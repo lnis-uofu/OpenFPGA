@@ -71,6 +71,7 @@ task_script_dir = os.path.dirname(os.path.abspath(__file__))
 script_env_vars = ({"PATH": {
     "OPENFPGA_FLOW_PATH": task_script_dir,
     "ARCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "arch"),
+    "OPENFPGA_SHELLSCRIPT_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "OpenFPGAShellScripts"),
     "BENCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "benchmarks"),
     "TECH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "tech"),
     "SPICENETLIST_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "SpiceNetlists"),
@@ -348,6 +349,14 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, param, task_conf):
 
     if task_gc.get("fpga_flow"):
         command += ["--fpga_flow", task_gc.get("fpga_flow")]
+
+    if task_gc.get("run_engine") == "openfpga_shell":
+        command += ["--openfpga_shell_template",
+                    task_gc.get("openfpga_shell_template")]
+        command += ["--openfpga_arch_file",
+                    task_gc.get("openfpga_arch_file")]
+        command += ["--openfpga_sim_setting_file",
+                    task_gc.get("openfpga_sim_setting_file")]
 
     if benchmark_obj.get("activity_file"):
         command += ["--activity_file", benchmark_obj.get("activity_file")]

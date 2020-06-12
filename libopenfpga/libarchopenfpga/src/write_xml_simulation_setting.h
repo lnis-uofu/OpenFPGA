@@ -12,6 +12,6 @@
  *******************************************************************/
 void write_xml_simulation_setting(std::fstream& fp,
                                   const char* fname,
-                                  const SimulationSetting& sim_setting);
+                                  const openfpga::SimulationSetting& sim_setting);
 
 #endif

@@ -48,7 +48,7 @@ std::string block_type_pin_index_to_name(t_physical_tile_type_ptr type, int pin_
 std::vector<std::string> block_type_class_index_to_pin_names(t_physical_tile_type_ptr type, int class_index);
 
 //Returns a user-friendly architectural identifier for the specified RR node
-std::string rr_node_arch_name(int inode);
+std::string rr_node_arch_name(const RRNodeId& inode);
 
 /**************************************************************
  * Intra-Logic Block Utility Functions

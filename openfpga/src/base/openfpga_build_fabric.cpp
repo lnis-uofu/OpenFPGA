@@ -1,0 +1,128 @@
+/********************************************************************
+ * This file includes functions to compress the hierachy of routing architecture
+ *******************************************************************/
+/* Headers from vtrutil library */
+#include "vtr_time.h"
+#include "vtr_log.h"
+
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
+#include "device_rr_gsb.h"
+#include "device_rr_gsb_utils.h"
+#include "build_device_module.h"
+#include "fabric_hierarchy_writer.h"
+#include "openfpga_build_fabric.h"
+
+/* Include global variables of VPR */
+#include "globals.h"
+
+/* begin namespace openfpga */
+namespace openfpga {
+
+/********************************************************************
+ * Identify the unique GSBs from the Device RR GSB arrays
+ * This function should only be called after the GSB builder is done
+ *******************************************************************/
+static 
+void compress_routing_hierarchy(OpenfpgaContext& openfpga_ctx,
+                                const bool& verbose_output) {
+  vtr::ScopedStartFinishTimer timer("Identify unique General Switch Blocks (GSBs)");
+
+  /* Build unique module lists */
+  openfpga_ctx.mutable_device_rr_gsb().build_unique_module(g_vpr_ctx.device().rr_graph);
+
+  /* Report the stats */
+  VTR_LOGV(verbose_output, 
+           "Detected %lu unique X-direction connection blocks from a total of %d (compression rate=%.2f%)\n",
+           openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANX),
+           find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(), CHANX),
+           100. * ((float)find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(), CHANX) / (float)openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANX) - 1.));
+
+  VTR_LOGV(verbose_output,
+           "Detected %lu unique Y-direction connection blocks from a total of %d (compression rate=%.2f%)\n",
+           openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANY),
+           find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(), CHANY),
+           100. * ((float)find_device_rr_gsb_num_cb_modules(openfpga_ctx.device_rr_gsb(), CHANY) / (float)openfpga_ctx.device_rr_gsb().get_num_cb_unique_module(CHANY) - 1.));
+
+  VTR_LOGV(verbose_output,
+           "Detected %lu unique switch blocks from a total of %d (compression rate=%.2f%)\n",
+           openfpga_ctx.device_rr_gsb().get_num_sb_unique_module(),
+           find_device_rr_gsb_num_sb_modules(openfpga_ctx.device_rr_gsb()),
+           100. * ((float)find_device_rr_gsb_num_sb_modules(openfpga_ctx.device_rr_gsb()) / (float)openfpga_ctx.device_rr_gsb().get_num_sb_unique_module() - 1.));
+
+  VTR_LOG("Detected %lu unique general switch blocks from a total of %d (compression rate=%.2f%)\n",
+          openfpga_ctx.device_rr_gsb().get_num_gsb_unique_module(),
+          find_device_rr_gsb_num_gsb_modules(openfpga_ctx.device_rr_gsb()),
+          100. * ((float)find_device_rr_gsb_num_gsb_modules(openfpga_ctx.device_rr_gsb()) / (float)openfpga_ctx.device_rr_gsb().get_num_gsb_unique_module() - 1.));
+}
+
+/********************************************************************
+ * Build the module graph for FPGA device
+ *******************************************************************/
+int build_fabric(OpenfpgaContext& openfpga_ctx,
+                 const Command& cmd, const CommandContext& cmd_context) { 
+
+  CommandOptionId opt_compress_routing = cmd.option("compress_routing");
+  CommandOptionId opt_duplicate_grid_pin = cmd.option("duplicate_grid_pin");
+  CommandOptionId opt_verbose = cmd.option("verbose");
+  
+  if (true == cmd_context.option_enable(cmd, opt_compress_routing)) {
+    compress_routing_hierarchy(openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
+    /* Update flow manager to enable compress routing */
+    openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
+  }
+
+  VTR_LOG("\n");
+
+  openfpga_ctx.mutable_module_graph() = build_device_module_graph(openfpga_ctx.mutable_io_location_map(),
+                                                                  openfpga_ctx.mutable_decoder_lib(),
+                                                                  const_cast<const OpenfpgaContext&>(openfpga_ctx),
+                                                                  g_vpr_ctx.device(),
+                                                                  cmd_context.option_enable(cmd, opt_compress_routing),
+                                                                  cmd_context.option_enable(cmd, opt_duplicate_grid_pin),
+                                                                  cmd_context.option_enable(cmd, opt_verbose));
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
+} 
+
+/********************************************************************
+ * Build the module graph for FPGA device
+ *******************************************************************/
+int write_fabric_hierarchy(const OpenfpgaContext& openfpga_ctx,
+                           const Command& cmd, const CommandContext& cmd_context) { 
+
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* Check the option '--file' is enabled or not 
+   * Actually, it must be enabled as the shell interface will check 
+   * before reaching this fuction
+   */
+  CommandOptionId opt_file = cmd.option("file");
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  /* Default depth requirement, will not stop until the leaf */
+  int depth = -1;
+  CommandOptionId opt_depth = cmd.option("depth");
+  if (true == cmd_context.option_enable(cmd, opt_depth)) {
+    depth = std::atoi(cmd_context.option_value(cmd, opt_depth).c_str());
+    /* Error out if we have negative depth */
+    if (0 > depth) {
+      VTR_LOG_ERROR("Invalid depth '%d' which should be 0 or a positive number!\n",
+                    depth);
+      return CMD_EXEC_FATAL_ERROR; 
+    }
+  }
+
+  std::string hie_file_name = cmd_context.option_value(cmd, opt_file);
+
+  /* Write hierarchy to a file */
+  return write_fabric_hierarchy_to_text_file(openfpga_ctx.module_graph(),
+                                             hie_file_name,
+                                             size_t(depth),
+                                             cmd_context.option_enable(cmd, opt_verbose));
+}
+
+} /* end namespace openfpga */

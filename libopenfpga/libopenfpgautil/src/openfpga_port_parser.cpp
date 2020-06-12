@@ -64,7 +64,7 @@ void PortParser::parse() {
 
   /* If we only have one token */
   if (1 == port_tokens.size()) {
-    port_.set_width(0); 
+    port_.set_width(1); 
     return; /* We can finish here */
   }
 
@@ -75,21 +75,22 @@ void PortParser::parse() {
   VTR_ASSERT_SAFE (1 == port_tokens.size());
 
   /* Split the pin string now */
-  tokenizer.set_data(port_tokens[0]);
+  tokenizer.set_data(pin_tokens[0]);
   pin_tokens = tokenizer.split(delim_);
 
   /* Check if we have LSB and MSB or just one */
   if ( 1 == pin_tokens.size() ) {
     /* Single pin */
-    port_.set_width(stoi(pin_tokens[0]), stoi(pin_tokens[0])); 
+    port_.set_width(std::stoi(pin_tokens[0]), std::stoi(pin_tokens[0])); 
   } else if ( 2 == pin_tokens.size() ) {
-    /* A number of pin */
-    port_.set_width(stoi(pin_tokens[0]), stoi(pin_tokens[1])); 
-  }
-
-  /* Re-order to ensure LSB <= MSB */
-  if (false == port_.is_valid()) {
-    port_.revert(); 
+    /* A number of pins. 
+     * Note that we always use the LSB for token[0] and MSB for token[1] 
+     */
+    if (std::stoi(pin_tokens[1]) < std::stoi(pin_tokens[0])) {
+      port_.set_width(std::stoi(pin_tokens[1]), std::stoi(pin_tokens[0])); 
+    } else {
+      port_.set_width(std::stoi(pin_tokens[0]), std::stoi(pin_tokens[1])); 
+    }
   }
 
   return;  

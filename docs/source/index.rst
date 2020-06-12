@@ -12,32 +12,16 @@ Welcome to OpenFPGA's documentation!
    motivation
 
 .. toctree::
-   :caption: Getting Started
-
-   eda_flow
-
-   run_fpga_flow
-
-   run_fpga_task
-
-
-.. toctree::
    :maxdepth: 2
-   :caption: Tools Guide
-
-   arch_lang/index
-
-   fpga_spice/index
-
-   fpga_verilog/index
-
-   fpga_bitstream/index
-
-.. toctree::
-   :maxdepth: 2
-   :caption: User Guide
+   :caption: Tutorials
 
    tutorials/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: User Manual
+
+   manual/index
 
 .. toctree::
    :maxdepth: 2
@@ -51,8 +35,6 @@ For more information on the VTR see vtr_doc_ or vtr_github_
 For more information on the Yosys see yosys_doc_ or yosys_github_
 
 For more information on the original FPGA architecture description language see xml_vtr_
-
-
 
 Indices and tables
 ==================

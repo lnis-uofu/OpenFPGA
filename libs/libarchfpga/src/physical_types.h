@@ -162,8 +162,11 @@ enum e_pin_type {
 enum e_interconnect {
     COMPLETE_INTERC = 1,
     DIRECT_INTERC = 2,
-    MUX_INTERC = 3
+    MUX_INTERC = 3,
+    NUM_INTERC_TYPES /* Xifan Tang - Invalid types for interconnect */
 };
+/* Xifan Tang - String versions of interconnection type */
+constexpr std::array<const char*, NUM_INTERC_TYPES> INTERCONNECT_TYPE_STRING = {{"unknown", "complete", "direct", "mux"}}; 
 
 /* Orientations. */
 enum e_side : unsigned char {
@@ -818,6 +821,9 @@ struct t_mode {
     int num_interconnect = 0;
     t_pb_type* parent_pb_type = nullptr;
     int index = 0;
+
+    /* Xifan Tang: Specify if the mode is packable or not */
+    bool packable = true;
 
     /* Power related members */
     t_mode_power* mode_power = nullptr;
@@ -1586,13 +1592,19 @@ struct t_clock_arch_spec {
 /*   Detailed routing architecture */
 struct t_arch {
     char* architecture_id; //Secure hash digest of the architecture file to uniquely identify this architecture
+    
+    /* Xifan Tang: options for tileable routing architectures */
+    bool tileable;
+    bool through_channel;
 
     t_chan_width_dist Chans;
     enum e_switch_block_type SBType;
+    enum e_switch_block_type SBSubType;
     std::vector<t_switchblock_inf> switchblocks;
     float R_minW_nmos;
     float R_minW_pmos;
     int Fs;
+    int subFs;
     float grid_logic_tile_area;
     std::vector<t_segment_inf> Segments;
     t_arch_switch_inf* Switches = nullptr;

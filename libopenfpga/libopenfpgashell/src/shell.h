@@ -10,6 +10,7 @@
 #include "vtr_range.h"
 #include "command.h"
 #include "command_context.h"
+#include "command_exit_codes.h"
 #include "shell_fwd.h"
 
 /* Begin namespace openfpga */
@@ -58,7 +59,9 @@ class Shell {
      * Built-in commands have their own execute functions inside the shell
      */
     enum e_exec_func_type {
+      CONST_STANDARD,
       STANDARD,
+      CONST_SHORT,
       SHORT,
       BUILTIN,
       MACRO,
@@ -86,30 +89,58 @@ class Shell {
     ShellCommandId add_command(const Command& cmd, const char* descr);
     void set_command_class(const ShellCommandId& cmd_id, const ShellCommandClassId& cmd_class_id);
     /* Link the execute function to a command
-     * We support here three types of functions to be executed in the shell
-     * 1. Standard function, including the data exchange <T> and commands
-     * 2. Short function, including only the data exchange <T>
-     * 3. Built-in function, including only the shell envoriment variables
-     * 4. Marco function, which directly call a macro function without command parsing
+     * We support here different types of functions to be executed in the shell
      * Users just need to specify the function object and its type will be automatically inferred
+     *
+     * Note that all the function should return exit codes complying to the shell_exit_code.h
+     * execept the internal functions
+     */
+
+    /* Standard function, including the data exchange <T> and commands 
+     * This function requires the data exchange <T> to be constant
+     * This is designed for outputting functions requiring external data than the <T>
+     */
+    void set_command_const_execute_function(const ShellCommandId& cmd_id,
+                                      std::function<int(const T&, const Command&, const CommandContext&)> exec_func);
+
+    /* Standard function, including the data exchange <T> and commands 
+     * This function allows modification to the data exchange <T>
+     * This is designed for implementing functions requiring external data than the <T>
      */
     void set_command_execute_function(const ShellCommandId& cmd_id,
-                                      std::function<void(T&, const Command&, const CommandContext&)> exec_func);
+                                      std::function<int(T&, const Command&, const CommandContext&)> exec_func);
+
+    /* Short function, including only the data exchange <T> 
+     * This function requires the data exchange <T> to be constant
+     * This is designed for outputting functions without external data than the <T>
+     */
+    void set_command_const_execute_function(const ShellCommandId& cmd_id,
+                                            std::function<int(const T&)> exec_func);
+
+    /* Short function, including only the data exchange <T> 
+     * This function allows modification to the data exchange <T>
+     * This is designed for internal implementing functions without external data than the <T>
+     */
     void set_command_execute_function(const ShellCommandId& cmd_id,
-                                      std::function<void(T&)> exec_func);
+                                      std::function<int(T&)> exec_func);
+
+    /* Built-in function, including only the shell envoriment variables */
     void set_command_execute_function(const ShellCommandId& cmd_id,
                                       std::function<void()> exec_func);
+
+    /* Marco function, which directly call a macro function without command parsing */
     void set_command_execute_function(const ShellCommandId& cmd_id,
-                                      std::function<int(int, const char**)> exec_func);
+                                      std::function<int(int, char**)> exec_func);
+
     void set_command_dependency(const ShellCommandId& cmd_id,
-                                const std::vector<ShellCommandId> cmd_dependency);
+                                const std::vector<ShellCommandId>& cmd_dependency);
     ShellCommandClassId add_command_class(const char* name);
   public: /* Public validators */
     bool valid_command_id(const ShellCommandId& cmd_id) const;
     bool valid_command_class_id(const ShellCommandClassId& cmd_class_id) const;
   public: /* Public executors */
     /* Start the interactive mode, where users will type-in command by command */
-    void run_interactive_mode(T& context);
+    void run_interactive_mode(T& context, const bool& quiet_mode = false);
     /* Start the script mode, where users provide a file which includes all the commands to run */
     void run_script_mode(const char* script_file_name, T& context);
     /* Print all the commands by their classes. This is actually the help desk */
@@ -120,7 +151,7 @@ class Shell {
     /* Execute a command, the command line is the user's input to launch a command
      * The common_context is the data structure to exchange data between commands
      */
-    void execute_command(const char* cmd_line, T& common_context);
+    int execute_command(const char* cmd_line, T& common_context);
   private: /* Internal data */ 
     /* Name of the shell, this will appear in the interactive mode */
     std::string name_;
@@ -156,15 +187,20 @@ class Shell {
      * 3. Built-in function, including only the shell envoriment variables
      * 4. Marco function, which directly call a macro function without command parsing
      */
-    vtr::vector<ShellCommandId, std::function<void(T&, const Command&, const CommandContext&)>> command_standard_execute_functions_;  
-    vtr::vector<ShellCommandId, std::function<void(T&)>> command_short_execute_functions_;  
+    vtr::vector<ShellCommandId, std::function<int(const T&, const Command&, const CommandContext&)>> command_const_execute_functions_;  
+    vtr::vector<ShellCommandId, std::function<int(T&, const Command&, const CommandContext&)>> command_standard_execute_functions_;  
+    vtr::vector<ShellCommandId, std::function<int(const T&)>> command_short_const_execute_functions_; 
+    vtr::vector<ShellCommandId, std::function<int(T&)>> command_short_execute_functions_; 
     vtr::vector<ShellCommandId, std::function<void()>> command_builtin_execute_functions_;  
-    vtr::vector<ShellCommandId, std::function<int(int, const char**)>> command_macro_execute_functions_;  
+    vtr::vector<ShellCommandId, std::function<int(int, char**)>> command_macro_execute_functions_;  
 
     /* Type of execute functions for each command.
      * This is supposed to be an internal data ONLY 
      */
     vtr::vector<ShellCommandId, e_exec_func_type> command_execute_function_types_;  
+
+    /* A flag to indicate if the command has been executed */  
+    vtr::vector<ShellCommandId, int> command_status_;  
 
     /* Dependency graph for different commands,
      * This helps the shell interface to check if a command need other commands to be run before its execution  

@@ -486,6 +486,11 @@ void read_xml_circuit_port(pugi::xml_node& xml_port,
   /* Parse the port size, by default it will be 1 */
   circuit_lib.set_port_size(port, get_attribute(xml_port, "size", loc_data).as_int(1));
 
+  /* Identify if the port is for io, this is only applicable to INPUT ports.
+   * By default, it will NOT be a mode selection port
+   */
+  circuit_lib.set_port_is_io(port, get_attribute(xml_port, "is_io", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
+
   /* Identify if the port is for mode selection, this is only applicable to SRAM ports.
    * By default, it will NOT be a mode selection port
    */
@@ -548,7 +553,7 @@ void read_xml_circuit_port(pugi::xml_node& xml_port,
      || (CIRCUIT_MODEL_PORT_WL  == circuit_lib.port_type(port))
      || (CIRCUIT_MODEL_PORT_BLB == circuit_lib.port_type(port))
      || (CIRCUIT_MODEL_PORT_WLB == circuit_lib.port_type(port)) ) {
-    circuit_lib.set_port_inv_model_name(port, get_attribute(xml_port, "inv_circuit_model_name", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string(nullptr));
+    circuit_lib.set_port_inv_model_name(port, get_attribute(xml_port, "inv_circuit_model_name", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string());
   }
 }
 

@@ -3,10 +3,10 @@
 [![Documentation Status](https://readthedocs.org/projects/openfpga/badge/?version=master)](https://openfpga.readthedocs.io/en/master/?badge=master)
 
 ## Introduction
-The OpenFPGA framework is the **first open-source FPGA IP generator** supporting highly-customizable homogeneous FPGA architectures. OpenFPGA provides a full set of EDA support for customized FPGAs, including Verilog-to-bitstream generation and self-testing verification [testbenches/scripts](./testbenches/scripts) OpenFPGA opens the door to democratizing FPGA technology and EDA techniques, with agile prototyping approaches and constantly evolving EDA tools for chip designers and researchers.
+The OpenFPGA framework is the **first open-source FPGA IP generator** supporting highly-customizable homogeneous FPGA architectures. OpenFPGA provides a full set of EDA support for customized FPGAs, including Verilog-to-bitstream generation and self-testing verification. OpenFPGA opens the door to democratizing FPGA technology and EDA techniques, with agile prototyping approaches and constantly evolving EDA tools for chip designers and researchers.
 
 ## Compilation
-Dependencies and help using docker can be found at [**./tutorials/building.md**](./tutorials/building.md).
+Dependencies and help using docker can be found [**here**](./docs/source/tutorials/compile.rst).
 
 **Compilation Steps:**
 ```bash
@@ -31,7 +31,6 @@ python3 openfpga_flow/scripts/run_fpga_task.py compilation_verification --debug 
 We currently target OpenFPGA for:
  1. Ubuntu 18.04
  2. Red Hat 7.5
- 3. MacOS Mojave 10.14.4
 
 *The tool was tested with these operating systems. It might work with earlier versions and other distributions.*
 
@@ -39,7 +38,4 @@ We currently target OpenFPGA for:
 OpenFPGA's [full documentation](https://openfpga.readthedocs.io/en/master/) includes tutorials, descriptions of the design flow, and tool options.
 
 ## Tutorials
-You can find some tutorials in the [**./tutorials**](./tutorials) folder. This will help you get more familiar with the tool and use OpenFPGA under different configurations. 
-
-Through those tutorials, users can learn how to use the flow and install the different dependencies.
-The [tutorial index](./tutorials/tutorial_index.md) will guide you through training and explain the folder oraganization as well as introducing some tips and commonly used keywords.
+You can find some tutorials in the [**./tutorials**](./docs/source/tutorials/) folder. This will help you get more familiar with the tool and use OpenFPGA under different configurations. 

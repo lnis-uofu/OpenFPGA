@@ -4,7 +4,10 @@
 .. toctree::
    :maxdepth: 2
 
-   getting_started
-  
+   compile
 
-   
+   eda_flow
+
+   design_flow/index
+
+   arch_modeling/index

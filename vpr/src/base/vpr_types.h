@@ -40,6 +40,10 @@
 #include "vtr_flat_map.h"
 #include "vtr_cache.h"
 
+/* Xifan Tang - Header for rr_graph related definition */
+#include "rr_graph_types.h"
+#include "rr_graph_obj.h"
+
 /*******************************************************************************
  * Global data types and constants
  ******************************************************************************/
@@ -1000,6 +1004,16 @@ struct t_det_routing_arch {
     enum e_switch_block_type switch_block_type;
     std::vector<t_switchblock_inf> switchblocks;
 
+    /* Xifan Tang: subtype of switch blocks.
+     * Sub type and Fs are applied to pass tracks
+     */
+    int subFs;
+    enum e_switch_block_type switch_block_subtype;
+    
+    /* Xifan Tang: tileable routing */
+    bool tileable;
+    bool through_channel;
+
     short global_route_switch;
     short delayless_switch;
     int wire_to_arch_ipin_switch;
@@ -1011,15 +1025,6 @@ struct t_det_routing_arch {
     std::string write_rr_graph_filename;
 };
 
-enum e_direction : unsigned char {
-    INC_DIRECTION = 0,
-    DEC_DIRECTION = 1,
-    BI_DIRECTION = 2,
-    NO_DIRECTION = 3,
-    NUM_DIRECTIONS
-};
-
-constexpr std::array<const char*, NUM_DIRECTIONS> DIRECTION_STRING = {{"INC_DIRECTION", "DEC_DIRECTION", "BI_DIRECTION", "NO_DIRECTION"}};
 
 /* Lists detailed information about segmentation.  [0 .. W-1].              *
  * length:  length of segment.                                              *
@@ -1132,26 +1137,6 @@ struct t_linked_f_pointer {
 
 typedef std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>> t_rr_node_indices; //[0..num_rr_types-1][0..grid_width-1][0..grid_height-1][0..NUM_SIDES-1][0..max_ptc-1]
 
-/* Type of a routing resource node.  x-directed channel segment,   *
- * y-directed channel segment, input pin to a clb to pad, output   *
- * from a clb or pad (i.e. output pin of a net) and:               *
- * SOURCE:  A dummy node that is a logical output within a block   *
- *          -- i.e., the gate that generates a signal.             *
- * SINK:    A dummy node that is a logical input within a block    *
- *          -- i.e. the gate that needs a signal.                  */
-typedef enum e_rr_type : unsigned char {
-    SOURCE = 0,
-    SINK,
-    IPIN,
-    OPIN,
-    CHANX,
-    CHANY,
-    NUM_RR_TYPES
-} t_rr_type;
-
-constexpr std::array<t_rr_type, NUM_RR_TYPES> RR_TYPES = {{SOURCE, SINK, IPIN, OPIN, CHANX, CHANY}};
-constexpr std::array<const char*, NUM_RR_TYPES> rr_node_typename{{"SOURCE", "SINK", "IPIN", "OPIN", "CHANX", "CHANY"}};
-
 /* Basic element used to store the traceback (routing) of each net.        *
  * index:   Array index (ID) of this routing resource node.                *
  * iswitch: Index of the switch type used to go from this rr_node to       *
@@ -1161,7 +1146,7 @@ constexpr std::array<const char*, NUM_RR_TYPES> rr_node_typename{{"SOURCE", "SIN
  * next:    Pointer to the next traceback element in this route.           */
 struct t_trace {
     t_trace* next;
-    int index;
+    RRNodeId index;
     short iswitch;
 };
 
@@ -1185,8 +1170,9 @@ struct t_trace {
  *               Number of times this node must be reached to fully route.  *
  * occ:        The current occupancy of the associated rr node              */
 struct t_rr_node_route_inf {
-    int prev_node;
-    t_edge_size prev_edge;
+    /* Xifan Tang - prev_node for RRGraph object */
+    RRNodeId prev_node;
+    RREdgeId prev_edge;
 
     float pres_cost;
     float acc_cost;
@@ -1212,13 +1198,13 @@ struct t_net_routing_status {
 };
 
 struct t_node_edge {
-    t_node_edge(int fnode, int tnode) {
+    t_node_edge(const RRNodeId& fnode, const RRNodeId& tnode) {
         from_node = fnode;
         to_node = tnode;
     }
 
-    int from_node;
-    int to_node;
+    RRNodeId from_node;
+    RRNodeId to_node;
 
     //For std::set
     friend bool operator<(const t_node_edge& lhs, const t_node_edge& rhs) {
@@ -1228,7 +1214,7 @@ struct t_node_edge {
 
 //Non-configurably connected nodes and edges in the RR graph
 struct t_non_configurable_rr_sets {
-    std::set<std::set<int>> node_sets;
+    std::set<std::set<RRNodeId>> node_sets;
     std::set<std::set<t_node_edge>> edge_sets;
 };
 
@@ -1314,6 +1300,6 @@ class RouteStatus {
     int chan_width_ = -1;
 };
 
-typedef vtr::vector<ClusterBlockId, std::vector<std::vector<int>>> t_clb_opins_used; //[0..num_blocks-1][0..class-1][0..used_pins-1]
+typedef vtr::vector<ClusterBlockId, std::vector<std::vector<RRNodeId>>> t_clb_opins_used; //[0..num_blocks-1][0..class-1][0..used_pins-1]
 
 #endif

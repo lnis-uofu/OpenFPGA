@@ -13,4 +13,8 @@
 void write_xml_openfpga_arch(const char* xml_fname, 
                              const openfpga::Arch& openfpga_arch);
 
+void write_xml_openfpga_simulation_settings(const char* xml_fname, 
+                                            const openfpga::SimulationSetting& openfpga_sim_setting);
+
+
 #endif

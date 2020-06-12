@@ -14,106 +14,99 @@ cache:
 # Currently sudo is not required, NO ENV is used
 
 # Supported Operating systems
-#os:
-#  - linux
-#  - osx
-# Create a matrix to branch the building environment
-matrix:
-  include:
-    - os: linux
-    # Compiler is specified in ./travis/common.sh
-      sudo: false
-      dist: bionic
-      compiler: g++-8
-      addons:
-        apt:
-          sources:
-          - ubuntu-toolchain-r-test # For newer GCC
-          - george-edison55-precise-backports # For cmake
-          - llvm_toolchain-trusty-7
-          packages:
-          - autoconf
-          - automake
-          - bash
-          - bison
-          - build-essential
-          - cmake
-          - ctags
-          - curl
-          - doxygen
-          - flex
-          - fontconfig
-          - g++-8
-          - gcc-8
-          - gdb
-          - git
-          - gperf
-          - iverilog
-          - libcairo2-dev
-          - libevent-dev
-          - libfontconfig1-dev
-          - liblist-moreutils-perl
-          - libncurses5-dev
-          - libx11-dev
-          - libxft-dev
-          - libxml++2.6-dev
-          - perl
-          - python
-          - python-lxml
-          - texinfo
-          - time
-          - valgrind
-          - zip
-          - qt5-default
-          - clang-format-7
-#    - os: osx
-#      osx_image: xcode10.2 # we target latest MacOS Mojave
-#      sudo: true
-#      compiler: gcc-4.9 # Use clang instead of gcc in MacOS
-#      addons:
-#        homebrew:
-#          packages:
-#          - bison
-#          - cmake
-#          - ctags
-#          - flex
-#          - fontconfig
-#          - git
-#          - gcc@6
-#          - gcc@4.9
-#          - gawk
-#          - icarus-verilog
-#          - libxml++
-#          - qt5
+dist: bionic
+compiler: g++-8
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test # For newer GCC
+    - llvm_toolchain-trusty-7
+    packages:
+    - autoconf
+    - automake
+    - bash
+    - bison
+    - build-essential
+    - cmake
+    - ctags
+    - curl
+    - doxygen
+    - flex
+    - fontconfig
+    - g++-8
+    - gcc-8
+    - gdb
+    - git
+    - gperf
+    - iverilog
+    - libcairo2-dev
+    - libevent-dev
+    - libfontconfig1-dev
+    - liblist-moreutils-perl
+    - libncurses5-dev
+    - libx11-dev
+    - libxft-dev
+    - libxml++2.6-dev
+    - perl
+    - python
+    - python-lxml
+    - texinfo
+    - time
+    - valgrind
+    - zip
+    - qt5-default
+    - clang-format-7
+#- os: osx
+#  osx_image: xcode10.2 # we target latest MacOS Mojave
+#  sudo: true
+#  compiler: gcc-4.9 # Use clang instead of gcc in MacOS
+#  addons:
+#    homebrew:
+#      packages:
+#      - bison
+#      - cmake
+#      - ctags
+#      - flex
+#      - fontconfig
+#      - git
+#      - gcc@6
+#      - gcc@4.9
+#      - gawk
+#      - icarus-verilog
+#      - libxml++
+#      - qt5
 
-before_install:
+before_script:
   - source .travis/common.sh
-
-install:
-  - DEPS_DIR="${HOME}/deps"
-  - mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
-  - |
-    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      CMAKE_URL="https://cmake.org/files/v3.16/cmake-3.16.3-Linux-x86_64.tar.gz"
-      mkdir -p cmake && travis_retry wget --no-clobber --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
-      export PATH=${DEPS_DIR}/cmake/bin:${PATH}
-      echo ${PATH}
-    else
-      brew install cmake || brew upgrade cmake
-    fi
-  - cmake --version
-  - cd -
   - source .travis/install.sh
 
+stages:
+  - name: Test
+    if: type != cron
+
+jobs:
+  include:
+    - stage: Test
+      name: "OpenFPGA + VPR7 regression tests"
+      script:
+        - source .travis/build.sh
+        - source .travis/openfpga_vpr7_reg_test.sh
+
+    - stage: Test
+      name: "OpenFPGA + VPR8 regression tests"
+      script:
+        - source .travis/build.sh
+        - source .travis/openfpga_vpr8_reg_test.sh
+
+#after_failure:
+#  - .travis/after_failure.sh
+
+#after_success:
+#  - .travis/after_success.sh
+
 script:
-  - .travis/script.sh
-  #- .travis/regression.sh
+  - true
 
-after_failure:
-  - .travis/after_failure.sh
-
-after_success:
-  - .travis/after_success.sh
 notifications:
   slack:
     secure: L8tzicFh+EKcK21GBA2m3rQ3jmnDdqiRXIZcb0iqYlhT0V5asYvCqwlpPDUDV1wmBXqPgRJBI/jitAJlKFWu74pLTVc6FscUIDYM7S0DJfHEcufLknZx88lMmmV0IsYLQe3/s89tWoudMf1bNBo/8YWzLDffqUQ7s/rTPD9SWLppb01X0Xm158oDlA0rWETs35nuNFgJxWcSyIyIvnRNE3dHjzmBETUR9mYDsUSYlcOI44FMD8rE6emicdkqdn1zVxScobrl4Dt2bPsMfKopgIKK1x+38AuaqQa7t5F5ICnF0WfxmQ6/TcRNwIij0fDu68w/fcU8SyV+Ex5aZBKYUU7PG7ELTOq+q1geDoTlbguvFSIT4EzqErc4hbJmcUn79BKLhdjshZtGihKatntJx2faXYNYGFjwmnPFRYpqsozydztgMjzv4prZ5yoh7jhoDiGj44QcpXlQ9otM17JdfqveowMLHBYzATsxIRG93irZfXG/E3S8FvXg8mYOIEn8UK7H6i8VWL3JHlw8RbpLdNLswZOUlpEaDAeTm5tvYcw7FGH2nlZ2e5aXLxN6dTovSSRztQHbWdJTGG0N+xldBXcCiChmok4nXGReIkMc+99nZjRsiCB0R16tCNb25/p7NAVkItfVe1qRTzdnhi1hdE7LPURK4kxoFRJ6sFVuYjw=

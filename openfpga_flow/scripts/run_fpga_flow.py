@@ -47,6 +47,7 @@ task_script_dir = os.path.dirname(os.path.abspath(__file__))
 script_env_vars = ({"PATH": {
     "OPENFPGA_FLOW_PATH": task_script_dir,
     "ARCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "arch"),
+    "OPENFPGA_SHELLSCRIPT_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "OpenFPGAShellScripts"),
     "BENCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "benchmarks"),
     "TECH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "tech"),
     "SPICENETLIST_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "SpiceNetlists"),
@@ -78,6 +79,12 @@ parser.add_argument('--flow_config', type=str,
 parser.add_argument('--run_dir', type=str,
                     default=os.path.join(openfpga_base_dir,  'tmp'),
                     help="Directory to store intermidiate file & final results")
+parser.add_argument('--openfpga_shell_template', type=str,
+                    help="Sample openfpga shell script")
+parser.add_argument('--openfpga_arch_file', type=str,
+                    help="Openfpga architecture file for shell")
+parser.add_argument('--openfpga_sim_setting_file', type=str,
+                    help="Openfpga simulation file for shell")
 parser.add_argument('--yosys_tmpl', type=str,
                     help="Alternate yosys template, generates top_module.blif")
 parser.add_argument('--disp', action="store_true",
@@ -249,7 +256,11 @@ def main():
     #     run_abc_vtr()
     # if (args.fpga_flow == "vtr_standard"):
     #     run_abc_for_standarad()
-    run_vpr()
+    if args.openfpga_shell_template:
+        logger.info("Runing OpenFPGA Shell Engine ")
+        run_openfpga_shell()
+    else:
+        run_vpr()
     if args.end_flow_with_test:
         run_netlists_verification()
 
@@ -323,10 +334,10 @@ def validate_command_line_arguments():
                     clean_up_and_exit("'%s' argument depends on (%s) argumets" %
                                       (eacharg, ", ".join(dependent).replace("|", " or ")))
 
-    # Filter provided architecrue files
+    # Filter provided architecture files
     args.arch_file = os.path.abspath(args.arch_file)
     if not os.path.isfile(args.arch_file):
-        clean_up_and_exit("Architecure file not found. -%s", args.arch_file)
+        clean_up_and_exit("Architecture file not found. -%s", args.arch_file)
 
     # Filter provided benchmark files
     for index, everyinput in enumerate(args.benchmark_files):
@@ -389,7 +400,7 @@ def prepare_run_directory(run_dir):
     # Clean run_dir is created change working directory
     os.chdir(run_dir)
 
-    # Create arch dir in run_dir and copy flattern architecrture file
+    # Create arch dir in run_dir and copy flattened architecture file
     os.mkdir("arch")
     tmpl = Template(
         open(args.arch_file, encoding='utf-8').read())
@@ -398,7 +409,15 @@ def prepare_run_directory(run_dir):
     with open(args.arch_file, 'w', encoding='utf-8') as archfile:
         archfile.write(tmpl.substitute(script_env_vars["PATH"]))
 
-    # Create benchmark dir in run_dir and copy flattern architecrture file
+    if (args.openfpga_arch_file):
+        tmpl = Template(
+            open(args.openfpga_arch_file, encoding='utf-8').read())
+        arch_filename = os.path.basename(args.openfpga_arch_file)
+        args.openfpga_arch_file = os.path.join(run_dir, "arch", arch_filename)
+        with open(args.openfpga_arch_file, 'w', encoding='utf-8') as archfile:
+            archfile.write(tmpl.substitute(script_env_vars["PATH"]))
+
+    # Create benchmark dir in run_dir and copy flattern architecture file
     os.mkdir("benchmark")
     try:
         for index, eachfile in enumerate(args.benchmark_files):
@@ -579,6 +598,17 @@ def collect_files_for_vpr():
         clean_up_and_exit("Provided base_verilog file not found")
     shutil.copy(args.base_verilog, args.top_module+"_output_verilog.v")
 
+    # Sanitize provided openshell template, if provided
+    if (args.openfpga_shell_template):
+        if not os.path.isfile(args.openfpga_shell_template or ""):
+            logger.error("Openfpga shell file - %s" %
+                         args.openfpga_shell_template)
+            clean_up_and_exit("Provided openfpga_shell_template" +
+                              f" {args.openfpga_shell_template} file not found")
+        else:
+            shutil.copy(args.openfpga_shell_template,
+                        args.top_module+"_template.openfpga")
+
 
 def run_vpr():
     ExecTime["VPRStart"] = time.time()
@@ -644,6 +674,29 @@ def run_vpr():
                           r_filename="vpr_power_stat",
                           parse_section="power")
     ExecTime["VPREnd"] = time.time()
+
+
+def run_openfpga_shell():
+    ExecTime["VPRStart"] = time.time()
+    # bench_blif, fixed_chan_width, logfile, route_only=False
+    tmpl = Template(open(args.top_module+"_template.openfpga",
+                         encoding='utf-8').read())
+
+    path_variables = script_env_vars["PATH"]
+    path_variables["VPR_ARCH_FILE"] = args.arch_file
+    path_variables["OPENFPGA_ARCH_FILE"] = args.openfpga_arch_file
+    path_variables["OPENFPGA_SIM_SETTING_FILE"] = args.openfpga_sim_setting_file
+    path_variables["VPR_TESTBENCH_BLIF"] = args.top_module+".blif"
+    path_variables["ACTIVITY_FILE"] = args.top_module+"_ace_out.act"
+    path_variables["REFERENCE_VERILOG_TESTBENCH"] = args.top_module + \
+        "_output_verilog.v"
+    with open(args.top_module+"_run.openfpga", 'w', encoding='utf-8') as archfile:
+        archfile.write(tmpl.substitute(path_variables))
+    command = [cad_tools["openfpga_shell_path"], "-f",
+               args.top_module+"_run.openfpga"]
+    run_command("OpenFPGA Shell Run", "openfpgashell.log", command)
+    ExecTime["VPREnd"] = time.time()
+    extract_vpr_stats("vpr_stdout.log")
 
 
 def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
@@ -861,13 +914,23 @@ def run_netlists_verification(exit_if_fail=True):
 
     command = [cad_tools["iverilog_path"]]
     command += ["-o", compiled_file]
-    command += ["./SRC/%s_include_netlists.v" %
-                args.top_module]
+    fpga_define_file = "./SRC/define_simulation.v"
+    fpga_define_file_bk = "./SRC/define_simulation.v.bak"
+    shutil.copy(fpga_define_file, fpga_define_file_bk)
+    with open(fpga_define_file, "r") as fp:
+        fpga_defines = fp.readlines()
+
+    command += ["./SRC/%s_include_netlists.v" % args.top_module]
     command += ["-s"]
     if args.vpr_fpga_verilog_formal_verification_top_netlist:
         command += [tb_top_formal]
     else:
         command += [tb_top_autochecked]
+        with open(fpga_define_file, "w") as fp:
+            for eachLine in fpga_defines:
+                if not (("ENABLE_FORMAL_VERIFICATION" in eachLine) or
+                        "FORMAL_SIMULATION" in eachLine):
+                    fp.write(eachLine)
     run_command("iverilog_verification", "iverilog_output.txt", command)
 
     vvp_command = ["vvp", compiled_file]

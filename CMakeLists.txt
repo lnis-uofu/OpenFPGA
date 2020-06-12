@@ -46,6 +46,10 @@ project("OPENFPGA" C CXX)
 option(ENABLE_VPR_GRAPHICS "Enables VPR graphics" ON)
 option(ENABLE_VPR_GRAPHICS "Enables build with librtlnumber" OFF)
 
+#Allow the user to decide weather to compile the graphics library
+set(VPR_USE_EZGL "auto" CACHE STRING "Specify whether vpr uses the graphics library")
+set_property(CACHE VPR_USE_EZGL PROPERTY STRINGS auto off on)
+
 # Version number
 set(OPENFPGA_VERSION_MAJOR 1)
 set(OPENFPGA_VERSION_MINOR 0)
@@ -154,6 +158,27 @@ message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 #
 enable_testing()
 
+# set VPR_USE_EZGL in the root of VTR to decide whether to add
+# subdirectory of graphics library, which prevents users
+# without gtk/x11 libraries installed to build. VPR_USE_EZGL is
+# being used in both the vpr CMakeLists and libs/EXTERNAL CMakeLists.
+#
+# check if GTK and X11 are installed and turn on/off graphics
+if (VPR_USE_EZGL STREQUAL "auto")
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(GTK3 QUIET gtk+-3.0)
+    pkg_check_modules(X11 QUIET x11)
+
+    if(GTK3_FOUND AND X11_FOUND)
+        set(VPR_USE_EZGL "on")
+        message(STATUS "VPR Graphics: Enabled")
+    else()
+        set(VPR_USE_EZGL "off")
+        message(STATUS "VPR Graphics: Disabled (required libraries missing, on debia/ubuntu try: sudo apt install libgtk-3 libx11-dev")
+    endif()
+endif()
+
+
 # 
 # Sub-projects
 #
@@ -232,12 +257,6 @@ set_target_properties(libvpr vpr_shell
   ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/vpr"
   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/vpr"
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/vpr")
-
-set_target_properties(libarchopenfpga read_arch_openfpga
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/libopenfpga/libarchopenfpga"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/libopenfpga/libarchopenfpga"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/libopenfpga/libarchopenfpga")
 
 set_target_properties(libvpr8 vpr8
   PROPERTIES

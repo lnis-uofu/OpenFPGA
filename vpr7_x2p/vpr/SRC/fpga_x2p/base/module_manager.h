@@ -26,6 +26,8 @@ class ModuleManager {
   public: /* Private data structures */
     enum e_module_port_type {
       MODULE_GLOBAL_PORT, /* Global inputs */
+      MODULE_GPIN_PORT,   /* General-purpose input */
+      MODULE_GPOUT_PORT,  /* General-purpose outputs, could be used for spypads */
       MODULE_GPIO_PORT,   /* General-purpose IOs, which are data IOs of the fabric */
       MODULE_INOUT_PORT,  /* Normal (non-global) inout ports */
       MODULE_INPUT_PORT,  /* Normal (non-global) input ports */

@@ -4,6 +4,12 @@
 #                  for several simple operations in OpenFPGA project
 #author          : Ganesh Gore <ganesh.gore@utah.edu>
 #==============================================================================
+# Enviroment variables
+export PATH=$PATH:/usr/local/stow/gcc/amd64_linux26/gcc-8.4.0/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/stow/gcc/amd64_linux26/gcc-8.4.0/lib64
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/stow/boost/boost_1_67_0/lib/
+export CC=$(which gcc)
+export CXX=$(which g++)
 
 export OPENFPGA_PATH="$(pwd)"
 export OPENFPGA_SCRIPT_PATH="$(pwd)/openfpga_flow/scripts"
@@ -82,4 +88,5 @@ fi
 TaskList=$(ls -tdalh ${OPENFPGA_TASK_PATH}/* | awk '{system("basename " $9)}' |  awk '{printf("%s ",$1)}')
 complete -W "${TaskList}" goto-task
 complete -W "${TaskList}" run-task
+complete -W "${TaskList}" run-shell-task
 complete -W "${TaskList}" run-modelsim

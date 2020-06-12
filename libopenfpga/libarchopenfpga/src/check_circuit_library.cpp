@@ -6,10 +6,10 @@
  * 3. if nay circuit model miss mandatory ports 
  ***********************************************************************/
 
-/* Header files should be included in a sequence */
-/* Standard header files required go first */
+/* Headers from vtrutil library */
 #include "vtr_assert.h"
 #include "vtr_log.h"
+#include "vtr_time.h"
 
 #include "check_circuit_library.h"
 
@@ -135,9 +135,11 @@ size_t check_one_circuit_model_port_size_required(const CircuitLibrary& circuit_
   size_t num_err = 0;
 
   if (port_size_to_check != circuit_lib.port_size(circuit_port)) {
-    VTR_LOG_ERROR(circuit_lib.model_name(circuit_model).c_str(), 
+    VTR_LOG_ERROR("Expect circuit model %s to have %d %s ports but only see %d!\n",
+                  circuit_lib.model_name(circuit_model).c_str(), 
+                  port_size_to_check,
                   CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(circuit_lib.port_type(circuit_port))],
-                  port_size_to_check);
+                  circuit_lib.port_size(circuit_port));
     /* Incremental the counter for errors */
     num_err++;
   }
@@ -282,7 +284,7 @@ size_t check_sram_circuit_model_ports(const CircuitLibrary& circuit_lib,
   /* Check if we has 1 output with size 2 */
   num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
                                                                  CIRCUIT_MODEL_PORT_OUTPUT,
-                                                                 1, 2, false);
+                                                                 2, 1, false);
   /* basic check finished here */
   if (false == check_blwl) {
     return num_err;
@@ -308,8 +310,21 @@ size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
   /* Check global ports: make sure all the global ports are input ports */
   for (const auto& port : circuit_lib.ports()) {
     if ( (circuit_lib.port_is_global(port)) 
-      && (!circuit_lib.is_input_port(port)) ) {
-      VTR_LOG_ERROR("Circuit port (type=%s) of model (name=%s) is defined as global but not an input port!\n",
+      && (!circuit_lib.is_input_port(port)) 
+      && (!circuit_lib.is_output_port(port)) ) {
+      VTR_LOG_ERROR("Circuit port (type=%s) of model (name=%s) is defined as global but not an input/output port!\n",
+                    CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(circuit_lib.port_type(port))],
+                    circuit_lib.model_name(port).c_str());
+      num_err++;
+    }
+  }
+
+  /* Check global output ports: make sure they are all I/Os */
+  for (const auto& port : circuit_lib.ports()) {
+    if ( (circuit_lib.port_is_global(port)) 
+      && (CIRCUIT_MODEL_PORT_OUTPUT == circuit_lib.port_type(port))
+      && (false == circuit_lib.port_is_io(port)) ) {
+      VTR_LOG_ERROR("Circuit port (type=%s) of model (name=%s) is defined as global output port but not an I/O!\n",
                     CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(circuit_lib.port_type(port))],
                     circuit_lib.model_name(port).c_str());
       num_err++;
@@ -322,7 +337,7 @@ size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
         || (circuit_lib.port_is_reset(port)) 
         || (circuit_lib.port_is_config_enable(port)) )
       && (!circuit_lib.port_is_global(port)) ) {
-      VTR_LOG_ERROR("Circuit port (type=%s) of model (name=%s) is defined as a set/reset/config_enable port but  it is not global!\n",
+      VTR_LOG_ERROR("Circuit port (type=%s) of model (name=%s) is defined as a set/reset/config_enable port but it is not global!\n",
                     CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(circuit_lib.port_type(port))],
                     circuit_lib.model_name(port).c_str());
       num_err++;
@@ -434,10 +449,10 @@ size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
  * 9. LUT must have at least an input, an output and a SRAM ports
  * 10. We must have default circuit models for these types: MUX, channel wires and wires
  ***********************************************************************/
-void check_circuit_library(const CircuitLibrary& circuit_lib) {
+bool check_circuit_library(const CircuitLibrary& circuit_lib) {
   size_t num_err = 0;
 
-  VTR_LOG("Checking circuit models...\n");
+  vtr::ScopedStartFinishTimer timer("Check circuit library");
 
   /* 1. Circuit models have unique names  
    * For each circuit model, we always make sure it does not share any name with any circuit model locating after it
@@ -462,7 +477,9 @@ void check_circuit_library(const CircuitLibrary& circuit_lib) {
   iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_INPUT);
   iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_OUTPUT);
   iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_INOUT);
-  iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_SRAM);
+  /* Some I/Os may not have SRAM port, such as AIB interface
+   * iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_SRAM);
+   */
 
   num_err += check_circuit_model_port_required(circuit_lib, CIRCUIT_MODEL_IOPAD, iopad_port_types_required);
 
@@ -491,7 +508,6 @@ void check_circuit_library(const CircuitLibrary& circuit_lib) {
 
   /* 6. SRAM must have at least an input and an output ports*/
   std::vector<enum e_circuit_model_port_type> sram_port_types_required;
-  sram_port_types_required.push_back(CIRCUIT_MODEL_PORT_INPUT);
   sram_port_types_required.push_back(CIRCUIT_MODEL_PORT_OUTPUT);
 
   num_err += check_circuit_model_port_required(circuit_lib, CIRCUIT_MODEL_SRAM, sram_port_types_required);
@@ -530,10 +546,11 @@ void check_circuit_library(const CircuitLibrary& circuit_lib) {
   if (0 < num_err) {
     VTR_LOG("Finished checking circuit library with %d errors!\n",
             num_err);
-    exit(1);
+    return false;
   }
 
   VTR_LOG("Checking circuit library passed.\n");
 
-  return;
+  return true;
 }
+

@@ -9,6 +9,7 @@
 #include <string>
 
 #include "circuit_library.h"
+#include "arch_direct.h"
 
 /********************************************************************
  * Function declaration
@@ -31,6 +32,6 @@ void write_xml_routing_segment_circuit(std::fstream& fp,
 void write_xml_direct_circuit(std::fstream& fp,
                               const char* fname,
                               const CircuitLibrary& circuit_lib,
-                              const std::map<std::string, CircuitModelId>& direct2circuit);
+                              const ArchDirect& arch_direct);
 
 #endif

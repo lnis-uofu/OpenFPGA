@@ -125,10 +125,13 @@ ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr) {
   command_description_.push_back(descr);
   command_classes_.push_back(ShellCommandClassId::INVALID());
   command_execute_function_types_.emplace_back();
+  command_const_execute_functions_.emplace_back();
   command_standard_execute_functions_.emplace_back();
+  command_short_const_execute_functions_.emplace_back();
   command_short_execute_functions_.emplace_back();
   command_builtin_execute_functions_.emplace_back();
   command_macro_execute_functions_.emplace_back();
+  command_status_.push_back(CMD_EXEC_NONE); /* By default, the command should be marked as fatal error as it has been never executed */
   command_dependencies_.emplace_back();
 
   /* Register the name in the name2id map */
@@ -151,16 +154,32 @@ void Shell<T>::set_command_class(const ShellCommandId& cmd_id, const ShellComman
 }
 
 template<class T>
+void Shell<T>::set_command_const_execute_function(const ShellCommandId& cmd_id, 
+                                                  std::function<int(const T&, const Command&, const CommandContext&)> exec_func) {
+  VTR_ASSERT(true == valid_command_id(cmd_id));
+  command_execute_function_types_[cmd_id] = CONST_STANDARD;
+  command_const_execute_functions_[cmd_id] = exec_func;
+}
+
+template<class T>
 void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
-                                            std::function<void(T&, const Command&, const CommandContext&)> exec_func) {
+                                            std::function<int(T&, const Command&, const CommandContext&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = STANDARD;
   command_standard_execute_functions_[cmd_id] = exec_func;
 }
 
 template<class T>
+void Shell<T>::set_command_const_execute_function(const ShellCommandId& cmd_id, 
+                                                  std::function<int(const T&)> exec_func) {
+  VTR_ASSERT(true == valid_command_id(cmd_id));
+  command_execute_function_types_[cmd_id] = CONST_SHORT;
+  command_short_const_execute_functions_[cmd_id] = exec_func;
+}
+
+template<class T>
 void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
-                                            std::function<void(T&)> exec_func) {
+                                            std::function<int(T&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = SHORT;
   command_short_execute_functions_[cmd_id] = exec_func;
@@ -176,7 +195,7 @@ void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
 
 template<class T>
 void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
-                                            std::function<int(int, const char**)> exec_func) {
+                                            std::function<int(int, char**)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = MACRO;
   command_macro_execute_functions_[cmd_id] = exec_func;
@@ -184,7 +203,7 @@ void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
 
 template<class T>
 void Shell<T>::set_command_dependency(const ShellCommandId& cmd_id,
-                                      const std::vector<ShellCommandId> dependent_cmds) {
+                                      const std::vector<ShellCommandId>& dependent_cmds) {
   /* Validate the command id as well as each of the command dependency */
   VTR_ASSERT(true == valid_command_id(cmd_id));
   for (ShellCommandId dependent_cmd : dependent_cmds) {
@@ -220,13 +239,15 @@ ShellCommandClassId Shell<T>::add_command_class(const char* name) {
  * Public executors
  ***********************************************************************/
 template <class T>
-void Shell<T>::run_interactive_mode(T& context) {
-  VTR_LOG("Start interactive mode of %s...\n",
-          name().c_str());
+void Shell<T>::run_interactive_mode(T& context, const bool& quiet_mode) {
+  if (false == quiet_mode) {
+    VTR_LOG("Start interactive mode of %s...\n",
+            name().c_str());
 
-  /* Print the title of the shell */
-  if (!title().empty()) {
-    VTR_LOG("%s\n", title().c_str());
+    /* Print the title of the shell */
+    if (!title().empty()) {
+      VTR_LOG("%s\n", title().c_str());
+    }
   }
 
   /* Wait for users input and execute the command */
@@ -268,6 +289,11 @@ void Shell<T>::run_script_mode(const char* script_file_name, T& context) {
     return; 
   }
 
+  /* Consider that each line may not end due to the continued line charactor 
+   * Use cmd_line to conjunct multiple lines 
+   */
+  std::string cmd_line;
+
   /* Read line by line */
   while (getline(fp, line)) {
     /* If the line that starts with '#', it is commented, we can skip */ 
@@ -281,12 +307,55 @@ void Shell<T>::run_script_mode(const char* script_file_name, T& context) {
     if (cmd_end_pos != std::string::npos) {
       cmd_part = line.substr(0, cmd_end_pos);
     }
-    /* Process the command only when the line is not empty */
-    if (!cmd_part.empty()) {
-      execute_command(cmd_part.c_str(), context);
+
+    /* Remove the space at the end of the line
+     * So that we can check easily if there is a continued line in the end  
+     */
+    StringToken cmd_part_tokenizer(cmd_part);
+    cmd_part_tokenizer.rtrim(std::string(" "));
+    cmd_part = cmd_part_tokenizer.data();
+
+    /* If the line ends with '\', this is a continued line, parse the next until it ends */
+    if ('\\' == cmd_part.back()) {
+      /* Pop up the last charactor and conjunct to cmd_line */
+      cmd_part.pop_back();
+ 
+      if (!cmd_part.empty()) {
+        cmd_line += cmd_part; 
+      }
+      /* Not finished yet. Parse the next line */
+      continue;
+    } else {
+      /* End of this line, if cmd_line is empty, 
+       * there is no previous lines, cache the part we have
+       * and then execute the command 
+       */
+      cmd_line += cmd_part;
+    }
+
+    /* Remove the space at the beginning of the line */
+    StringToken cmd_line_tokenizer(cmd_line);
+    cmd_line_tokenizer.ltrim(std::string(" "));
+    cmd_line = cmd_line_tokenizer.data();
+
+    /* Process the command only when the full command line in ended */
+    if (!cmd_line.empty()) {
+      VTR_LOG("\nCommand line to execute: %s\n", cmd_line.c_str());
+      int status = execute_command(cmd_line.c_str(), context);
+      /* Empty the line ready to start a new line */
+      cmd_line.clear();
+
+      /* Check the execution status of the command, if fatal error happened, we should abort immediately */
+      if (CMD_EXEC_FATAL_ERROR == status) {
+        VTR_LOG("Fatal error occurred!\nAbort and enter interactive mode\n");
+        break;
+      }
     }
   }
   fp.close();
+
+  /* Return to interactive mode, stay tuned */
+  run_interactive_mode(context, true); 
 }
 
 template <class T>
@@ -296,19 +365,11 @@ void Shell<T>::print_commands() const {
     /* Print the class name */
     VTR_LOG("%s:\n", command_class_names_[cmd_class].c_str());
 
-    size_t cnt = 0;
     for (const ShellCommandId& cmd : commands_by_classes_[cmd_class]) {
       /* Print the command names in this class
        * but limited4 command per line for a clean layout
        */
-      VTR_LOG("%s", commands_[cmd].name().c_str());
-      cnt++;
-      if (4 == cnt) {
-        VTR_LOG("\n");
-        cnt = 0;
-      } else {
-        VTR_LOG("\t");
-      } 
+      VTR_LOG("\t%s\n", commands_[cmd].name().c_str());
     }
 
     /* Put a new line in the end as a splitter */
@@ -321,16 +382,49 @@ void Shell<T>::print_commands() const {
 
 template <class T>
 void Shell<T>::exit() const {
+  /* Check all the command status, if we see fatal errors or minor errors, we drop an error code */
+  int exit_code = 0;
+  for (const int& status : command_status_) {
+    if ( (status == CMD_EXEC_FATAL_ERROR)
+      || (status == CMD_EXEC_MINOR_ERROR) ) {
+      exit_code = 1;
+      break;
+    }
+  } 
+
+  /* Show error message if we detect any errors */
+  int num_err = 0;
+  if (0 != exit_code) {
+    VTR_LOG("\n");
+    for (const ShellCommandId& cmd : commands()) {
+      if (command_status_[cmd] == CMD_EXEC_FATAL_ERROR) {
+        VTR_LOG_ERROR("Command '%s' execution has fatal errors\n",
+                      commands_[cmd].name().c_str());
+        num_err++;
+      }
+        
+      if (command_status_[cmd] == CMD_EXEC_MINOR_ERROR) {
+        VTR_LOG_ERROR("Command '%s' execution has minor errors\n",
+                      commands_[cmd].name().c_str());
+        num_err++;
+      }
+    }
+  }
+
+  VTR_LOG("\nFinish execution with %d errors\n",
+            num_err);
+
   VTR_LOG("\nThank you for using %s!\n",
           name().c_str());
-  std::exit(0);
+
+  std::exit(exit_code);
 }
 
 /************************************************************************
  * Private executors
  ***********************************************************************/
 template <class T>
-void Shell<T>::execute_command(const char* cmd_line,
+int Shell<T>::execute_command(const char* cmd_line,
                                T& common_context) {
   /* Tokenize the line */
   openfpga::StringToken tokenizer(cmd_line);  
@@ -341,10 +435,20 @@ void Shell<T>::execute_command(const char* cmd_line,
   if (ShellCommandId::INVALID() == cmd_id) {
     VTR_LOG("Try to call a command '%s' which is not defined!\n",
             tokens[0].c_str());
-    return;
+    return CMD_EXEC_FATAL_ERROR;
   }
 
-  /* TODO: Check the dependency graph to see if all the prequistics have been met */
+  /* Check the dependency graph to see if all the prequistics have been met */
+  for (const ShellCommandId& dep_cmd : command_dependencies_[cmd_id]) {
+    if ( (CMD_EXEC_NONE == command_status_[dep_cmd])
+      || (CMD_EXEC_FATAL_ERROR == command_status_[dep_cmd]) ) {
+      VTR_LOG("Command '%s' is required to be executed before command '%s'!\n",
+              commands_[dep_cmd].name().c_str(), commands_[cmd_id].name().c_str());
+      /* Echo the command help desk */
+      print_command_options(commands_[cmd_id]);
+      return CMD_EXEC_FATAL_ERROR;
+    } 
+  }
 
   /* Find the command! Parse the options 
    * Note:
@@ -357,45 +461,66 @@ void Shell<T>::execute_command(const char* cmd_line,
       argv[itok] = (char*)malloc((tokens[itok].length() + 1) * sizeof(char));
       strcpy(argv[itok], tokens[itok].c_str());
     }
-    /* Execute the marco function */
-    command_macro_execute_functions_[cmd_id](tokens.size(), (const char**)argv);
+    /* Execute the marco function and record the execution status */
+    command_status_[cmd_id] = command_macro_execute_functions_[cmd_id](tokens.size(), argv);
     /* Free the argv */
     for (size_t itok = 0; itok < tokens.size(); ++itok) {
       free(argv[itok]);
     }
     free(argv);
+
     /* Finish for macro command, return */
-    return;
+    return command_status_[cmd_id];
   }
  
+  /* Reset the command parse results to initial status 
+   * Avoid conflict when calling the same command in the second time 
+   */
+  command_contexts_[cmd_id].reset();
   if (false == parse_command(tokens, commands_[cmd_id], command_contexts_[cmd_id])) {
     /* Echo the command */
     print_command_options(commands_[cmd_id]);
-    return;
+    return CMD_EXEC_FATAL_ERROR;
   }
-    
+ 
   /* Parse succeed. Let user to confirm selected options */ 
   print_command_context(commands_[cmd_id], command_contexts_[cmd_id]);
-  
+
   /* Execute the command depending on the type of function ! */ 
   switch (command_execute_function_types_[cmd_id]) {
+  case CONST_STANDARD:
+    command_status_[cmd_id] = command_const_execute_functions_[cmd_id](common_context, commands_[cmd_id], command_contexts_[cmd_id]);
+    break;
   case STANDARD:
-    command_standard_execute_functions_[cmd_id](common_context, commands_[cmd_id], command_contexts_[cmd_id]);
+    command_status_[cmd_id] = command_standard_execute_functions_[cmd_id](common_context, commands_[cmd_id], command_contexts_[cmd_id]);
+    break;
+  case CONST_SHORT:
+    command_status_[cmd_id] = command_short_const_execute_functions_[cmd_id](common_context);
     break;
   case SHORT:
-    command_short_execute_functions_[cmd_id](common_context);
+    command_status_[cmd_id] = command_short_execute_functions_[cmd_id](common_context);
     break;
   case BUILTIN:
     command_builtin_execute_functions_[cmd_id]();
+    /* Built-in execution is always correct */
+    command_status_[cmd_id] = CMD_EXEC_SUCCESS; 
     break;
   /* MACRO should be executed eariler in this function. It should not appear here */
   default:
     /* This is not allowed! Error out */
-    VTR_LOG("Invalid type of execute function for command '%s'!\n",
-            commands_[cmd_id].name().c_str());
+    VTR_LOG_ERROR("Invalid type of execute function for command '%s'!\n",
+                  commands_[cmd_id].name().c_str());
     /* Exit the shell using the exit() function inside this class! */
-    exit();
+    return CMD_EXEC_FATAL_ERROR;
   }
+
+  /* Forbid users to return the status CMD_EXEC_NONE */
+  if (CMD_EXEC_NONE == command_status_[cmd_id]) {
+    VTR_LOG_ERROR("It is illegal to return never-executed status for an executed command!\n");
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  return command_status_[cmd_id];
 }
 
 /************************************************************************

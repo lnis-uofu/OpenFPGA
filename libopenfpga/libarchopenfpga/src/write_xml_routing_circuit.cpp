@@ -39,6 +39,29 @@ void write_xml_routing_component_circuit(std::fstream& fp,
 }
 
 /********************************************************************
+ * Write switch circuit model definition in XML format
+ *******************************************************************/
+static 
+void write_xml_direct_component_circuit(std::fstream& fp,
+                                         const char* fname,
+                                         const std::string& direct_tag_name, 
+                                         const CircuitLibrary& circuit_lib,
+                                         const ArchDirect& arch_direct,
+                                         const ArchDirectId& direct_id) {
+  /* Validate the file stream */
+  openfpga::check_file_stream(fname, fp);
+
+  /* Iterate over the mapping */
+  fp << "\t\t" << "<" << direct_tag_name;
+  write_xml_attribute(fp, "name", arch_direct.name(direct_id).c_str()); 
+  write_xml_attribute(fp, "circuit_model_name", circuit_lib.model_name(arch_direct.circuit_model(direct_id)).c_str()); 
+  write_xml_attribute(fp, "type", DIRECT_TYPE_STRING[arch_direct.type(direct_id)]); 
+  write_xml_attribute(fp, "x_dir", DIRECT_DIRECTION_STRING[arch_direct.x_dir(direct_id)]); 
+  write_xml_attribute(fp, "y_dir", DIRECT_DIRECTION_STRING[arch_direct.y_dir(direct_id)]); 
+  fp << "/>" << "\n";
+}
+
+/********************************************************************
  * Write Connection block circuit models in XML format
  *******************************************************************/
 void write_xml_cb_switch_circuit(std::fstream& fp,
@@ -104,9 +127,9 @@ void write_xml_routing_segment_circuit(std::fstream& fp,
 void write_xml_direct_circuit(std::fstream& fp,
                               const char* fname,
                               const CircuitLibrary& circuit_lib,
-                              const std::map<std::string, CircuitModelId>& direct2circuit) {
+                              const ArchDirect& arch_direct) {
   /* If the direct2circuit is empty, we do not output XML */
-  if (direct2circuit.empty()) {
+  if (0 == arch_direct.directs().size()) {
     return;
   }
 
@@ -117,7 +140,9 @@ void write_xml_direct_circuit(std::fstream& fp,
   fp << "\t" << "<direct_connection>" << "\n";
 
   /* Write each direct connection circuit definition */ 
-  write_xml_routing_component_circuit(fp, fname, std::string("direct"), circuit_lib, direct2circuit);
+  for (const ArchDirectId& direct_id : arch_direct.directs()) {
+    write_xml_direct_component_circuit(fp, fname, std::string("direct"), circuit_lib, arch_direct, direct_id);
+  }
 
   /* Finish writing the root node */
   fp << "\t" << "</direct_connection>" << "\n";

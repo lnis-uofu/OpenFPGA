@@ -3,6 +3,7 @@
 #include <vector>
 #include "clustered_netlist.h"
 #include "vtr_vector.h"
+#include "rr_graph_obj.h"
 
 /* Used by the heap as its fundamental data structure.
  * Each heap element represents a partial route.
@@ -37,14 +38,21 @@ struct t_heap {
     float backward_path_cost = 0.;
     float R_upstream = 0.;
 
-    int index = OPEN;
+    RRNodeId index = RRNodeId::INVALID();
 
     struct t_prev {
-        int node;
-        int edge;
+        RRNodeId node;
+        RREdgeId edge;
     };
 
-    union {
+    /* Xifan Tang - type union was used here, 
+     * but it causes an error in vtr_memory.h
+     * when allocating the data structure.
+     * I change to struct here.
+     * TODO: investigate the source of errors
+     * and see if this will cause memory overhead
+     */
+    struct {
         t_heap* next;
         t_prev prev;
     } u;
@@ -59,22 +67,22 @@ t_bb load_net_route_bb(ClusterNetId net_id, int bb_factor);
 void pathfinder_update_path_cost(t_trace* route_segment_start,
                                  int add_or_sub,
                                  float pres_fac);
-void pathfinder_update_single_node_cost(int inode, int add_or_sub, float pres_fac);
+void pathfinder_update_single_node_cost(const RRNodeId& inode, int add_or_sub, float pres_fac);
 
 void pathfinder_update_cost(float pres_fac, float acc_fac);
 
 t_trace* update_traceback(t_heap* hptr, ClusterNetId net_id);
 
-void reset_path_costs(const std::vector<int>& visited_rr_nodes);
+void reset_path_costs(const std::vector<RRNodeId>& visited_rr_nodes);
 
-float get_rr_cong_cost(int inode);
+float get_rr_cong_cost(const RRNodeId& inode);
 
 void mark_ends(ClusterNetId net_id);
 void mark_remaining_ends(const std::vector<int>& remaining_sinks);
 
 void add_to_heap(t_heap* hptr);
 t_heap* alloc_heap_data();
-void node_to_heap(int inode, float cost, int prev_node, int prev_edge, float backward_path_cost, float R_upstream);
+void node_to_heap(const RRNodeId& inode, float cost, const RRNodeId& prev_node, const RREdgeId& prev_edge, float backward_path_cost, float R_upstream);
 
 bool is_empty_heap();
 
@@ -82,14 +90,14 @@ void free_traceback(ClusterNetId net_id);
 void drop_traceback_tail(ClusterNetId net_id);
 void free_traceback(t_trace* tptr);
 
-void add_to_mod_list(int inode, std::vector<int>& modified_rr_node_inf);
+void add_to_mod_list(const RRNodeId& inode, std::vector<RRNodeId>& modified_rr_node_inf);
 
 namespace heap_ {
 void build_heap();
 void sift_down(size_t hole);
 void sift_up(size_t tail, t_heap* const hptr);
 void push_back(t_heap* const hptr);
-void push_back_node(int inode, float total_cost, int prev_node, int prev_edge, float backward_path_cost, float R_upstream);
+void push_back_node(const RRNodeId& inode, float total_cost, const RRNodeId& prev_node, const RREdgeId& prev_edge, float backward_path_cost, float R_upstream);
 bool is_valid();
 void pop_heap();
 void print_heap();
@@ -102,7 +110,7 @@ void empty_heap();
 
 void free_heap_data(t_heap* hptr);
 
-void invalidate_heap_entries(int sink_node, int ipin_node);
+void invalidate_heap_entries(const RRNodeId& sink_node, const RRNodeId& ipin_node);
 
 void init_route_structs(int bb_factor);
 

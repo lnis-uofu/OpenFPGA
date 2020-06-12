@@ -215,7 +215,7 @@ static void get_channel_occupancy_stats() {
 /* Loads the two arrays passed in with the total occupancy at each of the  *
  * channel segments in the FPGA.                                           */
 static void load_channel_occupancies(vtr::Matrix<int>& chanx_occ, vtr::Matrix<int>& chany_occ) {
-    int i, j, inode;
+    int i, j;
     t_trace* tptr;
     t_rr_type rr_type;
 
@@ -235,8 +235,8 @@ static void load_channel_occupancies(vtr::Matrix<int>& chanx_occ, vtr::Matrix<in
 
         tptr = route_ctx.trace[net_id].head;
         while (tptr != nullptr) {
-            inode = tptr->index;
-            rr_type = device_ctx.rr_nodes[inode].type();
+            const RRNodeId& inode = tptr->index;
+            rr_type = device_ctx.rr_graph.node_type(inode);
 
             if (rr_type == SINK) {
                 tptr = tptr->next; /* Skip next segment. */
@@ -245,14 +245,14 @@ static void load_channel_occupancies(vtr::Matrix<int>& chanx_occ, vtr::Matrix<in
             }
 
             else if (rr_type == CHANX) {
-                j = device_ctx.rr_nodes[inode].ylow();
-                for (i = device_ctx.rr_nodes[inode].xlow(); i <= device_ctx.rr_nodes[inode].xhigh(); i++)
+                j = device_ctx.rr_graph.node_ylow(inode);
+                for (i = device_ctx.rr_graph.node_xlow(inode); i <= device_ctx.rr_graph.node_xhigh(inode); i++)
                     chanx_occ[i][j]++;
             }
 
             else if (rr_type == CHANY) {
-                i = device_ctx.rr_nodes[inode].xlow();
-                for (j = device_ctx.rr_nodes[inode].ylow(); j <= device_ctx.rr_nodes[inode].yhigh(); j++)
+                i = device_ctx.rr_graph.node_xlow(inode);
+                for (j = device_ctx.rr_graph.node_ylow(inode); j <= device_ctx.rr_graph.node_yhigh(inode); j++)
                     chany_occ[i][j]++;
             }
 
@@ -268,7 +268,6 @@ void get_num_bends_and_length(ClusterNetId inet, int* bends_ptr, int* len_ptr, i
     auto& device_ctx = g_vpr_ctx.device();
 
     t_trace *tptr, *prevptr;
-    int inode;
     t_rr_type curr_type, prev_type;
     int bends, length, segments;
 
@@ -281,27 +280,27 @@ void get_num_bends_and_length(ClusterNetId inet, int* bends_ptr, int* len_ptr, i
         VPR_FATAL_ERROR(VPR_ERROR_OTHER,
                         "in get_num_bends_and_length: net #%lu has no traceback.\n", size_t(inet));
     }
-    inode = prevptr->index;
-    prev_type = device_ctx.rr_nodes[inode].type();
+    RRNodeId inode = prevptr->index;
+    prev_type = device_ctx.rr_graph.node_type(inode);
 
     tptr = prevptr->next;
 
     while (tptr != nullptr) {
         inode = tptr->index;
-        curr_type = device_ctx.rr_nodes[inode].type();
+        curr_type = device_ctx.rr_graph.node_type(inode);
 
         if (curr_type == SINK) { /* Starting a new segment */
             tptr = tptr->next;   /* Link to existing path - don't add to len. */
             if (tptr == nullptr)
                 break;
 
-            curr_type = device_ctx.rr_nodes[tptr->index].type();
+            curr_type = device_ctx.rr_graph.node_type(tptr->index);
         }
 
         else if (curr_type == CHANX || curr_type == CHANY) {
             segments++;
-            length += 1 + device_ctx.rr_nodes[inode].xhigh() - device_ctx.rr_nodes[inode].xlow()
-                      + device_ctx.rr_nodes[inode].yhigh() - device_ctx.rr_nodes[inode].ylow();
+            length += 1 + device_ctx.rr_graph.node_xhigh(inode) - device_ctx.rr_graph.node_xlow(inode)
+                      + device_ctx.rr_graph.node_yhigh(inode) - device_ctx.rr_graph.node_ylow(inode);
 
             if (curr_type != prev_type && (prev_type == CHANX || prev_type == CHANY))
                 bends++;

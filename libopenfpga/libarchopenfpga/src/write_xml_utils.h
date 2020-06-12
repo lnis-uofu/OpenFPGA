@@ -20,6 +20,10 @@ void write_xml_attribute(std::fstream& fp,
 
 void write_xml_attribute(std::fstream& fp, 
                          const char* attr,
+                         const int& value);
+
+void write_xml_attribute(std::fstream& fp, 
+                         const char* attr,
                          const float& value);
 
 #endif

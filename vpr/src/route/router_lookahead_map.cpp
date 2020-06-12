@@ -25,6 +25,7 @@
 #include "vtr_log.h"
 #include "vtr_assert.h"
 #include "vtr_time.h"
+#include "rr_graph_obj_util.h"
 #include "router_lookahead_map.h"
 
 /* the cost map is computed by running a Dijkstra search from channel segment rr nodes at the specified reference coordinate */
@@ -131,7 +132,7 @@ class Expansion_Cost_Entry {
 /* a class that represents an entry in the Dijkstra expansion priority queue */
 class PQ_Entry {
   public:
-    int rr_node_ind; //index in device_ctx.rr_nodes that this entry represents
+    RRNodeId rr_node_ind; //index in device_ctx.rr_nodes that this entry represents
     float cost;      //the cost of the path to get to this node
 
     /* store backward delay, R and congestion info */
@@ -139,7 +140,7 @@ class PQ_Entry {
     float R_upstream;
     float congestion_upstream;
 
-    PQ_Entry(int set_rr_node_ind, int /*switch_ind*/, float parent_delay, float parent_R_upstream, float parent_congestion_upstream, bool starting_node) {
+    PQ_Entry(const RRNodeId& set_rr_node_ind, int /*switch_ind*/, float parent_delay, float parent_R_upstream, float parent_congestion_upstream, bool starting_node) {
         this->rr_node_ind = set_rr_node_ind;
 
         auto& device_ctx = g_vpr_ctx.device();
@@ -147,7 +148,7 @@ class PQ_Entry {
         this->congestion_upstream = parent_congestion_upstream;
         this->R_upstream = parent_R_upstream;
         if (!starting_node) {
-            int cost_index = device_ctx.rr_nodes[set_rr_node_ind].cost_index();
+            int cost_index = device_ctx.rr_graph.node_cost_index(set_rr_node_ind);
             //this->delay += g_rr_nodes[set_rr_node_ind].C() * (g_rr_switch_inf[switch_ind].R + 0.5*g_rr_nodes[set_rr_node_ind].R()) +
             //              g_rr_switch_inf[switch_ind].Tdel;
 
@@ -191,12 +192,12 @@ t_cost_map f_cost_map;
 static void alloc_cost_map(int num_segments);
 static void free_cost_map();
 /* returns index of a node from which to start routing */
-static int get_start_node_ind(int start_x, int start_y, int target_x, int target_y, t_rr_type rr_type, int seg_index, int track_offset);
+static RRNodeId get_start_node_ind(int start_x, int start_y, int target_x, int target_y, t_rr_type rr_type, int seg_index, int track_offset);
 /* runs Dijkstra's algorithm from specified node until all nodes have been visited. Each time a pin is visited, the delay/congestion information
  * to that pin is stored is added to an entry in the routing_cost_map */
-static void run_dijkstra(int start_node_ind, int start_x, int start_y, t_routing_cost_map& routing_cost_map);
+static void run_dijkstra(const RRNodeId& start_node_ind, int start_x, int start_y, t_routing_cost_map& routing_cost_map);
 /* iterates over the children of the specified node and selectively pushes them onto the priority queue */
-static void expand_dijkstra_neighbours(PQ_Entry parent_entry, std::vector<float>& node_visited_costs, std::vector<bool>& node_expanded, std::priority_queue<PQ_Entry>& pq);
+static void expand_dijkstra_neighbours(PQ_Entry parent_entry, vtr::vector<RRNodeId, float>& node_visited_costs, vtr::vector<RRNodeId, bool>& node_expanded, std::priority_queue<PQ_Entry>& pq);
 /* sets the lookahead cost map entries based on representative cost entries from routing_cost_map */
 static void set_lookahead_map_costs(int segment_index, e_rr_type chan_type, t_routing_cost_map& routing_cost_map);
 /* fills in missing lookahead map entries by copying the cost of the closest valid entry */
@@ -204,19 +205,18 @@ static void fill_in_missing_lookahead_entries(int segment_index, e_rr_type chan_
 /* returns a cost entry in the f_cost_map that is near the specified coordinates (and preferably towards (0,0)) */
 static Cost_Entry get_nearby_cost_entry(int x, int y, int segment_index, int chan_index);
 /* returns the absolute delta_x and delta_y offset required to reach to_node from from_node */
-static void get_xy_deltas(int from_node_ind, int to_node_ind, int* delta_x, int* delta_y);
+static void get_xy_deltas(const RRNodeId& from_node_ind, const RRNodeId& to_node_ind, int* delta_x, int* delta_y);
 
 static void print_cost_map();
 
 /******** Function Definitions ********/
 /* queries the lookahead_map (should have been computed prior to routing) to get the expected cost
  * from the specified source to the specified target */
-float get_lookahead_map_cost(int from_node_ind, int to_node_ind, float criticality_fac) {
+float get_lookahead_map_cost(const RRNodeId& from_node_ind, const RRNodeId& to_node_ind, float criticality_fac) {
     auto& device_ctx = g_vpr_ctx.device();
-    auto& from_node = device_ctx.rr_nodes[from_node_ind];
 
-    e_rr_type from_type = from_node.type();
-    int from_cost_index = from_node.cost_index();
+    e_rr_type from_type = device_ctx.rr_graph.node_type(from_node_ind);
+    int from_cost_index = device_ctx.rr_graph.node_cost_index(from_node_ind);
     int from_seg_index = device_ctx.rr_indexed_data[from_cost_index].seg_index;
 
     VTR_ASSERT(from_seg_index >= 0);
@@ -262,11 +262,11 @@ void compute_router_lookahead(int num_segments) {
             for (int ref_inc = 0; ref_inc < 3; ref_inc++) {
                 for (int track_offset = 0; track_offset < MAX_TRACK_OFFSET; track_offset += 2) {
                     /* get the rr node index from which to start routing */
-                    int start_node_ind = get_start_node_ind(REF_X + ref_inc, REF_Y + ref_inc,
+                    RRNodeId start_node_ind = get_start_node_ind(REF_X + ref_inc, REF_Y + ref_inc,
                                                             device_ctx.grid.width() - 2, device_ctx.grid.height() - 2, //non-corner upper right
                                                             chan_type, iseg, track_offset);
 
-                    if (start_node_ind == UNDEFINED) {
+                    if (start_node_ind == RRNodeId::INVALID()) {
                         continue;
                     }
 
@@ -289,8 +289,8 @@ void compute_router_lookahead(int num_segments) {
 }
 
 /* returns index of a node from which to start routing */
-static int get_start_node_ind(int start_x, int start_y, int target_x, int target_y, t_rr_type rr_type, int seg_index, int track_offset) {
-    int result = UNDEFINED;
+static RRNodeId get_start_node_ind(int start_x, int start_y, int target_x, int target_y, t_rr_type rr_type, int seg_index, int track_offset) {
+    RRNodeId result = RRNodeId::INVALID();
 
     if (rr_type != CHANX && rr_type != CHANY) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "Must start lookahead routing from CHANX or CHANY node\n");
@@ -306,14 +306,18 @@ static int get_start_node_ind(int start_x, int start_y, int target_x, int target
 
     VTR_ASSERT(rr_type == CHANX || rr_type == CHANY);
 
-    const std::vector<int>& channel_node_list = device_ctx.rr_node_indices[rr_type][start_x][start_y][0];
+    std::vector<RRNodeId> channel_node_list;
+    /* As rr_node_indices is now an internal data of RRGraph object, 
+     * we can get the number of tracks for a 
+     * routing channel and then get the node one by one 
+     */
+    channel_node_list = find_rr_graph_chan_nodes(device_ctx.rr_graph, start_x, start_y, rr_type);
 
     /* find first node in channel that has specified segment index and goes in the desired direction */
-    for (unsigned itrack = 0; itrack < channel_node_list.size(); itrack++) {
-        int node_ind = channel_node_list[itrack];
+    for (const RRNodeId& node_ind : channel_node_list) {
 
-        e_direction node_direction = device_ctx.rr_nodes[node_ind].direction();
-        int node_cost_ind = device_ctx.rr_nodes[node_ind].cost_index();
+        e_direction node_direction = device_ctx.rr_graph.node_direction(node_ind);
+        int node_cost_ind = device_ctx.rr_graph.node_cost_index(node_ind);
         int node_seg_ind = device_ctx.rr_indexed_data[node_cost_ind].seg_index;
 
         if ((node_direction == direction || node_direction == BI_DIRECTION) && node_seg_ind == seg_index) {
@@ -343,14 +347,14 @@ static void free_cost_map() {
 
 /* runs Dijkstra's algorithm from specified node until all nodes have been visited. Each time a pin is visited, the delay/congestion information
  * to that pin is stored is added to an entry in the routing_cost_map */
-static void run_dijkstra(int start_node_ind, int start_x, int start_y, t_routing_cost_map& routing_cost_map) {
+static void run_dijkstra(const RRNodeId& start_node_ind, int start_x, int start_y, t_routing_cost_map& routing_cost_map) {
     auto& device_ctx = g_vpr_ctx.device();
 
     /* a list of boolean flags (one for each rr node) to figure out if a certain node has already been expanded */
-    std::vector<bool> node_expanded(device_ctx.rr_nodes.size(), false);
+    vtr::vector<RRNodeId, bool> node_expanded(device_ctx.rr_graph.nodes().size(), false);
     /* for each node keep a list of the cost with which that node has been visited (used to determine whether to push
      * a candidate node onto the expansion queue */
-    std::vector<float> node_visited_costs(device_ctx.rr_nodes.size(), -1.0);
+    vtr::vector<RRNodeId, float> node_visited_costs(device_ctx.rr_graph.nodes().size(), -1.0);
     /* a priority queue for expansion */
     std::priority_queue<PQ_Entry> pq;
 
@@ -364,7 +368,7 @@ static void run_dijkstra(int start_node_ind, int start_x, int start_y, t_routing
         PQ_Entry current = pq.top();
         pq.pop();
 
-        int node_ind = current.rr_node_ind;
+        RRNodeId node_ind = current.rr_node_ind;
 
         /* check that we haven't already expanded from this node */
         if (node_expanded[node_ind]) {
@@ -372,9 +376,9 @@ static void run_dijkstra(int start_node_ind, int start_x, int start_y, t_routing
         }
 
         /* if this node is an ipin record its congestion/delay in the routing_cost_map */
-        if (device_ctx.rr_nodes[node_ind].type() == IPIN) {
-            int ipin_x = device_ctx.rr_nodes[node_ind].xlow();
-            int ipin_y = device_ctx.rr_nodes[node_ind].ylow();
+        if (device_ctx.rr_graph.node_type(node_ind) == IPIN) {
+            int ipin_x = device_ctx.rr_graph.node_xlow(node_ind);
+            int ipin_y = device_ctx.rr_graph.node_ylow(node_ind);
 
             if (ipin_x >= start_x && ipin_y >= start_y) {
                 int delta_x, delta_y;
@@ -390,16 +394,14 @@ static void run_dijkstra(int start_node_ind, int start_x, int start_y, t_routing
 }
 
 /* iterates over the children of the specified node and selectively pushes them onto the priority queue */
-static void expand_dijkstra_neighbours(PQ_Entry parent_entry, std::vector<float>& node_visited_costs, std::vector<bool>& node_expanded, std::priority_queue<PQ_Entry>& pq) {
+static void expand_dijkstra_neighbours(PQ_Entry parent_entry, vtr::vector<RRNodeId, float>& node_visited_costs, vtr::vector<RRNodeId, bool>& node_expanded, std::priority_queue<PQ_Entry>& pq) {
     auto& device_ctx = g_vpr_ctx.device();
 
-    int parent_ind = parent_entry.rr_node_ind;
+    RRNodeId parent_ind = parent_entry.rr_node_ind;
 
-    auto& parent_node = device_ctx.rr_nodes[parent_ind];
-
-    for (t_edge_size iedge = 0; iedge < parent_node.num_edges(); iedge++) {
-        int child_node_ind = parent_node.edge_sink_node(iedge);
-        int switch_ind = parent_node.edge_switch(iedge);
+    for (const RREdgeId& iedge : device_ctx.rr_graph.node_out_edges(parent_ind)) {
+        RRNodeId child_node_ind = device_ctx.rr_graph.edge_sink_node(iedge);
+        int switch_ind = (int)size_t(device_ctx.rr_graph.edge_switch(iedge));
 
         /* skip this child if it has already been expanded from */
         if (node_expanded[child_node_ind]) {
@@ -595,25 +597,22 @@ Cost_Entry Expansion_Cost_Entry::get_median_entry() {
 }
 
 /* returns the absolute delta_x and delta_y offset required to reach to_node from from_node */
-static void get_xy_deltas(int from_node_ind, int to_node_ind, int* delta_x, int* delta_y) {
+static void get_xy_deltas(const RRNodeId& from_node_ind, const RRNodeId& to_node_ind, int* delta_x, int* delta_y) {
     auto& device_ctx = g_vpr_ctx.device();
-
-    auto& from = device_ctx.rr_nodes[from_node_ind];
-    auto& to = device_ctx.rr_nodes[to_node_ind];
 
     /* get chan/seg coordinates of the from/to nodes. seg coordinate is along the wire,
      * chan coordinate is orthogonal to the wire */
-    int from_seg_low = from.xlow();
-    int from_seg_high = from.xhigh();
-    int from_chan = from.ylow();
-    int to_seg = to.xlow();
-    int to_chan = to.ylow();
-    if (from.type() == CHANY) {
-        from_seg_low = from.ylow();
-        from_seg_high = from.yhigh();
-        from_chan = from.xlow();
-        to_seg = to.ylow();
-        to_chan = to.xlow();
+    int from_seg_low = device_ctx.rr_graph.node_xlow(from_node_ind);
+    int from_seg_high = device_ctx.rr_graph.node_xhigh(from_node_ind);
+    int from_chan = device_ctx.rr_graph.node_ylow(from_node_ind);
+    int to_seg = device_ctx.rr_graph.node_xlow(to_node_ind);
+    int to_chan = device_ctx.rr_graph.node_ylow(to_node_ind);
+    if (device_ctx.rr_graph.node_type(from_node_ind) == CHANY) {
+        from_seg_low = device_ctx.rr_graph.node_ylow(from_node_ind);
+        from_seg_high = device_ctx.rr_graph.node_yhigh(from_node_ind);
+        from_chan = device_ctx.rr_graph.node_xlow(from_node_ind);
+        to_seg = device_ctx.rr_graph.node_ylow(to_node_ind);
+        to_chan = device_ctx.rr_graph.node_xlow(to_node_ind);
     }
 
     /* now we want to count the minimum number of *channel segments* between the from and to nodes */
@@ -649,13 +648,13 @@ static void get_xy_deltas(int from_node_ind, int to_node_ind, int* delta_x, int*
 
     /* account for wire direction. lookahead map was computed by looking up and to the right starting at INC wires. for targets
      * that are opposite of the wire direction, let's add 1 to delta_seg */
-    if ((to_seg < from_seg_low && from.direction() == INC_DIRECTION) || (to_seg > from_seg_high && from.direction() == DEC_DIRECTION)) {
+    if ((to_seg < from_seg_low && device_ctx.rr_graph.node_direction(from_node_ind) == INC_DIRECTION) || (to_seg > from_seg_high && device_ctx.rr_graph.node_direction(from_node_ind) == DEC_DIRECTION)) {
         delta_seg++;
     }
 
     *delta_x = delta_seg;
     *delta_y = delta_chan;
-    if (from.type() == CHANY) {
+    if (device_ctx.rr_graph.node_type(from_node_ind) == CHANY) {
         *delta_x = delta_chan;
         *delta_y = delta_seg;
     }

@@ -275,6 +275,7 @@ class CircuitLibrary {
     std::string port_lib_name(const CircuitPortId& circuit_port_id) const;
     std::string port_inv_prefix(const CircuitPortId& circuit_port_id) const;
     size_t port_default_value(const CircuitPortId& circuit_port_id) const;
+    bool port_is_io(const CircuitPortId& circuit_port_id) const;
     bool port_is_mode_select(const CircuitPortId& circuit_port_id) const;
     bool port_is_global(const CircuitPortId& circuit_port_id) const;
     bool port_is_reset(const CircuitPortId& circuit_port_id) const;
@@ -346,6 +347,8 @@ class CircuitLibrary {
                              const std::string& inv_prefix);
     void set_port_default_value(const CircuitPortId& circuit_port_id, 
                                 const size_t& default_val);
+    void set_port_is_io(const CircuitPortId& circuit_port_id, 
+                        const bool& is_io);
     void set_port_is_mode_select(const CircuitPortId& circuit_port_id, 
                                  const bool& is_mode_select);
     void set_port_is_global(const CircuitPortId& circuit_port_id, 
@@ -529,6 +532,7 @@ class CircuitLibrary {
     vtr::vector<CircuitPortId, std::string> port_lib_names_;
     vtr::vector<CircuitPortId, std::string> port_inv_prefix_;
     vtr::vector<CircuitPortId, size_t> port_default_values_;
+    vtr::vector<CircuitPortId, bool> port_is_io_;
     vtr::vector<CircuitPortId, bool> port_is_mode_select_;
     vtr::vector<CircuitPortId, bool> port_is_global_;
     vtr::vector<CircuitPortId, bool> port_is_reset_;

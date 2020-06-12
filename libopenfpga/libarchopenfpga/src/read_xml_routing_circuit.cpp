@@ -186,19 +186,52 @@ std::map<std::string, CircuitModelId> read_xml_routing_segment_circuit(pugi::xml
 }
 
 /********************************************************************
+ * Convert string to the enumerate of direct type
+ *******************************************************************/
+static 
+e_direct_type string_to_direct_type(const std::string& type_string) {
+  if (std::string("column") == type_string) {
+    return INTER_COLUMN;
+  }
+
+  if (std::string("row") == type_string) {
+    return INTER_ROW;
+  }
+
+  return NUM_DIRECT_TYPES;
+} 
+
+/********************************************************************
+ * Convert string to the enumerate of direct direction type
+ *******************************************************************/
+static 
+e_direct_direction string_to_direct_direction(const std::string& type_string) {
+  if (std::string("positive") == type_string) {
+    return POSITIVE_DIR;
+  }
+
+  if (std::string("negative") == type_string) {
+    return NEGATIVE_DIR;
+  }
+
+  return NUM_DIRECT_DIRECTIONS;
+} 
+
+
+/********************************************************************
  * Parse XML codes about <direct_connection> to an object of name-to-circuit mapping
  * Note: this function should be called AFTER the parsing of circuit library!!!
  *******************************************************************/
-std::map<std::string, CircuitModelId> read_xml_direct_circuit(pugi::xml_node& Node,
-                                                              const pugiutil::loc_data& loc_data,
-                                                              const CircuitLibrary& circuit_lib) {
-  std::map<std::string, CircuitModelId> direct2circuit;
+ArchDirect read_xml_direct_circuit(pugi::xml_node& Node,
+                                   const pugiutil::loc_data& loc_data,
+                                   const CircuitLibrary& circuit_lib) {
+  ArchDirect arch_direct;
 
   /* Parse direct list, this is optional. May not be used */
   pugi::xml_node xml_directs= get_single_child(Node, "direct_connection", loc_data, pugiutil::ReqOpt::OPTIONAL);
   /* Not found, we can return */
   if (!xml_directs) {
-    return direct2circuit;
+    return arch_direct;
   }
 
   /* Iterate over the children under this node,
@@ -219,17 +252,51 @@ std::map<std::string, CircuitModelId> read_xml_direct_circuit(pugi::xml_node& No
                                                              circuit_lib, direct_model_name,
                                                              CIRCUIT_MODEL_WIRE);
   
-    /* Ensure that there is no duplicated seg names defined here */
-    std::map<std::string, CircuitModelId>::const_iterator it = direct2circuit.find(direct_name);
-    if (it != direct2circuit.end()) {
+    /* Add to the Arch direct database */
+    ArchDirectId direct = arch_direct.add_direct(direct_name);
+    if (false == arch_direct.valid_direct_id(direct)) {
       archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_direct),
                      "Direct name '%s' has been defined more than once!\n",
                      direct_name.c_str());
     }
+    arch_direct.set_circuit_model(direct, direct_model);
 
-    /* Pass all the check, we can add it to the map */
-    direct2circuit[direct_name] = direct_model; 
+    /* Add more information*/
+    std::string direct_type_name = get_attribute(xml_direct, "type", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string("none");
+    /* If not defined, we go to the next */
+    if (std::string("none") == direct_type_name) {
+      continue;
+    }
+
+    e_direct_type direct_type = string_to_direct_type(direct_type_name);
+
+    if (NUM_DIRECT_TYPES == direct_type) {
+      archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_direct),
+                     "Direct type '%s' is not support! Acceptable values are [column|row]\n",
+                     direct_type_name.c_str());
+    }
+
+    arch_direct.set_type(direct, direct_type);
+
+    std::string x_dir_name = get_attribute(xml_direct, "x_dir", loc_data).as_string();
+    std::string y_dir_name = get_attribute(xml_direct, "y_dir", loc_data).as_string();
+    e_direct_direction x_dir = string_to_direct_direction(x_dir_name);
+    e_direct_direction y_dir = string_to_direct_direction(y_dir_name);
+
+    if (NUM_DIRECT_DIRECTIONS == x_dir) {
+      archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_direct),
+                     "Direct x-direction '%s' is not support! Acceptable values are [positive|column]\n",
+                     x_dir_name.c_str());
+    }
+
+    if (NUM_DIRECT_DIRECTIONS == y_dir) {
+      archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_direct),
+                     "Direct y-direction '%s' is not support! Acceptable values are [positive|column]\n",
+                     y_dir_name.c_str());
+    }
+
+    arch_direct.set_direction(direct, x_dir, y_dir);
   } 
 
-  return direct2circuit;
+  return arch_direct;
 }

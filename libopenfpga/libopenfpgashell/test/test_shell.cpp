@@ -15,27 +15,31 @@ class ShellContext {
 };
 
 static
-void shell_execute_set(ShellContext& context, 
+int shell_execute_set(ShellContext& context, 
                        const Command& cmd, const CommandContext& cmd_context) {
   CommandOptionId opt_id = cmd.option("value");
   /* Get the value of a in the command context */
   context.a = std::atoi(cmd_context.option_value(cmd, opt_id).c_str());
+
+  return CMD_EXEC_SUCCESS; 
 }
 
 static
-void shell_execute_print(ShellContext& context) {
+int shell_execute_print(ShellContext& context) {
   VTR_LOG("a=%d\n", context.a);
+
+  return CMD_EXEC_SUCCESS; 
 }
 
 static
-int shell_execute_print_macro(int argc, const char** argv) {
+int shell_execute_print_macro(int argc, char** argv) {
   VTR_LOG("Number of arguments: %d\n", argc);
   VTR_LOG("Detailed arguments:\n");
   for (int iarg = 0; iarg < argc; ++iarg) {
     VTR_LOG("\t[%d]: %s\n", iarg, argv[iarg]);
   }
 
-  return 0;
+  return CMD_EXEC_SUCCESS; 
 }
 
 int main(int argc, char** argv) {
@@ -102,11 +106,13 @@ int main(int argc, char** argv) {
 
   /* Create a command of 'print' 
    * This function will print the value of an internal variable of ShellContext 
+   * We set a dependency to this command as it MUST be executed after 'set'
    */
   Command shell_cmd_print("print");
   ShellCommandId shell_cmd_print_id = shell.add_command(shell_cmd_print, "Print the value of internal variable 'a'");
   shell.set_command_class(shell_cmd_print_id, arith_cmd_class);
   shell.set_command_execute_function(shell_cmd_print_id, shell_execute_print);
+  shell.set_command_dependency(shell_cmd_print_id, std::vector<ShellCommandId>(1, shell_cmd_set_id));
 
   /* Create a macro command of 'print_macro' 
    * This function will print the value of an internal variable of ShellContext 
@@ -115,7 +121,6 @@ int main(int argc, char** argv) {
   ShellCommandId shell_cmd_print_macro_id = shell.add_command(shell_cmd_print_macro, "A macro function to print arguments");
   shell.set_command_class(shell_cmd_print_macro_id, arith_cmd_class);
   shell.set_command_execute_function(shell_cmd_print_macro_id, shell_execute_print_macro);
-
 
   /* Add a new class of commands */
   ShellCommandClassId basic_cmd_class = shell.add_command_class("Basic");

@@ -479,7 +479,6 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
   /* Validate the file stream */
   check_file_handler(fp);
 
-
   /* Instantiate register for inputs stimulis */
   print_verilog_comment(fp, std::string("----- Shared inputs -------"));
   for (const t_logical_block& lb : L_logical_blocks) {
