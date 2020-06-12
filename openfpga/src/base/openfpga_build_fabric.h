@@ -18,6 +18,9 @@ namespace openfpga {
 int build_fabric(OpenfpgaContext& openfpga_ctx,
                  const Command& cmd, const CommandContext& cmd_context); 
 
+int write_fabric_hierarchy(const OpenfpgaContext& openfpga_ctx,
+                           const Command& cmd, const CommandContext& cmd_context); 
+
 } /* end namespace openfpga */
 
 #endif

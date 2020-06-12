@@ -54,7 +54,7 @@
         <site pb_type="clb"/>
       </equivalent_sites>
       <input name="I" num_pins="40" equivalent="full"/>
-      <output name="O" num_pins="10" equivalent="instance"/>
+      <output name="O" num_pins="10" equivalent="none"/>
       <clock name="clk" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
       <pinlocations pattern="spread"/>
@@ -197,7 +197,7 @@
 	   -->
     <pb_type name="clb">
       <input name="I" num_pins="40" equivalent="full"/>
-      <output name="O" num_pins="10" equivalent="instance"/>
+      <output name="O" num_pins="10" equivalent="none"/>
       <clock name="clk" num_pins="1"/>
       <!-- Describe basic logic element.  
              Each basic logic element has a 6-LUT that can be optionally registered

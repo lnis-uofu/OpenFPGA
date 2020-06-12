@@ -26,6 +26,9 @@ namespace openfpga {
 std::string generate_instance_name(const std::string& instance_name,
                                    const size_t& instance_id);
 
+std::string generate_instance_wildcard_name(const std::string& instance_name,
+                                            const std::string& wildcard_str);
+
 std::string generate_mux_node_name(const size_t& node_level, 
                                    const bool& add_buffer_postfix);
 
@@ -46,6 +49,12 @@ std::string generate_mux_branch_subckt_name(const CircuitLibrary& circuit_lib,
 
 std::string generate_mux_local_decoder_subckt_name(const size_t& addr_size, 
                                                    const size_t& data_size); 
+
+std::string generate_memory_decoder_subckt_name(const size_t& addr_size, 
+                                                const size_t& data_size);
+
+std::string generate_memory_decoder_with_data_in_subckt_name(const size_t& addr_size, 
+                                                             const size_t& data_size);
 
 std::string generate_segment_wire_subckt_name(const std::string& wire_model_name, 
                                               const size_t& segment_id); 
@@ -162,9 +171,9 @@ std::string generate_configuration_chain_head_name();
 
 std::string generate_configuration_chain_tail_name();
 
-std::string generate_configuration_chain_data_out_name();
+std::string generate_configurable_memory_data_out_name();
 
-std::string generate_configuration_chain_inverted_data_out_name();
+std::string generate_configurable_memory_inverted_data_out_name();
 
 std::string generate_mux_local_decoder_addr_port_name();
 

@@ -25,6 +25,9 @@ std::string find_path_dir_name(const std::string& file_name);
 
 void create_directory(const std::string& dir_path, const bool& recursive = true); 
 
+bool write_space_to_file(std::fstream& fp,
+                         const size_t& num_space);
+
 } /* namespace openfpga ends */
 
 #endif

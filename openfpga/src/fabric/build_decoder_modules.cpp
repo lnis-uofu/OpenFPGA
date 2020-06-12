@@ -9,6 +9,7 @@
 #include "vtr_assert.h"
 #include "vtr_time.h"
 
+#include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 #include "decoder_library_utils.h"
 #include "module_manager_utils.h"
@@ -17,6 +18,174 @@
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+/***************************************************************************************
+ * Create a module for a decoder with a given output size
+ *
+ *                     Data input
+ *                   | | ... | 
+ *                   v v     v
+ *                 +-----------+
+ *                /             \
+ *      enable-->/    Decoder    \
+ *              +-----------------+
+ *                | | | ... | | |
+ *                v v v     v v v
+ *                  Data Outputs
+ *               
+ *  The outputs are assumes to be one-hot codes (at most only one '1' exist)
+ *  Considering this fact, there are only num_of_outputs conditions to be encoded.
+ *  Therefore, the number of inputs is ceil(log(num_of_outputs)/log(2))
+ ***************************************************************************************/
+ModuleId build_frame_memory_decoder_module(ModuleManager& module_manager,
+                                           const DecoderLibrary& decoder_lib,
+                                           const DecoderId& decoder) {
+  /* Get the number of inputs */
+  size_t addr_size = decoder_lib.addr_size(decoder);
+  size_t data_size = decoder_lib.data_size(decoder);
+
+  /* Create a name for the local encoder */
+  std::string module_name = generate_memory_decoder_subckt_name(addr_size, data_size);
+
+  /* Create a Verilog Module based on the circuit model, and add to module manager */
+  ModuleId module_id = module_manager.add_module(module_name); 
+  VTR_ASSERT(true == module_manager.valid_module_id(module_id));
+
+  /* Add enable port */
+  BasicPort en_port(std::string(DECODER_ENABLE_PORT_NAME), 1);
+  module_manager.add_port(module_id, en_port, ModuleManager::MODULE_INPUT_PORT);
+  /* Add each input port */
+  BasicPort addr_port(std::string(DECODER_ADDRESS_PORT_NAME), addr_size);
+  module_manager.add_port(module_id, addr_port, ModuleManager::MODULE_INPUT_PORT);
+  /* Add each output port */
+  BasicPort data_port(std::string(DECODER_DATA_OUT_PORT_NAME), data_size);
+  module_manager.add_port(module_id, data_port, ModuleManager::MODULE_OUTPUT_PORT);
+
+  /* Data port is registered. It should be outputted as 
+   *   output reg [lsb:msb] data 
+   */
+  module_manager.set_port_is_register(module_id, data_port.get_name(), true);
+  /* Add data_in port */
+  if (true == decoder_lib.use_data_inv_port(decoder)) {
+    BasicPort data_inv_port(std::string(DECODER_DATA_OUT_INV_PORT_NAME), data_size);
+    module_manager.add_port(module_id, data_inv_port, ModuleManager::MODULE_OUTPUT_PORT);
+  }
+
+  return module_id;
+}
+
+/***************************************************************************************
+ * Create a module for a BL decoder with a given output size
+ *
+ *                  BL Address
+ *                   | | ... | 
+ *                   v v     v
+ *                 +-----------+
+ *                /             \<-- data_in
+ *      enable-->/    Decoder    \
+ *              +-----------------+
+ *                | | | ... | | |
+ *                v v v     v v v
+ *                  Data Outputs
+ *               
+ *  The outputs are assumes to be one-hot codes (at most only one '1' exist)
+ *  Considering this fact, there are only num_of_outputs conditions to be encoded.
+ *  Therefore, the number of inputs is ceil(log(num_of_outputs)/log(2))
+ ***************************************************************************************/
+ModuleId build_bl_memory_decoder_module(ModuleManager& module_manager,
+                                        const DecoderLibrary& decoder_lib,
+                                        const DecoderId& decoder) {
+  /* Get the number of inputs */
+  size_t addr_size = decoder_lib.addr_size(decoder);
+  size_t data_size = decoder_lib.data_size(decoder);
+
+  /* Create a name for the local encoder */
+  std::string module_name = generate_memory_decoder_with_data_in_subckt_name(addr_size, data_size);
+
+  /* Create a Verilog Module based on the circuit model, and add to module manager */
+  ModuleId module_id = module_manager.add_module(module_name); 
+  VTR_ASSERT(true == module_manager.valid_module_id(module_id));
+
+  /* Add enable port */
+  BasicPort en_port(std::string(DECODER_ENABLE_PORT_NAME), 1);
+  module_manager.add_port(module_id, en_port, ModuleManager::MODULE_INPUT_PORT);
+  /* Add each input port */
+  BasicPort addr_port(std::string(DECODER_ADDRESS_PORT_NAME), addr_size);
+  module_manager.add_port(module_id, addr_port, ModuleManager::MODULE_INPUT_PORT);
+  /* Add each input port */
+  BasicPort din_port(std::string(DECODER_DATA_IN_PORT_NAME), 1);
+  module_manager.add_port(module_id, din_port, ModuleManager::MODULE_INPUT_PORT);
+  /* Add each output port */
+  BasicPort data_port(std::string(DECODER_DATA_OUT_PORT_NAME), data_size);
+  module_manager.add_port(module_id, data_port, ModuleManager::MODULE_OUTPUT_PORT);
+
+  /* Data port is registered. It should be outputted as 
+   *   output reg [lsb:msb] data 
+   */
+  module_manager.set_port_is_register(module_id, data_port.get_name(), true);
+  /* Add data_in port */
+  if (true == decoder_lib.use_data_inv_port(decoder)) {
+    BasicPort data_inv_port(std::string(DECODER_DATA_OUT_INV_PORT_NAME), data_size);
+    module_manager.add_port(module_id, data_inv_port, ModuleManager::MODULE_OUTPUT_PORT);
+  }
+
+  return module_id;
+}
+
+/***************************************************************************************
+ * Create a module for a Word-line decoder with a given output size
+ *
+ *                  WL Address
+ *                   | | ... | 
+ *                   v v     v
+ *                 +-----------+
+ *                /             \
+ *      enable-->/    Decoder    \
+ *              +-----------------+
+ *                | | | ... | | |
+ *                v v v     v v v
+ *                  Data Outputs
+ *               
+ *  The outputs are assumes to be one-hot codes (at most only one '1' exist)
+ *  Considering this fact, there are only num_of_outputs conditions to be encoded.
+ *  Therefore, the number of inputs is ceil(log(num_of_outputs)/log(2))
+ ***************************************************************************************/
+ModuleId build_wl_memory_decoder_module(ModuleManager& module_manager,
+                                        const DecoderLibrary& decoder_lib,
+                                        const DecoderId& decoder) {
+  /* Get the number of inputs */
+  size_t addr_size = decoder_lib.addr_size(decoder);
+  size_t data_size = decoder_lib.data_size(decoder);
+
+  /* Create a name for the local encoder */
+  std::string module_name = generate_memory_decoder_subckt_name(addr_size, data_size);
+
+  /* Create a Verilog Module based on the circuit model, and add to module manager */
+  ModuleId module_id = module_manager.add_module(module_name); 
+  VTR_ASSERT(true == module_manager.valid_module_id(module_id));
+
+  /* Add enable port */
+  BasicPort en_port(std::string(DECODER_ENABLE_PORT_NAME), 1);
+  module_manager.add_port(module_id, en_port, ModuleManager::MODULE_INPUT_PORT);
+  /* Add each input port */
+  BasicPort addr_port(std::string(DECODER_ADDRESS_PORT_NAME), addr_size);
+  module_manager.add_port(module_id, addr_port, ModuleManager::MODULE_INPUT_PORT);
+  /* Add each output port */
+  BasicPort data_port(std::string(DECODER_DATA_OUT_PORT_NAME), data_size);
+  module_manager.add_port(module_id, data_port, ModuleManager::MODULE_OUTPUT_PORT);
+
+  /* Data port is registered. It should be outputted as 
+   *   output reg [lsb:msb] data 
+   */
+  module_manager.set_port_is_register(module_id, data_port.get_name(), true);
+  /* Add data_in port */
+  if (true == decoder_lib.use_data_inv_port(decoder)) {
+    BasicPort data_inv_port(std::string(DECODER_DATA_OUT_INV_PORT_NAME), data_size);
+    module_manager.add_port(module_id, data_inv_port, ModuleManager::MODULE_OUTPUT_PORT);
+  }
+
+  return module_id;
+}
 
 /***************************************************************************************
  * Create a module for a decoder with a given output size
@@ -44,7 +213,7 @@ void build_mux_local_decoder_module(ModuleManager& module_manager,
   size_t addr_size = decoder_lib.addr_size(decoder);
   size_t data_size = decoder_lib.data_size(decoder);
 
-  /* TODO: create a name for the local encoder */
+  /* Create a name for the local encoder */
   std::string module_name = generate_mux_local_decoder_subckt_name(addr_size, data_size);
 
   /* Create a Verilog Module based on the circuit model, and add to module manager */
@@ -66,7 +235,6 @@ void build_mux_local_decoder_module(ModuleManager& module_manager,
   VTR_ASSERT(true == decoder_lib.use_data_inv_port(decoder));
   module_manager.add_port(module_id, data_inv_port, ModuleManager::MODULE_OUTPUT_PORT);
 }
-
 
 /***************************************************************************************
  * This function will generate all the unique Verilog modules of local decoders for 

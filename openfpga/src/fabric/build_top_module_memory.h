@@ -11,8 +11,10 @@
 #include "module_manager.h"
 #include "circuit_types.h"
 #include "circuit_library.h"
+#include "decoder_library.h"
 #include "device_grid.h"
 #include "device_rr_gsb.h"
+#include "fabric_key.h"
 
 /********************************************************************
  * Function declaration
@@ -33,10 +35,26 @@ void organize_top_module_memory_modules(ModuleManager& module_manager,
                                         const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
                                         const bool& compact_routing_hierarchy);
 
+void shuffle_top_module_configurable_children(ModuleManager& module_manager, 
+                                              const ModuleId& top_module);
+
+int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager,
+                                                   const ModuleId& top_module,
+                                                   const FabricKey& fabric_key); 
+
+void add_top_module_sram_ports(ModuleManager& module_manager, 
+                               const ModuleId& module_id,
+                               const CircuitLibrary& circuit_lib,
+                               const CircuitModelId& sram_model,
+                               const e_config_protocol_type sram_orgz_type,
+                               const size_t& num_config_bits);
+
 void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
+                                           DecoderLibrary& decoder_lib,
                                            const ModuleId& parent_module,
                                            const e_config_protocol_type& sram_orgz_type, 
-                                           const e_circuit_model_design_tech& mem_tech);
+                                           const e_circuit_model_design_tech& mem_tech,
+                                           const size_t& num_config_bits);
 
 } /* end namespace openfpga */
 

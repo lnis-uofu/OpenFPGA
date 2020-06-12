@@ -20,7 +20,7 @@
 static 
 void write_xml_clock_setting(std::fstream& fp,
                              const char* fname,
-                             const SimulationSetting& sim_setting) {
+                             const openfpga::SimulationSetting& sim_setting) {
   /* Validate the file stream */
   openfpga::check_file_stream(fname, fp);
 
@@ -53,7 +53,7 @@ void write_xml_clock_setting(std::fstream& fp,
 static 
 void write_xml_simulator_option(std::fstream& fp,
                                 const char* fname,
-                                const SimulationSetting& sim_setting) {
+                                const openfpga::SimulationSetting& sim_setting) {
   /* Validate the file stream */
   openfpga::check_file_stream(fname, fp);
 
@@ -87,7 +87,7 @@ void write_xml_simulator_option(std::fstream& fp,
 static 
 void write_xml_monte_carlo(std::fstream& fp,
                            const char* fname,
-                           const SimulationSetting& sim_setting) {
+                           const openfpga::SimulationSetting& sim_setting) {
   /* Validate the file stream */
   openfpga::check_file_stream(fname, fp);
 
@@ -111,7 +111,7 @@ void write_xml_monte_carlo(std::fstream& fp,
 static 
 void write_xml_slew_measurement(std::fstream& fp,
                                 const char* fname,
-                                const SimulationSetting& sim_setting,
+                                const openfpga::SimulationSetting& sim_setting,
                                 const e_sim_signal_type& signal_type) {
   /* Validate the file stream */
   openfpga::check_file_stream(fname, fp);
@@ -130,7 +130,7 @@ void write_xml_slew_measurement(std::fstream& fp,
 static 
 void write_xml_delay_measurement(std::fstream& fp,
                                 const char* fname,
-                                const SimulationSetting& sim_setting,
+                                const openfpga::SimulationSetting& sim_setting,
                                 const e_sim_signal_type& signal_type) {
   /* Validate the file stream */
   openfpga::check_file_stream(fname, fp);
@@ -149,7 +149,7 @@ void write_xml_delay_measurement(std::fstream& fp,
 static 
 void write_xml_measurement(std::fstream& fp,
                            const char* fname,
-                           const SimulationSetting& sim_setting) {
+                           const openfpga::SimulationSetting& sim_setting) {
   /* Validate the file stream */
   openfpga::check_file_stream(fname, fp);
 
@@ -174,7 +174,7 @@ void write_xml_measurement(std::fstream& fp,
 static 
 void write_xml_stimulus(std::fstream& fp,
                         const char* fname,
-                        const SimulationSetting& sim_setting) {
+                        const openfpga::SimulationSetting& sim_setting) {
   /* Validate the file stream */
   openfpga::check_file_stream(fname, fp);
 
@@ -216,7 +216,7 @@ void write_xml_stimulus(std::fstream& fp,
  *******************************************************************/
 void write_xml_simulation_setting(std::fstream& fp,
                                   const char* fname,
-                                  const SimulationSetting& sim_setting) {
+                                  const openfpga::SimulationSetting& sim_setting) {
   /* Validate the file stream */
   openfpga::check_file_stream(fname, fp);
   

@@ -24,6 +24,8 @@ lut_truth_table_fixup #--verbose
 #  - Enable pin duplication on grid modules 
 build_fabric --compress_routing --duplicate_grid_pin #--verbose
 
+write_fabric_hierarchy --file ./fabric_hierarchy.txt
+
 # Repack the netlist to physical pbs
 # This must be done before bitstream generator and testbench generation
 # Strongly recommend it is done after all the fix-up have been applied
@@ -50,6 +52,7 @@ write_verilog_testbench --file /var/tmp/xtang/openfpga_test_src/SRC --reference_
 
 # Write the SDC files for PnR backend
 #  - Turn on every options here 
+write_pnr_sdc --hierarchical --file /var/tmp/xtang/openfpga_test_src/SDC_hie
 write_pnr_sdc --file /var/tmp/xtang/openfpga_test_src/SDC 
 
 # Write the SDC to run timing analysis for a mapped FPGA fabric

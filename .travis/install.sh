@@ -4,18 +4,19 @@ source .travis/common.sh
 set -e
 
 ## Install necessary package which is not available on Travis CI 
-#export DEPS_DIR="${HOME}/deps"
-#mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
-## Install CMake
-#if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-#  export CMAKE_URL="https://cmake.org/files/v3.13/cmake-3.13.0-rc3-Linux-x86_64.tar.gz"
-#  mkdir -p cmake && travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
-#  export PATH=${DEPS_DIR}/cmake/bin:${PATH}
-#  echo ${PATH}
-#else
-#  brew install cmake || brew upgrade cmake
-#fi
-#  cmake --version
+export DEPS_DIR="${HOME}/deps"
+mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
+# Install CMake
+if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+  export CMAKE_URL="https://cmake.org/files/v3.16/cmake-3.16.3-Linux-x86_64.tar.gz"
+  mkdir -p cmake && travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
+  export PATH=${DEPS_DIR}/cmake/bin:${PATH}
+  echo ${PATH}
+else
+  brew install cmake || brew upgrade cmake
+fi
+cmake --version
+cd -
 #
 ## Install latest iVerilog. Since no deb is provided, compile from source codes
 #if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
@@ -32,7 +33,8 @@ set -e
 #  export PATH=${DEPS_DIR}/iverilog-10_3/bin:${PATH}
 #  echo ${PATH}
 #fi
-#iverilog -V
+iverilog -V
+vvp -V
 #cd -
 
 

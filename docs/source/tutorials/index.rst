@@ -1,5 +1,5 @@
 .. _tutorials:
-   Getting Started
+   Tutorials
  
 .. toctree::
    :maxdepth: 2
@@ -8,11 +8,6 @@
 
    eda_flow
 
-   run_fpga_flow
+   design_flow/index
 
-   run_fpga_task
-
-   
-  
-
-   
+   arch_modeling/index

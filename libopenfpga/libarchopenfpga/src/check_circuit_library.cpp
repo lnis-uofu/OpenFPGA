@@ -135,9 +135,11 @@ size_t check_one_circuit_model_port_size_required(const CircuitLibrary& circuit_
   size_t num_err = 0;
 
   if (port_size_to_check != circuit_lib.port_size(circuit_port)) {
-    VTR_LOG_ERROR(circuit_lib.model_name(circuit_model).c_str(), 
+    VTR_LOG_ERROR("Expect circuit model %s to have %d %s ports but only see %d!\n",
+                  circuit_lib.model_name(circuit_model).c_str(), 
+                  port_size_to_check,
                   CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(circuit_lib.port_type(circuit_port))],
-                  port_size_to_check);
+                  circuit_lib.port_size(circuit_port));
     /* Incremental the counter for errors */
     num_err++;
   }
@@ -282,7 +284,7 @@ size_t check_sram_circuit_model_ports(const CircuitLibrary& circuit_lib,
   /* Check if we has 1 output with size 2 */
   num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
                                                                  CIRCUIT_MODEL_PORT_OUTPUT,
-                                                                 1, 2, false);
+                                                                 2, 1, false);
   /* basic check finished here */
   if (false == check_blwl) {
     return num_err;
@@ -447,7 +449,7 @@ size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
  * 9. LUT must have at least an input, an output and a SRAM ports
  * 10. We must have default circuit models for these types: MUX, channel wires and wires
  ***********************************************************************/
-void check_circuit_library(const CircuitLibrary& circuit_lib) {
+bool check_circuit_library(const CircuitLibrary& circuit_lib) {
   size_t num_err = 0;
 
   vtr::ScopedStartFinishTimer timer("Check circuit library");
@@ -506,7 +508,6 @@ void check_circuit_library(const CircuitLibrary& circuit_lib) {
 
   /* 6. SRAM must have at least an input and an output ports*/
   std::vector<enum e_circuit_model_port_type> sram_port_types_required;
-  sram_port_types_required.push_back(CIRCUIT_MODEL_PORT_INPUT);
   sram_port_types_required.push_back(CIRCUIT_MODEL_PORT_OUTPUT);
 
   num_err += check_circuit_model_port_required(circuit_lib, CIRCUIT_MODEL_SRAM, sram_port_types_required);
@@ -545,10 +546,11 @@ void check_circuit_library(const CircuitLibrary& circuit_lib) {
   if (0 < num_err) {
     VTR_LOG("Finished checking circuit library with %d errors!\n",
             num_err);
-    exit(1);
+    return false;
   }
 
   VTR_LOG("Checking circuit library passed.\n");
 
-  return;
+  return true;
 }
+

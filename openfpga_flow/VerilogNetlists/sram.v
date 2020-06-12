@@ -1,3 +1,48 @@
+//-----------------------------------------------------
+// Design Name : sram_blwl
+// File Name   : sram.v
+// Function    : A SRAM cell is is accessible
+//               when wl is enabled
+// Coder       : Xifan TANG
+//-----------------------------------------------------
+module sram_blwl(
+input reset, // Word line control signal
+input wl, // Word line control signal
+input bl, // Bit line control signal
+output out, // Data output
+output outb // Data output
+);
+
+  //----- local variable need to be registered
+  reg data;
+
+  //----- when wl is enabled, we can read in data from bl
+  always @(bl, wl) 
+  begin
+    if (1'b1 == reset) begin 
+      data <= 1'b0;
+    end else if ((1'b1 == bl)&&(1'b1 == wl)) begin
+    //----- Cases to program internal memory bit 
+    //----- case 1: bl = 1, wl = 1, a -> 0
+      data <= 1'b1;
+    end else if ((1'b0 == bl)&&(1'b1 == wl)) begin
+    //----- case 2: bl = 0, wl = 1, a -> 0
+     data <= 1'b0;
+    end 
+  end
+
+`ifndef ENABLE_FORMAL_VERIFICATION
+    // Wire q_reg to Q
+    assign out = data;
+    assign outb = ~data;
+`else
+    assign out = 1'bZ;
+    assign outb = !out;
+`endif
+
+endmodule
+
+
 //------ Module: sram6T_blwl -----//
 //------ Verilog file: sram.v -----//
 //------ Author: Xifan TANG -----//

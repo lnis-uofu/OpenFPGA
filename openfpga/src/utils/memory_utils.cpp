@@ -70,8 +70,8 @@ std::map<std::string, BasicPort> generate_cmos_mem_module_port2port_map(const Ba
 
     /* Link the SRAM output ports of the memory module */ 
     VTR_ASSERT( 2 == mem_output_bus_ports.size() );
-    port2port_name_map[generate_configuration_chain_data_out_name()] = mem_output_bus_ports[0];
-    port2port_name_map[generate_configuration_chain_inverted_data_out_name()] = mem_output_bus_ports[1];
+    port2port_name_map[generate_configurable_memory_data_out_name()] = mem_output_bus_ports[0];
+    port2port_name_map[generate_configurable_memory_inverted_data_out_name()] = mem_output_bus_ports[1];
     break;
   }
   case CONFIG_MEM_MEMORY_BANK:
@@ -127,15 +127,16 @@ std::map<std::string, BasicPort> generate_rram_mem_module_port2port_map(const Ba
 
     /* Link the SRAM output ports of the memory module */ 
     VTR_ASSERT( 2 == mem_output_bus_ports.size() );
-    port2port_name_map[generate_configuration_chain_data_out_name()] = mem_output_bus_ports[0];
-    port2port_name_map[generate_configuration_chain_inverted_data_out_name()] = mem_output_bus_ports[1];
+    port2port_name_map[generate_configurable_memory_data_out_name()] = mem_output_bus_ports[0];
+    port2port_name_map[generate_configurable_memory_inverted_data_out_name()] = mem_output_bus_ports[1];
     break;
   }
   case CONFIG_MEM_MEMORY_BANK:
     /* TODO: link BL/WL/Reserved Ports to the inputs of a memory module */
     break;
   default:
-    VTR_LOG_ERROR("Invalid type of SRAM organization!\n");
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization!\n");
     exit(1);
   }
 
@@ -313,20 +314,15 @@ std::vector<std::string> generate_sram_port_names(const CircuitLibrary& circuit_
   std::vector<e_circuit_model_port_type> model_port_types; 
 
   switch (sram_orgz_type) {
-  case CONFIG_MEM_STANDALONE: 
-    model_port_types.push_back(CIRCUIT_MODEL_PORT_INPUT);
-    model_port_types.push_back(CIRCUIT_MODEL_PORT_OUTPUT);
-    break;
   case CONFIG_MEM_SCAN_CHAIN: 
     model_port_types.push_back(CIRCUIT_MODEL_PORT_INPUT);
     model_port_types.push_back(CIRCUIT_MODEL_PORT_OUTPUT);
     break;
+  case CONFIG_MEM_STANDALONE: 
   case CONFIG_MEM_MEMORY_BANK: {
     std::vector<e_circuit_model_port_type> ports_to_search;
     ports_to_search.push_back(CIRCUIT_MODEL_PORT_BL);
     ports_to_search.push_back(CIRCUIT_MODEL_PORT_WL);
-    ports_to_search.push_back(CIRCUIT_MODEL_PORT_BLB);
-    ports_to_search.push_back(CIRCUIT_MODEL_PORT_WLB);
     /* Try to find a BL/WL/BLB/WLB port and update the port types/module port types to be added */
     for (const auto& port_to_search : ports_to_search) {
       std::vector<CircuitPortId> found_port = circuit_lib.model_ports_by_type(sram_model, port_to_search);
@@ -337,8 +333,13 @@ std::vector<std::string> generate_sram_port_names(const CircuitLibrary& circuit_
     }
     break;
   }
+  case CONFIG_MEM_FRAME_BASED: {
+    model_port_types.push_back(CIRCUIT_MODEL_PORT_INPUT);
+    break;
+  }
   default:
-    VTR_LOG_ERROR("Invalid type of SRAM organization !\n");
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization !\n");
     exit(1);
   }
 
@@ -374,8 +375,11 @@ size_t generate_sram_port_size(const e_config_protocol_type sram_orgz_type,
     break;
   case CONFIG_MEM_MEMORY_BANK:
     break;
+  case CONFIG_MEM_FRAME_BASED:
+    break;
   default:
-    VTR_LOG_ERROR("Invalid type of SRAM organization !\n");
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization!\n");
     exit(1);
   }
 

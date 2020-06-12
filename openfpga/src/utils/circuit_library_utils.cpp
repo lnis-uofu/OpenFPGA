@@ -11,6 +11,8 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
+#include "check_circuit_library.h"
+#include "decoder_library_utils.h"
 #include "circuit_library_utils.h"
 
 /* begin namespace openfpga */
@@ -142,7 +144,8 @@ size_t find_circuit_num_shared_config_bits(const CircuitLibrary& circuit_lib,
        num_shared_config_bits = std::max((int)num_shared_config_bits, (int)find_rram_circuit_num_shared_config_bits(circuit_lib, sram_model, sram_orgz_type));
        break;
     default:
-      VTR_LOG_ERROR("Invalid design technology for SRAM model!\n");
+      VTR_LOGF_ERROR(__FILE__, __LINE__,
+                     "Invalid design technology for SRAM model!\n");
       exit(1);
     }
   } 
@@ -159,7 +162,8 @@ size_t find_circuit_num_shared_config_bits(const CircuitLibrary& circuit_lib,
  * for a multiplexer, because the multiplexer size is determined during 
  * the FPGA architecture generation (NOT during the XML parsing). 
  *******************************************************************/
-size_t find_circuit_num_config_bits(const CircuitLibrary& circuit_lib,
+size_t find_circuit_num_config_bits(const e_config_protocol_type& config_protocol_type,
+                                    const CircuitLibrary& circuit_lib,
                                     const CircuitModelId& circuit_model) {
   size_t num_config_bits = 0;
 
@@ -167,6 +171,27 @@ size_t find_circuit_num_config_bits(const CircuitLibrary& circuit_lib,
   for (auto sram_port : sram_ports) {
     num_config_bits += circuit_lib.port_size(sram_port); 
   } 
+
+  switch (config_protocol_type) {
+  case CONFIG_MEM_STANDALONE: 
+  case CONFIG_MEM_SCAN_CHAIN: 
+  case CONFIG_MEM_MEMORY_BANK: {
+    break;
+  }
+  case CONFIG_MEM_FRAME_BASED: {
+    /* For frame-based configuration protocol
+     * The number of configuration bits is the address size
+     */
+    if (0 < num_config_bits) {
+      num_config_bits = find_mux_local_decoder_addr_size(num_config_bits);
+    }
+    break;
+  }
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization !\n");
+    exit(1);
+  }
 
   return num_config_bits;
 }
@@ -224,6 +249,42 @@ std::vector<std::string> find_circuit_library_unique_verilog_netlists(const Circ
   }
 
  return netlists;
+}
+
+/************************************************************************
+ * Advanced check if the circuit model of configurable memory
+ * satisfy the needs of configuration protocol
+ * - Configuration chain -based: we check if we have a CCFF model
+ * - Frame -based: we check if we have a SRAM model which has BL and WL
+ * 
+ ***********************************************************************/
+bool check_configurable_memory_circuit_model(const e_config_protocol_type& config_protocol_type,
+                                             const CircuitLibrary& circuit_lib,
+                                             const CircuitModelId& config_mem_circuit_model) {
+  size_t num_err = 0;
+
+  switch (config_protocol_type) {
+  case CONFIG_MEM_SCAN_CHAIN:   
+    num_err = check_ccff_circuit_model_ports(circuit_lib,
+                                             config_mem_circuit_model);
+    break;
+  case CONFIG_MEM_STANDALONE: 
+  case CONFIG_MEM_MEMORY_BANK:  
+  case CONFIG_MEM_FRAME_BASED:  
+    num_err = check_sram_circuit_model_ports(circuit_lib,
+                                             config_mem_circuit_model,
+                                             true);
+    
+    break;
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of configuration protocol!\n");
+    return false;
+  }
+  
+  VTR_LOG("Found %ld errors when checking configurable memory circuit models!\n",
+          num_err);
+  return (0 == num_err);
 }
 
 } /* end namespace openfpga */

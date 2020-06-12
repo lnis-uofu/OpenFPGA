@@ -17,11 +17,13 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_include_netlists(const NetlistManager& netlist_manager,
-                            const std::string& src_dir,
+void print_fabric_include_netlist(const NetlistManager& netlist_manager,
+                                  const std::string& src_dir,
+                                  const CircuitLibrary& circuit_lib);
+
+void print_include_netlists(const std::string& src_dir,
                             const std::string& circuit_name,
-                            const std::string& reference_benchmark_file,
-                            const CircuitLibrary& circuit_lib);
+                            const std::string& reference_benchmark_file);
 
 void print_verilog_preprocessing_flags_netlist(const std::string& src_dir,
                                                const FabricVerilogOption& fabric_verilog_opts);

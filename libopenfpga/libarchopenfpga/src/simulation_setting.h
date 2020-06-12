@@ -34,6 +34,9 @@ enum e_sim_accuracy_type {
 /* Strings correspond to each accuracy type */
 constexpr std::array<const char*, NUM_SIM_ACCURACY_TYPES> SIM_ACCURACY_TYPE_STRING = {{"frac", "abs"}};
 
+/* namespace openfpga begins */
+namespace openfpga {
+
 /********************************************************************
  * A data structure to describe simulation settings
  *
@@ -210,5 +213,7 @@ class SimulationSetting {
     std::array<e_sim_accuracy_type, NUM_SIM_ACCURACY_TYPES> input_slew_types_;
     std::array<float, NUM_SIM_ACCURACY_TYPES> input_slews_;
 };
+
+} /* namespace openfpga ends */
 
 #endif

@@ -100,12 +100,6 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
     /* Parse the pb_type annotation */
     openfpga_arch.pb_type_annotations = read_xml_pb_type_annotations(xml_openfpga_arch, loc_data);
 
-    /* Second node should be <openfpga_simulation_setting> */
-    auto xml_simulation_settings = get_single_child(doc, "openfpga_simulation_setting", loc_data); 
-
-    /* Parse simulation settings to data structure */
-    openfpga_arch.sim_setting = read_xml_simulation_setting(xml_simulation_settings, loc_data);
-
   } catch (pugiutil::XmlError& e) {
     archfpga_throw(arch_file_name, e.line(),
                    "%s", e.what());
@@ -113,3 +107,35 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
 
   return openfpga_arch;
 }
+
+/********************************************************************
+ * Top-level function to parse an XML file and load data to simulation settings
+ *******************************************************************/
+openfpga::SimulationSetting read_xml_openfpga_simulation_settings(const char* sim_setting_file_name) {
+  vtr::ScopedStartFinishTimer timer("Read OpenFPGA simulation settings");
+
+  openfpga::SimulationSetting openfpga_sim_setting;
+
+  pugi::xml_node Next;
+
+  /* Parse the file */
+  pugi::xml_document doc;
+  pugiutil::loc_data loc_data;
+
+  try {
+    loc_data = pugiutil::load_xml(doc, sim_setting_file_name);
+
+    /* Second node should be <openfpga_simulation_setting> */
+    auto xml_simulation_settings = get_single_child(doc, "openfpga_simulation_setting", loc_data); 
+
+    /* Parse simulation settings to data structure */
+    openfpga_sim_setting = read_xml_simulation_setting(xml_simulation_settings, loc_data);
+
+  } catch (pugiutil::XmlError& e) {
+    archfpga_throw(sim_setting_file_name, e.line(),
+                   "%s", e.what());
+  }
+
+  return openfpga_sim_setting; 
+}
+

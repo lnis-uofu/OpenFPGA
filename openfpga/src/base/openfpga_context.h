@@ -10,11 +10,13 @@
 #include "vpr_placement_annotation.h"
 #include "vpr_routing_annotation.h"
 #include "mux_library.h"
+#include "decoder_library.h"
 #include "tile_direct.h"
 #include "module_manager.h"
 #include "netlist_manager.h"
 #include "openfpga_flow_manager.h"
 #include "bitstream_manager.h"
+#include "fabric_bitstream.h"
 #include "device_rr_gsb.h"
 #include "io_location_map.h"
 
@@ -48,6 +50,7 @@
 class OpenfpgaContext : public Context  {
   public:  /* Public accessors */
     const openfpga::Arch& arch() const { return arch_; }
+    const openfpga::SimulationSetting& simulation_setting() const { return sim_setting_; }
     const openfpga::VprDeviceAnnotation& vpr_device_annotation() const { return vpr_device_annotation_; }
     const openfpga::VprNetlistAnnotation& vpr_netlist_annotation() const { return vpr_netlist_annotation_; }
     const openfpga::VprClusteringAnnotation& vpr_clustering_annotation() const { return vpr_clustering_annotation_; }
@@ -55,16 +58,18 @@ class OpenfpgaContext : public Context  {
     const openfpga::VprRoutingAnnotation& vpr_routing_annotation() const { return vpr_routing_annotation_; }
     const openfpga::DeviceRRGSB& device_rr_gsb() const { return device_rr_gsb_; }
     const openfpga::MuxLibrary& mux_lib() const { return mux_lib_; }
+    const openfpga::DecoderLibrary& decoder_lib() const { return decoder_lib_; }
     const openfpga::TileDirect& tile_direct() const { return tile_direct_; }
     const openfpga::ModuleManager& module_graph() const { return module_graph_; }
     const openfpga::FlowManager& flow_manager() const { return flow_manager_; }
     const openfpga::BitstreamManager& bitstream_manager() const { return bitstream_manager_; }
-    const std::vector<openfpga::ConfigBitId>& fabric_bitstream() const { return fabric_bitstream_; }
+    const openfpga::FabricBitstream& fabric_bitstream() const { return fabric_bitstream_; }
     const openfpga::IoLocationMap& io_location_map() const { return io_location_map_; }
     const std::unordered_map<AtomNetId, t_net_power>& net_activity() const { return net_activity_; }
     const openfpga::NetlistManager& verilog_netlists() const { return verilog_netlists_; }
   public:  /* Public mutators */
     openfpga::Arch& mutable_arch() { return arch_; }
+    openfpga::SimulationSetting& mutable_simulation_setting() { return sim_setting_; }
     openfpga::VprDeviceAnnotation& mutable_vpr_device_annotation() { return vpr_device_annotation_; }
     openfpga::VprNetlistAnnotation& mutable_vpr_netlist_annotation() { return vpr_netlist_annotation_; }
     openfpga::VprClusteringAnnotation& mutable_vpr_clustering_annotation() { return vpr_clustering_annotation_; }
@@ -72,17 +77,19 @@ class OpenfpgaContext : public Context  {
     openfpga::VprRoutingAnnotation& mutable_vpr_routing_annotation() { return vpr_routing_annotation_; }
     openfpga::DeviceRRGSB& mutable_device_rr_gsb() { return device_rr_gsb_; }
     openfpga::MuxLibrary& mutable_mux_lib() { return mux_lib_; }
+    openfpga::DecoderLibrary& mutable_decoder_lib() { return decoder_lib_; }
     openfpga::TileDirect& mutable_tile_direct() { return tile_direct_; }
     openfpga::ModuleManager& mutable_module_graph() { return module_graph_; }
     openfpga::FlowManager& mutable_flow_manager() { return flow_manager_; }
     openfpga::BitstreamManager& mutable_bitstream_manager() { return bitstream_manager_; }
-    std::vector<openfpga::ConfigBitId>& mutable_fabric_bitstream() { return fabric_bitstream_; }
+    openfpga::FabricBitstream& mutable_fabric_bitstream() { return fabric_bitstream_; }
     openfpga::IoLocationMap& mutable_io_location_map() { return io_location_map_; }
     std::unordered_map<AtomNetId, t_net_power>& mutable_net_activity() { return net_activity_; }
     openfpga::NetlistManager& mutable_verilog_netlists() { return verilog_netlists_; }
   private: /* Internal data */
     /* Data structure to store information from read_openfpga_arch library */
     openfpga::Arch arch_;
+    openfpga::SimulationSetting sim_setting_;
 
     /* Annotation to pb_type of VPR */
     openfpga::VprDeviceAnnotation vpr_device_annotation_;
@@ -105,6 +112,9 @@ class OpenfpgaContext : public Context  {
     /* Library of physical implmentation of routing multiplexers */
     openfpga::MuxLibrary mux_lib_;
 
+    /* Library of physical implmentation of decoders */
+    openfpga::DecoderLibrary decoder_lib_;
+
     /* Inner/inter-column/row tile direct connections */
     openfpga::TileDirect tile_direct_;
 
@@ -114,7 +124,7 @@ class OpenfpgaContext : public Context  {
 
     /* Bitstream database */
     openfpga::BitstreamManager bitstream_manager_;
-    std::vector<openfpga::ConfigBitId> fabric_bitstream_;
+    openfpga::FabricBitstream fabric_bitstream_;
 
     /* Netlist database 
      * TODO: Each format should have an independent entry

@@ -11,6 +11,8 @@ namespace openfpga {
  ********************************************************************/
 AnalysisSdcOption::AnalysisSdcOption(const std::string& sdc_dir) {
   sdc_dir_ = sdc_dir;
+  flatten_names_ = false;
+  time_unit_ = 1.;
   generate_sdc_analysis_ = false;
 }
 
@@ -19,6 +21,14 @@ AnalysisSdcOption::AnalysisSdcOption(const std::string& sdc_dir) {
  ********************************************************************/
 std::string AnalysisSdcOption::sdc_dir() const {
   return sdc_dir_;
+}
+
+bool AnalysisSdcOption::flatten_names() const {
+  return flatten_names_;
+}
+
+float AnalysisSdcOption::time_unit() const {
+  return time_unit_;
 }
 
 bool AnalysisSdcOption::generate_sdc_analysis() const {
@@ -30,6 +40,14 @@ bool AnalysisSdcOption::generate_sdc_analysis() const {
  ********************************************************************/
 void AnalysisSdcOption::set_sdc_dir(const std::string& sdc_dir) {
   sdc_dir_ = sdc_dir;
+}
+
+void AnalysisSdcOption::set_flatten_names(const bool& flatten_names) {
+  flatten_names_ = flatten_names;
+}
+
+void AnalysisSdcOption::set_time_unit(const float& time_unit) {
+  time_unit_ = time_unit;
 }
 
 void AnalysisSdcOption::set_generate_sdc_analysis(const bool& generate_sdc_analysis) {

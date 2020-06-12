@@ -8,9 +8,14 @@
 /* Headers from openfpgashell library */
 #include "command_exit_codes.h"
 
+/* Headers from fabrickey library */
+#include "read_xml_fabric_key.h"
+
 #include "device_rr_gsb.h"
 #include "device_rr_gsb_utils.h"
 #include "build_device_module.h"
+#include "fabric_hierarchy_writer.h"
+#include "fabric_key_writer.h"
 #include "openfpga_build_fabric.h"
 
 /* Include global variables of VPR */
@@ -64,6 +69,9 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
 
   CommandOptionId opt_compress_routing = cmd.option("compress_routing");
   CommandOptionId opt_duplicate_grid_pin = cmd.option("duplicate_grid_pin");
+  CommandOptionId opt_gen_random_fabric_key = cmd.option("generate_random_fabric_key");
+  CommandOptionId opt_write_fabric_key = cmd.option("write_fabric_key");
+  CommandOptionId opt_load_fabric_key = cmd.option("load_fabric_key");
   CommandOptionId opt_verbose = cmd.option("verbose");
   
   if (true == cmd_context.option_enable(cmd, opt_compress_routing)) {
@@ -74,15 +82,76 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
 
   VTR_LOG("\n");
 
+  /* Load fabric key from file */
+  FabricKey predefined_fabric_key;
+  if (true == cmd_context.option_enable(cmd, opt_load_fabric_key)) {
+    std::string fkey_fname = cmd_context.option_value(cmd, opt_load_fabric_key);
+    VTR_ASSERT(false == fkey_fname.empty());
+    predefined_fabric_key = read_xml_fabric_key(fkey_fname.c_str());
+  }
+
+  VTR_LOG("\n");
+
   openfpga_ctx.mutable_module_graph() = build_device_module_graph(openfpga_ctx.mutable_io_location_map(),
-                                                                  g_vpr_ctx.device(),
+                                                                  openfpga_ctx.mutable_decoder_lib(),
                                                                   const_cast<const OpenfpgaContext&>(openfpga_ctx),
+                                                                  g_vpr_ctx.device(),
                                                                   cmd_context.option_enable(cmd, opt_compress_routing),
                                                                   cmd_context.option_enable(cmd, opt_duplicate_grid_pin),
+                                                                  predefined_fabric_key,
+                                                                  cmd_context.option_enable(cmd, opt_gen_random_fabric_key),
                                                                   cmd_context.option_enable(cmd, opt_verbose));
+
+  /* Output fabric key if user requested */
+  if (true == cmd_context.option_enable(cmd, opt_write_fabric_key)) {
+    std::string fkey_fname = cmd_context.option_value(cmd, opt_write_fabric_key);
+    VTR_ASSERT(false == fkey_fname.empty());
+    write_fabric_key_to_xml_file(openfpga_ctx.module_graph(),
+                                 fkey_fname,
+                                 cmd_context.option_enable(cmd, opt_verbose));
+                                 
+  }
 
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;
 } 
+
+/********************************************************************
+ * Build the module graph for FPGA device
+ *******************************************************************/
+int write_fabric_hierarchy(const OpenfpgaContext& openfpga_ctx,
+                           const Command& cmd, const CommandContext& cmd_context) { 
+
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* Check the option '--file' is enabled or not 
+   * Actually, it must be enabled as the shell interface will check 
+   * before reaching this fuction
+   */
+  CommandOptionId opt_file = cmd.option("file");
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  /* Default depth requirement, will not stop until the leaf */
+  int depth = -1;
+  CommandOptionId opt_depth = cmd.option("depth");
+  if (true == cmd_context.option_enable(cmd, opt_depth)) {
+    depth = std::atoi(cmd_context.option_value(cmd, opt_depth).c_str());
+    /* Error out if we have negative depth */
+    if (0 > depth) {
+      VTR_LOG_ERROR("Invalid depth '%d' which should be 0 or a positive number!\n",
+                    depth);
+      return CMD_EXEC_FATAL_ERROR; 
+    }
+  }
+
+  std::string hie_file_name = cmd_context.option_value(cmd, opt_file);
+
+  /* Write hierarchy to a file */
+  return write_fabric_hierarchy_to_text_file(openfpga_ctx.module_graph(),
+                                             hie_file_name,
+                                             size_t(depth),
+                                             cmd_context.option_enable(cmd, opt_verbose));
+}
 
 } /* end namespace openfpga */

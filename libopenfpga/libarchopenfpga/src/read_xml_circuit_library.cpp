@@ -553,7 +553,7 @@ void read_xml_circuit_port(pugi::xml_node& xml_port,
      || (CIRCUIT_MODEL_PORT_WL  == circuit_lib.port_type(port))
      || (CIRCUIT_MODEL_PORT_BLB == circuit_lib.port_type(port))
      || (CIRCUIT_MODEL_PORT_WLB == circuit_lib.port_type(port)) ) {
-    circuit_lib.set_port_inv_model_name(port, get_attribute(xml_port, "inv_circuit_model_name", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string(nullptr));
+    circuit_lib.set_port_inv_model_name(port, get_attribute(xml_port, "inv_circuit_model_name", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string());
   }
 }
 

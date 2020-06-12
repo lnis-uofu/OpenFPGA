@@ -311,6 +311,7 @@ vtr::Matrix<size_t> add_top_module_connection_block_instances(ModuleManager& mod
  *******************************************************************/
 void build_top_module(ModuleManager& module_manager,
                       IoLocationMap& io_location_map,
+                      DecoderLibrary& decoder_lib,
                       const CircuitLibrary& circuit_lib,
                       const DeviceGrid& grids,
                       const RRGraph& rr_graph,
@@ -320,7 +321,9 @@ void build_top_module(ModuleManager& module_manager,
                       const e_config_protocol_type& sram_orgz_type,
                       const CircuitModelId& sram_model,
                       const bool& compact_routing_hierarchy,
-                      const bool& duplicate_grid_pin) {
+                      const bool& duplicate_grid_pin,
+                      const FabricKey& fabric_key,
+                      const bool& generate_random_fabric_key) {
 
   vtr::ScopedStartFinishTimer timer("Build FPGA fabric module");
 
@@ -361,6 +364,27 @@ void build_top_module(ModuleManager& module_manager,
    */
   add_module_gpio_ports_from_child_modules(module_manager, top_module);
 
+  /* Organize the list of memory modules and instances
+   * If we have an empty fabric key, we organize the memory modules as routine
+   * Otherwise, we will load the fabric key directly 
+   */
+  if (true == fabric_key.empty()) {
+    organize_top_module_memory_modules(module_manager, top_module, 
+                                       circuit_lib, sram_orgz_type, sram_model,
+                                       grids, grid_instance_ids, 
+                                       device_rr_gsb, sb_instance_ids, cb_instance_ids,
+                                       compact_routing_hierarchy);
+  } else {
+    VTR_ASSERT_SAFE(false == fabric_key.empty());
+    load_top_module_memory_modules_from_fabric_key(module_manager, top_module,
+                                                   fabric_key); 
+  }
+
+  /* Shuffle the configurable children in a random sequence */
+  if (true == generate_random_fabric_key) {
+    shuffle_top_module_configurable_children(module_manager, top_module);
+  }
+
   /* Add shared SRAM ports from the sub-modules under this Verilog module
    * This is a much easier job after adding sub modules (instances), 
    * we just need to find all the I/O ports from the child modules and build a list of it
@@ -376,22 +400,19 @@ void build_top_module(ModuleManager& module_manager,
    */
   size_t module_num_config_bits = find_module_num_config_bits_from_child_modules(module_manager, top_module, circuit_lib, sram_model, sram_orgz_type); 
   if (0 < module_num_config_bits) {
-    add_sram_ports_to_module_manager(module_manager, top_module, circuit_lib, sram_model, sram_orgz_type, module_num_config_bits);
+    add_top_module_sram_ports(module_manager, top_module,
+                              circuit_lib, sram_model,
+                              sram_orgz_type, module_num_config_bits);
   }
-
-  /* Organize the list of memory modules and instances */
-  organize_top_module_memory_modules(module_manager, top_module, 
-                                     circuit_lib, sram_orgz_type, sram_model,
-                                     grids, grid_instance_ids, 
-                                     device_rr_gsb, sb_instance_ids, cb_instance_ids,
-                                     compact_routing_hierarchy);
 
   /* Add module nets to connect memory cells inside
    * This is a one-shot addition that covers all the memory modules in this pb module!
    */
   if (0 < module_manager.configurable_children(top_module).size()) {
-    add_top_module_nets_memory_config_bus(module_manager, top_module, 
-                                          sram_orgz_type, circuit_lib.design_tech_type(sram_model));
+    add_top_module_nets_memory_config_bus(module_manager, decoder_lib,
+                                          top_module, 
+                                          sram_orgz_type, circuit_lib.design_tech_type(sram_model),
+                                          module_num_config_bits);
   }
 }
 

@@ -16,6 +16,7 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
+#include "openfpga_scale.h"
 #include "openfpga_port.h"
 #include "openfpga_side_manager.h"
 #include "openfpga_digest.h"
@@ -49,6 +50,9 @@ float find_pnr_sdc_switch_tmax(const t_rr_switch_inf& switch_inf) {
  *******************************************************************/
 static 
 void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
+                                           const float& time_unit,
+                                           const bool& hierarchical,
+                                           const std::string& module_path,
                                            const ModuleManager& module_manager,
                                            const ModuleId& sb_module, 
                                            const RRGraph& rr_graph,
@@ -96,11 +100,22 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
       continue;
     }
     /* Constrain a path */
-    print_pnr_sdc_constrain_port2port_timing(fp,
-                                             module_manager, 
-                                             sb_module, module_input_port, 
-                                             sb_module, module_output_port,
-                                             switch_delays[module_input_port]);
+    if (false == hierarchical) {
+      print_pnr_sdc_constrain_max_delay(fp,
+                                        module_path,
+                                        generate_sdc_port(module_manager.module_port(sb_module, module_input_port)),
+                                        module_path,
+                                        generate_sdc_port(module_manager.module_port(sb_module, module_output_port)),
+                                        switch_delays[module_input_port] / time_unit);
+
+    } else {
+      VTR_ASSERT_SAFE(true == hierarchical);
+      print_pnr_sdc_constrain_port2port_timing(fp,
+                                               module_manager, 
+                                               sb_module, module_input_port, 
+                                               sb_module, module_output_port,
+                                               switch_delays[module_input_port] / time_unit);
+    }
   }
 }
 
@@ -114,6 +129,9 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
  *******************************************************************/
 static 
 void print_pnr_sdc_constrain_sb_timing(const std::string& sdc_dir,
+                                       const float& time_unit,
+                                       const bool& hierarchical,
+                                       const std::string& module_path,
                                        const ModuleManager& module_manager,
                                        const RRGraph& rr_graph,
                                        const RRGSB& rr_gsb,
@@ -137,6 +155,9 @@ void print_pnr_sdc_constrain_sb_timing(const std::string& sdc_dir,
   /* Generate the descriptions*/
   print_sdc_file_header(fp, std::string("Constrain timing of Switch Block " + sb_module_name + " for PnR"));
 
+  /* Print time unit for the SDC file */
+  print_sdc_timescale(fp, time_unit_to_string(time_unit));
+
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
     SideManager side_manager(side);
     for (size_t itrack = 0; itrack < rr_gsb.get_chan_width(side_manager.get_side()); ++itrack) {
@@ -151,6 +172,9 @@ void print_pnr_sdc_constrain_sb_timing(const std::string& sdc_dir,
       } 
       /* This is a MUX, constrain all the paths from an input to an output */
       print_pnr_sdc_constrain_sb_mux_timing(fp,
+                                            time_unit,
+                                            hierarchical,
+                                            module_path,
                                             module_manager, sb_module, 
                                             rr_graph,
                                             rr_gsb,
@@ -169,13 +193,18 @@ void print_pnr_sdc_constrain_sb_timing(const std::string& sdc_dir,
  * This function is designed for flatten routing hierarchy
  *******************************************************************/
 void print_pnr_sdc_flatten_routing_constrain_sb_timing(const std::string& sdc_dir,
+                                                       const float& time_unit,
+                                                       const bool& hierarchical,
                                                        const ModuleManager& module_manager,
+                                                       const ModuleId& top_module,
                                                        const RRGraph& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb,
                                                        const bool& constrain_zero_delay_paths) {
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer("Write SDC for constrain Switch Block timing for P&R flow");
+
+  std::string root_path = module_manager.module_name(top_module);
 
   /* Get the range of SB array */
   vtr::Point<size_t> sb_range = device_rr_gsb.get_gsb_range();
@@ -186,7 +215,19 @@ void print_pnr_sdc_flatten_routing_constrain_sb_timing(const std::string& sdc_di
       if (false == rr_gsb.is_sb_exist()) {
         continue;
       }
+
+      vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
+      std::string sb_instance_name = generate_switch_block_module_name(gsb_coordinate); 
+
+      ModuleId sb_module = module_manager.find_module(sb_instance_name);
+      VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
+
+      std::string module_path = format_dir_path(root_path) + sb_instance_name;
+
       print_pnr_sdc_constrain_sb_timing(sdc_dir,
+                                        time_unit,
+                                        hierarchical,
+                                        module_path,
                                         module_manager,
                                         rr_graph,
                                         rr_gsb,
@@ -200,7 +241,10 @@ void print_pnr_sdc_flatten_routing_constrain_sb_timing(const std::string& sdc_di
  * This function is designed for compact routing hierarchy
  *******************************************************************/
 void print_pnr_sdc_compact_routing_constrain_sb_timing(const std::string& sdc_dir,
+                                                       const float& time_unit,
+                                                       const bool& hierarchical,
                                                        const ModuleManager& module_manager,
+                                                       const ModuleId& top_module,
                                                        const RRGraph& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb,
                                                        const bool& constrain_zero_delay_paths) {
@@ -208,12 +252,29 @@ void print_pnr_sdc_compact_routing_constrain_sb_timing(const std::string& sdc_di
   /* Start time count */
   vtr::ScopedStartFinishTimer timer("Write SDC for constrain Switch Block timing for P&R flow");
 
+  std::string root_path = module_manager.module_name(top_module);
+
   for (size_t isb = 0; isb < device_rr_gsb.get_num_sb_unique_module(); ++isb) {
     const RRGSB& rr_gsb = device_rr_gsb.get_sb_unique_module(isb);
     if (false == rr_gsb.is_sb_exist()) {
       continue;
     }
+
+    /* Find all the sb instance under this module
+     * Create a regular expression to include these instance names 
+     */
+    vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
+    std::string sb_module_name = generate_switch_block_module_name(gsb_coordinate); 
+
+    ModuleId sb_module = module_manager.find_module(sb_module_name);
+    VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
+    
+    std::string module_path = format_dir_path(root_path) + sb_module_name;
+
     print_pnr_sdc_constrain_sb_timing(sdc_dir,
+                                      time_unit,
+                                      hierarchical,
+                                      module_path,
                                       module_manager,
                                       rr_graph,
                                       rr_gsb,
@@ -227,6 +288,9 @@ void print_pnr_sdc_compact_routing_constrain_sb_timing(const std::string& sdc_di
  *******************************************************************/
 static 
 void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
+                                           const float& time_unit,
+                                           const bool& hierarchical,
+                                           const std::string& module_path,
                                            const ModuleManager& module_manager,
                                            const ModuleId& cb_module, 
                                            const RRGraph& rr_graph,
@@ -295,11 +359,22 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
     }
 
     /* Constrain a path */
-    print_pnr_sdc_constrain_port2port_timing(fp,
-                                             module_manager, 
-                                             cb_module, module_input_port, 
-                                             cb_module, module_output_port,
-                                             switch_delays[module_input_port]);
+    if (true == hierarchical) {
+      print_pnr_sdc_constrain_port2port_timing(fp,
+                                               module_manager, 
+                                               cb_module, module_input_port, 
+                                               cb_module, module_output_port,
+                                               switch_delays[module_input_port] / time_unit);
+    } else {
+      VTR_ASSERT_SAFE(false == hierarchical);
+      print_pnr_sdc_constrain_max_delay(fp,
+                                        std::string(module_path),
+                                        generate_sdc_port(module_manager.module_port(cb_module, module_input_port)),
+                                        std::string(module_path),
+                                        generate_sdc_port(module_manager.module_port(cb_module, module_output_port)),
+                                        switch_delays[module_input_port] / time_unit);
+
+    }
   }
 }
 
@@ -309,6 +384,9 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
  *******************************************************************/
 static 
 void print_pnr_sdc_constrain_cb_timing(const std::string& sdc_dir,
+                                       const float& time_unit,
+                                       const bool& hierarchical,
+                                       const std::string& module_path,
                                        const ModuleManager& module_manager,
                                        const RRGraph& rr_graph,
                                        const RRGSB& rr_gsb, 
@@ -333,6 +411,9 @@ void print_pnr_sdc_constrain_cb_timing(const std::string& sdc_dir,
 
   /* Generate the descriptions*/
   print_sdc_file_header(fp, std::string("Constrain timing of Connection Block " + cb_module_name + " for PnR"));
+
+  /* Print time unit for the SDC file */
+  print_sdc_timescale(fp, time_unit_to_string(time_unit));
 
   /* Contrain each routing track inside the connection block */
   for (size_t itrack = 0; itrack < rr_gsb.get_cb_chan_width(cb_type); ++itrack) {
@@ -372,11 +453,21 @@ void print_pnr_sdc_constrain_cb_timing(const std::string& sdc_dir,
     }
 
     /* Constrain a path with routing segment delay */
-    print_pnr_sdc_constrain_port2port_timing(fp,
-                                             module_manager, 
-                                             cb_module, input_port_id, 
-                                             cb_module, output_port_id,
-                                             routing_segment_delay);
+    if (true == hierarchical) {
+      print_pnr_sdc_constrain_port2port_timing(fp,
+                                               module_manager, 
+                                               cb_module, input_port_id, 
+                                               cb_module, output_port_id,
+                                               routing_segment_delay / time_unit);
+    } else {
+      VTR_ASSERT_SAFE(false == hierarchical);
+      print_pnr_sdc_constrain_max_delay(fp,
+                                        std::string(module_path),
+                                        generate_sdc_port(module_manager.module_port(cb_module, input_port_id)),
+                                        std::string(module_path),
+                                        generate_sdc_port(module_manager.module_port(cb_module, output_port_id)),
+                                        routing_segment_delay / time_unit);
+    }
   }
 
   /* Contrain each multiplexers inside the connection block */
@@ -388,6 +479,8 @@ void print_pnr_sdc_constrain_cb_timing(const std::string& sdc_dir,
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side); ++inode) {
       const RRNodeId& ipin_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
       print_pnr_sdc_constrain_cb_mux_timing(fp,
+                                            time_unit,
+                                            hierarchical, module_path,
                                             module_manager, cb_module, 
                                             rr_graph, rr_gsb, cb_type,
                                             ipin_rr_node,
@@ -405,13 +498,18 @@ void print_pnr_sdc_constrain_cb_timing(const std::string& sdc_dir,
  *******************************************************************/
 static 
 void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_dir,
+                                                       const float& time_unit,
+                                                       const bool& hierarchical,
                                                        const ModuleManager& module_manager, 
+                                                       const ModuleId& top_module,
                                                        const RRGraph& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb,
                                                        const t_rr_type& cb_type,
                                                        const bool& constrain_zero_delay_paths) {
   /* Build unique X-direction connection block modules */
   vtr::Point<size_t> cb_range = device_rr_gsb.get_gsb_range();
+
+  std::string root_path = module_manager.module_name(top_module);
 
   for (size_t ix = 0; ix < cb_range.x(); ++ix) {
     for (size_t iy = 0; iy < cb_range.y(); ++iy) {
@@ -423,7 +521,21 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_di
       if (false == rr_gsb.is_cb_exist(cb_type)) {
         continue;
       }
+
+      /* Find all the cb instance under this module
+       * Create a regular expression to include these instance names 
+       */
+      vtr::Point<size_t> gsb_coordinate(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
+      std::string cb_instance_name = generate_connection_block_module_name(cb_type, gsb_coordinate); 
+      ModuleId cb_module = module_manager.find_module(cb_instance_name);
+      VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
+
+      std::string module_path = format_dir_path(root_path) + cb_instance_name;
+
       print_pnr_sdc_constrain_cb_timing(sdc_dir,
+                                        time_unit,
+                                        hierarchical,
+                                        module_path,
                                         module_manager,
                                         rr_graph, 
                                         rr_gsb, 
@@ -439,7 +551,10 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_di
  * and print SDC file for each of them 
  *******************************************************************/
 void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_dir,
+                                                       const float& time_unit,
+                                                       const bool& hierarchical,
                                                        const ModuleManager& module_manager, 
+                                                       const ModuleId& top_module,
                                                        const RRGraph& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb,
                                                        const bool& constrain_zero_delay_paths) {
@@ -447,13 +562,17 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_di
   /* Start time count */
   vtr::ScopedStartFinishTimer timer("Write SDC for constrain Connection Block timing for P&R flow");
 
-  print_pnr_sdc_flatten_routing_constrain_cb_timing(sdc_dir, module_manager, 
+  print_pnr_sdc_flatten_routing_constrain_cb_timing(sdc_dir, time_unit,
+                                                    hierarchical,
+                                                    module_manager, top_module,
                                                     rr_graph,
                                                     device_rr_gsb,
                                                     CHANX,
                                                     constrain_zero_delay_paths);
 
-  print_pnr_sdc_flatten_routing_constrain_cb_timing(sdc_dir, module_manager, 
+  print_pnr_sdc_flatten_routing_constrain_cb_timing(sdc_dir, time_unit,
+                                                    hierarchical, 
+                                                    module_manager, top_module,
                                                     rr_graph,
                                                     device_rr_gsb,
                                                     CHANY,
@@ -465,7 +584,10 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_di
  * This function is designed for compact routing hierarchy
  *******************************************************************/
 void print_pnr_sdc_compact_routing_constrain_cb_timing(const std::string& sdc_dir,
+                                                       const float& time_unit,
+                                                       const bool& hierarchical,
                                                        const ModuleManager& module_manager,
+                                                       const ModuleId& top_module,
                                                        const RRGraph& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb,
                                                        const bool& constrain_zero_delay_paths) {
@@ -473,10 +595,26 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(const std::string& sdc_di
   /* Start time count */
   vtr::ScopedStartFinishTimer timer("Write SDC for constrain Connection Block timing for P&R flow");
 
+  std::string root_path = module_manager.module_name(top_module);
+
   /* Print SDC for unique X-direction connection block modules */
   for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(CHANX); ++icb) {
     const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANX, icb);
+
+    /* Find all the cb instance under this module
+     * Create a regular expression to include these instance names 
+     */
+    vtr::Point<size_t> gsb_coordinate(unique_mirror.get_cb_x(CHANX), unique_mirror.get_cb_y(CHANX));
+    std::string cb_module_name = generate_connection_block_module_name(CHANX, gsb_coordinate); 
+    ModuleId cb_module = module_manager.find_module(cb_module_name);
+    VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
+
+    std::string module_path = format_dir_path(root_path) + cb_module_name;
+
     print_pnr_sdc_constrain_cb_timing(sdc_dir,
+                                      time_unit,
+                                      hierarchical,
+                                      module_path,
                                       module_manager,
                                       rr_graph, 
                                       unique_mirror, 
@@ -487,7 +625,21 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(const std::string& sdc_di
   /* Print SDC for unique Y-direction connection block modules */
   for (size_t icb = 0; icb < device_rr_gsb.get_num_cb_unique_module(CHANY); ++icb) {
     const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANY, icb);
+
+    /* Find all the cb instance under this module
+     * Create a regular expression to include these instance names 
+     */
+    vtr::Point<size_t> gsb_coordinate(unique_mirror.get_cb_x(CHANY), unique_mirror.get_cb_y(CHANY));
+    std::string cb_module_name = generate_connection_block_module_name(CHANY, gsb_coordinate); 
+    ModuleId cb_module = module_manager.find_module(cb_module_name);
+    VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
+
+    std::string module_path = format_dir_path(root_path) + cb_module_name;
+
     print_pnr_sdc_constrain_cb_timing(sdc_dir,
+                                      time_unit,
+                                      hierarchical,
+                                      module_path,
                                       module_manager,
                                       rr_graph, 
                                       unique_mirror, 

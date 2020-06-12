@@ -473,6 +473,10 @@ int Shell<T>::execute_command(const char* cmd_line,
     return command_status_[cmd_id];
   }
  
+  /* Reset the command parse results to initial status 
+   * Avoid conflict when calling the same command in the second time 
+   */
+  command_contexts_[cmd_id].reset();
   if (false == parse_command(tokens, commands_[cmd_id], command_contexts_[cmd_id])) {
     /* Echo the command */
     print_command_options(commands_[cmd_id]);

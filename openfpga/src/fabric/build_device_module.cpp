@@ -27,10 +27,13 @@ namespace openfpga {
  * for a FPGA fabric
  *******************************************************************/
 ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
-                                        const DeviceContext& vpr_device_ctx,
+                                        DecoderLibrary& decoder_lib,
                                         const OpenfpgaContext& openfpga_ctx,
+                                        const DeviceContext& vpr_device_ctx,
                                         const bool& compress_routing,
                                         const bool& duplicate_grid_pin,
+                                        const FabricKey& fabric_key,
+                                        const bool& generate_random_fabric_key,
                                         const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build fabric module graph");
 
@@ -66,12 +69,16 @@ ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
   build_wire_modules(module_manager, openfpga_ctx.arch().circuit_lib);
 
   /* Build memory modules */
-  build_memory_modules(module_manager, openfpga_ctx.mux_lib(), 
+  build_memory_modules(module_manager,
+                       decoder_lib,
+                       openfpga_ctx.mux_lib(), 
                        openfpga_ctx.arch().circuit_lib,
                        openfpga_ctx.arch().config_protocol.type());
 
   /* Build grid and programmable block modules */
-  build_grid_modules(module_manager, vpr_device_ctx,
+  build_grid_modules(module_manager,
+                     decoder_lib,
+                     vpr_device_ctx,
                      openfpga_ctx.vpr_device_annotation(),
                      openfpga_ctx.arch().circuit_lib,
                      openfpga_ctx.mux_lib(),
@@ -80,6 +87,7 @@ ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
 
   if (true == compress_routing) {
     build_unique_routing_modules(module_manager,
+                                 decoder_lib,
                                  vpr_device_ctx,
                                  openfpga_ctx.vpr_device_annotation(),
                                  openfpga_ctx.device_rr_gsb(),
@@ -89,6 +97,7 @@ ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
   } else {
     VTR_ASSERT_SAFE(false == compress_routing);
     build_flatten_routing_modules(module_manager,
+                                  decoder_lib,
                                   vpr_device_ctx,
                                   openfpga_ctx.vpr_device_annotation(),
                                   openfpga_ctx.device_rr_gsb(),
@@ -98,7 +107,9 @@ ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
   }
 
   /* Build FPGA fabric top-level module */
-  build_top_module(module_manager, io_location_map,
+  build_top_module(module_manager,
+                   io_location_map,
+                   decoder_lib,
                    openfpga_ctx.arch().circuit_lib, 
                    vpr_device_ctx.grid,
                    vpr_device_ctx.rr_graph,
@@ -107,7 +118,8 @@ ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
                    openfpga_ctx.arch().arch_direct, 
                    openfpga_ctx.arch().config_protocol.type(),
                    sram_model,
-                   compress_routing, duplicate_grid_pin);
+                   compress_routing, duplicate_grid_pin,
+                   fabric_key, generate_random_fabric_key);
 
   /* Now a critical correction has to be done!
    * In the module construction, we always use prefix of ports because they are binded

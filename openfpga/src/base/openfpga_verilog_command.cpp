@@ -79,6 +79,9 @@ ShellCommandId add_openfpga_write_verilog_testbench_command(openfpga::Shell<Open
   /* Add an option '--print_top_testbench' */
   shell_cmd.add_option("print_top_testbench", false, "Generate a full testbench for top-level fabric module with autocheck capability");
 
+  /* Add an option '--fast_configuration' */
+  shell_cmd.add_option("fast_configuration", false, "Reduce the period of configuration by skip zero data points");
+
   /* Add an option '--print_formal_verification_top_netlist' */
   shell_cmd.add_option("print_formal_verification_top_netlist", false, "Generate a top-level module which can be used in formal verification");
 
@@ -88,6 +91,9 @@ ShellCommandId add_openfpga_write_verilog_testbench_command(openfpga::Shell<Open
   /* Add an option '--print_simulation_ini' */
   CommandOptionId sim_ini_opt = shell_cmd.add_option("print_simulation_ini", false, "Generate a .ini file as an exchangeable file to enable HDL simulations");
   shell_cmd.set_option_require_value(sim_ini_opt, openfpga::OPT_STRING);
+
+  /* Add an option '--explicit_port_mapping' */
+  shell_cmd.add_option("explicit_port_mapping", false, "Use explicit port mapping in Verilog netlists");
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");

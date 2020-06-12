@@ -5,6 +5,9 @@ vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --clock_modeling route --absorb_buffe
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
 
+# Read OpenFPGA simulation settings
+read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
+
 # Annotate the OpenFPGA architecture to VPR data base
 # to debug use --verbose options
 link_openfpga_arch --activity_file ${ACTIVITY_FILE} --sort_gsb_chan_node_in_edges
@@ -22,6 +25,10 @@ lut_truth_table_fixup
 #  - Enabled compression on routing architecture modules
 #  - Enable pin duplication on grid modules
 build_fabric --compress_routing #--verbose
+
+# Write the fabric hierarchy of module graph to a file
+# This is used by hierarchical PnR flows
+write_fabric_hierarchy --file ./fabric_hierarchy.txt
 
 # Repack the netlist to physical pbs
 # This must be done before bitstream generator and testbench generation
@@ -54,6 +61,9 @@ write_verilog_testbench --file ./SRC --reference_benchmark_file_path ./${REFEREN
 # Write the SDC files for PnR backend
 #  - Turn on every options here
 write_pnr_sdc --file ./SDC
+
+# Write SDC to disable timing for configure ports
+write_sdc_disable_timing_configure_ports --file ./SDC/disable_configure_ports.sdc
 
 # Write the SDC to run timing analysis for a mapped FPGA fabric
 write_analysis_sdc --file ./SDC_analysis

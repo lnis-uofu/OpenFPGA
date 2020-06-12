@@ -329,6 +329,7 @@ void build_switch_block_interc_modules(ModuleManager& module_manager,
  ********************************************************************/
 static 
 void build_switch_block_module(ModuleManager& module_manager, 
+                               DecoderLibrary& decoder_lib,
                                const VprDeviceAnnotation& device_annotation,
                                const RRGraph& rr_graph,
                                const CircuitLibrary& circuit_lib,
@@ -438,7 +439,8 @@ void build_switch_block_module(ModuleManager& module_manager,
    * This is a one-shot addition that covers all the memory modules in this primitive module!
    */
   if (0 < module_manager.configurable_children(sb_module).size()) {
-    add_module_nets_memory_config_bus(module_manager, sb_module, 
+    add_module_nets_memory_config_bus(module_manager, decoder_lib, 
+                                      sb_module, 
                                       sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
 
@@ -709,6 +711,7 @@ void build_connection_block_interc_modules(ModuleManager& module_manager,
  ********************************************************************/
 static 
 void build_connection_block_module(ModuleManager& module_manager, 
+                                   DecoderLibrary& decoder_lib,
                                    const VprDeviceAnnotation& device_annotation,
                                    const RRGraph& rr_graph,
                                    const CircuitLibrary& circuit_lib, 
@@ -846,7 +849,8 @@ void build_connection_block_module(ModuleManager& module_manager,
    * This is a one-shot addition that covers all the memory modules in this primitive module!
    */
   if (0 < module_manager.configurable_children(cb_module).size()) {
-    add_module_nets_memory_config_bus(module_manager, cb_module, 
+    add_module_nets_memory_config_bus(module_manager, decoder_lib,
+                                      cb_module, 
                                       sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
 
@@ -860,6 +864,7 @@ void build_connection_block_module(ModuleManager& module_manager,
  *******************************************************************/
 static 
 void build_flatten_connection_block_modules(ModuleManager& module_manager, 
+                                            DecoderLibrary& decoder_lib,
                                             const DeviceContext& device_ctx,
                                             const VprDeviceAnnotation& device_annotation,
                                             const DeviceRRGSB& device_rr_gsb,
@@ -882,6 +887,7 @@ void build_flatten_connection_block_modules(ModuleManager& module_manager,
         continue;
       }
       build_connection_block_module(module_manager, 
+                                    decoder_lib,
                                     device_annotation,
                                     device_ctx.rr_graph,
                                     circuit_lib, 
@@ -902,6 +908,7 @@ void build_flatten_connection_block_modules(ModuleManager& module_manager,
  * 2. Switch blocks
  *******************************************************************/
 void build_flatten_routing_modules(ModuleManager& module_manager,
+                                   DecoderLibrary& decoder_lib,
                                    const DeviceContext& device_ctx,
                                    const VprDeviceAnnotation& device_annotation,
                                    const DeviceRRGSB& device_rr_gsb,
@@ -922,6 +929,7 @@ void build_flatten_routing_modules(ModuleManager& module_manager,
         continue;
       }
       build_switch_block_module(module_manager,
+                                decoder_lib,
                                 device_annotation,
                                 device_ctx.rr_graph,
                                 circuit_lib, 
@@ -932,6 +940,7 @@ void build_flatten_routing_modules(ModuleManager& module_manager,
   }
 
   build_flatten_connection_block_modules(module_manager,
+                                         decoder_lib,
                                          device_ctx, 
                                          device_annotation, 
                                          device_rr_gsb, 
@@ -941,6 +950,7 @@ void build_flatten_routing_modules(ModuleManager& module_manager,
                                          verbose);
 
   build_flatten_connection_block_modules(module_manager,
+                                         decoder_lib,
                                          device_ctx, 
                                          device_annotation, 
                                          device_rr_gsb, 
@@ -962,6 +972,7 @@ void build_flatten_routing_modules(ModuleManager& module_manager,
  * the option compact_routing_hierarchy is turned on!!!
  *******************************************************************/
 void build_unique_routing_modules(ModuleManager& module_manager,
+                                  DecoderLibrary& decoder_lib,
                                   const DeviceContext& device_ctx,
                                   const VprDeviceAnnotation& device_annotation,
                                   const DeviceRRGSB& device_rr_gsb,
@@ -976,6 +987,7 @@ void build_unique_routing_modules(ModuleManager& module_manager,
   for (size_t isb = 0; isb < device_rr_gsb.get_num_sb_unique_module(); ++isb) {
     const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(isb);
     build_switch_block_module(module_manager,
+                              decoder_lib,
                               device_annotation,
                               device_ctx.rr_graph,
                               circuit_lib, 
@@ -989,6 +1001,7 @@ void build_unique_routing_modules(ModuleManager& module_manager,
     const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANX, icb);
 
     build_connection_block_module(module_manager, 
+                                  decoder_lib,
                                   device_annotation,
                                   device_ctx.rr_graph,
                                   circuit_lib,  
@@ -1002,6 +1015,7 @@ void build_unique_routing_modules(ModuleManager& module_manager,
     const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(CHANY, icb);
 
     build_connection_block_module(module_manager, 
+                                  decoder_lib,
                                   device_annotation,
                                   device_ctx.rr_graph,
                                   circuit_lib, 

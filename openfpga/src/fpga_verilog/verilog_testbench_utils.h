@@ -20,16 +20,21 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+constexpr char* VPR_BENCHMARK_OUT_PORT_PREFIX = "out:";
+constexpr char* OPENFPGA_BENCHMARK_OUT_PORT_PREFIX = "out_";
+
 void print_verilog_testbench_fpga_instance(std::fstream& fp,
                                            const ModuleManager& module_manager,
                                            const ModuleId& top_module,
-                                           const std::string& top_instance_name);
+                                           const std::string& top_instance_name,
+                                           const bool& explicit_port_mapping);
 
 void print_verilog_testbench_benchmark_instance(std::fstream& fp,
                                                 const std::string& module_name,
                                                 const std::string& instance_name,
                                                 const std::string& module_input_port_postfix,
                                                 const std::string& module_output_port_postfix,
+                                                const std::vector<std::string>& output_port_prefix_to_remove,
                                                 const std::string& output_port_postfix,
                                                 const AtomContext& atom_ctx,
                                                 const VprNetlistAnnotation& netlist_annotation,

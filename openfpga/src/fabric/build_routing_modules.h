@@ -8,6 +8,7 @@
 #include "vpr_device_annotation.h"
 #include "device_rr_gsb.h"
 #include "mux_library.h"
+#include "decoder_library.h"
 #include "circuit_library.h"
 #include "module_manager.h"
 
@@ -19,6 +20,7 @@
 namespace openfpga {
 
 void build_flatten_routing_modules(ModuleManager& module_manager,
+                                   DecoderLibrary& decoder_lib,
                                    const DeviceContext& device_ctx,
                                    const VprDeviceAnnotation& device_annotation,
                                    const DeviceRRGSB& device_rr_gsb,
@@ -28,6 +30,7 @@ void build_flatten_routing_modules(ModuleManager& module_manager,
                                    const bool& verbose);
 
 void build_unique_routing_modules(ModuleManager& module_manager,
+                                  DecoderLibrary& decoder_lib,
                                   const DeviceContext& device_ctx,
                                   const VprDeviceAnnotation& device_annotation,
                                   const DeviceRRGSB& device_rr_gsb,

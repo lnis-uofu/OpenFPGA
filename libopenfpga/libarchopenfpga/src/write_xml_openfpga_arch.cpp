@@ -20,7 +20,7 @@
 #include "write_xml_openfpga_arch.h"
 
 /********************************************************************
- * A writer to output an OpenFPGAArch to XML format
+ * A writer to output an OpenFPGA arch database to XML format
  *******************************************************************/
 void write_xml_openfpga_arch(const char* fname, 
                              const openfpga::Arch& openfpga_arch) {
@@ -63,8 +63,27 @@ void write_xml_openfpga_arch(const char* fname,
 
   fp << "</openfpga_architecture>" << "\n";
 
+  /* Close the file stream */
+  fp.close();
+}
+
+/********************************************************************
+ * A writer to output an OpenFPGA simulation setting database to XML format
+ *******************************************************************/
+void write_xml_openfpga_simulation_settings(const char* fname, 
+                                            const openfpga::SimulationSetting& openfpga_sim_setting) {
+  vtr::ScopedStartFinishTimer timer("Write OpenFPGA simulation settings");
+
+  /* Create a file handler */
+  std::fstream fp;
+  /* Open the file stream */
+  fp.open(std::string(fname), std::fstream::out | std::fstream::trunc);
+
+  /* Validate the file stream */
+  openfpga::check_file_stream(fname, fp);
+
   /* Write the simulation */
-  write_xml_simulation_setting(fp, fname, openfpga_arch.sim_setting);
+  write_xml_simulation_setting(fp, fname, openfpga_sim_setting);
 
   /* Close the file stream */
   fp.close();

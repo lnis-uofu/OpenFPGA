@@ -65,6 +65,55 @@ ShellCommandId add_openfpga_write_arch_command(openfpga::Shell<OpenfpgaContext>&
 }
 
 /********************************************************************
+ * - Add a command to Shell environment: read_openfpga_simulation_setting
+ * - Add associated options 
+ * - Add command dependency
+ *******************************************************************/
+static 
+ShellCommandId add_openfpga_read_simulation_setting_command(openfpga::Shell<OpenfpgaContext>& shell,
+                                                            const ShellCommandClassId& cmd_class_id) {
+  Command shell_cmd("read_openfpga_simulation_setting");
+
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file = shell_cmd.add_option("file", true, "file path to the simulation setting XML");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  /* Add command 'read_openfpga_arch' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "read OpenFPGA simulation setting file");
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id, read_simulation_setting);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
+ * - Add a command to Shell environment: write_openfpga_simulation_setting
+ * - Add associated options 
+ * - Add command dependency
+ *******************************************************************/
+static 
+ShellCommandId add_openfpga_write_simulation_setting_command(openfpga::Shell<OpenfpgaContext>& shell,
+                                                             const ShellCommandClassId& cmd_class_id,
+                                                             const std::vector<ShellCommandId>& dependent_cmds) {
+  Command shell_cmd("write_openfpga_simulation_setting");
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file = shell_cmd.add_option("file", true, "file path to the simulation setting XML");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  /* Add command 'write_openfpga_arch' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "write OpenFPGA simulation setting file");
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_const_execute_function(shell_cmd_id, write_simulation_setting);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
  * - Add a command to Shell environment: link_openfpga_arch
  * - Add associated options 
  * - Add command dependency
@@ -224,6 +273,17 @@ ShellCommandId add_openfpga_build_fabric_command(openfpga::Shell<OpenfpgaContext
   /* Add an option '--duplicate_grid_pin' */
   shell_cmd.add_option("duplicate_grid_pin", false, "Duplicate the pins on the same side of a grid");
 
+  /* Add an option '--load_fabric_key' */
+  CommandOptionId opt_load_fkey = shell_cmd.add_option("load_fabric_key", false, "load the fabric key from the given file");
+  shell_cmd.set_option_require_value(opt_load_fkey, openfpga::OPT_STRING);
+
+  /* Add an option '--write_fabric_key' */
+  CommandOptionId opt_write_fkey = shell_cmd.add_option("write_fabric_key", false, "output current fabric key to a file");
+  shell_cmd.set_option_require_value(opt_write_fkey, openfpga::OPT_STRING);
+
+  /* Add an option '--generate_random_fabric_key' */
+  shell_cmd.add_option("generate_random_fabric_key", false, "Create a random fabric key which will shuffle the memory address for encryption purpose");
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
 
@@ -231,6 +291,41 @@ ShellCommandId add_openfpga_build_fabric_command(openfpga::Shell<OpenfpgaContext
   ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "Build the FPGA fabric in a graph of modules");
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id, build_fabric);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
+ * - Add a command to Shell environment: write_fabric_hierarchy
+ * - Add associated options 
+ * - Add command dependency
+ *******************************************************************/
+static 
+ShellCommandId add_openfpga_write_fabric_hierarchy_command(openfpga::Shell<OpenfpgaContext>& shell,
+                                                           const ShellCommandClassId& cmd_class_id,
+                                                           const std::vector<ShellCommandId>& dependent_cmds) {
+
+  Command shell_cmd("write_fabric_hierarchy");
+
+  /* Add an option '--file' */
+  CommandOptionId opt_file = shell_cmd.add_option("file", true, "Specify the file name to write the hierarchy to");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  /* Add an option '--depth' */
+  CommandOptionId opt_depth = shell_cmd.add_option("depth", false, "Specify the depth of hierarchy to which the writer should stop");
+  shell_cmd.set_option_require_value(opt_depth, openfpga::OPT_INT);
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Show verbose outputs");
+
+  /* Add command 'write_fabric_hierarchy' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "Write the hierarchy of FPGA fabric graph to a plain-text file");
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_const_execute_function(shell_cmd_id, write_fabric_hierarchy);
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
@@ -261,15 +356,34 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
                                   write_arch_dependent_cmds);
 
   /******************************** 
+   * Command 'read_openfpga_simulation_setting' 
+   */
+  ShellCommandId read_sim_setting_cmd_id = add_openfpga_read_simulation_setting_command(shell,
+                                                                                        openfpga_setup_cmd_class);
+
+  /******************************** 
+   * Command 'write_openfpga_simulation_setting' 
+   */
+  /* The 'write_openfpga_simulation_setting' command should NOT be executed before 'read_openfpga_simulation_setting' */
+  std::vector<ShellCommandId> write_sim_setting_dependent_cmds(1, read_sim_setting_cmd_id);
+  add_openfpga_write_simulation_setting_command(shell,
+                                                openfpga_setup_cmd_class,
+                                                write_sim_setting_dependent_cmds);
+
+  /******************************** 
    * Command 'link_openfpga_arch' 
    */
   /* The 'link_openfpga_arch' command should NOT be executed before 'vpr' */
   std::vector<ShellCommandId> link_arch_dependent_cmds;
   link_arch_dependent_cmds.push_back(read_arch_cmd_id);
+  /* TODO: This will be uncommented when openfpga flow script is updated
+   */
+  link_arch_dependent_cmds.push_back(read_sim_setting_cmd_id);
   link_arch_dependent_cmds.push_back(vpr_cmd_id);
   ShellCommandId link_arch_cmd_id = add_openfpga_link_arch_command(shell,
                                                                    openfpga_setup_cmd_class,
                                                                    link_arch_dependent_cmds);
+
   /******************************** 
    * Command 'write_gsb' 
    */
@@ -317,9 +431,19 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /* The 'build_fabric' command should NOT be executed before 'link_openfpga_arch' */
   std::vector<ShellCommandId> build_fabric_dependent_cmds;
   build_fabric_dependent_cmds.push_back(link_arch_cmd_id);
-  add_openfpga_build_fabric_command(shell,
-                                    openfpga_setup_cmd_class,
-                                    build_fabric_dependent_cmds);
+  ShellCommandId build_fabric_cmd_id = add_openfpga_build_fabric_command(shell,
+                                                                         openfpga_setup_cmd_class,
+                                                                         build_fabric_dependent_cmds);
+
+  /******************************** 
+   * Command 'write_fabric_hierarchy' 
+   */
+  /* The 'write_fabric_hierarchy' command should NOT be executed before 'build_fabric' */
+  std::vector<ShellCommandId> write_fabric_hie_dependent_cmds;
+  write_fabric_hie_dependent_cmds.push_back(build_fabric_cmd_id);
+  add_openfpga_write_fabric_hierarchy_command(shell,
+                                              openfpga_setup_cmd_class,
+                                              write_fabric_hie_dependent_cmds);
 } 
 
 } /* end namespace openfpga */

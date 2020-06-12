@@ -11,7 +11,8 @@
 /********************************************************************
  * Function declaration
  *******************************************************************/
-SimulationSetting read_xml_simulation_setting(pugi::xml_node& Node,
-                                              const pugiutil::loc_data& loc_data);
+
+openfpga::SimulationSetting read_xml_simulation_setting(pugi::xml_node& Node,
+                                                        const pugiutil::loc_data& loc_data);
 
 #endif

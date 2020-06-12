@@ -31,6 +31,20 @@ std::string generate_instance_name(const std::string& instance_name,
 }
 
 /************************************************
+ * A generic function to generate the instance name
+ * in the following format:
+ * <instance_name>_<id>_
+ * This is mainly used by module manager to give a default
+ * name for each instance when outputting the module
+ * in Verilog/SPICE format
+ ***********************************************/
+std::string generate_instance_wildcard_name(const std::string& instance_name,
+                                            const std::string& wildcard_str) {
+  return instance_name + std::string("_") + wildcard_str + std::string("_");
+}
+
+
+/************************************************
  * Generate the node name for a multiplexing structure 
  * Case 1 : If there is an intermediate buffer followed by,
  *          the node name will be mux_l<node_level>_in_buf
@@ -121,6 +135,34 @@ std::string generate_mux_branch_subckt_name(const CircuitLibrary& circuit_lib,
 std::string generate_mux_local_decoder_subckt_name(const size_t& addr_size, 
                                                    const size_t& data_size) {
   std::string subckt_name = "decoder";
+  subckt_name += std::to_string(addr_size);
+  subckt_name += "to";
+  subckt_name += std::to_string(data_size);
+
+  return subckt_name;
+} 
+
+/************************************************
+ * Generate the module name of a decoder
+ * for frame-based memories
+ ***********************************************/
+std::string generate_memory_decoder_subckt_name(const size_t& addr_size, 
+                                                const size_t& data_size) {
+  std::string subckt_name = "decoder";
+  subckt_name += std::to_string(addr_size);
+  subckt_name += "to";
+  subckt_name += std::to_string(data_size);
+
+  return subckt_name;
+} 
+
+/************************************************
+ * Generate the module name of a word-line decoder
+ * for memories
+ ***********************************************/
+std::string generate_memory_decoder_with_data_in_subckt_name(const size_t& addr_size, 
+                                                             const size_t& data_size) {
+  std::string subckt_name = "decoder_with_data_in_";
   subckt_name += std::to_string(addr_size);
   subckt_name += "to";
   subckt_name += std::to_string(data_size);
@@ -659,18 +701,18 @@ std::string generate_configuration_chain_tail_name() {
 }
 
 /*********************************************************************
- * Generate the memory output port name of a configuration chain
+ * Generate the memory output port name of a configurable memory
  * TODO: This could be replaced as a constexpr string
  *********************************************************************/
-std::string generate_configuration_chain_data_out_name() {
+std::string generate_configurable_memory_data_out_name() {
   return std::string("mem_out");
 }
 
 /*********************************************************************
- * Generate the inverted memory output port name of a configuration chain
+ * Generate the inverted memory output port name of a configurable memory
  * TODO: This could be replaced as a constexpr string
  *********************************************************************/
-std::string generate_configuration_chain_inverted_data_out_name() {
+std::string generate_configurable_memory_inverted_data_out_name() {
   return std::string("mem_outb");
 }
 
@@ -716,19 +758,6 @@ std::string generate_sram_port_name(const e_config_protocol_type& sram_orgz_type
   std::string port_name;
 
   switch (sram_orgz_type) {
-  case CONFIG_MEM_STANDALONE: {
-    /* Two types of ports are available:  
-     * (1) Regular output of a SRAM, enabled by port type of INPUT
-     * (2) Inverted output of a SRAM, enabled by port type of OUTPUT
-     */
-    if (CIRCUIT_MODEL_PORT_INPUT == port_type) {
-      port_name = std::string("mem_out"); 
-    } else {
-      VTR_ASSERT( CIRCUIT_MODEL_PORT_OUTPUT == port_type );
-      port_name = std::string("mem_outb"); 
-    }
-    break;
-  }
   case CONFIG_MEM_SCAN_CHAIN:
     /* Two types of ports are available:  
      * (1) Head of a chain of Configuration-chain Flip-Flops (CCFFs), enabled by port type of INPUT
@@ -744,34 +773,44 @@ std::string generate_sram_port_name(const e_config_protocol_type& sram_orgz_type
       port_name = std::string("ccff_tail"); 
     }
     break;
+  case CONFIG_MEM_STANDALONE:
   case CONFIG_MEM_MEMORY_BANK:
-    /* Four types of ports are available:  
+    /* Two types of ports are available:  
      * (1) Bit Lines (BLs) of a SRAM cell, enabled by port type of BL
      * (2) Word Lines (WLs) of a SRAM cell, enabled by port type of WL
-     * (3) Inverted Bit Lines (BLBs) of a SRAM cell, enabled by port type of BLB
-     * (4) Inverted Word Lines (WLBs) of a SRAM cell, enabled by port type of WLB
      *
-     *           BL BLB WL WLB    BL BLB WL WLB    BL BLB WL WLB
-     *          [0] [0] [0] [0]  [1] [1] [1] [1]  [i] [i] [i] [i]
-     *            ^  ^  ^  ^       ^  ^  ^  ^       ^  ^  ^  ^
-     *            |  |  |  |       |  |  |  |       |  |  |  |
+     *           BL     WL        BL     WL        BL     WL    
+     *          [0]     [0]      [1]     [1]      [i]     [i]    
+     *            ^     ^          ^     ^          ^     ^    
+     *            |     |          |     |          |     |    
      *           +----------+     +----------+     +----------+
      *           |   SRAM   |     |   SRAM   | ... |   SRAM   |         
      *           +----------+     +----------+     +----------+
      */
     if (CIRCUIT_MODEL_PORT_BL == port_type) {
-      port_name = std::string("bl"); 
-    } else if (CIRCUIT_MODEL_PORT_WL == port_type) {
-      port_name = std::string("wl"); 
-    } else if (CIRCUIT_MODEL_PORT_BLB == port_type) {
-      port_name = std::string("blb"); 
+      port_name = std::string(MEMORY_BL_PORT_NAME); 
     } else {
-      VTR_ASSERT( CIRCUIT_MODEL_PORT_WLB == port_type );
-      port_name = std::string("wlb"); 
+      VTR_ASSERT( CIRCUIT_MODEL_PORT_WL == port_type );
+      port_name = std::string(MEMORY_WL_PORT_NAME); 
     }
     break;
+  case CONFIG_MEM_FRAME_BASED:
+    /* Only one input port is required, which is the address port
+     *
+     *        EN         ADDR      DATA_IN
+     *         |          |           |
+     *         v          v           v
+     *     +---------------------------------+
+     *     |       Frame decoder             |
+     *     +---------------------------------+
+     *
+     */
+    VTR_ASSERT(port_type == CIRCUIT_MODEL_PORT_INPUT);
+    port_name = std::string(DECODER_ADDRESS_PORT_NAME); 
+    break;
   default:
-    VTR_LOG_ERROR("Invalid type of SRAM organization !\n");
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization !\n");
     exit(1);
   }
 

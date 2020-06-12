@@ -22,6 +22,7 @@ constexpr char* MODELSIM_SIMULATION_TIME_UNIT = "ms";
 constexpr char* ICARUS_SIMULATOR_FLAG = "ICARUS_SIMULATOR"; // the flag to enable specific Verilog code in testbenches
 // End of Icarus variables and flag
 
+constexpr char* FABRIC_INCLUDE_NETLIST_FILE_NAME = "fabric_netlists.v";
 constexpr char* TOP_INCLUDE_NETLIST_FILE_NAME_POSTFIX = "_include_netlists.v";
 constexpr char* VERILOG_TOP_POSTFIX = "_top.v";
 constexpr char* FORMAL_VERIFICATION_VERILOG_FILE_POSTFIX = "_top_formal_verification.v"; 
@@ -36,6 +37,7 @@ constexpr char* LUTS_VERILOG_FILE_NAME = "luts.v";
 constexpr char* ROUTING_VERILOG_FILE_NAME = "routing.v";
 constexpr char* MUXES_VERILOG_FILE_NAME = "muxes.v";
 constexpr char* LOCAL_ENCODER_VERILOG_FILE_NAME = "local_encoder.v";
+constexpr char* ARCH_ENCODER_VERILOG_FILE_NAME = "arch_encoder.v";
 constexpr char* MEMORIES_VERILOG_FILE_NAME = "memories.v";
 constexpr char* WIRES_VERILOG_FILE_NAME = "wires.v";
 constexpr char* ESSENTIALS_VERILOG_FILE_NAME = "inv_buf_passgate.v";

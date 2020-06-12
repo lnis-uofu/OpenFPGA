@@ -19,6 +19,9 @@ namespace openfpga {
 void print_sdc_file_header(std::fstream& fp,
                            const std::string& usage);
 
+void print_sdc_timescale(std::fstream& fp,
+                         const std::string& timescale);
+
 std::string generate_sdc_port(const BasicPort& port);
 
 void print_pnr_sdc_constrain_max_delay(std::fstream& fp,
@@ -27,6 +30,13 @@ void print_pnr_sdc_constrain_max_delay(std::fstream& fp,
                                        const std::string& des_instance_name,
                                        const std::string& des_port_name,
                                        const float& delay);
+
+void print_pnr_sdc_regexp_constrain_max_delay(std::fstream& fp,
+                                              const std::string& src_instance_name,
+                                              const std::string& src_port_name,
+                                              const std::string& des_instance_name,
+                                              const std::string& des_port_name,
+                                              const float& delay);
 
 void print_pnr_sdc_constrain_min_delay(std::fstream& fp,
                                        const std::string& src_instance_name,
@@ -63,6 +73,14 @@ void print_sdc_set_port_output_delay(std::fstream& fp,
                                      const BasicPort& port,
                                      const BasicPort& clock_port,
                                      const float& delay);
+
+int rec_print_sdc_disable_timing_for_module_ports(std::fstream& fp, 
+                                                  const bool& flatten_names,
+                                                  const ModuleManager& module_manager, 
+                                                  const ModuleId& parent_module,
+                                                  const ModuleId& module_to_disable,
+                                                  const std::string& parent_module_path,
+                                                  const std::string& disable_port_name);
 
 } /* end namespace openfpga */
 

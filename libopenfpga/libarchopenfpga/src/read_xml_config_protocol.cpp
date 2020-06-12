@@ -35,8 +35,8 @@ e_config_protocol_type string_to_config_protocol_type(const std::string& type_st
     return CONFIG_MEM_MEMORY_BANK;
   }
 
-  if (std::string("local_encoder") == type_string) {
-    return CONFIG_MEM_LOCAL_ENCODER;
+  if (std::string("frame_based") == type_string) {
+    return CONFIG_MEM_FRAME_BASED;
   }
 
   return NUM_CONFIG_PROTOCOL_TYPES;

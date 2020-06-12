@@ -14,6 +14,21 @@ namespace openfpga {
 
 /******************************************************************** 
  * Convert an integer to an one-hot encoding integer array
+ * For example: 
+ *   Input integer: 3
+ *   Binary length : 4
+ *   Output:
+ *     index | 0 | 1 | 2 | 3
+ *     ret   | 0 | 0 | 0 | 1
+ *
+ * If you need all zero code, set the input integer same as the binary length
+ * For example: 
+ *   Input integer: 4
+ *   Binary length : 4
+ *   Output:
+ *     index | 0 | 1 | 2 | 3
+ *     ret   | 0 | 0 | 0 | 0
+ *           
  ********************************************************************/
 std::vector<size_t> ito1hot_vec(const size_t& in_int,
                                 const size_t& bin_len) {
@@ -33,6 +48,12 @@ std::vector<size_t> ito1hot_vec(const size_t& in_int,
 
 /******************************************************************** 
  * Converter an integer to a binary vector 
+ * For example: 
+ *   Input integer: 4
+ *   Binary length : 3
+ *   Output:
+ *     index | 0 | 1 | 2
+ *     ret   | 0 | 0 | 1 
  ********************************************************************/
 std::vector<size_t> itobin_vec(const size_t& in_int,
                                const size_t& bin_len) {

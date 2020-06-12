@@ -260,6 +260,7 @@ size_t find_cmos_mux_num_config_bits(const CircuitLibrary& circuit_lib,
   case CONFIG_MEM_MEMORY_BANK:
   case CONFIG_MEM_SCAN_CHAIN:
   case CONFIG_MEM_STANDALONE:
+  case CONFIG_MEM_FRAME_BASED:
     num_config_bits = mux_graph.num_memory_bits();
     break;
   default:

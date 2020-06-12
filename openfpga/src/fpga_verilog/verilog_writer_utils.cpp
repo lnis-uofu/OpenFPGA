@@ -517,31 +517,27 @@ std::vector<BasicPort> combine_verilog_ports(const std::vector<BasicPort>& ports
     if (&port == &ports[0]) {
       continue;
     } 
-    /* Identify if the port name can be potentially merged: if the port name is already in the merged port list, it may be merged */
-    bool merged = false;
-    for (auto& merged_port : merged_ports) {
-      if (false == port.mergeable(merged_port)) {
-        /* Unable to merge, Go to next */
-        continue;
-      }
-      /* May be merged, check LSB of port and MSB of merged_port */
-      if (merged_port.get_msb() + 1 != port.get_lsb()) {
-        /* Unable to merge, Go to next */
-        continue;
-      } 
-      /* Reach here, we should merge the ports,
-       * LSB of merged_port remains the same,
-       * MSB of merged_port will be updated 
-       * to the MSB of port 
-       */
-      merged_port.set_msb(port.get_msb());
-      merged = true;
-      break;
-    }
-    if (false == merged) {
+    /* Identify if the port name can be potentially merged: 
+     * if the port can be merged to the last port in the list, it may be merged
+     */
+    if (false == port.mergeable(merged_ports.back())) {
       /* Unable to merge, add the port to merged port list */
       merged_ports.push_back(port);
+      continue;
     }
+    /* May be merged, check LSB of port and MSB of merged_port */
+    if (merged_ports.back().get_msb() + 1 != port.get_lsb()) {
+      /* Unable to merge, add the port to merged port list */
+      merged_ports.push_back(port);
+      continue;
+    } 
+    /* Reach here, we should merge the ports,
+     * LSB of merged_port remains the same,
+     * MSB of merged_port will be updated 
+     * to the MSB of port 
+     */
+    BasicPort& port_to_merge = merged_ports.back();
+    port_to_merge.set_msb(port.get_msb());
   }
 
   return merged_ports;
@@ -644,12 +640,38 @@ std::string generate_verilog_local_wire(const BasicPort& output_port,
 /********************************************************************
  * Generate a string for a constant value in Verilog format:
  *  <#.of bits>'b<binary numbers>
+ *
+ * Optimization: short_constant
+ *   When this switch is turned on, we will generate short version
+ *   for all-zero/all-one vectors
+ *   {<length>{1'b<zero/one>}}
  *******************************************************************/
-std::string generate_verilog_constant_values(const std::vector<size_t>& const_values) {
-  std::string str = std::to_string(const_values.size());
-  str += "'b";
-  for (const auto& val : const_values) {
-    str += std::to_string(val);
+std::string generate_verilog_constant_values(const std::vector<size_t>& const_values,
+                                             const bool& short_constant) {
+  VTR_ASSERT(!const_values.empty());
+
+  bool same_values = true;
+  size_t first_val = const_values.back();
+  if (true == short_constant) {
+    for (const auto& val : const_values) {
+      if (first_val != val) {
+        same_values = false;
+        break;
+      }
+    }
+  }
+
+  std::string str;
+
+  if ( (true == short_constant) 
+    && (true == same_values) ) {
+    str = "{" + std::to_string(const_values.size()) + "{1'b" + std::to_string(first_val) + "}}";
+  } else {
+    str = std::to_string(const_values.size());
+    str += "'b";
+    for (const auto& val : const_values) {
+      str += std::to_string(val);
+    }
   }
   return str;
 }

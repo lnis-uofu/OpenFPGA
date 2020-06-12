@@ -5,6 +5,9 @@ vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --clock_modeling route
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
 
+# Read OpenFPGA simulation settings
+read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
+
 # Annotate the OpenFPGA architecture to VPR data base
 # to debug use --verbose options
 link_openfpga_arch --activity_file ${ACTIVITY_FILE}
@@ -22,6 +25,10 @@ lut_truth_table_fixup
 #  - Enabled compression on routing architecture modules
 #  - Enable pin duplication on grid modules
 build_fabric #--verbose
+
+# Write the fabric hierarchy of module graph to a file
+# This is used by hierarchical PnR flows
+write_fabric_hierarchy --file ./fabric_hierarchy.txt
 
 # Repack the netlist to physical pbs
 # This must be done before bitstream generator and testbench generation
@@ -45,11 +52,14 @@ write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --inc
 #  - Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
 #  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
-write_verilog_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --print_top_testbench --print_preconfig_top_testbench --print_simulation_ini ./SimulationDeck/simulation_deck.ini
+write_verilog_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --print_top_testbench --print_preconfig_top_testbench --print_simulation_ini ./SimulationDeck/simulation_deck.ini --explicit_port_mapping
 
 # Write the SDC files for PnR backend
 #  - Turn on every options here
 write_pnr_sdc --file ./SDC
+
+# Write SDC to disable timing for configure ports
+write_sdc_disable_timing_configure_ports --file ./SDC/disable_configure_ports.sdc
 
 # Write the SDC to run timing analysis for a mapped FPGA fabric
 write_analysis_sdc --file ./SDC_analysis
