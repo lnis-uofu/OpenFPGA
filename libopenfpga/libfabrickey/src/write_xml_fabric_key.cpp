@@ -19,29 +19,44 @@
 
 /********************************************************************
  * A writer to output a component key to XML format
+ *
+ * Return 0 if successful
+ * Return 1 if there are more serious bugs in the architecture 
+ * Return 2 if fail when creating files
  *******************************************************************/
 static 
-void write_xml_fabric_component_key(std::fstream& fp,
-                                    const char* fname,
-                                    const FabricKey& fabric_key,
-                                    const FabricKeyId& component_key) {
+int write_xml_fabric_component_key(std::fstream& fp,
+                                   const FabricKey& fabric_key,
+                                   const FabricKeyId& component_key) {
   /* Validate the file stream */
-  openfpga::check_file_stream(fname, fp);
+  if (false == openfpga::valid_file_stream(fp)) {
+    return 2;
+  }
 
   fp << "\t" << "<key";
+
+  if (false == fabric_key.valid_key_id(component_key)) {
+    return 1;
+  }
 
   write_xml_attribute(fp, "id", size_t(component_key));
   write_xml_attribute(fp, "name", fabric_key.key_name(component_key).c_str());
   write_xml_attribute(fp, "value", fabric_key.key_value(component_key));
 
   fp << "/>" << "\n";
+
+  return 0;
 }
 
 /********************************************************************
  * A writer to output a fabric key to XML format
+ *
+ * Return 0 if successful
+ * Return 1 if there are more serious bugs in the architecture 
+ * Return 2 if fail when creating files
  *******************************************************************/
-void write_xml_fabric_key(const char* fname,
-                          const FabricKey& fabric_key) {
+int write_xml_fabric_key(const char* fname,
+                         const FabricKey& fabric_key) {
 
   vtr::ScopedStartFinishTimer timer("Write Fabric Key");
 
@@ -56,9 +71,14 @@ void write_xml_fabric_key(const char* fname,
   /* Write the root node */
   fp << "<fabric_key>" << "\n";
 
+  int err_code = 0;
+
   /* Write component by component */ 
   for (const FabricKeyId& key : fabric_key.keys()) {
-    write_xml_fabric_component_key(fp, fname, fabric_key, key);
+    err_code = write_xml_fabric_component_key(fp, fabric_key, key);
+    if (0 != err_code) {
+      return err_code;
+    }
   }
 
   /* Finish writing the root node */
@@ -66,4 +86,6 @@ void write_xml_fabric_key(const char* fname,
 
   /* Close the file stream */
   fp.close();
+
+  return err_code;
 }

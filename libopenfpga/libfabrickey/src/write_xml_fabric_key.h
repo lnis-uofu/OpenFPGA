@@ -10,7 +10,7 @@
 /********************************************************************
  * Function declaration
  *******************************************************************/
-void write_xml_fabric_key(const char* fname,
-                          const FabricKey& fabric_key);
+int write_xml_fabric_key(const char* fname,
+                         const FabricKey& fabric_key);
 
 #endif

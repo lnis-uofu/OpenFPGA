@@ -12,6 +12,7 @@
 #include "device_rr_gsb_utils.h"
 #include "build_device_module.h"
 #include "fabric_hierarchy_writer.h"
+#include "fabric_key_writer.h"
 #include "openfpga_build_fabric.h"
 
 /* Include global variables of VPR */
@@ -65,6 +66,7 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
 
   CommandOptionId opt_compress_routing = cmd.option("compress_routing");
   CommandOptionId opt_duplicate_grid_pin = cmd.option("duplicate_grid_pin");
+  CommandOptionId opt_write_fabric_key = cmd.option("write_fabric_key");
   CommandOptionId opt_verbose = cmd.option("verbose");
   
   if (true == cmd_context.option_enable(cmd, opt_compress_routing)) {
@@ -82,6 +84,16 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
                                                                   cmd_context.option_enable(cmd, opt_compress_routing),
                                                                   cmd_context.option_enable(cmd, opt_duplicate_grid_pin),
                                                                   cmd_context.option_enable(cmd, opt_verbose));
+
+  /* Output fabric key if user requested */
+  if (true == cmd_context.option_enable(cmd, opt_write_fabric_key)) {
+    std::string fkey_fname = cmd_context.option_value(cmd, opt_write_fabric_key);
+    VTR_ASSERT(false == fkey_fname.empty());
+    write_fabric_key_to_xml_file(openfpga_ctx.module_graph(),
+                                 fkey_fname,
+                                 cmd_context.option_enable(cmd, opt_verbose));
+                                 
+  }
 
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;
