@@ -34,6 +34,9 @@ void organize_top_module_memory_modules(ModuleManager& module_manager,
                                         const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
                                         const bool& compact_routing_hierarchy);
 
+void shuffle_top_module_configurable_children(ModuleManager& module_manager, 
+                                              const ModuleId& top_module);
+
 void add_top_module_sram_ports(ModuleManager& module_manager, 
                                const ModuleId& module_id,
                                const CircuitLibrary& circuit_lib,

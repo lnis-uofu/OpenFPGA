@@ -66,6 +66,7 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
 
   CommandOptionId opt_compress_routing = cmd.option("compress_routing");
   CommandOptionId opt_duplicate_grid_pin = cmd.option("duplicate_grid_pin");
+  CommandOptionId opt_gen_random_fabric_key = cmd.option("generate_random_fabric_key");
   CommandOptionId opt_write_fabric_key = cmd.option("write_fabric_key");
   CommandOptionId opt_verbose = cmd.option("verbose");
   
@@ -83,6 +84,7 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
                                                                   g_vpr_ctx.device(),
                                                                   cmd_context.option_enable(cmd, opt_compress_routing),
                                                                   cmd_context.option_enable(cmd, opt_duplicate_grid_pin),
+                                                                  cmd_context.option_enable(cmd, opt_gen_random_fabric_key),
                                                                   cmd_context.option_enable(cmd, opt_verbose));
 
   /* Output fabric key if user requested */

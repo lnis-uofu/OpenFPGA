@@ -36,7 +36,8 @@ void build_top_module(ModuleManager& module_manager,
                       const e_config_protocol_type& sram_orgz_type,
                       const CircuitModelId& sram_model,
                       const bool& compact_routing_hierarchy,
-                      const bool& duplicate_grid_pin);
+                      const bool& duplicate_grid_pin,
+                      const bool& generate_random_fabric_key);
 
 } /* end namespace openfpga */
 

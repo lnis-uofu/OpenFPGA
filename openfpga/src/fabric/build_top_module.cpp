@@ -321,7 +321,8 @@ void build_top_module(ModuleManager& module_manager,
                       const e_config_protocol_type& sram_orgz_type,
                       const CircuitModelId& sram_model,
                       const bool& compact_routing_hierarchy,
-                      const bool& duplicate_grid_pin) {
+                      const bool& duplicate_grid_pin,
+                      const bool& generate_random_fabric_key) {
 
   vtr::ScopedStartFinishTimer timer("Build FPGA fabric module");
 
@@ -368,6 +369,11 @@ void build_top_module(ModuleManager& module_manager,
                                      grids, grid_instance_ids, 
                                      device_rr_gsb, sb_instance_ids, cb_instance_ids,
                                      compact_routing_hierarchy);
+
+  /* Shuffle the configurable children in a random sequence */
+  if (true == generate_random_fabric_key) {
+    shuffle_top_module_configurable_children(module_manager, top_module);
+  }
 
   /* Add shared SRAM ports from the sub-modules under this Verilog module
    * This is a much easier job after adding sub modules (instances), 

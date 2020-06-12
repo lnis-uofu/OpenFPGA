@@ -366,6 +366,41 @@ void organize_top_module_memory_modules(ModuleManager& module_manager,
   }
 }
 
+
+/********************************************************************
+ * Shuffle the configurable children in a random sequence 
+ *
+ * TODO: May use a more customized shuffle mechanism
+ *
+ * Note: 
+ *   - This function should NOT be called 
+ *     before allocating any configurable child
+ ********************************************************************/
+void shuffle_top_module_configurable_children(ModuleManager& module_manager, 
+                                              const ModuleId& top_module) {
+  size_t num_keys = module_manager.configurable_children(top_module).size();
+  std::vector<size_t> shuffled_keys;
+  shuffled_keys.reserve(num_keys);
+  for (size_t ikey = 0; ikey < num_keys; ++ikey) {
+    shuffled_keys.push_back(ikey);
+  }
+
+  std::random_shuffle(shuffled_keys.begin(), shuffled_keys.end());
+
+  /* Cache the configurable children and their instances */
+  std::vector<ModuleId> orig_configurable_children = module_manager.configurable_children(top_module);
+  std::vector<size_t> orig_configurable_child_instances = module_manager.configurable_child_instances(top_module);
+ 
+  /* Reorganize the configurable children */
+  module_manager.clear_configurable_children(top_module);
+
+  for (size_t ikey = 0; ikey < num_keys; ++ikey) {
+    module_manager.add_configurable_child(top_module,
+                                          orig_configurable_children[shuffled_keys[ikey]],
+                                          orig_configurable_child_instances[shuffled_keys[ikey]]);
+  }
+}
+
 /********************************************************************
  * Add a list of ports that are used for SRAM configuration to the FPGA 
  * top-level module

@@ -32,6 +32,7 @@ ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
                                         const DeviceContext& vpr_device_ctx,
                                         const bool& compress_routing,
                                         const bool& duplicate_grid_pin,
+                                        const bool& generate_random_fabric_key,
                                         const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build fabric module graph");
 
@@ -116,7 +117,7 @@ ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
                    openfpga_ctx.arch().arch_direct, 
                    openfpga_ctx.arch().config_protocol.type(),
                    sram_model,
-                   compress_routing, duplicate_grid_pin);
+                   compress_routing, duplicate_grid_pin, generate_random_fabric_key);
 
   /* Now a critical correction has to be done!
    * In the module construction, we always use prefix of ports because they are binded
