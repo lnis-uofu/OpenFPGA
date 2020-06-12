@@ -156,6 +156,11 @@ class ModuleManager {
     void set_child_instance_name(const ModuleId& parent_module, const ModuleId& child_module, const size_t& instance_id, const std::string& instance_name);
     /* Add a configurable child module to module */
     void add_configurable_child(const ModuleId& module, const ModuleId& child_module, const size_t& child_instance);
+    /* Reserved a number of configurable children
+     * for memory efficiency
+     */
+    void reserve_configurable_child(const ModuleId& module, const size_t& num_children);
+
     /* Add a net to the connection graph of the module */ 
     ModuleNetId create_module_net(const ModuleId& module);
     /* Set the name of net */
@@ -169,6 +174,13 @@ class ModuleManager {
     ModuleNetSinkId add_module_net_sink(const ModuleId& module, const ModuleNetId& net,
                                         const ModuleId& sink_module, const size_t& instance_id,
                                         const ModulePortId& sink_port, const size_t& sink_pin);
+  public: /* Public deconstructors */
+    /* This is a strong function which will remove all the configurable children 
+     * under a given parent module
+     * It is mainly used by loading fabric keys
+     * Do NOT use unless you know what you are doing!!!
+     */
+    void clear_configurable_children(const ModuleId& parent_module);
   public: /* Public validators/invalidators */
     bool valid_module_id(const ModuleId& module) const;
     bool valid_module_port_id(const ModuleId& module, const ModulePortId& port) const;
