@@ -13,5 +13,9 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
 else
   cmake .. -DCMAKE_BUILD_TYPE=debug
 fi
- make -j16
+make -j16
+
+# Return to upper directory
+cd ${TRAVIS_BUILD_DIR}
+
 end_section "OpenFPGA.build"
