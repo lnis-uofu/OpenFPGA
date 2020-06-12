@@ -36,6 +36,7 @@ class FabricKey {
   public: /* Public Accessors: Basic data query */
     std::string key_name(const FabricKeyId& key_id) const;
     size_t key_value(const FabricKeyId& key_id) const;
+    bool empty() const;
   public: /* Public Mutators: model-related */
     void reserve_keys(const size_t& num_keys);
     FabricKeyId create_key();

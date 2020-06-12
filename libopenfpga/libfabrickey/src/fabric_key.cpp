@@ -37,6 +37,10 @@ size_t FabricKey::key_value(const FabricKeyId& key_id) const {
   return key_values_[key_id]; 
 }
 
+bool FabricKey::empty() const {
+  return 0 == key_ids_.size();
+}
+
 /************************************************************************
  * Public Mutators
  ***********************************************************************/

@@ -322,6 +322,7 @@ void build_top_module(ModuleManager& module_manager,
                       const CircuitModelId& sram_model,
                       const bool& compact_routing_hierarchy,
                       const bool& duplicate_grid_pin,
+                      const FabricKey& fabric_key,
                       const bool& generate_random_fabric_key) {
 
   vtr::ScopedStartFinishTimer timer("Build FPGA fabric module");
@@ -363,12 +364,21 @@ void build_top_module(ModuleManager& module_manager,
    */
   add_module_gpio_ports_from_child_modules(module_manager, top_module);
 
-  /* Organize the list of memory modules and instances */
-  organize_top_module_memory_modules(module_manager, top_module, 
-                                     circuit_lib, sram_orgz_type, sram_model,
-                                     grids, grid_instance_ids, 
-                                     device_rr_gsb, sb_instance_ids, cb_instance_ids,
-                                     compact_routing_hierarchy);
+  /* Organize the list of memory modules and instances
+   * If we have an empty fabric key, we organize the memory modules as routine
+   * Otherwise, we will load the fabric key directly 
+   */
+  if (true == fabric_key.empty()) {
+    organize_top_module_memory_modules(module_manager, top_module, 
+                                       circuit_lib, sram_orgz_type, sram_model,
+                                       grids, grid_instance_ids, 
+                                       device_rr_gsb, sb_instance_ids, cb_instance_ids,
+                                       compact_routing_hierarchy);
+  } else {
+    VTR_ASSERT_SAFE(false == fabric_key.empty());
+    load_top_module_memory_modules_from_fabric_key(module_manager, top_module,
+                                                   fabric_key); 
+  }
 
   /* Shuffle the configurable children in a random sequence */
   if (true == generate_random_fabric_key) {
