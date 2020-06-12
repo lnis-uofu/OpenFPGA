@@ -55,12 +55,12 @@ int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
   
   /* Build a fabric key database by visiting all the configurable children */
   FabricKey fabric_key;
-  const size_t& num_keys = module_manager.configurable_children(top_module).size(); 
+  size_t num_keys = module_manager.configurable_children(top_module).size(); 
   fabric_key.reserve_keys(num_keys);
 
   for (size_t ichild = 0; ichild < num_keys; ++ichild) {
-    const ModuleId& child_module = module_manager.configurable_children(top_module)[ichild];
-    const size_t& child_instance = module_manager.configurable_child_instances(top_module)[ichild];
+    ModuleId child_module = module_manager.configurable_children(top_module)[ichild];
+    size_t child_instance = module_manager.configurable_child_instances(top_module)[ichild];
 
     FabricKeyId key = fabric_key.create_key();
     fabric_key.set_key_name(key, module_manager.module_name(child_module));
