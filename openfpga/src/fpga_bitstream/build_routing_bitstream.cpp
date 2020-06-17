@@ -50,12 +50,18 @@ void build_switch_block_mux_bitstream(BitstreamManager& bitstream_manager,
   /* Find the input size of the implementation of a routing multiplexer */
   size_t datapath_mux_size = drive_rr_nodes.size();
 
-  /* Find out which routing path is used in this MUX */
+  /* Find out which routing path is used in this MUX 
+   * Two conditions to be considered:
+   * - There is no net mapped to cur_rr_node: we use default path id
+   * - There is a net mapped to cur_rr_node: we find the path id
+   */
   int path_id = DEFAULT_PATH_ID;
-  for (size_t inode = 0; inode < drive_rr_nodes.size(); ++inode) {
-    if (routing_annotation.rr_node_net(drive_rr_nodes[inode]) == routing_annotation.rr_node_net(cur_rr_node)) {
-      path_id = (int)inode;
-      break;
+  if (ClusterNetId::INVALID() != routing_annotation.rr_node_net(cur_rr_node)) {
+    for (size_t inode = 0; inode < drive_rr_nodes.size(); ++inode) {
+      if (routing_annotation.rr_node_net(drive_rr_nodes[inode]) == routing_annotation.rr_node_net(cur_rr_node)) {
+        path_id = (int)inode;
+        break;
+      }
     }
   }
 
@@ -205,20 +211,27 @@ void build_connection_block_mux_bitstream(BitstreamManager& bitstream_manager,
   /* Configuration bits for MUX*/
   int path_id = DEFAULT_PATH_ID;
   int edge_index = 0;
-  for (const RREdgeId& edge : rr_graph.node_in_edges(src_rr_node)) {
-    RRNodeId driver_node = rr_graph.edge_src_node(edge);
-    if (routing_annotation.rr_node_net(driver_node) == routing_annotation.rr_node_net(src_rr_node)) {
-      path_id = edge_index;
-      break;
+
+  /* Find which path is connected to the output of this routing multiplexer
+   * Two conditions to be considered:
+   * - There is no net mapped to src_rr_node: we use default path id
+   * - There is a net mapped to src_rr_node: we find the path id
+   */
+  if (ClusterNetId::INVALID() != routing_annotation.rr_node_net(src_rr_node)) {
+    for (const RREdgeId& edge : rr_graph.node_in_edges(src_rr_node)) {
+      RRNodeId driver_node = rr_graph.edge_src_node(edge);
+      if (routing_annotation.rr_node_net(driver_node) == routing_annotation.rr_node_net(src_rr_node)) {
+        path_id = edge_index;
+        break;
+      }
+      edge_index++;
     }
-    edge_index++;
   }
 
   /* Ensure that our path id makes sense! */
   VTR_ASSERT( (DEFAULT_PATH_ID == path_id)
            || ( (DEFAULT_PATH_ID < path_id) && (path_id < (int)datapath_mux_size) ) 
             );
-
 
   /* Find the circuit model id of the mux, we need its design technology which matters the bitstream generation */
   std::vector<RRSwitchId> driver_switches = get_rr_graph_driver_switches(rr_graph, src_rr_node);

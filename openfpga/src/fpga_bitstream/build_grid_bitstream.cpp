@@ -159,10 +159,14 @@ void build_physical_block_pin_interc_bitstream(BitstreamManager& bitstream_manag
 
     /* Find the path id:
      * - if des pb is not valid, this is an unmapped pb, we can set a default path_id
+     * - There is no net mapped to des_pb_graph_pin we use default path id
+     * - There is a net mapped to des_pin_graph_pin: we find the path id
      */
     const PhysicalPbId& des_pb_id = physical_pb.find_pb(des_pb_graph_pin->parent_node);
     size_t mux_input_pin_id = 0;
     if (true != physical_pb.valid_pb_id(des_pb_id)) {
+      mux_input_pin_id = DEFAULT_PATH_ID;
+    } else if (AtomNetId::INVALID() == physical_pb.pb_graph_pin_atom_net(des_pb_id, des_pb_graph_pin)) {
       mux_input_pin_id = DEFAULT_PATH_ID;
     } else { 
       for (t_pb_graph_pin* src_pb_graph_pin : pb_graph_pin_inputs(des_pb_graph_pin, cur_interc)) {
