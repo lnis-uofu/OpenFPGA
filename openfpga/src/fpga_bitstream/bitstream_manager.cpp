@@ -115,6 +115,20 @@ int BitstreamManager::block_path_id(const ConfigBlockId& block_id) const {
   return block_path_ids_[block_id];
 }
 
+std::vector<AtomNetId> BitstreamManager::block_input_net_ids(const ConfigBlockId& block_id) const {
+  /* Ensure the input ids are valid */
+  VTR_ASSERT(true == valid_block_id(block_id));
+
+  return block_input_net_ids_[block_id];
+}
+
+std::vector<AtomNetId> BitstreamManager::block_output_net_ids(const ConfigBlockId& block_id) const {
+  /* Ensure the input ids are valid */
+  VTR_ASSERT(true == valid_block_id(block_id));
+
+  return block_output_net_ids_[block_id];
+}
+
 /******************************************************************************
  * Public Mutators
  ******************************************************************************/
@@ -136,6 +150,8 @@ ConfigBlockId BitstreamManager::add_block(const std::string& block_name) {
   block_names_.push_back(block_name);
   block_bit_ids_.emplace_back();
   block_path_ids_.push_back(-2);
+  block_input_net_ids_.emplace_back();
+  block_output_net_ids_.emplace_back();
   parent_block_ids_.push_back(ConfigBlockId::INVALID());
   child_block_ids_.emplace_back();
 
@@ -180,6 +196,24 @@ void BitstreamManager::add_path_id_to_block(const ConfigBlockId& block, const in
 
   /* Add the bit to the block */
   block_path_ids_[block] = path_id;
+}
+
+void BitstreamManager::add_input_net_id_to_block(const ConfigBlockId& block,
+                                                 const AtomNetId& input_net_id) {
+  /* Ensure the input ids are valid */
+  VTR_ASSERT(true == valid_block_id(block));
+
+  /* Add the bit to the block */
+  block_input_net_ids_[block].push_back(input_net_id);
+}
+
+void BitstreamManager::add_output_net_id_to_block(const ConfigBlockId& block,
+                                                  const AtomNetId& output_net_id) {
+  /* Ensure the input ids are valid */
+  VTR_ASSERT(true == valid_block_id(block));
+
+  /* Add the bit to the block */
+  block_output_net_ids_[block].push_back(output_net_id);
 }
 
 void BitstreamManager::add_shared_config_bit_values(const ConfigBitId& bit, const std::vector<bool>& shared_config_bits) {

@@ -51,13 +51,14 @@ void write_bitstream_xml_file_head(std::fstream& fp) {
  *******************************************************************/
 static 
 void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
+                                           const AtomContext& atom_ctx, 
                                            const BitstreamManager& bitstream_manager, 
                                            const ConfigBlockId& block) {
   valid_file_stream(fp);
 
   /* Dive to child blocks if this block has any */
   for (const ConfigBlockId& child_block : bitstream_manager.block_children(block)) {
-    rec_write_block_bitstream_to_xml_file(fp, bitstream_manager, child_block);
+    rec_write_block_bitstream_to_xml_file(fp, atom_ctx, bitstream_manager, child_block);
   }
   
   if (0 == bitstream_manager.block_bits(block).size()) {
@@ -80,6 +81,37 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
   }
   fp << "\t</hierarchy>" << std::endl;
 
+  /* Output input/output nets if there are any */
+  if (false == bitstream_manager.block_input_net_ids(block).empty()) {
+    fp << "\t<input_nets>\n";
+    fp << "\t\t\n";
+    for (const AtomNetId& net : bitstream_manager.block_input_net_ids(block)) {
+      if (false == atom_ctx.nlist.valid_net_id(net)) {
+        fp << " unmapped";
+      } else {
+        VTR_ASSERT_SAFE(true == atom_ctx.nlist.valid_net_id(net));
+        fp << " " << atom_ctx.nlist.net_name(net);
+      }
+    }
+    fp << "\n";
+    fp << "\t</input_nets>\n";
+  }
+
+  if (false == bitstream_manager.block_output_net_ids(block).empty()) {
+    fp << "\t<output_nets>\n";
+    fp << "\t\t\n";
+    for (const AtomNetId& net : bitstream_manager.block_output_net_ids(block)) {
+      if (false == atom_ctx.nlist.valid_net_id(net)) {
+        fp << " unmapped";
+      } else {
+        VTR_ASSERT_SAFE(true == atom_ctx.nlist.valid_net_id(net));
+        fp << " " << atom_ctx.nlist.net_name(net);
+      }
+    }
+    fp << "\n";
+    fp << "\t</output_nets>\n";
+  }
+
   /* Output child bits under this block */
   size_t bit_counter = 0;
   fp << "\t<bitstream";
@@ -88,6 +120,7 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
     fp << " path_id=\"" << bitstream_manager.block_path_id(block) << "\"";
   }
   fp << ">" << std::endl;
+
   for (const ConfigBitId& child_bit : bitstream_manager.block_bits(block)) {
     fp << "\t\t<bit";
     fp << " memory_port=\"" << generate_configurable_memory_data_out_name() << "[" << bit_counter << "]" << "\"";
@@ -115,6 +148,7 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
  * 3. TODO: support FASM format 
  *******************************************************************/
 void write_arch_independent_bitstream_to_xml_file(const BitstreamManager& bitstream_manager,
+                                                  const AtomContext& atom_ctx, 
                                                   const std::string& fname) {
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
@@ -141,7 +175,7 @@ void write_arch_independent_bitstream_to_xml_file(const BitstreamManager& bitstr
   VTR_ASSERT(0 == top_block_name.compare(bitstream_manager.block_name(top_block[0])));
 
   /* Write bitstream, block by block, in a recursive way */
-  rec_write_block_bitstream_to_xml_file(fp, bitstream_manager, top_block[0]);
+  rec_write_block_bitstream_to_xml_file(fp, atom_ctx, bitstream_manager, top_block[0]);
 
   /* Close file handler */
   fp.close();

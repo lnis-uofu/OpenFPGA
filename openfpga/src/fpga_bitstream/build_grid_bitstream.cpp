@@ -157,6 +157,10 @@ void build_physical_block_pin_interc_bitstream(BitstreamManager& bitstream_manag
     size_t datapath_mux_size = fan_in;
     VTR_ASSERT(true == valid_mux_implementation_num_inputs(datapath_mux_size));
 
+    /* Cache input and output nets */
+    std::vector<AtomNetId> input_nets;
+    AtomNetId output_net = AtomNetId::INVALID();
+
     /* Find the path id:
      * - if des pb is not valid, this is an unmapped pb, we can set a default path_id
      * - There is no net mapped to des_pb_graph_pin we use default path id
@@ -169,12 +173,19 @@ void build_physical_block_pin_interc_bitstream(BitstreamManager& bitstream_manag
     } else if (AtomNetId::INVALID() == physical_pb.pb_graph_pin_atom_net(des_pb_id, des_pb_graph_pin)) {
       mux_input_pin_id = DEFAULT_PATH_ID;
     } else { 
+      output_net = physical_pb.pb_graph_pin_atom_net(des_pb_id, des_pb_graph_pin);
+
+      for (t_pb_graph_pin* src_pb_graph_pin : pb_graph_pin_inputs(des_pb_graph_pin, cur_interc)) {
+        const PhysicalPbId& src_pb_id = physical_pb.find_pb(src_pb_graph_pin->parent_node);
+        input_nets.push_back(physical_pb.pb_graph_pin_atom_net(src_pb_id, src_pb_graph_pin));
+      }
+
       for (t_pb_graph_pin* src_pb_graph_pin : pb_graph_pin_inputs(des_pb_graph_pin, cur_interc)) {
         const PhysicalPbId& src_pb_id = physical_pb.find_pb(src_pb_graph_pin->parent_node);
         /* If the src pb id is not valid, we bypass it */
         if ( (true == physical_pb.valid_pb_id(src_pb_id))
-          && (AtomNetId::INVALID() != physical_pb.pb_graph_pin_atom_net(des_pb_id, des_pb_graph_pin))
-          && (physical_pb.pb_graph_pin_atom_net(src_pb_id, src_pb_graph_pin) == physical_pb.pb_graph_pin_atom_net(des_pb_id, des_pb_graph_pin))) {
+          && (AtomNetId::INVALID() != output_net)
+          && (physical_pb.pb_graph_pin_atom_net(src_pb_id, src_pb_graph_pin) == output_net)) {
           break;
         }
         mux_input_pin_id++;
@@ -207,8 +218,13 @@ void build_physical_block_pin_interc_bitstream(BitstreamManager& bitstream_manag
       /* Link the memory bits to the mux mem block */
       bitstream_manager.add_bit_to_block(mux_mem_block, config_bit);
     }
-    /* Record path ids */
+    /* Record path ids, input and output nets */
     bitstream_manager.add_path_id_to_block(mux_mem_block, mux_input_pin_id);
+    for (const AtomNetId& input_net : input_nets) {
+      bitstream_manager.add_input_net_id_to_block(mux_mem_block, input_net);
+    }
+    bitstream_manager.add_output_net_id_to_block(mux_mem_block, output_net);
+
     break;
   }
   default:
