@@ -26,13 +26,19 @@ class VprRoutingAnnotation {
     VprRoutingAnnotation();
   public:  /* Public accessors */
     ClusterNetId rr_node_net(const RRNodeId& rr_node) const;
+    RRNodeId rr_node_prev_node(const RRNodeId& rr_node) const;
   public:  /* Public mutators */
     void init(const RRGraph& rr_graph);
     void set_rr_node_net(const RRNodeId& rr_node,
                          const ClusterNetId& net_id);
+    void set_rr_node_prev_node(const RRNodeId& rr_node,
+                               const RRNodeId& prev_node);
   private: /* Internal data */
-    /* Pair a regular pb_type to its physical pb_type */
+    /* Clustered net ids mapped to each rr_node */
     vtr::vector<RRNodeId, ClusterNetId> rr_node_nets_;
+
+    /* Previous rr_node driving each rr_node */
+    vtr::vector<RRNodeId, RRNodeId> rr_node_prev_nodes_;
 };
 
 } /* End namespace openfpga*/

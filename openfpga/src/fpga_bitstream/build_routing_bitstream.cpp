@@ -66,8 +66,11 @@ void build_switch_block_mux_bitstream(BitstreamManager& bitstream_manager,
    */
   int path_id = DEFAULT_PATH_ID;
   if (ClusterNetId::INVALID() != output_net) {
+    /* We must have a valid previous node that is supposed to drive the source node! */
+    VTR_ASSERT(routing_annotation.rr_node_prev_node(cur_rr_node));
     for (size_t inode = 0; inode < drive_rr_nodes.size(); ++inode) {
-      if (input_nets[inode] == output_net) {
+      if ( (input_nets[inode] == output_net)
+        && (drive_rr_nodes[inode] == routing_annotation.rr_node_prev_node(cur_rr_node)) ) {
         path_id = (int)inode;
         break;
       }
@@ -246,7 +249,10 @@ void build_connection_block_mux_bitstream(BitstreamManager& bitstream_manager,
   if (ClusterNetId::INVALID() != output_net) {
     for (const RREdgeId& edge : rr_graph.node_in_edges(src_rr_node)) {
       RRNodeId driver_node = rr_graph.edge_src_node(edge);
-      if (routing_annotation.rr_node_net(driver_node) == output_net) {
+      /* We must have a valid previous node that is supposed to drive the source node! */
+      VTR_ASSERT(routing_annotation.rr_node_prev_node(src_rr_node));
+      if ( (routing_annotation.rr_node_net(driver_node) == output_net) 
+         && (driver_node == routing_annotation.rr_node_prev_node(src_rr_node)) ) {
         path_id = edge_index;
         break;
       }
