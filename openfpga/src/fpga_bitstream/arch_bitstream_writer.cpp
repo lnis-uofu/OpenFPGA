@@ -84,13 +84,13 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
   /* Output input/output nets if there are any */
   if (false == bitstream_manager.block_input_net_ids(block).empty()) {
     fp << "\t<input_nets>\n";
-    fp << "\t\t\n";
+    fp << "\t\t";
     for (const AtomNetId& net : bitstream_manager.block_input_net_ids(block)) {
       if (false == atom_ctx.nlist.valid_net_id(net)) {
-        fp << " unmapped";
+        fp << "\tunmapped";
       } else {
         VTR_ASSERT_SAFE(true == atom_ctx.nlist.valid_net_id(net));
-        fp << " " << atom_ctx.nlist.net_name(net);
+        fp << "\t" << atom_ctx.nlist.net_name(net);
       }
     }
     fp << "\n";
@@ -99,13 +99,13 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
 
   if (false == bitstream_manager.block_output_net_ids(block).empty()) {
     fp << "\t<output_nets>\n";
-    fp << "\t\t\n";
+    fp << "\t\t";
     for (const AtomNetId& net : bitstream_manager.block_output_net_ids(block)) {
       if (false == atom_ctx.nlist.valid_net_id(net)) {
-        fp << " unmapped";
+        fp << "\tunmapped";
       } else {
         VTR_ASSERT_SAFE(true == atom_ctx.nlist.valid_net_id(net));
-        fp << " " << atom_ctx.nlist.net_name(net);
+        fp << "\t" << atom_ctx.nlist.net_name(net);
       }
     }
     fp << "\n";
