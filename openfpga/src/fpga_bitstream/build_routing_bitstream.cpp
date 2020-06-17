@@ -85,6 +85,8 @@ void build_switch_block_mux_bitstream(BitstreamManager& bitstream_manager,
     /* Link the memory bits to the mux mem block */
     bitstream_manager.add_bit_to_block(mux_mem_block, config_bit);
   }
+  /* Record path ids */
+  bitstream_manager.add_path_id_to_block(mux_mem_block, path_id);
 }
 
 /********************************************************************
@@ -239,6 +241,8 @@ void build_connection_block_mux_bitstream(BitstreamManager& bitstream_manager,
     /* Link the memory bits to the mux mem block */
     bitstream_manager.add_bit_to_block(mux_mem_block, config_bit);
   }
+  /* Record path ids */
+  bitstream_manager.add_path_id_to_block(mux_mem_block, path_id);
 }
 
 

@@ -82,7 +82,12 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
 
   /* Output child bits under this block */
   size_t bit_counter = 0;
-  fp << "\t<bitstream>" << std::endl;
+  fp << "\t<bitstream";
+  /* Output path id only when it is valid */
+  if (true == bitstream_manager.valid_block_path_id(block)) {
+    fp << " path_id=\"" << bitstream_manager.block_path_id(block) << "\"";
+  }
+  fp << ">" << std::endl;
   for (const ConfigBitId& child_bit : bitstream_manager.block_bits(block)) {
     fp << "\t\t<bit";
     fp << " memory_port=\"" << generate_configurable_memory_data_out_name() << "[" << bit_counter << "]" << "\"";

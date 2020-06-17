@@ -203,6 +203,8 @@ void build_physical_block_pin_interc_bitstream(BitstreamManager& bitstream_manag
       /* Link the memory bits to the mux mem block */
       bitstream_manager.add_bit_to_block(mux_mem_block, config_bit);
     }
+    /* Record path ids */
+    bitstream_manager.add_path_id_to_block(mux_mem_block, mux_input_pin_id);
     break;
   }
   default:

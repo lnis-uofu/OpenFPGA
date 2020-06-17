@@ -82,6 +82,9 @@ class BitstreamManager {
     /* Find the child block in a bitstream manager with a given name */
     ConfigBlockId find_child_block(const ConfigBlockId& block_id, const std::string& child_block_name) const;
 
+    /* Find path id of a block */
+    int block_path_id(const ConfigBlockId& block_id) const;
+
   public:  /* Public Mutators */
     /* Add a new configuration bit to the bitstream manager */
     ConfigBitId add_bit(const bool& bit_value);
@@ -95,6 +98,9 @@ class BitstreamManager {
     /* Add a configuration bit to a block */
     void add_bit_to_block(const ConfigBlockId& block, const ConfigBitId& bit);
 
+    /* Add a path id to a block */
+    void add_path_id_to_block(const ConfigBlockId& block, const int& path_id);
+
     /* Add share configuration bits to a configuration bit */
     void add_shared_config_bit_values(const ConfigBitId& bit, const std::vector<bool>& shared_config_bits);
 
@@ -102,6 +108,8 @@ class BitstreamManager {
     bool valid_bit_id(const ConfigBitId& bit_id) const;
 
     bool valid_block_id(const ConfigBlockId& block_id) const;
+
+    bool valid_block_path_id(const ConfigBlockId& block_id) const;
 
   private: /* Internal data */
     /* Unique id of a block of bits in the Bitstream */
@@ -118,6 +126,7 @@ class BitstreamManager {
     vtr::vector<ConfigBlockId, std::string> block_names_; 
     vtr::vector<ConfigBlockId, ConfigBlockId> parent_block_ids_; 
     vtr::vector<ConfigBlockId, std::vector<ConfigBlockId>> child_block_ids_; 
+    vtr::vector<ConfigBlockId, int> block_path_ids_; 
 
     /* Unique id of a bit in the Bitstream */
     vtr::vector<ConfigBitId, ConfigBitId> bit_ids_; 

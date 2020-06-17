@@ -108,6 +108,13 @@ ConfigBlockId BitstreamManager::find_child_block(const ConfigBlockId& block_id,
   return candidates[0];
 }
 
+int BitstreamManager::block_path_id(const ConfigBlockId& block_id) const {
+  /* Ensure the input ids are valid */
+  VTR_ASSERT(true == valid_block_id(block_id));
+
+  return block_path_ids_[block_id];
+}
+
 /******************************************************************************
  * Public Mutators
  ******************************************************************************/
@@ -128,6 +135,7 @@ ConfigBlockId BitstreamManager::add_block(const std::string& block_name) {
   block_ids_.push_back(block);
   block_names_.push_back(block_name);
   block_bit_ids_.emplace_back();
+  block_path_ids_.push_back(-2);
   parent_block_ids_.push_back(ConfigBlockId::INVALID());
   child_block_ids_.emplace_back();
 
@@ -166,6 +174,14 @@ void BitstreamManager::add_bit_to_block(const ConfigBlockId& block, const Config
   bit_parent_block_ids_[bit] = block;
 }
 
+void BitstreamManager::add_path_id_to_block(const ConfigBlockId& block, const int& path_id) {
+  /* Ensure the input ids are valid */
+  VTR_ASSERT(true == valid_block_id(block));
+
+  /* Add the bit to the block */
+  block_path_ids_[block] = path_id;
+}
+
 void BitstreamManager::add_shared_config_bit_values(const ConfigBitId& bit, const std::vector<bool>& shared_config_bits) {
   /* Ensure the input ids are valid */
   VTR_ASSERT(true == valid_bit_id(bit));
@@ -182,6 +198,10 @@ bool BitstreamManager::valid_bit_id(const ConfigBitId& bit_id) const {
 
 bool BitstreamManager::valid_block_id(const ConfigBlockId& block_id) const {
   return (size_t(block_id) < block_ids_.size()) && (block_id == block_ids_[block_id]);
+}
+
+bool BitstreamManager::valid_block_path_id(const ConfigBlockId& block_id) const {
+  return (true == valid_block_id(block_id)) && (-2 != block_path_id(block_id));
 }
 
 } /* end namespace openfpga */
