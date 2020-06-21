@@ -1,5 +1,5 @@
-#ifndef ARCH_BITSTREAM_WRITER_H
-#define ARCH_BITSTREAM_WRITER_H
+#ifndef WRITE_XML_ARCH_BITSTREAM_H
+#define WRITE_XML_ARCH_BITSTREAM_H
 
 /********************************************************************
  * Include header files that are required by function declaration
@@ -14,9 +14,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void write_arch_independent_bitstream_to_xml_file(const BitstreamManager& bitstream_manager,
-                                                  const std::string& top_block_name, 
-                                                  const std::string& fname);
+void write_xml_architecture_bitstream(const BitstreamManager& bitstream_manager,
+                                      const std::string& fname);
 
 } /* end namespace openfpga */
 

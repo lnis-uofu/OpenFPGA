@@ -9,7 +9,7 @@
 
 /* Headers from fabric key */
 #include "read_xml_arch_bitstream.h"
-#include "arch_bitstream_writer.h"
+#include "write_xml_arch_bitstream.h"
 
 int main(int argc, const char** argv) {
   /* Ensure we have only one or two argument */
@@ -24,7 +24,7 @@ int main(int argc, const char** argv) {
    * This is optional only used when there is a second argument
    */
   if (3 <= argc) { 
-    openfpga::write_arch_independent_bitstream_to_xml_file(test_bitstream, std::string("fpga_top"), argv[2]);
+    openfpga::write_xml_architecture_bitstream(test_bitstream, argv[2]);
     VTR_LOG("Echo the bitstream to an XML file: %s.\n",
             argv[2]);
   }

@@ -10,11 +10,10 @@
 
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
-#include "openfpga_reserved_words.h"
 
 /* Headers from fpgabitstream library */
 #include "read_xml_arch_bitstream.h"
-#include "arch_bitstream_writer.h"
+#include "write_xml_arch_bitstream.h"
 
 #include "build_device_bitstream.h"
 #include "fabric_bitstream_writer.h"
@@ -51,9 +50,8 @@ int fpga_bitstream(OpenfpgaContext& openfpga_ctx,
     /* Create directories */
     create_directory(src_dir_path);
 
-    write_arch_independent_bitstream_to_xml_file(openfpga_ctx.bitstream_manager(),
-                                                 std::string(FPGA_TOP_MODULE_NAME),
-                                                 cmd_context.option_value(cmd, opt_write_file));
+    write_xml_architecture_bitstream(openfpga_ctx.bitstream_manager(),
+                                     cmd_context.option_value(cmd, opt_write_file));
   }
 
   /* TODO: should identify the error code from internal function execution */

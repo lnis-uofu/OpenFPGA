@@ -17,7 +17,7 @@
 #include "openfpga_reserved_words.h"
 
 #include "bitstream_manager_utils.h"
-#include "arch_bitstream_writer.h"
+#include "write_xml_arch_bitstream.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -166,9 +166,8 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
  *    specific FPGAs
  * 3. TODO: support FASM format 
  *******************************************************************/
-void write_arch_independent_bitstream_to_xml_file(const BitstreamManager& bitstream_manager,
-                                                  const std::string& top_block_name, 
-                                                  const std::string& fname) {
+void write_xml_architecture_bitstream(const BitstreamManager& bitstream_manager,
+                                      const std::string& fname) {
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
     VTR_LOG_ERROR("Received empty file name to output bitstream!\n\tPlease specify a valid file name.\n");
@@ -188,9 +187,8 @@ void write_arch_independent_bitstream_to_xml_file(const BitstreamManager& bitstr
 
   /* Find the top block, which has not parents */
   std::vector<ConfigBlockId> top_block = find_bitstream_manager_top_blocks(bitstream_manager);
-  /* Make sure we have only 1 top block and its name matches the top module */
+  /* Make sure we have only 1 top block */
   VTR_ASSERT(1 == top_block.size());
-  VTR_ASSERT(0 == top_block_name.compare(bitstream_manager.block_name(top_block[0])));
 
   /* Write bitstream, block by block, in a recursive way */
   rec_write_block_bitstream_to_xml_file(fp, bitstream_manager, top_block[0], 0);
