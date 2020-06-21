@@ -107,10 +107,18 @@ void build_switch_block_mux_bitstream(BitstreamManager& bitstream_manager,
   bitstream_manager.add_path_id_to_block(mux_mem_block, path_id);
   for (const ClusterNetId& input_net : input_nets) {
     AtomNetId input_atom_net = atom_ctx.lookup.atom_net(input_net);
-    bitstream_manager.add_input_net_id_to_block(mux_mem_block, input_atom_net);
+    if (true == atom_ctx.nlist.valid_net_id(input_atom_net)) {
+      bitstream_manager.add_input_net_id_to_block(mux_mem_block, atom_ctx.nlist.net_name(input_atom_net));
+    } else {
+      bitstream_manager.add_input_net_id_to_block(mux_mem_block, std::string("unmapped"));
+    }
   }
   AtomNetId output_atom_net = atom_ctx.lookup.atom_net(output_net);
-  bitstream_manager.add_output_net_id_to_block(mux_mem_block, output_atom_net);
+  if (true == atom_ctx.nlist.valid_net_id(output_atom_net)) {
+    bitstream_manager.add_output_net_id_to_block(mux_mem_block, atom_ctx.nlist.net_name(output_atom_net));
+  } else {
+    bitstream_manager.add_output_net_id_to_block(mux_mem_block, std::string("unmapped"));
+  }
 }
 
 /********************************************************************
@@ -290,12 +298,19 @@ void build_connection_block_mux_bitstream(BitstreamManager& bitstream_manager,
   bitstream_manager.add_path_id_to_block(mux_mem_block, path_id);
   for (const ClusterNetId& input_net : input_nets) {
     AtomNetId input_atom_net = atom_ctx.lookup.atom_net(input_net);
-    bitstream_manager.add_input_net_id_to_block(mux_mem_block, input_atom_net);
+    if (true == atom_ctx.nlist.valid_net_id(input_atom_net)) {
+      bitstream_manager.add_input_net_id_to_block(mux_mem_block, atom_ctx.nlist.net_name(input_atom_net));
+    } else {
+      bitstream_manager.add_input_net_id_to_block(mux_mem_block, std::string("unmapped"));
+    }
   }
   AtomNetId output_atom_net = atom_ctx.lookup.atom_net(output_net);
-  bitstream_manager.add_output_net_id_to_block(mux_mem_block, output_atom_net);
+  if (true == atom_ctx.nlist.valid_net_id(output_atom_net)) {
+    bitstream_manager.add_output_net_id_to_block(mux_mem_block, atom_ctx.nlist.net_name(output_atom_net));
+  } else {
+    bitstream_manager.add_output_net_id_to_block(mux_mem_block, std::string("unmapped"));
+  }
 }
-
 
 /********************************************************************
  * This function generates bitstream for an interconnection, 

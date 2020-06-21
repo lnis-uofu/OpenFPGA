@@ -115,14 +115,14 @@ int BitstreamManager::block_path_id(const ConfigBlockId& block_id) const {
   return block_path_ids_[block_id];
 }
 
-std::vector<AtomNetId> BitstreamManager::block_input_net_ids(const ConfigBlockId& block_id) const {
+std::vector<std::string> BitstreamManager::block_input_net_ids(const ConfigBlockId& block_id) const {
   /* Ensure the input ids are valid */
   VTR_ASSERT(true == valid_block_id(block_id));
 
   return block_input_net_ids_[block_id];
 }
 
-std::vector<AtomNetId> BitstreamManager::block_output_net_ids(const ConfigBlockId& block_id) const {
+std::vector<std::string> BitstreamManager::block_output_net_ids(const ConfigBlockId& block_id) const {
   /* Ensure the input ids are valid */
   VTR_ASSERT(true == valid_block_id(block_id));
 
@@ -143,11 +143,22 @@ ConfigBitId BitstreamManager::add_bit(const bool& bit_value) {
   return bit; 
 }
 
-ConfigBlockId BitstreamManager::add_block(const std::string& block_name) {
+void BitstreamManager::reserve_blocks(const size_t& num_blocks) {
+  block_ids_.reserve(num_blocks);
+  block_names_.reserve(num_blocks);
+  block_bit_ids_.reserve(num_blocks);
+  block_path_ids_.reserve(num_blocks);
+  block_input_net_ids_.reserve(num_blocks);
+  block_output_net_ids_.reserve(num_blocks);
+  parent_block_ids_.reserve(num_blocks);
+  child_block_ids_.reserve(num_blocks);
+}
+
+ConfigBlockId BitstreamManager::create_block() {
   ConfigBlockId block = ConfigBlockId(block_ids_.size());
   /* Add a new bit, and allocate associated data structures */
   block_ids_.push_back(block);
-  block_names_.push_back(block_name);
+  block_names_.emplace_back();
   block_bit_ids_.emplace_back();
   block_path_ids_.push_back(-2);
   block_input_net_ids_.emplace_back();
@@ -156,6 +167,20 @@ ConfigBlockId BitstreamManager::add_block(const std::string& block_name) {
   child_block_ids_.emplace_back();
 
   return block; 
+}
+
+ConfigBlockId BitstreamManager::add_block(const std::string& block_name) {
+  ConfigBlockId block = create_block();
+  set_block_name(block, block_name);
+  
+  return block;
+}
+
+void BitstreamManager::set_block_name(const ConfigBlockId& block_id,
+                                      const std::string& block_name) {
+  /* Ensure the input ids are valid */
+  VTR_ASSERT(true == valid_block_id(block_id));
+  block_names_[block_id] = block_name;
 }
 
 void BitstreamManager::add_child_block(const ConfigBlockId& parent_block, const ConfigBlockId& child_block) {
@@ -199,7 +224,7 @@ void BitstreamManager::add_path_id_to_block(const ConfigBlockId& block, const in
 }
 
 void BitstreamManager::add_input_net_id_to_block(const ConfigBlockId& block,
-                                                 const AtomNetId& input_net_id) {
+                                                 const std::string& input_net_id) {
   /* Ensure the input ids are valid */
   VTR_ASSERT(true == valid_block_id(block));
 
@@ -208,7 +233,7 @@ void BitstreamManager::add_input_net_id_to_block(const ConfigBlockId& block,
 }
 
 void BitstreamManager::add_output_net_id_to_block(const ConfigBlockId& block,
-                                                  const AtomNetId& output_net_id) {
+                                                  const std::string& output_net_id) {
   /* Ensure the input ids are valid */
   VTR_ASSERT(true == valid_block_id(block));
 

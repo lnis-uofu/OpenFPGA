@@ -14,7 +14,7 @@
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
 
-#include "openfpga_naming.h"
+#include "openfpga_reserved_words.h"
 
 #include "bitstream_manager_utils.h"
 #include "arch_bitstream_writer.h"
@@ -51,70 +51,86 @@ void write_bitstream_xml_file_head(std::fstream& fp) {
  *******************************************************************/
 static 
 void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
-                                           const AtomContext& atom_ctx, 
                                            const BitstreamManager& bitstream_manager, 
-                                           const ConfigBlockId& block) {
+                                           const ConfigBlockId& block,
+                                           const size_t& hierarchy_level) {
   valid_file_stream(fp);
+
+  /* Write the bits of this block */
+  write_tab_to_file(fp, hierarchy_level);
+  fp << "<bitstream_block";
+  fp << " name=\"" << bitstream_manager.block_name(block)<< "\"";
+  fp << " hierarchy_level=\"" << hierarchy_level << "\"";
+  fp << ">" << std::endl;
 
   /* Dive to child blocks if this block has any */
   for (const ConfigBlockId& child_block : bitstream_manager.block_children(block)) {
-    rec_write_block_bitstream_to_xml_file(fp, atom_ctx, bitstream_manager, child_block);
+    rec_write_block_bitstream_to_xml_file(fp, bitstream_manager, child_block, hierarchy_level + 1);
   }
   
   if (0 == bitstream_manager.block_bits(block).size()) {
+    write_tab_to_file(fp, hierarchy_level);
+    fp << "</bitstream_block>" <<std::endl;
     return;
   }
-
-  /* Write the bits of this block */
-  fp << "<bitstream_block index=\"" << size_t(block) << "\">" << std::endl;
 
   std::vector<ConfigBlockId> block_hierarchy = find_bitstream_manager_block_hierarchy(bitstream_manager, block); 
   
   /* Output hierarchy of this parent*/
-  fp << "\t<hierarchy>" << std::endl;
+  write_tab_to_file(fp, hierarchy_level + 1);
+  fp << "<hierarchy>" << std::endl;
   size_t hierarchy_counter = 0;
   for (const ConfigBlockId& temp_block : block_hierarchy) {
-    fp << "\t\t<instance level=\"" << hierarchy_counter << "\"";
+    write_tab_to_file(fp, hierarchy_level + 2);
+    fp << "<instance level=\"" << hierarchy_counter << "\"";
     fp << " name=\"" << bitstream_manager.block_name(temp_block) << "\"";
     fp << "/>" << std::endl;
     hierarchy_counter++;
   }
-  fp << "\t</hierarchy>" << std::endl;
+  write_tab_to_file(fp, hierarchy_level + 1);
+  fp << "</hierarchy>" << std::endl;
 
   /* Output input/output nets if there are any */
   if (false == bitstream_manager.block_input_net_ids(block).empty()) {
-    fp << "\t<input_nets>\n";
-    fp << "\t\t";
-    for (const AtomNetId& net : bitstream_manager.block_input_net_ids(block)) {
-      if (false == atom_ctx.nlist.valid_net_id(net)) {
-        fp << "\tunmapped";
-      } else {
-        VTR_ASSERT_SAFE(true == atom_ctx.nlist.valid_net_id(net));
-        fp << "\t" << atom_ctx.nlist.net_name(net);
-      }
+    write_tab_to_file(fp, hierarchy_level + 1);
+    fp << "<input_nets>\n";
+    size_t path_counter = 0;
+    for (const std::string& net : bitstream_manager.block_input_net_ids(block)) {
+      write_tab_to_file(fp, hierarchy_level + 2);
+      fp << "<path id=\"" << path_counter << "\"";
+      fp << "net_name=\"";
+      fp << net;
+      fp << "\"/>";
+
+      path_counter++;
     }
     fp << "\n";
-    fp << "\t</input_nets>\n";
+    write_tab_to_file(fp, hierarchy_level + 1);
+    fp << "</input_nets>\n";
   }
 
   if (false == bitstream_manager.block_output_net_ids(block).empty()) {
-    fp << "\t<output_nets>\n";
-    fp << "\t\t";
-    for (const AtomNetId& net : bitstream_manager.block_output_net_ids(block)) {
-      if (false == atom_ctx.nlist.valid_net_id(net)) {
-        fp << "\tunmapped";
-      } else {
-        VTR_ASSERT_SAFE(true == atom_ctx.nlist.valid_net_id(net));
-        fp << "\t" << atom_ctx.nlist.net_name(net);
-      }
+    write_tab_to_file(fp, hierarchy_level + 1);
+    fp << "<output_nets>\n";
+    size_t path_counter = 0;
+    for (const std::string& net : bitstream_manager.block_output_net_ids(block)) {
+      write_tab_to_file(fp, hierarchy_level + 2);
+      fp << "<path id=\"" << path_counter << "\"";
+      fp << "net_name=\"";
+      fp << net;
+      fp << "\"/>";
+
+      path_counter++;
     }
     fp << "\n";
-    fp << "\t</output_nets>\n";
+    write_tab_to_file(fp, hierarchy_level + 1);
+    fp << "</output_nets>\n";
   }
 
   /* Output child bits under this block */
   size_t bit_counter = 0;
-  fp << "\t<bitstream";
+  write_tab_to_file(fp, hierarchy_level + 1);
+  fp << "<bitstream";
   /* Output path id only when it is valid */
   if (true == bitstream_manager.valid_block_path_id(block)) {
     fp << " path_id=\"" << bitstream_manager.block_path_id(block) << "\"";
@@ -122,14 +138,17 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
   fp << ">" << std::endl;
 
   for (const ConfigBitId& child_bit : bitstream_manager.block_bits(block)) {
-    fp << "\t\t<bit";
-    fp << " memory_port=\"" << generate_configurable_memory_data_out_name() << "[" << bit_counter << "]" << "\"";
+    write_tab_to_file(fp, hierarchy_level + 2);
+    fp << "<bit";
+    fp << " memory_port=\"" << CONFIGURABLE_MEMORY_DATA_OUT_NAME << "[" << bit_counter << "]" << "\"";
     fp << " value=\"" << bitstream_manager.bit_value(child_bit) << "\"";
     fp << "/>" << std::endl;
     bit_counter++;
   }
-  fp << "\t</bitstream>" << std::endl;
+  write_tab_to_file(fp, hierarchy_level + 1);
+  fp << "</bitstream>" << std::endl;
 
+  write_tab_to_file(fp, hierarchy_level);
   fp << "</bitstream_block>" <<std::endl;
 }
 
@@ -148,7 +167,7 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
  * 3. TODO: support FASM format 
  *******************************************************************/
 void write_arch_independent_bitstream_to_xml_file(const BitstreamManager& bitstream_manager,
-                                                  const AtomContext& atom_ctx, 
+                                                  const std::string& top_block_name, 
                                                   const std::string& fname) {
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
@@ -167,7 +186,6 @@ void write_arch_independent_bitstream_to_xml_file(const BitstreamManager& bitstr
   /* Put down a brief introduction */
   write_bitstream_xml_file_head(fp);
 
-  std::string top_block_name = generate_fpga_top_module_name();
   /* Find the top block, which has not parents */
   std::vector<ConfigBlockId> top_block = find_bitstream_manager_top_blocks(bitstream_manager);
   /* Make sure we have only 1 top block and its name matches the top module */
@@ -175,7 +193,7 @@ void write_arch_independent_bitstream_to_xml_file(const BitstreamManager& bitstr
   VTR_ASSERT(0 == top_block_name.compare(bitstream_manager.block_name(top_block[0])));
 
   /* Write bitstream, block by block, in a recursive way */
-  rec_write_block_bitstream_to_xml_file(fp, atom_ctx, bitstream_manager, top_block[0]);
+  rec_write_block_bitstream_to_xml_file(fp, bitstream_manager, top_block[0], 0);
 
   /* Close file handler */
   fp.close();

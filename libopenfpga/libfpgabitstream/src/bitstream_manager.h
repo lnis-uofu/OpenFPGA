@@ -38,9 +38,6 @@
 #include <map>
 #include "vtr_vector.h"
 
-/* Header files from vpr library */
-#include "atom_netlist_fwd.h"
-
 #include "bitstream_manager_fwd.h"
 
 /* begin namespace openfpga */
@@ -89,17 +86,27 @@ class BitstreamManager {
     int block_path_id(const ConfigBlockId& block_id) const;
 
     /* Find input net ids of a block */
-    std::vector<AtomNetId> block_input_net_ids(const ConfigBlockId& block_id) const;
+    std::vector<std::string> block_input_net_ids(const ConfigBlockId& block_id) const;
 
     /* Find input net ids of a block */
-    std::vector<AtomNetId> block_output_net_ids(const ConfigBlockId& block_id) const;
+    std::vector<std::string> block_output_net_ids(const ConfigBlockId& block_id) const;
 
   public:  /* Public Mutators */
     /* Add a new configuration bit to the bitstream manager */
     ConfigBitId add_bit(const bool& bit_value);
 
+    /* Reserve memory for a number of clocks */
+    void reserve_blocks(const size_t& num_blocks);
+
+    /* Create a new block of configuration bits */
+    ConfigBlockId create_block();
+
     /* Add a new block of configuration bits to the bitstream manager */
     ConfigBlockId add_block(const std::string& block_name);
+
+    /* Set a name for a block */
+    void set_block_name(const ConfigBlockId& block_id,
+                        const std::string& block_name);
 
     /* Set a block as a child block of another */
     void add_child_block(const ConfigBlockId& parent_block, const ConfigBlockId& child_block);
@@ -111,10 +118,10 @@ class BitstreamManager {
     void add_path_id_to_block(const ConfigBlockId& block, const int& path_id);
 
     /* Add an input net id to a block */
-    void add_input_net_id_to_block(const ConfigBlockId& block, const AtomNetId& input_net_id);
+    void add_input_net_id_to_block(const ConfigBlockId& block, const std::string& input_net_id);
 
     /* Add an output net id to a block */
-    void add_output_net_id_to_block(const ConfigBlockId& block, const AtomNetId& output_net_id);
+    void add_output_net_id_to_block(const ConfigBlockId& block, const std::string& output_net_id);
 
     /* Add share configuration bits to a configuration bit */
     void add_shared_config_bit_values(const ConfigBitId& bit, const std::vector<bool>& shared_config_bits);
@@ -161,8 +168,8 @@ class BitstreamManager {
      *   -Bitstream manager will NOT check if the id is good for bitstream builders
      *    It just store the results
      */
-    vtr::vector<ConfigBlockId, std::vector<AtomNetId>> block_input_net_ids_; 
-    vtr::vector<ConfigBlockId, std::vector<AtomNetId>> block_output_net_ids_; 
+    vtr::vector<ConfigBlockId, std::vector<std::string>> block_input_net_ids_; 
+    vtr::vector<ConfigBlockId, std::vector<std::string>> block_output_net_ids_; 
 
     /* Unique id of a bit in the Bitstream */
     vtr::vector<ConfigBitId, ConfigBitId> bit_ids_; 

@@ -10,6 +10,7 @@
 
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
+#include "openfpga_reserved_words.h"
 
 #include "build_device_bitstream.h"
 #include "arch_bitstream_writer.h"
@@ -43,7 +44,7 @@ int fpga_bitstream(OpenfpgaContext& openfpga_ctx,
     create_directory(src_dir_path);
 
     write_arch_independent_bitstream_to_xml_file(openfpga_ctx.bitstream_manager(),
-                                                 g_vpr_ctx.atom(),
+                                                 std::string(FPGA_TOP_MODULE_NAME),
                                                  cmd_context.option_value(cmd, opt_file));
   }
 

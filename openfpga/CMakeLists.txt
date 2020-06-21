@@ -23,6 +23,7 @@ target_link_libraries(libopenfpga
                       libopenfpgashell
                       libopenfpgautil
                       libfabrickey
+                      libfpgabitstream
                       libini
                       libvtrutil
                       libvpr8)

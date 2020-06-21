@@ -705,7 +705,7 @@ std::string generate_configuration_chain_tail_name() {
  * TODO: This could be replaced as a constexpr string
  *********************************************************************/
 std::string generate_configurable_memory_data_out_name() {
-  return std::string("mem_out");
+  return std::string(CONFIGURABLE_MEMORY_DATA_OUT_NAME);
 }
 
 /*********************************************************************
@@ -1409,7 +1409,7 @@ std::string generate_fpga_global_io_port_name(const std::string& prefix,
  * We give a fixed name here, because it is independent from benchmark file
  ********************************************************************/
 std::string generate_fpga_top_module_name() {
-  return std::string("fpga_top");
+  return std::string(FPGA_TOP_MODULE_NAME);
 }
 
 /*********************************************************************
@@ -1418,7 +1418,7 @@ std::string generate_fpga_top_module_name() {
  * We give a fixed name here, because it is independent from benchmark file
  ********************************************************************/
 std::string generate_fpga_top_netlist_name(const std::string& postfix) {
-  return std::string("fpga_top" + postfix);
+  return std::string(FPGA_TOP_MODULE_NAME + postfix);
 }
 
 /*********************************************************************
