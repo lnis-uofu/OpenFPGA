@@ -12,8 +12,11 @@
 #include "openfpga_digest.h"
 #include "openfpga_reserved_words.h"
 
-#include "build_device_bitstream.h"
+/* Headers from fpgabitstream library */
+#include "read_xml_arch_bitstream.h"
 #include "arch_bitstream_writer.h"
+
+#include "build_device_bitstream.h"
 #include "fabric_bitstream_writer.h"
 #include "build_fabric_bitstream.h"
 #include "openfpga_bitstream.h"
@@ -31,21 +34,26 @@ int fpga_bitstream(OpenfpgaContext& openfpga_ctx,
                    const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_verbose = cmd.option("verbose");
-  CommandOptionId opt_file = cmd.option("file");
+  CommandOptionId opt_write_file = cmd.option("write_file");
+  CommandOptionId opt_read_file = cmd.option("read_file");
 
-  openfpga_ctx.mutable_bitstream_manager() = build_device_bitstream(g_vpr_ctx,
-                                                                    openfpga_ctx,
-                                                                    cmd_context.option_enable(cmd, opt_verbose));
+  if (true == cmd_context.option_enable(cmd, opt_read_file)) {
+    openfpga_ctx.mutable_bitstream_manager() = read_xml_architecture_bitstream(cmd_context.option_value(cmd, opt_write_file).c_str());
+  } else {
+    openfpga_ctx.mutable_bitstream_manager() = build_device_bitstream(g_vpr_ctx,
+                                                                      openfpga_ctx,
+                                                                      cmd_context.option_enable(cmd, opt_verbose));
+  }
 
-  if (true == cmd_context.option_enable(cmd, opt_file)) {
-    std::string src_dir_path = find_path_dir_name(cmd_context.option_value(cmd, opt_file));
+  if (true == cmd_context.option_enable(cmd, opt_write_file)) {
+    std::string src_dir_path = find_path_dir_name(cmd_context.option_value(cmd, opt_write_file));
 
     /* Create directories */
     create_directory(src_dir_path);
 
     write_arch_independent_bitstream_to_xml_file(openfpga_ctx.bitstream_manager(),
                                                  std::string(FPGA_TOP_MODULE_NAME),
-                                                 cmd_context.option_value(cmd, opt_file));
+                                                 cmd_context.option_value(cmd, opt_write_file));
   }
 
   /* TODO: should identify the error code from internal function execution */
