@@ -98,7 +98,7 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
     for (const std::string& net : bitstream_manager.block_input_net_ids(block)) {
       write_tab_to_file(fp, hierarchy_level + 2);
       fp << "<path id=\"" << path_counter << "\"";
-      fp << "net_name=\"";
+      fp << " net_name=\"";
       fp << net;
       fp << "\"/>";
 
@@ -116,7 +116,7 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
     for (const std::string& net : bitstream_manager.block_output_net_ids(block)) {
       write_tab_to_file(fp, hierarchy_level + 2);
       fp << "<path id=\"" << path_counter << "\"";
-      fp << "net_name=\"";
+      fp << " net_name=\"";
       fp << net;
       fp << "\"/>";
 

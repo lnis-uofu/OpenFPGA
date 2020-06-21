@@ -57,7 +57,7 @@ void rec_read_xml_bitstream_block(pugi::xml_node& xml_bitstream_block,
         bad_tag(xml_input_net, loc_data, xml_input_nets, {"path"});
       }
       const int& id = get_attribute(xml_input_net, "id", loc_data).as_int();
-      const std::string& net_name = get_attribute(xml_input_net, "name", loc_data).as_string();
+      const std::string& net_name = get_attribute(xml_input_net, "net_name", loc_data).as_string();
       VTR_ASSERT((size_t)id < input_nets.size());
       input_nets[id] = net_name; 
     } 
@@ -81,7 +81,7 @@ void rec_read_xml_bitstream_block(pugi::xml_node& xml_bitstream_block,
         bad_tag(xml_output_net, loc_data, xml_output_nets, {"path"});
       }
       const int& id = get_attribute(xml_output_net, "id", loc_data).as_int();
-      const std::string& net_name = get_attribute(xml_output_net, "name", loc_data).as_string();
+      const std::string& net_name = get_attribute(xml_output_net, "net_name", loc_data).as_string();
       VTR_ASSERT((size_t)id < output_nets.size());
       output_nets[id] = net_name; 
     } 
@@ -95,7 +95,7 @@ void rec_read_xml_bitstream_block(pugi::xml_node& xml_bitstream_block,
   pugi::xml_node xml_bitstream = get_single_child(xml_bitstream_block, "bitstream", loc_data, pugiutil::ReqOpt::OPTIONAL);
   if (xml_bitstream) {
     /* Parse path_id: -2 is an invalid value defined in the bitstream manager internally */
-    const int& path_id = get_attribute(xml_bitstream, "path_id", loc_data).as_int();
+    const int& path_id = get_attribute(xml_bitstream, "path_id", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(-2);
     if (-2 < path_id) {
       bitstream_manager.add_path_id_to_block(curr_block, path_id); 
     }
@@ -117,7 +117,7 @@ void rec_read_xml_bitstream_block(pugi::xml_node& xml_bitstream_block,
   for (pugi::xml_node xml_child : xml_bitstream_block.children()) {
     /* We only care child bitstream blocks here */
     if (xml_child.name() == std::string("bitstream_block")) {
-      rec_read_xml_bitstream_block(xml_bitstream_block, loc_data, bitstream_manager, curr_block);
+      rec_read_xml_bitstream_block(xml_child, loc_data, bitstream_manager, curr_block);
     }
   } 
 }
