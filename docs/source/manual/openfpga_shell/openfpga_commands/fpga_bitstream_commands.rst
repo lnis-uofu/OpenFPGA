@@ -17,7 +17,9 @@ build_architecture_bitstream
 
   Decode VPR implementing results to an fabric-independent bitstream database 
   
-  - ``--file`` or ``-f`` Output the fabric-independent bitstream to an XML file
+  - ``--read_file`` Read the fabric-independent bitstream from an XML file. When this is enabled, bitstream generation will NOT consider VPR results.
+
+  - ``--write_file`` Output the fabric-independent bitstream to an XML file
   
   - ``--verbose`` Show verbose log
 
