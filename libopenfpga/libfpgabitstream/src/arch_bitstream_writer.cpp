@@ -101,10 +101,10 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
       fp << " net_name=\"";
       fp << net;
       fp << "\"/>";
+      fp << "\n";
 
       path_counter++;
     }
-    fp << "\n";
     write_tab_to_file(fp, hierarchy_level + 1);
     fp << "</input_nets>\n";
   }
@@ -119,10 +119,10 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
       fp << " net_name=\"";
       fp << net;
       fp << "\"/>";
+      fp << "\n";
 
       path_counter++;
     }
-    fp << "\n";
     write_tab_to_file(fp, hierarchy_level + 1);
     fp << "</output_nets>\n";
   }
