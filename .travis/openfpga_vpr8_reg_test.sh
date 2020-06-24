@@ -102,6 +102,11 @@ python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/generate_testbench
 echo -e "Testing SDC generation with time units";
 python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/sdc_time_unit --debug --show_thread_logs
 
+echo -e "Testing Secured FPGA fabrics";
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/fabric_key/generate_vanilla_key --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/fabric_key/generate_random_key --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/fabric_key/load_external_key --debug --show_thread_logs
+
 # Verify MCNC big20 benchmark suite with ModelSim 
 # Please make sure you have ModelSim installed in the environment
 # Otherwise, it will fail

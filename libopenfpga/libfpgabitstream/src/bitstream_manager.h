@@ -82,18 +82,46 @@ class BitstreamManager {
     /* Find the child block in a bitstream manager with a given name */
     ConfigBlockId find_child_block(const ConfigBlockId& block_id, const std::string& child_block_name) const;
 
+    /* Find path id of a block */
+    int block_path_id(const ConfigBlockId& block_id) const;
+
+    /* Find input net ids of a block */
+    std::vector<std::string> block_input_net_ids(const ConfigBlockId& block_id) const;
+
+    /* Find input net ids of a block */
+    std::vector<std::string> block_output_net_ids(const ConfigBlockId& block_id) const;
+
   public:  /* Public Mutators */
     /* Add a new configuration bit to the bitstream manager */
     ConfigBitId add_bit(const bool& bit_value);
 
+    /* Reserve memory for a number of clocks */
+    void reserve_blocks(const size_t& num_blocks);
+
+    /* Create a new block of configuration bits */
+    ConfigBlockId create_block();
+
     /* Add a new block of configuration bits to the bitstream manager */
     ConfigBlockId add_block(const std::string& block_name);
+
+    /* Set a name for a block */
+    void set_block_name(const ConfigBlockId& block_id,
+                        const std::string& block_name);
 
     /* Set a block as a child block of another */
     void add_child_block(const ConfigBlockId& parent_block, const ConfigBlockId& child_block);
 
     /* Add a configuration bit to a block */
     void add_bit_to_block(const ConfigBlockId& block, const ConfigBitId& bit);
+
+    /* Add a path id to a block */
+    void add_path_id_to_block(const ConfigBlockId& block, const int& path_id);
+
+    /* Add an input net id to a block */
+    void add_input_net_id_to_block(const ConfigBlockId& block, const std::string& input_net_id);
+
+    /* Add an output net id to a block */
+    void add_output_net_id_to_block(const ConfigBlockId& block, const std::string& output_net_id);
 
     /* Add share configuration bits to a configuration bit */
     void add_shared_config_bit_values(const ConfigBitId& bit, const std::vector<bool>& shared_config_bits);
@@ -102,6 +130,8 @@ class BitstreamManager {
     bool valid_bit_id(const ConfigBitId& bit_id) const;
 
     bool valid_block_id(const ConfigBlockId& block_id) const;
+
+    bool valid_block_path_id(const ConfigBlockId& block_id) const;
 
   private: /* Internal data */
     /* Unique id of a block of bits in the Bitstream */
@@ -118,6 +148,28 @@ class BitstreamManager {
     vtr::vector<ConfigBlockId, std::string> block_names_; 
     vtr::vector<ConfigBlockId, ConfigBlockId> parent_block_ids_; 
     vtr::vector<ConfigBlockId, std::vector<ConfigBlockId>> child_block_ids_; 
+
+    /* The ids of the inputs of routing multiplexer blocks which is propagated to outputs 
+     * By default, it will be -2 (which is invalid)
+     * A valid id starts from -1 
+     * -1 indicates an unused routing multiplexer. 
+     * It will be converted to a valid id by bitstream builders)
+     * For used routing multiplexers, the path id will be >= 0
+     *
+     * Note: 
+     *   -Bitstream manager will NOT check if the id is good for bitstream builders
+     *    It just store the results
+     */
+    vtr::vector<ConfigBlockId, int> block_path_ids_; 
+
+    /* Net ids that are mapped to inputs and outputs of this block
+     * 
+     * Note: 
+     *   -Bitstream manager will NOT check if the id is good for bitstream builders
+     *    It just store the results
+     */
+    vtr::vector<ConfigBlockId, std::vector<std::string>> block_input_net_ids_; 
+    vtr::vector<ConfigBlockId, std::vector<std::string>> block_output_net_ids_; 
 
     /* Unique id of a bit in the Bitstream */
     vtr::vector<ConfigBitId, ConfigBitId> bit_ids_; 

@@ -25,4 +25,4 @@ OpenFPGA Architecture Description
   
    annotate_vpr_arch
 
-   
+   fabric_key 

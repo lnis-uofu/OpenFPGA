@@ -5,6 +5,7 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <vector>
+#include "vpr_context.h"
 #include "device_grid.h"
 #include "bitstream_manager.h"
 #include "module_manager.h"
@@ -27,6 +28,7 @@ void build_grid_bitstream(BitstreamManager& bitstream_manager,
                           const CircuitLibrary& circuit_lib,
                           const MuxLibrary& mux_lib,
                           const DeviceGrid& grids,
+                          const AtomContext& atom_ctx,
                           const VprDeviceAnnotation& device_annotation,
                           const VprClusteringAnnotation& cluster_annotation,
                           const VprPlacementAnnotation& place_annotation,

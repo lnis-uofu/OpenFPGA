@@ -26,4 +26,8 @@ void write_xml_attribute(std::fstream& fp,
                          const char* attr,
                          const float& value);
 
+void write_xml_attribute(std::fstream& fp, 
+                         const char* attr,
+                         const size_t& value);
+
 #endif

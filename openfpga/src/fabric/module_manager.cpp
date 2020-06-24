@@ -626,6 +626,18 @@ void ModuleManager::add_configurable_child(const ModuleId& parent_module,
   configurable_child_instances_[parent_module].push_back(child_instance);
 }
 
+void ModuleManager::reserve_configurable_child(const ModuleId& parent_module,
+                                               const size_t& num_children) {
+  VTR_ASSERT ( valid_module_id(parent_module) );
+  /* Do reserve when the number of children is larger than current size of lists */
+  if (num_children > configurable_children_[parent_module].size()) {
+    configurable_children_[parent_module].reserve(num_children);
+  }
+  if (num_children > configurable_child_instances_[parent_module].size()) {
+    configurable_child_instances_[parent_module].reserve(num_children);
+  }
+}
+
 /* Add a net to the connection graph of the module */ 
 ModuleNetId ModuleManager::create_module_net(const ModuleId& module) {
   /* Validate the module id */
@@ -739,6 +751,16 @@ ModuleNetSinkId ModuleManager::add_module_net_sink(const ModuleId& module, const
   net_lookup_[module][sink_module][sink_instance_id][sink_port][sink_pin] = net;
 
   return net_sink;
+}
+
+/******************************************************************************
+ * Public Deconstructor
+ ******************************************************************************/
+void ModuleManager::clear_configurable_children(const ModuleId& parent_module) {
+  VTR_ASSERT(valid_module_id(parent_module));
+
+  configurable_children_[parent_module].clear();
+  configurable_child_instances_[parent_module].clear();
 }
 
 /******************************************************************************

@@ -10,6 +10,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+/* Top-level module name */
+constexpr char* FPGA_TOP_MODULE_NAME = "fpga_top";
+
+constexpr char* CONFIGURABLE_MEMORY_DATA_OUT_NAME = "mem_out";
+
 /* IO PORT */
 /* Prefix of global input, output and inout ports of FPGA fabric */
 constexpr char* GIO_INOUT_PREFIX = "gfpga_pad_";

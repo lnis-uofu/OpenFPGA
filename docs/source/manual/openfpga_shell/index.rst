@@ -11,4 +11,4 @@ OpenFPGA Shell
 
    openfpga_script
   
-   openfpga_commands
+   openfpga_commands/index

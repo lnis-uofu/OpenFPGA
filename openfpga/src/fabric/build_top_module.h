@@ -16,6 +16,7 @@
 #include "arch_direct.h"
 #include "module_manager.h"
 #include "io_location_map.h"
+#include "fabric_key.h"
 
 /********************************************************************
  * Function declaration
@@ -36,7 +37,9 @@ void build_top_module(ModuleManager& module_manager,
                       const e_config_protocol_type& sram_orgz_type,
                       const CircuitModelId& sram_model,
                       const bool& compact_routing_hierarchy,
-                      const bool& duplicate_grid_pin);
+                      const bool& duplicate_grid_pin,
+                      const FabricKey& fabric_key,
+                      const bool& generate_random_fabric_key);
 
 } /* end namespace openfpga */
 

@@ -14,6 +14,7 @@
 #include "decoder_library.h"
 #include "device_grid.h"
 #include "device_rr_gsb.h"
+#include "fabric_key.h"
 
 /********************************************************************
  * Function declaration
@@ -33,6 +34,13 @@ void organize_top_module_memory_modules(ModuleManager& module_manager,
                                         const vtr::Matrix<size_t>& sb_instance_ids,
                                         const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
                                         const bool& compact_routing_hierarchy);
+
+void shuffle_top_module_configurable_children(ModuleManager& module_manager, 
+                                              const ModuleId& top_module);
+
+int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager,
+                                                   const ModuleId& top_module,
+                                                   const FabricKey& fabric_key); 
 
 void add_top_module_sram_ports(ModuleManager& module_manager, 
                                const ModuleId& module_id,

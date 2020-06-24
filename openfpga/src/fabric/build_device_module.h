@@ -6,6 +6,7 @@
  *******************************************************************/
 #include "vpr_context.h"
 #include "openfpga_context.h"
+#include "fabric_key.h"
 
 /********************************************************************
  * Function declaration
@@ -20,6 +21,8 @@ ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
                                         const DeviceContext& vpr_device_ctx,
                                         const bool& compress_routing,
                                         const bool& duplicate_grid_pin,
+                                        const FabricKey& fabric_key,
+                                        const bool& generate_random_fabric_key,
                                         const bool& verbose);
 
 } /* end namespace openfpga */

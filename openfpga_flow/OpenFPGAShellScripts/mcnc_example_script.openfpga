@@ -37,7 +37,7 @@ repack #--verbose
 
 # Build the bitstream
 #  - Output the fabric-independent bitstream to a file
-build_architecture_bitstream --verbose --file fabric_indepenent_bitstream.xml
+build_architecture_bitstream --verbose --write_file fabric_indepenent_bitstream.xml
 
 # Build fabric-dependent bitstream
 build_fabric_bitstream --verbose
@@ -48,7 +48,7 @@ write_fabric_verilog --file ./SRC \
   --explicit_port_mapping \
   --include_timing \
   --include_signal_init
-  #--support_icarus_simulator
+# --support_icarus_simulator
 
 # Write the Verilog testbench for FPGA fabric
 #  - We suggest the use of same output directory as fabric Verilog netlists
