@@ -58,6 +58,11 @@ std::string format_dir_path(const std::string& dir_path_to_format) {
   char legal_back_slash = '\\';
 #endif
 
+  /* Return an empty string if the input is empty */
+  if (true == formatted_dir_path.empty()) {
+    return formatted_dir_path;
+  }
+
   /* Replace "\" with "/" */
   std::replace(formatted_dir_path.begin(), formatted_dir_path.end(), illegal_back_slash, legal_back_slash); 
 
@@ -123,8 +128,8 @@ bool create_dir_path(const std::string& dir_path,
                      const bool& verbose) {
   /* Give up if the path is empty */
   if (true == dir_path.empty()) {
-    VTR_LOG_ERROR("Directory path is empty and nothing will be created.\n");
-    return false;
+    VTR_LOG_WARN("Directory path is empty and nothing will be created.\n");
+    return true;
   }
 
   /* Try to create a directory */
@@ -170,8 +175,8 @@ static
 bool rec_create_dir_path(const std::string& dir_path) {
   /* Give up if the path is empty */
   if (true == dir_path.empty()) {
-    VTR_LOG_ERROR("Directory path is empty and nothing will be created.\n");
-    return false;
+    VTR_LOG_WARN("Directory path is empty and nothing will be created.\n");
+    return true;
   }
 
   /* Try to find the positions of all the slashes
