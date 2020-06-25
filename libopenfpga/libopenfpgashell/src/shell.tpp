@@ -296,6 +296,11 @@ void Shell<T>::run_script_mode(const char* script_file_name, T& context) {
 
   /* Read line by line */
   while (getline(fp, line)) {
+    /* Skip empty line */
+    if (true == line.empty()) {
+      continue;
+    }
+
     /* If the line that starts with '#', it is commented, we can skip */ 
     if ('#' == line.front()) {
       continue;
