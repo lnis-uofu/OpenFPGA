@@ -37,6 +37,13 @@ size_t FabricKey::key_value(const FabricKeyId& key_id) const {
   return key_values_[key_id]; 
 }
 
+/* Access the alias of a key */
+std::string FabricKey::key_alias(const FabricKeyId& key_id) const {
+  /* validate the key_id */
+  VTR_ASSERT(valid_key_id(key_id));
+  return key_alias_[key_id]; 
+}
+
 bool FabricKey::empty() const {
   return 0 == key_ids_.size();
 }
@@ -48,6 +55,7 @@ void FabricKey::reserve_keys(const size_t& num_keys) {
   key_ids_.reserve(num_keys);
   key_names_.reserve(num_keys);
   key_values_.reserve(num_keys);
+  key_alias_.reserve(num_keys);
 }
 
 /* Create a new key and add it to the library, return an id */
@@ -57,6 +65,7 @@ FabricKeyId FabricKey::create_key() {
   key_ids_.push_back(key);
   key_names_.emplace_back();
   key_values_.emplace_back();
+  key_alias_.emplace_back();
   
   return key;
 }
@@ -75,6 +84,14 @@ void FabricKey::set_key_value(const FabricKeyId& key_id,
   VTR_ASSERT(valid_key_id(key_id));
 
   key_values_[key_id] = value;
+}
+
+void FabricKey::set_key_alias(const FabricKeyId& key_id,
+                              const std::string& alias) {
+  /* validate the key_id */
+  VTR_ASSERT(valid_key_id(key_id));
+
+  key_alias_[key_id] = alias;
 }
 
 /************************************************************************

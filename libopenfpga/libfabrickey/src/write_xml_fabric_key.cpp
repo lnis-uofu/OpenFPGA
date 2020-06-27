@@ -43,6 +43,10 @@ int write_xml_fabric_component_key(std::fstream& fp,
   write_xml_attribute(fp, "name", fabric_key.key_name(component_key).c_str());
   write_xml_attribute(fp, "value", fabric_key.key_value(component_key));
 
+  if (!fabric_key.key_alias(component_key).empty()) {
+    write_xml_attribute(fp, "alias", fabric_key.key_alias(component_key).c_str());
+  }
+
   fp << "/>" << "\n";
 
   return 0;

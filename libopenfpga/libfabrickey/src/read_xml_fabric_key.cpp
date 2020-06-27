@@ -42,6 +42,12 @@ void read_xml_component_key(pugi::xml_node& xml_component_key,
 
   fabric_key.set_key_name(FabricKeyId(id), name);
   fabric_key.set_key_value(FabricKeyId(id), value);
+
+  /* If we have an alias, set the value as well */
+  const std::string& alias = get_attribute(xml_component_key, "alias", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string();
+  if (!alias.empty()) {
+    fabric_key.set_key_alias(FabricKeyId(id), alias);
+  }
 }
 
 /********************************************************************

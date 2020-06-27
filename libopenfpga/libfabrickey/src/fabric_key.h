@@ -36,6 +36,7 @@ class FabricKey {
   public: /* Public Accessors: Basic data query */
     std::string key_name(const FabricKeyId& key_id) const;
     size_t key_value(const FabricKeyId& key_id) const;
+    std::string key_alias(const FabricKeyId& key_id) const;
     bool empty() const;
   public: /* Public Mutators: model-related */
     void reserve_keys(const size_t& num_keys);
@@ -44,6 +45,8 @@ class FabricKey {
                       const std::string& name);
     void set_key_value(const FabricKeyId& key_id,
                        const size_t& value);
+    void set_key_alias(const FabricKeyId& key_id,
+                       const std::string& alias);
   public: /* Public invalidators/validators */
     bool valid_key_id(const FabricKeyId& key_id) const;
   private: /* Internal data */
@@ -55,6 +58,9 @@ class FabricKey {
 
     /* Values for each key */
     vtr::vector<FabricKeyId, size_t> key_values_;
+
+    /* Optional alias for each key, with which a key can also be represented */
+    vtr::vector<FabricKeyId, std::string> key_alias_;
 };
 
 #endif
