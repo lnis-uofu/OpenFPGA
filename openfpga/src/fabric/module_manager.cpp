@@ -35,7 +35,8 @@ ModuleManager::module_port_range ModuleManager::module_ports(const ModuleId& mod
 ModuleManager::module_net_range ModuleManager::module_nets(const ModuleId& module) const {
   /* Validate the module_id */
   VTR_ASSERT(valid_module_id(module));
-  return vtr::make_range(net_ids_[module].begin(), net_ids_[module].end());
+  return vtr::make_range(module_net_iterator(ModuleNetId(0), invalid_net_ids_[module]),
+                         module_net_iterator(ModuleNetId(num_nets_[module]), invalid_net_ids_[module]));
 }
 
 /* Find all the child modules under a parent module */
@@ -108,7 +109,7 @@ size_t ModuleManager::num_modules() const {
 size_t ModuleManager::num_nets(const ModuleId& module) const {
   /* Validate the module_id */
   VTR_ASSERT(valid_module_id(module));
-  return net_ids_[module].size();
+  return num_nets_[module];
 }
 
 /* Find the name of a module */
@@ -458,7 +459,8 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   port_is_register_.emplace_back();
   port_preproc_flags_.emplace_back();
 
-  net_ids_.emplace_back();
+  num_nets_.emplace_back(0);
+  invalid_net_ids_.emplace_back();
   net_names_.emplace_back();
   net_src_ids_.emplace_back();
   net_src_module_ids_.emplace_back();
@@ -643,8 +645,6 @@ void ModuleManager::reserve_module_nets(const ModuleId& module,
   /* Validate the module id */
   VTR_ASSERT ( valid_module_id(module) );
 
-  net_ids_[module].reserve(num_nets);
-
   net_names_[module].reserve(num_nets);
   net_src_ids_[module].reserve(num_nets);
   net_src_module_ids_[module].reserve(num_nets);
@@ -665,8 +665,8 @@ ModuleNetId ModuleManager::create_module_net(const ModuleId& module) {
   VTR_ASSERT ( valid_module_id(module) );
 
   /* Create an new id */
-  ModuleNetId net = ModuleNetId(net_ids_[module].size());
-  net_ids_[module].push_back(net);
+  ModuleNetId net = ModuleNetId(num_nets_[module]);
+  num_nets_[module]++;
   
   /* Allocate net-related data structures */
   net_names_[module].emplace_back();
@@ -832,7 +832,7 @@ bool ModuleManager::valid_module_net_id(const ModuleId& module, const ModuleNetI
   if (false == valid_module_id(module)) {
     return false;
   }
-  return ( size_t(net) < net_ids_[module].size() ) && ( net == net_ids_[module][net] ); 
+  return ( size_t(net) < num_nets_[module] ); 
 }
 
 void ModuleManager::invalidate_name2id_map() {
