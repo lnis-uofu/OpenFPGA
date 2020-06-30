@@ -303,7 +303,13 @@ vtr::vector<ModuleNetSrcId, ModuleId> ModuleManager::net_source_modules(const Mo
   /* Validate module net */
   VTR_ASSERT(valid_module_net_id(module, net));
 
-  return net_src_module_ids_[module][net];
+  vtr::vector<ModuleNetSrcId, ModuleId> src_modules;
+  src_modules.reserve(net_src_terminal_ids_[module][net].size());
+  for (const size_t& id : net_src_terminal_ids_[module][net]) {
+    src_modules.push_back(net_terminal_storage_[id].first);
+  }
+
+  return src_modules;
 }
 
 /* Find the ids of source instances of a net */
@@ -319,7 +325,13 @@ vtr::vector<ModuleNetSrcId, ModulePortId> ModuleManager::net_source_ports(const 
   /* Validate module net */
   VTR_ASSERT(valid_module_net_id(module, net));
 
-  return net_src_port_ids_[module][net];
+  vtr::vector<ModuleNetSrcId, ModulePortId> src_ports;
+  src_ports.reserve(net_src_terminal_ids_[module][net].size());
+  for (const size_t& id : net_src_terminal_ids_[module][net]) {
+    src_ports.push_back(net_terminal_storage_[id].second);
+  }
+
+  return src_ports;
 }
 
 /* Find the source pin indices of a net */
@@ -342,9 +354,9 @@ bool ModuleManager::net_source_exist(const ModuleId& module, const ModuleNetId& 
    * we can say that the source has already been added to this net!
    */
   for (const ModuleNetSrcId& net_src : module_net_sources(module, net)) {
-    if ( (src_module == net_source_modules(module, net)[net_src]) 
+    if ( (src_module == net_terminal_storage_[net_src_terminal_ids_[module][net][net_src]].first) 
       && (instance_id == net_source_instances(module, net)[net_src])   
-      && (src_port == net_source_ports(module, net)[net_src])   
+      && (src_port == net_terminal_storage_[net_src_terminal_ids_[module][net][net_src]].second) 
       && (src_pin == net_source_pins(module, net)[net_src]) ) {
       return true;
     }
@@ -359,7 +371,13 @@ vtr::vector<ModuleNetSinkId, ModuleId> ModuleManager::net_sink_modules(const Mod
   /* Validate module net */
   VTR_ASSERT(valid_module_net_id(module, net));
 
-  return net_sink_module_ids_[module][net];
+  vtr::vector<ModuleNetSinkId, ModuleId> sink_modules;
+  sink_modules.reserve(net_sink_terminal_ids_[module][net].size());
+  for (const size_t& id : net_sink_terminal_ids_[module][net]) {
+    sink_modules.push_back(net_terminal_storage_[id].first);
+  }
+
+  return sink_modules;
 }
 
 /* Find the ids of sink instances of a net */
@@ -375,7 +393,13 @@ vtr::vector<ModuleNetSinkId, ModulePortId> ModuleManager::net_sink_ports(const M
   /* Validate module net */
   VTR_ASSERT(valid_module_net_id(module, net));
 
-  return net_sink_port_ids_[module][net];
+  vtr::vector<ModuleNetSinkId, ModulePortId> sink_ports;
+  sink_ports.reserve(net_sink_terminal_ids_[module][net].size());
+  for (const size_t& id : net_sink_terminal_ids_[module][net]) {
+    sink_ports.push_back(net_terminal_storage_[id].second);
+  }
+
+  return sink_ports;
 }
 
 /* Find the sink pin indices of a net */
@@ -398,9 +422,9 @@ bool ModuleManager::net_sink_exist(const ModuleId& module, const ModuleNetId& ne
    * we can say that the sink has already been added to this net!
    */
   for (const ModuleNetSinkId& net_sink : module_net_sinks(module, net)) {
-    if ( (sink_module == net_sink_modules(module, net)[net_sink]) 
+    if ( (sink_module == net_terminal_storage_[net_sink_terminal_ids_[module][net][net_sink]].first) 
       && (instance_id == net_sink_instances(module, net)[net_sink])   
-      && (sink_port == net_sink_ports(module, net)[net_sink])   
+      && (sink_port == net_terminal_storage_[net_sink_terminal_ids_[module][net][net_sink]].second) 
       && (sink_pin == net_sink_pins(module, net)[net_sink]) ) {
       return true;
     }
@@ -463,15 +487,13 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   invalid_net_ids_.emplace_back();
   net_names_.emplace_back();
   net_src_ids_.emplace_back();
-  net_src_module_ids_.emplace_back();
+  net_src_terminal_ids_.emplace_back();
   net_src_instance_ids_.emplace_back();
-  net_src_port_ids_.emplace_back();
   net_src_pin_ids_.emplace_back();
 
   net_sink_ids_.emplace_back();
-  net_sink_module_ids_.emplace_back();
+  net_sink_terminal_ids_.emplace_back();
   net_sink_instance_ids_.emplace_back();
-  net_sink_port_ids_.emplace_back();
   net_sink_pin_ids_.emplace_back();
 
   /* Register in the name-to-id map */
@@ -647,15 +669,13 @@ void ModuleManager::reserve_module_nets(const ModuleId& module,
 
   net_names_[module].reserve(num_nets);
   net_src_ids_[module].reserve(num_nets);
-  net_src_module_ids_[module].reserve(num_nets);
+  net_src_terminal_ids_[module].reserve(num_nets);
   net_src_instance_ids_[module].reserve(num_nets);
-  net_src_port_ids_[module].reserve(num_nets);
   net_src_pin_ids_[module].reserve(num_nets);
 
   net_sink_ids_[module].reserve(num_nets);
-  net_sink_module_ids_[module].reserve(num_nets);
+  net_sink_terminal_ids_[module].reserve(num_nets);
   net_sink_instance_ids_[module].reserve(num_nets);
-  net_sink_port_ids_[module].reserve(num_nets);
   net_sink_pin_ids_[module].reserve(num_nets);
 }
 
@@ -671,18 +691,16 @@ ModuleNetId ModuleManager::create_module_net(const ModuleId& module) {
   /* Allocate net-related data structures */
   net_names_[module].emplace_back();
   net_src_ids_[module].emplace_back();
-  net_src_module_ids_[module].emplace_back();
+  net_src_terminal_ids_[module].emplace_back();
   net_src_instance_ids_[module].emplace_back();
-  net_src_port_ids_[module].emplace_back();
   net_src_pin_ids_[module].emplace_back();
 
   /* Reserve a source */
   reserve_module_net_sources(module, net, 1);
 
   net_sink_ids_[module].emplace_back();
-  net_sink_module_ids_[module].emplace_back();
+  net_sink_terminal_ids_[module].emplace_back();
   net_sink_instance_ids_[module].emplace_back();
-  net_sink_port_ids_[module].emplace_back();
   net_sink_pin_ids_[module].emplace_back();
 
   /* Reserve a source */
@@ -706,9 +724,8 @@ void ModuleManager::reserve_module_net_sources(const ModuleId& module, const Mod
   VTR_ASSERT(valid_module_net_id(module, net));
 
   net_src_ids_[module][net].reserve(num_sources);
-  net_src_module_ids_[module][net].reserve(num_sources);
+  net_src_terminal_ids_[module][net].reserve(num_sources);
   net_src_instance_ids_[module][net].reserve(num_sources);
-  net_src_port_ids_[module][net].reserve(num_sources);
   net_src_pin_ids_[module][net].reserve(num_sources);
 }
 
@@ -725,7 +742,25 @@ ModuleNetSrcId ModuleManager::add_module_net_source(const ModuleId& module, cons
 
   /* Validate the source module */
   VTR_ASSERT(valid_module_id(src_module));
-  net_src_module_ids_[module][net].push_back(src_module);
+
+  /* Validate the port exists in the src module */
+  VTR_ASSERT(valid_module_port_id(src_module, src_port));
+
+  /* Create pair of module and port
+   * Search in the storage. If found, use the existing pair
+   * Otherwise, add the pair
+   */
+  std::pair<ModuleId, ModulePortId> terminal(src_module, src_port);
+  std::vector<std::pair<ModuleId, ModulePortId>>::iterator it = std::find(net_terminal_storage_.begin(),
+                                                                          net_terminal_storage_.end(),
+                                                                          terminal);
+  if (it == net_terminal_storage_.end()) {
+    net_src_terminal_ids_[module][net].push_back(net_terminal_storage_.size());
+    net_terminal_storage_.push_back(terminal);
+  } else {
+   VTR_ASSERT_SAFE(it != net_terminal_storage_.end());
+   net_src_terminal_ids_[module][net].push_back(std::distance(net_terminal_storage_.begin(), it));
+  }
 
   /* if it has the same id as module, our instance id will be by default 0 */
   size_t src_instance_id = instance_id;
@@ -737,10 +772,6 @@ ModuleNetSrcId ModuleManager::add_module_net_source(const ModuleId& module, cons
     VTR_ASSERT (src_instance_id < num_instance(module, src_module));
     net_src_instance_ids_[module][net].push_back(src_instance_id);
   } 
-
-  /* Validate the port exists in the src module */
-  VTR_ASSERT(valid_module_port_id(src_module, src_port));
-  net_src_port_ids_[module][net].push_back(src_port);
 
   /* Validate the pin id is in the range of the port width */
   VTR_ASSERT(src_pin < module_port(src_module, src_port).get_width());
@@ -758,9 +789,8 @@ void ModuleManager::reserve_module_net_sinks(const ModuleId& module, const Modul
   VTR_ASSERT(valid_module_net_id(module, net));
 
   net_sink_ids_[module][net].reserve(num_sinks);
-  net_sink_module_ids_[module][net].reserve(num_sinks);
+  net_sink_terminal_ids_[module][net].reserve(num_sinks);
   net_sink_instance_ids_[module][net].reserve(num_sinks);
-  net_sink_port_ids_[module][net].reserve(num_sinks);
   net_sink_pin_ids_[module][net].reserve(num_sinks);
 }
 
@@ -777,7 +807,25 @@ ModuleNetSinkId ModuleManager::add_module_net_sink(const ModuleId& module, const
 
   /* Validate the source module */
   VTR_ASSERT(valid_module_id(sink_module));
-  net_sink_module_ids_[module][net].push_back(sink_module);
+
+  /* Validate the port exists in the sink module */
+  VTR_ASSERT(valid_module_port_id(sink_module, sink_port));
+
+  /* Create pair of module and port
+   * Search in the storage. If found, use the existing pair
+   * Otherwise, add the pair
+   */
+  std::pair<ModuleId, ModulePortId> terminal(sink_module, sink_port);
+  std::vector<std::pair<ModuleId, ModulePortId>>::iterator it = std::find(net_terminal_storage_.begin(),
+                                                                          net_terminal_storage_.end(),
+                                                                          terminal);
+  if (it == net_terminal_storage_.end()) {
+    net_sink_terminal_ids_[module][net].push_back(net_terminal_storage_.size());
+    net_terminal_storage_.push_back(terminal);
+  } else {
+   VTR_ASSERT_SAFE(it != net_terminal_storage_.end());
+   net_sink_terminal_ids_[module][net].push_back(std::distance(net_terminal_storage_.begin(), it));
+  }
 
   /* if it has the same id as module, our instance id will be by default 0 */
   size_t sink_instance_id = instance_id;
@@ -789,10 +837,6 @@ ModuleNetSinkId ModuleManager::add_module_net_sink(const ModuleId& module, const
     VTR_ASSERT (sink_instance_id < num_instance(module, sink_module));
     net_sink_instance_ids_[module][net].push_back(sink_instance_id);
   } 
-
-  /* Validate the port exists in the sink module */
-  VTR_ASSERT(valid_module_port_id(sink_module, sink_port));
-  net_sink_port_ids_[module][net].push_back(sink_port);
 
   /* Validate the pin id is in the range of the port width */
   VTR_ASSERT(sink_pin < module_port(sink_module, sink_port).get_width());

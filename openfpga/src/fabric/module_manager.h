@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <tuple>
 #include <unordered_set>
 #include <unordered_map>
 
@@ -298,16 +299,14 @@ class ModuleManager {
     vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::string>> net_names_;    /* Name of net */ 
 
     vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSrcId, ModuleNetSrcId>>> net_src_ids_;  /* Unique id of the source that drive the net */ 
-    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSrcId, ModuleId>>> net_src_module_ids_;  /* Pin ids that drive the net */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSrcId, size_t>>> net_src_terminal_ids_;  /* Pin ids that drive the net */ 
     vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSrcId, size_t>>> net_src_instance_ids_;  /* Pin ids that drive the net */ 
-    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSrcId, ModulePortId>>> net_src_port_ids_;  /* Pin ids that drive the net */ 
     vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSrcId, size_t>>> net_src_pin_ids_;  /* Pin ids that drive the net */ 
 
 
     vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSinkId, ModuleNetSinkId>>> net_sink_ids_;  /* Unique ids of the sink that the net drives */ 
-    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSinkId, ModuleId>>> net_sink_module_ids_;  /* Pin ids that the net drives */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSinkId, size_t>>> net_sink_terminal_ids_;  /* Pin ids that the net drives */ 
     vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSinkId, size_t>>> net_sink_instance_ids_;  /* Pin ids that drive the net */ 
-    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSinkId, ModulePortId>>> net_sink_port_ids_;  /* Pin ids that drive the net */ 
     vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSinkId, size_t>>> net_sink_pin_ids_;  /* Pin ids that drive the net */ 
 
     /* fast look-up for module */
@@ -319,6 +318,11 @@ class ModuleManager {
     /* fast look-up for nets */
     typedef vtr::vector<ModuleId, std::map<ModuleId, std::vector<std::map<ModulePortId, std::vector<ModuleNetId>>>>> NetLookup;
     mutable NetLookup net_lookup_; /* [module_ids][module_ids][instance_ids][port_ids][pin_ids] */ 
+
+    /* Store pairs of a module and a port, which are frequently used in net terminals
+     * (either source or sink)
+     */
+    std::vector<std::pair<ModuleId, ModulePortId>> net_terminal_storage_;
 };
 
 } /* end namespace openfpga */
