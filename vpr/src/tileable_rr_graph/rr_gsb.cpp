@@ -55,6 +55,13 @@ size_t RRGSB::get_chan_width(const e_side& side) const {
   return chan_node_[side_manager.to_size_t()].get_chan_width(); 
 }
 
+/* Get the number of routing tracks on a side */
+t_rr_type RRGSB::get_chan_type(const e_side& side) const {
+  SideManager side_manager(side);
+  VTR_ASSERT(side_manager.validate());
+  return chan_node_[side_manager.to_size_t()].get_type(); 
+}
+
 /* Get the maximum number of routing tracks on all sides */
 size_t RRGSB::get_max_chan_width() const {
   size_t max_chan_width = 0;

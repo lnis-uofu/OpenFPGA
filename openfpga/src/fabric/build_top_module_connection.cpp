@@ -555,7 +555,7 @@ void add_top_module_nets_connect_sb_and_cb(ModuleManager& module_manager,
  
     for (size_t itrack = 0; itrack < module_sb.get_chan_width(side_manager.get_side()); ++itrack) {
       std::string sb_port_name = generate_sb_module_track_port_name(rr_graph.node_type(module_sb.get_chan_node(side_manager.get_side(), itrack)),
-                                                                    side_manager.get_side(), itrack,  
+                                                                    side_manager.get_side(), 
                                                                     module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
       /* Prepare SB-related port information */
       ModulePortId sb_port_id = module_manager.find_module_port(sb_module_id, sb_port_name); 
@@ -578,7 +578,7 @@ void add_top_module_nets_connect_sb_and_cb(ModuleManager& module_manager,
       BasicPort cb_port = module_manager.module_port(cb_module_id, cb_port_id);
 
       /* Source and sink port should match in size */
-      VTR_ASSERT(cb_port.get_width() == sb_port.get_width());
+      VTR_ASSERT(1 == cb_port.get_width());
       
       /* Create a net for each pin */
       for (size_t pin_id = 0; pin_id < cb_port.pins().size(); ++pin_id) {
@@ -587,12 +587,12 @@ void add_top_module_nets_connect_sb_and_cb(ModuleManager& module_manager,
          * If sb port is an input (sink), cb port is an output (source) 
          */
         if (OUT_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack)) {
-          ModuleNetId net = create_module_source_pin_net(module_manager, top_module, sb_module_id, sb_instance, sb_port_id, sb_port.pins()[pin_id]);
+          ModuleNetId net = create_module_source_pin_net(module_manager, top_module, sb_module_id, sb_instance, sb_port_id, itrack / 2);
           module_manager.add_module_net_sink(top_module, net, cb_module_id, cb_instance, cb_port_id, cb_port.pins()[pin_id]);
         } else {
           VTR_ASSERT(IN_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
           ModuleNetId net = create_module_source_pin_net(module_manager, top_module, cb_module_id, cb_instance, cb_port_id, cb_port.pins()[pin_id]);
-          module_manager.add_module_net_sink(top_module, net, sb_module_id, sb_instance, sb_port_id, sb_port.pins()[pin_id]);
+          module_manager.add_module_net_sink(top_module, net, sb_module_id, sb_instance, sb_port_id, itrack / 2);
         }  
       }
     }

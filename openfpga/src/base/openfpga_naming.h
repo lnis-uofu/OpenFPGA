@@ -91,7 +91,6 @@ std::string generate_routing_track_port_name(const t_rr_type& chan_type,
 
 std::string generate_sb_module_track_port_name(const t_rr_type& chan_type, 
                                                const e_side& module_side,
-                                               const size_t& track_id,
                                                const PORTS& port_direction);
 
 std::string generate_cb_module_track_port_name(const t_rr_type& chan_type, 

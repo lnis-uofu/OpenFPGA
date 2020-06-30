@@ -18,28 +18,29 @@
 namespace openfpga {
 
 /*********************************************************************
- * Generate a port for a routing track of a swtich block
+ * Find the port id and pin id for a routing track in the switch 
+ * block module with a given rr_node
  ********************************************************************/
-ModulePortId find_switch_block_module_chan_port(const ModuleManager& module_manager, 
-                                                const ModuleId& sb_module,
-                                                const RRGraph& rr_graph,
-                                                const RRGSB& rr_gsb, 
-                                                const e_side& chan_side,
-                                                const RRNodeId& cur_rr_node,
-                                                const PORTS& cur_rr_node_direction) {
+std::pair<ModulePortId, size_t> find_switch_block_module_chan_port(const ModuleManager& module_manager, 
+                                                                   const ModuleId& sb_module,
+                                                                   const RRGraph& rr_graph,
+                                                                   const RRGSB& rr_gsb, 
+                                                                   const e_side& chan_side,
+                                                                   const RRNodeId& cur_rr_node,
+                                                                   const PORTS& cur_rr_node_direction) {
   /* Get the index in sb_info of cur_rr_node */
   int index = rr_gsb.get_node_index(rr_graph, cur_rr_node, chan_side, cur_rr_node_direction);
   /* Make sure this node is included in this sb_info */
   VTR_ASSERT((-1 != index) && (NUM_SIDES != chan_side));
 
   std::string chan_port_name = generate_sb_module_track_port_name(rr_graph.node_type(rr_gsb.get_chan_node(chan_side, index)),
-                                                                  chan_side, index,  
+                                                                  chan_side,  
                                                                   rr_gsb.get_chan_node_direction(chan_side, index));
   
   /* Must find a valid port id in the Switch Block module */
   ModulePortId chan_port_id = module_manager.find_module_port(sb_module, chan_port_name); 
   VTR_ASSERT(true == module_manager.valid_module_port_id(sb_module, chan_port_id));
-  return chan_port_id; 
+  return std::pair<ModulePortId, size_t>(chan_port_id, index / 2); 
 }
 
 /*********************************************************************
@@ -61,14 +62,14 @@ ModulePortId find_switch_block_module_chan_port(const ModuleManager& module_mana
  * 2. When the input is a routing track, the input_side should be
  *    the side of the node locating on the switch block
  ********************************************************************/
-ModulePortId find_switch_block_module_input_port(const ModuleManager& module_manager,
-                                                 const ModuleId& sb_module, 
-                                                 const RRGraph& rr_graph,
-                                                 const RRGSB& rr_gsb, 
-                                                 const e_side& input_side,
-                                                 const RRNodeId& input_rr_node) {
+std::pair<ModulePortId, size_t> find_switch_block_module_input_port(const ModuleManager& module_manager,
+                                                                    const ModuleId& sb_module, 
+                                                                    const RRGraph& rr_graph,
+                                                                    const RRGSB& rr_gsb, 
+                                                                    const e_side& input_side,
+                                                                    const RRNodeId& input_rr_node) {
   /* Deposit an invalid value */
-  ModulePortId input_port_id = ModulePortId::INVALID();
+  std::pair<ModulePortId, size_t> input_port(ModulePortId::INVALID(), 0);
   /* Generate the input port object */
   switch (rr_graph.node_type(input_rr_node)) {
   /* case SOURCE: */
@@ -85,14 +86,14 @@ ModulePortId find_switch_block_module_input_port(const ModuleManager& module_man
                                                                     grid_pin_side,
                                                                     rr_graph.node_pin_num(input_rr_node)); 
     /* Must find a valid port id in the Switch Block module */
-    input_port_id = module_manager.find_module_port(sb_module, input_port_name); 
-    VTR_ASSERT(true == module_manager.valid_module_port_id(sb_module, input_port_id));
+    input_port.first = module_manager.find_module_port(sb_module, input_port_name); 
+    VTR_ASSERT(true == module_manager.valid_module_port_id(sb_module, input_port.first));
     break;
   }
   case CHANX:
   case CHANY: {
-    input_port_id = find_switch_block_module_chan_port(module_manager, sb_module, rr_graph, 
-                                                       rr_gsb, input_side, input_rr_node, IN_PORT);
+    input_port = find_switch_block_module_chan_port(module_manager, sb_module, rr_graph, 
+                                                    rr_gsb, input_side, input_rr_node, IN_PORT);
     break;
   }
   default: /* SOURCE, IPIN, SINK are invalid*/
@@ -100,18 +101,18 @@ ModulePortId find_switch_block_module_input_port(const ModuleManager& module_man
     exit(1);
   }
 
-  return input_port_id; 
+  return input_port; 
 }
 
 /*********************************************************************
  * Generate a list of input ports for routing multiplexer inside the switch block
  ********************************************************************/
-std::vector<ModulePortId> find_switch_block_module_input_ports(const ModuleManager& module_manager,
-                                                               const ModuleId& sb_module, 
-                                                               const RRGraph& rr_graph,
-                                                               const RRGSB& rr_gsb, 
-                                                               const std::vector<RRNodeId>& input_rr_nodes) {
-  std::vector<ModulePortId> input_ports;
+std::vector<std::pair<ModulePortId, size_t>> find_switch_block_module_input_ports(const ModuleManager& module_manager,
+                                                                                  const ModuleId& sb_module, 
+                                                                                  const RRGraph& rr_graph,
+                                                                                  const RRGSB& rr_gsb, 
+                                                                                  const std::vector<RRNodeId>& input_rr_nodes) {
+  std::vector<std::pair<ModulePortId, size_t>> input_ports;
 
   for (const RRNodeId& input_rr_node : input_rr_nodes) {
     /* Find the side where the input locates in the Switch Block */
