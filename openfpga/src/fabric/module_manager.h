@@ -171,10 +171,24 @@ class ModuleManager {
     /* Set the name of net */
     void set_net_name(const ModuleId& module, const ModuleNetId& net,
                       const std::string& name);
+
+    /* Reserved a number of sources for a module net for a given module
+     * for memory efficiency
+     */
+    void reserve_module_net_sources(const ModuleId& module, const ModuleNetId& net,
+                                    const size_t& num_sources);
+
     /* Add a source to a net in the connection graph */
     ModuleNetSrcId add_module_net_source(const ModuleId& module, const ModuleNetId& net,
                                          const ModuleId& src_module, const size_t& instance_id,
                                          const ModulePortId& src_port, const size_t& src_pin);
+
+    /* Reserved a number of sinks for a module net for a given module
+     * for memory efficiency
+     */
+    void reserve_module_net_sinks(const ModuleId& module, const ModuleNetId& net,
+                                  const size_t& num_sinks);
+
     /* Add a sink to a net in the connection graph */
     ModuleNetSinkId add_module_net_sink(const ModuleId& module, const ModuleNetId& net,
                                         const ModuleId& sink_module, const size_t& instance_id,

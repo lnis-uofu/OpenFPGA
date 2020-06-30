@@ -676,11 +676,17 @@ ModuleNetId ModuleManager::create_module_net(const ModuleId& module) {
   net_src_port_ids_[module].emplace_back();
   net_src_pin_ids_[module].emplace_back();
 
+  /* Reserve a source */
+  reserve_module_net_sources(module, net, 1);
+
   net_sink_ids_[module].emplace_back();
   net_sink_module_ids_[module].emplace_back();
   net_sink_instance_ids_[module].emplace_back();
   net_sink_port_ids_[module].emplace_back();
   net_sink_pin_ids_[module].emplace_back();
+
+  /* Reserve a source */
+  reserve_module_net_sinks(module, net, 1);
 
   return net;
 }
@@ -692,6 +698,18 @@ void ModuleManager::set_net_name(const ModuleId& module, const ModuleNetId& net,
   VTR_ASSERT(valid_module_net_id(module, net));
 
   net_names_[module][net] = name;
+}
+
+void ModuleManager::reserve_module_net_sources(const ModuleId& module, const ModuleNetId& net,
+                                               const size_t& num_sources) {
+  /* Validate module net */
+  VTR_ASSERT(valid_module_net_id(module, net));
+
+  net_src_ids_[module][net].reserve(num_sources);
+  net_src_module_ids_[module][net].reserve(num_sources);
+  net_src_instance_ids_[module][net].reserve(num_sources);
+  net_src_port_ids_[module][net].reserve(num_sources);
+  net_src_pin_ids_[module][net].reserve(num_sources);
 }
 
 /* Add a source to a net in the connection graph */
@@ -732,6 +750,18 @@ ModuleNetSrcId ModuleManager::add_module_net_source(const ModuleId& module, cons
   net_lookup_[module][src_module][src_instance_id][src_port][src_pin] = net;
 
   return net_src;
+}
+
+void ModuleManager::reserve_module_net_sinks(const ModuleId& module, const ModuleNetId& net,
+                                             const size_t& num_sinks) {
+  /* Validate module net */
+  VTR_ASSERT(valid_module_net_id(module, net));
+
+  net_sink_ids_[module][net].reserve(num_sinks);
+  net_sink_module_ids_[module][net].reserve(num_sinks);
+  net_sink_instance_ids_[module][net].reserve(num_sinks);
+  net_sink_port_ids_[module][net].reserve(num_sinks);
+  net_sink_pin_ids_[module][net].reserve(num_sinks);
 }
 
 /* Add a sink to a net in the connection graph */

@@ -857,9 +857,7 @@ void add_module_nets_cmos_memory_chain_config_bus(ModuleManager& module_manager,
     /* Create a net for each pin */
     for (size_t pin_id = 0; pin_id < net_src_port.pins().size(); ++pin_id) {
       /* Create a net and add source and sink to it */
-      ModuleNetId net = module_manager.create_module_net(parent_module);
-      /* Add net source */
-      module_manager.add_module_net_source(parent_module, net, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
+      ModuleNetId net = create_module_source_pin_net(module_manager, parent_module, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
       /* Add net sink */
       module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[pin_id]);
     }
@@ -891,9 +889,7 @@ void add_module_nets_cmos_memory_chain_config_bus(ModuleManager& module_manager,
   /* Create a net for each pin */
   for (size_t pin_id = 0; pin_id < net_src_port.pins().size(); ++pin_id) {
     /* Create a net and add source and sink to it */
-    ModuleNetId net = module_manager.create_module_net(parent_module);
-    /* Add net source */
-    module_manager.add_module_net_source(parent_module, net, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
+    ModuleNetId net = create_module_source_pin_net(module_manager, parent_module, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
     /* Add net sink */
     module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[pin_id]);
   }
@@ -1452,7 +1448,6 @@ void add_module_io_ports_from_child_modules(ModuleManager& module_manager,
           /* For each pin of the child port, create a net and do wiring */
           for (const size_t& pin_id : child_gpio_port.pins()) {
             /* Reach here, it means this is the port we want, create a net and configure its source and sink */
-            ModuleNetId net = module_manager.create_module_net(module_id);
             /* - For GPIO and GPIN ports
              *   the source of the net is the current module 
              *   the sink of the net is the child module
@@ -1462,12 +1457,12 @@ void add_module_io_ports_from_child_modules(ModuleManager& module_manager,
              */
             if ( (ModuleManager::MODULE_GPIO_PORT == module_port_type)
               || (ModuleManager::MODULE_GPIN_PORT == module_port_type) ) {
-              module_manager.add_module_net_source(module_id, net, module_id, 0, gpio_port_ids[iport], gpio_port_lsb[iport]); 
+              ModuleNetId net = create_module_source_pin_net(module_manager, module_id, module_id, 0, gpio_port_ids[iport], gpio_port_lsb[iport]); 
               module_manager.add_module_net_sink(module_id, net, child, child_instance, child_gpio_port_id, pin_id); 
             } else {
               VTR_ASSERT(ModuleManager::MODULE_GPOUT_PORT == module_port_type);
+              ModuleNetId net = create_module_source_pin_net(module_manager, module_id, child, child_instance, child_gpio_port_id, pin_id); 
               module_manager.add_module_net_sink(module_id, net, module_id, 0, gpio_port_ids[iport], gpio_port_lsb[iport]); 
-              module_manager.add_module_net_source(module_id, net, child, child_instance, child_gpio_port_id, pin_id); 
             }
             /* Update the LSB counter */
             gpio_port_lsb[iport]++;
@@ -1559,6 +1554,22 @@ void add_module_global_input_ports_from_child_modules(ModuleManager& module_mana
     global_port_ids.push_back(port_id);
   } 
 
+  /* Count the number of sinks for each global port */
+  std::map<ModulePortId, size_t> port_sink_count;
+  for (const ModuleId& child : module_manager.child_modules(module_id)) {
+    /* Find all the global ports, whose port type is special */
+    for (ModulePortId child_global_port_id : module_manager.module_port_ids_by_type(child, ModuleManager::MODULE_GLOBAL_PORT)) {
+      BasicPort child_global_port = module_manager.module_port(child, child_global_port_id);
+      /* Search in the global port list to be added, find the port id */
+
+      std::vector<BasicPort>::iterator it = std::find(global_ports_to_add.begin(), global_ports_to_add.end(), child_global_port);
+      VTR_ASSERT(it != global_ports_to_add.end());
+      ModulePortId module_global_port_id = global_port_ids[it - global_ports_to_add.begin()];
+
+      port_sink_count[module_global_port_id] += module_manager.num_instance(module_id, child);
+    }
+  }
+
   /* Add module nets to connect the global ports of the module to the global ports of the sub module */
   /* Iterate over the child modules */
   for (const ModuleId& child : module_manager.child_modules(module_id)) {
@@ -1577,8 +1588,8 @@ void add_module_global_input_ports_from_child_modules(ModuleManager& module_mana
         /* For each pin of the child port, create a net and do wiring */
         for (size_t pin_id = 0; pin_id < child_global_port.pins().size(); ++pin_id) {
           /* Reach here, it means this is the port we want, create a net and configure its source and sink */
-          ModuleNetId net = module_manager.create_module_net(module_id);
-          module_manager.add_module_net_source(module_id, net, module_id, 0, module_global_port_id, module_global_port.pins()[pin_id]); 
+          ModuleNetId net = create_module_source_pin_net(module_manager, module_id, module_id, 0, module_global_port_id, module_global_port.pins()[pin_id]); 
+          module_manager.reserve_module_net_sinks(module_id, net, port_sink_count[module_global_port_id]);
           module_manager.add_module_net_sink(module_id, net, child, child_instance, child_global_port_id, child_global_port.pins()[pin_id]); 
           /* We finish for this child gpio port */
         }
