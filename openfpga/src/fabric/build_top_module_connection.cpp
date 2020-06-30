@@ -14,6 +14,7 @@
 #include "pb_type_utils.h"
 #include "rr_gsb_utils.h"
 #include "openfpga_physical_tile_utils.h"
+#include "module_manager_utils.h"
 
 #include "build_top_module_utils.h"
 #include "build_top_module_connection.h"
@@ -129,9 +130,7 @@ void add_top_module_nets_connect_grids_and_sb(ModuleManager& module_manager,
       
       /* Create a net for each pin */
       for (size_t pin_id = 0; pin_id < src_grid_port.pins().size(); ++pin_id) {
-        ModuleNetId net = module_manager.create_module_net(top_module);
-        /* Configure the net source */
-        module_manager.add_module_net_source(top_module, net, src_grid_module, src_grid_instance, src_grid_port_id, src_grid_port.pins()[pin_id]);
+        ModuleNetId net = create_module_source_pin_net(module_manager, top_module, src_grid_module, src_grid_instance, src_grid_port_id, src_grid_port.pins()[pin_id]);
         /* Configure the net sink */
         module_manager.add_module_net_sink(top_module, net, sink_sb_module, sink_sb_instance, sink_sb_port_id, sink_sb_port.pins()[pin_id]);
       }
@@ -274,9 +273,7 @@ void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(ModuleManager
       
       /* Create a net for each pin */
       for (size_t pin_id = 0; pin_id < src_grid_port.pins().size(); ++pin_id) {
-        ModuleNetId net = module_manager.create_module_net(top_module);
-        /* Configure the net source */
-        module_manager.add_module_net_source(top_module, net, src_grid_module, src_grid_instance, src_grid_port_id, src_grid_port.pins()[pin_id]);
+        ModuleNetId net = create_module_source_pin_net(module_manager, top_module, src_grid_module, src_grid_instance, src_grid_port_id, src_grid_port.pins()[pin_id]);
         /* Configure the net sink */
         module_manager.add_module_net_sink(top_module, net, sink_sb_module, sink_sb_instance, sink_sb_port_id, sink_sb_port.pins()[pin_id]);
       }
@@ -424,9 +421,7 @@ void add_top_module_nets_connect_grids_and_cb(ModuleManager& module_manager,
       
       /* Create a net for each pin */
       for (size_t pin_id = 0; pin_id < src_cb_port.pins().size(); ++pin_id) {
-        ModuleNetId net = module_manager.create_module_net(top_module);
-        /* Configure the net source */
-        module_manager.add_module_net_source(top_module, net, src_cb_module, src_cb_instance, src_cb_port_id, src_cb_port.pins()[pin_id]);
+        ModuleNetId net = create_module_source_pin_net(module_manager, top_module, src_cb_module, src_cb_instance, src_cb_port_id, src_cb_port.pins()[pin_id]);
         /* Configure the net sink */
         module_manager.add_module_net_sink(top_module, net, sink_grid_module, sink_grid_instance, sink_grid_port_id, sink_grid_port.pins()[pin_id]);
       }
@@ -587,17 +582,16 @@ void add_top_module_nets_connect_sb_and_cb(ModuleManager& module_manager,
       
       /* Create a net for each pin */
       for (size_t pin_id = 0; pin_id < cb_port.pins().size(); ++pin_id) {
-        ModuleNetId net = module_manager.create_module_net(top_module);
         /* Configure the net source and sink:
          * If sb port is an output (source), cb port is an input (sink) 
          * If sb port is an input (sink), cb port is an output (source) 
          */
         if (OUT_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+          ModuleNetId net = create_module_source_pin_net(module_manager, top_module, sb_module_id, sb_instance, sb_port_id, sb_port.pins()[pin_id]);
           module_manager.add_module_net_sink(top_module, net, cb_module_id, cb_instance, cb_port_id, cb_port.pins()[pin_id]);
-          module_manager.add_module_net_source(top_module, net, sb_module_id, sb_instance, sb_port_id, sb_port.pins()[pin_id]);
         } else {
           VTR_ASSERT(IN_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
-          module_manager.add_module_net_source(top_module, net, cb_module_id, cb_instance, cb_port_id, cb_port.pins()[pin_id]);
+          ModuleNetId net = create_module_source_pin_net(module_manager, top_module, cb_module_id, cb_instance, cb_port_id, cb_port.pins()[pin_id]);
           module_manager.add_module_net_sink(top_module, net, sb_module_id, sb_instance, sb_port_id, sb_port.pins()[pin_id]);
         }  
       }
