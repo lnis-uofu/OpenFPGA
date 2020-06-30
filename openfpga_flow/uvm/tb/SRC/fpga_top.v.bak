@@ -1,0 +1,2511 @@
+
+
+module fpga_top
+(
+  input [0:0] pReset_pad,
+  input [0:0] prog_clk_pad,
+  input [0:0] Reset_pad,
+  input [0:0] Test_en_pad,
+  input [0:0] clk_pad,
+  output [0:0] lut4_out_0_pad,
+  output [0:0] lut4_out_1_pad,
+  output [0:0] lut4_out_2_pad,
+  output [0:0] lut4_out_3_pad,
+  output [0:0] lut5_out_0_pad,
+  output [0:0] lut5_out_1_pad,
+  output [0:0] lut6_out_0_pad,
+  input [0:0] sc_head_pad,
+  output [0:0] sc_tail_pad,
+  output [0:0] cc_spypad_0_pad,
+  output [0:0] cc_spypad_1_pad,
+  output [0:0] cc_spypad_2_pad,
+  output [0:0] sc_spypad_0_pad,
+  output [0:0] shiftreg_spypad_0_pad,
+  output [0:0] cout_spypad_0_pad,
+  output [0:0] perf_spypad_0_pad,
+  inout [7:0] gpio_pad,
+  input [0:0] ccff_head_pad,
+  output [0:0] ccff_tail_pad
+);
+
+  wire [0:0] pReset;
+  wire [0:0] prog_clk;
+  wire [0:0] Reset;
+  wire [0:0] Test_en;
+  wire [0:0] clk;
+  wire [0:0] lut4_out_0;
+  wire [0:0] lut4_out_1;
+  wire [0:0] lut4_out_2;
+  wire [0:0] lut4_out_3;
+  wire [0:0] lut5_out_0;
+  wire [0:0] lut5_out_1;
+  wire [0:0] lut6_out_0;
+  wire [0:0] sc_head;
+  wire [0:0] sc_tail;
+  wire [0:0] cc_spypad_0;
+  wire [0:0] cc_spypad_1;
+  wire [0:0] cc_spypad_2;
+  wire [0:0] sc_spypad_0;
+  wire [0:0] shiftreg_spypad_0;
+  wire [0:0] cout_spypad_0;
+  wire [0:0] perf_spypad_0;
+  wire [7:0] gfpga_pad_GPIO_A;
+  wire [7:0] gfpga_pad_GPIO_IE;
+  wire [7:0] gfpga_pad_GPIO_OE;
+  wire [7:0] gfpga_pad_GPIO_Y;
+  wire [0:0] ccff_head;
+  wire [0:0] ccff_tail;
+  wire SNS;
+  wire RTO;
+  wire [149:0] TIELOW;
+  wire [70:0] TIEHIGH;
+  wire [46:0] UNCONN;
+
+  fpga_core
+  fpga_core_uut
+  (
+    .pReset(pReset),
+    .prog_clk(prog_clk),
+    .Reset(Reset),
+    .Test_en(Test_en),
+    .clk(clk),
+    .lut4_out_0(lut4_out_0),
+    .lut4_out_1(lut4_out_1),
+    .lut4_out_2(lut4_out_2),
+    .lut4_out_3(lut4_out_3),
+    .lut5_out_0(lut5_out_0),
+    .lut5_out_1(lut5_out_1),
+    .lut6_out_0(lut6_out_0),
+    .sc_head(sc_head),
+    .sc_tail(sc_tail),
+    .cc_spypad_0(cc_spypad_0),
+    .cc_spypad_1(cc_spypad_1),
+    .cc_spypad_2(cc_spypad_2),
+    .sc_spypad_0(sc_spypad_0),
+    .shiftreg_spypad_0(shiftreg_spypad_0),
+    .cout_spypad_0(cout_spypad_0),
+    .perf_spypad_0(perf_spypad_0),
+    .gfpga_pad_GPIO_A(gfpga_pad_GPIO_A),
+    .gfpga_pad_GPIO_IE(gfpga_pad_GPIO_IE),
+    .gfpga_pad_GPIO_OE(gfpga_pad_GPIO_OE),
+    .gfpga_pad_GPIO_Y(gfpga_pad_GPIO_Y),
+    .ccff_head(ccff_head),
+    .ccff_tail(ccff_tail)
+  );
+
+
+  PDVSS_18_18_NT_DR_H
+  PDVSS_18_18_NT_DR_left_cell_0
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PDVDD_18_18_NT_DR_H
+  PDVDD_18_18_NT_DR_left_cell_1
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PBIDIR_18_18_NT_DR_H
+  PBIDIR_18_18_NT_DR_left_cell_2
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(lut5_out_0_pad),
+    .A(lut5_out_0),
+    .Y(UNCONN[0]),
+    .IE(TIELOW[0]),
+    .OE(TIEHIGH[0]),
+    .DS0(TIEHIGH[1]),
+    .DS1(TIEHIGH[2]),
+    .IS(TIELOW[1]),
+    .PE(TIELOW[2]),
+    .POE(TIELOW[3]),
+    .PS(TIELOW[4]),
+    .SR(TIELOW[5]),
+    .PO(UNCONN[1])
+  );
+
+
+  PBIDIR_18_18_NT_DR_H
+  PBIDIR_18_18_NT_DR_left_cell_3
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(lut5_out_1_pad),
+    .A(lut5_out_1),
+    .Y(UNCONN[2]),
+    .IE(TIELOW[6]),
+    .OE(TIEHIGH[3]),
+    .DS0(TIEHIGH[4]),
+    .DS1(TIEHIGH[5]),
+    .IS(TIELOW[7]),
+    .PE(TIELOW[8]),
+    .POE(TIELOW[9]),
+    .PS(TIELOW[10]),
+    .SR(TIELOW[11]),
+    .PO(UNCONN[3])
+  );
+
+
+  PDVSS_18_18_NT_DR_H
+  PDVSS_18_18_NT_DR_left_cell_4
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PDVDD_18_18_NT_DR_H
+  PDVDD_18_18_NT_DR_left_cell_5
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PINCNP_18_18_NT_DR_H
+  PINCNP_18_18_NT_DR_left_cell_6
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(Reset_pad),
+    .Y(Reset),
+    .IE(TIEHIGH[6]),
+    .IS(TIELOW[12]),
+    .POE(TIELOW[13]),
+    .PO(UNCONN[4])
+  );
+
+
+  PBIDIR_18_18_NT_DR_H
+  PBIDIR_18_18_NT_DR_left_cell_7
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(gpio_pad[1]),
+    .Y(gfpga_pad_GPIO_Y[1]),
+    .A(gfpga_pad_GPIO_A[1]),
+    .IE(gfpga_pad_GPIO_IE[1]),
+    .OE(gfpga_pad_GPIO_OE[1]),
+    .DS0(TIEHIGH[7]),
+    .DS1(TIEHIGH[8]),
+    .IS(TIELOW[14]),
+    .PE(TIELOW[15]),
+    .POE(TIELOW[16]),
+    .PS(TIELOW[17]),
+    .SR(TIELOW[18]),
+    .PO(UNCONN[5])
+  );
+
+
+  PINCNP_18_18_NT_DR_H
+  PINCNP_18_18_NT_DR_left_cell_8
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(clk_pad),
+    .Y(clk),
+    .IE(TIEHIGH[9]),
+    .IS(TIELOW[19]),
+    .POE(TIELOW[20]),
+    .PO(UNCONN[6])
+  );
+
+
+  PBIDIR_18_18_NT_DR_H
+  PBIDIR_18_18_NT_DR_left_cell_9
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(gpio_pad[0]),
+    .Y(gfpga_pad_GPIO_Y[0]),
+    .A(gfpga_pad_GPIO_A[0]),
+    .IE(gfpga_pad_GPIO_IE[0]),
+    .OE(gfpga_pad_GPIO_OE[0]),
+    .DS0(TIEHIGH[10]),
+    .DS1(TIEHIGH[11]),
+    .IS(TIELOW[21]),
+    .PE(TIELOW[22]),
+    .POE(TIELOW[23]),
+    .PS(TIELOW[24]),
+    .SR(TIELOW[25]),
+    .PO(UNCONN[7])
+  );
+
+
+  PINCNP_18_18_NT_DR_H
+  PINCNP_18_18_NT_DR_left_cell_10
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(Test_en_pad),
+    .Y(Test_en),
+    .IE(TIEHIGH[12]),
+    .IS(TIELOW[26]),
+    .POE(TIELOW[27]),
+    .PO(UNCONN[8])
+  );
+
+
+/*  PBIDIR_18_18_NT_DR_H
+  PBIDIR_18_18_NT_DR_left_cell_11
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(cc_spypad_1_pad),
+    .A(cc_spypad_1),
+    .Y(UNCONN[9]),
+    .IE(TIELOW[28]),
+    .OE(TIEHIGH[13]),
+    .DS0(TIEHIGH[14]),
+    .DS1(TIEHIGH[15]),
+    .IS(TIELOW[29]),
+    .PE(TIELOW[30]),
+    .POE(TIELOW[31]),
+    .PS(TIELOW[32]),
+    .SR(TIELOW[33]),
+    .PO(UNCONN[10])
+  );
+*/
+
+  PBIDIR_18_18_NT_DR_H
+  PBIDIR_18_18_NT_DR_left_cell_12
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(perf_spypad_0_pad),
+    .A(perf_spypad_0),
+    .Y(UNCONN[11]),
+    .IE(TIELOW[34]),
+    .OE(TIEHIGH[16]),
+    .DS0(TIEHIGH[17]),
+    .DS1(TIEHIGH[18]),
+    .IS(TIELOW[35]),
+    .PE(TIELOW[36]),
+    .POE(TIELOW[37]),
+    .PS(TIELOW[38]),
+    .SR(TIELOW[39]),
+    .PO(UNCONN[12])
+  );
+
+
+  PBIDIR_18_18_NT_DR_H
+  PBIDIR_18_18_NT_DR_left_cell_13
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(lut6_out_0_pad),
+    .A(lut6_out_0),
+    .Y(UNCONN[13]),
+    .IE(TIELOW[40]),
+    .OE(TIEHIGH[19]),
+    .DS0(TIEHIGH[20]),
+    .DS1(TIEHIGH[21]),
+    .IS(TIELOW[41]),
+    .PE(TIELOW[42]),
+    .POE(TIELOW[43]),
+    .PS(TIELOW[44]),
+    .SR(TIELOW[45]),
+    .PO(UNCONN[14])
+  );
+
+
+  PVDD_08_08_NT_DR_H
+  PVDD_08_08_NT_DR_left_cell_14
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PVSS_08_08_NT_DR_H
+  PVSS_08_08_NT_DR_left_cell_15
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PDVSS_18_18_NT_DR_H
+  PDVSS_18_18_NT_DR_right_cell_16
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PDVDD_18_18_NT_DR_H
+  PDVDD_18_18_NT_DR_right_cell_17
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PDVSS_18_18_NT_DR_H
+  PDVSS_18_18_NT_DR_right_cell_18
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PDVDD_18_18_NT_DR_H
+  PDVDD_18_18_NT_DR_right_cell_19
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PVDD_08_08_NT_DR_H
+  PVDD_08_08_NT_DR_right_cell_20
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PVSS_08_08_NT_DR_H
+  PVSS_08_08_NT_DR_right_cell_21
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PINCNP_18_18_NT_DR_H
+  PINCNP_18_18_NT_DR_right_cell_22
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(prog_clk_pad),
+    .Y(prog_clk),
+    .IE(TIEHIGH[22]),
+    .IS(TIELOW[46]),
+    .POE(TIELOW[47]),
+    .PO(UNCONN[15])
+  );
+
+
+  PBIDIR_18_18_NT_DR_H
+  PBIDIR_18_18_NT_DR_right_cell_23
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(gpio_pad[4]),
+    .Y(gfpga_pad_GPIO_Y[4]),
+    .A(gfpga_pad_GPIO_A[4]),
+    .IE(gfpga_pad_GPIO_IE[4]),
+    .OE(gfpga_pad_GPIO_OE[4]),
+    .DS0(TIEHIGH[23]),
+    .DS1(TIEHIGH[24]),
+    .IS(TIELOW[48]),
+    .PE(TIELOW[49]),
+    .POE(TIELOW[50]),
+    .PS(TIELOW[51]),
+    .SR(TIELOW[52]),
+    .PO(UNCONN[16])
+  );
+
+
+  PDVDDTIE_18_18_NT_DR_H
+  PDVDDTIE_18_18_NT_DR_right_cell_24
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PBIDIR_18_18_NT_DR_H
+  PBIDIR_18_18_NT_DR_right_cell_25
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(gpio_pad[5]),
+    .Y(gfpga_pad_GPIO_Y[5]),
+    .A(gfpga_pad_GPIO_A[5]),
+    .IE(gfpga_pad_GPIO_IE[5]),
+    .OE(gfpga_pad_GPIO_OE[5]),
+    .DS0(TIEHIGH[25]),
+    .DS1(TIEHIGH[26]),
+    .IS(TIELOW[53]),
+    .PE(TIELOW[54]),
+    .POE(TIELOW[55]),
+    .PS(TIELOW[56]),
+    .SR(TIELOW[57]),
+    .PO(UNCONN[17])
+  );
+
+
+  PINCNP_18_18_NT_DR_H
+  PINCNP_18_18_NT_DR_right_cell_26
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(pReset_pad),
+    .Y(pReset),
+    .IE(TIEHIGH[27]),
+    .IS(TIELOW[58]),
+    .POE(TIELOW[59]),
+    .PO(UNCONN[18])
+  );
+
+
+  PDVDDTIE_18_18_NT_DR_H
+  PDVDDTIE_18_18_NT_DR_right_cell_27
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PDVDD_18_18_NT_DR_H
+  PDVDD_18_18_NT_DR_right_cell_28
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PDVSS_18_18_NT_DR_H
+  PDVSS_18_18_NT_DR_right_cell_29
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PVDD_08_08_NT_DR_H
+  PVDD_08_08_NT_DR_right_cell_30
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PVSS_08_08_NT_DR_H
+  PVSS_08_08_NT_DR_right_cell_31
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PDVSS_18_18_NT_DR_V
+  PDVSS_18_18_NT_DR_top_cell_32
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PDVDD_18_18_NT_DR_V
+  PDVDD_18_18_NT_DR_top_cell_33
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PBIDIR_18_18_NT_DR_V
+  PBIDIR_18_18_NT_DR_top_cell_34
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(lut4_out_0_pad),
+    .A(lut4_out_0),
+    .Y(UNCONN[19]),
+    .IE(TIELOW[60]),
+    .OE(TIEHIGH[28]),
+    .DS0(TIEHIGH[29]),
+    .DS1(TIEHIGH[30]),
+    .IS(TIELOW[61]),
+    .PE(TIELOW[62]),
+    .POE(TIELOW[63]),
+    .PS(TIELOW[64]),
+    .SR(TIELOW[65]),
+    .PO(UNCONN[20])
+  );
+
+
+  PBIDIR_18_18_NT_DR_V
+  PBIDIR_18_18_NT_DR_top_cell_35
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(lut4_out_1_pad),
+    .A(lut4_out_1),
+    .Y(UNCONN[21]),
+    .IE(TIELOW[66]),
+    .OE(TIEHIGH[31]),
+    .DS0(TIEHIGH[32]),
+    .DS1(TIEHIGH[33]),
+    .IS(TIELOW[67]),
+    .PE(TIELOW[68]),
+    .POE(TIELOW[69]),
+    .PS(TIELOW[70]),
+    .SR(TIELOW[71]),
+    .PO(UNCONN[22])
+  );
+
+
+  PBIDIR_18_18_NT_DR_V
+  PBIDIR_18_18_NT_DR_top_cell_36
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(lut4_out_2_pad),
+    .A(lut4_out_2),
+    .Y(UNCONN[23]),
+    .IE(TIELOW[72]),
+    .OE(TIEHIGH[34]),
+    .DS0(TIEHIGH[35]),
+    .DS1(TIEHIGH[36]),
+    .IS(TIELOW[73]),
+    .PE(TIELOW[74]),
+    .POE(TIELOW[75]),
+    .PS(TIELOW[76]),
+    .SR(TIELOW[77]),
+    .PO(UNCONN[24])
+  );
+
+
+  PBIDIR_18_18_NT_DR_V
+  PBIDIR_18_18_NT_DR_top_cell_37
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(lut4_out_3_pad),
+    .A(lut4_out_3),
+    .Y(UNCONN[25]),
+    .IE(TIELOW[78]),
+    .OE(TIEHIGH[37]),
+    .DS0(TIEHIGH[38]),
+    .DS1(TIEHIGH[39]),
+    .IS(TIELOW[79]),
+    .PE(TIELOW[80]),
+    .POE(TIELOW[81]),
+    .PS(TIELOW[82]),
+    .SR(TIELOW[83]),
+    .PO(UNCONN[26])
+  );
+
+
+  PINCNP_18_18_NT_DR_V
+  PINCNP_18_18_NT_DR_top_cell_38
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(sc_head_pad),
+    .Y(sc_head),
+    .IE(TIEHIGH[40]),
+    .IS(TIELOW[84]),
+    .POE(TIELOW[85]),
+    .PO(UNCONN[27])
+  );
+
+
+  PBIDIR_18_18_NT_DR_V
+  PBIDIR_18_18_NT_DR_top_cell_39
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(gpio_pad[7]),
+    .Y(gfpga_pad_GPIO_Y[7]),
+    .A(gfpga_pad_GPIO_A[7]),
+    .IE(gfpga_pad_GPIO_IE[7]),
+    .OE(gfpga_pad_GPIO_OE[7]),
+    .DS0(TIEHIGH[41]),
+    .DS1(TIEHIGH[42]),
+    .IS(TIELOW[86]),
+    .PE(TIELOW[87]),
+    .POE(TIELOW[88]),
+    .PS(TIELOW[89]),
+    .SR(TIELOW[90]),
+    .PO(UNCONN[28])
+  );
+
+
+  PDVDDTIE_18_18_NT_DR_V
+  PDVDDTIE_18_18_NT_DR_top_cell_40
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PBIDIR_18_18_NT_DR_V
+  PBIDIR_18_18_NT_DR_top_cell_41
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(gpio_pad[6]),
+    .Y(gfpga_pad_GPIO_Y[6]),
+    .A(gfpga_pad_GPIO_A[6]),
+    .IE(gfpga_pad_GPIO_IE[6]),
+    .OE(gfpga_pad_GPIO_OE[6]),
+    .DS0(TIEHIGH[43]),
+    .DS1(TIEHIGH[44]),
+    .IS(TIELOW[91]),
+    .PE(TIELOW[92]),
+    .POE(TIELOW[93]),
+    .PS(TIELOW[94]),
+    .SR(TIELOW[95]),
+    .PO(UNCONN[29])
+  );
+
+
+  PBIDIR_18_18_NT_DR_V
+  PBIDIR_18_18_NT_DR_top_cell_42
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(ccff_tail_pad),
+    .A(ccff_tail),
+    .Y(UNCONN[30]),
+    .IE(TIELOW[96]),
+    .OE(TIEHIGH[45]),
+    .DS0(TIEHIGH[46]),
+    .DS1(TIEHIGH[47]),
+    .IS(TIELOW[97]),
+    .PE(TIELOW[98]),
+    .POE(TIELOW[99]),
+    .PS(TIELOW[100]),
+    .SR(TIELOW[101]),
+    .PO(UNCONN[31])
+  );
+
+
+  PDVDDTIE_18_18_NT_DR_V
+  PDVDDTIE_18_18_NT_DR_top_cell_43
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PDVDD_18_18_NT_DR_V
+  PDVDD_18_18_NT_DR_top_cell_44
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PDVSS_18_18_NT_DR_V
+  PDVSS_18_18_NT_DR_top_cell_45
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PVDD_08_08_NT_DR_V
+  PVDD_08_08_NT_DR_top_cell_46
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PVSS_08_08_NT_DR_V
+  PVSS_08_08_NT_DR_top_cell_47
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PDVSS_18_18_NT_DR_V
+  PDVSS_18_18_NT_DR_bottom_cell_48
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PDVDD_18_18_NT_DR_V
+  PDVDD_18_18_NT_DR_bottom_cell_49
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PBIDIR_18_18_NT_DR_V
+  PBIDIR_18_18_NT_DR_bottom_cell_50
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(sc_spypad_0_pad),
+    .A(sc_spypad_0),
+    .Y(UNCONN[32]),
+    .IE(TIELOW[102]),
+    .OE(TIEHIGH[48]),
+    .DS0(TIEHIGH[49]),
+    .DS1(TIEHIGH[50]),
+    .IS(TIELOW[103]),
+    .PE(TIELOW[104]),
+    .POE(TIELOW[105]),
+    .PS(TIELOW[106]),
+    .SR(TIELOW[107]),
+    .PO(UNCONN[33])
+  );
+
+
+  PBIDIR_18_18_NT_DR_V
+  PBIDIR_18_18_NT_DR_bottom_cell_51
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(shiftreg_spypad_0_pad),
+    .A(shiftreg_spypad_0),
+    .Y(UNCONN[34]),
+    .IE(TIELOW[108]),
+    .OE(TIEHIGH[51]),
+    .DS0(TIEHIGH[52]),
+    .DS1(TIEHIGH[53]),
+    .IS(TIELOW[109]),
+    .PE(TIELOW[110]),
+    .POE(TIELOW[111]),
+    .PS(TIELOW[112]),
+    .SR(TIELOW[113]),
+    .PO(UNCONN[35])
+  );
+
+
+  PVDD_08_08_NT_DR_V
+  PVDD_08_08_NT_DR_bottom_cell_52
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PVSS_08_08_NT_DR_V
+  PVSS_08_08_NT_DR_bottom_cell_53
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PINCNP_18_18_NT_DR_V
+  PINCNP_18_18_NT_DR_bottom_cell_54
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(ccff_head_pad),
+    .Y(ccff_head),
+    .IE(TIEHIGH[54]),
+    .IS(TIELOW[114]),
+    .POE(TIELOW[115]),
+    .PO(UNCONN[36])
+  );
+
+
+  PBIDIR_18_18_NT_DR_V
+  PBIDIR_18_18_NT_DR_bottom_cell_55
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(gpio_pad[2]),
+    .Y(gfpga_pad_GPIO_Y[2]),
+    .A(gfpga_pad_GPIO_A[2]),
+    .IE(gfpga_pad_GPIO_IE[2]),
+    .OE(gfpga_pad_GPIO_OE[2]),
+    .DS0(TIEHIGH[55]),
+    .DS1(TIEHIGH[56]),
+    .IS(TIELOW[116]),
+    .PE(TIELOW[117]),
+    .POE(TIELOW[118]),
+    .PS(TIELOW[119]),
+    .SR(TIELOW[120]),
+    .PO(UNCONN[37])
+  );
+
+
+  PDVDDTIE_18_18_NT_DR_V
+  PDVDDTIE_18_18_NT_DR_bottom_cell_56
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PBIDIR_18_18_NT_DR_V
+  PBIDIR_18_18_NT_DR_bottom_cell_57
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(gpio_pad[3]),
+    .Y(gfpga_pad_GPIO_Y[3]),
+    .A(gfpga_pad_GPIO_A[3]),
+    .IE(gfpga_pad_GPIO_IE[3]),
+    .OE(gfpga_pad_GPIO_OE[3]),
+    .DS0(TIEHIGH[57]),
+    .DS1(TIEHIGH[58]),
+    .IS(TIELOW[121]),
+    .PE(TIELOW[122]),
+    .POE(TIELOW[123]),
+    .PS(TIELOW[124]),
+    .SR(TIELOW[125]),
+    .PO(UNCONN[38])
+  );
+
+
+  PBIDIR_18_18_NT_DR_V
+  PBIDIR_18_18_NT_DR_bottom_cell_58
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(sc_tail_pad),
+    .A(sc_tail),
+    .Y(UNCONN[39]),
+    .IE(TIELOW[126]),
+    .OE(TIEHIGH[59]),
+    .DS0(TIEHIGH[60]),
+    .DS1(TIEHIGH[61]),
+    .IS(TIELOW[127]),
+    .PE(TIELOW[128]),
+    .POE(TIELOW[129]),
+    .PS(TIELOW[130]),
+    .SR(TIELOW[131]),
+    .PO(UNCONN[40])
+  );
+
+
+  PBIDIR_18_18_NT_DR_V
+  PBIDIR_18_18_NT_DR_bottom_cell_59
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(cout_spypad_0_pad),
+    .A(cout_spypad_0),
+    .Y(UNCONN[41]),
+    .IE(TIELOW[132]),
+    .OE(TIEHIGH[62]),
+    .DS0(TIEHIGH[63]),
+    .DS1(TIEHIGH[64]),
+    .IS(TIELOW[133]),
+    .PE(TIELOW[134]),
+    .POE(TIELOW[135]),
+    .PS(TIELOW[136]),
+    .SR(TIELOW[137]),
+    .PO(UNCONN[42])
+  );
+
+
+  PBIDIR_18_18_NT_DR_V
+  PBIDIR_18_18_NT_DR_bottom_cell_60
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(cc_spypad_2_pad),
+    .A(cc_spypad_2),
+    .Y(UNCONN[43]),
+    .IE(TIELOW[138]),
+    .OE(TIEHIGH[65]),
+    .DS0(TIEHIGH[66]),
+    .DS1(TIEHIGH[67]),
+    .IS(TIELOW[139]),
+    .PE(TIELOW[140]),
+    .POE(TIELOW[141]),
+    .PS(TIELOW[142]),
+    .SR(TIELOW[143]),
+    .PO(UNCONN[44])
+  );
+
+
+  PBIDIR_18_18_NT_DR_V
+  PBIDIR_18_18_NT_DR_bottom_cell_61
+  (
+    .SNS(SNS),
+    .RTO(RTO),
+    .PAD(cc_spypad_0_pad),
+    .A(cc_spypad_0),
+    .Y(UNCONN[45]),
+    .IE(TIELOW[144]),
+    .OE(TIEHIGH[68]),
+    .DS0(TIEHIGH[69]),
+    .DS1(TIEHIGH[70]),
+    .IS(TIELOW[145]),
+    .PE(TIELOW[146]),
+    .POE(TIELOW[147]),
+    .PS(TIELOW[148]),
+    .SR(TIELOW[149]),
+    .PO(UNCONN[46])
+  );
+
+
+  PVDD_08_08_NT_DR_V
+  PVDD_08_08_NT_DR_bottom_cell_62
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  PVSS_08_08_NT_DR_V
+  PVSS_08_08_NT_DR_bottom_cell_63
+  (
+    .SNS(SNS),
+    .RTO(RTO)
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_0
+  (
+    .Y(TIEHIGH[0])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_1
+  (
+    .Y(TIEHIGH[1])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_2
+  (
+    .Y(TIEHIGH[2])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_3
+  (
+    .Y(TIEHIGH[3])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_4
+  (
+    .Y(TIEHIGH[4])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_5
+  (
+    .Y(TIEHIGH[5])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_6
+  (
+    .Y(TIEHIGH[6])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_7
+  (
+    .Y(TIEHIGH[7])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_8
+  (
+    .Y(TIEHIGH[8])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_9
+  (
+    .Y(TIEHIGH[9])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_10
+  (
+    .Y(TIEHIGH[10])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_11
+  (
+    .Y(TIEHIGH[11])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_12
+  (
+    .Y(TIEHIGH[12])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_13
+  (
+    .Y(TIEHIGH[13])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_14
+  (
+    .Y(TIEHIGH[14])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_15
+  (
+    .Y(TIEHIGH[15])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_16
+  (
+    .Y(TIEHIGH[16])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_17
+  (
+    .Y(TIEHIGH[17])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_18
+  (
+    .Y(TIEHIGH[18])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_19
+  (
+    .Y(TIEHIGH[19])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_20
+  (
+    .Y(TIEHIGH[20])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_21
+  (
+    .Y(TIEHIGH[21])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_22
+  (
+    .Y(TIEHIGH[22])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_23
+  (
+    .Y(TIEHIGH[23])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_24
+  (
+    .Y(TIEHIGH[24])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_25
+  (
+    .Y(TIEHIGH[25])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_26
+  (
+    .Y(TIEHIGH[26])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_27
+  (
+    .Y(TIEHIGH[27])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_28
+  (
+    .Y(TIEHIGH[28])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_29
+  (
+    .Y(TIEHIGH[29])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_30
+  (
+    .Y(TIEHIGH[30])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_31
+  (
+    .Y(TIEHIGH[31])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_32
+  (
+    .Y(TIEHIGH[32])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_33
+  (
+    .Y(TIEHIGH[33])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_34
+  (
+    .Y(TIEHIGH[34])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_35
+  (
+    .Y(TIEHIGH[35])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_36
+  (
+    .Y(TIEHIGH[36])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_37
+  (
+    .Y(TIEHIGH[37])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_38
+  (
+    .Y(TIEHIGH[38])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_39
+  (
+    .Y(TIEHIGH[39])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_40
+  (
+    .Y(TIEHIGH[40])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_41
+  (
+    .Y(TIEHIGH[41])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_42
+  (
+    .Y(TIEHIGH[42])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_43
+  (
+    .Y(TIEHIGH[43])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_44
+  (
+    .Y(TIEHIGH[44])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_45
+  (
+    .Y(TIEHIGH[45])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_46
+  (
+    .Y(TIEHIGH[46])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_47
+  (
+    .Y(TIEHIGH[47])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_48
+  (
+    .Y(TIEHIGH[48])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_49
+  (
+    .Y(TIEHIGH[49])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_50
+  (
+    .Y(TIEHIGH[50])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_51
+  (
+    .Y(TIEHIGH[51])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_52
+  (
+    .Y(TIEHIGH[52])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_53
+  (
+    .Y(TIEHIGH[53])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_54
+  (
+    .Y(TIEHIGH[54])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_55
+  (
+    .Y(TIEHIGH[55])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_56
+  (
+    .Y(TIEHIGH[56])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_57
+  (
+    .Y(TIEHIGH[57])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_58
+  (
+    .Y(TIEHIGH[58])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_59
+  (
+    .Y(TIEHIGH[59])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_60
+  (
+    .Y(TIEHIGH[60])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_61
+  (
+    .Y(TIEHIGH[61])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_62
+  (
+    .Y(TIEHIGH[62])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_63
+  (
+    .Y(TIEHIGH[63])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_64
+  (
+    .Y(TIEHIGH[64])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_65
+  (
+    .Y(TIEHIGH[65])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_66
+  (
+    .Y(TIEHIGH[66])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_67
+  (
+    .Y(TIEHIGH[67])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_68
+  (
+    .Y(TIEHIGH[68])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_69
+  (
+    .Y(TIEHIGH[69])
+  );
+
+
+  TIEHI_X1N_A9PP84TR_C14
+  tie_high_70
+  (
+    .Y(TIEHIGH[70])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_0
+  (
+    .Y(TIELOW[0])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_1
+  (
+    .Y(TIELOW[1])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_2
+  (
+    .Y(TIELOW[2])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_3
+  (
+    .Y(TIELOW[3])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_4
+  (
+    .Y(TIELOW[4])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_5
+  (
+    .Y(TIELOW[5])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_6
+  (
+    .Y(TIELOW[6])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_7
+  (
+    .Y(TIELOW[7])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_8
+  (
+    .Y(TIELOW[8])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_9
+  (
+    .Y(TIELOW[9])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_10
+  (
+    .Y(TIELOW[10])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_11
+  (
+    .Y(TIELOW[11])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_12
+  (
+    .Y(TIELOW[12])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_13
+  (
+    .Y(TIELOW[13])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_14
+  (
+    .Y(TIELOW[14])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_15
+  (
+    .Y(TIELOW[15])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_16
+  (
+    .Y(TIELOW[16])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_17
+  (
+    .Y(TIELOW[17])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_18
+  (
+    .Y(TIELOW[18])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_19
+  (
+    .Y(TIELOW[19])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_20
+  (
+    .Y(TIELOW[20])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_21
+  (
+    .Y(TIELOW[21])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_22
+  (
+    .Y(TIELOW[22])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_23
+  (
+    .Y(TIELOW[23])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_24
+  (
+    .Y(TIELOW[24])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_25
+  (
+    .Y(TIELOW[25])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_26
+  (
+    .Y(TIELOW[26])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_27
+  (
+    .Y(TIELOW[27])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_28
+  (
+    .Y(TIELOW[28])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_29
+  (
+    .Y(TIELOW[29])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_30
+  (
+    .Y(TIELOW[30])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_31
+  (
+    .Y(TIELOW[31])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_32
+  (
+    .Y(TIELOW[32])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_33
+  (
+    .Y(TIELOW[33])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_34
+  (
+    .Y(TIELOW[34])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_35
+  (
+    .Y(TIELOW[35])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_36
+  (
+    .Y(TIELOW[36])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_37
+  (
+    .Y(TIELOW[37])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_38
+  (
+    .Y(TIELOW[38])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_39
+  (
+    .Y(TIELOW[39])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_40
+  (
+    .Y(TIELOW[40])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_41
+  (
+    .Y(TIELOW[41])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_42
+  (
+    .Y(TIELOW[42])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_43
+  (
+    .Y(TIELOW[43])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_44
+  (
+    .Y(TIELOW[44])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_45
+  (
+    .Y(TIELOW[45])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_46
+  (
+    .Y(TIELOW[46])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_47
+  (
+    .Y(TIELOW[47])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_48
+  (
+    .Y(TIELOW[48])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_49
+  (
+    .Y(TIELOW[49])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_50
+  (
+    .Y(TIELOW[50])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_51
+  (
+    .Y(TIELOW[51])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_52
+  (
+    .Y(TIELOW[52])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_53
+  (
+    .Y(TIELOW[53])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_54
+  (
+    .Y(TIELOW[54])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_55
+  (
+    .Y(TIELOW[55])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_56
+  (
+    .Y(TIELOW[56])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_57
+  (
+    .Y(TIELOW[57])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_58
+  (
+    .Y(TIELOW[58])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_59
+  (
+    .Y(TIELOW[59])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_60
+  (
+    .Y(TIELOW[60])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_61
+  (
+    .Y(TIELOW[61])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_62
+  (
+    .Y(TIELOW[62])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_63
+  (
+    .Y(TIELOW[63])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_64
+  (
+    .Y(TIELOW[64])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_65
+  (
+    .Y(TIELOW[65])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_66
+  (
+    .Y(TIELOW[66])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_67
+  (
+    .Y(TIELOW[67])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_68
+  (
+    .Y(TIELOW[68])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_69
+  (
+    .Y(TIELOW[69])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_70
+  (
+    .Y(TIELOW[70])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_71
+  (
+    .Y(TIELOW[71])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_72
+  (
+    .Y(TIELOW[72])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_73
+  (
+    .Y(TIELOW[73])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_74
+  (
+    .Y(TIELOW[74])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_75
+  (
+    .Y(TIELOW[75])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_76
+  (
+    .Y(TIELOW[76])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_77
+  (
+    .Y(TIELOW[77])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_78
+  (
+    .Y(TIELOW[78])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_79
+  (
+    .Y(TIELOW[79])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_80
+  (
+    .Y(TIELOW[80])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_81
+  (
+    .Y(TIELOW[81])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_82
+  (
+    .Y(TIELOW[82])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_83
+  (
+    .Y(TIELOW[83])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_84
+  (
+    .Y(TIELOW[84])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_85
+  (
+    .Y(TIELOW[85])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_86
+  (
+    .Y(TIELOW[86])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_87
+  (
+    .Y(TIELOW[87])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_88
+  (
+    .Y(TIELOW[88])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_89
+  (
+    .Y(TIELOW[89])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_90
+  (
+    .Y(TIELOW[90])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_91
+  (
+    .Y(TIELOW[91])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_92
+  (
+    .Y(TIELOW[92])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_93
+  (
+    .Y(TIELOW[93])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_94
+  (
+    .Y(TIELOW[94])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_95
+  (
+    .Y(TIELOW[95])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_96
+  (
+    .Y(TIELOW[96])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_97
+  (
+    .Y(TIELOW[97])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_98
+  (
+    .Y(TIELOW[98])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_99
+  (
+    .Y(TIELOW[99])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_100
+  (
+    .Y(TIELOW[100])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_101
+  (
+    .Y(TIELOW[101])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_102
+  (
+    .Y(TIELOW[102])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_103
+  (
+    .Y(TIELOW[103])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_104
+  (
+    .Y(TIELOW[104])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_105
+  (
+    .Y(TIELOW[105])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_106
+  (
+    .Y(TIELOW[106])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_107
+  (
+    .Y(TIELOW[107])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_108
+  (
+    .Y(TIELOW[108])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_109
+  (
+    .Y(TIELOW[109])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_110
+  (
+    .Y(TIELOW[110])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_111
+  (
+    .Y(TIELOW[111])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_112
+  (
+    .Y(TIELOW[112])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_113
+  (
+    .Y(TIELOW[113])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_114
+  (
+    .Y(TIELOW[114])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_115
+  (
+    .Y(TIELOW[115])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_116
+  (
+    .Y(TIELOW[116])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_117
+  (
+    .Y(TIELOW[117])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_118
+  (
+    .Y(TIELOW[118])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_119
+  (
+    .Y(TIELOW[119])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_120
+  (
+    .Y(TIELOW[120])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_121
+  (
+    .Y(TIELOW[121])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_122
+  (
+    .Y(TIELOW[122])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_123
+  (
+    .Y(TIELOW[123])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_124
+  (
+    .Y(TIELOW[124])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_125
+  (
+    .Y(TIELOW[125])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_126
+  (
+    .Y(TIELOW[126])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_127
+  (
+    .Y(TIELOW[127])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_128
+  (
+    .Y(TIELOW[128])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_129
+  (
+    .Y(TIELOW[129])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_130
+  (
+    .Y(TIELOW[130])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_131
+  (
+    .Y(TIELOW[131])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_132
+  (
+    .Y(TIELOW[132])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_133
+  (
+    .Y(TIELOW[133])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_134
+  (
+    .Y(TIELOW[134])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_135
+  (
+    .Y(TIELOW[135])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_136
+  (
+    .Y(TIELOW[136])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_137
+  (
+    .Y(TIELOW[137])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_138
+  (
+    .Y(TIELOW[138])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_139
+  (
+    .Y(TIELOW[139])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_140
+  (
+    .Y(TIELOW[140])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_141
+  (
+    .Y(TIELOW[141])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_142
+  (
+    .Y(TIELOW[142])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_143
+  (
+    .Y(TIELOW[143])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_144
+  (
+    .Y(TIELOW[144])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_145
+  (
+    .Y(TIELOW[145])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_146
+  (
+    .Y(TIELOW[146])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_147
+  (
+    .Y(TIELOW[147])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_148
+  (
+    .Y(TIELOW[148])
+  );
+
+
+  TIELO_X1N_A9PP84TR_C14
+  tie_low_149
+  (
+    .Y(TIELOW[149])
+  );
+
+
+endmodule
+
