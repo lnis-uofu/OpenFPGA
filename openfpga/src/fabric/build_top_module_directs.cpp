@@ -125,10 +125,10 @@ void add_module_nets_tile_direct_connection(ModuleManager& module_manager,
   module_manager.add_module_net_source(top_module, net_direct_src, src_grid_module, src_grid_instance, src_port_id, 0);
   module_manager.add_module_net_sink(top_module, net_direct_src, direct_module, direct_instance_id, direct_input_port_id, 0);
 
-  /* Create the 2nd module net */
-  ModuleNetId net_direct_sink = module_manager.create_module_net(top_module); 
-  /* Connect the wire between direct_instance output and sink_pin of clb */
-  module_manager.add_module_net_source(top_module, net_direct_sink, direct_module, direct_instance_id, direct_output_port_id, 0);
+  /* Create the 2nd module net
+   * Connect the wire between direct_instance output and sink_pin of clb
+   */
+  ModuleNetId net_direct_sink = create_module_source_pin_net(module_manager, top_module, direct_module, direct_instance_id, direct_output_port_id, 0);
   module_manager.add_module_net_sink(top_module, net_direct_sink, sink_grid_module, sink_grid_instance, sink_port_id, 0);
 }
 
