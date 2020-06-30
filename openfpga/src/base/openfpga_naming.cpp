@@ -390,7 +390,6 @@ std::string generate_sb_module_track_port_name(const t_rr_type& chan_type,
  * Even though, port direction must be provided!
  *********************************************************************/
 std::string generate_cb_module_track_port_name(const t_rr_type& chan_type, 
-                                               const size_t& track_id,
                                                const PORTS& port_direction) {
   /* Channel must be either CHANX or CHANY */
   VTR_ASSERT( (CHANX == chan_type) || (CHANY == chan_type) );
@@ -406,18 +405,15 @@ std::string generate_cb_module_track_port_name(const t_rr_type& chan_type,
 
   switch (port_direction) {
   case OUT_PORT:
-    port_name += std::string("out_"); 
+    port_name += std::string("out"); 
     break;
   case IN_PORT:
-    port_name += std::string("in_"); 
+    port_name += std::string("in"); 
     break;
   default:
     VTR_LOG_ERROR("Invalid direction of chan_rr_node!\n");
     exit(1);
   }
-
-  /* Add the track id to the port name */
-  port_name += std::to_string(track_id) + std::string("_");
 
   return port_name;
 }

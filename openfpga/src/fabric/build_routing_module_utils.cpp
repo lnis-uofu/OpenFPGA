@@ -133,27 +133,26 @@ std::vector<std::pair<ModulePortId, size_t>> find_switch_block_module_input_port
  * Generate an input port for routing multiplexer inside the connection block
  * which is the middle output of a routing track 
  ********************************************************************/
-ModulePortId find_connection_block_module_chan_port(const ModuleManager& module_manager, 
-                                                    const ModuleId& cb_module,
-                                                    const RRGraph& rr_graph,
-                                                    const RRGSB& rr_gsb, 
-                                                    const t_rr_type& cb_type,
-                                                    const RRNodeId& chan_rr_node) {
-  ModulePortId input_port_id;
+std::pair<ModulePortId, size_t> find_connection_block_module_chan_port(const ModuleManager& module_manager, 
+                                                                       const ModuleId& cb_module,
+                                                                       const RRGraph& rr_graph,
+                                                                       const RRGSB& rr_gsb, 
+                                                                       const t_rr_type& cb_type,
+                                                                       const RRNodeId& chan_rr_node) {
+  std::pair<ModulePortId, size_t> input_port_info;
   /* Generate the input port object */
   switch (rr_graph.node_type(chan_rr_node)) {
   case CHANX:
   case CHANY: {
     /* Create port description for the routing track middle output */
-    vtr::Point<size_t> port_coord(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
     int chan_node_track_id = rr_gsb.get_cb_chan_node_index(cb_type, chan_rr_node);
     /* Create a port description for the middle output */
     std::string input_port_name = generate_cb_module_track_port_name(cb_type,
-                                                                     chan_node_track_id,  
                                                                      IN_PORT);
     /* Must find a valid port id in the Switch Block module */
-    input_port_id = module_manager.find_module_port(cb_module, input_port_name); 
-    VTR_ASSERT(true == module_manager.valid_module_port_id(cb_module, input_port_id));
+    input_port_info.first = module_manager.find_module_port(cb_module, input_port_name); 
+    input_port_info.second = chan_node_track_id;
+    VTR_ASSERT(true == module_manager.valid_module_port_id(cb_module, input_port_info.first));
     break;
   }
   default: /* OPIN, SOURCE, IPIN, SINK are invalid*/
@@ -161,7 +160,7 @@ ModulePortId find_connection_block_module_chan_port(const ModuleManager& module_
     exit(1);
   }
 
-  return input_port_id;
+  return input_port_info;
 }
 
 /*********************************************************************
@@ -196,13 +195,13 @@ ModulePortId find_connection_block_module_ipin_port(const ModuleManager& module_
  * Generate a list of routing track middle output ports 
  * for routing multiplexer inside the connection block
  ********************************************************************/
-std::vector<ModulePortId> find_connection_block_module_input_ports(const ModuleManager& module_manager,
-                                                                   const ModuleId& cb_module,
-                                                                   const RRGraph& rr_graph,
-                                                                   const RRGSB& rr_gsb, 
-                                                                   const t_rr_type& cb_type,
-                                                                   const std::vector<RRNodeId>& input_rr_nodes) {
-  std::vector<ModulePortId> input_ports;
+std::vector<std::pair<ModulePortId, size_t>> find_connection_block_module_input_ports(const ModuleManager& module_manager,
+                                                                                      const ModuleId& cb_module,
+                                                                                      const RRGraph& rr_graph,
+                                                                                      const RRGSB& rr_gsb, 
+                                                                                      const t_rr_type& cb_type,
+                                                                                      const std::vector<RRNodeId>& input_rr_nodes) {
+  std::vector<std::pair<ModulePortId, size_t>> input_ports;
 
   for (auto input_rr_node : input_rr_nodes) {
     input_ports.push_back(find_connection_block_module_chan_port(module_manager, cb_module, rr_graph, rr_gsb, cb_type, input_rr_node));

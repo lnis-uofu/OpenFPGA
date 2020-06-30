@@ -39,12 +39,12 @@ std::vector<std::pair<ModulePortId, size_t>> find_switch_block_module_input_port
                                                                                   const RRGSB& rr_gsb, 
                                                                                   const std::vector<RRNodeId>& input_rr_nodes);
 
-ModulePortId find_connection_block_module_chan_port(const ModuleManager& module_manager, 
-                                                    const ModuleId& cb_module,
-                                                    const RRGraph& rr_graph,
-                                                    const RRGSB& rr_gsb, 
-                                                    const t_rr_type& cb_type,
-                                                    const RRNodeId& chan_rr_node);
+std::pair<ModulePortId, size_t> find_connection_block_module_chan_port(const ModuleManager& module_manager, 
+                                                                       const ModuleId& cb_module,
+                                                                       const RRGraph& rr_graph,
+                                                                       const RRGSB& rr_gsb, 
+                                                                       const t_rr_type& cb_type,
+                                                                       const RRNodeId& chan_rr_node);
 
 ModulePortId find_connection_block_module_ipin_port(const ModuleManager& module_manager,
                                                     const ModuleId& cb_module, 
@@ -52,12 +52,12 @@ ModulePortId find_connection_block_module_ipin_port(const ModuleManager& module_
                                                     const RRGSB& rr_gsb, 
                                                     const RRNodeId& src_rr_node);
 
-std::vector<ModulePortId> find_connection_block_module_input_ports(const ModuleManager& module_manager,
-                                                                   const ModuleId& cb_module,
-                                                                   const RRGraph& rr_graph,
-                                                                   const RRGSB& rr_gsb, 
-                                                                   const t_rr_type& cb_type,
-                                                                   const std::vector<RRNodeId>& input_rr_nodes);
+std::vector<std::pair<ModulePortId, size_t>> find_connection_block_module_input_ports(const ModuleManager& module_manager,
+                                                                                      const ModuleId& cb_module,
+                                                                                      const RRGraph& rr_graph,
+                                                                                      const RRGSB& rr_gsb, 
+                                                                                      const t_rr_type& cb_type,
+                                                                                      const std::vector<RRNodeId>& input_rr_nodes);
 
 } /* end namespace openfpga */
 

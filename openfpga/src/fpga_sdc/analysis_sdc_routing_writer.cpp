@@ -76,16 +76,17 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
 
     /* Disable both input of the routing track if it is not used! */
     std::string port_name = generate_cb_module_track_port_name(cb_type,
-                                                               itrack,  
                                                                IN_PORT);
 
     /* Ensure we have this port in the module! */
     ModulePortId module_port = module_manager.find_module_port(cb_module, port_name);
     VTR_ASSERT(true == module_manager.valid_module_port_id(cb_module, module_port));
+    BasicPort chan_port(module_manager.module_port(cb_module, module_port).get_name(),
+                        itrack, itrack);
 
     fp << "set_disable_timing ";
     fp << cb_instance_name << "/";
-    fp << generate_sdc_port(module_manager.module_port(cb_module, module_port));
+    fp << generate_sdc_port(chan_port);
     fp << std::endl;
   }
 
@@ -99,16 +100,17 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
 
     /* Disable both input of the routing track if it is not used! */
     std::string port_name = generate_cb_module_track_port_name(cb_type,
-                                                               itrack,  
                                                                OUT_PORT);
 
     /* Ensure we have this port in the module! */
     ModulePortId module_port = module_manager.find_module_port(cb_module, port_name);
     VTR_ASSERT(true == module_manager.valid_module_port_id(cb_module, module_port));
+    BasicPort chan_port(module_manager.module_port(cb_module, module_port).get_name(),
+                        itrack, itrack);
 
     fp << "set_disable_timing ";
     fp << cb_instance_name << "/";
-    fp << generate_sdc_port(module_manager.module_port(cb_module, module_port));
+    fp << generate_sdc_port(chan_port);
     fp << std::endl;
   }
 
@@ -181,7 +183,6 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
 
     /* Disable both input of the routing track if it is not used! */
     std::string port_name = generate_cb_module_track_port_name(cb_type,
-                                                               itrack,  
                                                                OUT_PORT);
 
     /* Ensure we have this port in the module! */
@@ -190,12 +191,12 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
 
     AtomNetId mapped_atom_net = atom_ctx.lookup.atom_net(routing_annotation.rr_node_net(chan_node)); 
 
-    disable_analysis_module_input_port_net_sinks(fp, 
-                                                 module_manager, cb_module,
-                                                 cb_instance_name,
-                                                 module_port,
-                                                 mapped_atom_net,
-                                                 mux_instance_to_net_map);
+    disable_analysis_module_input_pin_net_sinks(fp, module_manager, cb_module,
+                                                cb_instance_name,
+                                                module_port, itrack,
+                                                mapped_atom_net,
+                                                mux_instance_to_net_map);
+
   }
 }
 

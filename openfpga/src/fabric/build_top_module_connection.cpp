@@ -571,29 +571,22 @@ void add_top_module_nets_connect_sb_and_cb(ModuleManager& module_manager,
         VTR_ASSERT(IN_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
       }  
       std::string cb_port_name = generate_cb_module_track_port_name(cb_type,
-                                                                    itrack,  
                                                                     cb_port_direction);
       ModulePortId cb_port_id = module_manager.find_module_port(cb_module_id, cb_port_name); 
       VTR_ASSERT(true == module_manager.valid_module_port_id(cb_module_id, cb_port_id));
       BasicPort cb_port = module_manager.module_port(cb_module_id, cb_port_id);
 
-      /* Source and sink port should match in size */
-      VTR_ASSERT(1 == cb_port.get_width());
-      
-      /* Create a net for each pin */
-      for (size_t pin_id = 0; pin_id < cb_port.pins().size(); ++pin_id) {
-        /* Configure the net source and sink:
-         * If sb port is an output (source), cb port is an input (sink) 
-         * If sb port is an input (sink), cb port is an output (source) 
-         */
-        if (OUT_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack)) {
-          ModuleNetId net = create_module_source_pin_net(module_manager, top_module, sb_module_id, sb_instance, sb_port_id, itrack / 2);
-          module_manager.add_module_net_sink(top_module, net, cb_module_id, cb_instance, cb_port_id, cb_port.pins()[pin_id]);
-        } else {
-          VTR_ASSERT(IN_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
-          ModuleNetId net = create_module_source_pin_net(module_manager, top_module, cb_module_id, cb_instance, cb_port_id, cb_port.pins()[pin_id]);
-          module_manager.add_module_net_sink(top_module, net, sb_module_id, sb_instance, sb_port_id, itrack / 2);
-        }  
+      /* Configure the net source and sink:
+       * If sb port is an output (source), cb port is an input (sink) 
+       * If sb port is an input (sink), cb port is an output (source) 
+       */
+      if (OUT_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+        ModuleNetId net = create_module_source_pin_net(module_manager, top_module, sb_module_id, sb_instance, sb_port_id, itrack / 2);
+        module_manager.add_module_net_sink(top_module, net, cb_module_id, cb_instance, cb_port_id, itrack);
+      } else {
+        VTR_ASSERT(IN_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
+        ModuleNetId net = create_module_source_pin_net(module_manager, top_module, cb_module_id, cb_instance, cb_port_id, itrack);
+        module_manager.add_module_net_sink(top_module, net, sb_module_id, sb_instance, sb_port_id, itrack / 2);
       }
     }
   }
