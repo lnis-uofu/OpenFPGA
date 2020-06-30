@@ -4,6 +4,7 @@
  *******************************************************************/
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
+#include "vtr_time.h"
 
 /* Headers from openfpgautil library */
 #include "openfpga_side_manager.h"
@@ -647,6 +648,8 @@ void add_top_module_nets_connect_grids_and_gsbs(ModuleManager& module_manager,
                                                 const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
                                                 const bool& compact_routing_hierarchy,
                                                 const bool& duplicate_grid_pin) {
+
+  vtr::ScopedStartFinishTimer timer("Add module nets between grids and GSBs");
 
   vtr::Point<size_t> gsb_range = device_rr_gsb.get_gsb_range();
 

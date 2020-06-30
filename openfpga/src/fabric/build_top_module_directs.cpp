@@ -8,6 +8,7 @@
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
 #include "vtr_log.h"
+#include "vtr_time.h"
 
 /* Headers from openfpgautil library */
 #include "openfpga_port.h"
@@ -144,6 +145,8 @@ void add_top_module_nets_tile_direct_connections(ModuleManager& module_manager,
                                                  const vtr::Matrix<size_t>& grid_instance_ids,
                                                  const TileDirect& tile_direct,
                                                  const ArchDirect& arch_direct) {
+
+  vtr::ScopedStartFinishTimer timer("Add module nets for inter-tile connections");
 
   for (const TileDirectId& tile_direct_id : tile_direct.directs()) {
     add_module_nets_tile_direct_connection(module_manager, top_module, circuit_lib, 

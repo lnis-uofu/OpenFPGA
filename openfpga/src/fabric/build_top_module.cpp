@@ -91,6 +91,9 @@ vtr::Matrix<size_t> add_top_module_grid_instances(ModuleManager& module_manager,
                                                   const ModuleId& top_module,
                                                   IoLocationMap& io_location_map,
                                                   const DeviceGrid& grids) {
+
+  vtr::ScopedStartFinishTimer timer("Add grid instances to top module");
+
   /* Reserve an array for the instance ids */
   vtr::Matrix<size_t> grid_instance_ids({grids.width(), grids.height()}); 
   grid_instance_ids.fill(size_t(-1));
@@ -203,6 +206,9 @@ vtr::Matrix<size_t> add_top_module_switch_block_instances(ModuleManager& module_
                                                           const ModuleId& top_module, 
                                                           const DeviceRRGSB& device_rr_gsb,
                                                           const bool& compact_routing_hierarchy) {
+
+  vtr::ScopedStartFinishTimer timer("Add switch block instances to top module");
+
   vtr::Point<size_t> sb_range = device_rr_gsb.get_gsb_range();
 
   /* Reserve an array for the instance ids */
@@ -253,6 +259,9 @@ vtr::Matrix<size_t> add_top_module_connection_block_instances(ModuleManager& mod
                                                               const DeviceRRGSB& device_rr_gsb,
                                                               const t_rr_type& cb_type,
                                                               const bool& compact_routing_hierarchy) {
+
+  vtr::ScopedStartFinishTimer timer("Add connection block instances to top module");
+
   vtr::Point<size_t> cb_range = device_rr_gsb.get_gsb_range();
 
   /* Reserve an array for the instance ids */

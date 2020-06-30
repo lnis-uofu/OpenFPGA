@@ -7,6 +7,7 @@
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
 #include "vtr_log.h"
+#include "vtr_time.h"
 
 /* Headers from vpr library */
 #include "vpr_utils.h"
@@ -911,6 +912,9 @@ void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            const e_config_protocol_type& sram_orgz_type, 
                                            const e_circuit_model_design_tech& mem_tech,
                                            const size_t& num_config_bits) {
+
+  vtr::ScopedStartFinishTimer timer("Add module nets for configuration buses");
+
   switch (mem_tech) {
   case CIRCUIT_MODEL_DESIGN_CMOS:
     add_top_module_nets_cmos_memory_config_bus(module_manager, decoder_lib,
