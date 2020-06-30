@@ -161,6 +161,11 @@ class ModuleManager {
      */
     void reserve_configurable_child(const ModuleId& module, const size_t& num_children);
 
+    /* Reserved a number of module nets for a given module
+     * for memory efficiency
+     */
+    void reserve_module_nets(const ModuleId& module, const size_t& num_nets);
+
     /* Add a net to the connection graph of the module */ 
     ModuleNetId create_module_net(const ModuleId& module);
     /* Set the name of net */

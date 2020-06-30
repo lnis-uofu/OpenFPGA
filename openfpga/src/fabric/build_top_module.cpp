@@ -342,6 +342,9 @@ void build_top_module(ModuleManager& module_manager,
   cb_instance_ids[CHANX] = add_top_module_connection_block_instances(module_manager, top_module, device_rr_gsb, CHANX, compact_routing_hierarchy);
   cb_instance_ids[CHANY] = add_top_module_connection_block_instances(module_manager, top_module, device_rr_gsb, CHANY, compact_routing_hierarchy);
 
+  /* Reserve nets to be memory efficient */
+  reserve_module_manager_module_nets(module_manager, top_module);
+
   /* Add module nets to connect the sub modules */
   add_top_module_nets_connect_grids_and_gsbs(module_manager, top_module, 
                                              grids, grid_instance_ids, 

@@ -638,6 +638,27 @@ void ModuleManager::reserve_configurable_child(const ModuleId& parent_module,
   }
 }
 
+void ModuleManager::reserve_module_nets(const ModuleId& module,
+                                        const size_t& num_nets) {
+  /* Validate the module id */
+  VTR_ASSERT ( valid_module_id(module) );
+
+  net_ids_[module].reserve(num_nets);
+
+  net_names_[module].reserve(num_nets);
+  net_src_ids_[module].reserve(num_nets);
+  net_src_module_ids_[module].reserve(num_nets);
+  net_src_instance_ids_[module].reserve(num_nets);
+  net_src_port_ids_[module].reserve(num_nets);
+  net_src_pin_ids_[module].reserve(num_nets);
+
+  net_sink_ids_[module].reserve(num_nets);
+  net_sink_module_ids_[module].reserve(num_nets);
+  net_sink_instance_ids_[module].reserve(num_nets);
+  net_sink_port_ids_[module].reserve(num_nets);
+  net_sink_pin_ids_[module].reserve(num_nets);
+}
+
 /* Add a net to the connection graph of the module */ 
 ModuleNetId ModuleManager::create_module_net(const ModuleId& module) {
   /* Validate the module id */

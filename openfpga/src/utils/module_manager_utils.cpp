@@ -27,6 +27,56 @@
 namespace openfpga {
 
 /******************************************************************************
+ * Reserved a number of module nets for a given module
+ * based on the number of output ports of its child modules
+ * for memory efficiency
+ ******************************************************************************/
+void reserve_module_manager_module_nets(ModuleManager& module_manager, 
+                                        const ModuleId& parent_module) {
+  size_t num_nets = 0;
+
+  /* Collect the driver port types for parent module*/
+  std::vector<ModuleManager::e_module_port_type> driver_port_types;
+  driver_port_types.push_back(ModuleManager::MODULE_GLOBAL_PORT);
+  driver_port_types.push_back(ModuleManager::MODULE_GPIN_PORT);
+  driver_port_types.push_back(ModuleManager::MODULE_GPIO_PORT);
+  driver_port_types.push_back(ModuleManager::MODULE_INOUT_PORT);
+  driver_port_types.push_back(ModuleManager::MODULE_INPUT_PORT);
+  driver_port_types.push_back(ModuleManager::MODULE_CLOCK_PORT);
+
+  /* The number of nets depends on the sizes of input ports of parent module */
+  for (const auto& port_type : driver_port_types) {
+    for (const BasicPort& port : module_manager.module_ports_by_type(parent_module, port_type)) {
+      num_nets += port.get_width();
+    }
+  }
+
+  /* Collect the output port types */
+  std::vector<ModuleManager::e_module_port_type> output_port_types;
+  output_port_types.push_back(ModuleManager::MODULE_GPOUT_PORT);
+  output_port_types.push_back(ModuleManager::MODULE_OUTPUT_PORT);
+  
+  for (const ModuleId& child_module : module_manager.child_modules(parent_module)) {
+    /* The number of nets depends on the sizes of output ports of 
+     * each instanciated child module
+     */
+    size_t num_instances = module_manager.num_instance(parent_module, child_module);
+
+    /* Sum up the port sizes for all the output ports */
+    size_t total_output_port_sizes = 0;
+    for (const auto& port_type : output_port_types) {
+      for (const BasicPort& port : module_manager.module_ports_by_type(child_module, port_type)) {
+        total_output_port_sizes += port.get_width();
+      }
+    }
+
+    num_nets += total_output_port_sizes * num_instances;
+  }
+  
+  module_manager.reserve_module_nets(parent_module, num_nets);
+}
+
+/******************************************************************************
  * Add a module to the module manager based on the circuit-level
  * description of a circuit model
  * This function add a module with a given customized name
