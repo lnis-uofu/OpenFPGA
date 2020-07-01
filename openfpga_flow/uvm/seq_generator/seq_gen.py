@@ -5,23 +5,13 @@ import fileinput
 import sys
 import re
 
-#Command example : python seq_gen.py -f and2_autocheck_top_tb.v
-
-#parser = argparse.ArgumentParser(description="create new python script from a template.")
-#parser.add_argument(
-#	"-f",
-#	"--filename",
-#	help="the name of the tb file in which the bitstream is stored",
-#	default="test"
-#)
-#args=parser.parse_args()
+#Command example : python seq_gen.py
 
 #Adapt the path here to the testbench bs_agent directory you're using
 #For the sequence
 seq_lib_path="../tb/bs_agent/seq_lib/"
 name="prog_seq_generated.sv"
 sequence = seq_lib_path + name
-#sequence = "./seq.sv"
 filename = "../../SRC/and2_autocheck_top_tb.v"
 template = '''`ifndef "prog_seq_gen"
 `define "prog_seq_gen"
@@ -82,7 +72,6 @@ def extract(file,startExp,endExp):
 					if index ==1:
 						index = 0
 						output.write("		`uvm_do_with(req,{req.address == " + addr_value + "; req.data_in ==" + data_value + "; req.IE == " + str(gpio_width) + "'b" + ie_value + ";})")
-						#output.write("\n		`uvm_do_with(req,{req.address == 16'b0000000000000000; req.data_in == 1'b0; req.IE == 64'hFFFFFFFFFFFDFFFF;})") # Temporary solution
 						output.write("\nendtask;")
 						output.write("\n\n`endif")
 				if index !=0:                   
@@ -102,7 +91,7 @@ def extract_parameters(file):
 	print("parameter gpio_width =" + gpio_width)
 	print("parameter addr_width =" + addr_width)
 	return gpio_width
-#	pkg_generator(gpio_width,addr_width)
+	pkg_generator(gpio_width,addr_width)
 
 # Modify parameters in the UVM testbench
 def pkg_generator(gpio_width,addr_width):
@@ -122,8 +111,6 @@ def pkg_generator(gpio_width,addr_width):
 
 
 def io_seeker():
-#	global ie_value
-#	global gpio_width
 	global results
 	results = [0] * 2
 	ie_value = ""
@@ -141,13 +128,9 @@ def io_seeker():
 	print(ie_value)
 	results[0] = ie_value
 	results[1] = gpio_width
-#	return ie_value
-#	return gpio_width
 	return results
 					
 
 
 
 extract(filename,"prog_cycle_task(","		@(negedge prog_clock[0]);")
-#extract_parameters(filename)
-#io_seeker()
