@@ -570,8 +570,10 @@ void add_top_module_nets_connect_sb_and_cb(ModuleManager& module_manager,
       } else {
         VTR_ASSERT(IN_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
       }  
+      bool use_cb_upper_port = (TOP == side_manager.get_side()) || (RIGHT == side_manager.get_side());
       std::string cb_port_name = generate_cb_module_track_port_name(cb_type,
-                                                                    cb_port_direction);
+                                                                    cb_port_direction,
+                                                                    use_cb_upper_port);
       ModulePortId cb_port_id = module_manager.find_module_port(cb_module_id, cb_port_name); 
       VTR_ASSERT(true == module_manager.valid_module_port_id(cb_module_id, cb_port_id));
       BasicPort cb_port = module_manager.module_port(cb_module_id, cb_port_id);
@@ -582,10 +584,10 @@ void add_top_module_nets_connect_sb_and_cb(ModuleManager& module_manager,
        */
       if (OUT_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack)) {
         ModuleNetId net = create_module_source_pin_net(module_manager, top_module, sb_module_id, sb_instance, sb_port_id, itrack / 2);
-        module_manager.add_module_net_sink(top_module, net, cb_module_id, cb_instance, cb_port_id, itrack);
+        module_manager.add_module_net_sink(top_module, net, cb_module_id, cb_instance, cb_port_id, itrack / 2);
       } else {
         VTR_ASSERT(IN_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
-        ModuleNetId net = create_module_source_pin_net(module_manager, top_module, cb_module_id, cb_instance, cb_port_id, itrack);
+        ModuleNetId net = create_module_source_pin_net(module_manager, top_module, cb_module_id, cb_instance, cb_port_id, itrack / 2);
         module_manager.add_module_net_sink(top_module, net, sb_module_id, sb_instance, sb_port_id, itrack / 2);
       }
     }

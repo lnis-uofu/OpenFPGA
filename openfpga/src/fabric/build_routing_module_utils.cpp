@@ -148,10 +148,11 @@ ModulePinInfo find_connection_block_module_chan_port(const ModuleManager& module
     int chan_node_track_id = rr_gsb.get_cb_chan_node_index(cb_type, chan_rr_node);
     /* Create a port description for the middle output */
     std::string input_port_name = generate_cb_module_track_port_name(cb_type,
-                                                                     IN_PORT);
+                                                                     IN_PORT,
+                                                                     0 == chan_node_track_id % 2);
     /* Must find a valid port id in the Switch Block module */
     input_port_info.first = module_manager.find_module_port(cb_module, input_port_name); 
-    input_port_info.second = chan_node_track_id;
+    input_port_info.second = chan_node_track_id / 2;
     VTR_ASSERT(true == module_manager.valid_module_port_id(cb_module, input_port_info.first));
     break;
   }

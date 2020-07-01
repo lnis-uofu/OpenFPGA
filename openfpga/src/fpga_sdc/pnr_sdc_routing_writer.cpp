@@ -436,17 +436,19 @@ void print_pnr_sdc_constrain_cb_timing(const std::string& sdc_dir,
   for (size_t itrack = 0; itrack < rr_gsb.get_cb_chan_width(cb_type); ++itrack) {
     /* Create a port description for the input */
     std::string input_port_name = generate_cb_module_track_port_name(cb_type,
-                                                                     IN_PORT);
+                                                                     IN_PORT,
+                                                                     0 == itrack % 2);
     ModulePortId input_port_id = module_manager.find_module_port(cb_module, input_port_name);
     BasicPort input_port(module_manager.module_port(cb_module, input_port_id).get_name(),
-                         itrack, itrack);
+                         itrack / 2, itrack / 2);
 
     /* Create a port description for the output */
     std::string output_port_name = generate_cb_module_track_port_name(cb_type,
-                                                                      OUT_PORT);
+                                                                      OUT_PORT,
+                                                                      0 == itrack % 2);
     ModulePortId output_port_id = module_manager.find_module_port(cb_module, output_port_name);
     BasicPort output_port(module_manager.module_port(cb_module, output_port_id).get_name(),
-                          itrack, itrack);
+                          itrack / 2, itrack / 2);
 
     /* Connection block routing segment ids for each track */
     RRSegmentId segment_id = rr_gsb.get_chan_node_segment(rr_gsb.get_cb_chan_side(cb_type), itrack);
