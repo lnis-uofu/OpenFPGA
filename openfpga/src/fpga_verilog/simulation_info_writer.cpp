@@ -98,7 +98,7 @@ void print_verilog_simulation_info(const std::string& ini_fname,
     for (const BasicPort& module_io_port : module_io_ports) {
       total_gpio_width += module_io_port.get_width();
     }
-    ini["SIMULATION_DECK"]["GPIO_WIDTH"] = total_gpio_width;
+    ini["SIMULATION_DECK"]["GPIO_WIDTH"] = std::to_string(total_gpio_width);
 
     /* I/O direction map: 
      * - '0' output 
