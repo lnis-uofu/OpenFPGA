@@ -74,19 +74,21 @@ int build_fabric_bitstream(OpenfpgaContext& openfpga_ctx,
                                                                              cmd_context.option_enable(cmd, opt_verbose));
 
   /* Write fabric bitstream if required */
+  int status = CMD_EXEC_SUCCESS;
   if (true == cmd_context.option_enable(cmd, opt_file)) {
     std::string src_dir_path = find_path_dir_name(cmd_context.option_value(cmd, opt_file));
 
     /* Create directories */
     create_directory(src_dir_path);
 
-    write_fabric_bitstream_to_text_file(openfpga_ctx.bitstream_manager(),
-                                        openfpga_ctx.fabric_bitstream(),
-                                        cmd_context.option_value(cmd, opt_file));
+    status = write_fabric_bitstream_to_text_file(openfpga_ctx.bitstream_manager(),
+                                                 openfpga_ctx.fabric_bitstream(),
+                                                 openfpga_ctx.arch().config_protocol,
+                                                 cmd_context.option_value(cmd, opt_file));
   }
   
   /* TODO: should identify the error code from internal function execution */
-  return CMD_EXEC_SUCCESS;
+  return status;
 } 
 
 } /* end namespace openfpga */
