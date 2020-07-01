@@ -23,14 +23,14 @@
 interface bs_if(input clk_uvm, clk);
 
    logic [0:0]  data_in; // Configuration signal
-   logic [0:ADDR_WIDTH] address; // Configuration signal
-   wire  [0:GPIO_WIDTH] gfpga_pad_GPIO; // We use a tri-state buffer assign to control IO's configuration
-   logic [0:GPIO_WIDTH] gfpga_pad_GPIO_IN_drv;
-   logic [0:GPIO_WIDTH] IE ;
+   logic [0:ADDR_WIDTH-1] address; // Configuration signal
+   wire  [0:GPIO_WIDTH-1] gfpga_pad_GPIO; // We use a tri-state buffer assign to control IO's configuration
+   logic [0:GPIO_WIDTH-1] gfpga_pad_GPIO_IN_drv;
+   logic [0:GPIO_WIDTH-1] IE ;
 
 // Assign GPIO[i] to GPIO_IN_drv[i] if GPIO[i] is configured as an input.
    genvar i;
-   for (i = 0; i <= GPIO_WIDTH; i++)
+   for (i = 0; i < GPIO_WIDTH; i++)
 	begin
    		assign gfpga_pad_GPIO[i] = IE[i] ? gfpga_pad_GPIO_IN_drv[i] : 1'bZ;
 	end
