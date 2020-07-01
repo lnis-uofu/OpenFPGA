@@ -67,7 +67,7 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
             || ( CHANY == rr_graph.node_type(output_rr_node) ));
 
   /* Find the module port corresponding to the output rr_node */
-  std::pair<ModulePortId, size_t> module_output_port = find_switch_block_module_chan_port(module_manager, 
+  ModulePinInfo module_output_port = find_switch_block_module_chan_port(module_manager, 
                                                                                           sb_module,
                                                                                           rr_graph, 
                                                                                           rr_gsb, 
@@ -76,14 +76,14 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
                                                                                           OUT_PORT);
 
   /* Find the module port corresponding to the fan-in rr_nodes of the output rr_node */
-  std::vector<std::pair<ModulePortId, size_t>> module_input_ports = find_switch_block_module_input_ports(module_manager,
+  std::vector<ModulePinInfo> module_input_ports = find_switch_block_module_input_ports(module_manager,
                                                                                                          sb_module, 
                                                                                                          rr_graph, 
                                                                                                          rr_gsb, 
                                                                                                          get_rr_graph_configurable_driver_nodes(rr_graph, output_rr_node));
 
   /* Find timing constraints for each path (edge) */
-  std::map<std::pair<ModulePortId, size_t>, float> switch_delays;
+  std::map<ModulePinInfo, float> switch_delays;
   size_t edge_counter = 0;
   for (const RREdgeId& edge : rr_graph.node_configurable_in_edges(output_rr_node)) {
     /* Get the switch delay */
@@ -93,7 +93,7 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
   }
 
   /* Find the starting points */
-  for (const std::pair<ModulePortId, size_t>& module_input_port : module_input_ports) {
+  for (const ModulePinInfo& module_input_port : module_input_ports) {
     /* If we have a zero-delay path to contrain, we will skip unless users want so */
     if ( (false == constrain_zero_delay_paths)
       && (0. == switch_delays[module_input_port]) ) {
@@ -343,15 +343,15 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
                                                                            output_rr_node);
 
   /* Find the module port corresponding to the fan-in rr_nodes of the output rr_node */
-  std::vector<std::pair<ModulePortId, size_t>> module_input_ports = find_connection_block_module_input_ports(module_manager,
-                                                                                                             cb_module, 
-                                                                                                             rr_graph, 
-                                                                                                             rr_gsb, 
-                                                                                                             cb_type,
-                                                                                                             input_rr_nodes);
+  std::vector<ModulePinInfo> module_input_ports = find_connection_block_module_input_ports(module_manager,
+                                                                                           cb_module, 
+                                                                                           rr_graph, 
+                                                                                           rr_gsb, 
+                                                                                           cb_type,
+                                                                                           input_rr_nodes);
 
   /* Find timing constraints for each path (edge) */
-  std::map<std::pair<ModulePortId, size_t>, float> switch_delays;
+  std::map<ModulePinInfo, float> switch_delays;
   size_t edge_counter = 0;
   for (const RREdgeId& edge : rr_graph.node_configurable_in_edges(output_rr_node)) {
     /* Get the switch delay */
@@ -361,7 +361,7 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
   }
 
   /* Find the starting points */
-  for (const std::pair<ModulePortId, size_t>& module_input_port : module_input_ports) {
+  for (const ModulePinInfo& module_input_port : module_input_ports) {
     /* If we have a zero-delay path to contrain, we will skip unless users want so */
     if ( (false == constrain_zero_delay_paths)
       && (0. == switch_delays[module_input_port]) ) {

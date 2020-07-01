@@ -49,7 +49,7 @@ void build_switch_block_module_short_interc(ModuleManager& module_manager,
                                             const RRNodeId& drive_rr_node,
                                             const std::map<ModulePortId, std::vector<ModuleNetId>>& input_port_to_module_nets) {
   /* Find the name of output port */
-  std::pair<ModulePortId, size_t> output_port_info = find_switch_block_module_chan_port(module_manager, sb_module, 
+  ModulePinInfo output_port_info = find_switch_block_module_chan_port(module_manager, sb_module, 
                                                                                         rr_graph, rr_gsb, 
                                                                                         chan_side, cur_rr_node, OUT_PORT);
   enum e_side input_pin_side = chan_side;
@@ -81,7 +81,7 @@ void build_switch_block_module_short_interc(ModuleManager& module_manager,
     exit(1);
   }
   /* Find the name of input port */
-  std::pair<ModulePortId, size_t> input_port_info = find_switch_block_module_input_port(module_manager, sb_module, rr_graph, rr_gsb, input_pin_side, drive_rr_node);
+  ModulePinInfo input_port_info = find_switch_block_module_input_port(module_manager, sb_module, rr_graph, rr_gsb, input_pin_side, drive_rr_node);
 
   /* The input port and output port must match in size */
   BasicPort input_port = module_manager.module_port(sb_module, input_port_info.first);
@@ -137,7 +137,7 @@ void build_switch_block_mux_module(ModuleManager& module_manager,
   module_manager.set_child_instance_name(sb_module, mux_module, mux_instance_id, mux_instance_name);
 
   /* Generate input ports that are wired to the input bus of the routing multiplexer */
-  std::vector<std::pair<ModulePortId, size_t>> sb_input_port_ids = find_switch_block_module_input_ports(module_manager, sb_module, rr_graph, rr_gsb, driver_rr_nodes);
+  std::vector<ModulePinInfo> sb_input_port_ids = find_switch_block_module_input_ports(module_manager, sb_module, rr_graph, rr_gsb, driver_rr_nodes);
 
   /* Link input bus port to Switch Block inputs */
   std::vector<CircuitPortId> mux_model_input_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_INPUT, true);
@@ -167,7 +167,7 @@ void build_switch_block_mux_module(ModuleManager& module_manager,
   ModulePortId mux_output_port_id = module_manager.find_module_port(mux_module, circuit_lib.port_prefix(mux_model_output_ports[0])); 
   VTR_ASSERT(true == module_manager.valid_module_port_id(mux_module, mux_output_port_id));
   BasicPort mux_output_port = module_manager.module_port(mux_module, mux_output_port_id);
-  std::pair<ModulePortId, size_t> sb_output_port_id = find_switch_block_module_chan_port(module_manager, sb_module, rr_graph, rr_gsb, chan_side, cur_rr_node, OUT_PORT); 
+  ModulePinInfo sb_output_port_id = find_switch_block_module_chan_port(module_manager, sb_module, rr_graph, rr_gsb, chan_side, cur_rr_node, OUT_PORT); 
   BasicPort sb_output_port = module_manager.module_port(sb_module, sb_output_port_id.first);
 
   /* Check port size should match */
@@ -471,7 +471,7 @@ void build_connection_block_module_short_interc(ModuleManager& module_manager,
                                                 const RRGSB& rr_gsb,
                                                 const t_rr_type& cb_type,
                                                 const RRNodeId& src_rr_node,
-                                                const std::map<std::pair<ModulePortId, size_t>, ModuleNetId>& input_port_to_module_nets) {
+                                                const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
   /* Ensure we have only one 1 driver node */
   std::vector<RRNodeId> driver_rr_nodes = get_rr_graph_configurable_driver_nodes(rr_graph, src_rr_node);
 
@@ -502,7 +502,7 @@ void build_connection_block_module_short_interc(ModuleManager& module_manager,
   VTR_ASSERT((CHANX == rr_graph.node_type(driver_rr_node)) || (CHANY == rr_graph.node_type(driver_rr_node)));
 
   /* Create port description for the routing track middle output */
-  std::pair<ModulePortId, size_t> input_port_info = find_connection_block_module_chan_port(module_manager, cb_module, rr_graph, rr_gsb, cb_type, driver_rr_node);
+  ModulePinInfo input_port_info = find_connection_block_module_chan_port(module_manager, cb_module, rr_graph, rr_gsb, cb_type, driver_rr_node);
 
   /* Create port description for input pin of a CLB */
   ModulePortId ipin_port_id = find_connection_block_module_ipin_port(module_manager, cb_module, rr_graph, rr_gsb, src_rr_node);
@@ -533,7 +533,7 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
                                        const CircuitLibrary& circuit_lib,
                                        const e_side& cb_ipin_side,
                                        const size_t& ipin_index,
-                                       const std::map<std::pair<ModulePortId, size_t>, ModuleNetId>& input_port_to_module_nets) {
+                                       const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
   const RRNodeId& cur_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
   /* Check current rr_node is an input pin of a CLB */
   VTR_ASSERT(IPIN == rr_graph.node_type(cur_rr_node));
@@ -566,7 +566,7 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
   module_manager.set_child_instance_name(cb_module, mux_module, mux_instance_id, mux_instance_name);
 
   /* TODO: Generate input ports that are wired to the input bus of the routing multiplexer */
-  std::vector<std::pair<ModulePortId, size_t>> cb_input_port_ids = find_connection_block_module_input_ports(module_manager, cb_module, rr_graph, rr_gsb, cb_type, driver_rr_nodes);
+  std::vector<ModulePinInfo> cb_input_port_ids = find_connection_block_module_input_ports(module_manager, cb_module, rr_graph, rr_gsb, cb_type, driver_rr_nodes);
 
   /* Link input bus port to Switch Block inputs */
   std::vector<CircuitPortId> mux_model_input_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_INPUT, true);
@@ -646,7 +646,7 @@ void build_connection_block_interc_modules(ModuleManager& module_manager,
                                            const CircuitLibrary& circuit_lib,
                                            const e_side& cb_ipin_side,
                                            const size_t& ipin_index,
-                                           const std::map<std::pair<ModulePortId, size_t>, ModuleNetId>& input_port_to_module_nets) {
+                                           const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
   const RRNodeId& src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
 
   if (1 > rr_graph.node_in_edges(src_rr_node).size()) {
@@ -770,7 +770,7 @@ void build_connection_block_module(ModuleManager& module_manager,
   }
 
   /* Create a cache (fast look up) for module nets whose source are input ports */
-  std::map<std::pair<ModulePortId, size_t>, ModuleNetId> input_port_to_module_nets;
+  std::map<ModulePinInfo, ModuleNetId> input_port_to_module_nets;
 
   /* Generate short-wire connection for each routing track : 
    * Each input port is short-wired to its output port
@@ -783,7 +783,7 @@ void build_connection_block_module(ModuleManager& module_manager,
     ModuleNetId net = create_module_source_pin_net(module_manager, cb_module, cb_module, 0, chan_input_port_id, chan_input_port.pins()[pin_id]); 
     module_manager.add_module_net_sink(cb_module, net, cb_module, 0, chan_output_port_id, chan_output_port.pins()[pin_id]); 
     /* Cache the module net */
-    input_port_to_module_nets[std::pair<ModulePortId, size_t>(chan_input_port_id, chan_input_port.pins()[pin_id])] = net;
+    input_port_to_module_nets[ModulePinInfo(chan_input_port_id, chan_input_port.pins()[pin_id])] = net;
   }
 
   /* Add sub modules of routing multiplexers or direct interconnect*/
