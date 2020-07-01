@@ -47,11 +47,11 @@ void build_switch_block_module_short_interc(ModuleManager& module_manager,
                                             const e_side& chan_side,
                                             const RRNodeId& cur_rr_node,
                                             const RRNodeId& drive_rr_node,
-                                            const std::map<ModulePortId, std::vector<ModuleNetId>>& input_port_to_module_nets) {
+                                            const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
   /* Find the name of output port */
   ModulePinInfo output_port_info = find_switch_block_module_chan_port(module_manager, sb_module, 
-                                                                                        rr_graph, rr_gsb, 
-                                                                                        chan_side, cur_rr_node, OUT_PORT);
+                                                                      rr_graph, rr_gsb, 
+                                                                      chan_side, cur_rr_node, OUT_PORT);
   enum e_side input_pin_side = chan_side;
   int index = -1;
 
@@ -88,7 +88,7 @@ void build_switch_block_module_short_interc(ModuleManager& module_manager,
   BasicPort output_port = module_manager.module_port(sb_module, output_port_info.first);
   
   /* Create a module net for this short-wire connection */
-  ModuleNetId net = input_port_to_module_nets.at(input_port_info.first)[input_port_info.second];
+  ModuleNetId net = input_port_to_module_nets.at(input_port_info);
   /* Skip Configuring the net source, it is done before */
   /* Configure the net sink */
   module_manager.add_module_net_sink(sb_module, net, sb_module, 0, output_port_info.first, output_port_info.second);
@@ -110,7 +110,7 @@ void build_switch_block_mux_module(ModuleManager& module_manager,
                                    const RRNodeId& cur_rr_node,
                                    const std::vector<RRNodeId>& driver_rr_nodes,
                                    const RRSwitchId& switch_index,
-                                   const std::map<ModulePortId, std::vector<ModuleNetId>>& input_port_to_module_nets) {
+                                   const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
   /* Check current rr_node is CHANX or CHANY*/
   VTR_ASSERT((CHANX == rr_graph.node_type(cur_rr_node)) || (CHANY == rr_graph.node_type(cur_rr_node)));
 
@@ -151,7 +151,7 @@ void build_switch_block_mux_module(ModuleManager& module_manager,
   VTR_ASSERT(mux_input_port.get_width() == sb_input_port_ids.size());
   for (size_t pin_id = 0; pin_id < sb_input_port_ids.size(); ++pin_id) {
     /* Use the exising net */
-    ModuleNetId net = input_port_to_module_nets.at(sb_input_port_ids[pin_id].first)[sb_input_port_ids[pin_id].second];
+    ModuleNetId net = input_port_to_module_nets.at(sb_input_port_ids[pin_id]);
     /* Configure the net source only if it is not yet in the source list */
     if (false == module_manager.net_source_exist(sb_module, net, sb_module, 0, sb_input_port_ids[pin_id].first, sb_input_port_ids[pin_id].second)) {
       module_manager.add_module_net_source(sb_module, net, sb_module, 0, sb_input_port_ids[pin_id].first, sb_input_port_ids[pin_id].second);
@@ -216,7 +216,7 @@ void build_switch_block_interc_modules(ModuleManager& module_manager,
                                        const CircuitLibrary& circuit_lib,
                                        const e_side& chan_side,
                                        const size_t& chan_node_id,
-                                       const std::map<ModulePortId, std::vector<ModuleNetId>>& input_port_to_module_nets) {
+                                       const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
   std::vector<RRNodeId> driver_rr_nodes;
 
   /* Get the node */
@@ -342,7 +342,7 @@ void build_switch_block_module(ModuleManager& module_manager,
            generate_switch_block_module_name(gsb_coordinate).c_str());
 
   /* Create a cache (fast look up) for module nets whose source are input ports */
-  std::map<ModulePortId, std::vector<ModuleNetId>> input_port_to_module_nets;
+  std::map<ModulePinInfo, ModuleNetId> input_port_to_module_nets;
 
   /* Add routing channel ports at each side of the GSB */
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
@@ -379,10 +379,9 @@ void build_switch_block_module(ModuleManager& module_manager,
       ModulePortId chan_input_port_id = module_manager.add_port(sb_module, chan_input_port, ModuleManager::MODULE_INPUT_PORT);
 
       /* Cache the input net */
-      input_port_to_module_nets[chan_input_port_id].reserve(chan_input_port_size);
       for (const size_t& pin : chan_input_port.pins()) {
         ModuleNetId net = create_module_source_pin_net(module_manager, sb_module, sb_module, 0, chan_input_port_id, pin);
-        input_port_to_module_nets[chan_input_port_id].push_back(net);
+        input_port_to_module_nets[ModulePinInfo(chan_input_port_id, pin)] = net;
       }
 
       std::string chan_output_port_name = generate_sb_module_track_port_name(chan_type,
@@ -405,7 +404,7 @@ void build_switch_block_module(ModuleManager& module_manager,
 
       /* Cache the input net */
       ModuleNetId net = create_module_source_pin_net(module_manager, sb_module, sb_module, 0, input_port_id, 0);
-      input_port_to_module_nets[input_port_id].push_back(net);
+      input_port_to_module_nets[ModulePinInfo(input_port_id, 0)] = net;
     } 
   }
 
