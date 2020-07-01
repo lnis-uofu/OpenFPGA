@@ -65,6 +65,10 @@ int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
     FabricKeyId key = fabric_key.create_key();
     fabric_key.set_key_name(key, module_manager.module_name(child_module));
     fabric_key.set_key_value(key, child_instance);
+
+    if (false == module_manager.instance_name(top_module, child_module, child_instance).empty()) {
+      fabric_key.set_key_alias(key, module_manager.instance_name(top_module, child_module, child_instance));
+    }
   }
 
   VTR_LOGV(verbose,

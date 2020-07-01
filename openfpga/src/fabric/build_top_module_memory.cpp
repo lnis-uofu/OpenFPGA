@@ -7,6 +7,7 @@
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
 #include "vtr_log.h"
+#include "vtr_time.h"
 
 /* Headers from vpr library */
 #include "vpr_utils.h"
@@ -429,6 +430,11 @@ int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager
 
     /* Find if instance id is valid */
     size_t child_instance = fabric_key.key_value(key);
+    /* If we have alias, we try to find a instance in this name */
+    if (!fabric_key.key_alias(key).empty()) {
+      child_instance = module_manager.instance_id(top_module, child_module, fabric_key.key_alias(key)); 
+    }
+
     if (child_instance >= module_manager.num_instance(top_module, child_module)) {
       VTR_LOGF_ERROR(__FILE__, __LINE__,
                      "Invalid key value '%ld'!\n",
@@ -906,6 +912,9 @@ void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            const e_config_protocol_type& sram_orgz_type, 
                                            const e_circuit_model_design_tech& mem_tech,
                                            const size_t& num_config_bits) {
+
+  vtr::ScopedStartFinishTimer timer("Add module nets for configuration buses");
+
   switch (mem_tech) {
   case CIRCUIT_MODEL_DESIGN_CMOS:
     add_top_module_nets_cmos_memory_config_bus(module_manager, decoder_lib,

@@ -8,6 +8,7 @@
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
 #include "vtr_log.h"
+#include "vtr_time.h"
 
 /* Headers from openfpgautil library */
 #include "openfpga_port.h"
@@ -124,10 +125,10 @@ void add_module_nets_tile_direct_connection(ModuleManager& module_manager,
   module_manager.add_module_net_source(top_module, net_direct_src, src_grid_module, src_grid_instance, src_port_id, 0);
   module_manager.add_module_net_sink(top_module, net_direct_src, direct_module, direct_instance_id, direct_input_port_id, 0);
 
-  /* Create the 2nd module net */
-  ModuleNetId net_direct_sink = module_manager.create_module_net(top_module); 
-  /* Connect the wire between direct_instance output and sink_pin of clb */
-  module_manager.add_module_net_source(top_module, net_direct_sink, direct_module, direct_instance_id, direct_output_port_id, 0);
+  /* Create the 2nd module net
+   * Connect the wire between direct_instance output and sink_pin of clb
+   */
+  ModuleNetId net_direct_sink = create_module_source_pin_net(module_manager, top_module, direct_module, direct_instance_id, direct_output_port_id, 0);
   module_manager.add_module_net_sink(top_module, net_direct_sink, sink_grid_module, sink_grid_instance, sink_port_id, 0);
 }
 
@@ -144,6 +145,8 @@ void add_top_module_nets_tile_direct_connections(ModuleManager& module_manager,
                                                  const vtr::Matrix<size_t>& grid_instance_ids,
                                                  const TileDirect& tile_direct,
                                                  const ArchDirect& arch_direct) {
+
+  vtr::ScopedStartFinishTimer timer("Add module nets for inter-tile connections");
 
   for (const TileDirectId& tile_direct_id : tile_direct.directs()) {
     add_module_nets_tile_direct_connection(module_manager, top_module, circuit_lib, 

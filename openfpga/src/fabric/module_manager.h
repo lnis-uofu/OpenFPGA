@@ -3,6 +3,10 @@
 
 #include <string>
 #include <map>
+#include <tuple>
+#include <unordered_set>
+#include <unordered_map>
+
 #include "vtr_vector.h"
 #include "module_manager_fwd.h"
 #include "openfpga_port.h"
@@ -40,10 +44,61 @@ class ModuleManager {
 
   public: /* Public Constructors */
 
+  public: /* Type implementations */
+    /*
+     * This class (forward delcared above) is a template used to represent a lazily calculated 
+     * iterator of the specified ID type. The key assumption made is that the ID space is 
+     * contiguous and can be walked by incrementing the underlying ID value. To account for 
+     * invalid IDs, it keeps a reference to the invalid ID set and returns ID::INVALID() for
+     * ID values in the set.
+     *
+     * It is used to lazily create an iteration range (e.g. as returned by RRGraph::edges() RRGraph::nodes())
+     * just based on the count of allocated elements (i.e. RRGraph::num_nodes_ or RRGraph::num_edges_),
+     * and the set of any invalid IDs (i.e. RRGraph::invalid_node_ids_, RRGraph::invalid_edge_ids_).
+     */
+    template<class ID>
+    class lazy_id_iterator : public std::iterator<std::bidirectional_iterator_tag, ID> {
+      public:
+        //Since we pass ID as a template to std::iterator we need to use an explicit 'typename'
+        //to bring the value_type and iterator names into scope
+        typedef typename std::iterator<std::bidirectional_iterator_tag, ID>::value_type value_type;
+        typedef typename std::iterator<std::bidirectional_iterator_tag, ID>::iterator iterator;
+
+        lazy_id_iterator(value_type init, const std::unordered_set<ID>& invalid_ids)
+            : value_(init)
+            , invalid_ids_(invalid_ids) {}
+
+        //Advance to the next ID value
+        iterator operator++() {
+            value_ = ID(size_t(value_) + 1);
+            return *this;
+        }
+
+        //Advance to the previous ID value
+        iterator operator--() {
+            value_ = ID(size_t(value_) - 1);
+            return *this;
+        }
+
+        //Dereference the iterator
+        value_type operator*() const { return (invalid_ids_.count(value_)) ? ID::INVALID() : value_; }
+
+        friend bool operator==(const lazy_id_iterator<ID> lhs, const lazy_id_iterator<ID> rhs) { return lhs.value_ == rhs.value_; }
+        friend bool operator!=(const lazy_id_iterator<ID> lhs, const lazy_id_iterator<ID> rhs) { return !(lhs == rhs); }
+
+      private:
+        value_type value_;
+        const std::unordered_set<ID>& invalid_ids_;
+    };
+
   public: /* Types and ranges */
+    //Lazy iterator utility forward declaration
+    template<class ID>
+    class lazy_id_iterator;
+
     typedef vtr::vector<ModuleId, ModuleId>::const_iterator module_iterator;
     typedef vtr::vector<ModulePortId, ModulePortId>::const_iterator module_port_iterator;
-    typedef vtr::vector<ModuleNetId, ModuleNetId>::const_iterator module_net_iterator;
+    typedef lazy_id_iterator<ModuleNetId> module_net_iterator;
     typedef vtr::vector<ModuleNetSrcId, ModuleNetSrcId>::const_iterator module_net_src_iterator;
     typedef vtr::vector<ModuleNetSinkId, ModuleNetSinkId>::const_iterator module_net_sink_iterator;
 
@@ -161,15 +216,34 @@ class ModuleManager {
      */
     void reserve_configurable_child(const ModuleId& module, const size_t& num_children);
 
+    /* Reserved a number of module nets for a given module
+     * for memory efficiency
+     */
+    void reserve_module_nets(const ModuleId& module, const size_t& num_nets);
+
     /* Add a net to the connection graph of the module */ 
     ModuleNetId create_module_net(const ModuleId& module);
     /* Set the name of net */
     void set_net_name(const ModuleId& module, const ModuleNetId& net,
                       const std::string& name);
+
+    /* Reserved a number of sources for a module net for a given module
+     * for memory efficiency
+     */
+    void reserve_module_net_sources(const ModuleId& module, const ModuleNetId& net,
+                                    const size_t& num_sources);
+
     /* Add a source to a net in the connection graph */
     ModuleNetSrcId add_module_net_source(const ModuleId& module, const ModuleNetId& net,
                                          const ModuleId& src_module, const size_t& instance_id,
                                          const ModulePortId& src_port, const size_t& src_pin);
+
+    /* Reserved a number of sinks for a module net for a given module
+     * for memory efficiency
+     */
+    void reserve_module_net_sinks(const ModuleId& module, const ModuleNetId& net,
+                                  const size_t& num_sinks);
+
     /* Add a sink to a net in the connection graph */
     ModuleNetSinkId add_module_net_sink(const ModuleId& module, const ModuleNetId& net,
                                         const ModuleId& sink_module, const size_t& instance_id,
@@ -220,20 +294,19 @@ class ModuleManager {
      * To avoid large memory footprint, we do NOT create pins,   
      * To enable fast look-up on pins, we create a fast look-up
      */
-    vtr::vector<ModuleId, vtr::vector<ModuleNetId, ModuleNetId>> net_ids_;    /* List of nets for each Module */ 
+    vtr::vector<ModuleId, size_t> num_nets_;    /* List of nets for each Module */ 
+    vtr::vector<ModuleId, std::unordered_set<ModuleNetId>> invalid_net_ids_;   /* Invalid net ids */
     vtr::vector<ModuleId, vtr::vector<ModuleNetId, std::string>> net_names_;    /* Name of net */ 
 
     vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSrcId, ModuleNetSrcId>>> net_src_ids_;  /* Unique id of the source that drive the net */ 
-    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSrcId, ModuleId>>> net_src_module_ids_;  /* Pin ids that drive the net */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSrcId, size_t>>> net_src_terminal_ids_;  /* Pin ids that drive the net */ 
     vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSrcId, size_t>>> net_src_instance_ids_;  /* Pin ids that drive the net */ 
-    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSrcId, ModulePortId>>> net_src_port_ids_;  /* Pin ids that drive the net */ 
     vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSrcId, size_t>>> net_src_pin_ids_;  /* Pin ids that drive the net */ 
 
 
     vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSinkId, ModuleNetSinkId>>> net_sink_ids_;  /* Unique ids of the sink that the net drives */ 
-    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSinkId, ModuleId>>> net_sink_module_ids_;  /* Pin ids that the net drives */ 
+    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSinkId, size_t>>> net_sink_terminal_ids_;  /* Pin ids that the net drives */ 
     vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSinkId, size_t>>> net_sink_instance_ids_;  /* Pin ids that drive the net */ 
-    vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSinkId, ModulePortId>>> net_sink_port_ids_;  /* Pin ids that drive the net */ 
     vtr::vector<ModuleId, vtr::vector<ModuleNetId, vtr::vector<ModuleNetSinkId, size_t>>> net_sink_pin_ids_;  /* Pin ids that drive the net */ 
 
     /* fast look-up for module */
@@ -245,6 +318,11 @@ class ModuleManager {
     /* fast look-up for nets */
     typedef vtr::vector<ModuleId, std::map<ModuleId, std::vector<std::map<ModulePortId, std::vector<ModuleNetId>>>>> NetLookup;
     mutable NetLookup net_lookup_; /* [module_ids][module_ids][instance_ids][port_ids][pin_ids] */ 
+
+    /* Store pairs of a module and a port, which are frequently used in net terminals
+     * (either source or sink)
+     */
+    std::vector<std::pair<ModuleId, ModulePortId>> net_terminal_storage_;
 };
 
 } /* end namespace openfpga */

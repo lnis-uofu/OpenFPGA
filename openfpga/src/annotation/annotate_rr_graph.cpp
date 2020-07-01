@@ -446,11 +446,18 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
  * output ports of the GSB
  *******************************************************************/
 void sort_device_rr_gsb_chan_node_in_edges(const RRGraph& rr_graph,
-                                           DeviceRRGSB& device_rr_gsb) {
+                                           DeviceRRGSB& device_rr_gsb,
+                                           const bool& verbose_output) {
   vtr::ScopedStartFinishTimer timer("Sort incoming edges for each routing track output node of General Switch Block(GSB)");
 
   /* Note that the GSB array is smaller than the grids by 1 column and 1 row!!! */
   vtr::Point<size_t> gsb_range = device_rr_gsb.get_gsb_range();
+
+  VTR_LOGV(verbose_output, 
+           "Start sorting edges for GSBs up to [%lu][%lu]\n",
+           gsb_range.x(), gsb_range.y());
+
+  size_t gsb_cnt = 0;
 
   /* For each switch block, determine the size of array */
   for (size_t ix = 0; ix < gsb_range.x(); ++ix) {
@@ -458,8 +465,19 @@ void sort_device_rr_gsb_chan_node_in_edges(const RRGraph& rr_graph,
       vtr::Point<size_t> gsb_coordinate(ix, iy);
       RRGSB& rr_gsb = device_rr_gsb.get_mutable_gsb(gsb_coordinate);
       rr_gsb.sort_chan_node_in_edges(rr_graph);
+
+      gsb_cnt++; /* Update counter */
+
+      /* Print info */
+      VTR_LOG("[%lu%] Sorted edges for GSB[%lu][%lu]\r",
+              100 * gsb_cnt / (gsb_range.x() * gsb_range.y()), 
+              ix, iy);
     } 
   }
+
+  /* Report number of unique mirrors */
+  VTR_LOG("Sorted edges for %d General Switch Blocks (GSBs).\n",
+          gsb_range.x() * gsb_range.y());
 }
 
 /********************************************************************

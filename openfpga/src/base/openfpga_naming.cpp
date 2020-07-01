@@ -348,7 +348,6 @@ std::string generate_routing_track_port_name(const t_rr_type& chan_type,
  *********************************************************************/
 std::string generate_sb_module_track_port_name(const t_rr_type& chan_type, 
                                                const e_side& module_side,
-                                               const size_t& track_id,
                                                const PORTS& port_direction) {
   /* Channel must be either CHANX or CHANY */
   VTR_ASSERT( (CHANX == chan_type) || (CHANY == chan_type) );
@@ -368,18 +367,15 @@ std::string generate_sb_module_track_port_name(const t_rr_type& chan_type,
 
   switch (port_direction) {
   case OUT_PORT:
-    port_name += std::string("out_"); 
+    port_name += std::string("out"); 
     break;
   case IN_PORT:
-    port_name += std::string("in_"); 
+    port_name += std::string("in"); 
     break;
   default:
     VTR_LOG_ERROR("Invalid direction of chan_rr_node!\n");
     exit(1);
   }
-
-  /* Add the track id to the port name */
-  port_name += std::to_string(track_id) + std::string("_");
 
   return port_name;
 }
@@ -392,36 +388,45 @@ std::string generate_sb_module_track_port_name(const t_rr_type& chan_type,
  * Instead, we use the relative location of the pins in the context of routing modules
  * so that each module can be instanciated across the fabric
  * Even though, port direction must be provided!
+ *
+ * Upper_location: specify if an upper/lower prefix to be added.
+ *                 The location indicates where the bus port should be
+ *                 placed on the perimeter of the connection block
+ *                 - For X-directional CB: 
+ *                   - upper is the left side
+ *                   - lower is the right side
+ *                 - For Y-directional CB: 
+ *                   - upper is the bottom side
+ *                   - lower is the top side
  *********************************************************************/
 std::string generate_cb_module_track_port_name(const t_rr_type& chan_type, 
-                                               const size_t& track_id,
-                                               const PORTS& port_direction) {
+                                               const PORTS& port_direction,
+                                               const bool& upper_location) {
   /* Channel must be either CHANX or CHANY */
   VTR_ASSERT( (CHANX == chan_type) || (CHANY == chan_type) );
 
   /* Create a map between chan_type and module_prefix */
-  std::map<t_rr_type, std::string> module_prefix_map;
+  std::map<t_rr_type, std::map<bool, std::string>> module_prefix_map;
   /* TODO: use a constexpr string to replace the fixed name? */
-  module_prefix_map[CHANX] = std::string("chanx");
-  module_prefix_map[CHANY] = std::string("chany");
+  module_prefix_map[CHANX][true] = std::string("chanx_left");
+  module_prefix_map[CHANX][false] = std::string("chanx_right");
+  module_prefix_map[CHANY][true] = std::string("chany_bottom");
+  module_prefix_map[CHANY][false] = std::string("chany_top");
 
-  std::string port_name = module_prefix_map[chan_type]; 
+  std::string port_name = module_prefix_map[chan_type][upper_location];
   port_name += std::string("_");
 
   switch (port_direction) {
   case OUT_PORT:
-    port_name += std::string("out_"); 
+    port_name += std::string("out"); 
     break;
   case IN_PORT:
-    port_name += std::string("in_"); 
+    port_name += std::string("in"); 
     break;
   default:
     VTR_LOG_ERROR("Invalid direction of chan_rr_node!\n");
     exit(1);
   }
-
-  /* Add the track id to the port name */
-  port_name += std::to_string(track_id) + std::string("_");
 
   return port_name;
 }

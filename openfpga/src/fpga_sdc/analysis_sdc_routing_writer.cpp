@@ -76,16 +76,18 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
 
     /* Disable both input of the routing track if it is not used! */
     std::string port_name = generate_cb_module_track_port_name(cb_type,
-                                                               itrack,  
-                                                               IN_PORT);
+                                                               IN_PORT,
+                                                               0 == itrack % 2);
 
     /* Ensure we have this port in the module! */
     ModulePortId module_port = module_manager.find_module_port(cb_module, port_name);
     VTR_ASSERT(true == module_manager.valid_module_port_id(cb_module, module_port));
+    BasicPort chan_port(module_manager.module_port(cb_module, module_port).get_name(),
+                        itrack / 2, itrack / 2);
 
     fp << "set_disable_timing ";
     fp << cb_instance_name << "/";
-    fp << generate_sdc_port(module_manager.module_port(cb_module, module_port));
+    fp << generate_sdc_port(chan_port);
     fp << std::endl;
   }
 
@@ -99,16 +101,18 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
 
     /* Disable both input of the routing track if it is not used! */
     std::string port_name = generate_cb_module_track_port_name(cb_type,
-                                                               itrack,  
-                                                               OUT_PORT);
+                                                               OUT_PORT,
+                                                               0 == itrack % 2);
 
     /* Ensure we have this port in the module! */
     ModulePortId module_port = module_manager.find_module_port(cb_module, port_name);
     VTR_ASSERT(true == module_manager.valid_module_port_id(cb_module, module_port));
+    BasicPort chan_port(module_manager.module_port(cb_module, module_port).get_name(),
+                        itrack / 2, itrack / 2);
 
     fp << "set_disable_timing ";
     fp << cb_instance_name << "/";
-    fp << generate_sdc_port(module_manager.module_port(cb_module, module_port));
+    fp << generate_sdc_port(chan_port);
     fp << std::endl;
   }
 
@@ -181,8 +185,8 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
 
     /* Disable both input of the routing track if it is not used! */
     std::string port_name = generate_cb_module_track_port_name(cb_type,
-                                                               itrack,  
-                                                               OUT_PORT);
+                                                               OUT_PORT,
+                                                               0 == itrack % 2);
 
     /* Ensure we have this port in the module! */
     ModulePortId module_port = module_manager.find_module_port(cb_module, port_name);
@@ -190,12 +194,12 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
 
     AtomNetId mapped_atom_net = atom_ctx.lookup.atom_net(routing_annotation.rr_node_net(chan_node)); 
 
-    disable_analysis_module_input_port_net_sinks(fp, 
-                                                 module_manager, cb_module,
-                                                 cb_instance_name,
-                                                 module_port,
-                                                 mapped_atom_net,
-                                                 mux_instance_to_net_map);
+    disable_analysis_module_input_pin_net_sinks(fp, module_manager, cb_module,
+                                                cb_instance_name,
+                                                module_port, itrack / 2,
+                                                mapped_atom_net,
+                                                mux_instance_to_net_map);
+
   }
 }
 
@@ -319,7 +323,7 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
       const RRNodeId& chan_node = rr_gsb.get_chan_node(side_manager.get_side(), itrack);
 
       std::string port_name = generate_sb_module_track_port_name(rr_graph.node_type(rr_gsb.get_chan_node(side_manager.get_side(), itrack)),
-                                                                 side_manager.get_side(), itrack,  
+                                                                 side_manager.get_side(), 
                                                                  rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack));
 
       if (true == compact_routing_hierarchy) {
@@ -327,7 +331,7 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
         vtr::Point<size_t> sb_coord(rr_gsb.get_x(), rr_gsb.get_y());
         const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(sb_coord);
         port_name = generate_sb_module_track_port_name(rr_graph.node_type(unique_mirror.get_chan_node(side_manager.get_side(), itrack)),
-                                                       side_manager.get_side(), itrack,  
+                                                       side_manager.get_side(),  
                                                        unique_mirror.get_chan_node_direction(side_manager.get_side(), itrack));
       }
 
@@ -347,9 +351,12 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
         continue;
       }
 
+      BasicPort sb_port(module_manager.module_port(sb_module, module_port).get_name(),
+                        itrack / 2, itrack / 2);
+
       fp << "set_disable_timing ";
       fp << sb_instance_name << "/";
-      fp << generate_sdc_port(module_manager.module_port(sb_module, module_port));
+      fp << generate_sdc_port(sb_port);
       fp << std::endl;
     }
   }
@@ -467,7 +474,7 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
       const RRNodeId& chan_node = rr_gsb.get_chan_node(side_manager.get_side(), itrack);
 
       std::string port_name = generate_sb_module_track_port_name(rr_graph.node_type(chan_node),
-                                                                 side_manager.get_side(), itrack,  
+                                                                 side_manager.get_side(),  
                                                                  rr_gsb.get_chan_node_direction(side_manager.get_side(), itrack));
 
       if (true == compact_routing_hierarchy) {
@@ -477,7 +484,7 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
         const RRNodeId& unique_mirror_chan_node = unique_mirror.get_chan_node(side_manager.get_side(), itrack);
 
         port_name = generate_sb_module_track_port_name(rr_graph.node_type(unique_mirror_chan_node),
-                                                       side_manager.get_side(), itrack,  
+                                                       side_manager.get_side(), 
                                                        unique_mirror.get_chan_node_direction(side_manager.get_side(), itrack));
       }
 
@@ -488,12 +495,11 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
 
       AtomNetId mapped_atom_net = atom_ctx.lookup.atom_net(routing_annotation.rr_node_net(chan_node));
 
-      disable_analysis_module_input_port_net_sinks(fp, module_manager,
-                                                   sb_module,
-                                                   sb_instance_name,
-                                                   module_port,
-                                                   mapped_atom_net,
-                                                   mux_instance_to_net_map);
+      disable_analysis_module_input_pin_net_sinks(fp, module_manager, sb_module,
+                                                  sb_instance_name,
+                                                  module_port, itrack / 2,
+                                                  mapped_atom_net,
+                                                  mux_instance_to_net_map);
     }
   }
 }
