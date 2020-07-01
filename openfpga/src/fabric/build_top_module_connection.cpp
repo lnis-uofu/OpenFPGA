@@ -570,6 +570,10 @@ void add_top_module_nets_connect_sb_and_cb(ModuleManager& module_manager,
       } else {
         VTR_ASSERT(IN_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
       }  
+     
+      /* Upper CB port is required if the routing tracks are on the top or right sides of 
+       * the switch block, which indicated bottom and left sides of the connection blocks
+       */
       bool use_cb_upper_port = (TOP == side_manager.get_side()) || (RIGHT == side_manager.get_side());
       std::string cb_port_name = generate_cb_module_track_port_name(cb_type,
                                                                     cb_port_direction,
