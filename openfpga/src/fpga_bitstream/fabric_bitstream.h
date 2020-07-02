@@ -52,12 +52,12 @@ class FabricBitstream {
     ConfigBitId config_bit(const FabricBitId& bit_id) const;
 
     /* Find the address of bitstream */
-    std::vector<size_t> bit_address(const FabricBitId& bit_id) const;
-    std::vector<size_t> bit_bl_address(const FabricBitId& bit_id) const;
-    std::vector<size_t> bit_wl_address(const FabricBitId& bit_id) const;
+    std::vector<char> bit_address(const FabricBitId& bit_id) const;
+    std::vector<char> bit_bl_address(const FabricBitId& bit_id) const;
+    std::vector<char> bit_wl_address(const FabricBitId& bit_id) const;
 
     /* Find the data-in of bitstream */
-    bool bit_din(const FabricBitId& bit_id) const;
+    char bit_din(const FabricBitId& bit_id) const;
 
   public:  /* Public Mutators */
     /* Reserve config bits */
@@ -67,16 +67,16 @@ class FabricBitstream {
     FabricBitId add_bit(const ConfigBitId& config_bit_id);
 
     void set_bit_address(const FabricBitId& bit_id,
-                         const std::vector<size_t>& address);
+                         const std::vector<char>& address);
 
     void set_bit_bl_address(const FabricBitId& bit_id,
-                            const std::vector<size_t>& address);
+                            const std::vector<char>& address);
 
     void set_bit_wl_address(const FabricBitId& bit_id,
-                            const std::vector<size_t>& address);
+                            const std::vector<char>& address);
 
     void set_bit_din(const FabricBitId& bit_id,
-                     const bool& din);
+                     const char& din);
 
     /* Reverse bit sequence of the fabric bitstream
      * This is required by configuration chain protocol 
@@ -84,7 +84,7 @@ class FabricBitstream {
     void reverse();
 
   public:  /* Public Validators */
-    bool valid_bit_id(const FabricBitId& bit_id) const;
+    char valid_bit_id(const FabricBitId& bit_id) const;
 
   private: /* Internal data */
     /* Unique id of a bit in the Bitstream */
@@ -97,10 +97,10 @@ class FabricBitstream {
      *
      * We use a 2-element array, as we may have a BL address and a WL address
      */
-    vtr::vector<FabricBitId, std::array<std::vector<size_t>, 2>> bit_addresses_;
+    vtr::vector<FabricBitId, std::array<std::vector<char>, 2>> bit_addresses_;
 
     /* Data input (Din) bits: this is designed for memory decoders */
-    vtr::vector<FabricBitId, bool> bit_dins_;
+    vtr::vector<FabricBitId, char> bit_dins_;
 };
 
 } /* end namespace openfpga */

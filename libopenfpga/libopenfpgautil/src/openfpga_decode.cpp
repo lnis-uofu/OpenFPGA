@@ -73,4 +73,34 @@ std::vector<size_t> itobin_vec(const size_t& in_int,
   return ret;
 }
 
+/******************************************************************** 
+ * Converter an integer to a binary vector 
+ * For example: 
+ *   Input integer: 4
+ *   Binary length : 3
+ *   Output:
+ *     index | 0 | 1 | 2
+ *     ret   | 0 | 0 | 1 
+ *
+ * This function is optimized to return a vector of char
+ * which has a smaller memory footprint than size_t
+ ********************************************************************/
+std::vector<char> itobin_charvec(const size_t& in_int,
+                                 const size_t& bin_len) {
+  std::vector<char> ret(bin_len, '0');
+
+  /* Make sure we do not have any overflow! */
+  VTR_ASSERT ( (in_int < pow(2., bin_len)) );
+  
+  size_t temp = in_int;
+  for (size_t i = 0; i < bin_len; i++) {
+    if (1 == temp % 2) { 
+      ret[i] = '1'; /* Keep a good sequence of bits */
+    }
+    temp = temp / 2;
+  }
+ 
+  return ret;
+}
+
 } /* end namespace openfpga */

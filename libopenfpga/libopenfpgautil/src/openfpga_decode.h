@@ -18,6 +18,9 @@ std::vector<size_t> ito1hot_vec(const size_t& in_int,
 std::vector<size_t> itobin_vec(const size_t& in_int,
                                const size_t& bin_len);
 
+std::vector<char> itobin_charvec(const size_t& in_int,
+                                 const size_t& bin_len);
+
 } /* namespace openfpga ends */
 
 #endif
