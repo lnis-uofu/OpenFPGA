@@ -67,6 +67,7 @@ void compress_routing_hierarchy(OpenfpgaContext& openfpga_ctx,
 int build_fabric(OpenfpgaContext& openfpga_ctx,
                  const Command& cmd, const CommandContext& cmd_context) { 
 
+  CommandOptionId opt_frame_view = cmd.option("frame_view");
   CommandOptionId opt_compress_routing = cmd.option("compress_routing");
   CommandOptionId opt_duplicate_grid_pin = cmd.option("duplicate_grid_pin");
   CommandOptionId opt_gen_random_fabric_key = cmd.option("generate_random_fabric_key");
@@ -96,6 +97,7 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
                                                                   openfpga_ctx.mutable_decoder_lib(),
                                                                   const_cast<const OpenfpgaContext&>(openfpga_ctx),
                                                                   g_vpr_ctx.device(),
+                                                                  cmd_context.option_enable(cmd, opt_frame_view),
                                                                   cmd_context.option_enable(cmd, opt_compress_routing),
                                                                   cmd_context.option_enable(cmd, opt_duplicate_grid_pin),
                                                                   predefined_fabric_key,

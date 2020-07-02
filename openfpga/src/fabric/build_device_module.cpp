@@ -30,6 +30,7 @@ ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
                                         DecoderLibrary& decoder_lib,
                                         const OpenfpgaContext& openfpga_ctx,
                                         const DeviceContext& vpr_device_ctx,
+                                        const bool& frame_view,
                                         const bool& compress_routing,
                                         const bool& duplicate_grid_pin,
                                         const FabricKey& fabric_key,
@@ -118,7 +119,7 @@ ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
                    openfpga_ctx.arch().arch_direct, 
                    openfpga_ctx.arch().config_protocol.type(),
                    sram_model,
-                   compress_routing, duplicate_grid_pin,
+                   frame_view, compress_routing, duplicate_grid_pin,
                    fabric_key, generate_random_fabric_key);
 
   /* Now a critical correction has to be done!
