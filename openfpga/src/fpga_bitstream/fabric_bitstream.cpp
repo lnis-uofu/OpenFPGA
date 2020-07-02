@@ -104,6 +104,7 @@ void FabricBitstream::set_bit_din(const FabricBitId& bit_id,
 }
 
 void FabricBitstream::reverse() {
+  std::reverse(config_bit_ids_.begin(), config_bit_ids_.end());
   std::reverse(bit_addresses_.begin(), bit_addresses_.end());
   std::reverse(bit_dins_.begin(), bit_dins_.end());
 }
