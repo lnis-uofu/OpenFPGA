@@ -10,16 +10,26 @@
 namespace openfpga {
 
 /**************************************************
+ * Public Constructors
+ *************************************************/
+BitstreamManager::BitstreamManager() {
+  num_blocks_ = 0;
+  num_bits_ = 0;
+}
+
+/**************************************************
  * Public Accessors : Aggregates
  *************************************************/
 /* Find all the configuration bits */
 BitstreamManager::config_bit_range BitstreamManager::bits() const {
-  return vtr::make_range(bit_ids_.begin(), bit_ids_.end());
+  return vtr::make_range(config_bit_iterator(ConfigBitId(0), invalid_bit_ids_),
+                         config_bit_iterator(ConfigBitId(num_bits_), invalid_bit_ids_));
 }
 
 /* Find all the configuration blocks */
 BitstreamManager::config_block_range BitstreamManager::blocks() const {
-  return vtr::make_range(block_ids_.begin(), block_ids_.end());
+  return vtr::make_range(config_block_iterator(ConfigBlockId(0), invalid_block_ids_),
+                         config_block_iterator(ConfigBlockId(num_blocks_), invalid_block_ids_));
 }
 
 /******************************************************************************
@@ -133,9 +143,9 @@ std::vector<std::string> BitstreamManager::block_output_net_ids(const ConfigBloc
  * Public Mutators
  ******************************************************************************/
 ConfigBitId BitstreamManager::add_bit(const bool& bit_value) {
-  ConfigBitId bit = ConfigBitId(bit_ids_.size());
+  ConfigBitId bit = ConfigBitId(num_bits_);
   /* Add a new bit, and allocate associated data structures */
-  bit_ids_.push_back(bit);
+  num_bits_++;
   bit_values_.push_back(bit_value);
   shared_config_bit_values_.emplace_back();
   bit_parent_block_ids_.push_back(ConfigBlockId::INVALID());
@@ -144,7 +154,6 @@ ConfigBitId BitstreamManager::add_bit(const bool& bit_value) {
 }
 
 void BitstreamManager::reserve_blocks(const size_t& num_blocks) {
-  block_ids_.reserve(num_blocks);
   block_names_.reserve(num_blocks);
   block_bit_ids_.reserve(num_blocks);
   block_path_ids_.reserve(num_blocks);
@@ -155,16 +164,15 @@ void BitstreamManager::reserve_blocks(const size_t& num_blocks) {
 }
 
 void BitstreamManager::reserve_bits(const size_t& num_bits) {
-  bit_ids_.reserve(num_bits);
   bit_values_.reserve(num_bits);
   shared_config_bit_values_.reserve(num_bits);
   bit_parent_block_ids_.reserve(num_bits);
 }
 
 ConfigBlockId BitstreamManager::create_block() {
-  ConfigBlockId block = ConfigBlockId(block_ids_.size());
+  ConfigBlockId block = ConfigBlockId(num_blocks_);
   /* Add a new bit, and allocate associated data structures */
-  block_ids_.push_back(block);
+  num_blocks_++;
   block_names_.emplace_back();
   block_bit_ids_.emplace_back();
   block_path_ids_.push_back(-2);
@@ -259,11 +267,11 @@ void BitstreamManager::add_shared_config_bit_values(const ConfigBitId& bit, cons
  * Public Validators
  ******************************************************************************/
 bool BitstreamManager::valid_bit_id(const ConfigBitId& bit_id) const {
-  return (size_t(bit_id) < bit_ids_.size()) && (bit_id == bit_ids_[bit_id]);
+  return (size_t(bit_id) < num_bits_);
 }
 
 bool BitstreamManager::valid_block_id(const ConfigBlockId& block_id) const {
-  return (size_t(block_id) < block_ids_.size()) && (block_id == block_ids_[block_id]);
+  return (size_t(block_id) < num_blocks_);
 }
 
 bool BitstreamManager::valid_block_path_id(const ConfigBlockId& block_id) const {
