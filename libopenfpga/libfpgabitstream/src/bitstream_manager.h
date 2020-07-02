@@ -98,6 +98,9 @@ class BitstreamManager {
     /* Reserve memory for a number of clocks */
     void reserve_blocks(const size_t& num_blocks);
 
+    /* Reserve memory for a number of bits */
+    void reserve_bits(const size_t& num_bits);
+
     /* Create a new block of configuration bits */
     ConfigBlockId create_block();
 

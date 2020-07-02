@@ -154,6 +154,13 @@ void BitstreamManager::reserve_blocks(const size_t& num_blocks) {
   child_block_ids_.reserve(num_blocks);
 }
 
+void BitstreamManager::reserve_bits(const size_t& num_bits) {
+  bit_ids_.reserve(num_bits);
+  bit_values_.reserve(num_bits);
+  shared_config_bit_values_.reserve(num_bits);
+  bit_parent_block_ids_.reserve(num_bits);
+}
+
 ConfigBlockId BitstreamManager::create_block() {
   ConfigBlockId block = ConfigBlockId(block_ids_.size());
   /* Add a new bit, and allocate associated data structures */
