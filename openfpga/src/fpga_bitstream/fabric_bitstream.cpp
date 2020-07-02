@@ -10,11 +10,19 @@
 namespace openfpga {
 
 /**************************************************
+ * Public Constructor
+ *************************************************/
+FabricBitstream::FabricBitstream() {
+  num_bits_ = 0;
+}
+
+/**************************************************
  * Public Accessors : Aggregates
  *************************************************/
 /* Find all the configuration bits */
 FabricBitstream::fabric_bit_range FabricBitstream::bits() const {
-  return vtr::make_range(bit_ids_.begin(), bit_ids_.end());
+  return vtr::make_range(fabric_bit_iterator(FabricBitId(0), invalid_bit_ids_),
+                         fabric_bit_iterator(FabricBitId(num_bits_), invalid_bit_ids_));
 }
 
 /******************************************************************************
@@ -56,16 +64,15 @@ char FabricBitstream::bit_din(const FabricBitId& bit_id) const {
  * Public Mutators
  ******************************************************************************/
 void FabricBitstream::reserve(const size_t& num_bits) {
-  bit_ids_.reserve(num_bits);
   config_bit_ids_.reserve(num_bits);
   bit_addresses_.reserve(num_bits);
   bit_dins_.reserve(num_bits);
 }
 
 FabricBitId FabricBitstream::add_bit(const ConfigBitId& config_bit_id) {
-  FabricBitId bit = FabricBitId(bit_ids_.size());
+  FabricBitId bit = FabricBitId(num_bits_);
   /* Add a new bit, and allocate associated data structures */
-  bit_ids_.push_back(bit);
+  num_bits_++;
   config_bit_ids_.push_back(config_bit_id);
   bit_addresses_.emplace_back();
   bit_dins_.push_back(false);
@@ -97,7 +104,6 @@ void FabricBitstream::set_bit_din(const FabricBitId& bit_id,
 }
 
 void FabricBitstream::reverse() {
-  std::reverse(config_bit_ids_.begin(), config_bit_ids_.end());
   std::reverse(bit_addresses_.begin(), bit_addresses_.end());
   std::reverse(bit_dins_.begin(), bit_dins_.end());
 }
@@ -106,7 +112,7 @@ void FabricBitstream::reverse() {
  * Public Validators
  ******************************************************************************/
 char FabricBitstream::valid_bit_id(const FabricBitId& bit_id) const {
-  return (size_t(bit_id) < bit_ids_.size()) && (bit_id == bit_ids_[bit_id]);
+  return (size_t(bit_id) < num_bits_);
 }
 
 } /* end namespace openfpga */
