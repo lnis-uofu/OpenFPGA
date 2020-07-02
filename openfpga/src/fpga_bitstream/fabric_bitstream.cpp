@@ -55,6 +55,13 @@ bool FabricBitstream::bit_din(const FabricBitId& bit_id) const {
 /******************************************************************************
  * Public Mutators
  ******************************************************************************/
+void FabricBitstream::reserve(const size_t& num_bits) {
+  bit_ids_.reserve(num_bits);
+  config_bit_ids_.reserve(num_bits);
+  bit_addresses_.reserve(num_bits);
+  bit_dins_.reserve(num_bits);
+}
+
 FabricBitId FabricBitstream::add_bit(const ConfigBitId& config_bit_id) {
   FabricBitId bit = FabricBitId(bit_ids_.size());
   /* Add a new bit, and allocate associated data structures */

@@ -495,6 +495,10 @@ FabricBitstream build_fabric_dependent_bitstream(const BitstreamManager& bitstre
   VTR_ASSERT(1 == top_block.size());
   VTR_ASSERT(0 == top_module_name.compare(bitstream_manager.block_name(top_block[0])));
 
+  /* Reserve bits before build-up */
+  fabric_bitstream.reserve(bitstream_manager.bits().size());
+
+  /* Start build-up formally */
   build_module_fabric_dependent_bitstream(config_protocol,
                                           bitstream_manager, top_block[0],
                                           module_manager, top_module, 

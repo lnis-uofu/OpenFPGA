@@ -60,6 +60,9 @@ class FabricBitstream {
     bool bit_din(const FabricBitId& bit_id) const;
 
   public:  /* Public Mutators */
+    /* Reserve config bits */
+    void reserve(const size_t& num_bits);
+
     /* Add a new configuration bit to the bitstream manager */
     FabricBitId add_bit(const ConfigBitId& config_bit_id);
 
