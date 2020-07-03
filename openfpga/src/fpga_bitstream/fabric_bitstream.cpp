@@ -76,7 +76,7 @@ FabricBitId FabricBitstream::add_bit(const ConfigBitId& config_bit_id) {
   num_bits_++;
   config_bit_ids_.push_back(config_bit_id);
   bit_addresses_.emplace_back();
-  bit_dins_.push_back(false);
+  bit_dins_.push_back('0');
 
   return bit; 
 }
