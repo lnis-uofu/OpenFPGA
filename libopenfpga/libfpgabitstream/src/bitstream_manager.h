@@ -175,15 +175,21 @@ class BitstreamManager {
 
     /* Add a path id to a block */
     void add_path_id_to_block(const ConfigBlockId& block, const int& path_id);
+ 
+    /* Reserve input net ids for a block */
+    void reserve_block_input_net_ids(const ConfigBlockId& block, const size_t& num_input_net_ids);
 
     /* Add an input net id to a block */
     void add_input_net_id_to_block(const ConfigBlockId& block, const std::string& input_net_id);
+
+    /* Reserve output net ids for a block */
+    void reserve_block_output_net_ids(const ConfigBlockId& block, const size_t& num_output_net_ids);
 
     /* Add an output net id to a block */
     void add_output_net_id_to_block(const ConfigBlockId& block, const std::string& output_net_id);
 
     /* Add share configuration bits to a configuration bit */
-    void add_shared_config_bit_values(const ConfigBitId& bit, const std::vector<bool>& shared_config_bits);
+    void add_shared_config_bit_values(const ConfigBitId& bit, const std::vector<char>& shared_config_bits);
 
   public:  /* Public Validators */
     bool valid_bit_id(const ConfigBitId& bit_id) const;
@@ -220,7 +226,7 @@ class BitstreamManager {
      *   -Bitstream manager will NOT check if the id is good for bitstream builders
      *    It just store the results
      */
-    vtr::vector<ConfigBlockId, int> block_path_ids_; 
+    vtr::vector<ConfigBlockId, uint8_t> block_path_ids_; 
 
     /* Net ids that are mapped to inputs and outputs of this block
      * 
@@ -236,9 +242,9 @@ class BitstreamManager {
     std::unordered_set<ConfigBitId> invalid_bit_ids_; 
     vtr::vector<ConfigBitId, ConfigBlockId> bit_parent_block_ids_;
     /* value of a bit in the Bitstream */
-    vtr::vector<ConfigBitId, bool> bit_values_;
+    vtr::vector<ConfigBitId, char> bit_values_;
     /* value of a shared configuration bits in the Bitstream */
-    vtr::vector<ConfigBitId, std::vector<bool>> shared_config_bit_values_;
+    vtr::vector<ConfigBitId, std::vector<char>> shared_config_bit_values_;
 };
 
 } /* end namespace openfpga */

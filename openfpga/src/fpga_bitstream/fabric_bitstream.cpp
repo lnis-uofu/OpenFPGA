@@ -14,6 +14,7 @@ namespace openfpga {
  *************************************************/
 FabricBitstream::FabricBitstream() {
   num_bits_ = 0;
+  invalid_bit_ids_.clear();
 }
 
 /**************************************************

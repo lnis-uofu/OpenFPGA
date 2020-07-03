@@ -105,6 +105,7 @@ void build_switch_block_mux_bitstream(BitstreamManager& bitstream_manager,
   }
   /* Record path ids, input and output nets */
   bitstream_manager.add_path_id_to_block(mux_mem_block, path_id);
+  bitstream_manager.reserve_block_input_net_ids(mux_mem_block, input_nets.size());
   for (const ClusterNetId& input_net : input_nets) {
     AtomNetId input_atom_net = atom_ctx.lookup.atom_net(input_net);
     if (true == atom_ctx.nlist.valid_net_id(input_atom_net)) {
@@ -114,6 +115,7 @@ void build_switch_block_mux_bitstream(BitstreamManager& bitstream_manager,
     }
   }
   AtomNetId output_atom_net = atom_ctx.lookup.atom_net(output_net);
+  bitstream_manager.reserve_block_output_net_ids(mux_mem_block, 1);
   if (true == atom_ctx.nlist.valid_net_id(output_atom_net)) {
     bitstream_manager.add_output_net_id_to_block(mux_mem_block, atom_ctx.nlist.net_name(output_atom_net));
   } else {
@@ -296,6 +298,7 @@ void build_connection_block_mux_bitstream(BitstreamManager& bitstream_manager,
   }
   /* Record path ids, input and output nets */
   bitstream_manager.add_path_id_to_block(mux_mem_block, path_id);
+  bitstream_manager.reserve_block_input_net_ids(mux_mem_block, input_nets.size());
   for (const ClusterNetId& input_net : input_nets) {
     AtomNetId input_atom_net = atom_ctx.lookup.atom_net(input_net);
     if (true == atom_ctx.nlist.valid_net_id(input_atom_net)) {
@@ -305,6 +308,7 @@ void build_connection_block_mux_bitstream(BitstreamManager& bitstream_manager,
     }
   }
   AtomNetId output_atom_net = atom_ctx.lookup.atom_net(output_net);
+  bitstream_manager.reserve_block_output_net_ids(mux_mem_block, 1);
   if (true == atom_ctx.nlist.valid_net_id(output_atom_net)) {
     bitstream_manager.add_output_net_id_to_block(mux_mem_block, atom_ctx.nlist.net_name(output_atom_net));
   } else {

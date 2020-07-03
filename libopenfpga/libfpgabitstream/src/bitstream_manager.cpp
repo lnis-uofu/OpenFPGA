@@ -15,6 +15,8 @@ namespace openfpga {
 BitstreamManager::BitstreamManager() {
   num_blocks_ = 0;
   num_bits_ = 0;
+  invalid_block_ids_.clear();
+  invalid_bit_ids_.clear();
 }
 
 /**************************************************
@@ -39,7 +41,7 @@ bool BitstreamManager::bit_value(const ConfigBitId& bit_id) const {
   /* Ensure a valid id */
   VTR_ASSERT(true == valid_bit_id(bit_id));
 
-  return bit_values_[bit_id];
+  return '1' == bit_values_[bit_id];
 }
 
 std::string BitstreamManager::block_name(const ConfigBlockId& block_id) const {
@@ -146,7 +148,11 @@ ConfigBitId BitstreamManager::add_bit(const bool& bit_value) {
   ConfigBitId bit = ConfigBitId(num_bits_);
   /* Add a new bit, and allocate associated data structures */
   num_bits_++;
-  bit_values_.push_back(bit_value);
+  if (true == bit_value) {
+    bit_values_.push_back('1');
+  } else {
+    bit_values_.push_back('0');
+  }
   shared_config_bit_values_.emplace_back();
   bit_parent_block_ids_.push_back(ConfigBlockId::INVALID());
 
@@ -238,6 +244,14 @@ void BitstreamManager::add_path_id_to_block(const ConfigBlockId& block, const in
   block_path_ids_[block] = path_id;
 }
 
+void BitstreamManager::reserve_block_input_net_ids(const ConfigBlockId& block,
+                                                   const size_t& num_input_net_ids) {
+  /* Ensure the input ids are valid */
+  VTR_ASSERT(true == valid_block_id(block));
+
+  block_input_net_ids_[block].reserve(num_input_net_ids);
+}
+
 void BitstreamManager::add_input_net_id_to_block(const ConfigBlockId& block,
                                                  const std::string& input_net_id) {
   /* Ensure the input ids are valid */
@@ -245,6 +259,14 @@ void BitstreamManager::add_input_net_id_to_block(const ConfigBlockId& block,
 
   /* Add the bit to the block */
   block_input_net_ids_[block].push_back(input_net_id);
+}
+
+void BitstreamManager::reserve_block_output_net_ids(const ConfigBlockId& block,
+                                                    const size_t& num_output_net_ids) {
+  /* Ensure the input ids are valid */
+  VTR_ASSERT(true == valid_block_id(block));
+
+  block_output_net_ids_[block].reserve(num_output_net_ids);
 }
 
 void BitstreamManager::add_output_net_id_to_block(const ConfigBlockId& block,
@@ -256,7 +278,7 @@ void BitstreamManager::add_output_net_id_to_block(const ConfigBlockId& block,
   block_output_net_ids_[block].push_back(output_net_id);
 }
 
-void BitstreamManager::add_shared_config_bit_values(const ConfigBitId& bit, const std::vector<bool>& shared_config_bits) {
+void BitstreamManager::add_shared_config_bit_values(const ConfigBitId& bit, const std::vector<char>& shared_config_bits) {
   /* Ensure the input ids are valid */
   VTR_ASSERT(true == valid_bit_id(bit));
  

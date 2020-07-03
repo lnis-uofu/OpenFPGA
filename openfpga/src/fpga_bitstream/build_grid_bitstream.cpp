@@ -221,6 +221,7 @@ void build_physical_block_pin_interc_bitstream(BitstreamManager& bitstream_manag
     }
     /* Record path ids, input and output nets */
     bitstream_manager.add_path_id_to_block(mux_mem_block, mux_input_pin_id);
+    bitstream_manager.reserve_block_input_net_ids(mux_mem_block, input_nets.size());
     for (const AtomNetId& input_net : input_nets) {
       if (true == atom_ctx.nlist.valid_net_id(input_net)) {
         bitstream_manager.add_input_net_id_to_block(mux_mem_block, atom_ctx.nlist.net_name(input_net));
@@ -229,6 +230,7 @@ void build_physical_block_pin_interc_bitstream(BitstreamManager& bitstream_manag
       }
     }
     if (true == atom_ctx.nlist.valid_net_id(output_net)) {
+    bitstream_manager.reserve_block_output_net_ids(mux_mem_block, 1);
       bitstream_manager.add_output_net_id_to_block(mux_mem_block, atom_ctx.nlist.net_name(output_net));
     } else {
       bitstream_manager.add_output_net_id_to_block(mux_mem_block, std::string("unmapped"));
