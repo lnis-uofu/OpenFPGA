@@ -77,7 +77,16 @@ std::vector<ConfigBitId> BitstreamManager::block_bits(const ConfigBlockId& block
   /* Ensure the input ids are valid */
   VTR_ASSERT(true == valid_block_id(block_id));
 
-  return block_bit_ids_[block_id];
+  size_t lsb = block_bit_id_lsbs_[block_id]; 
+  size_t msb = block_bit_id_msbs_[block_id]; 
+
+  std::vector<ConfigBitId> bits(msb - lsb + 1, ConfigBitId::INVALID());
+
+  for (size_t i = lsb; i < msb + 1; ++i) {
+    bits[i - lsb] = ConfigBitId(i);
+  }
+
+  return bits;
 }
 
 /* Find the child block in a bitstream manager with a given name */
@@ -142,7 +151,8 @@ ConfigBitId BitstreamManager::add_bit(const bool& bit_value) {
 
 void BitstreamManager::reserve_blocks(const size_t& num_blocks) {
   block_names_.reserve(num_blocks);
-  block_bit_ids_.reserve(num_blocks);
+  block_bit_id_lsbs_.reserve(num_blocks);
+  block_bit_id_msbs_.reserve(num_blocks);
   block_path_ids_.reserve(num_blocks);
   block_input_net_ids_.reserve(num_blocks);
   block_output_net_ids_.reserve(num_blocks);
@@ -159,7 +169,8 @@ ConfigBlockId BitstreamManager::create_block() {
   /* Add a new bit, and allocate associated data structures */
   num_blocks_++;
   block_names_.emplace_back();
-  block_bit_ids_.emplace_back();
+  block_bit_id_lsbs_.emplace_back(0);
+  block_bit_id_msbs_.emplace_back(-1);
   block_path_ids_.push_back(-2);
   block_input_net_ids_.emplace_back();
   block_output_net_ids_.emplace_back();
@@ -201,21 +212,19 @@ void BitstreamManager::add_child_block(const ConfigBlockId& parent_block, const 
   parent_block_ids_[child_block] = parent_block;
 }
 
-void BitstreamManager::reserve_block_bits(const ConfigBlockId& block,
-                                          const size_t& num_bits) {
+void BitstreamManager::add_block_bits(const ConfigBlockId& block,
+                                      const std::vector<bool>& block_bitstream) {
   /* Ensure the input ids are valid */
   VTR_ASSERT(true == valid_block_id(block));
 
-  block_bit_ids_[block].reserve(num_bits);
-}
-
-void BitstreamManager::add_bit_to_block(const ConfigBlockId& block, const ConfigBitId& bit) {
-  /* Ensure the input ids are valid */
-  VTR_ASSERT(true == valid_block_id(block));
-  VTR_ASSERT(true == valid_bit_id(bit));
-
-  /* Add the bit to the block */
-  block_bit_ids_[block].push_back(bit);
+  /* Add the bit to the block, record anchors in bit indexing for block-level searching */
+  size_t lsb = num_bits_;
+  size_t msb = num_bits_ + block_bitstream.size() - 1;
+  for (const bool& bit : block_bitstream) {
+    add_bit(bit);
+  }
+  block_bit_id_lsbs_[block] = lsb;
+  block_bit_id_msbs_[block] = msb;
 }
 
 void BitstreamManager::add_path_id_to_block(const ConfigBlockId& block, const int& path_id) {

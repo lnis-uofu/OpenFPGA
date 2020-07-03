@@ -98,12 +98,7 @@ void build_switch_block_mux_bitstream(BitstreamManager& bitstream_manager,
   VTR_ASSERT(mux_bitstream.size() == module_manager.module_port(mux_mem_module, mux_mem_out_port_id).get_width());
 
   /* Add the bistream to the bitstream manager */
-  bitstream_manager.reserve_block_bits(mux_mem_block, mux_bitstream.size());
-  for (const bool& bit : mux_bitstream) {
-    ConfigBitId config_bit = bitstream_manager.add_bit(bit);
-    /* Link the memory bits to the mux mem block */
-    bitstream_manager.add_bit_to_block(mux_mem_block, config_bit);
-  }
+  bitstream_manager.add_block_bits(mux_mem_block, mux_bitstream);
   /* Record path ids, input and output nets */
   bitstream_manager.add_path_id_to_block(mux_mem_block, path_id);
   bitstream_manager.reserve_block_input_net_ids(mux_mem_block, input_nets.size());
@@ -292,12 +287,7 @@ void build_connection_block_mux_bitstream(BitstreamManager& bitstream_manager,
   VTR_ASSERT(mux_bitstream.size() == module_manager.module_port(mux_mem_module, mux_mem_out_port_id).get_width());
 
   /* Add the bistream to the bitstream manager */
-  bitstream_manager.reserve_block_bits(mux_mem_block, mux_bitstream.size());
-  for (const bool& bit : mux_bitstream) {
-    ConfigBitId config_bit = bitstream_manager.add_bit(bit);
-    /* Link the memory bits to the mux mem block */
-    bitstream_manager.add_bit_to_block(mux_mem_block, config_bit);
-  }
+  bitstream_manager.add_block_bits(mux_mem_block, mux_bitstream);
   /* Record path ids, input and output nets */
   bitstream_manager.add_path_id_to_block(mux_mem_block, path_id);
   bitstream_manager.reserve_block_input_net_ids(mux_mem_block, input_nets.size());

@@ -166,12 +166,9 @@ class BitstreamManager {
     /* Set a block as a child block of another */
     void add_child_block(const ConfigBlockId& parent_block, const ConfigBlockId& child_block);
 
-    /* Reserve a number of configuration bits for a block */
-    void reserve_block_bits(const ConfigBlockId& block,
-                            const size_t& num_bits);
-
-    /* Add a configuration bit to a block */
-    void add_bit_to_block(const ConfigBlockId& block, const ConfigBitId& bit);
+    /* Add a bitstream to a block */
+    void add_block_bits(const ConfigBlockId& block,
+                        const std::vector<bool>& block_bitstream);
 
     /* Add a path id to a block */
     void add_path_id_to_block(const ConfigBlockId& block, const int& path_id);
@@ -199,7 +196,8 @@ class BitstreamManager {
     /* Unique id of a block of bits in the Bitstream */
     size_t num_blocks_; 
     std::unordered_set<ConfigBlockId> invalid_block_ids_;
-    vtr::vector<ConfigBlockId, std::vector<ConfigBitId>> block_bit_ids_; 
+    vtr::vector<ConfigBlockId, size_t> block_bit_id_lsbs_; 
+    vtr::vector<ConfigBlockId, size_t> block_bit_id_msbs_; 
 
     /* Back-annotation for the bits */
     /* Parent block of a bit in the Bitstream 
