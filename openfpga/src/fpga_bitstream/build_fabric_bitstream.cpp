@@ -425,8 +425,8 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
     /* Reserve bits before build-up */
     fabric_bitstream.set_use_address(true);
     fabric_bitstream.set_use_wl_address(true);
-    fabric_bitstream.set_bl_address_length(bl_port_info.get_width());
-    fabric_bitstream.set_wl_address_length(wl_port_info.get_width());
+    fabric_bitstream.set_bl_address_length(bl_addr_port_info.get_width());
+    fabric_bitstream.set_wl_address_length(wl_addr_port_info.get_width());
     fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
 
     rec_build_module_fabric_dependent_memory_bank_bitstream(bitstream_manager, top_block,
