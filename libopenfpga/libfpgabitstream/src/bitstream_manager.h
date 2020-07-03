@@ -109,8 +109,10 @@ class BitstreamManager {
 
   public: /* Public aggregators */
     /* Find all the configuration bits */
+    size_t num_bits() const;
     config_bit_range bits() const;
 
+    size_t num_blocks() const;
     config_block_range blocks() const;
 
   public:  /* Public Accessors */

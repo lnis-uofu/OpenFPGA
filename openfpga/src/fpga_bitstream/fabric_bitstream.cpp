@@ -20,6 +20,10 @@ FabricBitstream::FabricBitstream() {
 /**************************************************
  * Public Accessors : Aggregates
  *************************************************/
+size_t FabricBitstream::num_bits() const {
+  return num_bits_;
+}
+
 /* Find all the configuration bits */
 FabricBitstream::fabric_bit_range FabricBitstream::bits() const {
   return vtr::make_range(fabric_bit_iterator(FabricBitId(0), invalid_bit_ids_),

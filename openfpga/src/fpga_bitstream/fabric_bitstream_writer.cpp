@@ -101,7 +101,7 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
     VTR_LOG_ERROR("Received empty file name to output bitstream!\n\tPlease specify a valid file name.\n");
   }
 
-  std::string timer_message = std::string("Write ") + std::to_string(fabric_bitstream.bits().size()) + std::string(" fabric bitstream into plain text file '") + fname + std::string("'");
+  std::string timer_message = std::string("Write ") + std::to_string(fabric_bitstream.num_bits()) + std::string(" fabric bitstream into plain text file '") + fname + std::string("'");
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   /* Create the file stream */

@@ -23,9 +23,17 @@ BitstreamManager::BitstreamManager() {
  * Public Accessors : Aggregates
  *************************************************/
 /* Find all the configuration bits */
+size_t BitstreamManager::num_bits() const {
+  return num_bits_;
+}
+
 BitstreamManager::config_bit_range BitstreamManager::bits() const {
   return vtr::make_range(config_bit_iterator(ConfigBitId(0), invalid_bit_ids_),
                          config_bit_iterator(ConfigBitId(num_bits_), invalid_bit_ids_));
+}
+
+size_t BitstreamManager::num_blocks() const {
+  return num_blocks_;
 }
 
 /* Find all the configuration blocks */

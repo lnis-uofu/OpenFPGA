@@ -101,6 +101,7 @@ class FabricBitstream {
 
   public: /* Public aggregators */
     /* Find all the configuration bits */
+    size_t num_bits() const;
     fabric_bit_range bits() const;
 
   public:  /* Public Accessors */

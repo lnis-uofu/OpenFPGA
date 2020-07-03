@@ -380,7 +380,7 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
   switch (config_protocol.type()) {
   case CONFIG_MEM_STANDALONE: {
     /* Reserve bits before build-up */
-    fabric_bitstream.reserve_bits(bitstream_manager.bits().size());
+    fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
 
     rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, top_block,
                                                       module_manager, top_module, 
@@ -389,7 +389,7 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
   }
   case CONFIG_MEM_SCAN_CHAIN: { 
     /* Reserve bits before build-up */
-    fabric_bitstream.reserve_bits(bitstream_manager.bits().size());
+    fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
 
     rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, top_block,
                                                       module_manager, top_module, 
@@ -401,7 +401,7 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
     /* Reserve bits before build-up */
     fabric_bitstream.set_use_address(true);
     fabric_bitstream.set_use_wl_address(true);
-    fabric_bitstream.reserve_bits(bitstream_manager.bits().size());
+    fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
 
     size_t cur_mem_index = 0;
     /* Find BL address port size */
@@ -438,7 +438,7 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
   case CONFIG_MEM_FRAME_BASED: {
     /* Reserve bits before build-up */
     fabric_bitstream.set_use_address(true);
-    fabric_bitstream.reserve_bits(bitstream_manager.bits().size());
+    fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
 
     rec_build_module_fabric_dependent_frame_bitstream(bitstream_manager,
                                                       std::vector<ConfigBlockId>(1, top_block),
@@ -474,7 +474,7 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
    */
 
   /* Ensure our fabric bitstream is in the same size as device bistream */
-  VTR_ASSERT(bitstream_manager.bits().size() == fabric_bitstream.bits().size());
+  VTR_ASSERT(bitstream_manager.num_bits() == fabric_bitstream.num_bits());
 }
 
 /********************************************************************
@@ -518,7 +518,7 @@ FabricBitstream build_fabric_dependent_bitstream(const BitstreamManager& bitstre
 
   VTR_LOGV(verbose,
            "Built %lu configuration bits for fabric\n",
-           fabric_bitstream.bits().size());
+           fabric_bitstream.num_bits());
 
   return fabric_bitstream;
 }

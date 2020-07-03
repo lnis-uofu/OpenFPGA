@@ -234,7 +234,7 @@ namespace openfpga
                                     atom_ctx, place_ctx, io_location_map,
                                     module_manager,
                                     config_protocol_type,
-                                    bitstream_manager.bits().size(),
+                                    bitstream_manager.num_bits(),
                                     simulation_setting.num_clock_cycles(),
                                     simulation_setting.programming_clock_frequency(),
                                     simulation_setting.operating_clock_frequency());

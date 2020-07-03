@@ -562,7 +562,7 @@ static
 size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz_type,
                                          const bool& fast_configuration,
                                          const FabricBitstream& fabric_bitstream) {
-  size_t num_config_clock_cycles = 1 + fabric_bitstream.bits().size();
+  size_t num_config_clock_cycles = 1 + fabric_bitstream.num_bits();
 
   /* Branch on the type of configuration protocol */
   switch (sram_orgz_type) {
