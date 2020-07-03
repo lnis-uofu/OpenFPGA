@@ -129,12 +129,6 @@ class BitstreamManager {
     /* Find all the bits that belong to a block */
     std::vector<ConfigBitId> block_bits(const ConfigBlockId& block_id) const;
 
-    /* Find the parent block of a bit */
-    ConfigBlockId bit_parent_block(const ConfigBitId& bit_id) const;
-
-    /* Find the index of a configuration bit in its parent block */
-    size_t bit_index_in_parent_block(const ConfigBitId& bit_id) const; 
-
     /* Find the child block in a bitstream manager with a given name */
     ConfigBlockId find_child_block(const ConfigBlockId& block_id, const std::string& child_block_name) const;
 
@@ -241,7 +235,6 @@ class BitstreamManager {
     /* Unique id of a bit in the Bitstream */
     size_t num_bits_; 
     std::unordered_set<ConfigBitId> invalid_bit_ids_; 
-    vtr::vector<ConfigBitId, ConfigBlockId> bit_parent_block_ids_;
     /* value of a bit in the Bitstream */
     vtr::vector<ConfigBitId, char> bit_values_;
 };

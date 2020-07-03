@@ -72,31 +72,6 @@ std::vector<ConfigBitId> BitstreamManager::block_bits(const ConfigBlockId& block
   return block_bit_ids_[block_id];
 }
 
-ConfigBlockId BitstreamManager::bit_parent_block(const ConfigBitId& bit_id) const {
-  /* Ensure the input ids are valid */
-  VTR_ASSERT(true == valid_bit_id(bit_id));
-
-  return bit_parent_block_ids_[bit_id];
-}
-
-size_t BitstreamManager::bit_index_in_parent_block(const ConfigBitId& bit_id) const {
-  /* Ensure the input ids are valid */
-  VTR_ASSERT(true == valid_bit_id(bit_id));
-
-  ConfigBlockId bit_parent_block = bit_parent_block_ids_[bit_id];
-
-  VTR_ASSERT(true == valid_block_id(bit_parent_block));
-
-  for (size_t index = 0; index < block_bits(bit_parent_block).size(); ++index) {
-    if (bit_id == block_bits(bit_parent_block)[index]) {
-      return index;
-    }
-  }
-
-  /* Not found, return in valid value */
-  return size_t(-1); 
-}
-
 /* Find the child block in a bitstream manager with a given name */
 ConfigBlockId BitstreamManager::find_child_block(const ConfigBlockId& block_id, 
                                                  const std::string& child_block_name) const {
@@ -153,7 +128,6 @@ ConfigBitId BitstreamManager::add_bit(const bool& bit_value) {
   } else {
     bit_values_.push_back('0');
   }
-  bit_parent_block_ids_.push_back(ConfigBlockId::INVALID());
 
   return bit; 
 }
@@ -170,7 +144,6 @@ void BitstreamManager::reserve_blocks(const size_t& num_blocks) {
 
 void BitstreamManager::reserve_bits(const size_t& num_bits) {
   bit_values_.reserve(num_bits);
-  bit_parent_block_ids_.reserve(num_bits);
 }
 
 ConfigBlockId BitstreamManager::create_block() {
@@ -233,13 +206,8 @@ void BitstreamManager::add_bit_to_block(const ConfigBlockId& block, const Config
   VTR_ASSERT(true == valid_block_id(block));
   VTR_ASSERT(true == valid_bit_id(bit));
 
-  /* We should have only a parent block for each bit! */
-  VTR_ASSERT(ConfigBlockId::INVALID() == bit_parent_block_ids_[bit]);
-
   /* Add the bit to the block */
   block_bit_ids_[block].push_back(bit);
-  /* Register the block in the parent of the bit */
-  bit_parent_block_ids_[bit] = block;
 }
 
 void BitstreamManager::add_path_id_to_block(const ConfigBlockId& block, const int& path_id) {
