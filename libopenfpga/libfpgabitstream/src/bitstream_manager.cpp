@@ -220,6 +220,14 @@ void BitstreamManager::add_child_block(const ConfigBlockId& parent_block, const 
   parent_block_ids_[child_block] = parent_block;
 }
 
+void BitstreamManager::reserve_block_bits(const ConfigBlockId& block,
+                                          const size_t& num_bits) {
+  /* Ensure the input ids are valid */
+  VTR_ASSERT(true == valid_block_id(block));
+
+  block_bit_ids_[block].reserve(num_bits);
+}
+
 void BitstreamManager::add_bit_to_block(const ConfigBlockId& block, const ConfigBitId& bit) {
   /* Ensure the input ids are valid */
   VTR_ASSERT(true == valid_block_id(block));

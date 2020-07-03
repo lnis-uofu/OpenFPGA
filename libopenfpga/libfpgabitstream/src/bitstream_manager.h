@@ -170,6 +170,10 @@ class BitstreamManager {
     /* Set a block as a child block of another */
     void add_child_block(const ConfigBlockId& parent_block, const ConfigBlockId& child_block);
 
+    /* Reserve a number of configuration bits for a block */
+    void reserve_block_bits(const ConfigBlockId& block,
+                            const size_t& num_bits);
+
     /* Add a configuration bit to a block */
     void add_bit_to_block(const ConfigBlockId& block, const ConfigBitId& bit);
 

@@ -98,6 +98,7 @@ void build_switch_block_mux_bitstream(BitstreamManager& bitstream_manager,
   VTR_ASSERT(mux_bitstream.size() == module_manager.module_port(mux_mem_module, mux_mem_out_port_id).get_width());
 
   /* Add the bistream to the bitstream manager */
+  bitstream_manager.reserve_block_bits(mux_mem_block, mux_bitstream.size());
   for (const bool& bit : mux_bitstream) {
     ConfigBitId config_bit = bitstream_manager.add_bit(bit);
     /* Link the memory bits to the mux mem block */
@@ -291,6 +292,7 @@ void build_connection_block_mux_bitstream(BitstreamManager& bitstream_manager,
   VTR_ASSERT(mux_bitstream.size() == module_manager.module_port(mux_mem_module, mux_mem_out_port_id).get_width());
 
   /* Add the bistream to the bitstream manager */
+  bitstream_manager.reserve_block_bits(mux_mem_block, mux_bitstream.size());
   for (const bool& bit : mux_bitstream) {
     ConfigBitId config_bit = bitstream_manager.add_bit(bit);
     /* Link the memory bits to the mux mem block */
