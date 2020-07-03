@@ -188,9 +188,6 @@ class BitstreamManager {
     /* Add an output net id to a block */
     void add_output_net_id_to_block(const ConfigBlockId& block, const std::string& output_net_id);
 
-    /* Add share configuration bits to a configuration bit */
-    void add_shared_config_bit_values(const ConfigBitId& bit, const std::vector<char>& shared_config_bits);
-
   public:  /* Public Validators */
     bool valid_bit_id(const ConfigBitId& bit_id) const;
 
@@ -243,8 +240,6 @@ class BitstreamManager {
     vtr::vector<ConfigBitId, ConfigBlockId> bit_parent_block_ids_;
     /* value of a bit in the Bitstream */
     vtr::vector<ConfigBitId, char> bit_values_;
-    /* value of a shared configuration bits in the Bitstream */
-    vtr::vector<ConfigBitId, std::vector<char>> shared_config_bit_values_;
 };
 
 } /* end namespace openfpga */

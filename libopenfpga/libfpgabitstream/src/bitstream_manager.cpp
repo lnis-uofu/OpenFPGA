@@ -153,7 +153,6 @@ ConfigBitId BitstreamManager::add_bit(const bool& bit_value) {
   } else {
     bit_values_.push_back('0');
   }
-  shared_config_bit_values_.emplace_back();
   bit_parent_block_ids_.push_back(ConfigBlockId::INVALID());
 
   return bit; 
@@ -171,7 +170,6 @@ void BitstreamManager::reserve_blocks(const size_t& num_blocks) {
 
 void BitstreamManager::reserve_bits(const size_t& num_bits) {
   bit_values_.reserve(num_bits);
-  shared_config_bit_values_.reserve(num_bits);
   bit_parent_block_ids_.reserve(num_bits);
 }
 
@@ -276,13 +274,6 @@ void BitstreamManager::add_output_net_id_to_block(const ConfigBlockId& block,
 
   /* Add the bit to the block */
   block_output_net_ids_[block].push_back(output_net_id);
-}
-
-void BitstreamManager::add_shared_config_bit_values(const ConfigBitId& bit, const std::vector<char>& shared_config_bits) {
-  /* Ensure the input ids are valid */
-  VTR_ASSERT(true == valid_bit_id(bit));
- 
-  shared_config_bit_values_[bit] = shared_config_bits;
 }
 
 /******************************************************************************
