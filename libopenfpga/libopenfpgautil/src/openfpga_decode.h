@@ -21,6 +21,8 @@ std::vector<size_t> itobin_vec(const size_t& in_int,
 std::vector<char> itobin_charvec(const size_t& in_int,
                                  const size_t& bin_len);
 
+size_t bintoi_charvec(const std::vector<char>& bin);
+
 } /* namespace openfpga ends */
 
 #endif

@@ -398,10 +398,6 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
     break;
   }
   case CONFIG_MEM_MEMORY_BANK: { 
-    /* Reserve bits before build-up */
-    fabric_bitstream.set_use_address(true);
-    fabric_bitstream.set_use_wl_address(true);
-    fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
 
     size_t cur_mem_index = 0;
     /* Find BL address port size */
@@ -426,6 +422,13 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
     ModulePortId wl_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
     BasicPort wl_port_info = module_manager.module_port(wl_decoder_module, wl_port);
 
+    /* Reserve bits before build-up */
+    fabric_bitstream.set_use_address(true);
+    fabric_bitstream.set_use_wl_address(true);
+    fabric_bitstream.set_bl_address_length(bl_port_info.get_width());
+    fabric_bitstream.set_wl_address_length(wl_port_info.get_width());
+    fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
+
     rec_build_module_fabric_dependent_memory_bank_bitstream(bitstream_manager, top_block,
                                                             module_manager, top_module, top_module, 
                                                             bl_addr_port_info.get_width(),
@@ -436,9 +439,15 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
     break;
   }
   case CONFIG_MEM_FRAME_BASED: {
+
+    /* Find address port size */
+    ModulePortId addr_port = module_manager.find_module_port(top_module, std::string(DECODER_ADDRESS_PORT_NAME));
+    BasicPort addr_port_info = module_manager.module_port(top_module, addr_port);
+
     /* Reserve bits before build-up */
     fabric_bitstream.set_use_address(true);
     fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
+    fabric_bitstream.set_address_length(addr_port_info.get_width());
 
     rec_build_module_fabric_dependent_frame_bitstream(bitstream_manager,
                                                       std::vector<ConfigBlockId>(1, top_block),

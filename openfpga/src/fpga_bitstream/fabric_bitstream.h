@@ -152,11 +152,14 @@ class FabricBitstream {
      * This function is only applicable before any bits are added
      */
     void set_use_address(const bool& enable);
+    void set_address_length(const size_t& length);
+    void set_bl_address_length(const size_t& length);
 
     /* Enable the use of WL-address related data
      * Same priniciple as the set_use_address()  
      */
     void set_use_wl_address(const bool& enable);
+    void set_wl_address_length(const size_t& length);
 
   public:  /* Public Validators */
     char valid_bit_id(const FabricBitId& bit_id) const;
@@ -171,14 +174,17 @@ class FabricBitstream {
     bool use_address_;
     bool use_wl_address_;
 
+    size_t address_length_;
+    size_t wl_address_length_;
+
     /* Address bits: this is designed for memory decoders
      * Here we store the binary format of the address, which can be loaded
      * to the configuration protocol directly 
      *
      * We use a 2-element array, as we may have a BL address and a WL address
      */
-    vtr::vector<FabricBitId, std::vector<char>> bit_addresses_;
-    vtr::vector<FabricBitId, std::vector<char>> bit_wl_addresses_;
+    vtr::vector<FabricBitId, size_t> bit_addresses_;
+    vtr::vector<FabricBitId, size_t> bit_wl_addresses_;
 
     /* Data input (Din) bits: this is designed for memory decoders */
     vtr::vector<FabricBitId, char> bit_dins_;

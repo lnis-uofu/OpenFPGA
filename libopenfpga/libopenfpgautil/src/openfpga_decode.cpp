@@ -103,4 +103,29 @@ std::vector<char> itobin_charvec(const size_t& in_int,
   return ret;
 }
 
+/******************************************************************** 
+ * Converter a binary vector to an integer
+ * For example: 
+ *   Binary length : 3
+ *   Input:
+ *     index | 0 | 1 | 2
+ *     ret   | 0 | 0 | 1 
+ *
+ *   Output integer: 4
+ *
+ * This function is optimized to return a vector of char
+ * which has a smaller memory footprint than size_t
+ ********************************************************************/
+size_t bintoi_charvec(const std::vector<char>& bin) {
+  size_t ret = 0;
+
+  for (size_t i = 0; i < bin.size(); ++i) {
+    if ('1' == bin[i]) {
+      ret += pow(2., i);
+    }
+  }
+
+  return ret;
+}
+
 } /* end namespace openfpga */

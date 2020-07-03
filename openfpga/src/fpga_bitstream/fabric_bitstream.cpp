@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "vtr_assert.h"
+#include "openfpga_decode.h"
 #include "fabric_bitstream.h"
 
 /* begin namespace openfpga */
@@ -15,6 +16,8 @@ namespace openfpga {
 FabricBitstream::FabricBitstream() {
   num_bits_ = 0;
   invalid_bit_ids_.clear();
+  address_length_ = 0;
+  wl_address_length_ = 0;
 }
 
 /**************************************************
@@ -45,7 +48,7 @@ std::vector<char> FabricBitstream::bit_address(const FabricBitId& bit_id) const 
   VTR_ASSERT(true == valid_bit_id(bit_id));
   VTR_ASSERT(true == use_address_);
 
-  return bit_addresses_[bit_id];
+  return itobin_charvec(bit_addresses_[bit_id], address_length_);
 }
 
 std::vector<char> FabricBitstream::bit_bl_address(const FabricBitId& bit_id) const {
@@ -58,7 +61,7 @@ std::vector<char> FabricBitstream::bit_wl_address(const FabricBitId& bit_id) con
   VTR_ASSERT(true == use_address_);
   VTR_ASSERT(true == use_wl_address_);
 
-  return bit_wl_addresses_[bit_id];
+  return itobin_charvec(bit_wl_addresses_[bit_id], wl_address_length_);
 }
 
 char FabricBitstream::bit_din(const FabricBitId& bit_id) const {
@@ -106,7 +109,8 @@ void FabricBitstream::set_bit_address(const FabricBitId& bit_id,
                                       const std::vector<char>& address) {
   VTR_ASSERT(true == valid_bit_id(bit_id));
   VTR_ASSERT(true == use_address_);
-  bit_addresses_[bit_id] = address;
+  VTR_ASSERT(address_length_ == address.size());
+  bit_addresses_[bit_id] = bintoi_charvec(address);
 }
 
 void FabricBitstream::set_bit_bl_address(const FabricBitId& bit_id,
@@ -119,7 +123,8 @@ void FabricBitstream::set_bit_wl_address(const FabricBitId& bit_id,
   VTR_ASSERT(true == valid_bit_id(bit_id));
   VTR_ASSERT(true == use_address_);
   VTR_ASSERT(true == use_wl_address_);
-  bit_wl_addresses_[bit_id] = address;
+  VTR_ASSERT(wl_address_length_ == address.size());
+  bit_wl_addresses_[bit_id] = bintoi_charvec(address);
 }
 
 void FabricBitstream::set_bit_din(const FabricBitId& bit_id,
@@ -149,10 +154,26 @@ void FabricBitstream::set_use_address(const bool& enable) {
   }
 }
 
+void FabricBitstream::set_address_length(const size_t& length) {
+  if (true == use_address_) {
+    address_length_ = length; 
+  }
+}
+
+void FabricBitstream::set_bl_address_length(const size_t& length) {
+  set_address_length(length);
+}
+
 void FabricBitstream::set_use_wl_address(const bool& enable) {
   /* Add a lock, only can be modified when num bits are zero*/
   if (0 == num_bits_) {
     use_wl_address_ = enable;
+  }
+}
+
+void FabricBitstream::set_wl_address_length(const size_t& length) {
+  if (true == use_address_) {
+    wl_address_length_ = length; 
   }
 }
 
