@@ -163,6 +163,10 @@ class BitstreamManager {
     void set_block_name(const ConfigBlockId& block_id,
                         const std::string& block_name);
 
+    /* Reserve child blocks for a block to be memory efficient */
+    void reserve_child_blocks(const ConfigBlockId& parent_block,
+                              const size_t& num_children);
+
     /* Set a block as a child block of another */
     void add_child_block(const ConfigBlockId& parent_block, const ConfigBlockId& child_block);
 

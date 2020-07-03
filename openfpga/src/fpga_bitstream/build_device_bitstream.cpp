@@ -144,6 +144,10 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
   bitstream_manager.reserve_bits(num_bits_to_reserve);
   VTR_LOGV(verbose, "Reserved %lu configuration bits\n", num_bits_to_reserve);
 
+  /* Reserve child blocks for the top level block */
+  bitstream_manager.reserve_child_blocks(top_block,
+                                         openfpga_ctx.module_graph().configurable_children(top_module).size());
+
   /* Create bitstream from grids */
   VTR_LOGV(verbose, "Building grid bitstream...\n");
   build_grid_bitstream(bitstream_manager, top_block,

@@ -198,6 +198,15 @@ void BitstreamManager::set_block_name(const ConfigBlockId& block_id,
   block_names_[block_id] = block_name;
 }
 
+void BitstreamManager::reserve_child_blocks(const ConfigBlockId& parent_block,
+                                            const size_t& num_children) {
+  /* Ensure the input ids are valid */
+  VTR_ASSERT(true == valid_block_id(parent_block));
+
+  /* Add the child_block to the parent_block */
+  child_block_ids_[parent_block].reserve(num_children);
+}
+
 void BitstreamManager::add_child_block(const ConfigBlockId& parent_block, const ConfigBlockId& child_block) {
   /* Ensure the input ids are valid */
   VTR_ASSERT(true == valid_block_id(parent_block));
