@@ -226,7 +226,7 @@ class BitstreamManager {
      *   -Bitstream manager will NOT check if the id is good for bitstream builders
      *    It just store the results
      */
-    vtr::vector<ConfigBlockId, uint8_t> block_path_ids_; 
+    vtr::vector<ConfigBlockId, short> block_path_ids_; 
 
     /* Net ids that are mapped to inputs and outputs of this block
      * 
