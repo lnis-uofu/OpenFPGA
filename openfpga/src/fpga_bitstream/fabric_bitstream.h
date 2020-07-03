@@ -115,9 +115,13 @@ class FabricBitstream {
     /* Find the data-in of bitstream */
     char bit_din(const FabricBitId& bit_id) const;
 
+    /* Check if address data is accessible or not*/
+    bool use_address() const;
+    bool use_wl_address() const;
+
   public:  /* Public Mutators */
     /* Reserve config bits */
-    void reserve(const size_t& num_bits);
+    void reserve_bits(const size_t& num_bits);
 
     /* Add a new configuration bit to the bitstream manager */
     FabricBitId add_bit(const ConfigBitId& config_bit_id);
@@ -139,6 +143,20 @@ class FabricBitstream {
      */
     void reverse();
 
+    /* Enable the use of address-related data 
+     * When this is enabled, data allocation will be applied to these data
+     * and users can access/modify the data
+     * Otherwise, it will NOT be allocated and accessible.
+     *
+     * This function is only applicable before any bits are added
+     */
+    void set_use_address(const bool& enable);
+
+    /* Enable the use of WL-address related data
+     * Same priniciple as the set_use_address()  
+     */
+    void set_use_wl_address(const bool& enable);
+
   public:  /* Public Validators */
     char valid_bit_id(const FabricBitId& bit_id) const;
 
@@ -148,13 +166,18 @@ class FabricBitstream {
     std::unordered_set<FabricBitId> invalid_bit_ids_;
     vtr::vector<FabricBitId, ConfigBitId> config_bit_ids_; 
 
+    /* Flags to indicate if the addresses and din should be enabled */
+    bool use_address_;
+    bool use_wl_address_;
+
     /* Address bits: this is designed for memory decoders
      * Here we store the binary format of the address, which can be loaded
      * to the configuration protocol directly 
      *
      * We use a 2-element array, as we may have a BL address and a WL address
      */
-    vtr::vector<FabricBitId, std::array<std::vector<char>, 2>> bit_addresses_;
+    vtr::vector<FabricBitId, std::vector<char>> bit_addresses_;
+    vtr::vector<FabricBitId, std::vector<char>> bit_wl_addresses_;
 
     /* Data input (Din) bits: this is designed for memory decoders */
     vtr::vector<FabricBitId, char> bit_dins_;

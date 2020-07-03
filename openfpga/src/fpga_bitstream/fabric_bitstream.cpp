@@ -39,8 +39,9 @@ ConfigBitId FabricBitstream::config_bit(const FabricBitId& bit_id) const {
 std::vector<char> FabricBitstream::bit_address(const FabricBitId& bit_id) const {
   /* Ensure a valid id */
   VTR_ASSERT(true == valid_bit_id(bit_id));
+  VTR_ASSERT(true == use_address_);
 
-  return bit_addresses_[bit_id][0];
+  return bit_addresses_[bit_id];
 }
 
 std::vector<char> FabricBitstream::bit_bl_address(const FabricBitId& bit_id) const {
@@ -50,24 +51,42 @@ std::vector<char> FabricBitstream::bit_bl_address(const FabricBitId& bit_id) con
 std::vector<char> FabricBitstream::bit_wl_address(const FabricBitId& bit_id) const {
   /* Ensure a valid id */
   VTR_ASSERT(true == valid_bit_id(bit_id));
+  VTR_ASSERT(true == use_address_);
+  VTR_ASSERT(true == use_wl_address_);
 
-  return bit_addresses_[bit_id][1];
+  return bit_wl_addresses_[bit_id];
 }
 
 char FabricBitstream::bit_din(const FabricBitId& bit_id) const {
   /* Ensure a valid id */
   VTR_ASSERT(true == valid_bit_id(bit_id));
+  VTR_ASSERT(true == use_address_);
 
   return bit_dins_[bit_id];
+}
+
+bool FabricBitstream::use_address() const {
+  return use_address_;
+}
+
+bool FabricBitstream::use_wl_address() const {
+  return use_wl_address_;
 }
 
 /******************************************************************************
  * Public Mutators
  ******************************************************************************/
-void FabricBitstream::reserve(const size_t& num_bits) {
+void FabricBitstream::reserve_bits(const size_t& num_bits) {
   config_bit_ids_.reserve(num_bits);
-  bit_addresses_.reserve(num_bits);
-  bit_dins_.reserve(num_bits);
+ 
+  if (true == use_address_) {
+    bit_addresses_.reserve(num_bits);
+    bit_dins_.reserve(num_bits);
+ 
+    if (true == use_wl_address_) {
+      bit_wl_addresses_.reserve(num_bits);
+    }
+  }
 }
 
 FabricBitId FabricBitstream::add_bit(const ConfigBitId& config_bit_id) {
@@ -75,8 +94,6 @@ FabricBitId FabricBitstream::add_bit(const ConfigBitId& config_bit_id) {
   /* Add a new bit, and allocate associated data structures */
   num_bits_++;
   config_bit_ids_.push_back(config_bit_id);
-  bit_addresses_.emplace_back();
-  bit_dins_.push_back('0');
 
   return bit; 
 }
@@ -84,7 +101,8 @@ FabricBitId FabricBitstream::add_bit(const ConfigBitId& config_bit_id) {
 void FabricBitstream::set_bit_address(const FabricBitId& bit_id,
                                       const std::vector<char>& address) {
   VTR_ASSERT(true == valid_bit_id(bit_id));
-  bit_addresses_[bit_id][0] = address;
+  VTR_ASSERT(true == use_address_);
+  bit_addresses_[bit_id] = address;
 }
 
 void FabricBitstream::set_bit_bl_address(const FabricBitId& bit_id,
@@ -95,19 +113,43 @@ void FabricBitstream::set_bit_bl_address(const FabricBitId& bit_id,
 void FabricBitstream::set_bit_wl_address(const FabricBitId& bit_id,
                                          const std::vector<char>& address) {
   VTR_ASSERT(true == valid_bit_id(bit_id));
-  bit_addresses_[bit_id][1] = address;
+  VTR_ASSERT(true == use_address_);
+  VTR_ASSERT(true == use_wl_address_);
+  bit_wl_addresses_[bit_id] = address;
 }
 
 void FabricBitstream::set_bit_din(const FabricBitId& bit_id,
                                   const char& din) {
   VTR_ASSERT(true == valid_bit_id(bit_id));
+  VTR_ASSERT(true == use_address_);
   bit_dins_[bit_id] = din;
 }
 
 void FabricBitstream::reverse() {
   std::reverse(config_bit_ids_.begin(), config_bit_ids_.end());
-  std::reverse(bit_addresses_.begin(), bit_addresses_.end());
-  std::reverse(bit_dins_.begin(), bit_dins_.end());
+
+  if (true == use_address_) {
+    std::reverse(bit_addresses_.begin(), bit_addresses_.end());
+    std::reverse(bit_dins_.begin(), bit_dins_.end());
+
+    if (true == use_wl_address_) {
+      std::reverse(bit_wl_addresses_.begin(), bit_wl_addresses_.end());
+    }
+  }
+}
+
+void FabricBitstream::set_use_address(const bool& enable) {
+  /* Add a lock, only can be modified when num bits are zero*/
+  if (0 == num_bits_) {
+    use_address_ = enable;
+  }
+}
+
+void FabricBitstream::set_use_wl_address(const bool& enable) {
+  /* Add a lock, only can be modified when num bits are zero*/
+  if (0 == num_bits_) {
+    use_wl_address_ = enable;
+  }
 }
 
 /******************************************************************************

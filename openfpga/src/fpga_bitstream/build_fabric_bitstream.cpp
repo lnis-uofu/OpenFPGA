@@ -379,12 +379,18 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
 
   switch (config_protocol.type()) {
   case CONFIG_MEM_STANDALONE: {
+    /* Reserve bits before build-up */
+    fabric_bitstream.reserve_bits(bitstream_manager.bits().size());
+
     rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, top_block,
                                                       module_manager, top_module, 
                                                       fabric_bitstream);
     break;
   }
   case CONFIG_MEM_SCAN_CHAIN: { 
+    /* Reserve bits before build-up */
+    fabric_bitstream.reserve_bits(bitstream_manager.bits().size());
+
     rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, top_block,
                                                       module_manager, top_module, 
                                                       fabric_bitstream);
@@ -392,6 +398,11 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
     break;
   }
   case CONFIG_MEM_MEMORY_BANK: { 
+    /* Reserve bits before build-up */
+    fabric_bitstream.set_use_address(true);
+    fabric_bitstream.set_use_wl_address(true);
+    fabric_bitstream.reserve_bits(bitstream_manager.bits().size());
+
     size_t cur_mem_index = 0;
     /* Find BL address port size */
     ModulePortId bl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_BL_ADDRESS_PORT_NAME));
@@ -425,6 +436,10 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
     break;
   }
   case CONFIG_MEM_FRAME_BASED: {
+    /* Reserve bits before build-up */
+    fabric_bitstream.set_use_address(true);
+    fabric_bitstream.reserve_bits(bitstream_manager.bits().size());
+
     rec_build_module_fabric_dependent_frame_bitstream(bitstream_manager,
                                                       std::vector<ConfigBlockId>(1, top_block),
                                                       module_manager,
@@ -494,9 +509,6 @@ FabricBitstream build_fabric_dependent_bitstream(const BitstreamManager& bitstre
   /* Make sure we have only 1 top block and its name matches the top module */
   VTR_ASSERT(1 == top_block.size());
   VTR_ASSERT(0 == top_module_name.compare(bitstream_manager.block_name(top_block[0])));
-
-  /* Reserve bits before build-up */
-  fabric_bitstream.reserve(bitstream_manager.bits().size());
 
   /* Start build-up formally */
   build_module_fabric_dependent_bitstream(config_protocol,
