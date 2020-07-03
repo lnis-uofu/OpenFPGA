@@ -197,7 +197,7 @@ class BitstreamManager {
     size_t num_blocks_; 
     std::unordered_set<ConfigBlockId> invalid_block_ids_;
     vtr::vector<ConfigBlockId, size_t> block_bit_id_lsbs_; 
-    vtr::vector<ConfigBlockId, size_t> block_bit_id_msbs_; 
+    vtr::vector<ConfigBlockId, short> block_bit_lengths_; 
 
     /* Back-annotation for the bits */
     /* Parent block of a bit in the Bitstream 
