@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include <functional>
+#include <ctime>
 
 #include "vtr_vector.h"
 #include "vtr_range.h"
@@ -211,6 +212,9 @@ class Shell {
     std::map<std::string, ShellCommandId> command_name2ids_;
     std::map<std::string, ShellCommandClassId> command_class2ids_;
     vtr::vector<ShellCommandClassId, std::vector<ShellCommandId>> commands_by_classes_;  
+
+    /* Timer */
+    std::clock_t time_start_;
 };
 
 } /* End namespace openfpga */

@@ -25,6 +25,7 @@
  * Main function to start OpenFPGA shell interface
  *******************************************************************/
 int main(int argc, char** argv) {
+
   /* Create the command to launch shell in different modes */
   openfpga::Command start_cmd("OpenFPGA");
   /* Add two options:
@@ -89,13 +90,11 @@ int main(int argc, char** argv) {
     /* Parse succeed. Start a shell */ 
     if (true == start_cmd_context.option_enable(start_cmd, opt_interactive)) {
 
-      vtr::ScopedStartFinishTimer timer("OpenFPGA operating");
       shell.run_interactive_mode(openfpga_context);
       return 0;
     } 
 
     if (true == start_cmd_context.option_enable(start_cmd, opt_script_mode)) {
-      vtr::ScopedStartFinishTimer timer("OpenFPGA operating");
       shell.run_script_mode(start_cmd_context.option_value(start_cmd, opt_script_mode).c_str(),
                             openfpga_context);
       return 0;
