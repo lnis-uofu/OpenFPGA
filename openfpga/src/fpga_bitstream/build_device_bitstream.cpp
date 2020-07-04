@@ -180,8 +180,8 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
            bitstream_manager.num_bits(),
            bitstream_manager.num_blocks());
 
-  //VTR_ASSERT(num_blocks_to_reserve == bitstream_manager.num_blocks());
-  //VTR_ASSERT(num_bits_to_reserve == bitstream_manager.num_bits());
+  VTR_ASSERT(num_blocks_to_reserve == bitstream_manager.num_blocks());
+  VTR_ASSERT(num_bits_to_reserve == bitstream_manager.num_bits());
 
   return bitstream_manager;
 }

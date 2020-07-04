@@ -492,6 +492,16 @@ void rec_build_physical_block_bitstream(BitstreamManager& bitstream_manager,
   /* Find the mode that define_idle_mode*/
   t_mode* physical_mode = device_annotation.physical_mode(physical_pb_type);
 
+  /* Early exit if this parent module has no configurable child modules */
+  std::string pb_module_name = generate_physical_block_module_name(physical_pb_type);
+  ModuleId pb_module = module_manager.find_module(pb_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(pb_module));
+ 
+  /* Skip module with no configurable children */
+  if (0 == module_manager.configurable_children(pb_module).size()) {
+    return;
+  }
+
   /* Create a block for the physical block under the grid block in bitstream manager */
   std::string pb_block_name = generate_physical_block_instance_name(physical_pb_type, pb_graph_node_index);
   ConfigBlockId pb_configurable_block = bitstream_manager.add_block(pb_block_name);
