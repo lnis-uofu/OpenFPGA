@@ -24,6 +24,7 @@
 #include "mux_bitstream_constants.h"
 #include "pb_type_utils.h"
 #include "lut_utils.h"
+#include "module_manager_utils.h"
 
 #include "build_mux_bitstream.h"
 #include "build_grid_bitstream.h"
@@ -492,10 +493,24 @@ void rec_build_physical_block_bitstream(BitstreamManager& bitstream_manager,
   /* Find the mode that define_idle_mode*/
   t_mode* physical_mode = device_annotation.physical_mode(physical_pb_type);
 
+  /* Early exit if this parent module has no configurable child modules */
+  std::string pb_module_name = generate_physical_block_module_name(physical_pb_type);
+  ModuleId pb_module = module_manager.find_module(pb_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(pb_module));
+ 
+  /* Skip module with no configurable children */
+  if (0 == module_manager.configurable_children(pb_module).size()) {
+    return;
+  }
+
   /* Create a block for the physical block under the grid block in bitstream manager */
   std::string pb_block_name = generate_physical_block_instance_name(physical_pb_type, pb_graph_node_index);
   ConfigBlockId pb_configurable_block = bitstream_manager.add_block(pb_block_name);
   bitstream_manager.add_child_block(parent_configurable_block, pb_configurable_block);
+
+  /* Reserve child blocks for new created block */
+  bitstream_manager.reserve_child_blocks(parent_configurable_block,
+                                         count_module_manager_module_configurable_children(module_manager, pb_module)); 
 
   /* Recursively finish all the child pb_types*/
   if (false == is_primitive_pb_type(physical_pb_type)) { 
@@ -583,10 +598,26 @@ void build_physical_block_bitstream(BitstreamManager& bitstream_manager,
   /* Create a block for the grid in bitstream manager */
   t_physical_tile_type_ptr grid_type = grids[grid_coord.x()][grid_coord.y()].type;
   std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
+
+  /* Early exit if this parent module has no configurable child modules */
+  std::string grid_module_name = generate_grid_block_module_name(grid_module_name_prefix, std::string(grid_type->name), 
+                                                                 is_io_type(grid_type), border_side);
+  ModuleId grid_module = module_manager.find_module(grid_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
+ 
+  /* Skip module with no configurable children */
+  if (0 == module_manager.configurable_children(grid_module).size()) {
+    return;
+  }
+
   std::string grid_block_name = generate_grid_block_instance_name(grid_module_name_prefix, std::string(grid_type->name), 
                                                                   is_io_type(grid_type), border_side, grid_coord);
   ConfigBlockId grid_configurable_block = bitstream_manager.add_block(grid_block_name);
   bitstream_manager.add_child_block(top_block, grid_configurable_block);
+
+  /* Reserve child blocks for new created block */
+  bitstream_manager.reserve_child_blocks(grid_configurable_block,
+                                         count_module_manager_module_configurable_children(module_manager, grid_module)); 
 
   /* Iterate over the capacity of the grid
    * Now each physical tile may have a number of logical blocks

@@ -18,6 +18,7 @@
 #include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 #include "openfpga_rr_graph_utils.h"
+#include "module_manager_utils.h"
 
 #include "mux_bitstream_constants.h"
 #include "build_mux_bitstream.h"
@@ -403,6 +404,7 @@ void build_connection_block_bitstreams(BitstreamManager& bitstream_manager,
                                        const VprRoutingAnnotation& routing_annotation,
                                        const RRGraph& rr_graph,
                                        const DeviceRRGSB& device_rr_gsb,
+                                       const bool& compact_routing_hierarchy,
                                        const t_rr_type& cb_type) {
 
   vtr::Point<size_t> cb_range = device_rr_gsb.get_gsb_range();
@@ -421,11 +423,29 @@ void build_connection_block_bitstreams(BitstreamManager& bitstream_manager,
       if (true == connection_block_contain_only_routing_tracks(rr_gsb, cb_type)) {
         continue;
       }
-      /* Create a block for the bitstream which corresponds to the Switch block */
+
+      /* Find the cb module so that we can precisely reserve child blocks */
       vtr::Point<size_t> cb_coord(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
+      std::string cb_module_name = generate_connection_block_module_name(cb_type, cb_coord);
+      if (true == compact_routing_hierarchy) {
+        vtr::Point<size_t> unique_cb_coord(ix, iy);
+        /* Note: use GSB coordinate when inquire for unique modules!!! */
+        const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(cb_type, unique_cb_coord);
+        unique_cb_coord.set_x(unique_mirror.get_cb_x(cb_type)); 
+        unique_cb_coord.set_y(unique_mirror.get_cb_y(cb_type)); 
+        cb_module_name = generate_connection_block_module_name(cb_type, unique_cb_coord);
+      } 
+      ModuleId cb_module = module_manager.find_module(cb_module_name);
+      VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
+
+      /* Create a block for the bitstream which corresponds to the Switch block */
       ConfigBlockId cb_configurable_block = bitstream_manager.add_block(generate_connection_block_module_name(cb_type, cb_coord));
       /* Set switch block as a child of top block */
       bitstream_manager.add_child_block(top_configurable_block, cb_configurable_block);
+
+      /* Reserve child blocks for new created block */
+      bitstream_manager.reserve_child_blocks(cb_configurable_block,
+                                             count_module_manager_module_configurable_children(module_manager, cb_module)); 
   
       build_connection_block_bitstream(bitstream_manager, cb_configurable_block, module_manager,  
                                        circuit_lib, mux_lib,
@@ -451,7 +471,8 @@ void build_routing_bitstream(BitstreamManager& bitstream_manager,
                              const VprDeviceAnnotation& device_annotation,
                              const VprRoutingAnnotation& routing_annotation,
                              const RRGraph& rr_graph,
-                             const DeviceRRGSB& device_rr_gsb) {
+                             const DeviceRRGSB& device_rr_gsb,
+                             const bool& compact_routing_hierarchy) {
 
   /* Generate bitstream for each switch blocks
    * To organize the bitstream in blocks, we create a block for each switch block 
@@ -470,11 +491,28 @@ void build_routing_bitstream(BitstreamManager& bitstream_manager,
         continue;
       }
 
-      /* Create a block for the bitstream which corresponds to the Switch block */
       vtr::Point<size_t> sb_coord(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
+
+      /* Find the sb module so that we can precisely reserve child blocks */
+      std::string sb_module_name = generate_switch_block_module_name(sb_coord);
+      if (true == compact_routing_hierarchy) {
+        vtr::Point<size_t> unique_sb_coord(ix, iy);
+        const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(sb_coord);
+        unique_sb_coord.set_x(unique_mirror.get_sb_x()); 
+        unique_sb_coord.set_y(unique_mirror.get_sb_y()); 
+        sb_module_name = generate_switch_block_module_name(unique_sb_coord);
+      } 
+      ModuleId sb_module = module_manager.find_module(sb_module_name);
+      VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
+
+      /* Create a block for the bitstream which corresponds to the Switch block */
       ConfigBlockId sb_configurable_block = bitstream_manager.add_block(generate_switch_block_module_name(sb_coord));
       /* Set switch block as a child of top block */
       bitstream_manager.add_child_block(top_configurable_block, sb_configurable_block);
+
+      /* Reserve child blocks for new created block */
+      bitstream_manager.reserve_child_blocks(sb_configurable_block,
+                                             count_module_manager_module_configurable_children(module_manager, sb_module)); 
 
       build_switch_block_bitstream(bitstream_manager, sb_configurable_block, module_manager,  
                                    circuit_lib, mux_lib,
@@ -495,7 +533,9 @@ void build_routing_bitstream(BitstreamManager& bitstream_manager,
                                     circuit_lib, mux_lib,
                                     atom_ctx, device_annotation, routing_annotation,
                                     rr_graph,
-                                    device_rr_gsb, CHANX);
+                                    device_rr_gsb,
+                                    compact_routing_hierarchy,
+                                    CHANX);
   VTR_LOG("Done\n");
 
   VTR_LOG("Generating bitstream for Y-direction Connection blocks ...");
@@ -504,7 +544,9 @@ void build_routing_bitstream(BitstreamManager& bitstream_manager,
                                     circuit_lib, mux_lib,
                                     atom_ctx, device_annotation, routing_annotation,
                                     rr_graph,
-                                    device_rr_gsb, CHANY);
+                                    device_rr_gsb,
+                                    compact_routing_hierarchy,
+                                    CHANY);
   VTR_LOG("Done\n");
 
 }

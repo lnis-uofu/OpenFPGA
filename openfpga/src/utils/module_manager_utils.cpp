@@ -77,6 +77,23 @@ void reserve_module_manager_module_nets(ModuleManager& module_manager,
 }
 
 /******************************************************************************
+ * Count the 'actual' number of configurable children for a module in module manager
+ * A 'true' configurable children should have a number of configurable children as well
+ ******************************************************************************/
+size_t count_module_manager_module_configurable_children(const ModuleManager& module_manager, 
+                                                         const ModuleId& module) {
+  size_t num_config_children = 0;
+
+  for (const ModuleId& child : module_manager.configurable_children(module)) {
+    if (0 != module_manager.configurable_children(child).size()) {
+      num_config_children++;
+    }
+  }
+
+  return num_config_children;
+}
+
+/******************************************************************************
  * Add a module to the module manager based on the circuit-level
  * description of a circuit model
  * This function add a module with a given customized name
