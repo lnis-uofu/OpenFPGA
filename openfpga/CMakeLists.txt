@@ -26,7 +26,7 @@ target_link_libraries(libopenfpga
                       libfpgabitstream
                       libini
                       libvtrutil
-                      libvpr8)
+                      libvpr)
 
 #Create the test executable
 add_executable(openfpga ${EXEC_SOURCE})

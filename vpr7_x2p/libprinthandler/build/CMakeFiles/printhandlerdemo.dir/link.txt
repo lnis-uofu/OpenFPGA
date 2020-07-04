@@ -1,1 +1,0 @@
-/usr/local/stow/gcc/amd64_linux26/gcc-8.2.0/bin/g++  -O3 -DNDEBUG  -L/usr/include CMakeFiles/printhandlerdemo.dir/SRC/main.cxx.o  -o printhandlerdemo liblibprinthandler.a -llibpcre 

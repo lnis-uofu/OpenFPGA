@@ -87,16 +87,16 @@ stages:
 jobs:
   include:
     - stage: Test
-      name: "OpenFPGA + VPR7 regression tests"
+      name: "Basic regression tests"
       script:
         - source .travis/build.sh
-        - source .travis/openfpga_vpr7_reg_test.sh
+        - source .travis/basic_reg_test.sh
 
     - stage: Test
-      name: "OpenFPGA + VPR8 regression tests"
+      name: "FPGA-Verilog regression tests"
       script:
         - source .travis/build.sh
-        - source .travis/openfpga_vpr8_reg_test.sh
+        - source .travis/verilog_reg_test.sh
 
 #after_failure:
 #  - .travis/after_failure.sh
