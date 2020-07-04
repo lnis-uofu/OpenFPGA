@@ -267,6 +267,9 @@ ShellCommandId add_openfpga_build_fabric_command(openfpga::Shell<OpenfpgaContext
 
   Command shell_cmd("build_fabric");
 
+  /* Add an option '--frame_view' */
+  shell_cmd.add_option("frame_view", false, "Build only frame view of the fabric (nets are skipped)");
+
   /* Add an option '--compress_routing' */
   shell_cmd.add_option("compress_routing", false, "Compress the number of unique routing modules by identifying the unique GSBs");
 

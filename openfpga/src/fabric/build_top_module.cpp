@@ -329,6 +329,7 @@ void build_top_module(ModuleManager& module_manager,
                       const ArchDirect& arch_direct,
                       const e_config_protocol_type& sram_orgz_type,
                       const CircuitModelId& sram_model,
+                      const bool& frame_view,
                       const bool& compact_routing_hierarchy,
                       const bool& duplicate_grid_pin,
                       const FabricKey& fabric_key,
@@ -351,18 +352,23 @@ void build_top_module(ModuleManager& module_manager,
   cb_instance_ids[CHANX] = add_top_module_connection_block_instances(module_manager, top_module, device_rr_gsb, CHANX, compact_routing_hierarchy);
   cb_instance_ids[CHANY] = add_top_module_connection_block_instances(module_manager, top_module, device_rr_gsb, CHANY, compact_routing_hierarchy);
 
-  /* Reserve nets to be memory efficient */
-  reserve_module_manager_module_nets(module_manager, top_module);
+  /* Add nets when we need a complete fabric modeling,
+   * which is required by downstream functions
+   */
+  if (false == frame_view) {
+    /* Reserve nets to be memory efficient */
+    reserve_module_manager_module_nets(module_manager, top_module);
 
-  /* Add module nets to connect the sub modules */
-  add_top_module_nets_connect_grids_and_gsbs(module_manager, top_module, 
-                                             grids, grid_instance_ids, 
-                                             rr_graph, device_rr_gsb, sb_instance_ids, cb_instance_ids,
-                                             compact_routing_hierarchy, duplicate_grid_pin);
-  /* Add inter-CLB direct connections */
-  add_top_module_nets_tile_direct_connections(module_manager, top_module, circuit_lib, 
-                                              grids, grid_instance_ids,
-                                              tile_direct, arch_direct);
+    /* Add module nets to connect the sub modules */
+    add_top_module_nets_connect_grids_and_gsbs(module_manager, top_module, 
+                                               grids, grid_instance_ids, 
+                                               rr_graph, device_rr_gsb, sb_instance_ids, cb_instance_ids,
+                                               compact_routing_hierarchy, duplicate_grid_pin);
+    /* Add inter-CLB direct connections */
+    add_top_module_nets_tile_direct_connections(module_manager, top_module, circuit_lib, 
+                                                grids, grid_instance_ids,
+                                                tile_direct, arch_direct);
+  }
 
   /* Add global ports to the pb_module:
    * This is a much easier job after adding sub modules (instances), 

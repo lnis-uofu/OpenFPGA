@@ -36,6 +36,8 @@
 
 #include <vector>
 #include <map>
+#include <unordered_set>
+#include <unordered_map>
 #include "vtr_vector.h"
 
 #include "bitstream_manager_fwd.h"
@@ -44,17 +46,73 @@
 namespace openfpga {
 
 class BitstreamManager {
+  public: /* Type implementations */
+    /*
+     * This class (forward delcared above) is a template used to represent a lazily calculated 
+     * iterator of the specified ID type. The key assumption made is that the ID space is 
+     * contiguous and can be walked by incrementing the underlying ID value. To account for 
+     * invalid IDs, it keeps a reference to the invalid ID set and returns ID::INVALID() for
+     * ID values in the set.
+     *
+     * It is used to lazily create an iteration range (e.g. as returned by RRGraph::edges() RRGraph::nodes())
+     * just based on the count of allocated elements (i.e. RRGraph::num_nodes_ or RRGraph::num_edges_),
+     * and the set of any invalid IDs (i.e. RRGraph::invalid_node_ids_, RRGraph::invalid_edge_ids_).
+     */
+    template<class ID>
+    class lazy_id_iterator : public std::iterator<std::bidirectional_iterator_tag, ID> {
+      public:
+        //Since we pass ID as a template to std::iterator we need to use an explicit 'typename'
+        //to bring the value_type and iterator names into scope
+        typedef typename std::iterator<std::bidirectional_iterator_tag, ID>::value_type value_type;
+        typedef typename std::iterator<std::bidirectional_iterator_tag, ID>::iterator iterator;
+
+        lazy_id_iterator(value_type init, const std::unordered_set<ID>& invalid_ids)
+            : value_(init)
+            , invalid_ids_(invalid_ids) {}
+
+        //Advance to the next ID value
+        iterator operator++() {
+            value_ = ID(size_t(value_) + 1);
+            return *this;
+        }
+
+        //Advance to the previous ID value
+        iterator operator--() {
+            value_ = ID(size_t(value_) - 1);
+            return *this;
+        }
+
+        //Dereference the iterator
+        value_type operator*() const { return (invalid_ids_.count(value_)) ? ID::INVALID() : value_; }
+
+        friend bool operator==(const lazy_id_iterator<ID> lhs, const lazy_id_iterator<ID> rhs) { return lhs.value_ == rhs.value_; }
+        friend bool operator!=(const lazy_id_iterator<ID> lhs, const lazy_id_iterator<ID> rhs) { return !(lhs == rhs); }
+
+      private:
+        value_type value_;
+        const std::unordered_set<ID>& invalid_ids_;
+    };
+
+  public: /* Public constructor */
+    BitstreamManager();
+
   public: /* Types and ranges */
-    typedef vtr::vector<ConfigBitId, ConfigBitId>::const_iterator config_bit_iterator;
-    typedef vtr::vector<ConfigBlockId, ConfigBlockId>::const_iterator config_block_iterator;
+    //Lazy iterator utility forward declaration
+    template<class ID>
+    class lazy_id_iterator;
+
+    typedef lazy_id_iterator<ConfigBitId> config_bit_iterator;
+    typedef lazy_id_iterator<ConfigBlockId> config_block_iterator;
 
     typedef vtr::Range<config_bit_iterator> config_bit_range;
     typedef vtr::Range<config_block_iterator> config_block_range;
 
   public: /* Public aggregators */
     /* Find all the configuration bits */
+    size_t num_bits() const;
     config_bit_range bits() const;
 
+    size_t num_blocks() const;
     config_block_range blocks() const;
 
   public:  /* Public Accessors */
@@ -72,12 +130,6 @@ class BitstreamManager {
 
     /* Find all the bits that belong to a block */
     std::vector<ConfigBitId> block_bits(const ConfigBlockId& block_id) const;
-
-    /* Find the parent block of a bit */
-    ConfigBlockId bit_parent_block(const ConfigBitId& bit_id) const;
-
-    /* Find the index of a configuration bit in its parent block */
-    size_t bit_index_in_parent_block(const ConfigBitId& bit_id) const; 
 
     /* Find the child block in a bitstream manager with a given name */
     ConfigBlockId find_child_block(const ConfigBlockId& block_id, const std::string& child_block_name) const;
@@ -98,6 +150,9 @@ class BitstreamManager {
     /* Reserve memory for a number of clocks */
     void reserve_blocks(const size_t& num_blocks);
 
+    /* Reserve memory for a number of bits */
+    void reserve_bits(const size_t& num_bits);
+
     /* Create a new block of configuration bits */
     ConfigBlockId create_block();
 
@@ -108,23 +163,31 @@ class BitstreamManager {
     void set_block_name(const ConfigBlockId& block_id,
                         const std::string& block_name);
 
+    /* Reserve child blocks for a block to be memory efficient */
+    void reserve_child_blocks(const ConfigBlockId& parent_block,
+                              const size_t& num_children);
+
     /* Set a block as a child block of another */
     void add_child_block(const ConfigBlockId& parent_block, const ConfigBlockId& child_block);
 
-    /* Add a configuration bit to a block */
-    void add_bit_to_block(const ConfigBlockId& block, const ConfigBitId& bit);
+    /* Add a bitstream to a block */
+    void add_block_bits(const ConfigBlockId& block,
+                        const std::vector<bool>& block_bitstream);
 
     /* Add a path id to a block */
     void add_path_id_to_block(const ConfigBlockId& block, const int& path_id);
+ 
+    /* Reserve input net ids for a block */
+    void reserve_block_input_net_ids(const ConfigBlockId& block, const size_t& num_input_net_ids);
 
     /* Add an input net id to a block */
     void add_input_net_id_to_block(const ConfigBlockId& block, const std::string& input_net_id);
 
+    /* Reserve output net ids for a block */
+    void reserve_block_output_net_ids(const ConfigBlockId& block, const size_t& num_output_net_ids);
+
     /* Add an output net id to a block */
     void add_output_net_id_to_block(const ConfigBlockId& block, const std::string& output_net_id);
-
-    /* Add share configuration bits to a configuration bit */
-    void add_shared_config_bit_values(const ConfigBitId& bit, const std::vector<bool>& shared_config_bits);
 
   public:  /* Public Validators */
     bool valid_bit_id(const ConfigBitId& bit_id) const;
@@ -135,8 +198,10 @@ class BitstreamManager {
 
   private: /* Internal data */
     /* Unique id of a block of bits in the Bitstream */
-    vtr::vector<ConfigBlockId, ConfigBlockId> block_ids_; 
-    vtr::vector<ConfigBlockId, std::vector<ConfigBitId>> block_bit_ids_; 
+    size_t num_blocks_; 
+    std::unordered_set<ConfigBlockId> invalid_block_ids_;
+    vtr::vector<ConfigBlockId, size_t> block_bit_id_lsbs_; 
+    vtr::vector<ConfigBlockId, short> block_bit_lengths_; 
 
     /* Back-annotation for the bits */
     /* Parent block of a bit in the Bitstream 
@@ -160,7 +225,7 @@ class BitstreamManager {
      *   -Bitstream manager will NOT check if the id is good for bitstream builders
      *    It just store the results
      */
-    vtr::vector<ConfigBlockId, int> block_path_ids_; 
+    vtr::vector<ConfigBlockId, short> block_path_ids_; 
 
     /* Net ids that are mapped to inputs and outputs of this block
      * 
@@ -172,12 +237,10 @@ class BitstreamManager {
     vtr::vector<ConfigBlockId, std::vector<std::string>> block_output_net_ids_; 
 
     /* Unique id of a bit in the Bitstream */
-    vtr::vector<ConfigBitId, ConfigBitId> bit_ids_; 
-    vtr::vector<ConfigBitId, ConfigBlockId> bit_parent_block_ids_;
+    size_t num_bits_; 
+    std::unordered_set<ConfigBitId> invalid_bit_ids_; 
     /* value of a bit in the Bitstream */
-    vtr::vector<ConfigBitId, bool> bit_values_;
-    /* value of a shared configuration bits in the Bitstream */
-    vtr::vector<ConfigBitId, std::vector<bool>> shared_config_bit_values_;
+    vtr::vector<ConfigBitId, char> bit_values_;
 };
 
 } /* end namespace openfpga */

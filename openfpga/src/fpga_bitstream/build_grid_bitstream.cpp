@@ -106,11 +106,7 @@ void build_primitive_bitstream(BitstreamManager& bitstream_manager,
   bitstream_manager.add_child_block(parent_configurable_block, mem_block);
 
   /* Add the bitstream to the bitstream manager */
-  for (const bool& bit : mode_select_bitstream) {
-    ConfigBitId config_bit = bitstream_manager.add_bit(bit);
-    /* Link the memory bits to the mux mem block */
-    bitstream_manager.add_bit_to_block(mem_block, config_bit);
-  }
+  bitstream_manager.add_block_bits(mem_block, mode_select_bitstream);
 }
 
 /********************************************************************
@@ -214,13 +210,10 @@ void build_physical_block_pin_interc_bitstream(BitstreamManager& bitstream_manag
     VTR_ASSERT(mux_bitstream.size() == module_manager.module_port(mux_mem_module, mux_mem_out_port_id).get_width());
   
     /* Add the bistream to the bitstream manager */
-    for (const bool& bit : mux_bitstream) {
-      ConfigBitId config_bit = bitstream_manager.add_bit(bit);
-      /* Link the memory bits to the mux mem block */
-      bitstream_manager.add_bit_to_block(mux_mem_block, config_bit);
-    }
+    bitstream_manager.add_block_bits(mux_mem_block, mux_bitstream);
     /* Record path ids, input and output nets */
     bitstream_manager.add_path_id_to_block(mux_mem_block, mux_input_pin_id);
+    bitstream_manager.reserve_block_input_net_ids(mux_mem_block, input_nets.size());
     for (const AtomNetId& input_net : input_nets) {
       if (true == atom_ctx.nlist.valid_net_id(input_net)) {
         bitstream_manager.add_input_net_id_to_block(mux_mem_block, atom_ctx.nlist.net_name(input_net));
@@ -229,6 +222,7 @@ void build_physical_block_pin_interc_bitstream(BitstreamManager& bitstream_manag
       }
     }
     if (true == atom_ctx.nlist.valid_net_id(output_net)) {
+    bitstream_manager.reserve_block_output_net_ids(mux_mem_block, 1);
       bitstream_manager.add_output_net_id_to_block(mux_mem_block, atom_ctx.nlist.net_name(output_net));
     } else {
       bitstream_manager.add_output_net_id_to_block(mux_mem_block, std::string("unmapped"));
@@ -465,11 +459,7 @@ void build_lut_bitstream(BitstreamManager& bitstream_manager,
   bitstream_manager.add_child_block(parent_configurable_block, mem_block);
 
   /* Add the bitstream to the bitstream manager */
-  for (const bool& bit : lut_bitstream) {
-    ConfigBitId config_bit = bitstream_manager.add_bit(bit);
-    /* Link the memory bits to the mux mem block */
-    bitstream_manager.add_bit_to_block(mem_block, config_bit);
-  }
+  bitstream_manager.add_block_bits(mem_block, lut_bitstream);
 }
 
 /********************************************************************

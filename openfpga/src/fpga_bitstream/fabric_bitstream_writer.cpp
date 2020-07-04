@@ -50,11 +50,11 @@ int write_fabric_config_bit_to_text_file(std::fstream& fp,
     fp << bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit));
     break;
   case CONFIG_MEM_MEMORY_BANK: { 
-    for (const size_t& addr_bit : fabric_bitstream.bit_bl_address(fabric_bit)) {
+    for (const char& addr_bit : fabric_bitstream.bit_bl_address(fabric_bit)) {
       fp << addr_bit;
     }
     write_space_to_file(fp, 1);
-    for (const size_t& addr_bit : fabric_bitstream.bit_wl_address(fabric_bit)) {
+    for (const char& addr_bit : fabric_bitstream.bit_wl_address(fabric_bit)) {
       fp << addr_bit;
     }
     write_space_to_file(fp, 1);
@@ -63,7 +63,7 @@ int write_fabric_config_bit_to_text_file(std::fstream& fp,
     break;
   }
   case CONFIG_MEM_FRAME_BASED: {
-    for (const size_t& addr_bit : fabric_bitstream.bit_address(fabric_bit)) {
+    for (const char& addr_bit : fabric_bitstream.bit_address(fabric_bit)) {
       fp << addr_bit;
     }
     write_space_to_file(fp, 1);
@@ -101,7 +101,7 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
     VTR_LOG_ERROR("Received empty file name to output bitstream!\n\tPlease specify a valid file name.\n");
   }
 
-  std::string timer_message = std::string("Write ") + std::to_string(fabric_bitstream.bits().size()) + std::string(" fabric bitstream into plain text file '") + fname + std::string("'");
+  std::string timer_message = std::string("Write ") + std::to_string(fabric_bitstream.num_bits()) + std::string(" fabric bitstream into plain text file '") + fname + std::string("'");
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   /* Create the file stream */

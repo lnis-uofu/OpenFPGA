@@ -78,6 +78,7 @@ void print_verilog_simulation_info(const std::string& ini_fname,
   ini["SIMULATION_DECK"]["VERILOG_PATH "] = std::string(src_dir);
   ini["SIMULATION_DECK"]["VERILOG_FILE1"] = std::string(DEFINES_VERILOG_FILE_NAME);
   ini["SIMULATION_DECK"]["VERILOG_FILE2"] = std::string(circuit_name + std::string(TOP_INCLUDE_NETLIST_FILE_NAME_POSTFIX));
+  ini["SIMULATION_DECK"]["CONFIG_PROTOCOL"] = std::string(CONFIG_PROTOCOL_TYPE_STRING[config_protocol_type]);
 
   /* Information required by UVM */
   if (CONFIG_MEM_FRAME_BASED == config_protocol_type) {

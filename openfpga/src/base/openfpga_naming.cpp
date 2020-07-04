@@ -134,7 +134,7 @@ std::string generate_mux_branch_subckt_name(const CircuitLibrary& circuit_lib,
  ***********************************************/
 std::string generate_mux_local_decoder_subckt_name(const size_t& addr_size, 
                                                    const size_t& data_size) {
-  std::string subckt_name = "decoder";
+  std::string subckt_name = "local_encoder";
   subckt_name += std::to_string(addr_size);
   subckt_name += "to";
   subckt_name += std::to_string(data_size);

@@ -101,16 +101,17 @@ void rec_read_xml_bitstream_block(pugi::xml_node& xml_bitstream_block,
     }
 
     /* Find the child paths/nets */
+    std::vector<bool> block_bits;
     for (pugi::xml_node xml_bit : xml_bitstream.children()) {
       /* We only care child bitstream blocks here */
       if (xml_bit.name() != std::string("bit")) {
         bad_tag(xml_bit, loc_data, xml_bitstream, {"bit"});
       }
       const int& bit_value = get_attribute(xml_bit, "value", loc_data).as_int();
-      ConfigBitId bit = bitstream_manager.add_bit(1 == bit_value);
-      /* Link the bit to parent block */
-      bitstream_manager.add_bit_to_block(curr_block, bit);
-    } 
+      block_bits.push_back(1 == bit_value);
+    }
+    /* Link the bit to parent block */
+    bitstream_manager.add_block_bits(curr_block, block_bits);
   }
   
   /* Go recursively: find all the child blocks and parse */

@@ -562,7 +562,7 @@ static
 size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz_type,
                                          const bool& fast_configuration,
                                          const FabricBitstream& fabric_bitstream) {
-  size_t num_config_clock_cycles = 1 + fabric_bitstream.bits().size();
+  size_t num_config_clock_cycles = 1 + fabric_bitstream.num_bits();
 
   /* Branch on the type of configuration protocol */
   switch (sram_orgz_type) {
@@ -1223,14 +1223,14 @@ void print_verilog_top_testbench_memory_bank_bitstream(std::fstream& fp,
     fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
     fp << "(" << bl_addr_port.get_width() << "'b";
     VTR_ASSERT(bl_addr_port.get_width() == fabric_bitstream.bit_bl_address(bit_id).size());
-    for (const size_t& addr_bit : fabric_bitstream.bit_bl_address(bit_id)) {
+    for (const char& addr_bit : fabric_bitstream.bit_bl_address(bit_id)) {
       fp << addr_bit;
     }
 
     fp << ", ";
     fp << wl_addr_port.get_width() << "'b";
     VTR_ASSERT(wl_addr_port.get_width() == fabric_bitstream.bit_wl_address(bit_id).size());
-    for (const size_t& addr_bit : fabric_bitstream.bit_wl_address(bit_id)) {
+    for (const char& addr_bit : fabric_bitstream.bit_wl_address(bit_id)) {
       fp << addr_bit;
     }
 
@@ -1319,7 +1319,7 @@ void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
     fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
     fp << "(" << addr_port.get_width() << "'b";
     VTR_ASSERT(addr_port.get_width() == fabric_bitstream.bit_address(bit_id).size());
-    for (const size_t& addr_bit : fabric_bitstream.bit_address(bit_id)) {
+    for (const char& addr_bit : fabric_bitstream.bit_address(bit_id)) {
       fp << addr_bit;
     }
     fp << ", ";
