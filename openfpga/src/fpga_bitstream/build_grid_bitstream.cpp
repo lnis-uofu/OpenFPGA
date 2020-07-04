@@ -24,6 +24,7 @@
 #include "mux_bitstream_constants.h"
 #include "pb_type_utils.h"
 #include "lut_utils.h"
+#include "module_manager_utils.h"
 
 #include "build_mux_bitstream.h"
 #include "build_grid_bitstream.h"
@@ -507,6 +508,10 @@ void rec_build_physical_block_bitstream(BitstreamManager& bitstream_manager,
   ConfigBlockId pb_configurable_block = bitstream_manager.add_block(pb_block_name);
   bitstream_manager.add_child_block(parent_configurable_block, pb_configurable_block);
 
+  /* Reserve child blocks for new created block */
+  bitstream_manager.reserve_child_blocks(parent_configurable_block,
+                                         count_module_manager_module_configurable_children(module_manager, pb_module)); 
+
   /* Recursively finish all the child pb_types*/
   if (false == is_primitive_pb_type(physical_pb_type)) { 
     for (int ipb = 0; ipb < physical_mode->num_pb_type_children; ++ipb) {
@@ -609,6 +614,10 @@ void build_physical_block_bitstream(BitstreamManager& bitstream_manager,
                                                                   is_io_type(grid_type), border_side, grid_coord);
   ConfigBlockId grid_configurable_block = bitstream_manager.add_block(grid_block_name);
   bitstream_manager.add_child_block(top_block, grid_configurable_block);
+
+  /* Reserve child blocks for new created block */
+  bitstream_manager.reserve_child_blocks(grid_configurable_block,
+                                         count_module_manager_module_configurable_children(module_manager, grid_module)); 
 
   /* Iterate over the capacity of the grid
    * Now each physical tile may have a number of logical blocks

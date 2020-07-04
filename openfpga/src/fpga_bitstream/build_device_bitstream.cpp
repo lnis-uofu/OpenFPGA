@@ -13,6 +13,8 @@
 
 #include "openfpga_naming.h"
 
+#include "module_manager_utils.h"
+
 #include "build_grid_bitstream.h"
 #include "build_routing_bitstream.h"
 #include "build_device_bitstream.h"
@@ -146,7 +148,7 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
 
   /* Reserve child blocks for the top level block */
   bitstream_manager.reserve_child_blocks(top_block,
-                                         openfpga_ctx.module_graph().configurable_children(top_module).size());
+                                         count_module_manager_module_configurable_children(openfpga_ctx.module_graph(), top_module)); 
 
   /* Create bitstream from grids */
   VTR_LOGV(verbose, "Building grid bitstream...\n");
@@ -172,7 +174,8 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
                           openfpga_ctx.vpr_device_annotation(),
                           openfpga_ctx.vpr_routing_annotation(),
                           vpr_ctx.device().rr_graph,
-                          openfpga_ctx.device_rr_gsb());
+                          openfpga_ctx.device_rr_gsb(),
+                          openfpga_ctx.flow_manager().compress_routing());
   VTR_LOGV(verbose, "Done\n");
 
   VTR_LOGV(verbose,
