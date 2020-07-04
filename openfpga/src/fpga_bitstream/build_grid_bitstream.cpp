@@ -593,6 +593,18 @@ void build_physical_block_bitstream(BitstreamManager& bitstream_manager,
   /* Create a block for the grid in bitstream manager */
   t_physical_tile_type_ptr grid_type = grids[grid_coord.x()][grid_coord.y()].type;
   std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
+
+  /* Early exit if this parent module has no configurable child modules */
+  std::string grid_module_name = generate_grid_block_module_name(grid_module_name_prefix, std::string(grid_type->name), 
+                                                                 is_io_type(grid_type), border_side);
+  ModuleId grid_module = module_manager.find_module(grid_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
+ 
+  /* Skip module with no configurable children */
+  if (0 == module_manager.configurable_children(grid_module).size()) {
+    return;
+  }
+
   std::string grid_block_name = generate_grid_block_instance_name(grid_module_name_prefix, std::string(grid_type->name), 
                                                                   is_io_type(grid_type), border_side, grid_coord);
   ConfigBlockId grid_configurable_block = bitstream_manager.add_block(grid_block_name);
