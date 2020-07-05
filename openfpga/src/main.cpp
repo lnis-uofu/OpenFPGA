@@ -15,6 +15,7 @@
 #include "openfpga_setup_command.h"
 #include "openfpga_verilog_command.h"
 #include "openfpga_bitstream_command.h"
+#include "openfpga_spice_command.h"
 #include "openfpga_sdc_command.h"
 #include "basic_command.h"
 
@@ -62,6 +63,9 @@ int main(int argc, char** argv) {
 
   /* Add openfpga bitstream commands */
   openfpga::add_openfpga_bitstream_commands(shell);
+
+  /* Add openfpga SPICE commands */
+  openfpga::add_openfpga_spice_commands(shell);
 
   /* Add openfpga sdc commands */
   openfpga::add_openfpga_sdc_commands(shell);
