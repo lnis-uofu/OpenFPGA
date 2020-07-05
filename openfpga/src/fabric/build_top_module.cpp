@@ -341,6 +341,9 @@ void build_top_module(ModuleManager& module_manager,
   std::string top_module_name = generate_fpga_top_module_name();
   ModuleId top_module = module_manager.add_module(top_module_name);
 
+  /* Label module usage */
+  module_manager.set_module_usage(top_module, ModuleManager::MODULE_TOP);
+
   std::map<t_rr_type, vtr::Matrix<size_t>> cb_instance_ids;
  
   /* Add sub modules, which are grid, SB and CBX/CBY modules as instances */

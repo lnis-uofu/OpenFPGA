@@ -119,6 +119,12 @@ std::string ModuleManager::module_name(const ModuleId& module_id) const {
   return names_[module_id];
 }
 
+ModuleManager::e_module_usage_type ModuleManager::module_usage(const ModuleId& module_id) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(module_id));
+  return usages_[module_id];
+}
+
 /* Get the string of a module port type */
 std::string ModuleManager::module_port_type_str(const enum e_module_port_type& port_type) const {
   std::array<const char*, NUM_MODULE_PORT_TYPES> MODULE_PORT_TYPE_STRING = {{"GLOBAL PORTS", "GPIN PORTS", "GPOUT PORTS", "GPIO PORTS", "INOUT PORTS", "INPUT PORTS", "OUTPUT PORTS", "CLOCK PORTS"}};
@@ -469,6 +475,7 @@ ModuleId ModuleManager::add_module(const std::string& name) {
 
   /* Allocate other attributes */
   names_.push_back(name);
+  usages_.push_back(NUM_MODULE_USAGE_TYPES);
   parents_.emplace_back();
   children_.emplace_back();
   num_child_instances_.emplace_back();
@@ -551,6 +558,12 @@ void ModuleManager::set_module_name(const ModuleId& module, const std::string& n
   /* Validate the id of module */
   VTR_ASSERT( valid_module_id(module) );
   names_[module] = name;
+}
+
+void ModuleManager::set_module_usage(const ModuleId& module, const e_module_usage_type& usage) {
+  /* Validate the id of module */
+  VTR_ASSERT( valid_module_id(module) );
+  usages_[module] = usage;
 }
 
 /* Set a port to be a wire */

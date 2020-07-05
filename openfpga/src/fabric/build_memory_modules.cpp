@@ -322,6 +322,9 @@ void build_memory_flatten_module(ModuleManager& module_manager,
   /* Create a module and add to the module manager */
   ModuleId mem_module = module_manager.add_module(module_name); 
   VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
+
+  /* Label module usage */
+  module_manager.set_module_usage(mem_module, ModuleManager::MODULE_CONFIG);
   
   /* Add module ports */
   /* Input: BL port */
@@ -404,6 +407,9 @@ void build_memory_chain_module(ModuleManager& module_manager,
   /* Create a module and add to the module manager */
   ModuleId mem_module = module_manager.add_module(module_name); 
   VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
+
+  /* Label module usage */
+  module_manager.set_module_usage(mem_module, ModuleManager::MODULE_CONFIG);
   
   /* Add an input port, which is the head of configuration chain in the module */
   /* TODO: restriction!!!
@@ -541,6 +547,9 @@ void build_frame_memory_module(ModuleManager& module_manager,
   /* Create a module and add to the module manager */
   ModuleId mem_module = module_manager.add_module(module_name); 
   VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
+
+  /* Label module usage */
+  module_manager.set_module_usage(mem_module, ModuleManager::MODULE_CONFIG);
 
   /* Find the specification of the decoder:
    * Size of address port and data input 

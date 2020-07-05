@@ -105,6 +105,26 @@ ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager,
   ModuleId module = module_manager.add_module(module_name); 
   VTR_ASSERT(ModuleId::INVALID() != module);
 
+  /* Identify module usage based on circuit type:
+   * LUT, SRAM, CCFF, I/O have specific usages
+   * Others will be classified as hard IPs 
+   */
+  if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(circuit_model)) {
+    module_manager.set_module_usage(module, ModuleManager::MODULE_LUT);
+  } else if (CIRCUIT_MODEL_SRAM == circuit_lib.model_type(circuit_model)) {
+    module_manager.set_module_usage(module, ModuleManager::MODULE_CONFIG);
+  } else if (CIRCUIT_MODEL_CCFF == circuit_lib.model_type(circuit_model)) {
+    module_manager.set_module_usage(module, ModuleManager::MODULE_CONFIG);
+  } else if (CIRCUIT_MODEL_IOPAD == circuit_lib.model_type(circuit_model)) {
+    module_manager.set_module_usage(module, ModuleManager::MODULE_IO);
+  } else if (CIRCUIT_MODEL_WIRE == circuit_lib.model_type(circuit_model)) {
+    module_manager.set_module_usage(module, ModuleManager::MODULE_INTERC);
+  } else if (CIRCUIT_MODEL_CHAN_WIRE == circuit_lib.model_type(circuit_model)) {
+    module_manager.set_module_usage(module, ModuleManager::MODULE_INTERC);
+  } else {
+    module_manager.set_module_usage(module, ModuleManager::MODULE_HARD_IP);
+  }
+
   /* Add ports */
   /* Find global ports and add one by one 
    * Non-I/O Global input ports will be considered as global port to be shorted wired in the context of module manager
