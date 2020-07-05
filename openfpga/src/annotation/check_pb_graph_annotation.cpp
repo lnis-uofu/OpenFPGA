@@ -60,7 +60,7 @@ void rec_check_vpr_physical_pb_graph_node_annotation(t_pb_graph_node* pb_graph_n
   t_pb_graph_node* physical_pb_graph_node = vpr_device_annotation.physical_pb_graph_node(pb_graph_node);
   if (nullptr == physical_pb_graph_node) { 
     VTR_LOG_ERROR("Found a pb_graph_node '%s' missing physical pb_graph_node binding!\n",
-                  physical_pb_graph_node->pb_type->name);
+                  pb_graph_node->pb_type->name);
     num_err++;
     return; /* Invalid pointer already, further check is not applicable */
   } 

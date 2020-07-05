@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 
-project("vpr8")
+project("vpr")
 
 set(VPR_EXECUTION_ENGINE "auto" CACHE STRING "Specify the framework for (potential) parallel execution")
 set_property(CACHE VPR_EXECUTION_ENGINE PROPERTY STRINGS auto serial tbb)
@@ -46,16 +46,16 @@ if(${VTR_ENABLE_CAPNPROTO})
 endif()
 
 #Create the library
-add_library(libvpr8 STATIC
+add_library(libvpr STATIC
              ${LIB_HEADERS}
              ${LIB_SOURCES}
 )
 
-target_include_directories(libvpr8 PUBLIC ${LIB_INCLUDE_DIRS})
-set_target_properties(libvpr8 PROPERTIES PREFIX "") #Avoid extra 'lib' prefix
+target_include_directories(libvpr PUBLIC ${LIB_INCLUDE_DIRS})
+set_target_properties(libvpr PROPERTIES PREFIX "") #Avoid extra 'lib' prefix
 
 #Specify link-time dependancies
-target_link_libraries(libvpr8
+target_link_libraries(libvpr
                       libvtrutil
                       libopenfpgautil
                       libarchfpga
@@ -67,7 +67,7 @@ target_link_libraries(libvpr8
 
 #link graphics library only when graphics set to on
 if (VPR_USE_EZGL STREQUAL "on")
-    target_link_libraries(libvpr8
+    target_link_libraries(libvpr
 			     ezgl)
 
     compile_gresources(
@@ -100,21 +100,21 @@ if (VPR_USE_EZGL STREQUAL "on")
 
 endif()
 
-target_compile_definitions(libvpr8 PUBLIC ${GRAPHICS_DEFINES})
+target_compile_definitions(libvpr PUBLIC ${GRAPHICS_DEFINES})
 
 if(${VTR_ENABLE_CAPNPROTO})
-    target_link_libraries(libvpr8 libvtrcapnproto)
+    target_link_libraries(libvpr libvtrcapnproto)
 endif()
 
-add_executable(vpr8 ${EXEC_SOURCES})
+add_executable(vpr ${EXEC_SOURCES})
 
-target_link_libraries(vpr8 libvpr8)
+target_link_libraries(vpr libvpr)
 
 
 #Supress IPO link warnings if IPO is enabled
 get_target_property(VPR_USES_IPO vpr INTERPROCEDURAL_OPTIMIZATION)
 if (VPR_USES_IPO)
-    set_target_properties(vpr8 PROPERTIES LINK_FLAGS ${IPO_LINK_WARN_SUPRESS_FLAGS})
+    set_target_properties(vpr PROPERTIES LINK_FLAGS ${IPO_LINK_WARN_SUPRESS_FLAGS})
 endif()
 
 
@@ -145,9 +145,9 @@ if (VPR_PGO_CONFIG STREQUAL "prof_gen")
     foreach(flag ${PROF_GEN_FLAGS_TO_CHECK})
         CHECK_CXX_COMPILER_FLAG(${flag} CXX_COMPILER_SUPPORTS_${flag})
         if(CXX_COMPILER_SUPPORTS_${flag})
-            target_compile_options(libvpr8 PUBLIC ${flag})
-            target_compile_options(vpr8 PUBLIC ${flag})
-            target_link_libraries(vpr8 ${flag})
+            target_compile_options(libvpr PUBLIC ${flag})
+            target_compile_options(vpr PUBLIC ${flag})
+            target_link_libraries(vpr ${flag})
         endif()
     endforeach()
 elseif (VPR_PGO_CONFIG STREQUAL "prof_use")
@@ -155,9 +155,9 @@ elseif (VPR_PGO_CONFIG STREQUAL "prof_use")
     foreach(flag ${PROF_USE_FLAGS_TO_CHECK})
         CHECK_CXX_COMPILER_FLAG(${flag} CXX_COMPILER_SUPPORTS_${flag})
         if(CXX_COMPILER_SUPPORTS_${flag})
-            target_compile_options(libvpr8 PUBLIC ${flag})
-            target_compile_options(vpr8 PUBLIC ${flag})
-            target_link_libraries(vpr8 ${flag})
+            target_compile_options(libvpr PUBLIC ${flag})
+            target_compile_options(vpr PUBLIC ${flag})
+            target_link_libraries(vpr ${flag})
         endif()
     endforeach()
 elseif (VPR_PGO_CONFIG STREQUAL "none")
@@ -170,9 +170,9 @@ if (VTR_COMPILE_OPTIONS STREQUAL "strict")
     message(STATUS "VPR: building with strict flags")
     foreach(flag ${VPR_COMPILE_OPTIONS_FLAGS})
         message(STATUS "\tAdding CXX flag: ${flag}")
-        target_compile_options(libvpr8 PRIVATE ${flag})
-        target_compile_options(vpr8 PRIVATE ${flag})
-        target_link_libraries(vpr8 ${flag})
+        target_compile_options(libvpr PRIVATE ${flag})
+        target_compile_options(vpr PRIVATE ${flag})
+        target_link_libraries(vpr ${flag})
     endforeach()
 endif()
 
@@ -205,9 +205,9 @@ endif()
 
 #Configure the build to use the selected engine
 if (VPR_USE_EXECUTION_ENGINE STREQUAL "tbb")
-    target_compile_definitions(libvpr8 PRIVATE VPR_USE_TBB)
-    target_link_libraries(libvpr8 tbb)
-    target_link_libraries(libvpr8 tbbmalloc_proxy) #Use the scalable memory allocator
+    target_compile_definitions(libvpr PRIVATE VPR_USE_TBB)
+    target_link_libraries(libvpr tbb)
+    target_link_libraries(libvpr tbbmalloc_proxy) #Use the scalable memory allocator
     message(STATUS "VPR: will support parallel execution using '${VPR_USE_EXECUTION_ENGINE}'")
 elseif(VPR_USE_EXECUTION_ENGINE STREQUAL "serial")
     message(STATUS "VPR: will only support serial execution")
@@ -222,29 +222,29 @@ if (VPR_USE_SIGNAL_HANDLER)
     #Check wheter VPR can use sigaction to handle signals (only supported by POSIX)
     CHECK_CXX_SYMBOL_EXISTS(sigaction csignal HAVE_SIGACTION)
     if(HAVE_SIGACTION)
-        target_compile_definitions(libvpr8 PRIVATE VPR_USE_SIGACTION)
+        target_compile_definitions(libvpr PRIVATE VPR_USE_SIGACTION)
     endif()
 endif()
 
-install(TARGETS vpr8 libvpr8 DESTINATION bin)
+install(TARGETS vpr libvpr DESTINATION bin)
 
 
 #
 # Unit Tests
 #
 file(GLOB_RECURSE TEST_SOURCES test/*.cpp)
-add_executable(test_vpr8 ${TEST_SOURCES})
-target_link_libraries(test_vpr8
+add_executable(test_vpr ${TEST_SOURCES})
+target_link_libraries(test_vpr
                         libcatch
-                        libvpr8)
+                        libvpr)
 
 #Supress IPO link warnings if IPO is enabled
-get_target_property(TEST_VPR_USES_IPO vpr8 INTERPROCEDURAL_OPTIMIZATION)
+get_target_property(TEST_VPR_USES_IPO vpr INTERPROCEDURAL_OPTIMIZATION)
 if (TEST_VPR_USES_IPO)
-    set_target_properties(test_vpr8 PROPERTIES LINK_FLAGS ${IPO_LINK_WARN_SUPRESS_FLAGS})
+    set_target_properties(test_vpr PROPERTIES LINK_FLAGS ${IPO_LINK_WARN_SUPRESS_FLAGS})
 endif()
 
-add_test(NAME test_vpr8
+add_test(NAME test_vpr
     COMMAND test_vpr --use-colour=yes
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test
     )

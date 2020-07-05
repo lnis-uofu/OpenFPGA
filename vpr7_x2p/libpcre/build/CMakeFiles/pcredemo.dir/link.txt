@@ -1,1 +1,0 @@
-/usr/local/stow/gcc/amd64_linux26/gcc-8.2.0/bin/gcc   -L/usr/include CMakeFiles/pcredemo.dir/SRC/main.c.o  -o pcredemo liblibpcre.a 
