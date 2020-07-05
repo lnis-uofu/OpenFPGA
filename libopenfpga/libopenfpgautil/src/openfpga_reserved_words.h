@@ -52,6 +52,10 @@ constexpr char* INV_PORT_POSTFIX = "_inv";
 /* Bitstream file strings */
 constexpr char* BITSTREAM_XML_FILE_NAME_POSTFIX = "_bitstream.xml";
 
+constexpr char* DEFAULT_LB_DIR_NAME = "lb/";
+constexpr char* DEFAULT_RR_DIR_NAME = "routing/";
+constexpr char* DEFAULT_SUBMODULE_DIR_NAME = "sub_module/";
+
 } /* end namespace openfpga */
 
 #endif
