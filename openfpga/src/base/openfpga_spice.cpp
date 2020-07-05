@@ -36,12 +36,13 @@ int write_fabric_spice(OpenfpgaContext& openfpga_ctx,
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_compress_routing(openfpga_ctx.flow_manager().compress_routing());
   
-  fpga_fabric_spice(openfpga_ctx.module_graph(),
-                    openfpga_ctx.mutable_spice_netlists(),
-                    options);
+  int status = CMD_EXEC_SUCCESS;
+  status = fpga_fabric_spice(openfpga_ctx.module_graph(),
+                             openfpga_ctx.mutable_spice_netlists(),
+                             openfpga_ctx.arch().tech_lib,
+                             options);
 
-  /* TODO: should identify the error code from internal function execution */
-  return CMD_EXEC_SUCCESS;
+  return status;
 } 
 
 } /* end namespace openfpga */

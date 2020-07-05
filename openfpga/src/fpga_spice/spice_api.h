@@ -9,6 +9,7 @@
 #include <vector>
 #include "netlist_manager.h"
 #include "module_manager.h"
+#include "technology_library.h"
 #include "fabric_spice_options.h"
 
 /********************************************************************
@@ -18,9 +19,10 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void fpga_fabric_spice(const ModuleManager& module_manager,
-                       NetlistManager& netlist_manager,
-                       const FabricSpiceOption& options);
+int fpga_fabric_spice(const ModuleManager& module_manager,
+                      NetlistManager& netlist_manager,
+                      const TechnologyLibrary& tech_lib,
+                      const FabricSpiceOption& options);
 
 } /* end namespace openfpga */
 

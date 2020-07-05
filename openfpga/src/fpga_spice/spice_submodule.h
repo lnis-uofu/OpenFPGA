@@ -5,6 +5,7 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include "netlist_manager.h"
+#include "technology_library.h"
 
 /********************************************************************
  * Function declaration
@@ -13,8 +14,9 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_spice_submodule(NetlistManager& netlist_manager,
-                           const std::string& submodule_dir);
+int print_spice_submodule(NetlistManager& netlist_manager,
+                          const TechnologyLibrary& tech_lib,
+                          const std::string& submodule_dir);
 
 } /* end namespace openfpga */
 

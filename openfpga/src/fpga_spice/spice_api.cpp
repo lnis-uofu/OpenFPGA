@@ -7,6 +7,9 @@
 #include "vtr_assert.h"
 #include "vtr_time.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
 #include "openfpga_reserved_words.h"
@@ -34,9 +37,10 @@ namespace openfpga {
  *    It is about the fabric itself, independent from any implementation
  *    All the testbench generation should be in the function fpga_testbench_spice()
  ********************************************************************/
-void fpga_fabric_spice(const ModuleManager &module_manager,
-                       NetlistManager &netlist_manager,
-                       const FabricSpiceOption &options) {
+int fpga_fabric_spice(const ModuleManager& module_manager,
+                      NetlistManager& netlist_manager,
+                      const TechnologyLibrary& tech_lib,
+                      const FabricSpiceOption& options) {
 
   vtr::ScopedStartFinishTimer timer("Write SPICE netlists for FPGA fabric\n");
 
@@ -64,13 +68,22 @@ void fpga_fabric_spice(const ModuleManager &module_manager,
    * the module manager.
    * Without the modules in the module manager, core logic generation is not possible!!!
    */
-  print_spice_submodule(netlist_manager,
-                        submodule_dir_path);
+  int status = CMD_EXEC_SUCCESS;
+
+  status = print_spice_submodule(netlist_manager,
+                                 tech_lib,
+                                 submodule_dir_path);
+ 
+  if (CMD_EXEC_SUCCESS != status) {
+    return status;
+  }
 
   /* Given a brief stats on how many Spice modules have been written to files */
   VTR_LOGV(options.verbose_output(),
            "Written %lu SPICE modules in total\n",
            module_manager.num_modules());
+
+  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */

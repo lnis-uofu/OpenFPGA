@@ -5,6 +5,8 @@
 
 constexpr char* SPICE_NETLIST_FILE_POSTFIX = ".sp";
 
+constexpr char* TRANSISTOR_WRAPPER_POSTFIX = "_wrapper";
+
 constexpr char* TRANSISTORS_SPICE_FILE_NAME = "transistor.sp";
 constexpr char* ESSENTIALS_SPICE_FILE_NAME = "inv_buf_passgate.sp";
 
