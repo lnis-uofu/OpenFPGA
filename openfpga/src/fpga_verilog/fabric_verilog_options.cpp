@@ -18,9 +18,6 @@ FabricVerilogOption::FabricVerilogOption() {
   include_timing_ = false;
   explicit_port_mapping_ = false;
   compress_routing_ = false;
-  print_top_testbench_ = false;
-  print_formal_verification_top_netlist_ = false;
-  reference_verilog_file_path_.clear();
   print_user_defined_template_ = false;
   verbose_output_ = false;
 }
