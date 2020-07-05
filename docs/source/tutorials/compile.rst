@@ -14,7 +14,7 @@ In general, please follow the steps to compile
   cd OpenFPGA
   mkdir build
   cd build            
-  cmake ..  -DCMAKE_BUILD_TYPE=debug 
+  cmake ..
   make                             
 
 .. note:: OpenFPGA requires gcc/g++ version >5
