@@ -892,6 +892,16 @@ bool ModuleManager::valid_module_net_id(const ModuleId& module, const ModuleNetI
   return ( size_t(net) < num_nets_[module] ); 
 }
 
+bool ModuleManager::valid_module_instance_id(const ModuleId& parent_module,
+                                             const ModuleId& child_module,
+                                             const size_t& instance_id) const {
+  if ( (false == valid_module_id(parent_module))
+    || (false == valid_module_id(child_module))) {
+    return false;
+  }
+  return ( instance_id < num_instance(parent_module, child_module) ); 
+}
+
 void ModuleManager::invalidate_name2id_map() {
   name_id_map_.clear();
 }

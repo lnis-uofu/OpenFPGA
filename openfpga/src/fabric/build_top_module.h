@@ -25,22 +25,22 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void build_top_module(ModuleManager& module_manager,
-                      IoLocationMap& io_location_map,
-                      DecoderLibrary& decoder_lib,
-                      const CircuitLibrary& circuit_lib,
-                      const DeviceGrid& grids,
-                      const RRGraph& rr_graph,
-                      const DeviceRRGSB& device_rr_gsb,
-                      const TileDirect& tile_direct,
-                      const ArchDirect& arch_direct,
-                      const e_config_protocol_type& sram_orgz_type,
-                      const CircuitModelId& sram_model,
-                      const bool& frame_view,
-                      const bool& compact_routing_hierarchy,
-                      const bool& duplicate_grid_pin,
-                      const FabricKey& fabric_key,
-                      const bool& generate_random_fabric_key);
+int build_top_module(ModuleManager& module_manager,
+                     IoLocationMap& io_location_map,
+                     DecoderLibrary& decoder_lib,
+                     const CircuitLibrary& circuit_lib,
+                     const DeviceGrid& grids,
+                     const RRGraph& rr_graph,
+                     const DeviceRRGSB& device_rr_gsb,
+                     const TileDirect& tile_direct,
+                     const ArchDirect& arch_direct,
+                     const e_config_protocol_type& sram_orgz_type,
+                     const CircuitModelId& sram_model,
+                     const bool& frame_view,
+                     const bool& compact_routing_hierarchy,
+                     const bool& duplicate_grid_pin,
+                     const FabricKey& fabric_key,
+                     const bool& generate_random_fabric_key);
 
 } /* end namespace openfpga */
 

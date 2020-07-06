@@ -94,6 +94,30 @@ size_t count_module_manager_module_configurable_children(const ModuleManager& mo
 }
 
 /******************************************************************************
+ * Find the module id and instance id in module manager with a given instance name
+ * This function will exhaustively search all the child module under a given parent
+ * module 
+ ******************************************************************************/
+std::pair<ModuleId, size_t> find_module_manager_instance_module_info(const ModuleManager& module_manager,
+                                                                     const ModuleId& parent, 
+                                                                     const std::string& instance_name) {
+  /* Deposit invalid values as default */
+  std::pair<ModuleId, size_t> instance_info(ModuleId::INVALID(), 0);
+  
+  /* Search all the child module and see we have a match */
+  for (const ModuleId& child : module_manager.child_modules(parent)) {
+    size_t child_instance = module_manager.instance_id(parent, child, instance_name); 
+    if (true == module_manager.valid_module_instance_id(parent, child, child_instance)) {
+      instance_info.first = child;
+      instance_info.second = child_instance;
+      return instance_info;
+    }
+  }
+  
+  return instance_info; 
+}
+
+/******************************************************************************
  * Add a module to the module manager based on the circuit-level
  * description of a circuit model
  * This function add a module with a given customized name

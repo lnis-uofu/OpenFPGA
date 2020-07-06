@@ -12,6 +12,9 @@
 /* Headers from vpr library */
 #include "vpr_utils.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 #include "rr_gsb_utils.h"
 #include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
@@ -419,36 +422,47 @@ int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager
   module_manager.clear_configurable_children(top_module);
 
   for (const FabricKeyId& key : fabric_key.keys()) {
-    /* Find if the module name exist */
-    ModuleId child_module = module_manager.find_module(fabric_key.key_name(key));
-    if (false == module_manager.valid_module_id(child_module)) {
-      VTR_LOGF_ERROR(__FILE__, __LINE__,
-                     "Invalid key name '%s'!\n",
-                     fabric_key.key_name(key).c_str()); 
-      return 1;                    
-    }
-
     /* Find if instance id is valid */
-    size_t child_instance = fabric_key.key_value(key);
-    /* If we have alias, we try to find a instance in this name */
+    std::pair<ModuleId, size_t> instance_info(ModuleId::INVALID(), 0);
+    /* If we have an alias, we try to find a instance in this name */
     if (!fabric_key.key_alias(key).empty()) {
-      child_instance = module_manager.instance_id(top_module, child_module, fabric_key.key_alias(key)); 
+      /* Find the module id and instance id  */
+      instance_info = find_module_manager_instance_module_info(module_manager, top_module, fabric_key.key_alias(key)); 
+    } else { 
+      /* If we do not have an alias, we use the name and value to build the info deck */
+      instance_info.first = module_manager.find_module(fabric_key.key_name(key));
+      instance_info.second = fabric_key.key_value(key);
     }
 
-    if (child_instance >= module_manager.num_instance(top_module, child_module)) {
-      VTR_LOGF_ERROR(__FILE__, __LINE__,
-                     "Invalid key value '%ld'!\n",
-                     child_instance); 
-      return 1;                    
+    if (false == module_manager.valid_module_id(instance_info.first)) {
+      if (!fabric_key.key_alias(key).empty()) {
+        VTR_LOG_ERROR("Invalid key alias '%s'!\n",
+                      fabric_key.key_alias(key).c_str()); 
+      } else {
+        VTR_LOG_ERROR("Invalid key name '%s'!\n",
+                      fabric_key.key_name(key).c_str()); 
+      }
+      return CMD_EXEC_FATAL_ERROR;                    
+    }
+
+    if (false == module_manager.valid_module_instance_id(top_module, instance_info.first, instance_info.second)) {
+      if (!fabric_key.key_alias(key).empty()) {
+        VTR_LOG_ERROR("Invalid key alias '%s'!\n",
+                      fabric_key.key_alias(key).c_str()); 
+      } else {
+        VTR_LOG_ERROR("Invalid key value '%ld'!\n",
+                      instance_info.second); 
+      }
+      return CMD_EXEC_FATAL_ERROR;                    
     }
 
     /* Now we can add the child to configurable children of the top module */
     module_manager.add_configurable_child(top_module,
-                                          child_module,
-                                          child_instance);
+                                          instance_info.first,
+                                          instance_info.second);
   }
 
-  return 0;
+  return CMD_EXEC_SUCCESS;
 } 
 
 /********************************************************************

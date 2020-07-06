@@ -13,6 +13,9 @@
 /* Headers from vpr library */
 #include "vpr_utils.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 #include "rr_gsb_utils.h"
 #include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
@@ -318,24 +321,26 @@ vtr::Matrix<size_t> add_top_module_connection_block_instances(ModuleManager& mod
  * 4. Add module nets to connect datapath ports
  * 5. Add module nets/submodules to connect configuration ports
  *******************************************************************/
-void build_top_module(ModuleManager& module_manager,
-                      IoLocationMap& io_location_map,
-                      DecoderLibrary& decoder_lib,
-                      const CircuitLibrary& circuit_lib,
-                      const DeviceGrid& grids,
-                      const RRGraph& rr_graph,
-                      const DeviceRRGSB& device_rr_gsb,
-                      const TileDirect& tile_direct,
-                      const ArchDirect& arch_direct,
-                      const e_config_protocol_type& sram_orgz_type,
-                      const CircuitModelId& sram_model,
-                      const bool& frame_view,
-                      const bool& compact_routing_hierarchy,
-                      const bool& duplicate_grid_pin,
-                      const FabricKey& fabric_key,
-                      const bool& generate_random_fabric_key) {
+int build_top_module(ModuleManager& module_manager,
+                     IoLocationMap& io_location_map,
+                     DecoderLibrary& decoder_lib,
+                     const CircuitLibrary& circuit_lib,
+                     const DeviceGrid& grids,
+                     const RRGraph& rr_graph,
+                     const DeviceRRGSB& device_rr_gsb,
+                     const TileDirect& tile_direct,
+                     const ArchDirect& arch_direct,
+                     const e_config_protocol_type& sram_orgz_type,
+                     const CircuitModelId& sram_model,
+                     const bool& frame_view,
+                     const bool& compact_routing_hierarchy,
+                     const bool& duplicate_grid_pin,
+                     const FabricKey& fabric_key,
+                     const bool& generate_random_fabric_key) {
 
   vtr::ScopedStartFinishTimer timer("Build FPGA fabric module");
+
+  int status = CMD_EXEC_SUCCESS;
 
   /* Create a module as the top-level fabric, and add it to the module manager */
   std::string top_module_name = generate_fpga_top_module_name();
@@ -397,8 +402,11 @@ void build_top_module(ModuleManager& module_manager,
                                        compact_routing_hierarchy);
   } else {
     VTR_ASSERT_SAFE(false == fabric_key.empty());
-    load_top_module_memory_modules_from_fabric_key(module_manager, top_module,
-                                                   fabric_key); 
+    status = load_top_module_memory_modules_from_fabric_key(module_manager, top_module,
+                                                            fabric_key); 
+    if (CMD_EXEC_FATAL_ERROR == status) {
+      return status;
+    }
   }
 
   /* Shuffle the configurable children in a random sequence */
@@ -435,6 +443,8 @@ void build_top_module(ModuleManager& module_manager,
                                           sram_orgz_type, circuit_lib.design_tech_type(sram_model),
                                           module_num_config_bits);
   }
+
+  return status;
 }
 
 } /* end namespace openfpga */

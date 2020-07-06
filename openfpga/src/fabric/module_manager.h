@@ -285,6 +285,9 @@ class ModuleManager {
     bool valid_module_id(const ModuleId& module) const;
     bool valid_module_port_id(const ModuleId& module, const ModulePortId& port) const;
     bool valid_module_net_id(const ModuleId& module, const ModuleNetId& net) const;
+    bool valid_module_instance_id(const ModuleId& parent_module,
+                                  const ModuleId& child_module,
+                                  const size_t& instance_id) const;
   private: /* Private validators/invalidators */
     void invalidate_name2id_map();
     void invalidate_port_lookup();

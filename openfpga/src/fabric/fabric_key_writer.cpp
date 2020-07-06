@@ -29,6 +29,7 @@ namespace openfpga {
  ***************************************************************************************/
 int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
                                  const std::string& fname,
+                                 const e_config_protocol_type& config_protocol_type,
                                  const bool& verbose) {
   std::string timer_message = std::string("Write fabric key to XML file '") + fname + std::string("'");
 
@@ -56,6 +57,14 @@ int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
   /* Build a fabric key database by visiting all the configurable children */
   FabricKey fabric_key;
   size_t num_keys = module_manager.configurable_children(top_module).size(); 
+
+  /* Exclude configuration-related modules in the keys */
+  if (CONFIG_MEM_MEMORY_BANK == config_protocol_type) {
+    num_keys -= 2;
+  } else if (CONFIG_MEM_FRAME_BASED == config_protocol_type) {
+    num_keys -= 1;
+  }
+
   fabric_key.reserve_keys(num_keys);
 
   for (size_t ichild = 0; ichild < num_keys; ++ichild) {
