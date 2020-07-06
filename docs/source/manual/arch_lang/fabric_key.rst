@@ -67,5 +67,4 @@ The following is an example of a fabric key generate by OpenFPGA for a 2 :math:`
     	<key id="30" name="cbx_1__1_" value="0" alias="cbx_1__1_"/>
     	<key id="31" name="grid_io_top" value="0" alias="grid_io_top_1_3"/>
     	<key id="32" name="grid_io_left" value="1" alias="grid_io_left_0_2"/>
-    	<key id="33" name="decoder6to33" value="0"/>
     </fabric_key>
