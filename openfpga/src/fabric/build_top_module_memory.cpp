@@ -426,8 +426,15 @@ int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager
     std::pair<ModuleId, size_t> instance_info(ModuleId::INVALID(), 0);
     /* If we have an alias, we try to find a instance in this name */
     if (!fabric_key.key_alias(key).empty()) {
-      /* Find the module id and instance id  */
-      instance_info = find_module_manager_instance_module_info(module_manager, top_module, fabric_key.key_alias(key)); 
+      /* If we have the key, we can quickly spot instance id.
+       * Otherwise, we have to exhaustively find the module id and instance id
+       */
+      if (!fabric_key.key_name(key).empty()) {
+        instance_info.first = module_manager.find_module(fabric_key.key_name(key));
+        instance_info.second = module_manager.instance_id(top_module, instance_info.first, fabric_key.key_alias(key));
+      } else {
+        instance_info = find_module_manager_instance_module_info(module_manager, top_module, fabric_key.key_alias(key)); 
+      }
     } else { 
       /* If we do not have an alias, we use the name and value to build the info deck */
       instance_info.first = module_manager.find_module(fabric_key.key_name(key));
