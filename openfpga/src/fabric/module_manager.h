@@ -30,6 +30,10 @@ namespace openfpga {
  ******************************************************************************/
 class ModuleManager {
   public: /* Private data structures */
+    /* A type to indicate the usage of ports 
+     * Test bench generator use this to identify 
+     * what signals to drive   
+     */
     enum e_module_port_type {
       MODULE_GLOBAL_PORT, /* Global inputs */
       MODULE_GPIN_PORT,   /* General-purpose input */
@@ -38,8 +42,27 @@ class ModuleManager {
       MODULE_INOUT_PORT,  /* Normal (non-global) inout ports */
       MODULE_INPUT_PORT,  /* Normal (non-global) input ports */
       MODULE_OUTPUT_PORT, /* Normal (non-global) output ports */
-      MODULE_CLOCK_PORT,  /* Nromal (non-global) clock ports*/
+      MODULE_CLOCK_PORT,  /* Normal (non-global) clock ports*/
       NUM_MODULE_PORT_TYPES 
+    };
+
+    /* A type to indicate the usage of module
+     * This helps FPGA-SPICE to identify which VDD/VSS
+     * port should be applied to modules
+     */
+    enum e_module_usage_type {
+      MODULE_TOP,          /* Top-level module */
+      MODULE_CONFIG,       /* Configuration modules, i.e., decoders, sram etc. */
+      MODULE_INTERC,       /* Programmable interconnection, e.g., routing multiplexer etc. */
+      MODULE_GRID,         /* Grids (programmable blocks) */
+      MODULE_LUT,          /* Look-Up Table (LUT) modules */
+      MODULE_HARD_IP,      /* Hard IP modules */
+      MODULE_SB,           /* Switch block modules */
+      MODULE_CB,           /* Connection block modules */
+      MODULE_IO,           /* I/O modules */
+      MODULE_VDD,          /* Local VDD lines to generate constant voltages */
+      MODULE_VSS,          /* Local VSS lines to generate constant voltages */
+      NUM_MODULE_USAGE_TYPES
     };
 
   public: /* Public Constructors */
@@ -132,6 +155,7 @@ class ModuleManager {
     size_t num_modules() const;
     size_t num_nets(const ModuleId& module) const;
     std::string module_name(const ModuleId& module_id) const;
+    e_module_usage_type module_usage(const ModuleId& module_id) const;
     std::string module_port_type_str(const enum e_module_port_type& port_type) const;
     std::vector<BasicPort> module_ports_by_type(const ModuleId& module_id, const enum e_module_port_type& port_type) const;
     std::vector<ModulePortId> module_port_ids_by_type(const ModuleId& module_id, const enum e_module_port_type& port_type) const;
@@ -199,6 +223,8 @@ class ModuleManager {
     void set_module_port_name(const ModuleId& module, const ModulePortId& module_port, const std::string& port_name);
     /* Set a name for a module */
     void set_module_name(const ModuleId& module, const std::string& name);
+    /* Set a usage for a module */
+    void set_module_usage(const ModuleId& module, const e_module_usage_type& usage);
     /* Set a port to be a wire */
     void set_port_is_wire(const ModuleId& module, const std::string& port_name, const bool& is_wire);
     /* Set a port to be a register */
@@ -259,6 +285,9 @@ class ModuleManager {
     bool valid_module_id(const ModuleId& module) const;
     bool valid_module_port_id(const ModuleId& module, const ModulePortId& port) const;
     bool valid_module_net_id(const ModuleId& module, const ModuleNetId& net) const;
+    bool valid_module_instance_id(const ModuleId& parent_module,
+                                  const ModuleId& child_module,
+                                  const size_t& instance_id) const;
   private: /* Private validators/invalidators */
     void invalidate_name2id_map();
     void invalidate_port_lookup();
@@ -266,7 +295,8 @@ class ModuleManager {
   private: /* Internal data */
     /* Module-level data */
     vtr::vector<ModuleId, ModuleId> ids_;                                  /* Unique identifier for each Module */
-    vtr::vector<ModuleId, std::string> names_;                                  /* Unique identifier for each Module */
+    vtr::vector<ModuleId, std::string> names_;                             /* Unique identifier for each Module */
+    vtr::vector<ModuleId, e_module_usage_type> usages_;                     /* Usage of each module */
     vtr::vector<ModuleId, std::vector<ModuleId>> parents_;                 /* Parent modules that include the module */
     vtr::vector<ModuleId, std::vector<ModuleId>> children_;                /* Child modules that this module contain */
     vtr::vector<ModuleId, std::vector<size_t>> num_child_instances_;          /* Number of children instance in each child module */

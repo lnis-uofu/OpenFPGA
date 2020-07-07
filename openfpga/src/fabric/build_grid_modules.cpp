@@ -251,6 +251,9 @@ void build_primitive_block_module(ModuleManager& module_manager,
   /* Ensure that the module has been created and thus unique! */
   VTR_ASSERT(ModuleId::INVALID() != primitive_module);
 
+  /* Label module usage */
+  module_manager.set_module_usage(primitive_module, ModuleManager::MODULE_GRID);
+
   /* Note: to cooperate with the pb_type hierarchy and connections, we add the port of primitive pb_type here.
    * Since we have linked pb_type ports to circuit models when setting up FPGA-X2P,
    * no ports of the circuit model will be missing here  
@@ -857,6 +860,9 @@ void rec_build_logical_tile_modules(ModuleManager& module_manager,
   /* Register the Verilog module in module manager */
   ModuleId pb_module = module_manager.add_module(pb_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(pb_module));
+
+  /* Label module usage */
+  module_manager.set_module_usage(pb_module, ModuleManager::MODULE_GRID);
 
   /* Add ports to the Verilog module */
   add_pb_type_ports_to_module_manager(module_manager, pb_module, physical_pb_type); 

@@ -23,10 +23,6 @@ class FabricVerilogOption {
     bool include_signal_init() const;
     bool explicit_port_mapping() const;
     bool compress_routing() const;
-    bool print_top_testbench() const;
-    bool print_formal_verification_top_netlist() const;
-    bool print_autocheck_top_testbench() const;
-    std::string reference_verilog_file_path() const;
     bool print_user_defined_template() const;
     bool verbose_output() const;
   public: /* Public mutators */
@@ -36,9 +32,6 @@ class FabricVerilogOption {
     void set_include_signal_init(const bool& enabled);
     void set_explicit_port_mapping(const bool& enabled);
     void set_compress_routing(const bool& enabled);
-    void set_print_top_testbench(const bool& enabled);
-    void set_print_formal_verification_top_netlist(const bool& enabled);
-    void set_print_autocheck_top_testbench(const std::string& reference_verilog_file_path);
     void set_print_user_defined_template(const bool& enabled);
     void set_verbose_output(const bool& enabled);
   private: /* Internal Data */
@@ -48,10 +41,6 @@ class FabricVerilogOption {
     bool include_timing_;
     bool explicit_port_mapping_;
     bool compress_routing_;
-    bool print_top_testbench_;
-    bool print_formal_verification_top_netlist_;
-    /* print_autocheck_top_testbench will be enabled when reference file path is not empty */
-    std::string reference_verilog_file_path_;
     bool print_user_defined_template_;
     bool verbose_output_;
 };

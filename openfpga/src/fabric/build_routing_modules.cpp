@@ -337,6 +337,9 @@ void build_switch_block_module(ModuleManager& module_manager,
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
   ModuleId sb_module = module_manager.add_module(generate_switch_block_module_name(gsb_coordinate)); 
 
+  /* Label module usage */
+  module_manager.set_module_usage(sb_module, ModuleManager::MODULE_SB);
+
   VTR_LOGV(verbose,
            "Building module '%s'...",
            generate_switch_block_module_name(gsb_coordinate).c_str());
@@ -735,6 +738,9 @@ void build_connection_block_module(ModuleManager& module_manager,
 
   /* Create a Verilog Module based on the circuit model, and add to module manager */
   ModuleId cb_module = module_manager.add_module(generate_connection_block_module_name(cb_type, gsb_coordinate)); 
+
+  /* Label module usage */
+  module_manager.set_module_usage(cb_module, ModuleManager::MODULE_CB);
 
   VTR_LOGV(verbose,
            "Building module '%s'...",

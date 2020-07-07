@@ -11,6 +11,7 @@
 
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
+#include "openfpga_reserved_words.h"
 
 #include "device_rr_gsb.h"
 #include "verilog_constants.h"

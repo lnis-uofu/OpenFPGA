@@ -82,6 +82,10 @@ void build_lut_module(ModuleManager& module_manager,
   /* Create a Verilog Module based on the circuit model, and add to module manager */
   ModuleId lut_module = module_manager.add_module(circuit_lib.model_name(lut_model)); 
   VTR_ASSERT(true == module_manager.valid_module_id(lut_module));
+
+  /* Label module usage */
+  module_manager.set_module_usage(lut_module, ModuleManager::MODULE_LUT);
+
   /* Add module ports */
   /* Add each global port */
   for (const auto& port : lut_global_ports) {

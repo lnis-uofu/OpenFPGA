@@ -94,6 +94,30 @@ size_t count_module_manager_module_configurable_children(const ModuleManager& mo
 }
 
 /******************************************************************************
+ * Find the module id and instance id in module manager with a given instance name
+ * This function will exhaustively search all the child module under a given parent
+ * module 
+ ******************************************************************************/
+std::pair<ModuleId, size_t> find_module_manager_instance_module_info(const ModuleManager& module_manager,
+                                                                     const ModuleId& parent, 
+                                                                     const std::string& instance_name) {
+  /* Deposit invalid values as default */
+  std::pair<ModuleId, size_t> instance_info(ModuleId::INVALID(), 0);
+  
+  /* Search all the child module and see we have a match */
+  for (const ModuleId& child : module_manager.child_modules(parent)) {
+    size_t child_instance = module_manager.instance_id(parent, child, instance_name); 
+    if (true == module_manager.valid_module_instance_id(parent, child, child_instance)) {
+      instance_info.first = child;
+      instance_info.second = child_instance;
+      return instance_info;
+    }
+  }
+  
+  return instance_info; 
+}
+
+/******************************************************************************
  * Add a module to the module manager based on the circuit-level
  * description of a circuit model
  * This function add a module with a given customized name
@@ -104,6 +128,26 @@ ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager,
                                              const std::string& module_name) {
   ModuleId module = module_manager.add_module(module_name); 
   VTR_ASSERT(ModuleId::INVALID() != module);
+
+  /* Identify module usage based on circuit type:
+   * LUT, SRAM, CCFF, I/O have specific usages
+   * Others will be classified as hard IPs 
+   */
+  if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(circuit_model)) {
+    module_manager.set_module_usage(module, ModuleManager::MODULE_LUT);
+  } else if (CIRCUIT_MODEL_SRAM == circuit_lib.model_type(circuit_model)) {
+    module_manager.set_module_usage(module, ModuleManager::MODULE_CONFIG);
+  } else if (CIRCUIT_MODEL_CCFF == circuit_lib.model_type(circuit_model)) {
+    module_manager.set_module_usage(module, ModuleManager::MODULE_CONFIG);
+  } else if (CIRCUIT_MODEL_IOPAD == circuit_lib.model_type(circuit_model)) {
+    module_manager.set_module_usage(module, ModuleManager::MODULE_IO);
+  } else if (CIRCUIT_MODEL_WIRE == circuit_lib.model_type(circuit_model)) {
+    module_manager.set_module_usage(module, ModuleManager::MODULE_INTERC);
+  } else if (CIRCUIT_MODEL_CHAN_WIRE == circuit_lib.model_type(circuit_model)) {
+    module_manager.set_module_usage(module, ModuleManager::MODULE_INTERC);
+  } else {
+    module_manager.set_module_usage(module, ModuleManager::MODULE_HARD_IP);
+  }
 
   /* Add ports */
   /* Find global ports and add one by one 
