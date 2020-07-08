@@ -123,14 +123,14 @@ int BitstreamManager::block_path_id(const ConfigBlockId& block_id) const {
   return block_path_ids_[block_id];
 }
 
-std::vector<std::string> BitstreamManager::block_input_net_ids(const ConfigBlockId& block_id) const {
+std::string BitstreamManager::block_input_net_ids(const ConfigBlockId& block_id) const {
   /* Ensure the input ids are valid */
   VTR_ASSERT(true == valid_block_id(block_id));
 
   return block_input_net_ids_[block_id];
 }
 
-std::vector<std::string> BitstreamManager::block_output_net_ids(const ConfigBlockId& block_id) const {
+std::string BitstreamManager::block_output_net_ids(const ConfigBlockId& block_id) const {
   /* Ensure the input ids are valid */
   VTR_ASSERT(true == valid_block_id(block_id));
 
@@ -246,29 +246,13 @@ void BitstreamManager::add_path_id_to_block(const ConfigBlockId& block, const in
   block_path_ids_[block] = path_id;
 }
 
-void BitstreamManager::reserve_block_input_net_ids(const ConfigBlockId& block,
-                                                   const size_t& num_input_net_ids) {
-  /* Ensure the input ids are valid */
-  VTR_ASSERT(true == valid_block_id(block));
-
-  block_input_net_ids_[block].reserve(num_input_net_ids);
-}
-
 void BitstreamManager::add_input_net_id_to_block(const ConfigBlockId& block,
                                                  const std::string& input_net_id) {
   /* Ensure the input ids are valid */
   VTR_ASSERT(true == valid_block_id(block));
 
   /* Add the bit to the block */
-  block_input_net_ids_[block].push_back(input_net_id);
-}
-
-void BitstreamManager::reserve_block_output_net_ids(const ConfigBlockId& block,
-                                                    const size_t& num_output_net_ids) {
-  /* Ensure the input ids are valid */
-  VTR_ASSERT(true == valid_block_id(block));
-
-  block_output_net_ids_[block].reserve(num_output_net_ids);
+  block_input_net_ids_[block] = input_net_id;
 }
 
 void BitstreamManager::add_output_net_id_to_block(const ConfigBlockId& block,
@@ -277,7 +261,7 @@ void BitstreamManager::add_output_net_id_to_block(const ConfigBlockId& block,
   VTR_ASSERT(true == valid_block_id(block));
 
   /* Add the bit to the block */
-  block_output_net_ids_[block].push_back(output_net_id);
+  block_output_net_ids_[block] = output_net_id;
 }
 
 /******************************************************************************

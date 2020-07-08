@@ -13,6 +13,7 @@
 
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
+#include "openfpga_tokenizer.h"
 
 #include "openfpga_reserved_words.h"
 
@@ -95,7 +96,9 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
     write_tab_to_file(fp, hierarchy_level + 1);
     fp << "<input_nets>\n";
     size_t path_counter = 0;
-    for (const std::string& net : bitstream_manager.block_input_net_ids(block)) {
+    /* Split with space */
+    StringToken input_net_tokenizer(bitstream_manager.block_input_net_ids(block));
+    for (const std::string& net : input_net_tokenizer.split(std::string(" "))) {
       write_tab_to_file(fp, hierarchy_level + 2);
       fp << "<path id=\"" << path_counter << "\"";
       fp << " net_name=\"";
@@ -113,7 +116,9 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
     write_tab_to_file(fp, hierarchy_level + 1);
     fp << "<output_nets>\n";
     size_t path_counter = 0;
-    for (const std::string& net : bitstream_manager.block_output_net_ids(block)) {
+    /* Split with space */
+    StringToken output_net_tokenizer(bitstream_manager.block_output_net_ids(block));
+    for (const std::string& net : output_net_tokenizer.split(std::string(" "))) {
       write_tab_to_file(fp, hierarchy_level + 2);
       fp << "<path id=\"" << path_counter << "\"";
       fp << " net_name=\"";

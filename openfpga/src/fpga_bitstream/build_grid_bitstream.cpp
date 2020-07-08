@@ -214,20 +214,33 @@ void build_physical_block_pin_interc_bitstream(BitstreamManager& bitstream_manag
     bitstream_manager.add_block_bits(mux_mem_block, mux_bitstream);
     /* Record path ids, input and output nets */
     bitstream_manager.add_path_id_to_block(mux_mem_block, mux_input_pin_id);
-    bitstream_manager.reserve_block_input_net_ids(mux_mem_block, input_nets.size());
+
+    /* Add input nets */
+    std::string input_net_ids;
+    
+    bool need_splitter = false;
     for (const AtomNetId& input_net : input_nets) {
-      if (true == atom_ctx.nlist.valid_net_id(input_net)) {
-        bitstream_manager.add_input_net_id_to_block(mux_mem_block, atom_ctx.nlist.net_name(input_net));
-      } else {
-        bitstream_manager.add_input_net_id_to_block(mux_mem_block, std::string("unmapped"));
+      /* Add a space as a splitter*/
+      if (true == need_splitter) {
+        input_net_ids += std::string(" ");
       }
+      if (true == atom_ctx.nlist.valid_net_id(input_net)) {
+        input_net_ids += atom_ctx.nlist.net_name(input_net);
+      } else {
+        input_net_ids += std::string("unmapped");
+      }
+      need_splitter = true;
     }
+    bitstream_manager.add_input_net_id_to_block(mux_mem_block, input_net_ids);
+
+    /* Add output nets */
+    std::string output_net_ids;
     if (true == atom_ctx.nlist.valid_net_id(output_net)) {
-    bitstream_manager.reserve_block_output_net_ids(mux_mem_block, 1);
-      bitstream_manager.add_output_net_id_to_block(mux_mem_block, atom_ctx.nlist.net_name(output_net));
+      output_net_ids += atom_ctx.nlist.net_name(output_net);
     } else {
-      bitstream_manager.add_output_net_id_to_block(mux_mem_block, std::string("unmapped"));
+      output_net_ids += std::string("unmapped");
     }
+    bitstream_manager.add_output_net_id_to_block(mux_mem_block, output_net_ids);
 
     break;
   }

@@ -62,9 +62,16 @@ void rec_read_xml_bitstream_block(pugi::xml_node& xml_bitstream_block,
       input_nets[id] = net_name; 
     } 
 
+    std::string input_nets_str;
+    bool need_splitter = false;
     for (const std::string& input_net : input_nets) {
-      bitstream_manager.add_input_net_id_to_block(curr_block, input_net); 
+      if (true == need_splitter) {
+        input_nets_str += std::string(" ");
+      }
+      input_nets_str += input_net;
+      need_splitter = true;
     }
+    bitstream_manager.add_input_net_id_to_block(curr_block, input_nets_str); 
   }
 
   /* Parse output nets if defined */
@@ -86,9 +93,16 @@ void rec_read_xml_bitstream_block(pugi::xml_node& xml_bitstream_block,
       output_nets[id] = net_name; 
     } 
 
+    std::string output_nets_str;
+    bool need_splitter = false;
     for (const std::string& output_net : output_nets) {
-      bitstream_manager.add_output_net_id_to_block(curr_block, output_net); 
+      if (true == need_splitter) {
+        output_nets_str += std::string(" ");
+      }
+      output_nets_str += output_net;
+      need_splitter = true;
     }
+    bitstream_manager.add_output_net_id_to_block(curr_block, output_nets_str); 
   }
 
   /* Parse configuration bits */
