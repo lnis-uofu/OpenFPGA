@@ -138,10 +138,10 @@ class BitstreamManager {
     int block_path_id(const ConfigBlockId& block_id) const;
 
     /* Find input net ids of a block */
-    std::vector<std::string> block_input_net_ids(const ConfigBlockId& block_id) const;
+    std::string block_input_net_ids(const ConfigBlockId& block_id) const;
 
     /* Find input net ids of a block */
-    std::vector<std::string> block_output_net_ids(const ConfigBlockId& block_id) const;
+    std::string block_output_net_ids(const ConfigBlockId& block_id) const;
 
   public:  /* Public Mutators */
     /* Add a new configuration bit to the bitstream manager */
@@ -177,14 +177,8 @@ class BitstreamManager {
     /* Add a path id to a block */
     void add_path_id_to_block(const ConfigBlockId& block, const int& path_id);
  
-    /* Reserve input net ids for a block */
-    void reserve_block_input_net_ids(const ConfigBlockId& block, const size_t& num_input_net_ids);
-
     /* Add an input net id to a block */
     void add_input_net_id_to_block(const ConfigBlockId& block, const std::string& input_net_id);
-
-    /* Reserve output net ids for a block */
-    void reserve_block_output_net_ids(const ConfigBlockId& block, const size_t& num_output_net_ids);
 
     /* Add an output net id to a block */
     void add_output_net_id_to_block(const ConfigBlockId& block, const std::string& output_net_id);
@@ -233,8 +227,8 @@ class BitstreamManager {
      *   -Bitstream manager will NOT check if the id is good for bitstream builders
      *    It just store the results
      */
-    vtr::vector<ConfigBlockId, std::vector<std::string>> block_input_net_ids_; 
-    vtr::vector<ConfigBlockId, std::vector<std::string>> block_output_net_ids_; 
+    vtr::vector<ConfigBlockId, std::string> block_input_net_ids_; 
+    vtr::vector<ConfigBlockId, std::string> block_output_net_ids_; 
 
     /* Unique id of a bit in the Bitstream */
     size_t num_bits_; 
