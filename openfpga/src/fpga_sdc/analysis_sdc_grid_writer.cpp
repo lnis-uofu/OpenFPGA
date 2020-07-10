@@ -252,6 +252,14 @@ void disable_pb_graph_node_unused_mux_inputs(std::fstream& fp,
       const PhysicalPbId& pb_id = physical_pb.find_pb(physical_pb_graph_node); 
       const AtomNetId& mapped_net = physical_pb.pb_graph_pin_atom_net(pb_id, &(physical_pb_graph_node->input_pins[iport][ipin])); 
 
+      /* If the pin has not fan-out, we do not need to disable anything  */
+      if (0 == physical_pb_graph_node->input_pins[iport][ipin].num_output_edges) {
+        /* Make sure that we do not have any module net associated to this pin */
+        ModuleNetId module_net = module_manager.module_instance_port_net(parent_module, parent_module, 0, module_port, ipin); 
+        VTR_ASSERT(false == module_manager.valid_module_net_id(parent_module, module_net));
+        continue;
+      }
+
       disable_analysis_module_input_pin_net_sinks(fp, module_manager, parent_module,
                                                   hierarchy_name,
                                                   module_port, ipin,
@@ -269,6 +277,14 @@ void disable_pb_graph_node_unused_mux_inputs(std::fstream& fp,
 
       const PhysicalPbId& pb_id = physical_pb.find_pb(physical_pb_graph_node); 
       const AtomNetId& mapped_net = physical_pb.pb_graph_pin_atom_net(pb_id, &(physical_pb_graph_node->clock_pins[iport][ipin])); 
+
+      /* If the pin has not fan-out, we do not need to disable anything  */
+      if (0 == physical_pb_graph_node->clock_pins[iport][ipin].num_output_edges) {
+        /* Make sure that we do not have any module net associated to this pin */
+        ModuleNetId module_net = module_manager.module_instance_port_net(parent_module, parent_module, 0, module_port, ipin); 
+        VTR_ASSERT(false == module_manager.valid_module_net_id(parent_module, module_net));
+        continue;
+      }
 
       disable_analysis_module_input_pin_net_sinks(fp, module_manager, parent_module,
                                                   hierarchy_name,
