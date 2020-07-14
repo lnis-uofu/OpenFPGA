@@ -405,10 +405,14 @@ void read_xml_model_device_technology(pugi::xml_node& xml_model,
                                       const pugiutil::loc_data& loc_data,
                                       CircuitLibrary& circuit_lib, const CircuitModelId& model) {
 
-  auto xml_device_tech = get_single_child(xml_model, "device_technology", loc_data);
+  auto xml_device_tech = get_single_child(xml_model, "device_technology", loc_data, pugiutil::ReqOpt::OPTIONAL);
+ 
+  if (!xml_device_tech) {
+    return;
+  }
 
   /* Parse device model name */
-  const char* device_model_name_attr = get_attribute(xml_device_tech, "device_model_name", loc_data).value();
+  const char* device_model_name_attr = get_attribute(xml_device_tech, "device_model_name", loc_data, pugiutil::ReqOpt::OPTIONAL).value();
   if (nullptr != device_model_name_attr) {
     circuit_lib.set_device_model_name(model, std::string(device_model_name_attr));  
   }
