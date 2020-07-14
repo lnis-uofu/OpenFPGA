@@ -54,7 +54,7 @@ std::string TechnologyLibrary::model_name(const TechnologyModelId& model_id) con
  */
 TechnologyModelId TechnologyLibrary::model(const std::string& name) const {
   std::map<std::string, TechnologyModelId>::const_iterator it = model_name2ids_.find(name);
-  if (it != model_name2ids_.end()) {
+  if (it == model_name2ids_.end()) {
     return TechnologyModelId::INVALID();
   }
 
