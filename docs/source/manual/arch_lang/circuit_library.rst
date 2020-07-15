@@ -56,6 +56,7 @@ Design Technology-related Attributes
   <circuit_model type="string" name="string" prefix="string" is_default="int" netlist="string" 
   dump_structural_verilog="string">
     <design_technology type="string"/>
+    <device_technology device_model_name="string"/>
     <input_buffer exist="string" circuit_model_name="string"/>
     <output_buffer exist="string" circuit_model_name="string"/>
     <pass_gate_logic type="string" circuit_model_name="string"/>
@@ -70,6 +71,11 @@ Design Technology-related Attributes
 
 .. note:: Currently, the RRAM-based designs are only supported for multiplexers.
 
+
+Device Technology-related Attributes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* device_model_name : Specify the name of device model that the circuit design will use. The device model must be defined in the technology library (see details in :ref:technology_library);
 
 Circuit Port Attributes
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -209,6 +215,17 @@ Design Technology
       CMOS technology can be applied to any types of ``<circuit_model>``, while RRAM technology is only applicable to multiplexers and SRAMs 
 
 .. note:: Each ``<circuit_model>`` may have different technologies
+
+Device Technology
+^^^^^^^^^^^^^^^^^
+
+.. option:: <device_technology device_model_name="string"/>
+
+   Specify the technology binding between a circuit model and a device model which is defined in the technology library (see details in :ref:`technology_library`).
+
+     - ``device_model_name="<string>"`` Specify the name of device model that the circuit design will use. The device model must be a valid one in the technology library.
+
+.. note:: Technology binding is only required for primitive circuit models, which are inverters, buffers, logic gates, pass gate logic, and is mandatory only when SPICE netlist generation is required.
 
 Input and Output Buffers
 ^^^^^^^^^^^^^^^^^^^^^^^^
