@@ -1154,17 +1154,18 @@ void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
   /* Attention: when the fast configuration is enabled, we will start from the first bit '1'
    * This requires a reset signal (as we forced in the first clock cycle)
    */
-  bool first_bit_one = false;
+  bool start_config = false;
   for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
-    if (true == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id))) {
-      first_bit_one = true;
+    if ( (false == start_config)
+      && (true == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)))) {
+      start_config = true;
     } 
 
     /* In fast configuration mode, we do not output anything
      * until we have to (the first bit '1' detected)
      */
     if ( (true == fast_configuration)
-      && (false == first_bit_one)) {
+      && (false == start_config)) {
       continue;
     }
 

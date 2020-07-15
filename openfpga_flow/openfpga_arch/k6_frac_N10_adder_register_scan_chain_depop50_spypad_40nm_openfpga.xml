@@ -242,7 +242,7 @@
     <!-- physical pb_type binding in complex block CLB -->
     <!-- physical mode will be the default mode if not specified -->
     <pb_type name="clb.fle" physical_mode_name="physical"/>
-    <pb_type name="clb.fle[physical].frac_logic.frac_lut6" circuit_model_name="frac_lut6" mode_bits="11"/>
+    <pb_type name="clb.fle[physical].frac_logic.frac_lut6" circuit_model_name="frac_lut6" mode_bits="00"/>
     <pb_type name="clb.fle[physical].ff_phy" circuit_model_name="scan_chain_ff"/>
     <pb_type name="clb.fle[physical].frac_logic.adder_phy" circuit_model_name="adder"/>
     <!-- Binding operating pb_type to physical pb_type -->
@@ -277,7 +277,7 @@
     <pb_type name="clb_spypad.fle" physical_mode_name="physical"/>
 
     <!-- Binding regular FLEs -->
-    <pb_type name="clb_spypad.fle[physical].frac_logic.frac_lut6" circuit_model_name="frac_lut6" mode_bits="11"/>
+    <pb_type name="clb_spypad.fle[physical].frac_logic.frac_lut6" circuit_model_name="frac_lut6" mode_bits="00"/>
     <pb_type name="clb_spypad.fle[physical].ff_phy" circuit_model_name="scan_chain_ff"/>
     <pb_type name="clb_spypad.fle[physical].frac_logic.adder_phy" circuit_model_name="adder"/>
     <!-- Binding operating pb_type to physical pb_type -->
@@ -310,7 +310,7 @@
     <!-- physical mode will be the default mode if not specified -->
     <pb_type name="clb_spypad.fle_spypad" physical_mode_name="physical"/>
 
-    <pb_type name="clb_spypad.fle_spypad[physical].frac_logic.frac_lut6" circuit_model_name="frac_lut6_spypad" mode_bits="11"/>
+    <pb_type name="clb_spypad.fle_spypad[physical].frac_logic.frac_lut6" circuit_model_name="frac_lut6_spypad" mode_bits="00"/>
     <pb_type name="clb_spypad.fle_spypad[physical].ff_phy" circuit_model_name="scan_chain_ff"/>
     <pb_type name="clb_spypad.fle_spypad[physical].frac_logic.adder_phy" circuit_model_name="adder"/>
     <!-- Binding operating pb_type to physical pb_type -->
