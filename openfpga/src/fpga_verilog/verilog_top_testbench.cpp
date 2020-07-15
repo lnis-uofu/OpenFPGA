@@ -576,6 +576,7 @@ size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz
   case CONFIG_MEM_SCAN_CHAIN:
     /* For fast configuraiton, the bitstream size counts from the first bit '1' */
     if (true == fast_configuration) {
+      size_t full_num_config_clock_cycles = num_config_clock_cycles;
       size_t num_bits_to_skip = 0;
       for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
         if (true == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id))) {
@@ -583,7 +584,13 @@ size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz
         }
         num_bits_to_skip++;
       }
-      num_config_clock_cycles -= num_bits_to_skip;
+
+      num_config_clock_cycles = full_num_config_clock_cycles - num_bits_to_skip;
+
+      VTR_LOG("Fast configuration reduces number of configuration clock cycles from %lu to %lu (compression_rate = %f%)\n",
+              full_num_config_clock_cycles,
+              num_config_clock_cycles,
+              100. * ((float)num_config_clock_cycles / (float)full_num_config_clock_cycles - 1.));
     }
     break;
   case CONFIG_MEM_MEMORY_BANK:
