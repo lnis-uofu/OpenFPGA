@@ -16,12 +16,38 @@ void link_config_protocol_to_circuit_library(openfpga::Arch& openfpga_arch) {
 
   /* Error out if the circuit model id is invalid */
   if (CircuitModelId::INVALID() == config_memory_model) {
-    VTR_LOG("Invalid memory model name (=%s) defined in <configuration_protocol>!",
+    VTR_LOG("Invalid memory model name '%s' defined in <configuration_protocol>!",
             openfpga_arch.config_protocol.memory_model_name().c_str());
     exit(1);
   }
 
   openfpga_arch.config_protocol.set_memory_model(config_memory_model); 
+}
+
+/********************************************************************
+ * Link the circuit model of circuit library
+ * to these device model defined in technology library
+ *******************************************************************/
+void bind_circuit_model_to_technology_model(openfpga::Arch& openfpga_arch) {
+  /* Ensure a clean start */
+  openfpga_arch.circuit_tech_binding.clear();
+
+  for (const CircuitModelId& circuit_model : openfpga_arch.circuit_lib.models()) {
+    const std::string device_model_name = openfpga_arch.circuit_lib.device_model_name(circuit_model);
+    if (true == device_model_name.empty()) {
+      continue;
+    }
+    /* Try to find the device model name in technology library */
+    TechnologyModelId tech_model = openfpga_arch.tech_lib.model(device_model_name);
+    if (false == openfpga_arch.tech_lib.valid_model_id(tech_model)) {
+      VTR_LOG("Invalid device model name '%s' defined in circuit model '%s'!",
+              device_model_name.c_str(),
+              openfpga_arch.circuit_lib.model_name(circuit_model).c_str());
+      exit(1);
+    }
+    /* Create binding */
+    openfpga_arch.circuit_tech_binding[circuit_model] = tech_model;
+  }
 }
 
 /********************************************************************

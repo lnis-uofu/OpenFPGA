@@ -120,6 +120,13 @@ bool CircuitLibrary::is_power_gated(const CircuitModelId& model_id) const {
   return is_power_gated_[model_id]; 
 }
 
+/* Access the device model name that is binded to a circuit model */
+std::string CircuitLibrary::device_model_name(const CircuitModelId& model_id) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  return device_model_names_[model_id]; 
+}
+
 /* Return a flag showing if inputs are buffered for a circuit model */
 bool CircuitLibrary::is_input_buffered(const CircuitModelId& model_id) const {
   /* validate the model_id */
@@ -1135,6 +1142,9 @@ CircuitModelId CircuitLibrary::add_model(const enum e_circuit_model_type& type) 
   /* Design technology information */ 
   design_tech_types_.push_back(NUM_CIRCUIT_MODEL_DESIGN_TECH_TYPES);
   is_power_gated_.push_back(false);
+
+  /* Device technology information */ 
+  device_model_names_.emplace_back();
   
   /* Buffer existence */
   buffer_existence_.emplace_back();
@@ -1261,6 +1271,13 @@ void CircuitLibrary::set_model_is_power_gated(const CircuitModelId& model_id, co
   VTR_ASSERT(valid_model_id(model_id));
   is_power_gated_[model_id] = is_power_gated;
   return;
+}
+
+/* Set the device model name that is binded to a Circuit Model */
+void CircuitLibrary::set_device_model_name(const CircuitModelId& model_id, const std::string& name) {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  device_model_names_[model_id] = name;
 }
 
 /* Set input buffer information for the circuit model */
