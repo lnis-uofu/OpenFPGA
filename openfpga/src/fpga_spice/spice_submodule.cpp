@@ -28,14 +28,22 @@ namespace openfpga {
  * 6. TODO: Configuration memory blocks
  ********************************************************************/
 int print_spice_submodule(NetlistManager& netlist_manager,
-                          const TechnologyLibrary& tech_lib,
+                          const ModuleManager& module_manager,
+                          const Arch& openfpga_arch,
                           const std::string& submodule_dir) {
 
   int status = CMD_EXEC_SUCCESS;
 
   status = print_spice_transistor_wrapper(netlist_manager,
-                                          tech_lib,
+                                          openfpga_arch.tech_lib,
                                           submodule_dir);
+
+  status = print_spice_essential_gates(netlist_manager,
+                                       module_manager,
+                                       openfpga_arch.circuit_lib,
+                                       openfpga_arch.tech_lib,
+                                       openfpga_arch.circuit_tech_binding,
+                                       submodule_dir);
 
   return status;
 }
