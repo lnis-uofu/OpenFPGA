@@ -31,7 +31,7 @@ write_verilog_testbench
 
   - ``--reference_benchmark_file_path`` Must specify the reference benchmark Verilog file if you want to output any testbenches
 
-  - ``--fast_configuration`` Enable fast configuration phase for the top-level testbench in order to reduce runtime of simulations. It is applicable to memory bank and frame-based configuration protocols. When enabled, all the zero configuration bits will be skipped. So ensure that your memory cells can be correctly reset to zero with a reset signal. 
+  - ``--fast_configuration`` Enable fast configuration phase for the top-level testbench in order to reduce runtime of simulations. It is applicable to configuration chain, memory bank and frame-based configuration protocols. For configuration chain, when enabled, the zeros at the head of the bitstream will be skipped. For memory bank and frame-based, when enabled, all the zero configuration bits will be skipped. So ensure that your memory cells can be correctly reset to zero with a reset signal. 
 
   - ``--print_top_testbench`` Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
 

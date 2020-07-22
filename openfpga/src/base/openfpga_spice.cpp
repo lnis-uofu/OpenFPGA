@@ -39,7 +39,7 @@ int write_fabric_spice(OpenfpgaContext& openfpga_ctx,
   int status = CMD_EXEC_SUCCESS;
   status = fpga_fabric_spice(openfpga_ctx.module_graph(),
                              openfpga_ctx.mutable_spice_netlists(),
-                             openfpga_ctx.arch().tech_lib,
+                             openfpga_ctx.arch(),
                              options);
 
   return status;

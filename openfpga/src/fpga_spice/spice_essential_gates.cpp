@@ -18,6 +18,7 @@
 #include "openfpga_digest.h"
 
 #include "spice_constants.h"
+#include "spice_writer_utils.h"
 #include "spice_essential_gates.h"
 
 /* begin namespace openfpga */
@@ -82,7 +83,7 @@ int print_spice_transistor_wrapper(NetlistManager& netlist_manager,
   check_file_stream(spice_fname.c_str(), fp); 
 
   /* Create file */
-  VTR_LOG("Generating SPICE netlist '%s' for transistor wrappers...",
+  VTR_LOG("Generating SPICE netlist '%s' for essential gates...",
           spice_fname.c_str()); 
 
   /* Iterate over the transistor models */
@@ -108,6 +109,167 @@ int print_spice_transistor_wrapper(NetlistManager& netlist_manager,
   VTR_LOG("Done\n");
 
   return CMD_EXEC_SUCCESS;
+}
+
+/************************************************
+ * Generate the SPICE subckt for an inverter
+ * Schematic
+ *          LVDD
+ *            |
+ *           -
+ *      +-o||
+ *      |    -
+ *      |     |
+ * in-->+     +--> OUT
+ *      |     |
+ *      |    -
+ *      +--||
+ *           -
+ *            |
+ *          LGND
+ *
+ ***********************************************/
+static 
+int print_spice_inverter_subckt(std::fstream& fp,
+                                const ModuleManager& module_manager,
+                                const ModuleId& module_id,
+                                const CircuitLibrary& circuit_lib,
+                                const CircuitModelId& circuit_model,
+                                const TechnologyLibrary& tech_lib,
+                                const TechnologyModelId& tech_model) {
+  if (false == valid_file_stream(fp)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Print the inverter subckt definition */
+  print_spice_subckt_definition(fp, module_manager, module_id); 
+
+  /* Find the input and output ports:
+   * we do NOT support global ports here, 
+   * it should be handled in another type of inverter subckt (power-gated)
+   */
+  std::vector<CircuitPortId> input_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_INPUT, true);
+  std::vector<CircuitPortId> output_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_OUTPUT, true);
+
+  /* Make sure:
+   * There is only 1 input port and 1 output port, 
+   * each size of which is 1
+   */
+  VTR_ASSERT( (1 == input_ports.size()) && (1 == circuit_lib.port_size(input_ports[0])) );
+  VTR_ASSERT( (1 == output_ports.size()) && (1 == circuit_lib.port_size(output_ports[0])) );
+
+  /* TODO: may consider use size/bin to compact layout etc. */
+  for (size_t i = 0; i < circuit_lib.buffer_size(circuit_model); ++i) { 
+    /* Write transistor pairs using the technology model */
+    fp << "Xpmos_" << i << " ";
+    fp << circuit_lib.port_prefix(output_ports[0]) << " "; 
+    fp << circuit_lib.port_prefix(input_ports[0]) << " "; 
+    fp << "LVDD "; 
+    fp << "LVDD "; 
+    fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+
+    fp << "Xnmos_" << i << " ";
+    fp << circuit_lib.port_prefix(output_ports[0]) << " "; 
+    fp << circuit_lib.port_prefix(input_ports[0]) << " "; 
+    fp << "LGND "; 
+    fp << "LGND "; 
+    fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+  }
+
+  print_spice_subckt_end(fp, module_manager.module_name(module_id)); 
+
+  return CMD_EXEC_SUCCESS;
+}
+
+/************************************************
+ * Generate the SPICE netlist for essential gates:
+ * - inverters and their templates
+ * - buffers and their templates
+ * - pass-transistor or transmission gates
+ * - logic gates
+ ***********************************************/
+int print_spice_essential_gates(NetlistManager& netlist_manager,
+                                const ModuleManager& module_manager,
+                                const CircuitLibrary& circuit_lib,
+                                const TechnologyLibrary& tech_lib,
+                                const std::map<CircuitModelId, TechnologyModelId>& circuit_tech_binding,
+                                const std::string& submodule_dir) {
+  std::string spice_fname = submodule_dir + std::string(ESSENTIALS_SPICE_FILE_NAME);
+
+  std::fstream fp;
+
+  /* Create the file stream */
+  fp.open(spice_fname, std::fstream::out | std::fstream::trunc);
+  /* Check if the file stream if valid or not */
+  check_file_stream(spice_fname.c_str(), fp); 
+
+  /* Create file */
+  VTR_LOG("Generating SPICE netlist '%s' for transistor wrappers...",
+          spice_fname.c_str()); 
+
+  int status = CMD_EXEC_SUCCESS;
+
+  /* Iterate over the circuit models */
+  for (const CircuitModelId& circuit_model : circuit_lib.models()) {
+    /* Bypass models require extern netlists */
+    if (true == circuit_lib.model_circuit_netlist(circuit_model).empty()) {
+      continue;
+    }
+
+    /* Spot module id */
+    const ModuleId& module_id = module_manager.find_module(circuit_lib.model_name(circuit_model));
+
+    TechnologyModelId tech_model; 
+    /* Focus on inverter/buffer/pass-gate/logic gates only */
+    if ( (CIRCUIT_MODEL_INVBUF == circuit_lib.model_type(circuit_model))
+      || (CIRCUIT_MODEL_PASSGATE == circuit_lib.model_type(circuit_model))
+      || (CIRCUIT_MODEL_GATE == circuit_lib.model_type(circuit_model))) {
+      auto result = circuit_tech_binding.find(circuit_model);
+      if (result == circuit_tech_binding.end()) {
+        VTR_LOGF_ERROR(__FILE__, __LINE__,
+                       "Unable to find technology binding for circuit model '%s'!\n",
+                       circuit_lib.model_name(circuit_model).c_str()); 
+        return CMD_EXEC_FATAL_ERROR;
+      }
+      /* Valid technology binding. Assign techology model */
+      tech_model = result->second;
+      /* Ensure we have a valid technology model */
+      VTR_ASSERT(true == tech_lib.valid_model_id(tech_model));
+      VTR_ASSERT(TECH_LIB_MODEL_TRANSISTOR == tech_lib.model_type(tech_model));
+    }
+
+    /* Now branch on netlist writing */
+    if (CIRCUIT_MODEL_INVBUF == circuit_lib.model_type(circuit_model)) {
+      if (CIRCUIT_MODEL_BUF_INV == circuit_lib.buffer_type(circuit_model)) {
+        VTR_ASSERT(true == module_manager.valid_module_id(module_id));
+        status = print_spice_inverter_subckt(fp,
+                                             module_manager, module_id,
+                                             circuit_lib, circuit_model,
+                                             tech_lib, tech_model);
+      } else {
+        VTR_ASSERT(CIRCUIT_MODEL_BUF_BUF == circuit_lib.buffer_type(circuit_model));
+      }
+
+      if (CMD_EXEC_FATAL_ERROR == status) {
+        break;
+      }
+
+      /* Finish, go to the next */
+      continue;
+    }
+  } 
+
+  /* Close file handler*/
+  fp.close();
+
+  /* Add fname to the netlist name list */
+  NetlistId nlist_id = netlist_manager.add_netlist(spice_fname);
+  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  netlist_manager.set_netlist_type(nlist_id, NetlistManager::SUBMODULE_NETLIST);
+
+  VTR_LOG("Done\n");
+
+  return status;
 }
 
 } /* end namespace openfpga */

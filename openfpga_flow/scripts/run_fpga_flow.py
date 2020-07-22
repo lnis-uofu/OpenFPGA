@@ -419,6 +419,17 @@ def prepare_run_directory(run_dir):
         with open(args.openfpga_arch_file, 'w', encoding='utf-8') as archfile:
             archfile.write(tmpl.substitute(script_env_vars["PATH"]))
 
+    # Sanitize provided openshell template, if provided
+    if (args.openfpga_shell_template):
+        if not os.path.isfile(args.openfpga_shell_template or ""):
+            logger.error("Openfpga shell file - %s" %
+                         args.openfpga_shell_template)
+            clean_up_and_exit("Provided openfpga_shell_template" +
+                              f" {args.openfpga_shell_template} file not found")
+        else:
+            shutil.copy(args.openfpga_shell_template,
+                        args.top_module+"_template.openfpga")
+
     # Create benchmark dir in run_dir and copy flattern architecture file
     os.mkdir("benchmark")
     try:
@@ -599,17 +610,6 @@ def collect_files_for_vpr():
         logger.error("Base Verilog File - %s" % args.base_verilog)
         clean_up_and_exit("Provided base_verilog file not found")
     shutil.copy(args.base_verilog, args.top_module+"_output_verilog.v")
-
-    # Sanitize provided openshell template, if provided
-    if (args.openfpga_shell_template):
-        if not os.path.isfile(args.openfpga_shell_template or ""):
-            logger.error("Openfpga shell file - %s" %
-                         args.openfpga_shell_template)
-            clean_up_and_exit("Provided openfpga_shell_template" +
-                              f" {args.openfpga_shell_template} file not found")
-        else:
-            shutil.copy(args.openfpga_shell_template,
-                        args.top_module+"_template.openfpga")
 
 
 def run_vpr():
