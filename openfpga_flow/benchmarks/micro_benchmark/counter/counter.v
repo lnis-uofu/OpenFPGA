@@ -1,4 +1,4 @@
-module counter_original(clk_counter, q_counter, rst_counter);
+module counter(clk_counter, q_counter, rst_counter);
 
     input clk_counter;
     input rst_counter;
