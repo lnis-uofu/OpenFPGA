@@ -15,15 +15,17 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
-                                        DecoderLibrary& decoder_lib,
-                                        const OpenfpgaContext& openfpga_ctx,
-                                        const DeviceContext& vpr_device_ctx,
-                                        const bool& compress_routing,
-                                        const bool& duplicate_grid_pin,
-                                        const FabricKey& fabric_key,
-                                        const bool& generate_random_fabric_key,
-                                        const bool& verbose);
+int build_device_module_graph(ModuleManager& module_manager,
+                              IoLocationMap& io_location_map,
+                              DecoderLibrary& decoder_lib,
+                              const OpenfpgaContext& openfpga_ctx,
+                              const DeviceContext& vpr_device_ctx,
+                              const bool& frame_view,
+                              const bool& compress_routing,
+                              const bool& duplicate_grid_pin,
+                              const FabricKey& fabric_key,
+                              const bool& generate_random_fabric_key,
+                              const bool& verbose);
 
 } /* end namespace openfpga */
 

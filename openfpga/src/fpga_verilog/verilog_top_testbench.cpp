@@ -561,8 +561,9 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
 static
 size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz_type,
                                          const bool& fast_configuration,
+                                         const BitstreamManager& bitstream_manager,
                                          const FabricBitstream& fabric_bitstream) {
-  size_t num_config_clock_cycles = 1 + fabric_bitstream.bits().size();
+  size_t num_config_clock_cycles = 1 + fabric_bitstream.num_bits();
 
   /* Branch on the type of configuration protocol */
   switch (sram_orgz_type) {
@@ -573,7 +574,24 @@ size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz
     num_config_clock_cycles = 2;
     break;
   case CONFIG_MEM_SCAN_CHAIN:
-    /* Fast configuraiton is not applicable to configuration chain protocol*/
+    /* For fast configuraiton, the bitstream size counts from the first bit '1' */
+    if (true == fast_configuration) {
+      size_t full_num_config_clock_cycles = num_config_clock_cycles;
+      size_t num_bits_to_skip = 0;
+      for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
+        if (true == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id))) {
+          break;
+        }
+        num_bits_to_skip++;
+      }
+
+      num_config_clock_cycles = full_num_config_clock_cycles - num_bits_to_skip;
+
+      VTR_LOG("Fast configuration reduces number of configuration clock cycles from %lu to %lu (compression_rate = %f%)\n",
+              full_num_config_clock_cycles,
+              num_config_clock_cycles,
+              100. * ((float)num_config_clock_cycles / (float)full_num_config_clock_cycles - 1.));
+    }
     break;
   case CONFIG_MEM_MEMORY_BANK:
   case CONFIG_MEM_FRAME_BASED: {
@@ -1108,6 +1126,7 @@ void print_verilog_top_testbench_vanilla_bitstream(std::fstream& fp,
  *******************************************************************/
 static
 void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
+                                                               const bool& fast_configuration,
                                                                const BitstreamManager& bitstream_manager,
                                                                const FabricBitstream& fabric_bitstream) {
   /* Validate the file stream */
@@ -1132,10 +1151,23 @@ void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
 
   fp << std::endl;
 
-  /* Attention: the configuration chain protcol requires the last configuration bit is fed first
-   * We will visit the fabric bitstream in a reverse way
+  /* Attention: when the fast configuration is enabled, we will start from the first bit '1'
+   * This requires a reset signal (as we forced in the first clock cycle)
    */
+  bool first_bit_one = false;
   for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
+    if (true == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id))) {
+      first_bit_one = true;
+    } 
+
+    /* In fast configuration mode, we do not output anything
+     * until we have to (the first bit '1' detected)
+     */
+    if ( (true == fast_configuration)
+      && (false == first_bit_one)) {
+      continue;
+    }
+
     fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
     fp << "(1'b" << (size_t)bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)) << ");" << std::endl;
   }
@@ -1223,14 +1255,14 @@ void print_verilog_top_testbench_memory_bank_bitstream(std::fstream& fp,
     fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
     fp << "(" << bl_addr_port.get_width() << "'b";
     VTR_ASSERT(bl_addr_port.get_width() == fabric_bitstream.bit_bl_address(bit_id).size());
-    for (const size_t& addr_bit : fabric_bitstream.bit_bl_address(bit_id)) {
+    for (const char& addr_bit : fabric_bitstream.bit_bl_address(bit_id)) {
       fp << addr_bit;
     }
 
     fp << ", ";
     fp << wl_addr_port.get_width() << "'b";
     VTR_ASSERT(wl_addr_port.get_width() == fabric_bitstream.bit_wl_address(bit_id).size());
-    for (const size_t& addr_bit : fabric_bitstream.bit_wl_address(bit_id)) {
+    for (const char& addr_bit : fabric_bitstream.bit_wl_address(bit_id)) {
       fp << addr_bit;
     }
 
@@ -1319,7 +1351,7 @@ void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
     fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
     fp << "(" << addr_port.get_width() << "'b";
     VTR_ASSERT(addr_port.get_width() == fabric_bitstream.bit_address(bit_id).size());
-    for (const size_t& addr_bit : fabric_bitstream.bit_address(bit_id)) {
+    for (const char& addr_bit : fabric_bitstream.bit_address(bit_id)) {
       fp << addr_bit;
     }
     fp << ", ";
@@ -1382,7 +1414,8 @@ void print_verilog_top_testbench_bitstream(std::fstream& fp,
                                                   bitstream_manager, fabric_bitstream);
     break;
   case CONFIG_MEM_SCAN_CHAIN:
-    print_verilog_top_testbench_configuration_chain_bitstream(fp, bitstream_manager, fabric_bitstream);
+    print_verilog_top_testbench_configuration_chain_bitstream(fp, fast_configuration, 
+                                                              bitstream_manager, fabric_bitstream);
     break;
   case CONFIG_MEM_MEMORY_BANK:
     print_verilog_top_testbench_memory_bank_bitstream(fp, fast_configuration,
@@ -1471,6 +1504,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   /* Estimate the number of configuration clock cycles */
   size_t num_config_clock_cycles = calculate_num_config_clock_cycles(sram_orgz_type,
                                                                      fast_configuration,
+                                                                     bitstream_manager,
                                                                      fabric_bitstream);
 
   /* Generate stimuli for general control signals */

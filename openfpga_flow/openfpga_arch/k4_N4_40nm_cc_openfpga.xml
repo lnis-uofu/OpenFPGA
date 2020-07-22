@@ -30,6 +30,7 @@
   <circuit_library>
     <circuit_model type="inv_buf" name="INVTX1" prefix="INVTX1" is_default="true">
       <design_technology type="cmos" topology="inverter" size="1"/>
+      <device_technology device_model_name="logic"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
       <delay_matrix type="rise" in_port="in" out_port="out">
@@ -41,6 +42,7 @@
     </circuit_model>
     <circuit_model type="inv_buf" name="buf4" prefix="buf4" is_default="false">
       <design_technology type="cmos" topology="buffer" size="1" num_level="2" f_per_stage="4"/>
+      <device_technology device_model_name="logic"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
       <delay_matrix type="rise" in_port="in" out_port="out">
@@ -52,6 +54,7 @@
     </circuit_model>
     <circuit_model type="inv_buf" name="tap_buf4" prefix="tap_buf4" is_default="false">
       <design_technology type="cmos" topology="buffer" size="1" num_level="3" f_per_stage="4"/>
+      <device_technology device_model_name="logic"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
       <delay_matrix type="rise" in_port="in" out_port="out">
@@ -63,6 +66,7 @@
     </circuit_model>
     <circuit_model type="pass_gate" name="TGATE" prefix="TGATE" is_default="true">
       <design_technology type="cmos" topology="transmission_gate" nmos_size="1" pmos_size="2"/>
+      <device_technology device_model_name="logic"/>
       <input_buffer exist="false"/>
       <output_buffer exist="false"/>
       <port type="input" prefix="in" size="1"/>
@@ -92,8 +96,8 @@
       <port type="output" prefix="out" size="1"/>
       <wire_param model_type="pi" R="0" C="0" num_level="1"/> <!-- model_type could be T, res_val cap_val should be defined -->
     </circuit_model>
-    <circuit_model type="mux" name="mux_2level" prefix="mux_2level" dump_structural_verilog="true">
-      <design_technology type="cmos" structure="multi_level" num_level="2" add_const_input="true" const_input_val="1"/>
+    <circuit_model type="mux" name="mux_tree" prefix="mux_tree" dump_structural_verilog="true">
+      <design_technology type="cmos" structure="tree" add_const_input="true" const_input_val="1"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <pass_gate_logic circuit_model_name="TGATE"/>
@@ -101,17 +105,8 @@
       <port type="output" prefix="out" size="1"/>
       <port type="sram" prefix="sram" size="1"/>
     </circuit_model>
-    <circuit_model type="mux" name="mux_2level_tapbuf" prefix="mux_2level_tapbuf" dump_structural_verilog="true">
-      <design_technology type="cmos" structure="multi_level" num_level="2" add_const_input="true" const_input_val="1"/>
-      <input_buffer exist="true" circuit_model_name="INVTX1"/>
-      <output_buffer exist="true" circuit_model_name="tap_buf4"/>
-      <pass_gate_logic circuit_model_name="TGATE"/>
-      <port type="input" prefix="in" size="1"/>
-      <port type="output" prefix="out" size="1"/>
-      <port type="sram" prefix="sram" size="1"/>
-    </circuit_model>
-    <circuit_model type="mux" name="mux_1level_tapbuf" prefix="mux_1level_tapbuf" is_default="true" dump_structural_verilog="true">
-      <design_technology type="cmos" structure="one_level" add_const_input="true" const_input_val="1"/>
+    <circuit_model type="mux" name="mux_tree_tapbuf" prefix="mux_tree_tapbuf" is_default="true" dump_structural_verilog="true">
+      <design_technology type="cmos" structure="tree" add_const_input="true" const_input_val="1"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="tap_buf4"/>
       <pass_gate_logic circuit_model_name="TGATE"/>
@@ -166,10 +161,10 @@
     <organization type="scan_chain" circuit_model_name="sc_dff_compact"/>
   </configuration_protocol>
   <connection_block>
-    <switch name="ipin_cblock" circuit_model_name="mux_2level_tapbuf"/>
+    <switch name="ipin_cblock" circuit_model_name="mux_tree_tapbuf"/>
   </connection_block>
   <switch_block>
-    <switch name="0" circuit_model_name="mux_2level_tapbuf"/>
+    <switch name="0" circuit_model_name="mux_tree_tapbuf"/>
   </switch_block>
   <routing_segment>
     <segment name="L4" circuit_model_name="chan_segment"/>
@@ -186,7 +181,7 @@
     <!-- physical mode will be the default mode if not specified -->
     <pb_type name="clb">
       <!-- Binding interconnect to circuit models as their physical implementation, if not defined, we use the default model -->
-      <interconnect name="crossbar" circuit_model_name="mux_2level"/>
+      <interconnect name="crossbar" circuit_model_name="mux_tree"/>
     </pb_type>
     <pb_type name="clb.fle[n1_lut4].ble4.lut4" circuit_model_name="lut4"/>
     <pb_type name="clb.fle[n1_lut4].ble4.ff" circuit_model_name="static_dff"/>

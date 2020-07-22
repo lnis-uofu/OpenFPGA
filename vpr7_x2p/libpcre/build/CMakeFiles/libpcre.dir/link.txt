@@ -1,2 +1,0 @@
-/usr/bin/ar qc liblibpcre.a  CMakeFiles/libpcre.dir/SRC/get.c.o CMakeFiles/libpcre.dir/SRC/main.c.o CMakeFiles/libpcre.dir/SRC/pcre.c.o
-/usr/bin/ranlib liblibpcre.a

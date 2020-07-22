@@ -188,7 +188,6 @@ add_subdirectory(libopenfpga)
 add_subdirectory(yosys)
 add_subdirectory(abc)
 add_subdirectory(ace2)
-add_subdirectory(vpr7_x2p)
 add_subdirectory(vpr)
 add_subdirectory(openfpga)
 
@@ -228,37 +227,7 @@ set_target_properties(libace ace
   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ace2"
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ace2")
 
-set_target_properties(libarchfpgavpr7 read_arch_vpr7
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libarchfpgavpr7"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libarchfpgavpr7"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libarchfpgavpr7")
-
-set_target_properties(libpcre pcredemo
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libpcre"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libpcre"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libpcre")
-
-set_target_properties(libprinthandler printhandlerdemo
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libprinthandler"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libprinthandler"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/libprinthandler")
-
 set_target_properties(libvpr vpr
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/vpr"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/vpr"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/vpr")
-
-set_target_properties(libvpr vpr_shell
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/vpr"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/vpr"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr7_x2p/vpr")
-
-set_target_properties(libvpr8 vpr8
   PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr"
   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr"

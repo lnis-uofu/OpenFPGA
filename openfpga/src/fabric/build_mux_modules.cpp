@@ -1145,6 +1145,15 @@ void build_cmos_mux_module(ModuleManager& module_manager,
   /* Create a Verilog Module based on the circuit model, and add to module manager */
   ModuleId mux_module = module_manager.add_module(module_name); 
   VTR_ASSERT(ModuleId::INVALID() != mux_module);
+
+  /* Label module usage */
+  if (CIRCUIT_MODEL_MUX == circuit_lib.model_type(mux_model)) {
+    module_manager.set_module_usage(mux_module, ModuleManager::MODULE_INTERC);
+  } else {
+    VTR_ASSERT_SAFE(CIRCUIT_MODEL_LUT == circuit_lib.model_type(mux_model)); 
+    module_manager.set_module_usage(mux_module, ModuleManager::MODULE_LUT);
+  }
+
   /* Add module ports */
   /* Add each input port
    * Treat MUX and LUT differently 
@@ -1294,6 +1303,10 @@ void build_rram_mux_module(ModuleManager& module_manager,
   /* Create a Verilog Module based on the circuit model, and add to module manager */
   ModuleId module_id = module_manager.add_module(module_name); 
   VTR_ASSERT(ModuleId::INVALID() != module_id);
+
+  /* Label module usage */
+  module_manager.set_module_usage(module_id, ModuleManager::MODULE_INTERC);
+
   /* Add module ports */
   /* Add each global port */
   for (const auto& port : mux_global_ports) {

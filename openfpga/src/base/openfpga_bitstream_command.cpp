@@ -46,10 +46,14 @@ ShellCommandId add_openfpga_arch_bitstream_command(openfpga::Shell<OpenfpgaConte
                                                    const std::vector<ShellCommandId>& dependent_cmds) {
   Command shell_cmd("build_architecture_bitstream");
 
-  /* Add an option '--file' in short '-f'*/
-  CommandOptionId opt_file = shell_cmd.add_option("file", true, "file path to output the bitstream database");
-  shell_cmd.set_option_short_name(opt_file, "f");
-  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+  /* Add an option '--write_file' */
+  CommandOptionId opt_write_file = shell_cmd.add_option("write_file", false, "file path to output the bitstream database");
+  shell_cmd.set_option_require_value(opt_write_file, openfpga::OPT_STRING);
+
+  /* Add an option '--read_file' */
+  CommandOptionId opt_read_file = shell_cmd.add_option("read_file", false, "file path to read the bitstream database");
+  shell_cmd.set_option_require_value(opt_read_file, openfpga::OPT_STRING);
+
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");

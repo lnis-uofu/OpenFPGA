@@ -13,6 +13,9 @@
 /* Headers from vpr library */
 #include "vpr_utils.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 #include "rr_gsb_utils.h"
 #include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
@@ -91,6 +94,9 @@ vtr::Matrix<size_t> add_top_module_grid_instances(ModuleManager& module_manager,
                                                   const ModuleId& top_module,
                                                   IoLocationMap& io_location_map,
                                                   const DeviceGrid& grids) {
+
+  vtr::ScopedStartFinishTimer timer("Add grid instances to top module");
+
   /* Reserve an array for the instance ids */
   vtr::Matrix<size_t> grid_instance_ids({grids.width(), grids.height()}); 
   grid_instance_ids.fill(size_t(-1));
@@ -203,6 +209,9 @@ vtr::Matrix<size_t> add_top_module_switch_block_instances(ModuleManager& module_
                                                           const ModuleId& top_module, 
                                                           const DeviceRRGSB& device_rr_gsb,
                                                           const bool& compact_routing_hierarchy) {
+
+  vtr::ScopedStartFinishTimer timer("Add switch block instances to top module");
+
   vtr::Point<size_t> sb_range = device_rr_gsb.get_gsb_range();
 
   /* Reserve an array for the instance ids */
@@ -253,6 +262,9 @@ vtr::Matrix<size_t> add_top_module_connection_block_instances(ModuleManager& mod
                                                               const DeviceRRGSB& device_rr_gsb,
                                                               const t_rr_type& cb_type,
                                                               const bool& compact_routing_hierarchy) {
+
+  vtr::ScopedStartFinishTimer timer("Add connection block instances to top module");
+
   vtr::Point<size_t> cb_range = device_rr_gsb.get_gsb_range();
 
   /* Reserve an array for the instance ids */
@@ -309,27 +321,33 @@ vtr::Matrix<size_t> add_top_module_connection_block_instances(ModuleManager& mod
  * 4. Add module nets to connect datapath ports
  * 5. Add module nets/submodules to connect configuration ports
  *******************************************************************/
-void build_top_module(ModuleManager& module_manager,
-                      IoLocationMap& io_location_map,
-                      DecoderLibrary& decoder_lib,
-                      const CircuitLibrary& circuit_lib,
-                      const DeviceGrid& grids,
-                      const RRGraph& rr_graph,
-                      const DeviceRRGSB& device_rr_gsb,
-                      const TileDirect& tile_direct,
-                      const ArchDirect& arch_direct,
-                      const e_config_protocol_type& sram_orgz_type,
-                      const CircuitModelId& sram_model,
-                      const bool& compact_routing_hierarchy,
-                      const bool& duplicate_grid_pin,
-                      const FabricKey& fabric_key,
-                      const bool& generate_random_fabric_key) {
+int build_top_module(ModuleManager& module_manager,
+                     IoLocationMap& io_location_map,
+                     DecoderLibrary& decoder_lib,
+                     const CircuitLibrary& circuit_lib,
+                     const DeviceGrid& grids,
+                     const RRGraph& rr_graph,
+                     const DeviceRRGSB& device_rr_gsb,
+                     const TileDirect& tile_direct,
+                     const ArchDirect& arch_direct,
+                     const e_config_protocol_type& sram_orgz_type,
+                     const CircuitModelId& sram_model,
+                     const bool& frame_view,
+                     const bool& compact_routing_hierarchy,
+                     const bool& duplicate_grid_pin,
+                     const FabricKey& fabric_key,
+                     const bool& generate_random_fabric_key) {
 
   vtr::ScopedStartFinishTimer timer("Build FPGA fabric module");
+
+  int status = CMD_EXEC_SUCCESS;
 
   /* Create a module as the top-level fabric, and add it to the module manager */
   std::string top_module_name = generate_fpga_top_module_name();
   ModuleId top_module = module_manager.add_module(top_module_name);
+
+  /* Label module usage */
+  module_manager.set_module_usage(top_module, ModuleManager::MODULE_TOP);
 
   std::map<t_rr_type, vtr::Matrix<size_t>> cb_instance_ids;
  
@@ -342,15 +360,23 @@ void build_top_module(ModuleManager& module_manager,
   cb_instance_ids[CHANX] = add_top_module_connection_block_instances(module_manager, top_module, device_rr_gsb, CHANX, compact_routing_hierarchy);
   cb_instance_ids[CHANY] = add_top_module_connection_block_instances(module_manager, top_module, device_rr_gsb, CHANY, compact_routing_hierarchy);
 
-  /* Add module nets to connect the sub modules */
-  add_top_module_nets_connect_grids_and_gsbs(module_manager, top_module, 
-                                             grids, grid_instance_ids, 
-                                             rr_graph, device_rr_gsb, sb_instance_ids, cb_instance_ids,
-                                             compact_routing_hierarchy, duplicate_grid_pin);
-  /* Add inter-CLB direct connections */
-  add_top_module_nets_tile_direct_connections(module_manager, top_module, circuit_lib, 
-                                              grids, grid_instance_ids,
-                                              tile_direct, arch_direct);
+  /* Add nets when we need a complete fabric modeling,
+   * which is required by downstream functions
+   */
+  if (false == frame_view) {
+    /* Reserve nets to be memory efficient */
+    reserve_module_manager_module_nets(module_manager, top_module);
+
+    /* Add module nets to connect the sub modules */
+    add_top_module_nets_connect_grids_and_gsbs(module_manager, top_module, 
+                                               grids, grid_instance_ids, 
+                                               rr_graph, device_rr_gsb, sb_instance_ids, cb_instance_ids,
+                                               compact_routing_hierarchy, duplicate_grid_pin);
+    /* Add inter-CLB direct connections */
+    add_top_module_nets_tile_direct_connections(module_manager, top_module, circuit_lib, 
+                                                grids, grid_instance_ids,
+                                                tile_direct, arch_direct);
+  }
 
   /* Add global ports to the pb_module:
    * This is a much easier job after adding sub modules (instances), 
@@ -376,8 +402,11 @@ void build_top_module(ModuleManager& module_manager,
                                        compact_routing_hierarchy);
   } else {
     VTR_ASSERT_SAFE(false == fabric_key.empty());
-    load_top_module_memory_modules_from_fabric_key(module_manager, top_module,
-                                                   fabric_key); 
+    status = load_top_module_memory_modules_from_fabric_key(module_manager, top_module,
+                                                            fabric_key); 
+    if (CMD_EXEC_FATAL_ERROR == status) {
+      return status;
+    }
   }
 
   /* Shuffle the configurable children in a random sequence */
@@ -414,6 +443,8 @@ void build_top_module(ModuleManager& module_manager,
                                           sram_orgz_type, circuit_lib.design_tech_type(sram_model),
                                           module_num_config_bits);
   }
+
+  return status;
 }
 
 } /* end namespace openfpga */

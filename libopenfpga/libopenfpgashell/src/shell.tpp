@@ -28,6 +28,7 @@ namespace openfpga {
 template<class T>
 Shell<T>::Shell(const char* name) {
   name_ = std::string(name);
+  time_start_ = 0;
 }
 
 /************************************************************************
@@ -241,6 +242,9 @@ ShellCommandClassId Shell<T>::add_command_class(const char* name) {
 template <class T>
 void Shell<T>::run_interactive_mode(T& context, const bool& quiet_mode) {
   if (false == quiet_mode) {
+    /* Reset timer since it does not come from another mode */
+    time_start_ = std::clock();
+
     VTR_LOG("Start interactive mode of %s...\n",
             name().c_str());
 
@@ -270,6 +274,8 @@ void Shell<T>::run_interactive_mode(T& context, const bool& quiet_mode) {
 template <class T>
 void Shell<T>::run_script_mode(const char* script_file_name, T& context) {
 
+  time_start_ = std::clock();
+
   VTR_LOG("Reading script file %s...\n", script_file_name);
 
   /* Print the title of the shell */
@@ -296,6 +302,11 @@ void Shell<T>::run_script_mode(const char* script_file_name, T& context) {
 
   /* Read line by line */
   while (getline(fp, line)) {
+    /* Skip empty line */
+    if (true == line.empty()) {
+      continue;
+    }
+
     /* If the line that starts with '#', it is commented, we can skip */ 
     if ('#' == line.front()) {
       continue;
@@ -413,6 +424,9 @@ void Shell<T>::exit() const {
 
   VTR_LOG("\nFinish execution with %d errors\n",
             num_err);
+
+  VTR_LOG("\nThe entire OpenFPGA flow took %g seconds\n",
+          (double)(std::clock() - time_start_) / (double)CLOCKS_PER_SEC);
 
   VTR_LOG("\nThank you for using %s!\n",
           name().c_str());

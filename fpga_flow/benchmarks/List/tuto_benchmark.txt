@@ -1,2 +1,0 @@
-# Circuit Names, fixed routing channel width, 
-s298/*.v, 200

@@ -67,6 +67,7 @@ void compress_routing_hierarchy(OpenfpgaContext& openfpga_ctx,
 int build_fabric(OpenfpgaContext& openfpga_ctx,
                  const Command& cmd, const CommandContext& cmd_context) { 
 
+  CommandOptionId opt_frame_view = cmd.option("frame_view");
   CommandOptionId opt_compress_routing = cmd.option("compress_routing");
   CommandOptionId opt_duplicate_grid_pin = cmd.option("duplicate_grid_pin");
   CommandOptionId opt_gen_random_fabric_key = cmd.option("generate_random_fabric_key");
@@ -82,6 +83,12 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
 
   VTR_LOG("\n");
 
+  /* Record the execution status in curr_status for each command 
+   * and summarize them in the final status
+   */
+  int curr_status = CMD_EXEC_SUCCESS;
+  int final_status = CMD_EXEC_SUCCESS;
+
   /* Load fabric key from file */
   FabricKey predefined_fabric_key;
   if (true == cmd_context.option_enable(cmd, opt_load_fabric_key)) {
@@ -92,28 +99,38 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
 
   VTR_LOG("\n");
 
-  openfpga_ctx.mutable_module_graph() = build_device_module_graph(openfpga_ctx.mutable_io_location_map(),
-                                                                  openfpga_ctx.mutable_decoder_lib(),
-                                                                  const_cast<const OpenfpgaContext&>(openfpga_ctx),
-                                                                  g_vpr_ctx.device(),
-                                                                  cmd_context.option_enable(cmd, opt_compress_routing),
-                                                                  cmd_context.option_enable(cmd, opt_duplicate_grid_pin),
-                                                                  predefined_fabric_key,
-                                                                  cmd_context.option_enable(cmd, opt_gen_random_fabric_key),
-                                                                  cmd_context.option_enable(cmd, opt_verbose));
+  curr_status = build_device_module_graph(openfpga_ctx.mutable_module_graph(),
+                                          openfpga_ctx.mutable_io_location_map(),
+                                          openfpga_ctx.mutable_decoder_lib(),
+                                          const_cast<const OpenfpgaContext&>(openfpga_ctx),
+                                          g_vpr_ctx.device(),
+                                          cmd_context.option_enable(cmd, opt_frame_view),
+                                          cmd_context.option_enable(cmd, opt_compress_routing),
+                                          cmd_context.option_enable(cmd, opt_duplicate_grid_pin),
+                                          predefined_fabric_key,
+                                          cmd_context.option_enable(cmd, opt_gen_random_fabric_key),
+                                          cmd_context.option_enable(cmd, opt_verbose));
+
+  /* If there is any error, final status cannot be overwritten by a success flag */
+  if (CMD_EXEC_SUCCESS != curr_status) {
+    final_status = curr_status;
+  }
 
   /* Output fabric key if user requested */
   if (true == cmd_context.option_enable(cmd, opt_write_fabric_key)) {
     std::string fkey_fname = cmd_context.option_value(cmd, opt_write_fabric_key);
     VTR_ASSERT(false == fkey_fname.empty());
-    write_fabric_key_to_xml_file(openfpga_ctx.module_graph(),
-                                 fkey_fname,
-                                 cmd_context.option_enable(cmd, opt_verbose));
-                                 
+    curr_status = write_fabric_key_to_xml_file(openfpga_ctx.module_graph(),
+                                               fkey_fname,
+                                               openfpga_ctx.arch().config_protocol.type(),
+                                               cmd_context.option_enable(cmd, opt_verbose));
+    /* If there is any error, final status cannot be overwritten by a success flag */
+    if (CMD_EXEC_SUCCESS != curr_status) {
+      final_status = curr_status;
+    }
   }
 
-  /* TODO: should identify the error code from internal function execution */
-  return CMD_EXEC_SUCCESS;
+  return final_status;
 } 
 
 /********************************************************************

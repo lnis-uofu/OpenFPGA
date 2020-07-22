@@ -30,6 +30,7 @@
   <circuit_library>
     <circuit_model type="inv_buf" name="INVTX1" prefix="INVTX1" is_default="true">
       <design_technology type="cmos" topology="inverter" size="1"/>
+      <device_technology device_model_name="logic"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
       <delay_matrix type="rise" in_port="in" out_port="out">
@@ -41,6 +42,7 @@
     </circuit_model>
     <circuit_model type="inv_buf" name="buf4" prefix="buf4" is_default="false">
       <design_technology type="cmos" topology="buffer" size="1" num_level="2" f_per_stage="4"/>
+      <device_technology device_model_name="logic"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
       <delay_matrix type="rise" in_port="in" out_port="out">
@@ -52,6 +54,7 @@
     </circuit_model>
     <circuit_model type="inv_buf" name="tap_buf4" prefix="tap_buf4" is_default="false">
       <design_technology type="cmos" topology="buffer" size="1" num_level="3" f_per_stage="4"/>
+      <device_technology device_model_name="logic"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
       <delay_matrix type="rise" in_port="in" out_port="out">
@@ -63,6 +66,7 @@
     </circuit_model>
     <circuit_model type="gate" name="OR2" prefix="OR2" is_default="true">
       <design_technology type="cmos" topology="OR"/>
+      <device_technology device_model_name="logic"/>
       <input_buffer exist="false"/>
       <output_buffer exist="false"/>
       <port type="input" prefix="a" size="1"/>
@@ -77,6 +81,7 @@
     </circuit_model>
     <circuit_model type="pass_gate" name="TGATE" prefix="TGATE" is_default="true">
       <design_technology type="cmos" topology="transmission_gate" nmos_size="1" pmos_size="2"/>
+      <device_technology device_model_name="logic"/>
       <input_buffer exist="false"/>
       <output_buffer exist="false"/>
       <port type="input" prefix="in" size="1"/>

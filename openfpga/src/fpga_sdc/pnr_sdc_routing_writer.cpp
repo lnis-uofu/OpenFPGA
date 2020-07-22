@@ -67,23 +67,23 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
             || ( CHANY == rr_graph.node_type(output_rr_node) ));
 
   /* Find the module port corresponding to the output rr_node */
-  ModulePortId module_output_port = find_switch_block_module_chan_port(module_manager, 
-                                                                       sb_module,
-                                                                       rr_graph, 
-                                                                       rr_gsb, 
-                                                                       output_node_side,
-                                                                       output_rr_node,
-                                                                       OUT_PORT);
+  ModulePinInfo module_output_port = find_switch_block_module_chan_port(module_manager, 
+                                                                                          sb_module,
+                                                                                          rr_graph, 
+                                                                                          rr_gsb, 
+                                                                                          output_node_side,
+                                                                                          output_rr_node,
+                                                                                          OUT_PORT);
 
   /* Find the module port corresponding to the fan-in rr_nodes of the output rr_node */
-  std::vector<ModulePortId> module_input_ports = find_switch_block_module_input_ports(module_manager,
-                                                                                      sb_module, 
-                                                                                      rr_graph, 
-                                                                                      rr_gsb, 
-                                                                                      get_rr_graph_configurable_driver_nodes(rr_graph, output_rr_node));
+  std::vector<ModulePinInfo> module_input_ports = find_switch_block_module_input_ports(module_manager,
+                                                                                                         sb_module, 
+                                                                                                         rr_graph, 
+                                                                                                         rr_gsb, 
+                                                                                                         get_rr_graph_configurable_driver_nodes(rr_graph, output_rr_node));
 
   /* Find timing constraints for each path (edge) */
-  std::map<ModulePortId, float> switch_delays;
+  std::map<ModulePinInfo, float> switch_delays;
   size_t edge_counter = 0;
   for (const RREdgeId& edge : rr_graph.node_configurable_in_edges(output_rr_node)) {
     /* Get the switch delay */
@@ -93,28 +93,38 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
   }
 
   /* Find the starting points */
-  for (const ModulePortId& module_input_port : module_input_ports) {
+  for (const ModulePinInfo& module_input_port : module_input_ports) {
     /* If we have a zero-delay path to contrain, we will skip unless users want so */
     if ( (false == constrain_zero_delay_paths)
       && (0. == switch_delays[module_input_port]) ) {
       continue;
     }
+
+    BasicPort src_port(module_manager.module_port(sb_module, module_input_port.first).get_name(),
+                       module_input_port.second,
+                       module_input_port.second);
+
+    BasicPort sink_port(module_manager.module_port(sb_module, module_output_port.first).get_name(),
+                        module_output_port.second,
+                        module_output_port.second);
+
     /* Constrain a path */
     if (false == hierarchical) {
       print_pnr_sdc_constrain_max_delay(fp,
                                         module_path,
-                                        generate_sdc_port(module_manager.module_port(sb_module, module_input_port)),
+                                        generate_sdc_port(src_port),
                                         module_path,
-                                        generate_sdc_port(module_manager.module_port(sb_module, module_output_port)),
+                                        generate_sdc_port(sink_port),
                                         switch_delays[module_input_port] / time_unit);
 
     } else {
       VTR_ASSERT_SAFE(true == hierarchical);
-      print_pnr_sdc_constrain_port2port_timing(fp,
-                                               module_manager, 
-                                               sb_module, module_input_port, 
-                                               sb_module, module_output_port,
-                                               switch_delays[module_input_port] / time_unit);
+      print_pnr_sdc_constrain_max_delay(fp,
+                                        std::string(),
+                                        generate_sdc_port(src_port),
+                                        std::string(),
+                                        generate_sdc_port(sink_port),
+                                        switch_delays[module_input_port] / time_unit);
     }
   }
 }
@@ -333,15 +343,15 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
                                                                            output_rr_node);
 
   /* Find the module port corresponding to the fan-in rr_nodes of the output rr_node */
-  std::vector<ModulePortId> module_input_ports = find_connection_block_module_input_ports(module_manager,
-                                                                                          cb_module, 
-                                                                                          rr_graph, 
-                                                                                          rr_gsb, 
-                                                                                          cb_type,
-                                                                                          input_rr_nodes);
+  std::vector<ModulePinInfo> module_input_ports = find_connection_block_module_input_ports(module_manager,
+                                                                                           cb_module, 
+                                                                                           rr_graph, 
+                                                                                           rr_gsb, 
+                                                                                           cb_type,
+                                                                                           input_rr_nodes);
 
   /* Find timing constraints for each path (edge) */
-  std::map<ModulePortId, float> switch_delays;
+  std::map<ModulePinInfo, float> switch_delays;
   size_t edge_counter = 0;
   for (const RREdgeId& edge : rr_graph.node_configurable_in_edges(output_rr_node)) {
     /* Get the switch delay */
@@ -351,27 +361,34 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
   }
 
   /* Find the starting points */
-  for (const ModulePortId& module_input_port : module_input_ports) {
+  for (const ModulePinInfo& module_input_port : module_input_ports) {
     /* If we have a zero-delay path to contrain, we will skip unless users want so */
     if ( (false == constrain_zero_delay_paths)
       && (0. == switch_delays[module_input_port]) ) {
       continue;
     }
 
+    BasicPort input_port(module_manager.module_port(cb_module, module_input_port.first).get_name(),
+                         module_input_port.second,
+                         module_input_port.second);
+    BasicPort output_port = module_manager.module_port(cb_module, module_output_port);
+
     /* Constrain a path */
     if (true == hierarchical) {
-      print_pnr_sdc_constrain_port2port_timing(fp,
-                                               module_manager, 
-                                               cb_module, module_input_port, 
-                                               cb_module, module_output_port,
-                                               switch_delays[module_input_port] / time_unit);
+      print_pnr_sdc_constrain_max_delay(fp,
+                                        std::string(),
+                                        generate_sdc_port(input_port),
+                                        std::string(),
+                                        generate_sdc_port(output_port),
+                                        switch_delays[module_input_port] / time_unit);
+
     } else {
       VTR_ASSERT_SAFE(false == hierarchical);
       print_pnr_sdc_constrain_max_delay(fp,
                                         std::string(module_path),
-                                        generate_sdc_port(module_manager.module_port(cb_module, module_input_port)),
+                                        generate_sdc_port(input_port),
                                         std::string(module_path),
-                                        generate_sdc_port(module_manager.module_port(cb_module, module_output_port)),
+                                        generate_sdc_port(output_port),
                                         switch_delays[module_input_port] / time_unit);
 
     }
@@ -419,21 +436,19 @@ void print_pnr_sdc_constrain_cb_timing(const std::string& sdc_dir,
   for (size_t itrack = 0; itrack < rr_gsb.get_cb_chan_width(cb_type); ++itrack) {
     /* Create a port description for the input */
     std::string input_port_name = generate_cb_module_track_port_name(cb_type,
-                                                                     itrack,  
-                                                                     IN_PORT);
+                                                                     IN_PORT,
+                                                                     0 == itrack % 2);
     ModulePortId input_port_id = module_manager.find_module_port(cb_module, input_port_name);
-    BasicPort input_port = module_manager.module_port(cb_module, input_port_id);
+    BasicPort input_port(module_manager.module_port(cb_module, input_port_id).get_name(),
+                         itrack / 2, itrack / 2);
 
     /* Create a port description for the output */
     std::string output_port_name = generate_cb_module_track_port_name(cb_type,
-                                                                      itrack,  
-                                                                      OUT_PORT);
+                                                                      OUT_PORT,
+                                                                      0 == itrack % 2);
     ModulePortId output_port_id = module_manager.find_module_port(cb_module, output_port_name);
-    BasicPort output_port = module_manager.module_port(cb_module, output_port_id);
-
-    /* Ensure port size matching */
-    VTR_ASSERT(1 == input_port.get_width());
-    VTR_ASSERT(input_port.get_width() == output_port.get_width());
+    BasicPort output_port(module_manager.module_port(cb_module, output_port_id).get_name(),
+                          itrack / 2, itrack / 2);
 
     /* Connection block routing segment ids for each track */
     RRSegmentId segment_id = rr_gsb.get_chan_node_segment(rr_gsb.get_cb_chan_side(cb_type), itrack);
@@ -454,18 +469,20 @@ void print_pnr_sdc_constrain_cb_timing(const std::string& sdc_dir,
 
     /* Constrain a path with routing segment delay */
     if (true == hierarchical) {
-      print_pnr_sdc_constrain_port2port_timing(fp,
-                                               module_manager, 
-                                               cb_module, input_port_id, 
-                                               cb_module, output_port_id,
-                                               routing_segment_delay / time_unit);
+      print_pnr_sdc_constrain_max_delay(fp,
+                                        std::string(),
+                                        generate_sdc_port(input_port),
+                                        std::string(),
+                                        generate_sdc_port(output_port),
+                                        routing_segment_delay / time_unit);
+
     } else {
       VTR_ASSERT_SAFE(false == hierarchical);
       print_pnr_sdc_constrain_max_delay(fp,
                                         std::string(module_path),
-                                        generate_sdc_port(module_manager.module_port(cb_module, input_port_id)),
+                                        generate_sdc_port(input_port),
                                         std::string(module_path),
-                                        generate_sdc_port(module_manager.module_port(cb_module, output_port_id)),
+                                        generate_sdc_port(output_port),
                                         routing_segment_delay / time_unit);
     }
   }

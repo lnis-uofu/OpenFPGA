@@ -4,6 +4,7 @@
  *******************************************************************/
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
+#include "vtr_time.h"
 
 /* Headers from openfpgautil library */
 #include "openfpga_side_manager.h"
@@ -13,6 +14,7 @@
 #include "pb_type_utils.h"
 #include "rr_gsb_utils.h"
 #include "openfpga_physical_tile_utils.h"
+#include "module_manager_utils.h"
 
 #include "build_top_module_utils.h"
 #include "build_top_module_connection.h"
@@ -128,9 +130,7 @@ void add_top_module_nets_connect_grids_and_sb(ModuleManager& module_manager,
       
       /* Create a net for each pin */
       for (size_t pin_id = 0; pin_id < src_grid_port.pins().size(); ++pin_id) {
-        ModuleNetId net = module_manager.create_module_net(top_module);
-        /* Configure the net source */
-        module_manager.add_module_net_source(top_module, net, src_grid_module, src_grid_instance, src_grid_port_id, src_grid_port.pins()[pin_id]);
+        ModuleNetId net = create_module_source_pin_net(module_manager, top_module, src_grid_module, src_grid_instance, src_grid_port_id, src_grid_port.pins()[pin_id]);
         /* Configure the net sink */
         module_manager.add_module_net_sink(top_module, net, sink_sb_module, sink_sb_instance, sink_sb_port_id, sink_sb_port.pins()[pin_id]);
       }
@@ -273,9 +273,7 @@ void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(ModuleManager
       
       /* Create a net for each pin */
       for (size_t pin_id = 0; pin_id < src_grid_port.pins().size(); ++pin_id) {
-        ModuleNetId net = module_manager.create_module_net(top_module);
-        /* Configure the net source */
-        module_manager.add_module_net_source(top_module, net, src_grid_module, src_grid_instance, src_grid_port_id, src_grid_port.pins()[pin_id]);
+        ModuleNetId net = create_module_source_pin_net(module_manager, top_module, src_grid_module, src_grid_instance, src_grid_port_id, src_grid_port.pins()[pin_id]);
         /* Configure the net sink */
         module_manager.add_module_net_sink(top_module, net, sink_sb_module, sink_sb_instance, sink_sb_port_id, sink_sb_port.pins()[pin_id]);
       }
@@ -423,9 +421,7 @@ void add_top_module_nets_connect_grids_and_cb(ModuleManager& module_manager,
       
       /* Create a net for each pin */
       for (size_t pin_id = 0; pin_id < src_cb_port.pins().size(); ++pin_id) {
-        ModuleNetId net = module_manager.create_module_net(top_module);
-        /* Configure the net source */
-        module_manager.add_module_net_source(top_module, net, src_cb_module, src_cb_instance, src_cb_port_id, src_cb_port.pins()[pin_id]);
+        ModuleNetId net = create_module_source_pin_net(module_manager, top_module, src_cb_module, src_cb_instance, src_cb_port_id, src_cb_port.pins()[pin_id]);
         /* Configure the net sink */
         module_manager.add_module_net_sink(top_module, net, sink_grid_module, sink_grid_instance, sink_grid_port_id, sink_grid_port.pins()[pin_id]);
       }
@@ -559,7 +555,7 @@ void add_top_module_nets_connect_sb_and_cb(ModuleManager& module_manager,
  
     for (size_t itrack = 0; itrack < module_sb.get_chan_width(side_manager.get_side()); ++itrack) {
       std::string sb_port_name = generate_sb_module_track_port_name(rr_graph.node_type(module_sb.get_chan_node(side_manager.get_side(), itrack)),
-                                                                    side_manager.get_side(), itrack,  
+                                                                    side_manager.get_side(), 
                                                                     module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
       /* Prepare SB-related port information */
       ModulePortId sb_port_id = module_manager.find_module_port(sb_module_id, sb_port_name); 
@@ -574,31 +570,29 @@ void add_top_module_nets_connect_sb_and_cb(ModuleManager& module_manager,
       } else {
         VTR_ASSERT(IN_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
       }  
+     
+      /* Upper CB port is required if the routing tracks are on the top or right sides of 
+       * the switch block, which indicated bottom and left sides of the connection blocks
+       */
+      bool use_cb_upper_port = (TOP == side_manager.get_side()) || (RIGHT == side_manager.get_side());
       std::string cb_port_name = generate_cb_module_track_port_name(cb_type,
-                                                                    itrack,  
-                                                                    cb_port_direction);
+                                                                    cb_port_direction,
+                                                                    use_cb_upper_port);
       ModulePortId cb_port_id = module_manager.find_module_port(cb_module_id, cb_port_name); 
       VTR_ASSERT(true == module_manager.valid_module_port_id(cb_module_id, cb_port_id));
       BasicPort cb_port = module_manager.module_port(cb_module_id, cb_port_id);
 
-      /* Source and sink port should match in size */
-      VTR_ASSERT(cb_port.get_width() == sb_port.get_width());
-      
-      /* Create a net for each pin */
-      for (size_t pin_id = 0; pin_id < cb_port.pins().size(); ++pin_id) {
-        ModuleNetId net = module_manager.create_module_net(top_module);
-        /* Configure the net source and sink:
-         * If sb port is an output (source), cb port is an input (sink) 
-         * If sb port is an input (sink), cb port is an output (source) 
-         */
-        if (OUT_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack)) {
-          module_manager.add_module_net_sink(top_module, net, cb_module_id, cb_instance, cb_port_id, cb_port.pins()[pin_id]);
-          module_manager.add_module_net_source(top_module, net, sb_module_id, sb_instance, sb_port_id, sb_port.pins()[pin_id]);
-        } else {
-          VTR_ASSERT(IN_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
-          module_manager.add_module_net_source(top_module, net, cb_module_id, cb_instance, cb_port_id, cb_port.pins()[pin_id]);
-          module_manager.add_module_net_sink(top_module, net, sb_module_id, sb_instance, sb_port_id, sb_port.pins()[pin_id]);
-        }  
+      /* Configure the net source and sink:
+       * If sb port is an output (source), cb port is an input (sink) 
+       * If sb port is an input (sink), cb port is an output (source) 
+       */
+      if (OUT_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack)) {
+        ModuleNetId net = create_module_source_pin_net(module_manager, top_module, sb_module_id, sb_instance, sb_port_id, itrack / 2);
+        module_manager.add_module_net_sink(top_module, net, cb_module_id, cb_instance, cb_port_id, itrack / 2);
+      } else {
+        VTR_ASSERT(IN_PORT == module_sb.get_chan_node_direction(side_manager.get_side(), itrack));
+        ModuleNetId net = create_module_source_pin_net(module_manager, top_module, cb_module_id, cb_instance, cb_port_id, itrack / 2);
+        module_manager.add_module_net_sink(top_module, net, sb_module_id, sb_instance, sb_port_id, itrack / 2);
       }
     }
   }
@@ -647,6 +641,8 @@ void add_top_module_nets_connect_grids_and_gsbs(ModuleManager& module_manager,
                                                 const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
                                                 const bool& compact_routing_hierarchy,
                                                 const bool& duplicate_grid_pin) {
+
+  vtr::ScopedStartFinishTimer timer("Add module nets between grids and GSBs");
 
   vtr::Point<size_t> gsb_range = device_rr_gsb.get_gsb_range();
 

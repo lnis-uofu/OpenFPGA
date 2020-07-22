@@ -3,16 +3,6 @@
 General Hierarchy
 -----------------
 
-For OpenFPGA using VPR7
-~~~~~~~~~~~~~~~~~~~~~~~
-
-The extension of the VPR architectural description language is developed as an independent branch of the original one. Most of the FPGA-SPICE descriptions are located under a XML node called <spice_settings>, which is a child node under the root node <architecture>. 
-Under the <spice_settings>, some child node is created for describing SPICE simulation settings, technology library and transistor-level modeling of circuit modules.
-In the following sub-sections, we will introduce the structures of these XML nodes and the parameters provided.
-
-For OpenFPGA using VPR8
-~~~~~~~~~~~~~~~~~~~~~~~
-
 OpenFPGA uses separated XMLs file other than the VPR8 architecture description file.
 This is to keep a loose integration to VPR8 so that OpenFPGA can easily integrate any future version of VPR with least engineering effort.
 However, to implement a physical FPGA, OpenFPGA requires the original VPR XML to include full physical design details.

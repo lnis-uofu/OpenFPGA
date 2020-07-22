@@ -13,9 +13,6 @@ constexpr char* INITIAL_SIMULATION_FLAG = "INITIAL_SIMULATION"; // the flag to e
 constexpr char* AUTOCHECKED_SIMULATION_FLAG = "AUTOCHECKED_SIMULATION"; // the flag to enable autochecked functional verification
 constexpr char* FORMAL_SIMULATION_FLAG = "FORMAL_SIMULATION"; // the flag to enable formal functional verification
 
-constexpr char* DEFAULT_LB_DIR_NAME = "lb/";
-constexpr char* DEFAULT_RR_DIR_NAME = "routing/";
-constexpr char* DEFAULT_SUBMODULE_DIR_NAME = "sub_module/";
 constexpr char* MODELSIM_SIMULATION_TIME_UNIT = "ms";
 
 // Icarus variables and flag

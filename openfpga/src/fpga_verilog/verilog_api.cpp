@@ -11,6 +11,7 @@
 
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
+#include "openfpga_reserved_words.h"
 
 #include "device_rr_gsb.h"
 #include "verilog_constants.h"
@@ -231,7 +232,10 @@ namespace openfpga
       print_verilog_simulation_info(simulation_ini_file_name,
                                     netlist_name,
                                     src_dir_path,
-                                    bitstream_manager.bits().size(),
+                                    atom_ctx, place_ctx, io_location_map,
+                                    module_manager,
+                                    config_protocol_type,
+                                    bitstream_manager.num_bits(),
                                     simulation_setting.num_clock_cycles(),
                                     simulation_setting.programming_clock_frequency(),
                                     simulation_setting.operating_clock_frequency());

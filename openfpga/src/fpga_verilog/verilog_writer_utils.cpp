@@ -661,6 +661,10 @@ std::string generate_verilog_constant_values(const std::vector<size_t>& const_va
     }
   }
 
+  if (1 == const_values.size()) {
+    same_values = false;
+  }
+
   std::string str;
 
   if ( (true == short_constant) 

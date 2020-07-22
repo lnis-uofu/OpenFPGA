@@ -219,6 +219,10 @@ void build_mux_local_decoder_module(ModuleManager& module_manager,
   /* Create a Verilog Module based on the circuit model, and add to module manager */
   ModuleId module_id = module_manager.add_module(module_name); 
   VTR_ASSERT(true == module_manager.valid_module_id(module_id));
+
+  /* Label module usage */
+  module_manager.set_module_usage(module_id, ModuleManager::MODULE_CONFIG);
+
   /* Add module ports */
   /* Add each input port */
   BasicPort addr_port(generate_mux_local_decoder_addr_port_name(), addr_size);

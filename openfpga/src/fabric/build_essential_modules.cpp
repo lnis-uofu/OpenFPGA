@@ -215,6 +215,17 @@ void build_constant_generator_module(ModuleManager& module_manager,
   /* Add one output port */
   BasicPort const_output_port(generate_const_value_module_output_port_name(const_value), 1);
   module_manager.add_port(const_module, const_output_port, ModuleManager::MODULE_OUTPUT_PORT);
+
+  /* Specify the usage of this module 
+   * 1: VDD
+   * 0: GND
+   */
+  if (1 == const_value) {
+    module_manager.set_module_usage(const_module, ModuleManager::MODULE_VDD);
+  } else {
+    VTR_ASSERT(0 == const_value);
+    module_manager.set_module_usage(const_module, ModuleManager::MODULE_VSS);
+  }
 }
 
 /*********************************************************************

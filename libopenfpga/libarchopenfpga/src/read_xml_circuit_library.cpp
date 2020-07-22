@@ -398,6 +398,27 @@ void read_xml_model_design_technology(pugi::xml_node& xml_model,
 }
 
 /********************************************************************
+ * Parse XML codes of device technology of a circuit model to circuit library
+ *******************************************************************/
+static 
+void read_xml_model_device_technology(pugi::xml_node& xml_model,
+                                      const pugiutil::loc_data& loc_data,
+                                      CircuitLibrary& circuit_lib, const CircuitModelId& model) {
+
+  auto xml_device_tech = get_single_child(xml_model, "device_technology", loc_data, pugiutil::ReqOpt::OPTIONAL);
+ 
+  if (!xml_device_tech) {
+    return;
+  }
+
+  /* Parse device model name */
+  const char* device_model_name_attr = get_attribute(xml_device_tech, "device_model_name", loc_data, pugiutil::ReqOpt::OPTIONAL).value();
+  if (nullptr != device_model_name_attr) {
+    circuit_lib.set_device_model_name(model, std::string(device_model_name_attr));  
+  }
+}
+
+/********************************************************************
  * This is a generic function to parse XML codes that describe
  * a buffer of a circuit model to circuit library
  * This function will return a string with the circuit model name 
@@ -696,6 +717,18 @@ void read_xml_circuit_model(pugi::xml_node& xml_model,
         circuit_lib.set_model_lut_intermediate_buffer_location_map(model, get_attribute(xml_intermediate_buffer, "location_map", loc_data).as_string());
       }
     }
+  }
+
+  /* Parse device technology attributes
+   * This is applicable to only atom circuit models:
+   * - inverter/buffer
+   * - pass gate
+   * - logic gates
+   */
+  if ((CIRCUIT_MODEL_INVBUF == circuit_lib.model_type(model))
+      || (CIRCUIT_MODEL_PASSGATE == circuit_lib.model_type(model))
+      || (CIRCUIT_MODEL_GATE == circuit_lib.model_type(model))) {
+    read_xml_model_device_technology(xml_model, loc_data, circuit_lib, model); 
   }
 
   /* Input buffer attributes, NOT required for circuit models which are inverters or buffers */

@@ -13,7 +13,7 @@ Dependencies and help using docker can be found [**here**](./docs/source/tutoria
 # Clone the repository and go inside it
 git clone https://github.com/LNIS-Projects/OpenFPGA.git && cd OpenFPGA
 mkdir build && cd build            # Create a folder named build in the OpenPFGA repository
-cmake ..  -DCMAKE_BUILD_TYPE=debug # Create a Makefile in this folder using cmake
+cmake ..                           # Create a Makefile in this folder using cmake
 make                               # Compile the tool and its dependencies
 ```
 *cmake3.12 is recommended to compile OpenFPGA with GUI*

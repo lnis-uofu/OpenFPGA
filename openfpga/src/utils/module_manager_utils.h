@@ -9,6 +9,7 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <vector>
+#include <tuple>
 
 /* Headers from readarch library */
 #include "physical_types.h"
@@ -30,6 +31,16 @@
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+void reserve_module_manager_module_nets(ModuleManager& module_manager, 
+                                        const ModuleId& module);
+
+size_t count_module_manager_module_configurable_children(const ModuleManager& module_manager, 
+                                                         const ModuleId& module);
+
+std::pair<ModuleId, size_t> find_module_manager_instance_module_info(const ModuleManager& module_manager,
+                                                                     const ModuleId& parent, 
+                                                                     const std::string& instance_name);
 
 ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager, 
                                              const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model,

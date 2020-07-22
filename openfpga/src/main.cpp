@@ -15,6 +15,7 @@
 #include "openfpga_setup_command.h"
 #include "openfpga_verilog_command.h"
 #include "openfpga_bitstream_command.h"
+#include "openfpga_spice_command.h"
 #include "openfpga_sdc_command.h"
 #include "basic_command.h"
 
@@ -25,6 +26,7 @@
  * Main function to start OpenFPGA shell interface
  *******************************************************************/
 int main(int argc, char** argv) {
+
   /* Create the command to launch shell in different modes */
   openfpga::Command start_cmd("OpenFPGA");
   /* Add two options:
@@ -62,6 +64,9 @@ int main(int argc, char** argv) {
   /* Add openfpga bitstream commands */
   openfpga::add_openfpga_bitstream_commands(shell);
 
+  /* Add openfpga SPICE commands */
+  openfpga::add_openfpga_spice_commands(shell);
+
   /* Add openfpga sdc commands */
   openfpga::add_openfpga_sdc_commands(shell);
 
@@ -89,13 +94,11 @@ int main(int argc, char** argv) {
     /* Parse succeed. Start a shell */ 
     if (true == start_cmd_context.option_enable(start_cmd, opt_interactive)) {
 
-      vtr::ScopedStartFinishTimer timer("OpenFPGA operating");
       shell.run_interactive_mode(openfpga_context);
       return 0;
     } 
 
     if (true == start_cmd_context.option_enable(start_cmd, opt_script_mode)) {
-      vtr::ScopedStartFinishTimer timer("OpenFPGA operating");
       shell.run_script_mode(start_cmd_context.option_value(start_cmd, opt_script_mode).c_str(),
                             openfpga_context);
       return 0;

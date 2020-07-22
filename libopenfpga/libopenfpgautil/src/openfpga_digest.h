@@ -28,6 +28,9 @@ void create_directory(const std::string& dir_path, const bool& recursive = true)
 bool write_space_to_file(std::fstream& fp,
                          const size_t& num_space);
 
+bool write_tab_to_file(std::fstream& fp,
+                       const size_t& num_tab);
+
 } /* namespace openfpga ends */
 
 #endif

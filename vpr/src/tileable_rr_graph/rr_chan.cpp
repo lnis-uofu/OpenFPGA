@@ -180,6 +180,12 @@ void RRChan::add_node(const RRGraph& rr_graph, const RRNodeId& node, const RRSeg
   nodes_.push_back(node);
   node_segments_.push_back(node_segment);
 
+  if (NUM_RR_TYPES == type_) {
+    type_ = rr_graph.node_type(node);
+  } else {
+    VTR_ASSERT(type_ == rr_graph.node_type(node));
+  }
+
   VTR_ASSERT(valid_node_type(rr_graph, node));
 }
 

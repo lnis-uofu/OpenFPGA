@@ -1,4 +1,0 @@
-/research/ece/lnis/USERS/tang/github/OpenFPGA/vpr7_x2p/printhandler/build/CMakeFiles/rebuild_cache.dir
-/research/ece/lnis/USERS/tang/github/OpenFPGA/vpr7_x2p/printhandler/build/CMakeFiles/edit_cache.dir
-/research/ece/lnis/USERS/tang/github/OpenFPGA/vpr7_x2p/printhandler/build/CMakeFiles/printhandlerdemo.dir
-/research/ece/lnis/USERS/tang/github/OpenFPGA/vpr7_x2p/printhandler/build/CMakeFiles/libprinthandler.dir

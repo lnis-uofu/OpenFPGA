@@ -29,6 +29,9 @@ struct Arch {
   /* Technology devices */
   TechnologyLibrary tech_lib;
 
+  /* Binding between circuit models and technology models */
+  std::map<CircuitModelId, TechnologyModelId> circuit_tech_binding; 
+
   /* Configuration protocol settings */
   ConfigProtocol config_protocol;
 

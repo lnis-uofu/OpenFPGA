@@ -29,9 +29,7 @@ void read_xml_component_key(pugi::xml_node& xml_component_key,
 
   /* Find the id of component key */
   const size_t& id = get_attribute(xml_component_key, "id", loc_data).as_int();
-  const std::string& name = get_attribute(xml_component_key, "name", loc_data).as_string();
-  const size_t& value = get_attribute(xml_component_key, "value", loc_data).as_int();
-  
+
   if (false == fabric_key.valid_key_id(FabricKeyId(id))) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_component_key),
                    "Invalid 'id' attribute '%d'\n",
@@ -40,6 +38,23 @@ void read_xml_component_key(pugi::xml_node& xml_component_key,
 
   VTR_ASSERT_SAFE(true == fabric_key.valid_key_id(FabricKeyId(id)));
 
+  /* If we have an alias, set the value as well */
+  const std::string& alias = get_attribute(xml_component_key, "alias", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string();
+  if (!alias.empty()) {
+    fabric_key.set_key_alias(FabricKeyId(id), alias);
+  }
+
+  /* If we have the alias set, name and valus are optional then 
+   * Otherwise, they are mandatory attributes 
+   */
+  pugiutil::ReqOpt required_name_value = pugiutil::ReqOpt::OPTIONAL; 
+  if (true == alias.empty()) {
+    required_name_value = pugiutil::ReqOpt::REQUIRED;
+  }
+
+  const std::string& name = get_attribute(xml_component_key, "name", loc_data, required_name_value).as_string();
+  const size_t& value = get_attribute(xml_component_key, "value", loc_data, required_name_value).as_int();
+  
   fabric_key.set_key_name(FabricKeyId(id), name);
   fabric_key.set_key_value(FabricKeyId(id), value);
 }

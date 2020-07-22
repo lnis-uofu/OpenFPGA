@@ -4,8 +4,9 @@ A Quick Start
 -------------
 
 In this tutorial, we will consider a simple but representative FPGA architecture to show you how to
-  - Adapt the VPR architecture XML file to OpenFPGA acceptable format
-  - Create the OpenFPGA architecture XMl file to customize the primitive circuits
+  - Adapt a VPR architecture XML file to OpenFPGA acceptable format
+  - Create an OpenFPGA architecture XML file to customize the primitive circuits
+  - Create a simulation setting XML file to specify the simulation settings 
 
 Through this quick example, we will introduce the key steps to build your own FPGA based on a VPR architecture template.
 
@@ -128,6 +129,7 @@ Craft OpenFPGA Architecture
 
 OpenFPGA needs another XML file which contains detailed modeling on the physical design of FPGA architecture.
 This is designed to minimize the modification on the original VPR architecture file, so that it can be reused.
+You may create an XML file `k4_n4_openfpga_arch.xml` and then add contents shown as follows.
 
 Overview on the Structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -136,7 +138,6 @@ An OpenFPGA architecture including the following parts.
   - Architecture modeling with a focus on circuit-level description
   - Configuration protocol definition
   - Annotation on the VPR architecture modules
-  - Simulation settings
 
 These parts are organized as follows in the XML file.
 
@@ -172,10 +173,6 @@ These parts are organized as follows in the XML file.
       ...
     </pb_type_annotations>
   </openfpga_architecture>
-
-  <openfpga_simulation_setting>
-    ...
-  </openfpga_simulation_setting>
 
 Technology Library Definition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -474,9 +471,12 @@ The complete annotation is shown as follows:
 See details in :ref:`annotate_vpr_arch`.
 
 Simulation Settings
-^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~
 
+OpenFPGA needs an XML file where detailed simulation settings are defined.
 The simulation settings contain critical parameters to build testbenches for verify the FPGA fabric. 
+
+You may create an XML file `k4_n4_openfpga_simulation.xml` and then add contents shown as follows.
 
 The complete annotation is shown as follows:
 

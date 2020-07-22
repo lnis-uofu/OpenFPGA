@@ -194,8 +194,11 @@ class CircuitLibrary {
     bool model_is_default(const CircuitModelId& model_id) const;
     bool dump_structural_verilog(const CircuitModelId& model_id) const;
     bool dump_explicit_port_map(const CircuitModelId& model_id) const;
+    /* Design technology information */
     enum e_circuit_model_design_tech design_tech_type(const CircuitModelId& model_id) const;
     bool is_power_gated(const CircuitModelId& model_id) const;
+    /* Device technology information */
+    std::string device_model_name(const CircuitModelId& model_id) const;
     /* General buffer information */
     bool is_input_buffered(const CircuitModelId& model_id) const;
     bool is_output_buffered(const CircuitModelId& model_id) const;
@@ -319,6 +322,8 @@ class CircuitLibrary {
     /* Design technology information */ 
     void set_model_design_tech_type(const CircuitModelId& model_id, const enum e_circuit_model_design_tech& design_tech_type);
     void set_model_is_power_gated(const CircuitModelId& model_id, const bool& is_power_gated);
+    /* Design technology information */ 
+    void set_device_model_name(const CircuitModelId& model_id, const std::string& name);
     /* Buffer existence */
     void set_model_input_buffer(const CircuitModelId& model_id, 
                                 const bool& existence, const std::string& model_name);
@@ -512,6 +517,9 @@ class CircuitLibrary {
     /* Design technology information */ 
     vtr::vector<CircuitModelId, enum e_circuit_model_design_tech> design_tech_types_;
     vtr::vector<CircuitModelId, bool> is_power_gated_;
+
+    /* Device technology information */ 
+    vtr::vector<CircuitModelId, std::string> device_model_names_;
 
     /* Buffer existence */
     vtr::vector<CircuitModelId, std::vector<bool>> buffer_existence_;

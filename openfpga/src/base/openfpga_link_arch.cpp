@@ -95,13 +95,20 @@ int link_arch(OpenfpgaContext& openfpga_ctx,
                                    openfpga_ctx.mutable_vpr_device_annotation(),
                                    cmd_context.option_enable(cmd, opt_verbose));
 
-  /* Annotate net mapping to each rr_node 
+  /* Annotate routing results:
+   * - net mapping to each rr_node 
+   * - previous nodes driving each rr_node 
    */
   openfpga_ctx.mutable_vpr_routing_annotation().init(g_vpr_ctx.device().rr_graph);
 
   annotate_rr_node_nets(g_vpr_ctx.device(), g_vpr_ctx.clustering(), g_vpr_ctx.routing(), 
                         openfpga_ctx.mutable_vpr_routing_annotation(),
                         cmd_context.option_enable(cmd, opt_verbose));
+
+  annotate_rr_node_previous_nodes(g_vpr_ctx.device(), g_vpr_ctx.clustering(), g_vpr_ctx.routing(), 
+                                  openfpga_ctx.mutable_vpr_routing_annotation(),
+                                  cmd_context.option_enable(cmd, opt_verbose));
+
 
   /* Build the routing graph annotation
    * - RRGSB
@@ -117,7 +124,8 @@ int link_arch(OpenfpgaContext& openfpga_ctx,
 
   if (true == cmd_context.option_enable(cmd, opt_sort_edge)) {
     sort_device_rr_gsb_chan_node_in_edges(g_vpr_ctx.device().rr_graph,
-                                          openfpga_ctx.mutable_device_rr_gsb());
+                                          openfpga_ctx.mutable_device_rr_gsb(),
+                                          cmd_context.option_enable(cmd, opt_verbose));
   } 
 
   /* Build multiplexer library */

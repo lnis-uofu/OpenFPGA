@@ -9,9 +9,9 @@ mkdir build
 cd build
 
 if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
-  cmake .. -DCMAKE_BUILD_TYPE=debug -DENABLE_VPR_GRAPHICS=off
+  cmake .. -DENABLE_VPR_GRAPHICS=off
 else
-  cmake .. -DCMAKE_BUILD_TYPE=debug
+  cmake .. 
 fi
 make -j16
 

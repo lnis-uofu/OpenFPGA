@@ -8,6 +8,9 @@
 #include "vtr_log.h"
 #include "vtr_time.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 #include "build_essential_modules.h"
 #include "build_decoder_modules.h"
 #include "build_mux_modules.h"
@@ -26,19 +29,20 @@ namespace openfpga {
  * The main function to be called for building module graphs 
  * for a FPGA fabric
  *******************************************************************/
-ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
-                                        DecoderLibrary& decoder_lib,
-                                        const OpenfpgaContext& openfpga_ctx,
-                                        const DeviceContext& vpr_device_ctx,
-                                        const bool& compress_routing,
-                                        const bool& duplicate_grid_pin,
-                                        const FabricKey& fabric_key,
-                                        const bool& generate_random_fabric_key,
-                                        const bool& verbose) {
+int build_device_module_graph(ModuleManager& module_manager,
+                              IoLocationMap& io_location_map,
+                              DecoderLibrary& decoder_lib,
+                              const OpenfpgaContext& openfpga_ctx,
+                              const DeviceContext& vpr_device_ctx,
+                              const bool& frame_view,
+                              const bool& compress_routing,
+                              const bool& duplicate_grid_pin,
+                              const FabricKey& fabric_key,
+                              const bool& generate_random_fabric_key,
+                              const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build fabric module graph");
 
-  /* Module manager to be built */
-  ModuleManager module_manager;
+  int status = CMD_EXEC_SUCCESS;
 
   CircuitModelId sram_model = openfpga_ctx.arch().config_protocol.memory_model();  
   VTR_ASSERT(true == openfpga_ctx.arch().circuit_lib.valid_model_id(sram_model));
@@ -107,19 +111,23 @@ ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
   }
 
   /* Build FPGA fabric top-level module */
-  build_top_module(module_manager,
-                   io_location_map,
-                   decoder_lib,
-                   openfpga_ctx.arch().circuit_lib, 
-                   vpr_device_ctx.grid,
-                   vpr_device_ctx.rr_graph,
-                   openfpga_ctx.device_rr_gsb(), 
-                   openfpga_ctx.tile_direct(), 
-                   openfpga_ctx.arch().arch_direct, 
-                   openfpga_ctx.arch().config_protocol.type(),
-                   sram_model,
-                   compress_routing, duplicate_grid_pin,
-                   fabric_key, generate_random_fabric_key);
+  status = build_top_module(module_manager,
+                            io_location_map,
+                            decoder_lib,
+                            openfpga_ctx.arch().circuit_lib, 
+                            vpr_device_ctx.grid,
+                            vpr_device_ctx.rr_graph,
+                            openfpga_ctx.device_rr_gsb(), 
+                            openfpga_ctx.tile_direct(), 
+                            openfpga_ctx.arch().arch_direct, 
+                            openfpga_ctx.arch().config_protocol.type(),
+                            sram_model,
+                            frame_view, compress_routing, duplicate_grid_pin,
+                            fabric_key, generate_random_fabric_key);
+
+  if (CMD_EXEC_FATAL_ERROR == status) {
+    return status;
+  }
 
   /* Now a critical correction has to be done!
    * In the module construction, we always use prefix of ports because they are binded
@@ -130,7 +138,7 @@ ModuleManager build_device_module_graph(IoLocationMap& io_location_map,
    */
   rename_primitive_module_port_names(module_manager, openfpga_ctx.arch().circuit_lib);
 
-  return module_manager;
+  return status;
 }
 
 } /* end namespace openfpga */

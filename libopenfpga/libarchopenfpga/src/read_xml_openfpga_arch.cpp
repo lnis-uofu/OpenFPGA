@@ -64,6 +64,9 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
     /* Build the internal link for technology library */
     openfpga_arch.tech_lib.link_models_to_variations();
 
+    /* Binding circuit models to device models */
+    bind_circuit_model_to_technology_model(openfpga_arch);
+
     /* Parse configuration protocol to data structure */
     openfpga_arch.config_protocol = read_xml_config_protocol(xml_openfpga_arch, loc_data);
 

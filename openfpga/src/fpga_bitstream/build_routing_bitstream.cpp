@@ -18,6 +18,7 @@
 #include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 #include "openfpga_rr_graph_utils.h"
+#include "module_manager_utils.h"
 
 #include "mux_bitstream_constants.h"
 #include "build_mux_bitstream.h"
@@ -41,6 +42,7 @@ void build_switch_block_mux_bitstream(BitstreamManager& bitstream_manager,
                                       const RRGraph& rr_graph,
                                       const RRNodeId& cur_rr_node,
                                       const std::vector<RRNodeId>& drive_rr_nodes,
+                                      const AtomContext& atom_ctx,
                                       const VprDeviceAnnotation& device_annotation,
                                       const VprRoutingAnnotation& routing_annotation) {
   /* Check current rr_node is CHANX or CHANY*/
@@ -50,12 +52,29 @@ void build_switch_block_mux_bitstream(BitstreamManager& bitstream_manager,
   /* Find the input size of the implementation of a routing multiplexer */
   size_t datapath_mux_size = drive_rr_nodes.size();
 
-  /* Find out which routing path is used in this MUX */
-  int path_id = DEFAULT_PATH_ID;
+  /* Cache input and output nets */
+  std::vector<ClusterNetId> input_nets;
+  ClusterNetId output_net = routing_annotation.rr_node_net(cur_rr_node);
   for (size_t inode = 0; inode < drive_rr_nodes.size(); ++inode) {
-    if (routing_annotation.rr_node_net(drive_rr_nodes[inode]) == routing_annotation.rr_node_net(cur_rr_node)) {
-      path_id = (int)inode;
-      break;
+    input_nets.push_back(routing_annotation.rr_node_net(drive_rr_nodes[inode]));
+  }
+  VTR_ASSERT(input_nets.size() == drive_rr_nodes.size());
+
+  /* Find out which routing path is used in this MUX 
+   * Two conditions to be considered:
+   * - There is no net mapped to cur_rr_node: we use default path id
+   * - There is a net mapped to cur_rr_node: we find the path id
+   */
+  int path_id = DEFAULT_PATH_ID;
+  if (ClusterNetId::INVALID() != output_net) {
+    /* We must have a valid previous node that is supposed to drive the source node! */
+    VTR_ASSERT(routing_annotation.rr_node_prev_node(cur_rr_node));
+    for (size_t inode = 0; inode < drive_rr_nodes.size(); ++inode) {
+      if ( (input_nets[inode] == output_net)
+        && (drive_rr_nodes[inode] == routing_annotation.rr_node_prev_node(cur_rr_node)) ) {
+        path_id = (int)inode;
+        break;
+      }
     }
   }
 
@@ -80,11 +99,37 @@ void build_switch_block_mux_bitstream(BitstreamManager& bitstream_manager,
   VTR_ASSERT(mux_bitstream.size() == module_manager.module_port(mux_mem_module, mux_mem_out_port_id).get_width());
 
   /* Add the bistream to the bitstream manager */
-  for (const bool& bit : mux_bitstream) {
-    ConfigBitId config_bit = bitstream_manager.add_bit(bit);
-    /* Link the memory bits to the mux mem block */
-    bitstream_manager.add_bit_to_block(mux_mem_block, config_bit);
+  bitstream_manager.add_block_bits(mux_mem_block, mux_bitstream);
+  /* Record path ids, input and output nets */
+  bitstream_manager.add_path_id_to_block(mux_mem_block, path_id);
+
+  /* Add input nets */
+  bool need_splitter = false;
+  std::string input_net_ids;
+  for (const ClusterNetId& input_net : input_nets) {
+    /* Add a space as a splitter*/
+    if (true == need_splitter) {
+      input_net_ids += std::string(" ");
+    }
+    AtomNetId input_atom_net = atom_ctx.lookup.atom_net(input_net);
+    if (true == atom_ctx.nlist.valid_net_id(input_atom_net)) {
+      input_net_ids += atom_ctx.nlist.net_name(input_atom_net);
+    } else {
+      input_net_ids += std::string("unmapped");
+    }
+    need_splitter = true;
   }
+  bitstream_manager.add_input_net_id_to_block(mux_mem_block, input_net_ids);
+
+  /* Add output nets */
+  std::string output_net_ids;
+  AtomNetId output_atom_net = atom_ctx.lookup.atom_net(output_net);
+  if (true == atom_ctx.nlist.valid_net_id(output_atom_net)) {
+    output_net_ids += atom_ctx.nlist.net_name(output_atom_net);
+  } else {
+    output_net_ids += std::string("unmapped");
+  }
+  bitstream_manager.add_output_net_id_to_block(mux_mem_block, output_net_ids);
 }
 
 /********************************************************************
@@ -101,6 +146,7 @@ void build_switch_block_interc_bitstream(BitstreamManager& bitstream_manager,
                                          const CircuitLibrary& circuit_lib,
                                          const MuxLibrary& mux_lib,
                                          const RRGraph& rr_graph,
+                                         const AtomContext& atom_ctx,
                                          const VprDeviceAnnotation& device_annotation,
                                          const VprRoutingAnnotation& routing_annotation,
                                          const RRGSB& rr_gsb,
@@ -134,7 +180,7 @@ void build_switch_block_interc_bitstream(BitstreamManager& bitstream_manager,
     build_switch_block_mux_bitstream(bitstream_manager, mux_mem_block, module_manager,
                                      circuit_lib, mux_lib, rr_graph, 
                                      cur_rr_node, driver_rr_nodes, 
-                                     device_annotation, routing_annotation);
+                                     atom_ctx, device_annotation, routing_annotation);
   } /*Nothing should be done else*/ 
 }
 
@@ -155,6 +201,7 @@ void build_switch_block_bitstream(BitstreamManager& bitstream_manager,
                                   const ModuleManager& module_manager,
                                   const CircuitLibrary& circuit_lib,
                                   const MuxLibrary& mux_lib,
+                                  const AtomContext& atom_ctx,
                                   const VprDeviceAnnotation& device_annotation,
                                   const VprRoutingAnnotation& routing_annotation,
                                   const RRGraph& rr_graph,
@@ -173,7 +220,7 @@ void build_switch_block_bitstream(BitstreamManager& bitstream_manager,
       build_switch_block_interc_bitstream(bitstream_manager, sb_config_block, 
                                           module_manager, 
                                           circuit_lib, mux_lib, rr_graph,
-                                          device_annotation, routing_annotation,
+                                          atom_ctx, device_annotation, routing_annotation,
                                           rr_gsb, side_manager.get_side(), itrack);
     }
   }
@@ -192,6 +239,7 @@ void build_connection_block_mux_bitstream(BitstreamManager& bitstream_manager,
                                           const ModuleManager& module_manager,
                                           const CircuitLibrary& circuit_lib,
                                           const MuxLibrary& mux_lib,
+                                          const AtomContext& atom_ctx,
                                           const VprDeviceAnnotation& device_annotation,
                                           const VprRoutingAnnotation& routing_annotation,
                                           const RRGraph& rr_graph,
@@ -200,23 +248,41 @@ void build_connection_block_mux_bitstream(BitstreamManager& bitstream_manager,
   /* Find drive_rr_nodes*/
   size_t datapath_mux_size = rr_graph.node_fan_in(src_rr_node);
 
+  /* Cache input and output nets */
+  std::vector<ClusterNetId> input_nets;
+  ClusterNetId output_net = routing_annotation.rr_node_net(src_rr_node);
+  for (const RREdgeId& edge : rr_graph.node_in_edges(src_rr_node)) {
+    RRNodeId driver_node = rr_graph.edge_src_node(edge);
+    input_nets.push_back(routing_annotation.rr_node_net(driver_node));
+  }
+
   /* Configuration bits for MUX*/
   int path_id = DEFAULT_PATH_ID;
   int edge_index = 0;
-  for (const RREdgeId& edge : rr_graph.node_in_edges(src_rr_node)) {
-    RRNodeId driver_node = rr_graph.edge_src_node(edge);
-    if (routing_annotation.rr_node_net(driver_node) == routing_annotation.rr_node_net(src_rr_node)) {
-      path_id = edge_index;
-      break;
+
+  /* Find which path is connected to the output of this routing multiplexer
+   * Two conditions to be considered:
+   * - There is no net mapped to src_rr_node: we use default path id
+   * - There is a net mapped to src_rr_node: we find the path id
+   */
+  if (ClusterNetId::INVALID() != output_net) {
+    for (const RREdgeId& edge : rr_graph.node_in_edges(src_rr_node)) {
+      RRNodeId driver_node = rr_graph.edge_src_node(edge);
+      /* We must have a valid previous node that is supposed to drive the source node! */
+      VTR_ASSERT(routing_annotation.rr_node_prev_node(src_rr_node));
+      if ( (routing_annotation.rr_node_net(driver_node) == output_net) 
+         && (driver_node == routing_annotation.rr_node_prev_node(src_rr_node)) ) {
+        path_id = edge_index;
+        break;
+      }
+      edge_index++;
     }
-    edge_index++;
   }
 
   /* Ensure that our path id makes sense! */
   VTR_ASSERT( (DEFAULT_PATH_ID == path_id)
            || ( (DEFAULT_PATH_ID < path_id) && (path_id < (int)datapath_mux_size) ) 
             );
-
 
   /* Find the circuit model id of the mux, we need its design technology which matters the bitstream generation */
   std::vector<RRSwitchId> driver_switches = get_rr_graph_driver_switches(rr_graph, src_rr_node);
@@ -234,13 +300,39 @@ void build_connection_block_mux_bitstream(BitstreamManager& bitstream_manager,
   VTR_ASSERT(mux_bitstream.size() == module_manager.module_port(mux_mem_module, mux_mem_out_port_id).get_width());
 
   /* Add the bistream to the bitstream manager */
-  for (const bool& bit : mux_bitstream) {
-    ConfigBitId config_bit = bitstream_manager.add_bit(bit);
-    /* Link the memory bits to the mux mem block */
-    bitstream_manager.add_bit_to_block(mux_mem_block, config_bit);
-  }
-}
+  bitstream_manager.add_block_bits(mux_mem_block, mux_bitstream);
+  /* Record path ids, input and output nets */
+  bitstream_manager.add_path_id_to_block(mux_mem_block, path_id);
 
+  /* Add input nets */
+  bool need_splitter = false;
+  std::string input_net_ids;
+  for (const ClusterNetId& input_net : input_nets) {
+    /* Add a space as a splitter*/
+    if (true == need_splitter) {
+      input_net_ids += std::string(" ");
+    }
+    AtomNetId input_atom_net = atom_ctx.lookup.atom_net(input_net);
+    if (true == atom_ctx.nlist.valid_net_id(input_atom_net)) {
+      input_net_ids += atom_ctx.nlist.net_name(input_atom_net);
+    } else {
+      input_net_ids += std::string("unmapped");
+    }
+    need_splitter = true;
+  }
+  bitstream_manager.add_input_net_id_to_block(mux_mem_block, input_net_ids);
+
+  /* Add output nets */
+  std::string output_net_ids;
+  AtomNetId output_atom_net = atom_ctx.lookup.atom_net(output_net);
+  if (true == atom_ctx.nlist.valid_net_id(output_atom_net)) {
+    output_net_ids += atom_ctx.nlist.net_name(output_atom_net);
+  } else {
+    output_net_ids += std::string("unmapped");
+  }
+  bitstream_manager.add_output_net_id_to_block(mux_mem_block, output_net_ids);
+
+}
 
 /********************************************************************
  * This function generates bitstream for an interconnection, 
@@ -255,6 +347,7 @@ void build_connection_block_interc_bitstream(BitstreamManager& bitstream_manager
                                          const ModuleManager& module_manager,
                                          const CircuitLibrary& circuit_lib,
                                          const MuxLibrary& mux_lib,
+                                         const AtomContext& atom_ctx,
                                          const VprDeviceAnnotation& device_annotation,
                                          const VprRoutingAnnotation& routing_annotation,
                                          const RRGraph& rr_graph,
@@ -277,7 +370,7 @@ void build_connection_block_interc_bitstream(BitstreamManager& bitstream_manager
     /* This is a routing multiplexer! Generate bitstream */
     build_connection_block_mux_bitstream(bitstream_manager, mux_mem_block, 
                                          module_manager, circuit_lib, mux_lib, 
-                                         device_annotation, routing_annotation,
+                                         atom_ctx, device_annotation, routing_annotation,
                                          rr_graph, src_rr_node);
   } /*Nothing should be done else*/ 
 }
@@ -299,6 +392,7 @@ void build_connection_block_bitstream(BitstreamManager& bitstream_manager,
                                       const ModuleManager& module_manager,
                                       const CircuitLibrary& circuit_lib,
                                       const MuxLibrary& mux_lib,
+                                      const AtomContext& atom_ctx,
                                       const VprDeviceAnnotation& device_annotation,
                                       const VprRoutingAnnotation& routing_annotation,
                                       const RRGraph& rr_graph,
@@ -314,7 +408,7 @@ void build_connection_block_bitstream(BitstreamManager& bitstream_manager,
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side); ++inode) { 
       build_connection_block_interc_bitstream(bitstream_manager, cb_configurable_block,
                                               module_manager, circuit_lib, mux_lib, 
-                                              device_annotation, routing_annotation,
+                                              atom_ctx, device_annotation, routing_annotation,
                                               rr_graph, rr_gsb,
                                               cb_ipin_side, inode);
     }
@@ -330,10 +424,12 @@ void build_connection_block_bitstreams(BitstreamManager& bitstream_manager,
                                        const ModuleManager& module_manager,
                                        const CircuitLibrary& circuit_lib,
                                        const MuxLibrary& mux_lib,
+                                       const AtomContext& atom_ctx,
                                        const VprDeviceAnnotation& device_annotation,
                                        const VprRoutingAnnotation& routing_annotation,
                                        const RRGraph& rr_graph,
                                        const DeviceRRGSB& device_rr_gsb,
+                                       const bool& compact_routing_hierarchy,
                                        const t_rr_type& cb_type) {
 
   vtr::Point<size_t> cb_range = device_rr_gsb.get_gsb_range();
@@ -352,15 +448,33 @@ void build_connection_block_bitstreams(BitstreamManager& bitstream_manager,
       if (true == connection_block_contain_only_routing_tracks(rr_gsb, cb_type)) {
         continue;
       }
-      /* Create a block for the bitstream which corresponds to the Switch block */
+
+      /* Find the cb module so that we can precisely reserve child blocks */
       vtr::Point<size_t> cb_coord(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
+      std::string cb_module_name = generate_connection_block_module_name(cb_type, cb_coord);
+      if (true == compact_routing_hierarchy) {
+        vtr::Point<size_t> unique_cb_coord(ix, iy);
+        /* Note: use GSB coordinate when inquire for unique modules!!! */
+        const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(cb_type, unique_cb_coord);
+        unique_cb_coord.set_x(unique_mirror.get_cb_x(cb_type)); 
+        unique_cb_coord.set_y(unique_mirror.get_cb_y(cb_type)); 
+        cb_module_name = generate_connection_block_module_name(cb_type, unique_cb_coord);
+      } 
+      ModuleId cb_module = module_manager.find_module(cb_module_name);
+      VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
+
+      /* Create a block for the bitstream which corresponds to the Switch block */
       ConfigBlockId cb_configurable_block = bitstream_manager.add_block(generate_connection_block_module_name(cb_type, cb_coord));
       /* Set switch block as a child of top block */
       bitstream_manager.add_child_block(top_configurable_block, cb_configurable_block);
+
+      /* Reserve child blocks for new created block */
+      bitstream_manager.reserve_child_blocks(cb_configurable_block,
+                                             count_module_manager_module_configurable_children(module_manager, cb_module)); 
   
       build_connection_block_bitstream(bitstream_manager, cb_configurable_block, module_manager,  
                                        circuit_lib, mux_lib,
-                                       device_annotation, routing_annotation,
+                                       atom_ctx, device_annotation, routing_annotation,
                                        rr_graph,
                                        rr_gsb, cb_type);
     }
@@ -378,10 +492,12 @@ void build_routing_bitstream(BitstreamManager& bitstream_manager,
                              const ModuleManager& module_manager,
                              const CircuitLibrary& circuit_lib,
                              const MuxLibrary& mux_lib,
+                             const AtomContext& atom_ctx,
                              const VprDeviceAnnotation& device_annotation,
                              const VprRoutingAnnotation& routing_annotation,
                              const RRGraph& rr_graph,
-                             const DeviceRRGSB& device_rr_gsb) {
+                             const DeviceRRGSB& device_rr_gsb,
+                             const bool& compact_routing_hierarchy) {
 
   /* Generate bitstream for each switch blocks
    * To organize the bitstream in blocks, we create a block for each switch block 
@@ -400,15 +516,32 @@ void build_routing_bitstream(BitstreamManager& bitstream_manager,
         continue;
       }
 
-      /* Create a block for the bitstream which corresponds to the Switch block */
       vtr::Point<size_t> sb_coord(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
+
+      /* Find the sb module so that we can precisely reserve child blocks */
+      std::string sb_module_name = generate_switch_block_module_name(sb_coord);
+      if (true == compact_routing_hierarchy) {
+        vtr::Point<size_t> unique_sb_coord(ix, iy);
+        const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(sb_coord);
+        unique_sb_coord.set_x(unique_mirror.get_sb_x()); 
+        unique_sb_coord.set_y(unique_mirror.get_sb_y()); 
+        sb_module_name = generate_switch_block_module_name(unique_sb_coord);
+      } 
+      ModuleId sb_module = module_manager.find_module(sb_module_name);
+      VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
+
+      /* Create a block for the bitstream which corresponds to the Switch block */
       ConfigBlockId sb_configurable_block = bitstream_manager.add_block(generate_switch_block_module_name(sb_coord));
       /* Set switch block as a child of top block */
       bitstream_manager.add_child_block(top_configurable_block, sb_configurable_block);
 
+      /* Reserve child blocks for new created block */
+      bitstream_manager.reserve_child_blocks(sb_configurable_block,
+                                             count_module_manager_module_configurable_children(module_manager, sb_module)); 
+
       build_switch_block_bitstream(bitstream_manager, sb_configurable_block, module_manager,  
                                    circuit_lib, mux_lib,
-                                   device_annotation, routing_annotation,
+                                   atom_ctx, device_annotation, routing_annotation,
                                    rr_graph,
                                    rr_gsb);
     }
@@ -423,18 +556,22 @@ void build_routing_bitstream(BitstreamManager& bitstream_manager,
 
   build_connection_block_bitstreams(bitstream_manager, top_configurable_block, module_manager,  
                                     circuit_lib, mux_lib,
-                                    device_annotation, routing_annotation,
+                                    atom_ctx, device_annotation, routing_annotation,
                                     rr_graph,
-                                    device_rr_gsb, CHANX);
+                                    device_rr_gsb,
+                                    compact_routing_hierarchy,
+                                    CHANX);
   VTR_LOG("Done\n");
 
   VTR_LOG("Generating bitstream for Y-direction Connection blocks ...");
 
   build_connection_block_bitstreams(bitstream_manager, top_configurable_block, module_manager,  
                                     circuit_lib, mux_lib,
-                                    device_annotation, routing_annotation,
+                                    atom_ctx, device_annotation, routing_annotation,
                                     rr_graph,
-                                    device_rr_gsb, CHANY);
+                                    device_rr_gsb,
+                                    compact_routing_hierarchy,
+                                    CHANY);
   VTR_LOG("Done\n");
 
 }
