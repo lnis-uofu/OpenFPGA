@@ -45,18 +45,15 @@ void print_verilog_power_gated_invbuf_body(std::fstream& fp,
   /* Create a sensitive list */
   fp << "\treg " << circuit_lib.port_prefix(output_port) << "_reg;" << std::endl;
 
-  fp << "\talways @(" << std::endl;
+  fp << "\talways @(";
   /* Power-gate port first*/
   for (const auto& power_gate_port : power_gate_ports) {
     /* Only config_enable signal will be considered */
     if (false == circuit_lib.port_is_config_enable(power_gate_port)) {
       continue;
     }
-    /* Skip first comma to dump*/
-    if (0 < &power_gate_port - &power_gate_ports[0]) {
-      fp << ",";
-    }
     fp << circuit_lib.port_prefix(power_gate_port);
+    fp << ", ";
   }
   fp << circuit_lib.port_prefix(input_port) << ") begin" << std::endl; 
 
@@ -78,7 +75,7 @@ void print_verilog_power_gated_invbuf_body(std::fstream& fp,
       /* Power-gated signal are disable during operating, enabled during configuration,
        * Therefore, we need to reverse them here   
        */
-      if (0 == circuit_lib.port_default_value(power_gate_port)) {
+      if (1 == circuit_lib.port_default_value(power_gate_port)) {
         fp << "~";
       }
       

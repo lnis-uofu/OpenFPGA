@@ -36,8 +36,8 @@
       <design_technology type="cmos" power_gated="true" topology="inverter" size="1"/>
       <device_technology device_model_name="logic"/>
       <port type="input" prefix="in" size="1"/>
-      <port type="input" prefix="en" size="1" is_global="true" default_val="0" config_enable="true"/>
-      <port type="input" prefix="enb" size="1" is_global="true" default_val="1" config_enable="true"/>
+      <port type="input" prefix="en" size="1" is_global="true" default_val="0" is_config_enable="true"/>
+      <port type="input" prefix="enb" size="1" is_global="true" default_val="1" is_config_enable="true"/>
       <port type="output" prefix="out" size="1"/>
       <delay_matrix type="rise" in_port="in" out_port="out">
         10e-12
