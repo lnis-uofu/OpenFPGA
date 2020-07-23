@@ -17,6 +17,8 @@
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
 
+#include "circuit_library_utils.h"
+
 #include "spice_constants.h"
 #include "spice_writer_utils.h"
 #include "spice_essential_gates.h"
@@ -159,7 +161,6 @@ int print_spice_powergated_inverter_subckt(std::fstream& fp,
    */
   std::vector<CircuitPortId> input_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_INPUT, true);
   std::vector<CircuitPortId> output_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_OUTPUT, true);
-  std::vector<CircuitPortId> global_ports = circuit_lib.model_global_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_INPUT, true, true);
 
   /* Make sure:
    * There is only 1 input port and 1 output port, 
@@ -170,54 +171,10 @@ int print_spice_powergated_inverter_subckt(std::fstream& fp,
 
   /* If the circuit model is power-gated, we need to find at least one global config_enable signals */
   VTR_ASSERT(true == circuit_lib.is_power_gated(circuit_model));
-  /* Check all the ports we have are good for a power-gated circuit model */
-  size_t num_err = 0;
-  /* We need at least one global port */
-  if (2 != global_ports.size())  {
-    VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "Expect two global ports (a pair of EN/Enb) for Inverter/buffer circuit model '%s' which is power-gated!\n",
-                   circuit_lib.model_name(circuit_model).c_str()); 
-    num_err++;
-  }
-  /* All the global ports should be config_enable */
-  for (const auto& port : global_ports) {
-    if (false == circuit_lib.port_is_config_enable(port)) {
-      VTR_LOGF_ERROR(__FILE__, __LINE__,
-                     "Inverter/buffer circuit model '%s' is power-gated. At least one config-enable global port is required!\n",
-                     circuit_lib.model_name(circuit_model).c_str()); 
-      num_err++;
-    }
-  }
-  /* Report errors if there are any */
-  if (0 < num_err) {
-    exit(1);
-  }
-
-  /* Try to find a pair of Enable and ENb ports from the global ports */
-  VTR_ASSERT(2 == global_ports.size());
-  CircuitPortId en_port = CircuitPortId::INVALID();
-  CircuitPortId enb_port = CircuitPortId::INVALID();
-  for (const auto& port : global_ports) {
-    if (0 == circuit_lib.port_default_value(port)) {
-      en_port = port;
-    } else {
-      VTR_ASSERT(1 == circuit_lib.port_default_value(port));
-      enb_port = port;
-    }
-  }
-  /* We must have valid EN/ENb ports */
-  if (false == circuit_lib.valid_circuit_port_id(en_port)) {
-    VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "Fail to find an enable port for the inverter/buffer circuit model '%s' is power-gated!\n",
-                   circuit_lib.model_name(circuit_model).c_str()); 
-    exit(1);
-  }
-  if (false == circuit_lib.valid_circuit_port_id(enb_port)) {
-    VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "Fail to find an inverted enable port for the inverter/buffer circuit model '%s' is power-gated!\n",
-                   circuit_lib.model_name(circuit_model).c_str()); 
-    exit(1);
-  }
+  CircuitPortId en_port = find_circuit_model_power_gate_en_port(circuit_lib, circuit_model);
+  CircuitPortId enb_port = find_circuit_model_power_gate_enb_port(circuit_lib, circuit_model);
+  VTR_ASSERT(true == circuit_lib.valid_circuit_port_id(en_port));
+  VTR_ASSERT(true == circuit_lib.valid_circuit_port_id(enb_port));
 
   /* TODO: may consider use size/bin to compact layout etc. */
   for (size_t i = 0; i < circuit_lib.buffer_size(circuit_model); ++i) { 

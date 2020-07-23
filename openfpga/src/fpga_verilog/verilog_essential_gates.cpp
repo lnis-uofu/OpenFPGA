@@ -48,6 +48,10 @@ void print_verilog_power_gated_invbuf_body(std::fstream& fp,
   fp << "\talways @(" << std::endl;
   /* Power-gate port first*/
   for (const auto& power_gate_port : power_gate_ports) {
+    /* Only config_enable signal will be considered */
+    if (false == circuit_lib.port_is_config_enable(power_gate_port)) {
+      continue;
+    }
     /* Skip first comma to dump*/
     if (0 < &power_gate_port - &power_gate_ports[0]) {
       fp << ",";
@@ -61,6 +65,10 @@ void print_verilog_power_gated_invbuf_body(std::fstream& fp,
   /* For the first pin, we skip output comma */
   size_t port_cnt = 0;
   for (const auto& power_gate_port : power_gate_ports) {
+    /* Only config_enable signal will be considered */
+    if (false == circuit_lib.port_is_config_enable(power_gate_port)) {
+      continue;
+    }
     for (const auto& power_gate_pin : circuit_lib.pins(power_gate_port)) {
       if (0 < port_cnt) { 
         fp << std::endl << "\t\t&&";
@@ -160,30 +168,6 @@ void print_verilog_invbuf_module(const ModuleManager& module_manager,
    */
   VTR_ASSERT( (1 == input_ports.size()) && (1 == circuit_lib.port_size(input_ports[0])) );
   VTR_ASSERT( (1 == output_ports.size()) && (1 == circuit_lib.port_size(output_ports[0])) );
-
-  /* TODO: move the check codes to check_circuit_library.h */
-  /* If the circuit model is power-gated, we need to find at least one global config_enable signals */
-  if (true == circuit_lib.is_power_gated(circuit_model)) { 
-    /* Check all the ports we have are good for a power-gated circuit model */
-    size_t num_err = 0;
-    /* We need at least one global port */
-    if (0 == global_ports.size())  {
-      num_err++;
-    }
-    /* All the global ports should be config_enable */
-    for (const auto& port : global_ports) {
-      if (false == circuit_lib.port_is_config_enable(port)) {
-        num_err++;
-      }
-    }
-    /* Report errors if there are any */
-    if (0 < num_err) {
-      VTR_LOGF_ERROR(__FILE__, __LINE__,
-                     "Inverter/buffer circuit model '%s' is power-gated. At least one config-enable global port is required!\n",
-                     circuit_lib.model_name(circuit_model).c_str()); 
-      exit(1);
-    }
-  }
 
   /* Create a Verilog Module based on the circuit model, and add to module manager */
   ModuleId module_id = module_manager.find_module(circuit_lib.model_name(circuit_model)); 
