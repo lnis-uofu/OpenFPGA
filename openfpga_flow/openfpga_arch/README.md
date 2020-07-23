@@ -23,5 +23,6 @@ Note that an OpenFPGA architecture can be applied to multiple VPR architecture f
 - stdcell: If circuit designs are built with standard cells only
 - tree\_mux: If routing multiplexers are built with a tree-like structure
 - <feature_size>: The technology node which the delay numbers are extracted from.
+- powergate : The FPGA has power-gating techniques applied. If not defined, there is no power-gating.
 
 Other features are used in naming should be listed here.
