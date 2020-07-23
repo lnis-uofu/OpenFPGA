@@ -307,7 +307,7 @@ CircuitPortId find_circuit_model_power_gate_en_port(const CircuitLibrary& circui
     if (false == circuit_lib.port_is_config_enable(port)) {
       continue;
     }
-    if (0 == circuit_lib.port_default_value(port)) {
+    if (1 == circuit_lib.port_default_value(port)) {
       en_port = port;
       break;
     }
@@ -336,7 +336,7 @@ CircuitPortId find_circuit_model_power_gate_enb_port(const CircuitLibrary& circu
     if (false == circuit_lib.port_is_config_enable(port)) {
       continue;
     }
-    if (1 == circuit_lib.port_default_value(port)) {
+    if (0 == circuit_lib.port_default_value(port)) {
       enb_port = port;
       break;
     }

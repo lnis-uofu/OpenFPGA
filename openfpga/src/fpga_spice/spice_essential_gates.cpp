@@ -117,27 +117,38 @@ int print_spice_transistor_wrapper(NetlistManager& netlist_manager,
  * Generate the SPICE subckt for a power gated inverter
  * The Enable signal controlled the power gating
  * Schematic
- *          LVDD
- *            |
- *           -
- *   ENb -o||
- *           -
- *            |
- *           -
- *      +-o||
- *      |    -
- *      |     |
- * in-->+     +--> OUT
- *      |     |
- *      |    -
- *      +--||
- *           -
- *            |
- *           -
- *     EN -||
- *           -
- *            |
- *          LGND
+ *            LVDD
+ *              |
+ *             -
+ *   ENb[0] -o||
+ *             -
+ *              |
+ *             -
+ *   ENb[1] -o||
+ *             -
+ *              |
+ *            ...
+ *              |
+ *             -
+ *        +-o||
+ *        |    -
+ *        |     |
+ *   in-->+     +--> OUT
+ *        |     |
+ *        |    -
+ *        +--||
+ *             -
+ *             ...
+ *              |
+ *             -
+ *    EN[1] -||
+ *             -
+ *              |
+ *             -
+ *    EN[0] -||
+ *             -
+ *              |
+ *            LGND
  *
  ***********************************************/
 static 
@@ -178,33 +189,71 @@ int print_spice_powergated_inverter_subckt(std::fstream& fp,
 
   /* TODO: may consider use size/bin to compact layout etc. */
   for (size_t i = 0; i < circuit_lib.buffer_size(circuit_model); ++i) { 
-    /* Write power-gateing transistor pairs using the technology model */
-    fp << "Xpmos_powergate_" << i << " ";
-    fp << circuit_lib.port_prefix(output_ports[0]) << "_pmos_pg "; 
-    fp << circuit_lib.port_prefix(enb_port) << " "; 
-    fp << "LVDD "; 
-    fp << "LVDD "; 
-    fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+    /* Write power-gating transistor pairs using the technology model
+     * Note that for a mulit-bit power gating port, we should cascade the transistors
+     */
+    bool first_enb_pin = true;
+    size_t last_enb_pin;
+    for (const auto& power_gate_pin : circuit_lib.pins(enb_port)) {
+      BasicPort enb_pin(circuit_lib.port_prefix(enb_port), power_gate_pin, power_gate_pin);
+      fp << "Xpmos_powergate_" << i << "_pin_" << power_gate_pin << " ";
+      /* For the first pin, we should connect it to local VDD*/
+      if (true == first_enb_pin) {
+        fp << circuit_lib.port_prefix(output_ports[0]) << "_pmos_pg_" << power_gate_pin << " "; 
+        fp << generate_spice_port(enb_pin) << " "; 
+        fp << "LVDD "; 
+        fp << "LVDD "; 
+        first_enb_pin = false;
+      } else {
+        VTR_ASSERT_SAFE(false == first_enb_pin);
+        fp << circuit_lib.port_prefix(output_ports[0]) << "_pmos_pg_" << last_enb_pin << " "; 
+        fp << generate_spice_port(enb_pin) << " "; 
+        fp << circuit_lib.port_prefix(output_ports[0]) << "_pmos_pg_" << power_gate_pin << " "; 
+        fp << "LVDD "; 
+      }
+      fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
 
-    fp << "Xnmos_powergate_" << i << " ";
-    fp << circuit_lib.port_prefix(output_ports[0]) << " _nmos_pg "; 
-    fp << circuit_lib.port_prefix(en_port) << " "; 
-    fp << "LGND "; 
-    fp << "LGND "; 
-    fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+      /* Cache the last pin*/
+      last_enb_pin = power_gate_pin;
+    }
+
+    bool first_en_pin = true;
+    size_t last_en_pin;
+    for (const auto& power_gate_pin : circuit_lib.pins(en_port)) {
+      BasicPort en_pin(circuit_lib.port_prefix(en_port), power_gate_pin, power_gate_pin);
+      fp << "Xnmos_powergate_" << i << "_pin_" << power_gate_pin << " ";
+      /* For the first pin, we should connect it to local VDD*/
+      if (true == first_en_pin) {
+        fp << circuit_lib.port_prefix(output_ports[0]) << "_nmos_pg_" << power_gate_pin << " "; 
+        fp << generate_spice_port(en_pin) << " "; 
+        fp << "LGND "; 
+        fp << "LGND "; 
+        first_en_pin = false;
+      } else {
+        VTR_ASSERT_SAFE(false == first_enb_pin);
+        fp << circuit_lib.port_prefix(output_ports[0]) << "_nmos_pg_" << last_en_pin << " "; 
+        fp << circuit_lib.port_prefix(en_port) << " "; 
+        fp << circuit_lib.port_prefix(output_ports[0]) << "_nmos_pg_" << power_gate_pin << " "; 
+        fp << "LGND "; 
+      }
+      fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+
+      /* Cache the last pin*/
+      last_enb_pin = power_gate_pin;
+    }
 
     /* Write transistor pairs using the technology model */
     fp << "Xpmos_" << i << " ";
     fp << circuit_lib.port_prefix(output_ports[0]) << " "; 
     fp << circuit_lib.port_prefix(input_ports[0]) << " "; 
-    fp << circuit_lib.port_prefix(output_ports[0]) << "_pmos_pg "; 
+    fp << circuit_lib.port_prefix(output_ports[0]) << "_pmos_pg_" << circuit_lib.pins(enb_port).back() << " "; 
     fp << "LVDD "; 
     fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
 
     fp << "Xnmos_" << i << " ";
     fp << circuit_lib.port_prefix(output_ports[0]) << " "; 
     fp << circuit_lib.port_prefix(input_ports[0]) << " "; 
-    fp << circuit_lib.port_prefix(output_ports[0]) << " _nmos_pg "; 
+    fp << circuit_lib.port_prefix(output_ports[0]) << " _nmos_pg_" << circuit_lib.pins(en_port).back() << " "; 
     fp << "LGND "; 
     fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
   }
