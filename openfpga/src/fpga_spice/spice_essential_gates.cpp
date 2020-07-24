@@ -26,9 +26,9 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-/************************************************
+/********************************************************************
  * Print a SPICE model wrapper for a transistor model
- ***********************************************/
+ *******************************************************************/
 static 
 int print_spice_transistor_model_wrapper(std::fstream& fp,
                                          const TechnologyLibrary& tech_lib,
@@ -69,9 +69,9 @@ int print_spice_transistor_model_wrapper(std::fstream& fp,
   return CMD_EXEC_SUCCESS;
 }
 
-/************************************************
+/********************************************************************
  * Generate the SPICE netlist for transistors
- ***********************************************/
+ *******************************************************************/
 int print_spice_transistor_wrapper(NetlistManager& netlist_manager,
                                    const TechnologyLibrary& tech_lib,
                                    const std::string& submodule_dir) {
@@ -113,9 +113,110 @@ int print_spice_transistor_wrapper(NetlistManager& netlist_manager,
   return CMD_EXEC_SUCCESS;
 }
 
-/************************************************
+/********************************************************************
+ * Generate the SPICE modeling for a power-gated inverter
+ *
+ * This function is created to be shared by inverter and buffer SPICE netlist writer
+ *
+ * Note: 
+ * - This function does NOT create a file
+ *   but requires a file stream created
+ * - This function only output SPICE modeling for 
+ *   an inverter. Any preprocessing or subckt definition should not be included!
+ *******************************************************************/
+static 
+int print_spice_powergated_inverter_modeling(std::fstream& fp,
+                                             const std::string& trans_name_postfix,
+                                             const std::string& input_port_name,
+                                             const std::string& output_port_name,
+                                             const CircuitLibrary& circuit_lib,
+                                             const CircuitPortId& enb_port,
+                                             const CircuitPortId& en_port,
+                                             const TechnologyLibrary& tech_lib,
+                                             const TechnologyModelId& tech_model) {
+
+  if (false == valid_file_stream(fp)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Write power-gating transistor pairs using the technology model
+   * Note that for a mulit-bit power gating port, we should cascade the transistors
+   */
+  bool first_enb_pin = true;
+  size_t last_enb_pin;
+  for (const auto& power_gate_pin : circuit_lib.pins(enb_port)) {
+    BasicPort enb_pin(circuit_lib.port_prefix(enb_port), power_gate_pin, power_gate_pin);
+    fp << "Xpmos_powergate_" << trans_name_postfix << "_pin_" << power_gate_pin << " ";
+    /* For the first pin, we should connect it to local VDD*/
+    if (true == first_enb_pin) {
+      fp << output_port_name << "_pmos_pg_" << power_gate_pin << " "; 
+      fp << generate_spice_port(enb_pin) << " "; 
+      fp << "LVDD "; 
+      fp << "LVDD "; 
+      first_enb_pin = false;
+    } else {
+      VTR_ASSERT_SAFE(false == first_enb_pin);
+      fp << output_port_name << "_pmos_pg_" << last_enb_pin << " "; 
+      fp << generate_spice_port(enb_pin) << " "; 
+      fp << output_port_name << "_pmos_pg_" << power_gate_pin << " "; 
+      fp << "LVDD "; 
+    }
+    fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+
+    /* Cache the last pin*/
+    last_enb_pin = power_gate_pin;
+  }
+
+  bool first_en_pin = true;
+  size_t last_en_pin;
+  for (const auto& power_gate_pin : circuit_lib.pins(en_port)) {
+    BasicPort en_pin(circuit_lib.port_prefix(en_port), power_gate_pin, power_gate_pin);
+    fp << "Xnmos_powergate_" << trans_name_postfix << "_pin_" << power_gate_pin << " ";
+    /* For the first pin, we should connect it to local VDD*/
+    if (true == first_en_pin) {
+      fp << output_port_name << "_nmos_pg_" << power_gate_pin << " "; 
+      fp << generate_spice_port(en_pin) << " "; 
+      fp << "LGND "; 
+      fp << "LGND "; 
+      first_en_pin = false;
+    } else {
+      VTR_ASSERT_SAFE(false == first_enb_pin);
+      fp << output_port_name << "_nmos_pg_" << last_en_pin << " "; 
+      fp << circuit_lib.port_prefix(en_port) << " "; 
+      fp << output_port_name << "_nmos_pg_" << power_gate_pin << " "; 
+      fp << "LGND "; 
+    }
+    fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+
+    /* Cache the last pin*/
+    last_enb_pin = power_gate_pin;
+  }
+
+  /* Write transistor pairs using the technology model */
+  fp << "Xpmos_" << trans_name_postfix << " ";
+  fp << output_port_name << " "; 
+  fp << input_port_name << " "; 
+  fp << output_port_name << "_pmos_pg_" << circuit_lib.pins(enb_port).back() << " "; 
+  fp << "LVDD "; 
+  fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+
+  fp << "Xnmos_" << trans_name_postfix << " ";
+  fp << output_port_name << " "; 
+  fp << input_port_name << " "; 
+  fp << output_port_name << " _nmos_pg_" << circuit_lib.pins(en_port).back() << " "; 
+  fp << "LGND "; 
+  fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
  * Generate the SPICE subckt for a power gated inverter
  * The Enable signal controlled the power gating
+ *
+ * Note: 
+ * - This function supports multi-bit power gating 
+ *
  * Schematic
  *            LVDD
  *              |
@@ -127,7 +228,9 @@ int print_spice_transistor_wrapper(NetlistManager& netlist_manager,
  *   ENb[1] -o||
  *             -
  *              |
- *            ...
+ *
+ *            ... <More control signals if available in the port>
+ *
  *              |
  *             -
  *        +-o||
@@ -138,7 +241,9 @@ int print_spice_transistor_wrapper(NetlistManager& netlist_manager,
  *        |    -
  *        +--||
  *             -
- *             ...
+ *
+ *            ... <More control signals if available in the port>
+ *
  *              |
  *             -
  *    EN[1] -||
@@ -150,7 +255,7 @@ int print_spice_transistor_wrapper(NetlistManager& netlist_manager,
  *              |
  *            LGND
  *
- ***********************************************/
+ *******************************************************************/
 static 
 int print_spice_powergated_inverter_subckt(std::fstream& fp,
                                            const ModuleManager& module_manager,
@@ -187,75 +292,22 @@ int print_spice_powergated_inverter_subckt(std::fstream& fp,
   VTR_ASSERT(true == circuit_lib.valid_circuit_port_id(en_port));
   VTR_ASSERT(true == circuit_lib.valid_circuit_port_id(enb_port));
 
+  int status = CMD_EXEC_SUCCESS;
+
   /* TODO: may consider use size/bin to compact layout etc. */
-  for (size_t i = 0; i < circuit_lib.buffer_size(circuit_model); ++i) { 
-    /* Write power-gating transistor pairs using the technology model
-     * Note that for a mulit-bit power gating port, we should cascade the transistors
-     */
-    bool first_enb_pin = true;
-    size_t last_enb_pin;
-    for (const auto& power_gate_pin : circuit_lib.pins(enb_port)) {
-      BasicPort enb_pin(circuit_lib.port_prefix(enb_port), power_gate_pin, power_gate_pin);
-      fp << "Xpmos_powergate_" << i << "_pin_" << power_gate_pin << " ";
-      /* For the first pin, we should connect it to local VDD*/
-      if (true == first_enb_pin) {
-        fp << circuit_lib.port_prefix(output_ports[0]) << "_pmos_pg_" << power_gate_pin << " "; 
-        fp << generate_spice_port(enb_pin) << " "; 
-        fp << "LVDD "; 
-        fp << "LVDD "; 
-        first_enb_pin = false;
-      } else {
-        VTR_ASSERT_SAFE(false == first_enb_pin);
-        fp << circuit_lib.port_prefix(output_ports[0]) << "_pmos_pg_" << last_enb_pin << " "; 
-        fp << generate_spice_port(enb_pin) << " "; 
-        fp << circuit_lib.port_prefix(output_ports[0]) << "_pmos_pg_" << power_gate_pin << " "; 
-        fp << "LVDD "; 
-      }
-      fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
-
-      /* Cache the last pin*/
-      last_enb_pin = power_gate_pin;
+  for (size_t width = 0; width < circuit_lib.buffer_size(circuit_model); ++width) { 
+    status = print_spice_powergated_inverter_modeling(fp,
+                                                      std::to_string(width),
+                                                      circuit_lib.port_prefix(input_ports[0]), 
+                                                      circuit_lib.port_prefix(output_ports[0]), 
+                                                      circuit_lib,
+                                                      en_port,
+                                                      enb_port,
+                                                      tech_lib,
+                                                      tech_model);
+    if (CMD_EXEC_FATAL_ERROR == status) {
+      return status;
     }
-
-    bool first_en_pin = true;
-    size_t last_en_pin;
-    for (const auto& power_gate_pin : circuit_lib.pins(en_port)) {
-      BasicPort en_pin(circuit_lib.port_prefix(en_port), power_gate_pin, power_gate_pin);
-      fp << "Xnmos_powergate_" << i << "_pin_" << power_gate_pin << " ";
-      /* For the first pin, we should connect it to local VDD*/
-      if (true == first_en_pin) {
-        fp << circuit_lib.port_prefix(output_ports[0]) << "_nmos_pg_" << power_gate_pin << " "; 
-        fp << generate_spice_port(en_pin) << " "; 
-        fp << "LGND "; 
-        fp << "LGND "; 
-        first_en_pin = false;
-      } else {
-        VTR_ASSERT_SAFE(false == first_enb_pin);
-        fp << circuit_lib.port_prefix(output_ports[0]) << "_nmos_pg_" << last_en_pin << " "; 
-        fp << circuit_lib.port_prefix(en_port) << " "; 
-        fp << circuit_lib.port_prefix(output_ports[0]) << "_nmos_pg_" << power_gate_pin << " "; 
-        fp << "LGND "; 
-      }
-      fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
-
-      /* Cache the last pin*/
-      last_enb_pin = power_gate_pin;
-    }
-
-    /* Write transistor pairs using the technology model */
-    fp << "Xpmos_" << i << " ";
-    fp << circuit_lib.port_prefix(output_ports[0]) << " "; 
-    fp << circuit_lib.port_prefix(input_ports[0]) << " "; 
-    fp << circuit_lib.port_prefix(output_ports[0]) << "_pmos_pg_" << circuit_lib.pins(enb_port).back() << " "; 
-    fp << "LVDD "; 
-    fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
-
-    fp << "Xnmos_" << i << " ";
-    fp << circuit_lib.port_prefix(output_ports[0]) << " "; 
-    fp << circuit_lib.port_prefix(input_ports[0]) << " "; 
-    fp << circuit_lib.port_prefix(output_ports[0]) << " _nmos_pg_" << circuit_lib.pins(en_port).back() << " "; 
-    fp << "LGND "; 
-    fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
   }
 
   print_spice_subckt_end(fp, module_manager.module_name(module_id)); 
@@ -263,8 +315,54 @@ int print_spice_powergated_inverter_subckt(std::fstream& fp,
   return CMD_EXEC_SUCCESS;
 }
 
-/************************************************
+/********************************************************************
+ * Generate the SPICE modeling for a regular inverter
+ *
+ * This function is created to be shared by inverter and buffer SPICE netlist writer
+ *
+ * Note: 
+ * - This function does NOT create a file
+ *   but requires a file stream created
+ * - This function only output SPICE modeling for 
+ *   an inverter. Any preprocessing or subckt definition should not be included!
+ *******************************************************************/
+static 
+int print_spice_regular_inverter_modeling(std::fstream& fp,
+                                          const std::string& trans_name_postfix,
+                                          const std::string& input_port_name,
+                                          const std::string& output_port_name,
+                                          const TechnologyLibrary& tech_lib,
+                                          const TechnologyModelId& tech_model) {
+
+  if (false == valid_file_stream(fp)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Write transistor pairs using the technology model */
+  fp << "Xpmos_" << trans_name_postfix << " ";
+  fp << output_port_name << " "; 
+  fp << input_port_name << " "; 
+  fp << "LVDD "; 
+  fp << "LVDD "; 
+  fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+
+  fp << "Xnmos_" << trans_name_postfix << " ";
+  fp << output_port_name << " "; 
+  fp << input_port_name << " "; 
+  fp << "LGND "; 
+  fp << "LGND "; 
+  fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
  * Generate the SPICE subckt for a regular inverter
+ *
+ * Note: 
+ * - This function does NOT support power-gating
+ *   It should be managed in a separated function
+ *
  * Schematic
  *          LVDD
  *            |
@@ -280,7 +378,7 @@ int print_spice_powergated_inverter_subckt(std::fstream& fp,
  *            |
  *          LGND
  *
- ***********************************************/
+ *******************************************************************/
 static 
 int print_spice_regular_inverter_subckt(std::fstream& fp,
                                         const ModuleManager& module_manager,
@@ -310,33 +408,29 @@ int print_spice_regular_inverter_subckt(std::fstream& fp,
   VTR_ASSERT( (1 == input_ports.size()) && (1 == circuit_lib.port_size(input_ports[0])) );
   VTR_ASSERT( (1 == output_ports.size()) && (1 == circuit_lib.port_size(output_ports[0])) );
 
+  int status = CMD_EXEC_SUCCESS;
   /* TODO: may consider use size/bin to compact layout etc. */
-  for (size_t i = 0; i < circuit_lib.buffer_size(circuit_model); ++i) { 
-    /* Write transistor pairs using the technology model */
-    fp << "Xpmos_" << i << " ";
-    fp << circuit_lib.port_prefix(output_ports[0]) << " "; 
-    fp << circuit_lib.port_prefix(input_ports[0]) << " "; 
-    fp << "LVDD "; 
-    fp << "LVDD "; 
-    fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
-
-    fp << "Xnmos_" << i << " ";
-    fp << circuit_lib.port_prefix(output_ports[0]) << " "; 
-    fp << circuit_lib.port_prefix(input_ports[0]) << " "; 
-    fp << "LGND "; 
-    fp << "LGND "; 
-    fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+  for (size_t width = 0; width < circuit_lib.buffer_size(circuit_model); ++width) { 
+    status = print_spice_regular_inverter_modeling(fp,
+                                                   std::to_string(width),
+                                                   circuit_lib.port_prefix(input_ports[0]), 
+                                                   circuit_lib.port_prefix(output_ports[0]), 
+                                                   tech_lib,
+                                                   tech_model);
+    if (CMD_EXEC_FATAL_ERROR == status) {
+      return status;
+    }
   }
 
   print_spice_subckt_end(fp, module_manager.module_name(module_id)); 
 
-  return CMD_EXEC_SUCCESS;
+  return status;
 }
 
-/************************************************
+/********************************************************************
  * Generate the SPICE subckt for an inverter
  * Branch on the different circuit topologies
- ***********************************************/
+ *******************************************************************/
 static 
 int print_spice_inverter_subckt(std::fstream& fp,
                                 const ModuleManager& module_manager,
@@ -362,13 +456,262 @@ int print_spice_inverter_subckt(std::fstream& fp,
   return status;
 }
 
-/************************************************
+/********************************************************************
+ * Generate the SPICE subckt for a power-gated buffer
+ * which contains at least 2 stages
+ *
+ * Schematic of a multi-stage buffer
+ * 
+ *            LVDD              LVDD
+ *              |                |
+ *             -                -
+ *   ENb[0] -o||     ENb[0] -o||
+ *             -                -
+ *              |                |
+ *             -                -
+ *   ENb[1] -o||     ENb[1] -o||
+ *             -                -
+ *              |                |
+ *
+ *            ... <More control signals if available in the port>
+ *
+ *              |                |
+ *             -                -
+ *        +-o||            +-o||
+ *        |    -           |    -
+ *        |     |          |     |
+ *   in-->+     +-- ... ---+---->+---> out
+ *        |     |          |     |
+ *        |    -           |    -
+ *        +--||            +--||
+ *             -                -
+ *              |                |
+ *
+ *            ... <More control signals if available in the port>
+ *
+ *              |                |
+ *             -                -
+ *   EN[0]  -||       EN[0]  -||
+ *             -                -
+ *              |                |
+ *             -                -
+ *   EN[1]  -||       EN[1]  -||
+ *             -                -
+ *              |                |
+
+ *              |                |
+ *            LGND             LGND
+ *
+ *******************************************************************/
+static 
+int print_spice_powergated_buffer_subckt(std::fstream& fp,
+                                         const ModuleManager& module_manager,
+                                         const ModuleId& module_id,
+                                         const CircuitLibrary& circuit_lib,
+                                         const CircuitModelId& circuit_model,
+                                         const TechnologyLibrary& tech_lib,
+                                         const TechnologyModelId& tech_model) {
+  if (false == valid_file_stream(fp)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Print the inverter subckt definition */
+  print_spice_subckt_definition(fp, module_manager, module_id); 
+
+  /* Find the input and output ports:
+   * we do NOT support global ports here, 
+   * it should be handled in another type of inverter subckt (power-gated)
+   */
+  std::vector<CircuitPortId> input_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_INPUT, true);
+  std::vector<CircuitPortId> output_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_OUTPUT, true);
+
+  /* Make sure:
+   * There is only 1 input port and 1 output port, 
+   * each size of which is 1
+   */
+  VTR_ASSERT( (1 == input_ports.size()) && (1 == circuit_lib.port_size(input_ports[0])) );
+  VTR_ASSERT( (1 == output_ports.size()) && (1 == circuit_lib.port_size(output_ports[0])) );
+
+  /* If the circuit model is power-gated, we need to find at least one global config_enable signals */
+  VTR_ASSERT(true == circuit_lib.is_power_gated(circuit_model));
+  CircuitPortId en_port = find_circuit_model_power_gate_en_port(circuit_lib, circuit_model);
+  CircuitPortId enb_port = find_circuit_model_power_gate_enb_port(circuit_lib, circuit_model);
+  VTR_ASSERT(true == circuit_lib.valid_circuit_port_id(en_port));
+  VTR_ASSERT(true == circuit_lib.valid_circuit_port_id(enb_port));
+
+  int status = CMD_EXEC_SUCCESS;
+
+  /* Buffers must have >= 2 stages */
+  VTR_ASSERT(2 <= circuit_lib.buffer_num_levels(circuit_model));
+
+  /* TODO: may consider use size/bin to compact layout etc. */
+  for (size_t level = 0; level < circuit_lib.buffer_num_levels(circuit_model); ++level) {
+    std::string input_port_name = circuit_lib.port_prefix(input_ports[0]); 
+    std::string output_port_name = circuit_lib.port_prefix(output_ports[0]); 
+
+    /* Special for first stage: output port should be an intermediate node 
+     * Special for rest of stages: input port should be the output of previous stage
+     */
+    if (0 == level) {
+      output_port_name += std::string("_level") + std::to_string(level);
+    } else {
+      VTR_ASSERT(0 < level);
+      input_port_name += std::string("_level") + std::to_string(level - 1);
+    }
+    
+    for (size_t width = 0; width < circuit_lib.buffer_size(circuit_model); ++width) { 
+      std::string name_postfix = std::string("level") + std::to_string(level) + std::string("_bin") + std::to_string(width);
+
+      status = print_spice_powergated_inverter_modeling(fp,
+                                                        name_postfix,
+                                                        circuit_lib.port_prefix(input_ports[0]), 
+                                                        circuit_lib.port_prefix(output_ports[0]), 
+                                                        circuit_lib,
+                                                        en_port,
+                                                        enb_port,
+                                                        tech_lib,
+                                                        tech_model);
+      if (CMD_EXEC_FATAL_ERROR == status) {
+        return status;
+      }
+    }
+  }
+
+  print_spice_subckt_end(fp, module_manager.module_name(module_id)); 
+
+  return CMD_EXEC_SUCCESS;
+}
+
+
+/********************************************************************
+ * Generate the SPICE subckt for a regular buffer
+ * which contains at least 2 stages
+ *
+ * Note: 
+ * - This function does NOT support power-gating
+ *   It should be managed in a separated function
+ *
+ * Schematic of a multi-stage buffer
+ * 
+ *          LVDD              LVDD
+ *            |                |
+ *           -                -
+ *      +-o||            +-o||
+ *      |    -           |    -
+ *      |     |          |     |
+ * in-->+     +-- ... ---+---->+---> out
+ *      |     |          |     |
+ *      |    -           |    -
+ *      +--||            +--||
+ *           -                -
+ *            |                |
+ *          LGND             LGND
+ *
+ *******************************************************************/
+static 
+int print_spice_regular_buffer_subckt(std::fstream& fp,
+                                      const ModuleManager& module_manager,
+                                      const ModuleId& module_id,
+                                      const CircuitLibrary& circuit_lib,
+                                      const CircuitModelId& circuit_model,
+                                      const TechnologyLibrary& tech_lib,
+                                      const TechnologyModelId& tech_model) {
+  if (false == valid_file_stream(fp)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Print the inverter subckt definition */
+  print_spice_subckt_definition(fp, module_manager, module_id); 
+
+  /* Find the input and output ports:
+   * we do NOT support global ports here, 
+   * it should be handled in another type of inverter subckt (power-gated)
+   */
+  std::vector<CircuitPortId> input_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_INPUT, true);
+  std::vector<CircuitPortId> output_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_OUTPUT, true);
+
+  /* Make sure:
+   * There is only 1 input port and 1 output port, 
+   * each size of which is 1
+   */
+  VTR_ASSERT( (1 == input_ports.size()) && (1 == circuit_lib.port_size(input_ports[0])) );
+  VTR_ASSERT( (1 == output_ports.size()) && (1 == circuit_lib.port_size(output_ports[0])) );
+
+  int status = CMD_EXEC_SUCCESS;
+
+  /* Buffers must have >= 2 stages */
+  VTR_ASSERT(2 <= circuit_lib.buffer_num_levels(circuit_model));
+
+  /* TODO: may consider use size/bin to compact layout etc. */
+  for (size_t level = 0; level < circuit_lib.buffer_num_levels(circuit_model); ++level) {
+    std::string input_port_name = circuit_lib.port_prefix(input_ports[0]); 
+    std::string output_port_name = circuit_lib.port_prefix(output_ports[0]); 
+
+    /* Special for first stage: output port should be an intermediate node 
+     * Special for rest of stages: input port should be the output of previous stage
+     */
+    if (0 == level) {
+      output_port_name += std::string("_level") + std::to_string(level);
+    } else {
+      VTR_ASSERT(0 < level);
+      input_port_name += std::string("_level") + std::to_string(level - 1);
+    }
+    
+    for (size_t width = 0; width < circuit_lib.buffer_size(circuit_model); ++width) { 
+      std::string name_postfix = std::string("level") + std::to_string(level) + std::string("_bin") + std::to_string(width);
+      status = print_spice_regular_inverter_modeling(fp,
+                                                     name_postfix,
+                                                     input_port_name, 
+                                                     output_port_name, 
+                                                     tech_lib,
+                                                     tech_model);
+      if (CMD_EXEC_FATAL_ERROR == status) {
+        return status;
+      }
+    }
+  }
+
+  print_spice_subckt_end(fp, module_manager.module_name(module_id)); 
+
+  return status;
+}
+
+/********************************************************************
+ * Generate the SPICE subckt for an buffer 
+ * which consists of multiple stage of inverters
+ *******************************************************************/
+static 
+int print_spice_buffer_subckt(std::fstream& fp,
+                              const ModuleManager& module_manager,
+                              const ModuleId& module_id,
+                              const CircuitLibrary& circuit_lib,
+                              const CircuitModelId& circuit_model,
+                              const TechnologyLibrary& tech_lib,
+                              const TechnologyModelId& tech_model) {
+  int status = CMD_EXEC_SUCCESS;
+  if (true == circuit_lib.is_power_gated(circuit_model)) {
+    status = print_spice_powergated_buffer_subckt(fp,
+                                                  module_manager, module_id,
+                                                  circuit_lib, circuit_model,
+                                                  tech_lib, tech_model);
+  } else { 
+    VTR_ASSERT_SAFE(false == circuit_lib.is_power_gated(circuit_model));
+    status = print_spice_regular_buffer_subckt(fp,
+                                               module_manager, module_id,
+                                               circuit_lib, circuit_model,
+                                               tech_lib, tech_model);
+  }
+ 
+  return status;
+}
+
+/********************************************************************
  * Generate the SPICE netlist for essential gates:
  * - inverters and their templates
  * - buffers and their templates
  * - pass-transistor or transmission gates
  * - logic gates
- ***********************************************/
+ *******************************************************************/
 int print_spice_essential_gates(NetlistManager& netlist_manager,
                                 const ModuleManager& module_manager,
                                 const CircuitLibrary& circuit_lib,
@@ -429,6 +772,10 @@ int print_spice_essential_gates(NetlistManager& netlist_manager,
                                              tech_lib, tech_model);
       } else {
         VTR_ASSERT(CIRCUIT_MODEL_BUF_BUF == circuit_lib.buffer_type(circuit_model));
+        status = print_spice_buffer_subckt(fp,
+                                           module_manager, module_id,
+                                           circuit_lib, circuit_model,
+                                           tech_lib, tech_model);
       }
 
       if (CMD_EXEC_FATAL_ERROR == status) {
