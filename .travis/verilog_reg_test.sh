@@ -75,6 +75,9 @@ python3 openfpga_flow/scripts/run_fpga_task.py fabric_key/generate_vanilla_key -
 python3 openfpga_flow/scripts/run_fpga_task.py fabric_key/generate_random_key --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py fabric_key/load_external_key --debug --show_thread_logs
 
+echo -e "Testing Power-gating designs";
+python3 openfpga_flow/scripts/run_fpga_task.py power_gated_design/power_gated_inverter --show_thread_logs --debug
+
 # Verify MCNC big20 benchmark suite with ModelSim 
 # Please make sure you have ModelSim installed in the environment
 # Otherwise, it will fail

@@ -302,7 +302,9 @@ size_t check_sram_circuit_model_ports(const CircuitLibrary& circuit_lib,
   return num_err;
 }
 
-/* Check all the ports make sure, they satisfy the restriction */
+/************************************************************************
+ * Check all the ports make sure, they satisfy the restriction 
+ ***********************************************************************/
 static 
 size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
   size_t num_err = 0;
@@ -436,6 +438,94 @@ size_t check_circuit_library_ports(const CircuitLibrary& circuit_lib) {
 }
 
 /************************************************************************
+ * Check the port requirements for a power-gated circuit model 
+ * - It must have at least 2 global ports and which are config enable signals
+ * - It must have an Enable port which control power gating 
+ * - It must have an EnableB port which control power gating 
+ ***********************************************************************/
+static 
+int check_power_gated_circuit_model(const CircuitLibrary& circuit_lib,
+                                    const CircuitModelId& circuit_model) {
+  int num_err = 0;
+
+  std::vector<CircuitPortId> global_ports = circuit_lib.model_global_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_INPUT, true, true);
+
+  /* If the circuit model is power-gated, we need to find at least one global config_enable signals */
+  VTR_ASSERT(true == circuit_lib.is_power_gated(circuit_model));
+  /* Check all the ports we have are good for a power-gated circuit model */
+  /* We need at least one global port */
+  if (2 > global_ports.size())  {
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Expect at least two global ports (a pair of EN/Enb) for circuit model '%s' which is power-gated!\n",
+                   circuit_lib.model_name(circuit_model).c_str()); 
+    num_err++;
+  }
+  /* All the global ports should be config_enable */
+  int num_config_enable_ports = 0;
+  for (const auto& port : global_ports) {
+    if (true == circuit_lib.port_is_config_enable(port)) {
+      num_config_enable_ports++;
+    }
+  }
+
+  if (2 != num_config_enable_ports) {
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Circuit model '%s' is power-gated. Two config-enable global ports are required!\n",
+                   circuit_lib.model_name(circuit_model).c_str()); 
+    num_err++;
+  }
+  /* Report errors if there are any */
+  if (0 < num_err) {
+    return num_err;
+  }
+
+  /* Try to find a pair of Enable and ENb ports from the global ports */
+  CircuitPortId en_port = CircuitPortId::INVALID();
+  CircuitPortId enb_port = CircuitPortId::INVALID();
+  for (const auto& port : global_ports) {
+    /* Focus on config_enable ports which are power-gate control signals */
+    if (false == circuit_lib.port_is_config_enable(port)) {
+      continue;
+    }
+    if (0 == circuit_lib.port_default_value(port)) {
+      en_port = port;
+    } else {
+      VTR_ASSERT(1 == circuit_lib.port_default_value(port));
+      enb_port = port;
+    }
+  }
+  /* We must have valid EN/ENb ports */
+  if (false == circuit_lib.valid_circuit_port_id(en_port)) {
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Fail to find an enable port for the circuit model '%s' is power-gated!\n",
+                   circuit_lib.model_name(circuit_model).c_str()); 
+  }
+  if (false == circuit_lib.valid_circuit_port_id(enb_port)) {
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Fail to find an inverted enable port for the circuit model '%s' is power-gated!\n",
+                   circuit_lib.model_name(circuit_model).c_str()); 
+  }
+
+  return num_err;
+}
+
+/************************************************************************
+ * Check the port requirements for each power-gated circuit model 
+ ***********************************************************************/
+static 
+int check_power_gated_circuit_models(const CircuitLibrary& circuit_lib) {
+  int num_err = 0;
+
+  for (const CircuitModelId& circuit_model : circuit_lib.models()) {
+    if (true == circuit_lib.is_power_gated(circuit_model)) {
+      num_err += check_power_gated_circuit_model(circuit_lib, circuit_model);
+    }
+  }
+
+  return num_err;
+}
+
+/************************************************************************
  * Check points to make sure we have a valid circuit library
  * Detailed checkpoints: 
  * 1. Circuit models have unique names 
@@ -540,6 +630,9 @@ bool check_circuit_library(const CircuitLibrary& circuit_lib) {
   num_err += check_required_default_circuit_model(circuit_lib, CIRCUIT_MODEL_MUX);
   num_err += check_required_default_circuit_model(circuit_lib, CIRCUIT_MODEL_CHAN_WIRE);
   num_err += check_required_default_circuit_model(circuit_lib, CIRCUIT_MODEL_WIRE);
+
+  /* 11. Check power-gated inverter/buffer models */
+  num_err += check_power_gated_circuit_models(circuit_lib);
 
   /* If we have any errors, exit */
 
