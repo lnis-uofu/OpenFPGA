@@ -5,6 +5,7 @@
  * logic gates etc. 
  ***********************************************/
 #include <fstream>
+#include <cmath>
 #include <iomanip>
 
 /* Headers from vtrutil library */
@@ -125,15 +126,15 @@ int print_spice_transistor_wrapper(NetlistManager& netlist_manager,
  *   an inverter. Any preprocessing or subckt definition should not be included!
  *******************************************************************/
 static 
-int print_spice_powergated_inverter_modeling(std::fstream& fp,
-                                             const std::string& trans_name_postfix,
-                                             const std::string& input_port_name,
-                                             const std::string& output_port_name,
-                                             const CircuitLibrary& circuit_lib,
-                                             const CircuitPortId& enb_port,
-                                             const CircuitPortId& en_port,
-                                             const TechnologyLibrary& tech_lib,
-                                             const TechnologyModelId& tech_model) {
+int print_spice_powergated_inverter_pmos_modeling(std::fstream& fp,
+                                                  const std::string& trans_name_postfix,
+                                                  const std::string& input_port_name,
+                                                  const std::string& output_port_name,
+                                                  const CircuitLibrary& circuit_lib,
+                                                  const CircuitPortId& enb_port,
+                                                  const TechnologyLibrary& tech_lib,
+                                                  const TechnologyModelId& tech_model,
+                                                  const float& trans_width) {
 
   if (false == valid_file_stream(fp)) {
     return CMD_EXEC_FATAL_ERROR;
@@ -162,9 +163,50 @@ int print_spice_powergated_inverter_modeling(std::fstream& fp,
       fp << "LVDD "; 
     }
     fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+    fp << "W=" << trans_width;
+    fp << "\n";
 
     /* Cache the last pin*/
     last_enb_pin = power_gate_pin;
+  }
+
+  /* Write transistor pairs using the technology model */
+  fp << "Xpmos_" << trans_name_postfix << " ";
+  fp << output_port_name << " "; 
+  fp << input_port_name << " "; 
+  fp << output_port_name << "_pmos_pg_" << circuit_lib.pins(enb_port).back() << " "; 
+  fp << "LVDD "; 
+  fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+  fp << "W=" << trans_width;
+  fp << "\n";
+
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
+ * Generate the SPICE modeling for the NMOS part of a power-gated inverter
+ *
+ * This function is created to be shared by inverter and buffer SPICE netlist writer
+ *
+ * Note: 
+ * - This function does NOT create a file
+ *   but requires a file stream created
+ * - This function only output SPICE modeling for 
+ *   an inverter. Any preprocessing or subckt definition should not be included!
+ *******************************************************************/
+static 
+int print_spice_powergated_inverter_nmos_modeling(std::fstream& fp,
+                                                  const std::string& trans_name_postfix,
+                                                  const std::string& input_port_name,
+                                                  const std::string& output_port_name,
+                                                  const CircuitLibrary& circuit_lib,
+                                                  const CircuitPortId& en_port,
+                                                  const TechnologyLibrary& tech_lib,
+                                                  const TechnologyModelId& tech_model,
+                                                  const float& trans_width) {
+
+  if (false == valid_file_stream(fp)) {
+    return CMD_EXEC_FATAL_ERROR;
   }
 
   bool first_en_pin = true;
@@ -180,25 +222,19 @@ int print_spice_powergated_inverter_modeling(std::fstream& fp,
       fp << "LGND "; 
       first_en_pin = false;
     } else {
-      VTR_ASSERT_SAFE(false == first_enb_pin);
+      VTR_ASSERT_SAFE(false == first_en_pin);
       fp << output_port_name << "_nmos_pg_" << last_en_pin << " "; 
       fp << circuit_lib.port_prefix(en_port) << " "; 
       fp << output_port_name << "_nmos_pg_" << power_gate_pin << " "; 
       fp << "LGND "; 
     }
     fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+    fp << "W=" << trans_width;
+    fp << "\n";
 
     /* Cache the last pin*/
-    last_enb_pin = power_gate_pin;
+    last_en_pin = power_gate_pin;
   }
-
-  /* Write transistor pairs using the technology model */
-  fp << "Xpmos_" << trans_name_postfix << " ";
-  fp << output_port_name << " "; 
-  fp << input_port_name << " "; 
-  fp << output_port_name << "_pmos_pg_" << circuit_lib.pins(enb_port).back() << " "; 
-  fp << "LVDD "; 
-  fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
 
   fp << "Xnmos_" << trans_name_postfix << " ";
   fp << output_port_name << " "; 
@@ -206,6 +242,8 @@ int print_spice_powergated_inverter_modeling(std::fstream& fp,
   fp << output_port_name << " _nmos_pg_" << circuit_lib.pins(en_port).back() << " "; 
   fp << "LGND "; 
   fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+  fp << "W=" << trans_width;
+  fp << "\n";
 
   return CMD_EXEC_SUCCESS;
 }
@@ -294,17 +332,58 @@ int print_spice_powergated_inverter_subckt(std::fstream& fp,
 
   int status = CMD_EXEC_SUCCESS;
 
-  /* TODO: may consider use size/bin to compact layout etc. */
-  for (size_t width = 0; width < circuit_lib.buffer_size(circuit_model); ++width) { 
-    status = print_spice_powergated_inverter_modeling(fp,
-                                                      std::to_string(width),
-                                                      circuit_lib.port_prefix(input_ports[0]), 
-                                                      circuit_lib.port_prefix(output_ports[0]), 
-                                                      circuit_lib,
-                                                      en_port,
-                                                      enb_port,
-                                                      tech_lib,
-                                                      tech_model);
+  /* Consider use size/bin to compact layout:
+   * Try to size transistors to the max width for each bin
+   * The last bin may not reach the max width 
+   */
+  int total_pmos_width = circuit_lib.buffer_size(circuit_model) * tech_lib.model_pn_ratio(tech_model);
+  int regular_pmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_PMOS);
+  int num_pmos_bins = std::ceil(total_pmos_width / regular_pmos_bin_width);
+  float last_pmos_bin_width = total_pmos_width % regular_pmos_bin_width;
+  for (int ibin = 0; ibin < num_pmos_bins; ++ibin) { 
+    int curr_bin_width = regular_pmos_bin_width;
+    /* For last bin, we need an irregular width */
+    if (ibin == num_pmos_bins - 1) {
+      curr_bin_width = last_pmos_bin_width;
+    }
+    status = print_spice_powergated_inverter_pmos_modeling(fp,
+                                                           std::to_string(ibin),
+                                                           circuit_lib.port_prefix(input_ports[0]), 
+                                                           circuit_lib.port_prefix(output_ports[0]), 
+                                                           circuit_lib,
+                                                           enb_port,
+                                                           tech_lib,
+                                                           tech_model,
+                                                           curr_bin_width);
+    if (CMD_EXEC_FATAL_ERROR == status) {
+      return status;
+    }
+  }
+
+  /* Consider use size/bin to compact layout:
+   * Try to size transistors to the max width for each bin
+   * The last bin may not reach the max width 
+   */
+  int total_nmos_width = circuit_lib.buffer_size(circuit_model);
+  int regular_nmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_NMOS);
+  int num_nmos_bins = std::ceil(total_nmos_width / regular_nmos_bin_width);
+  float last_nmos_bin_width = total_nmos_width % regular_nmos_bin_width;
+  for (int ibin = 0; ibin < num_nmos_bins; ++ibin) { 
+    int curr_bin_width = regular_nmos_bin_width;
+    /* For last bin, we need an irregular width */
+    if (ibin == num_nmos_bins - 1) {
+      curr_bin_width = last_nmos_bin_width;
+    }
+
+    status = print_spice_powergated_inverter_nmos_modeling(fp,
+                                                           std::to_string(ibin),
+                                                           circuit_lib.port_prefix(input_ports[0]), 
+                                                           circuit_lib.port_prefix(output_ports[0]), 
+                                                           circuit_lib,
+                                                           en_port,
+                                                           tech_lib,
+                                                           tech_model,
+                                                           curr_bin_width);
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
     }
@@ -316,7 +395,7 @@ int print_spice_powergated_inverter_subckt(std::fstream& fp,
 }
 
 /********************************************************************
- * Generate the SPICE modeling for a regular inverter
+ * Generate the SPICE modeling for the PMOS part of a regular inverter
  *
  * This function is created to be shared by inverter and buffer SPICE netlist writer
  *
@@ -327,12 +406,13 @@ int print_spice_powergated_inverter_subckt(std::fstream& fp,
  *   an inverter. Any preprocessing or subckt definition should not be included!
  *******************************************************************/
 static 
-int print_spice_regular_inverter_modeling(std::fstream& fp,
-                                          const std::string& trans_name_postfix,
-                                          const std::string& input_port_name,
-                                          const std::string& output_port_name,
-                                          const TechnologyLibrary& tech_lib,
-                                          const TechnologyModelId& tech_model) {
+int print_spice_regular_inverter_pmos_modeling(std::fstream& fp,
+                                               const std::string& trans_name_postfix,
+                                               const std::string& input_port_name,
+                                               const std::string& output_port_name,
+                                               const TechnologyLibrary& tech_lib,
+                                               const TechnologyModelId& tech_model,
+                                               const float& trans_width) {
 
   if (false == valid_file_stream(fp)) {
     return CMD_EXEC_FATAL_ERROR;
@@ -345,6 +425,35 @@ int print_spice_regular_inverter_modeling(std::fstream& fp,
   fp << "LVDD "; 
   fp << "LVDD "; 
   fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+  fp << "W=" << trans_width;
+  fp << "\n";
+
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
+ * Generate the SPICE modeling for the NMOS part of a regular inverter
+ *
+ * This function is created to be shared by inverter and buffer SPICE netlist writer
+ *
+ * Note: 
+ * - This function does NOT create a file
+ *   but requires a file stream created
+ * - This function only output SPICE modeling for 
+ *   an inverter. Any preprocessing or subckt definition should not be included!
+ *******************************************************************/
+static 
+int print_spice_regular_inverter_nmos_modeling(std::fstream& fp,
+                                               const std::string& trans_name_postfix,
+                                               const std::string& input_port_name,
+                                               const std::string& output_port_name,
+                                               const TechnologyLibrary& tech_lib,
+                                               const TechnologyModelId& tech_model,
+                                               const float& trans_width) {
+
+  if (false == valid_file_stream(fp)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
 
   fp << "Xnmos_" << trans_name_postfix << " ";
   fp << output_port_name << " "; 
@@ -352,6 +461,8 @@ int print_spice_regular_inverter_modeling(std::fstream& fp,
   fp << "LGND "; 
   fp << "LGND "; 
   fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+  fp << "W=" << trans_width;
+  fp << "\n";
 
   return CMD_EXEC_SUCCESS;
 }
@@ -409,14 +520,56 @@ int print_spice_regular_inverter_subckt(std::fstream& fp,
   VTR_ASSERT( (1 == output_ports.size()) && (1 == circuit_lib.port_size(output_ports[0])) );
 
   int status = CMD_EXEC_SUCCESS;
-  /* TODO: may consider use size/bin to compact layout etc. */
-  for (size_t width = 0; width < circuit_lib.buffer_size(circuit_model); ++width) { 
-    status = print_spice_regular_inverter_modeling(fp,
-                                                   std::to_string(width),
-                                                   circuit_lib.port_prefix(input_ports[0]), 
-                                                   circuit_lib.port_prefix(output_ports[0]), 
-                                                   tech_lib,
-                                                   tech_model);
+
+  /* Consider use size/bin to compact layout:
+   * Try to size transistors to the max width for each bin
+   * The last bin may not reach the max width 
+   */
+  int total_pmos_width = circuit_lib.buffer_size(circuit_model) * tech_lib.model_pn_ratio(tech_model);
+  int regular_pmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_PMOS);
+  int num_pmos_bins = std::ceil(total_pmos_width / regular_pmos_bin_width);
+  float last_pmos_bin_width = total_pmos_width % regular_pmos_bin_width;
+  for (int ibin = 0; ibin < num_pmos_bins; ++ibin) { 
+    int curr_bin_width = regular_pmos_bin_width;
+    /* For last bin, we need an irregular width */
+    if (ibin == num_pmos_bins - 1) {
+      curr_bin_width = last_pmos_bin_width;
+    }
+
+    status = print_spice_regular_inverter_pmos_modeling(fp,
+                                                        std::to_string(ibin),
+                                                        circuit_lib.port_prefix(input_ports[0]), 
+                                                        circuit_lib.port_prefix(output_ports[0]), 
+                                                        tech_lib,
+                                                        tech_model,
+                                                        curr_bin_width);
+    if (CMD_EXEC_FATAL_ERROR == status) {
+      return status;
+    }
+  }
+
+  /* Consider use size/bin to compact layout:
+   * Try to size transistors to the max width for each bin
+   * The last bin may not reach the max width 
+   */
+  int total_nmos_width = circuit_lib.buffer_size(circuit_model);
+  int regular_nmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_NMOS);
+  int num_nmos_bins = std::ceil(total_nmos_width / regular_nmos_bin_width);
+  float last_nmos_bin_width = total_nmos_width % regular_nmos_bin_width;
+  for (int ibin = 0; ibin < num_nmos_bins; ++ibin) { 
+    int curr_bin_width = regular_nmos_bin_width;
+    /* For last bin, we need an irregular width */
+    if (ibin == num_nmos_bins - 1) {
+      curr_bin_width = last_nmos_bin_width;
+    }
+
+    status = print_spice_regular_inverter_nmos_modeling(fp,
+                                                        std::to_string(ibin),
+                                                        circuit_lib.port_prefix(input_ports[0]), 
+                                                        circuit_lib.port_prefix(output_ports[0]), 
+                                                        tech_lib,
+                                                        tech_model,
+                                                        curr_bin_width);
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
     }
@@ -544,7 +697,13 @@ int print_spice_powergated_buffer_subckt(std::fstream& fp,
   /* Buffers must have >= 2 stages */
   VTR_ASSERT(2 <= circuit_lib.buffer_num_levels(circuit_model));
 
-  /* TODO: may consider use size/bin to compact layout etc. */
+  /* Build the array denoting width of inverters per stage */
+  std::vector<float> buffer_widths(circuit_lib.buffer_num_levels(circuit_model), 1);
+  for (size_t level = 0; level < circuit_lib.buffer_num_levels(circuit_model); ++level) {
+    buffer_widths[level] = circuit_lib.buffer_size(circuit_model)
+                         * std::pow(circuit_lib.buffer_f_per_stage(circuit_model), level);
+  }
+
   for (size_t level = 0; level < circuit_lib.buffer_num_levels(circuit_model); ++level) {
     std::string input_port_name = circuit_lib.port_prefix(input_ports[0]); 
     std::string output_port_name = circuit_lib.port_prefix(output_ports[0]); 
@@ -558,19 +717,66 @@ int print_spice_powergated_buffer_subckt(std::fstream& fp,
       VTR_ASSERT(0 < level);
       input_port_name += std::string("_level") + std::to_string(level - 1);
     }
-    
-    for (size_t width = 0; width < circuit_lib.buffer_size(circuit_model); ++width) { 
-      std::string name_postfix = std::string("level") + std::to_string(level) + std::string("_bin") + std::to_string(width);
 
-      status = print_spice_powergated_inverter_modeling(fp,
-                                                        name_postfix,
-                                                        circuit_lib.port_prefix(input_ports[0]), 
-                                                        circuit_lib.port_prefix(output_ports[0]), 
-                                                        circuit_lib,
-                                                        en_port,
-                                                        enb_port,
-                                                        tech_lib,
-                                                        tech_model);
+    /* Consider use size/bin to compact layout:
+     * Try to size transistors to the max width for each bin
+     * The last bin may not reach the max width 
+     */
+    int total_pmos_width = buffer_widths[level] * tech_lib.model_pn_ratio(tech_model);
+    int regular_pmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_PMOS);
+    int num_pmos_bins = std::ceil(total_pmos_width / regular_pmos_bin_width);
+    float last_pmos_bin_width = total_pmos_width % regular_pmos_bin_width;
+
+    for (int ibin = 0; ibin < num_pmos_bins; ++ibin) { 
+      int curr_bin_width = regular_pmos_bin_width;
+      /* For last bin, we need an irregular width */
+      if (ibin == num_pmos_bins - 1) {
+        curr_bin_width = last_pmos_bin_width;
+      }
+
+      std::string name_postfix = std::string("level") + std::to_string(level) + std::string("_bin") + std::to_string(ibin);
+
+      status = print_spice_powergated_inverter_pmos_modeling(fp,
+                                                             name_postfix,
+                                                             circuit_lib.port_prefix(input_ports[0]), 
+                                                             circuit_lib.port_prefix(output_ports[0]), 
+                                                             circuit_lib,
+                                                             enb_port,
+                                                             tech_lib,
+                                                             tech_model,
+                                                             curr_bin_width);
+      if (CMD_EXEC_FATAL_ERROR == status) {
+        return status;
+      }
+    }
+
+    /* Consider use size/bin to compact layout:
+     * Try to size transistors to the max width for each bin
+     * The last bin may not reach the max width 
+     */
+    int total_nmos_width = buffer_widths[level] ;
+    int regular_nmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_NMOS);
+    int num_nmos_bins = std::ceil(total_nmos_width / regular_nmos_bin_width);
+    float last_nmos_bin_width = total_nmos_width % regular_nmos_bin_width;
+
+    for (int ibin = 0; ibin < num_nmos_bins; ++ibin) { 
+      int curr_bin_width = regular_nmos_bin_width;
+      /* For last bin, we need an irregular width */
+      if (ibin == num_nmos_bins - 1) {
+        curr_bin_width = last_nmos_bin_width;
+      }
+
+      std::string name_postfix = std::string("level") + std::to_string(level) + std::string("_bin") + std::to_string(ibin);
+
+      status = print_spice_powergated_inverter_nmos_modeling(fp,
+                                                             name_postfix,
+                                                             circuit_lib.port_prefix(input_ports[0]), 
+                                                             circuit_lib.port_prefix(output_ports[0]), 
+                                                             circuit_lib,
+                                                             en_port,
+                                                             tech_lib,
+                                                             tech_model,
+                                                             curr_bin_width);
       if (CMD_EXEC_FATAL_ERROR == status) {
         return status;
       }
@@ -642,7 +848,13 @@ int print_spice_regular_buffer_subckt(std::fstream& fp,
   /* Buffers must have >= 2 stages */
   VTR_ASSERT(2 <= circuit_lib.buffer_num_levels(circuit_model));
 
-  /* TODO: may consider use size/bin to compact layout etc. */
+  /* Build the array denoting width of inverters per stage */
+  std::vector<float> buffer_widths(circuit_lib.buffer_num_levels(circuit_model), 1);
+  for (size_t level = 0; level < circuit_lib.buffer_num_levels(circuit_model); ++level) {
+    buffer_widths[level] = circuit_lib.buffer_size(circuit_model)
+                         * std::pow(circuit_lib.buffer_f_per_stage(circuit_model), level);
+  }
+
   for (size_t level = 0; level < circuit_lib.buffer_num_levels(circuit_model); ++level) {
     std::string input_port_name = circuit_lib.port_prefix(input_ports[0]); 
     std::string output_port_name = circuit_lib.port_prefix(output_ports[0]); 
@@ -657,14 +869,61 @@ int print_spice_regular_buffer_subckt(std::fstream& fp,
       input_port_name += std::string("_level") + std::to_string(level - 1);
     }
     
-    for (size_t width = 0; width < circuit_lib.buffer_size(circuit_model); ++width) { 
-      std::string name_postfix = std::string("level") + std::to_string(level) + std::string("_bin") + std::to_string(width);
-      status = print_spice_regular_inverter_modeling(fp,
-                                                     name_postfix,
-                                                     input_port_name, 
-                                                     output_port_name, 
-                                                     tech_lib,
-                                                     tech_model);
+    /* Consider use size/bin to compact layout:
+     * Try to size transistors to the max width for each bin
+     * The last bin may not reach the max width 
+     */
+    int total_pmos_width = buffer_widths[level] * tech_lib.model_pn_ratio(tech_model);
+    int regular_pmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_PMOS);
+    int num_pmos_bins = std::ceil(total_pmos_width / regular_pmos_bin_width);
+    float last_pmos_bin_width = total_pmos_width % regular_pmos_bin_width;
+
+    for (int ibin = 0; ibin < num_pmos_bins; ++ibin) { 
+      int curr_bin_width = regular_pmos_bin_width;
+      /* For last bin, we need an irregular width */
+      if (ibin == num_pmos_bins - 1) {
+        curr_bin_width = last_pmos_bin_width;
+      }
+
+      std::string name_postfix = std::string("level") + std::to_string(level) + std::string("_bin") + std::to_string(ibin);
+
+      status = print_spice_regular_inverter_pmos_modeling(fp,
+                                                          name_postfix,
+                                                          circuit_lib.port_prefix(input_ports[0]), 
+                                                          circuit_lib.port_prefix(output_ports[0]), 
+                                                          tech_lib,
+                                                          tech_model,
+                                                          curr_bin_width);
+      if (CMD_EXEC_FATAL_ERROR == status) {
+        return status;
+      }
+    }
+
+    /* Consider use size/bin to compact layout:
+     * Try to size transistors to the max width for each bin
+     * The last bin may not reach the max width 
+     */
+    int total_nmos_width = buffer_widths[level] ;
+    int regular_nmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_NMOS);
+    int num_nmos_bins = std::ceil(total_nmos_width / regular_nmos_bin_width);
+    float last_nmos_bin_width = total_nmos_width % regular_nmos_bin_width;
+
+    for (int ibin = 0; ibin < num_nmos_bins; ++ibin) { 
+      int curr_bin_width = regular_nmos_bin_width;
+      /* For last bin, we need an irregular width */
+      if (ibin == num_nmos_bins - 1) {
+        curr_bin_width = last_nmos_bin_width;
+      }
+
+      std::string name_postfix = std::string("level") + std::to_string(level) + std::string("_bin") + std::to_string(ibin);
+
+      status = print_spice_regular_inverter_nmos_modeling(fp,
+                                                          name_postfix,
+                                                          circuit_lib.port_prefix(input_ports[0]), 
+                                                          circuit_lib.port_prefix(output_ports[0]), 
+                                                          tech_lib,
+                                                          tech_model,
+                                                          curr_bin_width);
       if (CMD_EXEC_FATAL_ERROR == status) {
         return status;
       }
