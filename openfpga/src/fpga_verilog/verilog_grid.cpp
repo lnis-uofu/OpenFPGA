@@ -270,7 +270,7 @@ void print_verilog_physical_tile_netlist(NetlistManager& netlist_manager,
   /* Give a name to the Verilog netlist */
   /* Create the file name for Verilog */
   std::string verilog_fname(subckt_dir 
-                          + generate_grid_block_netlist_name(std::string(phy_block_type->name), 
+                          + generate_grid_block_netlist_name(std::string(GRID_MODULE_NAME_PREFIX) + std::string(phy_block_type->name), 
                                                              is_io_type(phy_block_type), 
                                                              border_side, 
                                                              std::string(VERILOG_NETLIST_FILE_POSTFIX))

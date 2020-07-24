@@ -238,7 +238,7 @@ std::string generate_routing_block_netlist_name(const std::string& prefix,
 std::string generate_routing_block_netlist_name(const std::string& prefix, 
                                                 const vtr::Point<size_t>& coordinate,
                                                 const std::string& postfix) {
-  return std::string( prefix + std::to_string(coordinate.x()) + std::string("_") + std::to_string(coordinate.y()) + postfix );
+  return std::string( prefix + std::to_string(coordinate.x()) + std::string("__") + std::to_string(coordinate.y()) + std::string("_") + postfix );
 }
 
 /*********************************************************************
@@ -1183,8 +1183,9 @@ std::string generate_grid_block_instance_name(const std::string& prefix,
   module_name += generate_grid_block_netlist_name(block_name, is_block_io, io_side, std::string());
   module_name += std::string("_");
   module_name += std::to_string(grid_coord.x());
-  module_name += std::string("_");
+  module_name += std::string("__");
   module_name += std::to_string(grid_coord.y());
+  module_name += std::string("_");
 
   return module_name;
 }
