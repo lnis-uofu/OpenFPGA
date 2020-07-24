@@ -63,20 +63,36 @@ namespace openfpga {
  *
  *******************************************************************/
 static 
-void print_verilog_primitive_block(std::fstream& fp,
+void print_verilog_primitive_block(NetlistManager& netlist_manager,
                                    const ModuleManager& module_manager,
+                                   const std::string& subckt_dir,
                                    t_pb_graph_node* primitive_pb_graph_node,
                                    const bool& use_explicit_mapping,
                                    const bool& verbose) {
-  /* Ensure a valid file handler */ 
-  VTR_ASSERT(true == valid_file_stream(fp));
-
   /* Ensure a valid pb_graph_node */ 
   if (nullptr == primitive_pb_graph_node) {
     VTR_LOGF_ERROR(__FILE__, __LINE__,
                    "Invalid primitive_pb_graph_node!\n");
     exit(1);
   }
+
+  /* Give a name to the Verilog netlist */
+  /* Create the file name for Verilog */
+  std::string verilog_fname(subckt_dir 
+                          + generate_logical_tile_netlist_name(std::string(), primitive_pb_graph_node, std::string(VERILOG_NETLIST_FILE_POSTFIX))
+                           );
+
+  VTR_LOG("Writing Verilog netlist '%s' for primitive pb_type '%s' ...",
+          verilog_fname.c_str(), primitive_pb_graph_node->pb_type->name);
+  VTR_LOGV(verbose, "\n");
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_stream(verilog_fname.c_str(), fp);
+
+  print_verilog_file_header(fp, std::string("Verilog modules for primitive pb_type: " + std::string(primitive_pb_graph_node->pb_type->name))); 
 
   /* Generate the module name for this primitive pb_graph_node*/
   std::string primitive_module_name = generate_physical_block_module_name(primitive_pb_graph_node->pb_type);
@@ -93,8 +109,13 @@ void print_verilog_primitive_block(std::fstream& fp,
   /* Write the verilog module */
   write_verilog_module_to_file(fp, module_manager, primitive_module, use_explicit_mapping);
 
-  /* Add an empty line as a splitter */
-  fp << std::endl;
+  /* Close file handler */
+  fp.close();
+
+  /* Add fname to the netlist name list */
+  NetlistId nlist_id = netlist_manager.add_netlist(verilog_fname);
+  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  netlist_manager.set_netlist_type(nlist_id, NetlistManager::LOGIC_BLOCK_NETLIST);
 
   VTR_LOGV(verbose, "Done\n");
 }
@@ -115,14 +136,13 @@ void print_verilog_primitive_block(std::fstream& fp,
  * to its parent in module manager  
  *******************************************************************/
 static 
-void rec_print_verilog_logical_tile(std::fstream& fp,
+void rec_print_verilog_logical_tile(NetlistManager& netlist_manager,
                                     const ModuleManager& module_manager,
                                     const VprDeviceAnnotation& device_annotation,
+                                    const std::string& subckt_dir,
                                     t_pb_graph_node* physical_pb_graph_node,
                                     const bool& use_explicit_mapping,
                                     const bool& verbose) {
-  /* Check the file handler*/ 
-  VTR_ASSERT(true == valid_file_stream(fp));
 
   /* Check cur_pb_graph_node*/
   if (nullptr == physical_pb_graph_node) {
@@ -143,8 +163,9 @@ void rec_print_verilog_logical_tile(std::fstream& fp,
   if (false == is_primitive_pb_type(physical_pb_type)) { 
     for (int ipb = 0; ipb < physical_mode->num_pb_type_children; ++ipb) {
       /* Go recursive to visit the children */
-      rec_print_verilog_logical_tile(fp,
-                                     module_manager, device_annotation, 
+      rec_print_verilog_logical_tile(netlist_manager,
+                                     module_manager, device_annotation,
+                                     subckt_dir, 
                                      &(physical_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ipb][0]),
                                      use_explicit_mapping,
                                      verbose);
@@ -156,13 +177,33 @@ void rec_print_verilog_logical_tile(std::fstream& fp,
    * explict port mapping. This aims to avoid any port sequence issues!!!
    */
   if (true == is_primitive_pb_type(physical_pb_type)) { 
-    print_verilog_primitive_block(fp, module_manager,
+    print_verilog_primitive_block(netlist_manager,
+                                  module_manager,
+                                  subckt_dir,
                                   physical_pb_graph_node, 
                                   true, 
                                   verbose);
     /* Finish for primitive node, return */
     return;
   }
+
+  /* Give a name to the Verilog netlist */
+  /* Create the file name for Verilog */
+  std::string verilog_fname(subckt_dir 
+                          + generate_logical_tile_netlist_name(std::string(), physical_pb_graph_node, std::string(VERILOG_NETLIST_FILE_POSTFIX))
+                           );
+
+  VTR_LOG("Writing Verilog netlist '%s' for pb_type '%s' ...",
+          verilog_fname.c_str(), physical_pb_type->name);
+  VTR_LOGV(verbose, "\n");
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_stream(verilog_fname.c_str(), fp);
+
+  print_verilog_file_header(fp, std::string("Verilog modules for pb_type: " + std::string(physical_pb_type->name))); 
 
   /* Generate the name of the Verilog module for this pb_type */
   std::string pb_module_name = generate_physical_block_module_name(physical_pb_type);
@@ -172,7 +213,7 @@ void rec_print_verilog_logical_tile(std::fstream& fp,
   VTR_ASSERT(true == module_manager.valid_module_id(pb_module));
 
   VTR_LOGV(verbose,
-          "Writing Verilog codes of logical tile block '%s'...",
+          "Writing Verilog codes of pb_type '%s'...",
            module_manager.module_name(pb_module).c_str());
 
   /* Comment lines */
@@ -183,8 +224,13 @@ void rec_print_verilog_logical_tile(std::fstream& fp,
 
   print_verilog_comment(fp, std::string("----- END Physical programmable logic block Verilog module: " + std::string(physical_pb_type->name) + " -----"));
 
-  /* Add an empty line as a splitter */
-  fp << std::endl;
+  /* Close file handler */
+  fp.close();
+
+  /* Add fname to the netlist name list */
+  NetlistId nlist_id = netlist_manager.add_netlist(verilog_fname);
+  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  netlist_manager.set_netlist_type(nlist_id, NetlistManager::LOGIC_BLOCK_NETLIST);
 
   VTR_LOGV(verbose, "Done\n");
 }
@@ -201,23 +247,10 @@ void print_verilog_logical_tile_netlist(NetlistManager& netlist_manager,
                                         t_pb_graph_node* pb_graph_head,
                                         const bool& use_explicit_mapping,
                                         const bool& verbose) {
-  /* Give a name to the Verilog netlist */
-  /* Create the file name for Verilog */
-  std::string verilog_fname(subckt_dir 
-                          + generate_logical_tile_netlist_name(std::string(LOGICAL_MODULE_VERILOG_FILE_NAME_PREFIX), pb_graph_head, std::string(VERILOG_NETLIST_FILE_POSTFIX))
-                           );
 
-  VTR_LOG("Writing Verilog netlist '%s' for logic tile '%s' ...",
-          verilog_fname.c_str(), pb_graph_head->pb_type->name);
-  VTR_LOGV(verbose, "\n");
-
-  /* Create the file stream */
-  std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
-
-  check_file_stream(verilog_fname.c_str(), fp);
-
-  print_verilog_file_header(fp, std::string("Verilog modules for logical tile: " + std::string(pb_graph_head->pb_type->name) + "]")); 
+  VTR_LOG("Writing Verilog netlists for logic tile '%s' ...",
+          pb_graph_head->pb_type->name);
+  VTR_LOG("\n");
 
   /* Print Verilog modules for all the pb_types/pb_graph_nodes
    * use a Depth-First Search Algorithm to print the sub-modules 
@@ -226,22 +259,13 @@ void print_verilog_logical_tile_netlist(NetlistManager& netlist_manager,
    * to its parent in module manager  
    */
   /* Print Verilog modules starting from the top-level pb_type/pb_graph_node, and traverse the graph in a recursive way */
-  rec_print_verilog_logical_tile(fp, module_manager,
+  rec_print_verilog_logical_tile(netlist_manager,
+                                 module_manager,
                                  device_annotation, 
+                                 subckt_dir,
                                  pb_graph_head,
                                  use_explicit_mapping,
                                  verbose);
-
-  /* Add an empty line as a splitter */
-  fp << std::endl;
-
-  /* Close file handler */
-  fp.close();
-
-  /* Add fname to the netlist name list */
-  NetlistId nlist_id = netlist_manager.add_netlist(verilog_fname);
-  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
-  netlist_manager.set_netlist_type(nlist_id, NetlistManager::LOGIC_BLOCK_NETLIST);
 
   VTR_LOG("Done\n");
   VTR_LOG("\n");

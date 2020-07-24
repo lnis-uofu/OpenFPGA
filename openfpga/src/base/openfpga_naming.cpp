@@ -968,10 +968,8 @@ std::string generate_mux_sram_port_name(const CircuitLibrary& circuit_lib,
 std::string generate_logical_tile_netlist_name(const std::string& prefix,
                                                const t_pb_graph_node* pb_graph_head,
                                                const std::string& postfix) {
-  /* This must be the root node */
-  VTR_ASSERT(true == pb_graph_head->is_root());
   /* Add the name of physical block */
-  std::string module_name = prefix + std::string(pb_graph_head->pb_type->name);
+  std::string module_name = prefix + generate_physical_block_module_name(pb_graph_head->pb_type);
 
   module_name += postfix;
 
@@ -1244,7 +1242,6 @@ std::string generate_physical_block_module_name(t_pb_type* physical_pb_type) {
 
   return module_name;
 }
-
 
 /*********************************************************************
  * Generate the instance name for physical block with a given index 
