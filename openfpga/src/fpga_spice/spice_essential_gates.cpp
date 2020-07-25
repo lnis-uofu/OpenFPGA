@@ -86,8 +86,10 @@ int print_spice_transistor_wrapper(NetlistManager& netlist_manager,
   check_file_stream(spice_fname.c_str(), fp); 
 
   /* Create file */
-  VTR_LOG("Generating SPICE netlist '%s' for essential gates...",
+  VTR_LOG("Generating SPICE netlist '%s' for transistors...",
           spice_fname.c_str()); 
+
+  print_spice_file_header(fp, std::string("Transistor wrappers"));
 
   /* Iterate over the transistor models */
   for (const TechnologyModelId& model : tech_lib.models()) {
@@ -163,7 +165,7 @@ int print_spice_powergated_inverter_pmos_modeling(std::fstream& fp,
       fp << "LVDD "; 
     }
     fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
-    fp << "W=" << trans_width;
+    fp << " W=" << std::setprecision(10) << trans_width;
     fp << "\n";
 
     /* Cache the last pin*/
@@ -177,7 +179,7 @@ int print_spice_powergated_inverter_pmos_modeling(std::fstream& fp,
   fp << output_port_name << "_pmos_pg_" << circuit_lib.pins(enb_port).back() << " "; 
   fp << "LVDD "; 
   fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
-  fp << "W=" << trans_width;
+  fp << " W=" << std::setprecision(10) << trans_width;
   fp << "\n";
 
   return CMD_EXEC_SUCCESS;
@@ -229,7 +231,7 @@ int print_spice_powergated_inverter_nmos_modeling(std::fstream& fp,
       fp << "LGND "; 
     }
     fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
-    fp << "W=" << trans_width;
+    fp << " W=" << std::setprecision(10) << trans_width;
     fp << "\n";
 
     /* Cache the last pin*/
@@ -242,7 +244,7 @@ int print_spice_powergated_inverter_nmos_modeling(std::fstream& fp,
   fp << output_port_name << " _nmos_pg_" << circuit_lib.pins(en_port).back() << " "; 
   fp << "LGND "; 
   fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
-  fp << "W=" << trans_width;
+  fp << " W=" << std::setprecision(10) << trans_width;
   fp << "\n";
 
   return CMD_EXEC_SUCCESS;
@@ -336,14 +338,17 @@ int print_spice_powergated_inverter_subckt(std::fstream& fp,
    * Try to size transistors to the max width for each bin
    * The last bin may not reach the max width 
    */
-  int total_pmos_width = circuit_lib.buffer_size(circuit_model) * tech_lib.model_pn_ratio(tech_model);
-  int regular_pmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_PMOS);
+  float regular_pmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_PMOS);
+  float total_pmos_width = circuit_lib.buffer_size(circuit_model)
+                         * tech_lib.model_pn_ratio(tech_model)
+                         * tech_lib.transistor_model_min_width(tech_model, TECH_LIB_TRANSISTOR_PMOS);
   int num_pmos_bins = std::ceil(total_pmos_width / regular_pmos_bin_width);
-  float last_pmos_bin_width = total_pmos_width % regular_pmos_bin_width;
+  float last_pmos_bin_width = std::fmod(total_pmos_width, regular_pmos_bin_width);
   for (int ibin = 0; ibin < num_pmos_bins; ++ibin) { 
-    int curr_bin_width = regular_pmos_bin_width;
+    float curr_bin_width = regular_pmos_bin_width;
     /* For last bin, we need an irregular width */
-    if (ibin == num_pmos_bins - 1) {
+    if ((ibin == num_pmos_bins - 1) 
+       && (0. != last_pmos_bin_width)) {
       curr_bin_width = last_pmos_bin_width;
     }
     status = print_spice_powergated_inverter_pmos_modeling(fp,
@@ -364,14 +369,16 @@ int print_spice_powergated_inverter_subckt(std::fstream& fp,
    * Try to size transistors to the max width for each bin
    * The last bin may not reach the max width 
    */
-  int total_nmos_width = circuit_lib.buffer_size(circuit_model);
-  int regular_nmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_NMOS);
+  float regular_nmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_NMOS);
+  float total_nmos_width = circuit_lib.buffer_size(circuit_model)
+                           * tech_lib.transistor_model_min_width(tech_model, TECH_LIB_TRANSISTOR_NMOS);
   int num_nmos_bins = std::ceil(total_nmos_width / regular_nmos_bin_width);
-  float last_nmos_bin_width = total_nmos_width % regular_nmos_bin_width;
+  float last_nmos_bin_width = std::fmod(total_nmos_width, regular_nmos_bin_width);
   for (int ibin = 0; ibin < num_nmos_bins; ++ibin) { 
-    int curr_bin_width = regular_nmos_bin_width;
+    float curr_bin_width = regular_nmos_bin_width;
     /* For last bin, we need an irregular width */
-    if (ibin == num_nmos_bins - 1) {
+    if ((ibin == num_nmos_bins - 1) 
+       && (0. != last_nmos_bin_width)) {
       curr_bin_width = last_nmos_bin_width;
     }
 
@@ -425,7 +432,7 @@ int print_spice_regular_inverter_pmos_modeling(std::fstream& fp,
   fp << "LVDD "; 
   fp << "LVDD "; 
   fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
-  fp << "W=" << trans_width;
+  fp << " W=" << std::setprecision(10) << trans_width;
   fp << "\n";
 
   return CMD_EXEC_SUCCESS;
@@ -461,7 +468,7 @@ int print_spice_regular_inverter_nmos_modeling(std::fstream& fp,
   fp << "LGND "; 
   fp << "LGND "; 
   fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
-  fp << "W=" << trans_width;
+  fp << " W=" << std::setprecision(10) << trans_width;
   fp << "\n";
 
   return CMD_EXEC_SUCCESS;
@@ -525,14 +532,17 @@ int print_spice_regular_inverter_subckt(std::fstream& fp,
    * Try to size transistors to the max width for each bin
    * The last bin may not reach the max width 
    */
-  int total_pmos_width = circuit_lib.buffer_size(circuit_model) * tech_lib.model_pn_ratio(tech_model);
-  int regular_pmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_PMOS);
+  float regular_pmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_PMOS);
+  float total_pmos_width = circuit_lib.buffer_size(circuit_model)
+                           * tech_lib.model_pn_ratio(tech_model)
+                           * tech_lib.transistor_model_min_width(tech_model, TECH_LIB_TRANSISTOR_PMOS);
   int num_pmos_bins = std::ceil(total_pmos_width / regular_pmos_bin_width);
-  float last_pmos_bin_width = total_pmos_width % regular_pmos_bin_width;
+  float last_pmos_bin_width = std::fmod(total_pmos_width, regular_pmos_bin_width);
   for (int ibin = 0; ibin < num_pmos_bins; ++ibin) { 
-    int curr_bin_width = regular_pmos_bin_width;
+    float curr_bin_width = regular_pmos_bin_width;
     /* For last bin, we need an irregular width */
-    if (ibin == num_pmos_bins - 1) {
+    if ((ibin == num_pmos_bins - 1) 
+       && (0. != last_pmos_bin_width)) {
       curr_bin_width = last_pmos_bin_width;
     }
 
@@ -552,14 +562,17 @@ int print_spice_regular_inverter_subckt(std::fstream& fp,
    * Try to size transistors to the max width for each bin
    * The last bin may not reach the max width 
    */
-  int total_nmos_width = circuit_lib.buffer_size(circuit_model);
-  int regular_nmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_NMOS);
+  float regular_nmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_NMOS);
+  float total_nmos_width = circuit_lib.buffer_size(circuit_model)
+                           * tech_lib.transistor_model_min_width(tech_model, TECH_LIB_TRANSISTOR_NMOS);
   int num_nmos_bins = std::ceil(total_nmos_width / regular_nmos_bin_width);
-  float last_nmos_bin_width = total_nmos_width % regular_nmos_bin_width;
+  float last_nmos_bin_width = std::fmod(total_nmos_width, regular_nmos_bin_width);
+
   for (int ibin = 0; ibin < num_nmos_bins; ++ibin) { 
-    int curr_bin_width = regular_nmos_bin_width;
+    float curr_bin_width = regular_nmos_bin_width;
     /* For last bin, we need an irregular width */
-    if (ibin == num_nmos_bins - 1) {
+    if ((ibin == num_nmos_bins - 1) 
+       && (0. != last_nmos_bin_width)) {
       curr_bin_width = last_nmos_bin_width;
     }
 
@@ -722,15 +735,18 @@ int print_spice_powergated_buffer_subckt(std::fstream& fp,
      * Try to size transistors to the max width for each bin
      * The last bin may not reach the max width 
      */
-    int total_pmos_width = buffer_widths[level] * tech_lib.model_pn_ratio(tech_model);
-    int regular_pmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_PMOS);
+    float regular_pmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_PMOS);
+    float total_pmos_width = buffer_widths[level]
+                             * tech_lib.model_pn_ratio(tech_model)
+                             * tech_lib.transistor_model_min_width(tech_model, TECH_LIB_TRANSISTOR_PMOS);
     int num_pmos_bins = std::ceil(total_pmos_width / regular_pmos_bin_width);
-    float last_pmos_bin_width = total_pmos_width % regular_pmos_bin_width;
+    float last_pmos_bin_width = std::fmod(total_pmos_width, regular_pmos_bin_width);
 
     for (int ibin = 0; ibin < num_pmos_bins; ++ibin) { 
-      int curr_bin_width = regular_pmos_bin_width;
+      float curr_bin_width = regular_pmos_bin_width;
       /* For last bin, we need an irregular width */
-      if (ibin == num_pmos_bins - 1) {
+      if ((ibin == num_pmos_bins - 1) 
+         && (0. != last_pmos_bin_width)) {
         curr_bin_width = last_pmos_bin_width;
       }
 
@@ -754,15 +770,17 @@ int print_spice_powergated_buffer_subckt(std::fstream& fp,
      * Try to size transistors to the max width for each bin
      * The last bin may not reach the max width 
      */
-    int total_nmos_width = buffer_widths[level] ;
-    int regular_nmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_NMOS);
+    float regular_nmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_NMOS);
+    float total_nmos_width = buffer_widths[level]
+                             * tech_lib.transistor_model_min_width(tech_model, TECH_LIB_TRANSISTOR_NMOS);
     int num_nmos_bins = std::ceil(total_nmos_width / regular_nmos_bin_width);
-    float last_nmos_bin_width = total_nmos_width % regular_nmos_bin_width;
+    float last_nmos_bin_width = std::fmod(total_nmos_width, regular_nmos_bin_width);
 
     for (int ibin = 0; ibin < num_nmos_bins; ++ibin) { 
-      int curr_bin_width = regular_nmos_bin_width;
+      float curr_bin_width = regular_nmos_bin_width;
       /* For last bin, we need an irregular width */
-      if (ibin == num_nmos_bins - 1) {
+      if ((ibin == num_nmos_bins - 1) 
+         && (0. != last_nmos_bin_width)) {
         curr_bin_width = last_nmos_bin_width;
       }
 
@@ -873,15 +891,18 @@ int print_spice_regular_buffer_subckt(std::fstream& fp,
      * Try to size transistors to the max width for each bin
      * The last bin may not reach the max width 
      */
-    int total_pmos_width = buffer_widths[level] * tech_lib.model_pn_ratio(tech_model);
-    int regular_pmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_PMOS);
+    float regular_pmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_PMOS);
+    float total_pmos_width = buffer_widths[level]
+                             * tech_lib.model_pn_ratio(tech_model)
+                             * tech_lib.transistor_model_min_width(tech_model, TECH_LIB_TRANSISTOR_PMOS);
     int num_pmos_bins = std::ceil(total_pmos_width / regular_pmos_bin_width);
-    float last_pmos_bin_width = total_pmos_width % regular_pmos_bin_width;
+    float last_pmos_bin_width = std::fmod(total_pmos_width, regular_pmos_bin_width);
 
     for (int ibin = 0; ibin < num_pmos_bins; ++ibin) { 
-      int curr_bin_width = regular_pmos_bin_width;
+      float curr_bin_width = regular_pmos_bin_width;
       /* For last bin, we need an irregular width */
-      if (ibin == num_pmos_bins - 1) {
+      if ((ibin == num_pmos_bins - 1) 
+         && (0. != last_pmos_bin_width)) {
         curr_bin_width = last_pmos_bin_width;
       }
 
@@ -903,15 +924,17 @@ int print_spice_regular_buffer_subckt(std::fstream& fp,
      * Try to size transistors to the max width for each bin
      * The last bin may not reach the max width 
      */
-    int total_nmos_width = buffer_widths[level] ;
-    int regular_nmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_NMOS);
+    float regular_nmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_NMOS);
+    float total_nmos_width = buffer_widths[level]
+                              * tech_lib.transistor_model_min_width(tech_model, TECH_LIB_TRANSISTOR_NMOS);
     int num_nmos_bins = std::ceil(total_nmos_width / regular_nmos_bin_width);
-    float last_nmos_bin_width = total_nmos_width % regular_nmos_bin_width;
+    float last_nmos_bin_width = std::fmod(total_nmos_width, regular_nmos_bin_width);
 
     for (int ibin = 0; ibin < num_nmos_bins; ++ibin) { 
-      int curr_bin_width = regular_nmos_bin_width;
+      float curr_bin_width = regular_nmos_bin_width;
       /* For last bin, we need an irregular width */
-      if (ibin == num_nmos_bins - 1) {
+      if ((ibin == num_nmos_bins - 1) 
+         && (0. != last_nmos_bin_width)) {
         curr_bin_width = last_nmos_bin_width;
       }
 
@@ -987,15 +1010,17 @@ int print_spice_essential_gates(NetlistManager& netlist_manager,
   check_file_stream(spice_fname.c_str(), fp); 
 
   /* Create file */
-  VTR_LOG("Generating SPICE netlist '%s' for transistor wrappers...",
+  VTR_LOG("Generating SPICE netlist '%s' for essential gates...",
           spice_fname.c_str()); 
+
+  print_spice_file_header(fp, std::string("Essential gates"));
 
   int status = CMD_EXEC_SUCCESS;
 
   /* Iterate over the circuit models */
   for (const CircuitModelId& circuit_model : circuit_lib.models()) {
     /* Bypass models require extern netlists */
-    if (true == circuit_lib.model_circuit_netlist(circuit_model).empty()) {
+    if (!circuit_lib.model_circuit_netlist(circuit_model).empty()) {
       continue;
     }
 
