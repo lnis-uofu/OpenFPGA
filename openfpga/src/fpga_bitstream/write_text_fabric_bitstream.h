@@ -1,5 +1,5 @@
-#ifndef FABRIC_BITSTREAM_WRITER_H
-#define FABRIC_BITSTREAM_WRITER_H
+#ifndef WRITE_TEXT_FABRIC_BITSTREAM_H
+#define WRITE_TEXT_FABRIC_BITSTREAM_H
 
 /********************************************************************
  * Include header files that are required by function declaration

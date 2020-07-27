@@ -122,6 +122,14 @@ void read_xml_device_transistor(pugi::xml_node& xml_device_transistor,
   tech_lib.set_transistor_model_min_width(device_model, transistor_type, 
                                           get_attribute(xml_device_transistor, "min_width", loc_data).as_float(0.));
 
+  /* Parse the transistor maximum width, by default we consider the same as minimum width */
+  tech_lib.set_transistor_model_max_width(device_model, transistor_type, 
+                                          get_attribute(xml_device_transistor, "max_width", loc_data, pugiutil::ReqOpt::OPTIONAL).as_float(0.));
+  /* If the max_width is default value, we set it to be the same as min_width */
+  if (0. == tech_lib.transistor_model_max_width(device_model, transistor_type)) {
+    tech_lib.set_transistor_model_max_width(device_model, transistor_type, tech_lib.transistor_model_min_width(device_model, transistor_type));
+  }
+
   /* Parse the transistor variation name */
   tech_lib.set_transistor_model_variation_name(device_model, transistor_type, 
                                                get_attribute(xml_device_transistor, "variation", loc_data).as_string());

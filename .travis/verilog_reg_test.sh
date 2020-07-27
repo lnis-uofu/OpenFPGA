@@ -78,6 +78,9 @@ python3 openfpga_flow/scripts/run_fpga_task.py fabric_key/load_external_key --de
 echo -e "Testing Power-gating designs";
 python3 openfpga_flow/scripts/run_fpga_task.py power_gated_design/power_gated_inverter --show_thread_logs --debug
 
+echo -e "Testing Depopulated crossbar in local routing";
+python3 openfpga_flow/scripts/run_fpga_task.py depopulate_crossbar --debug --show_thread_logs
+
 # Verify MCNC big20 benchmark suite with ModelSim 
 # Please make sure you have ModelSim installed in the environment
 # Otherwise, it will fail

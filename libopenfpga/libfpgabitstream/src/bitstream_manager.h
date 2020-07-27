@@ -119,6 +119,9 @@ class BitstreamManager {
     /* Find the value of bitstream */
     bool bit_value(const ConfigBitId& bit_id) const;
 
+    /* Find the parent block of a configuration bit */
+    ConfigBlockId bit_parent_block(const ConfigBitId& bit_id) const;
+
     /* Find a name of a block */
     std::string block_name(const ConfigBlockId& block_id) const;
 
@@ -145,7 +148,7 @@ class BitstreamManager {
 
   public:  /* Public Mutators */
     /* Add a new configuration bit to the bitstream manager */
-    ConfigBitId add_bit(const bool& bit_value);
+    ConfigBitId add_bit(const ConfigBlockId& parent_block, const bool& bit_value);
 
     /* Reserve memory for a number of clocks */
     void reserve_blocks(const size_t& num_blocks);
@@ -235,6 +238,7 @@ class BitstreamManager {
     std::unordered_set<ConfigBitId> invalid_bit_ids_; 
     /* value of a bit in the Bitstream */
     vtr::vector<ConfigBitId, char> bit_values_;
+    vtr::vector<ConfigBitId, ConfigBlockId> bit_parent_blocks_;
 };
 
 } /* end namespace openfpga */

@@ -13,8 +13,8 @@ General organization is as follows.
       <device_model name="<string>" type="<string>">
         <lib type="<string>" corner="<string>" ref="<string>" path="<string>"/>
         <design vdd="<float>" pn_ratio="<float>"/>
-        <pmos name="<string>" chan_length="<float>" min_width="<float>" variation="<string>"/>
-        <nmos name="<string>" chan_length="<float>" min_width="<float>" variation="<string>"/>
+        <pmos name="<string>" chan_length="<float>" min_width="<float>" max_width="<float>" variation="<string>"/>
+        <nmos name="<string>" chan_length="<float>" min_width="<float>" max_width="<float>" variation="<string>"/>
         <rram rlrs="<float>" rhrs="<float>" variation="<string>"/> 
       </device_model>
     </device_library>
@@ -71,15 +71,19 @@ A device model represents a transistor/RRAM model available in users' technology
  
    - ``pn_ratio="<float>"`` specify the ratio between *p*-type and *n*-type transistors. The ratio will be used when building circuit structures such as inverters, buffers, etc.
 
-.. option:: <pmos|nmos name="<string>" chan_length="<float>" min_width="<float>" variation="<string>"/>
+.. option:: <pmos|nmos name="<string>" chan_length="<float>" min_width="<float>" max_width="<float>" variation="<string>"/>
   
   Specify device-level parameters for transistors
 
   - ``name="<string>"`` specify the name of the p/n type transistor, which can be found in the manual of the technology provider.
 
-  - ``chan_length="<float>"`` specify the channel length of *p/n* type transistor.
+  - ``chan_length="<float>"`` specify the channel length of a *p/n* type transistor.
   
-  - ``min_width="<float>"`` specify the minimum width of *p/n* type transistor. This parameter will be used in building inverter, buffer, *etc*. as a base number for transistor sizing. 
+  - ``min_width="<float>"`` specify the minimum width of a *p/n* type transistor. This parameter will be used in building inverter, buffer, *etc*. as a base number for transistor sizing. 
+
+  - ``max_width="<float>"`` specify the maximum width of a *p/n* type transistor. This parameter will be used in building inverter, buffer, *etc*. as a base number for transistor sizing. If the required transistor width exceeds the maximum width, multiple transistors will be instanciated. Note that for FinFET technology, your ``max_width`` should be the same as your ``min_width``.
+
+    .. note:: The ``max_width`` is optional. By default, it will be set to be same as the ``min_width``.
 
   - ``variation="<string>"`` specify the variation name defined in the ``<variation_library>`` 
 

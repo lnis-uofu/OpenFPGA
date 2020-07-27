@@ -101,6 +101,8 @@ class TechnologyLibrary {
                                        const e_tech_lib_transistor_type& transistor_type) const;
     float transistor_model_min_width(const TechnologyModelId& model_id,
                                      const e_tech_lib_transistor_type& transistor_type) const;
+    float transistor_model_max_width(const TechnologyModelId& model_id,
+                                     const e_tech_lib_transistor_type& transistor_type) const;
     TechnologyVariationId transistor_model_variation(const TechnologyModelId& model_id,
                                                      const e_tech_lib_transistor_type& transistor_type) const;
   public: /* Public Accessors: Basic data query on RRAM models */
@@ -138,6 +140,9 @@ class TechnologyLibrary {
     void set_transistor_model_min_width(const TechnologyModelId& model_id, 
                                         const e_tech_lib_transistor_type& transistor_type,
                                         const float& min_width);
+    void set_transistor_model_max_width(const TechnologyModelId& model_id, 
+                                        const e_tech_lib_transistor_type& transistor_type,
+                                        const float& max_width);
     void set_transistor_model_variation_name(const TechnologyModelId& model_id, 
                                              const e_tech_lib_transistor_type& transistor_type,
                                              const std::string& variation_name);
@@ -230,6 +235,15 @@ class TechnologyLibrary {
      * This should be defined by your technology vendor
      */
     vtr::vector<TechnologyModelId, std::array<float, 2>> transistor_model_min_widths_;
+
+    /* The maximum width of a transistor.
+     * This should be defined by your technology vendor
+     * The maximum width of a transistor will be used to size your transistors 
+     * If the required width in circuit models in larger then the max width,
+     * multiple transistor bin will be instanciated.
+     * For FinFET, the maximum width should be the same as min_width
+     */
+    vtr::vector<TechnologyModelId, std::array<float, 2>> transistor_model_max_widths_;
 
     /* The variation name and id binded to PMOS and NMOS transistor
      * We expect users to provide the exact name of variation defined in this technology library

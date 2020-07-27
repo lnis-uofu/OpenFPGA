@@ -1,6 +1,6 @@
 /********************************************************************
  * This file includes functions that output a fabric-dependent 
- * bitstream database to files in different formats
+ * bitstream database to files in plain text
  *******************************************************************/
 #include <chrono>
 #include <ctime>
@@ -17,7 +17,7 @@
 #include "openfpga_naming.h"
 
 #include "bitstream_manager_utils.h"
-#include "fabric_bitstream_writer.h"
+#include "write_text_fabric_bitstream.h"
 
 /* begin namespace openfpga */
 namespace openfpga {

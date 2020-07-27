@@ -44,4 +44,7 @@ python3 openfpga_flow/scripts/run_fpga_task.py fixed_simulation_settings --debug
 echo -e "Testing SDC generation with time units";
 python3 openfpga_flow/scripts/run_fpga_task.py sdc_time_unit --debug --show_thread_logs
 
+echo -e "Testing FPGA-SPICE with netlist generation";
+python3 openfpga_flow/scripts/run_fpga_task.py generate_spice --debug --show_thread_logs
+
 end_section "OpenFPGA.TaskTun"
