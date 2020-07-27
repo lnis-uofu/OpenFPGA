@@ -20,11 +20,11 @@ The information depends on the type of configuration procotol.
 
 .. option:: vanilla
 
-  A line consisting of ``0``|``1``
+  A line consisting of ``0`` | ``1``
 
 .. option:: scan_chain
 
-  A line consisting of ``0``|``1``
+  A line consisting of ``0`` | ``1``
 
 .. option:: memory_bank
 
@@ -34,7 +34,7 @@ The information depends on the type of configuration procotol.
   The second line represents the Word-Line address and configuration bit.
   For example
    
-  .. code_block:: 
+  .. code_block:: xml
      
      <bitline_address> <bit_value> 
      <wordline_address> <bit_value> 
@@ -45,10 +45,11 @@ The information depends on the type of configuration procotol.
      <wordline_address> <bit_value> 
 
 .. option:: frame_based 
+
   Multiple lines will be included, each of which is organized as <address><space><bit>.
   For example
    
-  .. code_block:: 
+  .. code_block:: xml 
      
      <frame_address> <bit_value> 
      <frame_address> <bit_value> 
@@ -98,17 +99,17 @@ Other information may depend on the type of configuration procotol.
 
   .. code_block:: xml
 
-  <bit id="0" value="1">
-    <hierarchy>
-      <instance level="0" name="fpga_top"/>
-      <instance level="1" name="grid_io_bottom_1__0_"/>
-      <instance level="2" name="logical_tile_io_mode_io__0"/>
-      <instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-      <instance level="4" name="iopad_sram_blwl_mem"/>
-    </hierarchy>
-    <bl address="000000"/>
-    <wl address="000000"/>
-  </bit>
+    <bit id="0" value="1">
+      <hierarchy>
+        <instance level="0" name="fpga_top"/>
+        <instance level="1" name="grid_io_bottom_1__0_"/>
+        <instance level="2" name="logical_tile_io_mode_io__0"/>
+        <instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
+        <instance level="4" name="iopad_sram_blwl_mem"/>
+      </hierarchy>
+      <bl address="000000"/>
+      <wl address="000000"/>
+    </bit>
 
 .. option:: frame_based 
 
@@ -118,13 +119,13 @@ Other information may depend on the type of configuration procotol.
 
   .. code_block:: xml
 
-  <bit id="0" value="1">
-    <hierarchy>
-      <instance level="0" name="fpga_top"/>
-      <instance level="1" name="grid_io_bottom_1__0_"/>
-      <instance level="2" name="logical_tile_io_mode_io__0"/>
-      <instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-      <instance level="4" name="iopad_config_latch_mem"/>
-    </hierarchy>
-    <frame address="0000000000000000"/>
-  </bit>
+    <bit id="0" value="1">
+      <hierarchy>
+        <instance level="0" name="fpga_top"/>
+        <instance level="1" name="grid_io_bottom_1__0_"/>
+        <instance level="2" name="logical_tile_io_mode_io__0"/>
+        <instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
+        <instance level="4" name="iopad_config_latch_mem"/>
+      </hierarchy>
+      <frame address="0000000000000000"/>
+    </bit>
