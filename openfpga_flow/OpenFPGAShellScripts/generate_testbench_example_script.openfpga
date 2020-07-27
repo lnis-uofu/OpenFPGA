@@ -40,7 +40,7 @@ repack #--verbose
 build_architecture_bitstream --verbose --write_file fabric_independent_bitstream.xml
 
 # Build fabric-dependent bitstream
-build_fabric_bitstream --verbose --write_file fabric_bitstream --format xml
+build_fabric_bitstream --verbose --file fabric_bitstream --format xml
 
 # Write the Verilog testbench for FPGA fabric
 #  - We suggest the use of same output directory as fabric Verilog netlists
