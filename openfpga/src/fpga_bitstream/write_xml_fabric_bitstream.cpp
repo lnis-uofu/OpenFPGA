@@ -95,6 +95,7 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
     fp << "/>\n";
     hierarchy_counter++;
   }
+  write_tab_to_file(fp, 1);
   fp << "</hierarchy>\n";
 
   switch (config_type) {
