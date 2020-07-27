@@ -120,7 +120,7 @@ ShellCommandId add_openfpga_write_fabric_bitstream_command(openfpga::Shell<Openf
   /* Add command 'fabric_bitstream' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "Write the fabric-dependent bitstream to a file");
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id, build_fabric_bitstream);
+  shell.set_command_execute_function(shell_cmd_id, write_fabric_bitstream);
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
