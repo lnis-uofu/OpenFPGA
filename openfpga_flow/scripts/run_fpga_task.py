@@ -190,6 +190,8 @@ def generate_each_task_actions(taskname):
     # Read task configuration file and check consistency
     task_conf = ConfigParser(allow_no_value=True,
                              interpolation=ExtendedInterpolation())
+    script_env_vars['PATH']["TASK_NAME"] = "/".join(taskname)
+    script_env_vars['PATH']["TASK_DIR"] = curr_task_dir
     task_conf.read_dict(script_env_vars)
     task_conf.read_file(open(curr_task_conf_file))
 
