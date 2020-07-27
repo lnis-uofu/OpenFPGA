@@ -30,6 +30,6 @@ build_fabric_bitstream
 
   - ``--file`` or ``-f`` Output the fabric bitstream to an plain text file (only 0 or 1)
 
-  - ``--format`` Specify the file format [``plain_text``|``xml``]. By default is ``plain_text``.
+  - ``--format`` Specify the file format [``plain_text`` | ``xml``]. By default is ``plain_text``.
 
   - ``--verbose`` Show verbose log

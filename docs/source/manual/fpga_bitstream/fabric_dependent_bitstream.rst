@@ -74,6 +74,8 @@ In principle, the file consist a number of XML node ``<bit>``, each bit contains
 
     - ``level`` denotes the depth of the block in the hierarchy
 
+    - ``width`` denotes the number of configuration bits under the instance. Typically, only leaf instance has this attribute.
+
 A quick example:
 
 .. code-block:: xml
@@ -83,7 +85,7 @@ A quick example:
       <instance level="0" name="fpga_top"/>
       <instance level="1" name="grid_clb_1__2_"/>
       <instance level="2" name="logical_tile_clb_mode_clb__0"/>
-      <instance level="3" name="mem_fle_9_in_5"/>
+      <instance level="3" width="10" name="mem_fle_9_in_5"/>
     </hierarchy>
   </bit>
 
@@ -105,7 +107,7 @@ Other information may depend on the type of configuration procotol.
         <instance level="1" name="grid_io_bottom_1__0_"/>
         <instance level="2" name="logical_tile_io_mode_io__0"/>
         <instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-        <instance level="4" name="iopad_sram_blwl_mem"/>
+        <instance level="4" width="1" name="iopad_sram_blwl_mem"/>
       </hierarchy>
       <bl address="000000"/>
       <wl address="000000"/>
@@ -125,7 +127,7 @@ Other information may depend on the type of configuration procotol.
         <instance level="1" name="grid_io_bottom_1__0_"/>
         <instance level="2" name="logical_tile_io_mode_io__0"/>
         <instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-        <instance level="4" name="iopad_config_latch_mem"/>
+        <instance level="4" width="1" name="iopad_config_latch_mem"/>
       </hierarchy>
       <frame address="0000000000000000"/>
     </bit>
