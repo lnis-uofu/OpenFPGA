@@ -343,6 +343,7 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, param, task_conf):
 
     # Make execution command to run Open FPGA flow
     task_gc = task_conf["GENERAL"]
+    task_OFPGAc = task_conf["OpenFPGA_SHELL"]
     command = [archfile] + benchmark_obj["files"]
     command += ["--top_module", benchmark_obj["top_module"]]
     command += ["--run_dir", curr_job_dir]
@@ -351,14 +352,9 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, param, task_conf):
         command += ["--fpga_flow", task_gc.get("fpga_flow")]
 
     if task_gc.get("run_engine") == "openfpga_shell":
-        command += ["--openfpga_shell_template",
-                    task_gc.get("openfpga_shell_template")]
-        command += ["--openfpga_arch_file",
-                    task_gc.get("openfpga_arch_file")]
-        command += ["--openfpga_sim_setting_file",
-                    task_gc.get("openfpga_sim_setting_file")]
-        command += ["--external_fabric_key_file",
-                    task_gc.get("external_fabric_key_file")]
+        for eachKey in task_OFPGAc.keys():
+            command += [f"--{eachKey}",
+                        task_OFPGAc.get(f"{eachKey}")]
 
     if benchmark_obj.get("activity_file"):
         command += ["--activity_file", benchmark_obj.get("activity_file")]
