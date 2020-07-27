@@ -156,7 +156,8 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
 int write_fabric_bitstream_to_xml_file(const BitstreamManager& bitstream_manager,
                                        const FabricBitstream& fabric_bitstream,
                                        const ConfigProtocol& config_protocol,
-                                       const std::string& fname) {
+                                       const std::string& fname,
+                                       const bool& verbose) {
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
     VTR_LOG_ERROR("Received empty file name to output bitstream!\n\tPlease specify a valid file name.\n");
@@ -190,6 +191,11 @@ int write_fabric_bitstream_to_xml_file(const BitstreamManager& bitstream_manager
 
   /* Close file handler */
   fp.close();
+
+  VTR_LOGV(verbose,
+           "Outputted %lu configuration bits to XML file: %s\n",
+           fabric_bitstream.bits().size(),
+           fname.c_str());
 
   return status;
 }
