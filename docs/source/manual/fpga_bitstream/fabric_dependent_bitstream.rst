@@ -34,7 +34,7 @@ The information depends on the type of configuration procotol.
   The second line represents the Word-Line address and configuration bit.
   For example
    
-  .. code_block:: xml
+  .. code-block:: xml
      
      <bitline_address> <bit_value> 
      <wordline_address> <bit_value> 
@@ -49,7 +49,7 @@ The information depends on the type of configuration procotol.
   Multiple lines will be included, each of which is organized as <address><space><bit>.
   For example
    
-  .. code_block:: xml 
+  .. code-block:: xml 
      
      <frame_address> <bit_value> 
      <frame_address> <bit_value> 
@@ -76,7 +76,7 @@ In principle, the file consist a number of XML node ``<bit>``, each bit contains
 
 A quick example:
 
-.. code_block:: xml
+.. code-block:: xml
 
   <bit id="0" value="1">
     <hierarchy>
@@ -97,7 +97,7 @@ Other information may depend on the type of configuration procotol.
 
   A quick example:
 
-  .. code_block:: xml
+  .. code-block:: xml
 
     <bit id="0" value="1">
       <hierarchy>
@@ -117,7 +117,7 @@ Other information may depend on the type of configuration procotol.
 
   A quick example:
 
-  .. code_block:: xml
+  .. code-block:: xml
 
     <bit id="0" value="1">
       <hierarchy>
