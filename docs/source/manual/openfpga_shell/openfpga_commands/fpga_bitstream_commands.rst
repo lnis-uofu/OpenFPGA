@@ -28,6 +28,13 @@ build_fabric_bitstream
 
   Build a sequence for every configuration bits in the bitstream database for a specific FPGA fabric
 
+  - ``--verbose`` Show verbose log
+
+write_fabric_bitstream
+~~~~~~~~~~~~~~~~~~~~~~
+
+  Output the fabric bitstream database to a specific file format
+
   - ``--file`` or ``-f`` Output the fabric bitstream to an plain text file (only 0 or 1)
 
   - ``--format`` Specify the file format [``plain_text`` | ``xml``]. By default is ``plain_text``.
