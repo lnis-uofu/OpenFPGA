@@ -111,7 +111,7 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
     }
     fp << "\"/>\n";   
  
-    write_space_to_file(fp, 1);
+    write_tab_to_file(fp, 1);
     fp << "<wl address=\"";
     for (const char& addr_bit : fabric_bitstream.bit_wl_address(fabric_bit)) {
       fp << addr_bit;
@@ -120,7 +120,7 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
     break;
   }
   case CONFIG_MEM_FRAME_BASED: {
-    write_space_to_file(fp, 1);
+    write_tab_to_file(fp, 1);
     fp << "<frame address=\"";
     for (const char& addr_bit : fabric_bitstream.bit_address(fabric_bit)) {
       fp << addr_bit;
