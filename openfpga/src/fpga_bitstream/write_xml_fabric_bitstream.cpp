@@ -76,6 +76,7 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
     return 1;
   }
 
+  write_tab_to_file(fp, 1);
   fp << "<bit id=\"" << size_t(fabric_bit) << "\" ";
   fp << "value=\"";
   fp << bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit));
@@ -85,11 +86,11 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
   const ConfigBitId& config_bit = fabric_bitstream.config_bit(fabric_bit);
   const ConfigBlockId& config_block = bitstream_manager.bit_parent_block(config_bit);
   std::vector<ConfigBlockId> block_hierarchy = find_bitstream_manager_block_hierarchy(bitstream_manager, config_block); 
-  write_tab_to_file(fp, 1);
+  write_tab_to_file(fp, 2);
   fp << "<hierarchy>\n";
   size_t hierarchy_counter = 0;
   for (const ConfigBlockId& temp_block : block_hierarchy) {
-    write_tab_to_file(fp, 2);
+    write_tab_to_file(fp, 3);
     fp << "<instance level=\"" << hierarchy_counter << "\"";
     if (0 < bitstream_manager.block_bits(temp_block).size()) {
       fp << " width=\"" << bitstream_manager.block_bits(temp_block).size() << "\"";
@@ -98,7 +99,7 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
     fp << "/>\n";
     hierarchy_counter++;
   }
-  write_tab_to_file(fp, 1);
+  write_tab_to_file(fp, 2);
   fp << "</hierarchy>\n";
 
   switch (config_type) {
@@ -107,14 +108,14 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
     break;
   case CONFIG_MEM_MEMORY_BANK: { 
     /* Bit line address */
-    write_tab_to_file(fp, 1);
+    write_tab_to_file(fp, 2);
     fp << "<bl address=\"";
     for (const char& addr_bit : fabric_bitstream.bit_bl_address(fabric_bit)) {
       fp << addr_bit;
     }
     fp << "\"/>\n";   
  
-    write_tab_to_file(fp, 1);
+    write_tab_to_file(fp, 2);
     fp << "<wl address=\"";
     for (const char& addr_bit : fabric_bitstream.bit_wl_address(fabric_bit)) {
       fp << addr_bit;
@@ -123,7 +124,7 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
     break;
   }
   case CONFIG_MEM_FRAME_BASED: {
-    write_tab_to_file(fp, 1);
+    write_tab_to_file(fp, 2);
     fp << "<frame address=\"";
     for (const char& addr_bit : fabric_bitstream.bit_address(fabric_bit)) {
       fp << addr_bit;
@@ -137,6 +138,7 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
     return 1;
   }
 
+  write_tab_to_file(fp, 1);
   fp << "</bit>\n";
 
   return 0;
@@ -175,6 +177,8 @@ int write_fabric_bitstream_to_xml_file(const BitstreamManager& bitstream_manager
   /* Write XML head */
   write_fabric_bitstream_xml_file_head(fp);
 
+  fp << "<fabric_bitstream>\n";
+
   /* Output fabric bitstream to the file */
   int status = 0;
   for (const FabricBitId& fabric_bit : fabric_bitstream.bits()) {
@@ -186,8 +190,9 @@ int write_fabric_bitstream_to_xml_file(const BitstreamManager& bitstream_manager
       break;
     }
   }
+
   /* Print an end to the file here */
-  fp << std::endl;
+  fp << "</fabric_bitstream>\n";
 
   /* Close file handler */
   fp.close();
