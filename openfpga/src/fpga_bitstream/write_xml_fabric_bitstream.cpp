@@ -77,30 +77,26 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
   }
 
   write_tab_to_file(fp, 1);
-  fp << "<bit id=\"" << size_t(fabric_bit) << "\" ";
-  fp << "value=\"";
+  fp << "<bit id=\"" << size_t(fabric_bit) << "\"";
+  fp << " value=\"";
   fp << bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit));
-  fp << "\">\n";
+  fp << "\"";
 
   /* Output hierarchy of this parent*/
   const ConfigBitId& config_bit = fabric_bitstream.config_bit(fabric_bit);
   const ConfigBlockId& config_block = bitstream_manager.bit_parent_block(config_bit);
   std::vector<ConfigBlockId> block_hierarchy = find_bitstream_manager_block_hierarchy(bitstream_manager, config_block); 
-  write_tab_to_file(fp, 2);
-  fp << "<hierarchy>\n";
-  size_t hierarchy_counter = 0;
+  std::string hie_path;
   for (const ConfigBlockId& temp_block : block_hierarchy) {
-    write_tab_to_file(fp, 3);
-    fp << "<instance level=\"" << hierarchy_counter << "\"";
-    if (0 < bitstream_manager.block_bits(temp_block).size()) {
-      fp << " width=\"" << bitstream_manager.block_bits(temp_block).size() << "\"";
-    }
-    fp << " name=\"" << bitstream_manager.block_name(temp_block) << "\"";
-    fp << "/>\n";
-    hierarchy_counter++;
+    hie_path += bitstream_manager.block_name(temp_block);
+    hie_path += std::string(".");
   }
-  write_tab_to_file(fp, 2);
-  fp << "</hierarchy>\n";
+  hie_path += generate_configurable_memory_data_out_name();
+  hie_path += std::string("[");
+  hie_path += std::to_string(find_bitstream_manager_config_bit_index_in_parent_block(bitstream_manager, config_bit));
+  hie_path += std::string("]");
+
+  fp << " path=\"" << hie_path << "\"/>\n";
 
   switch (config_type) {
   case CONFIG_MEM_STANDALONE: 
