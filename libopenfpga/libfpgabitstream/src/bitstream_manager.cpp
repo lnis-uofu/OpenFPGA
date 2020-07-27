@@ -52,6 +52,13 @@ bool BitstreamManager::bit_value(const ConfigBitId& bit_id) const {
   return '1' == bit_values_[bit_id];
 }
 
+ConfigBlockId BitstreamManager::bit_parent_block(const ConfigBitId& bit_id) const {
+  /* Ensure a valid id */
+  VTR_ASSERT(true == valid_bit_id(bit_id));
+
+  return bit_parent_blocks_[bit_id];
+}
+
 std::string BitstreamManager::block_name(const ConfigBlockId& block_id) const {
   /* Ensure the input ids are valid */
   VTR_ASSERT(true == valid_block_id(block_id));
@@ -140,7 +147,7 @@ std::string BitstreamManager::block_output_net_ids(const ConfigBlockId& block_id
 /******************************************************************************
  * Public Mutators
  ******************************************************************************/
-ConfigBitId BitstreamManager::add_bit(const bool& bit_value) {
+ConfigBitId BitstreamManager::add_bit(const ConfigBlockId& parent_block, const bool& bit_value) {
   ConfigBitId bit = ConfigBitId(num_bits_);
   /* Add a new bit, and allocate associated data structures */
   num_bits_++;
@@ -149,6 +156,8 @@ ConfigBitId BitstreamManager::add_bit(const bool& bit_value) {
   } else {
     bit_values_.push_back('0');
   }
+
+  bit_parent_blocks_.push_back(parent_block);
 
   return bit; 
 }
@@ -234,7 +243,7 @@ void BitstreamManager::add_block_bits(const ConfigBlockId& block,
   block_bit_id_lsbs_[block] = num_bits_;
   block_bit_lengths_[block] = block_bitstream.size();
   for (const bool& bit : block_bitstream) {
-    add_bit(bit);
+    add_bit(block, bit);
   }
 }
 
