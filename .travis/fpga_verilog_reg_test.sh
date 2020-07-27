@@ -8,7 +8,7 @@ cd ${TRAVIS_BUILD_DIR}
 ###############################################
 # OpenFPGA Shell with VPR8
 ##############################################
-echo -e "OpenFPGA Feature Testing for Verilog-to-Verification";
+echo -e "FPGA-Verilog Feature Tests";
 
 echo -e "Testing Verilog generation for LUTs: a single mode LUT6 FPGA using micro benchmarks";
 python3 openfpga_flow/scripts/run_fpga_task.py lut_design/single_mode --debug --show_thread_logs
@@ -46,13 +46,13 @@ python3 openfpga_flow/scripts/run_fpga_task.py fabric_chain/register_chain --deb
 echo -e "Testing Verilog generation with scan chain across an FPGA";
 python3 openfpga_flow/scripts/run_fpga_task.py fabric_chain/scan_chain --debug --show_thread_logs
 
-echo -e "Testing Verilog generation with routing mutliplexers implemented by tree structure";
+echo -e "Testing Verilog generation with routing multiplexers implemented by tree structure";
 python3 openfpga_flow/scripts/run_fpga_task.py mux_design/tree_structure --debug --show_thread_logs
 
-echo -e "Testing Verilog generation with routing mutliplexers implemented by standard cell MUX2";
+echo -e "Testing Verilog generation with routing multiplexers implemented by standard cell MUX2";
 python3 openfpga_flow/scripts/run_fpga_task.py mux_design/stdcell_mux2 --debug --show_thread_logs
 
-echo -e "Testing Verilog generation with routing mutliplexers implemented by local encoders";
+echo -e "Testing Verilog generation with routing multiplexers implemented by local encoders";
 python3 openfpga_flow/scripts/run_fpga_task.py mux_design/local_encoder --debug --show_thread_logs
 
 echo -e "Testing Verilog generation with behavioral description";
