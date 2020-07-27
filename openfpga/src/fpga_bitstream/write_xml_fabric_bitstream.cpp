@@ -126,7 +126,6 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
       fp << addr_bit;
     }
     fp << "\"/>\n";   
-    fp << "\n";
     break;
   }
   default:
