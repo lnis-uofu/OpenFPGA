@@ -91,6 +91,9 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
   for (const ConfigBlockId& temp_block : block_hierarchy) {
     write_tab_to_file(fp, 2);
     fp << "<instance level=\"" << hierarchy_counter << "\"";
+    if (0 < bitstream_manager.block_bits(temp_block).size()) {
+      fp << " width=\"" << bitstream_manager.block_bits(temp_block).size() << "\"";
+    }
     fp << " name=\"" << bitstream_manager.block_name(temp_block) << "\"";
     fp << "/>\n";
     hierarchy_counter++;
