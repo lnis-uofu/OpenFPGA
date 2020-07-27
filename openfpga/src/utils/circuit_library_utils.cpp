@@ -287,4 +287,62 @@ bool check_configurable_memory_circuit_model(const e_config_protocol_type& confi
   return (0 == num_err);
 }
 
+/************************************************************************
+ * Try to find the enable port control power-gate for a power-gated circuit model
+ * We will return the first port that meet the requirement:
+ * - a global port
+ * - its function is labelled as config_enable
+ * - default value is 0
+ * Return invalid id if not found
+ ***********************************************************************/
+CircuitPortId find_circuit_model_power_gate_en_port(const CircuitLibrary& circuit_lib,
+                                                    const CircuitModelId& circuit_model) {
+  VTR_ASSERT(true == circuit_lib.is_power_gated(circuit_model));
+  std::vector<CircuitPortId> global_ports = circuit_lib.model_global_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_INPUT, true, true);
+
+  /* Try to find an ENABLE port from the global ports */
+  CircuitPortId en_port = CircuitPortId::INVALID();
+  for (const auto& port : global_ports) {
+    /* Focus on config_enable ports which are power-gate control signals */
+    if (false == circuit_lib.port_is_config_enable(port)) {
+      continue;
+    }
+    if (1 == circuit_lib.port_default_value(port)) {
+      en_port = port;
+      break;
+    }
+  }
+
+  return en_port;
+}
+
+/************************************************************************
+ * Try to find the enableB port control power-gate for a power-gated circuit model
+ * We will return the first port that meet the requirement:
+ * - a global port
+ * - its function is labelled as config_enable
+ * - default value is 1
+ * Return invalid id if not found
+ ***********************************************************************/
+CircuitPortId find_circuit_model_power_gate_enb_port(const CircuitLibrary& circuit_lib,
+                                                     const CircuitModelId& circuit_model) {
+  CircuitPortId enb_port = CircuitPortId::INVALID();
+  VTR_ASSERT(true == circuit_lib.is_power_gated(circuit_model));
+  std::vector<CircuitPortId> global_ports = circuit_lib.model_global_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_INPUT, true, true);
+
+  /* Try to find an ENABLE_B port from the global ports */
+  for (const auto& port : global_ports) {
+    /* Focus on config_enable ports which are power-gate control signals */
+    if (false == circuit_lib.port_is_config_enable(port)) {
+      continue;
+    }
+    if (0 == circuit_lib.port_default_value(port)) {
+      enb_port = port;
+      break;
+    }
+  }
+
+  return enb_port;
+}
+
 } /* end namespace openfpga */

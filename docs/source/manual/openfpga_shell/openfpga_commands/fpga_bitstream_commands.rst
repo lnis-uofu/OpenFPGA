@@ -7,8 +7,8 @@ repack
 ~~~~~~
 
   Repack the netlist to physical pbs
-  This must be done before bitstream generator and testbench generation
-  Strongly recommend it is done after all the fix-up have been applied
+
+  .. note:: This must be done before bitstream generator and testbench generation. Strongly recommend it is done after all the fix-up have been applied
    
   - ``--verbose`` Show verbose log
 
@@ -28,6 +28,15 @@ build_fabric_bitstream
 
   Build a sequence for every configuration bits in the bitstream database for a specific FPGA fabric
 
+  - ``--verbose`` Show verbose log
+
+write_fabric_bitstream
+~~~~~~~~~~~~~~~~~~~~~~
+
+  Output the fabric bitstream database to a specific file format
+
   - ``--file`` or ``-f`` Output the fabric bitstream to an plain text file (only 0 or 1)
+
+  - ``--format`` Specify the file format [``plain_text`` | ``xml``]. By default is ``plain_text``.
 
   - ``--verbose`` Show verbose log

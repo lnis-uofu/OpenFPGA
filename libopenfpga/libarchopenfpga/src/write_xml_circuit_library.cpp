@@ -93,6 +93,25 @@ void write_xml_design_technology(std::fstream& fp,
 }
 
 /********************************************************************
+ * A writer to output the device technology of a circuit model to XML format
+ *******************************************************************/
+static 
+void write_xml_device_technology(std::fstream& fp,
+                                 const char* fname,
+                                 const CircuitLibrary& circuit_lib,
+                                 const CircuitModelId& model) {
+  /* Validate the file stream */
+  openfpga::check_file_stream(fname, fp);
+   
+  if (!circuit_lib.device_model_name(model).empty()) {
+    fp << "\t\t\t" << "<device_technology";
+    write_xml_attribute(fp, "device_model_name", circuit_lib.device_model_name(model).c_str());
+    /* Finish all the attributes, we can return here */
+    fp << "/>" << "\n";
+  }
+}
+
+/********************************************************************
  * A writer to output a circuit port to XML format
  *******************************************************************/
 static 
@@ -400,6 +419,9 @@ void write_xml_circuit_model(std::fstream& fp,
 
   /* Write the design technology of circuit model */
   write_xml_design_technology(fp, fname, circuit_lib, model);
+
+  /* Write the device technology of circuit model */
+  write_xml_device_technology(fp, fname, circuit_lib, model);
 
   /* Write the input buffer information of circuit model, 
    * only applicable when this circuit model is neither inverter nor buffer

@@ -43,6 +43,12 @@ bool check_configurable_memory_circuit_model(const e_config_protocol_type& confi
                                              const CircuitLibrary& circuit_lib,
                                              const CircuitModelId& config_mem_circuit_model);
 
+CircuitPortId find_circuit_model_power_gate_en_port(const CircuitLibrary& circuit_lib,
+                                                    const CircuitModelId& circuit_model);
+
+CircuitPortId find_circuit_model_power_gate_enb_port(const CircuitLibrary& circuit_lib,
+                                                     const CircuitModelId& circuit_model);
+
 } /* end namespace openfpga */
 
 #endif

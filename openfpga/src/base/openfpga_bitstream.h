@@ -21,6 +21,9 @@ int fpga_bitstream(OpenfpgaContext& openfpga_ctx,
 int build_fabric_bitstream(OpenfpgaContext& openfpga_ctx,
                            const Command& cmd, const CommandContext& cmd_context);
 
+int write_fabric_bitstream(const OpenfpgaContext& openfpga_ctx,
+                           const Command& cmd, const CommandContext& cmd_context);
+
 } /* end namespace openfpga */
 
 #endif

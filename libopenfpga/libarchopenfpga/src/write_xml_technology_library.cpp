@@ -60,6 +60,7 @@ void write_xml_device_model(std::fstream& fp,
     write_xml_attribute(fp, "name", tech_lib.transistor_model_name(device_model, TECH_LIB_TRANSISTOR_PMOS).c_str());
     write_xml_attribute(fp, "chan_length", tech_lib.transistor_model_chan_length(device_model, TECH_LIB_TRANSISTOR_PMOS));
     write_xml_attribute(fp, "min_width", tech_lib.transistor_model_min_width(device_model, TECH_LIB_TRANSISTOR_PMOS));
+    write_xml_attribute(fp, "max_width", tech_lib.transistor_model_max_width(device_model, TECH_LIB_TRANSISTOR_PMOS));
     if (TechnologyVariationId::INVALID() != tech_lib.transistor_model_variation(device_model, TECH_LIB_TRANSISTOR_PMOS)) {
       write_xml_attribute(fp, "variation", tech_lib.variation_name(tech_lib.transistor_model_variation(device_model, TECH_LIB_TRANSISTOR_PMOS)).c_str());
     }

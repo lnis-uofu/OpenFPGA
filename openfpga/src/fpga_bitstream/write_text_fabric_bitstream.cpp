@@ -1,6 +1,6 @@
 /********************************************************************
  * This file includes functions that output a fabric-dependent 
- * bitstream database to files in different formats
+ * bitstream database to files in plain text
  *******************************************************************/
 #include <chrono>
 #include <ctime>
@@ -17,7 +17,7 @@
 #include "openfpga_naming.h"
 
 #include "bitstream_manager_utils.h"
-#include "fabric_bitstream_writer.h"
+#include "write_text_fabric_bitstream.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -95,7 +95,8 @@ int write_fabric_config_bit_to_text_file(std::fstream& fp,
 int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manager,
                                         const FabricBitstream& fabric_bitstream,
                                         const ConfigProtocol& config_protocol,
-                                        const std::string& fname) {
+                                        const std::string& fname,
+                                        const bool& verbose) {
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
     VTR_LOG_ERROR("Received empty file name to output bitstream!\n\tPlease specify a valid file name.\n");
@@ -126,6 +127,11 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
 
   /* Close file handler */
   fp.close();
+
+  VTR_LOGV(verbose,
+           "Outputted %lu configuration bits to plain text file: %s\n",
+           fabric_bitstream.bits().size(),
+           fname.c_str());
 
   return status;
 }

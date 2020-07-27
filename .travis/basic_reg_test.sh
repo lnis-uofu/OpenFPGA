@@ -36,12 +36,15 @@ echo -e "Testing Verilog testbench generation only";
 python3 openfpga_flow/scripts/run_fpga_task.py generate_testbench --debug --show_thread_logs
 
 echo -e "Testing bitstream generation only";
-python3 openfpga_flow/scripts/run_fpga_task.py generate_bitstream --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py fpga_bitstream/generate_bitstream --debug --show_thread_logs
 
 echo -e "Testing user-defined simulation settings: clock frequency and number of cycles";
 python3 openfpga_flow/scripts/run_fpga_task.py fixed_simulation_settings --debug --show_thread_logs
 
 echo -e "Testing SDC generation with time units";
 python3 openfpga_flow/scripts/run_fpga_task.py sdc_time_unit --debug --show_thread_logs
+
+echo -e "Testing FPGA-SPICE with netlist generation";
+python3 openfpga_flow/scripts/run_fpga_task.py fpga_spice/generate_spice --debug --show_thread_logs
 
 end_section "OpenFPGA.TaskTun"
