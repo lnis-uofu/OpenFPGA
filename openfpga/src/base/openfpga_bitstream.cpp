@@ -67,7 +67,7 @@ int build_fabric_bitstream(OpenfpgaContext& openfpga_ctx,
 
   CommandOptionId opt_verbose = cmd.option("verbose");
   CommandOptionId opt_file = cmd.option("file");
-  CommandOptionId opt_file_format = cmd.option("file_format");
+  CommandOptionId opt_file_format = cmd.option("format");
 
   /* Build fabric bitstream here */
   openfpga_ctx.mutable_fabric_bitstream() = build_fabric_dependent_bitstream(openfpga_ctx.bitstream_manager(),
