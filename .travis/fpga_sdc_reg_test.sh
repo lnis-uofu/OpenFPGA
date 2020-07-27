@@ -11,6 +11,6 @@ cd ${TRAVIS_BUILD_DIR}
 echo -e "FPGA-SDC regression tests";
 
 echo -e "Testing SDC generation with time units";
-python3 openfpga_flow/scripts/run_fpga_task.py sdc_time_unit --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py fpga_sdc/sdc_time_unit --debug --show_thread_logs
 
 end_section "OpenFPGA.TaskTun"
