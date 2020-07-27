@@ -7,8 +7,8 @@ repack
 ~~~~~~
 
   Repack the netlist to physical pbs
-  This must be done before bitstream generator and testbench generation
-  Strongly recommend it is done after all the fix-up have been applied
+
+  .. note:: This must be done before bitstream generator and testbench generation. Strongly recommend it is done after all the fix-up have been applied
    
   - ``--verbose`` Show verbose log
 
