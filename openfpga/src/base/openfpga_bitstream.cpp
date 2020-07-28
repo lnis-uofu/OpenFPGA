@@ -38,7 +38,7 @@ int fpga_bitstream(OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_read_file = cmd.option("read_file");
 
   if (true == cmd_context.option_enable(cmd, opt_read_file)) {
-    openfpga_ctx.mutable_bitstream_manager() = read_xml_architecture_bitstream(cmd_context.option_value(cmd, opt_write_file).c_str());
+    openfpga_ctx.mutable_bitstream_manager() = read_xml_architecture_bitstream(cmd_context.option_value(cmd, opt_read_file).c_str());
   } else {
     openfpga_ctx.mutable_bitstream_manager() = build_device_bitstream(g_vpr_ctx,
                                                                       openfpga_ctx,
