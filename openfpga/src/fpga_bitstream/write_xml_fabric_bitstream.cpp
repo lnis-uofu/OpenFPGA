@@ -96,7 +96,7 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
   hie_path += std::to_string(find_bitstream_manager_config_bit_index_in_parent_block(bitstream_manager, config_bit));
   hie_path += std::string("]");
 
-  fp << " path=\"" << hie_path << "\"/>\n";
+  fp << " path=\"" << hie_path << "\">\n";
 
   switch (config_type) {
   case CONFIG_MEM_STANDALONE: 
