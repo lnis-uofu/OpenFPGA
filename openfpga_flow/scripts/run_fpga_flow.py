@@ -70,6 +70,8 @@ parser = argparse.ArgumentParser(formatter_class=formatter)
 # Mandatory arguments
 parser.add_argument('arch_file', type=str)
 parser.add_argument('benchmark_files', type=str, nargs='+')
+# parser.add_argument('extraArgs', nargs=argparse.REMAINDER)
+parser.add_argument('otherthings', nargs='*')
 
 # Optional arguments
 parser.add_argument('--top_module', type=str, default="top")
@@ -83,10 +85,10 @@ parser.add_argument('--openfpga_shell_template', type=str,
                     help="Sample openfpga shell script")
 parser.add_argument('--openfpga_arch_file', type=str,
                     help="Openfpga architecture file for shell")
-parser.add_argument('--openfpga_sim_setting_file', type=str,
-                    help="Openfpga simulation file for shell")
-parser.add_argument('--external_fabric_key_file', type=str,
-                    help="Key file for shell")
+# parser.add_argument('--openfpga_sim_setting_file', type=str,
+#                     help="Openfpga simulation file for shell")
+# parser.add_argument('--external_fabric_key_file', type=str,
+#                     help="Key file for shell")
 parser.add_argument('--yosys_tmpl', type=str,
                     help="Alternate yosys template, generates top_module.blif")
 parser.add_argument('--disp', action="store_true",
@@ -687,12 +689,17 @@ def run_openfpga_shell():
     path_variables = script_env_vars["PATH"]
     path_variables["VPR_ARCH_FILE"] = args.arch_file
     path_variables["OPENFPGA_ARCH_FILE"] = args.openfpga_arch_file
-    path_variables["OPENFPGA_SIM_SETTING_FILE"] = args.openfpga_sim_setting_file
-    path_variables["EXTERNAL_FABRIC_KEY_FILE"] = args.external_fabric_key_file
+    # path_variables["OPENFPGA_SIM_SETTING_FILE"] = args.openfpga_sim_setting_file
+    # path_variables["EXTERNAL_FABRIC_KEY_FILE"] = args.external_fabric_key_file
     path_variables["VPR_TESTBENCH_BLIF"] = args.top_module+".blif"
     path_variables["ACTIVITY_FILE"] = args.top_module+"_ace_out.act"
     path_variables["REFERENCE_VERILOG_TESTBENCH"] = args.top_module + \
         "_output_verilog.v"
+
+    for indx in range(0, len(OpenFPGAArgs), 2):
+        tmpVar = OpenFPGAArgs[indx][2:].upper()
+        path_variables[tmpVar] = OpenFPGAArgs[indx+1]
+
     with open(args.top_module+"_run.openfpga", 'w', encoding='utf-8') as archfile:
         archfile.write(tmpl.substitute(path_variables))
     command = [cad_tools["openfpga_shell_path"], "-f",
@@ -980,5 +987,6 @@ def filter_failed_process_output(vpr_output):
 
 if __name__ == "__main__":
     ExecTime["Start"] = time.time()
-    args = parser.parse_args()
+    # args = parser.parse_args()
+    args, OpenFPGAArgs = parser.parse_known_args()
     main()
