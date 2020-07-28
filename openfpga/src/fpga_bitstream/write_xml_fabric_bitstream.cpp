@@ -76,27 +76,27 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
     return 1;
   }
 
-  fp << "<bit id=\"" << size_t(fabric_bit) << "\" ";
-  fp << "value=\"";
+  write_tab_to_file(fp, 1);
+  fp << "<bit id=\"" << size_t(fabric_bit) << "\"";
+  fp << " value=\"";
   fp << bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit));
-  fp << "\">\n";
+  fp << "\"";
 
   /* Output hierarchy of this parent*/
   const ConfigBitId& config_bit = fabric_bitstream.config_bit(fabric_bit);
   const ConfigBlockId& config_block = bitstream_manager.bit_parent_block(config_bit);
   std::vector<ConfigBlockId> block_hierarchy = find_bitstream_manager_block_hierarchy(bitstream_manager, config_block); 
-  write_tab_to_file(fp, 1);
-  fp << "<hierarchy>\n";
-  size_t hierarchy_counter = 0;
+  std::string hie_path;
   for (const ConfigBlockId& temp_block : block_hierarchy) {
-    write_tab_to_file(fp, 2);
-    fp << "<instance level=\"" << hierarchy_counter << "\"";
-    fp << " name=\"" << bitstream_manager.block_name(temp_block) << "\"";
-    fp << "/>\n";
-    hierarchy_counter++;
+    hie_path += bitstream_manager.block_name(temp_block);
+    hie_path += std::string(".");
   }
-  write_tab_to_file(fp, 1);
-  fp << "</hierarchy>\n";
+  hie_path += generate_configurable_memory_data_out_name();
+  hie_path += std::string("[");
+  hie_path += std::to_string(find_bitstream_manager_config_bit_index_in_parent_block(bitstream_manager, config_bit));
+  hie_path += std::string("]");
+
+  fp << " path=\"" << hie_path << "\">\n";
 
   switch (config_type) {
   case CONFIG_MEM_STANDALONE: 
@@ -104,14 +104,14 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
     break;
   case CONFIG_MEM_MEMORY_BANK: { 
     /* Bit line address */
-    write_tab_to_file(fp, 1);
+    write_tab_to_file(fp, 2);
     fp << "<bl address=\"";
     for (const char& addr_bit : fabric_bitstream.bit_bl_address(fabric_bit)) {
       fp << addr_bit;
     }
     fp << "\"/>\n";   
  
-    write_tab_to_file(fp, 1);
+    write_tab_to_file(fp, 2);
     fp << "<wl address=\"";
     for (const char& addr_bit : fabric_bitstream.bit_wl_address(fabric_bit)) {
       fp << addr_bit;
@@ -120,7 +120,7 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
     break;
   }
   case CONFIG_MEM_FRAME_BASED: {
-    write_tab_to_file(fp, 1);
+    write_tab_to_file(fp, 2);
     fp << "<frame address=\"";
     for (const char& addr_bit : fabric_bitstream.bit_address(fabric_bit)) {
       fp << addr_bit;
@@ -134,6 +134,7 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
     return 1;
   }
 
+  write_tab_to_file(fp, 1);
   fp << "</bit>\n";
 
   return 0;
@@ -153,7 +154,8 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
 int write_fabric_bitstream_to_xml_file(const BitstreamManager& bitstream_manager,
                                        const FabricBitstream& fabric_bitstream,
                                        const ConfigProtocol& config_protocol,
-                                       const std::string& fname) {
+                                       const std::string& fname,
+                                       const bool& verbose) {
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
     VTR_LOG_ERROR("Received empty file name to output bitstream!\n\tPlease specify a valid file name.\n");
@@ -171,6 +173,8 @@ int write_fabric_bitstream_to_xml_file(const BitstreamManager& bitstream_manager
   /* Write XML head */
   write_fabric_bitstream_xml_file_head(fp);
 
+  fp << "<fabric_bitstream>\n";
+
   /* Output fabric bitstream to the file */
   int status = 0;
   for (const FabricBitId& fabric_bit : fabric_bitstream.bits()) {
@@ -182,11 +186,17 @@ int write_fabric_bitstream_to_xml_file(const BitstreamManager& bitstream_manager
       break;
     }
   }
+
   /* Print an end to the file here */
-  fp << std::endl;
+  fp << "</fabric_bitstream>\n";
 
   /* Close file handler */
   fp.close();
+
+  VTR_LOGV(verbose,
+           "Outputted %lu configuration bits to XML file: %s\n",
+           fabric_bitstream.bits().size(),
+           fname.c_str());
 
   return status;
 }

@@ -96,7 +96,25 @@ jobs:
       name: "FPGA-Verilog regression tests"
       script:
         - source .travis/build.sh
-        - source .travis/verilog_reg_test.sh
+        - source .travis/fpga_verilog_reg_test.sh
+
+    - stage: Test
+      name: "FPGA-Bitstream regression tests"
+      script:
+        - source .travis/build.sh
+        - source .travis/fpga_bitstream_reg_test.sh
+
+    - stage: Test
+      name: "FPGA-SDC regression tests"
+      script:
+        - source .travis/build.sh
+        - source .travis/fpga_sdc_reg_test.sh
+
+    - stage: Test
+      name: "FPGA-SPICE regression tests"
+      script:
+        - source .travis/build.sh
+        - source .travis/fpga_spice_reg_test.sh
 
 #after_failure:
 #  - .travis/after_failure.sh

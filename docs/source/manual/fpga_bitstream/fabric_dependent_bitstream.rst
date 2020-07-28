@@ -67,24 +67,13 @@ In principle, the file consist a number of XML node ``<bit>``, each bit contains
 
 - ``value``: The configuration bit value.
 
-  - ``hierarchy`` represents the location of this block in FPGA fabric.
-    The hierachy includes the full hierarchy of this block
-
-    - ``instance`` denotes the instance name which you can find in the fabric netlists
-
-    - ``level`` denotes the depth of the block in the hierarchy
+- ``path`` represents the location of this block in FPGA fabric, i.e., the full path in the hierarchy of FPGA fabric.
 
 A quick example:
 
 .. code-block:: xml
 
-  <bit id="0" value="1">
-    <hierarchy>
-      <instance level="0" name="fpga_top"/>
-      <instance level="1" name="grid_clb_1__2_"/>
-      <instance level="2" name="logical_tile_clb_mode_clb__0"/>
-      <instance level="3" name="mem_fle_9_in_5"/>
-    </hierarchy>
+  <bit id="0" value="1" path="fpga_top.grid_clb_1__2_.logical_tile_clb_mode_clb__0.mem_fle_9_in_5.mem_out[0]"/>
   </bit>
 
 Other information may depend on the type of configuration procotol.
@@ -99,14 +88,7 @@ Other information may depend on the type of configuration procotol.
 
   .. code-block:: xml
 
-    <bit id="0" value="1">
-      <hierarchy>
-        <instance level="0" name="fpga_top"/>
-        <instance level="1" name="grid_io_bottom_1__0_"/>
-        <instance level="2" name="logical_tile_io_mode_io__0"/>
-        <instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-        <instance level="4" name="iopad_sram_blwl_mem"/>
-      </hierarchy>
+    <bit id="0" value="1" path="fpga_top.grid_clb_1__2_.logical_tile_clb_mode_clb__0.mem_fle_9_in_5.mem_out[0]"/>
       <bl address="000000"/>
       <wl address="000000"/>
     </bit>
@@ -119,13 +101,6 @@ Other information may depend on the type of configuration procotol.
 
   .. code-block:: xml
 
-    <bit id="0" value="1">
-      <hierarchy>
-        <instance level="0" name="fpga_top"/>
-        <instance level="1" name="grid_io_bottom_1__0_"/>
-        <instance level="2" name="logical_tile_io_mode_io__0"/>
-        <instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-        <instance level="4" name="iopad_config_latch_mem"/>
-      </hierarchy>
+    <bit id="0" value="1" path="fpga_top.grid_clb_1__2_.logical_tile_clb_mode_clb__0.mem_fle_9_in_5.mem_out[0]"/>
       <frame address="0000000000000000"/>
     </bit>
