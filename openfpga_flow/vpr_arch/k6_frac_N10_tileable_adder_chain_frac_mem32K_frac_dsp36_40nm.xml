@@ -939,15 +939,30 @@
       <!-- Physical mode of the fracturable memory -->
       <mode name="physical">
          <pb_type name="frac_mem_32k" blif_model=".subckt dual_port_ram" class="memory" num_pb="1">
-           <input name="addr1" num_pins="15"/>
-           <input name="addr2" num_pins="15"/>
-           <input name="data1" num_pins="32"/>
-           <input name="data2" num_pins="32"/>
-           <input name="we1" num_pins="1"/>
-           <input name="we2" num_pins="1"/>
-           <output name="out1" num_pins="32"/>
-           <output name="out2" num_pins="32"/>
-           <clock name="clk" num_pins="1"/>
+           <input name="addr1" num_pins="15" port_class="address1"/>
+           <input name="addr2" num_pins="15" port_class="address2"/>
+           <input name="data1" num_pins="32" port_class="data_in1"/>
+           <input name="data2" num_pins="32" port_class="data_in2"/>
+           <input name="we1" num_pins="1" port_class="write_en1"/>
+           <input name="we2" num_pins="1" port_class="write_en2"/>
+           <output name="out1" num_pins="32" port_class="data_out1"/>
+           <output name="out2" num_pins="32" port_class="data_out2"/>
+           <clock name="clk" num_pins="1" port_class="clock"/>
+
+           <T_setup value="509e-12" port="frac_mem_32k.addr1" clock="clk"/>
+           <T_setup value="509e-12" port="frac_mem_32k.addr2" clock="clk"/>
+           <T_setup value="509e-12" port="frac_mem_32k.data1" clock="clk"/>
+           <T_setup value="509e-12" port="frac_mem_32k.data2" clock="clk"/>
+           <T_setup value="509e-12" port="frac_mem_32k.we1" clock="clk"/>
+           <T_setup value="509e-12" port="frac_mem_32k.we2" clock="clk"/>
+           <T_hold value="238e-12" port="frac_mem_32k.addr1" clock="clk"/>
+           <T_hold value="238e-12" port="frac_mem_32k.addr2" clock="clk"/>
+           <T_hold value="238e-12" port="frac_mem_32k.data1" clock="clk"/>
+           <T_hold value="238e-12" port="frac_mem_32k.data2" clock="clk"/>
+           <T_hold value="238e-12" port="frac_mem_32k.we1" clock="clk"/>
+           <T_hold value="238e-12" port="frac_mem_32k.we2" clock="clk"/>
+           <T_clock_to_Q max="1.234e-9" min="1.196e-9" port="frac_mem_32k.out1" clock="clk"/>
+           <T_clock_to_Q max="1.234e-9" min="1.196e-9" port="frac_mem_32k.out2" clock="clk"/>
          </pb_type>
          <interconnect>
           <direct name="address1" input="memory.addr1[14:0]" output="frac_mem_32k.addr1[14:0]"/>
