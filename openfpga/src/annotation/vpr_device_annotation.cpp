@@ -48,23 +48,28 @@ t_pb_type* VprDeviceAnnotation::physical_pb_type(t_pb_type* pb_type) const {
   return physical_pb_types_.at(pb_type);
 }
 
-t_port* VprDeviceAnnotation::physical_pb_port(t_port* pb_port) const {
+std::vector<t_port*> VprDeviceAnnotation::physical_pb_port(t_port* pb_port) const {
   /* Ensure that the pb_type is in the list */
-  std::map<t_port*, t_port*>::const_iterator it = physical_pb_ports_.find(pb_port);
+  std::map<t_port*, std::vector<t_port*>>::const_iterator it = physical_pb_ports_.find(pb_port);
   if (it == physical_pb_ports_.end()) {
-    return nullptr;
+    return std::vector<t_port*>();
   }
   return physical_pb_ports_.at(pb_port);
 }
 
-BasicPort VprDeviceAnnotation::physical_pb_port_range(t_port* pb_port) const {
+BasicPort VprDeviceAnnotation::physical_pb_port_range(t_port* operating_pb_port,
+                                                      t_port* physical_pb_port) const {
   /* Ensure that the pb_type is in the list */
-  std::map<t_port*, BasicPort>::const_iterator it = physical_pb_port_ranges_.find(pb_port);
+  std::map<t_port*, std::map<t_port*, BasicPort>>::const_iterator it = physical_pb_port_ranges_.find(operating_pb_port);
   if (it == physical_pb_port_ranges_.end()) {
     /* Return an invalid port. As such the port width will be 0, which is an invalid value */
     return BasicPort();
   }
-  return physical_pb_port_ranges_.at(pb_port);
+  if (0 == physical_pb_port_ranges_.at(operating_pb_port).count(physical_pb_port)) {
+    /* Return an invalid port. As such the port width will be 0, which is an invalid value */
+    return BasicPort();
+  }
+  return physical_pb_port_ranges_.at(operating_pb_port).at(physical_pb_port);
 }
 
 CircuitModelId VprDeviceAnnotation::pb_type_circuit_model(t_pb_type* physical_pb_type) const {
@@ -185,24 +190,34 @@ int VprDeviceAnnotation::physical_pb_type_index_offset(t_pb_type* pb_type) const
   return physical_pb_type_index_offsets_.at(pb_type);
 }
 
-int VprDeviceAnnotation::physical_pb_pin_rotate_offset(t_port* pb_port) const {
+int VprDeviceAnnotation::physical_pb_pin_rotate_offset(t_port* operating_pb_port,
+                                                       t_port* physical_pb_port) const {
   /* Ensure that the pb_type is in the list */
-  std::map<t_port*, int>::const_iterator it = physical_pb_pin_rotate_offsets_.find(pb_port);
+  std::map<t_port*, std::map<t_port*, int>>::const_iterator it = physical_pb_pin_rotate_offsets_.find(operating_pb_port);
   if (it == physical_pb_pin_rotate_offsets_.end()) {
     /* Default value is 0 */
     return 0;
   }
-  return physical_pb_pin_rotate_offsets_.at(pb_port);
+  if (0 == physical_pb_pin_rotate_offsets_.at(operating_pb_port).count(physical_pb_port)) {
+    /* Default value is 0 */
+    return 0;
+  }
+  return physical_pb_pin_rotate_offsets_.at(operating_pb_port).at(physical_pb_port);
 }
 
-int VprDeviceAnnotation::physical_pb_pin_offset(t_port* pb_port) const {
+int VprDeviceAnnotation::physical_pb_pin_offset(t_port* operating_pb_port,
+                                                t_port* physical_pb_port) const {
   /* Ensure that the pb_type is in the list */
-  std::map<t_port*, int>::const_iterator it = physical_pb_pin_offsets_.find(pb_port);
+  std::map<t_port*, std::map<t_port*, int>>::const_iterator it = physical_pb_pin_offsets_.find(operating_pb_port);
   if (it == physical_pb_pin_offsets_.end()) {
     /* Default value is 0 */
     return 0;
   }
-  return physical_pb_pin_offsets_.at(pb_port);
+  if (0 == physical_pb_pin_offsets_.at(operating_pb_port).count(physical_pb_port)) {
+    /* Default value is 0 */
+    return 0;
+  }
+  return physical_pb_pin_offsets_.at(operating_pb_port).at(physical_pb_port);
 }
 
 
@@ -274,29 +289,28 @@ void VprDeviceAnnotation::add_physical_pb_type(t_pb_type* operating_pb_type, t_p
   physical_pb_types_[operating_pb_type] = physical_pb_type;
 }
 
-void VprDeviceAnnotation::add_physical_pb_port(t_port* operating_pb_port, t_port* physical_pb_port) {
-  /* Warn any override attempt */
-  std::map<t_port*, t_port*>::const_iterator it = physical_pb_ports_.find(operating_pb_port);
-  if (it != physical_pb_ports_.end()) {
-    VTR_LOG_WARN("Override the annotation between operating pb_port '%s' and it physical pb_port '%s'!\n",
-                 operating_pb_port->name, physical_pb_port->name);
-  }
-
-  physical_pb_ports_[operating_pb_port] = physical_pb_port;
+void VprDeviceAnnotation::add_physical_pb_port(t_port* operating_pb_port,
+                                               t_port* physical_pb_port) {
+  physical_pb_ports_[operating_pb_port].push_back(physical_pb_port);
 }
 
-void VprDeviceAnnotation::add_physical_pb_port_range(t_port* operating_pb_port, const BasicPort& port_range) {
+void VprDeviceAnnotation::add_physical_pb_port_range(t_port* operating_pb_port,
+                                                     t_port* physical_pb_port,
+                                                     const BasicPort& port_range) {
   /* The port range must satify the port width*/
   VTR_ASSERT((size_t)operating_pb_port->num_pins == port_range.get_width());
 
   /* Warn any override attempt */
-  std::map<t_port*, BasicPort>::const_iterator it = physical_pb_port_ranges_.find(operating_pb_port);
-  if (it != physical_pb_port_ranges_.end()) {
-    VTR_LOG_WARN("Override the annotation between operating pb_port '%s' and it physical pb_port range '[%ld:%ld]'!\n",
-                 operating_pb_port->name, port_range.get_lsb(), port_range.get_msb());
+  std::map<t_port*, std::map<t_port*, BasicPort>>::const_iterator it = physical_pb_port_ranges_.find(operating_pb_port);
+  if ( (it != physical_pb_port_ranges_.end())
+    && (0 < physical_pb_port_ranges_[operating_pb_port].count(physical_pb_port)) ) {
+    VTR_LOG_WARN("Override the annotation between operating pb_port '%s' and it physical pb_port range '%s[%ld:%ld]'!\n",
+                 operating_pb_port->name,
+                 physical_pb_port->name,
+                 port_range.get_lsb(), port_range.get_msb());
   }
 
-  physical_pb_port_ranges_[operating_pb_port] = port_range;
+  physical_pb_port_ranges_[operating_pb_port][physical_pb_port] = port_range;
 }
 
 void VprDeviceAnnotation::add_pb_type_circuit_model(t_pb_type* physical_pb_type, const CircuitModelId& circuit_model) {
@@ -396,17 +410,20 @@ void VprDeviceAnnotation::add_physical_pb_type_index_offset(t_pb_type* pb_type, 
   physical_pb_type_index_offsets_[pb_type] = offset;
 }
 
-void VprDeviceAnnotation::add_physical_pb_pin_rotate_offset(t_port* pb_port, const int& offset) {
+void VprDeviceAnnotation::add_physical_pb_pin_rotate_offset(t_port* operating_pb_port,
+                                                            t_port* physical_pb_port,
+                                                            const int& offset) {
   /* Warn any override attempt */
-  std::map<t_port*, int>::const_iterator it = physical_pb_pin_rotate_offsets_.find(pb_port);
-  if (it != physical_pb_pin_rotate_offsets_.end()) {
-    VTR_LOG_WARN("Override the annotation between operating pb_port '%s' and it physical pb_port pin rotate offset '%d'!\n",
-                 pb_port->name, offset);
+  std::map<t_port*, std::map<t_port*, int>>::const_iterator it = physical_pb_pin_rotate_offsets_.find(operating_pb_port);
+  if ( (it != physical_pb_pin_rotate_offsets_.end())
+    && (0 < physical_pb_pin_rotate_offsets_[operating_pb_port].count(physical_pb_port)) ) {
+    VTR_LOG_WARN("Override the annotation between operating pb_port '%s' and it physical pb_port '%s' pin rotate offset '%d'!\n",
+                 operating_pb_port->name, offset);
   }
 
-  physical_pb_pin_rotate_offsets_[pb_port] = offset;
+  physical_pb_pin_rotate_offsets_[operating_pb_port][physical_pb_port] = offset;
   /* We initialize the accumulated offset to 0 */
-  physical_pb_pin_offsets_[pb_port] = 0;
+  physical_pb_pin_offsets_[operating_pb_port][physical_pb_port] = 0;
 }
 
 void VprDeviceAnnotation::add_physical_pb_graph_pin(const t_pb_graph_pin* operating_pb_graph_pin, 
@@ -432,17 +449,17 @@ void VprDeviceAnnotation::add_physical_pb_graph_pin(const t_pb_graph_pin* operat
    *    Physical port      |         +                        +               +
    *
    */
-  if (0 == physical_pb_pin_rotate_offset(operating_pb_graph_pin->port)) {
+  if (0 == physical_pb_pin_rotate_offset(operating_pb_graph_pin->port, physical_pb_graph_pin->port)) {
     return;
   }
 
-  physical_pb_pin_offsets_[operating_pb_graph_pin->port] += physical_pb_pin_rotate_offset(operating_pb_graph_pin->port);
+  physical_pb_pin_offsets_[operating_pb_graph_pin->port][physical_pb_graph_pin->port] += physical_pb_pin_rotate_offset(operating_pb_graph_pin->port, physical_pb_graph_pin->port);
 
-  if ((size_t)physical_pb_port(operating_pb_graph_pin->port)->num_pins - 1 
+  if ((size_t)physical_pb_graph_pin->port->num_pins - 1 
     < operating_pb_graph_pin->pin_number
-    + physical_pb_port_range(operating_pb_graph_pin->port).get_lsb() 
-    + physical_pb_pin_offsets_[operating_pb_graph_pin->port]) {
-    physical_pb_pin_offsets_[operating_pb_graph_pin->port] = 0;
+    + physical_pb_port_range(operating_pb_graph_pin->port, physical_pb_graph_pin->port).get_lsb() 
+    + physical_pb_pin_offsets_[operating_pb_graph_pin->port][physical_pb_graph_pin->port]) {
+    physical_pb_pin_offsets_[operating_pb_graph_pin->port][physical_pb_graph_pin->port] = 0;
   }
 }
 

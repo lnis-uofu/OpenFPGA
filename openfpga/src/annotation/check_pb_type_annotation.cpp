@@ -114,7 +114,7 @@ void check_vpr_physical_primitive_pb_type_annotation(t_pb_type* cur_pb_type,
 
   /* Now we need to check each port of the pb_type */ 
   for (t_port* pb_port : pb_type_ports(cur_pb_type)) {
-    if (nullptr == vpr_device_annotation.physical_pb_port(pb_port)) {
+    if (0 == vpr_device_annotation.physical_pb_port(pb_port).size()) {
       VTR_LOG_ERROR("Find a port '%s' of pb_type '%s' which has not been mapped to any physical port!\n",
                     pb_port->name, cur_pb_type->name);
       VTR_LOG_ERROR("Please specify in the OpenFPGA architecture\n");

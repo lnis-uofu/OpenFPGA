@@ -48,8 +48,7 @@ class PbTypeAnnotation {
     float physical_pb_type_index_factor() const;
     int physical_pb_type_index_offset() const;
     std::vector<std::string> port_names() const;
-    BasicPort physical_pb_type_port(const std::string& port_name) const;
-    int physical_pin_rotate_offset(const std::string& port_name) const;
+    std::map<BasicPort, int> physical_pb_type_port(const std::string& port_name) const;
     std::vector<std::string> interconnect_names() const;
     std::string interconnect_circuit_model_name(const std::string& interc_name) const;
   public: /* Public mutators */
@@ -68,6 +67,7 @@ class PbTypeAnnotation {
     void add_pb_type_port_pair(const std::string& operating_pb_port_name,
                                const BasicPort& physical_pb_port);
     void set_physical_pin_rotate_offset(const std::string& operating_pb_port_name,
+                                        const BasicPort& physical_pb_port,
                                         const int& physical_pin_rotate_offset);
     void add_interconnect_circuit_model_pair(const std::string& interc_name,
                                              const std::string& circuit_model_name);
@@ -133,10 +133,9 @@ class PbTypeAnnotation {
      */
     int physical_pb_type_index_offset_;
 
-    /* Link from the pins under an operating pb_type to physical pb_type  */
-    std::map<std::string, BasicPort> operating_pb_type_ports_;
-
-    /* The offset aims to align the pin indices for port of pb_type 
+    /* Link from the pins under an operating pb_type to pairs of
+     * its physical pb_type and its pin rotating offset
+     * The offset aims to align the pin indices for port of pb_type 
      * between operating and physical modes, especially when an operating 
      * mode contains multiple pb_type (num_pb>1) that are linked to 
      * the same physical pb_type. 
@@ -148,7 +147,7 @@ class PbTypeAnnotation {
      * operating pb_type adder[0].pin[0] with a full path clb.fle[arith].adder[0]
      * to physical pb_type adder[0].pin[1] with a full path clb.fle[physical].adder[0]
      */
-    std::map<std::string, int> physical_pin_rotate_offsets_;
+    std::map<std::string, std::map<BasicPort, int>> operating_pb_type_ports_;
 
     /* Link between the interconnects under this pb_type and circuit model names */
     std::map<std::string, std::string> interconnect_circuit_model_names_;
