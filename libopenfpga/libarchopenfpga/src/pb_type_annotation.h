@@ -158,7 +158,7 @@ class PbTypeAnnotation {
      *   physical pb_type bram[0].dout_a[0] with a full path memory[physical].bram[0]
      *   physical pb_type bram[0].dout_a[1] with a full path memory[physical].bram[0]
      *
-     * For example, a rotating offset of 1 is used to map 
+     * For example, a rotating offset of 9 is used to map 
      *   operating pb_type mult_9x9[0].a[0:8] with a full path mult[frac].mult_9x9[0]
      *   operating pb_type mult_9x9[1].a[0:8] with a full path mult[frac].mult_9x9[1]
      * to 
