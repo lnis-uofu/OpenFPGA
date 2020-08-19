@@ -298,7 +298,7 @@ void VprDeviceAnnotation::add_physical_pb_port_range(t_port* operating_pb_port,
                                                      t_port* physical_pb_port,
                                                      const BasicPort& port_range) {
   /* The port range must satify the port width*/
-  VTR_ASSERT((size_t)operating_pb_port->num_pins == port_range.get_width());
+  VTR_ASSERT((size_t)operating_pb_port->num_pins >= port_range.get_width());
 
   /* Warn any override attempt */
   std::map<t_port*, std::map<t_port*, BasicPort>>::const_iterator it = physical_pb_port_ranges_.find(operating_pb_port);
