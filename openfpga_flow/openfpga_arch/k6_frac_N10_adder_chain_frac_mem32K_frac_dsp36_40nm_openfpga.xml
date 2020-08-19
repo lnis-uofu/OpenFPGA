@@ -309,9 +309,9 @@
     <!-- Bind the 512x64 single port RAM to the physical implementation -->
     <pb_type name="memory[mem_512x64_sp].mem_512x64_sp" physical_pb_type_name="memory[physical].frac_mem_32k" mode_bits="0000">
       <port name="addr" physical_mode_port="addr1[0:8]"/>
-      <port name="data" physical_mode_port="data1 data2"/>
+      <port name="data" physical_mode_port="data1 data2" physical_mode_pin_initial_offset="0 -32"/>
       <port name="we" physical_mode_port="we1"/>
-      <port name="out" physical_mode_port="out1 out2"/>
+      <port name="out" physical_mode_port="out1 out2" physical_mode_pin_initial_offset="0 -32"/>
       <port name="clk" physical_mode_port="clk"/>
     </pb_type>
     <!-- Bind the 1024x32 single port RAM to the physical implementation -->
