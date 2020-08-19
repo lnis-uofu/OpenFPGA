@@ -840,7 +840,7 @@ void load_chanx_rr_nodes_basic_info(RRGraph& rr_graph,
          *  track0 ----->+-----------------------------+----> track0
          *               |                             |
          */
-        if (true == is_chanx_exist(grids, chanx_coord)) {
+        if (true == is_chanx_exist(grids, chanx_coord, through_channel)) {
           /* Rotate the chanx_details by an offset of ix - 1, the distance to the most left channel */
           /* For INC_DIRECTION, we use clockwise rotation 
            * node_id A ---->   -----> node_id D
@@ -951,7 +951,7 @@ void load_chany_rr_nodes_basic_info(RRGraph& rr_graph,
          *               |                             |
          * we should rotate only once at the bottom side of a grid 
          */
-        if (true == is_chany_exist(grids, chany_coord)) {
+        if (true == is_chany_exist(grids, chany_coord, through_channel)) {
           /* Rotate the chany_details by an offset of 1*/
           /* For INC_DIRECTION, we use clockwise rotation 
            * node_id A ---->   -----> node_id D
