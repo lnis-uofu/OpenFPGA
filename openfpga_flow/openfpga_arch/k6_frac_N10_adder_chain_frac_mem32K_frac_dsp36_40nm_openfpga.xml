@@ -287,7 +287,7 @@
          There are four 9x9 multipliers, each of which occupies part
          of the input/output of the 36x36 multiplier
       -->
-    <pb_type name="mult_36[two_divisible_mult_18x18].divisible_mult_18x18[two_mult_9x9].mult9x9_slice.mult_9x9" physical_pb_type_name="mult_36[mult_36x36].mult_36x36_slice.mult_36x36" mode_bits="01" physical_pb_type_index_factor="0">
+    <pb_type name="mult_36[two_divisible_mult_18x18].divisible_mult_18x18[two_mult_9x9].mult_9x9_slice.mult_9x9" physical_pb_type_name="mult_36[mult_36x36].mult_36x36_slice.mult_36x36" mode_bits="01" physical_pb_type_index_factor="0">
       <port name="a" physical_mode_port="a[0:8]" physical_mode_pin_rotate_offset="9"/>
       <port name="b" physical_mode_port="b[0:8]" physical_mode_pin_rotate_offset="9"/>
       <port name="out" physical_mode_port="out[0:17]" physical_mode_pin_rotate_offset="18"/>
@@ -296,7 +296,7 @@
          There are two 18x18 multipliers, each of which occupies part
          of the input/output of the 36x36 multiplier
       -->
-    <pb_type name="mult_36[two_divisible_mult_18x18].divisible_mult_18x18[mult_18x18].mult18x18_slice.mult_18x18" physical_pb_type_name="mult_36[mult_36x36].mult_36x36_slice.mult_36x36" mode_bits="10" physical_pb_type_index_factor="0">
+    <pb_type name="mult_36[two_divisible_mult_18x18].divisible_mult_18x18[mult_18x18].mult_18x18_slice.mult_18x18" physical_pb_type_name="mult_36[mult_36x36].mult_36x36_slice.mult_36x36" mode_bits="10" physical_pb_type_index_factor="0">
       <port name="a" physical_mode_port="a[0:17]" physical_mode_pin_rotate_offset="18"/>
       <port name="b" physical_mode_port="b[0:17]" physical_mode_pin_rotate_offset="18"/>
       <port name="out" physical_mode_port="out[0:35]" physical_mode_pin_rotate_offset="36"/>
