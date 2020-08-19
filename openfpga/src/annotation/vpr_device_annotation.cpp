@@ -190,6 +190,21 @@ int VprDeviceAnnotation::physical_pb_type_index_offset(t_pb_type* pb_type) const
   return physical_pb_type_index_offsets_.at(pb_type);
 }
 
+int VprDeviceAnnotation::physical_pb_pin_initial_offset(t_port* operating_pb_port,
+                                                        t_port* physical_pb_port) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_port*, std::map<t_port*, int>>::const_iterator it = physical_pb_pin_initial_offsets_.find(operating_pb_port);
+  if (it == physical_pb_pin_initial_offsets_.end()) {
+    /* Default value is 0 */
+    return 0;
+  }
+  if (0 == physical_pb_pin_initial_offsets_.at(operating_pb_port).count(physical_pb_port)) {
+    /* Default value is 0 */
+    return 0;
+  }
+  return physical_pb_pin_initial_offsets_.at(operating_pb_port).at(physical_pb_port);
+}
+
 int VprDeviceAnnotation::physical_pb_pin_rotate_offset(t_port* operating_pb_port,
                                                        t_port* physical_pb_port) const {
   /* Ensure that the pb_type is in the list */
@@ -219,7 +234,6 @@ int VprDeviceAnnotation::physical_pb_pin_offset(t_port* operating_pb_port,
   }
   return physical_pb_pin_offsets_.at(operating_pb_port).at(physical_pb_port);
 }
-
 
 t_pb_graph_pin* VprDeviceAnnotation::physical_pb_graph_pin(const t_pb_graph_pin* pb_graph_pin) const {
   /* Ensure that the pb_type is in the list */
@@ -408,6 +422,20 @@ void VprDeviceAnnotation::add_physical_pb_type_index_offset(t_pb_type* pb_type, 
   }
 
   physical_pb_type_index_offsets_[pb_type] = offset;
+}
+
+void VprDeviceAnnotation::add_physical_pb_pin_initial_offset(t_port* operating_pb_port,
+                                                             t_port* physical_pb_port,
+                                                             const int& offset) {
+  /* Warn any override attempt */
+  std::map<t_port*, std::map<t_port*, int>>::const_iterator it = physical_pb_pin_initial_offsets_.find(operating_pb_port);
+  if ( (it != physical_pb_pin_initial_offsets_.end())
+    && (0 < physical_pb_pin_initial_offsets_[operating_pb_port].count(physical_pb_port)) ) {
+    VTR_LOG_WARN("Override the annotation between operating pb_port '%s' and it physical pb_port '%s' pin rotate offset '%d'!\n",
+                 operating_pb_port->name, offset);
+  }
+
+  physical_pb_pin_initial_offsets_[operating_pb_port][physical_pb_port] = offset;
 }
 
 void VprDeviceAnnotation::add_physical_pb_pin_rotate_offset(t_port* operating_pb_port,

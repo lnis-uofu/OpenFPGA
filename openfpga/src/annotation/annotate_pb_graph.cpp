@@ -308,16 +308,23 @@ bool try_match_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin,
   /* If the parent ports of the two pins are not paired, fail */
   for (t_port* candidate_port : vpr_device_annotation.physical_pb_port(operating_pb_graph_pin->port)) {
     if (physical_pb_graph_pin->port != candidate_port) {
-      return false;
+      /* Not the one we want, try the next candidate */
+      continue;
     }
     /* Check the pin number of physical pb_graph_pin matches the pin number of 
-     * operating pb_graph_pin plus a rotation offset 
-     *                                              operating port         physical port
-     *                      LSB  port_range.lsb()    pin_number              pin_number      MSB
-     *                                 |                  |                     |
-     *    Operating port     |         |                  +------               |
-     *                                 |                        |<----offset--->|
-     *    Physical port      |         +                        +               +
+     * operating pb_graph_pin plus a rotation offset with an initial offset, 
+     * which is to align the lsb between operating and physical ports
+     *
+     * For example: 
+     *   We can align the operating_port[32] to physical_port[0] with an initial offset
+     *   which is -32
+     *
+     *                                              operating port            physical port
+     *                      LSB  port_range.lsb()    pin_number                 pin_number      MSB
+     *                                 |                  |           init_offset   |
+     *    Operating port     |         |                  +------         +         |
+     *                                 |                        |<----acc_offset--->|
+     *    Physical port      |         +                        +                   +
      *
      * Note: 
      *   - accumulated offset is NOT the pin rotate offset specified by users
@@ -327,11 +334,14 @@ bool try_match_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin,
      *     The accumulated offset will be reset to 0 when it exceeds the msb() of the physical port
      */
     int acc_offset = vpr_device_annotation.physical_pb_pin_offset(operating_pb_graph_pin->port, candidate_port);
+    int init_offset = vpr_device_annotation.physical_pb_pin_initial_offset(operating_pb_graph_pin->port, candidate_port);
     const BasicPort& physical_port_range = vpr_device_annotation.physical_pb_port_range(operating_pb_graph_pin->port, candidate_port);
     if (physical_pb_graph_pin->pin_number != operating_pb_graph_pin->pin_number
                                            + (int)physical_port_range.get_lsb() 
+                                           + init_offset
                                            + acc_offset) {
-      return false;
+      /* Not the one we want, try the next candidate */
+      continue;
     }
 
     /* Reach here, it means all the requirements have been met */

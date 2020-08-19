@@ -211,7 +211,7 @@ bool pair_operating_and_physical_pb_types(t_pb_type* operating_pb_type,
    * if not found, we assume that the physical port is the same as the operating pb_port
    */
   for (t_port* operating_pb_port : pb_type_ports(operating_pb_type)) {
-    std::map<BasicPort, int> expected_physical_pb_ports = pb_type_annotation.physical_pb_type_port(std::string(operating_pb_port->name));
+    std::map<BasicPort, std::array<int, 2>> expected_physical_pb_ports = pb_type_annotation.physical_pb_type_port(std::string(operating_pb_port->name));
   
     /* If not defined in the annotation, set the default pair:
      * rotate_offset is 0 by default!
@@ -220,7 +220,7 @@ bool pair_operating_and_physical_pb_types(t_pb_type* operating_pb_type,
       BasicPort expected_physical_pb_port;
       expected_physical_pb_port.set_name(std::string(operating_pb_port->name));
       expected_physical_pb_port.set_width(operating_pb_port->num_pins);
-      expected_physical_pb_ports[expected_physical_pb_port] = 0;
+      expected_physical_pb_ports[expected_physical_pb_port] = {0, 0};
     }
 
     for (const auto& expected_physical_pb_port : expected_physical_pb_ports) {
@@ -241,7 +241,8 @@ bool pair_operating_and_physical_pb_types(t_pb_type* operating_pb_type,
        */
       vpr_device_annotation.add_physical_pb_port(operating_pb_port, physical_pb_port);
       vpr_device_annotation.add_physical_pb_port_range(operating_pb_port, physical_pb_port, expected_physical_pb_port.first);
-      vpr_device_annotation.add_physical_pb_pin_rotate_offset(operating_pb_port, physical_pb_port, expected_physical_pb_port.second);
+      vpr_device_annotation.add_physical_pb_pin_initial_offset(operating_pb_port, physical_pb_port, expected_physical_pb_port.second[0]);
+      vpr_device_annotation.add_physical_pb_pin_rotate_offset(operating_pb_port, physical_pb_port, expected_physical_pb_port.second[1]);
     }
   }
 

@@ -61,6 +61,9 @@ class VprDeviceAnnotation {
     float physical_pb_type_index_factor(t_pb_type* pb_type) const;
     int physical_pb_type_index_offset(t_pb_type* pb_type) const;
 
+    int physical_pb_pin_initial_offset(t_port* operating_pb_port,
+                                       t_port* physical_pb_port) const;
+
     int physical_pb_pin_rotate_offset(t_port* operating_pb_port,
                                       t_port* physical_pb_port) const;
 
@@ -96,6 +99,9 @@ class VprDeviceAnnotation {
                                     t_pb_graph_node* physical_pb_graph_node);
     void add_physical_pb_type_index_factor(t_pb_type* pb_type, const float& factor);
     void add_physical_pb_type_index_offset(t_pb_type* pb_type, const int& offset);
+    void add_physical_pb_pin_initial_offset(t_port* operating_pb_port,
+                                            t_port* physical_pb_port,
+                                            const int& offset);
     void add_physical_pb_pin_rotate_offset(t_port* operating_pb_port,
                                            t_port* physical_pb_port,
                                            const int& offset);
@@ -148,6 +154,7 @@ class VprDeviceAnnotation {
      * - the parent of physical pb_port MUST be a physical pb_type
      */
     std::map<t_port*, std::vector<t_port*>> physical_pb_ports_;
+    std::map<t_port*, std::map<t_port*, int>> physical_pb_pin_initial_offsets_;
     std::map<t_port*, std::map<t_port*, int>> physical_pb_pin_rotate_offsets_;
 
     /* Accumulated offsets for a physical pb_type port, just for internal usage */
