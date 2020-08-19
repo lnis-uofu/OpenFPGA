@@ -374,20 +374,8 @@
       <port name="out2" physical_mode_port="out2[0:31]"/>
       <port name="clk" physical_mode_port="clk"/>
     </pb_type>
-    <!-- Bind the 1024x32 dual port RAM to the physical implementation -->
-    <pb_type name="memory[mem_1024x32_dp].mem_1024x32_dp" physical_pb_type_name="memory[physical].frac_mem_32k" mode_bits="1000">
-      <port name="addr1" physical_mode_port="addr1[0:9]"/>
-      <port name="addr2" physical_mode_port="addr2[0:9]"/>
-      <port name="data1" physical_mode_port="data1[0:31]"/>
-      <port name="data2" physical_mode_port="data2[0:31]"/>
-      <port name="we1" physical_mode_port="we1"/>
-      <port name="we2" physical_mode_port="we2"/>
-      <port name="out1" physical_mode_port="out1[0:31]"/>
-      <port name="out2" physical_mode_port="out2[0:31]"/>
-      <port name="clk" physical_mode_port="clk"/>
-    </pb_type>
     <!-- Bind the 2048x16 dual port RAM to the physical implementation -->
-    <pb_type name="memory[mem_2048x16_dp].mem_2048x16_dp" physical_pb_type_name="memory[physical].frac_mem_32k" mode_bits="1001">
+    <pb_type name="memory[mem_2048x16_dp].mem_2048x16_dp" physical_pb_type_name="memory[physical].frac_mem_32k" mode_bits="1000">
       <port name="addr1" physical_mode_port="addr1[0:10]"/>
       <port name="addr2" physical_mode_port="addr2[0:10]"/>
       <port name="data1" physical_mode_port="data1[0:15]"/>
@@ -399,7 +387,7 @@
       <port name="clk" physical_mode_port="clk"/>
     </pb_type>
     <!-- Bind the 4096x8 dual port RAM to the physical implementation -->
-    <pb_type name="memory[mem_4096x8_dp].mem_4096x8_dp" physical_pb_type_name="memory[physical].frac_mem_32k" mode_bits="1010">
+    <pb_type name="memory[mem_4096x8_dp].mem_4096x8_dp" physical_pb_type_name="memory[physical].frac_mem_32k" mode_bits="1001">
       <port name="addr1" physical_mode_port="addr1[0:11]"/>
       <port name="addr2" physical_mode_port="addr2[0:11]"/>
       <port name="data1" physical_mode_port="data1[0:7]"/>
@@ -411,7 +399,7 @@
       <port name="clk" physical_mode_port="clk"/>
     </pb_type>
     <!-- Bind the 8192x4 dual port RAM to the physical implementation -->
-    <pb_type name="memory[mem_8192x4_dp].mem_8192x4_dp" physical_pb_type_name="memory[physical].frac_mem_32k" mode_bits="1011">
+    <pb_type name="memory[mem_8192x4_dp].mem_8192x4_dp" physical_pb_type_name="memory[physical].frac_mem_32k" mode_bits="1010">
       <port name="addr1" physical_mode_port="addr1[0:12]"/>
       <port name="addr2" physical_mode_port="addr2[0:12]"/>
       <port name="data1" physical_mode_port="data1[0:3]"/>
@@ -423,7 +411,7 @@
       <port name="clk" physical_mode_port="clk"/>
     </pb_type>
     <!-- Bind the 16384x2 dual port RAM to the physical implementation -->
-    <pb_type name="memory[mem_16384x2_dp].mem_16384x2_dp" physical_pb_type_name="memory[physical].frac_mem_32k" mode_bits="1100">
+    <pb_type name="memory[mem_16384x2_dp].mem_16384x2_dp" physical_pb_type_name="memory[physical].frac_mem_32k" mode_bits="1011">
       <port name="addr1" physical_mode_port="addr1[0:13]"/>
       <port name="addr2" physical_mode_port="addr2[0:13]"/>
       <port name="data1" physical_mode_port="data1[0:1]"/>
@@ -435,7 +423,7 @@
       <port name="clk" physical_mode_port="clk"/>
     </pb_type>
     <!-- Bind the 32768x1 dual port RAM to the physical implementation -->
-    <pb_type name="memory[mem_32768x1_dp].mem_32768x1_dp" physical_pb_type_name="memory[physical].frac_mem_32k" mode_bits="1101">
+    <pb_type name="memory[mem_32768x1_dp].mem_32768x1_dp" physical_pb_type_name="memory[physical].frac_mem_32k" mode_bits="1100">
       <port name="addr1" physical_mode_port="addr1[0:14]"/>
       <port name="addr2" physical_mode_port="addr2[0:14]"/>
       <port name="data1" physical_mode_port="data1[0:0]"/>
