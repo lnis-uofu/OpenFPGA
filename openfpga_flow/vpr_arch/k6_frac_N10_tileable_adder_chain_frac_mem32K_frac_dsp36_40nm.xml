@@ -223,7 +223,14 @@
       <input name="b" num_pins="36"/>
       <output name="out" num_pins="72"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="spread"/>
+      <!--  Highly recommand to customize pin location when direct connection is used!!! -->
+      <!--pinlocations pattern="spread"/-->
+      <pinlocations pattern="custom">
+        <loc side="left"></loc>
+        <loc side="top"></loc>
+        <loc side="right">mult_36.a[0:17] mult_36.b[0:17] mult_36.out[0:35]</loc>
+        <loc side="bottom">mult_36.a[18:35] mult_36.b[18:35] mult_36.out[36:71]</loc>
+      </pinlocations>
     </tile>
     <tile name="memory" height="6" area="548000">
       <equivalent_sites>
@@ -237,7 +244,14 @@
       <output name="out" num_pins="64"/>
       <clock name="clk" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="spread"/>
+      <!--  Highly recommand to customize pin location when direct connection is used!!! -->
+      <!--pinlocations pattern="spread"/-->
+      <pinlocations pattern="custom">
+        <loc side="left"></loc>
+        <loc side="top">memory.clk</loc>
+        <loc side="right">memory.addr1[0:14] memory.data[0:31] memory.we1 memory.out[0:31]</loc>
+        <loc side="bottom">memory.addr2[0:14] memory.data[32:63] memory.we2 memory.out[32:63]</loc>
+      </pinlocations>
     </tile>
   </tiles>
   <!-- ODIN II specific config ends -->
