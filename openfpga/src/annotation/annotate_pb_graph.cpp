@@ -337,6 +337,9 @@ bool try_match_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin,
     /* Reach here, it means all the requirements have been met */
     return true;
   }
+
+  /* If we reach here, we failed */
+  return false;
 }
 
 /********************************************************************
@@ -426,7 +429,7 @@ void annotate_physical_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin,
 
   /* If we reach here, it means that pin pairing fails, error out! */
   VTR_LOG_ERROR("Fail to match a physical pin for '%s' from pb_graph_node '%s'!\n",
-                operating_pb_graph_pin->port->name,
+                operating_pb_graph_pin->to_string().c_str(),
                 physical_pb_graph_node->hierarchical_type_name().c_str());
 }
 
