@@ -82,7 +82,8 @@ echo -e "Testing Depopulated crossbar in local routing";
 python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/depopulate_crossbar --debug --show_thread_logs
 
 echo -e "Testing through channels in tileable routing";
-python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/thru_channel --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/thru_channel/thru_narrow_tile --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/thru_channel/thru_wide_tile --debug --show_thread_logs
 
 # Verify MCNC big20 benchmark suite with ModelSim 
 # Please make sure you have ModelSim installed in the environment
