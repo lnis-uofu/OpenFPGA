@@ -124,6 +124,16 @@ bool BasicPort::operator== (const BasicPort& portA) const {
   return false;
 }
 
+bool BasicPort::operator< (const BasicPort& portA) const {
+  if  ( (0 == this->get_name().compare(portA.get_name())) 
+     && (this->get_lsb() < portA.get_lsb())
+     && (this->get_msb() < portA.get_msb()) ) {
+    return true;
+  }
+  return false;
+}
+
+
 /************************************************************************
  * Mutators 
  ***********************************************************************/

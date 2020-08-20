@@ -172,7 +172,21 @@ size_t get_grid_num_classes(const t_grid_tile& cur_grid,
  *  When height_offset == height - 1, it means that the grid is at the top side of this multi-width and multi-height block
  ***********************************************************************/
 bool is_chanx_exist(const DeviceGrid& grids,
-                    const vtr::Point<size_t>& chanx_coord) {
+                    const vtr::Point<size_t>& chanx_coord,
+                    const bool& through_channel) {
+
+  if ((1 > chanx_coord.x()) || (chanx_coord.x() > grids.width() - 2)) {
+    return false;
+  }
+
+  if (chanx_coord.y() > grids.height() - 2) {
+    return false;
+  }
+
+  if (true == through_channel) {
+    return true;
+  }
+
   return (grids[chanx_coord.x()][chanx_coord.y()].height_offset == grids[chanx_coord.x()][chanx_coord.y()].type->height - 1);
 }
 
@@ -192,9 +206,26 @@ bool is_chanx_exist(const DeviceGrid& grids,
  *  If the CHANY is in the middle of a multi-width and multi-height grid
  *  it should locate at a grid whose width_offset is lower than the its width defined in physical_tile
  *  When height_offset == height - 1, it means that the grid is at the top side of this multi-width and multi-height block
+ *
+ *  If through channel is allowed, the chany will always exists
+ *  unless it falls out of the grid array
  ***********************************************************************/
 bool is_chany_exist(const DeviceGrid& grids,
-                    const vtr::Point<size_t>& chany_coord) {
+                    const vtr::Point<size_t>& chany_coord,
+                    const bool& through_channel) {
+
+  if (chany_coord.x() > grids.width() - 2) {
+    return false;
+  }
+
+  if ((1 > chany_coord.y()) || (chany_coord.y() > grids.height() - 2)) {
+    return false;
+  }
+
+  if (true == through_channel) {
+    return true;
+  }
+
   return (grids[chany_coord.x()][chany_coord.y()].width_offset == grids[chany_coord.x()][chany_coord.y()].type->width - 1);
 }
 

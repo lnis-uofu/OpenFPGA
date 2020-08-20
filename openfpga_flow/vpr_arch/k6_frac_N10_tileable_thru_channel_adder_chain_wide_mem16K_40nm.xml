@@ -193,7 +193,7 @@
   </tiles>
   <!-- ODIN II specific config ends -->
   <!-- Physical descriptions begin -->
-  <layout tileable="true" through_channel="false">
+  <layout tileable="true" through_channel="true">
     <!--auto_layout aspect_ratio="1.0"-->
     <fixed_layout name="4x4" width="6" height="6">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->

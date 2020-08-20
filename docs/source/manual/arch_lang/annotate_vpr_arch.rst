@@ -103,8 +103,9 @@ The ``circuit_model_name`` should match the given name of a ``circuit_model`` de
 
 .. note:: OpenFPGA will infer the physical mode for a single-mode ``pb_type`` defined in VPR architecture
 
-.. option:: <pb_type name="<string>" physical_pb_type_name="<string>" circuit_model_name="<string>" 
-  mode_bits="<int>" physical_pb_type_index_factor="<float>" physical_pb_type_index_offset="<int>">
+.. option:: <pb_type name="<string>" physical_pb_type_name="<string>"
+             circuit_model_name="<string>" mode_bits="<int>"
+             physical_pb_type_index_factor="<float>" physical_pb_type_index_offset="<int>">
 
   Specify the physical implementation for a primitive ``pb_type`` in VPR architecture
 
@@ -128,7 +129,8 @@ The ``circuit_model_name`` should match the given name of a ``circuit_model`` de
 
   - ``circuit_model_name="<string>"`` For the interconnection type direct, the type of the linked circuit model should be wire. For multiplexers, the type of linked circuit model should be ``mux``. For complete, the type of the linked circuit model can be either ``mux`` or ``wire``, depending on the case.
 
-.. option:: <port name="<string>" physical_mode_port="<string>" physical_mode_pin_rotate_offset="<int>"/>
+.. option:: <port name="<string>" physical_mode_port="<string>"
+             physical_mode_pin_initial_offset="<int>" physical_mode_pin_rotate_offset="<int>"/>
 
    Link a port of an operating ``pb_type`` to a port of a physical ``pb_type``
 
@@ -136,7 +138,38 @@ The ``circuit_model_name`` should match the given name of a ``circuit_model`` de
 
   - ``physical_mode_pin="<string>" creates the link of ``port`` of ``pb_type`` between operating and physical modes. This syntax is mandatory for every primitive ``pb_type`` in an operating mode ``pb_type``. It should be a valid ``port`` name of leaf ``pb_type`` in physical mode and the port size should also match. 
 
-  - ``physical_mode_pin_rotate_offset="<int>"`` aims to align the pin indices for ``port`` of ``pb_type`` between operating and physical modes, especially when an operating mode contains multiple ``pb_type`` (``num_pb``>1) that are linked to the same physical ``pb_type``. When ``physical_mode_pin_rotate_offset`` is larger than zero, the pin index of ``pb_type`` (whose index is large than 1) will be shifted by the given offset. 
+    .. note:: Users can define multiple ports. For example: ``physical_mode_pin="a[0:1] b[2:2]"``. When multiple ports are used, the ``physical_mode_pin_initial_offset`` and ``physical_mode_pin_rotate_offset`` should also be adapt. For example: ``physical_mode_pin_rotate_offset="1 0"``)
+
+
+  - ``physical_mode_pin_initial_offset="<int>"`` aims to align the pin indices for ``port`` of ``pb_type`` between operating and physical modes, especially when part of port of operating mode is mapped to a port in physical ``pb_type``. When ``physical_mode_pin_initial_offset`` is larger than zero, the pin index of ``pb_type`` (whose index is large than 1) will be shifted by the given offset. 
+
+    .. note:: A quick example to understand the initial offset
+              For example, an initial offset of -32 is used to map 
+
+              - operating pb_type ``bram[0].dout[32]`` with a full path ``memory[dual_port].bram[0]``
+              - operating pb_type ``bram[0].dout[33]`` with a full path ``memory[dual_port].bram[0]``
+
+              to 
+
+              - physical pb_type ``bram[0].dout_a[0]`` with a full path ``memory[physical].bram[0]``
+              - physical pb_type ``bram[0].dout_a[1]`` with a full path ``memory[physical].bram[0]``
+
+    .. note:: If not defined, the default value of ``physical_mode_pin_initial_offset`` is set to ``0``.
+
+  - ``physical_mode_pin_rotate_offset="<int>"`` aims to align the pin indices for ``port`` of ``pb_type`` between operating and physical modes, especially when an operating mode contains multiple ``pb_type`` (``num_pb``>1) that are linked to the same physical ``pb_type``. When ``physical_mode_pin_rotate_offset`` is larger than zero, the pin index of ``pb_type`` (whose index is large than 1) will be shifted by the given offset.
+  
+    .. note:: A quick example to understand the rotate offset
+              For example, a rotating offset of 9 is used to map 
+
+              - operating pb_type ``mult_9x9[0].a[0:8]`` with a full path ``mult[frac].mult_9x9[0]``
+              - operating pb_type ``mult_9x9[1].a[0:8]`` with a full path ``mult[frac].mult_9x9[1]``
+
+               to 
+
+              - physical pb_type ``mult_36x36.a[0:8]`` with a full path ``mult[physical].mult_36x36[0]``
+              - physical pb_type ``mult_36x36.a[9:17]`` with a full path ``mult[physical].mult_36x36[0]``
+
+    .. note:: If not defined, the default value of ``physical_mode_pin_rotate_offset`` is set to ``0``.
 
 .. note::
   It is highly recommended that only one physical mode is defined for a multi-mode configurable block. Try not to use nested physical mode definition. This will ease the debugging and lead to clean XML description. 

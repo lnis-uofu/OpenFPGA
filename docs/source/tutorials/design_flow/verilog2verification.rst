@@ -1,7 +1,7 @@
-.. _from_blif_to_verification:
+.. _from_verilog_to_verification:
 
-From BLIF to Verification
--------------------------
+From Verilog to Verification
+----------------------------
 
 This tutorial will show an example how to 
   - generate Verilog netlists for a FPGA fabric
