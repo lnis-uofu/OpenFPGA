@@ -154,7 +154,7 @@
        <port type="output" prefix="Q" size="1"/>
        <port type="clock" prefix="clk" size="1" is_global="true" default_val="0" />
     </circuit_model>
-    <circuit_model type="lut" name="frac_lut6" prefix="frac_lut6" dump_structural_verilog="true">
+    <circuit_model type="lut" name="frac_lut6" prefix="frac_lut6" is_default="true" dump_structural_verilog="true">
       <design_technology type="cmos" fracturable_lut="true"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
