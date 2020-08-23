@@ -461,6 +461,10 @@ class CircuitLibrary {
   public: /* Public Mutators: builders */
     void build_model_links();
     void build_timing_graphs();
+    /* Automatically identify the default models for each type,
+     * suggest to do this after circuit library is built
+     */
+    void auto_detect_default_models();
   public: /* Internal mutators: build timing graphs */
     void add_edge(const CircuitModelId& model_id,
                   const CircuitPortId& from_port, const size_t& from_pin, 

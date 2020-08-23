@@ -2,6 +2,7 @@
 #include <algorithm>
 
 #include "vtr_assert.h"
+#include "vtr_log.h"
 
 #include "openfpga_port_parser.h"
 #include "circuit_library.h"
@@ -2106,6 +2107,23 @@ void CircuitLibrary::build_timing_graphs() {
     set_timing_graph_delays(model_id);
   }
   return;
+}
+
+/* Automatically identify the default models for each type*/
+void CircuitLibrary::auto_detect_default_models() {
+  /* Go through the model fast look-up */
+  for (const auto& curr_type_models : model_lookup_) {
+    if ( (1 == curr_type_models.size())
+      && (false == model_is_default(curr_type_models[0]))) {
+      /* This is the only model in this type,
+       * it is safe to set it to be default
+       * Give a warning for users
+       */
+      set_model_is_default(curr_type_models[0], true);
+      VTR_LOG_WARN("Automatically set circuit model '%s' to be default in its type.\n",
+                   model_name(curr_type_models[0]).c_str());
+    }
+  }
 }
 
 /************************************************************************
