@@ -52,6 +52,9 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
     auto xml_circuit_models = get_single_child(xml_openfpga_arch, "circuit_library", loc_data);
     openfpga_arch.circuit_lib = read_xml_circuit_library(xml_circuit_models, loc_data);
 
+    /* Automatically identify the default models for circuit library */
+    openfpga_arch.circuit_lib.auto_detect_default_models();
+
     /* Build the internal links for the circuit library */
     openfpga_arch.circuit_lib.build_model_links();
   

@@ -189,7 +189,7 @@
       <port type="input" prefix="outpad" size="1"/>
       <port type="output" prefix="inpad" size="1"/>
     </circuit_model>
-    <circuit_model type="hard_logic" name="adder" prefix="adder" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/adder.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/adder.v">
+    <circuit_model type="hard_logic" name="adder" prefix="adder" is_default="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/adder.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/adder.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
