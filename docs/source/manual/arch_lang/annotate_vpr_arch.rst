@@ -111,6 +111,8 @@ The ``circuit_model_name`` should match the given name of a ``circuit_model`` de
 
   .. note:: This should be applied to primitive ``pb_type``, i.e., ``pb_type`` have no children.
 
+  .. note:: This definition should be placed directly under the XML node ``<pb_type_annotation>`` without any intermediate XML nodes!
+
   - ``name="<string>"`` specifiy the full name of a ``pb_type`` in the hierarchy of VPR architecture.
 
   - ``physical_pb_type_name=<string>`` creates the link on ``pb_type`` between operating and physical modes. This syntax is mandatory for every primitive ``pb_type`` in an operating mode ``pb_type``. It should be a valid name of primitive ``pb_type`` in physical mode.   
@@ -125,9 +127,11 @@ The ``circuit_model_name`` should match the given name of a ``circuit_model`` de
 
 .. option:: <interconnect name="<string>" circuit_model_name="<string>">
 
-  - ``name="<string>"`` specifiy the name of a ``interconnect`` in VPR architecture. Different from ``pb_type``, hierarchical name is not required here.
+  - ``name="<string>"`` specify the name of a ``interconnect`` in VPR architecture. Different from ``pb_type``, hierarchical name is not required here.
 
   - ``circuit_model_name="<string>"`` For the interconnection type direct, the type of the linked circuit model should be wire. For multiplexers, the type of linked circuit model should be ``mux``. For complete, the type of the linked circuit model can be either ``mux`` or ``wire``, depending on the case.
+
+  .. note:: A ``<pb_type name="<string>">`` parent XML node is required for the interconnect-to-circuit bindings whose interconnects are defined under the ``pb_type`` in VPR architecture description. 
 
 .. option:: <port name="<string>" physical_mode_port="<string>"
              physical_mode_pin_initial_offset="<int>" physical_mode_pin_rotate_offset="<int>"/>

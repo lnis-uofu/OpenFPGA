@@ -9,7 +9,7 @@ OpenFPGA aims to be an open-source framework that enables rapid prototyping of c
    :scale: 50%
    :alt: OpenFPGA: a fast prototyping framework for customizable FPGAs
 
-   Comparison on engineering time and effort to prototype an FPGA using OpenFPGA and conventional approaches
+   Comparison on engineering time and effort to prototype an FPGA using OpenFPGA and conventional approaches [All the layout figures are permitted to publish under proper licenses]
 
 Using OpenFPGA, the development cycle in both hardware and software can be significantly accelerated. OpenFPGA can automatically generate Verilog netlists describing a full FPGA fabric based on an XML-based description file. Thanks to modern semi-custom design tools, production-ready layout generation can be achieved within 24 hours. To help sign-off, OpenFPGA can auto-generate Verilog testbenches to validate the correctness of FPGA fabric using modern verification tools.
 OpenFPGA also provides native bitstream generation support based the same XML-based description file used in Verilog generation. This avoid the recurring engineering in developing CAD tools for different FPGAs. Once the FPGA architecture is finalized, the CAD tool is ready to use.
