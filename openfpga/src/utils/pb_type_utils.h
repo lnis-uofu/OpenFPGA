@@ -57,6 +57,8 @@ std::vector<t_port*> find_pb_type_ports_match_circuit_model_port_type(t_pb_type*
                                                                       const e_circuit_model_port_type& port_type,
                                                                       const VprDeviceAnnotation& vpr_device_annotation);
 
+std::string generate_pb_type_hierarchy_path(t_pb_type* cur_pb_type);
+
 } /* end namespace openfpga */
 
 #endif
