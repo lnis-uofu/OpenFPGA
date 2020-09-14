@@ -15,7 +15,7 @@ cache:
 
 # Supported Operating systems
 dist: bionic
-compiler: g++-8
+#compiler: g++-8
 addons:
   apt:
     sources:
@@ -33,8 +33,6 @@ addons:
     - doxygen
     - flex
     - fontconfig
-    - g++-8
-    - gcc-8
     - gdb
     - git
     - gperf
@@ -56,6 +54,17 @@ addons:
     - zip
     - qt5-default
     - clang-format-7
+# Add all the supported compilers
+    - g++-6
+    - gcc-6
+    - g++-7
+    - gcc-7
+    - g++-8
+    - gcc-8
+    - g++-9
+    - gcc-9
+    - clang-6.0
+    - clang-8
 #- os: osx
 #  osx_image: xcode10.2 # we target latest MacOS Mojave
 #  sudo: true
@@ -75,6 +84,10 @@ addons:
 #      - icarus-verilog
 #      - libxml++
 #      - qt5
+
+# Use gcc-8 as default compiler
+env:
+  - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
 
 before_script:
   - source .travis/common.sh
@@ -115,6 +128,48 @@ jobs:
       script:
         - source .travis/build.sh
         - source .travis/fpga_spice_reg_test.sh
+
+    - stage: Test
+      name: "Build Compatibility: GCC-6 (Ubuntu Bionic 18.04)"
+      env:
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+      script:
+        - source .travis/build.sh
+
+    - stage: Test
+      name: "Build Compatibility: GCC-7 (Ubuntu Bionic 18.04)"
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+      script:
+        - source .travis/build.sh
+
+    - stage: Test
+      name: "Build Compatibility: GCC-8 (Ubuntu Bionic 18.04)"
+      env:
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+      script:
+        - source .travis/build.sh
+
+    - stage: Test
+      name: "Build Compatibility: GCC-9 (Ubuntu Bionic 18.04)"
+      env:
+        - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
+      script:
+        - source .travis/build.sh
+
+    - stage: Test
+      name: "Build Compatibility: Clang-6 (Ubuntu Bionic 18.04)"
+      env:
+        - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
+      script:
+        - source .travis/build.sh
+
+    - stage: Test
+      name: "Build Compatibility: Clang-8 (Ubuntu Bionic 18.04)"
+      env:
+        - MATRIX_EVAL="CC=clang-8 && CXX=clang++-8"
+      script:
+        - source .travis/build.sh
 
 #after_failure:
 #  - .travis/after_failure.sh
