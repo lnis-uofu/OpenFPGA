@@ -58,6 +58,9 @@ python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/mux_design/local_enc
 echo -e "Testing Verilog generation with routing multiplexers without buffers";
 python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/mux_design/debuf_mux --debug --show_thread_logs
 
+echo -e "Testing Verilog generation with routing multiplexers with input buffers only";
+python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/mux_design/inbuf_only_mux --debug --show_thread_logs
+
 echo -e "Testing Verilog generation with behavioral description";
 python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/behavioral_verilog --debug --show_thread_logs
 
