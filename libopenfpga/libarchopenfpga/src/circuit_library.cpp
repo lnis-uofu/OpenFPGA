@@ -1963,7 +1963,7 @@ void CircuitLibrary::link_buffer_model(const CircuitModelId& model_id) {
   /* Get the circuit model id by name, skip those with empty names*/
   for (size_t buffer_id = 0; buffer_id < buffer_model_names_[model_id].size(); ++buffer_id) {
     if (true == buffer_model_names_[model_id][buffer_id].empty()) {
-      return;
+      continue;
     }
     buffer_model_ids_[model_id][buffer_id] = model(buffer_model_names_[model_id][buffer_id]);
   }
