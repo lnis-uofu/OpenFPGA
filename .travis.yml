@@ -55,6 +55,8 @@ addons:
     - qt5-default
     - clang-format-7
 # Add all the supported compilers
+    - g++-5
+    - gcc-5
     - g++-6
     - gcc-6
     - g++-7
@@ -128,6 +130,13 @@ jobs:
       script:
         - source .travis/build.sh
         - source .travis/fpga_spice_reg_test.sh
+
+    - stage: Test
+      name: "Build Compatibility: GCC-5 (Ubuntu Bionic 18.04)"
+      env:
+        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+      script:
+        - source .travis/build.sh
 
     - stage: Test
       name: "Build Compatibility: GCC-6 (Ubuntu Bionic 18.04)"
