@@ -4,6 +4,7 @@
 /********************************************************************
  * Include header files required by the data structure definition
  *******************************************************************/
+#include <stddef.h>
 #include <vector>
 
 /* Begin namespace openfpga */

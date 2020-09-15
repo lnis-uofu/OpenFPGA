@@ -140,7 +140,7 @@ float string_to_unit(const std::string& scale) {
   /* Invalid unit report error */
   VTR_LOGF_ERROR(__FILE__, __LINE__,
                  "Invalid unit %s!\nAcceptable units are [a|f|p|n|u|k|M|B|T] or empty\n",
-                 scale); 
+                 scale.c_str()); 
   exit(1);
 }
 
@@ -153,13 +153,13 @@ float string_to_time_unit(const std::string& scale) {
     && (2 != scale.length()) ) {
     VTR_LOGF_ERROR(__FILE__, __LINE__,
                    "Time unit (='%s') must contain only one or two characters!\n",
-                   scale);
+                   scale.c_str());
   } 
   /* The last character must be 's' */
   if ('s' != scale.back()) {
     VTR_LOGF_ERROR(__FILE__, __LINE__,
                    "Time unit (='%s') must end with 's'!\n",
-                   scale);
+                   scale.c_str());
   }
 
   float unit = 1.;

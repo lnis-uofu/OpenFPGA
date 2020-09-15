@@ -39,8 +39,9 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
   sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target / -allowUntrusted
 else
   # For linux, we use g++-8 and gcc-8 as default compilers
-  export CC=gcc-8
-  export CXX=g++-8
+  eval "${MATRIX_EVAL}"
+  export "CC=$CC"
+  export "CXX=$CXX"
 fi
 
 
