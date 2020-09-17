@@ -1,0 +1,11 @@
+.model and2_or2
+.inputs a b
+.outputs c d
+
+.names a b c
+11 1
+
+.names a b d
+00 1
+
+.end
