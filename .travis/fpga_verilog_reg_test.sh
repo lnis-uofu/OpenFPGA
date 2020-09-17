@@ -93,6 +93,9 @@ python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/depopulate_crossbar 
 echo -e "Testing Fully connected output crossbar in local routing";
 python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/fully_connected_output_crossbar --debug --show_thread_logs
 
+echo -e "Testing no local routing architecture";
+python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/no_local_routing --debug --show_thread_logs
+
 echo -e "Testing through channels in tileable routing";
 python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/thru_channel/thru_narrow_tile --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/thru_channel/thru_wide_tile --debug --show_thread_logs
