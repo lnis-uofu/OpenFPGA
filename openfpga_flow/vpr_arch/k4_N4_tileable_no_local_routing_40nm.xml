@@ -265,10 +265,10 @@
         <!-- 6-LUT mode definition end -->
       </pb_type>
       <interconnect>
-        <direct name="crossbar0" input="clb.I0" output="fle[0:0].in">
-        <direct name="crossbar1" input="clb.I1" output="fle[1:1].in">
-        <direct name="crossbar2" input="clb.I2" output="fle[2:2].in">
-        <direct name="crossbar3" input="clb.I3" output="fle[3:3].in">
+        <direct name="crossbar0" input="clb.I0" output="fle[0:0].in"/>
+        <direct name="crossbar1" input="clb.I1" output="fle[1:1].in"/>
+        <direct name="crossbar2" input="clb.I2" output="fle[2:2].in"/>
+        <direct name="crossbar3" input="clb.I3" output="fle[3:3].in"/>
         <complete name="clks" input="clb.clk" output="fle[3:0].clk">
         </complete>
         <!-- This way of specifying direct connection to clb outputs is important because this architecture uses automatic spreading of opins.  
