@@ -243,7 +243,6 @@ int print_spice_transmission_gate_subckt(std::fstream& fp,
    */
   float regular_pmos_bin_width = tech_lib.transistor_model_max_width(tech_model, TECH_LIB_TRANSISTOR_PMOS);
   float total_pmos_width = circuit_lib.pass_gate_logic_pmos_size(circuit_model)
-                           * tech_lib.model_pn_ratio(tech_model)
                            * tech_lib.transistor_model_min_width(tech_model, TECH_LIB_TRANSISTOR_PMOS);
   int num_pmos_bins = std::ceil(total_pmos_width / regular_pmos_bin_width);
   float last_pmos_bin_width = std::fmod(total_pmos_width, regular_pmos_bin_width);
