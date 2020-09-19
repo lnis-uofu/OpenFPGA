@@ -1,6 +1,6 @@
 /************************************************
  * This file includes functions on 
- * outputting Verilog netlists for essential gates
+ * outputting SPICE netlists for essential gates
  * which are inverters, buffers, transmission-gates
  * logic gates etc. 
  ***********************************************/
@@ -22,6 +22,7 @@
 
 #include "spice_constants.h"
 #include "spice_writer_utils.h"
+#include "spice_passgate.h"
 #include "spice_essential_gates.h"
 
 /* begin namespace openfpga */
@@ -1046,7 +1047,7 @@ int print_spice_essential_gates(NetlistManager& netlist_manager,
       VTR_ASSERT(TECH_LIB_MODEL_TRANSISTOR == tech_lib.model_type(tech_model));
     }
 
-    /* Now branch on netlist writing */
+    /* Now branch on netlist writing: for inverter/buffers */
     if (CIRCUIT_MODEL_INVBUF == circuit_lib.model_type(circuit_model)) {
       if (CIRCUIT_MODEL_BUF_INV == circuit_lib.buffer_type(circuit_model)) {
         VTR_ASSERT(true == module_manager.valid_module_id(module_id));
@@ -1061,6 +1062,21 @@ int print_spice_essential_gates(NetlistManager& netlist_manager,
                                            circuit_lib, circuit_model,
                                            tech_lib, tech_model);
       }
+
+      if (CMD_EXEC_FATAL_ERROR == status) {
+        break;
+      }
+
+      /* Finish, go to the next */
+      continue;
+    }
+
+    /* Now branch on netlist writing: for inverter/buffers */
+    if (CIRCUIT_MODEL_PASSGATE == circuit_lib.model_type(circuit_model)) {
+      status = print_spice_passgate_subckt(fp,
+                                           module_manager, module_id,
+                                           circuit_lib, circuit_model,
+                                           tech_lib, tech_model);
 
       if (CMD_EXEC_FATAL_ERROR == status) {
         break;
