@@ -114,4 +114,77 @@ int print_spice_transistor_wrapper(NetlistManager& netlist_manager,
   return CMD_EXEC_SUCCESS;
 }
 
+/********************************************************************
+ * Generate the SPICE modeling for the PMOS part of a logic gate
+ *
+ * This function is created to be shared by pass-transistor and
+ * transmission-gate SPICE netlist writer
+ *
+ * Note: 
+ * - This function does NOT create a file
+ *   but requires a file stream created
+ * - This function only output SPICE modeling for 
+ *   a PMOS. Any preprocessing or subckt definition should not be included!
+ *******************************************************************/
+int print_spice_generic_pmos_modeling(std::fstream& fp,
+                                      const std::string& trans_name_postfix,
+                                      const std::string& input_port_name,
+                                      const std::string& gate_port_name,
+                                      const std::string& output_port_name,
+                                      const TechnologyLibrary& tech_lib,
+                                      const TechnologyModelId& tech_model,
+                                      const float& trans_width) {
+
+  if (false == valid_file_stream(fp)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Write transistor pairs using the technology model */
+  fp << "Xpmos_" << trans_name_postfix << " ";
+  fp << input_port_name << " "; 
+  fp << gate_port_name << " "; 
+  fp << output_port_name << " "; 
+  fp << "LVDD "; 
+  fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+  fp << " W=" << std::setprecision(10) << trans_width;
+  fp << "\n";
+
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
+ * Generate the SPICE modeling for the NMOS part of a logic gate
+ *
+ * Note: 
+ * - This function does NOT create a file
+ *   but requires a file stream created
+ * - This function only output SPICE modeling for 
+ *   a NMOS. Any preprocessing or subckt definition should not be included!
+ *******************************************************************/
+int print_spice_generic_nmos_modeling(std::fstream& fp,
+                                      const std::string& trans_name_postfix,
+                                      const std::string& input_port_name,
+                                      const std::string& gate_port_name,
+                                      const std::string& output_port_name,
+                                      const TechnologyLibrary& tech_lib,
+                                      const TechnologyModelId& tech_model,
+                                      const float& trans_width) {
+
+  if (false == valid_file_stream(fp)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  fp << "Xnmos_" << trans_name_postfix << " ";
+  fp << input_port_name << " "; 
+  fp << gate_port_name << " "; 
+  fp << output_port_name << " "; 
+  fp << "LGND "; 
+  fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
+  fp << " W=" << std::setprecision(10) << trans_width;
+  fp << "\n";
+
+  return CMD_EXEC_SUCCESS;
+}
+
+
 } /* end namespace openfpga */

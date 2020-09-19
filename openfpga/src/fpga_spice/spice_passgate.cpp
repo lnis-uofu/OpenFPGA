@@ -20,87 +20,11 @@
 
 #include "spice_constants.h"
 #include "spice_writer_utils.h"
+#include "spice_transistor_wrapper.h"
 #include "spice_passgate.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
-
-/********************************************************************
- * Generate the SPICE modeling for the PMOS part of a pass-gate logic
- *
- * This function is created to be shared by pass-transistor and
- * transmission-gate SPICE netlist writer
- *
- * Note: 
- * - This function does NOT create a file
- *   but requires a file stream created
- * - This function only output SPICE modeling for 
- *   a pass-gate. Any preprocessing or subckt definition should not be included!
- *******************************************************************/
-static 
-int print_spice_passgate_pmos_modeling(std::fstream& fp,
-                                       const std::string& trans_name_postfix,
-                                       const std::string& input_port_name,
-                                       const std::string& gate_port_name,
-                                       const std::string& output_port_name,
-                                       const TechnologyLibrary& tech_lib,
-                                       const TechnologyModelId& tech_model,
-                                       const float& trans_width) {
-
-  if (false == valid_file_stream(fp)) {
-    return CMD_EXEC_FATAL_ERROR;
-  }
-
-  /* Write transistor pairs using the technology model */
-  fp << "Xpmos_" << trans_name_postfix << " ";
-  fp << input_port_name << " "; 
-  fp << gate_port_name << " "; 
-  fp << output_port_name << " "; 
-  fp << "LVDD "; 
-  fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
-  fp << " W=" << std::setprecision(10) << trans_width;
-  fp << "\n";
-
-  return CMD_EXEC_SUCCESS;
-}
-
-/********************************************************************
- * Generate the SPICE modeling for the NMOS part of a pass-gate logic
- *
- * This function is created to be shared by pass-transistor and
- * transmission-gate SPICE netlist writer
- *
- * Note: 
- * - This function does NOT create a file
- *   but requires a file stream created
- * - This function only output SPICE modeling for 
- *   a pass-gate. Any preprocessing or subckt definition should not be included!
- *******************************************************************/
-static 
-int print_spice_passgate_nmos_modeling(std::fstream& fp,
-                                       const std::string& trans_name_postfix,
-                                       const std::string& input_port_name,
-                                       const std::string& gate_port_name,
-                                       const std::string& output_port_name,
-                                       const TechnologyLibrary& tech_lib,
-                                       const TechnologyModelId& tech_model,
-                                       const float& trans_width) {
-
-  if (false == valid_file_stream(fp)) {
-    return CMD_EXEC_FATAL_ERROR;
-  }
-
-  fp << "Xnmos_" << trans_name_postfix << " ";
-  fp << input_port_name << " "; 
-  fp << gate_port_name << " "; 
-  fp << output_port_name << " "; 
-  fp << "LGND "; 
-  fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
-  fp << " W=" << std::setprecision(10) << trans_width;
-  fp << "\n";
-
-  return CMD_EXEC_SUCCESS;
-}
 
 /********************************************************************
  * Generate the SPICE subckt for a pass-transistor
@@ -167,14 +91,14 @@ int print_spice_pass_transistor_subckt(std::fstream& fp,
       curr_bin_width = last_nmos_bin_width;
     }
 
-    status = print_spice_passgate_nmos_modeling(fp,
-                                                std::to_string(ibin),
-                                                circuit_lib.port_prefix(input_ports[0]), 
-                                                circuit_lib.port_prefix(input_ports[1]), 
-                                                circuit_lib.port_prefix(output_ports[0]), 
-                                                tech_lib,
-                                                tech_model,
-                                                curr_bin_width);
+    status = print_spice_generic_nmos_modeling(fp,
+                                               std::to_string(ibin),
+                                               circuit_lib.port_prefix(input_ports[0]), 
+                                               circuit_lib.port_prefix(input_ports[1]), 
+                                               circuit_lib.port_prefix(output_ports[0]), 
+                                               tech_lib,
+                                               tech_model,
+                                               curr_bin_width);
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
     }
@@ -254,14 +178,14 @@ int print_spice_transmission_gate_subckt(std::fstream& fp,
       curr_bin_width = last_pmos_bin_width;
     }
 
-    status = print_spice_passgate_pmos_modeling(fp,
-                                                std::to_string(ibin),
-                                                circuit_lib.port_prefix(input_ports[0]), 
-                                                circuit_lib.port_prefix(input_ports[2]), 
-                                                circuit_lib.port_prefix(output_ports[0]), 
-                                                tech_lib,
-                                                tech_model,
-                                                curr_bin_width);
+    status = print_spice_generic_pmos_modeling(fp,
+                                               std::to_string(ibin),
+                                               circuit_lib.port_prefix(input_ports[0]), 
+                                               circuit_lib.port_prefix(input_ports[2]), 
+                                               circuit_lib.port_prefix(output_ports[0]), 
+                                               tech_lib,
+                                               tech_model,
+                                               curr_bin_width);
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
     }
@@ -285,14 +209,14 @@ int print_spice_transmission_gate_subckt(std::fstream& fp,
       curr_bin_width = last_nmos_bin_width;
     }
 
-    status = print_spice_passgate_nmos_modeling(fp,
-                                                std::to_string(ibin),
-                                                circuit_lib.port_prefix(input_ports[0]), 
-                                                circuit_lib.port_prefix(input_ports[1]), 
-                                                circuit_lib.port_prefix(output_ports[0]), 
-                                                tech_lib,
-                                                tech_model,
-                                                curr_bin_width);
+    status = print_spice_generic_nmos_modeling(fp,
+                                               std::to_string(ibin),
+                                               circuit_lib.port_prefix(input_ports[0]), 
+                                               circuit_lib.port_prefix(input_ports[1]), 
+                                               circuit_lib.port_prefix(output_ports[0]), 
+                                               tech_lib,
+                                               tech_model,
+                                               curr_bin_width);
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
     }
