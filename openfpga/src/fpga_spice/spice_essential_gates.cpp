@@ -52,6 +52,15 @@ int print_spice_essential_gates(NetlistManager& netlist_manager,
       continue;
     }
 
+    /* Output only the model type is supported in auto-generation */
+    if ( (CIRCUIT_MODEL_INVBUF != circuit_lib.model_type(circuit_model))
+      && (CIRCUIT_MODEL_PASSGATE != circuit_lib.model_type(circuit_model))
+      && (CIRCUIT_MODEL_CHAN_WIRE != circuit_lib.model_type(circuit_model))
+      && (CIRCUIT_MODEL_WIRE != circuit_lib.model_type(circuit_model))
+      && (CIRCUIT_MODEL_GATE != circuit_lib.model_type(circuit_model))) {
+      continue; 
+    }
+
     /* Spot module id */
     const ModuleId& module_id = module_manager.find_module(circuit_lib.model_name(circuit_model));
 
@@ -75,7 +84,7 @@ int print_spice_essential_gates(NetlistManager& netlist_manager,
     }
 
     /* Create file stream */
-    std::string spice_fname = submodule_dir + circuit_lib.model_name(circuit_model);
+    std::string spice_fname = submodule_dir + circuit_lib.model_name(circuit_model) + std::string(SPICE_NETLIST_FILE_POSTFIX);
   
     std::fstream fp;
   
@@ -146,6 +155,21 @@ int print_spice_essential_gates(NetlistManager& netlist_manager,
         netlist_filled = true;
       }
 
+      if (CMD_EXEC_FATAL_ERROR == status) {
+        break;
+      }
+    }
+
+    /* Now branch on netlist writing: for routing channel wires */
+    if (CIRCUIT_MODEL_CHAN_WIRE == circuit_lib.model_type(circuit_model)) {
+      netlist_filled = true;
+      if (CMD_EXEC_FATAL_ERROR == status) {
+        break;
+      }
+    }
+    /* Now branch on netlist writing: for regular wires */
+    if (CIRCUIT_MODEL_WIRE == circuit_lib.model_type(circuit_model)) {
+      netlist_filled = true;
       if (CMD_EXEC_FATAL_ERROR == status) {
         break;
       }
