@@ -10,6 +10,7 @@
 /* Headers from openfpgashell library */
 #include "command_exit_codes.h"
 
+#include "spice_transistor_wrapper.h"
 #include "spice_essential_gates.h"
 
 #include "spice_constants.h"
@@ -21,7 +22,7 @@ namespace openfpga {
 /*********************************************************************
  * Top-level function to generate primitive modules:
  * 1. Transistor wrapper
- * 2. TODO: Logic gates: AND/OR, inverter, buffer and transmission-gate/pass-transistor
+ * 2. Logic gates: AND/OR, inverter, buffer and transmission-gate/pass-transistor
  * 3. TODO: Routing multiplexers
  * 4. TODO: Local encoders for routing multiplexers
  * 5. TODO: Wires
