@@ -63,15 +63,15 @@ int print_spice_powergated_inverter_pmos_modeling(std::fstream& fp,
     if (true == first_enb_pin) {
       fp << output_port_name << "_pmos_pg_" << power_gate_pin << " "; 
       fp << generate_spice_port(enb_pin) << " "; 
-      fp << "LVDD "; 
-      fp << "LVDD "; 
+      fp << SPICE_SUBCKT_VDD_PORT_NAME << " "; 
+      fp << SPICE_SUBCKT_VDD_PORT_NAME << " "; 
       first_enb_pin = false;
     } else {
       VTR_ASSERT_SAFE(false == first_enb_pin);
       fp << output_port_name << "_pmos_pg_" << last_enb_pin << " "; 
       fp << generate_spice_port(enb_pin) << " "; 
       fp << output_port_name << "_pmos_pg_" << power_gate_pin << " "; 
-      fp << "LVDD "; 
+      fp << SPICE_SUBCKT_VDD_PORT_NAME << " "; 
     }
     fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
     fp << " W=" << std::setprecision(10) << trans_width;
@@ -86,7 +86,7 @@ int print_spice_powergated_inverter_pmos_modeling(std::fstream& fp,
   fp << output_port_name << " "; 
   fp << input_port_name << " "; 
   fp << output_port_name << "_pmos_pg_" << circuit_lib.pins(enb_port).back() << " "; 
-  fp << "LVDD "; 
+  fp << SPICE_SUBCKT_VDD_PORT_NAME << " "; 
   fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
   fp << " W=" << std::setprecision(10) << trans_width;
   fp << "\n";
@@ -129,15 +129,15 @@ int print_spice_powergated_inverter_nmos_modeling(std::fstream& fp,
     if (true == first_en_pin) {
       fp << output_port_name << "_nmos_pg_" << power_gate_pin << " "; 
       fp << generate_spice_port(en_pin) << " "; 
-      fp << "LGND "; 
-      fp << "LGND "; 
+      fp << SPICE_SUBCKT_GND_PORT_NAME << " "; 
+      fp << SPICE_SUBCKT_GND_PORT_NAME << " "; 
       first_en_pin = false;
     } else {
       VTR_ASSERT_SAFE(false == first_en_pin);
       fp << output_port_name << "_nmos_pg_" << last_en_pin << " "; 
       fp << circuit_lib.port_prefix(en_port) << " "; 
       fp << output_port_name << "_nmos_pg_" << power_gate_pin << " "; 
-      fp << "LGND "; 
+      fp << SPICE_SUBCKT_GND_PORT_NAME << " "; 
     }
     fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
     fp << " W=" << std::setprecision(10) << trans_width;
@@ -151,7 +151,7 @@ int print_spice_powergated_inverter_nmos_modeling(std::fstream& fp,
   fp << output_port_name << " "; 
   fp << input_port_name << " "; 
   fp << output_port_name << " _nmos_pg_" << circuit_lib.pins(en_port).back() << " "; 
-  fp << "LGND "; 
+  fp << SPICE_SUBCKT_GND_PORT_NAME << " "; 
   fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
   fp << " W=" << std::setprecision(10) << trans_width;
   fp << "\n";
@@ -338,8 +338,8 @@ int print_spice_regular_inverter_pmos_modeling(std::fstream& fp,
   fp << "Xpmos_" << trans_name_postfix << " ";
   fp << output_port_name << " "; 
   fp << input_port_name << " "; 
-  fp << "LVDD "; 
-  fp << "LVDD "; 
+  fp << SPICE_SUBCKT_VDD_PORT_NAME << " "; 
+  fp << SPICE_SUBCKT_VDD_PORT_NAME << " "; 
   fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
   fp << " W=" << std::setprecision(10) << trans_width;
   fp << "\n";
@@ -374,8 +374,8 @@ int print_spice_regular_inverter_nmos_modeling(std::fstream& fp,
   fp << "Xnmos_" << trans_name_postfix << " ";
   fp << output_port_name << " "; 
   fp << input_port_name << " "; 
-  fp << "LGND "; 
-  fp << "LGND "; 
+  fp << SPICE_SUBCKT_GND_PORT_NAME << " "; 
+  fp << SPICE_SUBCKT_GND_PORT_NAME << " "; 
   fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
   fp << " W=" << std::setprecision(10) << trans_width;
   fp << "\n";

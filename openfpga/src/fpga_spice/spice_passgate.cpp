@@ -248,7 +248,7 @@ int print_spice_passgate_subckt(std::fstream& fp,
                                                 module_manager, module_id,
                                                 circuit_lib, circuit_model,
                                                 tech_lib, tech_model);
-  } else if (CIRCUIT_MODEL_PASS_GATE_TRANSMISSION == circuit_lib.is_power_gated(circuit_model)) {
+  } else if (CIRCUIT_MODEL_PASS_GATE_TRANSMISSION == circuit_lib.pass_gate_logic_type(circuit_model)) {
     status = print_spice_transmission_gate_subckt(fp,
                                                   module_manager, module_id,
                                                   circuit_lib, circuit_model,

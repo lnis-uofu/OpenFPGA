@@ -10,4 +10,7 @@ constexpr char* TRANSISTOR_WRAPPER_POSTFIX = "_wrapper";
 constexpr char* TRANSISTORS_SPICE_FILE_NAME = "transistor.sp";
 constexpr char* ESSENTIALS_SPICE_FILE_NAME = "inv_buf_passgate.sp";
 
+constexpr char* SPICE_SUBCKT_VDD_PORT_NAME = "VDD";
+constexpr char* SPICE_SUBCKT_GND_PORT_NAME = "VSS";
+
 #endif

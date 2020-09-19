@@ -96,7 +96,7 @@ int print_spice_transistor_wrapper(NetlistManager& netlist_manager,
       continue;
     }
     /* Write a wrapper for the transistor model */
-    if (CMD_EXEC_SUCCESS == print_spice_transistor_model_wrapper(fp, tech_lib, model)) {
+    if (CMD_EXEC_SUCCESS != print_spice_transistor_model_wrapper(fp, tech_lib, model)) {
       return CMD_EXEC_FATAL_ERROR;
     }
   } 
@@ -144,7 +144,7 @@ int print_spice_generic_pmos_modeling(std::fstream& fp,
   fp << input_port_name << " "; 
   fp << gate_port_name << " "; 
   fp << output_port_name << " "; 
-  fp << "LVDD "; 
+  fp << SPICE_SUBCKT_VDD_PORT_NAME << " "; 
   fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_PMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
   fp << " W=" << std::setprecision(10) << trans_width;
   fp << "\n";
@@ -178,7 +178,7 @@ int print_spice_generic_nmos_modeling(std::fstream& fp,
   fp << input_port_name << " "; 
   fp << gate_port_name << " "; 
   fp << output_port_name << " "; 
-  fp << "LGND "; 
+  fp << SPICE_SUBCKT_GND_PORT_NAME << " "; 
   fp << tech_lib.transistor_model_name(tech_model, TECH_LIB_TRANSISTOR_NMOS) << TRANSISTOR_WRAPPER_POSTFIX; 
   fp << " W=" << std::setprecision(10) << trans_width;
   fp << "\n";

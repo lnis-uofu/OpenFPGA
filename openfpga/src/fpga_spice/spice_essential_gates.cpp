@@ -24,6 +24,7 @@
 #include "spice_writer_utils.h"
 #include "spice_buffer.h"
 #include "spice_passgate.h"
+#include "spice_logic_gate.h"
 #include "spice_essential_gates.h"
 
 /* begin namespace openfpga */
@@ -112,7 +113,7 @@ int print_spice_essential_gates(NetlistManager& netlist_manager,
       continue;
     }
 
-    /* Now branch on netlist writing: for inverter/buffers */
+    /* Now branch on netlist writing: for pass-gate logic */
     if (CIRCUIT_MODEL_PASSGATE == circuit_lib.model_type(circuit_model)) {
       status = print_spice_passgate_subckt(fp,
                                            module_manager, module_id,
@@ -126,6 +127,29 @@ int print_spice_essential_gates(NetlistManager& netlist_manager,
       /* Finish, go to the next */
       continue;
     }
+
+    /* Now branch on netlist writing: for logic gate */
+    if (CIRCUIT_MODEL_GATE == circuit_lib.model_type(circuit_model)) {
+      if (CIRCUIT_MODEL_GATE_AND == circuit_lib.gate_type(circuit_model)) {
+        status = print_spice_and_gate_subckt(fp,
+                                             module_manager, module_id,
+                                             circuit_lib, circuit_model,
+                                             tech_lib, tech_model);
+      } else if (CIRCUIT_MODEL_GATE_OR == circuit_lib.gate_type(circuit_model)) {
+        status = print_spice_or_gate_subckt(fp,
+                                            module_manager, module_id,
+                                            circuit_lib, circuit_model,
+                                            tech_lib, tech_model);
+      }
+
+      if (CMD_EXEC_FATAL_ERROR == status) {
+        break;
+      }
+
+      /* Finish, go to the next */
+      continue;
+    }
+
   } 
 
   /* Close file handler*/
