@@ -43,21 +43,6 @@ int print_spice_essential_gates(NetlistManager& netlist_manager,
                                 const TechnologyLibrary& tech_lib,
                                 const std::map<CircuitModelId, TechnologyModelId>& circuit_tech_binding,
                                 const std::string& submodule_dir) {
-  std::string spice_fname = submodule_dir + std::string(ESSENTIALS_SPICE_FILE_NAME);
-
-  std::fstream fp;
-
-  /* Create the file stream */
-  fp.open(spice_fname, std::fstream::out | std::fstream::trunc);
-  /* Check if the file stream if valid or not */
-  check_file_stream(spice_fname.c_str(), fp); 
-
-  /* Create file */
-  VTR_LOG("Generating SPICE netlist '%s' for essential gates...",
-          spice_fname.c_str()); 
-
-  print_spice_file_header(fp, std::string("Essential gates"));
-
   int status = CMD_EXEC_SUCCESS;
 
   /* Iterate over the circuit models */
@@ -89,6 +74,26 @@ int print_spice_essential_gates(NetlistManager& netlist_manager,
       VTR_ASSERT(TECH_LIB_MODEL_TRANSISTOR == tech_lib.model_type(tech_model));
     }
 
+    /* Create file stream */
+    std::string spice_fname = submodule_dir + circuit_lib.model_name(circuit_model);
+  
+    std::fstream fp;
+  
+    /* Create the file stream */
+    fp.open(spice_fname, std::fstream::out | std::fstream::trunc);
+    /* Check if the file stream if valid or not */
+    check_file_stream(spice_fname.c_str(), fp); 
+  
+    /* Create file */
+    VTR_LOG("Generating SPICE netlist '%s' for circuit model '%s'...",
+            spice_fname.c_str(),
+            circuit_lib.model_name(circuit_model).c_str());
+  
+    print_spice_file_header(fp, circuit_lib.model_name(circuit_model));
+
+    /* A flag to record if any logic has been filled to the netlist */
+    bool netlist_filled = false;
+
     /* Now branch on netlist writing: for inverter/buffers */
     if (CIRCUIT_MODEL_INVBUF == circuit_lib.model_type(circuit_model)) {
       if (CIRCUIT_MODEL_BUF_INV == circuit_lib.buffer_type(circuit_model)) {
@@ -97,20 +102,19 @@ int print_spice_essential_gates(NetlistManager& netlist_manager,
                                              module_manager, module_id,
                                              circuit_lib, circuit_model,
                                              tech_lib, tech_model);
+        netlist_filled = true;
       } else {
         VTR_ASSERT(CIRCUIT_MODEL_BUF_BUF == circuit_lib.buffer_type(circuit_model));
         status = print_spice_buffer_subckt(fp,
                                            module_manager, module_id,
                                            circuit_lib, circuit_model,
                                            tech_lib, tech_model);
+        netlist_filled = true;
       }
 
       if (CMD_EXEC_FATAL_ERROR == status) {
         break;
       }
-
-      /* Finish, go to the next */
-      continue;
     }
 
     /* Now branch on netlist writing: for pass-gate logic */
@@ -119,13 +123,11 @@ int print_spice_essential_gates(NetlistManager& netlist_manager,
                                            module_manager, module_id,
                                            circuit_lib, circuit_model,
                                            tech_lib, tech_model);
+      netlist_filled = true;
 
       if (CMD_EXEC_FATAL_ERROR == status) {
         break;
       }
-
-      /* Finish, go to the next */
-      continue;
     }
 
     /* Now branch on netlist writing: for logic gate */
@@ -135,32 +137,40 @@ int print_spice_essential_gates(NetlistManager& netlist_manager,
                                              module_manager, module_id,
                                              circuit_lib, circuit_model,
                                              tech_lib, tech_model);
+        netlist_filled = true;
       } else if (CIRCUIT_MODEL_GATE_OR == circuit_lib.gate_type(circuit_model)) {
         status = print_spice_or_gate_subckt(fp,
                                             module_manager, module_id,
                                             circuit_lib, circuit_model,
                                             tech_lib, tech_model);
+        netlist_filled = true;
       }
 
       if (CMD_EXEC_FATAL_ERROR == status) {
         break;
       }
-
-      /* Finish, go to the next */
-      continue;
     }
 
+    /* Check if the netlist has been filled or not.
+     * If not, flag a fatal error
+     */
+    if (false == netlist_filled) {
+      VTR_LOG_ERROR("Cannot auto-generate netlist for circuit model '%s'!\n\tThe circuit topology is not supported yet!\n",
+                    circuit_lib.model_name(circuit_model).c_str());
+      status = CMD_EXEC_FATAL_ERROR; 
+      break;
+    }
+
+    /* Close file handler*/
+    fp.close();
+
+    /* Add fname to the netlist name list */
+    NetlistId nlist_id = netlist_manager.add_netlist(spice_fname);
+    VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+    netlist_manager.set_netlist_type(nlist_id, NetlistManager::SUBMODULE_NETLIST);
+
+    VTR_LOG("Done\n");
   } 
-
-  /* Close file handler*/
-  fp.close();
-
-  /* Add fname to the netlist name list */
-  NetlistId nlist_id = netlist_manager.add_netlist(spice_fname);
-  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
-  netlist_manager.set_netlist_type(nlist_id, NetlistManager::SUBMODULE_NETLIST);
-
-  VTR_LOG("Done\n");
 
   return status;
 }
