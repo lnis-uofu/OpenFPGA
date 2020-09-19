@@ -70,10 +70,21 @@ void print_spice_comment(std::fstream& fp,
 
 /************************************************
  * Generate a string for a port in SPICE format
+ * If the pin id is zero, e.g., A[0], the option
+ * 'omit_pin_zero' may be turned on for compact port
+ * print-out, e.g., A
  ***********************************************/
-std::string generate_spice_port(const BasicPort& port) {
+std::string generate_spice_port(const BasicPort& port,
+                                const bool& omit_pin_zero) {
   VTR_ASSERT(1 == port.get_width());
+
   std::string ret = port.get_name();
+
+  if ((true == omit_pin_zero)
+     && (0 == port.get_lsb())) {
+    return ret;
+  }
+
   ret += "[";
   ret += std::to_string(port.get_lsb());
   ret += "]";
@@ -119,7 +130,15 @@ void print_spice_subckt_definition(std::fstream& fp,
         
         BasicPort port_pin(port.get_name(), pin, pin);
 
-        fp << generate_spice_port(port_pin);
+        /* For single-bit port,
+         * we can print the port name directly
+         */
+        bool omit_pin_zero = false;
+        if ((1 == port.pins().size())
+           && (0 == pin)) {
+          omit_pin_zero = true;
+        }
+        fp << generate_spice_port(port_pin, omit_pin_zero);
 
         /* Increase the counter */
         pin_cnt++;

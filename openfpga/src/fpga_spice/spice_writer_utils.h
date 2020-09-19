@@ -39,7 +39,8 @@ void print_spice_include_netlist(std::fstream& fp,
 void print_spice_comment(std::fstream& fp, 
                          const std::string& comment);
 
-std::string generate_spice_port(const BasicPort& port);
+std::string generate_spice_port(const BasicPort& port,
+                                const bool& omit_pin_zero = false);
 
 void print_spice_subckt_definition(std::fstream& fp, 
                                    const ModuleManager& module_manager, const ModuleId& module_id);
