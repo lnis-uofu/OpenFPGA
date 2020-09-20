@@ -19,4 +19,8 @@ constexpr char* SPICE_SUBCKT_GND_PORT_NAME = "VSS";
 constexpr char* SPICE_MUX_BASIS_POSTFIX = "_basis";
 constexpr char* SPICE_MEM_POSTFIX = "_mem";
 
+constexpr char* SB_SPICE_FILE_NAME_PREFIX = "sb_";
+constexpr char* LOGICAL_MODULE_SPICE_FILE_NAME_PREFIX = "logical_tile_";
+constexpr char* GRID_SPICE_FILE_NAME_PREFIX = "grid_";
+
 #endif
