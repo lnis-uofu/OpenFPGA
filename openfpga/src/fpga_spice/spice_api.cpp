@@ -17,6 +17,7 @@
 #include "spice_constants.h"
 #include "spice_submodule.h"
 #include "spice_routing.h"
+#include "spice_grid.h"
 
 /* Header file for this source file */
 #include "spice_api.h"
@@ -42,6 +43,8 @@ int fpga_fabric_spice(const ModuleManager& module_manager,
                       NetlistManager& netlist_manager,
                       const Arch& openfpga_arch,
                       const MuxLibrary& mux_lib,
+                      const DeviceContext &device_ctx,
+                      const VprDeviceAnnotation &device_annotation,
                       const DeviceRRGSB &device_rr_gsb,
                       const FabricSpiceOption& options) {
 
@@ -96,6 +99,13 @@ int fpga_fabric_spice(const ModuleManager& module_manager,
                                         device_rr_gsb,
                                         rr_dir_path);
   }
+
+  /* Generate grids */
+  print_spice_grids(netlist_manager,
+                    module_manager,
+                    device_ctx, device_annotation,
+                    lb_dir_path,
+                    options.verbose_output());
 
   /* Given a brief stats on how many Spice modules have been written to files */
   VTR_LOGV(options.verbose_output(),
