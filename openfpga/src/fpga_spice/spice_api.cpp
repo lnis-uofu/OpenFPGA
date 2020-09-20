@@ -19,6 +19,7 @@
 #include "spice_routing.h"
 #include "spice_grid.h"
 #include "spice_top_module.h"
+#include "spice_auxiliary_netlists.h"
 
 /* Header file for this source file */
 #include "spice_api.h"
@@ -114,11 +115,9 @@ int fpga_fabric_spice(const ModuleManager& module_manager,
                          src_dir_path);
 
   /* Generate an netlist including all the fabric-related netlists */
-  /*
-  print_fabric_include_netlist(const_cast<const NetlistManager &>(netlist_manager),
-                               src_dir_path,
-                               circuit_lib);
-   */
+  print_spice_fabric_include_netlist(const_cast<const NetlistManager &>(netlist_manager),
+                                     src_dir_path,
+                                     openfpga_arch.circuit_lib);
 
   /* Given a brief stats on how many Spice modules have been written to files */
   VTR_LOGV(options.verbose_output(),
