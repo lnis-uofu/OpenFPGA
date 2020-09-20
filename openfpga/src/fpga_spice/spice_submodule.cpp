@@ -26,10 +26,10 @@ namespace openfpga {
  * Top-level function to generate primitive modules:
  * 1. Transistor wrapper
  * 2. Logic gates: AND/OR, inverter, buffer and transmission-gate/pass-transistor
- * 3. TODO: Routing multiplexers
+ * 3. Routing multiplexers
  * 4. TODO: Local encoders for routing multiplexers
  * 5. Wires
- * 6. TODO: Configuration memory blocks
+ * 6. Configuration memory blocks
  ********************************************************************/
 int print_spice_submodule(NetlistManager& netlist_manager,
                           const ModuleManager& module_manager,
@@ -77,6 +77,8 @@ int print_spice_submodule(NetlistManager& netlist_manager,
     return CMD_EXEC_FATAL_ERROR;
   }
 
+  /* TODO: local decoders for routing multiplexers */
+
   /* Routing multiplexers */
   status = print_spice_submodule_muxes(netlist_manager,
                                        module_manager,
@@ -111,6 +113,8 @@ int print_spice_submodule(NetlistManager& netlist_manager,
   if (CMD_EXEC_SUCCESS != status) {
     return CMD_EXEC_FATAL_ERROR;
   }
+
+  /* TODO: architecture decoders */
 
   return status;
 }
