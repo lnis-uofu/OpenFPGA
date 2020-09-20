@@ -14,6 +14,7 @@
 #include "spice_essential_gates.h"
 #include "spice_mux.h"
 #include "spice_lut.h"
+#include "spice_memory.h"
 
 #include "spice_constants.h"
 #include "spice_submodule.h"
@@ -93,6 +94,18 @@ int print_spice_submodule(NetlistManager& netlist_manager,
                                       module_manager,
                                       openfpga_arch.circuit_lib,
                                       submodule_dir);
+
+  /* Error out if fatal errors have been reported */
+  if (CMD_EXEC_SUCCESS != status) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Memories */
+  status = print_spice_submodule_memories(netlist_manager,
+                                          module_manager,
+                                          mux_lib,
+                                          openfpga_arch.circuit_lib,
+                                          submodule_dir);
 
   /* Error out if fatal errors have been reported */
   if (CMD_EXEC_SUCCESS != status) {

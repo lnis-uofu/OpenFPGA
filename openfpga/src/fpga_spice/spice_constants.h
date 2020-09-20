@@ -11,6 +11,7 @@ constexpr char* TRANSISTORS_SPICE_FILE_NAME = "transistor.sp";
 constexpr char* SUPPLY_WRAPPER_SPICE_FILE_NAME = "supply_wrapper.sp";
 constexpr char* MUXES_SPICE_FILE_NAME = "muxes.sp";
 constexpr char* LUTS_SPICE_FILE_NAME = "luts.sp";
+constexpr char* MEMORIES_SPICE_FILE_NAME = "memories.sp";
 
 constexpr char* SPICE_SUBCKT_VDD_PORT_NAME = "VDD";
 constexpr char* SPICE_SUBCKT_GND_PORT_NAME = "VSS";
