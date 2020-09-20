@@ -40,6 +40,7 @@ namespace openfpga {
 int fpga_fabric_spice(const ModuleManager& module_manager,
                       NetlistManager& netlist_manager,
                       const Arch& openfpga_arch,
+                      const MuxLibrary& mux_lib,
                       const FabricSpiceOption& options) {
 
   vtr::ScopedStartFinishTimer timer("Write SPICE netlists for FPGA fabric\n");
@@ -73,6 +74,7 @@ int fpga_fabric_spice(const ModuleManager& module_manager,
   status = print_spice_submodule(netlist_manager,
                                  module_manager,
                                  openfpga_arch,
+                                 mux_lib,
                                  submodule_dir_path);
  
   if (CMD_EXEC_SUCCESS != status) {

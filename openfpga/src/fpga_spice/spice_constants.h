@@ -9,8 +9,12 @@ constexpr char* TRANSISTOR_WRAPPER_POSTFIX = "_wrapper";
 
 constexpr char* TRANSISTORS_SPICE_FILE_NAME = "transistor.sp";
 constexpr char* SUPPLY_WRAPPER_SPICE_FILE_NAME = "supply_wrapper.sp";
+constexpr char* MUXES_SPICE_FILE_NAME = "muxes.sp";
 
 constexpr char* SPICE_SUBCKT_VDD_PORT_NAME = "VDD";
 constexpr char* SPICE_SUBCKT_GND_PORT_NAME = "VSS";
+
+constexpr char* SPICE_MUX_BASIS_POSTFIX = "_basis";
+constexpr char* SPICE_MEM_POSTFIX = "_mem";
 
 #endif

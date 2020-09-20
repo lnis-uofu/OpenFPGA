@@ -1,5 +1,5 @@
 /*********************************************************************
- * This file includes top-level function to generate Spice primitive modules
+ * This file includes top-level function to generate SPICE primitive modules
  * and print them to files
  ********************************************************************/
 
@@ -12,6 +12,7 @@
 
 #include "spice_transistor_wrapper.h"
 #include "spice_essential_gates.h"
+#include "spice_mux.h"
 
 #include "spice_constants.h"
 #include "spice_submodule.h"
@@ -31,6 +32,7 @@ namespace openfpga {
 int print_spice_submodule(NetlistManager& netlist_manager,
                           const ModuleManager& module_manager,
                           const Arch& openfpga_arch,
+                          const MuxLibrary& mux_lib,
                           const std::string& submodule_dir) {
 
   int status = CMD_EXEC_SUCCESS;
@@ -74,13 +76,11 @@ int print_spice_submodule(NetlistManager& netlist_manager,
   }
 
   /* Routing multiplexers */
-  /*
   status = print_spice_submodule_muxes(netlist_manager,
                                        module_manager,
                                        mux_lib,
                                        openfpga_arch.circuit_lib,
                                        submodule_dir);
-   */
 
   /* Error out if fatal errors have been reported */
   if (CMD_EXEC_SUCCESS != status) {

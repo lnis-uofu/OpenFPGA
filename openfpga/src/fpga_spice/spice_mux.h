@@ -1,17 +1,17 @@
-#ifndef SPICE_API_H 
-#define SPICE_API_H 
+#ifndef SPICE_MUX_H
+#define SPICE_MUX_H
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-
-#include <string>
+#include <fstream>
 #include <vector>
-#include "netlist_manager.h"
-#include "module_manager.h"
-#include "openfpga_arch.h"
+
+#include "circuit_library.h"
+#include "mux_graph.h"
 #include "mux_library.h"
-#include "fabric_spice_options.h"
+#include "module_manager.h"
+#include "netlist_manager.h"
 
 /********************************************************************
  * Function declaration
@@ -20,11 +20,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-int fpga_fabric_spice(const ModuleManager& module_manager,
-                      NetlistManager& netlist_manager,
-                      const Arch& openfpga_arch,
-                      const MuxLibrary& mux_lib,
-                      const FabricSpiceOption& options);
+int print_spice_submodule_muxes(NetlistManager& netlist_manager,
+                                const ModuleManager& module_manager,
+                                const MuxLibrary& mux_lib,
+                                const CircuitLibrary& circuit_lib,
+                                const std::string& submodule_dir);
 
 } /* end namespace openfpga */
 
