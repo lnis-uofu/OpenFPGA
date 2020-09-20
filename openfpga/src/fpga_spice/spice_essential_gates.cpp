@@ -25,6 +25,7 @@
 #include "spice_buffer.h"
 #include "spice_passgate.h"
 #include "spice_logic_gate.h"
+#include "spice_wire.h"
 #include "spice_essential_gates.h"
 
 /* begin namespace openfpga */
@@ -55,7 +56,6 @@ int print_spice_essential_gates(NetlistManager& netlist_manager,
     /* Output only the model type is supported in auto-generation */
     if ( (CIRCUIT_MODEL_INVBUF != circuit_lib.model_type(circuit_model))
       && (CIRCUIT_MODEL_PASSGATE != circuit_lib.model_type(circuit_model))
-      && (CIRCUIT_MODEL_CHAN_WIRE != circuit_lib.model_type(circuit_model))
       && (CIRCUIT_MODEL_WIRE != circuit_lib.model_type(circuit_model))
       && (CIRCUIT_MODEL_GATE != circuit_lib.model_type(circuit_model))) {
       continue; 
@@ -160,15 +160,11 @@ int print_spice_essential_gates(NetlistManager& netlist_manager,
       }
     }
 
-    /* Now branch on netlist writing: for routing channel wires */
-    if (CIRCUIT_MODEL_CHAN_WIRE == circuit_lib.model_type(circuit_model)) {
-      netlist_filled = true;
-      if (CMD_EXEC_FATAL_ERROR == status) {
-        break;
-      }
-    }
-    /* Now branch on netlist writing: for regular wires */
+    /* Now branch on netlist writing: for wires */
     if (CIRCUIT_MODEL_WIRE == circuit_lib.model_type(circuit_model)) {
+      status = print_spice_wire_subckt(fp,
+                                       module_manager, module_id,
+                                       circuit_lib, circuit_model);
       netlist_filled = true;
       if (CMD_EXEC_FATAL_ERROR == status) {
         break;
