@@ -18,6 +18,7 @@
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
 
+#include "spice_constants.h"
 #include "spice_writer_utils.h"
 
 /* begin namespace openfpga */
@@ -98,7 +99,9 @@ std::string generate_spice_port(const BasicPort& port,
  * module <module_name> (<ports without directions>);
  ***********************************************/
 void print_spice_subckt_definition(std::fstream& fp, 
-                                   const ModuleManager& module_manager, const ModuleId& module_id) {
+                                   const ModuleManager& module_manager,
+                                   const ModuleId& module_id,
+                                   const bool& include_supply_ports) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
   print_spice_comment(fp, std::string("SPICE module for " + module_manager.module_name(module_id)));
@@ -153,6 +156,29 @@ void print_spice_subckt_definition(std::fstream& fp,
       }
     }
   }
+  
+  /* Add supply ports if specified */
+  if (true == include_supply_ports) {
+    /* Check if we need a new line */
+    new_line = false;
+    if (10 == pin_cnt) {
+      pin_cnt = 0;
+      fp << std::endl;
+      new_line = true;
+    }
+    /* Print VDD and VSS ports
+     * TODO: the supply ports should be derived from module manager
+     */
+    if (true == new_line) {
+      std::string port_whitespace(module_head_line.length() - 2, ' ');
+      fp << "+ " << port_whitespace;
+    }
+    write_space_to_file(fp, 1);
+    fp << SPICE_SUBCKT_VDD_PORT_NAME;
+    write_space_to_file(fp, 1);
+    fp << SPICE_SUBCKT_GND_PORT_NAME;
+  }
+
   fp << std::endl;
 }
 

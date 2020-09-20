@@ -43,7 +43,9 @@ std::string generate_spice_port(const BasicPort& port,
                                 const bool& omit_pin_zero = false);
 
 void print_spice_subckt_definition(std::fstream& fp, 
-                                   const ModuleManager& module_manager, const ModuleId& module_id);
+                                   const ModuleManager& module_manager,
+                                   const ModuleId& module_id,
+                                   const bool& include_supply_ports = true);
 
 void print_spice_subckt_end(std::fstream& fp, 
                             const std::string& module_name);
