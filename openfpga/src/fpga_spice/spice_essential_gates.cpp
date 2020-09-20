@@ -136,7 +136,7 @@ int print_spice_essential_gates(NetlistManager& netlist_manager,
   /* Iterate over the circuit models */
   for (const CircuitModelId& circuit_model : circuit_lib.models()) {
     /* Bypass models require extern netlists */
-    if (!circuit_lib.model_circuit_netlist(circuit_model).empty()) {
+    if (!circuit_lib.model_spice_netlist(circuit_model).empty()) {
       continue;
     }
 

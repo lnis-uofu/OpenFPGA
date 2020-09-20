@@ -56,7 +56,7 @@ int print_spice_submodule_luts(NetlistManager& netlist_manager,
   /* Search for each LUT circuit model */
   for (const auto& lut_model : circuit_lib.models()) {
     /* Bypass user-defined and non-LUT modules */
-    if ( (!circuit_lib.model_circuit_netlist(lut_model).empty()) 
+    if ( (!circuit_lib.model_spice_netlist(lut_model).empty()) 
       || (CIRCUIT_MODEL_LUT != circuit_lib.model_type(lut_model)) ) {
       continue;
     }

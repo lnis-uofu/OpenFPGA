@@ -79,11 +79,11 @@ std::string CircuitLibrary::model_verilog_netlist(const CircuitModelId& model_id
   return model_verilog_netlists_[model_id]; 
 }
 
-/* Access the path + file of user-defined circuit netlist of a circuit model */
-std::string CircuitLibrary::model_circuit_netlist(const CircuitModelId& model_id) const {
+/* Access the path + file of user-defined spice netlist of a circuit model */
+std::string CircuitLibrary::model_spice_netlist(const CircuitModelId& model_id) const {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
-  return model_circuit_netlists_[model_id]; 
+  return model_spice_netlists_[model_id]; 
 }
 
 /* Access the is_default flag (check if this is the default circuit model in the type) of a circuit model */
@@ -1132,7 +1132,7 @@ CircuitModelId CircuitLibrary::add_model(const enum e_circuit_model_type& type) 
   model_names_.emplace_back();
   model_prefix_.emplace_back();
   model_verilog_netlists_.emplace_back();
-  model_circuit_netlists_.emplace_back();
+  model_spice_netlists_.emplace_back();
   model_is_default_.push_back(false);
   sub_models_.emplace_back();
 
@@ -1226,11 +1226,11 @@ void CircuitLibrary::set_model_verilog_netlist(const CircuitModelId& model_id, c
   return;
 }
 
-/* Set the circuit_netlist of a Circuit Model */
-void CircuitLibrary::set_model_circuit_netlist(const CircuitModelId& model_id, const std::string& circuit_netlist) {
+/* Set the spice_netlist of a Circuit Model */
+void CircuitLibrary::set_model_spice_netlist(const CircuitModelId& model_id, const std::string& spice_netlist) {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
-  model_circuit_netlists_[model_id] = circuit_netlist;
+  model_spice_netlists_[model_id] = spice_netlist;
   return;
 }
 
