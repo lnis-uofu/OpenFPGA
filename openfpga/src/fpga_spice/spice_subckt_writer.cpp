@@ -19,6 +19,9 @@
 #include "openfpga_naming.h"
 
 #include "module_manager_utils.h"
+
+
+#include "spice_constants.h"
 #include "spice_writer_utils.h"
 #include "spice_subckt_writer.h"
 
@@ -370,7 +373,7 @@ void write_spice_instance_to_file(std::fstream& fp,
 
         /* Currently we limit 10 ports per line to keep a clean netlist */
         new_line = false;
-        if (10 == pin_cnt) {
+        if (SPICE_NETLIST_MAX_NUM_PORTS_PER_LINE == pin_cnt) {
           pin_cnt = 0;
           fp << std::endl;
           new_line = true;
@@ -378,6 +381,29 @@ void write_spice_instance_to_file(std::fstream& fp,
         }
       } 
     }
+  }
+
+  /* Print VDD and VSS ports
+   * TODO: the supply ports should be derived from module manager
+   */
+  if (true == new_line) {
+    std::string port_whitespace(instance_head_line.length() - 2, ' ');
+    fp << "+ " << port_whitespace;
+  }
+  write_space_to_file(fp, 1);
+  fp << SPICE_SUBCKT_VDD_PORT_NAME;
+  write_space_to_file(fp, 1);
+  fp << SPICE_SUBCKT_GND_PORT_NAME;
+
+  pin_cnt += 2;
+
+  /* Check if we need a new line */
+  new_line = false;
+  if (SPICE_NETLIST_MAX_NUM_PORTS_PER_LINE == pin_cnt) {
+    pin_cnt = 0;
+    fp << std::endl;
+    new_line = true;
+    fit_one_line = false;
   }
 
   /* Print module name: 

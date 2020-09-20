@@ -2,6 +2,7 @@
 #define SPICE_CONSTANTS_H
 
 /* global parameters for dumping spice netlists */
+constexpr size_t SPICE_NETLIST_MAX_NUM_PORTS_PER_LINE = 10;
 
 constexpr char* SPICE_NETLIST_FILE_POSTFIX = ".sp";
 
