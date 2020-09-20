@@ -24,7 +24,7 @@
 #include "verilog_preconfig_top_module.h"
 #include "verilog_formal_random_top_testbench.h"
 #include "verilog_top_testbench.h"
-#include "simulation_info_writer.h"
+#include "verilog_simulation_info_writer.h"
 
 /* Header file for this source file */
 #include "verilog_api.h"
@@ -128,9 +128,9 @@ void fpga_fabric_verilog(ModuleManager &module_manager,
                            options.explicit_port_mapping());
 
   /* Generate an netlist including all the fabric-related netlists */
-  print_fabric_include_netlist(const_cast<const NetlistManager &>(netlist_manager),
-                               src_dir_path,
-                               circuit_lib);
+  print_verilog_fabric_include_netlist(const_cast<const NetlistManager &>(netlist_manager),
+                                       src_dir_path,
+                                       circuit_lib);
 
   /* Given a brief stats on how many Verilog modules have been written to files */
   VTR_LOGV(options.verbose_output(),
@@ -233,9 +233,9 @@ void fpga_verilog_testbench(const ModuleManager &module_manager,
   }
 
   /* Generate a Verilog file including all the netlists that have been generated */
-  print_include_netlists(src_dir_path,
-                         netlist_name,
-                         options.reference_benchmark_file_path());
+  print_verilog_testbench_include_netlists(src_dir_path,
+                                           netlist_name,
+                                           options.reference_benchmark_file_path());
 }
 
 } /* end namespace openfpga */
