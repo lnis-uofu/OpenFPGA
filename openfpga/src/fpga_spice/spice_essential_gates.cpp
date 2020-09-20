@@ -18,6 +18,7 @@
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
 
+#include "openfpga_naming.h"
 #include "circuit_library_utils.h"
 
 #include "spice_constants.h"
@@ -30,6 +31,92 @@
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+/************************************************
+ * Generate the SPICE netlist for a constant generator,
+ * i.e., either VDD or GND
+ ***********************************************/
+static 
+void print_spice_supply_wrapper_subckt(const ModuleManager& module_manager, 
+                                       std::fstream& fp, 
+                                       const size_t& const_value) {
+  /* Find the module in module manager */
+  std::string module_name = generate_const_value_module_name(const_value);
+  ModuleId const_val_module = module_manager.find_module(module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(const_val_module));
+
+  /* Ensure a valid file handler*/
+  VTR_ASSERT(true == valid_file_stream(fp));
+
+  /* dump module definition + ports */
+  print_spice_subckt_definition(fp, module_manager, const_val_module);
+  /* Finish dumping ports */
+
+  /* Find the only output*/
+  for (const ModulePortId& module_port_id : module_manager.module_ports(const_val_module)) {
+    BasicPort module_port = module_manager.module_port(const_val_module, module_port_id);
+    for (const auto& pin : module_port.pins()) {
+      BasicPort spice_pin(module_port.get_name(), pin, pin);
+      std::string const_pin_name = std::string(SPICE_SUBCKT_VDD_PORT_NAME);
+      if (0 == const_value) {
+        const_pin_name = std::string(SPICE_SUBCKT_GND_PORT_NAME);
+      } else {
+        VTR_ASSERT(1 == const_value);
+      }
+         
+      print_spice_short_connection(fp,
+                                   generate_spice_port(spice_pin, true),
+                                   const_pin_name);
+    }
+  }
+  
+  /* Put an end to the SPICE subcircuit */
+  print_spice_subckt_end(fp, module_name);
+}
+
+/********************************************************************
+ * Create supply voltage wrappers
+ * The wrappers are used for constant inputs of routing multiplexers
+ *
+ *******************************************************************/
+int print_spice_supply_wrappers(NetlistManager& netlist_manager,
+                                const ModuleManager& module_manager,
+                                const std::string& submodule_dir) {
+  int status = CMD_EXEC_SUCCESS;
+
+  /* Create file stream */
+  std::string spice_fname = submodule_dir + std::string(SUPPLY_WRAPPER_SPICE_FILE_NAME);
+  
+  std::fstream fp;
+  
+  /* Create the file stream */
+  fp.open(spice_fname, std::fstream::out | std::fstream::trunc);
+  /* Check if the file stream if valid or not */
+  check_file_stream(spice_fname.c_str(), fp); 
+  
+  /* Create file */
+  VTR_LOG("Generating SPICE netlist '%s' for voltage supply wrappers...",
+          spice_fname.c_str());
+  
+  print_spice_file_header(fp, std::string("Voltage Supply Wrappers"));
+
+  /* VDD */
+  print_spice_supply_wrapper_subckt(module_manager, fp, 0);
+  /* GND */
+  print_spice_supply_wrapper_subckt(module_manager, fp, 1);
+
+  /* Close file handler*/
+  fp.close();
+
+  /* Add fname to the netlist name list */
+  NetlistId nlist_id = netlist_manager.add_netlist(spice_fname);
+  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  netlist_manager.set_netlist_type(nlist_id, NetlistManager::SUBMODULE_NETLIST);
+
+  VTR_LOG("Done\n");
+
+  return status;
+}
 
 /********************************************************************
  * Generate the SPICE netlist for essential gates:

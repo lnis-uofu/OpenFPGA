@@ -18,6 +18,10 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+int print_spice_supply_wrappers(NetlistManager& netlist_manager,
+                                const ModuleManager& module_manager,
+                                const std::string& submodule_dir);
+
 int print_spice_essential_gates(NetlistManager& netlist_manager,
                                 const ModuleManager& module_manager,
                                 const CircuitLibrary& circuit_lib,
