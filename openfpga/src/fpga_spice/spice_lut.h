@@ -1,13 +1,15 @@
-#ifndef SPICE_SUBMODULE_H
-#define SPICE_SUBMODULE_H
+#ifndef SPICE_LUT_H
+#define SPICE_LUT_H
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "netlist_manager.h"
+#include <fstream>
+#include <string>
+
+#include "circuit_library.h"
 #include "module_manager.h"
-#include "openfpga_arch.h"
-#include "mux_library.h"
+#include "netlist_manager.h"
 
 /********************************************************************
  * Function declaration
@@ -16,11 +18,10 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-int print_spice_submodule(NetlistManager& netlist_manager,
-                          const ModuleManager& module_manager,
-                          const Arch& openfpga_arch,
-                          const MuxLibrary& mux_lib,
-                          const std::string& submodule_dir);
+int print_spice_submodule_luts(NetlistManager& netlist_manager,
+                               const ModuleManager& module_manager,
+                               const CircuitLibrary& circuit_lib,
+                               const std::string& submodule_dir);
 
 } /* end namespace openfpga */
 

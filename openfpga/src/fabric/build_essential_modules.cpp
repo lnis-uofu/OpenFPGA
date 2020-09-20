@@ -187,7 +187,7 @@ void build_user_defined_modules(ModuleManager& module_manager,
   for (const auto& model : circuit_lib.models()) {
     /* We only care about user-defined models */
     if ( (true == circuit_lib.model_verilog_netlist(model).empty())
-      && (true == circuit_lib.model_circuit_netlist(model).empty()) ) {
+      && (true == circuit_lib.model_spice_netlist(model).empty()) ) {
       continue;
     }
     /* Skip Routing channel wire models because they need a different name. Do it later */
@@ -255,7 +255,7 @@ void rename_primitive_module_port_names(ModuleManager& module_manager,
   for (const CircuitModelId& model : circuit_lib.models()) {
     /* We only care about user-defined models */
     if ( (true == circuit_lib.model_verilog_netlist(model).empty())
-      && (true == circuit_lib.model_circuit_netlist(model).empty()) ) {
+      && (true == circuit_lib.model_spice_netlist(model).empty()) ) {
       continue;
     }
     /* Skip Routing channel wire models because they need a different name. Do it later */

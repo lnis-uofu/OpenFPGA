@@ -30,10 +30,10 @@ namespace openfpga {
  * This does NOT include any testbenches!
  * Some netlists are open to compile under specific preprocessing flags
  *******************************************************************/
-void print_fabric_include_netlist(const NetlistManager& netlist_manager,
-                                  const std::string& src_dir,
-                                  const CircuitLibrary& circuit_lib) {
-  std::string verilog_fname = src_dir + std::string(FABRIC_INCLUDE_NETLIST_FILE_NAME);
+void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
+                                          const std::string& src_dir,
+                                          const CircuitLibrary& circuit_lib) {
+  std::string verilog_fname = src_dir + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME);
 
   /* Create the file stream */
   std::fstream fp;
@@ -94,10 +94,10 @@ void print_fabric_include_netlist(const NetlistManager& netlist_manager,
  * that have been generated and user-defined.
  * Some netlists are open to compile under specific preprocessing flags
  *******************************************************************/
-void print_include_netlists(const std::string& src_dir,
-                            const std::string& circuit_name,
-                            const std::string& reference_benchmark_file) {
-  std::string verilog_fname = src_dir + circuit_name + std::string(TOP_INCLUDE_NETLIST_FILE_NAME_POSTFIX);
+void print_verilog_testbench_include_netlists(const std::string& src_dir,
+                                              const std::string& circuit_name,
+                                              const std::string& reference_benchmark_file) {
+  std::string verilog_fname = src_dir + circuit_name + std::string(TOP_VERILOG_TESTBENCH_INCLUDE_NETLIST_FILE_NAME_POSTFIX);
 
   /* Create the file stream */
   std::fstream fp;
@@ -116,7 +116,7 @@ void print_include_netlists(const std::string& src_dir,
 
   /* Include FPGA top module */
   print_verilog_comment(fp, std::string("------ Include fabric top-level netlists -----"));
-  print_verilog_include_netlist(fp, src_dir + std::string(FABRIC_INCLUDE_NETLIST_FILE_NAME));
+  print_verilog_include_netlist(fp, src_dir + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME));
   fp << std::endl;
 
   /* Include reference benchmark netlist only when auto-check flag is enabled */

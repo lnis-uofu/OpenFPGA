@@ -1,13 +1,11 @@
-#ifndef SPICE_SUBMODULE_H
-#define SPICE_SUBMODULE_H
+#ifndef SPICE_SUBCKT_WRITER_H
+#define SPICE_SUBCKT_WRITER_H
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "netlist_manager.h"
+#include <fstream>
 #include "module_manager.h"
-#include "openfpga_arch.h"
-#include "mux_library.h"
 
 /********************************************************************
  * Function declaration
@@ -16,11 +14,9 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-int print_spice_submodule(NetlistManager& netlist_manager,
-                          const ModuleManager& module_manager,
-                          const Arch& openfpga_arch,
-                          const MuxLibrary& mux_lib,
-                          const std::string& submodule_dir);
+void write_spice_subckt_to_file(std::fstream& fp,
+                                const ModuleManager& module_manager,
+                                const ModuleId& module_id);
 
 } /* end namespace openfpga */
 

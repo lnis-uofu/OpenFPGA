@@ -40,6 +40,10 @@ int write_fabric_spice(OpenfpgaContext& openfpga_ctx,
   status = fpga_fabric_spice(openfpga_ctx.module_graph(),
                              openfpga_ctx.mutable_spice_netlists(),
                              openfpga_ctx.arch(),
+                             openfpga_ctx.mux_lib(),
+                             g_vpr_ctx.device(),
+                             openfpga_ctx.vpr_device_annotation(),
+                             openfpga_ctx.device_rr_gsb(),
                              options);
 
   return status;

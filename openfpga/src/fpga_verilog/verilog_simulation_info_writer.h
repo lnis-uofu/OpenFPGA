@@ -1,5 +1,5 @@
-#ifndef SIMULATION_INFO_WRITER_H
-#define SIMULATION_INFO_WRITER_H
+#ifndef VERILOG_SIMULATION_INFO_WRITER_H
+#define VERILOG_SIMULATION_INFO_WRITER_H
 
 /********************************************************************
  * Include header files that are required by function declaration

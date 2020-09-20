@@ -16,6 +16,10 @@
 
 #include "spice_constants.h"
 #include "spice_submodule.h"
+#include "spice_routing.h"
+#include "spice_grid.h"
+#include "spice_top_module.h"
+#include "spice_auxiliary_netlists.h"
 
 /* Header file for this source file */
 #include "spice_api.h"
@@ -40,6 +44,10 @@ namespace openfpga {
 int fpga_fabric_spice(const ModuleManager& module_manager,
                       NetlistManager& netlist_manager,
                       const Arch& openfpga_arch,
+                      const MuxLibrary& mux_lib,
+                      const DeviceContext &device_ctx,
+                      const VprDeviceAnnotation &device_annotation,
+                      const DeviceRRGSB &device_rr_gsb,
                       const FabricSpiceOption& options) {
 
   vtr::ScopedStartFinishTimer timer("Write SPICE netlists for FPGA fabric\n");
@@ -73,11 +81,43 @@ int fpga_fabric_spice(const ModuleManager& module_manager,
   status = print_spice_submodule(netlist_manager,
                                  module_manager,
                                  openfpga_arch,
+                                 mux_lib,
                                  submodule_dir_path);
  
   if (CMD_EXEC_SUCCESS != status) {
     return status;
   }
+
+  /* Generate routing blocks */
+  if (true == options.compress_routing()) {
+    print_spice_unique_routing_modules(netlist_manager,
+                                       module_manager,
+                                       device_rr_gsb,
+                                       rr_dir_path);
+  } else {
+    VTR_ASSERT(false == options.compress_routing());
+    print_spice_flatten_routing_modules(netlist_manager,
+                                        module_manager,
+                                        device_rr_gsb,
+                                        rr_dir_path);
+  }
+
+  /* Generate grids */
+  print_spice_grids(netlist_manager,
+                    module_manager,
+                    device_ctx, device_annotation,
+                    lb_dir_path,
+                    options.verbose_output());
+
+  /* Generate FPGA fabric */
+  print_spice_top_module(netlist_manager,
+                         module_manager,
+                         src_dir_path);
+
+  /* Generate an netlist including all the fabric-related netlists */
+  print_spice_fabric_include_netlist(const_cast<const NetlistManager &>(netlist_manager),
+                                     src_dir_path,
+                                     openfpga_arch.circuit_lib);
 
   /* Given a brief stats on how many Spice modules have been written to files */
   VTR_LOGV(options.verbose_output(),

@@ -1,13 +1,14 @@
-#ifndef SPICE_SUBMODULE_H
-#define SPICE_SUBMODULE_H
+#ifndef SPICE_GRID_H
+#define SPICE_GRID_H
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "netlist_manager.h"
+#include <string>
+#include "vpr_context.h"
 #include "module_manager.h"
-#include "openfpga_arch.h"
-#include "mux_library.h"
+#include "netlist_manager.h"
+#include "vpr_device_annotation.h"
 
 /********************************************************************
  * Function declaration
@@ -16,11 +17,13 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-int print_spice_submodule(NetlistManager& netlist_manager,
-                          const ModuleManager& module_manager,
-                          const Arch& openfpga_arch,
-                          const MuxLibrary& mux_lib,
-                          const std::string& submodule_dir);
+void print_spice_grids(NetlistManager& netlist_manager,
+                      const ModuleManager& module_manager,
+                      const DeviceContext& device_ctx,
+                      const VprDeviceAnnotation& device_annotation,
+                      const std::string& subckt_dir,
+                      const bool& verbose);
+
 
 } /* end namespace openfpga */
 

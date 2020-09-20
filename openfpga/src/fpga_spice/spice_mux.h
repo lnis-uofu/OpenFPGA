@@ -1,15 +1,17 @@
-#ifndef SPICE_ESSENTIAL_GATES_H
-#define SPICE_ESSENTIAL_GATES_H
+#ifndef SPICE_MUX_H
+#define SPICE_MUX_H
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include <string>
-#include <map>
-#include "netlist_manager.h"
-#include "module_manager.h"
+#include <fstream>
+#include <vector>
+
 #include "circuit_library.h"
-#include "technology_library.h"
+#include "mux_graph.h"
+#include "mux_library.h"
+#include "module_manager.h"
+#include "netlist_manager.h"
 
 /********************************************************************
  * Function declaration
@@ -18,15 +20,10 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-int print_spice_supply_wrappers(NetlistManager& netlist_manager,
+int print_spice_submodule_muxes(NetlistManager& netlist_manager,
                                 const ModuleManager& module_manager,
-                                const std::string& submodule_dir);
-
-int print_spice_essential_gates(NetlistManager& netlist_manager,
-                                const ModuleManager& module_manager,
+                                const MuxLibrary& mux_lib,
                                 const CircuitLibrary& circuit_lib,
-                                const TechnologyLibrary& tech_lib,
-                                const std::map<CircuitModelId, TechnologyModelId>& circuit_tech_binding,
                                 const std::string& submodule_dir);
 
 } /* end namespace openfpga */
