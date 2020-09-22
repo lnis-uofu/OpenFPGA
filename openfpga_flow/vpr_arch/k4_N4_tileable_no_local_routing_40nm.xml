@@ -54,10 +54,10 @@
       <equivalent_sites>
         <site pb_type="clb"/>
       </equivalent_sites>
-      <input name="I0" num_pins="4" equivalent="full"/>
-      <input name="I1" num_pins="4" equivalent="full"/>
-      <input name="I2" num_pins="4" equivalent="full"/>
-      <input name="I3" num_pins="4" equivalent="full"/>
+      <input name="I0" num_pins="4" equivalent="none"/>
+      <input name="I1" num_pins="4" equivalent="none"/>
+      <input name="I2" num_pins="4" equivalent="none"/>
+      <input name="I3" num_pins="4" equivalent="none"/>
       <output name="O" num_pins="4" equivalent="none"/>
       <clock name="clk" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
@@ -207,10 +207,14 @@
 	   routing area up significantly, we estimate into the ~70% range. 
 	   -->
     <pb_type name="clb">
-      <input name="I0" num_pins="4" equivalent="full"/>
-      <input name="I1" num_pins="4" equivalent="full"/>
-      <input name="I2" num_pins="4" equivalent="full"/>
-      <input name="I3" num_pins="4" equivalent="full"/>
+      <!-- FIXME These inputs should be logic equivalent
+           However, current annotation engine does not support this
+           The feature should be enabled after patching
+        -->
+      <input name="I0" num_pins="4" equivalent="none"/>
+      <input name="I1" num_pins="4" equivalent="none"/>
+      <input name="I2" num_pins="4" equivalent="none"/>
+      <input name="I3" num_pins="4" equivalent="none"/>
       <output name="O" num_pins="4" equivalent="none"/>
       <clock name="clk" num_pins="1"/>
       <!-- Describe basic logic element.  
