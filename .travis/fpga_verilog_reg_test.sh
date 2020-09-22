@@ -13,8 +13,11 @@ echo -e "FPGA-Verilog Feature Tests";
 echo -e "Testing Verilog generation for LUTs: a single mode LUT6 FPGA using micro benchmarks";
 python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/lut_design/single_mode --debug --show_thread_logs
 
+echo -e "Testing Verilog generation for LUTs: simple fracturable LUT4 ";
+python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/lut_design/frac_lut4 --debug --show_thread_logs
+
 echo -e "Testing Verilog generation for LUTs: simple fracturable LUT6 ";
-python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/lut_design/frac_lut --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/lut_design/frac_lut6 --debug --show_thread_logs
 
 echo -e "Testing Verilog generation for LUTs: LUT6 with intermediate buffers";
 python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/lut_design/intermediate_buffer --debug --show_thread_logs

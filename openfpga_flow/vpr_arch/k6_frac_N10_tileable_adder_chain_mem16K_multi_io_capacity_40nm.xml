@@ -225,7 +225,19 @@
   <!-- ODIN II specific config ends -->
   <!-- Physical descriptions begin -->
   <layout tileable="true" through_channel="false">
-    <!--auto_layout aspect_ratio="1.0"-->
+    <auto_layout aspect_ratio="1.0">
+      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
+      <row type="io_top" starty="H-1" priority="100"/>
+      <row type="io_bottom" starty="0" priority="100"/>
+      <col type="io_left" startx="0" priority="100"/>
+      <col type="io_right" startx="W-1" priority="100"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+      <!--Column of 'memory' with 'EMPTY' blocks wherever a 'memory' does not fit. Vertical offset by 1 for perimeter.-->
+      <col type="memory" startx="2" starty="1" repeatx="8" priority="20"/>
+      <col type="EMPTY" startx="2" repeatx="8" starty="1" priority="19"/>
+    </auto_layout>
     <fixed_layout name="3x2" width="5" height="4">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <row type="io_top" starty="H-1" priority="100"/>
@@ -239,7 +251,6 @@
       <col type="memory" startx="2" starty="1" repeatx="8" priority="20"/>
       <col type="EMPTY" startx="2" repeatx="8" starty="1" priority="19"/>
     </fixed_layout>
-    <!-- /auto_layout -->
   </layout>
   <device>
     <!-- VB & JL: Using Ian Kuon's transistor sizing and drive strength data for routing, at 40 nm. Ian used BPTM 

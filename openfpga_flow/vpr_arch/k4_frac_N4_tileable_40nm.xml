@@ -1,16 +1,15 @@
 <!-- 
-  Architecture with no fracturable LUTs
+  Flagship Heterogeneous Architecture (No Carry Chains) for VTR 7.0.
 
   - 40 nm technology
   - General purpose logic block: 
-    K = 4, N = 4
+    K = 4, N = 4, fracturable 4 LUTs (can operate as one 4-LUT or two 3-LUTs with all 3 inputs shared) 
+    with optionally registered outputs
   - Routing architecture: L = 4, fc_in = 0.15, Fc_out = 0.1
-  - Local routing: a fully connected crossbar between LEs and CLB outputs
 
   Details on Modelling:
 
-  Based on flagship k6_frac_N10_mem32K_40nm.xml architecture.  This architecture has no fracturable LUTs nor any heterogeneous blocks.
-
+  Based on flagship k4_frac_N4_mem32K_40nm.xml architecture.
 
   Authors: Jason Luu, Jeff Goeders, Vaughn Betz
 -->
@@ -34,8 +33,22 @@
         <port name="inpad"/>
       </output_ports>
     </model>
+    <!-- A virtual model for I/O to be used in the physical mode of io block -->
+    <model name="frac_lut4">
+      <input_ports>
+        <port name="in"/>
+      </input_ports>
+      <output_ports>
+        <port name="lut3_out"/>
+        <port name="lut4_out"/>
+      </output_ports>
+    </model>
   </models>
   <tiles>
+    <!-- Do NOT add clock pins to I/O here!!! VPR does not build clock network in the way that OpenFPGA can support
+         If you need to register the I/O, define clocks in the circuit models
+         These clocks can be handled in back-end
+     -->
     <tile name="io" capacity="8" area="0">
       <equivalent_sites>
         <site pb_type="io"/>
@@ -54,8 +67,8 @@
       <equivalent_sites>
         <site pb_type="clb"/>
       </equivalent_sites>
-      <input name="I" num_pins="10" equivalent="full"/>
-      <output name="O" num_pins="4" equivalent="full"/>
+      <input name="I" num_pins="12" equivalent="full"/>
+      <output name="O" num_pins="8" equivalent="none"/>
       <clock name="clk" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
       <pinlocations pattern="spread"/>
@@ -72,6 +85,13 @@
       <fill type="clb" priority="10"/>
     </auto_layout>
     <fixed_layout name="2x2" width="4" height="4">
+      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
+      <perimeter type="io" priority="100"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+    </fixed_layout>
+    <fixed_layout name="4x4" width="6" height="6">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="100"/>
       <corners type="EMPTY" priority="101"/>
@@ -104,7 +124,7 @@
       <x distr="uniform" peak="1.000000"/>
       <y distr="uniform" peak="1.000000"/>
     </chan_width_distr>
-    <switch_block type="wilton" fs="3"/>
+    <switch_block type="wilton" fs="3" sub_type="subset" sub_fs="3"/>
     <connection_block input_switch_name="ipin_cblock"/>
   </device>
   <switchlist>
@@ -129,6 +149,7 @@
     <!--- VB & JL: using ITRS metal stack data, 96 nm half pitch wires, which are intermediate metal width/space.  
 			     With the 96 nm half pitch, such wires would take 60 um of height, vs. a 90 nm high (approximated as square) Stratix IV tile so this seems
 			     reasonable. Using a tile length of 90 nm, corresponding to the length of a Stratix IV tile if it were square. -->
+    <!-- GIVE a specific name for the segment! OpenFPGA appreciate that! -->
     <segment name="L4" freq="1.000000" length="4" type="unidir" Rmetal="101" Cmetal="22.5e-15">
       <mux name="0"/>
       <sb type="pattern">1 1 1 1 1</sb>
@@ -142,10 +163,14 @@
     <pb_type name="io">
       <input name="outpad" num_pins="1"/>
       <output name="inpad" num_pins="1"/>
+      <!-- Do NOT add clock pins to I/O here!!! VPR does not build clock network in the way that OpenFPGA can support
+           If you need to register the I/O, define clocks in the circuit models
+           These clocks can be handled in back-end
+       -->
       <!-- A mode denotes the physical implementation of an I/O 
            This mode will be not packable but is mainly used for fabric verilog generation   
         -->
-      <mode name="physical" packable="false">
+      <mode name="physical" disabled_in_pack="true">
         <pb_type name="iopad" blif_model=".subckt io" num_pb="1">
           <input name="outpad" num_pins="1"/>
           <output name="inpad" num_pins="1"/>
@@ -159,6 +184,7 @@
           </direct>
         </interconnect>
       </mode>
+
       <!-- IOs can operate as either inputs or outputs.
 	     Delays below come from Ian Kuon. They are small, so they should be interpreted as
 	     the delays to and from registers in the I/O (and generally I/Os are registered 
@@ -204,16 +230,135 @@
 	   routing area up significantly, we estimate into the ~70% range. 
 	   -->
     <pb_type name="clb">
-      <input name="I" num_pins="10" equivalent="full"/>
-      <output name="O" num_pins="4" equivalent="full"/>
+      <input name="I" num_pins="12" equivalent="full"/>
+      <output name="O" num_pins="8" equivalent="none"/>
       <clock name="clk" num_pins="1"/>
-      <!-- Describe basic logic element.  
-             Each basic logic element has a 4-LUT that can be optionally registered
+      <!-- Describe fracturable logic element.  
+             Each fracturable logic element has a 6-LUT that can alternatively operate as two 5-LUTs with shared inputs. 
+             The outputs of the fracturable logic element can be optionally registered
         -->
       <pb_type name="fle" num_pb="4">
         <input name="in" num_pins="4"/>
-        <output name="out" num_pins="1"/>
+        <output name="out" num_pins="2"/>
         <clock name="clk" num_pins="1"/>
+        <!-- Physical mode definition begin (physical implementation of the fle) -->
+        <mode name="physical" disabled_in_pack="true">
+          <pb_type name="fabric" num_pb="1">
+            <input name="in" num_pins="4"/>
+            <output name="out" num_pins="2"/>
+            <clock name="clk" num_pins="1"/>
+            <pb_type name="frac_logic" num_pb="1">
+              <input name="in" num_pins="4"/>
+              <output name="out" num_pins="2"/>
+              <!-- Define LUT -->
+              <pb_type name="frac_lut4" blif_model=".subckt frac_lut4" num_pb="1">
+                <input name="in" num_pins="4"/>
+                <output name="lut3_out" num_pins="2"/>
+                <output name="lut4_out" num_pins="1"/>
+              </pb_type>
+              <interconnect>
+                <direct name="direct1" input="frac_logic.in" output="frac_lut4.in"/>
+                <direct name="direct2" input="frac_lut4.lut3_out[1]" output="frac_logic.out[1]"/>
+                <!-- Xifan Tang: I use out[0] because the output of lut6 in lut6 mode is wired to the out[0] -->
+                <mux name="mux1" input="frac_lut4.lut4_out frac_lut4.lut3_out[0]" output="frac_logic.out[0]"/>
+              </interconnect>
+            </pb_type>
+            <!-- Define flip-flop -->
+            <pb_type name="ff" blif_model=".latch" num_pb="2" class="flipflop">
+              <input name="D" num_pins="1" port_class="D"/>
+              <output name="Q" num_pins="1" port_class="Q"/>
+              <clock name="clk" num_pins="1" port_class="clock"/>
+              <T_setup value="66e-12" port="ff.D" clock="clk"/>
+              <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+            </pb_type>
+            <interconnect>
+              <direct name="direct1" input="fabric.in" output="frac_logic.in"/>
+              <direct name="direct2" input="frac_logic.out[1:0]" output="ff[1:0].D"/>
+              <complete name="direct3" input="fabric.clk" output="ff[1:0].clk"/>
+              <mux name="mux1" input="ff[0].Q frac_logic.out[0]" output="fabric.out[0]">
+                <!-- LUT to output is faster than FF to output on a Stratix IV -->
+                <delay_constant max="25e-12" in_port="frac_logic.out[0]" out_port="fabric.out[0]"/>
+                <delay_constant max="45e-12" in_port="ff[0].Q" out_port="fabric.out[0]"/>
+              </mux>
+              <mux name="mux2" input="ff[1].Q frac_logic.out[1]" output="fabric.out[1]">
+                <!-- LUT to output is faster than FF to output on a Stratix IV -->
+                <delay_constant max="25e-12" in_port="frac_logic.out[1]" out_port="fabric.out[1]"/>
+                <delay_constant max="45e-12" in_port="ff[1].Q" out_port="fabric.out[1]"/>
+              </mux>
+            </interconnect>
+          </pb_type>
+          <interconnect>
+            <direct name="direct1" input="fle.in" output="fabric.in"/>
+            <direct name="direct2" input="fabric.out" output="fle.out"/>
+            <direct name="direct3" input="fle.clk" output="fabric.clk"/>
+          </interconnect>
+        </mode>
+        <!-- Physical mode definition end (physical implementation of the fle) -->
+        <!-- Dual 3-LUT mode definition begin -->
+        <mode name="n2_lut3">
+          <pb_type name="lut3inter" num_pb="1">
+            <input name="in" num_pins="3"/>
+            <output name="out" num_pins="2"/>
+            <clock name="clk" num_pins="1"/>
+            <pb_type name="ble3" num_pb="2">
+              <input name="in" num_pins="3"/>
+              <output name="out" num_pins="1"/>
+              <clock name="clk" num_pins="1"/>
+              <!-- Define the LUT -->
+              <pb_type name="lut3" blif_model=".names" num_pb="1" class="lut">
+                <input name="in" num_pins="3" port_class="lut_in"/>
+                <output name="out" num_pins="1" port_class="lut_out"/>
+                <!-- LUT timing using delay matrix -->
+                <!-- These are the physical delay inputs on a Stratix IV LUT but because VPR cannot do LUT rebalancing,
+                           we instead take the average of these numbers to get more stable results
+                      82e-12
+                      173e-12
+                      261e-12
+                      263e-12
+                      398e-12
+                      -->
+                <delay_matrix type="max" in_port="lut3.in" out_port="lut3.out">
+                  235e-12
+                  235e-12
+                  235e-12
+                </delay_matrix>
+              </pb_type>
+              <!-- Define the flip-flop -->
+              <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
+                <input name="D" num_pins="1" port_class="D"/>
+                <output name="Q" num_pins="1" port_class="Q"/>
+                <clock name="clk" num_pins="1" port_class="clock"/>
+                <T_setup value="66e-12" port="ff.D" clock="clk"/>
+                <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+              </pb_type>
+              <interconnect>
+                <direct name="direct1" input="ble3.in[2:0]" output="lut3[0:0].in[2:0]"/>
+                <direct name="direct2" input="lut3[0:0].out" output="ff[0:0].D">
+                  <!-- Advanced user option that tells CAD tool to find LUT+FF pairs in netlist -->
+                  <pack_pattern name="ble3" in_port="lut3[0:0].out" out_port="ff[0:0].D"/>
+                </direct>
+                <direct name="direct3" input="ble3.clk" output="ff[0:0].clk"/>
+                <mux name="mux1" input="ff[0:0].Q lut3.out[0:0]" output="ble3.out[0:0]">
+                  <!-- LUT to output is faster than FF to output on a Stratix IV -->
+                  <delay_constant max="25e-12" in_port="lut3.out[0:0]" out_port="ble3.out[0:0]"/>
+                  <delay_constant max="45e-12" in_port="ff[0:0].Q" out_port="ble3.out[0:0]"/>
+                </mux>
+              </interconnect>
+            </pb_type>
+            <interconnect>
+              <direct name="direct1" input="lut3inter.in" output="ble3[0:0].in"/>
+              <direct name="direct2" input="lut3inter.in" output="ble3[1:1].in"/>
+              <direct name="direct3" input="ble3[1:0].out" output="lut3inter.out"/>
+              <complete name="complete1" input="lut3inter.clk" output="ble3[1:0].clk"/>
+            </interconnect>
+          </pb_type>
+          <interconnect>
+            <direct name="direct1" input="fle.in[2:0]" output="lut3inter.in"/>
+            <direct name="direct2" input="lut3inter.out" output="fle.out"/>
+            <direct name="direct3" input="fle.clk" output="lut3inter.clk"/>
+          </interconnect>
+        </mode>
+        <!-- Dual 3-LUT mode definition end -->
         <!-- 4-LUT mode definition begin -->
         <mode name="n1_lut4">
           <!-- Define 4-LUT mode -->
@@ -226,6 +371,15 @@
               <input name="in" num_pins="4" port_class="lut_in"/>
               <output name="out" num_pins="1" port_class="lut_out"/>
               <!-- LUT timing using delay matrix -->
+              <!-- These are the physical delay inputs on a Stratix IV LUT but because VPR cannot do LUT rebalancing,
+                       we instead take the average of these numbers to get more stable results
+                  82e-12
+                  173e-12
+                  261e-12
+                  263e-12
+                  398e-12
+                  397e-12
+                  -->
               <delay_matrix type="max" in_port="lut4.in" out_port="lut4.out">
                 261e-12
                 261e-12
@@ -284,9 +438,8 @@
                then the outputs those 6-LUTs take get evenly distributed across all four sides of the CLB instead of clumped on two sides (which is what happens with a more
                naive specification).
           -->
-        <complete name="output_crossbar" input="fle[3:0].out" output="clb.O">
-          <delay_constant max="45e-12" in_port="fle[3:0].out" out_port="clb.O"/>
-        </complete>
+        <direct name="clbouts1" input="fle[3:0].out[0:0]" output="clb.O[3:0]"/>
+        <direct name="clbouts2" input="fle[3:0].out[1:1]" output="clb.O[7:4]"/>
       </interconnect>
       <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 10% of the tracks in a channel -->
       <!-- Place this general purpose logic block in any unspecified column -->
