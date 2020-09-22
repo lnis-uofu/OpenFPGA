@@ -38,4 +38,18 @@ python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/generate_testbench --
 echo -e "Testing user-defined simulation settings: clock frequency and number of cycles";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/fixed_simulation_settings --debug --show_thread_logs
 
+echo -e "Testing K4 series FPGA";
+echo -e "Testing K4N4 with facturable LUTs";
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n4_frac_lut --debug --show_thread_logs
+echo -e "Testing K4N4 with hard adders";
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n4_adder --debug --show_thread_logs
+echo -e "Testing K4N4 without local routing architecture";
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n4_no_local_routing --debug --show_thread_logs
+echo -e "Testing K4N4 with block RAM";
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n4_bram --debug --show_thread_logs
+echo -e "Testing K4N4 with multiple lengths of routing segments";
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n4_L124 --debug --show_thread_logs
+echo -e "Testing K4N4 with 32-bit fracturable multiplier";
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n4_frac_mult --debug --show_thread_logs
+
 end_section "OpenFPGA.TaskTun"
