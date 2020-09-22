@@ -1211,7 +1211,7 @@ t_track2pin_map build_gsb_track_to_ipin_map(const RRGraph& rr_graph,
         ipin_Fc_out.push_back(ipin_Fc);
         if (0 != ipin_Fc) { 
           skip_conn2track = false;
-          break;
+          continue;
         }
       }
 
@@ -1290,7 +1290,7 @@ t_pin2track_map build_gsb_opin_to_track_map(const RRGraph& rr_graph,
         opin_Fc_out.push_back(opin_Fc);
         if (0 != opin_Fc) { 
           skip_conn2track = false;
-          break;
+          continue;
         }
       }
 
