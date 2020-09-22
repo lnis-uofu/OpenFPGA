@@ -184,7 +184,16 @@
        This is strongly recommended if you want to PnR large FPGA fabric
     -->
   <layout tileable="true">
-    <!-- auto_layout aspect_ratio="1.0" -->
+    <auto_layout aspect_ratio="1.0">
+      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
+      <perimeter type="io" priority="100"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+      <!--Column of 'memory' with 'EMPTY' blocks wherever a 'memory' does not fit. Vertical offset by 1 for perimeter.-->
+      <col type="memory" startx="16" starty="1" repeatx="16" priority="20"/>
+      <col type="EMPTY" startx="16" repeatx="16" starty="1" priority="19"/>
+    </auto_layout-->
     <!-- Apply a fixed layout of 2x2 core array.
          VPR8 considers the I/O ring in the array size
          Therefore the height and width are both 4
@@ -199,7 +208,6 @@
       <col type="memory" startx="16" starty="1" repeatx="16" priority="20"/>
       <col type="EMPTY" startx="16" repeatx="16" starty="1" priority="19"/>
     </fixed_layout>
-    <!--/auto_layout-->
   </layout>
   <device>
     <sizing R_minW_nmos="8926" R_minW_pmos="16067"/>
