@@ -43,5 +43,7 @@ echo -e "Testing K4N4 with facturable LUTs";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n4_frac_lut --debug --show_thread_logs
 echo -e "Testing K4N4 with hard adders";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n4_adder --debug --show_thread_logs
+echo -e "Testing K4N4 without local routing architecture";
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n4_no_local_routing --debug --show_thread_logs
 
 end_section "OpenFPGA.TaskTun"
