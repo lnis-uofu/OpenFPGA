@@ -2,14 +2,12 @@
 // Design Name : config_latch
 // File Name   : config_latch.v
 // Function    : A Configurable Latch where data storage
-//               can be updated at rising clock edge 
-//               when wl is enabled
+//               can be updated when wl is enabled
 //               Reset is active low
 // Coder       : Xifan TANG
 //-----------------------------------------------------
 module config_latch (
   input resetb, // Reset input
-  input clk, // Clock Input
   input wl, // Data Enable
   input bl, // Data Input
   output Q, // Q output
@@ -19,7 +17,7 @@ module config_latch (
 reg q_reg;
 
 //-------------Code Starts Here---------
-always @ ( posedge clk or posedge resetb) begin
+always @ ( posedge resetb) begin
   if (~resetb) begin
     q_reg <= 1'b0;
   end else if (1'b1 == wl) begin
