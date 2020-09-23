@@ -4,6 +4,7 @@
 // Function    : A Configurable Latch where data storage
 //               can be updated at rising clock edge 
 //               when wl is enabled
+//               Reset is active high
 // Coder       : Xifan TANG
 //-----------------------------------------------------
 module config_latch (
