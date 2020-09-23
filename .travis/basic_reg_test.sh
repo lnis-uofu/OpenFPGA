@@ -29,6 +29,9 @@ echo -e "Testing standalone (flatten memory) configuration protocol of a K4N4 FP
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/flatten_memory --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/preconfig_testbench/flatten_memory --debug --show_thread_logs
 
+echo -e "Testing fixed device layout and routing channel width";
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/fixed_device_support --debug --show_thread_logs
+
 echo -e "Testing fabric Verilog generation only";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/generate_fabric --debug --show_thread_logs
 
