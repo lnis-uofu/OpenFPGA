@@ -51,5 +51,7 @@ echo -e "Testing K4N4 with multiple lengths of routing segments";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n4_L124 --debug --show_thread_logs
 echo -e "Testing K4N4 with 32-bit fracturable multiplier";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n4_frac_mult --debug --show_thread_logs
+echo -e "Testing K4N5 with pattern based local routing";
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n5_pattern_local_routing --debug --show_thread_logs
 
 end_section "OpenFPGA.TaskTun"
