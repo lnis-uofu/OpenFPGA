@@ -7,6 +7,6 @@ Design Flows
 .. toctree::
    :maxdepth: 2
 
-   blif_to_verification
+   verilog2verification
 
-   verilog_to_gds2
+   verilog2gds2

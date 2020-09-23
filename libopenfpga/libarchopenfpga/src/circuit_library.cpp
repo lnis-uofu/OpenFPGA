@@ -2,6 +2,7 @@
 #include <algorithm>
 
 #include "vtr_assert.h"
+#include "vtr_log.h"
 
 #include "openfpga_port_parser.h"
 #include "circuit_library.h"
@@ -78,11 +79,11 @@ std::string CircuitLibrary::model_verilog_netlist(const CircuitModelId& model_id
   return model_verilog_netlists_[model_id]; 
 }
 
-/* Access the path + file of user-defined circuit netlist of a circuit model */
-std::string CircuitLibrary::model_circuit_netlist(const CircuitModelId& model_id) const {
+/* Access the path + file of user-defined spice netlist of a circuit model */
+std::string CircuitLibrary::model_spice_netlist(const CircuitModelId& model_id) const {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
-  return model_circuit_netlists_[model_id]; 
+  return model_spice_netlists_[model_id]; 
 }
 
 /* Access the is_default flag (check if this is the default circuit model in the type) of a circuit model */
@@ -1131,7 +1132,7 @@ CircuitModelId CircuitLibrary::add_model(const enum e_circuit_model_type& type) 
   model_names_.emplace_back();
   model_prefix_.emplace_back();
   model_verilog_netlists_.emplace_back();
-  model_circuit_netlists_.emplace_back();
+  model_spice_netlists_.emplace_back();
   model_is_default_.push_back(false);
   sub_models_.emplace_back();
 
@@ -1225,11 +1226,11 @@ void CircuitLibrary::set_model_verilog_netlist(const CircuitModelId& model_id, c
   return;
 }
 
-/* Set the circuit_netlist of a Circuit Model */
-void CircuitLibrary::set_model_circuit_netlist(const CircuitModelId& model_id, const std::string& circuit_netlist) {
+/* Set the spice_netlist of a Circuit Model */
+void CircuitLibrary::set_model_spice_netlist(const CircuitModelId& model_id, const std::string& spice_netlist) {
   /* validate the model_id */
   VTR_ASSERT(valid_model_id(model_id));
-  model_circuit_netlists_[model_id] = circuit_netlist;
+  model_spice_netlists_[model_id] = spice_netlist;
   return;
 }
 
@@ -1962,7 +1963,7 @@ void CircuitLibrary::link_buffer_model(const CircuitModelId& model_id) {
   /* Get the circuit model id by name, skip those with empty names*/
   for (size_t buffer_id = 0; buffer_id < buffer_model_names_[model_id].size(); ++buffer_id) {
     if (true == buffer_model_names_[model_id][buffer_id].empty()) {
-      return;
+      continue;
     }
     buffer_model_ids_[model_id][buffer_id] = model(buffer_model_names_[model_id][buffer_id]);
   }
@@ -2106,6 +2107,23 @@ void CircuitLibrary::build_timing_graphs() {
     set_timing_graph_delays(model_id);
   }
   return;
+}
+
+/* Automatically identify the default models for each type*/
+void CircuitLibrary::auto_detect_default_models() {
+  /* Go through the model fast look-up */
+  for (const auto& curr_type_models : model_lookup_) {
+    if ( (1 == curr_type_models.size())
+      && (false == model_is_default(curr_type_models[0]))) {
+      /* This is the only model in this type,
+       * it is safe to set it to be default
+       * Give a warning for users
+       */
+      set_model_is_default(curr_type_models[0], true);
+      VTR_LOG_WARN("Automatically set circuit model '%s' to be default in its type.\n",
+                   model_name(curr_type_models[0]).c_str());
+    }
+  }
 }
 
 /************************************************************************

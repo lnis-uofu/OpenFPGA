@@ -1,0 +1,12 @@
+# This BLIF is created to test the feature of
+# loading external bitstream files.
+# Therefore, its module name is and2 rather than or2
+# Please do NOT use this file is regular regression tests
+.model and2
+.inputs a b
+.outputs c
+
+.names a b c
+00 0
+
+.end

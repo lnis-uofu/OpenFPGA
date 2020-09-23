@@ -1,6 +1,7 @@
 /************************************************************************
  * Member functions for class PbTypeAnnotation
  ***********************************************************************/
+#include <algorithm>
 #include "vtr_log.h"
 #include "vtr_assert.h"
 #include "pb_type_annotation.h"
@@ -85,22 +86,13 @@ std::vector<std::string> PbTypeAnnotation::port_names() const {
   return keys;
 }
 
-BasicPort PbTypeAnnotation::physical_pb_type_port(const std::string& port_name) const {
-  std::map<std::string, BasicPort>::const_iterator it = operating_pb_type_ports_.find(port_name);
+std::map<BasicPort, std::array<int, 2>> PbTypeAnnotation::physical_pb_type_port(const std::string& port_name) const {
+  std::map<std::string, std::map<BasicPort, std::array<int, 2>>>::const_iterator it = operating_pb_type_ports_.find(port_name);
   if (it == operating_pb_type_ports_.end()) {
     /* Return an empty port */
-    return BasicPort();
+    return std::map<BasicPort, std::array<int, 2>>();
   }
   return operating_pb_type_ports_.at(port_name);
-}
-
-int PbTypeAnnotation::physical_pin_rotate_offset(const std::string& port_name) const {
-  std::map<std::string, int>::const_iterator it = physical_pin_rotate_offsets_.find(port_name);
-  if (it == physical_pin_rotate_offsets_.end()) {
-    /* Return a zero offset which is default */
-    return 0;
-  }
-  return physical_pin_rotate_offsets_.at(port_name);
 }
 
 std::vector<std::string> PbTypeAnnotation::interconnect_names() const {
@@ -177,27 +169,65 @@ void PbTypeAnnotation::set_physical_pb_type_index_offset(const int& value) {
 void PbTypeAnnotation::add_pb_type_port_pair(const std::string& operating_pb_port_name,
                                              const BasicPort& physical_pb_port) {
   /* Give a warning if the operating_pb_port_name already exist */
-  std::map<std::string, BasicPort>::const_iterator it = operating_pb_type_ports_.find(operating_pb_port_name);
-  /* Give a warning if the interconnection name already exist */
-  if (it != operating_pb_type_ports_.end()) {
-    VTR_LOG_WARN("Redefine operating pb type port '%s' with physical pb type port '%s'\n",
-                  operating_pb_port_name.c_str(), physical_pb_port.get_name().c_str());
-  }
+  std::map<std::string, std::map<BasicPort, std::array<int, 2>>>::const_iterator it = operating_pb_type_ports_.find(operating_pb_port_name);
 
-  operating_pb_type_ports_[operating_pb_port_name] = physical_pb_port;
-}
-
-void PbTypeAnnotation::set_physical_pin_rotate_offset(const std::string& operating_pb_port_name,
-                                                      const int& physical_pin_rotate_offset) {
-  std::map<std::string, BasicPort>::const_iterator it = operating_pb_type_ports_.find(operating_pb_port_name);
-  /* Give a warning if the interconnection name already exist */
+  /* If not exist, initialize and set a default value */
   if (it == operating_pb_type_ports_.end()) {
-    VTR_LOG_ERROR("Operating pb type port '%s' does not exist! Ignore physical pin rotate offset '%d'\n",
-                  operating_pb_port_name.c_str(), physical_pin_rotate_offset);
+    operating_pb_type_ports_[operating_pb_port_name][physical_pb_port] = {0, 0};
+    /* We can return early */
     return;
   }
 
-  physical_pin_rotate_offsets_[operating_pb_port_name] = physical_pin_rotate_offset;
+  /* If the physical port is not in the list, we create one and set a default value */
+  if (0 == operating_pb_type_ports_[operating_pb_port_name].count(physical_pb_port)) {
+    operating_pb_type_ports_[operating_pb_port_name][physical_pb_port] = {0, 0};
+  }
+}
+
+void PbTypeAnnotation::set_physical_pin_initial_offset(const std::string& operating_pb_port_name,
+                                                       const BasicPort& physical_pb_port,
+                                                       const int& physical_pin_initial_offset) {
+  std::map<std::string, std::map<BasicPort, std::array<int, 2>>>::const_iterator it = operating_pb_type_ports_.find(operating_pb_port_name);
+
+  if (it == operating_pb_type_ports_.end()) {
+    VTR_LOG_ERROR("The operating pb_type port '%s' is not valid!\n",
+                  operating_pb_port_name.c_str());
+    exit(1);
+  }
+
+  if (operating_pb_type_ports_[operating_pb_port_name].end() == operating_pb_type_ports_[operating_pb_port_name].find(physical_pb_port)) {
+    VTR_LOG_ERROR("The physical pb_type port '%s[%lu:%lu]' definition for operating pb_type port '%s' is not valid!\n",
+                  physical_pb_port.get_name().c_str(),
+                  physical_pb_port.get_lsb(),
+                  physical_pb_port.get_msb(),
+                  operating_pb_port_name.c_str());
+    exit(1);
+  }
+
+  operating_pb_type_ports_[operating_pb_port_name][physical_pb_port][0] = physical_pin_initial_offset;
+}
+
+void PbTypeAnnotation::set_physical_pin_rotate_offset(const std::string& operating_pb_port_name,
+                                                      const BasicPort& physical_pb_port,
+                                                      const int& physical_pin_rotate_offset) {
+  std::map<std::string, std::map<BasicPort, std::array<int, 2>>>::const_iterator it = operating_pb_type_ports_.find(operating_pb_port_name);
+
+  if (it == operating_pb_type_ports_.end()) {
+    VTR_LOG_ERROR("The operating pb_type port '%s' is not valid!\n",
+                  operating_pb_port_name.c_str());
+    exit(1);
+  }
+
+  if (operating_pb_type_ports_[operating_pb_port_name].end() == operating_pb_type_ports_[operating_pb_port_name].find(physical_pb_port)) {
+    VTR_LOG_ERROR("The physical pb_type port '%s[%lu:%lu]' definition for operating pb_type port '%s' is not valid!\n",
+                  physical_pb_port.get_name().c_str(),
+                  physical_pb_port.get_lsb(),
+                  physical_pb_port.get_msb(),
+                  operating_pb_port_name.c_str());
+    exit(1);
+  }
+
+  operating_pb_type_ports_[operating_pb_port_name][physical_pb_port][1] = physical_pin_rotate_offset;
 }
 
 void PbTypeAnnotation::add_interconnect_circuit_model_pair(const std::string& interc_name,

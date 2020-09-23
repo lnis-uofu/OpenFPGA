@@ -40,10 +40,12 @@ size_t get_grid_num_classes(const t_grid_tile& cur_grid,
                             const e_pin_type& pin_type);
 
 bool is_chanx_exist(const DeviceGrid& grids,
-                    const vtr::Point<size_t>& chanx_coord);
+                    const vtr::Point<size_t>& chanx_coord,
+                    const bool& through_channel=false);
 
 bool is_chany_exist(const DeviceGrid& grids,
-                    const vtr::Point<size_t>& chany_coord);
+                    const vtr::Point<size_t>& chany_coord,
+                    const bool& through_channel=false);
 
 bool is_chanx_right_to_multi_height_grid(const DeviceGrid& grids,
                                          const vtr::Point<size_t>& chanx_coord,

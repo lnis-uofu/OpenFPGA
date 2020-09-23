@@ -62,7 +62,7 @@ void build_wire_modules(ModuleManager& module_manager,
   /* Print Verilog models for regular wires*/
   for (const auto& wire_model : circuit_lib.models_by_type(CIRCUIT_MODEL_WIRE)) { 
     /* Bypass user-defined circuit models */
-    if ( (!circuit_lib.model_circuit_netlist(wire_model).empty()) 
+    if ( (!circuit_lib.model_spice_netlist(wire_model).empty()) 
       && (!circuit_lib.model_verilog_netlist(wire_model).empty()) ) {
       continue;
     }

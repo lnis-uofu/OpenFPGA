@@ -17,7 +17,7 @@ RUN mkdir -p /release /dev
 
 RUN cd release && git clone --single-branch --branch master https://github.com/LNIS-Projects/OpenFPGA.git OpenFPGA
 
-RUN cd /release/OpenFPGA && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=debug -DCMAKE_NO_GRAPHICS=on && make
+RUN cd /release/OpenFPGA && mkdir build && cd build && cmake .. -DCMAKE_NO_GRAPHICS=on && make
 
 RUN rm -rf /var/lib/apt/lists/*
 

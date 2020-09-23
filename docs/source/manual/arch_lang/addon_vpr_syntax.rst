@@ -52,7 +52,7 @@ Layout
 
   .. warning:: Do NOT enable ``through_channel`` if you are not using the tileable routing resource graph generator!
   
-  .. warning:: Currently ``through_channel`` supports only a fixed routing channel width!
+  .. warning:: You cannot use ``spread`` pin location for the ``height > 1`` or ``width >1`` tiles when using the tileable routing resource graph!!! Otherwise, it will cause undriven pins in your device!!!
 
 
 A quick example to show tileable routing is enabled and through channels are disabled:

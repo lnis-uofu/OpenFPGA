@@ -324,4 +324,42 @@ std::vector<t_port*> find_pb_type_ports_match_circuit_model_port_type(t_pb_type*
   return ports;
 }
 
+/*********************************************************************
+ * Generate the full hierarchy for a pb_type
+ * The final name will be in the following format:
+ * <top_pb_type_name>[<mode_name>].<parent_pb_type_name> ... <current_pb_type_name>
+ *
+ * TODO: This function should be part of the VPR libarchfpga parser
+ **********************************************************************/
+std::string generate_pb_type_hierarchy_path(t_pb_type* cur_pb_type) {
+  std::string hie_name(cur_pb_type->name);
+
+  t_pb_type* parent_pb_type = cur_pb_type;
+
+  /* Backward trace until we meet the top-level pb_type */
+  while (1) {
+    /* If there is no parent mode, this is a top-level pb_type, quit the loop here */
+    t_mode* parent_mode = parent_pb_type->parent_mode;
+    if (NULL == parent_mode) {
+      break;
+    }
+    
+    /* Add the mode name to the full hierarchy */
+    hie_name = std::string("[") + std::string(parent_mode->name) + std::string("].") + hie_name;
+
+    /* Backtrace to the upper level */
+    parent_pb_type = parent_mode->parent_pb_type;
+
+    /* If there is no parent pb_type, this is a top-level pb_type, quit the loop here */
+    if (NULL == parent_pb_type) {
+      break;
+    }
+
+    /* Add the current pb_type name to the hierarchy name */
+    hie_name = std::string(parent_pb_type->name) + hie_name;
+  }
+
+  return hie_name;
+}
+
 } /* end namespace openfpga */

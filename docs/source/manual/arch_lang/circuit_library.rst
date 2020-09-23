@@ -78,9 +78,9 @@ Here, we focus these common syntax and we will detail special syntax in :ref:`ci
 
 .. warning:: ``prefix`` may be deprecated soon
 
-.. note:: Multiplexers cannot be user-defined.
+.. warning:: Multiplexers cannot be user-defined.
 
-.. note:: For a circuit model type, only one circuit model can be set as default.
+.. warning:: For a circuit model type, only one circuit model is allowed to be set as default. If there is only one circuit model defined in a type, it will be considered as the default automatically.
 
 .. note:: If ``<spice_netlist>`` or ``<verilog_netlist>`` are not specified, FPGA-Verilog/SPICE auto-generates the Verilog/SPICE netlists for multiplexers, wires, and LUTs.
 

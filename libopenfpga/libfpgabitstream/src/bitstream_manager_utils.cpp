@@ -55,4 +55,21 @@ std::vector<ConfigBlockId> find_bitstream_manager_top_blocks(const BitstreamMana
   return top_blocks;
 }
 
+/********************************************************************
+ * Find the index of a configuration bit in the children bits of its parent block
+ *******************************************************************/
+size_t find_bitstream_manager_config_bit_index_in_parent_block(const BitstreamManager& bitstream_manager,
+                                                               const ConfigBitId& bit_id) {
+  size_t curr_index = 0;
+  for (const ConfigBitId& cand_bit : bitstream_manager.block_bits(bitstream_manager.bit_parent_block(bit_id))) {
+    if (cand_bit == bit_id) {
+      break;
+    }
+    curr_index++;
+  }
+
+  return curr_index;
+}
+
+
 } /* end namespace openfpga */

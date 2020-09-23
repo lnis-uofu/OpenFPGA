@@ -175,7 +175,7 @@
        <port type="output" prefix="Qb" size="1"/>
        <port type="clock" prefix="prog_clk" lib_name="clk" size="1" is_global="true" default_val="0" is_prog="true"/>
     </circuit_model>
-    <circuit_model type="iopad" name="iopad" prefix="iopad" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/io.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/io.v">
+    <circuit_model type="iopad" name="iopad" prefix="iopad" is_default="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/io.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/io.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
@@ -184,7 +184,7 @@
       <port type="input" prefix="outpad" size="1"/>
       <port type="output" prefix="inpad" size="1"/>
     </circuit_model>
-    <circuit_model type="hard_logic" name="adder" prefix="adder" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/adder.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/adder.v">
+    <circuit_model type="hard_logic" name="adder" prefix="adder" is_default="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/adder.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/adder.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>

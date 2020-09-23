@@ -198,6 +198,43 @@ size_t check_circuit_model_port_required(const CircuitLibrary& circuit_lib,
 }
 
 /************************************************************************
+ *  A generic function to search each default circuit model by types 
+ *  that have been defined by users.
+ *  If a type of circuit model is defined, we expect there is a default model 
+ *  to be specified
+ ***********************************************************************/
+static 
+size_t check_default_circuit_model_by_types(const CircuitLibrary& circuit_lib) {
+  size_t num_err = 0;
+
+  for (size_t itype = 0; itype < NUM_CIRCUIT_MODEL_TYPES; ++itype) {
+    std::vector<CircuitModelId> curr_models = circuit_lib.models_by_type(e_circuit_model_type(itype));
+    if (0 == curr_models.size()) {
+       continue;
+    }
+    /* Go through the models and try to find a default one */
+    size_t found_default_counter = 0;
+    for (const auto& curr_model : curr_models) {
+      if (true == circuit_lib.model_is_default(curr_model)) {
+        found_default_counter++;
+      }
+    }
+    if (0 == found_default_counter) {
+      VTR_LOG_ERROR("Miss a default circuit model for the type %s! Try to define it in your architecture file!\n",
+                    CIRCUIT_MODEL_TYPE_STRING[itype]);
+      num_err++;
+    }
+    if (1 < found_default_counter) {
+      VTR_LOG_ERROR("Found >1 default circuit models for the type %s! Expect only one!\n",
+                    CIRCUIT_MODEL_TYPE_STRING[itype]);
+      num_err++;
+    }
+  }
+
+  return num_err;
+}
+
+/************************************************************************
  *  A generic function to find the default circuit model with a given type
  *  If not found, we give an error
  ***********************************************************************/
@@ -207,9 +244,9 @@ size_t check_required_default_circuit_model(const CircuitLibrary& circuit_lib,
   size_t num_err = 0;
 
   if (CircuitModelId::INVALID() == circuit_lib.default_model(circuit_model_type)) {
-    VTR_LOG_ERROR("A default circuit model for the type %s! Try to define it in your architecture file!\n",
+    VTR_LOG_ERROR("Miss a default circuit model for the type %s! Try to define it in your architecture file!\n",
                   CIRCUIT_MODEL_TYPE_STRING[size_t(circuit_model_type)]);
-    exit(1);
+    num_err++;
   }
 
   return num_err;
@@ -626,7 +663,10 @@ bool check_circuit_library(const CircuitLibrary& circuit_lib) {
 
   num_err += check_circuit_model_port_required(circuit_lib, CIRCUIT_MODEL_LUT, lut_port_types_required);
 
-  /* 10. We must have default circuit models for these types: MUX, channel wires and wires */
+  /* 10. For each type of circuit models that are define, we must have 1 default model
+   *     We must have default circuit models for these types: MUX, channel wires and wires 
+   */
+  num_err += check_default_circuit_model_by_types(circuit_lib);
   num_err += check_required_default_circuit_model(circuit_lib, CIRCUIT_MODEL_MUX);
   num_err += check_required_default_circuit_model(circuit_lib, CIRCUIT_MODEL_CHAN_WIRE);
   num_err += check_required_default_circuit_model(circuit_lib, CIRCUIT_MODEL_WIRE);

@@ -25,8 +25,9 @@ sub print_usage()
   print "              -i <input_blif_path>\n";
   print "              -o <output_blif_path>\n";
   print "      Options: (Optional)\n";
-  print "              -remove_buffers\n";
-  print "              -add_default_clk\n";
+  print "              -remove_buffers: remove buffers in the blif\n";
+  print "              -add_default_clk: add a default clock using the default clock name 'clk', or set by users through the option '-default clk'\n";
+  print "              -default_clk <clk_name>: set the default clk name to be used by .latch\n";
   print "              -initial_blif <input_blif_path>\n";
   print "\n";
   return 0;
@@ -46,6 +47,8 @@ sub opts_read()
         $frpt = $ARGV[$iargv+1];
       } elsif ("-add_default_clk" eq $ARGV[$iargv]) {
         $add_default_clk = "on";
+      } elsif ("-default_clk" eq $ARGV[$iargv]) {
+        $default_clk_name = $ARGV[$iargv+1];
       } elsif ("-initial_blif" eq $ARGV[$iargv]) {
         $finitial = $ARGV[$iargv+1];
       } elsif ("-remove_buffers" eq $ARGV[$iargv]) {
@@ -219,7 +222,7 @@ sub scan_blif()
   my ($line_no) = (0);
 
   if (!defined($finitial)) {
-    $latch_token = "re clk";
+    $latch_token = "re $default_clk_name";
   } else {
     my $latch_token_found = 0;
     my $count = 0;

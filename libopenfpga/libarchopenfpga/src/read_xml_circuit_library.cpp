@@ -459,7 +459,7 @@ void read_xml_output_mask(pugi::xml_node& xml_port,
     if (circuit_lib.port_size(port) != mask_vector.size()) {
       archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_port),
                      "Invalid lut_output_mask attribute '%s'! It must match the port size (=%lu)\n",
-                     output_mask_attr, circuit_lib.port_size(port));
+                     output_mask_attr.c_str(), circuit_lib.port_size(port));
     } 
   } else {
     /* By default, we give a mask vector covering each pin of the port */
@@ -674,7 +674,7 @@ void read_xml_circuit_model(pugi::xml_node& xml_model,
   circuit_lib.set_model_prefix(model, std::string(prefix_attr));
 
   /* Find a SPICE netlist which is an optional attribute*/
-  circuit_lib.set_model_circuit_netlist(model, get_attribute(xml_model, "spice_netlist", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string(""));
+  circuit_lib.set_model_spice_netlist(model, get_attribute(xml_model, "spice_netlist", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string(""));
 
   /* Find a Verilog netlist which is an optional attribute*/
   circuit_lib.set_model_verilog_netlist(model, get_attribute(xml_model, "verilog_netlist", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string(""));

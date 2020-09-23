@@ -21,6 +21,7 @@ class BasicPort {
     BasicPort(const BasicPort& basic_port); /* Copy constructor */
   public: /* Overloaded operators */
     bool operator== (const BasicPort& portA) const;
+    bool operator< (const BasicPort& portA) const;
   public: /* Accessors */
     size_t get_width() const; /* get the port width */
     size_t get_msb() const; /* get the LSB */

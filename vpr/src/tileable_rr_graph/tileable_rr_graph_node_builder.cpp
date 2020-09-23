@@ -186,7 +186,8 @@ size_t estimate_num_chanx_rr_nodes(const DeviceGrid& grids,
       vtr::Point<size_t> chanx_coord(ix, iy);
 
       /* Bypass if the routing channel does not exist when through channels are not allowed */
-      if (false == is_chanx_exist(grids, chanx_coord)) {
+      if ( (false == through_channel)
+        && (false == is_chanx_exist(grids, chanx_coord))) {
         continue;
       }
 
@@ -237,10 +238,12 @@ size_t estimate_num_chany_rr_nodes(const DeviceGrid& grids,
     for (size_t iy = 1; iy < grids.height() - 1; ++iy) { 
       vtr::Point<size_t> chany_coord(ix, iy);
 
-      /* Bypass if the routing channel does not exist when through channels are not allowed */
-      if (false == is_chany_exist(grids, chany_coord)) {
+      /* Bypass if the routing channel does not exist when through channel are not allowed */
+      if ( (false == through_channel)
+        && (false == is_chany_exist(grids, chany_coord))) {
         continue;
       }
+
 
       bool force_start = false;
       bool force_end = false;
@@ -837,7 +840,7 @@ void load_chanx_rr_nodes_basic_info(RRGraph& rr_graph,
          *  track0 ----->+-----------------------------+----> track0
          *               |                             |
          */
-        if (true == is_chanx_exist(grids, chanx_coord)) {
+        if (true == is_chanx_exist(grids, chanx_coord, through_channel)) {
           /* Rotate the chanx_details by an offset of ix - 1, the distance to the most left channel */
           /* For INC_DIRECTION, we use clockwise rotation 
            * node_id A ---->   -----> node_id D
@@ -922,7 +925,9 @@ void load_chany_rr_nodes_basic_info(RRGraph& rr_graph,
 
       ChanNodeDetails chany_details = build_unidir_chan_node_details(chan_width, grids.height() - 2,
                                                                      force_start, force_end, segment_infs); 
-      /* Force node_ids from the previous chanx */
+      /* Force node_ids from the previous chany
+       * This will not be applied when the routing channel is cut off (force to start)
+       */
       if (0 < track_node_ids.size()) {
         /* Rotate should be done based on a typical case of routing tracks.
          * Tracks on the borders are not regularly started and ended, 
@@ -946,7 +951,7 @@ void load_chany_rr_nodes_basic_info(RRGraph& rr_graph,
          *               |                             |
          * we should rotate only once at the bottom side of a grid 
          */
-        if (true == is_chany_exist(grids, chany_coord)) {
+        if (true == is_chany_exist(grids, chany_coord, through_channel)) {
           /* Rotate the chany_details by an offset of 1*/
           /* For INC_DIRECTION, we use clockwise rotation 
            * node_id A ---->   -----> node_id D

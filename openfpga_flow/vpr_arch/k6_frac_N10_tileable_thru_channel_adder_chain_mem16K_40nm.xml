@@ -188,13 +188,29 @@
       <output name="d_out" num_pins="32"/>
       <clock name="clk" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="spread"/>
+      <pinlocations pattern="perimeter"/>
+      <!--pinlocations pattern="custom">
+        <loc side="left"></loc>
+        <loc side="top">memory.clk</loc>
+        <loc side="right" yoffset="0">memory.waddr[0:4] memory.d_in[0:15] memory.wen</loc>
+        <loc side="right" yoffset="1">memory.raddr[0:4] memory.d_out[0:15]</loc>
+        <loc side="bottom">memory.waddr[5:9] memory.raddr[5:9] memory.d_in[16:31] memory.ren memory.d_out[16:31]</loc>
+      </pinlocations-->
     </tile>
   </tiles>
   <!-- ODIN II specific config ends -->
   <!-- Physical descriptions begin -->
   <layout tileable="true" through_channel="true">
-    <!--auto_layout aspect_ratio="1.0"-->
+    <auto_layout aspect_ratio="1.0">
+      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
+      <perimeter type="io" priority="100"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+      <!--Column of 'memory' with 'EMPTY' blocks wherever a 'memory' does not fit. Vertical offset by 1 for perimeter.-->
+      <col type="memory" startx="2" starty="1" repeatx="8" priority="20"/>
+      <col type="EMPTY" startx="2" repeatx="8" starty="1" priority="19"/>
+    </auto_layout>
     <fixed_layout name="4x4" width="5" height="4">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="100"/>
@@ -205,7 +221,6 @@
       <col type="memory" startx="2" starty="1" repeatx="8" priority="20"/>
       <col type="EMPTY" startx="2" repeatx="8" starty="1" priority="19"/>
     </fixed_layout>
-    <!-- /auto_layout -->
   </layout>
   <device>
     <!-- VB & JL: Using Ian Kuon's transistor sizing and drive strength data for routing, at 40 nm. Ian used BPTM 

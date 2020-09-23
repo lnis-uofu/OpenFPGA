@@ -409,8 +409,8 @@ void write_xml_circuit_model(std::fstream& fp,
   if (true == circuit_lib.dump_structural_verilog(model)) { 
     write_xml_attribute(fp, "dump_structural_verilog", "true"); 
   }
-  if (!circuit_lib.model_circuit_netlist(model).empty()) {
-    write_xml_attribute(fp, "circuit_netlist", circuit_lib.model_circuit_netlist(model).c_str()); 
+  if (!circuit_lib.model_spice_netlist(model).empty()) {
+    write_xml_attribute(fp, "spice_netlist", circuit_lib.model_spice_netlist(model).c_str()); 
   }
   if (!circuit_lib.model_verilog_netlist(model).empty()) {
     write_xml_attribute(fp, "verilog_netlist", circuit_lib.model_verilog_netlist(model).c_str()); 

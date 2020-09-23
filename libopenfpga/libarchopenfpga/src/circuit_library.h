@@ -48,7 +48,7 @@
  *                          It should be the same as user-defined Verilog modules, if it is not auto-generated
  * 4. model_prefix_: the prefix of a circuit model when it is instanciated  
  * 5. verilog_netlist_: specified path and file name of Verilog netlist if a circuit model is not auto-generated
- * 6. circuit_netlist_: specified path and file name of CIRCUIT netlist if a circuit model is not auto-generated
+ * 6. spice_netlist_: specified path and file name of CIRCUIT netlist if a circuit model is not auto-generated
  * 7. is_default_: indicate if the circuit model is the default one among all those in the same type 
  * 8. sub_models_: the sub circuit models included by a circuit model. It is a collection of unique circuit model ids
  *                 found in the CircuitModelId of pass-gate/buffers/port-related circuit models.
@@ -190,7 +190,7 @@ class CircuitLibrary {
     std::string model_name(const CircuitModelId& model_id) const;
     std::string model_prefix(const CircuitModelId& model_id) const;
     std::string model_verilog_netlist(const CircuitModelId& model_id) const;
-    std::string model_circuit_netlist(const CircuitModelId& model_id) const;
+    std::string model_spice_netlist(const CircuitModelId& model_id) const;
     bool model_is_default(const CircuitModelId& model_id) const;
     bool dump_structural_verilog(const CircuitModelId& model_id) const;
     bool dump_explicit_port_map(const CircuitModelId& model_id) const;
@@ -314,7 +314,7 @@ class CircuitLibrary {
     void set_model_name(const CircuitModelId& model_id, const std::string& name);
     void set_model_prefix(const CircuitModelId& model_id, const std::string& prefix);
     void set_model_verilog_netlist(const CircuitModelId& model_id, const std::string& verilog_netlist);
-    void set_model_circuit_netlist(const CircuitModelId& model_id, const std::string& circuit_netlist);
+    void set_model_spice_netlist(const CircuitModelId& model_id, const std::string& spice_netlist);
     void set_model_is_default(const CircuitModelId& model_id, const bool& is_default);
     /* Verilog generator options */ 
     void set_model_dump_structural_verilog(const CircuitModelId& model_id, const bool& dump_structural_verilog);
@@ -461,6 +461,10 @@ class CircuitLibrary {
   public: /* Public Mutators: builders */
     void build_model_links();
     void build_timing_graphs();
+    /* Automatically identify the default models for each type,
+     * suggest to do this after circuit library is built
+     */
+    void auto_detect_default_models();
   public: /* Internal mutators: build timing graphs */
     void add_edge(const CircuitModelId& model_id,
                   const CircuitPortId& from_port, const size_t& from_pin, 
@@ -495,7 +499,7 @@ class CircuitLibrary {
     vtr::vector<CircuitModelId, std::string> model_names_;
     vtr::vector<CircuitModelId, std::string> model_prefix_;
     vtr::vector<CircuitModelId, std::string> model_verilog_netlists_;
-    vtr::vector<CircuitModelId, std::string> model_circuit_netlists_;
+    vtr::vector<CircuitModelId, std::string> model_spice_netlists_;
     vtr::vector<CircuitModelId, bool> model_is_default_;
 
     /* Submodules that a circuit model contains */
