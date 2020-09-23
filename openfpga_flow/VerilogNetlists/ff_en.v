@@ -13,6 +13,7 @@ input CK, // Clock Input
 /* Local ports follow */
 input D, // Data Input
 output Q // Q output
+output QB // QB output
 );
 //------------Internal Variables--------
 reg q_reg;
@@ -27,7 +28,13 @@ end else if (WE) begin
   q_reg <= D;
 end
 
+`ifndef ENABLE_FORMAL_VERIFICATION
 // Wire q_reg to Q
 assign Q = q_reg;
+assign QB = ~q_reg;
+`else
+assign Q = 1'bZ;
+assign QB = !Q;
+`endif
 
 endmodule //End Of Module
