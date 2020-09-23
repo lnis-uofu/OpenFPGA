@@ -4,12 +4,6 @@
 #                  for several simple operations in OpenFPGA project
 #author          : Ganesh Gore <ganesh.gore@utah.edu>
 #==============================================================================
-# Enviroment variables
-export PATH=$PATH:/usr/local/stow/gcc/amd64_linux26/gcc-8.4.0/bin
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/stow/gcc/amd64_linux26/gcc-8.4.0/lib64
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/stow/boost/boost_1_67_0/lib/
-export CC=$(which gcc)
-export CXX=$(which g++)
 
 export OPENFPGA_PATH="$(pwd)"
 export OPENFPGA_SCRIPT_PATH="$(pwd)/openfpga_flow/scripts"
@@ -26,7 +20,7 @@ check_execution_path (){
 }
 
 run-task-with-modelsim () {
-	echo "Script as to be run as \"run-task-with-modelsim task_name --maxthreads nb_threads other_run-modelsim_options\""
+    echo "Script as to be run as \"run-task-with-modelsim task_name --maxthreads nb_threads other_run-modelsim_options\""
     $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_fpga_task.py $1 $2 $3
     $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_modelsim.py "$@"
 }
