@@ -146,15 +146,15 @@
       <port type="sram" prefix="sram" size="16"/>
     </circuit_model>
     <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-    <circuit_model type="sram" name="DFFR" prefix="DFFR" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff_en.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/ff.v">
+    <circuit_model type="sram" name="DFFR" prefix="DFFR" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/dff.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
-       <port type="input" prefix="pReset" lib_name="reset" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
+       <port type="input" prefix="pReset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
        <port type="bl" prefix="bl" lib_name="D" size="1"/>
-       <port type="wl" prefix="wl" lib_name="clk" size="1" is_edge_triggered="true"/>
+       <port type="wl" prefix="wl" lib_name="CK" size="1" is_edge_triggered="true"/>
        <port type="output" prefix="Q" lib_name="Q" size="1"/>
-       <port type="output" prefix="Qb" lib_name="Qb" size="1"/>
+       <port type="output" prefix="Qb" lib_name="QN" size="1"/>
     </circuit_model>
     <circuit_model type="iopad" name="iopad" prefix="iopad" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/io.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/io.v">
       <design_technology type="cmos"/>
