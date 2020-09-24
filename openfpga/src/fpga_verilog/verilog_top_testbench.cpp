@@ -1536,10 +1536,13 @@ void print_verilog_top_testbench_bitstream(std::fstream& fp,
   std::vector<CircuitPortId> global_prog_reset_ports;
   std::vector<CircuitPortId> global_prog_set_ports;
   for (const CircuitPortId& global_port : global_ports) {
+    if (false == circuit_lib.port_is_reset(global_port)) {
+      continue;
+    }
     VTR_ASSERT(true == circuit_lib.port_is_global(global_port));
     VTR_ASSERT( (false == circuit_lib.port_is_reset(global_port))
                || (false == circuit_lib.port_is_reset(global_port)));
-    if (true == circuit_lib.port_is_reset(global_port)) {
+    if (true == circuit_lib.port_is_prog(global_port)) {
       global_prog_reset_ports.push_back(global_port);
     }
     if (true == circuit_lib.port_is_set(global_port)) {
