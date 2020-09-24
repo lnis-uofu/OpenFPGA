@@ -91,15 +91,16 @@
  * 9. port_is_reset: specify if this port is a reset signal which needs special pulse widths in testbenches 
  * 10. port_is_set: specify if this port is a set signal which needs special pulse widths in testbenches 
  * 11. port_is_config_enable: specify if this port is a config_enable signal which needs special pulse widths in testbenches 
- * 12. port_is_prog: specify if this port is for FPGA programming use which needs special pulse widths in testbenches 
- * 13. port_tri_state_model_name: the name of circuit model linked to tri-state the port  
- * 14. port_tri_state_model_ids_: the Id of circuit model linked to tri-state the port 
- * 15. port_inv_model_names_: the name of inverter circuit model linked to the port 
- * 16. port_inv_model_ids_: the Id of inverter circuit model linked to the port
- * 17. port_tri_state_map_: only applicable to inputs of LUTs, the tri-state map applied to each pin of this port 
- * 18. port_lut_frac_level_:  only applicable to outputs of LUTs, indicate which level of outputs inside LUT multiplexing structure will be used
- * 19. port_lut_output_mask_: only applicable to outputs of LUTs, indicate which output at an internal level of LUT multiplexing structure will be used
- * 20. port_sram_orgz_: only applicable to SRAM ports, indicate how the SRAMs will be organized, either memory decoders or scan-chains
+ * 12. port_is_edge_triggered: specify if this port is triggerd by edges like the clock signal of a D-type flip-flop 
+ * 13. port_is_prog: specify if this port is for FPGA programming use which needs special pulse widths in testbenches 
+ * 14. port_tri_state_model_name: the name of circuit model linked to tri-state the port  
+ * 15. port_tri_state_model_ids_: the Id of circuit model linked to tri-state the port 
+ * 16. port_inv_model_names_: the name of inverter circuit model linked to the port 
+ * 17. port_inv_model_ids_: the Id of inverter circuit model linked to the port
+ * 18. port_tri_state_map_: only applicable to inputs of LUTs, the tri-state map applied to each pin of this port 
+ * 19. port_lut_frac_level_:  only applicable to outputs of LUTs, indicate which level of outputs inside LUT multiplexing structure will be used
+ * 20. port_lut_output_mask_: only applicable to outputs of LUTs, indicate which output at an internal level of LUT multiplexing structure will be used
+ * 21. port_sram_orgz_: only applicable to SRAM ports, indicate how the SRAMs will be organized, either memory decoders or scan-chains
  *
  *  ------ Delay information ------
  * 1. delay_types_: type of pin-to-pin delay, either rising_edge of falling_edge
@@ -284,6 +285,7 @@ class CircuitLibrary {
     bool port_is_reset(const CircuitPortId& circuit_port_id) const;
     bool port_is_set(const CircuitPortId& circuit_port_id) const;
     bool port_is_config_enable(const CircuitPortId& circuit_port_id) const;
+    bool port_is_edge_triggered(const CircuitPortId& circuit_port_id) const;
     bool port_is_prog(const CircuitPortId& circuit_port_id) const;
     size_t port_lut_frac_level(const CircuitPortId& circuit_port_id) const;
     std::vector<size_t> port_lut_output_mask(const CircuitPortId& circuit_port_id) const;
@@ -364,6 +366,8 @@ class CircuitLibrary {
                          const bool& is_set);
     void set_port_is_config_enable(const CircuitPortId& circuit_port_id, 
                                    const bool& is_config_enable);
+    void set_port_is_edge_triggered(const CircuitPortId& circuit_port_id, 
+                                    const bool& is_edge_triggered);
     void set_port_is_prog(const CircuitPortId& circuit_port_id, 
                           const bool& is_prog);
     void set_port_tri_state_model_name(const CircuitPortId& circuit_port_id, 
@@ -550,6 +554,7 @@ class CircuitLibrary {
     vtr::vector<CircuitPortId, bool> port_is_reset_;
     vtr::vector<CircuitPortId, bool> port_is_set_;
     vtr::vector<CircuitPortId, bool> port_is_config_enable_;
+    vtr::vector<CircuitPortId, bool> port_is_edge_triggered_;
     vtr::vector<CircuitPortId, bool> port_is_prog_;
     vtr::vector<CircuitPortId, std::string> port_tri_state_model_names_;
     vtr::vector<CircuitPortId, CircuitModelId> port_tri_state_model_ids_;

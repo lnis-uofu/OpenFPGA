@@ -153,6 +153,8 @@ void print_verilog_top_testbench_memory_bank_port(std::fstream& fp,
  *******************************************************************/
 static
 void print_verilog_top_testbench_frame_decoder_port(std::fstream& fp,
+                                                    const ConfigProtocol& config_protocol,
+                                                    const CircuitLibrary& circuit_lib,
                                                     const ModuleManager& module_manager,
                                                     const ModuleId& top_module) {
   /* Validate the file stream */
@@ -174,15 +176,32 @@ void print_verilog_top_testbench_frame_decoder_port(std::fstream& fp,
   fp << generate_verilog_port(VERILOG_PORT_REG, din_port) << ";" << std::endl;
 
   /* Wire the INVERTED configuration done signal to the enable signal !!! */
-  print_verilog_comment(fp, std::string("---- Wire enable port of frame-based decoder to inverted configuration done signal -----"));
   ModulePortId en_port_id = module_manager.find_module_port(top_module,
                                                             std::string(DECODER_ENABLE_PORT_NAME));
   BasicPort en_port = module_manager.module_port(top_module, en_port_id);
-  BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
 
-  fp << generate_verilog_port(VERILOG_PORT_WIRE, en_port) << ";" << std::endl;
-  print_verilog_wire_connection(fp, en_port, config_done_port, true);
+  /* Find the circuit model of configurable memory
+   * Spot its BL port and generate stimuli based on BL port's attribute:
+   * - If the BL port is triggered by edge, use the inverted programming clock signal
+   * - If the BL port is a regular port, use the inverted configuration done signal
+   */
+  const CircuitModelId& mem_model = config_protocol.memory_model();
+  VTR_ASSERT(true == circuit_lib.valid_model_id(mem_model));
+  std::vector<CircuitPortId> mem_model_bl_ports = circuit_lib.model_ports_by_type(mem_model, CIRCUIT_MODEL_PORT_BL);
+  VTR_ASSERT(1 == mem_model_bl_ports.size());
 
+  if (true == circuit_lib.port_is_edge_triggered(mem_model_bl_ports[0])) {
+    VTR_ASSERT_SAFE(false == circuit_lib.port_is_edge_triggered(mem_model_bl_ports[0]));
+    BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
+    print_verilog_comment(fp, std::string("---- Wire enable port of frame-based decoder to inverted programming clock signal -----"));
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, en_port) << ";" << std::endl;
+    print_verilog_wire_connection(fp, en_port, prog_clock_port, true);
+  } else {
+    BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
+    print_verilog_comment(fp, std::string("---- Wire enable port of frame-based decoder to inverted configuration done signal -----"));
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, en_port) << ";" << std::endl;
+    print_verilog_wire_connection(fp, en_port, config_done_port, true);
+  }
 }
 
 /********************************************************************
@@ -190,10 +209,11 @@ void print_verilog_top_testbench_frame_decoder_port(std::fstream& fp,
  *******************************************************************/
 static
 void print_verilog_top_testbench_config_protocol_port(std::fstream& fp,
-                                                      const e_config_protocol_type& sram_orgz_type,
+                                                      const ConfigProtocol& config_protocol,
+                                                      const CircuitLibrary& circuit_lib,
                                                       const ModuleManager& module_manager,
                                                       const ModuleId& top_module) {
-  switch(sram_orgz_type) {
+  switch(config_protocol.type()) {
   case CONFIG_MEM_STANDALONE:
     print_verilog_top_testbench_flatten_memory_port(fp, module_manager, top_module);
     break;
@@ -204,7 +224,8 @@ void print_verilog_top_testbench_config_protocol_port(std::fstream& fp,
     print_verilog_top_testbench_memory_bank_port(fp, module_manager, top_module);
     break;
   case CONFIG_MEM_FRAME_BASED:
-    print_verilog_top_testbench_frame_decoder_port(fp, module_manager, top_module);
+    print_verilog_top_testbench_frame_decoder_port(fp, config_protocol, circuit_lib,
+                                                   module_manager, top_module);
     break;
   default:
     VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -435,7 +456,8 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
                                        const AtomContext& atom_ctx,
                                        const VprNetlistAnnotation& netlist_annotation,
                                        const std::vector<std::string>& clock_port_names,
-                                       const e_config_protocol_type& sram_orgz_type,
+                                       const ConfigProtocol& config_protocol,
+                                       const CircuitLibrary& circuit_lib,
                                        const std::string& circuit_name){
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -509,7 +531,7 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
   fp << generate_verilog_port(VERILOG_PORT_REG, set_port) << ";" << std::endl;
 
   /* Configuration ports depend on the organization of SRAMs */
-  print_verilog_top_testbench_config_protocol_port(fp, sram_orgz_type,
+  print_verilog_top_testbench_config_protocol_port(fp, config_protocol, circuit_lib,
                                                    module_manager, top_module);
 
   /* Create a clock port if the benchmark have one but not in the default name!
@@ -1459,7 +1481,7 @@ void print_verilog_top_testbench_bitstream(std::fstream& fp,
 void print_verilog_top_testbench(const ModuleManager& module_manager,
                                  const BitstreamManager& bitstream_manager,
                                  const FabricBitstream& fabric_bitstream,
-                                 const e_config_protocol_type& sram_orgz_type,
+                                 const ConfigProtocol& config_protocol,
                                  const CircuitLibrary& circuit_lib,
                                  const std::vector<CircuitPortId>& global_ports,
                                  const AtomContext& atom_ctx,
@@ -1498,13 +1520,14 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   /* Start of testbench */
   print_verilog_top_testbench_ports(fp, module_manager, top_module,
                                     atom_ctx, netlist_annotation, clock_port_names,
-                                    sram_orgz_type, circuit_name);
+                                    config_protocol, circuit_lib,
+                                    circuit_name);
 
   /* Find the clock period */
   float prog_clock_period = (1./simulation_parameters.programming_clock_frequency());
   float op_clock_period = (1./simulation_parameters.operating_clock_frequency());
   /* Estimate the number of configuration clock cycles */
-  size_t num_config_clock_cycles = calculate_num_config_clock_cycles(sram_orgz_type,
+  size_t num_config_clock_cycles = calculate_num_config_clock_cycles(config_protocol.type(),
                                                                      fast_configuration,
                                                                      bitstream_manager,
                                                                      fabric_bitstream);
@@ -1543,11 +1566,11 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
 
   /* Print tasks used for loading bitstreams */
   print_verilog_top_testbench_load_bitstream_task(fp,
-                                                  sram_orgz_type,
+                                                  config_protocol.type(),
                                                   module_manager, top_module);
 
   /* load bitstream to FPGA fabric in a configuration phase */
-  print_verilog_top_testbench_bitstream(fp, sram_orgz_type,
+  print_verilog_top_testbench_bitstream(fp, config_protocol.type(),
                                         fast_configuration,
                                         module_manager, top_module,
                                         bitstream_manager, fabric_bitstream);
