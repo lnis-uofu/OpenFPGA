@@ -1,31 +1,31 @@
 //-----------------------------------------------------
 // Design Name : sram_blwl
 // File Name   : sram.v
-// Function    : A SRAM cell is is accessible
-//               when wl is enabled
 // Coder       : Xifan TANG
 //-----------------------------------------------------
-module sram_blwl(
-input reset, // Word line control signal
-input wl, // Word line control signal
-input bl, // Bit line control signal
-output out, // Data output
-output outb // Data output
+
+
+//-----------------------------------------------------
+// Function    : A SRAM cell with write enable
+//-----------------------------------------------------
+module SRAM(
+  input WE, // Word line control signal as write enable
+  input D, // Bit line control signal
+  output Q, // Data output
+  output QN // Data output
 );
 
   //----- local variable need to be registered
   reg data;
 
   //----- when wl is enabled, we can read in data from bl
-  always @(bl or wl) 
+  always @(WE or D) 
   begin
-    if (1'b1 == reset) begin 
-      data <= 1'b0;
-    end else if ((1'b1 == bl)&&(1'b1 == wl)) begin
+    if ((1'b1 == D)&&(1'b1 == WE)) begin
     //----- Cases to program internal memory bit 
     //----- case 1: bl = 1, wl = 1, a -> 0
       data <= 1'b1;
-    end else if ((1'b0 == bl)&&(1'b1 == wl)) begin
+    end else if ((1'b0 == D)&&(1'b1 == WE)) begin
     //----- case 2: bl = 0, wl = 1, a -> 0
      data <= 1'b0;
     end 
@@ -33,11 +33,11 @@ output outb // Data output
 
 `ifndef ENABLE_FORMAL_VERIFICATION
     // Wire q_reg to Q
-    assign out = data;
-    assign outb = ~data;
+    assign Q = data;
+    assign QN = ~data;
 `else
-    assign out = 1'bZ;
-    assign outb = !out;
+    assign Q = 1'bZ;
+    assign QN = !out;
 `endif
 
 endmodule
