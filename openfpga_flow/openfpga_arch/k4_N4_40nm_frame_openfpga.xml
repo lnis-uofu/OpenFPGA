@@ -124,15 +124,15 @@
       <port type="sram" prefix="sram" size="1"/>
     </circuit_model>
     <!--DFF subckt ports should be defined as <D> <Q> <CLK> <RESET> <SET>  -->
-    <circuit_model type="ff" name="static_dff" prefix="dff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/ff.v">
+    <circuit_model type="ff" name="DFFSRQ" prefix="DFFSRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/dff.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
        <port type="input" prefix="D" size="1"/>
-       <port type="input" prefix="set" size="1" is_global="true" default_val="0" is_set="true"/>
-       <port type="input" prefix="reset" size="1" is_global="true" default_val="0" is_reset="true"/>
+       <port type="input" prefix="set" lib_name="SET" size="1" is_global="true" default_val="0" is_set="true"/>
+       <port type="input" prefix="reset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true"/>
        <port type="output" prefix="Q" size="1"/>
-       <port type="clock" prefix="clk" size="1" is_global="true" default_val="0" />
+       <port type="clock" prefix="clk" lib_name="CK" size="1" is_global="true" default_val="0" />
     </circuit_model>
     <circuit_model type="lut" name="lut4" prefix="lut4" dump_structural_verilog="true">
       <design_technology type="cmos"/>
@@ -192,7 +192,7 @@
       <interconnect name="crossbar" circuit_model_name="mux_2level"/>
     </pb_type>
     <pb_type name="clb.fle[n1_lut4].ble4.lut4" circuit_model_name="lut4"/>
-    <pb_type name="clb.fle[n1_lut4].ble4.ff" circuit_model_name="static_dff"/>
+    <pb_type name="clb.fle[n1_lut4].ble4.ff" circuit_model_name="DFFSRQ"/>
     <!-- End physical pb_type binding in complex block IO -->
   </pb_type_annotations>
 </openfpga_architecture>
