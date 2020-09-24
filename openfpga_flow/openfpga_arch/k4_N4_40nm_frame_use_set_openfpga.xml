@@ -146,7 +146,7 @@
       <port type="sram" prefix="sram" size="16"/>
     </circuit_model>
     <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-    <circuit_model type="sram" name="config_latch" prefix="config_latch" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/config_latch.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/config_latch.v">
+    <circuit_model type="sram" name="config_latch_set_set" prefix="config_latch_set_set" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/config_latch_set_set.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/config_latch_set_set.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
@@ -161,13 +161,13 @@
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <port type="inout" prefix="pad" size="1" is_global="true" is_io="true"/>
-      <port type="sram" prefix="en" size="1" mode_select="true" circuit_model_name="config_latch" default_val="1"/>
+      <port type="sram" prefix="en" size="1" mode_select="true" circuit_model_name="config_latch_set" default_val="1"/>
       <port type="input" prefix="outpad" size="1"/>
       <port type="output" prefix="inpad" size="1"/>
     </circuit_model>
   </circuit_library>
   <configuration_protocol>
-    <organization type="frame_based" circuit_model_name="config_latch"/>
+    <organization type="frame_based" circuit_model_name="config_latch_set"/>
   </configuration_protocol>
   <connection_block>
     <switch name="ipin_cblock" circuit_model_name="mux_2level_tapbuf"/>
