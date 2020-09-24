@@ -1164,6 +1164,8 @@ bool find_bit_value_to_skip_for_fast_configuration(const e_config_protocol_type&
   VTR_ASSERT(!global_prog_set_ports.empty() && !global_prog_reset_ports.empty());
   bool bit_value_to_skip = false;
 
+  VTR_LOG("Both reset and set ports are defined for programming controls, selecting the best-fit one...\n");
+
   size_t num_ones_to_skip = 0;
   size_t num_zeros_to_skip = 0;
 
@@ -1210,9 +1212,20 @@ bool find_bit_value_to_skip_for_fast_configuration(const e_config_protocol_type&
     exit(1);
   }
 
+  VTR_LOG("Using reset will skip %g% (%lu/%lu) of configuration bitstream.\n",
+          100. * (float) num_zeros_to_skip / (float) fabric_bitstream.num_bits(),
+          num_zeros_to_skip, fabric_bitstream.num_bits());
+
+  VTR_LOG("Using set will skip %g% (%lu/%lu) of configuration bitstream.\n",
+          100. * (float) num_ones_to_skip / (float) fabric_bitstream.num_bits(),
+          num_ones_to_skip, fabric_bitstream.num_bits());
+
   /* By default, we prefer to skip zeros (when the numbers are the same */
   if (num_ones_to_skip > num_zeros_to_skip) {
+    VTR_LOG("Will use set signal in fast configuration\n");
     bit_value_to_skip = true;
+  } else {
+    VTR_LOG("Will use reset signal in fast configuration\n");
   }
 
   return bit_value_to_skip;
