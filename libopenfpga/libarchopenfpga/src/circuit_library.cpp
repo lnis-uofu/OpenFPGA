@@ -1380,6 +1380,7 @@ CircuitPortId CircuitLibrary::add_model_port(const CircuitModelId& model_id,
   port_is_reset_.push_back(false);
   port_is_set_.push_back(false);
   port_is_config_enable_.push_back(false);
+  port_is_edge_triggered_.push_back(false);
   port_is_prog_.push_back(false);
   port_tri_state_model_names_.emplace_back();
   port_tri_state_model_ids_.push_back(CircuitModelId::INVALID());
