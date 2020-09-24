@@ -636,13 +636,13 @@ void build_frame_memory_module(ModuleManager& module_manager,
     module_manager.add_configurable_child(mem_module, sram_mem_module, sram_instance);
 
     /* Wire data_in port to SRAM BL port */
-    ModulePortId sram_bl_port = module_manager.find_module_port(sram_mem_module, circuit_lib.port_lib_name(sram_bl_ports[0]));
+    ModulePortId sram_bl_port = module_manager.find_module_port(sram_mem_module, circuit_lib.port_prefix(sram_bl_ports[0]));
     add_module_bus_nets(module_manager, mem_module,
                         mem_module, 0, mem_data_port,
                         sram_mem_module, sram_instance, sram_bl_port);
 
     /* Wire decoder data_out port to sram WL ports */
-    ModulePortId sram_wl_port = module_manager.find_module_port(sram_mem_module, circuit_lib.port_lib_name(sram_wl_ports[0]));
+    ModulePortId sram_wl_port = module_manager.find_module_port(sram_mem_module, circuit_lib.port_prefix(sram_wl_ports[0]));
     ModulePortId decoder_data_port = module_manager.find_module_port(decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
     ModuleNetId wl_net = module_manager.create_module_net(mem_module);
     /* Source node of the input net is the input of memory module */
