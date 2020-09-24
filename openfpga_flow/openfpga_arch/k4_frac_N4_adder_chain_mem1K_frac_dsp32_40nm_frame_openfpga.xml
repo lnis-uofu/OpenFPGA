@@ -161,25 +161,25 @@
       <port type="output" prefix="lut3_out" size="2" lut_frac_level="3" lut_output_mask="0,1"/>
       <port type="output" prefix="lut4_out" size="1" lut_output_mask="0"/>
       <port type="sram" prefix="sram" size="16"/>
-      <port type="sram" prefix="mode" size="1" mode_select="true" circuit_model_name="config_latch" default_val="1"/>
+      <port type="sram" prefix="mode" size="1" mode_select="true" circuit_model_name="LATCHR" default_val="1"/>
     </circuit_model>
     <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-    <circuit_model type="sram" name="config_latch" prefix="config_latch" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/config_latch.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/config_latch.v">
+    <circuit_model type="sram" name="LATCHR" prefix="LATCHR" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/latch.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/latch.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
-       <port type="input" prefix="pReset" lib_name="reset" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
-       <port type="bl" prefix="bl" size="1"/>
-       <port type="wl" prefix="wl" size="1"/>
-       <port type="output" prefix="Q" size="1"/>
-       <port type="output" prefix="Qb" size="1"/>
+       <port type="input" prefix="pReset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
+       <port type="bl" prefix="bl" lib_name="D" size="1"/>
+       <port type="wl" prefix="wl" lib_name="WE" size="1"/>
+       <port type="output" prefix="Q" lib_name="Q" size="1"/>
+       <port type="output" prefix="Qb" lib_name="QN" size="1"/>
     </circuit_model>
     <circuit_model type="iopad" name="iopad" prefix="iopad" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/io.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/io.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <port type="inout" prefix="pad" size="1" is_global="true" is_io="true"/>
-      <port type="sram" prefix="en" size="1" mode_select="true" circuit_model_name="config_latch" default_val="1"/>
+      <port type="sram" prefix="en" size="1" mode_select="true" circuit_model_name="LATCHR" default_val="1"/>
       <port type="input" prefix="outpad" size="1"/>
       <port type="output" prefix="inpad" size="1"/>
     </circuit_model>
@@ -213,11 +213,11 @@
       <port type="input" prefix="b" size="32"/>
       <port type="output" prefix="out" size="64"/>
       <!-- As a fracturable multiplier, it requires 2 configuration bits to operate in 4 different modes -->
-      <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="config_latch" default_val="1"/>
+      <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="LATCHR" default_val="1"/>
     </circuit_model>
   </circuit_library>
   <configuration_protocol>
-    <organization type="frame_based" circuit_model_name="config_latch"/>
+    <organization type="frame_based" circuit_model_name="LATCHR"/>
   </configuration_protocol>
   <connection_block>
     <switch name="ipin_cblock" circuit_model_name="mux_2level_tapbuf"/>
