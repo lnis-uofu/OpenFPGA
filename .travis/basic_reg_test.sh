@@ -17,7 +17,9 @@ python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/preconfig_testbench/c
 
 echo -e "Testing fram-based configuration protocol of a K4N4 FPGA";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_frame --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/smart_fast_configuration_frame --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/fast_configuration_frame --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/fast_configuration_frame_use_set --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/preconfig_testbench/configuration_frame --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_frame_ccff --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_frame_scff --debug --show_thread_logs
