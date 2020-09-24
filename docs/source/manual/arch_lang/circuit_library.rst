@@ -143,7 +143,8 @@ A circuit model may consist of a number of ports. The port list is mandatory in 
 
 .. option:: <port type="<string>" prefix="<string>" lib_name="<string>" size="<int>"
   default_val="<int>" circuit_model_name="<string>" mode_select="<bool>"
-  is_global="<bool>" is_set="<bool>" is_reset="<bool>" is_config_enable="<bool>"/>
+  is_global="<bool>" is_set="<bool>" is_reset="<bool>" 
+  is_edge_triggered="<bool>" is_config_enable="<bool>"/>
 
   Define the attributes for a port of a circuit model.
 
@@ -189,6 +190,8 @@ A circuit model may consist of a number of ports. The port list is mandatory in 
   - ``is_reset="true|false"`` Specify if this port controls a reset signal. All the reset ports are connected to a global reset voltage stimuli in testbenches.
 
   - ``is_config_enable="true|false"`` Specify if this port controls a configuration-enable signal. Only valid when ``is_global`` is ``true``. This port is only enabled during FPGA configuration, and always disabled during FPGA operation. All the ``config_enable`` ports are connected to global configuration-enable voltage stimuli in testbenches.
+
+  - ``is_edge_triggered="true|false"`` Specify if this port is edge sensitive, like the clock port of a D-type flip-flop. This attribute is used to create stimuli in testbenches when flip-flops are used as configurable memory in frame-based configuration protocol.
 
 .. note:: ``is_set``, ``is_reset`` and ``is_config_enable`` are only valid when ``is_global`` is ``true``. 
 
