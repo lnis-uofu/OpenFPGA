@@ -146,7 +146,7 @@
       <port type="sram" prefix="sram" size="16"/>
     </circuit_model>
     <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-    <circuit_model type="ccff" name="DFF_EN" prefix="DFF_EN" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/DFF_EN.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/DFF_EN.v">
+    <circuit_model type="sram" name="DFF_EN" prefix="DFF_EN" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/DFF_EN.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/DFF_EN.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
