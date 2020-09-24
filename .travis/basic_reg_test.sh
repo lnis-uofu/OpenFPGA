@@ -28,7 +28,12 @@ python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/preconfig_testbench/c
 
 echo -e "Testing memory bank configuration protocol of a K4N4 FPGA";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/memory_bank --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/memory_bank_use_reset --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/memory_bank_use_resetb --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/memory_bank_use_set --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/memory_bank_use_setb --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/fast_memory_bank --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/smart_fast_memory_bank --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/preconfig_testbench/memory_bank --debug --show_thread_logs
 
 echo -e "Testing standalone (flatten memory) configuration protocol of a K4N4 FPGA";
