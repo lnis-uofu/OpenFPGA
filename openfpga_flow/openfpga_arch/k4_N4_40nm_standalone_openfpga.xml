@@ -155,7 +155,6 @@
        <port type="wl" prefix="wl" size="1"/>
        <port type="output" prefix="Q" size="1"/>
        <port type="output" prefix="Qb" size="1"/>
-       <port type="clock" prefix="prog_clk" lib_name="clk" size="1" is_global="true" default_val="0" is_prog="true"/>
     </circuit_model>
     <circuit_model type="iopad" name="iopad" prefix="iopad" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/io.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/io.v">
       <design_technology type="cmos"/>
