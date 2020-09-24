@@ -244,15 +244,14 @@ endmodule //End Of Module
 //               - scan-chain input
 //               - a scan-chain enable 
 //-----------------------------------------------------
-module SDFFSR (
+module SDFFSRQ (
   input SET, // Set input
   input RST, // Reset input
-  input SE, // Scan-chain Enable
-  input SI, // Scan-chain input
   input CK, // Clock Input
+  input SE, // Scan-chain Enable
   input D, // Data Input
+  input SI, // Scan-chain input
   output Q, // Q output
-  output QN // QB output
 );
 //------------Internal Variables--------
 reg q_reg;
@@ -272,10 +271,8 @@ end
 `ifndef ENABLE_FORMAL_VERIFICATION
 // Wire q_reg to Q
   assign Q = q_reg;
-  assign QN = ~q_reg;
 `else
   assign Q = 1'bZ;
-  assign QN = !Q;
 `endif
 
 endmodule //End Of Module
