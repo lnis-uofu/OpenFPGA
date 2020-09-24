@@ -1136,6 +1136,89 @@ void print_verilog_top_testbench_vanilla_bitstream(std::fstream& fp,
 }
 
 /********************************************************************
+ * Decide if we should use reset or set signal to acheive fast configuration
+ * - If only one type signal is specified, we use that type
+ *   For example, only reset signal is defined, we will use reset  
+ * - If both are defined, pick the one that will bring bigger reduction
+ *   i.e., larger number of configuration bits can be skipped
+ *******************************************************************/
+static 
+bool find_bit_value_to_skip_for_fast_configuration(const e_config_protocol_type& config_protocol_type,  
+                                                   const bool& fast_configuration,
+                                                   const std::vector<CircuitPortId>& global_prog_reset_ports,
+                                                   const std::vector<CircuitPortId>& global_prog_set_ports,
+                                                   const BitstreamManager& bitstream_manager,
+                                                   const FabricBitstream& fabric_bitstream) {
+
+  /* Early exit conditions */
+  if (!global_prog_reset_ports.empty() && global_prog_set_ports.empty()) {
+    return false; 
+  } else if (!global_prog_set_ports.empty() && global_prog_reset_ports.empty()) {
+    return true; 
+  } else if (global_prog_set_ports.empty() && global_prog_reset_ports.empty()) {
+    /* If both types of ports are not defined, the fast configuration should be turned off */
+    VTR_ASSERT(false == fast_configuration); 
+    return false;
+  }
+
+  VTR_ASSERT(!global_prog_set_ports.empty() && !global_prog_reset_ports.empty());
+  bool bit_value_to_skip = false;
+
+  size_t num_ones_to_skip = 0;
+  size_t num_zeros_to_skip = 0;
+
+  /* Branch on the type of configuration protocol */
+  switch (config_protocol_type) {
+  case CONFIG_MEM_STANDALONE:
+    break;
+  case CONFIG_MEM_SCAN_CHAIN: {
+    /* We can only skip the ones/zeros at the beginning of the bitstream */
+    /* Count how many logic '1' bits we can skip */
+    for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
+      if (false == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id))) {
+        break;
+      }
+      VTR_ASSERT(true == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)));
+      num_ones_to_skip++;
+    }
+    /* Count how many logic '0' bits we can skip */
+    for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
+      if (true == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id))) {
+        break;
+      }
+      VTR_ASSERT(false == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)));
+      num_zeros_to_skip++;
+    }
+    break;
+  }
+  case CONFIG_MEM_MEMORY_BANK:
+  case CONFIG_MEM_FRAME_BASED: {
+    /* Count how many logic '1' and logic '0' bits we can skip */
+    for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
+      if (false == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id))) {
+        num_zeros_to_skip++;
+      } else {
+        VTR_ASSERT(true == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)));
+        num_ones_to_skip++;
+      }
+    }
+    break;
+  }
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid SRAM organization type!\n");
+    exit(1);
+  }
+
+  /* By default, we prefer to skip zeros (when the numbers are the same */
+  if (num_ones_to_skip > num_zeros_to_skip) {
+    bit_value_to_skip = true;
+  }
+
+  return bit_value_to_skip;
+}
+
+/********************************************************************
  * Print stimulus for a FPGA fabric with a configuration chain protocol
  * where configuration bits are programming in serial (one by one)
  * Task list:
@@ -1150,6 +1233,7 @@ void print_verilog_top_testbench_vanilla_bitstream(std::fstream& fp,
 static
 void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
                                                                const bool& fast_configuration,
+                                                               const bool& bit_value_to_skip,
                                                                const BitstreamManager& bitstream_manager,
                                                                const FabricBitstream& fabric_bitstream) {
   /* Validate the file stream */
@@ -1174,13 +1258,14 @@ void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
 
   fp << std::endl;
 
+
   /* Attention: when the fast configuration is enabled, we will start from the first bit '1'
    * This requires a reset signal (as we forced in the first clock cycle)
    */
   bool start_config = false;
   for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
     if ( (false == start_config)
-      && (true == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)))) {
+      && (bit_value_to_skip != bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)))) {
       start_config = true;
     } 
 
@@ -1221,6 +1306,7 @@ void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
 static
 void print_verilog_top_testbench_memory_bank_bitstream(std::fstream& fp,
                                                        const bool& fast_configuration,
+                                                       const bool& bit_value_to_skip,
                                                        const ModuleManager& module_manager,
                                                        const ModuleId& top_module,
                                                        const FabricBitstream& fabric_bitstream) {
@@ -1272,7 +1358,7 @@ void print_verilog_top_testbench_memory_bank_bitstream(std::fstream& fp,
   for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
     /* When fast configuration is enabled, we skip zero data_in values */
     if ((true == fast_configuration)
-      && (false == fabric_bitstream.bit_din(bit_id))) {
+      && (bit_value_to_skip == fabric_bitstream.bit_din(bit_id))) {
       continue;
     }
 
@@ -1326,6 +1412,7 @@ void print_verilog_top_testbench_memory_bank_bitstream(std::fstream& fp,
 static
 void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
                                                          const bool& fast_configuration,
+                                                         const bool& bit_value_to_skip,
                                                          const ModuleManager& module_manager,
                                                          const ModuleId& top_module,
                                                          const FabricBitstream& fabric_bitstream) {
@@ -1368,7 +1455,7 @@ void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
   for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
     /* When fast configuration is enabled, we skip zero data_in values */
     if ((true == fast_configuration)
-      && (false == fabric_bitstream.bit_din(bit_id))) {
+      && (bit_value_to_skip == fabric_bitstream.bit_din(bit_id))) {
       continue;
     }
 
@@ -1424,30 +1511,61 @@ void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
  *******************************************************************/
 static
 void print_verilog_top_testbench_bitstream(std::fstream& fp,
-                                           const e_config_protocol_type& sram_orgz_type,
+                                           const e_config_protocol_type& config_protocol_type,
                                            const bool& fast_configuration,
+                                           const CircuitLibrary& circuit_lib,
+                                           const std::vector<CircuitPortId>& global_ports,
                                            const ModuleManager& module_manager,
                                            const ModuleId& top_module,
                                            const BitstreamManager& bitstream_manager,
                                            const FabricBitstream& fabric_bitstream) {
+  /* Try to find global reset/set ports for programming */
+  std::vector<CircuitPortId> global_prog_reset_ports;
+  std::vector<CircuitPortId> global_prog_set_ports;
+  for (const CircuitPortId& global_port : global_ports) {
+    VTR_ASSERT(true == circuit_lib.port_is_global(global_port));
+    VTR_ASSERT( (false == circuit_lib.port_is_reset(global_port))
+               || (false == circuit_lib.port_is_reset(global_port)));
+    if (true == circuit_lib.port_is_reset(global_port)) {
+      global_prog_reset_ports.push_back(global_port);
+    }
+    if (true == circuit_lib.port_is_set(global_port)) {
+      global_prog_set_ports.push_back(global_port);
+    }
+  }
+
+  bool apply_fast_configuration = fast_configuration;
+  if ( (global_prog_set_ports.empty() && global_prog_reset_ports.empty())
+     && (true == fast_configuration)) {
+    VTR_LOG_WARN("None of global reset and set ports are defined for programming purpose. Fast configuration is turned off");
+  }
+  bool bit_value_to_skip = find_bit_value_to_skip_for_fast_configuration(config_protocol_type,
+                                                                         apply_fast_configuration,
+                                                                         global_prog_reset_ports, 
+                                                                         global_prog_set_ports, 
+                                                                         bitstream_manager, fabric_bitstream);
+
   /* Branch on the type of configuration protocol */
-  switch (sram_orgz_type) {
+  switch (config_protocol_type) {
   case CONFIG_MEM_STANDALONE:
     print_verilog_top_testbench_vanilla_bitstream(fp,
                                                   module_manager, top_module,
                                                   bitstream_manager, fabric_bitstream);
     break;
   case CONFIG_MEM_SCAN_CHAIN:
-    print_verilog_top_testbench_configuration_chain_bitstream(fp, fast_configuration, 
+    print_verilog_top_testbench_configuration_chain_bitstream(fp, apply_fast_configuration, 
+                                                              bit_value_to_skip,
                                                               bitstream_manager, fabric_bitstream);
     break;
   case CONFIG_MEM_MEMORY_BANK:
-    print_verilog_top_testbench_memory_bank_bitstream(fp, fast_configuration,
+    print_verilog_top_testbench_memory_bank_bitstream(fp, apply_fast_configuration,
+                                                      bit_value_to_skip,
                                                       module_manager, top_module,
                                                       fabric_bitstream);
     break;
   case CONFIG_MEM_FRAME_BASED:
-    print_verilog_top_testbench_frame_decoder_bitstream(fp, fast_configuration,
+    print_verilog_top_testbench_frame_decoder_bitstream(fp, apply_fast_configuration,
+                                                        bit_value_to_skip,
                                                         module_manager, top_module,
                                                         fabric_bitstream);
     break;
@@ -1572,6 +1690,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   /* load bitstream to FPGA fabric in a configuration phase */
   print_verilog_top_testbench_bitstream(fp, config_protocol.type(),
                                         fast_configuration,
+                                        circuit_lib, global_ports,
                                         module_manager, top_module,
                                         bitstream_manager, fabric_bitstream);
 
