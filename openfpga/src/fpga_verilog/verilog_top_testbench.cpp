@@ -1536,13 +1536,14 @@ void print_verilog_top_testbench_bitstream(std::fstream& fp,
   std::vector<CircuitPortId> global_prog_reset_ports;
   std::vector<CircuitPortId> global_prog_set_ports;
   for (const CircuitPortId& global_port : global_ports) {
-    if (false == circuit_lib.port_is_reset(global_port)) {
+    VTR_ASSERT(true == circuit_lib.port_is_global(global_port));
+    if (false == circuit_lib.port_is_prog(global_port)) {
       continue;
     }
-    VTR_ASSERT(true == circuit_lib.port_is_global(global_port));
+    VTR_ASSERT(true == circuit_lib.port_is_prog(global_port));
     VTR_ASSERT( (false == circuit_lib.port_is_reset(global_port))
-               || (false == circuit_lib.port_is_reset(global_port)));
-    if (true == circuit_lib.port_is_prog(global_port)) {
+               || (false == circuit_lib.port_is_set(global_port)));
+    if (true == circuit_lib.port_is_reset(global_port)) {
       global_prog_reset_ports.push_back(global_port);
     }
     if (true == circuit_lib.port_is_set(global_port)) {
@@ -1553,7 +1554,7 @@ void print_verilog_top_testbench_bitstream(std::fstream& fp,
   bool apply_fast_configuration = fast_configuration;
   if ( (global_prog_set_ports.empty() && global_prog_reset_ports.empty())
      && (true == fast_configuration)) {
-    VTR_LOG_WARN("None of global reset and set ports are defined for programming purpose. Fast configuration is turned off");
+    VTR_LOG_WARN("None of global reset and set ports are defined for programming purpose. Fast configuration is turned off\n");
   }
   bool bit_value_to_skip = find_bit_value_to_skip_for_fast_configuration(config_protocol_type,
                                                                          apply_fast_configuration,
