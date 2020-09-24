@@ -12,7 +12,7 @@ input WE, // Write Enable
 input CK, // Clock Input
 /* Local ports follow */
 input D, // Data Input
-output Q // Q output
+output Q, // Q output
 output QB // QB output
 );
 //------------Internal Variables--------
@@ -20,7 +20,7 @@ reg q_reg;
 
 //-------------Code Starts Here---------
 always @ ( posedge CK or posedge RST or posedge SET)
-if (RESET) begin
+if (RST) begin
   q_reg <= 1'b0;
 end else if (SET) begin
   q_reg <= 1'b1;

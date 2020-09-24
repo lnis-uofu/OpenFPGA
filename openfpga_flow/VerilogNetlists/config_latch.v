@@ -17,7 +17,7 @@ module config_latch (
 reg q_reg;
 
 //-------------Code Starts Here---------
-always @ ( posedge reset) begin
+always @ (reset or bl or wl) begin
   if (reset) begin
     q_reg <= 1'b0;
   end else if (1'b1 == wl) begin
