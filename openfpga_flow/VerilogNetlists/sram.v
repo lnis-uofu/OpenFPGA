@@ -37,7 +37,7 @@ module SRAM(
     assign QN = ~data;
 `else
     assign Q = 1'bZ;
-    assign QN = !out;
+    assign QN = !Q;
 `endif
 
 endmodule
@@ -79,7 +79,7 @@ module SRAMS(
     assign QN = ~data;
 `else
     assign Q = 1'bZ;
-    assign QN = !out;
+    assign QN = !Q;
 `endif
 
 endmodule
@@ -121,7 +121,7 @@ module SRAMSN(
     assign QN = ~data;
 `else
     assign Q = 1'bZ;
-    assign QN = !out;
+    assign QN = !Q;
 `endif
 
 endmodule
@@ -163,7 +163,7 @@ module SRAMR(
     assign QN = ~data;
 `else
     assign Q = 1'bZ;
-    assign QN = !out;
+    assign QN = !Q;
 `endif
 
 endmodule
@@ -205,7 +205,7 @@ module SRAMRN(
     assign QN = ~data;
 `else
     assign Q = 1'bZ;
-    assign QN = !out;
+    assign QN = !Q;
 `endif
 
 endmodule
@@ -251,7 +251,7 @@ module SRAMSR(
     assign QN = ~data;
 `else
     assign Q = 1'bZ;
-    assign QN = !out;
+    assign QN = !Q;
 `endif
 
 endmodule
@@ -297,7 +297,7 @@ module SRAMSNRN(
     assign QN = ~data;
 `else
     assign Q = 1'bZ;
-    assign QN = !out;
+    assign QN = !Q;
 `endif
 
 endmodule
