@@ -129,10 +129,10 @@
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
        <port type="input" prefix="D" size="1"/>
-       <port type="input" prefix="set" lib_name="SET" lib_name="SET" size="1" is_global="true" default_val="0" is_set="true"/>
-       <port type="input" prefix="reset" lib_name="RST" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true"/>
+       <port type="input" prefix="set" lib_name="SET" size="1" is_global="true" default_val="0" is_set="true"/>
+       <port type="input" prefix="reset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true"/>
        <port type="output" prefix="Q" size="1"/>
-       <port type="clock" prefix="clk" lib_name="CK" lib_name="CK" size="1" is_global="true" default_val="0" />
+       <port type="clock" prefix="clk" lib_name="CK" size="1" is_global="true" default_val="0" />
     </circuit_model>
     <circuit_model type="lut" name="lut4" prefix="lut4" dump_structural_verilog="true">
       <design_technology type="cmos"/>

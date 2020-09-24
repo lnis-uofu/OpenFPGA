@@ -228,12 +228,7 @@ end else begin
   q_reg <= D;
 end
 
-// Wire q_reg to Q
-`ifndef ENABLE_FORMAL_VERIFICATION
-  assign Q = q_reg;
-`else
-  assign Q = 1'bZ;
-`endif
+assign Q = q_reg;
 
 endmodule //End Of Module
 
@@ -311,11 +306,6 @@ end else begin
   q_reg <= D;
 end
 
-`ifndef ENABLE_FORMAL_VERIFICATION
-// Wire q_reg to Q
-  assign Q = q_reg;
-`else
-  assign Q = 1'bZ;
-`endif
+assign Q = q_reg;
 
 endmodule //End Of Module
