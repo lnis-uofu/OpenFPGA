@@ -213,7 +213,7 @@ module DFFSRQ (
   input RST, // Reset input
   input CK, // Clock Input
   input D, // Data Input
-  output Q, // Q output
+  output Q // Q output
 );
 //------------Internal Variables--------
 reg q_reg;
@@ -294,7 +294,7 @@ module SDFFSRQ (
   input SE, // Scan-chain Enable
   input D, // Data Input
   input SI, // Scan-chain input
-  output Q, // Q output
+  output Q // Q output
 );
 //------------Internal Variables--------
 reg q_reg;
