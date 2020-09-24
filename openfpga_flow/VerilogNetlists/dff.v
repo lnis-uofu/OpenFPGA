@@ -17,7 +17,7 @@ module DFF (
 reg q_reg;
 
 //-------------Code Starts Here---------
-always @ ( posedge CK) 
+always @ (posedge CK) begin 
   q_reg <= D;
 end
 
