@@ -203,7 +203,7 @@
       <port type="input" prefix="wen" size="1"/>
       <port type="input" prefix="ren" size="1"/>
       <port type="output" prefix="d_out" size="8"/>
-      <port type="clock" prefix="clk" lib_name="CK" size="1" is_global="true" default_val="0"/>
+      <port type="clock" prefix="clk" size="1" is_global="true" default_val="0"/>
     </circuit_model>
   </circuit_library>
   <configuration_protocol>

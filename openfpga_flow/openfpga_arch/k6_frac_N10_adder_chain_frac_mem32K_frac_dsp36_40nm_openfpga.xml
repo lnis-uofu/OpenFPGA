@@ -216,7 +216,7 @@
       <port type="input" prefix="we2" lib_name="we_b" size="1"/>
       <port type="output" prefix="out1" lib_name="q_a" size="32"/>
       <port type="output" prefix="out2" lib_name="q_b" size="32"/>
-      <port type="clock" prefix="clk" lib_name="CK" size="1" is_global="true" default_val="0"/>
+      <port type="clock" prefix="clk" size="1" is_global="true" default_val="0"/>
       <!-- As a fracturable memory, it requires 4 configuration bits to operate in 13 different modes -->
       <port type="sram" prefix="mode" size="4" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
     </circuit_model>
