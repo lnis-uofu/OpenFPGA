@@ -69,8 +69,8 @@
       <device_technology device_model_name="logic"/>
       <input_buffer exist="false"/>
       <output_buffer exist="false"/>
-      <port type="input" prefix="a" lib_name="A" size="1"/>
-      <port type="input" prefix="b" lib_name="B" size="1"/>
+      <port type="input" prefix="a" size="1"/>
+      <port type="input" prefix="b" size="1"/>
       <port type="output" prefix="out" size="1"/>
       <delay_matrix type="rise" in_port="a b" out_port="out">
         10e-12 5e-12
