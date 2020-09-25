@@ -147,7 +147,7 @@
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
        <port type="input" prefix="D" size="1"/>
-       <port type="input" prefix="D_chain" lib_name="DI" size="1"/>
+       <port type="input" prefix="D_chain" lib_name="SI" size="1"/>
        <port type="input" prefix="TESTEN" lib_name="SE" size="1" is_global="true" default_val="0"/>
        <port type="input" prefix="set" lib_name="SET" size="1" is_global="true" default_val="0" is_set="true"/>
        <port type="input" prefix="reset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true"/>
