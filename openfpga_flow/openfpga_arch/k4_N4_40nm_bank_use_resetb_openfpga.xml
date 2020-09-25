@@ -124,7 +124,7 @@
       <port type="sram" prefix="sram" size="1"/>
     </circuit_model>
     <!--DFF subckt ports should be defined as <D> <Q> <CLK> <RESET> <SET>  -->
-    <circuit_model type="ff" name="DFFSRQ" prefix="DFFSRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/dff.v">
+    <circuit_model type="ff" name="DFFSRQ" prefix="DFFSRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
@@ -146,7 +146,7 @@
       <port type="sram" prefix="sram" size="16"/>
     </circuit_model>
     <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-    <circuit_model type="sram" name="SRAMRN" prefix="SRAMRN" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/sram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/sram.v">
+    <circuit_model type="sram" name="SRAMRN" prefix="SRAMRN" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/sram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/sram.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
@@ -156,7 +156,7 @@
        <port type="output" prefix="out" lib_name="Q" size="1"/>
        <port type="output" prefix="outb" lib_name="QN" size="1"/>
     </circuit_model>
-    <circuit_model type="iopad" name="GPIO" prefix="GPIO" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/gpio.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/gpio.v">
+    <circuit_model type="iopad" name="GPIO" prefix="GPIO" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/gpio.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/gpio.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
