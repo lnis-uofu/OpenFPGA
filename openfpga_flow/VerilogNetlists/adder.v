@@ -1,19 +1,20 @@
-//------ Module: sram6T_blwl -----//
-//------ Verilog file: sram.v -----//
-//------ Author: Xifan TANG -----//
-module adder(
-input [0:0] a, // Input a
-input [0:0] b, // Input b
-input [0:0] cin, // Input cin
-output [0:0] cout, // Output carry
-output [0:0] sumout // Output sum
-);
-//wire[1:0] int_calc;
+//-----------------------------------------------------
+// Design Name : Multi-bit Full Adder
+// File Name   : adder.v
+// Coder       : Xifan TANG
+//-----------------------------------------------------
 
-//assign int_calc = a + b + cin;
-//assign cout = int_calc[1];
-//assign sumout = int_calc[0];
-  assign sumout = a ^ b ^ cin;
-  assign cout = (a & b) | (a & cin) | (b & cin); 
+//-----------------------------------------------------
+// Function    : A 1-bit full adder
+//-----------------------------------------------------
+module ADDF(
+  input [0:0] A, // Input a
+  input [0:0] B, // Input b
+  input [0:0] CI, // Input cin
+  output [0:0] CO, // Output carry
+  output [0:0] SUM // Output sum
+);
+  assign SUM = A ^ B ^ CI;
+  assign CO = (A & B) | (A & CI) | (B & CI); 
 endmodule
 
