@@ -69,8 +69,8 @@
       <device_technology device_model_name="logic"/>
       <input_buffer exist="false"/>
       <output_buffer exist="false"/>
-      <port type="input" prefix="a" size="1"/>
-      <port type="input" prefix="b" size="1"/>
+      <port type="input" prefix="a" lib_name="A" size="1"/>
+      <port type="input" prefix="b" lib_name="B" size="1"/>
       <port type="output" prefix="out" size="1"/>
       <delay_matrix type="rise" in_port="a b" out_port="out">
         10e-12 5e-12
@@ -183,15 +183,15 @@
       <port type="input" prefix="outpad" lib_name="A" size="1"/>
       <port type="output" prefix="inpad" lib_name="Y" size="1"/>
     </circuit_model>
-    <circuit_model type="hard_logic" name="adder" prefix="adder" is_default="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/adder.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/adder.v">
+    <circuit_model type="hard_logic" name="ADDF" prefix="ADDF" is_default="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/adder.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/adder.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <port type="input" prefix="a" size="1"/>
-      <port type="input" prefix="b" size="1"/>
-      <port type="input" prefix="cin" size="1"/>
-      <port type="output" prefix="sumout" size="1"/>
-      <port type="output" prefix="cout" size="1"/>
+      <port type="input" prefix="a" lib_name="A" size="1"/>
+      <port type="input" prefix="b" lib_name="B" size="1"/>
+      <port type="input" prefix="cin" lib_name="CI" size="1"/>
+      <port type="output" prefix="sumout" lib_name="SUM" size="1"/>
+      <port type="output" prefix="cout" lib_name="CO" size="1"/>
     </circuit_model>
     <circuit_model type="hard_logic" name="dpram_128x8" prefix="dpram_128x8" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/dpram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/dpram1k.v">
       <design_technology type="cmos"/>
@@ -209,8 +209,8 @@
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <port type="input" prefix="a" size="32"/>
-      <port type="input" prefix="b" size="32"/>
+      <port type="input" prefix="a" lib_name="A" size="32"/>
+      <port type="input" prefix="b" lib_name="B" size="32"/>
       <port type="output" prefix="out" size="64"/>
       <!-- As a fracturable multiplier, it requires 2 configuration bits to operate in 4 different modes -->
       <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="LATCHR" default_val="1"/>
@@ -248,7 +248,7 @@
     <pb_type name="clb.fle" physical_mode_name="physical"/>
     <pb_type name="clb.fle[physical].fabric.frac_logic.frac_lut4" circuit_model_name="frac_lut4" mode_bits="0"/>
     <pb_type name="clb.fle[physical].fabric.ff" circuit_model_name="DFFSRQ"/>
-    <pb_type name="clb.fle[physical].fabric.adder" circuit_model_name="adder"/>
+    <pb_type name="clb.fle[physical].fabric.adder" circuit_model_name="ADDF"/>
     <!-- Binding operating pb_type to physical pb_type -->
     <pb_type name="clb.fle[n2_lut3].lut3inter.ble3.lut3" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut4" mode_bits="1" physical_pb_type_index_factor="0.5">
       <!-- Binding the lut3 to the first 3 inputs of fracturable lut4 -->
