@@ -147,14 +147,14 @@
        <port type="output" prefix="QN" size="1"/>
        <port type="clock" prefix="prog_clk" lib_name="CK" size="1" is_global="true" default_val="0" is_prog="true"/>
     </circuit_model>
-    <circuit_model type="iopad" name="iopad" prefix="iopad" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/io.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/io.v">
+    <circuit_model type="iopad" name="GPIO" prefix="GPIO" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/gpio.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/gpio.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <port type="inout" prefix="pad" size="1" is_global="true" is_io="true"/>
-      <port type="sram" prefix="en" size="1" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
-      <port type="input" prefix="outpad" size="1"/>
-      <port type="output" prefix="inpad" size="1"/>
+      <port type="inout" prefix="PAD" size="1" is_global="true" is_io="true"/>
+      <port type="sram" prefix="DIR" size="1" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
+      <port type="input" prefix="outpad" lib_name="A" size="1"/>
+      <port type="output" prefix="inpad" lib_name="Y" size="1"/>
     </circuit_model>
   </circuit_library>
   <configuration_protocol>
@@ -172,7 +172,7 @@
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
     <pb_type name="io" physical_mode_name="physical" idle_mode_name="inpad"/>
-    <pb_type name="io[physical].iopad" circuit_model_name="iopad" mode_bits="1"/> 
+    <pb_type name="io[physical].iopad" circuit_model_name="GPIO" mode_bits="1"/> 
     <pb_type name="io[inpad].inpad" physical_pb_type_name="io[physical].iopad" mode_bits="1"/> 
     <pb_type name="io[outpad].outpad" physical_pb_type_name="io[physical].iopad" mode_bits="0"/> 
     <!-- End physical pb_type binding in complex block IO -->
