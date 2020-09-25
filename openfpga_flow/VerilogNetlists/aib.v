@@ -5,12 +5,12 @@
 // Coder       : Xifan Tang
 //-----------------------------------------------------
 
-module aib (
-	input tx_clk,
-	input rx_clk,
-	inout[0:79] pad,
-	input[0:79] tx_data,
-	output[0:79] rx_data);
+module AIB (
+	input TXCLK,
+	input RXCLK,
+	inout[0:79] PAD,
+	input[0:79] TXDATA,
+	output[0:79] RXDATA);
 
 // May add the logic function of a real AIB
 // Refer to the offical AIB github
