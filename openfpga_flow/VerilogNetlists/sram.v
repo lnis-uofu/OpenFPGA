@@ -1,31 +1,31 @@
 //-----------------------------------------------------
 // Design Name : sram_blwl
 // File Name   : sram.v
-// Function    : A SRAM cell is is accessible
-//               when wl is enabled
 // Coder       : Xifan TANG
 //-----------------------------------------------------
-module sram_blwl(
-input reset, // Word line control signal
-input wl, // Word line control signal
-input bl, // Bit line control signal
-output out, // Data output
-output outb // Data output
+
+
+//-----------------------------------------------------
+// Function    : A SRAM cell with write enable
+//-----------------------------------------------------
+module SRAM(
+  input WE, // Word line control signal as write enable
+  input D, // Bit line control signal
+  output Q, // Data output
+  output QN // Data output
 );
 
   //----- local variable need to be registered
   reg data;
 
   //----- when wl is enabled, we can read in data from bl
-  always @(bl, wl) 
+  always @(WE or D) 
   begin
-    if (1'b1 == reset) begin 
-      data <= 1'b0;
-    end else if ((1'b1 == bl)&&(1'b1 == wl)) begin
+    if ((1'b1 == D)&&(1'b1 == WE)) begin
     //----- Cases to program internal memory bit 
     //----- case 1: bl = 1, wl = 1, a -> 0
       data <= 1'b1;
-    end else if ((1'b0 == bl)&&(1'b1 == wl)) begin
+    end else if ((1'b0 == D)&&(1'b1 == WE)) begin
     //----- case 2: bl = 0, wl = 1, a -> 0
      data <= 1'b0;
     end 
@@ -33,56 +33,275 @@ output outb // Data output
 
 `ifndef ENABLE_FORMAL_VERIFICATION
     // Wire q_reg to Q
-    assign out = data;
-    assign outb = ~data;
+    assign Q = data;
+    assign QN = ~data;
 `else
-    assign out = 1'bZ;
-    assign outb = !out;
+    assign Q = 1'bZ;
+    assign QN = !Q;
 `endif
 
 endmodule
 
-
-//------ Module: sram6T_blwl -----//
-//------ Verilog file: sram.v -----//
-//------ Author: Xifan TANG -----//
-module sram6T_blwl(
-//input read,
-//input nequalize,
-input din, // Data input
-output dout, // Data output
-output doutb, // Data output
-input bl, // Bit line control signal
-input wl, // Word line control signal
-input blb // Inverted Bit line control signal
+//-----------------------------------------------------
+// Function    : A SRAM cell with 
+//               - an active-high set
+//               - a write-enable
+//-----------------------------------------------------
+module SRAMS(
+  input SET, // active-high set signal
+  input WE, // Word line control signal as write enable
+  input D, // Bit line control signal as data input
+  output Q, // Data output
+  output QN // Data output
 );
+
   //----- local variable need to be registered
-  reg a;
+  reg data;
 
   //----- when wl is enabled, we can read in data from bl
-  always @(bl, wl) 
+  always @(D or WE) 
   begin
+    if (1'b1 == SET) begin 
+      data <= 1'b1;
+    end else if ((1'b1 == D)&&(1'b1 == WE)) begin
     //----- Cases to program internal memory bit 
     //----- case 1: bl = 1, wl = 1, a -> 0
-    if ((1'b1 == bl)&&(1'b1 == wl)) begin
-      a <= 1'b1;
-    end 
+      data <= 1'b1;
+    end else if ((1'b0 == D)&&(1'b1 == WE)) begin
     //----- case 2: bl = 0, wl = 1, a -> 0
-    if ((1'b0 == bl)&&(1'b1 == wl)) begin
-     a <= 1'b0;
+     data <= 1'b0;
     end 
   end
 
-  // dout is short-wired to din 
-  assign dout = a;
-  //---- doutb is always opposite to dout 
-  assign doutb = ~dout;
-`ifdef ENABLE_SIGNAL_INITIALIZATION
-   initial begin
-     $deposit(a, $random);
-   end
+`ifndef ENABLE_FORMAL_VERIFICATION
+    // Wire q_reg to Q
+    assign Q = data;
+    assign QN = ~data;
+`else
+    assign Q = 1'bZ;
+    assign QN = !Q;
 `endif
+
 endmodule
+
+//-----------------------------------------------------
+// Function    : A SRAM cell with 
+//               - an active-low set
+//               - a write-enable
+//-----------------------------------------------------
+module SRAMSN(
+  input SETN, // active-low set signal
+  input WE, // Word line control signal as write enable
+  input D, // Bit line control signal as data input
+  output Q, // Data output
+  output QN // Data output
+);
+
+  //----- local variable need to be registered
+  reg data;
+
+  //----- when wl is enabled, we can read in data from bl
+  always @(D or WE) 
+  begin
+    if (1'b0 == SETN) begin 
+      data <= 1'b1;
+    end else if ((1'b1 == D)&&(1'b1 == WE)) begin
+    //----- Cases to program internal memory bit 
+    //----- case 1: bl = 1, wl = 1, a -> 0
+      data <= 1'b1;
+    end else if ((1'b0 == D)&&(1'b1 == WE)) begin
+    //----- case 2: bl = 0, wl = 1, a -> 0
+     data <= 1'b0;
+    end 
+  end
+
+`ifndef ENABLE_FORMAL_VERIFICATION
+    // Wire q_reg to Q
+    assign Q = data;
+    assign QN = ~data;
+`else
+    assign Q = 1'bZ;
+    assign QN = !Q;
+`endif
+
+endmodule
+
+//-----------------------------------------------------
+// Function    : A SRAM cell with 
+//               - an active-high reset
+//               - a write-enable
+//-----------------------------------------------------
+module SRAMR(
+  input RST, // active-high reset signal
+  input WE, // Word line control signal as write enable
+  input D, // Bit line control signal as data input
+  output Q, // Data output
+  output QN // Data output
+);
+
+  //----- local variable need to be registered
+  reg data;
+
+  //----- when wl is enabled, we can read in data from bl
+  always @(D or WE) 
+  begin
+    if (1'b1 == RST) begin 
+      data <= 1'b0;
+    end else if ((1'b1 == D)&&(1'b1 == WE)) begin
+    //----- Cases to program internal memory bit 
+    //----- case 1: bl = 1, wl = 1, a -> 0
+      data <= 1'b1;
+    end else if ((1'b0 == D)&&(1'b1 == WE)) begin
+    //----- case 2: bl = 0, wl = 1, a -> 0
+     data <= 1'b0;
+    end 
+  end
+
+`ifndef ENABLE_FORMAL_VERIFICATION
+    // Wire q_reg to Q
+    assign Q = data;
+    assign QN = ~data;
+`else
+    assign Q = 1'bZ;
+    assign QN = !Q;
+`endif
+
+endmodule
+
+//-----------------------------------------------------
+// Function    : A SRAM cell with 
+//               - an active-low reset
+//               - a write-enable
+//-----------------------------------------------------
+module SRAMRN(
+  input RSTN, // active-low reset signal
+  input WE, // Word line control signal as write enable
+  input D, // Bit line control signal as data input
+  output Q, // Data output
+  output QN // Data output
+);
+
+  //----- local variable need to be registered
+  reg data;
+
+  //----- when wl is enabled, we can read in data from bl
+  always @(D or WE) 
+  begin
+    if (1'b0 == RSTN) begin 
+      data <= 1'b0;
+    end else if ((1'b1 == D)&&(1'b1 == WE)) begin
+    //----- Cases to program internal memory bit 
+    //----- case 1: bl = 1, wl = 1, a -> 0
+      data <= 1'b1;
+    end else if ((1'b0 == D)&&(1'b1 == WE)) begin
+    //----- case 2: bl = 0, wl = 1, a -> 0
+     data <= 1'b0;
+    end 
+  end
+
+`ifndef ENABLE_FORMAL_VERIFICATION
+    // Wire q_reg to Q
+    assign Q = data;
+    assign QN = ~data;
+`else
+    assign Q = 1'bZ;
+    assign QN = !Q;
+`endif
+
+endmodule
+
+//-----------------------------------------------------
+// Function    : A SRAM cell with 
+//               - an active-high reset
+//               - an active-high set
+//               - a write-enable
+//-----------------------------------------------------
+module SRAMSR(
+  input RST, // active-high reset signal
+  input SET, // active-high set signal
+  input WE, // Word line control signal as write enable
+  input D, // Bit line control signal as data input
+  output Q, // Data output
+  output QN // Data output
+);
+
+  //----- local variable need to be registered
+  reg data;
+
+  //----- when wl is enabled, we can read in data from bl
+  always @(D or WE) 
+  begin
+    if (1'b1 == RST) begin 
+      data <= 1'b0;
+    end else if (1'b1 == SET) begin 
+      data <= 1'b1;
+    end else if ((1'b1 == D)&&(1'b1 == WE)) begin
+    //----- Cases to program internal memory bit 
+    //----- case 1: bl = 1, wl = 1, a -> 0
+      data <= 1'b1;
+    end else if ((1'b0 == D)&&(1'b1 == WE)) begin
+    //----- case 2: bl = 0, wl = 1, a -> 0
+     data <= 1'b0;
+    end 
+  end
+
+`ifndef ENABLE_FORMAL_VERIFICATION
+    // Wire q_reg to Q
+    assign Q = data;
+    assign QN = ~data;
+`else
+    assign Q = 1'bZ;
+    assign QN = !Q;
+`endif
+
+endmodule
+
+//-----------------------------------------------------
+// Function    : A SRAM cell with 
+//               - an active-low reset
+//               - an active-low set
+//               - a write-enable
+//-----------------------------------------------------
+module SRAMSNRN(
+  input RSTN, // active-low reset signal
+  input SETN, // active-low set signal
+  input WE, // Word line control signal as write enable
+  input D, // Bit line control signal as data input
+  output Q, // Data output
+  output QN // Data output
+);
+
+  //----- local variable need to be registered
+  reg data;
+
+  //----- when wl is enabled, we can read in data from bl
+  always @(D or WE) 
+  begin
+    if (1'b0 == RSTN) begin 
+      data <= 1'b0;
+    end else if (1'b0 == SETN) begin 
+      data <= 1'b1;
+    end else if ((1'b1 == D)&&(1'b1 == WE)) begin
+    //----- Cases to program internal memory bit 
+    //----- case 1: bl = 1, wl = 1, a -> 0
+      data <= 1'b1;
+    end else if ((1'b0 == D)&&(1'b1 == WE)) begin
+    //----- case 2: bl = 0, wl = 1, a -> 0
+     data <= 1'b0;
+    end 
+  end
+
+`ifndef ENABLE_FORMAL_VERIFICATION
+    // Wire q_reg to Q
+    assign Q = data;
+    assign QN = ~data;
+`else
+    assign Q = 1'bZ;
+    assign QN = !Q;
+`endif
+
+endmodule
+
 
 module sram6T_rram(
 input read,

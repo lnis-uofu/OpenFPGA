@@ -2,7 +2,7 @@
 	- Architecture independent bitstream
 	- Author: Xifan TANG
 	- Organization: University of Utah
-	- Date: Mon Jul 27 15:47:36 2020
+	- Date: Thu Sep 24 20:16:32 2020
 -->
 
 <bitstream_block name="fpga_top" hierarchy_level="0">
@@ -11,7 +11,7 @@
 			<bitstream_block name="logical_tile_clb_mode_default__fle_0" hierarchy_level="3">
 				<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0" hierarchy_level="4">
 					<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0" hierarchy_level="5">
-						<bitstream_block name="lut4_config_latch_mem" hierarchy_level="6">
+						<bitstream_block name="lut4_LATCHR_mem" hierarchy_level="6">
 							<hierarchy>
 								<instance level="0" name="fpga_top"/>
 								<instance level="1" name="grid_clb_1__1_"/>
@@ -19,7 +19,7 @@
 								<instance level="3" name="logical_tile_clb_mode_default__fle_0"/>
 								<instance level="4" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0"/>
 								<instance level="5" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0"/>
-								<instance level="6" name="lut4_config_latch_mem"/>
+								<instance level="6" name="lut4_LATCHR_mem"/>
 							</hierarchy>
 							<bitstream>
 								<bit memory_port="mem_out[0]" value="0"/>
@@ -64,7 +64,7 @@
 			<bitstream_block name="logical_tile_clb_mode_default__fle_1" hierarchy_level="3">
 				<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0" hierarchy_level="4">
 					<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0" hierarchy_level="5">
-						<bitstream_block name="lut4_config_latch_mem" hierarchy_level="6">
+						<bitstream_block name="lut4_LATCHR_mem" hierarchy_level="6">
 							<hierarchy>
 								<instance level="0" name="fpga_top"/>
 								<instance level="1" name="grid_clb_1__1_"/>
@@ -72,7 +72,7 @@
 								<instance level="3" name="logical_tile_clb_mode_default__fle_1"/>
 								<instance level="4" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0"/>
 								<instance level="5" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0"/>
-								<instance level="6" name="lut4_config_latch_mem"/>
+								<instance level="6" name="lut4_LATCHR_mem"/>
 							</hierarchy>
 							<bitstream>
 								<bit memory_port="mem_out[0]" value="0"/>
@@ -117,7 +117,7 @@
 			<bitstream_block name="logical_tile_clb_mode_default__fle_2" hierarchy_level="3">
 				<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0" hierarchy_level="4">
 					<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0" hierarchy_level="5">
-						<bitstream_block name="lut4_config_latch_mem" hierarchy_level="6">
+						<bitstream_block name="lut4_LATCHR_mem" hierarchy_level="6">
 							<hierarchy>
 								<instance level="0" name="fpga_top"/>
 								<instance level="1" name="grid_clb_1__1_"/>
@@ -125,7 +125,7 @@
 								<instance level="3" name="logical_tile_clb_mode_default__fle_2"/>
 								<instance level="4" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0"/>
 								<instance level="5" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0"/>
-								<instance level="6" name="lut4_config_latch_mem"/>
+								<instance level="6" name="lut4_LATCHR_mem"/>
 							</hierarchy>
 							<bitstream>
 								<bit memory_port="mem_out[0]" value="0"/>
@@ -170,7 +170,7 @@
 			<bitstream_block name="logical_tile_clb_mode_default__fle_3" hierarchy_level="3">
 				<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0" hierarchy_level="4">
 					<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0" hierarchy_level="5">
-						<bitstream_block name="lut4_config_latch_mem" hierarchy_level="6">
+						<bitstream_block name="lut4_LATCHR_mem" hierarchy_level="6">
 							<hierarchy>
 								<instance level="0" name="fpga_top"/>
 								<instance level="1" name="grid_clb_1__1_"/>
@@ -178,7 +178,7 @@
 								<instance level="3" name="logical_tile_clb_mode_default__fle_3"/>
 								<instance level="4" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0"/>
 								<instance level="5" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0"/>
-								<instance level="6" name="lut4_config_latch_mem"/>
+								<instance level="6" name="lut4_LATCHR_mem"/>
 							</hierarchy>
 							<bitstream>
 								<bit memory_port="mem_out[0]" value="0"/>
@@ -563,7 +563,7 @@
 			<bitstream_block name="logical_tile_clb_mode_default__fle_0" hierarchy_level="3">
 				<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0" hierarchy_level="4">
 					<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0" hierarchy_level="5">
-						<bitstream_block name="lut4_config_latch_mem" hierarchy_level="6">
+						<bitstream_block name="lut4_LATCHR_mem" hierarchy_level="6">
 							<hierarchy>
 								<instance level="0" name="fpga_top"/>
 								<instance level="1" name="grid_clb_1__2_"/>
@@ -571,7 +571,7 @@
 								<instance level="3" name="logical_tile_clb_mode_default__fle_0"/>
 								<instance level="4" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0"/>
 								<instance level="5" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0"/>
-								<instance level="6" name="lut4_config_latch_mem"/>
+								<instance level="6" name="lut4_LATCHR_mem"/>
 							</hierarchy>
 							<bitstream>
 								<bit memory_port="mem_out[0]" value="0"/>
@@ -616,7 +616,7 @@
 			<bitstream_block name="logical_tile_clb_mode_default__fle_1" hierarchy_level="3">
 				<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0" hierarchy_level="4">
 					<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0" hierarchy_level="5">
-						<bitstream_block name="lut4_config_latch_mem" hierarchy_level="6">
+						<bitstream_block name="lut4_LATCHR_mem" hierarchy_level="6">
 							<hierarchy>
 								<instance level="0" name="fpga_top"/>
 								<instance level="1" name="grid_clb_1__2_"/>
@@ -624,7 +624,7 @@
 								<instance level="3" name="logical_tile_clb_mode_default__fle_1"/>
 								<instance level="4" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0"/>
 								<instance level="5" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0"/>
-								<instance level="6" name="lut4_config_latch_mem"/>
+								<instance level="6" name="lut4_LATCHR_mem"/>
 							</hierarchy>
 							<bitstream>
 								<bit memory_port="mem_out[0]" value="0"/>
@@ -669,7 +669,7 @@
 			<bitstream_block name="logical_tile_clb_mode_default__fle_2" hierarchy_level="3">
 				<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0" hierarchy_level="4">
 					<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0" hierarchy_level="5">
-						<bitstream_block name="lut4_config_latch_mem" hierarchy_level="6">
+						<bitstream_block name="lut4_LATCHR_mem" hierarchy_level="6">
 							<hierarchy>
 								<instance level="0" name="fpga_top"/>
 								<instance level="1" name="grid_clb_1__2_"/>
@@ -677,7 +677,7 @@
 								<instance level="3" name="logical_tile_clb_mode_default__fle_2"/>
 								<instance level="4" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0"/>
 								<instance level="5" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0"/>
-								<instance level="6" name="lut4_config_latch_mem"/>
+								<instance level="6" name="lut4_LATCHR_mem"/>
 							</hierarchy>
 							<bitstream>
 								<bit memory_port="mem_out[0]" value="0"/>
@@ -722,7 +722,7 @@
 			<bitstream_block name="logical_tile_clb_mode_default__fle_3" hierarchy_level="3">
 				<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0" hierarchy_level="4">
 					<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0" hierarchy_level="5">
-						<bitstream_block name="lut4_config_latch_mem" hierarchy_level="6">
+						<bitstream_block name="lut4_LATCHR_mem" hierarchy_level="6">
 							<hierarchy>
 								<instance level="0" name="fpga_top"/>
 								<instance level="1" name="grid_clb_1__2_"/>
@@ -730,7 +730,7 @@
 								<instance level="3" name="logical_tile_clb_mode_default__fle_3"/>
 								<instance level="4" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0"/>
 								<instance level="5" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0"/>
-								<instance level="6" name="lut4_config_latch_mem"/>
+								<instance level="6" name="lut4_LATCHR_mem"/>
 							</hierarchy>
 							<bitstream>
 								<bit memory_port="mem_out[0]" value="0"/>
@@ -1115,7 +1115,7 @@
 			<bitstream_block name="logical_tile_clb_mode_default__fle_0" hierarchy_level="3">
 				<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0" hierarchy_level="4">
 					<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0" hierarchy_level="5">
-						<bitstream_block name="lut4_config_latch_mem" hierarchy_level="6">
+						<bitstream_block name="lut4_LATCHR_mem" hierarchy_level="6">
 							<hierarchy>
 								<instance level="0" name="fpga_top"/>
 								<instance level="1" name="grid_clb_2__1_"/>
@@ -1123,7 +1123,7 @@
 								<instance level="3" name="logical_tile_clb_mode_default__fle_0"/>
 								<instance level="4" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0"/>
 								<instance level="5" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0"/>
-								<instance level="6" name="lut4_config_latch_mem"/>
+								<instance level="6" name="lut4_LATCHR_mem"/>
 							</hierarchy>
 							<bitstream>
 								<bit memory_port="mem_out[0]" value="0"/>
@@ -1168,7 +1168,7 @@
 			<bitstream_block name="logical_tile_clb_mode_default__fle_1" hierarchy_level="3">
 				<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0" hierarchy_level="4">
 					<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0" hierarchy_level="5">
-						<bitstream_block name="lut4_config_latch_mem" hierarchy_level="6">
+						<bitstream_block name="lut4_LATCHR_mem" hierarchy_level="6">
 							<hierarchy>
 								<instance level="0" name="fpga_top"/>
 								<instance level="1" name="grid_clb_2__1_"/>
@@ -1176,7 +1176,7 @@
 								<instance level="3" name="logical_tile_clb_mode_default__fle_1"/>
 								<instance level="4" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0"/>
 								<instance level="5" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0"/>
-								<instance level="6" name="lut4_config_latch_mem"/>
+								<instance level="6" name="lut4_LATCHR_mem"/>
 							</hierarchy>
 							<bitstream>
 								<bit memory_port="mem_out[0]" value="0"/>
@@ -1221,7 +1221,7 @@
 			<bitstream_block name="logical_tile_clb_mode_default__fle_2" hierarchy_level="3">
 				<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0" hierarchy_level="4">
 					<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0" hierarchy_level="5">
-						<bitstream_block name="lut4_config_latch_mem" hierarchy_level="6">
+						<bitstream_block name="lut4_LATCHR_mem" hierarchy_level="6">
 							<hierarchy>
 								<instance level="0" name="fpga_top"/>
 								<instance level="1" name="grid_clb_2__1_"/>
@@ -1229,7 +1229,7 @@
 								<instance level="3" name="logical_tile_clb_mode_default__fle_2"/>
 								<instance level="4" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0"/>
 								<instance level="5" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0"/>
-								<instance level="6" name="lut4_config_latch_mem"/>
+								<instance level="6" name="lut4_LATCHR_mem"/>
 							</hierarchy>
 							<bitstream>
 								<bit memory_port="mem_out[0]" value="0"/>
@@ -1274,7 +1274,7 @@
 			<bitstream_block name="logical_tile_clb_mode_default__fle_3" hierarchy_level="3">
 				<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0" hierarchy_level="4">
 					<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0" hierarchy_level="5">
-						<bitstream_block name="lut4_config_latch_mem" hierarchy_level="6">
+						<bitstream_block name="lut4_LATCHR_mem" hierarchy_level="6">
 							<hierarchy>
 								<instance level="0" name="fpga_top"/>
 								<instance level="1" name="grid_clb_2__1_"/>
@@ -1282,24 +1282,24 @@
 								<instance level="3" name="logical_tile_clb_mode_default__fle_3"/>
 								<instance level="4" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0"/>
 								<instance level="5" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0"/>
-								<instance level="6" name="lut4_config_latch_mem"/>
+								<instance level="6" name="lut4_LATCHR_mem"/>
 							</hierarchy>
 							<bitstream>
 								<bit memory_port="mem_out[0]" value="1"/>
-								<bit memory_port="mem_out[1]" value="0"/>
+								<bit memory_port="mem_out[1]" value="1"/>
 								<bit memory_port="mem_out[2]" value="1"/>
-								<bit memory_port="mem_out[3]" value="0"/>
+								<bit memory_port="mem_out[3]" value="1"/>
 								<bit memory_port="mem_out[4]" value="1"/>
-								<bit memory_port="mem_out[5]" value="0"/>
+								<bit memory_port="mem_out[5]" value="1"/>
 								<bit memory_port="mem_out[6]" value="1"/>
-								<bit memory_port="mem_out[7]" value="0"/>
-								<bit memory_port="mem_out[8]" value="0"/>
+								<bit memory_port="mem_out[7]" value="1"/>
+								<bit memory_port="mem_out[8]" value="1"/>
 								<bit memory_port="mem_out[9]" value="0"/>
-								<bit memory_port="mem_out[10]" value="0"/>
+								<bit memory_port="mem_out[10]" value="1"/>
 								<bit memory_port="mem_out[11]" value="0"/>
-								<bit memory_port="mem_out[12]" value="0"/>
+								<bit memory_port="mem_out[12]" value="1"/>
 								<bit memory_port="mem_out[13]" value="0"/>
-								<bit memory_port="mem_out[14]" value="0"/>
+								<bit memory_port="mem_out[14]" value="1"/>
 								<bit memory_port="mem_out[15]" value="0"/>
 							</bitstream>
 						</bitstream_block>
@@ -1703,7 +1703,7 @@
 			<bitstream_block name="logical_tile_clb_mode_default__fle_0" hierarchy_level="3">
 				<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0" hierarchy_level="4">
 					<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0" hierarchy_level="5">
-						<bitstream_block name="lut4_config_latch_mem" hierarchy_level="6">
+						<bitstream_block name="lut4_LATCHR_mem" hierarchy_level="6">
 							<hierarchy>
 								<instance level="0" name="fpga_top"/>
 								<instance level="1" name="grid_clb_2__2_"/>
@@ -1711,7 +1711,7 @@
 								<instance level="3" name="logical_tile_clb_mode_default__fle_0"/>
 								<instance level="4" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0"/>
 								<instance level="5" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0"/>
-								<instance level="6" name="lut4_config_latch_mem"/>
+								<instance level="6" name="lut4_LATCHR_mem"/>
 							</hierarchy>
 							<bitstream>
 								<bit memory_port="mem_out[0]" value="0"/>
@@ -1756,7 +1756,7 @@
 			<bitstream_block name="logical_tile_clb_mode_default__fle_1" hierarchy_level="3">
 				<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0" hierarchy_level="4">
 					<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0" hierarchy_level="5">
-						<bitstream_block name="lut4_config_latch_mem" hierarchy_level="6">
+						<bitstream_block name="lut4_LATCHR_mem" hierarchy_level="6">
 							<hierarchy>
 								<instance level="0" name="fpga_top"/>
 								<instance level="1" name="grid_clb_2__2_"/>
@@ -1764,7 +1764,7 @@
 								<instance level="3" name="logical_tile_clb_mode_default__fle_1"/>
 								<instance level="4" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0"/>
 								<instance level="5" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0"/>
-								<instance level="6" name="lut4_config_latch_mem"/>
+								<instance level="6" name="lut4_LATCHR_mem"/>
 							</hierarchy>
 							<bitstream>
 								<bit memory_port="mem_out[0]" value="0"/>
@@ -1809,7 +1809,7 @@
 			<bitstream_block name="logical_tile_clb_mode_default__fle_2" hierarchy_level="3">
 				<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0" hierarchy_level="4">
 					<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0" hierarchy_level="5">
-						<bitstream_block name="lut4_config_latch_mem" hierarchy_level="6">
+						<bitstream_block name="lut4_LATCHR_mem" hierarchy_level="6">
 							<hierarchy>
 								<instance level="0" name="fpga_top"/>
 								<instance level="1" name="grid_clb_2__2_"/>
@@ -1817,7 +1817,7 @@
 								<instance level="3" name="logical_tile_clb_mode_default__fle_2"/>
 								<instance level="4" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0"/>
 								<instance level="5" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0"/>
-								<instance level="6" name="lut4_config_latch_mem"/>
+								<instance level="6" name="lut4_LATCHR_mem"/>
 							</hierarchy>
 							<bitstream>
 								<bit memory_port="mem_out[0]" value="0"/>
@@ -1862,7 +1862,7 @@
 			<bitstream_block name="logical_tile_clb_mode_default__fle_3" hierarchy_level="3">
 				<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0" hierarchy_level="4">
 					<bitstream_block name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0" hierarchy_level="5">
-						<bitstream_block name="lut4_config_latch_mem" hierarchy_level="6">
+						<bitstream_block name="lut4_LATCHR_mem" hierarchy_level="6">
 							<hierarchy>
 								<instance level="0" name="fpga_top"/>
 								<instance level="1" name="grid_clb_2__2_"/>
@@ -1870,7 +1870,7 @@
 								<instance level="3" name="logical_tile_clb_mode_default__fle_3"/>
 								<instance level="4" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0"/>
 								<instance level="5" name="logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0"/>
-								<instance level="6" name="lut4_config_latch_mem"/>
+								<instance level="6" name="lut4_LATCHR_mem"/>
 							</hierarchy>
 							<bitstream>
 								<bit memory_port="mem_out[0]" value="0"/>
@@ -2253,13 +2253,13 @@
 	<bitstream_block name="grid_io_top_1__3_" hierarchy_level="1">
 		<bitstream_block name="logical_tile_io_mode_io__0" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_top_1__3_"/>
 						<instance level="2" name="logical_tile_io_mode_io__0"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2269,13 +2269,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__1" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_top_1__3_"/>
 						<instance level="2" name="logical_tile_io_mode_io__1"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2285,13 +2285,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__2" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_top_1__3_"/>
 						<instance level="2" name="logical_tile_io_mode_io__2"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2301,13 +2301,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__3" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_top_1__3_"/>
 						<instance level="2" name="logical_tile_io_mode_io__3"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2317,13 +2317,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__4" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_top_1__3_"/>
 						<instance level="2" name="logical_tile_io_mode_io__4"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2333,13 +2333,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__5" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_top_1__3_"/>
 						<instance level="2" name="logical_tile_io_mode_io__5"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2349,13 +2349,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__6" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_top_1__3_"/>
 						<instance level="2" name="logical_tile_io_mode_io__6"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2365,13 +2365,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__7" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_top_1__3_"/>
 						<instance level="2" name="logical_tile_io_mode_io__7"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2383,13 +2383,13 @@
 	<bitstream_block name="grid_io_top_2__3_" hierarchy_level="1">
 		<bitstream_block name="logical_tile_io_mode_io__0" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_top_2__3_"/>
 						<instance level="2" name="logical_tile_io_mode_io__0"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2399,13 +2399,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__1" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_top_2__3_"/>
 						<instance level="2" name="logical_tile_io_mode_io__1"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2415,13 +2415,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__2" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_top_2__3_"/>
 						<instance level="2" name="logical_tile_io_mode_io__2"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2431,13 +2431,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__3" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_top_2__3_"/>
 						<instance level="2" name="logical_tile_io_mode_io__3"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2447,13 +2447,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__4" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_top_2__3_"/>
 						<instance level="2" name="logical_tile_io_mode_io__4"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2463,13 +2463,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__5" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_top_2__3_"/>
 						<instance level="2" name="logical_tile_io_mode_io__5"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2479,13 +2479,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__6" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_top_2__3_"/>
 						<instance level="2" name="logical_tile_io_mode_io__6"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2495,13 +2495,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__7" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_top_2__3_"/>
 						<instance level="2" name="logical_tile_io_mode_io__7"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2513,13 +2513,13 @@
 	<bitstream_block name="grid_io_right_3__1_" hierarchy_level="1">
 		<bitstream_block name="logical_tile_io_mode_io__0" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_right_3__1_"/>
 						<instance level="2" name="logical_tile_io_mode_io__0"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2529,13 +2529,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__1" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_right_3__1_"/>
 						<instance level="2" name="logical_tile_io_mode_io__1"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2545,13 +2545,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__2" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_right_3__1_"/>
 						<instance level="2" name="logical_tile_io_mode_io__2"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2561,13 +2561,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__3" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_right_3__1_"/>
 						<instance level="2" name="logical_tile_io_mode_io__3"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2577,13 +2577,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__4" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_right_3__1_"/>
 						<instance level="2" name="logical_tile_io_mode_io__4"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2593,13 +2593,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__5" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_right_3__1_"/>
 						<instance level="2" name="logical_tile_io_mode_io__5"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2609,13 +2609,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__6" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_right_3__1_"/>
 						<instance level="2" name="logical_tile_io_mode_io__6"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2625,13 +2625,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__7" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_right_3__1_"/>
 						<instance level="2" name="logical_tile_io_mode_io__7"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2643,13 +2643,13 @@
 	<bitstream_block name="grid_io_right_3__2_" hierarchy_level="1">
 		<bitstream_block name="logical_tile_io_mode_io__0" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_right_3__2_"/>
 						<instance level="2" name="logical_tile_io_mode_io__0"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2659,13 +2659,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__1" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_right_3__2_"/>
 						<instance level="2" name="logical_tile_io_mode_io__1"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2675,13 +2675,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__2" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_right_3__2_"/>
 						<instance level="2" name="logical_tile_io_mode_io__2"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2691,13 +2691,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__3" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_right_3__2_"/>
 						<instance level="2" name="logical_tile_io_mode_io__3"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2707,13 +2707,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__4" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_right_3__2_"/>
 						<instance level="2" name="logical_tile_io_mode_io__4"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2723,13 +2723,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__5" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_right_3__2_"/>
 						<instance level="2" name="logical_tile_io_mode_io__5"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2739,13 +2739,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__6" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_right_3__2_"/>
 						<instance level="2" name="logical_tile_io_mode_io__6"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2755,13 +2755,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__7" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_right_3__2_"/>
 						<instance level="2" name="logical_tile_io_mode_io__7"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2773,13 +2773,13 @@
 	<bitstream_block name="grid_io_bottom_1__0_" hierarchy_level="1">
 		<bitstream_block name="logical_tile_io_mode_io__0" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_bottom_1__0_"/>
 						<instance level="2" name="logical_tile_io_mode_io__0"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2789,13 +2789,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__1" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_bottom_1__0_"/>
 						<instance level="2" name="logical_tile_io_mode_io__1"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2805,13 +2805,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__2" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_bottom_1__0_"/>
 						<instance level="2" name="logical_tile_io_mode_io__2"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2821,13 +2821,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__3" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_bottom_1__0_"/>
 						<instance level="2" name="logical_tile_io_mode_io__3"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2837,13 +2837,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__4" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_bottom_1__0_"/>
 						<instance level="2" name="logical_tile_io_mode_io__4"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2853,13 +2853,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__5" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_bottom_1__0_"/>
 						<instance level="2" name="logical_tile_io_mode_io__5"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2869,13 +2869,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__6" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_bottom_1__0_"/>
 						<instance level="2" name="logical_tile_io_mode_io__6"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2885,13 +2885,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__7" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_bottom_1__0_"/>
 						<instance level="2" name="logical_tile_io_mode_io__7"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2903,13 +2903,13 @@
 	<bitstream_block name="grid_io_bottom_2__0_" hierarchy_level="1">
 		<bitstream_block name="logical_tile_io_mode_io__0" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_bottom_2__0_"/>
 						<instance level="2" name="logical_tile_io_mode_io__0"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2919,13 +2919,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__1" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_bottom_2__0_"/>
 						<instance level="2" name="logical_tile_io_mode_io__1"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2935,13 +2935,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__2" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_bottom_2__0_"/>
 						<instance level="2" name="logical_tile_io_mode_io__2"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2951,13 +2951,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__3" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_bottom_2__0_"/>
 						<instance level="2" name="logical_tile_io_mode_io__3"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2967,13 +2967,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__4" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_bottom_2__0_"/>
 						<instance level="2" name="logical_tile_io_mode_io__4"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2983,13 +2983,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__5" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_bottom_2__0_"/>
 						<instance level="2" name="logical_tile_io_mode_io__5"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -2999,13 +2999,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__6" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_bottom_2__0_"/>
 						<instance level="2" name="logical_tile_io_mode_io__6"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="0"/>
@@ -3015,13 +3015,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__7" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_bottom_2__0_"/>
 						<instance level="2" name="logical_tile_io_mode_io__7"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -3033,13 +3033,13 @@
 	<bitstream_block name="grid_io_left_0__1_" hierarchy_level="1">
 		<bitstream_block name="logical_tile_io_mode_io__0" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_left_0__1_"/>
 						<instance level="2" name="logical_tile_io_mode_io__0"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -3049,13 +3049,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__1" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_left_0__1_"/>
 						<instance level="2" name="logical_tile_io_mode_io__1"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -3065,13 +3065,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__2" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_left_0__1_"/>
 						<instance level="2" name="logical_tile_io_mode_io__2"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -3081,13 +3081,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__3" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_left_0__1_"/>
 						<instance level="2" name="logical_tile_io_mode_io__3"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -3097,13 +3097,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__4" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_left_0__1_"/>
 						<instance level="2" name="logical_tile_io_mode_io__4"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -3113,13 +3113,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__5" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_left_0__1_"/>
 						<instance level="2" name="logical_tile_io_mode_io__5"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -3129,13 +3129,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__6" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_left_0__1_"/>
 						<instance level="2" name="logical_tile_io_mode_io__6"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -3145,13 +3145,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__7" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_left_0__1_"/>
 						<instance level="2" name="logical_tile_io_mode_io__7"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -3163,13 +3163,13 @@
 	<bitstream_block name="grid_io_left_0__2_" hierarchy_level="1">
 		<bitstream_block name="logical_tile_io_mode_io__0" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_left_0__2_"/>
 						<instance level="2" name="logical_tile_io_mode_io__0"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -3179,13 +3179,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__1" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_left_0__2_"/>
 						<instance level="2" name="logical_tile_io_mode_io__1"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -3195,13 +3195,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__2" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_left_0__2_"/>
 						<instance level="2" name="logical_tile_io_mode_io__2"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -3211,13 +3211,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__3" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_left_0__2_"/>
 						<instance level="2" name="logical_tile_io_mode_io__3"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -3227,13 +3227,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__4" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_left_0__2_"/>
 						<instance level="2" name="logical_tile_io_mode_io__4"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -3243,13 +3243,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__5" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_left_0__2_"/>
 						<instance level="2" name="logical_tile_io_mode_io__5"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -3259,13 +3259,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__6" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_left_0__2_"/>
 						<instance level="2" name="logical_tile_io_mode_io__6"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>
@@ -3275,13 +3275,13 @@
 		</bitstream_block>
 		<bitstream_block name="logical_tile_io_mode_io__7" hierarchy_level="2">
 			<bitstream_block name="logical_tile_io_mode_physical__iopad_0" hierarchy_level="3">
-				<bitstream_block name="iopad_config_latch_mem" hierarchy_level="4">
+				<bitstream_block name="GPIO_LATCHR_mem" hierarchy_level="4">
 					<hierarchy>
 						<instance level="0" name="fpga_top"/>
 						<instance level="1" name="grid_io_left_0__2_"/>
 						<instance level="2" name="logical_tile_io_mode_io__7"/>
 						<instance level="3" name="logical_tile_io_mode_physical__iopad_0"/>
-						<instance level="4" name="iopad_config_latch_mem"/>
+						<instance level="4" name="GPIO_LATCHR_mem"/>
 					</hierarchy>
 					<bitstream>
 						<bit memory_port="mem_out[0]" value="1"/>

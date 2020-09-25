@@ -942,6 +942,12 @@ bool CircuitLibrary::port_is_config_enable(const CircuitPortId& circuit_port_id)
   return port_is_config_enable_[circuit_port_id];
 }
 
+bool CircuitLibrary::port_is_edge_triggered(const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_is_edge_triggered_[circuit_port_id];
+}
+
 /* Return a flag if the port is used during programming a FPGA in a circuit model */
 bool CircuitLibrary::port_is_prog(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
@@ -1374,6 +1380,7 @@ CircuitPortId CircuitLibrary::add_model_port(const CircuitModelId& model_id,
   port_is_reset_.push_back(false);
   port_is_set_.push_back(false);
   port_is_config_enable_.push_back(false);
+  port_is_edge_triggered_.push_back(false);
   port_is_prog_.push_back(false);
   port_tri_state_model_names_.emplace_back();
   port_tri_state_model_ids_.push_back(CircuitModelId::INVALID());
@@ -1490,6 +1497,15 @@ void CircuitLibrary::set_port_is_config_enable(const CircuitPortId& circuit_port
   /* validate the circuit_port_id */
   VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
   port_is_config_enable_[circuit_port_id] = is_config_enable;
+  return;
+}
+
+/* Set the is_edge_triggered for a port of a circuit model */
+void CircuitLibrary::set_port_is_edge_triggered(const CircuitPortId& circuit_port_id, 
+                                                const bool& is_edge_triggered) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_is_edge_triggered_[circuit_port_id] = is_edge_triggered;
   return;
 }
 

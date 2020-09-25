@@ -10,6 +10,7 @@
 #include "mux_library.h"
 #include "decoder_library.h"
 #include "circuit_library.h"
+#include "config_protocol.h"
 #include "vpr_context.h"
 #include "vpr_device_annotation.h"
 #include "device_rr_gsb.h"
@@ -49,7 +50,7 @@ void fpga_verilog_testbench(const ModuleManager& module_manager,
                             const VprNetlistAnnotation& netlist_annotation, 
                             const CircuitLibrary& circuit_lib,
                             const SimulationSetting& simulation_parameters,
-                            const e_config_protocol_type& config_protocol_type,
+                            const ConfigProtocol& config_protocol,
                             const VerilogTestbenchOption& options);
 
 

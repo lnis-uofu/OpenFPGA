@@ -12,22 +12,48 @@ echo -e "Basic regression tests";
 
 echo -e "Testing configuration chain of a K4N4 FPGA";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_chain --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_chain_use_reset --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_chain_use_resetb --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_chain_use_set --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_chain_use_setb --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_chain_use_set_reset --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/fast_configuration_chain --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/fast_configuration_chain_use_set --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/smart_fast_configuration_chain --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/preconfig_testbench/configuration_chain --debug --show_thread_logs
 
 echo -e "Testing fram-based configuration protocol of a K4N4 FPGA";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_frame --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/smart_fast_configuration_frame --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/fast_configuration_frame --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/fast_configuration_frame_use_set --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_frame_ccff --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_frame_scff --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_frame_use_reset --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_frame_use_resetb --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_frame_use_set --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_frame_use_setb --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_frame_use_set_reset --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/preconfig_testbench/configuration_frame --debug --show_thread_logs
 
 echo -e "Testing memory bank configuration protocol of a K4N4 FPGA";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/memory_bank --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/memory_bank_use_reset --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/memory_bank_use_resetb --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/memory_bank_use_set --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/memory_bank_use_setb --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/memory_bank_use_set_reset --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/fast_memory_bank --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/fast_memory_bank_use_set --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/smart_fast_memory_bank --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/preconfig_testbench/memory_bank --debug --show_thread_logs
 
 echo -e "Testing standalone (flatten memory) configuration protocol of a K4N4 FPGA";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/flatten_memory --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/preconfig_testbench/flatten_memory --debug --show_thread_logs
+
+echo -e "Testing fixed device layout and routing channel width";
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/fixed_device_support --debug --show_thread_logs
 
 echo -e "Testing fabric Verilog generation only";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/generate_fabric --debug --show_thread_logs
@@ -51,5 +77,7 @@ echo -e "Testing K4N4 with multiple lengths of routing segments";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n4_L124 --debug --show_thread_logs
 echo -e "Testing K4N4 with 32-bit fracturable multiplier";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n4_frac_mult --debug --show_thread_logs
+echo -e "Testing K4N5 with pattern based local routing";
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n5_pattern_local_routing --debug --show_thread_logs
 
 end_section "OpenFPGA.TaskTun"

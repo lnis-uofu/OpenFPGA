@@ -207,6 +207,10 @@ void write_xml_circuit_port(std::fstream& fp,
     write_xml_attribute(fp, "is_config_enable", "true"); 
   }
 
+  if (true == circuit_lib.port_is_edge_triggered(port)) {
+    write_xml_attribute(fp, "is_edge_triggered", "true"); 
+  }
+
   /* Output the name of circuit model that this port is linked to */
   if (!circuit_lib.port_tri_state_model_name(port).empty()) {
     write_xml_attribute(fp, "circuit_model_name", circuit_lib.port_tri_state_model_name(port).c_str());
