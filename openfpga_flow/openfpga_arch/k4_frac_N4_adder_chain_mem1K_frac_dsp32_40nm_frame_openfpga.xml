@@ -139,7 +139,7 @@
       <port type="sram" prefix="sram" size="1"/>
     </circuit_model>
     <!--DFF subckt ports should be defined as <D> <Q> <CLK> <RESET> <SET>  -->
-    <circuit_model type="ff" name="DFFSRQ" prefix="DFFSRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/dff.v">
+    <circuit_model type="ff" name="DFFSRQ" prefix="DFFSRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
@@ -164,7 +164,7 @@
       <port type="sram" prefix="mode" size="1" mode_select="true" circuit_model_name="LATCHR" default_val="1"/>
     </circuit_model>
     <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-    <circuit_model type="sram" name="LATCHR" prefix="LATCHR" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/latch.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/latch.v">
+    <circuit_model type="sram" name="LATCHR" prefix="LATCHR" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/latch.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/latch.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
@@ -174,7 +174,7 @@
        <port type="output" prefix="Q" lib_name="Q" size="1"/>
        <port type="output" prefix="Qb" lib_name="QN" size="1"/>
     </circuit_model>
-    <circuit_model type="iopad" name="GPIO" prefix="GPIO" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/gpio.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/gpio.v">
+    <circuit_model type="iopad" name="GPIO" prefix="GPIO" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/gpio.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/gpio.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
@@ -183,7 +183,7 @@
       <port type="input" prefix="outpad" lib_name="A" size="1"/>
       <port type="output" prefix="inpad" lib_name="Y" size="1"/>
     </circuit_model>
-    <circuit_model type="hard_logic" name="ADDF" prefix="ADDF" is_default="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/adder.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/adder.v">
+    <circuit_model type="hard_logic" name="ADDF" prefix="ADDF" is_default="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/adder.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/adder.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
@@ -193,7 +193,7 @@
       <port type="output" prefix="sumout" lib_name="SUM" size="1"/>
       <port type="output" prefix="cout" lib_name="CO" size="1"/>
     </circuit_model>
-    <circuit_model type="hard_logic" name="dpram_128x8" prefix="dpram_128x8" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/dpram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/dpram1k.v">
+    <circuit_model type="hard_logic" name="dpram_128x8" prefix="dpram_128x8" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dpram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dpram1k.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
@@ -205,7 +205,7 @@
       <port type="output" prefix="d_out" size="8"/>
       <port type="clock" prefix="clk" size="1" is_global="true" default_val="0"/>
     </circuit_model>
-    <circuit_model type="hard_logic" name="mult_32x32" prefix="mult_32x32" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/mult_32x32.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/mult_32x32.v">
+    <circuit_model type="hard_logic" name="mult_32x32" prefix="mult_32x32" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/mult_32x32.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/mult_32x32.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
