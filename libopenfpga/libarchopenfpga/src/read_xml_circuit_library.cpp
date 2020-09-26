@@ -564,9 +564,6 @@ void read_xml_circuit_port(pugi::xml_node& xml_port,
   /* Identify if the port is to enable programming for FPGAs, by default it is NOT */
   circuit_lib.set_port_is_config_enable(port, get_attribute(xml_port, "is_config_enable", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
 
-  /* Identify if the port is to triggered by edges, by default it is NOT */
-  circuit_lib.set_port_is_edge_triggered(port, get_attribute(xml_port, "is_edge_triggered", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
-
   /* Find the name of circuit model that this port is linked to */
   circuit_lib.set_port_tri_state_model_name(port, get_attribute(xml_port, "circuit_model_name", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string());
 
