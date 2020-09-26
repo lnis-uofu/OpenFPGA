@@ -2,7 +2,7 @@
 	- Architecture independent bitstream
 	- Author: Xifan TANG
 	- Organization: University of Utah
-	- Date: Thu Sep 24 20:16:32 2020
+	- Date: Fri Sep 25 21:30:07 2020
 -->
 
 <bitstream_block name="fpga_top" hierarchy_level="0">
@@ -1286,20 +1286,20 @@
 							</hierarchy>
 							<bitstream>
 								<bit memory_port="mem_out[0]" value="1"/>
-								<bit memory_port="mem_out[1]" value="1"/>
+								<bit memory_port="mem_out[1]" value="0"/>
 								<bit memory_port="mem_out[2]" value="1"/>
-								<bit memory_port="mem_out[3]" value="1"/>
+								<bit memory_port="mem_out[3]" value="0"/>
 								<bit memory_port="mem_out[4]" value="1"/>
-								<bit memory_port="mem_out[5]" value="1"/>
+								<bit memory_port="mem_out[5]" value="0"/>
 								<bit memory_port="mem_out[6]" value="1"/>
-								<bit memory_port="mem_out[7]" value="1"/>
-								<bit memory_port="mem_out[8]" value="1"/>
+								<bit memory_port="mem_out[7]" value="0"/>
+								<bit memory_port="mem_out[8]" value="0"/>
 								<bit memory_port="mem_out[9]" value="0"/>
-								<bit memory_port="mem_out[10]" value="1"/>
+								<bit memory_port="mem_out[10]" value="0"/>
 								<bit memory_port="mem_out[11]" value="0"/>
-								<bit memory_port="mem_out[12]" value="1"/>
+								<bit memory_port="mem_out[12]" value="0"/>
 								<bit memory_port="mem_out[13]" value="0"/>
-								<bit memory_port="mem_out[14]" value="1"/>
+								<bit memory_port="mem_out[14]" value="0"/>
 								<bit memory_port="mem_out[15]" value="0"/>
 							</bitstream>
 						</bitstream_block>
