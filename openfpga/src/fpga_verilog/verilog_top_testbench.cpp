@@ -178,21 +178,34 @@ void print_verilog_top_testbench_memory_bank_port(std::fstream& fp,
   fp << generate_verilog_port(VERILOG_PORT_REG, wl_addr_port) << ";" << std::endl;
 
   /* Print the data-input port for the frame-based decoder here */
-  print_verilog_comment(fp, std::string("---- Data input port for frame-based decoder -----"));
+  print_verilog_comment(fp, std::string("---- Data input port for memory decoders -----"));
   ModulePortId din_port_id = module_manager.find_module_port(top_module,
                                                              std::string(DECODER_DATA_IN_PORT_NAME));
   BasicPort din_port = module_manager.module_port(top_module, din_port_id);
   fp << generate_verilog_port(VERILOG_PORT_REG, din_port) << ";" << std::endl;
 
-  /* Wire the INVERTED configuration done signal to the enable signal !!! */
-  print_verilog_comment(fp, std::string("---- Wire enable port of frame-based decoder to inverted configuration done signal -----"));
+  /* Generate enable signal waveform here:
+   * which is a 90 degree phase shift than the programming clock   
+   */
+  print_verilog_comment(fp, std::string("---- Wire enable port of memory decoders  -----"));
   ModulePortId en_port_id = module_manager.find_module_port(top_module,
                                                             std::string(DECODER_ENABLE_PORT_NAME));
   BasicPort en_port = module_manager.module_port(top_module, en_port_id);
+  BasicPort en_register_port(std::string(en_port.get_name() + std::string(TOP_TB_CLOCK_REG_POSTFIX)), 1);
+
   BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
 
   fp << generate_verilog_port(VERILOG_PORT_WIRE, en_port) << ";" << std::endl;
-  print_verilog_wire_connection(fp, en_port, config_done_port, true);
+  fp << generate_verilog_port(VERILOG_PORT_REG, en_register_port) << ";" << std::endl;
+
+  write_tab_to_file(fp, 1);
+  fp << "assign ";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, en_port);
+  fp << "= ";
+  fp << "~" << generate_verilog_port(VERILOG_PORT_CONKT, en_register_port);
+  fp << " & ";
+  fp << "~" << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port);
+  fp << ";" << std::endl;
 }
 
 
@@ -201,8 +214,6 @@ void print_verilog_top_testbench_memory_bank_port(std::fstream& fp,
  *******************************************************************/
 static
 void print_verilog_top_testbench_frame_decoder_port(std::fstream& fp,
-                                                    const ConfigProtocol& config_protocol,
-                                                    const CircuitLibrary& circuit_lib,
                                                     const ModuleManager& module_manager,
                                                     const ModuleId& top_module) {
   /* Validate the file stream */
@@ -223,33 +234,28 @@ void print_verilog_top_testbench_frame_decoder_port(std::fstream& fp,
   BasicPort din_port = module_manager.module_port(top_module, din_port_id);
   fp << generate_verilog_port(VERILOG_PORT_REG, din_port) << ";" << std::endl;
 
-  /* Wire the INVERTED configuration done signal to the enable signal !!! */
+  /* Generate enable signal waveform here:
+   * which is a 90 degree phase shift than the programming clock   
+   */
+  print_verilog_comment(fp, std::string("---- Wire enable port of frame-based decoders  -----"));
   ModulePortId en_port_id = module_manager.find_module_port(top_module,
                                                             std::string(DECODER_ENABLE_PORT_NAME));
   BasicPort en_port = module_manager.module_port(top_module, en_port_id);
+  BasicPort en_register_port(std::string(en_port.get_name() + std::string(TOP_TB_CLOCK_REG_POSTFIX)), 1);
 
-  /* Find the circuit model of configurable memory
-   * Spot its BL port and generate stimuli based on BL port's attribute:
-   * - If the BL port is triggered by edge, use the inverted programming clock signal
-   * - If the BL port is a regular port, use the inverted configuration done signal
-   */
-  const CircuitModelId& mem_model = config_protocol.memory_model();
-  VTR_ASSERT(true == circuit_lib.valid_model_id(mem_model));
-  std::vector<CircuitPortId> mem_model_bl_ports = circuit_lib.model_ports_by_type(mem_model, CIRCUIT_MODEL_PORT_BL);
-  VTR_ASSERT(1 == mem_model_bl_ports.size());
+  BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
 
-  if (true == circuit_lib.port_is_edge_triggered(mem_model_bl_ports[0])) {
-    VTR_ASSERT_SAFE(false == circuit_lib.port_is_edge_triggered(mem_model_bl_ports[0]));
-    BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
-    print_verilog_comment(fp, std::string("---- Wire enable port of frame-based decoder to inverted programming clock signal -----"));
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, en_port) << ";" << std::endl;
-    print_verilog_wire_connection(fp, en_port, prog_clock_port, true);
-  } else {
-    BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
-    print_verilog_comment(fp, std::string("---- Wire enable port of frame-based decoder to inverted configuration done signal -----"));
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, en_port) << ";" << std::endl;
-    print_verilog_wire_connection(fp, en_port, config_done_port, true);
-  }
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, en_port) << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_REG, en_register_port) << ";" << std::endl;
+
+  write_tab_to_file(fp, 1);
+  fp << "assign ";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, en_port);
+  fp << "= ";
+  fp << "~" << generate_verilog_port(VERILOG_PORT_CONKT, en_register_port);
+  fp << " & ";
+  fp << "~" << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port);
+  fp << ";" << std::endl;
 }
 
 /********************************************************************
@@ -258,7 +264,6 @@ void print_verilog_top_testbench_frame_decoder_port(std::fstream& fp,
 static
 void print_verilog_top_testbench_config_protocol_port(std::fstream& fp,
                                                       const ConfigProtocol& config_protocol,
-                                                      const CircuitLibrary& circuit_lib,
                                                       const ModuleManager& module_manager,
                                                       const ModuleId& top_module) {
   switch(config_protocol.type()) {
@@ -272,7 +277,7 @@ void print_verilog_top_testbench_config_protocol_port(std::fstream& fp,
     print_verilog_top_testbench_memory_bank_port(fp, module_manager, top_module);
     break;
   case CONFIG_MEM_FRAME_BASED:
-    print_verilog_top_testbench_frame_decoder_port(fp, config_protocol, circuit_lib,
+    print_verilog_top_testbench_frame_decoder_port(fp,
                                                    module_manager, top_module);
     break;
   default:
@@ -525,7 +530,6 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
                                        const VprNetlistAnnotation& netlist_annotation,
                                        const std::vector<std::string>& clock_port_names,
                                        const ConfigProtocol& config_protocol,
-                                       const CircuitLibrary& circuit_lib,
                                        const std::string& circuit_name){
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -599,7 +603,7 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
   fp << generate_verilog_port(VERILOG_PORT_REG, set_port) << ";" << std::endl;
 
   /* Configuration ports depend on the organization of SRAMs */
-  print_verilog_top_testbench_config_protocol_port(fp, config_protocol, circuit_lib,
+  print_verilog_top_testbench_config_protocol_port(fp, config_protocol,
                                                    module_manager, top_module);
 
   /* Create a clock port if the benchmark have one but not in the default name!
@@ -816,9 +820,7 @@ void print_verilog_top_testbench_load_bitstream_task_memory_bank(std::fstream& f
   /* Validate the file stream */
   valid_file_stream(fp);
 
-  ModulePortId en_port_id = module_manager.find_module_port(top_module,
-                                                            std::string(DECODER_ENABLE_PORT_NAME));
-  BasicPort en_port = module_manager.module_port(top_module, en_port_id);
+  BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
 
   ModulePortId bl_addr_port_id = module_manager.find_module_port(top_module,
                                                                  std::string(DECODER_BL_ADDRESS_PORT_NAME));
@@ -851,7 +853,7 @@ void print_verilog_top_testbench_load_bitstream_task_memory_bank(std::fstream& f
   fp << generate_verilog_port(VERILOG_PORT_INPUT, wl_addr_value) << ";" << std::endl;
   fp << generate_verilog_port(VERILOG_PORT_INPUT, din_value) << ";" << std::endl;
   fp << "\tbegin" << std::endl;
-  fp << "\t\t@(posedge " << generate_verilog_port(VERILOG_PORT_CONKT, en_port) << ");" << std::endl;
+  fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
 
   fp << "\t\t\t";
   fp << generate_verilog_port(VERILOG_PORT_CONKT, bl_addr_port);
@@ -898,9 +900,7 @@ void print_verilog_top_testbench_load_bitstream_task_frame_decoder(std::fstream&
   /* Validate the file stream */
   valid_file_stream(fp);
 
-  ModulePortId en_port_id = module_manager.find_module_port(top_module,
-                                                            std::string(DECODER_ENABLE_PORT_NAME));
-  BasicPort en_port = module_manager.module_port(top_module, en_port_id);
+  BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
 
   ModulePortId addr_port_id = module_manager.find_module_port(top_module,
                                                               std::string(DECODER_ADDRESS_PORT_NAME));
@@ -926,7 +926,7 @@ void print_verilog_top_testbench_load_bitstream_task_frame_decoder(std::fstream&
   fp << generate_verilog_port(VERILOG_PORT_INPUT, addr_value) << ";" << std::endl;
   fp << generate_verilog_port(VERILOG_PORT_INPUT, din_value) << ";" << std::endl;
   fp << "\tbegin" << std::endl;
-  fp << "\t\t@(posedge " << generate_verilog_port(VERILOG_PORT_CONKT, en_port) << ");" << std::endl;
+  fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
 
   fp << "\t\t\t";
   fp << generate_verilog_port(VERILOG_PORT_CONKT, addr_port);
@@ -1111,6 +1111,49 @@ void print_verilog_top_testbench_generic_stimulus(std::fstream& fp,
   print_verilog_comment(fp, "----- End operating set signal generation: always disabled -----");
 
   fp << std::endl;
+}
+
+/********************************************************************
+ * Print input stimuli for configuration protocol
+ * include:
+ * - memory bank 
+ *   1. the enable signal 
+ * - frame-based 
+ *   1. the enable signal 
+ *******************************************************************/
+static
+void print_verilog_top_testbench_configuration_protocol_stimulus(std::fstream& fp,
+                                                                 const e_config_protocol_type& config_protocol_type, 
+                                                                 const ModuleManager& module_manager,
+                                                                 const ModuleId& top_module,
+                                                                 const float& prog_clock_period,
+                                                                 const float& timescale) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  /* Branch on the type of configuration protocol */
+  switch (config_protocol_type) {
+  case CONFIG_MEM_STANDALONE:
+    break;
+  case CONFIG_MEM_SCAN_CHAIN:
+    break;
+  case CONFIG_MEM_MEMORY_BANK:
+  case CONFIG_MEM_FRAME_BASED: {
+    ModulePortId en_port_id = module_manager.find_module_port(top_module,
+                                                              std::string(DECODER_ENABLE_PORT_NAME));
+    BasicPort en_port = module_manager.module_port(top_module, en_port_id);
+    BasicPort en_register_port(std::string(en_port.get_name() + std::string(TOP_TB_CLOCK_REG_POSTFIX)), 1);
+    print_verilog_comment(fp, std::string("---- Generate enable signal waveform  -----"));
+    print_verilog_shifted_clock_stimuli(fp, en_register_port,
+                                        0.25 * prog_clock_period / timescale,
+                                        0.5 * prog_clock_period / timescale, 0);
+    break;
+  }
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid SRAM organization type!\n");
+    exit(1);
+  }
 }
 
 /********************************************************************
@@ -1711,7 +1754,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   /* Start of testbench */
   print_verilog_top_testbench_ports(fp, module_manager, top_module,
                                     atom_ctx, netlist_annotation, clock_port_names,
-                                    config_protocol, circuit_lib,
+                                    config_protocol,
                                     circuit_name);
 
   /* Find the clock period */
@@ -1731,6 +1774,13 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                                op_clock_period,
                                                VERILOG_SIM_TIMESCALE);
 
+  /* Generate stimuli for programming interface */
+  print_verilog_top_testbench_configuration_protocol_stimulus(fp, 
+                                                              config_protocol.type(),
+                                                              module_manager, top_module,
+                                                              prog_clock_period,
+                                                              VERILOG_SIM_TIMESCALE);
+                                                      
   /* Identify the stimulus for global reset/set for programming purpose:
    * - If only reset port is seen we turn on Reset 
    * - If only set port is seen we turn on Reset 

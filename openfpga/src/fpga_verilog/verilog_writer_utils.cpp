@@ -1294,6 +1294,57 @@ void print_verilog_pulse_stimuli(std::fstream& fp,
   fp << std::endl;
 }
 
+
+/********************************************************************
+ * Print stimuli for a clock pulse generation
+ * This function supports the delay at the beginning of the waveform
+ *
+ *                |<-- Initial delay -->|<--- pulse width --->|
+ *                                                            +------ flip_value
+ *                                                            |      
+ *  initial_value --------------------------------------------+       
+ *
+ *******************************************************************/
+void print_verilog_shifted_clock_stimuli(std::fstream& fp, 
+                                         const BasicPort& port,
+                                         const float& initial_delay,
+                                         const float& pulse_width,
+                                         const size_t& initial_value) {
+  /* Validate the file stream */
+  VTR_ASSERT(true == valid_file_stream(fp));
+
+  /* Config_done signal: indicate when configuration is finished */
+  fp << "initial" << std::endl;
+
+  write_tab_to_file(fp, 1);
+  fp << "begin" << std::endl;
+
+  write_tab_to_file(fp, 1);
+  std::vector<size_t> initial_values(port.get_width(), initial_value);
+
+  write_tab_to_file(fp, 1);
+  fp << generate_verilog_port_constant_values(port, initial_values);
+  fp << ";" << std::endl;
+
+  write_tab_to_file(fp, 2);
+  fp << "#" << std::setprecision(10) << initial_delay;
+  fp << ";" << std::endl;
+
+  write_tab_to_file(fp, 2);
+  fp << "forever "; 
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, port);
+  fp << " = "; 
+  fp << "#" << std::setprecision(10) << pulse_width;
+  fp << " ~" << generate_verilog_port(VERILOG_PORT_CONKT, port);
+  fp << ";" << std::endl;
+  
+  write_tab_to_file(fp, 1);
+  fp << "end" << std::endl;
+
+  /* Print an empty line as splitter */
+  fp << std::endl;
+}
+
 /********************************************************************
  * Print stimuli for a pulse generation
  * This function supports multiple signal switching under different pulse width
