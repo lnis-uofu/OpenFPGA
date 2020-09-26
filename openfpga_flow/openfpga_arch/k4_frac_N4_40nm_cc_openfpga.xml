@@ -84,10 +84,10 @@
       <device_technology device_model_name="logic"/>
       <input_buffer exist="false"/>
       <output_buffer exist="false"/>
-      <port type="input" prefix="in" size="1"/>
-      <port type="input" prefix="sel" size="1"/>
-      <port type="input" prefix="selb" size="1"/>
-      <port type="output" prefix="out" size="1"/>
+      <port type="input" prefix="in" lib_name="A" size="1"/>
+      <port type="input" prefix="sel" lib_name="S" size="1"/>
+      <port type="input" prefix="selb" lib_name="SI" size="1"/>
+      <port type="output" prefix="out" lib_name="Y" size="1"/>
       <delay_matrix type="rise" in_port="in sel selb" out_port="out">
         10e-12 5e-12 5e-12
       </delay_matrix>
