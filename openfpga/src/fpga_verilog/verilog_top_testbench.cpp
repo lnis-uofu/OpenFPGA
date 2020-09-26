@@ -641,8 +641,8 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
   /* Instantiate an integer to count the number of error and
    * determine if the simulation succeed or failed
    */
-  print_verilog_comment(fp, std::string("----- Error counter -----"));
-  fp << "\tinteger " << TOP_TESTBENCH_ERROR_COUNTER << "= 0;" << std::endl;
+  print_verilog_comment(fp, std::string("----- Error counter: Deposit an error for config_done signal is not raised at the beginning -----"));
+  fp << "\tinteger " << TOP_TESTBENCH_ERROR_COUNTER << "= 1;" << std::endl;
 }
 
 /********************************************************************
@@ -1676,6 +1676,44 @@ void print_verilog_top_testbench_bitstream(std::fstream& fp,
 }
 
 /********************************************************************
+ * Add auto-check codes for the full testbench
+ * in particular for the configuration phase:
+ * - Check that the configuration done signal is raised, indicating
+ *   that the configuration phase is finished
+ *******************************************************************/
+static
+void print_verilog_top_testbench_check(std::fstream& fp, 
+                                       const std::string& autochecked_preprocessing_flag,
+                                       const std::string& config_done_port_name,
+                                       const std::string& error_counter_name) {
+
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  /* Add output autocheck conditionally: only when a preprocessing flag is enable */
+  print_verilog_preprocessing_flag(fp, autochecked_preprocessing_flag); 
+
+  print_verilog_comment(fp, std::string("----- Configuration done must be raised in the end -------"));
+
+  BasicPort config_done_port(config_done_port_name, 1);
+
+  write_tab_to_file(fp, 1);
+  fp << "always@(posedge " << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port) << ") begin" << std::endl;
+
+  write_tab_to_file(fp, 2);
+  fp << error_counter_name << " = " << error_counter_name << " - 1;" << std::endl;
+
+  write_tab_to_file(fp, 1);
+  fp << "end" << std::endl;
+
+  /* Condition ends */
+  print_verilog_endif(fp);
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
+}
+
+/********************************************************************
  * The top-level function to generate a testbench, in order to verify:
  * 1. Configuration phase of the FPGA fabric, where the bitstream is
  *    loaded to the configuration protocol of the FPGA fabric
@@ -1865,6 +1903,12 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                 netlist_annotation,
                                 clock_port_names,
                                 std::string(TOP_TB_OP_CLOCK_PORT_NAME));
+
+  /* Add autocheck for configuration phase */
+  print_verilog_top_testbench_check(fp, 
+                                    std::string(AUTOCHECKED_SIMULATION_FLAG),
+                                    std::string(TOP_TB_CONFIG_DONE_PORT_NAME),
+                                    std::string(TOP_TESTBENCH_ERROR_COUNTER));
 
   /* Find simulation time */
   float simulation_time = find_simulation_time_period(VERILOG_SIM_TIMESCALE,
