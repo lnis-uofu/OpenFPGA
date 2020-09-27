@@ -26,52 +26,10 @@
  *******************************************************************/
 static 
 e_circuit_model_type string_to_circuit_model_type(const std::string& type_string) {
-  if (std::string("chan_wire") == type_string) {
-    return CIRCUIT_MODEL_CHAN_WIRE;
-  }
-
-  if (std::string("wire") == type_string) {
-    return CIRCUIT_MODEL_WIRE;
-  }
-
-  if (std::string("mux") == type_string) {
-    return CIRCUIT_MODEL_MUX;
-  }
-
-  if (std::string("lut") == type_string) {
-    return CIRCUIT_MODEL_LUT;
-  }
-
-  if (std::string("ff") == type_string) {
-    return CIRCUIT_MODEL_FF;
-  }
-
-  if (std::string("sram") == type_string) {
-    return CIRCUIT_MODEL_SRAM;
-  }
-
-  if (std::string("hard_logic") == type_string) {
-    return CIRCUIT_MODEL_HARDLOGIC;
-  }
-
-  if (std::string("ccff") == type_string) {
-    return CIRCUIT_MODEL_CCFF;
-  }
-
-  if (std::string("iopad") == type_string) {
-    return CIRCUIT_MODEL_IOPAD;
-  }
-
-  if (std::string("inv_buf") == type_string) {
-    return CIRCUIT_MODEL_INVBUF;
-  }
-
-  if (std::string("pass_gate") == type_string) {
-    return CIRCUIT_MODEL_PASSGATE;
-  }
-
-  if (std::string("gate") == type_string) {
-    return CIRCUIT_MODEL_GATE;
+  for (size_t itype = 0; itype < NUM_CIRCUIT_MODEL_TYPES; ++itype) {
+    if (std::string(CIRCUIT_MODEL_TYPE_STRING[itype]) == type_string) {
+      return static_cast<e_circuit_model_type>(itype);
+    }
   }
 
   /* Reach here, we have an invalid value, error out */
@@ -83,12 +41,10 @@ e_circuit_model_type string_to_circuit_model_type(const std::string& type_string
  *******************************************************************/
 static 
 e_circuit_model_design_tech string_to_design_tech_type(const std::string& type_string) {
-  if (std::string("cmos") == type_string) {
-    return CIRCUIT_MODEL_DESIGN_CMOS;
-  }
-
-  if (std::string("rram") == type_string) {
-    return CIRCUIT_MODEL_DESIGN_RRAM;
+  for (size_t itype = 0; itype < NUM_CIRCUIT_MODEL_DESIGN_TECH_TYPES; ++itype) {
+    if (std::string(CIRCUIT_MODEL_DESIGN_TECH_TYPE_STRING[itype]) == type_string) {
+      return static_cast<e_circuit_model_design_tech>(itype);
+    }
   }
 
   return NUM_CIRCUIT_MODEL_DESIGN_TECH_TYPES;
@@ -99,12 +55,10 @@ e_circuit_model_design_tech string_to_design_tech_type(const std::string& type_s
  *******************************************************************/
 static 
 e_circuit_model_buffer_type string_to_buffer_type(const std::string& type_string) {
-  if (std::string("inverter") == type_string) {
-    return CIRCUIT_MODEL_BUF_INV;
-  }
-
-  if (std::string("buffer") == type_string) {
-    return CIRCUIT_MODEL_BUF_BUF;
+  for (size_t itype = 0; itype < NUM_CIRCUIT_MODEL_BUF_TYPES; ++itype) {
+    if (std::string(CIRCUIT_MODEL_BUFFER_TYPE_STRING[itype]) == type_string) {
+      return static_cast<e_circuit_model_buffer_type>(itype);
+    }
   }
 
   return NUM_CIRCUIT_MODEL_BUF_TYPES;
@@ -115,12 +69,10 @@ e_circuit_model_buffer_type string_to_buffer_type(const std::string& type_string
  *******************************************************************/
 static 
 e_circuit_model_pass_gate_logic_type string_to_passgate_type(const std::string& type_string) {
-  if (std::string("transmission_gate") == type_string) {
-    return CIRCUIT_MODEL_PASS_GATE_TRANSMISSION;
-  }
-
-  if (std::string("pass_transistor") == type_string) {
-    return CIRCUIT_MODEL_PASS_GATE_TRANSISTOR;
+  for (size_t itype = 0; itype < NUM_CIRCUIT_MODEL_PASS_GATE_TYPES; ++itype) {
+    if (std::string(CIRCUIT_MODEL_PASSGATE_TYPE_STRING[itype]) == type_string) {
+      return static_cast<e_circuit_model_pass_gate_logic_type>(itype);
+    }
   }
 
   return NUM_CIRCUIT_MODEL_PASS_GATE_TYPES;
@@ -131,16 +83,10 @@ e_circuit_model_pass_gate_logic_type string_to_passgate_type(const std::string& 
  *******************************************************************/
 static 
 e_circuit_model_structure string_to_mux_structure_type(const std::string& type_string) {
-  if (std::string("tree") == type_string) {
-    return CIRCUIT_MODEL_STRUCTURE_TREE;
-  }
-
-  if (std::string("one_level") == type_string) {
-    return CIRCUIT_MODEL_STRUCTURE_ONELEVEL;
-  }
-
-  if (std::string("multi_level") == type_string) {
-    return CIRCUIT_MODEL_STRUCTURE_MULTILEVEL;
+  for (size_t itype = 0; itype < NUM_CIRCUIT_MODEL_STRUCTURE_TYPES; ++itype) {
+    if (std::string(CIRCUIT_MODEL_STRUCTURE_TYPE_STRING[itype]) == type_string) {
+      return static_cast<e_circuit_model_structure>(itype);
+    }
   }
 
   return NUM_CIRCUIT_MODEL_STRUCTURE_TYPES;
@@ -151,16 +97,10 @@ e_circuit_model_structure string_to_mux_structure_type(const std::string& type_s
  *******************************************************************/
 static 
 e_circuit_model_gate_type string_to_gate_type(const std::string& type_string) {
-  if (std::string("AND") == type_string) {
-    return CIRCUIT_MODEL_GATE_AND;
-  }
-
-  if (std::string("OR") == type_string) {
-    return CIRCUIT_MODEL_GATE_OR;
-  }
-
-  if (std::string("MUX2") == type_string) {
-    return CIRCUIT_MODEL_GATE_MUX2;
+  for (size_t itype = 0; itype < NUM_CIRCUIT_MODEL_GATE_TYPES; ++itype) {
+    if (std::string(CIRCUIT_MODEL_GATE_TYPE_STRING[itype]) == type_string) {
+      return static_cast<e_circuit_model_gate_type>(itype);
+    }
   }
 
   return NUM_CIRCUIT_MODEL_GATE_TYPES;
@@ -171,40 +111,10 @@ e_circuit_model_gate_type string_to_gate_type(const std::string& type_string) {
  *******************************************************************/
 static 
 e_circuit_model_port_type string_to_circuit_model_port_type(const std::string& type_string) {
-  if (std::string("input") == type_string) {
-    return CIRCUIT_MODEL_PORT_INPUT;
-  }
-
-  if (std::string("output") == type_string) {
-    return CIRCUIT_MODEL_PORT_OUTPUT;
-  }
-
-  if (std::string("clock") == type_string) {
-    return CIRCUIT_MODEL_PORT_CLOCK;
-  }
-
-  if (std::string("sram") == type_string) {
-    return CIRCUIT_MODEL_PORT_SRAM;
-  }
-
-  if (std::string("bl") == type_string) {
-    return CIRCUIT_MODEL_PORT_BL;
-  }
-
-  if (std::string("wl") == type_string) {
-    return CIRCUIT_MODEL_PORT_WL;
-  }
-
-  if (std::string("blb") == type_string) {
-    return CIRCUIT_MODEL_PORT_BLB;
-  }
-
-  if (std::string("wlb") == type_string) {
-    return CIRCUIT_MODEL_PORT_WLB;
-  }
-
-  if (std::string("inout") == type_string) {
-    return CIRCUIT_MODEL_PORT_INOUT;
+  for (size_t itype = 0; itype < NUM_CIRCUIT_MODEL_PORT_TYPES; ++itype) {
+    if (std::string(CIRCUIT_MODEL_PORT_TYPE_STRING[itype]) == type_string) {
+      return static_cast<e_circuit_model_port_type>(itype);
+    }
   }
 
   return NUM_CIRCUIT_MODEL_PORT_TYPES;
@@ -215,12 +125,10 @@ e_circuit_model_port_type string_to_circuit_model_port_type(const std::string& t
  *******************************************************************/
 static 
 e_wire_model_type string_to_wire_model_type(const std::string& type_string) {
-  if (std::string("pi") == type_string) {
-    return WIRE_MODEL_PI;
-  }
-
-  if (std::string("t") == type_string) {
-    return WIRE_MODEL_T;
+  for (size_t itype = 0; itype < NUM_WIRE_MODEL_TYPES; ++itype) {
+    if (std::string(WIRE_MODEL_TYPE_STRING[itype]) == type_string) {
+      return static_cast<e_wire_model_type>(itype);
+    }
   }
 
   return NUM_WIRE_MODEL_TYPES;
@@ -231,12 +139,10 @@ e_wire_model_type string_to_wire_model_type(const std::string& type_string) {
  *******************************************************************/
 static 
 e_circuit_model_delay_type string_to_circuit_model_delay_type(const std::string& type_string) {
-  if (std::string("rise") == type_string) {
-    return CIRCUIT_MODEL_DELAY_RISE;
-  }
-
-  if (std::string("fall") == type_string) {
-    return CIRCUIT_MODEL_DELAY_FALL;
+  for (size_t itype = 0; itype < NUM_CIRCUIT_MODEL_DELAY_TYPES; ++itype) {
+    if (std::string(CIRCUIT_MODEL_DELAY_TYPE_STRING[itype]) == type_string) {
+      return static_cast<e_circuit_model_delay_type>(itype);
+    }
   }
 
   return NUM_CIRCUIT_MODEL_DELAY_TYPES;
@@ -563,9 +469,6 @@ void read_xml_circuit_port(pugi::xml_node& xml_port,
 
   /* Identify if the port is to enable programming for FPGAs, by default it is NOT */
   circuit_lib.set_port_is_config_enable(port, get_attribute(xml_port, "is_config_enable", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
-
-  /* Identify if the port is to triggered by edges, by default it is NOT */
-  circuit_lib.set_port_is_edge_triggered(port, get_attribute(xml_port, "is_edge_triggered", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
 
   /* Find the name of circuit model that this port is linked to */
   circuit_lib.set_port_tri_state_model_name(port, get_attribute(xml_port, "circuit_model_name", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string());

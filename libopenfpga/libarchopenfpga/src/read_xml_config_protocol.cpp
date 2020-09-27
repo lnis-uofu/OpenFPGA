@@ -23,20 +23,11 @@
  *******************************************************************/
 static 
 e_config_protocol_type string_to_config_protocol_type(const std::string& type_string) {
-  if (std::string("standalone") == type_string) {
-    return CONFIG_MEM_STANDALONE;
-  }
-
-  if (std::string("scan_chain") == type_string) {
-    return CONFIG_MEM_SCAN_CHAIN;
-  }
-
-  if (std::string("memory_bank") == type_string) {
-    return CONFIG_MEM_MEMORY_BANK;
-  }
-
-  if (std::string("frame_based") == type_string) {
-    return CONFIG_MEM_FRAME_BASED;
+  
+  for (size_t itype = 0; itype < NUM_CONFIG_PROTOCOL_TYPES; ++itype) {
+    if (std::string(CONFIG_PROTOCOL_TYPE_STRING[itype]) == type_string) {
+      return static_cast<e_config_protocol_type>(itype); 
+    }
   }
 
   return NUM_CONFIG_PROTOCOL_TYPES;
