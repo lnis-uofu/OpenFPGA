@@ -23,12 +23,10 @@
  *******************************************************************/
 static 
 e_sim_accuracy_type string_to_sim_accuracy_type(const std::string& type_string) {
-  if (std::string("frac") == type_string) {
-    return SIM_ACCURACY_FRAC;
-  }
-
-  if (std::string("abs") == type_string) {
-    return SIM_ACCURACY_ABS;
+  for (size_t itype = 0; itype < NUM_SIM_ACCURACY_TYPES; ++itype) {
+    if (std::string(SIM_ACCURACY_TYPE_STRING[itype]) == type_string) {
+      return static_cast<e_sim_accuracy_type>(itype);
+    }
   }
 
   return NUM_SIM_ACCURACY_TYPES;
