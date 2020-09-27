@@ -161,6 +161,12 @@ void print_verilog_formal_verification_mux_sram_ports_wiring(std::fstream& fp,
                                                              const size_t& num_conf_bits, 
                                                              const BasicPort& fm_config_bus); 
 
+void print_verilog_shifted_clock_stimuli(std::fstream& fp, 
+                                         const BasicPort& port,
+                                         const float& initial_delay,
+                                         const float& pulse_width,
+                                         const size_t& initial_value);
+
 void print_verilog_pulse_stimuli(std::fstream& fp, 
                                  const BasicPort& port,
                                  const size_t& initial_value,

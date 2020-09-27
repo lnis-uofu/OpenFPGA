@@ -33,6 +33,8 @@ write_verilog_testbench
 
   - ``--fast_configuration`` Enable fast configuration phase for the top-level testbench in order to reduce runtime of simulations. It is applicable to configuration chain, memory bank and frame-based configuration protocols. For configuration chain, when enabled, the zeros at the head of the bitstream will be skipped. For memory bank and frame-based, when enabled, all the zero configuration bits will be skipped. So ensure that your memory cells can be correctly reset to zero with a reset signal. 
 
+    .. note:: If both reset and set ports are defined in the circuit modeling for programming, OpenFPGA will pick the one that will bring largest benefit in speeding up configuration.
+
   - ``--print_top_testbench`` Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
 
   - ``--print_formal_verification_top_netlist`` Generate a top-level module which can be used in formal verification

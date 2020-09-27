@@ -142,17 +142,17 @@
         This is flip-flop with scan-chain feature.
         When the TESTEN is enabled, the data will be propagated form DI instead of D
       -->
-    <circuit_model type="ff" name="scan_chain_ff" prefix="scan_chain_ff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/ff.v">
+    <circuit_model type="ff" name="SDFFSRQ" prefix="SDFFSRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
        <port type="input" prefix="D" size="1"/>
-       <port type="input" prefix="D_chain" lib_name="DI" size="1"/>
-       <port type="input" prefix="TESTEN" size="1" is_global="true" default_val="0"/>
-       <port type="input" prefix="set" size="1" is_global="true" default_val="0" is_set="true"/>
-       <port type="input" prefix="reset" size="1" is_global="true" default_val="0" is_reset="true"/>
+       <port type="input" prefix="D_chain" lib_name="SI" size="1"/>
+       <port type="input" prefix="TESTEN" lib_name="SE" size="1" is_global="true" default_val="0"/>
+       <port type="input" prefix="set" lib_name="SET" size="1" is_global="true" default_val="0" is_set="true"/>
+       <port type="input" prefix="reset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true"/>
        <port type="output" prefix="Q" size="1"/>
-       <port type="clock" prefix="clk" size="1" is_global="true" default_val="0" />
+       <port type="clock" prefix="clk" lib_name="CK" size="1" is_global="true" default_val="0" />
     </circuit_model>
     <circuit_model type="lut" name="frac_lut6" prefix="frac_lut6" is_default="true" dump_structural_verilog="true">
       <design_technology type="cmos" fracturable_lut="true"/>
@@ -167,7 +167,7 @@
       <port type="output" prefix="lut5_out" size="2" lut_frac_level="5" lut_output_mask="0,1"/>
       <port type="output" prefix="lut6_out" size="1" lut_output_mask="0"/>
       <port type="sram" prefix="sram" size="64"/>
-      <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="sc_dff_compact" default_val="1"/>
+      <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
     </circuit_model>
     <circuit_model type="lut" name="frac_lut6_spypad" prefix="frac_lut6_spypad" dump_structural_verilog="true">
       <design_technology type="cmos" fracturable_lut="true"/>
@@ -182,41 +182,41 @@
       <port type="output" prefix="lut5_out" size="2" lut_frac_level="5" lut_output_mask="0,1" is_global="true" is_io="true"/>
       <port type="output" prefix="lut6_out" size="1" lut_output_mask="0" is_global="true" is_io="true"/>
       <port type="sram" prefix="sram" size="64"/>
-      <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="sc_dff_compact" default_val="1"/>
+      <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
     </circuit_model>
     <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-    <circuit_model type="ccff" name="sc_dff_compact" prefix="scff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/ff.v">
+    <circuit_model type="ccff" name="DFFR" prefix="DFFR" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
-       <port type="input" prefix="pReset" lib_name="reset" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
+       <port type="input" prefix="pReset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
        <port type="input" prefix="D" size="1"/>
        <port type="output" prefix="Q" size="1"/>
-       <port type="output" prefix="Qb" size="1"/>
-       <port type="clock" prefix="prog_clk" lib_name="clk" size="1" is_global="true" default_val="0" is_prog="true"/>
+       <port type="output" prefix="QN" size="1"/>
+       <port type="clock" prefix="prog_clk" lib_name="CK" size="1" is_global="true" default_val="0" is_prog="true"/>
     </circuit_model>
-    <circuit_model type="iopad" name="iopad" prefix="iopad" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/io.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/io.v">
+    <circuit_model type="iopad" name="GPIO" prefix="GPIO" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/gpio.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/gpio.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <port type="inout" prefix="pad" size="1" is_global="true" is_io="true"/>
-      <port type="sram" prefix="en" size="1" mode_select="true" circuit_model_name="sc_dff_compact" default_val="1"/>
-      <port type="input" prefix="outpad" size="1"/>
-      <port type="output" prefix="inpad" size="1"/>
+      <port type="inout" prefix="PAD" size="1" is_global="true" is_io="true"/>
+      <port type="sram" prefix="DIR" size="1" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
+      <port type="input" prefix="outpad" lib_name="A" size="1"/>
+      <port type="output" prefix="inpad" lib_name="Y" size="1"/>
     </circuit_model>
-    <circuit_model type="hard_logic" name="adder" prefix="adder" is_default="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/adder.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/adder.v">
+    <circuit_model type="hard_logic" name="ADDF" prefix="ADDF" is_default="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/adder.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/adder.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <port type="input" prefix="a" size="1"/>
-      <port type="input" prefix="b" size="1"/>
-      <port type="input" prefix="cin" size="1"/>
-      <port type="output" prefix="sumout" size="1"/>
-      <port type="output" prefix="cout" size="1"/>
+      <port type="input" prefix="a" lib_name="A" size="1"/>
+      <port type="input" prefix="b" lib_name="B" size="1"/>
+      <port type="input" prefix="cin" lib_name="CI" size="1"/>
+      <port type="output" prefix="sumout" lib_name="SUM" size="1"/>
+      <port type="output" prefix="cout" lib_name="CO" size="1"/>
     </circuit_model>
   </circuit_library>
   <configuration_protocol>
-    <organization type="scan_chain" circuit_model_name="sc_dff_compact"/>
+    <organization type="scan_chain" circuit_model_name="DFFR"/>
   </configuration_protocol>
   <connection_block>
     <switch name="ipin_cblock" circuit_model_name="mux_2level_tapbuf"/>
@@ -234,7 +234,7 @@
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
     <pb_type name="io" physical_mode_name="physical" idle_mode_name="inpad"/>
-    <pb_type name="io[physical].iopad" circuit_model_name="iopad" mode_bits="1"/>
+    <pb_type name="io[physical].iopad" circuit_model_name="GPIO" mode_bits="1"/>
     <pb_type name="io[inpad].inpad" physical_pb_type_name="io[physical].iopad" mode_bits="1"/>
     <pb_type name="io[outpad].outpad" physical_pb_type_name="io[physical].iopad" mode_bits="0"/>
     <!-- End physical pb_type binding in complex block IO -->
@@ -243,8 +243,8 @@
     <!-- physical mode will be the default mode if not specified -->
     <pb_type name="clb.fle" physical_mode_name="physical"/>
     <pb_type name="clb.fle[physical].frac_logic.frac_lut6" circuit_model_name="frac_lut6" mode_bits="00"/>
-    <pb_type name="clb.fle[physical].ff_phy" circuit_model_name="scan_chain_ff"/>
-    <pb_type name="clb.fle[physical].frac_logic.adder_phy" circuit_model_name="adder"/>
+    <pb_type name="clb.fle[physical].ff_phy" circuit_model_name="SDFFSRQ"/>
+    <pb_type name="clb.fle[physical].frac_logic.adder_phy" circuit_model_name="ADDF"/>
     <!-- Binding operating pb_type to physical pb_type -->
     <!-- Binding operating pb_types in mode 'n2_lut5' -->
     <pb_type name="clb.fle[n2_lut5].lut5inter.ble5[blut5].flut5.lut5" physical_pb_type_name="clb.fle[physical].frac_logic.frac_lut6" mode_bits="01" physical_pb_type_index_factor="0.5">
@@ -278,8 +278,8 @@
 
     <!-- Binding regular FLEs -->
     <pb_type name="clb_spypad.fle[physical].frac_logic.frac_lut6" circuit_model_name="frac_lut6" mode_bits="00"/>
-    <pb_type name="clb_spypad.fle[physical].ff_phy" circuit_model_name="scan_chain_ff"/>
-    <pb_type name="clb_spypad.fle[physical].frac_logic.adder_phy" circuit_model_name="adder"/>
+    <pb_type name="clb_spypad.fle[physical].ff_phy" circuit_model_name="SDFFSRQ"/>
+    <pb_type name="clb_spypad.fle[physical].frac_logic.adder_phy" circuit_model_name="ADDF"/>
     <!-- Binding operating pb_type to physical pb_type -->
     <!-- Binding operating pb_types in mode 'n2_lut5' -->
     <pb_type name="clb_spypad.fle[n2_lut5].lut5inter.ble5[blut5].flut5.lut5" physical_pb_type_name="clb_spypad.fle[physical].frac_logic.frac_lut6" mode_bits="01" physical_pb_type_index_factor="0.5">
@@ -311,8 +311,8 @@
     <pb_type name="clb_spypad.fle_spypad" physical_mode_name="physical"/>
 
     <pb_type name="clb_spypad.fle_spypad[physical].frac_logic.frac_lut6" circuit_model_name="frac_lut6_spypad" mode_bits="00"/>
-    <pb_type name="clb_spypad.fle_spypad[physical].ff_phy" circuit_model_name="scan_chain_ff"/>
-    <pb_type name="clb_spypad.fle_spypad[physical].frac_logic.adder_phy" circuit_model_name="adder"/>
+    <pb_type name="clb_spypad.fle_spypad[physical].ff_phy" circuit_model_name="SDFFSRQ"/>
+    <pb_type name="clb_spypad.fle_spypad[physical].frac_logic.adder_phy" circuit_model_name="ADDF"/>
     <!-- Binding operating pb_type to physical pb_type -->
     <!-- Binding operating pb_types in mode 'n2_lut5' -->
     <pb_type name="clb_spypad.fle_spypad[n2_lut5].lut5inter.ble5[blut5].flut5.lut5" physical_pb_type_name="clb_spypad.fle_spypad[physical].frac_logic.frac_lut6" mode_bits="01" physical_pb_type_index_factor="0.5">

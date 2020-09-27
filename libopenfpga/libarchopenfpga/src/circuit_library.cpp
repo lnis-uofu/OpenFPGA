@@ -942,6 +942,7 @@ bool CircuitLibrary::port_is_config_enable(const CircuitPortId& circuit_port_id)
   return port_is_config_enable_[circuit_port_id];
 }
 
+
 /* Return a flag if the port is used during programming a FPGA in a circuit model */
 bool CircuitLibrary::port_is_prog(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */

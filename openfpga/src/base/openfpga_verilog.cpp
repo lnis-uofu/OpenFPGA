@@ -97,7 +97,7 @@ int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
                          openfpga_ctx.vpr_netlist_annotation(),
                          openfpga_ctx.arch().circuit_lib,
                          openfpga_ctx.simulation_setting(),
-                         openfpga_ctx.arch().config_protocol.type(),
+                         openfpga_ctx.arch().config_protocol,
                          options);
 
   /* TODO: should identify the error code from internal function execution */

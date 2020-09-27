@@ -23,12 +23,10 @@
  *******************************************************************/
 static 
 e_tech_lib_model_type string_to_device_model_type(const std::string& type_string) {
-  if (std::string("transistor") == type_string) {
-    return TECH_LIB_MODEL_TRANSISTOR;
-  }
-
-  if (std::string("rram") == type_string) {
-    return TECH_LIB_MODEL_RRAM;
+  for (size_t itype = 0; itype < NUM_TECH_LIB_MODEL_TYPES; ++itype) {
+    if (std::string(TECH_LIB_MODEL_TYPE_STRING[itype]) == type_string) {
+      return static_cast<e_tech_lib_model_type>(itype);
+    }
   }
 
   return NUM_TECH_LIB_MODEL_TYPES;
@@ -39,12 +37,10 @@ e_tech_lib_model_type string_to_device_model_type(const std::string& type_string
  *******************************************************************/
 static 
 e_tech_lib_type string_to_tech_lib_type(const std::string& type_string) {
-  if (std::string("industry") == type_string) {
-    return TECH_LIB_INDUSTRY;
-  }
-
-  if (std::string("academia") == type_string) {
-    return TECH_LIB_ACADEMIA;
+  for (size_t itype = 0; itype < NUM_TECH_LIB_TYPES; ++itype) {
+    if (std::string(TECH_LIB_TYPE_STRING[itype]) == type_string) {
+      return static_cast<e_tech_lib_type>(itype);
+    }
   }
 
   return NUM_TECH_LIB_TYPES;
