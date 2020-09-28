@@ -129,7 +129,7 @@ FabricKey read_xml_fabric_key(const char* key_fname) {
       if (xml_region.name() != std::string("region")) {
         bad_tag(xml_region, loc_data, xml_root, {"region"});
       }
-      num_keys += std::distance(xml_root.children().begin(), xml_root.children().end());
+      num_keys += std::distance(xml_region.children().begin(), xml_region.children().end());
     }
 
     fabric_key.reserve_keys(num_keys);

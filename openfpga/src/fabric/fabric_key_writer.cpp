@@ -65,6 +65,11 @@ int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
     num_keys -= 1;
   }
 
+  /* FIXME: create a region for the keys. Later down the road, we will create multiple regions */
+  fabric_key.reserve_regions(1);
+  FabricRegionId region = fabric_key.create_region();
+  fabric_key.reserve_region_keys(region, num_keys);
+
   fabric_key.reserve_keys(num_keys);
 
   for (size_t ichild = 0; ichild < num_keys; ++ichild) {
@@ -78,6 +83,9 @@ int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
     if (false == module_manager.instance_name(top_module, child_module, child_instance).empty()) {
       fabric_key.set_key_alias(key, module_manager.instance_name(top_module, child_module, child_instance));
     }
+
+    /* Add keys to the region */
+    fabric_key.add_key_to_region(region, key);
   }
 
   VTR_LOGV(verbose,
