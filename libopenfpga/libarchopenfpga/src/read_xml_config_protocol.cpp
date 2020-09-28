@@ -53,8 +53,18 @@ void read_xml_config_organization(pugi::xml_node& xml_config_orgz,
 
   config_protocol.set_type(config_orgz_type);
 
+  /* Find the circuit model used by the configuration protocol */
   config_protocol.set_memory_model_name(get_attribute(xml_config_orgz, "circuit_model_name", loc_data).as_string());
 
+  /* Parse the number of configurable regions
+   * At least 1 region should be defined, otherwise error out 
+   */
+  config_protocol.set_num_regions(get_attribute(xml_config_orgz, "num_regions", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(1));
+  if (1 > config_protocol.num_regions()) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_config_orgz),
+                   "Invalid 'num_region=%d' definition. At least 1 region should be defined!\n",
+                   config_protocol.num_regions());
+  }
 }
 
 /********************************************************************
