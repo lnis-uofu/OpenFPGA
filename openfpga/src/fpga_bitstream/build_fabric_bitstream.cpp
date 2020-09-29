@@ -131,7 +131,8 @@ void rec_build_module_fabric_dependent_memory_bank_bitstream(const BitstreamMana
                                                              const size_t& num_bls,
                                                              const size_t& num_wls, 
                                                              size_t& cur_mem_index,
-                                                             FabricBitstream& fabric_bitstream) {
+                                                             FabricBitstream& fabric_bitstream,
+                                                             const FabricBitRegionId& fabric_bitstream_region) {
 
   /* Depth-first search: if we have any children in the parent_block, 
    * we dive to the next level first! 
@@ -171,7 +172,8 @@ void rec_build_module_fabric_dependent_memory_bank_bitstream(const BitstreamMana
                                                               bl_addr_size, wl_addr_size,
                                                               num_bls, num_wls,
                                                               cur_mem_index,
-                                                              fabric_bitstream);
+                                                              fabric_bitstream,
+                                                              fabric_bitstream_region);
     }
     /* Ensure that there should be no configuration bits in the parent block */
     VTR_ASSERT(0 == bitstream_manager.block_bits(parent_block).size());
@@ -202,6 +204,9 @@ void rec_build_module_fabric_dependent_memory_bank_bitstream(const BitstreamMana
     
     /* Set data input */
     fabric_bitstream.set_bit_din(fabric_bit, bitstream_manager.bit_value(config_bit));
+
+    /* Add the bit to the region */
+    fabric_bitstream.add_bit_to_region(fabric_bitstream_region, fabric_bit);
 
     /* Increase the memory index */
     cur_mem_index++;
@@ -237,7 +242,8 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
                                                        const ModuleManager& module_manager,
                                                        const std::vector<ModuleId>& parent_modules,
                                                        const std::vector<char>& addr_code,
-                                                       FabricBitstream& fabric_bitstream) {
+                                                       FabricBitstream& fabric_bitstream,
+                                                       FabricBitRegionId& fabric_bitstream_region) {
 
   /* Depth-first search: if we have any children in the parent_block, 
    * we dive to the next level first! 
@@ -355,7 +361,8 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
       rec_build_module_fabric_dependent_frame_bitstream(bitstream_manager, child_blocks,
                                                         module_manager, child_modules,
                                                         child_addr_code,
-                                                        fabric_bitstream);
+                                                        fabric_bitstream,
+                                                        fabric_bitstream_region);
     }
     /* Ensure that there should be no configuration bits in the parent block */
     VTR_ASSERT(0 == bitstream_manager.block_bits(parent_block).size());
@@ -392,6 +399,9 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
     
     /* Set data input */
     fabric_bitstream.set_bit_din(fabric_bit, bitstream_manager.bit_value(config_bit));
+
+    /* Add the bit to the region */
+    fabric_bitstream.add_bit_to_region(fabric_bitstream_region, fabric_bit);
   }
 }
 
@@ -472,13 +482,21 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
     fabric_bitstream.set_wl_address_length(wl_addr_port_info.get_width());
     fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
 
-    rec_build_module_fabric_dependent_memory_bank_bitstream(bitstream_manager, top_block,
-                                                            module_manager, top_module, top_module, 
-                                                            bl_addr_port_info.get_width(),
-                                                            wl_addr_port_info.get_width(),
-                                                            bl_port_info.get_width(),
-                                                            wl_port_info.get_width(),
-                                                            cur_mem_index, fabric_bitstream);
+    /* TODO: Currently only support 1 region. Will expand later! */
+    VTR_ASSERT(1 == module_manager.regions(top_module).size());
+
+    for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+      FabricBitRegionId fabric_bitstream_region = fabric_bitstream.add_region();
+      rec_build_module_fabric_dependent_memory_bank_bitstream(bitstream_manager, top_block,
+                                                              module_manager, top_module, top_module, 
+                                                              bl_addr_port_info.get_width(),
+                                                              wl_addr_port_info.get_width(),
+                                                              bl_port_info.get_width(),
+                                                              wl_port_info.get_width(),
+                                                              cur_mem_index,
+                                                              fabric_bitstream,
+                                                              fabric_bitstream_region);
+    }
     break;
   }
   case CONFIG_MEM_FRAME_BASED: {
@@ -492,12 +510,19 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
     fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
     fabric_bitstream.set_address_length(addr_port_info.get_width());
 
-    rec_build_module_fabric_dependent_frame_bitstream(bitstream_manager,
-                                                      std::vector<ConfigBlockId>(1, top_block),
-                                                      module_manager,
-                                                      std::vector<ModuleId>(1, top_module),
-													  std::vector<char>(),
-                                                      fabric_bitstream);
+    /* TODO: Currently only support 1 region. Will expand later! */
+    VTR_ASSERT(1 == module_manager.regions(top_module).size());
+
+    for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+      FabricBitRegionId fabric_bitstream_region = fabric_bitstream.add_region();
+      rec_build_module_fabric_dependent_frame_bitstream(bitstream_manager,
+                                                        std::vector<ConfigBlockId>(1, top_block),
+                                                        module_manager,
+                                                        std::vector<ModuleId>(1, top_module),
+	  												    std::vector<char>(),
+                                                        fabric_bitstream,
+                                                        fabric_bitstream_region);
+    }
     break;
   }
   default:
