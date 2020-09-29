@@ -124,12 +124,14 @@ class ModuleManager {
     typedef lazy_id_iterator<ModuleNetId> module_net_iterator;
     typedef vtr::vector<ModuleNetSrcId, ModuleNetSrcId>::const_iterator module_net_src_iterator;
     typedef vtr::vector<ModuleNetSinkId, ModuleNetSinkId>::const_iterator module_net_sink_iterator;
+    typedef vtr::vector<ConfigRegionId, ConfigRegionId>::const_iterator region_iterator;
 
     typedef vtr::Range<module_iterator> module_range;
     typedef vtr::Range<module_port_iterator> module_port_range;
     typedef vtr::Range<module_net_iterator> module_net_range;
     typedef vtr::Range<module_net_src_iterator> module_net_src_range;
     typedef vtr::Range<module_net_sink_iterator> module_net_sink_range;
+    typedef vtr::Range<region_iterator> region_range;
 
   public: /* Public aggregators */
     /* Find all the modules */
@@ -151,6 +153,15 @@ class ModuleManager {
     /* Find the sink ids of modules */
     module_net_sink_range module_net_sinks(const ModuleId& module, const ModuleNetId& net) const;
 
+    /* Find all the regions */
+    region_range regions(const ModuleId& module) const;
+    /* Find all the configurable child modules under a region of a parent module */
+    std::vector<ModuleId> region_configurable_children(const ModuleId& parent_module,
+                                                       const ConfigRegionId& region) const;
+    /* Find all the instances of configurable child modules under a region of a parent module */
+    std::vector<size_t> region_configurable_child_instances(const ModuleId& parent_module,
+                                                            const ConfigRegionId& region) const;
+    
   public: /* Public accessors */
     size_t num_modules() const;
     size_t num_nets(const ModuleId& module) const;
@@ -242,6 +253,18 @@ class ModuleManager {
      */
     void reserve_configurable_child(const ModuleId& module, const size_t& num_children);
 
+    /* Create a new configurable region under a module */
+    ConfigRegionId add_config_region(const ModuleId& module);
+    /* Add a configurable child module to a region
+     * Note:
+     *   - The child module must be added as a configurable child to the parent module
+     *     before calling this function!
+     */
+    void add_configurable_child_to_region(const ModuleId& parent_module,
+                                          const ConfigRegionId& config_region,
+                                          const ModuleId& child_module,
+                                          const size_t& child_instance);
+
     /* Reserved a number of module nets for a given module
      * for memory efficiency
      */
@@ -281,6 +304,13 @@ class ModuleManager {
      * Do NOT use unless you know what you are doing!!!
      */
     void clear_configurable_children(const ModuleId& parent_module);
+
+    /* This is a strong function which will remove all the configurable regions
+     * under a given parent module
+     * It is mainly used by loading fabric keys
+     * Do NOT use unless you know what you are doing!!!
+     */
+    void clear_config_region(const ModuleId& parent_module);
   public: /* Public validators/invalidators */
     bool valid_module_id(const ModuleId& module) const;
     bool valid_module_port_id(const ModuleId& module, const ModulePortId& port) const;
@@ -288,6 +318,8 @@ class ModuleManager {
     bool valid_module_instance_id(const ModuleId& parent_module,
                                   const ModuleId& child_module,
                                   const size_t& instance_id) const;
+    bool valid_region_id(const ModuleId& module,
+                         const ConfigRegionId& region) const;
   private: /* Private validators/invalidators */
     void invalidate_name2id_map();
     void invalidate_port_lookup();
@@ -310,6 +342,14 @@ class ModuleManager {
      */
     vtr::vector<ModuleId, std::vector<ModuleId>> configurable_children_;                /* Child modules with configurable memory bits that this module contain */
     vtr::vector<ModuleId, std::vector<size_t>> configurable_child_instances_;           /* Instances of child modules with configurable memory bits that this module contain */
+    vtr::vector<ModuleId, std::vector<ConfigRegionId>> configurable_child_regions_;           /* Instances of child modules with configurable memory bits that this module contain */
+
+    /* Configurable regions to group the configurable children
+     * Note:
+     *   - Each child can only be added a group
+     */
+    vtr::vector<ModuleId, vtr::vector<ConfigRegionId, ConfigRegionId>> config_region_ids_; 
+    vtr::vector<ModuleId, vtr::vector<ConfigRegionId, std::vector<size_t>>> config_region_children_;
 
     /* Port-level data */
     vtr::vector<ModuleId, vtr::vector<ModulePortId, ModulePortId>> port_ids_;    /* List of ports for each Module */ 

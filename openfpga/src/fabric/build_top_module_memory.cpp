@@ -176,6 +176,94 @@ void organize_top_module_tile_memory_modules(ModuleManager& module_manager,
   }
 }
 
+
+/********************************************************************
+ * Split memory modules into different configurable regions
+ * This function will create regions based on the definition
+ * in the configuration protocols, to accommodate each configurable
+ * child under the top-level module
+ *
+ * For example:
+ *  FPGA Top-level module
+ *  +----------------------+
+ *  |           |          |
+ *  |  Region 0 | Region 1 |
+ *  |           |          |
+ *  +----------------------+
+ *  |           |          |
+ *  |  Region 2 | Region 3 |
+ *  |           |          |
+ *  +----------------------+
+ *
+ *  A typical organization of a Region X
+ *  +-----------------------+
+ *  |                       |
+ *  | +------+ +------+     |
+ *  | |      | |      |     |
+ *  | | Tile | | Tile | ... |
+ *  | |      | |      |     |
+ *  | +------+ +------+     |
+ *  |  ...      ...         |
+ *  |                       |
+ *  | +------+ +------+     |
+ *  | |      | |      |     |
+ *  | | Tile | | Tile | ... |
+ *  | |      | |      |     |
+ *  | +------+ +------+     |
+ *  +-----------------------+
+ *
+ * Note:
+ *   - This function should NOT modify configurable children
+ *
+ *******************************************************************/
+static  
+void build_top_module_configurable_regions(ModuleManager& module_manager,
+                                           const ModuleId& top_module,
+                                           const ConfigProtocol& config_protocol) {
+
+  /* Ensure we have valid configurable children */
+  VTR_ASSERT(false == module_manager.configurable_children(top_module).empty());
+
+  /* Ensure that our region definition is valid */
+  VTR_ASSERT(1 <= config_protocol.num_regions());
+
+  /* Exclude decoders from the list */
+  size_t num_configurable_children = module_manager.configurable_children(top_module).size();
+  if (CONFIG_MEM_MEMORY_BANK == config_protocol.type()) {
+    num_configurable_children -= 2;
+  } else if (CONFIG_MEM_FRAME_BASED == config_protocol.type()) {
+    num_configurable_children -= 1;
+  }
+
+  /* Evenly place each configurable child to each region */
+  size_t num_children_per_region = num_configurable_children / config_protocol.num_regions(); 
+  size_t region_child_counter = 0;
+  bool create_region = true;
+  ConfigRegionId curr_region = ConfigRegionId::INVALID();
+  for (size_t ichild = 0; ichild < num_configurable_children; ++ichild) {
+    if (true == create_region) {
+      curr_region = module_manager.add_config_region(top_module);
+    }
+
+    /* Add the child to a region */
+    module_manager.add_configurable_child_to_region(top_module,
+                                                    curr_region,
+                                                    module_manager.configurable_children(top_module)[ichild],
+                                                    module_manager.configurable_child_instances(top_module)[ichild]);
+
+    /* See if the current region is full or not:
+     * For the last region, we will keep adding until we finish all the children 
+     */
+    region_child_counter++;
+    if (region_child_counter < num_children_per_region) {
+      create_region = false;
+    } else if (size_t(curr_region) < (size_t)config_protocol.num_regions() - 1) {
+      create_region = true;
+      region_child_counter = 0;
+    }
+  }
+}
+
 /********************************************************************
  * Organize the list of memory modules and instances
  * This function will record all the sub modules of the top-level module
@@ -273,7 +361,7 @@ void organize_top_module_tile_memory_modules(ModuleManager& module_manager,
 void organize_top_module_memory_modules(ModuleManager& module_manager, 
                                         const ModuleId& top_module,
                                         const CircuitLibrary& circuit_lib,
-                                        const e_config_protocol_type& sram_orgz_type,
+                                        const ConfigProtocol& config_protocol,
                                         const CircuitModelId& sram_model,
                                         const DeviceGrid& grids,
                                         const vtr::Matrix<size_t>& grid_instance_ids,
@@ -332,7 +420,7 @@ void organize_top_module_memory_modules(ModuleManager& module_manager,
     for (const vtr::Point<size_t>& io_coord : io_coords[io_side]) {
       /* Identify the GSB that surrounds the grid */
       organize_top_module_tile_memory_modules(module_manager, top_module, 
-                                              circuit_lib, sram_orgz_type, sram_model,
+                                              circuit_lib, config_protocol.type(), sram_model,
                                               grids, grid_instance_ids,
                                               device_rr_gsb, sb_instance_ids, cb_instance_ids,
                                               compact_routing_hierarchy,
@@ -362,12 +450,15 @@ void organize_top_module_memory_modules(ModuleManager& module_manager,
 
   for (const vtr::Point<size_t>& core_coord : core_coords) {
     organize_top_module_tile_memory_modules(module_manager, top_module,  
-                                            circuit_lib, sram_orgz_type, sram_model, 
+                                            circuit_lib, config_protocol.type(), sram_model, 
                                             grids, grid_instance_ids,
                                             device_rr_gsb, sb_instance_ids, cb_instance_ids,
                                             compact_routing_hierarchy,
                                             core_coord, NUM_SIDES);
   }
+
+  /* Split memory modules into different regions */
+  build_top_module_configurable_regions(module_manager, top_module, config_protocol);  
 }
 
 
@@ -375,13 +466,18 @@ void organize_top_module_memory_modules(ModuleManager& module_manager,
  * Shuffle the configurable children in a random sequence 
  *
  * TODO: May use a more customized shuffle mechanism
+ * TODO: Apply region-based shuffling
+ *       The shuffling will be applied to each separated regions 
+ *       Configurable children will not shuffled from a region
+ *       to another, instead they should stay in the same region
  *
  * Note: 
  *   - This function should NOT be called 
  *     before allocating any configurable child
  ********************************************************************/
 void shuffle_top_module_configurable_children(ModuleManager& module_manager, 
-                                              const ModuleId& top_module) {
+                                              const ModuleId& top_module,
+                                              const ConfigProtocol& config_protocol) {
   size_t num_keys = module_manager.configurable_children(top_module).size();
   std::vector<size_t> shuffled_keys;
   shuffled_keys.reserve(num_keys);
@@ -403,6 +499,9 @@ void shuffle_top_module_configurable_children(ModuleManager& module_manager,
                                           orig_configurable_children[shuffled_keys[ikey]],
                                           orig_configurable_child_instances[shuffled_keys[ikey]]);
   }
+
+  /* Split memory modules into different regions */
+  build_top_module_configurable_regions(module_manager, top_module, config_protocol);  
 }
 
 /********************************************************************
@@ -421,52 +520,60 @@ int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager
   /* Ensure a clean start */
   module_manager.clear_configurable_children(top_module);
 
-  for (const FabricKeyId& key : fabric_key.keys()) {
-    /* Find if instance id is valid */
-    std::pair<ModuleId, size_t> instance_info(ModuleId::INVALID(), 0);
-    /* If we have an alias, we try to find a instance in this name */
-    if (!fabric_key.key_alias(key).empty()) {
-      /* If we have the key, we can quickly spot instance id.
-       * Otherwise, we have to exhaustively find the module id and instance id
-       */
-      if (!fabric_key.key_name(key).empty()) {
+  for (const FabricRegionId& region : fabric_key.regions()) {
+    /* Create a configurable region in the top module */
+    ConfigRegionId top_module_config_region = module_manager.add_config_region(top_module);
+    for (const FabricKeyId& key : fabric_key.region_keys(region)) {
+      /* Find if instance id is valid */
+      std::pair<ModuleId, size_t> instance_info(ModuleId::INVALID(), 0);
+      /* If we have an alias, we try to find a instance in this name */
+      if (!fabric_key.key_alias(key).empty()) {
+        /* If we have the key, we can quickly spot instance id.
+         * Otherwise, we have to exhaustively find the module id and instance id
+         */
+        if (!fabric_key.key_name(key).empty()) {
+          instance_info.first = module_manager.find_module(fabric_key.key_name(key));
+          instance_info.second = module_manager.instance_id(top_module, instance_info.first, fabric_key.key_alias(key));
+        } else {
+          instance_info = find_module_manager_instance_module_info(module_manager, top_module, fabric_key.key_alias(key)); 
+        }
+      } else { 
+        /* If we do not have an alias, we use the name and value to build the info deck */
         instance_info.first = module_manager.find_module(fabric_key.key_name(key));
-        instance_info.second = module_manager.instance_id(top_module, instance_info.first, fabric_key.key_alias(key));
-      } else {
-        instance_info = find_module_manager_instance_module_info(module_manager, top_module, fabric_key.key_alias(key)); 
+        instance_info.second = fabric_key.key_value(key);
       }
-    } else { 
-      /* If we do not have an alias, we use the name and value to build the info deck */
-      instance_info.first = module_manager.find_module(fabric_key.key_name(key));
-      instance_info.second = fabric_key.key_value(key);
-    }
 
-    if (false == module_manager.valid_module_id(instance_info.first)) {
-      if (!fabric_key.key_alias(key).empty()) {
-        VTR_LOG_ERROR("Invalid key alias '%s'!\n",
-                      fabric_key.key_alias(key).c_str()); 
-      } else {
-        VTR_LOG_ERROR("Invalid key name '%s'!\n",
-                      fabric_key.key_name(key).c_str()); 
+      if (false == module_manager.valid_module_id(instance_info.first)) {
+        if (!fabric_key.key_alias(key).empty()) {
+          VTR_LOG_ERROR("Invalid key alias '%s'!\n",
+                        fabric_key.key_alias(key).c_str()); 
+        } else {
+          VTR_LOG_ERROR("Invalid key name '%s'!\n",
+                        fabric_key.key_name(key).c_str()); 
+        }
+        return CMD_EXEC_FATAL_ERROR;                    
       }
-      return CMD_EXEC_FATAL_ERROR;                    
-    }
 
-    if (false == module_manager.valid_module_instance_id(top_module, instance_info.first, instance_info.second)) {
-      if (!fabric_key.key_alias(key).empty()) {
-        VTR_LOG_ERROR("Invalid key alias '%s'!\n",
-                      fabric_key.key_alias(key).c_str()); 
-      } else {
-        VTR_LOG_ERROR("Invalid key value '%ld'!\n",
-                      instance_info.second); 
+      if (false == module_manager.valid_module_instance_id(top_module, instance_info.first, instance_info.second)) {
+        if (!fabric_key.key_alias(key).empty()) {
+          VTR_LOG_ERROR("Invalid key alias '%s'!\n",
+                        fabric_key.key_alias(key).c_str()); 
+        } else {
+          VTR_LOG_ERROR("Invalid key value '%ld'!\n",
+                        instance_info.second); 
+        }
+        return CMD_EXEC_FATAL_ERROR;                    
       }
-      return CMD_EXEC_FATAL_ERROR;                    
-    }
 
-    /* Now we can add the child to configurable children of the top module */
-    module_manager.add_configurable_child(top_module,
-                                          instance_info.first,
-                                          instance_info.second);
+      /* Now we can add the child to configurable children of the top module */
+      module_manager.add_configurable_child(top_module,
+                                            instance_info.first,
+                                            instance_info.second);
+      module_manager.add_configurable_child_to_region(top_module,
+                                                      top_module_config_region,
+                                                      instance_info.first, 
+                                                      instance_info.second);
+    }
   }
 
   return CMD_EXEC_SUCCESS;

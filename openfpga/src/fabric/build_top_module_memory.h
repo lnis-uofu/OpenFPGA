@@ -11,6 +11,7 @@
 #include "module_manager.h"
 #include "circuit_types.h"
 #include "circuit_library.h"
+#include "config_protocol.h"
 #include "decoder_library.h"
 #include "device_grid.h"
 #include "device_rr_gsb.h"
@@ -26,7 +27,7 @@ namespace openfpga {
 void organize_top_module_memory_modules(ModuleManager& module_manager, 
                                         const ModuleId& top_module,
                                         const CircuitLibrary& circuit_lib,
-                                        const e_config_protocol_type& sram_orgz_type,
+                                        const ConfigProtocol& config_protocol,
                                         const CircuitModelId& sram_model,
                                         const DeviceGrid& grids,
                                         const vtr::Matrix<size_t>& grid_instance_ids,
@@ -36,7 +37,8 @@ void organize_top_module_memory_modules(ModuleManager& module_manager,
                                         const bool& compact_routing_hierarchy);
 
 void shuffle_top_module_configurable_children(ModuleManager& module_manager, 
-                                              const ModuleId& top_module);
+                                              const ModuleId& top_module,
+                                              const ConfigProtocol& config_protocol);
 
 int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager,
                                                    const ModuleId& top_module,
