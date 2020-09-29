@@ -17,9 +17,11 @@ python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/config
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_chain_use_set --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_chain_use_setb --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_chain_use_set_reset --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/multi_region_configuration_chain --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/fast_configuration_chain --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/fast_configuration_chain_use_set --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/smart_fast_configuration_chain --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/smart_fast_multi_region_configuration_chain --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/preconfig_testbench/configuration_chain --debug --show_thread_logs
 
 echo -e "Testing fram-based configuration protocol of a K4N4 FPGA";
