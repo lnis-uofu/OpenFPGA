@@ -66,6 +66,15 @@ python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/generate_testbench --
 echo -e "Testing user-defined simulation settings: clock frequency and number of cycles";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/fixed_simulation_settings --debug --show_thread_logs
 
+echo -e "Testing Secured FPGA fabrics";
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/fabric_key/generate_vanilla_key --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/fabric_key/generate_multi_region_vanilla_key --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/fabric_key/generate_random_key --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/fabric_key/load_external_key --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/fabric_key/load_external_key_cc_fpga --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/fabric_key/load_external_key_multi_region_cc_fpga --debug --show_thread_logs
+
+
 echo -e "Testing K4 series FPGA";
 echo -e "Testing K4N4 with facturable LUTs";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n4_frac_lut --debug --show_thread_logs
