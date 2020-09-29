@@ -737,31 +737,16 @@ ConfigRegionId ModuleManager::add_config_region(const ModuleId& module) {
 void ModuleManager::add_configurable_child_to_region(const ModuleId& parent_module,
                                                      const ConfigRegionId& config_region,
                                                      const ModuleId& child_module,
-                                                     const size_t& child_instance) {
+                                                     const size_t& child_instance,
+                                                     const size_t& config_child_id) {
   /* Validate the module id */
   VTR_ASSERT ( valid_module_id(parent_module) );
   VTR_ASSERT ( valid_module_id(child_module) );
   VTR_ASSERT ( valid_region_id(parent_module, config_region) );
 
   /* Ensure that the child module is in the configurable children list */
-  size_t config_child_id = configurable_children(parent_module).size();
-  for (size_t ichild = 0; ichild < configurable_children(parent_module).size(); ++ichild) {
-    if ( (child_module == configurable_children(parent_module)[ichild])
-      && (child_instance == configurable_child_instances(parent_module)[ichild]) ) {
-      config_child_id = ichild;
-      break;
-    }
-  }
-
-  /* Error out as the child is not valid */
-  if (config_child_id == configurable_children(parent_module).size()) {
-    VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "Try to add an invalid configurable child '%s[%lu]' to region '%lu'!\n",
-                   module_name(child_module).c_str(),
-                   child_instance,
-                   size_t(config_region));
-    exit(1);
-  }
+  VTR_ASSERT(child_module == configurable_children(parent_module)[config_child_id]);
+  VTR_ASSERT(child_instance == configurable_child_instances(parent_module)[config_child_id]);
 
   /* If the child is already in another region, error out */
   if ( (true == valid_region_id(parent_module, configurable_child_regions_[parent_module][config_child_id]))
@@ -773,18 +758,6 @@ void ModuleManager::add_configurable_child_to_region(const ModuleId& parent_modu
                    size_t(config_region),
                    size_t(configurable_child_regions_[parent_module][config_child_id]));
     exit(1);
-  }
-
-  /* Ensure that the child is not in the list */
-  if (config_region_children_[parent_module][config_region].end() != std::find(config_region_children_[parent_module][config_region].begin(),
-                                                                config_region_children_[parent_module][config_region].end(),
-                                                                config_child_id)) {
-    VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "The configurable child '%s[%lu]' is already in the region '%lu'! Skip adding\n",
-                   module_name(child_module).c_str(),
-                   child_instance,
-                   size_t(config_region));
-    return;
   }
 
   /* Passed all the checks, add the child to the region */

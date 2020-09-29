@@ -263,7 +263,8 @@ class ModuleManager {
     void add_configurable_child_to_region(const ModuleId& parent_module,
                                           const ConfigRegionId& config_region,
                                           const ModuleId& child_module,
-                                          const size_t& child_instance);
+                                          const size_t& child_instance,
+                                          const size_t& config_child_id);
 
     /* Reserved a number of module nets for a given module
      * for memory efficiency

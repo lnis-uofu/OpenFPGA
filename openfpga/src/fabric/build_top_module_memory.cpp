@@ -221,6 +221,8 @@ void build_top_module_configurable_regions(ModuleManager& module_manager,
                                            const ModuleId& top_module,
                                            const ConfigProtocol& config_protocol) {
 
+  vtr::ScopedStartFinishTimer timer("Build configurable regions for the top module");
+
   /* Ensure we have valid configurable children */
   VTR_ASSERT(false == module_manager.configurable_children(top_module).empty());
 
@@ -240,7 +242,7 @@ void build_top_module_configurable_regions(ModuleManager& module_manager,
   size_t region_child_counter = 0;
   bool create_region = true;
   ConfigRegionId curr_region = ConfigRegionId::INVALID();
-  for (size_t ichild = 0; ichild < num_configurable_children; ++ichild) {
+  for (size_t ichild = 0; ichild < module_manager.configurable_children(top_module).size(); ++ichild) {
     if (true == create_region) {
       curr_region = module_manager.add_config_region(top_module);
     }
@@ -249,7 +251,8 @@ void build_top_module_configurable_regions(ModuleManager& module_manager,
     module_manager.add_configurable_child_to_region(top_module,
                                                     curr_region,
                                                     module_manager.configurable_children(top_module)[ichild],
-                                                    module_manager.configurable_child_instances(top_module)[ichild]);
+                                                    module_manager.configurable_child_instances(top_module)[ichild],
+                                                    ichild);
 
     /* See if the current region is full or not:
      * For the last region, we will keep adding until we finish all the children 
@@ -262,6 +265,9 @@ void build_top_module_configurable_regions(ModuleManager& module_manager,
       region_child_counter = 0;
     }
   }
+
+  /* Ensure that the number of configurable regions created matches the definition */
+  VTR_ASSERT((size_t)config_protocol.num_regions() == module_manager.regions(top_module).size());
 }
 
 /********************************************************************
@@ -500,7 +506,8 @@ void shuffle_top_module_configurable_children(ModuleManager& module_manager,
                                           orig_configurable_child_instances[shuffled_keys[ikey]]);
   }
 
-  /* Split memory modules into different regions */
+  /* Reset configurable regions */
+  module_manager.clear_config_region(top_module);
   build_top_module_configurable_regions(module_manager, top_module, config_protocol);  
 }
 
@@ -519,6 +526,8 @@ int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager
                                                    const FabricKey& fabric_key) {
   /* Ensure a clean start */
   module_manager.clear_configurable_children(top_module);
+
+  size_t curr_configurable_child_id = 0;
 
   for (const FabricRegionId& region : fabric_key.regions()) {
     /* Create a configurable region in the top module */
@@ -572,7 +581,9 @@ int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager
       module_manager.add_configurable_child_to_region(top_module,
                                                       top_module_config_region,
                                                       instance_info.first, 
-                                                      instance_info.second);
+                                                      instance_info.second,
+                                                      curr_configurable_child_id);
+      curr_configurable_child_id++;
     }
   }
 
