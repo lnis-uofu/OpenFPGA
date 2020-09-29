@@ -120,7 +120,7 @@ int build_device_module_graph(ModuleManager& module_manager,
                             openfpga_ctx.device_rr_gsb(), 
                             openfpga_ctx.tile_direct(), 
                             openfpga_ctx.arch().arch_direct, 
-                            openfpga_ctx.arch().config_protocol.type(),
+                            openfpga_ctx.arch().config_protocol,
                             sram_model,
                             frame_view, compress_routing, duplicate_grid_pin,
                             fabric_key, generate_random_fabric_key);

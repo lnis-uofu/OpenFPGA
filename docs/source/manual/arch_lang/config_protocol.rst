@@ -49,7 +49,7 @@ It will use the circuit model defined in :numref:`fig_ccff`.
 .. code-block:: xml
 
   <configuration_protocol>
-    <organization type="scan_chain" circuit_model_name="ccff"/>
+    <organization type="scan_chain" circuit_model_name="ccff" num_regions="<int>"/>
   </configuration_protocol>
 
 .. _fig_ccff_fpga:
@@ -59,6 +59,17 @@ It will use the circuit model defined in :numref:`fig_ccff`.
    :alt: map to buried treasure
  
    Example of a configuration chain to program core logic of a FPGA 
+
+.. option:: num_regions="<int>"
+
+  Specify the number of configuration chains to be used across the fabrics. By default, it will be only 1 configuration chain. The more configuration chain to be used, the fast configuration runtime will be, but at the cost of more I/Os in the FPGA fabrics. The organization of each configurable region can be customized through the fabric key (see details in :ref:`fabric_key`).
+
+.. figure:: figures/multi_region_config_chains.png
+   :scale: 100%
+   :alt: map to buried treasure
+ 
+   Examples of single- and multiple- region configuration chains
+
 
 Frame-based Example
 ~~~~~~~~~~~~~~~~~~~

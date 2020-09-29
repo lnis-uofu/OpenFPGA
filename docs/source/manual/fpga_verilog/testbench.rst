@@ -88,7 +88,7 @@ Inside the directory, the Verilog testbenches are organized as illustrated in :n
 .. _fig_preconfig_module:
 
 .. figure:: ./figures/preconfig_module.png
-   :scale: 100%
+   :scale: 25%
 
    Internal structure of a pre-configured FPGA module
 

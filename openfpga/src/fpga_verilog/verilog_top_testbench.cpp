@@ -23,6 +23,8 @@
 #include "simulation_utils.h"
 #include "openfpga_atom_netlist_utils.h"
 
+#include "fabric_bitstream_utils.h"
+
 #include "verilog_constants.h"
 #include "verilog_writer_utils.h"
 #include "verilog_testbench_utils.h"
@@ -136,18 +138,22 @@ void print_verilog_top_testbench_flatten_memory_port(std::fstream& fp,
  * Print local wires for configuration chain protocols
  *******************************************************************/
 static
-void print_verilog_top_testbench_config_chain_port(std::fstream& fp) {
+void print_verilog_top_testbench_config_chain_port(std::fstream& fp,
+                                                   const ModuleManager& module_manager,
+                                                   const ModuleId& top_module) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
   /* Print the head of configuraion-chains here */
   print_verilog_comment(fp, std::string("---- Configuration-chain head -----"));
-  BasicPort config_chain_head_port(generate_configuration_chain_head_name(), 1);
+  ModulePortId cc_head_port_id = module_manager.find_module_port(top_module, generate_configuration_chain_head_name());
+  BasicPort config_chain_head_port = module_manager.module_port(top_module, cc_head_port_id);
   fp << generate_verilog_port(VERILOG_PORT_REG, config_chain_head_port) << ";" << std::endl;
 
   /* Print the tail of configuration-chains here */
   print_verilog_comment(fp, std::string("---- Configuration-chain tail -----"));
-  BasicPort config_chain_tail_port(generate_configuration_chain_tail_name(), 1);
+  ModulePortId cc_tail_port_id = module_manager.find_module_port(top_module, generate_configuration_chain_tail_name());
+  BasicPort config_chain_tail_port = module_manager.module_port(top_module, cc_tail_port_id);
   fp << generate_verilog_port(VERILOG_PORT_WIRE, config_chain_tail_port) << ";" << std::endl;
 }
 
@@ -271,7 +277,7 @@ void print_verilog_top_testbench_config_protocol_port(std::fstream& fp,
     print_verilog_top_testbench_flatten_memory_port(fp, module_manager, top_module);
     break;
   case CONFIG_MEM_SCAN_CHAIN:
-    print_verilog_top_testbench_config_chain_port(fp);
+    print_verilog_top_testbench_config_chain_port(fp, module_manager, top_module);
     break;
   case CONFIG_MEM_MEMORY_BANK:
     print_verilog_top_testbench_memory_bank_port(fp, module_manager, top_module);
@@ -659,7 +665,10 @@ size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz
                                          const bool& bit_value_to_skip,
                                          const BitstreamManager& bitstream_manager,
                                          const FabricBitstream& fabric_bitstream) {
-  size_t num_config_clock_cycles = 1 + fabric_bitstream.num_bits();
+  /* Find the longest regional bitstream */
+  size_t regional_bitstream_max_size = find_fabric_regional_bitstream_max_size(fabric_bitstream);
+
+  size_t num_config_clock_cycles = 1 + regional_bitstream_max_size;
 
   /* Branch on the type of configuration protocol */
   switch (sram_orgz_type) {
@@ -670,23 +679,24 @@ size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz
     num_config_clock_cycles = 2;
     break;
   case CONFIG_MEM_SCAN_CHAIN:
-    /* For fast configuraiton, the bitstream size counts from the first bit '1' */
+    /* For fast configuration, the bitstream size counts from the first bit '1' */
     if (true == fast_configuration) {
-      size_t full_num_config_clock_cycles = num_config_clock_cycles;
-      size_t num_bits_to_skip = 0;
-      for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
-        if (bit_value_to_skip != bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id))) {
-          break;
-        }
-        num_bits_to_skip++;
-      }
+      /* For fast configuration, the number of bits to be skipped
+       * depends on each regional bitstream
+       * For example:
+       *   Region 0: 000000001111101010
+       *   Region 1:     00000011010101
+       *   Region 2:   0010101111000110
+       * The number of bits that can be skipped is limited by Region 2
+       */
+      size_t num_bits_to_skip = find_configuration_chain_fabric_bitstream_size_to_be_skipped(fabric_bitstream, bitstream_manager, bit_value_to_skip);
 
-      num_config_clock_cycles = full_num_config_clock_cycles - num_bits_to_skip;
+      num_config_clock_cycles = 1 + regional_bitstream_max_size - num_bits_to_skip;
 
       VTR_LOG("Fast configuration reduces number of configuration clock cycles from %lu to %lu (compression_rate = %f%)\n",
-              full_num_config_clock_cycles,
+              1 + regional_bitstream_max_size,
               num_config_clock_cycles,
-              100. * ((float)num_config_clock_cycles / (float)full_num_config_clock_cycles - 1.));
+              100. * ((float)num_config_clock_cycles / (float)(1 + regional_bitstream_max_size) - 1.));
     }
     break;
   case CONFIG_MEM_MEMORY_BANK:
@@ -770,14 +780,17 @@ void print_verilog_top_testbench_benchmark_instance(std::fstream& fp,
  * During each programming cycle, we feed the input of scan chain with a memory bit
  *******************************************************************/
 static
-void print_verilog_top_testbench_load_bitstream_task_configuration_chain(std::fstream& fp) {
+void print_verilog_top_testbench_load_bitstream_task_configuration_chain(std::fstream& fp,
+                                                                         const ModuleManager& module_manager,
+                                                                         const ModuleId& top_module) {
 
   /* Validate the file stream */
   valid_file_stream(fp);
 
   BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
-  BasicPort cc_head_port(generate_configuration_chain_head_name(), 1);
-  BasicPort cc_head_value(generate_configuration_chain_head_name() + std::string("_val"), 1);
+  ModulePortId cc_head_port_id = module_manager.find_module_port(top_module, generate_configuration_chain_head_name());
+  BasicPort cc_head_port = module_manager.module_port(top_module, cc_head_port_id);
+  BasicPort cc_head_value(generate_configuration_chain_head_name() + std::string("_val"), cc_head_port.get_width());
 
   /* Add an empty line as splitter */
   fp << std::endl;
@@ -962,7 +975,9 @@ void print_verilog_top_testbench_load_bitstream_task(std::fstream& fp,
     /* No need to have a specific task. Loading is done in 1 clock cycle */
     break;
   case CONFIG_MEM_SCAN_CHAIN:
-    print_verilog_top_testbench_load_bitstream_task_configuration_chain(fp);
+    print_verilog_top_testbench_load_bitstream_task_configuration_chain(fp,
+                                                                        module_manager,
+                                                                        top_module);
     break;
   case CONFIG_MEM_MEMORY_BANK:
     print_verilog_top_testbench_load_bitstream_task_memory_bank(fp,
@@ -1359,6 +1374,8 @@ static
 void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
                                                                const bool& fast_configuration,
                                                                const bool& bit_value_to_skip,
+                                                               const ModuleManager& module_manager,
+                                                               const ModuleId& top_module,
                                                                const BitstreamManager& bitstream_manager,
                                                                const FabricBitstream& fabric_bitstream) {
   /* Validate the file stream */
@@ -1370,7 +1387,8 @@ void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
    * We do not care the value of scan_chain head during the first programming cycle
    * It is reset anyway
    */
-  BasicPort config_chain_head_port(generate_configuration_chain_head_name(), 1);
+  ModulePortId cc_head_port_id = module_manager.find_module_port(top_module, generate_configuration_chain_head_name());
+  BasicPort config_chain_head_port = module_manager.module_port(top_module, cc_head_port_id);
   std::vector<size_t> initial_values(config_chain_head_port.get_width(), 0);
 
   print_verilog_comment(fp, "----- Begin bitstream loading during configuration phase -----");
@@ -1383,27 +1401,60 @@ void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
 
   fp << std::endl;
 
+  /* Find the longest bitstream */
+  size_t regional_bitstream_max_size = find_fabric_regional_bitstream_max_size(fabric_bitstream);
+
+  /* For fast configuration, the bitstream size counts from the first bit '1' */
+  size_t num_bits_to_skip = 0;
+  if (true == fast_configuration) {
+    num_bits_to_skip = find_configuration_chain_fabric_bitstream_size_to_be_skipped(fabric_bitstream, bitstream_manager, bit_value_to_skip);
+  }
+  VTR_ASSERT(num_bits_to_skip < regional_bitstream_max_size);
+
+  /* Reorganize the regional bitstreams to be the same size */
+  std::vector<std::vector<bool>> regional_bitstreams;
+  regional_bitstreams.reserve(fabric_bitstream.regions().size());
+  for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
+    std::vector<bool> curr_regional_bitstream;
+    curr_regional_bitstream.resize(regional_bitstream_max_size, false);
+    /* Starting index should consider the offset between the current bitstream size and 
+     * the maximum size of regional bitstream
+     */
+    size_t offset = regional_bitstream_max_size - fabric_bitstream.region_bits(region).size();
+    for (const FabricBitId& bit_id : fabric_bitstream.region_bits(region)) {
+      curr_regional_bitstream[offset] = bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id));
+      offset++;
+    }
+    VTR_ASSERT(offset == regional_bitstream_max_size);
+   
+    /* Add the adapt sub-bitstream */
+    regional_bitstreams.push_back(curr_regional_bitstream);
+  }
 
   /* Attention: when the fast configuration is enabled, we will start from the first bit '1'
    * This requires a reset signal (as we forced in the first clock cycle)
+   *
+   * Note that bitstream may come from different regions
+   * The bitstream value to be loaded should be organized as follows
+   *
+   *        cycleA
+   *              |
+   *   Region 0: 0|00000001111101010
+   *   Region 1:  |   00000011010101
+   *   Region 2:  | 0010101111000110
+   *
+   *   Zero bits will be added to the head of those bitstreams are shorter 
+   *   than the longest bitstream
    */
-  bool start_config = false;
-  for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
-    if ( (false == start_config)
-      && (bit_value_to_skip != bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)))) {
-      start_config = true;
-    } 
-
-    /* In fast configuration mode, we do not output anything
-     * until we have to (the first bit '1' detected)
-     */
-    if ( (true == fast_configuration)
-      && (false == start_config)) {
-      continue;
+  for (size_t ibit = num_bits_to_skip; ibit < regional_bitstream_max_size; ++ibit) { 
+    std::vector<size_t> curr_cc_head_val;
+    curr_cc_head_val.reserve(fabric_bitstream.regions().size());
+    for (const auto& region_bitstream : regional_bitstreams) {
+      curr_cc_head_val.push_back((size_t)region_bitstream[ibit]);
     }
 
     fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
-    fp << "(1'b" << (size_t)bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)) << ");" << std::endl;
+    fp << "(" << generate_verilog_constant_values(curr_cc_head_val) << ");" << std::endl;
   }
 
   /* Raise the flag of configuration done when bitstream loading is complete */
@@ -1654,6 +1705,7 @@ void print_verilog_top_testbench_bitstream(std::fstream& fp,
   case CONFIG_MEM_SCAN_CHAIN:
     print_verilog_top_testbench_configuration_chain_bitstream(fp, fast_configuration, 
                                                               bit_value_to_skip,
+                                                              module_manager, top_module,
                                                               bitstream_manager, fabric_bitstream);
     break;
   case CONFIG_MEM_MEMORY_BANK:

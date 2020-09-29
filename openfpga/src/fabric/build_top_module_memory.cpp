@@ -176,6 +176,100 @@ void organize_top_module_tile_memory_modules(ModuleManager& module_manager,
   }
 }
 
+
+/********************************************************************
+ * Split memory modules into different configurable regions
+ * This function will create regions based on the definition
+ * in the configuration protocols, to accommodate each configurable
+ * child under the top-level module
+ *
+ * For example:
+ *  FPGA Top-level module
+ *  +----------------------+
+ *  |           |          |
+ *  |  Region 0 | Region 1 |
+ *  |           |          |
+ *  +----------------------+
+ *  |           |          |
+ *  |  Region 2 | Region 3 |
+ *  |           |          |
+ *  +----------------------+
+ *
+ *  A typical organization of a Region X
+ *  +-----------------------+
+ *  |                       |
+ *  | +------+ +------+     |
+ *  | |      | |      |     |
+ *  | | Tile | | Tile | ... |
+ *  | |      | |      |     |
+ *  | +------+ +------+     |
+ *  |  ...      ...         |
+ *  |                       |
+ *  | +------+ +------+     |
+ *  | |      | |      |     |
+ *  | | Tile | | Tile | ... |
+ *  | |      | |      |     |
+ *  | +------+ +------+     |
+ *  +-----------------------+
+ *
+ * Note:
+ *   - This function should NOT modify configurable children
+ *
+ *******************************************************************/
+static  
+void build_top_module_configurable_regions(ModuleManager& module_manager,
+                                           const ModuleId& top_module,
+                                           const ConfigProtocol& config_protocol) {
+
+  vtr::ScopedStartFinishTimer timer("Build configurable regions for the top module");
+
+  /* Ensure we have valid configurable children */
+  VTR_ASSERT(false == module_manager.configurable_children(top_module).empty());
+
+  /* Ensure that our region definition is valid */
+  VTR_ASSERT(1 <= config_protocol.num_regions());
+
+  /* Exclude decoders from the list */
+  size_t num_configurable_children = module_manager.configurable_children(top_module).size();
+  if (CONFIG_MEM_MEMORY_BANK == config_protocol.type()) {
+    num_configurable_children -= 2;
+  } else if (CONFIG_MEM_FRAME_BASED == config_protocol.type()) {
+    num_configurable_children -= 1;
+  }
+
+  /* Evenly place each configurable child to each region */
+  size_t num_children_per_region = num_configurable_children / config_protocol.num_regions(); 
+  size_t region_child_counter = 0;
+  bool create_region = true;
+  ConfigRegionId curr_region = ConfigRegionId::INVALID();
+  for (size_t ichild = 0; ichild < module_manager.configurable_children(top_module).size(); ++ichild) {
+    if (true == create_region) {
+      curr_region = module_manager.add_config_region(top_module);
+    }
+
+    /* Add the child to a region */
+    module_manager.add_configurable_child_to_region(top_module,
+                                                    curr_region,
+                                                    module_manager.configurable_children(top_module)[ichild],
+                                                    module_manager.configurable_child_instances(top_module)[ichild],
+                                                    ichild);
+
+    /* See if the current region is full or not:
+     * For the last region, we will keep adding until we finish all the children 
+     */
+    region_child_counter++;
+    if (region_child_counter < num_children_per_region) {
+      create_region = false;
+    } else if (size_t(curr_region) < (size_t)config_protocol.num_regions() - 1) {
+      create_region = true;
+      region_child_counter = 0;
+    }
+  }
+
+  /* Ensure that the number of configurable regions created matches the definition */
+  VTR_ASSERT((size_t)config_protocol.num_regions() == module_manager.regions(top_module).size());
+}
+
 /********************************************************************
  * Organize the list of memory modules and instances
  * This function will record all the sub modules of the top-level module
@@ -273,7 +367,7 @@ void organize_top_module_tile_memory_modules(ModuleManager& module_manager,
 void organize_top_module_memory_modules(ModuleManager& module_manager, 
                                         const ModuleId& top_module,
                                         const CircuitLibrary& circuit_lib,
-                                        const e_config_protocol_type& sram_orgz_type,
+                                        const ConfigProtocol& config_protocol,
                                         const CircuitModelId& sram_model,
                                         const DeviceGrid& grids,
                                         const vtr::Matrix<size_t>& grid_instance_ids,
@@ -332,7 +426,7 @@ void organize_top_module_memory_modules(ModuleManager& module_manager,
     for (const vtr::Point<size_t>& io_coord : io_coords[io_side]) {
       /* Identify the GSB that surrounds the grid */
       organize_top_module_tile_memory_modules(module_manager, top_module, 
-                                              circuit_lib, sram_orgz_type, sram_model,
+                                              circuit_lib, config_protocol.type(), sram_model,
                                               grids, grid_instance_ids,
                                               device_rr_gsb, sb_instance_ids, cb_instance_ids,
                                               compact_routing_hierarchy,
@@ -362,12 +456,15 @@ void organize_top_module_memory_modules(ModuleManager& module_manager,
 
   for (const vtr::Point<size_t>& core_coord : core_coords) {
     organize_top_module_tile_memory_modules(module_manager, top_module,  
-                                            circuit_lib, sram_orgz_type, sram_model, 
+                                            circuit_lib, config_protocol.type(), sram_model, 
                                             grids, grid_instance_ids,
                                             device_rr_gsb, sb_instance_ids, cb_instance_ids,
                                             compact_routing_hierarchy,
                                             core_coord, NUM_SIDES);
   }
+
+  /* Split memory modules into different regions */
+  build_top_module_configurable_regions(module_manager, top_module, config_protocol);  
 }
 
 
@@ -375,13 +472,18 @@ void organize_top_module_memory_modules(ModuleManager& module_manager,
  * Shuffle the configurable children in a random sequence 
  *
  * TODO: May use a more customized shuffle mechanism
+ * TODO: Apply region-based shuffling
+ *       The shuffling will be applied to each separated regions 
+ *       Configurable children will not shuffled from a region
+ *       to another, instead they should stay in the same region
  *
  * Note: 
  *   - This function should NOT be called 
  *     before allocating any configurable child
  ********************************************************************/
 void shuffle_top_module_configurable_children(ModuleManager& module_manager, 
-                                              const ModuleId& top_module) {
+                                              const ModuleId& top_module,
+                                              const ConfigProtocol& config_protocol) {
   size_t num_keys = module_manager.configurable_children(top_module).size();
   std::vector<size_t> shuffled_keys;
   shuffled_keys.reserve(num_keys);
@@ -403,6 +505,10 @@ void shuffle_top_module_configurable_children(ModuleManager& module_manager,
                                           orig_configurable_children[shuffled_keys[ikey]],
                                           orig_configurable_child_instances[shuffled_keys[ikey]]);
   }
+
+  /* Reset configurable regions */
+  module_manager.clear_config_region(top_module);
+  build_top_module_configurable_regions(module_manager, top_module, config_protocol);  
 }
 
 /********************************************************************
@@ -421,56 +527,103 @@ int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager
   /* Ensure a clean start */
   module_manager.clear_configurable_children(top_module);
 
-  for (const FabricKeyId& key : fabric_key.keys()) {
-    /* Find if instance id is valid */
-    std::pair<ModuleId, size_t> instance_info(ModuleId::INVALID(), 0);
-    /* If we have an alias, we try to find a instance in this name */
-    if (!fabric_key.key_alias(key).empty()) {
-      /* If we have the key, we can quickly spot instance id.
-       * Otherwise, we have to exhaustively find the module id and instance id
-       */
-      if (!fabric_key.key_name(key).empty()) {
+  size_t curr_configurable_child_id = 0;
+
+  for (const FabricRegionId& region : fabric_key.regions()) {
+    /* Create a configurable region in the top module */
+    ConfigRegionId top_module_config_region = module_manager.add_config_region(top_module);
+    for (const FabricKeyId& key : fabric_key.region_keys(region)) {
+      /* Find if instance id is valid */
+      std::pair<ModuleId, size_t> instance_info(ModuleId::INVALID(), 0);
+      /* If we have an alias, we try to find a instance in this name */
+      if (!fabric_key.key_alias(key).empty()) {
+        /* If we have the key, we can quickly spot instance id.
+         * Otherwise, we have to exhaustively find the module id and instance id
+         */
+        if (!fabric_key.key_name(key).empty()) {
+          instance_info.first = module_manager.find_module(fabric_key.key_name(key));
+          instance_info.second = module_manager.instance_id(top_module, instance_info.first, fabric_key.key_alias(key));
+        } else {
+          instance_info = find_module_manager_instance_module_info(module_manager, top_module, fabric_key.key_alias(key)); 
+        }
+      } else { 
+        /* If we do not have an alias, we use the name and value to build the info deck */
         instance_info.first = module_manager.find_module(fabric_key.key_name(key));
-        instance_info.second = module_manager.instance_id(top_module, instance_info.first, fabric_key.key_alias(key));
-      } else {
-        instance_info = find_module_manager_instance_module_info(module_manager, top_module, fabric_key.key_alias(key)); 
+        instance_info.second = fabric_key.key_value(key);
       }
-    } else { 
-      /* If we do not have an alias, we use the name and value to build the info deck */
-      instance_info.first = module_manager.find_module(fabric_key.key_name(key));
-      instance_info.second = fabric_key.key_value(key);
-    }
 
-    if (false == module_manager.valid_module_id(instance_info.first)) {
-      if (!fabric_key.key_alias(key).empty()) {
-        VTR_LOG_ERROR("Invalid key alias '%s'!\n",
-                      fabric_key.key_alias(key).c_str()); 
-      } else {
-        VTR_LOG_ERROR("Invalid key name '%s'!\n",
-                      fabric_key.key_name(key).c_str()); 
+      if (false == module_manager.valid_module_id(instance_info.first)) {
+        if (!fabric_key.key_alias(key).empty()) {
+          VTR_LOG_ERROR("Invalid key alias '%s'!\n",
+                        fabric_key.key_alias(key).c_str()); 
+        } else {
+          VTR_LOG_ERROR("Invalid key name '%s'!\n",
+                        fabric_key.key_name(key).c_str()); 
+        }
+        return CMD_EXEC_FATAL_ERROR;                    
       }
-      return CMD_EXEC_FATAL_ERROR;                    
-    }
 
-    if (false == module_manager.valid_module_instance_id(top_module, instance_info.first, instance_info.second)) {
-      if (!fabric_key.key_alias(key).empty()) {
-        VTR_LOG_ERROR("Invalid key alias '%s'!\n",
-                      fabric_key.key_alias(key).c_str()); 
-      } else {
-        VTR_LOG_ERROR("Invalid key value '%ld'!\n",
-                      instance_info.second); 
+      if (false == module_manager.valid_module_instance_id(top_module, instance_info.first, instance_info.second)) {
+        if (!fabric_key.key_alias(key).empty()) {
+          VTR_LOG_ERROR("Invalid key alias '%s'!\n",
+                        fabric_key.key_alias(key).c_str()); 
+        } else {
+          VTR_LOG_ERROR("Invalid key value '%ld'!\n",
+                        instance_info.second); 
+        }
+        return CMD_EXEC_FATAL_ERROR;                    
       }
-      return CMD_EXEC_FATAL_ERROR;                    
-    }
 
-    /* Now we can add the child to configurable children of the top module */
-    module_manager.add_configurable_child(top_module,
-                                          instance_info.first,
-                                          instance_info.second);
+      /* Now we can add the child to configurable children of the top module */
+      module_manager.add_configurable_child(top_module,
+                                            instance_info.first,
+                                            instance_info.second);
+      module_manager.add_configurable_child_to_region(top_module,
+                                                      top_module_config_region,
+                                                      instance_info.first, 
+                                                      instance_info.second,
+                                                      curr_configurable_child_id);
+      curr_configurable_child_id++;
+    }
   }
 
   return CMD_EXEC_SUCCESS;
 } 
+
+/********************************************************************
+ * Generate a list of ports that are used for SRAM configuration 
+ * to the top-level module
+ * 1. Standalone SRAMs: 
+ *    use the suggested port_size 
+ * 2. Scan-chain Flip-flops:
+ *    IMPORTANT: the port size will be limited by the number of configurable regions
+ * 3. Memory decoders:
+ *    use the suggested port_size 
+ ********************************************************************/
+static 
+size_t generate_top_module_sram_port_size(const ConfigProtocol& config_protocol,
+                                          const size_t& num_config_bits) {
+  size_t sram_port_size = num_config_bits;
+
+  switch (config_protocol.type()) {
+  case CONFIG_MEM_STANDALONE: 
+    break;
+  case CONFIG_MEM_SCAN_CHAIN: 
+    /* CCFF head/tail are single-bit ports */
+    sram_port_size = config_protocol.num_regions();
+    break;
+  case CONFIG_MEM_MEMORY_BANK:
+    break;
+  case CONFIG_MEM_FRAME_BASED:
+    break;
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization!\n");
+    exit(1);
+  }
+
+  return sram_port_size;
+}
 
 /********************************************************************
  * Add a list of ports that are used for SRAM configuration to the FPGA 
@@ -499,13 +652,13 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
                                const ModuleId& module_id,
                                const CircuitLibrary& circuit_lib,
                                const CircuitModelId& sram_model,
-                               const e_config_protocol_type sram_orgz_type,
+                               const ConfigProtocol& config_protocol,
                                const size_t& num_config_bits) {
-  std::vector<std::string> sram_port_names = generate_sram_port_names(circuit_lib, sram_model, sram_orgz_type);
-  size_t sram_port_size = generate_sram_port_size(sram_orgz_type, num_config_bits); 
+  std::vector<std::string> sram_port_names = generate_sram_port_names(circuit_lib, sram_model, config_protocol.type());
+  size_t sram_port_size = generate_top_module_sram_port_size(config_protocol, num_config_bits); 
 
   /* Add ports to the module manager */
-  switch (sram_orgz_type) {
+  switch (config_protocol.type()) {
   case CONFIG_MEM_STANDALONE: { 
     for (const std::string& sram_port_name : sram_port_names) {
       /* Add generated ports to the ModuleManager */
@@ -821,6 +974,124 @@ void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manag
   module_manager.add_configurable_child(top_module, wl_decoder_module, 0);
 }
 
+/********************************************************************
+ * Connect all the memory modules under the parent module in a chain
+ * 
+ *  Region 0: 
+ *                   +--------+    +--------+            +--------+
+ *  ccff_head[0] --->| Memory |--->| Memory |--->... --->| Memory |----> ccff_tail[0]
+ *                   | Module |    | Module |            | Module |
+ *                   |   [0]  |    |   [1]  |            |  [N-1] |             
+ *                   +--------+    +--------+            +--------+
+ *
+ *  Region 1: 
+ *                   +--------+    +--------+            +--------+
+ *  ccff_head[1] --->| Memory |--->| Memory |--->... --->| Memory |----> ccff_tail[1]
+ *                   | Module |    | Module |            | Module |
+ *                   |   [0]  |    |   [1]  |            |  [N-1] |             
+ *                   +--------+    +--------+            +--------+
+ *
+ *  For the 1st memory module:
+ *    net source is the configuration chain head of the primitive module
+ *    net sink is the configuration chain head of the next memory module
+ *
+ *  For the rest of memory modules:
+ *    net source is the configuration chain tail of the previous memory module
+ *    net sink is the configuration chain head of the next memory module
+ *********************************************************************/
+static 
+void add_top_module_nets_cmos_memory_chain_config_bus(ModuleManager& module_manager,
+                                                      const ModuleId& parent_module,
+                                                      const ConfigProtocol& config_protocol) {
+  for (const ConfigRegionId& config_region : module_manager.regions(parent_module)) {
+    for (size_t mem_index = 0; mem_index < module_manager.region_configurable_children(parent_module, config_region).size(); ++mem_index) {
+      ModuleId net_src_module_id;
+      size_t net_src_instance_id;
+      ModulePortId net_src_port_id;
+      size_t net_src_pin_id;
+
+      ModuleId net_sink_module_id;
+      size_t net_sink_instance_id;
+      ModulePortId net_sink_port_id;
+      size_t net_sink_pin_id;
+
+      if (0 == mem_index) {
+        /* Find the port name of configuration chain head */
+        std::string src_port_name = generate_sram_port_name(config_protocol.type(), CIRCUIT_MODEL_PORT_INPUT);
+        net_src_module_id = parent_module; 
+        net_src_instance_id = 0;
+        net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+        net_src_pin_id = size_t(config_region);
+
+        /* Find the port name of next memory module */
+        std::string sink_port_name = generate_configuration_chain_head_name();
+        net_sink_module_id = module_manager.region_configurable_children(parent_module, config_region)[mem_index]; 
+        net_sink_instance_id = module_manager.region_configurable_child_instances(parent_module, config_region)[mem_index];
+        net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+        net_sink_pin_id = 0;
+      } else {
+        /* Find the port name of previous memory module */
+        std::string src_port_name = generate_configuration_chain_tail_name();
+        net_src_module_id = module_manager.region_configurable_children(parent_module, config_region)[mem_index - 1]; 
+        net_src_instance_id = module_manager.region_configurable_child_instances(parent_module, config_region)[mem_index - 1];
+        net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+        net_src_pin_id = 0;
+
+        /* Find the port name of next memory module */
+        std::string sink_port_name = generate_configuration_chain_head_name();
+        net_sink_module_id = module_manager.region_configurable_children(parent_module, config_region)[mem_index]; 
+        net_sink_instance_id = module_manager.region_configurable_child_instances(parent_module, config_region)[mem_index];
+        net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+        net_sink_pin_id = 0;
+      }
+
+      /* Get the pin id for source port */
+      BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
+      /* Get the pin id for sink port */
+      BasicPort net_sink_port = module_manager.module_port(net_sink_module_id, net_sink_port_id); 
+
+      VTR_ASSERT(net_src_pin_id < net_src_port.get_width());
+      VTR_ASSERT(net_sink_pin_id < net_sink_port.get_width());
+
+      /* Create a net and add source and sink to it */
+      ModuleNetId net = create_module_source_pin_net(module_manager, parent_module, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[net_src_pin_id]);
+      /* Add net sink */
+      module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[net_sink_pin_id]);
+    }
+
+    /* For the last memory module:
+     *    net source is the configuration chain tail of the previous memory module
+     *    net sink is the configuration chain tail of the primitive module
+     */
+    /* Find the port name of previous memory module */
+    std::string src_port_name = generate_configuration_chain_tail_name();
+    ModuleId net_src_module_id = module_manager.region_configurable_children(parent_module, config_region).back(); 
+    size_t net_src_instance_id = module_manager.region_configurable_child_instances(parent_module, config_region).back();
+    ModulePortId net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+    size_t net_src_pin_id = 0;
+
+    /* Find the port name of next memory module */
+    std::string sink_port_name = generate_sram_port_name(config_protocol.type(), CIRCUIT_MODEL_PORT_OUTPUT);
+    ModuleId net_sink_module_id = parent_module; 
+    size_t net_sink_instance_id = 0;
+    ModulePortId net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+    size_t net_sink_pin_id = size_t(config_region);
+
+    /* Get the pin id for source port */
+    BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
+    /* Get the pin id for sink port */
+    BasicPort net_sink_port = module_manager.module_port(net_sink_module_id, net_sink_port_id); 
+
+    VTR_ASSERT(net_src_pin_id < net_src_port.get_width());
+    VTR_ASSERT(net_sink_pin_id < net_sink_port.get_width());
+    
+    /* Create a net and add source and sink to it */
+    ModuleNetId net = create_module_source_pin_net(module_manager, parent_module, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[net_src_pin_id]);
+    /* Add net sink */
+    module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[net_sink_pin_id]);
+  }
+}
+
 /*********************************************************************
  * Add the port-to-port connection between all the memory modules 
  * and their parent module
@@ -869,17 +1140,17 @@ static
 void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
                                                 DecoderLibrary& decoder_lib,
                                                 const ModuleId& parent_module,
-                                                const e_config_protocol_type& sram_orgz_type,
+                                                const ConfigProtocol& config_protocol, 
                                                 const size_t& num_config_bits) {
-  switch (sram_orgz_type) {
+  switch (config_protocol.type()) {
   case CONFIG_MEM_STANDALONE:
     add_module_nets_cmos_flatten_memory_config_bus(module_manager, parent_module,
-                                                   sram_orgz_type, CIRCUIT_MODEL_PORT_BL);
+                                                   config_protocol.type(), CIRCUIT_MODEL_PORT_BL);
     add_module_nets_cmos_flatten_memory_config_bus(module_manager, parent_module,
-                                                   sram_orgz_type, CIRCUIT_MODEL_PORT_WL);
+                                                   config_protocol.type(), CIRCUIT_MODEL_PORT_WL);
     break;
   case CONFIG_MEM_SCAN_CHAIN: {
-    add_module_nets_cmos_memory_chain_config_bus(module_manager, parent_module, CONFIG_MEM_SCAN_CHAIN);
+    add_top_module_nets_cmos_memory_chain_config_bus(module_manager, parent_module, config_protocol);
     break;
   }
   case CONFIG_MEM_MEMORY_BANK:
@@ -930,7 +1201,7 @@ void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
 void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            DecoderLibrary& decoder_lib,
                                            const ModuleId& parent_module,
-                                           const e_config_protocol_type& sram_orgz_type, 
+                                           const ConfigProtocol& config_protocol, 
                                            const e_circuit_model_design_tech& mem_tech,
                                            const size_t& num_config_bits) {
 
@@ -940,7 +1211,7 @@ void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
   case CIRCUIT_MODEL_DESIGN_CMOS:
     add_top_module_nets_cmos_memory_config_bus(module_manager, decoder_lib,
                                                parent_module, 
-                                               sram_orgz_type,
+                                               config_protocol,
                                                num_config_bits);
     break;
   case CIRCUIT_MODEL_DESIGN_RRAM:

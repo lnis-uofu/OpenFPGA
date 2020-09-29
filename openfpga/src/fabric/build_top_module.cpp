@@ -330,7 +330,7 @@ int build_top_module(ModuleManager& module_manager,
                      const DeviceRRGSB& device_rr_gsb,
                      const TileDirect& tile_direct,
                      const ArchDirect& arch_direct,
-                     const e_config_protocol_type& sram_orgz_type,
+                     const ConfigProtocol& config_protocol,
                      const CircuitModelId& sram_model,
                      const bool& frame_view,
                      const bool& compact_routing_hierarchy,
@@ -396,7 +396,7 @@ int build_top_module(ModuleManager& module_manager,
    */
   if (true == fabric_key.empty()) {
     organize_top_module_memory_modules(module_manager, top_module, 
-                                       circuit_lib, sram_orgz_type, sram_model,
+                                       circuit_lib, config_protocol, sram_model,
                                        grids, grid_instance_ids, 
                                        device_rr_gsb, sb_instance_ids, cb_instance_ids,
                                        compact_routing_hierarchy);
@@ -411,7 +411,7 @@ int build_top_module(ModuleManager& module_manager,
 
   /* Shuffle the configurable children in a random sequence */
   if (true == generate_random_fabric_key) {
-    shuffle_top_module_configurable_children(module_manager, top_module);
+    shuffle_top_module_configurable_children(module_manager, top_module, config_protocol);
   }
 
   /* Add shared SRAM ports from the sub-modules under this Verilog module
@@ -427,11 +427,11 @@ int build_top_module(ModuleManager& module_manager,
    * This is a much easier job after adding sub modules (instances), 
    * we just need to find all the I/O ports from the child modules and build a list of it
    */
-  size_t module_num_config_bits = find_module_num_config_bits_from_child_modules(module_manager, top_module, circuit_lib, sram_model, sram_orgz_type); 
+  size_t module_num_config_bits = find_module_num_config_bits_from_child_modules(module_manager, top_module, circuit_lib, sram_model, config_protocol.type()); 
   if (0 < module_num_config_bits) {
     add_top_module_sram_ports(module_manager, top_module,
                               circuit_lib, sram_model,
-                              sram_orgz_type, module_num_config_bits);
+                              config_protocol, module_num_config_bits);
   }
 
   /* Add module nets to connect memory cells inside
@@ -440,7 +440,7 @@ int build_top_module(ModuleManager& module_manager,
   if (0 < module_manager.configurable_children(top_module).size()) {
     add_top_module_nets_memory_config_bus(module_manager, decoder_lib,
                                           top_module, 
-                                          sram_orgz_type, circuit_lib.design_tech_type(sram_model),
+                                          config_protocol, circuit_lib.design_tech_type(sram_model),
                                           module_num_config_bits);
   }
 

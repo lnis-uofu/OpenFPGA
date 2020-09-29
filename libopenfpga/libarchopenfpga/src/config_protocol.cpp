@@ -28,6 +28,10 @@ CircuitModelId ConfigProtocol::memory_model() const {
   return memory_model_;
 }
 
+int ConfigProtocol::num_regions() const {
+  return num_regions_;
+}
+
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
@@ -41,4 +45,8 @@ void ConfigProtocol::set_memory_model_name(const std::string& memory_model_name)
 
 void ConfigProtocol::set_memory_model(const CircuitModelId& memory_model) {
   memory_model_ = memory_model;
+}
+
+void ConfigProtocol::set_num_regions(const int& num_regions) {
+  num_regions_ = num_regions;
 }

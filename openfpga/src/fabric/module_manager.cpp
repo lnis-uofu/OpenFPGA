@@ -5,6 +5,7 @@
 #include <numeric>
 #include <algorithm>
 #include "vtr_assert.h"
+#include "vtr_log.h"
 
 #include "circuit_library.h"
 #include "module_manager.h"
@@ -95,6 +96,43 @@ ModuleManager::module_net_sink_range ModuleManager::module_net_sinks(const Modul
   /* Validate the module_id */
   VTR_ASSERT(valid_module_net_id(module, net));
   return vtr::make_range(net_sink_ids_[module][net].begin(), net_sink_ids_[module][net].end());
+}
+
+ModuleManager::region_range ModuleManager::regions(const ModuleId& module) const {
+  VTR_ASSERT(valid_module_id(module));
+  return vtr::make_range(config_region_ids_[module].begin(), config_region_ids_[module].end());
+}
+
+std::vector<ModuleId> ModuleManager::region_configurable_children(const ModuleId& parent_module,
+                                                                  const ConfigRegionId& region) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(parent_module));
+  VTR_ASSERT(valid_region_id(parent_module, region));
+
+  std::vector<ModuleId> region_config_children;
+  region_config_children.reserve(config_region_children_[parent_module][region].size());
+
+  for (const size_t& child_id : config_region_children_[parent_module][region]) {
+    region_config_children.push_back(configurable_children_[parent_module][child_id]);
+  } 
+
+  return region_config_children;
+}
+
+std::vector<size_t> ModuleManager::region_configurable_child_instances(const ModuleId& parent_module,
+                                                                       const ConfigRegionId& region) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(parent_module));
+  VTR_ASSERT(valid_region_id(parent_module, region));
+
+  std::vector<size_t> region_config_child_instances;
+  region_config_child_instances.reserve(config_region_children_[parent_module][region].size());
+
+  for (const size_t& child_id : config_region_children_[parent_module][region]) {
+    region_config_child_instances.push_back(configurable_child_instances_[parent_module][child_id]);
+  } 
+
+  return region_config_child_instances;
 }
 
 /******************************************************************************
@@ -482,6 +520,10 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   child_instance_names_.emplace_back();
   configurable_children_.emplace_back();
   configurable_child_instances_.emplace_back();
+  configurable_child_regions_.emplace_back();
+
+  config_region_ids_.emplace_back(); 
+  config_region_children_.emplace_back(); 
 
   port_ids_.emplace_back();
   ports_.emplace_back();
@@ -661,6 +703,7 @@ void ModuleManager::add_configurable_child(const ModuleId& parent_module,
 
   configurable_children_[parent_module].push_back(child_module);
   configurable_child_instances_[parent_module].push_back(child_instance);
+  configurable_child_regions_[parent_module].push_back(ConfigRegionId::INVALID());
 }
 
 void ModuleManager::reserve_configurable_child(const ModuleId& parent_module,
@@ -673,6 +716,52 @@ void ModuleManager::reserve_configurable_child(const ModuleId& parent_module,
   if (num_children > configurable_child_instances_[parent_module].size()) {
     configurable_child_instances_[parent_module].reserve(num_children);
   }
+  if (num_children > configurable_child_instances_[parent_module].size()) {
+    configurable_child_regions_[parent_module].reserve(num_children);
+  }
+}
+
+ConfigRegionId ModuleManager::add_config_region(const ModuleId& module) {
+  /* Validate the module id */
+  VTR_ASSERT ( valid_module_id(module) );
+
+  /* Create an new id */
+  ConfigRegionId config_region_id = ConfigRegionId(config_region_ids_[module].size());
+  config_region_ids_[module].push_back(config_region_id);
+  
+  config_region_children_[module].emplace_back();
+
+  return config_region_id;
+}
+
+void ModuleManager::add_configurable_child_to_region(const ModuleId& parent_module,
+                                                     const ConfigRegionId& config_region,
+                                                     const ModuleId& child_module,
+                                                     const size_t& child_instance,
+                                                     const size_t& config_child_id) {
+  /* Validate the module id */
+  VTR_ASSERT ( valid_module_id(parent_module) );
+  VTR_ASSERT ( valid_module_id(child_module) );
+  VTR_ASSERT ( valid_region_id(parent_module, config_region) );
+
+  /* Ensure that the child module is in the configurable children list */
+  VTR_ASSERT(child_module == configurable_children(parent_module)[config_child_id]);
+  VTR_ASSERT(child_instance == configurable_child_instances(parent_module)[config_child_id]);
+
+  /* If the child is already in another region, error out */
+  if ( (true == valid_region_id(parent_module, configurable_child_regions_[parent_module][config_child_id]))
+    && (config_region != configurable_child_regions_[parent_module][config_child_id]) ) {
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Try to add a configurable child '%s[%lu]' to region '%lu' which is already added to another region '%lu'!\n",
+                   module_name(child_module).c_str(),
+                   child_instance,
+                   size_t(config_region),
+                   size_t(configurable_child_regions_[parent_module][config_child_id]));
+    exit(1);
+  }
+
+  /* Passed all the checks, add the child to the region */
+  config_region_children_[parent_module][config_region].push_back(config_child_id);
 }
 
 void ModuleManager::reserve_module_nets(const ModuleId& module,
@@ -869,6 +958,14 @@ void ModuleManager::clear_configurable_children(const ModuleId& parent_module) {
 
   configurable_children_[parent_module].clear();
   configurable_child_instances_[parent_module].clear();
+  configurable_child_regions_[parent_module].clear();
+}
+
+void ModuleManager::clear_config_region(const ModuleId& parent_module) {
+  VTR_ASSERT(valid_module_id(parent_module));
+
+  config_region_ids_[parent_module].clear();
+  config_region_children_[parent_module].clear();
 }
 
 /******************************************************************************
@@ -900,6 +997,14 @@ bool ModuleManager::valid_module_instance_id(const ModuleId& parent_module,
     return false;
   }
   return ( instance_id < num_instance(parent_module, child_module) ); 
+}
+
+bool ModuleManager::valid_region_id(const ModuleId& module,
+                                    const ConfigRegionId& region) const {
+  if (false == valid_module_id(module)) {
+    return false;
+  }
+  return ( size_t(region) < config_region_ids_[module].size() ) && ( region == config_region_ids_[module][region] ); 
 }
 
 void ModuleManager::invalidate_name2id_map() {

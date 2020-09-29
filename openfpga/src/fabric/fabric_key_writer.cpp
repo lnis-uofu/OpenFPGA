@@ -29,7 +29,6 @@ namespace openfpga {
  ***************************************************************************************/
 int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
                                  const std::string& fname,
-                                 const e_config_protocol_type& config_protocol_type,
                                  const bool& verbose) {
   std::string timer_message = std::string("Write fabric key to XML file '") + fname + std::string("'");
 
@@ -58,31 +57,36 @@ int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
   FabricKey fabric_key;
   size_t num_keys = module_manager.configurable_children(top_module).size(); 
 
-  /* Exclude configuration-related modules in the keys */
-  if (CONFIG_MEM_MEMORY_BANK == config_protocol_type) {
-    num_keys -= 2;
-  } else if (CONFIG_MEM_FRAME_BASED == config_protocol_type) {
-    num_keys -= 1;
-  }
-
   fabric_key.reserve_keys(num_keys);
 
-  for (size_t ichild = 0; ichild < num_keys; ++ichild) {
-    ModuleId child_module = module_manager.configurable_children(top_module)[ichild];
-    size_t child_instance = module_manager.configurable_child_instances(top_module)[ichild];
+  size_t num_regions = module_manager.regions(top_module).size();
+  fabric_key.reserve_regions(num_regions);
 
-    FabricKeyId key = fabric_key.create_key();
-    fabric_key.set_key_name(key, module_manager.module_name(child_module));
-    fabric_key.set_key_value(key, child_instance);
+  /* Create regions for the keys and load keys by region */
+  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+    FabricRegionId fabric_region = fabric_key.create_region();
+    fabric_key.reserve_region_keys(fabric_region, module_manager.region_configurable_children(top_module, config_region).size());
 
-    if (false == module_manager.instance_name(top_module, child_module, child_instance).empty()) {
-      fabric_key.set_key_alias(key, module_manager.instance_name(top_module, child_module, child_instance));
+    for (size_t ichild = 0; ichild < module_manager.region_configurable_children(top_module, config_region).size(); ++ichild) {
+      ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[ichild];
+      size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[ichild];
+
+      FabricKeyId key = fabric_key.create_key();
+      fabric_key.set_key_name(key, module_manager.module_name(child_module));
+      fabric_key.set_key_value(key, child_instance);
+
+      if (false == module_manager.instance_name(top_module, child_module, child_instance).empty()) {
+        fabric_key.set_key_alias(key, module_manager.instance_name(top_module, child_module, child_instance));
+      }
+
+      /* Add keys to the region */
+      fabric_key.add_key_to_region(fabric_region, key);
     }
   }
 
   VTR_LOGV(verbose,
-           "Created %lu keys for the top module %s.\n",
-           num_keys, top_module_name.c_str());
+           "Created %lu regions and %lu keys for the top module %s.\n",
+           num_regions, num_keys, top_module_name.c_str());
 
   /* Call the XML writer for fabric key */
   int err_code = write_xml_fabric_key(fname.c_str(), fabric_key);

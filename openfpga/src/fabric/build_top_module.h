@@ -14,6 +14,7 @@
 #include "decoder_library.h"
 #include "tile_direct.h"
 #include "arch_direct.h"
+#include "config_protocol.h"
 #include "module_manager.h"
 #include "io_location_map.h"
 #include "fabric_key.h"
@@ -34,7 +35,7 @@ int build_top_module(ModuleManager& module_manager,
                      const DeviceRRGSB& device_rr_gsb,
                      const TileDirect& tile_direct,
                      const ArchDirect& arch_direct,
-                     const e_config_protocol_type& sram_orgz_type,
+                     const ConfigProtocol& config_protocol,
                      const CircuitModelId& sram_model,
                      const bool& frame_view,
                      const bool& compact_routing_hierarchy,

@@ -18,6 +18,9 @@ FabricBitstream::FabricBitstream() {
   invalid_bit_ids_.clear();
   address_length_ = 0;
   wl_address_length_ = 0;
+
+  num_regions_ = 0;
+  invalid_region_ids_.clear();
 }
 
 /**************************************************
@@ -31,6 +34,23 @@ size_t FabricBitstream::num_bits() const {
 FabricBitstream::fabric_bit_range FabricBitstream::bits() const {
   return vtr::make_range(fabric_bit_iterator(FabricBitId(0), invalid_bit_ids_),
                          fabric_bit_iterator(FabricBitId(num_bits_), invalid_bit_ids_));
+}
+
+size_t FabricBitstream::num_regions() const {
+  return num_regions_;
+}
+
+/* Find all the configuration bits */
+FabricBitstream::fabric_bit_region_range FabricBitstream::regions() const {
+  return vtr::make_range(fabric_bit_region_iterator(FabricBitRegionId(0), invalid_region_ids_),
+                         fabric_bit_region_iterator(FabricBitRegionId(num_regions_), invalid_region_ids_));
+}
+
+std::vector<FabricBitId> FabricBitstream::region_bits(const FabricBitRegionId& region_id) const {
+  /* Ensure a valid id */
+  VTR_ASSERT(true == valid_region_id(region_id));
+
+  return region_bit_ids_[region_id];
 }
 
 /******************************************************************************
@@ -134,19 +154,6 @@ void FabricBitstream::set_bit_din(const FabricBitId& bit_id,
   bit_dins_[bit_id] = din;
 }
 
-void FabricBitstream::reverse() {
-  std::reverse(config_bit_ids_.begin(), config_bit_ids_.end());
-
-  if (true == use_address_) {
-    std::reverse(bit_addresses_.begin(), bit_addresses_.end());
-    std::reverse(bit_dins_.begin(), bit_dins_.end());
-
-    if (true == use_wl_address_) {
-      std::reverse(bit_wl_addresses_.begin(), bit_wl_addresses_.end());
-    }
-  }
-}
-
 void FabricBitstream::set_use_address(const bool& enable) {
   /* Add a lock, only can be modified when num bits are zero*/
   if (0 == num_bits_) {
@@ -177,11 +184,55 @@ void FabricBitstream::set_wl_address_length(const size_t& length) {
   }
 }
 
+void FabricBitstream::reserve_regions(const size_t& num_regions) {
+  region_bit_ids_.reserve(num_regions);
+}
+
+FabricBitRegionId FabricBitstream::add_region() {
+  FabricBitRegionId region = FabricBitRegionId(num_regions_);
+  /* Add a new bit, and allocate associated data structures */
+  num_regions_++;
+  region_bit_ids_.emplace_back();
+
+  return region; 
+}
+
+void FabricBitstream::add_bit_to_region(const FabricBitRegionId& region_id,
+                                        const FabricBitId& bit_id) {
+  VTR_ASSERT(true == valid_region_id(region_id));
+  VTR_ASSERT(true == valid_bit_id(bit_id));
+ 
+  region_bit_ids_[region_id].push_back(bit_id); 
+}
+
+void FabricBitstream::reverse() {
+  std::reverse(config_bit_ids_.begin(), config_bit_ids_.end());
+
+  if (true == use_address_) {
+    std::reverse(bit_addresses_.begin(), bit_addresses_.end());
+    std::reverse(bit_dins_.begin(), bit_dins_.end());
+
+    if (true == use_wl_address_) {
+      std::reverse(bit_wl_addresses_.begin(), bit_wl_addresses_.end());
+    }
+  }
+}
+
+void FabricBitstream::reverse_region_bits(const FabricBitRegionId& region_id) {
+  VTR_ASSERT(true == valid_region_id(region_id));
+
+  std::reverse(region_bit_ids_[region_id].begin(), region_bit_ids_[region_id].end());
+}
+
 /******************************************************************************
  * Public Validators
  ******************************************************************************/
-char FabricBitstream::valid_bit_id(const FabricBitId& bit_id) const {
+bool FabricBitstream::valid_bit_id(const FabricBitId& bit_id) const {
   return (size_t(bit_id) < num_bits_);
+}
+
+bool FabricBitstream::valid_region_id(const FabricBitRegionId& region_id) const {
+  return (size_t(region_id) < num_regions_);
 }
 
 } /* end namespace openfpga */

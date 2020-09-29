@@ -13,8 +13,10 @@ namespace openfpga {
 
 /* Strong Ids for BitstreamContext */
 struct fabric_bit_id_tag;
+struct fabric_bit_region_id_tag;
 
 typedef vtr::StrongId<fabric_bit_id_tag> FabricBitId;
+typedef vtr::StrongId<fabric_bit_region_id_tag> FabricBitRegionId;
 
 class FabricBitstream;
 

@@ -1,7 +1,9 @@
 <fabric_key>
-  <key id="0" name="sb" value="0"/>
-  <key id="2" name="cb" value="10"/>
-  <key id="1" name="sb" value="7"/>
-  <key id="3" name="clb" value="53"/>
-  <key id="4" name="bram" value="32"/>
+  <region id="0">
+    <key id="0" name="sb" value="0"/>
+    <key id="2" name="cb" value="10"/>
+    <key id="1" name="sb" value="7"/>
+    <key id="3" name="clb" value="53"/>
+    <key id="4" name="bram" value="32"/>
+  </region>
 </fabric_key>
