@@ -6,7 +6,7 @@
 
    compile
 
-   eda_flow
+   tools
 
    design_flow/index
 
