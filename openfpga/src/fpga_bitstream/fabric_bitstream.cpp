@@ -50,7 +50,7 @@ std::vector<FabricBitId> FabricBitstream::region_bits(const FabricBitRegionId& r
   /* Ensure a valid id */
   VTR_ASSERT(true == valid_region_id(region_id));
 
-  return region_bits_[region_id];
+  return region_bit_ids_[region_id];
 }
 
 /******************************************************************************
@@ -185,7 +185,24 @@ void FabricBitstream::set_wl_address_length(const size_t& length) {
 }
 
 void FabricBitstream::reserve_regions(const size_t& num_regions) {
-  region_bits_.reserve(num_regions);
+  region_bit_ids_.reserve(num_regions);
+}
+
+FabricBitRegionId FabricBitstream::add_region() {
+  FabricBitRegionId region = FabricBitRegionId(num_regions_);
+  /* Add a new bit, and allocate associated data structures */
+  num_regions_++;
+  region_bit_ids_.emplace_back();
+
+  return region; 
+}
+
+void FabricBitstream::add_bit_to_region(const FabricBitRegionId& region_id,
+                                        const FabricBitId& bit_id) {
+  VTR_ASSERT(true == valid_region_id(region_id));
+  VTR_ASSERT(true == valid_bit_id(bit_id));
+ 
+  region_bit_ids_[region_id].push_back(bit_id); 
 }
 
 void FabricBitstream::reverse() {
@@ -204,7 +221,7 @@ void FabricBitstream::reverse() {
 void FabricBitstream::reverse_region_bits(const FabricBitRegionId& region_id) {
   VTR_ASSERT(true == valid_region_id(region_id));
 
-  std::reverse(region_bits_[region_id].begin(), region_bits_[region_id].end());
+  std::reverse(region_bit_ids_[region_id].begin(), region_bit_ids_[region_id].end());
 }
 
 /******************************************************************************

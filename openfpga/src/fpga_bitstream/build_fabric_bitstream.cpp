@@ -38,29 +38,58 @@ static
 void rec_build_module_fabric_dependent_chain_bitstream(const BitstreamManager& bitstream_manager,
                                                        const ConfigBlockId& parent_block,
                                                        const ModuleManager& module_manager,
+                                                       const ModuleId& top_module,
                                                        const ModuleId& parent_module,
-                                                       FabricBitstream& fabric_bitstream) {
+                                                       const ConfigRegionId& config_region,
+                                                       FabricBitstream& fabric_bitstream,
+                                                       const FabricBitRegionId& fabric_bitstream_region) {
 
   /* Depth-first search: if we have any children in the parent_block, 
    * we dive to the next level first! 
    */
   if (0 < bitstream_manager.block_children(parent_block).size()) {
-    for (size_t child_id = 0; child_id < module_manager.configurable_children(parent_module).size(); ++child_id) {
-      ModuleId child_module = module_manager.configurable_children(parent_module)[child_id]; 
-      size_t child_instance = module_manager.configurable_child_instances(parent_module)[child_id]; 
-      /* Get the instance name and ensure it is not empty */
-      std::string instance_name = module_manager.instance_name(parent_module, child_module, child_instance);
-       
-      /* Find the child block that matches the instance name! */ 
-      ConfigBlockId child_block = bitstream_manager.find_child_block(parent_block, instance_name); 
-      /* We must have one valid block id! */
-      if (true != bitstream_manager.valid_block_id(child_block))
-      VTR_ASSERT(true == bitstream_manager.valid_block_id(child_block));
+    if (parent_module == top_module) {
+      for (size_t child_id = 0; child_id < module_manager.region_configurable_children(parent_module, config_region).size(); ++child_id) {
+        ModuleId child_module = module_manager.region_configurable_children(parent_module, config_region)[child_id]; 
+        size_t child_instance = module_manager.region_configurable_child_instances(parent_module, config_region)[child_id]; 
+        /* Get the instance name and ensure it is not empty */
+        std::string instance_name = module_manager.instance_name(parent_module, child_module, child_instance);
+         
+        /* Find the child block that matches the instance name! */ 
+        ConfigBlockId child_block = bitstream_manager.find_child_block(parent_block, instance_name); 
+        /* We must have one valid block id! */
+        if (true != bitstream_manager.valid_block_id(child_block))
+        VTR_ASSERT(true == bitstream_manager.valid_block_id(child_block));
 
-      /* Go recursively */
-      rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, child_block,
-                                                        module_manager, child_module,
-                                                        fabric_bitstream);
+        /* Go recursively */
+        rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, child_block,
+                                                          module_manager, top_module,
+                                                          child_module,
+                                                          config_region,
+                                                          fabric_bitstream,
+                                                          fabric_bitstream_region);
+      }
+    } else { 
+      for (size_t child_id = 0; child_id < module_manager.configurable_children(parent_module).size(); ++child_id) {
+        ModuleId child_module = module_manager.configurable_children(parent_module)[child_id]; 
+        size_t child_instance = module_manager.configurable_child_instances(parent_module)[child_id]; 
+        /* Get the instance name and ensure it is not empty */
+        std::string instance_name = module_manager.instance_name(parent_module, child_module, child_instance);
+         
+        /* Find the child block that matches the instance name! */ 
+        ConfigBlockId child_block = bitstream_manager.find_child_block(parent_block, instance_name); 
+        /* We must have one valid block id! */
+        if (true != bitstream_manager.valid_block_id(child_block))
+        VTR_ASSERT(true == bitstream_manager.valid_block_id(child_block));
+
+        /* Go recursively */
+        rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, child_block,
+                                                          module_manager, top_module,
+                                                          child_module,
+                                                          config_region,
+                                                          fabric_bitstream,
+                                                          fabric_bitstream_region);
+      }
     }
     /* Ensure that there should be no configuration bits in the parent block */
     VTR_ASSERT(0 == bitstream_manager.block_bits(parent_block).size());
@@ -71,7 +100,8 @@ void rec_build_module_fabric_dependent_chain_bitstream(const BitstreamManager& b
    * And then, we can return
    */
   for (const ConfigBitId& config_bit : bitstream_manager.block_bits(parent_block)) {
-    fabric_bitstream.add_bit(config_bit);
+    FabricBitId fabric_bit = fabric_bitstream.add_bit(config_bit);
+    fabric_bitstream.add_bit_to_region(fabric_bitstream_region, fabric_bit);
   }
 }
 
@@ -382,19 +412,32 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
     /* Reserve bits before build-up */
     fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
 
-    rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, top_block,
-                                                      module_manager, top_module, 
-                                                      fabric_bitstream);
+    for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+      FabricBitRegionId fabric_bitstream_region = fabric_bitstream.add_region();
+      rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, top_block,
+                                                        module_manager, top_module, 
+                                                        top_module,
+                                                        config_region,
+                                                        fabric_bitstream,
+                                                        fabric_bitstream_region);
+    }
+
     break;
   }
   case CONFIG_MEM_SCAN_CHAIN: { 
     /* Reserve bits before build-up */
     fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
 
-    rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, top_block,
-                                                      module_manager, top_module, 
-                                                      fabric_bitstream);
-    fabric_bitstream.reverse();
+    for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+      FabricBitRegionId fabric_bitstream_region = fabric_bitstream.add_region();
+      rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, top_block,
+                                                        module_manager, top_module, 
+                                                        top_module,
+                                                        config_region,
+                                                        fabric_bitstream,
+                                                        fabric_bitstream_region);
+      fabric_bitstream.reverse_region_bits(fabric_bitstream_region);
+    }
     break;
   }
   case CONFIG_MEM_MEMORY_BANK: { 

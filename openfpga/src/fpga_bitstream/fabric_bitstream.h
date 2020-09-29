@@ -149,6 +149,12 @@ class FabricBitstream {
     /* Reserve regions */
     void reserve_regions(const size_t& num_regions);
 
+    /* Add a new configuration region */
+    FabricBitRegionId add_region();
+
+    void add_bit_to_region(const FabricBitRegionId& region_id,
+                           const FabricBitId& bit_id);
+
     /* Reserve bits by region */
     void reverse_region_bits(const FabricBitRegionId& region_id);
 
@@ -182,7 +188,7 @@ class FabricBitstream {
     /* Unique id of a region in the Bitstream */
     size_t num_regions_; 
     std::unordered_set<FabricBitRegionId> invalid_region_ids_;
-    vtr::vector<FabricBitRegionId, std::vector<FabricBitId>> region_bits_; 
+    vtr::vector<FabricBitRegionId, std::vector<FabricBitId>> region_bit_ids_; 
 
     /* Unique id of a bit in the Bitstream */
     size_t num_bits_; 
