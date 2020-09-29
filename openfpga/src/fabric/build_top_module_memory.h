@@ -16,6 +16,7 @@
 #include "device_grid.h"
 #include "device_rr_gsb.h"
 #include "fabric_key.h"
+#include "config_protocol.h"
 
 /********************************************************************
  * Function declaration
@@ -48,13 +49,13 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
                                const ModuleId& module_id,
                                const CircuitLibrary& circuit_lib,
                                const CircuitModelId& sram_model,
-                               const e_config_protocol_type sram_orgz_type,
+                               const ConfigProtocol& config_protocol,
                                const size_t& num_config_bits);
 
 void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            DecoderLibrary& decoder_lib,
                                            const ModuleId& parent_module,
-                                           const e_config_protocol_type& sram_orgz_type, 
+                                           const ConfigProtocol& config_protocol, 
                                            const e_circuit_model_design_tech& mem_tech,
                                            const size_t& num_config_bits);
 

@@ -431,7 +431,7 @@ int build_top_module(ModuleManager& module_manager,
   if (0 < module_num_config_bits) {
     add_top_module_sram_ports(module_manager, top_module,
                               circuit_lib, sram_model,
-                              config_protocol.type(), module_num_config_bits);
+                              config_protocol, module_num_config_bits);
   }
 
   /* Add module nets to connect memory cells inside
@@ -440,7 +440,7 @@ int build_top_module(ModuleManager& module_manager,
   if (0 < module_manager.configurable_children(top_module).size()) {
     add_top_module_nets_memory_config_bus(module_manager, decoder_lib,
                                           top_module, 
-                                          config_protocol.type(), circuit_lib.design_tech_type(sram_model),
+                                          config_protocol, circuit_lib.design_tech_type(sram_model),
                                           module_num_config_bits);
   }
 

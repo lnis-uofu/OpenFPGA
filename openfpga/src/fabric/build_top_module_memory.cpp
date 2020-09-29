@@ -580,6 +580,41 @@ int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager
 } 
 
 /********************************************************************
+ * Generate a list of ports that are used for SRAM configuration 
+ * to the top-level module
+ * 1. Standalone SRAMs: 
+ *    use the suggested port_size 
+ * 2. Scan-chain Flip-flops:
+ *    IMPORTANT: the port size will be limited by the number of configurable regions
+ * 3. Memory decoders:
+ *    use the suggested port_size 
+ ********************************************************************/
+static 
+size_t generate_top_module_sram_port_size(const ConfigProtocol& config_protocol,
+                                          const size_t& num_config_bits) {
+  size_t sram_port_size = num_config_bits;
+
+  switch (config_protocol.type()) {
+  case CONFIG_MEM_STANDALONE: 
+    break;
+  case CONFIG_MEM_SCAN_CHAIN: 
+    /* CCFF head/tail are single-bit ports */
+    sram_port_size = config_protocol.num_regions();
+    break;
+  case CONFIG_MEM_MEMORY_BANK:
+    break;
+  case CONFIG_MEM_FRAME_BASED:
+    break;
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization!\n");
+    exit(1);
+  }
+
+  return sram_port_size;
+}
+
+/********************************************************************
  * Add a list of ports that are used for SRAM configuration to the FPGA 
  * top-level module
  * The type and names of added ports strongly depend on the 
@@ -606,13 +641,13 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
                                const ModuleId& module_id,
                                const CircuitLibrary& circuit_lib,
                                const CircuitModelId& sram_model,
-                               const e_config_protocol_type sram_orgz_type,
+                               const ConfigProtocol& config_protocol,
                                const size_t& num_config_bits) {
-  std::vector<std::string> sram_port_names = generate_sram_port_names(circuit_lib, sram_model, sram_orgz_type);
-  size_t sram_port_size = generate_sram_port_size(sram_orgz_type, num_config_bits); 
+  std::vector<std::string> sram_port_names = generate_sram_port_names(circuit_lib, sram_model, config_protocol.type());
+  size_t sram_port_size = generate_top_module_sram_port_size(config_protocol, num_config_bits); 
 
   /* Add ports to the module manager */
-  switch (sram_orgz_type) {
+  switch (config_protocol.type()) {
   case CONFIG_MEM_STANDALONE: { 
     for (const std::string& sram_port_name : sram_port_names) {
       /* Add generated ports to the ModuleManager */
@@ -928,6 +963,124 @@ void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manag
   module_manager.add_configurable_child(top_module, wl_decoder_module, 0);
 }
 
+/********************************************************************
+ * Connect all the memory modules under the parent module in a chain
+ * 
+ *  Region 0: 
+ *                   +--------+    +--------+            +--------+
+ *  ccff_head[0] --->| Memory |--->| Memory |--->... --->| Memory |----> ccff_tail[0]
+ *                   | Module |    | Module |            | Module |
+ *                   |   [0]  |    |   [1]  |            |  [N-1] |             
+ *                   +--------+    +--------+            +--------+
+ *
+ *  Region 1: 
+ *                   +--------+    +--------+            +--------+
+ *  ccff_head[1] --->| Memory |--->| Memory |--->... --->| Memory |----> ccff_tail[1]
+ *                   | Module |    | Module |            | Module |
+ *                   |   [0]  |    |   [1]  |            |  [N-1] |             
+ *                   +--------+    +--------+            +--------+
+ *
+ *  For the 1st memory module:
+ *    net source is the configuration chain head of the primitive module
+ *    net sink is the configuration chain head of the next memory module
+ *
+ *  For the rest of memory modules:
+ *    net source is the configuration chain tail of the previous memory module
+ *    net sink is the configuration chain head of the next memory module
+ *********************************************************************/
+static 
+void add_top_module_nets_cmos_memory_chain_config_bus(ModuleManager& module_manager,
+                                                      const ModuleId& parent_module,
+                                                      const ConfigProtocol& config_protocol) {
+  for (const ConfigRegionId& config_region : module_manager.regions(parent_module)) {
+    for (size_t mem_index = 0; mem_index < module_manager.region_configurable_children(parent_module, config_region).size(); ++mem_index) {
+      ModuleId net_src_module_id;
+      size_t net_src_instance_id;
+      ModulePortId net_src_port_id;
+      size_t net_src_pin_id;
+
+      ModuleId net_sink_module_id;
+      size_t net_sink_instance_id;
+      ModulePortId net_sink_port_id;
+      size_t net_sink_pin_id;
+
+      if (0 == mem_index) {
+        /* Find the port name of configuration chain head */
+        std::string src_port_name = generate_sram_port_name(config_protocol.type(), CIRCUIT_MODEL_PORT_INPUT);
+        net_src_module_id = parent_module; 
+        net_src_instance_id = 0;
+        net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+        net_src_pin_id = size_t(config_region);
+
+        /* Find the port name of next memory module */
+        std::string sink_port_name = generate_configuration_chain_head_name();
+        net_sink_module_id = module_manager.region_configurable_children(parent_module, config_region)[mem_index]; 
+        net_sink_instance_id = module_manager.region_configurable_child_instances(parent_module, config_region)[mem_index];
+        net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+        net_sink_pin_id = 0;
+      } else {
+        /* Find the port name of previous memory module */
+        std::string src_port_name = generate_configuration_chain_tail_name();
+        net_src_module_id = module_manager.region_configurable_children(parent_module, config_region)[mem_index - 1]; 
+        net_src_instance_id = module_manager.region_configurable_child_instances(parent_module, config_region)[mem_index - 1];
+        net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+        net_src_pin_id = 0;
+
+        /* Find the port name of next memory module */
+        std::string sink_port_name = generate_configuration_chain_head_name();
+        net_sink_module_id = module_manager.region_configurable_children(parent_module, config_region)[mem_index]; 
+        net_sink_instance_id = module_manager.region_configurable_child_instances(parent_module, config_region)[mem_index];
+        net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+        net_sink_pin_id = 0;
+      }
+
+      /* Get the pin id for source port */
+      BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
+      /* Get the pin id for sink port */
+      BasicPort net_sink_port = module_manager.module_port(net_sink_module_id, net_sink_port_id); 
+
+      VTR_ASSERT(net_src_pin_id < net_src_port.get_width());
+      VTR_ASSERT(net_sink_pin_id < net_sink_port.get_width());
+
+      /* Create a net and add source and sink to it */
+      ModuleNetId net = create_module_source_pin_net(module_manager, parent_module, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[net_src_pin_id]);
+      /* Add net sink */
+      module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[net_sink_pin_id]);
+    }
+
+    /* For the last memory module:
+     *    net source is the configuration chain tail of the previous memory module
+     *    net sink is the configuration chain tail of the primitive module
+     */
+    /* Find the port name of previous memory module */
+    std::string src_port_name = generate_configuration_chain_tail_name();
+    ModuleId net_src_module_id = module_manager.region_configurable_children(parent_module, config_region).back(); 
+    size_t net_src_instance_id = module_manager.region_configurable_child_instances(parent_module, config_region).back();
+    ModulePortId net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+    size_t net_src_pin_id = 0;
+
+    /* Find the port name of next memory module */
+    std::string sink_port_name = generate_sram_port_name(config_protocol.type(), CIRCUIT_MODEL_PORT_OUTPUT);
+    ModuleId net_sink_module_id = parent_module; 
+    size_t net_sink_instance_id = 0;
+    ModulePortId net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+    size_t net_sink_pin_id = size_t(config_region);
+
+    /* Get the pin id for source port */
+    BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
+    /* Get the pin id for sink port */
+    BasicPort net_sink_port = module_manager.module_port(net_sink_module_id, net_sink_port_id); 
+
+    VTR_ASSERT(net_src_pin_id < net_src_port.get_width());
+    VTR_ASSERT(net_sink_pin_id < net_sink_port.get_width());
+    
+    /* Create a net and add source and sink to it */
+    ModuleNetId net = create_module_source_pin_net(module_manager, parent_module, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[net_src_pin_id]);
+    /* Add net sink */
+    module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[net_sink_pin_id]);
+  }
+}
+
 /*********************************************************************
  * Add the port-to-port connection between all the memory modules 
  * and their parent module
@@ -976,17 +1129,17 @@ static
 void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
                                                 DecoderLibrary& decoder_lib,
                                                 const ModuleId& parent_module,
-                                                const e_config_protocol_type& sram_orgz_type,
+                                                const ConfigProtocol& config_protocol, 
                                                 const size_t& num_config_bits) {
-  switch (sram_orgz_type) {
+  switch (config_protocol.type()) {
   case CONFIG_MEM_STANDALONE:
     add_module_nets_cmos_flatten_memory_config_bus(module_manager, parent_module,
-                                                   sram_orgz_type, CIRCUIT_MODEL_PORT_BL);
+                                                   config_protocol.type(), CIRCUIT_MODEL_PORT_BL);
     add_module_nets_cmos_flatten_memory_config_bus(module_manager, parent_module,
-                                                   sram_orgz_type, CIRCUIT_MODEL_PORT_WL);
+                                                   config_protocol.type(), CIRCUIT_MODEL_PORT_WL);
     break;
   case CONFIG_MEM_SCAN_CHAIN: {
-    add_module_nets_cmos_memory_chain_config_bus(module_manager, parent_module, CONFIG_MEM_SCAN_CHAIN);
+    add_top_module_nets_cmos_memory_chain_config_bus(module_manager, parent_module, config_protocol);
     break;
   }
   case CONFIG_MEM_MEMORY_BANK:
@@ -1037,7 +1190,7 @@ void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
 void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            DecoderLibrary& decoder_lib,
                                            const ModuleId& parent_module,
-                                           const e_config_protocol_type& sram_orgz_type, 
+                                           const ConfigProtocol& config_protocol, 
                                            const e_circuit_model_design_tech& mem_tech,
                                            const size_t& num_config_bits) {
 
@@ -1047,7 +1200,7 @@ void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
   case CIRCUIT_MODEL_DESIGN_CMOS:
     add_top_module_nets_cmos_memory_config_bus(module_manager, decoder_lib,
                                                parent_module, 
-                                               sram_orgz_type,
+                                               config_protocol,
                                                num_config_bits);
     break;
   case CIRCUIT_MODEL_DESIGN_RRAM:
