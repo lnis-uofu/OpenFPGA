@@ -764,7 +764,8 @@ void ModuleManager::add_configurable_child_to_region(const ModuleId& parent_modu
   }
 
   /* If the child is already in another region, error out */
-  if (config_region != configurable_child_regions_[parent_module][config_child_id]) {
+  if ( (true == valid_region_id(parent_module, configurable_child_regions_[parent_module][config_child_id]))
+    && (config_region != configurable_child_regions_[parent_module][config_child_id]) ) {
     VTR_LOGF_ERROR(__FILE__, __LINE__,
                    "Try to add a configurable child '%s[%lu]' to region '%lu' which is already added to another region '%lu'!\n",
                    module_name(child_module).c_str(),
