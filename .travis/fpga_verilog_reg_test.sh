@@ -84,8 +84,10 @@ python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/spypad --debug --sho
 
 echo -e "Testing Secured FPGA fabrics";
 python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/fabric_key/generate_vanilla_key --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/fabric_key/generate_multi_region_vanilla_key --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/fabric_key/generate_random_key --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/fabric_key/load_external_key --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/fabric_key/load_external_key_multi_region_cc_fpga --debug --show_thread_logs
 
 echo -e "Testing Power-gating designs";
 python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/power_gated_design/power_gated_inverter --show_thread_logs --debug
