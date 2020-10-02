@@ -672,7 +672,7 @@ def run_vpr():
                     min_channel_width)
         extract_vpr_stats(args.top_module+"_fr_chan_width_vpr.txt")
     else:
-        extract_vpr_stats(args.top_module+"_min_chan_width.txt")
+        extract_vpr_stats(args.top_module+"_min_chan_width_vpr.txt")
     if args.power:
         extract_vpr_stats(logfile=args.top_module+".power",
                           r_filename="vpr_power_stat",
@@ -716,11 +716,11 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
                "--net_file", args.top_module+"_vpr.net",
                "--place_file", args.top_module+"_vpr.place",
                "--route_file", args.top_module+"_vpr.route",
-               "--full_stats",
+               "--full_stats", "on",
                "--activity_file", args.top_module+"_ace_out.act",
                ]
     if not args.disp:
-        command += ["--nodisp"]
+        command += ["--disp", "off"]
     if route_only:
         command += ["--route"]
     # Power options
