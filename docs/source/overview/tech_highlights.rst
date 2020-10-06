@@ -76,6 +76,11 @@ The following are most commonly seen architectural features:
 |                    | - Flexible connectivity                      |
 |                    | - Flexible Switch Block Patterns             |
 +--------------------+----------------------------------------------+
+| Configuration      | - Chain-based organization                   |
+| Protocol           | - Frame-based organization                   |
+|                    | - Memory bank organization                   |
+|                    | - Flatten organization                       |
++--------------------+----------------------------------------------+
 
 Supported Verilog Modeling
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
