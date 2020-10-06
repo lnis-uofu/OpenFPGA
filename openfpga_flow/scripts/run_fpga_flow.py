@@ -622,7 +622,7 @@ def run_vpr():
         args.top_module,
         args.top_module)
     cmd += r"| sed 's/$/./' | fold -s -w80 "
-    cmd += r"| sed 's/[^.]$/ \\/' | sed 's/[.]$/ /'"
+    cmd += r"| sed 's/[^.]$/ \\/' | sed 's/[.]$//'"
     cmd += " > %s.blif" % args.top_module
     os.system(cmd)
     if not args.fix_route_chan_width:
