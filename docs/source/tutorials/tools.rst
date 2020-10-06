@@ -22,26 +22,28 @@ Third-Party Tools
 OpenFPGA accepts and outputs in standard file formats, and therefore can 
 interface a wide range of commercial and open-source tools.
 
-+--------------+-------------------------+
-| Usage        | Tools                   |
-+==============+=========================+
-| Backend      | Synopsys IC Compiler II |
-|              |                         |
-|              | Cadence Innovus         |
-+--------------+-------------------------+
-| Timing       | Synopsys PrimeTime      |
-| Analyzer     |                         |
-|              | Cadence Tempus          |
-+--------------+-------------------------+
-| Verification | Synopsys VCS            |
-|              |                         |
-|              | Synopsys Formality      |
-|              |                         |
-|              | Mentor ModelSim         |
-|              |                         |
-|              | Mentor QuestaSim        |
-|              |                         |
-|              | Cadence NCSim           |
-|              |                         |
-|              | Icarus iVerilog         |
-+--------------+-------------------------+
++--------------+-------------------------+---------------------+
+| Usage        | Tools                   | Version Requirement |
++==============+=========================+=====================+
+| Backend      | Synopsys IC Compiler II | v2019.03 or later   |
+|              |                         |                     |
+|              | Cadence Innovus         | v19.1 or later      |
++--------------+-------------------------+---------------------+
+| Timing       | Synopsys PrimeTime      | v2019.03 or later   |
+| Analyzer     |                         |                     |
+|              | Cadence Tempus          | v19.15 or later     |
++--------------+-------------------------+---------------------+
+| Verification | Synopsys VCS            | v2019.06 or later   |
+|              |                         |                     |
+|              | Synopsys Formality      | v2019.03 or later   |
+|              |                         |                     |
+|              | Mentor ModelSim         | v10.6 or later      |
+|              |                         |                     |
+|              | Mentor QuestaSim        | v2019.3 or later    |
+|              |                         |                     |
+|              | Cadence NCSim           | v15.2 or later      |
+|              |                         |                     |
+|              | Icarus iVerilog         | v10.1 or later      |
++--------------+-------------------------+---------------------+
+
+* The version requirements is based on our local tests. Older versions may work.
