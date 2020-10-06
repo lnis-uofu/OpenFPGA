@@ -11,7 +11,7 @@ In this part, we will introduce the hierarchy, dependency and functionality of e
 | Full            | Long    | Random Stimuli | Full fabric   |
 +-----------------+---------+----------------+---------------+
 | Formal-oriented | Short   | Random Stimuli | Programmable  |
-|                 |         |      or        | fabric only   |
+|                 |         |                | fabric only   |
 |                 |         | Formal Method  |               |
 +-----------------+---------+----------------+---------------+
 
