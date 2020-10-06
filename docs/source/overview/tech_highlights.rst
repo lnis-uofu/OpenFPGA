@@ -31,7 +31,7 @@ Supported Circuit Designs
 | Routing       |     Yes         |   No         | - **Any size**          |
 | Multiplexer   |                 |              | - Buffer location       |
 |               |                 |              | - One-level structure   |
-|               |                 |              | - Treee structure       |
+|               |                 |              | - Tree structure        |
 |               |                 |              | - Multi-level structure |
 |               |                 |              | - Local encoders        |
 |               |                 |              | - Constant inputs       |
