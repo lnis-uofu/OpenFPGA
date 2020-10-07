@@ -596,7 +596,7 @@ def run_pro_blif_3arg():
 def collect_files_for_vpr():
     # Sanitize provided Benchmark option
     if len(args.benchmark_files) > 1:
-        logger.error("Expecting Single Benchmark BLif file.")
+        logger.error("Expecting Single Benchmark Blif file.")
     if not os.path.isfile(args.benchmark_files[0] or ""):
         clean_up_and_exit("Provided Blif file not found")
     shutil.copy(args.benchmark_files[0], args.top_module+".blif")
@@ -721,6 +721,9 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
                ]
     if not args.disp:
         command += ["--disp", "off"]
+    else:  
+        command += ["--disp", "on"]
+
     if route_only:
         command += ["--route"]
     # Power options
