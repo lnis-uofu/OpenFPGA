@@ -23,6 +23,8 @@ In general, please follow the steps to compile
 
 .. note:: recommand to use ``make -j`` to accelerate the compilation
 
+.. note:: VPR's GUI requires gtk-3, and can be enabled with ``cmake .. -DVPR_USE_EZGL=on``
+
 **Quick Compilation Verification**
 
 To quickly verify the tool is well compiled, user can run the following command from OpenFPGA root repository
