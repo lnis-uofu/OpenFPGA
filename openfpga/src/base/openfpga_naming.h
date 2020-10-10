@@ -264,6 +264,9 @@ std::string generate_const_value_module_name(const size_t& const_val);
 
 std::string generate_const_value_module_output_port_name(const size_t& const_val);
 
+std::string generate_analysis_sdc_file_name(const std::string& circuit_name,
+                                            const std::string& file_name_postfix);
+
 } /* end namespace openfpga */
 
 #endif

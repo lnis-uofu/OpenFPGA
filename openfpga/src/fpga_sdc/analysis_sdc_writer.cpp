@@ -228,7 +228,7 @@ void print_analysis_sdc(const AnalysisSdcOption& option,
                         const std::vector<CircuitPortId>& global_ports,
                         const bool& compact_routing_hierarchy) {
   /* Create the file name for Verilog netlist */
-  std::string sdc_fname(option.sdc_dir() + std::string(SDC_ANALYSIS_FILE_NAME));
+  std::string sdc_fname(option.sdc_dir() + generate_analysis_sdc_file_name(vpr_ctx.atom().nlist.netlist_name(), std::string(SDC_ANALYSIS_FILE_NAME)));
 
   std::string timer_message = std::string("Generating SDC for Timing/Power analysis on the mapped FPGA '")
                             + sdc_fname

@@ -1445,4 +1445,14 @@ std::string generate_const_value_module_output_port_name(const size_t& const_val
   return generate_const_value_module_name(const_val);
 }
 
+/*********************************************************************
+ * Generate the analysis SDC file name
+ * The format is
+ *   <circuit_name>_<postfix>
+ ********************************************************************/
+std::string generate_analysis_sdc_file_name(const std::string& circuit_name,
+                                            const std::string& file_name_postfix) {
+  return circuit_name + "_" + file_name_postfix;
+}
+
 } /* end namespace openfpga */
