@@ -16,6 +16,9 @@ python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/lut_design/single_mo
 echo -e "Testing Verilog generation for LUTs: simple fracturable LUT4 ";
 python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/lut_design/frac_lut4 --debug --show_thread_logs
 
+echo -e "Testing Verilog generation for LUTs: simple fracturable LUT4 using AND gate to switch modes";
+python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/lut_design/frac_lut4_and_switch --debug --show_thread_logs
+
 echo -e "Testing Verilog generation for LUTs: simple fracturable LUT6 ";
 python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/lut_design/frac_lut6 --debug --show_thread_logs
 
