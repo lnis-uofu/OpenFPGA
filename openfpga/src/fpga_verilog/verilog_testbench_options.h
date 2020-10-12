@@ -23,6 +23,7 @@ class VerilogTestbenchOption {
     VerilogTestbenchOption();
   public: /* Public accessors */
     std::string output_directory() const;
+    std::string fabric_netlist_file_path() const;
     std::string reference_benchmark_file_path() const;
     bool fast_configuration() const;
     bool print_formal_verification_top_netlist() const;
@@ -42,6 +43,10 @@ class VerilogTestbenchOption {
      * If the file path is empty, the above testbench generation will not be enabled 
      */
     void set_reference_benchmark_file_path(const std::string& reference_benchmark_file_path);
+    /* The fabric netlist file path is an optional parameter 
+     * to allow users to specify a fabric netlist at another location
+     */
+    void set_fabric_netlist_file_path(const std::string& fabric_netlist_file_path);
     void set_print_formal_verification_top_netlist(const bool& enabled);
     /* The preconfig top testbench generation can be enabled only when formal verification top netlist is enabled */
     void set_print_preconfig_top_testbench(const bool& enabled);
@@ -52,6 +57,7 @@ class VerilogTestbenchOption {
     void set_verbose_output(const bool& enabled);
   private: /* Internal Data */
     std::string output_directory_;
+    std::string fabric_netlist_file_path_;
     std::string reference_benchmark_file_path_;
     bool fast_configuration_;
     bool print_formal_verification_top_netlist_;

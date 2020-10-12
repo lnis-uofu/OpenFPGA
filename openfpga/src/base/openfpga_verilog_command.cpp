@@ -72,6 +72,10 @@ ShellCommandId add_openfpga_write_verilog_testbench_command(openfpga::Shell<Open
   shell_cmd.set_option_short_name(output_opt, "f");
   shell_cmd.set_option_require_value(output_opt, openfpga::OPT_STRING);
 
+  /* Add an option '--fabric_netlist_file_path'*/
+  CommandOptionId fabric_netlist_opt = shell_cmd.add_option("fabric_netlist_file_path", false, "Specify the file path to the fabric Verilog netlist");
+  shell_cmd.set_option_require_value(fabric_netlist_opt, openfpga::OPT_STRING);
+
   /* Add an option '--reference_benchmark_file_path'*/
   CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", true, "Specify the file path to the reference Verilog netlist");
   shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);

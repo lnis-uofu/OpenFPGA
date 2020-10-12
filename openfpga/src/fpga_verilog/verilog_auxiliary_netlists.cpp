@@ -96,6 +96,7 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
  *******************************************************************/
 void print_verilog_testbench_include_netlists(const std::string& src_dir,
                                               const std::string& circuit_name,
+                                              const std::string& fabric_netlist_file,
                                               const std::string& reference_benchmark_file) {
   std::string verilog_fname = src_dir + circuit_name + std::string(TOP_VERILOG_TESTBENCH_INCLUDE_NETLIST_FILE_NAME_POSTFIX);
 
@@ -116,7 +117,12 @@ void print_verilog_testbench_include_netlists(const std::string& src_dir,
 
   /* Include FPGA top module */
   print_verilog_comment(fp, std::string("------ Include fabric top-level netlists -----"));
-  print_verilog_include_netlist(fp, src_dir + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME));
+  if (true == fabric_netlist_file.empty()) {
+    print_verilog_include_netlist(fp, src_dir + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME));
+  } else {
+    VTR_ASSERT_SAFE(false == fabric_netlist_file.empty());
+    print_verilog_include_netlist(fp, fabric_netlist_file);
+  }
   fp << std::endl;
 
   /* Include reference benchmark netlist only when auto-check flag is enabled */

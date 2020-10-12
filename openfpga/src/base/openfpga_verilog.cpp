@@ -65,6 +65,7 @@ int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
                             const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_output_dir = cmd.option("file");
+  CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
   CommandOptionId opt_print_top_testbench = cmd.option("print_top_testbench");
   CommandOptionId opt_fast_configuration = cmd.option("fast_configuration");
@@ -79,6 +80,7 @@ int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
    */
   VerilogTestbenchOption options;
   options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
+  options.set_fabric_netlist_file_path(cmd_context.option_value(cmd, opt_fabric_netlist));
   options.set_reference_benchmark_file_path(cmd_context.option_value(cmd, opt_reference_benchmark));
   options.set_print_formal_verification_top_netlist(cmd_context.option_enable(cmd, opt_print_formal_verification_top_netlist));
   options.set_print_preconfig_top_testbench(cmd_context.option_enable(cmd, opt_print_preconfig_top_testbench));
