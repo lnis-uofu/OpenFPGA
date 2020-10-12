@@ -63,6 +63,9 @@ python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/generate_fabric --deb
 echo -e "Testing Verilog testbench generation only";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/generate_testbench --debug --show_thread_logs
 
+echo -e "Testing separated Verilog fabric netlists and testbench locations";
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/custom_fabric_netlist_location --debug --show_thread_logs
+
 echo -e "Testing user-defined simulation settings: clock frequency and number of cycles";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/fixed_simulation_settings --debug --show_thread_logs
 
