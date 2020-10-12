@@ -235,6 +235,7 @@ void fpga_verilog_testbench(const ModuleManager &module_manager,
   /* Generate a Verilog file including all the netlists that have been generated */
   print_verilog_testbench_include_netlists(src_dir_path,
                                            netlist_name,
+                                           options.fabric_netlist_file_path(),
                                            options.reference_benchmark_file_path());
 }
 
