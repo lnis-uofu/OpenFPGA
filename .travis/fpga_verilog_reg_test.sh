@@ -70,6 +70,12 @@ python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/mux_design/inbuf_onl
 echo -e "Testing Verilog generation with routing multiplexers with output buffers only";
 python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/mux_design/outbuf_only_mux --debug --show_thread_logs
 
+echo -e "Testing Verilog generation with routing multiplexers with constant gnd input";
+python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/mux_design/const_input_gnd --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with routing multiplexers without constant inputs";
+python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/mux_design/no_const_input --debug --show_thread_logs
+
 echo -e "Testing Verilog generation with behavioral description";
 python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/behavioral_verilog --debug --show_thread_logs
 
