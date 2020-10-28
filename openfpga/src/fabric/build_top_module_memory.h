@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <map>
+#include "vtr_vector.h"
 #include "vtr_ndmatrix.h"
 #include "module_manager.h"
 #include "circuit_types.h"
@@ -44,6 +45,12 @@ void shuffle_top_module_configurable_children(ModuleManager& module_manager,
 int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager,
                                                    const ModuleId& top_module,
                                                    const FabricKey& fabric_key); 
+
+vtr::vector<ConfigRegionId, size_t> find_top_module_regional_num_config_bit(const ModuleManager& module_manager,
+                                                                            const ModuleId& top_module,
+                                                                            const CircuitLibrary& circuit_lib,
+                                                                            const CircuitModelId& sram_model,
+                                                                            const e_config_protocol_type& config_protocol_type);
 
 void add_top_module_sram_ports(ModuleManager& module_manager, 
                                const ModuleId& module_id,

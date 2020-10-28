@@ -591,6 +591,68 @@ int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager
 } 
 
 /********************************************************************
+ * Find the number of configuration bits in each region of 
+ * the top-level module.
+ *
+ * Note: 
+ *   - This function should be called after the configurable children
+ *     is loaded to the top-level module!
+ ********************************************************************/
+vtr::vector<ConfigRegionId, size_t> find_top_module_regional_num_config_bit(const ModuleManager& module_manager,
+                                                                            const ModuleId& top_module,
+                                                                            const CircuitLibrary& circuit_lib,
+                                                                            const CircuitModelId& sram_model,
+                                                                            const e_config_protocol_type& config_protocol_type) {
+  /* Initialize the number of configuration bits for each region */
+  vtr::vector<ConfigRegionId, size_t> num_config_bits(module_manager.regions(top_module).size(), 0);
+
+  switch (config_protocol_type) {
+  case CONFIG_MEM_STANDALONE: 
+  case CONFIG_MEM_SCAN_CHAIN: 
+  case CONFIG_MEM_MEMORY_BANK: {
+    /* For flatten, chain and memory bank configuration protocol
+     * The number of configuration bits is the sum of configuration bits 
+     * per configurable children in each region 
+     */
+    for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+      for (const ModuleId& child_module : module_manager.region_configurable_children(top_module, config_region)) {
+        num_config_bits[config_region] = find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, config_protocol_type);
+      }
+    } 
+    break;
+  }
+  case CONFIG_MEM_FRAME_BASED: {
+    /* For frame-based configuration protocol
+     * The number of configuration bits is the sum of
+     * - the maximum of configuration bits among configurable children
+     * - and the number of configurable children
+     */
+    for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+      for (const ModuleId& child_module : module_manager.region_configurable_children(top_module, config_region)) {
+        size_t temp_num_config_bits = find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, config_protocol_type);
+        num_config_bits[config_region] = std::max((int)temp_num_config_bits, (int)num_config_bits[config_region]);
+      }
+
+      /* If there are more than 2 configurable children, we need a decoder
+       * Otherwise, we can just short wire the address port to the children
+       */
+      if (1 < module_manager.region_configurable_children(top_module, config_region).size()) {
+        num_config_bits[config_region] += find_mux_local_decoder_addr_size(module_manager.region_configurable_children(top_module, config_region).size());
+      }
+    } 
+
+    break;
+  }
+
+  default:
+    VTR_LOG_ERROR("Invalid type of SRAM organization !\n");
+    exit(1);
+  }
+
+  return num_config_bits;
+}
+
+/********************************************************************
  * Generate a list of ports that are used for SRAM configuration 
  * to the top-level module
  * 1. Standalone SRAMs: 
