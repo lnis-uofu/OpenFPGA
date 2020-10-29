@@ -115,8 +115,9 @@ When the decoder of sub block, e.g., the LUT, is enabled, each memory cells can 
 
 Memory bank Example
 ~~~~~~~~~~~~~~~~~~~
-The following XML code describes a memory-bank circuitry to configure the core logic of FPGA, as illustrated in :numref:`fig_sram`.
+The following XML code describes a memory-bank circuitry to configure the core logic of FPGA, as illustrated in :numref:`fig_memory_bank`.
 It will use the circuit model defined in :numref:`fig_sram_blwl`.
+Users can customized the number of memory banks to be used across the fabrics. By default, it will be only 1 memory bank. :numref:`fig_memory_bank` shows an example where 4 memory banks are defined. The more memory bank to be used, the fast configuration runtime will be, but at the cost of more I/Os in the FPGA fabrics. The organization of each configurable region can be customized through the fabric key (see details in :ref:`fabric_key`).
 
 .. code-block:: xml
 
@@ -124,13 +125,13 @@ It will use the circuit model defined in :numref:`fig_sram_blwl`.
     <organization type="memory_bank" circuit_model_name="sram_blwl"/>
   </configuration_protocol>
 
-.. _fig_sram:
+.. _fig_memory_bank:
 
-.. figure:: figures/sram.png
-   :scale: 60%
+.. figure:: figures/memory_bank.png
+   :scale: 30%
    :alt: map to buried treasure
  
-   Example of a memory organization using memory decoders 
+   Example of (a) a memory organization using memory decoders; (b) single memory bank across the fabric; and (c) multiple memory banks across the fabric.
 
 .. note:: Memory-bank decoders does require a memory cell to have 
 
