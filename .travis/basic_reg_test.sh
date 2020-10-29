@@ -49,6 +49,7 @@ python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/multi_
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/fast_memory_bank --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/fast_memory_bank_use_set --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/smart_fast_memory_bank --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/smart_fast_multi_region_memory_bank --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/preconfig_testbench/memory_bank --debug --show_thread_logs
 
 echo -e "Testing standalone (flatten memory) configuration protocol of a K4N4 FPGA";
