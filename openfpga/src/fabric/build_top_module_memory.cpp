@@ -672,10 +672,9 @@ size_t generate_top_module_sram_port_size(const ConfigProtocol& config_protocol,
     break;
   case CONFIG_MEM_SCAN_CHAIN: 
   case CONFIG_MEM_MEMORY_BANK:
+  case CONFIG_MEM_FRAME_BASED:
     /* CCFF head/tail, data input could be multi-bit ports */
     sram_port_size = config_protocol.num_regions();
-    break;
-  case CONFIG_MEM_FRAME_BASED:
     break;
   default:
     VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -785,7 +784,7 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
     BasicPort addr_port(std::string(DECODER_ADDRESS_PORT_NAME), total_num_config_bits);
     module_manager.add_port(module_id, addr_port, ModuleManager::MODULE_INPUT_PORT);
 
-    BasicPort din_port(std::string(DECODER_DATA_IN_PORT_NAME), 1);
+    BasicPort din_port(std::string(DECODER_DATA_IN_PORT_NAME), sram_port_size);
     module_manager.add_port(module_id, din_port, ModuleManager::MODULE_INPUT_PORT);
 
     break;
