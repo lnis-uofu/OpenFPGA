@@ -165,8 +165,7 @@ void add_module_bus_nets(ModuleManager& module_manager,
                          const ModulePortId& src_module_port_id,
                          const ModuleId& des_module_id,
                          const size_t& des_instance_id,
-                         const ModulePortId& des_module_port_id,
-                         const bool& align_to_lsb = false);
+                         const ModulePortId& des_module_port_id);
 
 } /* end namespace openfpga */
 

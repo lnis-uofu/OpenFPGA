@@ -1794,15 +1794,6 @@ ModuleNetId create_module_source_pin_net(ModuleManager& module_manager,
  * - src_instance should be valid and des_instance should be valid as well
  * - src port size should match the des port size
  *
- * Power options:
- *   - align_to_lsb: This is by default turned off!
- *                   When enabled, the source and destination ports
- *                   will be connected pin-by-pin starting from 
- *                   the Least Significant Bit (LSB)
- *                   The source and destination ports are not required
- *                   to be same in sizes.
- *                   BE CAREFUL! This may cause dangling pins!
- *                   Use when you know what you are doing!
  *******************************************************************/
 void add_module_bus_nets(ModuleManager& module_manager,
                          const ModuleId& cur_module_id,
@@ -1811,8 +1802,7 @@ void add_module_bus_nets(ModuleManager& module_manager,
                          const ModulePortId& src_module_port_id,
                          const ModuleId& des_module_id,
                          const size_t& des_instance_id,
-                         const ModulePortId& des_module_port_id,
-                         const bool& align_to_lsb) {
+                         const ModulePortId& des_module_port_id) {
 
   VTR_ASSERT(true == module_manager.valid_module_id(cur_module_id));
   VTR_ASSERT(true == module_manager.valid_module_id(src_module_id));
@@ -1836,8 +1826,7 @@ void add_module_bus_nets(ModuleManager& module_manager,
   const BasicPort& src_port = module_manager.module_port(src_module_id, src_module_port_id);
   const BasicPort& des_port = module_manager.module_port(des_module_id, des_module_port_id);
 
-  if ( (false == align_to_lsb) 
-     && (src_port.get_width() != des_port.get_width())) {
+  if (src_port.get_width() != des_port.get_width()) {
     VTR_LOGF_ERROR(__FILE__, __LINE__,
                    "Unmatched port size: src_port %s is %lu while des_port %s is %lu!\n",
                    src_port.get_name().c_str(),
@@ -1849,11 +1838,6 @@ void add_module_bus_nets(ModuleManager& module_manager,
 
   /* Create a net for each pin */
   for (size_t pin_id = 0; pin_id < src_port.pins().size(); ++pin_id) {
-    /* Create net only when des_port has a valid pin! */
-    if (pin_id >= des_port.pins().size()) {
-      continue;
-    }
-
     ModuleNetId net = create_module_source_pin_net(module_manager, cur_module_id, 
                                                    src_module_id, src_instance_id, 
                                                    src_module_port_id, src_port.pins()[pin_id]);

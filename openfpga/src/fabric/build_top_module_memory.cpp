@@ -811,7 +811,7 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
  *
  *            top_bl_addr[N-1:0]
  *                 ^
- *                 | local_bl_addr[M-1:0], N > M
+ *                 | local_bl_addr[N-1:0]
  *                 |
  *           +-----+------------------+
  *           |     |                  |
@@ -819,6 +819,32 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
  *           |  | Word Line Decoder | |
  *           |  +-------------------+ |
  *           |                        |
+ *
+ * The BL/WL decoders should have the same circuit designs no matter what region 
+ * they are placed even when the number of configuration bits are different 
+ * from one region to another!
+ * This is designed to avoid any address collision between memory banks
+ * since they are programmed in the same clock cycle
+ * For example: 
+ *   - Memory Bank A has 36 memory cells.
+ *     Its BL decoder has 3 address bit and 6 data output bit
+ *     Its WL decoder has 3 address bit and 6 data output bit
+ *   - Memory Bank B has 16 memory cells.
+ *     Its BL decoder has 2 address bit and 4 data output bit
+ *     Its WL decoder has 2 address bit and 4 data output bit
+ *   - If we try to program the 36th memory cell in bank A
+ *     the BL address will be 3'b110
+ *     the WL address will be 3'b110
+ *     the data input will be 1'b0
+ *   - If we try to program the 4th memory cell in bank A
+ *     the BL address will be 3'b010
+ *     the WL address will be 3'b010
+ *     the data input will be 1'b1
+ *     However, in both cases, this will trigger a parasitic programming in bank B
+ *     the BL address will be 2'b10 
+ *     the WL address will be 2'b10
+ *     Assume the data input is expected to be 1'b1 for bank B
+ *     but it will be overwritten to 1'b0 when programming the 36th cell in bank A!
  *
  * Detailed schematic of each memory bank:
  *
@@ -884,35 +910,37 @@ void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manag
   BasicPort wl_addr_port_info = module_manager.module_port(top_module, wl_addr_port);
 
   /* Find the top-level number of BLs and WLs required to access each memory bit */
-  size_t top_bl_addr_size = bl_addr_port_info.get_width();
-  size_t top_wl_addr_size = wl_addr_port_info.get_width();
+  size_t bl_addr_size = bl_addr_port_info.get_width();
+  size_t wl_addr_size = wl_addr_port_info.get_width();
+
+  /* Each memory bank has a unified number of BL/WLs */
+  size_t num_bls = 0;
+  for (const size_t& curr_config_bits : num_config_bits) {
+     num_bls = std::max(num_bls, find_memory_decoder_data_size(curr_config_bits));
+  }
+
+  size_t num_wls = 0;
+  for (const size_t& curr_config_bits : num_config_bits) {
+     num_wls = std::max(num_wls, find_memory_decoder_data_size(curr_config_bits));
+  }
 
   /* Create separated memory bank circuitry, i.e., BL/WL decoders for each region */
   for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
-    /* Find the number of BL/WLs and address sizes for the local decoders in the region */
-    size_t num_bls = find_memory_decoder_data_size(num_config_bits[config_region]);
-    size_t num_wls = find_memory_decoder_data_size(num_config_bits[config_region]);
-    size_t local_bl_addr_size = find_memory_decoder_addr_size(num_config_bits[config_region]);
-    size_t local_wl_addr_size = find_memory_decoder_addr_size(num_config_bits[config_region]);
-
-    VTR_ASSERT(top_bl_addr_size >= local_bl_addr_size);
-    VTR_ASSERT(top_wl_addr_size >= local_wl_addr_size);
-    
     /************************************************************** 
      * Add the BL decoder module 
      * Search the decoder library
      * If we find one, we use the module.
      * Otherwise, we create one and add it to the decoder library
      */
-    DecoderId bl_decoder_id = decoder_lib.find_decoder(local_bl_addr_size, num_bls,
+    DecoderId bl_decoder_id = decoder_lib.find_decoder(bl_addr_size, num_bls,
                                                        true, true, false);
     if (DecoderId::INVALID() == bl_decoder_id) {
-      bl_decoder_id = decoder_lib.add_decoder(local_bl_addr_size, num_bls, true, true, false);
+      bl_decoder_id = decoder_lib.add_decoder(bl_addr_size, num_bls, true, true, false);
     }
     VTR_ASSERT(DecoderId::INVALID() != bl_decoder_id);
 
     /* Create a module if not existed yet */
-    std::string bl_decoder_module_name = generate_memory_decoder_with_data_in_subckt_name(local_bl_addr_size, num_bls);
+    std::string bl_decoder_module_name = generate_memory_decoder_with_data_in_subckt_name(bl_addr_size, num_bls);
     ModuleId bl_decoder_module = module_manager.find_module(bl_decoder_module_name);
     if (ModuleId::INVALID() == bl_decoder_module) {
       /* BL decoder has the same ports as the frame-based decoders
@@ -932,15 +960,15 @@ void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manag
      * If we find one, we use the module.
      * Otherwise, we create one and add it to the decoder library
      */
-    DecoderId wl_decoder_id = decoder_lib.find_decoder(local_wl_addr_size, num_wls,
+    DecoderId wl_decoder_id = decoder_lib.find_decoder(wl_addr_size, num_wls,
                                                        true, false, false);
     if (DecoderId::INVALID() == wl_decoder_id) {
-      wl_decoder_id = decoder_lib.add_decoder(local_wl_addr_size, num_wls, true, false, false);
+      wl_decoder_id = decoder_lib.add_decoder(wl_addr_size, num_wls, true, false, false);
     }
     VTR_ASSERT(DecoderId::INVALID() != wl_decoder_id);
 
     /* Create a module if not existed yet */
-    std::string wl_decoder_module_name = generate_memory_decoder_subckt_name(local_wl_addr_size, num_wls);
+    std::string wl_decoder_module_name = generate_memory_decoder_subckt_name(wl_addr_size, num_wls);
     ModuleId wl_decoder_module = module_manager.find_module(wl_decoder_module_name);
     if (ModuleId::INVALID() == wl_decoder_module) {
       /* BL decoder has the same ports as the frame-based decoders
@@ -979,17 +1007,12 @@ void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manag
     add_module_bus_nets(module_manager,
                         top_module,
                         top_module, 0, bl_addr_port,
-                        bl_decoder_module, curr_bl_decoder_instance_id, bl_decoder_addr_port,
-                        true);
+                        bl_decoder_module, curr_bl_decoder_instance_id, bl_decoder_addr_port);
 
     /* Top module data_in port -> BL Decoder data_in port:
      * Note that each region has independent data_in connection from the top-level module 
      * The pin index is the configuration region index
      */
-    add_module_bus_nets(module_manager,
-                        top_module,
-                        top_module, 0, din_port,
-                        bl_decoder_module, curr_bl_decoder_instance_id, bl_decoder_din_port);
     ModuleNetId din_net = create_module_source_pin_net(module_manager, top_module, 
                                                        top_module, 0, 
                                                        din_port,
@@ -1018,8 +1041,7 @@ void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manag
     add_module_bus_nets(module_manager,
                         top_module,
                         top_module, 0, wl_addr_port,
-                        wl_decoder_module, curr_wl_decoder_instance_id, wl_decoder_addr_port,
-                        true);
+                        wl_decoder_module, curr_wl_decoder_instance_id, wl_decoder_addr_port);
 
     /************************************************************** 
      * Add nets from BL data out to each configurable child

@@ -40,7 +40,7 @@ std::string generate_verilog_undriven_local_wire_name(const ModuleManager& modul
   if (!module_manager.instance_name(parent, child, instance_id).empty()) {
     wire_name = module_manager.instance_name(parent, child, instance_id);
   } else {
-    wire_name = module_manager.module_name(parent) + std::string("_") + std::to_string(instance_id); 
+    wire_name = module_manager.module_name(child) + std::string("_") + std::to_string(instance_id); 
     wire_name += std::string("_");
   }
   
