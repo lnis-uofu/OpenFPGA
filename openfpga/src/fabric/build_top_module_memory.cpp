@@ -1349,6 +1349,7 @@ void add_top_module_nets_cmos_memory_frame_short_config_bus(ModuleManager& modul
  *     what is required for this configuration region.
  *     A decoder will be created anyway to avoid address collision 
  *     to other configuration regions
+ *     The address lines will be aligned from the MSB of top-level address lines!!!
  *   - Connect the enable (EN) port of memory modules under the parent module
  *     to the frame decoder outputs
  *   - Connect the data_in (Din) of parent module to the data_in of the all
@@ -1387,14 +1388,12 @@ void add_top_module_nets_cmos_memory_frame_short_config_bus(ModuleManager& modul
  *   |       |             |                    |
  *   |       +-------------+--------------------+
  *   |                     |
- *   |                  ADDR[X - log(N)/log2 - 1: 0]
+ *   |                  ADDR[log(N)/log2 - 1: 0]
  *
  * Note:
  *  - X is the port size of address port of the parent module
  *  - the address port of child memory modules may be smaller than 
  *    X - log(N)/log2. In such case, we will drop the MSBs until it fit
- *  - This function is only applicable to 2+ configurable children!!!
- *
  *********************************************************************/
 static 
 void add_top_module_nets_cmos_memory_frame_decoder_config_bus(ModuleManager& module_manager,
@@ -1404,19 +1403,13 @@ void add_top_module_nets_cmos_memory_frame_decoder_config_bus(ModuleManager& mod
   std::vector<ModuleId> configurable_children = module_manager.region_configurable_children(parent_module, config_region);
   std::vector<size_t> configurable_child_instances = module_manager.region_configurable_child_instances(parent_module, config_region);
 
+  ModulePortId parent_addr_port = module_manager.find_module_port(parent_module, std::string(DECODER_ADDRESS_PORT_NAME));
+  BasicPort parent_addr_port_info = module_manager.module_port(parent_module, parent_addr_port);
+
   /* Find the decoder specification */
   size_t addr_size = find_mux_local_decoder_addr_size(configurable_children.size());
   /* Data input should match the WL (data_in) of a SRAM */
   size_t data_size = configurable_children.size(); 
-
-  /* Find the number of address bits that are wired directly to configurable children */
-  size_t max_child_addr_size = 0;
-  for (size_t mem_index = 0; mem_index < configurable_children.size(); ++mem_index) {
-    ModuleId child_module = configurable_children[mem_index]; 
-    ModulePortId child_addr_port = module_manager.find_module_port(child_module, std::string(DECODER_ADDRESS_PORT_NAME));
-    BasicPort child_addr_port_info = module_manager.module_port(child_module, child_addr_port);
-    max_child_addr_size = std::max(max_child_addr_size, child_addr_port_info.get_width());
-  }
 
   /* Search the decoder library and try to find one 
    * If not found, create a new module and add it to the module manager 
@@ -1453,23 +1446,21 @@ void add_top_module_nets_cmos_memory_frame_decoder_config_bus(ModuleManager& mod
   /* Connect the address port of the parent module to the frame decoder address port
    * Note that we only connect to the first few bits of address port
    */
-  ModulePortId parent_addr_port = module_manager.find_module_port(parent_module, std::string(DECODER_ADDRESS_PORT_NAME));
   ModulePortId decoder_addr_port = module_manager.find_module_port(decoder_module, std::string(DECODER_ADDRESS_PORT_NAME));
-  BasicPort parent_addr_port_info = module_manager.module_port(parent_module, parent_addr_port);
   BasicPort decoder_addr_port_info = module_manager.module_port(decoder_module, decoder_addr_port);
   for (size_t ipin = 0; ipin < decoder_addr_port_info.get_width(); ++ipin) {
     /* Create a net for the addr pin */
     ModuleNetId addr_net = create_module_source_pin_net(module_manager, parent_module, 
                                                         parent_module, 0, 
                                                         parent_addr_port,
-                                                        parent_addr_port_info.pins()[ipin + max_child_addr_size]);
+                                                        parent_addr_port_info.pins()[parent_addr_port_info.get_width() - 1 - ipin]);
     VTR_ASSERT(ModuleNetId::INVALID() != addr_net);
 
     /* Configure the net sink */
     module_manager.add_module_net_sink(parent_module, addr_net,
                                        decoder_module, decoder_instance,
                                        decoder_addr_port,
-                                       decoder_addr_port_info.pins()[ipin]);
+                                       decoder_addr_port_info.pins()[decoder_addr_port_info.get_width() - 1 - ipin]);
   } 
 
   /* Connect the address port of the parent module to the address port of configurable children
@@ -1577,10 +1568,9 @@ void add_top_module_nets_cmos_memory_frame_config_bus(ModuleManager& module_mana
                                                       const ModuleId& top_module,
                                                       const vtr::vector<ConfigRegionId, size_t>& num_config_bits) {
   /* Find the number of address bits for the top-level module */
-  size_t top_addr_size = 0;
-  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
-    top_addr_size = std::max(top_addr_size, num_config_bits[config_region]);
-  } 
+  ModulePortId top_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_ADDRESS_PORT_NAME));
+  BasicPort top_addr_port_info = module_manager.module_port(top_module, top_addr_port);
+  size_t top_addr_size = top_addr_port_info.get_width();
 
   for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
     if (0 == module_manager.region_configurable_children(top_module, config_region).size()) {
