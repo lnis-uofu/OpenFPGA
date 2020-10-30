@@ -1676,29 +1676,74 @@ void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
 
   fp << std::endl;
 
-  /* Attention: the configuration chain protcol requires the last configuration bit is fed first
-   * We will visit the fabric bitstream in a reverse way
+  /* Reorganize the fabric bitstream by the same address across regions:
+   * This is due to that the length of fabric bitstream could be different in each region.
+   * Template:
+   *   <address> <din_values_from_different_regions>
+   * An example:
+   *   000000 1011
+   *
+   * Note: the std::map may cause large memory footprint for large bitstream databases!
    */
-  for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
-    /* When fast configuration is enabled, we skip zero data_in values */
-    if ((true == fast_configuration)
-      && (bit_value_to_skip == fabric_bitstream.bit_din(bit_id))) {
-      continue;
+  std::map<std::string, std::vector<bool>> fabric_bits_by_addr;
+  for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
+    for (const FabricBitId& bit_id : fabric_bitstream.region_bits(region)) {
+      /* Create string for address */
+      VTR_ASSERT(addr_port.get_width() == fabric_bitstream.bit_address(bit_id).size());
+      std::string addr_str;
+      for (const char& addr_bit : fabric_bitstream.bit_address(bit_id)) {
+        addr_str.push_back(addr_bit);
+      }
+
+      /* Place the config bit */
+      auto result = fabric_bits_by_addr.find(addr_str);
+      if (result == fabric_bits_by_addr.end()) {
+        /* This is a new bit, resize the vector to the number of regions
+         * and deposit '0' to all the bits
+         */
+        fabric_bits_by_addr[addr_str] = std::vector<bool>(fabric_bitstream.regions().size(), false);
+        fabric_bits_by_addr[addr_str][size_t(region)] = fabric_bitstream.bit_din(bit_id);
+      } else {
+        VTR_ASSERT_SAFE(result != fabric_bits_by_addr.end());
+        result->second[size_t(region)] = fabric_bitstream.bit_din(bit_id);
+      }
+    }
+  }
+
+  for (const auto& addr_din_pair : fabric_bits_by_addr) {
+    /* When fast configuration is enabled,
+     * the rule to skip any configuration bit should consider the whole data input values.
+     * Only all the bits in the din port match the value to be skipped,
+     * the programming cycle can be skipped!
+     */
+    if (true == fast_configuration) {
+      bool skip_curr_bits = true;
+      for (const bool& bit : addr_din_pair.second) {
+        if (bit_value_to_skip != bit) {
+          skip_curr_bits = false;
+          break;
+        }
+      }
+
+      if (true == skip_curr_bits) {
+        continue;
+      }
     }
 
     fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
     fp << "(" << addr_port.get_width() << "'b";
-    VTR_ASSERT(addr_port.get_width() == fabric_bitstream.bit_address(bit_id).size());
-    for (const char& addr_bit : fabric_bitstream.bit_address(bit_id)) {
-      fp << addr_bit;
-    }
+    VTR_ASSERT(addr_port.get_width() == addr_din_pair.first.size());
+    fp << addr_din_pair.first;
     fp << ", ";
     fp <<"1'b";
-    if (true == fabric_bitstream.bit_din(bit_id)) {
-      fp << "1";
-    } else {
-      VTR_ASSERT(false == fabric_bitstream.bit_din(bit_id));
-      fp << "0";
+    VTR_ASSERT(din_port.get_width() == addr_din_pair.second.size());
+    for (const bool& din_value : addr_din_pair.second) {
+      if (true == din_value) {
+        fp << "1";
+      } else {
+        VTR_ASSERT(false == din_value);
+        fp << "0";
+      }
     }
     fp << ");" << std::endl;
   }
