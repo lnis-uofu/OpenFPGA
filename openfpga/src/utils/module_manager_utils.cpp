@@ -1793,6 +1793,7 @@ ModuleNetId create_module_source_pin_net(ModuleManager& module_manager,
  * - des_module should be the cur_module or a child of it
  * - src_instance should be valid and des_instance should be valid as well
  * - src port size should match the des port size
+ *
  *******************************************************************/
 void add_module_bus_nets(ModuleManager& module_manager,
                          const ModuleId& cur_module_id,

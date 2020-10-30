@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <map>
+#include "vtr_vector.h"
 #include "vtr_ndmatrix.h"
 #include "module_manager.h"
 #include "circuit_types.h"
@@ -45,19 +46,25 @@ int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager
                                                    const ModuleId& top_module,
                                                    const FabricKey& fabric_key); 
 
+vtr::vector<ConfigRegionId, size_t> find_top_module_regional_num_config_bit(const ModuleManager& module_manager,
+                                                                            const ModuleId& top_module,
+                                                                            const CircuitLibrary& circuit_lib,
+                                                                            const CircuitModelId& sram_model,
+                                                                            const e_config_protocol_type& config_protocol_type);
+
 void add_top_module_sram_ports(ModuleManager& module_manager, 
                                const ModuleId& module_id,
                                const CircuitLibrary& circuit_lib,
                                const CircuitModelId& sram_model,
                                const ConfigProtocol& config_protocol,
-                               const size_t& num_config_bits);
+                               const vtr::vector<ConfigRegionId, size_t>& num_config_bits);
 
 void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            DecoderLibrary& decoder_lib,
                                            const ModuleId& parent_module,
                                            const ConfigProtocol& config_protocol, 
                                            const e_circuit_model_design_tech& mem_tech,
-                                           const size_t& num_config_bits);
+                                           const vtr::vector<ConfigRegionId, size_t>& num_config_bits);
 
 } /* end namespace openfpga */
 

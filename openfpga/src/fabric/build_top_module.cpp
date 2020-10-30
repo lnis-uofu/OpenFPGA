@@ -402,6 +402,16 @@ int build_top_module(ModuleManager& module_manager,
                                        compact_routing_hierarchy);
   } else {
     VTR_ASSERT_SAFE(false == fabric_key.empty());
+    /* Give a warning message that the fabric key may overwrite existing region organization.
+     * Only applicable when number of regions defined in configuration protocol is different
+     * than the number of regions defined in the fabric key 
+     */
+    if (size_t(config_protocol.num_regions()) != fabric_key.regions().size()) {
+      VTR_LOG_WARN("Fabric key will overwrite the region organization (='%ld') than architecture definition (=%d)!\n",
+                   fabric_key.regions().size(),
+                   config_protocol.num_regions());
+    }
+
     status = load_top_module_memory_modules_from_fabric_key(module_manager, top_module,
                                                             fabric_key); 
     if (CMD_EXEC_FATAL_ERROR == status) {
@@ -427,11 +437,13 @@ int build_top_module(ModuleManager& module_manager,
    * This is a much easier job after adding sub modules (instances), 
    * we just need to find all the I/O ports from the child modules and build a list of it
    */
-  size_t module_num_config_bits = find_module_num_config_bits_from_child_modules(module_manager, top_module, circuit_lib, sram_model, config_protocol.type()); 
-  if (0 < module_num_config_bits) {
+  vtr::vector<ConfigRegionId, size_t> top_module_num_config_bits = find_top_module_regional_num_config_bit(module_manager, top_module, circuit_lib, sram_model, config_protocol.type());
+
+  if (!top_module_num_config_bits.empty()) {
     add_top_module_sram_ports(module_manager, top_module,
                               circuit_lib, sram_model,
-                              config_protocol, module_num_config_bits);
+                              config_protocol,
+                              top_module_num_config_bits);
   }
 
   /* Add module nets to connect memory cells inside
@@ -441,7 +453,7 @@ int build_top_module(ModuleManager& module_manager,
     add_top_module_nets_memory_config_bus(module_manager, decoder_lib,
                                           top_module, 
                                           config_protocol, circuit_lib.design_tech_type(sram_model),
-                                          module_num_config_bits);
+                                          top_module_num_config_bits);
   }
 
   return status;
