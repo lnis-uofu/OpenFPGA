@@ -168,7 +168,7 @@
     </circuit_model>
   </circuit_library>
   <configuration_protocol>
-    <organization type="memory_bank" circuit_model_name="SRAMSR"/>
+    <organization type="memory_bank" circuit_model_name="SRAMSR" num_regions="4"/>
   </configuration_protocol>
   <connection_block>
     <switch name="ipin_cblock" circuit_model_name="mux_2level_tapbuf"/>
