@@ -699,17 +699,24 @@ size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz
               100. * ((float)num_config_clock_cycles / (float)(1 + regional_bitstream_max_size) - 1.));
     }
     break;
-  case CONFIG_MEM_MEMORY_BANK:
-  case CONFIG_MEM_FRAME_BASED: {
+  case CONFIG_MEM_MEMORY_BANK: {
     /* For fast configuration, we will skip all the zero data points */
+    num_config_clock_cycles = 1 + build_memory_bank_fabric_bitstream_by_address(fabric_bitstream).size();
     if (true == fast_configuration) {
       size_t full_num_config_clock_cycles = num_config_clock_cycles;
-      num_config_clock_cycles = 1;
-      for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
-        if (bit_value_to_skip != fabric_bitstream.bit_din(bit_id)) {
-          num_config_clock_cycles++;
-        }
-      }
+      num_config_clock_cycles = 1 + find_memory_bank_fast_configuration_fabric_bitstream_size(fabric_bitstream, bit_value_to_skip);
+      VTR_LOG("Fast configuration reduces number of configuration clock cycles from %lu to %lu (compression_rate = %f%)\n",
+              full_num_config_clock_cycles,
+              num_config_clock_cycles,
+              100. * ((float)num_config_clock_cycles / (float)full_num_config_clock_cycles - 1.));
+    }
+    break;
+  }
+  case CONFIG_MEM_FRAME_BASED: {
+    num_config_clock_cycles = 1 + build_frame_based_fabric_bitstream_by_address(fabric_bitstream).size();
+    if (true == fast_configuration) {
+      size_t full_num_config_clock_cycles = num_config_clock_cycles;
+      num_config_clock_cycles = 1 + find_frame_based_fast_configuration_fabric_bitstream_size(fabric_bitstream, bit_value_to_skip);
       VTR_LOG("Fast configuration reduces number of configuration clock cycles from %lu to %lu (compression_rate = %f%)\n",
               full_num_config_clock_cycles,
               num_config_clock_cycles,
@@ -1529,46 +1536,8 @@ void print_verilog_top_testbench_memory_bank_bitstream(std::fstream& fp,
 
   fp << std::endl;
 
-  /* Reorganize the fabric bitstream by the same address across regions:
-   * This is due to that the length of fabric bitstream could be different in each region.
-   * Template:
-   *   <bl_address> <wl_address> <din_values_from_different_regions>
-   * An example:
-   *   000000  00000 1011
-   *
-   * Note: the std::map may cause large memory footprint for large bitstream databases!
-   */
-  std::map<std::pair<std::string, std::string>, std::vector<bool>> fabric_bits_by_addr;
-  for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
-    for (const FabricBitId& bit_id : fabric_bitstream.region_bits(region)) {
-      /* Create string for BL address */
-      VTR_ASSERT(bl_addr_port.get_width() == fabric_bitstream.bit_bl_address(bit_id).size());
-      std::string bl_addr_str;
-      for (const char& addr_bit : fabric_bitstream.bit_bl_address(bit_id)) {
-        bl_addr_str.push_back(addr_bit);
-      }
-
-      /* Create string for WL address */
-      VTR_ASSERT(wl_addr_port.get_width() == fabric_bitstream.bit_wl_address(bit_id).size());
-      std::string wl_addr_str;
-      for (const char& addr_bit : fabric_bitstream.bit_wl_address(bit_id)) {
-        wl_addr_str.push_back(addr_bit);
-      }
-
-      /* Place the config bit */
-      auto result = fabric_bits_by_addr.find(std::make_pair(bl_addr_str, wl_addr_str));
-      if (result == fabric_bits_by_addr.end()) {
-        /* This is a new bit, resize the vector to the number of regions
-         * and deposit '0' to all the bits
-         */
-        fabric_bits_by_addr[std::make_pair(bl_addr_str, wl_addr_str)] = std::vector<bool>(fabric_bitstream.regions().size(), false);
-        fabric_bits_by_addr[std::make_pair(bl_addr_str, wl_addr_str)][size_t(region)] = fabric_bitstream.bit_din(bit_id);
-      } else {
-        VTR_ASSERT_SAFE(result != fabric_bits_by_addr.end());
-        result->second[size_t(region)] = fabric_bitstream.bit_din(bit_id);
-      }
-    }
-  }
+  /* Reorganize the fabric bitstream by the same address across regions */
+  std::map<std::pair<std::string, std::string>, std::vector<bool>> fabric_bits_by_addr = build_memory_bank_fabric_bitstream_by_address(fabric_bitstream);
 
   for (const auto& addr_din_pair : fabric_bits_by_addr) {
     /* When fast configuration is enabled,
@@ -1676,34 +1645,48 @@ void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
 
   fp << std::endl;
 
-  /* Attention: the configuration chain protcol requires the last configuration bit is fed first
-   * We will visit the fabric bitstream in a reverse way
-   */
-  for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
-    /* When fast configuration is enabled, we skip zero data_in values */
-    if ((true == fast_configuration)
-      && (bit_value_to_skip == fabric_bitstream.bit_din(bit_id))) {
-      continue;
+  /* Reorganize the fabric bitstream by the same address across regions */
+  std::map<std::string, std::vector<bool>> fabric_bits_by_addr = build_frame_based_fabric_bitstream_by_address(fabric_bitstream);
+
+  for (const auto& addr_din_pair : fabric_bits_by_addr) {
+    /* When fast configuration is enabled,
+     * the rule to skip any configuration bit should consider the whole data input values.
+     * Only all the bits in the din port match the value to be skipped,
+     * the programming cycle can be skipped!
+     */
+    if (true == fast_configuration) {
+      bool skip_curr_bits = true;
+      for (const bool& bit : addr_din_pair.second) {
+        if (bit_value_to_skip != bit) {
+          skip_curr_bits = false;
+          break;
+        }
+      }
+
+      if (true == skip_curr_bits) {
+        continue;
+      }
     }
 
     fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
     fp << "(" << addr_port.get_width() << "'b";
-    VTR_ASSERT(addr_port.get_width() == fabric_bitstream.bit_address(bit_id).size());
-    for (const char& addr_bit : fabric_bitstream.bit_address(bit_id)) {
-      fp << addr_bit;
-    }
+    VTR_ASSERT(addr_port.get_width() == addr_din_pair.first.size());
+    fp << addr_din_pair.first;
     fp << ", ";
-    fp <<"1'b";
-    if (true == fabric_bitstream.bit_din(bit_id)) {
-      fp << "1";
-    } else {
-      VTR_ASSERT(false == fabric_bitstream.bit_din(bit_id));
-      fp << "0";
+    fp << din_port.get_width() << "'b";
+    VTR_ASSERT(din_port.get_width() == addr_din_pair.second.size());
+    for (const bool& din_value : addr_din_pair.second) {
+      if (true == din_value) {
+        fp << "1";
+      } else {
+        VTR_ASSERT(false == din_value);
+        fp << "0";
+      }
     }
     fp << ");" << std::endl;
   }
 
-  /* Disable the address and din */
+  /* Disable the address and din 
   fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
   fp << "(" << addr_port.get_width() << "'b";
   std::vector<size_t> all_zero_addr(addr_port.get_width(), 0);
@@ -1711,8 +1694,9 @@ void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
     fp << addr_bit;
   }
   fp << ", ";
-  fp <<"1'b0";
+  fp << generate_verilog_constant_values(initial_din_values);
   fp << ");" << std::endl;
+  */
 
   /* Raise the flag of configuration done when bitstream loading is complete */
   BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);

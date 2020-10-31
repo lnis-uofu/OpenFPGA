@@ -47,6 +47,8 @@ The information depends on the type of configuration procotol.
 .. option:: frame_based 
 
   Multiple lines will be included, each of which is organized as <address><space><bit>.
+  Note that the address may include don't care bit which is denoted as ``x``.
+  OpenFPGA automatically convert don't care bit to logic ``0`` when generating testbenches.
   For example
    
   .. code-block:: xml 
@@ -97,10 +99,12 @@ Other information may depend on the type of configuration procotol.
 
   - ``frame``: frame address information 
 
+  .. note:: Frame address may include don't care bit which is denoted as ``x``.
+
   A quick example:
 
   .. code-block:: xml
 
     <bit id="0" value="1" path="fpga_top.grid_clb_1__2_.logical_tile_clb_mode_clb__0.mem_fle_9_in_5.mem_out[0]"/>
-      <frame address="0000000000000000"/>
+      <frame address="0001000x00000x01"/>
     </bit>

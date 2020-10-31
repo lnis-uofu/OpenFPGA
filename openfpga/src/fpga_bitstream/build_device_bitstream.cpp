@@ -85,14 +85,13 @@ size_t rec_estimate_device_bitstream_num_bits(const ModuleManager& module_manage
     for (const ConfigRegionId& config_region : module_manager.regions(parent_module)) {
       size_t curr_region_num_config_child = module_manager.region_configurable_children(parent_module, config_region).size();
 
-      /* FIXME: This will be uncommented when multi-region support is extended for frame-based 
-       * Frame-based configuration protocol will have 1 decoder
+      /* Frame-based configuration protocol will have 1 decoder
        * if there are more than 1 configurable children
+       */
       if ( (CONFIG_MEM_FRAME_BASED == config_protocol_type)
         && (2 <= curr_region_num_config_child)) {
         curr_region_num_config_child--;
       }
-       */
 
       /* Memory configuration protocol will have 2 decoders
        * at the top-level

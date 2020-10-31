@@ -36,6 +36,8 @@ python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/config
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_frame_use_set --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_frame_use_setb --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_frame_use_set_reset --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/multi_region_configuration_frame --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/smart_fast_multi_region_configuration_frame --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/preconfig_testbench/configuration_frame --debug --show_thread_logs
 
 echo -e "Testing memory bank configuration protocol of a K4N4 FPGA";
@@ -97,4 +99,3 @@ echo -e "Testing K4N5 with pattern based local routing";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n5_pattern_local_routing --debug --show_thread_logs
 
 end_section "OpenFPGA.TaskTun"
-python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/multi_region_memory_bank --debug --show_thread_logs

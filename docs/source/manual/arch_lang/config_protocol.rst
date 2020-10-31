@@ -41,6 +41,13 @@ Template
   - ``memory_bank`` requires a circuit model type of ``sram``
   - ``standalone`` requires a circuit model type of ``sram``
 
+.. option:: num_regions="<int>"
+
+  Specify the number of configuration regions to be used across the fabrics. By default, it will be only 1 configuration region. Each configuration region contains independent configuration protocols, but the whole fabric should employ the same type of configuration protocols. For example, an FPGA fabric consists of 4 configuration regions, each of which includes a configuration chain. The more configuration chain to be used, the fast configuration runtime will be, but at the cost of more I/Os in the FPGA fabrics. The organization of each configurable region can be customized through the fabric key (see details in :ref:`fabric_key`).
+
+  .. warning:: Currently, multiple configuration regions is not applicable to ``standalone`` configuration protocol.
+
+
 Configuration Chain Example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The following XML code describes a scan-chain circuitry to configure the core logic of FPGA, as illustrated in :numref:`fig_ccff_fpga`.
@@ -60,9 +67,6 @@ It will use the circuit model defined in :numref:`fig_ccff`.
  
    Example of a configuration chain to program core logic of a FPGA 
 
-.. option:: num_regions="<int>"
-
-  Specify the number of configuration chains to be used across the fabrics. By default, it will be only 1 configuration chain. The more configuration chain to be used, the fast configuration runtime will be, but at the cost of more I/Os in the FPGA fabrics. The organization of each configurable region can be customized through the fabric key (see details in :ref:`fabric_key`).
 
 .. figure:: figures/multi_region_config_chains.png
    :scale: 100%
@@ -112,6 +116,8 @@ When the decoder of sub block, e.g., the LUT, is enabled, each memory cells can 
   -  a Word-Line input to enable data write 
 
 .. warning:: Please do NOT add inverted Bit-Line and Word-Line inputs. It is not supported yet!
+
+When multiple configuration region is applied, the configuration frames will be grouped into different configuration regions. Each region has a separated data input bus and dedicated address decoders. As such, the configuration frame groups can be programmed in parallel.
 
 Memory bank Example
 ~~~~~~~~~~~~~~~~~~~

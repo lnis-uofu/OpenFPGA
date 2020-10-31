@@ -207,9 +207,13 @@ class FabricBitstream {
      * to the configuration protocol directly 
      *
      * We use a 2-element array, as we may have a BL address and a WL address
+     *
+     * TODO: use nested vector may cause large memory footprint 
+     *       when bitstream size increases
+     *       NEED TO THINK ABOUT A COMPACT MODELING
      */
-    vtr::vector<FabricBitId, size_t> bit_addresses_;
-    vtr::vector<FabricBitId, size_t> bit_wl_addresses_;
+    vtr::vector<FabricBitId, std::vector<char>> bit_addresses_;
+    vtr::vector<FabricBitId, std::vector<char>> bit_wl_addresses_;
 
     /* Data input (Din) bits: this is designed for memory decoders */
     vtr::vector<FabricBitId, char> bit_dins_;

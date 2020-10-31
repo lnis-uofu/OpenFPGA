@@ -128,4 +128,54 @@ size_t bintoi_charvec(const std::vector<char>& bin) {
   return ret;
 }
 
+/******************************************************************** 
+ * Expand all the don't care bits in a string 
+ * A don't care 'x' can be decoded to either '0' or '1'
+ * For example:
+ *    input:  0x1x
+ *    output: 0010
+ *            0100
+ *            0101
+ *            0011
+ *
+ * Return all the strings
+ ********************************************************************/
+std::vector<std::string> expand_dont_care_bin_str(const std::string& input_str) {
+  std::vector<std::string> ret;
+
+  /* If the input is don't care free, we can retrun */
+  bool has_dont_care = false;
+  for (const char& bit : input_str) {
+    if (DONT_CARE_CHAR == bit) {
+      has_dont_care = true;
+      break;
+    }
+  }
+
+  if (false == has_dont_care) {
+    ret.push_back(input_str);
+    return ret;
+  }
+
+  /* Recusively expand all the don't bits */
+  for (size_t i = 0; i < input_str.length(); ++i) {
+    if (DONT_CARE_CHAR == input_str[i]) {
+      std::string temp_input_str = input_str;
+      /* Flip to '0' and go recursively */
+      temp_input_str[i] = '0';  
+      for (const std::string& expanded_str : expand_dont_care_bin_str(temp_input_str)) {
+        ret.push_back(expanded_str);
+      }
+      /* Flip to '1' and go recursively */
+      temp_input_str[i] = '1';  
+      for (const std::string& expanded_str : expand_dont_care_bin_str(temp_input_str)) {
+        ret.push_back(expanded_str);
+      }
+      break;
+    }
+  }
+
+  return ret;
+}
+
 } /* end namespace openfpga */
