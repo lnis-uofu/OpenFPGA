@@ -68,7 +68,7 @@ std::vector<char> FabricBitstream::bit_address(const FabricBitId& bit_id) const 
   VTR_ASSERT(true == valid_bit_id(bit_id));
   VTR_ASSERT(true == use_address_);
 
-  return itobin_charvec(bit_addresses_[bit_id], address_length_);
+  return bit_addresses_[bit_id];
 }
 
 std::vector<char> FabricBitstream::bit_bl_address(const FabricBitId& bit_id) const {
@@ -81,7 +81,7 @@ std::vector<char> FabricBitstream::bit_wl_address(const FabricBitId& bit_id) con
   VTR_ASSERT(true == use_address_);
   VTR_ASSERT(true == use_wl_address_);
 
-  return itobin_charvec(bit_wl_addresses_[bit_id], wl_address_length_);
+  return bit_wl_addresses_[bit_id];
 }
 
 char FabricBitstream::bit_din(const FabricBitId& bit_id) const {
@@ -122,6 +122,16 @@ FabricBitId FabricBitstream::add_bit(const ConfigBitId& config_bit_id) {
   num_bits_++;
   config_bit_ids_.push_back(config_bit_id);
 
+  if (true == use_address_) {
+    bit_addresses_.emplace_back();
+    bit_dins_.emplace_back();
+ 
+    if (true == use_wl_address_) {
+      bit_wl_addresses_.emplace_back();
+    }
+  }
+
+
   return bit; 
 }
 
@@ -130,7 +140,7 @@ void FabricBitstream::set_bit_address(const FabricBitId& bit_id,
   VTR_ASSERT(true == valid_bit_id(bit_id));
   VTR_ASSERT(true == use_address_);
   VTR_ASSERT(address_length_ == address.size());
-  bit_addresses_[bit_id] = bintoi_charvec(address);
+  bit_addresses_[bit_id] = address;
 }
 
 void FabricBitstream::set_bit_bl_address(const FabricBitId& bit_id,
@@ -144,7 +154,7 @@ void FabricBitstream::set_bit_wl_address(const FabricBitId& bit_id,
   VTR_ASSERT(true == use_address_);
   VTR_ASSERT(true == use_wl_address_);
   VTR_ASSERT(wl_address_length_ == address.size());
-  bit_wl_addresses_[bit_id] = bintoi_charvec(address);
+  bit_wl_addresses_[bit_id] = address;
 }
 
 void FabricBitstream::set_bit_din(const FabricBitId& bit_id,

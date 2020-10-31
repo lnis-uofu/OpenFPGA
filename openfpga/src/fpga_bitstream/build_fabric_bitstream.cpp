@@ -285,6 +285,7 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
                                                        const ConfigRegionId& config_region,
                                                        const std::vector<ModuleId>& parent_modules,
                                                        const std::vector<char>& addr_code,
+                                                       const char& bitstream_dont_care_char,
                                                        FabricBitstream& fabric_bitstream,
                                                        FabricBitRegionId& fabric_bitstream_region) {
 
@@ -418,7 +419,8 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
         const ModulePortId& child_addr_port_id = module_manager.find_module_port(child_module, std::string(DECODER_ADDRESS_PORT_NAME));
         const BasicPort& child_addr_port = module_manager.module_port(child_module, child_addr_port_id);
         if (0 < max_child_addr_code_size - child_addr_port.get_width()) {
-          std::vector<char> dummy_codes(max_child_addr_code_size - child_addr_port.get_width(), '0');
+          /* Deposit don't care state for the dummy bits */
+          std::vector<char> dummy_codes(max_child_addr_code_size - child_addr_port.get_width(), bitstream_dont_care_char);
           child_addr_code.insert(child_addr_code.begin(), dummy_codes.begin(), dummy_codes.end());
         }
       }
@@ -430,6 +432,7 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
                                                         config_region,
                                                         child_modules,
                                                         child_addr_code,
+                                                        bitstream_dont_care_char,
                                                         fabric_bitstream,
                                                         fabric_bitstream_region);
     }
@@ -583,6 +586,12 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
     fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
     fabric_bitstream.set_address_length(addr_port_info.get_width());
 
+    /* Avoid use don't care if there is only a region */
+    char bitstream_dont_care_char = DONT_CARE_CHAR;
+    if (1 == module_manager.regions(top_module).size()) {
+      bitstream_dont_care_char = '0';
+    }
+
     /* Find the maximum decoder address among all the configurable regions */
     size_t max_decoder_addr_size = 0;
     for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
@@ -624,7 +633,7 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
       ModulePortId decoder_addr_port_id = module_manager.find_module_port(decoder_module, DECODER_ADDRESS_PORT_NAME);
       BasicPort decoder_addr_port = module_manager.module_port(decoder_module, decoder_addr_port_id);
       VTR_ASSERT(max_decoder_addr_size >= decoder_addr_port.get_width());
-      std::vector<char> idle_addr_bits(max_decoder_addr_size - decoder_addr_port.get_width(), '0');
+      std::vector<char> idle_addr_bits(max_decoder_addr_size - decoder_addr_port.get_width(), bitstream_dont_care_char);
      
       FabricBitRegionId fabric_bitstream_region = fabric_bitstream.add_region();
       rec_build_module_fabric_dependent_frame_bitstream(bitstream_manager,
@@ -634,6 +643,7 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
                                                         config_region,
                                                         std::vector<ModuleId>(1, top_module),
 	  												    idle_addr_bits,
+                                                        bitstream_dont_care_char,
                                                         fabric_bitstream,
                                                         fabric_bitstream_region);
     }

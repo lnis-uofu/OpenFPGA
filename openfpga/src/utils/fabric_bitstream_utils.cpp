@@ -11,6 +11,9 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
+/* Headers from openfpgautil library */
+#include "openfpga_decode.h"
+
 #include "fabric_bitstream_utils.h"
 
 /* begin namespace openfpga */
@@ -85,17 +88,20 @@ std::map<std::string, std::vector<bool>> build_frame_based_fabric_bitstream_by_a
         addr_str.push_back(addr_bit);
       }
 
-      /* Place the config bit */
-      auto result = fabric_bits_by_addr.find(addr_str);
-      if (result == fabric_bits_by_addr.end()) {
-        /* This is a new bit, resize the vector to the number of regions
-         * and deposit '0' to all the bits
-         */
-        fabric_bits_by_addr[addr_str] = std::vector<bool>(fabric_bitstream.regions().size(), false);
-        fabric_bits_by_addr[addr_str][size_t(region)] = fabric_bitstream.bit_din(bit_id);
-      } else {
-        VTR_ASSERT_SAFE(result != fabric_bits_by_addr.end());
-        result->second[size_t(region)] = fabric_bitstream.bit_din(bit_id);
+      /* Expand all the don't care bits */
+      for (const std::string& curr_addr_str : expand_dont_care_bin_str(addr_str)) {
+        /* Place the config bit */
+        auto result = fabric_bits_by_addr.find(curr_addr_str);
+        if (result == fabric_bits_by_addr.end()) {
+          /* This is a new bit, resize the vector to the number of regions
+           * and deposit '0' to all the bits
+           */
+          fabric_bits_by_addr[curr_addr_str] = std::vector<bool>(fabric_bitstream.regions().size(), false);
+          fabric_bits_by_addr[curr_addr_str][size_t(region)] = fabric_bitstream.bit_din(bit_id);
+        } else {
+          VTR_ASSERT_SAFE(result != fabric_bits_by_addr.end());
+          result->second[size_t(region)] = fabric_bitstream.bit_din(bit_id);
+        }
       }
     }
   }
