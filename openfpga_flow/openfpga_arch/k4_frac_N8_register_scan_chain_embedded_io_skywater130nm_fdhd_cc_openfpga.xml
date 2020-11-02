@@ -188,14 +188,14 @@
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
       <output_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
-      <port type="inout" prefix="PAD" lib_name="A" size="1" is_global="true" is_io="true" />
+      <port type="input" prefix="PAD" lib_name="A" size="1" is_global="true" is_io="true" />
       <port type="output" prefix="inpad" lib_name="Y" size="1"/>
     </circuit_model>
     <circuit_model type="iopad" name="GPOUT" prefix="GPOUT" is_default="false" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/gpio.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
       <output_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
-      <port type="inout" prefix="PAD" lib_name="Y" size="1" is_global="true" is_io="true" />
+      <port type="output" prefix="PAD" lib_name="Y" size="1" is_global="true" is_io="true" />
       <port type="input" prefix="outpad" lib_name="A" size="1"/>
     </circuit_model>
   </circuit_library>
@@ -221,16 +221,12 @@
   </direct_connection>
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
-    <pb_type name="io[inpad].inpad" circuit_model_name="GPIN"/>
-    <pb_type name="io[outpad].outpad" circuit_model_name="GPOUT"/>
+    <pb_type name="io.inpad" circuit_model_name="GPIN"/>
+    <pb_type name="io.outpad" circuit_model_name="GPOUT"/>
     <!-- End physical pb_type binding in complex block IO -->
 
     <!-- physical pb_type binding in complex block CLB -->
     <!-- physical mode will be the default mode if not specified -->
-    <pb_type name="clb">
-      <!-- Binding interconnect to circuit models as their physical implementation, if not defined, we use the default model -->
-      <interconnect name="crossbar" circuit_model_name="mux_tree"/>
-    </pb_type>
     <pb_type name="clb.fle" physical_mode_name="physical"/>
     <pb_type name="clb.fle[physical].fabric.frac_logic.frac_lut4" circuit_model_name="frac_lut4" mode_bits="0"/>
     <pb_type name="clb.fle[physical].fabric.ff" circuit_model_name="SDFFSRQ"/>
