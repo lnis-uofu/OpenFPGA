@@ -577,8 +577,7 @@ size_t check_io_circuit_model(const CircuitLibrary& circuit_lib) {
    * iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_SRAM);
    */
   std::vector<enum e_circuit_model_port_type> iopad_port_types_required;
-  iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_INPUT);
-  iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_OUTPUT);
+  iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_INOUT);
   num_err += check_circuit_model_port_required(circuit_lib, CIRCUIT_MODEL_IOPAD, iopad_port_types_required);
 
   /* Each I/O cell must have 
