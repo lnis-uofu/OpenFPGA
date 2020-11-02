@@ -18,3 +18,23 @@ module GPIO (
   //----- when direction is disabled, the signal is propagated from data out to pad
   assign PAD = DIR ? 1'bz : A;
 endmodule
+
+//-----------------------------------------------------
+// Function    : A minimum input pad
+//-----------------------------------------------------
+module GPIN (
+  input A, // Data output
+  output Y // Data input
+);
+  assign Y = A;
+endmodule
+
+//-----------------------------------------------------
+// Function    : A minimum output pad
+//-----------------------------------------------------
+module GPOUT (
+  input A, // Data output
+  output Y // Data input
+);
+  assign Y = A;
+endmodule
