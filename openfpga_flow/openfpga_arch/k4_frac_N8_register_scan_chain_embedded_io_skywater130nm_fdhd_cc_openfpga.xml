@@ -188,14 +188,14 @@
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
       <output_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
-      <port type="input" prefix="PAD" lib_name="A" size="1" is_global="true" is_io="true" />
+      <port type="inout" prefix="PAD" lib_name="A" size="1" is_global="true" is_io="true" />
       <port type="output" prefix="inpad" lib_name="Y" size="1"/>
     </circuit_model>
     <circuit_model type="iopad" name="GPOUT" prefix="GPOUT" is_default="false" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/gpio.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
       <output_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
-      <port type="output" prefix="PAD" lib_name="Y" size="1" is_global="true" is_io="true" />
+      <port type="inout" prefix="PAD" lib_name="Y" size="1" is_global="true" is_io="true" />
       <port type="input" prefix="outpad" lib_name="A" size="1"/>
     </circuit_model>
   </circuit_library>
