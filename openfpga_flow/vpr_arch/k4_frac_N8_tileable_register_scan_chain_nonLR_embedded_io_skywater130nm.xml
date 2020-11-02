@@ -25,15 +25,6 @@
   -->
   <models>
     <!-- A virtual model for I/O to be used in the physical mode of io block -->
-    <model name="io">
-      <input_ports>
-        <port name="outpad"/>
-      </input_ports>
-      <output_ports>
-        <port name="inpad"/>
-      </output_ports>
-    </model>
-    <!-- A virtual model for I/O to be used in the physical mode of io block -->
     <model name="frac_lut4">
       <input_ports>
         <port name="in"/>
@@ -227,53 +218,24 @@
     <pb_type name="io">
       <input name="outpad" num_pins="1"/>
       <output name="inpad" num_pins="1"/>
-      <!-- Do NOT add clock pins to I/O here!!! VPR does not build clock network in the way that OpenFPGA can support
-           If you need to register the I/O, define clocks in the circuit models
-           These clocks can be handled in back-end
-       -->
-      <!-- A mode denotes the physical implementation of an I/O 
-           This mode will be not packable but is mainly used for fabric verilog generation   
-        -->
-      <mode name="physical" disabled_in_pack="true">
-        <pb_type name="iopad" blif_model=".subckt io" num_pb="1">
-          <input name="outpad" num_pins="1"/>
-          <output name="inpad" num_pins="1"/>
-        </pb_type>
-        <interconnect>
-          <direct name="outpad" input="io.outpad" output="iopad.outpad">
-            <delay_constant max="1.394e-11" in_port="io.outpad" out_port="iopad.outpad"/>
-          </direct>
-          <direct name="inpad" input="iopad.inpad" output="io.inpad">
-            <delay_constant max="4.243e-11" in_port="iopad.inpad" out_port="io.inpad"/>
-          </direct>
-        </interconnect>
-      </mode>
-
-      <!-- IOs can operate as either inputs or outputs.
-	     Delays below come from Ian Kuon. They are small, so they should be interpreted as
-	     the delays to and from registers in the I/O (and generally I/Os are registered 
-	     today and that is when you timing analyze them.
+      <!-- Different from GPIOs, embedded I/O interfaces can afford splitting
+           input and output pin. Therefore, the input pad and output pad are defined
+           as different blocks
 	     -->
-      <mode name="inpad">
-        <pb_type name="inpad" blif_model=".input" num_pb="1">
-          <output name="inpad" num_pins="1"/>
-        </pb_type>
-        <interconnect>
-          <direct name="inpad" input="inpad.inpad" output="io.inpad">
-            <delay_constant max="4.243e-11" in_port="inpad.inpad" out_port="io.inpad"/>
-          </direct>
-        </interconnect>
-      </mode>
-      <mode name="outpad">
-        <pb_type name="outpad" blif_model=".output" num_pb="1">
-          <input name="outpad" num_pins="1"/>
-        </pb_type>
-        <interconnect>
-          <direct name="outpad" input="io.outpad" output="outpad.outpad">
-            <delay_constant max="1.394e-11" in_port="io.outpad" out_port="outpad.outpad"/>
-          </direct>
-        </interconnect>
-      </mode>
+      <pb_type name="inpad" blif_model=".input" num_pb="1">
+        <output name="inpad" num_pins="1"/>
+      </pb_type>
+      <pb_type name="outpad" blif_model=".output" num_pb="1">
+        <input name="outpad" num_pins="1"/>
+      </pb_type>
+      <interconnect>
+        <direct name="inpad" input="inpad.inpad" output="io.inpad">
+          <delay_constant max="4.243e-11" in_port="inpad.inpad" out_port="io.inpad"/>
+        </direct>
+        <direct name="outpad" input="io.outpad" output="outpad.outpad">
+          <delay_constant max="1.394e-11" in_port="io.outpad" out_port="outpad.outpad"/>
+        </direct>
+      </interconnect>
       <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 10% of the tracks in a channel -->
       <!-- IOs go on the periphery of the FPGA, for consistency, 
           make it physically equivalent on all sides so that only one definition of I/Os is needed.
