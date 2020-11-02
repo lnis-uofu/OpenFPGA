@@ -51,18 +51,30 @@
          If you need to register the I/O, define clocks in the circuit models
          These clocks can be handled in back-end
      -->
-    <tile name="io" capacity="8" area="0">
+    <tile name="gp_inpad" capacity="8" area="0">
       <equivalent_sites>
-        <site pb_type="io"/>
+        <site pb_type="gp_inpad"/>
       </equivalent_sites>
-      <input name="outpad" num_pins="1"/>
       <output name="inpad" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
       <pinlocations pattern="custom">
-        <loc side="left">io.outpad io.inpad</loc>
-        <loc side="top">io.outpad io.inpad</loc>
-        <loc side="right">io.outpad io.inpad</loc>
-        <loc side="bottom">io.outpad io.inpad</loc>
+        <loc side="left">gp_inpad.inpad</loc>
+        <loc side="top">gp_inpad.inpad</loc>
+        <loc side="right">gp_inpad.inpad</loc>
+        <loc side="bottom">gp_inpad.inpad</loc>
+      </pinlocations>
+    </tile>
+    <tile name="gp_outpad" capacity="8" area="0">
+      <equivalent_sites>
+        <site pb_type="gp_outpad"/>
+      </equivalent_sites>
+      <input name="outpad" num_pins="1"/>
+      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+      <pinlocations pattern="custom">
+        <loc side="left">gp_outpad.outpad</loc>
+        <loc side="top">gp_outpad.outpad</loc>
+        <loc side="right">gp_outpad.outpad</loc>
+        <loc side="bottom">gp_outpad.outpad</loc>
       </pinlocations>
     </tile>
     <tile name="clb" area="53894">
@@ -109,30 +121,67 @@
   <!-- ODIN II specific config ends -->
   <!-- Physical descriptions begin -->
   <layout tileable="true">
-    <auto_layout aspect_ratio="2.0">
-      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
-      <perimeter type="io" priority="100"/>
+    <auto_layout aspect_ratio="1.0">
+      <!-- On each side, general-purpose inpad and outpad are interleaved -->
+      <!-- On top side, I/Os are organized as inpad, outpad, inpad, outpad, ... -->
+      <region type="gp_inpad" priority="100" startx="1" endx="W-1" incrx="2" starty="H-1" endy="H-1"/>
+      <region type="gp_outpad" priority="100" startx="2" endx="W-1" incrx="2" starty="H-1" endy="H-1"/>
+      <!-- On right side, I/Os are organized as 
+           inpad 
+           outpad
+           ...
+           inpad
+           outpad
+           This is to avoid unroutable conditions when FPGA size is too small (only gp_inpad is available)
+           -->
+      <region type="gp_outpad" priority="100" startx="W-1" endx="W-1" starty="1" endy="H-1" incry="2"/>
+      <region type="gp_inpad" priority="100" startx="W-1" endx="W-1" starty="2" endy="H-1" incry="2"/>
+      <!-- On top side, I/Os are organized as inpad, outpad, inpad, outpad, ... -->
+      <region type="gp_inpad" priority="100" startx="1" endx="W-1" incrx="2" starty="0" endy="0"/>
+      <region type="gp_outpad" priority="100" startx="2" endx="W-1" incrx="2" starty="0" endy="0"/>
       <corners type="EMPTY" priority="101"/>
+      <!-- On left side, I/Os are organized as 
+           inpad 
+           outpad
+           ...
+           inpad
+           outpad
+           This is to avoid unroutable conditions when FPGA size is too small (only gp_inpad is available)
+           -->
+      <region type="gp_outpad" priority="100" startx="0" endx="0" starty="1" endy="H-1" incry="2"/>
+      <region type="gp_inpad" priority="100" startx="0" endx="0" starty="2" endy="H-1" incry="2"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
     </auto_layout>
     <fixed_layout name="2x2" width="4" height="4">
-      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
-      <perimeter type="io" priority="100"/>
+      <!-- On each side, general-purpose inpad and outpad are interleaved -->
+      <!-- On top side, I/Os are organized as inpad, outpad, inpad, outpad, ... -->
+      <region type="gp_inpad" priority="100" startx="1" endx="W-1" incrx="2" starty="H-1" endy="H-1"/>
+      <region type="gp_outpad" priority="100" startx="2" endx="W-1" incrx="2" starty="H-1" endy="H-1"/>
+      <!-- On right side, I/Os are organized as 
+           inpad 
+           outpad
+           ...
+           inpad
+           outpad
+           This is to avoid unroutable conditions when FPGA size is too small (only gp_inpad is available)
+           -->
+      <region type="gp_outpad" priority="100" startx="W-1" endx="W-1" starty="1" endy="H-1" incry="2"/>
+      <region type="gp_inpad" priority="100" startx="W-1" endx="W-1" starty="2" endy="H-1" incry="2"/>
+      <!-- On top side, I/Os are organized as inpad, outpad, inpad, outpad, ... -->
+      <region type="gp_inpad" priority="100" startx="1" endx="W-1" incrx="2" starty="0" endy="0"/>
+      <region type="gp_outpad" priority="100" startx="2" endx="W-1" incrx="2" starty="0" endy="0"/>
       <corners type="EMPTY" priority="101"/>
-      <!--Fill with 'clb'-->
-      <fill type="clb" priority="10"/>
-    </fixed_layout>
-    <fixed_layout name="4x4" width="6" height="6">
-      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
-      <perimeter type="io" priority="100"/>
-      <corners type="EMPTY" priority="101"/>
-      <!--Fill with 'clb'-->
-      <fill type="clb" priority="10"/>
-    </fixed_layout>
-    <fixed_layout name="20x10" width="22" height="12">
-      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
-      <perimeter type="io" priority="100"/>
+      <!-- On left side, I/Os are organized as 
+           inpad 
+           outpad
+           ...
+           inpad
+           outpad
+           This is to avoid unroutable conditions when FPGA size is too small (only gp_inpad is available)
+           -->
+      <region type="gp_outpad" priority="100" startx="0" endx="0" starty="1" endy="H-1" incry="2"/>
+      <region type="gp_inpad" priority="100" startx="0" endx="0" starty="2" endy="H-1" incry="2"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
@@ -212,39 +261,38 @@
     <direct name="scan_chain" from_pin="clb.scout" to_pin="clb.scin" x_offset="0" y_offset="-1" z_offset="0"/>
   </directlist>
   <complexblocklist>
-    <!-- Define I/O pads begin -->
-    <!-- Capacity is a unique property of I/Os, it is the maximum number of I/Os that can be placed at the same (X,Y) location on the FPGA -->
-    <!-- Not sure of the area of an I/O (varies widely), and it's not relevant to the design of the FPGA core, so we're setting it to 0. -->
-    <pb_type name="io">
-      <input name="outpad" num_pins="1"/>
+    <!-- Different from GPIOs, embedded I/O interfaces can afford splitting
+         input and output pin. Therefore, the input pad and output pad are defined
+         as different blocks
+	   -->
+    <!-- Define input pads begin -->
+    <pb_type name="gp_inpad">
       <output name="inpad" num_pins="1"/>
-      <!-- Different from GPIOs, embedded I/O interfaces can afford splitting
-           input and output pin. Therefore, the input pad and output pad are defined
-           as different blocks
-	     -->
       <pb_type name="inpad" blif_model=".input" num_pb="1">
         <output name="inpad" num_pins="1"/>
       </pb_type>
+      <interconnect>
+        <direct name="inpad" input="inpad.inpad" output="gp_inpad.inpad">
+          <delay_constant max="4.243e-11" in_port="inpad.inpad" out_port="gp_inpad.inpad"/>
+        </direct>
+      </interconnect>
+      <power method="ignore"/>
+    </pb_type>
+    <!-- Define input pads end -->
+    <!-- Define output pads begin -->
+    <pb_type name="gp_outpad">
+      <input name="outpad" num_pins="1"/>
       <pb_type name="outpad" blif_model=".output" num_pb="1">
         <input name="outpad" num_pins="1"/>
       </pb_type>
       <interconnect>
-        <direct name="inpad" input="inpad.inpad" output="io.inpad">
-          <delay_constant max="4.243e-11" in_port="inpad.inpad" out_port="io.inpad"/>
-        </direct>
-        <direct name="outpad" input="io.outpad" output="outpad.outpad">
-          <delay_constant max="1.394e-11" in_port="io.outpad" out_port="outpad.outpad"/>
+        <direct name="outpad" input="gp_outpad.outpad" output="outpad.outpad">
+          <delay_constant max="1.394e-11" in_port="gp_outpad.outpad" out_port="outpad.outpad"/>
         </direct>
       </interconnect>
-      <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 10% of the tracks in a channel -->
-      <!-- IOs go on the periphery of the FPGA, for consistency, 
-          make it physically equivalent on all sides so that only one definition of I/Os is needed.
-          If I do not make a physically equivalent definition, then I need to define 4 different I/Os, one for each side of the FPGA
-        -->
-      <!-- Place I/Os on the sides of the FPGA -->
       <power method="ignore"/>
     </pb_type>
-    <!-- Define I/O pads ends -->
+    <!-- Define output pads end -->
     <!-- Define general purpose logic block (CLB) begin -->
     <!-- -Due to the absence of local routing, 
          the 4 inputs of fracturable LUT4 are no longer equivalent, 

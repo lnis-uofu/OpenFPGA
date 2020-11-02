@@ -221,8 +221,8 @@
   </direct_connection>
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
-    <pb_type name="io.inpad" circuit_model_name="GPIN"/>
-    <pb_type name="io.outpad" circuit_model_name="GPOUT"/>
+    <pb_type name="gp_inpad.inpad" circuit_model_name="GPIN"/>
+    <pb_type name="gp_outpad.outpad" circuit_model_name="GPOUT"/>
     <!-- End physical pb_type binding in complex block IO -->
 
     <!-- physical pb_type binding in complex block CLB -->
