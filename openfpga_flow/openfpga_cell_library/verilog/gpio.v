@@ -23,7 +23,7 @@ endmodule
 // Function    : A minimum input pad
 //-----------------------------------------------------
 module GPIN (
-  input A, // Data output
+  inout A, // External PAD signal
   output Y // Data input
 );
   assign Y = A;
@@ -33,8 +33,8 @@ endmodule
 // Function    : A minimum output pad
 //-----------------------------------------------------
 module GPOUT (
-  input A, // Data output
-  output Y // Data input
+  inout A, // External PAD signal
+  input Y // Data output
 );
-  assign Y = A;
+  assign A = Y;
 endmodule
