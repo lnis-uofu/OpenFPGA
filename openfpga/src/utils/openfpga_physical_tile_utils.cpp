@@ -8,6 +8,7 @@
 #include "vtr_assert.h"
 #include "vtr_time.h"
 
+#include "openfpga_device_grid_utils.h"
 #include "openfpga_physical_tile_utils.h"
 
 /* begin namespace openfpga */
@@ -60,29 +61,9 @@ std::set<e_side> find_physical_io_tile_located_sides(const DeviceGrid& grids,
 
   /* Search the border side */
   /* Create the coordinate range for each side of FPGA fabric */
-  std::vector<e_side> fpga_sides{TOP, RIGHT, BOTTOM, LEFT};
-  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates;
+  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates = generate_perimeter_grid_coordinates( grids);
 
-  /* TOP side*/
-  for (size_t ix = 1; ix < grids.width() - 1; ++ix) { 
-    io_coordinates[TOP].push_back(vtr::Point<size_t>(ix, grids.height() - 1));
-  } 
-
-  /* RIGHT side */
-  for (size_t iy = 1; iy < grids.height() - 1; ++iy) { 
-    io_coordinates[RIGHT].push_back(vtr::Point<size_t>(grids.width() - 1, iy));
-  } 
-
-  /* BOTTOM side*/
-  for (size_t ix = 1; ix < grids.width() - 1; ++ix) { 
-    io_coordinates[BOTTOM].push_back(vtr::Point<size_t>(ix, 0));
-  } 
-
-  /* LEFT side */
-  for (size_t iy = 1; iy < grids.height() - 1; ++iy) { 
-    io_coordinates[LEFT].push_back(vtr::Point<size_t>(0, iy));
-  }
-  for (const e_side& fpga_side : fpga_sides) {
+  for (const e_side& fpga_side : FPGA_SIDES_CLOCKWISE) {
     for (const vtr::Point<size_t>& io_coordinate : io_coordinates[fpga_side]) {
       /* If located in center, we add a NUM_SIDES and finish */
       if (physical_tile == grids[io_coordinate.x()][io_coordinate.y()].type) {
