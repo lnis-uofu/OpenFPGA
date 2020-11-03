@@ -76,6 +76,10 @@ static bool check_lb_rr_graph_dangling_nodes(const LbRRGraph& lb_rr_graph) {
    * If so, this is a dangling nodes and report 
    */
   for (auto node : lb_rr_graph.nodes()) {
+    /* Bypass 0-capacity node; They can be dangling */
+    if (0 == lb_rr_graph.node_capacity(node)) {
+      continue;
+    }
     if ((0 == lb_rr_graph.node_in_edges(node).size())
       && (0 == lb_rr_graph.node_out_edges(node).size())) {
       /* Print a warning! */
@@ -105,6 +109,10 @@ static bool check_lb_rr_graph_source_nodes(const LbRRGraph& lb_rr_graph) {
     if (LB_SOURCE != lb_rr_graph.node_type(node)) {
       continue;
     }
+    /* Bypass 0-capacity node; They can be dangling */
+    if (0 == lb_rr_graph.node_capacity(node)) {
+      continue;
+    }
     if ((0 != lb_rr_graph.node_in_edges(node).size())
       || (0 == lb_rr_graph.node_out_edges(node).size())) {
       /* Print a warning! */
@@ -132,6 +140,10 @@ static bool check_lb_rr_graph_sink_nodes(const LbRRGraph& lb_rr_graph) {
   for (auto node : lb_rr_graph.nodes()) {
     /* Pass nodes whose types are not LB_SINK */
     if (LB_SINK != lb_rr_graph.node_type(node)) {
+      continue;
+    }
+    /* Bypass 0-capacity node; They can be dangling */
+    if (0 == lb_rr_graph.node_capacity(node)) {
       continue;
     }
     if ((0 == lb_rr_graph.node_in_edges(node).size())
@@ -171,16 +183,6 @@ bool check_lb_rr_graph(const LbRRGraph& lb_rr_graph) {
 
   if (false == check_lb_rr_graph_dangling_nodes(lb_rr_graph)) {
     VTR_LOG_WARN("Fail in checking dangling nodes !\n");
-    num_err++;
-  }
-
-  if (false == check_lb_rr_graph_source_nodes(lb_rr_graph)) {
-    VTR_LOG_WARN("Fail in checking source nodes!\n");
-    num_err++;
-  }
-
-  if (false == check_lb_rr_graph_sink_nodes(lb_rr_graph)) {
-    VTR_LOG_WARN("Fail in checking sink nodes!\n");
     num_err++;
   }
 

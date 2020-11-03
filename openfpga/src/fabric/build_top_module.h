@@ -16,7 +16,6 @@
 #include "arch_direct.h"
 #include "config_protocol.h"
 #include "module_manager.h"
-#include "io_location_map.h"
 #include "fabric_key.h"
 
 /********************************************************************
@@ -27,7 +26,6 @@
 namespace openfpga {
 
 int build_top_module(ModuleManager& module_manager,
-                     IoLocationMap& io_location_map,
                      DecoderLibrary& decoder_lib,
                      const CircuitLibrary& circuit_lib,
                      const DeviceGrid& grids,

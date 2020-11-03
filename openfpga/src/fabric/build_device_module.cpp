@@ -30,7 +30,6 @@ namespace openfpga {
  * for a FPGA fabric
  *******************************************************************/
 int build_device_module_graph(ModuleManager& module_manager,
-                              IoLocationMap& io_location_map,
                               DecoderLibrary& decoder_lib,
                               const OpenfpgaContext& openfpga_ctx,
                               const DeviceContext& vpr_device_ctx,
@@ -112,7 +111,6 @@ int build_device_module_graph(ModuleManager& module_manager,
 
   /* Build FPGA fabric top-level module */
   status = build_top_module(module_manager,
-                            io_location_map,
                             decoder_lib,
                             openfpga_ctx.arch().circuit_lib, 
                             vpr_device_ctx.grid,
