@@ -11,7 +11,10 @@ namespace openfpga {
 /**************************************************
  * Public Accessors 
  *************************************************/
-size_t IoLocationMap::io_index(const size_t& x, const size_t& y, const size_t& z) const {
+size_t IoLocationMap::io_index(const size_t& x,
+                               const size_t& y,
+                               const size_t& z,
+                               const std::string& io_port_name) const {
   if (x >= io_indices_.size()) {
     return size_t(-1);
   }
@@ -24,10 +27,19 @@ size_t IoLocationMap::io_index(const size_t& x, const size_t& y, const size_t& z
     return size_t(-1);
   }
 
-  return io_indices_[x][y][z];
+  auto result = io_indices_[x][y][z].find(io_port_name);
+  if (result == io_indices_[x][y][z].end()) {
+    return size_t(-1);
+  }
+
+  return result->second;
 }
 
-void IoLocationMap::set_io_index(const size_t& x, const size_t& y, const size_t& z, const size_t& io_index) {
+void IoLocationMap::set_io_index(const size_t& x,
+                                 const size_t& y,
+                                 const size_t& z,
+                                 const std::string& io_port_name,
+                                 const size_t& io_index) {
   if (x >= io_indices_.size()) {
     io_indices_.resize(x + 1);
   }
@@ -40,7 +52,7 @@ void IoLocationMap::set_io_index(const size_t& x, const size_t& y, const size_t&
     io_indices_[x][y].resize(z + 1);
   }
 
-  io_indices_[x][y][z] = io_index;
+  io_indices_[x][y][z][io_port_name] = io_index;
 }
 
 } /* end namespace openfpga */

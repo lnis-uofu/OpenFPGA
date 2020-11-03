@@ -92,7 +92,6 @@ size_t add_top_module_grid_instance(ModuleManager& module_manager,
 static 
 vtr::Matrix<size_t> add_top_module_grid_instances(ModuleManager& module_manager,
                                                   const ModuleId& top_module,
-                                                  IoLocationMap& io_location_map,
                                                   const DeviceGrid& grids) {
 
   vtr::ScopedStartFinishTimer timer("Add grid instances to top module");
@@ -178,21 +177,6 @@ vtr::Matrix<size_t> add_top_module_grid_instances(ModuleManager& module_manager,
 
       /* Add a grid module to top_module*/
       grid_instance_ids[io_coordinate.x()][io_coordinate.y()] = add_top_module_grid_instance(module_manager, top_module, grids[io_coordinate.x()][io_coordinate.y()].type, io_side, io_coordinate);
-
-      /* MUST DO: register in io location mapping!
-       * I/O location mapping is a critical look-up for testbench generators
-       * As we add the I/O grid instances to top module by following order:
-       * TOP -> RIGHT -> BOTTOM -> LEFT
-       * The I/O index will increase in this way as well.
-       * This organization I/O indices is also consistent to the way 
-       * that GPIOs are wired in function connect_gpio_module()
-       *
-       * Note: if you change the GPIO function, you should update here as well!
-       */
-      for (int z = 0; z < grids[io_coordinate.x()][io_coordinate.y()].type->capacity; ++z) {
-        io_location_map.set_io_index(io_coordinate.x(), io_coordinate.y(), z, io_counter);
-        io_counter++;
-      }
     }
   }
 
@@ -322,7 +306,6 @@ vtr::Matrix<size_t> add_top_module_connection_block_instances(ModuleManager& mod
  * 5. Add module nets/submodules to connect configuration ports
  *******************************************************************/
 int build_top_module(ModuleManager& module_manager,
-                     IoLocationMap& io_location_map,
                      DecoderLibrary& decoder_lib,
                      const CircuitLibrary& circuit_lib,
                      const DeviceGrid& grids,
@@ -353,7 +336,7 @@ int build_top_module(ModuleManager& module_manager,
  
   /* Add sub modules, which are grid, SB and CBX/CBY modules as instances */
   /* Add all the grids across the fabric */
-  vtr::Matrix<size_t> grid_instance_ids = add_top_module_grid_instances(module_manager, top_module, io_location_map, grids);
+  vtr::Matrix<size_t> grid_instance_ids = add_top_module_grid_instances(module_manager, top_module, grids);
   /* Add all the SBs across the fabric */
   vtr::Matrix<size_t> sb_instance_ids = add_top_module_switch_block_instances(module_manager, top_module, device_rr_gsb, compact_routing_hierarchy);
   /* Add all the CBX and CBYs across the fabric */
