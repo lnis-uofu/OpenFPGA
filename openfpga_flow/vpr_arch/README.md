@@ -13,5 +13,9 @@ Please reveal the following architecture features in the names to help quickly s
 - multi\_io\_capacity: If I/O capacity is different on each side of FPGAs.
 - reduced\_io: If I/Os only appear a certain or multiple sides of FPGAs 
 - <feature\_size>: The technology node which the delay numbers are extracted from.
+- TileOrgz<Type>: How tile is organized. 
+  * Top-left (Tl): the pins of a tile are placed on the top side and left side only
+  * Top-right (Tr): the pins of a tile are placed on the top side and right side only
+  * Bottom-right (Br): the pins of a tile are placed on the bottom side and right side only
 
 Other features are used in naming should be listed here.
