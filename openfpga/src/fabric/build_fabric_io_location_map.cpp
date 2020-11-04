@@ -18,6 +18,7 @@
 #include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 
+#include "openfpga_device_grid_utils.h"
 #include "build_fabric_io_location_map.h"
 
 /* begin namespace openfpga */
@@ -36,31 +37,10 @@ IoLocationMap build_fabric_io_location_map(const ModuleManager& module_manager,
   std::map<std::string, size_t> io_counter;
 
   /* Create the coordinate range for each side of FPGA fabric */
-  std::vector<e_side> io_sides{TOP, RIGHT, BOTTOM, LEFT};
-  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates;
-
-  /* TOP side*/
-  for (size_t ix = 1; ix < grids.width() - 1; ++ix) { 
-    io_coordinates[TOP].push_back(vtr::Point<size_t>(ix, grids.height() - 1));
-  } 
-
-  /* RIGHT side */
-  for (size_t iy = 1; iy < grids.height() - 1; ++iy) { 
-    io_coordinates[RIGHT].push_back(vtr::Point<size_t>(grids.width() - 1, iy));
-  } 
-
-  /* BOTTOM side*/
-  for (size_t ix = 1; ix < grids.width() - 1; ++ix) { 
-    io_coordinates[BOTTOM].push_back(vtr::Point<size_t>(ix, 0));
-  } 
-
-  /* LEFT side */
-  for (size_t iy = 1; iy < grids.height() - 1; ++iy) { 
-    io_coordinates[LEFT].push_back(vtr::Point<size_t>(0, iy));
-  }
+  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates = generate_perimeter_grid_coordinates( grids);
 
   /* Walk through all the grids on the perimeter, which are I/O grids */
-  for (const e_side& io_side : io_sides) {
+  for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
     for (const vtr::Point<size_t>& io_coordinate : io_coordinates[io_side]) {
       /* Bypass EMPTY grid */
       if (true == is_empty_type(grids[io_coordinate.x()][io_coordinate.y()].type)) {

@@ -26,6 +26,7 @@
 #include "build_top_module_directs.h"
 
 #include "build_module_graph_utils.h"
+#include "openfpga_device_grid_utils.h"
 #include "build_top_module.h"
 
 /* begin namespace openfpga */
@@ -131,32 +132,9 @@ vtr::Matrix<size_t> add_top_module_grid_instances(ModuleManager& module_manager,
 
   /* Instanciate I/O grids */
   /* Create the coordinate range for each side of FPGA fabric */
-  std::vector<e_side> io_sides{TOP, RIGHT, BOTTOM, LEFT};
-  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates;
+  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates = generate_perimeter_grid_coordinates( grids);
 
-  /* TOP side*/
-  for (size_t ix = 1; ix < grids.width() - 1; ++ix) { 
-    io_coordinates[TOP].push_back(vtr::Point<size_t>(ix, grids.height() - 1));
-  } 
-
-  /* RIGHT side */
-  for (size_t iy = 1; iy < grids.height() - 1; ++iy) { 
-    io_coordinates[RIGHT].push_back(vtr::Point<size_t>(grids.width() - 1, iy));
-  } 
-
-  /* BOTTOM side*/
-  for (size_t ix = 1; ix < grids.width() - 1; ++ix) { 
-    io_coordinates[BOTTOM].push_back(vtr::Point<size_t>(ix, 0));
-  } 
-
-  /* LEFT side */
-  for (size_t iy = 1; iy < grids.height() - 1; ++iy) { 
-    io_coordinates[LEFT].push_back(vtr::Point<size_t>(0, iy));
-  }
-
-  /* Add instances of I/O grids to top_module */
-  size_t io_counter = 0;
-  for (const e_side& io_side : io_sides) {
+  for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
     for (const vtr::Point<size_t>& io_coordinate : io_coordinates[io_side]) {
       /* Bypass EMPTY grid */
       if (true == is_empty_type(grids[io_coordinate.x()][io_coordinate.y()].type)) {
