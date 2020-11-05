@@ -188,9 +188,12 @@
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
       <output_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
-      <port type="input" prefix="outpad" lib_name="A" size="1" is_global="true" is_io="true"/>
-      <port type="output" prefix="inpad" lib_name="Y" size="1" is_global="true" is_io="true"/>
-      <port type="sram" prefix="en" lib_name="DIR" size="1" mode_select="true" circuit_model_name="DFF" default_val="1"/>
+      <port type="input" prefix="SOC_IN" lib_name="SOC_IN" size="1" is_global="true" is_io="true" is_data_io="true"/>
+      <port type="output" prefix="SOC_OUT" lib_name="SOC_OUT" size="1" is_global="true" is_io="true" is_data_io="true"/>
+      <port type="output" prefix="SOC_DIR" lib_name="SOC_DIR" size="1" is_global="true" is_io="true"/>
+      <port type="output" prefix="inpad" lib_name="FPGA_IN" size="1"/>
+      <port type="input" prefix="outpad" lib_name="FPGA_OUT" size="1"/>
+      <port type="sram" prefix="en" lib_name="FPGA_DIR" size="1" mode_select="true" circuit_model_name="DFF" default_val="1"/>
     </circuit_model>
   </circuit_library>
   <configuration_protocol>
