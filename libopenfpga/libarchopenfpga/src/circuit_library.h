@@ -79,27 +79,29 @@
  *  2. pass_gate_logic_model_id_: specify the id of circuit model for the pass gate logic 
  *
  *  ------ Port information ------
- * 1. port_ids_: unique id of ports belonging to a circuit model 
- * 1. port_model_ids_: unique id of the parent circuit model for the port
- * 2. port_types_: types of ports belonging to a circuit model 
- * 3. port_sizes_: width of ports belonging to a circuit model
- * 4. port_prefix_: prefix of a port when instance of a circuit model 
- * 5. port_lib_names_: port name in the standard cell library, only used when explicit_port_mapping is enabled   
- * 6. port_inv_prefix_: the prefix to be added for the inverted port. This is mainly used by SRAM ports, which have an coupled inverterd port 
- * 7. port_is_mode_select: specify if this port is used to select operating modes of the circuit model  
- * 8. port_is_global: specify if this port is a global signal shared by other circuit model
- * 9. port_is_reset: specify if this port is a reset signal which needs special pulse widths in testbenches 
- * 10. port_is_set: specify if this port is a set signal which needs special pulse widths in testbenches 
- * 11. port_is_config_enable: specify if this port is a config_enable signal which needs special pulse widths in testbenches 
- * 12. port_is_prog: specify if this port is for FPGA programming use which needs special pulse widths in testbenches 
- * 13. port_tri_state_model_name: the name of circuit model linked to tri-state the port  
- * 14. port_tri_state_model_ids_: the Id of circuit model linked to tri-state the port 
- * 15. port_inv_model_names_: the name of inverter circuit model linked to the port 
- * 16. port_inv_model_ids_: the Id of inverter circuit model linked to the port
- * 17. port_tri_state_map_: only applicable to inputs of LUTs, the tri-state map applied to each pin of this port 
- * 18. port_lut_frac_level_:  only applicable to outputs of LUTs, indicate which level of outputs inside LUT multiplexing structure will be used
- * 19. port_lut_output_mask_: only applicable to outputs of LUTs, indicate which output at an internal level of LUT multiplexing structure will be used
- * 20. port_sram_orgz_: only applicable to SRAM ports, indicate how the SRAMs will be organized, either memory decoders or scan-chains
+ * - port_ids_: unique id of ports belonging to a circuit model 
+ * - port_model_ids_: unique id of the parent circuit model for the port
+ * - port_types_: types of ports belonging to a circuit model 
+ * - port_sizes_: width of ports belonging to a circuit model
+ * - port_prefix_: prefix of a port when instance of a circuit model 
+ * - port_lib_names_: port name in the standard cell library, only used when explicit_port_mapping is enabled   
+ * - port_inv_prefix_: the prefix to be added for the inverted port. This is mainly used by SRAM ports, which have an coupled inverterd port 
+ * - port_is_mode_select: specify if this port is used to select operating modes of the circuit model  
+ * - port_is_io: specify if this port is an io port
+ * - port_is_data_io: specify if this port is an io port that can be mapped to a signal from netlist
+ * - port_is_global: specify if this port is a global signal shared by other circuit model
+ * - port_is_reset: specify if this port is a reset signal which needs special pulse widths in testbenches 
+ * - port_is_set: specify if this port is a set signal which needs special pulse widths in testbenches 
+ * - port_is_config_enable: specify if this port is a config_enable signal which needs special pulse widths in testbenches 
+ * - port_is_prog: specify if this port is for FPGA programming use which needs special pulse widths in testbenches 
+ * - port_tri_state_model_name: the name of circuit model linked to tri-state the port  
+ * - port_tri_state_model_ids_: the Id of circuit model linked to tri-state the port 
+ * - port_inv_model_names_: the name of inverter circuit model linked to the port 
+ * - port_inv_model_ids_: the Id of inverter circuit model linked to the port
+ * - port_tri_state_map_: only applicable to inputs of LUTs, the tri-state map applied to each pin of this port 
+ * - port_lut_frac_level_:  only applicable to outputs of LUTs, indicate which level of outputs inside LUT multiplexing structure will be used
+ * - port_lut_output_mask_: only applicable to outputs of LUTs, indicate which output at an internal level of LUT multiplexing structure will be used
+ * - port_sram_orgz_: only applicable to SRAM ports, indicate how the SRAMs will be organized, either memory decoders or scan-chains
  *
  *  ------ Delay information ------
  * 1. delay_types_: type of pin-to-pin delay, either rising_edge of falling_edge
@@ -279,6 +281,7 @@ class CircuitLibrary {
     std::string port_inv_prefix(const CircuitPortId& circuit_port_id) const;
     size_t port_default_value(const CircuitPortId& circuit_port_id) const;
     bool port_is_io(const CircuitPortId& circuit_port_id) const;
+    bool port_is_data_io(const CircuitPortId& circuit_port_id) const;
     bool port_is_mode_select(const CircuitPortId& circuit_port_id) const;
     bool port_is_global(const CircuitPortId& circuit_port_id) const;
     bool port_is_reset(const CircuitPortId& circuit_port_id) const;
@@ -354,6 +357,8 @@ class CircuitLibrary {
                                 const size_t& default_val);
     void set_port_is_io(const CircuitPortId& circuit_port_id, 
                         const bool& is_io);
+    void set_port_is_data_io(const CircuitPortId& circuit_port_id, 
+                             const bool& is_data_io);
     void set_port_is_mode_select(const CircuitPortId& circuit_port_id, 
                                  const bool& is_mode_select);
     void set_port_is_global(const CircuitPortId& circuit_port_id, 
@@ -545,6 +550,7 @@ class CircuitLibrary {
     vtr::vector<CircuitPortId, std::string> port_inv_prefix_;
     vtr::vector<CircuitPortId, size_t> port_default_values_;
     vtr::vector<CircuitPortId, bool> port_is_io_;
+    vtr::vector<CircuitPortId, bool> port_is_data_io_;
     vtr::vector<CircuitPortId, bool> port_is_mode_select_;
     vtr::vector<CircuitPortId, bool> port_is_global_;
     vtr::vector<CircuitPortId, bool> port_is_reset_;

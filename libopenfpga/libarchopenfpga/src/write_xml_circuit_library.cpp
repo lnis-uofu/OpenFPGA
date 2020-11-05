@@ -186,6 +186,15 @@ void write_xml_circuit_port(std::fstream& fp,
     }
   }
 
+  /* I/O port attributes */
+  if (true == circuit_lib.port_is_io(port)) {
+    write_xml_attribute(fp, "is_io", "true"); 
+  }
+
+  if (true == circuit_lib.port_is_data_io(port)) {
+    write_xml_attribute(fp, "is_data_io", "true"); 
+  }
+
   /* Global, reset, set port attributes */
   if (true == circuit_lib.port_is_global(port)) {
     write_xml_attribute(fp, "is_global", "true"); 

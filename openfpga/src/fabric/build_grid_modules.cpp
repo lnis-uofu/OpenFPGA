@@ -159,6 +159,11 @@ void add_primitive_module_fpga_global_io_port(ModuleManager& module_manager,
                                               const CircuitPortId& circuit_port) {
   BasicPort module_port(generate_fpga_global_io_port_name(std::string(GIO_INOUT_PREFIX), circuit_lib, primitive_model, circuit_port), circuit_lib.port_size(circuit_port));
   ModulePortId primitive_io_port_id = module_manager.add_port(primitive_module, module_port, module_io_port_type);
+  /* Set if the port is mappable or not */
+  if (true == circuit_lib.port_is_data_io(circuit_port)) { 
+    module_manager.set_port_is_mappable_io(primitive_module, primitive_io_port_id, true);
+  }
+
   ModulePortId logic_io_port_id = module_manager.find_module_port(logic_module, circuit_lib.port_prefix(circuit_port));
   BasicPort logic_io_port = module_manager.module_port(logic_module, logic_io_port_id);
   VTR_ASSERT(logic_io_port.get_width() == module_port.get_width());

@@ -169,7 +169,7 @@
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <port type="inout" prefix="PAD" size="1" is_global="true" is_io="true"/>
+      <port type="inout" prefix="PAD" size="1" is_global="true" is_io="true" is_data_io="true"/>
       <port type="sram" prefix="DIR" size="1" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
       <port type="input" prefix="outpad" lib_name="A" size="1"/>
       <port type="output" prefix="inpad" lib_name="Y" size="1"/>

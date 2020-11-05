@@ -18,6 +18,7 @@
 #include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 
+#include "module_manager_utils.h"
 #include "openfpga_device_grid_utils.h"
 #include "build_fabric_io_location_map.h"
 
@@ -74,16 +75,25 @@ IoLocationMap build_fabric_io_location_map(const ModuleManager& module_manager,
        * Note: if you change the GPIO function, you should update here as well!
        */
       for (int z = 0; z < grids[io_coordinate.x()][io_coordinate.y()].type->capacity; ++z) {
-        for (const BasicPort& gpio_port : module_manager.module_ports_by_type(grid_module, ModuleManager::MODULE_GPIO_PORT)) {
-          auto curr_io_index = io_counter.find(gpio_port.get_name());
-          /* Index always start from zero */
-          if (curr_io_index == io_counter.end()) {
-            io_counter[gpio_port.get_name()] = 0;
+        for (const ModuleManager::e_module_port_type& module_io_port_type : MODULE_IO_PORT_TYPES) {
+          for (const ModulePortId& gpio_port_id : module_manager.module_port_ids_by_type(grid_module, module_io_port_type)) {
+            /* Only care mappable I/O */
+            if (false == module_manager.port_is_mappable_io(grid_module, gpio_port_id)) {
+              continue;
+            }
+
+            const BasicPort& gpio_port = module_manager.module_port(grid_module, gpio_port_id);
+
+            auto curr_io_index = io_counter.find(gpio_port.get_name());
+            /* Index always start from zero */
+            if (curr_io_index == io_counter.end()) {
+              io_counter[gpio_port.get_name()] = 0;
+            }
+            io_location_map.set_io_index(io_coordinate.x(), io_coordinate.y(), z,
+                                         gpio_port.get_name(),
+                                         io_counter[gpio_port.get_name()]);
+            io_counter[gpio_port.get_name()]++;
           }
-          io_location_map.set_io_index(io_coordinate.x(), io_coordinate.y(), z,
-                                       gpio_port.get_name(),
-                                       io_counter[gpio_port.get_name()]);
-          io_counter[gpio_port.get_name()]++;
         }
       }
     }
@@ -94,8 +104,16 @@ IoLocationMap build_fabric_io_location_map(const ModuleManager& module_manager,
   ModuleId top_module = module_manager.find_module(top_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
 
-  for (const BasicPort& gpio_port : module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GPIO_PORT)) {
-    VTR_ASSERT(io_counter[gpio_port.get_name()] == gpio_port.get_width());
+  for (const ModuleManager::e_module_port_type& module_io_port_type : MODULE_IO_PORT_TYPES) {
+    for (const ModulePortId& gpio_port_id : module_manager.module_port_ids_by_type(top_module, module_io_port_type)) {
+      /* Only care mappable I/O */
+      if (false == module_manager.port_is_mappable_io(top_module, gpio_port_id)) {
+        continue;
+      }
+      
+      const BasicPort& gpio_port = module_manager.module_port(top_module, gpio_port_id);
+      VTR_ASSERT(io_counter[gpio_port.get_name()] == gpio_port.get_width());
+    }
   }
 
   return io_location_map;

@@ -98,4 +98,12 @@ python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n4_frac_m
 echo -e "Testing K4N5 with pattern based local routing";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/k4_series/k4n5_pattern_local_routing --debug --show_thread_logs
 
+echo -e "Testing different tile organizations";
+echo -e "Testing tiles with pins only on top and left sides";
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/tile_organization/top_left_custom_pins --debug --show_thread_logs
+echo -e "Testing tiles with pins only on top and right sides";
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/tile_organization/top_right_custom_pins --debug --show_thread_logs
+echo -e "Testing tiles with pins only on bottom and right sides";
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/tile_organization/bottom_right_custom_pins --debug --show_thread_logs
+
 end_section "OpenFPGA.TaskTun"
