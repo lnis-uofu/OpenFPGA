@@ -184,8 +184,12 @@ class ModuleManager {
     /* Find the instance id of a given instance name */
     size_t instance_id(const ModuleId& parent_module, const ModuleId& child_module,
                        const std::string& instance_name) const;
+    /* Find the type of a port */
+    ModuleManager::e_module_port_type port_type(const ModuleId& module, const ModulePortId& port) const;
     /* Find if a port is a wire connection */
     bool port_is_wire(const ModuleId& module, const ModulePortId& port) const;
+    /* Find if a port is mappable to an I/O from users' implementations */
+    bool port_is_mappable_io(const ModuleId& module, const ModulePortId& port) const;
     /* Find if a port is register */
     bool port_is_register(const ModuleId& module, const ModulePortId& port) const;
     /* Return the pre-processing flag of a port */
@@ -238,6 +242,8 @@ class ModuleManager {
     void set_module_usage(const ModuleId& module, const e_module_usage_type& usage);
     /* Set a port to be a wire */
     void set_port_is_wire(const ModuleId& module, const std::string& port_name, const bool& is_wire);
+    /* Set a port to be mappable to an I/O from users' implemenations */
+    void set_port_is_mappable_io(const ModuleId& module, const ModulePortId& port_id, const bool& is_mappable_io);
     /* Set a port to be a register */
     void set_port_is_register(const ModuleId& module, const std::string& port_name, const bool& is_register);
     /* Set the preprocessing flag for a port */
@@ -356,6 +362,7 @@ class ModuleManager {
     vtr::vector<ModuleId, vtr::vector<ModulePortId, ModulePortId>> port_ids_;    /* List of ports for each Module */ 
     vtr::vector<ModuleId, vtr::vector<ModulePortId, BasicPort>> ports_;    /* List of ports for each Module */ 
     vtr::vector<ModuleId, vtr::vector<ModulePortId, enum e_module_port_type>> port_types_; /* Type of ports */ 
+    vtr::vector<ModuleId, vtr::vector<ModulePortId, bool>> port_is_mappable_io_; /* If the port is mappable  to an I/O for user's implementations */ 
     vtr::vector<ModuleId, vtr::vector<ModulePortId, bool>> port_is_wire_; /* If the port is a wire, use for Verilog port definition. If enabled: <port_type> reg <port_name>  */ 
     vtr::vector<ModuleId, vtr::vector<ModulePortId, bool>> port_is_register_; /* If the port is a register, use for Verilog port definition. If enabled: <port_type> reg <port_name>  */ 
     vtr::vector<ModuleId, vtr::vector<ModulePortId, std::string>> port_preproc_flags_; /* If a port is available only when a pre-processing flag is enabled. This is to record the pre-processing flags */ 

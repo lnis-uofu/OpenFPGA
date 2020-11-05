@@ -7,6 +7,7 @@
  *******************************************************************/
 #include <algorithm>
 #include <iomanip>
+#include <map>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
@@ -16,6 +17,8 @@
 #include "openfpga_digest.h"
 
 #include "verilog_port_types.h"
+
+#include "module_manager_utils.h"
 
 #include "verilog_constants.h"
 #include "verilog_writer_utils.h"
@@ -147,84 +150,129 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
   /* Validate the file stream */
   valid_file_stream(fp);
 
-  /* In this function, we support only 1 type of I/Os */
-  std::vector<BasicPort> module_io_ports = module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GPIO_PORT);
+  /* Only mappable i/o ports can be considered */
+  std::vector<ModulePortId> module_io_ports;
+  for (const ModuleManager::e_module_port_type& module_io_port_type : MODULE_IO_PORT_TYPES) {
+    for (const ModulePortId& gpio_port_id : module_manager.module_port_ids_by_type(top_module, module_io_port_type)) {
+      /* Only care mappable I/O */
+      if (false == module_manager.port_is_mappable_io(top_module, gpio_port_id)) {
+        continue;
+      }
+      module_io_ports.push_back(gpio_port_id);
+    }
+  }
 
   /* Keep tracking which I/Os have been used */
-  for (const BasicPort& module_io_port : module_io_ports) {
-    std::vector<bool> io_used(module_io_port.get_width(), false);
+  std::map<ModulePortId, std::vector<bool>> io_used;
+  for (const ModulePortId& module_io_port_id :  module_io_ports) {
+    const BasicPort& module_io_port = module_manager.module_port(top_module, module_io_port_id);
+    io_used[module_io_port_id] = std::vector<bool>(module_io_port.get_width(), false);
+  }
 
-    /* See if this I/O should be wired to a benchmark input/output */
-    /* Add signals from blif benchmark and short-wire them to FPGA I/O PADs
-     * This brings convenience to checking functionality  
-     */
-    print_verilog_comment(fp, std::string("----- Link BLIF Benchmark I/Os to FPGA I/Os -----"));
+  /* Type mapping between VPR block and Module port */
+  std::map<AtomBlockType, ModuleManager::e_module_port_type> atom_block_type_to_module_port_type;
+  atom_block_type_to_module_port_type[AtomBlockType::INPAD] = ModuleManager::MODULE_GPIN_PORT;
+  atom_block_type_to_module_port_type[AtomBlockType::OUTPAD] = ModuleManager::MODULE_GPOUT_PORT;
 
-    for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
-      /* Bypass non-I/O atom blocks ! */
-      if ( (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk))
-        && (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) ) {
-        continue;
-      }
+  /* See if this I/O should be wired to a benchmark input/output */
+  /* Add signals from blif benchmark and short-wire them to FPGA I/O PADs
+   * This brings convenience to checking functionality  
+   */
+  print_verilog_comment(fp, std::string("----- Link BLIF Benchmark I/Os to FPGA I/Os -----"));
+
+  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+    /* Bypass non-I/O atom blocks ! */
+    if ( (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk))
+      && (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) ) {
+      continue;
+    }
+    
+    /* If there is a GPIO port, use it directly
+     * Otherwise, should find a GPIN for INPAD
+     *         or should find a GPOUT for OUTPAD
+     */ 
+    std::pair<ModulePortId, size_t> mapped_module_io_info = std::make_pair(ModulePortId::INVALID(), -1);
+    for (const ModulePortId& module_io_port_id : module_io_ports) {
+      const BasicPort& module_io_port = module_manager.module_port(top_module, module_io_port_id);
 
       /* Find the index of the mapped GPIO in top-level FPGA fabric */
-      size_t io_index = io_location_map.io_index(place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
-                                                 place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
-                                                 place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.z,
-                                                 module_io_port.get_name());
+      size_t temp_io_index = io_location_map.io_index(place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
+                                                      place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
+                                                      place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.z,
+                                                      module_io_port.get_name());
 
       /* Bypass invalid index (not mapped to this GPIO port) */
-      if (size_t(-1) == io_index) {
+      if (size_t(-1) == temp_io_index) {
         continue;
       }
 
-      /* Ensure that IO index is in range */
-      BasicPort module_mapped_io_port = module_io_port; 
-      /* Set the port pin index */ 
-      VTR_ASSERT(io_index < module_mapped_io_port.get_width());
-      module_mapped_io_port.set_width(io_index, io_index);
-
-      /* The block may be renamed as it contains special characters which violate Verilog syntax */
-      std::string block_name = atom_ctx.nlist.block_name(atom_blk);
-      if (true == netlist_annotation.is_block_renamed(atom_blk)) {
-        block_name = netlist_annotation.block_name(atom_blk);
-      } 
-
-      /* Create the port for benchmark I/O, due to BLIF benchmark, each I/O always has a size of 1 
-       * In addition, the input and output ports may have different postfix in naming
-       * due to verification context! Here, we give full customization on naming 
-       */
-      BasicPort benchmark_io_port;
-      if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
-        benchmark_io_port.set_name(std::string(block_name + io_input_port_name_postfix)); 
-        benchmark_io_port.set_width(1);
-        print_verilog_comment(fp, std::string("----- Blif Benchmark input " + block_name + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
-        print_verilog_wire_connection(fp, module_mapped_io_port, benchmark_io_port, false);
-      } else {
-        VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
-        benchmark_io_port.set_name(std::string(block_name + io_output_port_name_postfix)); 
-        benchmark_io_port.set_width(1);
-        print_verilog_comment(fp, std::string("----- Blif Benchmark output " + block_name + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
-        print_verilog_wire_connection(fp, benchmark_io_port, module_mapped_io_port, false);
+      /* If the port is an GPIO port, just use it */
+      if (ModuleManager::MODULE_GPIO_PORT == module_manager.port_type(top_module, module_io_port_id)) {
+        mapped_module_io_info = std::make_pair(module_io_port_id, temp_io_index);
+        break;
       }
 
-      /* Mark this I/O has been used/wired */
-      io_used[io_index] = true;
+      /* If this is an INPAD, we can use an GPIN port (if available) */
+      if (atom_block_type_to_module_port_type[atom_ctx.nlist.block_type(atom_blk)] == module_manager.port_type(top_module, module_io_port_id)) {
+        mapped_module_io_info = std::make_pair(module_io_port_id, temp_io_index);
+        break;
+      }
     }
+
+    /* We must find a valid one */
+    VTR_ASSERT(true == module_manager.valid_module_port_id(top_module, mapped_module_io_info.first));
+    VTR_ASSERT(size_t(-1) != mapped_module_io_info.second);
+
+    /* Ensure that IO index is in range */
+    BasicPort module_mapped_io_port = module_manager.module_port(top_module, mapped_module_io_info.first); 
+    size_t io_index = mapped_module_io_info.second;
+
+    /* Set the port pin index */ 
+    VTR_ASSERT(io_index < module_mapped_io_port.get_width());
+    module_mapped_io_port.set_width(io_index, io_index);
+
+    /* The block may be renamed as it contains special characters which violate Verilog syntax */
+    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+      block_name = netlist_annotation.block_name(atom_blk);
+    } 
+
+    /* Create the port for benchmark I/O, due to BLIF benchmark, each I/O always has a size of 1 
+     * In addition, the input and output ports may have different postfix in naming
+     * due to verification context! Here, we give full customization on naming 
+     */
+    BasicPort benchmark_io_port;
+    if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
+      benchmark_io_port.set_name(std::string(block_name + io_input_port_name_postfix)); 
+      benchmark_io_port.set_width(1);
+      print_verilog_comment(fp, std::string("----- Blif Benchmark input " + block_name + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
+      print_verilog_wire_connection(fp, module_mapped_io_port, benchmark_io_port, false);
+    } else {
+      VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
+      benchmark_io_port.set_name(std::string(block_name + io_output_port_name_postfix)); 
+      benchmark_io_port.set_width(1);
+      print_verilog_comment(fp, std::string("----- Blif Benchmark output " + block_name + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
+      print_verilog_wire_connection(fp, benchmark_io_port, module_mapped_io_port, false);
+    }
+
+    /* Mark this I/O has been used/wired */
+    io_used[mapped_module_io_info.first][io_index] = true;
 
     /* Add an empty line as a splitter */
     fp << std::endl;
+  }
 
-    /* Wire the unused iopads to a constant */
-    print_verilog_comment(fp, std::string("----- Wire unused FPGA I/Os to constants -----"));
-    for (size_t io_index = 0; io_index < io_used.size(); ++io_index) {
+  /* Wire the unused iopads to a constant */
+  print_verilog_comment(fp, std::string("----- Wire unused FPGA I/Os to constants -----"));
+  for (const ModulePortId& module_io_port_id : module_io_ports) {
+    for (size_t io_index = 0; io_index < io_used[module_io_port_id].size(); ++io_index) {
       /* Bypass used iopads */
-      if (true == io_used[io_index]) {
+      if (true == io_used[module_io_port_id][io_index]) {
         continue;
       }
 
       /* Wire to a contant */
-      BasicPort module_unused_io_port = module_io_port; 
+      BasicPort module_unused_io_port = module_manager.module_port(top_module, module_io_port_id);
       /* Set the port pin index */ 
       module_unused_io_port.set_width(io_index, io_index);
 

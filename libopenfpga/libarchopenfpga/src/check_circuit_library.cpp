@@ -571,31 +571,41 @@ static
 size_t check_io_circuit_model(const CircuitLibrary& circuit_lib) {
   size_t num_err = 0;
 
-  /* Embedded I/O interface may not have inout port 
-   * iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_INOUT);
-   * Some I/Os may not have SRAM port, such as AIB interface
-   * iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_SRAM);
-   */
-  std::vector<enum e_circuit_model_port_type> iopad_port_types_required;
-  iopad_port_types_required.push_back(CIRCUIT_MODEL_PORT_INOUT);
-  num_err += check_circuit_model_port_required(circuit_lib, CIRCUIT_MODEL_IOPAD, iopad_port_types_required);
-
   /* Each I/O cell must have 
    *  - One of the following ports
-   *    - At least 1 ASIC-to-FPGA (A2F) port that is defined as global I/O 
-   *    - At least 1 FPGA-to-ASIC (F2A) port that is defined as global I/O!
+   *    - At least 1 ASIC-to-FPGA (A2F) port that is defined as global data I/O 
+   *    - At least 1 FPGA-to-ASIC (F2A) port that is defined as global data I/O!
    *  - At least 1 regular port that is non-global which is connected to global routing architecture
    */
   for (const auto& io_model : circuit_lib.models_by_type(CIRCUIT_MODEL_IOPAD)) {
-    bool has_global_io = false;
+    bool has_data_io = false;
+    bool has_data_input_only_io = false;
+    bool has_data_output_only_io = false;
     bool has_internal_connection = false;
 
     for (const auto& port : circuit_lib.model_ports(io_model)) {
-      if ( (true == circuit_lib.port_is_io(port)
-        && (true == circuit_lib.port_is_global(port)))) {
-        has_global_io = true;
+      if ( (true == circuit_lib.port_is_io(port))
+        && (true == circuit_lib.port_is_data_io(port))
+        && (CIRCUIT_MODEL_PORT_INOUT == circuit_lib.port_type(port))
+        && (true == circuit_lib.port_is_global(port))) {
+        has_data_io = true;
         continue; /* Go to next */
       }
+      if ( (true == circuit_lib.port_is_io(port))
+        && (true == circuit_lib.port_is_data_io(port))
+        && (CIRCUIT_MODEL_PORT_INPUT == circuit_lib.port_type(port))
+        && (true == circuit_lib.port_is_global(port))) {
+        has_data_input_only_io = true;
+        continue; /* Go to next */
+      }
+      if ( (true == circuit_lib.port_is_io(port))
+        && (true == circuit_lib.port_is_data_io(port))
+        && (CIRCUIT_MODEL_PORT_OUTPUT == circuit_lib.port_type(port))
+        && (true == circuit_lib.port_is_global(port))) {
+        has_data_output_only_io = true;
+        continue; /* Go to next */
+      }
+
       if ( (false == circuit_lib.port_is_io(port)
         && (false == circuit_lib.port_is_global(port)))
         && (CIRCUIT_MODEL_PORT_SRAM != circuit_lib.port_type(port))) {
@@ -604,9 +614,14 @@ size_t check_io_circuit_model(const CircuitLibrary& circuit_lib) {
       }
     }
   
-    if (false == has_global_io) {
+    /* Error out when
+     *   - there is no data io, data input-only io and data output-only io
+     */
+    if ( (false == has_data_io) 
+      && (false == has_data_input_only_io) 
+      && (false == has_data_output_only_io)) {
       VTR_LOGF_ERROR(__FILE__, __LINE__,
-                     "I/O circuit model '%s' does not have any I/O port defined!\n",
+                     "I/O circuit model '%s' does not have any data I/O port defined!\n",
                      circuit_lib.model_name(io_model).c_str()); 
       num_err++;
     }

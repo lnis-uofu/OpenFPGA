@@ -32,6 +32,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+constexpr std::array<ModuleManager::e_module_port_type, 3> MODULE_IO_PORT_TYPES = {ModuleManager::MODULE_GPIN_PORT, ModuleManager::MODULE_GPOUT_PORT, ModuleManager::MODULE_GPIO_PORT};
+
 void reserve_module_manager_module_nets(ModuleManager& module_manager, 
                                         const ModuleId& module);
 
