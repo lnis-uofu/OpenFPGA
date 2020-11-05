@@ -157,20 +157,29 @@ ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager,
    */
   for (const auto& port : circuit_lib.model_global_ports(circuit_model, false)) {
     BasicPort port_info(circuit_lib.port_prefix(port), circuit_lib.port_size(port));
+    ModulePortId module_port = ModulePortId::INVALID();
+
     if ( (CIRCUIT_MODEL_PORT_INPUT == circuit_lib.port_type(port))
       && (false == circuit_lib.port_is_io(port)) ) {
-      module_manager.add_port(module, port_info, ModuleManager::MODULE_GLOBAL_PORT);  
+      module_port = module_manager.add_port(module, port_info, ModuleManager::MODULE_GLOBAL_PORT);  
     } else if (CIRCUIT_MODEL_PORT_CLOCK == circuit_lib.port_type(port)) {
-      module_manager.add_port(module, port_info, ModuleManager::MODULE_GLOBAL_PORT);  
+      module_port = module_manager.add_port(module, port_info, ModuleManager::MODULE_GLOBAL_PORT);  
     } else if ( (CIRCUIT_MODEL_PORT_INPUT == circuit_lib.port_type(port))
              && (true == circuit_lib.port_is_io(port)) ) {
-      module_manager.add_port(module, port_info, ModuleManager::MODULE_GPIN_PORT);  
+      module_port = module_manager.add_port(module, port_info, ModuleManager::MODULE_GPIN_PORT);  
     } else if (CIRCUIT_MODEL_PORT_OUTPUT == circuit_lib.port_type(port)) {
       VTR_ASSERT(true == circuit_lib.port_is_io(port));
-      module_manager.add_port(module, port_info, ModuleManager::MODULE_GPOUT_PORT);  
+      module_port = module_manager.add_port(module, port_info, ModuleManager::MODULE_GPOUT_PORT);  
     } else if ( (CIRCUIT_MODEL_PORT_INOUT == circuit_lib.port_type(port)) 
              && (true == circuit_lib.port_is_io(port)) ) {
-      module_manager.add_port(module, port_info, ModuleManager::MODULE_GPIO_PORT);  
+      module_port = module_manager.add_port(module, port_info, ModuleManager::MODULE_GPIO_PORT);  
+    }
+
+    /* Specify if the port can be mapped to an data signal */
+    if (true == module_manager.valid_module_port_id(module, module_port)) {
+      if (true == circuit_lib.port_is_data_io(port)) {
+        module_manager.set_port_is_mappable_io(module, module_port, true);
+      }
     }
   }
 
@@ -191,11 +200,7 @@ ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager,
   for (const auto& kv : port_type2type_map) {
     for (const auto& port : circuit_lib.model_ports_by_type(circuit_model, kv.first, true)) {
       BasicPort port_info(circuit_lib.port_prefix(port), circuit_lib.port_size(port));
-      ModulePortId module_port = module_manager.add_port(module, port_info, kv.second);  
-      /* Specify if the port can be mapped to an data signal */
-      if (true == circuit_lib.port_is_data_io(port)) {
-        module_manager.set_port_is_mappable_io(module, module_port, true);
-      }
+      module_manager.add_port(module, port_info, kv.second);  
     }
   }
 
