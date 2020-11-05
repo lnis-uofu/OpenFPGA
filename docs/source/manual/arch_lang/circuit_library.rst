@@ -176,6 +176,8 @@ A circuit model may consist of a number of ports. The port list is mandatory in 
 
   - ``is_data_io="true|false"`` Specify if this port should be treated as a mappable FPGA I/O port for users' implementation. When this is enabled, I/Os of user's implementation, e.g., ``.input`` and ``.output`` in ``.blif`` netlist, can be mapped to the port through VPR.
 
+    .. note:: Any I/O model must have at least 1 port that is defined as data I/O!
+
   - ``mode_select="true|false"`` Specify if this port controls the mode switching in a configurable logic block. This is due to that a configurable logic block can operate in different modes, which is controlled by SRAM bits.
 
     .. note:: ``mode_select`` is only valid when the type of this port is ``sram``.
