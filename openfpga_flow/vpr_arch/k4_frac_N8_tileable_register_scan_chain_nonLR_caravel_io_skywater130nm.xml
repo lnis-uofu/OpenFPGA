@@ -25,6 +25,15 @@
   -->
   <models>
     <!-- A virtual model for I/O to be used in the physical mode of io block -->
+    <model name="io">
+      <input_ports>
+        <port name="outpad"/>
+      </input_ports>
+      <output_ports>
+        <port name="inpad"/>
+      </output_ports>
+    </model>
+
     <model name="frac_lut4">
       <input_ports>
         <port name="in"/>
