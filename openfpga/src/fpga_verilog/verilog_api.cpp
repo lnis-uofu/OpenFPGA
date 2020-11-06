@@ -181,6 +181,7 @@ void fpga_verilog_testbench(const ModuleManager &module_manager,
   if (true == options.print_formal_verification_top_netlist()) {
     std::string formal_verification_top_netlist_file_path = src_dir_path + netlist_name + std::string(FORMAL_VERIFICATION_VERILOG_FILE_POSTFIX);
     print_verilog_preconfig_top_module(module_manager, bitstream_manager,
+                                       config_protocol,
                                        circuit_lib, global_ports,
                                        atom_ctx, place_ctx, io_location_map,
                                        netlist_annotation,

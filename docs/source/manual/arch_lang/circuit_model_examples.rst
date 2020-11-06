@@ -832,7 +832,7 @@ Template
 
   - ``type="ccff|ff"`` Specify the type of a flip-flop. ``ff`` is a regular flip-flop while ``ccff`` denotes a configuration-chain flip-flop
 
-.. note:: A flip-flop should have three types of ports, ``input``, ``output`` and ``clock``.
+.. note:: A flip-flop should at least have three types of ports, ``input``, ``output`` and ``clock``.
 
 .. note:: If the user provides a customized Verilog/SPICE netlist, the bandwidth of ports should be defined to the same as the Verilog/SPICE netlist.
 
@@ -891,7 +891,8 @@ The code describing this FF is:
 
   <circuit_model type="ccff" name="ccff" prefix="ccff" verilog_netlist="ccff.v" spice_netlist="ccff.sp">
     <port type="input" prefix="D" size="1"/>
-    <port type="output" prefix="Q" size="2"/>
+    <port type="output" prefix="Q" size="1"/>
+    <port type="output" prefix="Qb" size="1"/>
     <port type="clock" prefix="CK" size="1" is_global="true"/>
   </circuit_model>
 
@@ -1053,7 +1054,7 @@ The code describing this I/O-Pad is:
     <input_buffer exist="true" circuit_model_name="INVTX1"/>
     <output_buffer exist="true" circuit_model_name="INVTX1"/>
     <pass_gate_logic circuit_model_name="TGATE"/>
-    <port type="inout" prefix="pad" size="1"/>
+    <port type="inout" prefix="pad" size="1" is_global="true" is_io="true" is_data_io="true"/>
     <port type="sram" prefix="en" size="1" mode_select="true" circuit_model_name="ccff" default_val="1"/>
     <port type="input" prefix="outpad" size="1"/>
     <port type="output" prefix="inpad" size="1"/>

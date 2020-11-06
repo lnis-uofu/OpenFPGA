@@ -776,7 +776,7 @@ void add_module_nets_between_logic_and_memory_sram_bus(ModuleManager& module_man
 
   /* Do wiring only when we have sramb ports */
   if ( (false == logic_module_sramb_port_ids.empty())
-    || (ModulePortId::INVALID() == mem_module_sramb_port_id) ) {
+    && (ModulePortId::INVALID() != mem_module_sramb_port_id) ) {
     add_module_nets_between_logic_and_memory_sram_ports(module_manager, parent_module, 
                                                         logic_module, logic_instance_id,
                                                         memory_module, memory_instance_id,

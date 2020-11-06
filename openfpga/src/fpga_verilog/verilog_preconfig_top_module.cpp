@@ -189,7 +189,8 @@ namespace openfpga
   static void print_verilog_preconfig_top_module_assign_bitstream(std::fstream &fp,
                                                                   const ModuleManager &module_manager,
                                                                   const ModuleId &top_module,
-                                                                  const BitstreamManager &bitstream_manager)
+                                                                  const BitstreamManager &bitstream_manager,
+                                                                  const bool& output_datab_bits)
   {
     /* Validate the file stream */
     valid_file_stream(fp);
@@ -231,43 +232,45 @@ namespace openfpga
       print_verilog_wire_constant_values(fp, config_data_port, config_data_values);
     }
 
-    fp << "initial begin" << std::endl;
+    if (true == output_datab_bits) {
+      fp << "initial begin" << std::endl;
 
-    for (const ConfigBlockId &config_block_id : bitstream_manager.blocks())
-    {
-      /* We only cares blocks with configuration bits */
-      if (0 == bitstream_manager.block_bits(config_block_id).size())
+      for (const ConfigBlockId &config_block_id : bitstream_manager.blocks())
       {
-        continue;
-      }
-      /* Build the hierarchical path of the configuration bit in modules */
-      std::vector<ConfigBlockId> block_hierarchy = find_bitstream_manager_block_hierarchy(bitstream_manager, config_block_id);
-      /* Drop the first block, which is the top module, it should be replaced by the instance name here */
-      /* Ensure that this is the module we want to drop! */
-      VTR_ASSERT(0 == module_manager.module_name(top_module).compare(bitstream_manager.block_name(block_hierarchy[0])));
-      block_hierarchy.erase(block_hierarchy.begin());
-      /* Build the full hierarchy path */
-      std::string bit_hierarchy_path(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME);
-      for (const ConfigBlockId &temp_block : block_hierarchy)
-      {
+        /* We only cares blocks with configuration bits */
+        if (0 == bitstream_manager.block_bits(config_block_id).size())
+        {
+          continue;
+        }
+        /* Build the hierarchical path of the configuration bit in modules */
+        std::vector<ConfigBlockId> block_hierarchy = find_bitstream_manager_block_hierarchy(bitstream_manager, config_block_id);
+        /* Drop the first block, which is the top module, it should be replaced by the instance name here */
+        /* Ensure that this is the module we want to drop! */
+        VTR_ASSERT(0 == module_manager.module_name(top_module).compare(bitstream_manager.block_name(block_hierarchy[0])));
+        block_hierarchy.erase(block_hierarchy.begin());
+        /* Build the full hierarchy path */
+        std::string bit_hierarchy_path(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME);
+        for (const ConfigBlockId &temp_block : block_hierarchy)
+        {
+          bit_hierarchy_path += std::string(".");
+          bit_hierarchy_path += bitstream_manager.block_name(temp_block);
+        }
         bit_hierarchy_path += std::string(".");
-        bit_hierarchy_path += bitstream_manager.block_name(temp_block);
-      }
-      bit_hierarchy_path += std::string(".");
 
-      /* Find the bit index in the parent block */
-      BasicPort config_datab_port(bit_hierarchy_path + generate_configurable_memory_inverted_data_out_name(),
-                                  bitstream_manager.block_bits(config_block_id).size());
+        /* Find the bit index in the parent block */
+        BasicPort config_datab_port(bit_hierarchy_path + generate_configurable_memory_inverted_data_out_name(),
+                                    bitstream_manager.block_bits(config_block_id).size());
 
-      std::vector<size_t> config_datab_values;
-      for (const ConfigBitId config_bit : bitstream_manager.block_bits(config_block_id))
-      {
-        config_datab_values.push_back(!bitstream_manager.bit_value(config_bit));
+        std::vector<size_t> config_datab_values;
+        for (const ConfigBitId config_bit : bitstream_manager.block_bits(config_block_id))
+        {
+          config_datab_values.push_back(!bitstream_manager.bit_value(config_bit));
+        }
+        print_verilog_force_wire_constant_values(fp, config_datab_port, config_datab_values);
       }
-      print_verilog_force_wire_constant_values(fp, config_datab_port, config_datab_values);
+
+      fp << "end" << std::endl;
     }
-
-    fp << "end" << std::endl;
 
     print_verilog_comment(fp, std::string("----- End assign bitstream to configuration memories -----"));
   }
@@ -279,7 +282,8 @@ namespace openfpga
   static void print_verilog_preconfig_top_module_deposit_bitstream(std::fstream &fp,
                                                                    const ModuleManager &module_manager,
                                                                    const ModuleId &top_module,
-                                                                   const BitstreamManager &bitstream_manager)
+                                                                   const BitstreamManager &bitstream_manager,
+                                                                   const bool& output_datab_bits)
   {
     /* Validate the file stream */
     valid_file_stream(fp);
@@ -314,9 +318,6 @@ namespace openfpga
       BasicPort config_data_port(bit_hierarchy_path + generate_configurable_memory_data_out_name(),
                                  bitstream_manager.block_bits(config_block_id).size());
 
-      BasicPort config_datab_port(bit_hierarchy_path + generate_configurable_memory_inverted_data_out_name(),
-                                  bitstream_manager.block_bits(config_block_id).size());
-
       /* Wire it to the configuration bit: access both data out and data outb ports */
       std::vector<size_t> config_data_values;
       for (const ConfigBitId config_bit : bitstream_manager.block_bits(config_block_id))
@@ -324,6 +325,15 @@ namespace openfpga
         config_data_values.push_back(bitstream_manager.bit_value(config_bit));
       }
       print_verilog_deposit_wire_constant_values(fp, config_data_port, config_data_values);
+
+      /* Skip datab ports if specified */
+      if (false == output_datab_bits) {
+        continue;
+      }
+
+      BasicPort config_datab_port(bit_hierarchy_path + generate_configurable_memory_inverted_data_out_name(),
+                                  bitstream_manager.block_bits(config_block_id).size());
+
 
       std::vector<size_t> config_datab_values;
       for (const ConfigBitId config_bit : bitstream_manager.block_bits(config_block_id))
@@ -347,19 +357,37 @@ namespace openfpga
   static void print_verilog_preconfig_top_module_load_bitstream(std::fstream &fp,
                                                                 const ModuleManager &module_manager,
                                                                 const ModuleId &top_module,
+                                                                const CircuitLibrary& circuit_lib,
+                                                                const CircuitModelId& mem_model,
                                                                 const BitstreamManager &bitstream_manager)
   {
+
+    /* Skip the datab port if there is only 1 output port in memory model
+     * Currently, it assumes that the data output port is always defined while datab is optional
+     * If we see only 1 port, we assume datab is not defined by default.
+     * TODO: this switch could be smarter: it should identify if only data or datab
+     * ports are defined.
+     */
+    bool output_datab_bits = true;
+    if (1 == circuit_lib.model_ports_by_type(mem_model, CIRCUIT_MODEL_PORT_OUTPUT).size()) {
+      output_datab_bits = false;
+    }
+
     print_verilog_comment(fp, std::string("----- Begin load bitstream to configuration memories -----"));
 
     print_verilog_preprocessing_flag(fp, std::string(ICARUS_SIMULATOR_FLAG));
 
     /* Use assign syntax for Icarus simulator */
-    print_verilog_preconfig_top_module_assign_bitstream(fp, module_manager, top_module, bitstream_manager);
+    print_verilog_preconfig_top_module_assign_bitstream(fp, module_manager, top_module,
+                                                        bitstream_manager,
+                                                        output_datab_bits);
 
     fp << "`else" << std::endl;
 
     /* Use assign syntax for Icarus simulator */
-    print_verilog_preconfig_top_module_deposit_bitstream(fp, module_manager, top_module, bitstream_manager);
+    print_verilog_preconfig_top_module_deposit_bitstream(fp, module_manager, top_module,
+                                                         bitstream_manager,
+                                                         output_datab_bits);
 
     print_verilog_endif(fp);
 
@@ -400,6 +428,7 @@ namespace openfpga
  *******************************************************************/
   void print_verilog_preconfig_top_module(const ModuleManager &module_manager,
                                           const BitstreamManager &bitstream_manager,
+                                          const ConfigProtocol &config_protocol,
                                           const CircuitLibrary &circuit_lib,
                                           const std::vector<CircuitPortId> &global_ports,
                                           const AtomContext &atom_ctx,
@@ -457,8 +486,13 @@ namespace openfpga
                                              std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
                                              (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
+    /* Assign the SRAM model applied to the FPGA fabric */
+    CircuitModelId sram_model = config_protocol.memory_model();  
+    VTR_ASSERT(true == circuit_lib.valid_model_id(sram_model));
+
     /* Assign FPGA internal SRAM/Memory ports to bitstream values */
     print_verilog_preconfig_top_module_load_bitstream(fp, module_manager, top_module,
+                                                      circuit_lib, sram_model, 
                                                       bitstream_manager);
 
     /* Testbench ends*/
