@@ -299,10 +299,11 @@ size_t check_ccff_circuit_model_ports(const CircuitLibrary& circuit_lib,
                                                                  1, 1, true);
 
 
-  /* Check if we have output */
+  /* Check if we have 1 or 2 outputs */
+  size_t num_output_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_OUTPUT, true).size();
   num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
                                                                  CIRCUIT_MODEL_PORT_OUTPUT,
-                                                                 1, 1, false);
+                                                                 num_output_ports, 1, false);
 
   return num_err;
 }
