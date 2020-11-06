@@ -172,16 +172,15 @@
       <port type="output" prefix="lut3_out" size="2" lut_frac_level="3" lut_output_mask="0,1"/>
       <port type="output" prefix="lut4_out" size="1" lut_output_mask="0"/>
       <port type="sram" prefix="sram" size="16"/>
-      <port type="sram" prefix="mode" size="1" mode_select="true" circuit_model_name="DFF" default_val="1"/>
+      <port type="sram" prefix="mode" size="1" mode_select="true" circuit_model_name="DFFQ" default_val="1"/>
     </circuit_model>
     <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-    <circuit_model type="ccff" name="DFF" prefix="DFF" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
+    <circuit_model type="ccff" name="DFFQ" prefix="DFFQ" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
       <output_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
       <port type="input" prefix="D" size="1"/>
       <port type="output" prefix="Q" size="1"/>
-      <port type="output" prefix="QN" size="1"/>
       <port type="clock" prefix="prog_clk" lib_name="CK" size="1" is_global="true" default_val="0" is_prog="true"/>
     </circuit_model>
     <circuit_model type="iopad" name="EMBEDDED_IO" prefix="EMBEDDED_IO" is_default="true" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/gpio.v">
@@ -193,11 +192,11 @@
       <port type="output" prefix="SOC_DIR" lib_name="SOC_DIR" size="1" is_global="true" is_io="true"/>
       <port type="output" prefix="inpad" lib_name="FPGA_IN" size="1"/>
       <port type="input" prefix="outpad" lib_name="FPGA_OUT" size="1"/>
-      <port type="sram" prefix="en" lib_name="FPGA_DIR" size="1" mode_select="true" circuit_model_name="DFF" default_val="1"/>
+      <port type="sram" prefix="en" lib_name="FPGA_DIR" size="1" mode_select="true" circuit_model_name="DFFQ" default_val="1"/>
     </circuit_model>
   </circuit_library>
   <configuration_protocol>
-    <organization type="scan_chain" circuit_model_name="DFF" num_regions="1"/>
+    <organization type="scan_chain" circuit_model_name="DFFQ" num_regions="1"/>
   </configuration_protocol>
   <connection_block>
     <switch name="ipin_cblock" circuit_model_name="mux_tree_tapbuf"/>
