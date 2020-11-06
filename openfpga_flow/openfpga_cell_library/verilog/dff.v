@@ -5,6 +5,31 @@
 //-----------------------------------------------------
 
 //-----------------------------------------------------
+// Function    : A native D-type flip-flop with single output
+//-----------------------------------------------------
+module DFFQ (
+  input CK, // Clock Input
+  input D, // Data Input
+  output Q // Q output
+);
+//------------Internal Variables--------
+reg q_reg;
+
+//-------------Code Starts Here---------
+always @ (posedge CK) begin 
+  q_reg <= D;
+end
+
+// Wire q_reg to Q
+`ifndef ENABLE_FORMAL_VERIFICATION
+  assign Q = q_reg;
+`else
+  assign Q = 1'bZ;
+`endif
+
+endmodule //End Of Module
+
+//-----------------------------------------------------
 // Function    : A native D-type flip-flop
 //-----------------------------------------------------
 module DFF (
