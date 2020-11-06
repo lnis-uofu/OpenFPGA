@@ -59,6 +59,38 @@ endmodule //End Of Module
 
 //-----------------------------------------------------
 // Function    : D-type flip-flop with 
+//               - single output
+//               - asynchronous active high reset
+//-----------------------------------------------------
+module DFFRQ (
+  input RST, // Reset input
+  input CK, // Clock Input
+  input D, // Data Input
+  output Q // Q output
+);
+//------------Internal Variables--------
+reg q_reg;
+
+//-------------Code Starts Here---------
+always @ ( posedge CK or posedge RST)
+if (RST) begin
+  q_reg <= 1'b0;
+end else begin
+  q_reg <= D;
+end
+
+// Wire q_reg to Q
+`ifndef ENABLE_FORMAL_VERIFICATION
+  assign Q = q_reg;
+`else
+  assign Q = 1'bZ;
+`endif
+
+endmodule //End Of Module
+
+
+//-----------------------------------------------------
+// Function    : D-type flip-flop with 
 //               - asynchronous active high reset
 //-----------------------------------------------------
 module DFFR (
