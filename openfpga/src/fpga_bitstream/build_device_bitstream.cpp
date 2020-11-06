@@ -152,10 +152,6 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
   /* Bitstream manager to be built */
   BitstreamManager bitstream_manager;
 
-  /* Assign the SRAM model applied to the FPGA fabric */
-  CircuitModelId sram_model = openfpga_ctx.arch().config_protocol.memory_model();  
-  VTR_ASSERT(true == openfpga_ctx.arch().circuit_lib.valid_model_id(sram_model));
-
   /* Create the top-level block for bitstream 
    * This is related to the top-level module of fpga  
    */

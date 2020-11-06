@@ -302,7 +302,7 @@ size_t check_ccff_circuit_model_ports(const CircuitLibrary& circuit_lib,
   /* Check if we have output */
   num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
                                                                  CIRCUIT_MODEL_PORT_OUTPUT,
-                                                                 2, 1, false);
+                                                                 1, 1, false);
 
   return num_err;
 }
