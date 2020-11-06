@@ -596,7 +596,7 @@ def run_pro_blif_3arg():
 def collect_files_for_vpr():
     # Sanitize provided Benchmark option
     if len(args.benchmark_files) > 1:
-        logger.error("Expecting Single Benchmark BLif file.")
+        logger.error("Expecting Single Benchmark Blif file.")
     if not os.path.isfile(args.benchmark_files[0] or ""):
         clean_up_and_exit("Provided Blif file not found")
     shutil.copy(args.benchmark_files[0], args.top_module+".blif")
@@ -622,7 +622,7 @@ def run_vpr():
         args.top_module,
         args.top_module)
     cmd += r"| sed 's/$/./' | fold -s -w80 "
-    cmd += r"| sed 's/[^.]$/ \\/' | sed 's/[.]$/ /'"
+    cmd += r"| sed 's/[^.]$/ \\/' | sed 's/[.]$//'"
     cmd += " > %s.blif" % args.top_module
     os.system(cmd)
     if not args.fix_route_chan_width:
@@ -672,7 +672,7 @@ def run_vpr():
                     min_channel_width)
         extract_vpr_stats(args.top_module+"_fr_chan_width_vpr.txt")
     else:
-        extract_vpr_stats(args.top_module+"_min_chan_width.txt")
+        extract_vpr_stats(args.top_module+"_min_chan_width_vpr.txt")
     if args.power:
         extract_vpr_stats(logfile=args.top_module+".power",
                           r_filename="vpr_power_stat",
@@ -716,11 +716,14 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
                "--net_file", args.top_module+"_vpr.net",
                "--place_file", args.top_module+"_vpr.place",
                "--route_file", args.top_module+"_vpr.route",
-               "--full_stats",
+               "--full_stats", "on",
                "--activity_file", args.top_module+"_ace_out.act",
                ]
     if not args.disp:
-        command += ["--nodisp"]
+        command += ["--disp", "off"]
+    else:  
+        command += ["--disp", "on"]
+
     if route_only:
         command += ["--route"]
     # Power options
