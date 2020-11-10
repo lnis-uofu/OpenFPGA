@@ -66,6 +66,7 @@ std::string generate_physical_pb_type_hierarchy_name(const PbTypeAnnotation& pb_
 }
 
 /********************************************************************
+ * FIXME: Use a common function to output ports
  * Generate the full hierarchy name for a operating pb_type
  *******************************************************************/
 static 
