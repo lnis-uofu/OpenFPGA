@@ -6,14 +6,21 @@
 #include "vtr_assert.h"
 #include "vtr_time.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 /* Headers from openfpgautil library */
 #include "openfpga_side_manager.h"
+
+/* Headers from vpr library */
+#include "vpr_utils.h"
 
 #include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 #include "pb_type_utils.h"
 #include "rr_gsb_utils.h"
 #include "openfpga_physical_tile_utils.h"
+#include "circuit_library_utils.h"
 #include "module_manager_utils.h"
 
 #include "build_top_module_utils.h"
@@ -681,6 +688,153 @@ void add_top_module_nets_connect_grids_and_gsbs(ModuleManager& module_manager,
 
     }
   }
+}
+
+/********************************************************************
+ * Add global ports from grid ports that are defined as global in tile annotation 
+ *******************************************************************/
+int add_top_module_global_ports_from_grid_modules(ModuleManager& module_manager,
+                                                  const ModuleId& top_module,
+                                                  const CircuitLibrary& circuit_lib,
+                                                  const TileAnnotation& tile_annotation,
+                                                  const DeviceGrid& grids,
+                                                  const vtr::Matrix<size_t>& grid_instance_ids) {
+
+  /* Ensure that the global port has no conflicts with 
+   * the global ports which are defined in circuit library:
+   * - If a port has the same name, must ensure that its attributes are the same
+   *   i.e., is_clock, is_reset, is_set
+   *   Otherwise, error out
+   */
+  std::vector<CircuitPortId> ckt_global_ports = find_circuit_library_global_ports(circuit_lib);
+  for (const TileGlobalPortId& tile_global_port : tile_annotation.global_ports()) {
+    for (const CircuitPortId& ckt_global_port : ckt_global_ports) {
+      if (tile_annotation.global_port_name(tile_global_port) != circuit_lib.port_prefix(ckt_global_port)) {
+        continue;
+      }
+      /* All the global clock port here must be operating clock */
+      bool is_both_op_signal = !circuit_lib.port_is_prog(ckt_global_port);
+      if (false == is_both_op_signal) {
+        VTR_LOGF_ERROR(__FILE__, __LINE__,
+                       "Global port '%s' in tile annotation share the same name as global port '%s' in circuit library, which is defined for programming usage!\n",
+                       tile_annotation.global_port_name(tile_global_port).c_str(),
+                       circuit_lib.port_prefix(ckt_global_port).c_str());
+        return CMD_EXEC_FATAL_ERROR;
+      }
+
+      /* Error out if one is defined as clock while another is not */
+      bool is_clock_attr_same = (tile_annotation.global_port_is_clock(tile_global_port) != (CIRCUIT_MODEL_PORT_CLOCK == circuit_lib.port_type(ckt_global_port)));
+      if (false == is_clock_attr_same) {
+        VTR_LOGF_ERROR(__FILE__, __LINE__,
+                       "Global port '%s' in tile annotation share the same name as global port '%s' in circuit library but has different definition as clock!\n",
+                       tile_annotation.global_port_name(tile_global_port).c_str(),
+                       circuit_lib.port_prefix(ckt_global_port).c_str());
+        return CMD_EXEC_FATAL_ERROR;
+      }
+
+      /* Error out if one is defined as reset while another is not */
+      bool is_reset_attr_same = (tile_annotation.global_port_is_reset(tile_global_port) != circuit_lib.port_is_reset(ckt_global_port));
+      if (false == is_reset_attr_same) {
+        VTR_LOGF_ERROR(__FILE__, __LINE__,
+                       "Global port '%s' in tile annotation share the same name as global port '%s' in circuit library but has different definition as reset!\n",
+                       tile_annotation.global_port_name(tile_global_port).c_str(),
+                       circuit_lib.port_prefix(ckt_global_port).c_str());
+        return CMD_EXEC_FATAL_ERROR;
+      }
+
+      /* Error out if one is defined as set while another is not */
+      bool is_set_attr_same = (tile_annotation.global_port_is_set(tile_global_port) != circuit_lib.port_is_set(ckt_global_port));
+      if (false == is_set_attr_same) {
+        VTR_LOGF_ERROR(__FILE__, __LINE__,
+                       "Global port '%s' in tile annotation share the same name as global port '%s' in circuit library but has different definition as set!\n",
+                       tile_annotation.global_port_name(tile_global_port).c_str(),
+                       circuit_lib.port_prefix(ckt_global_port).c_str());
+        return CMD_EXEC_FATAL_ERROR;
+      }
+    }
+  }
+
+  /* Add the global ports which are yet added to the top-level module 
+   * (in different names than the global ports defined in circuit library
+   */
+  std::vector<BasicPort> global_ports_to_add;
+  for (const TileGlobalPortId& tile_global_port : tile_annotation.global_ports()) {
+    ModulePortId module_port = module_manager.find_module_port(top_module, tile_annotation.global_port_name(tile_global_port));
+    if (ModulePortId::INVALID() == module_port) {
+      BasicPort global_port_to_add; 
+      global_port_to_add.set_name(tile_annotation.global_port_name(tile_global_port));
+      global_port_to_add.set_width(tile_annotation.global_port_tile_port(tile_global_port).get_width());
+      global_ports_to_add.push_back(global_port_to_add);
+    }
+  }
+
+  for (const BasicPort& global_port_to_add : global_ports_to_add) {
+    module_manager.add_port(top_module, global_port_to_add, ModuleManager::MODULE_GLOBAL_PORT);
+  }
+
+  /* Add module nets */
+  for (const TileGlobalPortId& tile_global_port : tile_annotation.global_ports()) {
+    /* Must found one valid port! */
+    ModulePortId top_module_port = module_manager.find_module_port(top_module, tile_annotation.global_port_name(tile_global_port));
+    VTR_ASSERT(ModulePortId::INVALID() == top_module_port);
+    /* Spot the port from child modules */
+    for (size_t ix = 0; ix < grids.width(); ++ix) {
+      for (size_t iy = 0; iy < grids.height(); ++iy) {
+        /* Bypass EMPTY tiles */
+        if (true == is_empty_type(grids[ix][iy].type)) {
+          continue;
+        }
+        /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
+        if ( (0 < grids[ix][iy].width_offset)
+          || (0 < grids[ix][iy].height_offset)) {
+          continue;
+        }
+
+        /* Bypass the tiles whose names do not match */
+        if (std::string(grids[ix][iy].type->name) != tile_annotation.global_port_tile_name(tile_global_port)) {
+          continue;
+        }
+        t_physical_tile_type_ptr physical_tile = grids[ix][iy].type;
+        /* Find the port of the grid module according to the tile annotation */
+        int grid_pin_index = physical_tile->num_pins;
+        for (const t_physical_tile_port& tile_port : physical_tile->ports) { 
+          if (std::string(tile_port.name) == tile_annotation.global_port_tile_port(tile_global_port).get_name()) {
+            /* Port size must match!!! */
+            VTR_ASSERT(size_t(tile_port.num_pins) == tile_annotation.global_port_tile_port(tile_global_port).get_width());
+            /* TODO: Should check there is only port matching!!! */
+            grid_pin_index = tile_port.absolute_first_pin_index;
+            break;
+          }
+        }
+        /* Ensure the pin index is valid */
+        VTR_ASSERT(grid_pin_index < physical_tile->num_pins);
+        /* Find the module name for this type of grid */
+        std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
+        /* FIXME: grid side should be inferred from if it is on any border side!!! */
+        std::string grid_module_name = generate_grid_block_module_name(grid_module_name_prefix, std::string(physical_tile->name), is_io_type(physical_tile), NUM_SIDES);
+        ModuleId grid_module = module_manager.find_module(grid_module_name);
+        VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
+        size_t grid_instance = grid_instance_ids[ix][iy];
+        /* Find the module pin */
+        size_t grid_pin_width = physical_tile->pin_width_offset[grid_pin_index];
+        size_t grid_pin_height = physical_tile->pin_height_offset[grid_pin_index];
+        vtr::Point<size_t> grid_coordinate(ix, iy);
+        std::string grid_port_name = generate_grid_port_name(grid_coordinate,
+                                                             grid_pin_width, grid_pin_height,
+                                                             NUM_SIDES,
+                                                             grid_pin_index, false);
+        ModulePortId grid_port_id = module_manager.find_module_port(grid_module, grid_port_name);
+        VTR_ASSERT(true == module_manager.valid_module_port_id(grid_module, grid_port_id));
+
+        /* Build nets */
+        add_module_bus_nets(module_manager, top_module,
+                            top_module, 0, top_module_port,
+                            grid_module, grid_instance, grid_port_id);
+      }
+    }
+  }
+
+  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */

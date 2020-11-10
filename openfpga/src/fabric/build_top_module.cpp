@@ -287,6 +287,7 @@ int build_top_module(ModuleManager& module_manager,
                      DecoderLibrary& decoder_lib,
                      const CircuitLibrary& circuit_lib,
                      const DeviceGrid& grids,
+                     const TileAnnotation& tile_annotation,
                      const RRGraph& rr_graph,
                      const DeviceRRGSB& device_rr_gsb,
                      const TileDirect& tile_direct,
@@ -344,6 +345,12 @@ int build_top_module(ModuleManager& module_manager,
    * we just need to find all the global ports from the child modules and build a list of it
    */
   add_module_global_ports_from_child_modules(module_manager, top_module);
+
+  /* Add global ports from grid ports that are defined as global in tile annotation */
+  status = add_top_module_global_ports_from_grid_modules(module_manager, top_module, circuit_lib, tile_annotation, grids, grid_instance_ids);
+  if (CMD_EXEC_FATAL_ERROR == status) {
+    return status;
+  }
 
   /* Add GPIO ports from the sub-modules under this Verilog module 
    * This is a much easier job after adding sub modules (instances), 
