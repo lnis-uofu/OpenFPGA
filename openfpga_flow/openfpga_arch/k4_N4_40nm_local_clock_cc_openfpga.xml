@@ -123,7 +123,7 @@
        <port type="input" prefix="set" lib_name="SET" size="1" is_global="true" default_val="0" is_set="true"/>
        <port type="input" prefix="reset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true"/>
        <port type="output" prefix="Q" size="1"/>
-       <port type="clock" prefix="clk" lib_name="CK" size="1" is_global="false" default_val="0" />
+       <port type="clock" prefix="clk" lib_name="CK" size="1" is_global="false" default_val="0"/>
     </circuit_model>
     <circuit_model type="lut" name="lut4" prefix="lut4" dump_structural_verilog="true">
       <design_technology type="cmos"/>
@@ -169,7 +169,7 @@
     <segment name="L4" circuit_model_name="chan_segment"/>
   </routing_segment>
   <tile_annotation>
-    <global_port tile_port="clb.clk" circuit_port="DFFSRQ.clk"/>
+    <global_port name="clk" tile_port="clb.clk" is_clock="true" default_val="0"/>
   </tile_annotation>
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
