@@ -8,11 +8,49 @@
 #include "vtr_assert.h"
 #include "vtr_time.h"
 
+/* Headers from openfpgautil library */
+#include "openfpga_side_manager.h"
+
 #include "openfpga_device_grid_utils.h"
 #include "openfpga_physical_tile_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+/********************************************************************
+ * Give a given pin index, find the side where this pin is located 
+ * on the physical tile
+ * Note:
+ *   - Need to check if the pin_width_offset and pin_height_offset
+ *     are properly set in VPR!!!
+ *******************************************************************/
+std::vector<e_side> find_physical_tile_pin_side(t_physical_tile_type_ptr physical_tile,
+                                                const int& physical_pin,
+                                                const e_side& border_side) {
+  std::vector<e_side> pin_sides;
+  for (const e_side& side_cand : {TOP, RIGHT, BOTTOM, LEFT}) {
+    int pin_width_offset = physical_tile->pin_width_offset[physical_pin];
+    int pin_height_offset = physical_tile->pin_height_offset[physical_pin];
+    if (true == physical_tile->pinloc[pin_width_offset][pin_height_offset][side_cand][physical_pin]) {
+      pin_sides.push_back(side_cand);
+    } 
+  }
+
+  /* For regular grid, we should have pin only one side!
+   * I/O grids: VPR creates the grid with duplicated pins on every side 
+   * but the expected side (only used side) will be opposite side of the border side!
+   */
+  if (NUM_SIDES == border_side) {
+    VTR_ASSERT(1 == pin_sides.size());
+  } else {
+    SideManager side_manager(border_side);
+    VTR_ASSERT(pin_sides.end() != std::find(pin_sides.begin(), pin_sides.end(), side_manager.get_opposite()));
+    pin_sides.clear();
+    pin_sides.push_back(side_manager.get_opposite());
+  }
+
+  return pin_sides;
+}
 
 /********************************************************************
  * Find the Fc of a pin in physical tile 

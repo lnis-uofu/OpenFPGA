@@ -1,14 +1,13 @@
-#ifndef ANALYSIS_SDC_WRITER_H
-#define ANALYSIS_SDC_WRITER_H
+#ifndef CHECK_TILE_ANNOTATION_H
+#define CHECK_TILE_ANNOTATION_H
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include <string>
 #include <vector>
-#include "vpr_context.h"
-#include "openfpga_context.h"
-#include "analysis_sdc_option.h"
+#include "tile_annotation.h"
+#include "circuit_library.h"
+#include "physical_types.h"
 
 /********************************************************************
  * Function declaration
@@ -17,11 +16,9 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_analysis_sdc(const AnalysisSdcOption& option,
-                        const float& critical_path_delay,
-                        const VprContext& vpr_ctx, 
-                        const OpenfpgaContext& openfpga_ctx,
-                        const bool& compact_routing_hierarchy);
+bool check_tile_annotation(const TileAnnotation& tile_annotations,
+                           const CircuitLibrary& circuit_lib,
+                           const std::vector<t_physical_tile_type>& physical_tile_types);
 
 } /* end namespace openfpga */
 

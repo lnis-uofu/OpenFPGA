@@ -153,6 +153,7 @@ void fpga_verilog_testbench(const ModuleManager &module_manager,
                             const AtomContext &atom_ctx,
                             const PlacementContext &place_ctx,
                             const IoLocationMap &io_location_map,
+                            const FabricGlobalPortInfo &fabric_global_port_info,
                             const VprNetlistAnnotation &netlist_annotation,
                             const CircuitLibrary &circuit_lib,
                             const SimulationSetting &simulation_setting,
@@ -172,17 +173,12 @@ void fpga_verilog_testbench(const ModuleManager &module_manager,
   print_verilog_simulation_preprocessing_flags(std::string(src_dir_path),
                                                options);
 
-  /* Collect global ports from the circuit library:
- * TODO: should we place this in the OpenFPGA context?
- */
-  std::vector<CircuitPortId> global_ports = find_circuit_library_global_ports(circuit_lib);
-
   /* Generate wrapper module for FPGA fabric (mapped by the input benchmark and pre-configured testbench for verification */
   if (true == options.print_formal_verification_top_netlist()) {
     std::string formal_verification_top_netlist_file_path = src_dir_path + netlist_name + std::string(FORMAL_VERIFICATION_VERILOG_FILE_POSTFIX);
     print_verilog_preconfig_top_module(module_manager, bitstream_manager,
                                        config_protocol,
-                                       circuit_lib, global_ports,
+                                       circuit_lib, fabric_global_port_info,
                                        atom_ctx, place_ctx, io_location_map,
                                        netlist_annotation,
                                        netlist_name,
@@ -207,7 +203,7 @@ void fpga_verilog_testbench(const ModuleManager &module_manager,
     print_verilog_top_testbench(module_manager,
                                 bitstream_manager, fabric_bitstream,
                                 config_protocol,
-                                circuit_lib, global_ports,
+                                fabric_global_port_info,
                                 atom_ctx, place_ctx, io_location_map,
                                 netlist_annotation,
                                 netlist_name,

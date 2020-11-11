@@ -106,4 +106,7 @@ python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/tile_organization/top
 echo -e "Testing tiles with pins only on bottom and right sides";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/tile_organization/bottom_right_custom_pins --debug --show_thread_logs
 
+echo -e "Testing global port definition from tiles";
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/global_tile_ports/global_tile_clock --debug --show_thread_logs
+
 end_section "OpenFPGA.TaskTun"

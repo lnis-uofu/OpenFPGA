@@ -44,8 +44,7 @@ void print_analysis_sdc_io_delays(std::fstream& fp,
                                   const IoLocationMap& io_location_map,
                                   const ModuleManager& module_manager,
                                   const ModuleId& top_module,
-                                  const CircuitLibrary& circuit_lib,
-                                  const std::vector<CircuitPortId>& global_ports,
+                                  const FabricGlobalPortInfo& fabric_global_port_info,
                                   const float& critical_path_delay) {
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -57,17 +56,17 @@ void print_analysis_sdc_io_delays(std::fstream& fp,
 
   /* Get clock port from the global port */
   std::vector<BasicPort> operating_clock_ports;
-  for (const CircuitPortId& clock_port : global_ports) {
-    if (CIRCUIT_MODEL_PORT_CLOCK != circuit_lib.port_type(clock_port)) {
+  for (const FabricGlobalPortId& clock_port : fabric_global_port_info.global_ports()) {
+    if (false == fabric_global_port_info.global_port_is_clock(clock_port)) {
       continue;
     }
     /* We only constrain operating clock here! */
-    if (true == circuit_lib.port_is_prog(clock_port)) {
+    if (true == fabric_global_port_info.global_port_is_prog(clock_port)) {
       continue;
     }
    
     /* Find the module port and Update the operating port list */
-    ModulePortId module_port = module_manager.find_module_port(top_module, circuit_lib.port_prefix(clock_port)); 
+    ModulePortId module_port = fabric_global_port_info.global_module_port(clock_port); 
     operating_clock_ports.push_back(module_manager.module_port(top_module, module_port));
   }
 
@@ -181,8 +180,7 @@ static
 void print_analysis_sdc_disable_global_ports(std::fstream& fp,
                                              const ModuleManager& module_manager,
                                              const ModuleId& top_module,
-                                             const CircuitLibrary& circuit_lib,
-                                             const std::vector<CircuitPortId>& global_ports) {
+                                             const FabricGlobalPortInfo& fabric_global_port_info) {
   /* Validate file stream */
   valid_file_stream(fp);
 
@@ -191,31 +189,19 @@ void print_analysis_sdc_disable_global_ports(std::fstream& fp,
   fp << "# Disable timing for global ports                 " << std::endl;
   fp << "##################################################" << std::endl; 
 
-  for (const CircuitPortId& global_port : global_ports) {
+  for (const FabricGlobalPortId& global_port : fabric_global_port_info.global_ports()) {
     /* Skip operating clock here! */
-    if ( (CIRCUIT_MODEL_PORT_CLOCK == circuit_lib.port_type(global_port)) 
-      && (false == circuit_lib.port_is_prog(global_port)) ) {
+    if ( (true == fabric_global_port_info.global_port_is_clock(global_port)) 
+      && (false == fabric_global_port_info.global_port_is_prog(global_port)) ) {
       continue;
     }
 
     /* Skip any gpio port here! */
-    if ( (CIRCUIT_MODEL_PORT_INPUT == circuit_lib.port_type(global_port)) 
-      && (true == circuit_lib.port_is_io(global_port)) ) {
+    if (true == fabric_global_port_info.global_port_is_io(global_port)) {
       continue;
     }
 
-    /* Skip any gpio port here! */
-    if (CIRCUIT_MODEL_PORT_OUTPUT == circuit_lib.port_type(global_port)) {
-      continue;
-    }
-
-    /* Skip any gpio port here! */
-    if ( (CIRCUIT_MODEL_PORT_INOUT == circuit_lib.port_type(global_port)) 
-      && (true == circuit_lib.port_is_io(global_port)) ) {
-      continue;
-    }
-
-    ModulePortId module_port = module_manager.find_module_port(top_module, circuit_lib.port_prefix(global_port)); 
+    ModulePortId module_port = fabric_global_port_info.global_module_port(global_port); 
     BasicPort port_to_disable = module_manager.module_port(top_module, module_port);
 
     print_sdc_disable_port_timing(fp, port_to_disable);
@@ -230,7 +216,6 @@ void print_analysis_sdc(const AnalysisSdcOption& option,
                         const float& critical_path_delay,
                         const VprContext& vpr_ctx, 
                         const OpenfpgaContext& openfpga_ctx,
-                        const std::vector<CircuitPortId>& global_ports,
                         const bool& compact_routing_hierarchy) {
   /* Create the file name for Verilog netlist */
   std::string sdc_fname(option.sdc_dir() + generate_analysis_sdc_file_name(vpr_ctx.atom().nlist.netlist_name(), std::string(SDC_ANALYSIS_FILE_NAME)));
@@ -261,13 +246,13 @@ void print_analysis_sdc(const AnalysisSdcOption& option,
                                vpr_ctx.atom(), vpr_ctx.placement(),
                                openfpga_ctx.vpr_netlist_annotation(), openfpga_ctx.io_location_map(),
                                openfpga_ctx.module_graph(), top_module, 
-                               openfpga_ctx.arch().circuit_lib, global_ports,
+                               openfpga_ctx.fabric_global_port_info(),
                                critical_path_delay);
 
   /* Disable the timing for global ports */
   print_analysis_sdc_disable_global_ports(fp,
                                           openfpga_ctx.module_graph(), top_module,
-                                          openfpga_ctx.arch().circuit_lib, global_ports);
+                                          openfpga_ctx.fabric_global_port_info());
 
   /* Disable the timing for configuration cells */ 
   rec_print_pnr_sdc_disable_configurable_memory_module_output(fp, option.flatten_names(), 

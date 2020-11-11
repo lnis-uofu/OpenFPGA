@@ -1,14 +1,15 @@
-#ifndef ANALYSIS_SDC_WRITER_H
-#define ANALYSIS_SDC_WRITER_H
+#ifndef BUILD_FABRIC_GLOBAL_PORT_INFO_H
+#define BUILD_FABRIC_GLOBAL_PORT_INFO_H
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
+
 #include <string>
-#include <vector>
-#include "vpr_context.h"
-#include "openfpga_context.h"
-#include "analysis_sdc_option.h"
+#include "tile_annotation.h"
+#include "circuit_library.h"
+#include "fabric_global_port_info.h"
+#include "module_manager.h"
 
 /********************************************************************
  * Function declaration
@@ -17,11 +18,9 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_analysis_sdc(const AnalysisSdcOption& option,
-                        const float& critical_path_delay,
-                        const VprContext& vpr_ctx, 
-                        const OpenfpgaContext& openfpga_ctx,
-                        const bool& compact_routing_hierarchy);
+FabricGlobalPortInfo build_fabric_global_port_info(const ModuleManager& module_manager,
+                                                   const TileAnnotation& tile_annotation,
+                                                   const CircuitLibrary& circuit_lib);
 
 } /* end namespace openfpga */
 

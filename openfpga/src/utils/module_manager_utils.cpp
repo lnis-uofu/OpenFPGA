@@ -564,7 +564,6 @@ void add_primitive_pb_type_module_nets(ModuleManager& module_manager,
     BasicPort des_port = module_manager.module_port(child_module, des_module_port_id);
 
     /* Port size must match */
-    if (src_port.get_width() != des_port.get_width()) 
     VTR_ASSERT(src_port.get_width() == des_port.get_width());
 
     /* For each pin, generate the nets.
@@ -588,9 +587,9 @@ void add_primitive_pb_type_module_nets(ModuleManager& module_manager,
       for (size_t pin_id = 0; pin_id < src_port.pins().size(); ++pin_id) {
         ModuleNetId net = module_manager.create_module_net(pb_type_module);
         /* Add net source */
-        module_manager.add_module_net_sink(pb_type_module, net, pb_type_module, 0, src_module_port_id, src_port.pins()[pin_id]);
-        /* Add net sink */
         module_manager.add_module_net_source(pb_type_module, net, child_module, child_instance_id, des_module_port_id, des_port.pins()[pin_id]);
+        /* Add net sink */
+        module_manager.add_module_net_sink(pb_type_module, net, pb_type_module, 0, src_module_port_id, src_port.pins()[pin_id]);
       }
       break;
     default:

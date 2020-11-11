@@ -12,9 +12,13 @@
 #include "read_xml_openfpga_arch.h"
 #include "check_circuit_library.h"
 #include "circuit_library_utils.h"
+#include "check_tile_annotation.h"
 #include "write_xml_openfpga_arch.h"
 
 #include "openfpga_read_arch.h"
+
+/* Include global variables of VPR */
+#include "globals.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -44,8 +48,9 @@ int read_arch(OpenfpgaContext& openfpga_context,
 
   /* Check the architecture:
    * 1. Circuit library
-   * 2. Technology library (TODO)
-   * 3. Simulation settings (TODO)
+   * 2. Tile annotation
+   * 3. Technology library (TODO)
+   * 4. Simulation settings (TODO)
    */
   if (false == check_circuit_library(openfpga_context.arch().circuit_lib)) {
     return CMD_EXEC_FATAL_ERROR;
@@ -54,6 +59,12 @@ int read_arch(OpenfpgaContext& openfpga_context,
   if (false == check_configurable_memory_circuit_model(openfpga_context.arch().config_protocol.type(),
                                                        openfpga_context.arch().circuit_lib,
                                                        openfpga_context.arch().config_protocol.memory_model())) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  if (false == check_tile_annotation(openfpga_context.arch().tile_annotations,
+                                     openfpga_context.arch().circuit_lib,
+                                     g_vpr_ctx.device().physical_tile_types)) {
     return CMD_EXEC_FATAL_ERROR;
   }
 

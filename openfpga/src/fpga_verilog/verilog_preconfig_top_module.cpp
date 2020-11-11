@@ -118,8 +118,7 @@ namespace openfpga
   static void print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
                                                                       const ModuleManager &module_manager,
                                                                       const ModuleId &top_module,
-                                                                      const CircuitLibrary &circuit_lib,
-                                                                      const std::vector<CircuitPortId> &global_ports,
+                                                                      const FabricGlobalPortInfo &fabric_global_ports,
                                                                       const std::vector<std::string> &benchmark_clock_port_names)
   {
     /* Validate the file stream */
@@ -127,40 +126,16 @@ namespace openfpga
 
     print_verilog_comment(fp, std::string("----- Begin Connect Global ports of FPGA top module -----"));
 
-    /* Global ports of the top module in module manager do not carry any attributes,
-   * such as is_clock, is_set, etc.
-   * Therefore, for each global port in the top module, we find the circuit port in the circuit library
-   * which share the same name. We can access to the attributes.
-   * To gurantee the correct link between global ports in module manager and those in circuit library
-   * We have performed some critical check in check_circuit_library() for global ports,
-   * where we guarantee all the global ports share the same name must have the same attributes.
-   * So that each global port with the same name is unique!
-   */
-    for (const BasicPort &module_global_port : module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GLOBAL_PORT))
-    {
-      CircuitPortId linked_circuit_port_id = CircuitPortId::INVALID();
-      /* Find the circuit port with the same name */
-      for (const CircuitPortId &circuit_port_id : global_ports)
-      {
-        if (0 != module_global_port.get_name().compare(circuit_lib.port_prefix(circuit_port_id)))
-        {
-          continue;
-        }
-        linked_circuit_port_id = circuit_port_id;
-        break;
-      }
-      /* Must find one valid circuit port */
-      VTR_ASSERT(CircuitPortId::INVALID() != linked_circuit_port_id);
-      /* Port size should match! */
-      VTR_ASSERT(module_global_port.get_width() == circuit_lib.port_size(linked_circuit_port_id));
+    for (const FabricGlobalPortId& global_port_id : fabric_global_ports.global_ports()) {
+      ModulePortId module_global_port_id = fabric_global_ports.global_module_port(global_port_id);
+      VTR_ASSERT(ModuleManager::MODULE_GLOBAL_PORT == module_manager.port_type(top_module, module_global_port_id));
+      BasicPort module_global_port = module_manager.module_port(top_module, module_global_port_id);
       /* Now, for operating clock port, we should wire it to the clock of benchmark! */
-      if ((CIRCUIT_MODEL_PORT_CLOCK == circuit_lib.port_type(linked_circuit_port_id)) && (false == circuit_lib.port_is_prog(linked_circuit_port_id)))
-      {
+      if ((true == fabric_global_ports.global_port_is_clock(global_port_id)) 
+       && (false == fabric_global_ports.global_port_is_prog(global_port_id))) {
         /* Wiring to each pin of the global port: benchmark clock is always 1-bit */
-        for (const size_t &pin : module_global_port.pins())
-        {
-          for (const std::string &clock_port_name : benchmark_clock_port_names)
-          {
+        for (const size_t &pin : module_global_port.pins()) {
+          for (const std::string &clock_port_name : benchmark_clock_port_names) {
             BasicPort module_clock_pin(module_global_port.get_name(), pin, pin);
             BasicPort benchmark_clock_pin(clock_port_name + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), 1);
             print_verilog_wire_connection(fp, module_clock_pin, benchmark_clock_pin, false);
@@ -171,7 +146,7 @@ namespace openfpga
       }
 
       /* For other ports, give an default value */
-      std::vector<size_t> default_values(module_global_port.get_width(), circuit_lib.port_default_value(linked_circuit_port_id));
+      std::vector<size_t> default_values(module_global_port.get_width(), fabric_global_ports.global_port_default_value(global_port_id));
       print_verilog_wire_constant_values(fp, module_global_port, default_values);
     }
 
@@ -430,7 +405,7 @@ namespace openfpga
                                           const BitstreamManager &bitstream_manager,
                                           const ConfigProtocol &config_protocol,
                                           const CircuitLibrary &circuit_lib,
-                                          const std::vector<CircuitPortId> &global_ports,
+                                          const FabricGlobalPortInfo &global_ports,
                                           const AtomContext &atom_ctx,
                                           const PlacementContext &place_ctx,
                                           const IoLocationMap &io_location_map,
@@ -475,7 +450,7 @@ namespace openfpga
 
     /* Connect FPGA top module global ports to constant or benchmark global signals! */
     print_verilog_preconfig_top_module_connect_global_ports(fp, module_manager, top_module,
-                                                            circuit_lib, global_ports,
+                                                            global_ports,
                                                             benchmark_clock_port_names);
 
     /* Connect I/Os to benchmark I/Os or constant driver */
