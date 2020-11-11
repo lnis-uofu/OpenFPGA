@@ -17,6 +17,7 @@
 #include "fabric_hierarchy_writer.h"
 #include "fabric_key_writer.h"
 #include "build_fabric_io_location_map.h"
+#include "build_fabric_global_port_info.h"
 #include "openfpga_build_fabric.h"
 
 /* Include global variables of VPR */
@@ -119,6 +120,11 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
   /* Build I/O location map */
   openfpga_ctx.mutable_io_location_map() = build_fabric_io_location_map(openfpga_ctx.module_graph(),
                                                                         g_vpr_ctx.device().grid);
+
+  /* Build fabric global port information */
+  openfpga_ctx.mutable_fabric_global_port_info() = build_fabric_global_port_info(openfpga_ctx.module_graph(),
+                                                                                 openfpga_ctx.arch().tile_annotations,
+                                                                                 openfpga_ctx.arch().circuit_lib);
 
   /* Output fabric key if user requested */
   if (true == cmd_context.option_enable(cmd, opt_write_fabric_key)) {

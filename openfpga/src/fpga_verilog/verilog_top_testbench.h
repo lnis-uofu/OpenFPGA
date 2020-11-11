@@ -9,10 +9,10 @@
 #include "module_manager.h"
 #include "bitstream_manager.h"
 #include "fabric_bitstream.h"
-#include "circuit_library.h"
 #include "config_protocol.h"
 #include "vpr_context.h"
 #include "io_location_map.h"
+#include "fabric_global_port_info.h"
 #include "vpr_netlist_annotation.h"
 #include "simulation_setting.h"
 
@@ -27,8 +27,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                  const BitstreamManager& bitstream_manager,
                                  const FabricBitstream& fabric_bitstream,
                                  const ConfigProtocol& config_protocol,
-                                 const CircuitLibrary& circuit_lib,
-                                 const std::vector<CircuitPortId>& global_ports,
+                                 const FabricGlobalPortInfo& global_ports,
                                  const AtomContext& atom_ctx,
                                  const PlacementContext& place_ctx,
                                  const IoLocationMap& io_location_map,
