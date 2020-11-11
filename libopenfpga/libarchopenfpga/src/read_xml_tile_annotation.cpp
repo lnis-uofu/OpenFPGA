@@ -43,7 +43,7 @@ void read_xml_tile_global_port_annotation(pugi::xml_node& xml_tile,
   if (2 != tile_port_tokens.size()) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_tile),
                    "Invalid tile_port attribute '%s'! Valid format is <tile_name>.<port_name>\n",
-                   tile_port_name_attr);
+                   tile_port_name_attr.c_str());
   }
   /* Extract the tile port information */
   openfpga::PortParser tile_port_parser(tile_port_tokens[1]);
