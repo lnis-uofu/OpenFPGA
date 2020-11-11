@@ -49,6 +49,36 @@ Similar to the Switch Boxes and Connection Blocks, the channel wire segments in 
 
 - ``circuit_model_name="<string>"`` should match a circuit model whose type is ``chan_wire`` defined in :ref:`circuit_library`.
 
+Physical Tile Annotation
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Original VPR architecture description contains ``<tile>`` XML nodes to define physical tile pins.
+OpenFPGA allows users to define pin/port of physical tiles as global ports.
+
+Here is an example:
+
+.. code-block:: xml
+
+  <tile_annotations>
+    <global_port name="<string>" tile_port="<string>" is_clock="<bool>" is_reset="<bool>" is_set="<bool>"/>
+  </tile_annotations>
+
+- ``name="<string>"`` is the port name to appear in the top-level FPGA fabric.
+
+- ``tile_port="<string>"`` is the port name of a physical tile, e.g., ``tile_port="clb.clk"``.
+
+.. note:: The port of physical tile must be a valid port of the physical definition in VPR architecture!
+
+
+- ``is_clock="<bool>"`` define if the global port is a clock port at the top-level FPGA fabric. An operating clock port will be driven by proper signals in auto-generated testbenches.
+
+- ``is_reset="<bool>"`` define if the global port is a reset port at the top-level FPGA fabric. An operating reset port will be driven by proper signals in testbenches.
+
+- ``is_set="<bool>"`` define if the global port is a set port at the top-level FPGA fabric. An operating set port will be driven by proper signals in testbenches.
+
+.. note:: All the global port from a physical tile port is only used in operating phase. Any ports for programmable use are not allowed!
+
+
 Primitive Blocks inside Multi-mode Configurable Logic Blocks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
