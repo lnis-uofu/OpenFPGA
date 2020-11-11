@@ -65,7 +65,7 @@ void update_cluster_pin_with_post_routing_results(const DeviceContext& device_ct
       VTR_ASSERT(class_inf.type == RECEIVER);
       rr_node_type = IPIN;
     }
-    std::vector<e_side> pin_sides = find_physical_tile_pin_side(physical_tile, physical_pin);
+    std::vector<e_side> pin_sides = find_physical_tile_pin_side(physical_tile, physical_pin, border_side);
     /* As some grid has height/width offset, we may not have the pin on any side */
     if (0 == pin_sides.size()) {
       continue;
