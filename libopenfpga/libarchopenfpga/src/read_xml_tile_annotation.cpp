@@ -51,16 +51,16 @@ void read_xml_tile_global_port_annotation(pugi::xml_node& xml_tile,
   TileGlobalPortId tile_global_port_id = tile_annotation.create_global_port(name_attr, tile_port_tokens[0], tile_port_parser.port());
 
   /* Get is_clock attributes */
-  tile_annotation.set_global_port_is_clock(tile_global_port_id, get_attribute(xml_tile, "is_clock", loc_data).as_bool(false));
+  tile_annotation.set_global_port_is_clock(tile_global_port_id, get_attribute(xml_tile, "is_clock", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
 
   /* Get is_set attributes */
-  tile_annotation.set_global_port_is_set(tile_global_port_id, get_attribute(xml_tile, "is_set", loc_data).as_bool(false));
+  tile_annotation.set_global_port_is_set(tile_global_port_id, get_attribute(xml_tile, "is_set", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
 
   /* Get is_reset attributes */
-  tile_annotation.set_global_port_is_reset(tile_global_port_id, get_attribute(xml_tile, "is_reset", loc_data).as_bool(false));
+  tile_annotation.set_global_port_is_reset(tile_global_port_id, get_attribute(xml_tile, "is_reset", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
 
   /* Get default_value attributes */
-  tile_annotation.set_global_port_default_value(tile_global_port_id, get_attribute(xml_tile, "default_value", loc_data).as_int(0));
+  tile_annotation.set_global_port_default_value(tile_global_port_id, get_attribute(xml_tile, "default_value", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(0));
 }
 
 /********************************************************************

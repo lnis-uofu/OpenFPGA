@@ -17,6 +17,9 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+std::vector<e_side> find_physical_tile_pin_side(t_physical_tile_type_ptr physical_tile,
+                                                const int& physical_pin);
+
 float find_physical_tile_pin_Fc(t_physical_tile_type_ptr type,
                                 const int& pin);
 

@@ -20,6 +20,7 @@
 #include "pb_type_utils.h"
 #include "rr_gsb_utils.h"
 #include "openfpga_physical_tile_utils.h"
+#include "openfpga_device_grid_utils.h"
 #include "circuit_library_utils.h"
 #include "module_manager_utils.h"
 
@@ -776,7 +777,7 @@ int add_top_module_global_ports_from_grid_modules(ModuleManager& module_manager,
   for (const TileGlobalPortId& tile_global_port : tile_annotation.global_ports()) {
     /* Must found one valid port! */
     ModulePortId top_module_port = module_manager.find_module_port(top_module, tile_annotation.global_port_name(tile_global_port));
-    VTR_ASSERT(ModulePortId::INVALID() == top_module_port);
+    VTR_ASSERT(ModulePortId::INVALID() != top_module_port);
     /* Spot the port from child modules */
     for (size_t ix = 0; ix < grids.width(); ++ix) {
       for (size_t iy = 0; iy < grids.height(); ++iy) {
@@ -819,17 +820,20 @@ int add_top_module_global_ports_from_grid_modules(ModuleManager& module_manager,
         size_t grid_pin_width = physical_tile->pin_width_offset[grid_pin_index];
         size_t grid_pin_height = physical_tile->pin_height_offset[grid_pin_index];
         vtr::Point<size_t> grid_coordinate(ix, iy);
-        std::string grid_port_name = generate_grid_port_name(grid_coordinate,
-                                                             grid_pin_width, grid_pin_height,
-                                                             NUM_SIDES,
-                                                             grid_pin_index, false);
-        ModulePortId grid_port_id = module_manager.find_module_port(grid_module, grid_port_name);
-        VTR_ASSERT(true == module_manager.valid_module_port_id(grid_module, grid_port_id));
+        std::vector<e_side> pin_sides = find_physical_tile_pin_side(physical_tile, grid_pin_index);
+        for (const e_side& pin_side : pin_sides) {
+          std::string grid_port_name = generate_grid_port_name(grid_coordinate,
+                                                               grid_pin_width, grid_pin_height,
+                                                               pin_side,
+                                                               grid_pin_index, false);
+          ModulePortId grid_port_id = module_manager.find_module_port(grid_module, grid_port_name);
+          VTR_ASSERT(true == module_manager.valid_module_port_id(grid_module, grid_port_id));
 
-        /* Build nets */
-        add_module_bus_nets(module_manager, top_module,
-                            top_module, 0, top_module_port,
-                            grid_module, grid_instance, grid_port_id);
+          /* Build nets */
+          add_module_bus_nets(module_manager, top_module,
+                              top_module, 0, top_module_port,
+                              grid_module, grid_instance, grid_port_id);
+        }
       }
     }
   }

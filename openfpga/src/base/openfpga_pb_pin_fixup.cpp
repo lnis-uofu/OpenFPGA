@@ -17,6 +17,7 @@
 #include "openfpga_side_manager.h"
 
 #include "pb_type_utils.h"
+#include "openfpga_physical_tile_utils.h"
 #include "openfpga_pb_pin_fixup.h"
 
 /* Include global variables of VPR */
@@ -24,28 +25,6 @@
 
 /* begin namespace openfpga */
 namespace openfpga {
-
-/********************************************************************
- * Give a given pin index, find the side where this pin is located 
- * on the physical tile
- * Note:
- *   - Need to check if the pin_width_offset and pin_height_offset
- *     are properly set in VPR!!!
- *******************************************************************/
-static 
-std::vector<e_side> find_logic_tile_pin_side(t_physical_tile_type_ptr physical_tile,
-                                             const int& physical_pin) {
-  std::vector<e_side> pin_sides;
-  for (const e_side& side_cand : {TOP, RIGHT, BOTTOM, LEFT}) {
-    int pin_width_offset = physical_tile->pin_width_offset[physical_pin];
-    int pin_height_offset = physical_tile->pin_height_offset[physical_pin];
-    if (true == physical_tile->pinloc[pin_width_offset][pin_height_offset][side_cand][physical_pin]) {
-      pin_sides.push_back(side_cand);
-    } 
-  }
-
-  return pin_sides;
-}
 
 /********************************************************************
  * Fix up the pb pin mapping results for a given clustered block
@@ -86,7 +65,7 @@ void update_cluster_pin_with_post_routing_results(const DeviceContext& device_ct
       VTR_ASSERT(class_inf.type == RECEIVER);
       rr_node_type = IPIN;
     }
-    std::vector<e_side> pin_sides = find_logic_tile_pin_side(physical_tile, physical_pin);
+    std::vector<e_side> pin_sides = find_physical_tile_pin_side(physical_tile, physical_pin);
     /* As some grid has height/width offset, we may not have the pin on any side */
     if (0 == pin_sides.size()) {
       continue;

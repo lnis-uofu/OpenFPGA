@@ -15,6 +15,27 @@
 namespace openfpga {
 
 /********************************************************************
+ * Give a given pin index, find the side where this pin is located 
+ * on the physical tile
+ * Note:
+ *   - Need to check if the pin_width_offset and pin_height_offset
+ *     are properly set in VPR!!!
+ *******************************************************************/
+std::vector<e_side> find_physical_tile_pin_side(t_physical_tile_type_ptr physical_tile,
+                                                const int& physical_pin) {
+  std::vector<e_side> pin_sides;
+  for (const e_side& side_cand : {TOP, RIGHT, BOTTOM, LEFT}) {
+    int pin_width_offset = physical_tile->pin_width_offset[physical_pin];
+    int pin_height_offset = physical_tile->pin_height_offset[physical_pin];
+    if (true == physical_tile->pinloc[pin_width_offset][pin_height_offset][side_cand][physical_pin]) {
+      pin_sides.push_back(side_cand);
+    } 
+  }
+
+  return pin_sides;
+}
+
+/********************************************************************
  * Find the Fc of a pin in physical tile 
  *******************************************************************/
 float find_physical_tile_pin_Fc(t_physical_tile_type_ptr type,
