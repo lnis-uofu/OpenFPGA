@@ -66,6 +66,12 @@ size_t TileAnnotation::global_port_default_value(const TileGlobalPortId& global_
 TileGlobalPortId TileAnnotation::create_global_port(const std::string& port_name,
                                                     const std::string& tile_name,
                                                     const BasicPort& tile_port) {
+  /* Ensure that the name is unique */
+  std::map<std::string, TileGlobalPortId>::iterator it = global_port_name2ids_.find(port_name);
+  if (it != global_port_name2ids_.end()) {
+    return TileGlobalPortId::INVALID();
+  }
+
   /* This is a legal name. we can create a new id */
   TileGlobalPortId port_id = TileGlobalPortId(global_port_ids_.size());
   global_port_ids_.push_back(port_id);
@@ -76,6 +82,9 @@ TileGlobalPortId TileAnnotation::create_global_port(const std::string& port_name
   global_port_is_set_.push_back(false);
   global_port_is_reset_.push_back(false);
   global_port_default_values_.push_back(0);
+
+  /* Register in the name-to-id map */
+  global_port_name2ids_[port_name] = port_id;
 
   return port_id;
 }
@@ -110,6 +119,26 @@ void TileAnnotation::set_global_port_default_value(const TileGlobalPortId& globa
 /* Validators */
 bool TileAnnotation::valid_global_port_id(const TileGlobalPortId& global_port_id) const {
   return ( size_t(global_port_id) < global_port_ids_.size() ) && ( global_port_id == global_port_ids_[global_port_id] ); 
+}
+
+bool TileAnnotation::valid_global_port_attributes(const TileGlobalPortId& global_port_id) const {
+  VTR_ASSERT(valid_global_port_id(global_port_id));
+
+  int attribute_counter = 0;
+
+  if (true == global_port_is_clock_[global_port_id]) {
+    attribute_counter++;
+  }
+
+  if (true == global_port_is_reset_[global_port_id]) {
+    attribute_counter++;
+  }
+
+  if (true == global_port_is_set_[global_port_id]) {
+    attribute_counter++;
+  }
+
+  return ((0 == attribute_counter) || (1 == attribute_counter));
 }
 
 } /* namespace openfpga ends */

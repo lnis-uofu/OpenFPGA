@@ -50,6 +50,13 @@ void read_xml_tile_global_port_annotation(pugi::xml_node& xml_tile,
 
   TileGlobalPortId tile_global_port_id = tile_annotation.create_global_port(name_attr, tile_port_tokens[0], tile_port_parser.port());
 
+  /* Report any duplicated port names */
+  if (TileGlobalPortId::INVALID() == tile_global_port_id) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_tile),
+                   "Invalid port name '%s' which is defined more than once in the global port list!\n",
+                   name_attr.c_str());
+  }
+
   /* Get is_clock attributes */
   tile_annotation.set_global_port_is_clock(tile_global_port_id, get_attribute(xml_tile, "is_clock", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
 
@@ -61,6 +68,13 @@ void read_xml_tile_global_port_annotation(pugi::xml_node& xml_tile,
 
   /* Get default_value attributes */
   tile_annotation.set_global_port_default_value(tile_global_port_id, get_attribute(xml_tile, "default_value", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(0));
+
+  /* Ensure valid port attributes */
+  if (false == tile_annotation.valid_global_port_attributes(tile_global_port_id)) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_tile),
+                   "Invalid port attributes for '%s'! A port can only be clock or set or reset.\n",
+                   name_attr.c_str());
+  }
 }
 
 /********************************************************************

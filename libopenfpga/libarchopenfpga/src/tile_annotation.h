@@ -62,6 +62,10 @@ class TileAnnotation {
                                        const size_t& default_value);
   public: /* Public validator */
     bool valid_global_port_id(const TileGlobalPortId& global_port_id) const;
+    /* Validate attributes of a given global port 
+     * - A port can only be defined as clock or set or reset
+     */
+    bool valid_global_port_attributes(const TileGlobalPortId& global_port_id) const;
   private: /* Internal data */
     /* Global port information for tiles */
     vtr::vector<TileGlobalPortId, TileGlobalPortId> global_port_ids_;
@@ -72,9 +76,11 @@ class TileAnnotation {
     vtr::vector<TileGlobalPortId, bool> global_port_is_reset_;
     vtr::vector<TileGlobalPortId, bool> global_port_is_set_;
     vtr::vector<TileGlobalPortId, size_t> global_port_default_values_;
+
+    /* A fast lookup for port names */
+    std::map<std::string, TileGlobalPortId> global_port_name2ids_;
 };
 
 } /* namespace openfpga ends */
 
 #endif
-
