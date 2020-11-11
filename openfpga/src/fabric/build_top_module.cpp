@@ -347,7 +347,7 @@ int build_top_module(ModuleManager& module_manager,
   add_module_global_ports_from_child_modules(module_manager, top_module);
 
   /* Add global ports from grid ports that are defined as global in tile annotation */
-  status = add_top_module_global_ports_from_grid_modules(module_manager, top_module, circuit_lib, tile_annotation, grids, grid_instance_ids);
+  status = add_top_module_global_ports_from_grid_modules(module_manager, top_module, tile_annotation, grids, grid_instance_ids);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }

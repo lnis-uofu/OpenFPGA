@@ -21,7 +21,6 @@
 #include "rr_gsb_utils.h"
 #include "openfpga_physical_tile_utils.h"
 #include "openfpga_device_grid_utils.h"
-#include "circuit_library_utils.h"
 #include "module_manager_utils.h"
 
 #include "build_top_module_utils.h"
@@ -696,64 +695,9 @@ void add_top_module_nets_connect_grids_and_gsbs(ModuleManager& module_manager,
  *******************************************************************/
 int add_top_module_global_ports_from_grid_modules(ModuleManager& module_manager,
                                                   const ModuleId& top_module,
-                                                  const CircuitLibrary& circuit_lib,
                                                   const TileAnnotation& tile_annotation,
                                                   const DeviceGrid& grids,
                                                   const vtr::Matrix<size_t>& grid_instance_ids) {
-
-  /* Ensure that the global port has no conflicts with 
-   * the global ports which are defined in circuit library:
-   * - If a port has the same name, must ensure that its attributes are the same
-   *   i.e., is_clock, is_reset, is_set
-   *   Otherwise, error out
-   */
-  std::vector<CircuitPortId> ckt_global_ports = find_circuit_library_global_ports(circuit_lib);
-  for (const TileGlobalPortId& tile_global_port : tile_annotation.global_ports()) {
-    for (const CircuitPortId& ckt_global_port : ckt_global_ports) {
-      if (tile_annotation.global_port_name(tile_global_port) != circuit_lib.port_prefix(ckt_global_port)) {
-        continue;
-      }
-      /* All the global clock port here must be operating clock */
-      bool is_both_op_signal = !circuit_lib.port_is_prog(ckt_global_port);
-      if (false == is_both_op_signal) {
-        VTR_LOGF_ERROR(__FILE__, __LINE__,
-                       "Global port '%s' in tile annotation share the same name as global port '%s' in circuit library, which is defined for programming usage!\n",
-                       tile_annotation.global_port_name(tile_global_port).c_str(),
-                       circuit_lib.port_prefix(ckt_global_port).c_str());
-        return CMD_EXEC_FATAL_ERROR;
-      }
-
-      /* Error out if one is defined as clock while another is not */
-      bool is_clock_attr_same = (tile_annotation.global_port_is_clock(tile_global_port) != (CIRCUIT_MODEL_PORT_CLOCK == circuit_lib.port_type(ckt_global_port)));
-      if (false == is_clock_attr_same) {
-        VTR_LOGF_ERROR(__FILE__, __LINE__,
-                       "Global port '%s' in tile annotation share the same name as global port '%s' in circuit library but has different definition as clock!\n",
-                       tile_annotation.global_port_name(tile_global_port).c_str(),
-                       circuit_lib.port_prefix(ckt_global_port).c_str());
-        return CMD_EXEC_FATAL_ERROR;
-      }
-
-      /* Error out if one is defined as reset while another is not */
-      bool is_reset_attr_same = (tile_annotation.global_port_is_reset(tile_global_port) != circuit_lib.port_is_reset(ckt_global_port));
-      if (false == is_reset_attr_same) {
-        VTR_LOGF_ERROR(__FILE__, __LINE__,
-                       "Global port '%s' in tile annotation share the same name as global port '%s' in circuit library but has different definition as reset!\n",
-                       tile_annotation.global_port_name(tile_global_port).c_str(),
-                       circuit_lib.port_prefix(ckt_global_port).c_str());
-        return CMD_EXEC_FATAL_ERROR;
-      }
-
-      /* Error out if one is defined as set while another is not */
-      bool is_set_attr_same = (tile_annotation.global_port_is_set(tile_global_port) != circuit_lib.port_is_set(ckt_global_port));
-      if (false == is_set_attr_same) {
-        VTR_LOGF_ERROR(__FILE__, __LINE__,
-                       "Global port '%s' in tile annotation share the same name as global port '%s' in circuit library but has different definition as set!\n",
-                       tile_annotation.global_port_name(tile_global_port).c_str(),
-                       circuit_lib.port_prefix(ckt_global_port).c_str());
-        return CMD_EXEC_FATAL_ERROR;
-      }
-    }
-  }
 
   /* Add the global ports which are yet added to the top-level module 
    * (in different names than the global ports defined in circuit library
