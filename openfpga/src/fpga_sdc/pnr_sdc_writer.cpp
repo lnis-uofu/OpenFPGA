@@ -327,21 +327,21 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
                    const ModuleManager& module_manager,
                    const MuxLibrary& mux_lib,
                    const CircuitLibrary& circuit_lib,
-                   const std::vector<CircuitPortId>& global_ports,
+                   const FabricGlobalPortInfo& global_ports,
                    const bool& compact_routing_hierarchy) {
-  
+
+  std::string top_module_name = generate_fpga_top_module_name();
+  ModuleId top_module = module_manager.find_module(top_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(top_module));
+
   /* Constrain global ports */
   if (true == sdc_options.constrain_global_port()) {
     print_pnr_sdc_global_ports(sdc_options.sdc_dir(),
                                programming_critical_path_delay,
                                operating_critical_path_delay,
-                               circuit_lib, global_ports,
+                               module_manager, top_module, global_ports,
                                sdc_options.constrain_non_clock_global_port());
   }
-
-  std::string top_module_name = generate_fpga_top_module_name();
-  ModuleId top_module = module_manager.find_module(top_module_name);
-  VTR_ASSERT(true == module_manager.valid_module_id(top_module));
 
   /* Output Design Constraints to disable outputs of memory cells */
   if (true == sdc_options.constrain_configurable_memory_outputs()) {
