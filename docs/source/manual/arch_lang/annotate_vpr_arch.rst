@@ -69,12 +69,19 @@ Here is an example:
 
 .. note:: The port of physical tile must be a valid port of the physical definition in VPR architecture!
 
+.. note:: The linked port of physical tile must meet the following requirements:
+
+            - If the ``global_port`` is set as clock through ``is_clock="true"``, the port of the physical tile must also be a clock port.
+            - If not a clock, the port of the physical tile must be defined as non-clock global
+            - The port of the physical tile should have zero connectivity (``Fc=0``) in VPR architecture
 
 - ``is_clock="<bool>"`` define if the global port is a clock port at the top-level FPGA fabric. An operating clock port will be driven by proper signals in auto-generated testbenches.
 
 - ``is_reset="<bool>"`` define if the global port is a reset port at the top-level FPGA fabric. An operating reset port will be driven by proper signals in testbenches.
 
 - ``is_set="<bool>"`` define if the global port is a set port at the top-level FPGA fabric. An operating set port will be driven by proper signals in testbenches.
+
+.. note:: A port can only be defined as ``clock`` or ``set`` or ``reset``.
 
 .. note:: All the global port from a physical tile port is only used in operating phase. Any ports for programmable use are not allowed!
 
