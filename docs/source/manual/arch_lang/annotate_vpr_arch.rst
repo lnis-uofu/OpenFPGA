@@ -85,6 +85,37 @@ Here is an example:
 
 .. note:: All the global port from a physical tile port is only used in operating phase. Any ports for programmable use are not allowed!
 
+A more illustrative example:
+
+:numref:`fig_global_tile_ports` illustrates the difference between the global ports defined through ``circuit_model`` and ``tile_annotation``.
+
+.. _fig_global_tile_ports:
+
+.. figure:: ./figures/global_tile_ports.png
+   :scale: 100%
+   :alt: Difference between global port definition through circuit model and tile annotation
+
+   Difference between global port definition through circuit model and tile annotation
+
+When a global port, e.g., ``clk``, is defined in ``circuit_model`` using the following code:
+
+.. code-block:: xml
+
+  <circuit_model>
+    <port name="clk" is_global="true" is_clock="true"/>
+  </circuit_model>
+
+Dedicated feedthrough wires will be created across all the modules from top-level to primitive.
+
+When a global port, e.g., ``clk``, is defined in ``tile_annotation`` using the following code:
+
+.. code-block:: xml
+
+  <tile_annotations>
+    <global_port name="clk" tile_port="clb.clk" is_clock="true"/>
+  </tile_annotations>
+
+Clock port ``clk`` of each ``clb`` tile will be connected to a common clock port of the top module, while local clock network is customizable through VPR's architecture description language. For instance, the local clock network can be a programmable clock network. 
 
 Primitive Blocks inside Multi-mode Configurable Logic Blocks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
