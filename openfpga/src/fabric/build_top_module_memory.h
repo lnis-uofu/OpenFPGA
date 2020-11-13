@@ -44,6 +44,8 @@ void shuffle_top_module_configurable_children(ModuleManager& module_manager,
 
 int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager,
                                                    const ModuleId& top_module,
+                                                   const CircuitLibrary& circuit_lib,
+                                                   const ConfigProtocol& config_protocol,
                                                    const FabricKey& fabric_key); 
 
 vtr::vector<ConfigRegionId, size_t> find_top_module_regional_num_config_bit(const ModuleManager& module_manager,
