@@ -43,12 +43,12 @@ std::map<e_side, std::vector<vtr::Point<size_t>>> generate_perimeter_grid_coordi
   } 
 
   /* RIGHT side */
-  for (size_t iy = 1; iy < grids.height() - 1; ++iy) { 
+  for (size_t iy = grids.height() - 2; iy > 0; --iy) { 
     io_coordinates[RIGHT].push_back(vtr::Point<size_t>(grids.width() - 1, iy));
   } 
 
   /* BOTTOM side*/
-  for (size_t ix = 1; ix < grids.width() - 1; ++ix) { 
+  for (size_t ix = grids.width() - 2; ix > 0; --ix) { 
     io_coordinates[BOTTOM].push_back(vtr::Point<size_t>(ix, 0));
   } 
 
