@@ -523,6 +523,8 @@ void shuffle_top_module_configurable_children(ModuleManager& module_manager,
  ********************************************************************/
 int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager,
                                                    const ModuleId& top_module,
+                                                   const CircuitLibrary& circuit_lib,
+                                                   const ConfigProtocol& config_protocol,
                                                    const FabricKey& fabric_key) {
   /* Ensure a clean start */
   module_manager.clear_configurable_children(top_module);
@@ -570,6 +572,20 @@ int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager
         } else {
           VTR_LOG_ERROR("Invalid key value '%ld'!\n",
                         instance_info.second); 
+        }
+        return CMD_EXEC_FATAL_ERROR;                    
+      }
+
+      /* If the the child has not configuration bits, error out */
+      if (0 == find_module_num_config_bits(module_manager, instance_info.first,
+                                           circuit_lib, config_protocol.memory_model(), 
+                                           config_protocol.type())) {
+        if (!fabric_key.key_alias(key).empty()) {
+          VTR_LOG_ERROR("Invalid key alias '%s' which has zero configuration bits!\n",
+                        fabric_key.key_alias(key).c_str()); 
+        } else {
+          VTR_LOG_ERROR("Invalid key name '%s' which has zero configuration bits!\n",
+                        fabric_key.key_name(key).c_str()); 
         }
         return CMD_EXEC_FATAL_ERROR;                    
       }

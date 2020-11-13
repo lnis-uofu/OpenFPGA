@@ -381,6 +381,7 @@ int build_top_module(ModuleManager& module_manager,
     }
 
     status = load_top_module_memory_modules_from_fabric_key(module_manager, top_module,
+                                                            circuit_lib, config_protocol,
                                                             fabric_key); 
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
