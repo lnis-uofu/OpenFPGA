@@ -169,7 +169,7 @@ void fpga_verilog_testbench(const ModuleManager &module_manager,
   /* Create directories */
   create_directory(src_dir_path);
 
-  /* TODO: check if this works here. This function was in fabric generator */
+  /* Output preprocessing flags for HDL simulations */
   print_verilog_simulation_preprocessing_flags(std::string(src_dir_path),
                                                options);
 
