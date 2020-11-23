@@ -470,6 +470,13 @@ namespace openfpga
                                                       circuit_lib, sram_model, 
                                                       bitstream_manager);
 
+    /* Add signal initialization */
+    print_verilog_testbench_signal_initialization(fp,
+                                                  std::string(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME),
+                                                  circuit_lib,
+                                                  module_manager,
+                                                  top_module);
+
     /* Testbench ends*/
     print_verilog_module_end(fp, std::string(circuit_name) + std::string(FORMAL_VERIFICATION_TOP_MODULE_POSTFIX));
 

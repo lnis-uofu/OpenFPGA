@@ -195,9 +195,6 @@ void print_verilog_invbuf_module(const ModuleManager& module_manager,
   /* Print timing info */
   print_verilog_submodule_timing(fp, circuit_lib, circuit_model);
 
-  /* Print signal initialization */
-  print_verilog_submodule_signal_init(fp, circuit_lib, circuit_model);
-
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, circuit_lib.model_name(circuit_model));
 }
@@ -271,9 +268,6 @@ void print_verilog_passgate_module(const ModuleManager& module_manager,
   /* Print timing info */
   print_verilog_submodule_timing(fp, circuit_lib, circuit_model);
 
-  /* Print signal initialization */
-  print_verilog_submodule_signal_init(fp, circuit_lib, circuit_model);
-   
   /* Put an end to the Verilog module */
   print_verilog_module_end(fp, circuit_lib.model_name(circuit_model));
 }

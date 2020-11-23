@@ -16,6 +16,8 @@
 #include "openfpga_port.h"
 #include "openfpga_digest.h"
 
+#include "openfpga_naming.h"
+
 #include "verilog_port_types.h"
 
 #include "module_manager_utils.h"
@@ -730,6 +732,140 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
 
   /* Add an empty line as splitter */
   fp << std::endl;
+}
+
+/********************************************************************
+ * Print signal initialization which
+ * deposit initial values for the input ports of primitive circuit models
+ * This function recusively walk through from the parent_module
+ * until reaching a primitive module that matches the circuit_model name
+ * The hierarchy walkthrough collects the full paths for the primitive modules
+ * in the graph of modules
+ *******************************************************************/
+static 
+void rec_print_verilog_testbench_primitive_module_signal_initialization(std::fstream& fp,
+                                                                        const std::string& hie_path,
+                                                                        const CircuitLibrary& circuit_lib,
+                                                                        const CircuitModelId& circuit_model,
+                                                                        const ModuleManager& module_manager,
+                                                                        const ModuleId& parent_module,
+                                                                        const ModuleId& primitive_module) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  /* Return if the current module has no children */
+  if (0 == module_manager.child_modules(parent_module).size()) {
+    return;
+  }
+
+  /* Go through child modules */
+  for (const ModuleId& child_module : module_manager.child_modules(parent_module)) {
+    /* If the child module is not the primitive module, 
+     * we recursively visit the child module
+     */
+    for (const size_t& child_instance : module_manager.child_module_instances(parent_module, child_module)) {
+      std::string instance_name = module_manager.instance_name(parent_module, child_module, child_instance);
+      /* Use default instanec name if not assigned */
+      if (true == instance_name.empty()) {
+        instance_name = generate_instance_name(module_manager.module_name(child_module), child_instance);
+      }
+   
+      std::string child_hie_path = hie_path + "." + instance_name;
+
+      if (child_module != primitive_module) {
+        rec_print_verilog_testbench_primitive_module_signal_initialization(fp,
+                                                                           child_hie_path,
+                                                                           circuit_lib, circuit_model,
+                                                                           module_manager, child_module,
+                                                                           primitive_module);
+      } else {
+        /* If the child module is the primitive module, 
+         * we output the signal initialization codes for the input ports
+         */
+        VTR_ASSERT_SAFE(child_module == primitive_module);
+
+        print_verilog_comment(fp, std::string("------ BEGIN driver initialization -----"));
+        fp << "\tinitial begin" << std::endl;
+        fp << "\t`ifdef " << VERILOG_FORMAL_VERIFICATION_PREPROC_FLAG << std::endl;
+
+        for (const auto& input_port : circuit_lib.model_input_ports(circuit_model)) {
+          /* Only for formal verification: deposite a zero signal values */
+          /* Initialize each input port */
+          BasicPort input_port_info(circuit_lib.port_lib_name(input_port), circuit_lib.port_size(input_port));
+          fp << "\t\t$deposit(";
+          fp << child_hie_path << ".";
+          fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info);
+          fp << ", " <<  circuit_lib.port_size(input_port) << "'b" << std::string(circuit_lib.port_size(input_port), '0');
+          fp << ");" << std::endl;
+        }
+        fp << "\t`else" << std::endl;
+
+        /* Regular case: deposite initial signal values: a random value */
+        for (const auto& input_port : circuit_lib.model_input_ports(circuit_model)) {
+          BasicPort input_port_info(circuit_lib.port_lib_name(input_port), circuit_lib.port_size(input_port));
+          fp << "\t\t$deposit(";
+          fp << child_hie_path << ".";
+          fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info);
+          fp << ", $random);" << std::endl;
+        }
+
+        fp << "\t`endif\n" << std::endl;
+        fp << "\tend" << std::endl;
+        print_verilog_comment(fp, std::string("------ END driver initialization -----"));
+      }
+    }
+  }
+}
+
+/********************************************************************
+ * Print signal initialization for Verilog testbenches
+ * which aim to deposit initial values for the input ports of primitive circuit models:
+ * - Passgate
+ * - Logic gates (ONLY for MUX2)
+ *******************************************************************/
+void print_verilog_testbench_signal_initialization(std::fstream& fp,
+                                                   const std::string& top_instance_name,
+                                                   const CircuitLibrary& circuit_lib,
+                                                   const ModuleManager& module_manager,
+                                                   const ModuleId& top_module) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  /* Collect circuit models that need signal initialization */
+  std::vector<CircuitModelId> signal_init_circuit_models;
+
+  for (const CircuitModelId& model : circuit_lib.models_by_type(CIRCUIT_MODEL_PASSGATE)) {
+    signal_init_circuit_models.push_back(model);
+  }
+
+  for (const CircuitModelId& model : circuit_lib.models_by_type(CIRCUIT_MODEL_GATE)) {
+    if (CIRCUIT_MODEL_GATE_MUX2 == circuit_lib.gate_type(model)) {
+      signal_init_circuit_models.push_back(model);
+    }
+  }
+
+  /* If there is no circuit model in the list, return directly */
+  if (signal_init_circuit_models.empty()) {
+    return;
+  }
+
+  /* Add signal initialization Verilog codes */
+  fp << std::endl;
+  fp << "`ifdef " << VERILOG_SIGNAL_INIT_PREPROC_FLAG << std::endl;
+  for (const CircuitModelId& signal_init_circuit_model : signal_init_circuit_models) {
+    /* Find the module id corresponding to the circuit model from module graph */
+    ModuleId primitive_module = module_manager.find_module(circuit_lib.model_name(signal_init_circuit_model));
+    VTR_ASSERT(true == module_manager.valid_module_id(primitive_module));
+
+    /* Find all the instances created by the circuit model across the fabric*/
+    rec_print_verilog_testbench_primitive_module_signal_initialization(fp,
+                                                                       top_instance_name,
+                                                                       circuit_lib, signal_init_circuit_model,
+                                                                       module_manager, top_module,
+                                                                       primitive_module);
+  }
+
+  fp << "`endif" << std::endl;
 }
 
 } /* end namespace openfpga */
