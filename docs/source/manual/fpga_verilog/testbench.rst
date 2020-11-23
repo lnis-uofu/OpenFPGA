@@ -80,11 +80,13 @@ Inside the directory, the Verilog testbenches are organized as illustrated in :n
 
    .. note:: To run full testbenches, both flags ``ENABLE_FORMAL_VERIFICATION`` and ``ENABLE_FORMAL_SIMULATION`` must be disabled!
 
-   - ```define ENABLE_SIGNAL_INITIALIZATION`` When enabled, all the outputs of primitive Verilog modules will be initialized with a random value. This flag is added when ``--include_signal_init`` option is enabled when calling the ``write_fabric_verilog`` command. 
+   - ```define ENABLE_SIGNAL_INITIALIZATION`` When enabled, all the outputs of primitive Verilog modules will be initialized with a random value. This flag is added when ``--include_signal_init`` option is enabled when calling the ``write_verilog_testbench`` command. 
 
    .. note:: We strongly recommend users to turn on this flag as it can help simulators to converge quickly.
+
+   .. warning:: Signal initialization is only applied to the datapath inputs of routing multiplexers (considering the fact that they are indispensible cells of FPGAs)! If your FPGA does not contain any multiplexer cells, signal initialization is not applicable.
    
-   - ```define ICARUS_SIMULATOR`` When enabled, Verilog netlists are generated to be compatible with the syntax required by `icarus iVerilog simulator`__. This flag is added when ``--support_icarus_simulator`` option is enabled when calling the ``write_fabric_verilog`` command. 
+   - ```define ICARUS_SIMULATOR`` When enabled, Verilog netlists are generated to be compatible with the syntax required by `icarus iVerilog simulator`__. This flag is added when ``--support_icarus_simulator`` option is enabled when calling the ``write_verilog_testbench`` command. 
 
    .. warning:: Please disable this flag if you are not using icarus iVerilog simulator.
 
