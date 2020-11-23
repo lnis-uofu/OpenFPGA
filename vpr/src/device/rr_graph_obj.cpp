@@ -449,6 +449,7 @@ void RRGraph::print_node(const RRNodeId& node) const {
     VTR_LOG("Node ptc: %d\n", node_ptc_num(node));
     VTR_LOG("Node num in_edges: %d\n", node_in_edges(node).size());
     VTR_LOG("Node num out_edges: %d\n", node_out_edges(node).size());
+    VTR_LOG("Node segment id: %d\n", node_segment(node));
 }
 
 /* Check if the segment id of a node is in range */
