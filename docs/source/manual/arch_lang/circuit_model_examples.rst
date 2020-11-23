@@ -200,7 +200,15 @@ Template
     <port type="output" prefix="<string>" size="<int>"/>
   </circuit_model>
 
-.. note:: Please do not add input and output buffers to pass-gate logic.
+.. note:: The port sequence really matters! And all the input ports must have an input size of 1!
+
+          - The first input must be the datapath input, e.g., ``in``.
+
+          - The second input must be the select input, e.g., ``sel``.
+
+          - The third input (if applicable) must be the inverted select input, e.g., ``selb``.
+
+.. warning:: Please do **NOT** add input and output buffers to pass-gate logic.
 
 .. option:: <design_technology type="cmos" topology="<string>" nmos_size="<float>" pmos_size="<float>"/>
 
@@ -375,6 +383,12 @@ Template
 .. option:: <design_technology type="cmos" topology="<string>"/>
   
   - ``topology="AND|OR|MUX2"`` Specify the logic functionality of a gate. As for standard cells, the size of each port is limited to 1. Currently, only 2-input and single-output logic gates are supported.
+
+.. note:: The port sequence really matters for MUX2 logic gates! 
+
+          - The first two inputs must be the datapath inputs, e.g., ``in0`` and ``in1``.
+
+          - The third input must be the select input, e.g., ``sel``.
 
 .. _circuit_model_and2_example:
 
