@@ -80,6 +80,20 @@ Inside the directory, the Verilog testbenches are organized as illustrated in :n
 
    .. note:: To run full testbenches, both flags ``ENABLE_FORMAL_VERIFICATION`` and ``ENABLE_FORMAL_SIMULATION`` must be disabled!
 
+   - ```define ENABLE_SIGNAL_INITIALIZATION`` When enabled, all the outputs of primitive Verilog modules will be initialized with a random value. This flag is added when ``--include_signal_init`` option is enabled when calling the ``write_fabric_verilog`` command. 
+
+   .. note:: We strongly recommend users to turn on this flag as it can help simulators to converge quickly.
+   
+   - ```define ICARUS_SIMULATOR`` When enabled, Verilog netlists are generated to be compatible with the syntax required by `icarus iVerilog simulator`__. This flag is added when ``--support_icarus_simulator`` option is enabled when calling the ``write_fabric_verilog`` command. 
+
+   .. warning:: Please disable this flag if you are not using icarus iVerilog simulator.
+
+__ iverilog_website_
+
+.. _iverilog_website: http://iverilog.icarus.com/
+
+
+
 .. option:: <bench_name>_autocheck_top_tb.v
 
   This is the netlist for full testbench.

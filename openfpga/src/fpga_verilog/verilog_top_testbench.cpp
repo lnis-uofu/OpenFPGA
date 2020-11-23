@@ -1769,6 +1769,7 @@ void print_verilog_top_testbench_check(std::fstream& fp,
 void print_verilog_top_testbench(const ModuleManager& module_manager,
                                  const BitstreamManager& bitstream_manager,
                                  const FabricBitstream& fabric_bitstream,
+                                 const CircuitLibrary& circuit_lib,
                                  const ConfigProtocol& config_protocol,
                                  const FabricGlobalPortInfo& global_ports,
                                  const AtomContext& atom_ctx,
@@ -1915,6 +1916,13 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                         bit_value_to_skip,
                                         module_manager, top_module,
                                         bitstream_manager, fabric_bitstream);
+
+  /* Add signal initialization */
+  print_verilog_testbench_signal_initialization(fp,
+                                                std::string(TOP_TESTBENCH_FPGA_INSTANCE_NAME),
+                                                circuit_lib,
+                                                module_manager,
+                                                top_module);
 
   /* Add stimuli for reset, set, clock and iopad signals */
   print_verilog_testbench_random_stimuli(fp, atom_ctx,

@@ -7,10 +7,12 @@
 //-----------------------------------------------------
 
 module MUX2(
-	input A,   // Data input 0
-	input B,   // Data input 1
-	input S0, // Select port
-	output Y  // Data output
+    // iVerilog is buggy on the 'input A' declaration when deposit initial
+    // values 
+	input [0:0] A,   // Data input 0
+	input [0:0] B,   // Data input 1
+	input [0:0] S0, // Select port
+	output [0:0] Y  // Data output
 	);
   
 	assign Y = S0 ? B : A;

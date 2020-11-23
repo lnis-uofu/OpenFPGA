@@ -47,7 +47,7 @@ write_fabric_bitstream --file fabric_bitstream.xml --format xml
 
 # Write the Verilog netlist for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
-write_fabric_verilog --file ./FABRIC_NETLIST --explicit_port_mapping --include_timing --include_signal_init --support_icarus_simulator --print_user_defined_template --verbose
+write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --print_user_defined_template --verbose
 
 # Write the Verilog testbench for FPGA fabric
 #  - We suggest the use of same output directory as fabric Verilog netlists
@@ -55,7 +55,7 @@ write_fabric_verilog --file ./FABRIC_NETLIST --explicit_port_mapping --include_t
 #  - Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
 #  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
-write_verilog_testbench --file ./SRC --fabric_netlist_file_path ${OPENFPGA_FABRIC_NETLIST_FILE} --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --print_top_testbench --print_preconfig_top_testbench --print_simulation_ini ./SimulationDeck/simulation_deck.ini --explicit_port_mapping
+write_verilog_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --print_top_testbench --print_preconfig_top_testbench --print_simulation_ini ./SimulationDeck/simulation_deck.ini --include_signal_init --support_icarus_simulator --explicit_port_mapping
 
 # Write the SDC files for PnR backend
 #  - Turn on every options here

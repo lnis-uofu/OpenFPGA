@@ -24,7 +24,7 @@ lut_truth_table_fixup
 # Build the module graph
 #  - Enabled compression on routing architecture modules
 #  - Enable pin duplication on grid modules
-build_fabric --compress_routing #--verbose
+build_fabric --compress_routing --duplicate_grid_pin #--verbose
 
 # Write the fabric hierarchy of module graph to a file
 # This is used by hierarchical PnR flows
@@ -37,14 +37,17 @@ repack #--verbose
 
 # Build the bitstream
 #  - Output the fabric-independent bitstream to a file
-build_architecture_bitstream --verbose --write_file fabric_indepenent_bitstream.xml
+build_architecture_bitstream --verbose --write_file fabric_independent_bitstream.xml
 
 # Build fabric-dependent bitstream
 build_fabric_bitstream --verbose
 
+# Write fabric-dependent bitstream
+write_fabric_bitstream --file fabric_bitstream.xml --format xml
+
 # Write the Verilog netlist for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
-write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --include_signal_init --support_icarus_simulator --print_user_defined_template --verbose
+write_fabric_verilog --file ./SRC --include_timing --print_user_defined_template --verbose
 
 # Write the Verilog testbench for FPGA fabric
 #  - We suggest the use of same output directory as fabric Verilog netlists
@@ -52,17 +55,17 @@ write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --inc
 #  - Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
 #  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
-write_verilog_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --print_top_testbench --print_preconfig_top_testbench --print_simulation_ini ./SimulationDeck/simulation_deck.ini --explicit_port_mapping
+write_verilog_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --print_top_testbench --print_preconfig_top_testbench --print_simulation_ini ./SimulationDeck/simulation_deck.ini --include_signal_init --support_icarus_simulator
 
 # Write the SDC files for PnR backend
 #  - Turn on every options here
-write_pnr_sdc --time_unit ps --file ./SDC
+write_pnr_sdc --file ./SDC
 
 # Write SDC to disable timing for configure ports
 write_sdc_disable_timing_configure_ports --file ./SDC/disable_configure_ports.sdc
 
 # Write the SDC to run timing analysis for a mapped FPGA fabric
-write_analysis_sdc --time_unit ps --file ./SDC_analysis
+write_analysis_sdc --file ./SDC_analysis
 
 # Finish and exit OpenFPGA
 exit

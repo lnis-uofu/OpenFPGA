@@ -40,14 +40,10 @@ repack #--verbose
 build_architecture_bitstream --verbose --write_file fabric_independent_bitstream.xml
 
 # Build fabric-dependent bitstream
-build_fabric_bitstream --verbose 
+build_fabric_bitstream --verbose
 
 # Write fabric-dependent bitstream
-write_fabric_bitstream --file fabric_bitstream.xml --format xml
-
-# Write the Verilog netlist for FPGA fabric
-#  - Enable the use of explicit port mapping in Verilog netlist
-write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --include_signal_init --support_icarus_simulator --print_user_defined_template --verbose
+write_fabric_bitstream --file fabric_bitstream --format xml
 
 # Write the Verilog testbench for FPGA fabric
 #  - We suggest the use of same output directory as fabric Verilog netlists
@@ -55,17 +51,7 @@ write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --inc
 #  - Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
 #  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
-write_verilog_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --print_top_testbench --print_preconfig_top_testbench --print_simulation_ini ./SimulationDeck/simulation_deck.ini --explicit_port_mapping
-
-# Write the SDC files for PnR backend
-#  - Turn on every options here
-write_pnr_sdc --file ./SDC
-
-# Write SDC to constrain timing of configuration chain
-write_configuration_chain_sdc --file ./SDC/ccff_timing.sdc --time_unit ns --max_delay 5 --min_delay 2.5
-
-# Write SDC to disable timing for configure ports
-write_sdc_disable_timing_configure_ports --file ./SDC/disable_configure_ports.sdc
+write_verilog_testbench --file ./TESTBENCH --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --print_top_testbench --print_preconfig_top_testbench --print_simulation_ini ./SimulationDeck/simulation_deck.ini --include_signal_init --support_icarus_simulator --explicit_port_mapping
 
 # Write the SDC to run timing analysis for a mapped FPGA fabric
 write_analysis_sdc --file ./SDC_analysis

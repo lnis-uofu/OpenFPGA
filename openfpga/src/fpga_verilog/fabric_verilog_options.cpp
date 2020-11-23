@@ -13,8 +13,6 @@ namespace openfpga {
  *************************************************/
 FabricVerilogOption::FabricVerilogOption() {
   output_directory_.clear();
-  support_icarus_simulator_ = false;
-  include_signal_init_ = false;
   include_timing_ = false;
   explicit_port_mapping_ = false;
   compress_routing_ = false;
@@ -29,16 +27,8 @@ std::string FabricVerilogOption::output_directory() const {
   return output_directory_;
 }
 
-bool FabricVerilogOption::support_icarus_simulator() const {
-  return support_icarus_simulator_;
-}
-
 bool FabricVerilogOption::include_timing() const {
   return include_timing_;
-}
-
-bool FabricVerilogOption::include_signal_init() const {
-  return include_signal_init_;
 }
 
 bool FabricVerilogOption::explicit_port_mapping() const {
@@ -64,16 +54,8 @@ void FabricVerilogOption::set_output_directory(const std::string& output_dir) {
   output_directory_ = output_dir;
 }
 
-void FabricVerilogOption::set_support_icarus_simulator(const bool& enabled) {
-  support_icarus_simulator_ = enabled;
-}
-
 void FabricVerilogOption::set_include_timing(const bool& enabled) {
   include_timing_ = enabled;
-}
-
-void FabricVerilogOption::set_include_signal_init(const bool& enabled) {
-  include_signal_init_ = enabled;
 }
 
 void FabricVerilogOption::set_explicit_port_mapping(const bool& enabled) {
