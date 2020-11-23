@@ -807,7 +807,7 @@ void rec_print_verilog_testbench_primitive_module_signal_initialization(std::fst
           fp << "\t\t$deposit(";
           fp << child_hie_path << ".";
           fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info);
-          fp << ", $urandom_range(0, 1));" << std::endl;
+          fp << ", $random % 2 ? 1'b1 : 1'b0);" << std::endl;
         }
 
         fp << "\t`endif\n" << std::endl;
