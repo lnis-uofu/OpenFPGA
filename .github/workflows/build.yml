@@ -108,10 +108,24 @@ jobs:
       - name: ccache cache files
         uses: actions/cache@v1.1.0
         with:
-          path: ${{runner.workspace}}/build/.ccache
+          path: .ccache
           key: ${{ matrix.config.name }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
           restore-keys: |
             ${{ matrix.config.name }}-ccache-
+
+      # Set up the paths for ccache and control the size under 400MB
+      - name: Configure ccache
+        shell: cmake -P {0}
+        run: |
+          file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}" ccache_basedir)
+          set(ENV{CCACHE_BASEDIR} "${ccache_basedir}")
+          set(ENV{CCACHE_DIR} "${ccache_basedir}/.ccache")
+          set(ENV{CCACHE_COMPRESS} "true")
+          set(ENV{CCACHE_COMPRESSLEVEL} "6")
+          set(ENV{CCACHE_MAXSIZE} "400M")
+
+          execute_process(COMMAND ccache -p)
+          execute_process(COMMAND ccache -z)
 
       - name: Configure CMake
         # Use a bash shell so we can use the same syntax for environment variable
@@ -130,4 +144,7 @@ jobs:
         working-directory: ${{runner.workspace}}/build
         shell: bash
         # Execute the build.  You can specify a specific target with "--target <NAME>"
-        run: cmake --build . --config $BUILD_TYPE 
+        # Check the cache size and see if it is over the limit
+        run: |
+          cmake --build . --config $BUILD_TYPE 
+          ccache -s
