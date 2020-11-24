@@ -123,7 +123,7 @@ jobs:
         # Execute the build.  You can specify a specific target with "--target <NAME>"
         run: cmake --build . --config $BUILD_TYPE 
 
-      - name: ${{matrix.config.name}
+      - name: ${{matrix.config.name}}
         working-directory: ${{runner.workspace}}
         shell: bash
         # Execute the test. 
