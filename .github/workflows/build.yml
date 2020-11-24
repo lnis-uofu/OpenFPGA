@@ -147,7 +147,7 @@ jobs:
         run: cmake -E make_directory ${{runner.workspace}}/build
       
       - name: ccache cache files
-        uses: actions/cache@v1.1.0
+        uses: actions/cache@v2
         with:
           path: .ccache
           key: ${{ matrix.config.name }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
