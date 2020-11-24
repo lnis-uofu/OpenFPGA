@@ -44,15 +44,15 @@ jobs:
         run: source ./.github/workflows/install_dependency.sh 
 
       - name: Prepare ccache timestamp
-          id: ccache_cache_timestamp
-          shell: cmake -P {0}
-          run: |
+        id: ccache_cache_timestamp
+        shell: cmake -P {0}
+        run: |
           string(TIMESTAMP current_date "%Y-%m-%d-%H;%M;%S" UTC)
           message("::set-output name=timestamp::${current_date}")
       
       - name: ccache cache files
-          uses: actions/cache@v1.1.0
-          with:
+        uses: actions/cache@v1.1.0
+        with:
           path: .ccache
           key: ${{ matrix.config.name }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
           restore-keys: |
