@@ -1,4 +1,4 @@
-name: OpenFPGA CI
+name: Build Compatibility Tests
 
 # Run CI on
 # - each push
