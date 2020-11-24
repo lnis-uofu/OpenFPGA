@@ -1,0 +1,31 @@
+name: OpenFPGA CI
+
+# Run CI on
+# - each push
+# - each pull request
+# - scheduled weekly
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 0 * * 0 ' # weekly
+
+# Multiple job to tests
+jobs:
+  # Test the compilation
+  build_gcc8:
+    runs-on: ubuntu-18.04
+
+    # Define the steps to run the build job
+    steps:
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v2
+
+      - name: Install dependency
+        run: source install_dependency.sh 
+
+      - name: Compile OpenFPGA
+        uses: nicledomaS/cmake_build_action@v1
+        with:
+          submodule_update: OFF
+          cmake_args: -DCMAKE_BUILD_TYPE=release;-DCMAKE_C_COMPILER=gcc-8;-DCMAKE_CXX_COMPILER=g++-8;
