@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install dependency
-        run: source ./.github/workflow/install_dependency.sh 
+        run: source ./.github/workflows/install_dependency.sh 
 
       - name: Compile OpenFPGA
         uses: nicledomaS/cmake_build_action@v1
