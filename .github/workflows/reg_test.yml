@@ -32,35 +32,40 @@ jobs:
             name: "Basic Regression Tests: GCC-8 (Ubuntu 18.04)",
             artifact: "OpenFPGA-basic-tests-ubuntu-18.04-gcc8-build.7z",
             os: ubuntu-18.04,
-            cc: "gcc-8", cxx: "g++-8"
+            cc: "gcc-8", cxx: "g++-8",
+            reg_script: "basic_reg_test.sh"
           }
 
         - {
             name: "FPGA-Verilog Regression Tests: GCC-8 (Ubuntu 18.04)",
             artifact: "OpenFPGA-fpga-verilog-tests-ubuntu-18.04-gcc8-build.7z",
             os: ubuntu-18.04,
-            cc: "gcc-8", cxx: "g++-8"
+            cc: "gcc-8", cxx: "g++-8",
+            reg_script: "fpga_verilog_reg_test.sh"
           }
 
         - {
             name: "FPGA-Bitstream Regression Tests: GCC-8 (Ubuntu 18.04)",
             artifact: "OpenFPGA-fpga-bitstream-tests-ubuntu-18.04-gcc8-build.7z",
             os: ubuntu-18.04,
-            cc: "gcc-8", cxx: "g++-8"
+            cc: "gcc-8", cxx: "g++-8",
+            reg_script: "fpga_bitstream_reg_test.sh"
           }
 
         - {
             name: "FPGA-SDC Regression Tests: GCC-8 (Ubuntu 18.04)",
             artifact: "OpenFPGA-fpga-sdc-tests-ubuntu-18.04-gcc8-build.7z",
             os: ubuntu-18.04,
-            cc: "gcc-8", cxx: "g++-8"
+            cc: "gcc-8", cxx: "g++-8",
+            reg_script: "fpga_sdc_reg_test.sh"
           }
 
         - {
             name: "FPGA-SPICE Regression Tests: GCC-8 (Ubuntu 18.04)",
             artifact: "OpenFPGA-fpga-spice-tests-ubuntu-18.04-gcc8-build.7z",
             os: ubuntu-18.04,
-            cc: "gcc-8", cxx: "g++-8"
+            cc: "gcc-8", cxx: "g++-8",
+            reg_script: "fpga_spice_reg_test.sh"
           }
 
     # Define the steps to run the build job
@@ -118,47 +123,9 @@ jobs:
         # Execute the build.  You can specify a specific target with "--target <NAME>"
         run: cmake --build . --config $BUILD_TYPE 
 
-      - name: Basic Regression Tests
+      - name: ${{matrix.config.name}
         working-directory: ${{runner.workspace}}
         shell: bash
         # Execute the test. 
         run: |
-          if ("${{matrix.config.name}}" STRQUAL "Basic Regression Tests: GCC-8 (Ubuntu 18.04)")
-            source ${{runner.workspace}}/.github/workflows/basic_reg_test.sh
-          endif()
-        
-      - name: FPGA-Verilog Regression Tests
-        working-directory: ${{runner.workspace}}
-        shell: bash
-        # Execute the test. 
-        run: |
-          if ("${{matrix.config.name}}" STRQUAL "FPGA-Verilog Regression Tests: GCC-8 (Ubuntu 18.04)")
-            source ${{runner.workspace}}/.github/workflows/fpga_verilog_reg_test.sh
-          endif()
-
-      - name: FPGA-Bitstream Regression Tests
-        working-directory: ${{runner.workspace}}
-        shell: bash
-        # Execute the test. 
-        run: |
-          if ("${{matrix.config.name}}" STRQUAL "FPGA-Bitstream Regression Tests: GCC-8 (Ubuntu 18.04)")
-            source ${{runner.workspace}}/.github/workflows/fpga_bitstream_reg_test.sh
-          endif()
-
-      - name: FPGA-SDC Regression Tests
-        working-directory: ${{runner.workspace}}
-        shell: bash
-        # Execute the test. 
-        run: |
-          if ("${{matrix.config.name}}" STRQUAL "FPGA-SDC Regression Tests: GCC-8 (Ubuntu 18.04)")
-            source ${{runner.workspace}}/.github/workflows/fpga_sdc_reg_test.sh
-          endif()
-
-      - name: FPGA-SPICE Regression Tests
-        working-directory: ${{runner.workspace}}
-        shell: bash
-        # Execute the test. 
-        run: |
-          if ("${{matrix.config.name}}" STRQUAL "FPGA-SPICE Regression Tests: GCC-8 (Ubuntu 18.04)")
-            source ${{runner.workspace}}/.github/workflows/fpga_spice_reg_test.sh
-          endif()
+          source ${{runner.workspace}}/.github/workflows/${{matrix.config.reg_script}}
