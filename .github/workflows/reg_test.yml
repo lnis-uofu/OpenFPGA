@@ -119,41 +119,46 @@ jobs:
         run: cmake --build . --config $BUILD_TYPE 
 
       - name: Basic Regression Tests
-        if: matrix.config.name STRQUAL ${{'Basic Regression Tests: GCC-8 (Ubuntu 18.04)'}}
         working-directory: ${{runner.workspace}}
         shell: bash
         # Execute the test. 
         run: |
-          source basic_reg_test.sh
+          if ("${{matrix.config.name}}" STRQUAL "Basic Regression Tests: GCC-8 (Ubuntu 18.04)")
+            source basic_reg_test.sh
+          endif()
         
       - name: FPGA-Verilog Regression Tests
-        if: matrix.config.name STRQUAL ${{'FPGA-Verilog Regression Tests: GCC-8 (Ubuntu 18.04)' }}
         working-directory: ${{runner.workspace}}
         shell: bash
         # Execute the test. 
         run: |
-          source fpga_verilog_reg_test.sh
+          if ("${{matrix.config.name}}" STRQUAL "FPGA-Verilog Regression Tests: GCC-8 (Ubuntu 18.04)")
+            source fpga_verilog_reg_test.sh
+          endif()
 
       - name: FPGA-Bitstream Regression Tests
-        if: matrix.config.name STRQUAL ${{'FPGA-Bitstream Regression Tests: GCC-8 (Ubuntu 18.04)' }}
         working-directory: ${{runner.workspace}}
         shell: bash
         # Execute the test. 
         run: |
-          source fpga_bitstream_reg_test.sh
+          if ("${{matrix.config.name}}" STRQUAL "FPGA-Bitstream Regression Tests: GCC-8 (Ubuntu 18.04)")
+            source fpga_bitstream_reg_test.sh
+          endif()
 
       - name: FPGA-SDC Regression Tests
-        if: matrix.config.name STRQUAL ${{'FPGA-SDC Regression Tests: GCC-8 (Ubuntu 18.04)' }}
         working-directory: ${{runner.workspace}}
         shell: bash
         # Execute the test. 
         run: |
-          source fpga_sdc_reg_test.sh
+          if ("${{matrix.config.name}}" STRQUAL "FPGA-SDC Regression Tests: GCC-8 (Ubuntu 18.04)")
+            source fpga_sdc_reg_test.sh
+          endif()
 
       - name: FPGA-SPICE Regression Tests
-        if: matrix.config.name STRQUAL ${{'FPGA-SPICE Regression Tests: GCC-8 (Ubuntu 18.04)' }}
         working-directory: ${{runner.workspace}}
         shell: bash
         # Execute the test. 
         run: |
-          source fpga_spice_reg_test.sh
+          if ("${{matrix.config.name}}" STRQUAL "FPGA-SPICE Regression Tests: GCC-8 (Ubuntu 18.04)")
+            source fpga_spice_reg_test.sh
+          endif()
