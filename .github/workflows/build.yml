@@ -1,4 +1,4 @@
-name: Build Compatibility Tests
+name: OpenFPGA Tests
 
 # Run CI on
 # - each push
@@ -77,6 +77,47 @@ jobs:
             cc: "clang-8", cxx: "clang++-8"
           }
 
+        - {
+            name: "Basic Regression Tests: GCC-8 (Ubuntu 18.04)",
+            artifact: "OpenFPGA-basic-tests-ubuntu-18.04-gcc8-build.7z",
+            os: ubuntu-18.04,
+            cc: "gcc-8", cxx: "g++-8",
+            reg_script: "basic_reg_test.sh"
+          }
+
+        - {
+            name: "FPGA-Verilog Regression Tests: GCC-8 (Ubuntu 18.04)",
+            artifact: "OpenFPGA-fpga-verilog-tests-ubuntu-18.04-gcc8-build.7z",
+            os: ubuntu-18.04,
+            cc: "gcc-8", cxx: "g++-8",
+            reg_script: "fpga_verilog_reg_test.sh"
+          }
+
+        - {
+            name: "FPGA-Bitstream Regression Tests: GCC-8 (Ubuntu 18.04)",
+            artifact: "OpenFPGA-fpga-bitstream-tests-ubuntu-18.04-gcc8-build.7z",
+            os: ubuntu-18.04,
+            cc: "gcc-8", cxx: "g++-8",
+            reg_script: "fpga_bitstream_reg_test.sh"
+          }
+
+        - {
+            name: "FPGA-SDC Regression Tests: GCC-8 (Ubuntu 18.04)",
+            artifact: "OpenFPGA-fpga-sdc-tests-ubuntu-18.04-gcc8-build.7z",
+            os: ubuntu-18.04,
+            cc: "gcc-8", cxx: "g++-8",
+            reg_script: "fpga_sdc_reg_test.sh"
+          }
+
+        - {
+            name: "FPGA-SPICE Regression Tests: GCC-8 (Ubuntu 18.04)",
+            artifact: "OpenFPGA-fpga-spice-tests-ubuntu-18.04-gcc8-build.7z",
+            os: ubuntu-18.04,
+            cc: "gcc-8", cxx: "g++-8",
+            reg_script: "fpga_spice_reg_test.sh"
+          }
+
+
     # Define the steps to run the build job
     steps:
       - name: Checkout OpenFPGA repo
@@ -152,3 +193,9 @@ jobs:
         shell: cmake -P {0}
         run: |
           execute_process(COMMAND ccache -s)
+
+      - name: ${{matrix.config.name}}
+        if: contains(matrix.config.name, 'Regression Test')
+        shell: bash
+        # Execute the test. 
+        run: source ./.github/workflows/${{matrix.config.reg_script}}
