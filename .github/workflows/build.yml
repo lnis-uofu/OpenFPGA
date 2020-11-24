@@ -29,9 +29,9 @@ jobs:
       matrix:
         config:
         - {
-            name: "Build Compatibility: GCC-8 (Ubuntu 18.04)"
-            artifact: "OpenFPGA-ubuntu-18.04-gcc8-build.7z"
-            os: ubuntu-18.04
+            name: "Build Compatibility: GCC-8 (Ubuntu 18.04)",
+            artifact: "OpenFPGA-ubuntu-18.04-gcc8-build.7z",
+            os: ubuntu-18.04,
             cc: "gcc-8", cxx: "g++-8"
           }
 
