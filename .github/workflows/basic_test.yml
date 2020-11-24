@@ -1,0 +1,159 @@
+name: OpenFPGA Regression Tests
+
+# Run CI on
+# - each push
+# - each pull request
+# - scheduled weekly
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 0 * * 0 ' # weekly
+
+# Environment variables
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+  MAKEFLAGS: "-j8"
+
+# Multiple job to tests
+jobs:
+  # Test the functionality of OpenFPGA tools
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+
+    # Branch on different OS and settings
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - {
+            name: "Basic Regression Tests: GCC-8 (Ubuntu 18.04)",
+            artifact: "OpenFPGA-basic-tests-ubuntu-18.04-gcc8-build.7z",
+            os: ubuntu-18.04,
+            cc: "gcc-8", cxx: "g++-8"
+          }
+
+        - {
+            name: "FPGA-Verilog Regression Tests: GCC-8 (Ubuntu 18.04)",
+            artifact: "OpenFPGA-fpga-verilog-tests-ubuntu-18.04-gcc8-build.7z",
+            os: ubuntu-18.04,
+            cc: "gcc-8", cxx: "g++-8"
+          }
+
+        - {
+            name: "FPGA-Bitstream Regression Tests: GCC-8 (Ubuntu 18.04)",
+            artifact: "OpenFPGA-fpga-bitstream-tests-ubuntu-18.04-gcc8-build.7z",
+            os: ubuntu-18.04,
+            cc: "gcc-8", cxx: "g++-8"
+          }
+
+        - {
+            name: "FPGA-SDC Regression Tests: GCC-8 (Ubuntu 18.04)",
+            artifact: "OpenFPGA-fpga-sdc-tests-ubuntu-18.04-gcc8-build.7z",
+            os: ubuntu-18.04,
+            cc: "gcc-8", cxx: "g++-8"
+          }
+
+        - {
+            name: "FPGA-SPICE Regression Tests: GCC-8 (Ubuntu 18.04)",
+            artifact: "OpenFPGA-fpga-spice-tests-ubuntu-18.04-gcc8-build.7z",
+            os: ubuntu-18.04,
+            cc: "gcc-8", cxx: "g++-8"
+          }
+
+    # Define the steps to run the build job
+    steps:
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v2
+
+      - name: Install dependency
+        run: source ./.github/workflows/install_dependency.sh 
+
+      - name: Checkout CMake version
+        run: cmake --version 
+
+      - name: Checkout iVerilog version
+        run: |
+          iverilog -V 
+          vvp -V 
+
+      - name: Prepare ccache timestamp
+        id: ccache_cache_timestamp
+        shell: cmake -P {0}
+        run: |
+          string(TIMESTAMP current_date "%Y-%m-%d-%H;%M;%S" UTC)
+          message("::set-output name=timestamp::${current_date}")
+
+      - name: Create CMake build environment
+        # Some projects don't allow in-source building, so create a separate build directory
+        # We'll use this as our working directory for all subsequent commands
+        run: cmake -E make_directory ${{runner.workspace}}/build
+      
+      - name: ccache cache files
+        uses: actions/cache@v1.1.0
+        with:
+          path: ${{runner.workspace}}/build/.ccache
+          key: ${{ matrix.config.name }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
+          restore-keys: |
+            ${{ matrix.config.name }}-ccache-
+
+      - name: Configure CMake
+        # Use a bash shell so we can use the same syntax for environment variable
+        # access regardless of the host operating system
+        shell: bash
+        working-directory: ${{runner.workspace}}/build
+        # Note the current convention is to use the -S and -B options here to specify source 
+        # and build directories, but this is only available with CMake 3.13 and higher.  
+        # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
+        run: |
+          export CC=${{ matrix.config.cc }}
+          export CXX=${{ matrix.config.cxx }}
+          cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+      - name: Build
+        working-directory: ${{runner.workspace}}/build
+        shell: bash
+        # Execute the build.  You can specify a specific target with "--target <NAME>"
+        run: cmake --build . --config $BUILD_TYPE 
+
+      - name: Basic Regression Tests
+        if: matrix.config.name == 'Basic Regression Tests: GCC-8 (Ubuntu 18.04)'
+        working-directory: ${{runner.workspace}}
+        shell: bash
+        # Execute the test. 
+        run: |
+          source basic_reg_test.sh
+        
+      - name: FPGA-Verilog Regression Tests
+        if: matrix.config.name == 'FPGA-Verilog Regression Tests: GCC-8 (Ubuntu 18.04)'
+        working-directory: ${{runner.workspace}}
+        shell: bash
+        # Execute the test. 
+        run: |
+          source fpga_verilog_reg_test.sh
+
+      - name: FPGA-Bitstream Regression Tests
+        if: matrix.config.name == 'FPGA-Bitstream Regression Tests: GCC-8 (Ubuntu 18.04)'
+        working-directory: ${{runner.workspace}}
+        shell: bash
+        # Execute the test. 
+        run: |
+          source fpga_bitstream_reg_test.sh
+
+      - name: FPGA-SDC Regression Tests
+        if: matrix.config.name == 'FPGA-SDC Regression Tests: GCC-8 (Ubuntu 18.04)'
+        working-directory: ${{runner.workspace}}
+        shell: bash
+        # Execute the test. 
+        run: |
+          source fpga_sdc_reg_test.sh
+
+      - name: FPGA-SPICE Regression Tests
+        if: matrix.config.name == 'FPGA-SPICE Regression Tests: GCC-8 (Ubuntu 18.04)'
+        working-directory: ${{runner.workspace}}
+        shell: bash
+        # Execute the test. 
+        run: |
+          source fpga_spice_reg_test.sh
