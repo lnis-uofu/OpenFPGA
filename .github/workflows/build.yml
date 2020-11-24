@@ -43,6 +43,14 @@ jobs:
       - name: Install dependency
         run: source ./.github/workflows/install_dependency.sh 
 
+      - name: Checkout CMake version
+        run: cmake --version 
+
+      - name: Checkout iVerilog version
+        run: |
+          iverilog -V 
+          vvp -V 
+
       - name: Prepare ccache timestamp
         id: ccache_cache_timestamp
         shell: cmake -P {0}
