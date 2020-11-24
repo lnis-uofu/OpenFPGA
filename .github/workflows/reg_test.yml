@@ -19,7 +19,7 @@ env:
 # Multiple job to tests
 jobs:
   # Test the functionality of OpenFPGA tools
-  build:
+  reg_test:
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
 
@@ -119,7 +119,7 @@ jobs:
         run: cmake --build . --config $BUILD_TYPE 
 
       - name: Basic Regression Tests
-        if: ${{ matrix.config.name == 'Basic Regression Tests: GCC-8 (Ubuntu 18.04)' }}
+        if: matrix.config.name == ${{'Basic Regression Tests: GCC-8 (Ubuntu 18.04)'}}
         working-directory: ${{runner.workspace}}
         shell: bash
         # Execute the test. 
@@ -127,7 +127,7 @@ jobs:
           source basic_reg_test.sh
         
       - name: FPGA-Verilog Regression Tests
-        if: ${{ matrix.config.name == 'FPGA-Verilog Regression Tests: GCC-8 (Ubuntu 18.04)' }}
+        if: matrix.config.name == ${{'FPGA-Verilog Regression Tests: GCC-8 (Ubuntu 18.04)' }}
         working-directory: ${{runner.workspace}}
         shell: bash
         # Execute the test. 
@@ -135,7 +135,7 @@ jobs:
           source fpga_verilog_reg_test.sh
 
       - name: FPGA-Bitstream Regression Tests
-        if: ${{ matrix.config.name == 'FPGA-Bitstream Regression Tests: GCC-8 (Ubuntu 18.04)' }}
+        if: matrix.config.name == ${{'FPGA-Bitstream Regression Tests: GCC-8 (Ubuntu 18.04)' }}
         working-directory: ${{runner.workspace}}
         shell: bash
         # Execute the test. 
@@ -143,7 +143,7 @@ jobs:
           source fpga_bitstream_reg_test.sh
 
       - name: FPGA-SDC Regression Tests
-        if: ${{ matrix.config.name == 'FPGA-SDC Regression Tests: GCC-8 (Ubuntu 18.04)' }}
+        if: matrix.config.name == ${{'FPGA-SDC Regression Tests: GCC-8 (Ubuntu 18.04)' }}
         working-directory: ${{runner.workspace}}
         shell: bash
         # Execute the test. 
@@ -151,7 +151,7 @@ jobs:
           source fpga_sdc_reg_test.sh
 
       - name: FPGA-SPICE Regression Tests
-        if: ${{ matrix.config.name == 'FPGA-SPICE Regression Tests: GCC-8 (Ubuntu 18.04)' }}
+        if: matrix.config.name == ${{'FPGA-SPICE Regression Tests: GCC-8 (Ubuntu 18.04)' }}
         working-directory: ${{runner.workspace}}
         shell: bash
         # Execute the test. 
