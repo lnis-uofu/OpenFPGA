@@ -14,6 +14,7 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
+  MAKE_FLAGS: "-j8"
 
 # Multiple job to tests
 jobs:
@@ -48,4 +49,4 @@ jobs:
         working-directory: ${{runner.workspace}}/build
         shell: bash
         # Execute the build.  You can specify a specific target with "--target <NAME>"
-        run: cmake --build . --config $BUILD_TYPE -j 8
+        run: cmake --build . --config $BUILD_TYPE 
