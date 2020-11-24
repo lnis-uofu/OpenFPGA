@@ -6,6 +6,7 @@ sudo apt-get install bash
 sudo apt-get install bison
 sudo apt-get install build-essential
 sudo apt-get install cmake
+sudo apt-get install ccache
 sudo apt-get install ctags
 sudo apt-get install curl
 sudo apt-get install doxygen
