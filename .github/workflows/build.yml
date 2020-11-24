@@ -144,7 +144,11 @@ jobs:
         working-directory: ${{runner.workspace}}/build
         shell: bash
         # Execute the build.  You can specify a specific target with "--target <NAME>"
-        # Check the cache size and see if it is over the limit
         run: |
           cmake --build . --config $BUILD_TYPE 
-          ccache -s
+
+      # Check the cache size and see if it is over the limit
+      - name: Check ccache size
+        shell: cmake -P {0}
+        run: |
+          execute_process(COMMAND ccache -s)
