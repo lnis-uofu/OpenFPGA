@@ -29,10 +29,52 @@ jobs:
       matrix:
         config:
         - {
+            name: "Build Compatibility: GCC-5 (Ubuntu 18.04)",
+            artifact: "OpenFPGA-ubuntu-18.04-gcc5-build.7z",
+            os: ubuntu-18.04,
+            cc: "gcc-5", cxx: "g++-5"
+          }
+
+        - {
+            name: "Build Compatibility: GCC-6 (Ubuntu 18.04)",
+            artifact: "OpenFPGA-ubuntu-18.04-gcc6-build.7z",
+            os: ubuntu-18.04,
+            cc: "gcc-6", cxx: "g++-6"
+          }
+
+        - {
+            name: "Build Compatibility: GCC-7 (Ubuntu 18.04)",
+            artifact: "OpenFPGA-ubuntu-18.04-gcc7-build.7z",
+            os: ubuntu-18.04,
+            cc: "gcc-7", cxx: "g++-7"
+          }
+
+        - {
             name: "Build Compatibility: GCC-8 (Ubuntu 18.04)",
             artifact: "OpenFPGA-ubuntu-18.04-gcc8-build.7z",
             os: ubuntu-18.04,
             cc: "gcc-8", cxx: "g++-8"
+          }
+
+        - {
+            name: "Build Compatibility: GCC-9 (Ubuntu 18.04)",
+            artifact: "OpenFPGA-ubuntu-18.04-gcc9-build.7z",
+            os: ubuntu-18.04,
+            cc: "gcc-9", cxx: "g++-9"
+          }
+
+        - {
+            name: "Build Compatibility: Clang-6 (Ubuntu 18.04)",
+            artifact: "OpenFPGA-ubuntu-18.04-clang6-build.7z",
+            os: ubuntu-18.04,
+            cc: "clang-6.0", cxx: "clang++-6.0"
+          }
+
+        - {
+            name: "Build Compatibility: Clang-8 (Ubuntu 18.04)",
+            artifact: "OpenFPGA-ubuntu-18.04-clang8-build.7z",
+            os: ubuntu-18.04,
+            cc: "clang-8", cxx: "clang++-8"
           }
 
     # Define the steps to run the build job
