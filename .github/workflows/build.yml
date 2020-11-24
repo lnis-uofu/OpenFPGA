@@ -19,8 +19,21 @@ env:
 # Multiple job to tests
 jobs:
   # Test the compilation
-  build_gcc8:
-    runs-on: ubuntu-18.04
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+
+    # Branch on different OS and settings
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - {
+            name: "Build Compatibility: GCC-8 (Ubuntu 18.04)"
+            artifact: "OpenFPGA-ubuntu-18.04-gcc8-build.7z"
+            os: ubuntu-18.04
+            cc: "gcc-8", cxx: "g++-8"
+          }
 
     # Define the steps to run the build job
     steps:
@@ -29,6 +42,21 @@ jobs:
 
       - name: Install dependency
         run: source ./.github/workflows/install_dependency.sh 
+
+      - name: Prepare ccache timestamp
+          id: ccache_cache_timestamp
+          shell: cmake -P {0}
+          run: |
+          string(TIMESTAMP current_date "%Y-%m-%d-%H;%M;%S" UTC)
+          message("::set-output name=timestamp::${current_date}")
+      
+      - name: ccache cache files
+          uses: actions/cache@v1.1.0
+          with:
+          path: .ccache
+          key: ${{ matrix.config.name }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
+          restore-keys: |
+            ${{ matrix.config.name }}-ccache-
 
       - name: Create CMake build environment
         # Some projects don't allow in-source building, so create a separate build directory
