@@ -149,7 +149,7 @@ jobs:
       - name: ccache cache files
         uses: actions/cache@v2
         with:
-          path: $ENV{GITHUB_WORKSPACE}/.ccache
+          path: ${{runner.workspace}}/.ccache
           key: ${{ matrix.config.name }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
           restore-keys: |
             ${{ matrix.config.name }}-ccache-
@@ -158,7 +158,7 @@ jobs:
       - name: Configure ccache
         shell: cmake -P {0}
         run: |
-          file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}" ccache_basedir)
+          file(TO_CMAKE_PATH ${{runner.workspace}} ccache_basedir)
           set(ENV{CCACHE_BASEDIR} "${ccache_basedir}")
           set(ENV{CCACHE_DIR} "${ccache_basedir}/.ccache")
           set(ENV{CCACHE_COMPRESS} "true")
