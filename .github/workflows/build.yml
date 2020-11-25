@@ -149,7 +149,7 @@ jobs:
       - name: ccache cache files
         uses: actions/cache@v2
         with:
-          path: ${{runner.workspace}}/build/.ccache
+          path: ~/.ccache
           key: ${{ matrix.config.name }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
           restore-keys: |
             ${{ matrix.config.name }}-ccache-
@@ -190,7 +190,6 @@ jobs:
 
       # Check the cache size and see if it is over the limit
       - name: Check ccache size
-        working-directory: ${{runner.workspace}}/build
         shell: cmake -P {0}
         run: |
           execute_process(COMMAND ccache -s)
