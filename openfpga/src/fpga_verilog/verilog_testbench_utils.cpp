@@ -747,6 +747,7 @@ void rec_print_verilog_testbench_primitive_module_signal_initialization(std::fst
                                                                         const std::string& hie_path,
                                                                         const CircuitLibrary& circuit_lib,
                                                                         const CircuitModelId& circuit_model,
+                                                                        const std::vector<CircuitPortId>& circuit_input_ports,
                                                                         const ModuleManager& module_manager,
                                                                         const ModuleId& parent_module,
                                                                         const ModuleId& primitive_module) {
@@ -775,7 +776,7 @@ void rec_print_verilog_testbench_primitive_module_signal_initialization(std::fst
       if (child_module != primitive_module) {
         rec_print_verilog_testbench_primitive_module_signal_initialization(fp,
                                                                            child_hie_path,
-                                                                           circuit_lib, circuit_model,
+                                                                           circuit_lib, circuit_model, circuit_input_ports,
                                                                            module_manager, child_module,
                                                                            primitive_module);
       } else {
@@ -788,7 +789,7 @@ void rec_print_verilog_testbench_primitive_module_signal_initialization(std::fst
         fp << "\tinitial begin" << std::endl;
         fp << "\t`ifdef " << VERILOG_FORMAL_VERIFICATION_PREPROC_FLAG << std::endl;
 
-        for (const auto& input_port : circuit_lib.model_input_ports(circuit_model)) {
+        for (const auto& input_port : circuit_input_ports) {
           /* Only for formal verification: deposite a zero signal values */
           /* Initialize each input port */
           BasicPort input_port_info(circuit_lib.port_lib_name(input_port), circuit_lib.port_size(input_port));
@@ -801,12 +802,12 @@ void rec_print_verilog_testbench_primitive_module_signal_initialization(std::fst
         fp << "\t`else" << std::endl;
 
         /* Regular case: deposite initial signal values: a random value */
-        for (const auto& input_port : circuit_lib.model_input_ports(circuit_model)) {
+        for (const auto& input_port : circuit_input_ports) {
           BasicPort input_port_info(circuit_lib.port_lib_name(input_port), circuit_lib.port_size(input_port));
           fp << "\t\t$deposit(";
           fp << child_hie_path << ".";
           fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info);
-          fp << ", $random);" << std::endl;
+          fp << ", $random % 2 ? 1'b1 : 1'b0);" << std::endl;
         }
 
         fp << "\t`endif\n" << std::endl;
@@ -834,13 +835,29 @@ void print_verilog_testbench_signal_initialization(std::fstream& fp,
   /* Collect circuit models that need signal initialization */
   std::vector<CircuitModelId> signal_init_circuit_models;
 
+  /* Collect the input ports that require signal initialization */
+  std::map<CircuitModelId, std::vector<CircuitPortId>> signal_init_circuit_ports;
+
   for (const CircuitModelId& model : circuit_lib.models_by_type(CIRCUIT_MODEL_PASSGATE)) {
     signal_init_circuit_models.push_back(model);
+    /* Only 1 input requires signal initialization,
+     * which is the first port, i.e., the datapath inputs
+     */
+    std::vector<CircuitPortId> input_ports = circuit_lib.model_input_ports(model);
+    VTR_ASSERT(0 < input_ports.size());
+    signal_init_circuit_ports[model].push_back(input_ports[0]); 
   }
 
   for (const CircuitModelId& model : circuit_lib.models_by_type(CIRCUIT_MODEL_GATE)) {
     if (CIRCUIT_MODEL_GATE_MUX2 == circuit_lib.gate_type(model)) {
       signal_init_circuit_models.push_back(model);
+      /* Only 2 input requires signal initialization,
+       * which is the first two port, i.e., the datapath inputs
+       */
+      std::vector<CircuitPortId> input_ports = circuit_lib.model_input_ports(model);
+      VTR_ASSERT(1 < input_ports.size());
+      signal_init_circuit_ports[model].push_back(input_ports[0]); 
+      signal_init_circuit_ports[model].push_back(input_ports[1]); 
     }
   }
 
@@ -860,7 +877,7 @@ void print_verilog_testbench_signal_initialization(std::fstream& fp,
     /* Find all the instances created by the circuit model across the fabric*/
     rec_print_verilog_testbench_primitive_module_signal_initialization(fp,
                                                                        top_instance_name,
-                                                                       circuit_lib, signal_init_circuit_model,
+                                                                       circuit_lib, signal_init_circuit_model, signal_init_circuit_ports.at(signal_init_circuit_model),
                                                                        module_manager, top_module,
                                                                        primitive_module);
   }
