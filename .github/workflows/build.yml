@@ -149,7 +149,7 @@ jobs:
       - name: ccache cache files
         uses: actions/cache@v2
         with:
-          path: ${{runner.workspace}}/.ccache
+          path: ${GITHUB_WORKSPACE}/.ccache
           key: ${{ matrix.config.name }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
           restore-keys: |
             ${{ matrix.config.name }}-ccache-
