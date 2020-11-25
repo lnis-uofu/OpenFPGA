@@ -1,4 +1,4 @@
-name: OpenFPGA Tests
+name: linux_build
 
 # Run CI on
 # - each push
@@ -19,7 +19,7 @@ env:
 # Multiple job to tests
 jobs:
   # Test the compilation compatibility
-  build:
+  linux_build:
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
 
