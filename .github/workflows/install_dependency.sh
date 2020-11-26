@@ -26,6 +26,7 @@ sudo apt-get install libxft-dev
 sudo apt-get install libxml++2.6-dev
 sudo apt-get install perl
 sudo apt-get install python
+sudo apt-get install python3-setuptools
 sudo apt-get install python-lxml
 sudo apt-get install texinfo
 sudo apt-get install time
