@@ -424,7 +424,7 @@ def prepare_run_directory(run_dir):
     arch_filename = os.path.basename(args.arch_file)
     args.arch_file = os.path.join(run_dir, "arch", arch_filename)
     with open(args.arch_file, 'w', encoding='utf-8') as archfile:
-        archfile.write(tmpl.substitute(script_env_vars["PATH"]))
+        archfile.write(tmpl.safe_substitute(script_env_vars["PATH"]))
 
     if (args.openfpga_arch_file):
         tmpl = Template(
@@ -432,7 +432,7 @@ def prepare_run_directory(run_dir):
         arch_filename = os.path.basename(args.openfpga_arch_file)
         args.openfpga_arch_file = os.path.join(run_dir, "arch", arch_filename)
         with open(args.openfpga_arch_file, 'w', encoding='utf-8') as archfile:
-            archfile.write(tmpl.substitute(script_env_vars["PATH"]))
+            archfile.write(tmpl.safe_substitute(script_env_vars["PATH"]))
 
     # Sanitize provided openshell template, if provided
     if (args.openfpga_shell_template):
@@ -491,7 +491,7 @@ def run_yosys_with_abc():
         cad_tools["misc_dir"], "ys_tmpl_yosys_vpr_flow.ys")
     tmpl = Template(open(yosys_template, encoding='utf-8').read())
     with open("yosys.ys", 'w') as archfile:
-        archfile.write(tmpl.substitute(ys_params))
+        archfile.write(tmpl.safe_substitute(ys_params))
     try:
         with open('yosys_output.txt', 'w+') as output:
             process = subprocess.run([cad_tools["yosys_path"], 'yosys.ys'],
@@ -714,7 +714,7 @@ def run_openfpga_shell():
         path_variables[tmpVar] = OpenFPGAArgs[indx+1]
 
     with open(args.top_module+"_run.openfpga", 'w', encoding='utf-8') as archfile:
-        archfile.write(tmpl.substitute(path_variables))
+        archfile.write(tmpl.safe_substitute(path_variables))
     command = [cad_tools["openfpga_shell_path"], "-f",
                args.top_module+"_run.openfpga"]
     run_command("OpenFPGA Shell Run", "openfpgashell.log", command)
@@ -734,7 +734,7 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
                ]
     if not args.disp:
         command += ["--disp", "off"]
-    else:  
+    else:
         command += ["--disp", "on"]
 
     if route_only:
