@@ -14,12 +14,15 @@ namespace openfpga {
  *************************************************/
 VerilogTestbenchOption::VerilogTestbenchOption() {
   output_directory_.clear();
+  fabric_netlist_file_path_.clear();
   reference_benchmark_file_path_.clear();
   print_preconfig_top_testbench_ = false;
   print_formal_verification_top_netlist_ = false;
   print_top_testbench_ = false;
   simulation_ini_path_.clear();
   explicit_port_mapping_ = false;
+  support_icarus_simulator_ = false;
+  include_signal_init_ = false;
   verbose_output_ = false;
 }
 
@@ -28,6 +31,10 @@ VerilogTestbenchOption::VerilogTestbenchOption() {
  *************************************************/
 std::string VerilogTestbenchOption::output_directory() const {
   return output_directory_;
+}
+
+std::string VerilogTestbenchOption::fabric_netlist_file_path() const {
+  return fabric_netlist_file_path_;
 }
 
 std::string VerilogTestbenchOption::reference_benchmark_file_path() const {
@@ -62,6 +69,14 @@ bool VerilogTestbenchOption::explicit_port_mapping() const {
   return explicit_port_mapping_;
 }
 
+bool VerilogTestbenchOption::include_signal_init() const {
+  return include_signal_init_;
+}
+
+bool VerilogTestbenchOption::support_icarus_simulator() const {
+  return support_icarus_simulator_;
+}
+
 bool VerilogTestbenchOption::verbose_output() const {
   return verbose_output_;
 }
@@ -71,6 +86,10 @@ bool VerilogTestbenchOption::verbose_output() const {
  ******************************************************************************/
 void VerilogTestbenchOption::set_output_directory(const std::string& output_dir) {
   output_directory_ = output_dir;
+}
+
+void VerilogTestbenchOption::set_fabric_netlist_file_path(const std::string& fabric_netlist_file_path) {
+  fabric_netlist_file_path_ = fabric_netlist_file_path;
 }
 
 void VerilogTestbenchOption::set_reference_benchmark_file_path(const std::string& reference_benchmark_file_path) {
@@ -112,6 +131,14 @@ void VerilogTestbenchOption::set_print_simulation_ini(const std::string& simulat
 
 void VerilogTestbenchOption::set_explicit_port_mapping(const bool& enabled) {
   explicit_port_mapping_ = enabled;
+}
+
+void VerilogTestbenchOption::set_include_signal_init(const bool& enabled) {
+  include_signal_init_ = enabled;
+}
+
+void VerilogTestbenchOption::set_support_icarus_simulator(const bool& enabled) {
+  support_icarus_simulator_ = enabled;
 }
 
 void VerilogTestbenchOption::set_verbose_output(const bool& enabled) {

@@ -295,14 +295,17 @@ void print_verilog_arch_decoder_module(std::fstream& fp,
   /* Print the truth table of this decoder */
   /* Internal logics */
   /* Early exit: Corner case for data size = 1 the logic is very simple:
-   * data = addr;  
-   * data_inv = ~data_inv
+   * when enable is '1' and and address is '0'
+   * data_out is driven by '1'
+   * else data_out is driven by '0'
    */
   if (1 == data_size) {
     fp << "always@(" << generate_verilog_port(VERILOG_PORT_CONKT, addr_port);
     fp << " or " << generate_verilog_port(VERILOG_PORT_CONKT, enable_port);
     fp << ") begin" << std::endl;
-    fp << "\tif (" << generate_verilog_port(VERILOG_PORT_CONKT, enable_port) << " == 1'b1) begin" << std::endl;
+    fp << "\tif ((" << generate_verilog_port(VERILOG_PORT_CONKT, enable_port) << " == 1'b1) && ("; 
+    fp << generate_verilog_port(VERILOG_PORT_CONKT, addr_port) << " == 1'b0))"; 
+    fp << " begin" << std::endl;
     fp << "\t\t" << generate_verilog_port_constant_values(data_port, std::vector<size_t>(1, 1)) << ";" << std::endl; 
     fp << "\t" << "end else begin" << std::endl;
     fp << "\t\t" << generate_verilog_port_constant_values(data_port, std::vector<size_t>(1, 0)) << ";" << std::endl; 

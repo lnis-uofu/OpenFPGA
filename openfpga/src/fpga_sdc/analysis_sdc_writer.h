@@ -21,7 +21,6 @@ void print_analysis_sdc(const AnalysisSdcOption& option,
                         const float& critical_path_delay,
                         const VprContext& vpr_ctx, 
                         const OpenfpgaContext& openfpga_ctx,
-                        const std::vector<CircuitPortId>& global_ports,
                         const bool& compact_routing_hierarchy);
 
 } /* end namespace openfpga */

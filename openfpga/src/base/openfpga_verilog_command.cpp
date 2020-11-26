@@ -33,12 +33,6 @@ ShellCommandId add_openfpga_write_fabric_verilog_command(openfpga::Shell<Openfpg
   /* Add an option '--include_timing' */
   shell_cmd.add_option("include_timing", false, "Enable timing annotation in Verilog netlists");
 
-  /* Add an option '--include_signal_init' */
-  shell_cmd.add_option("include_signal_init", false, "Initialize all the signals in Verilog netlists");
-
-  /* Add an option '--support_icarus_simulator' */
-  shell_cmd.add_option("support_icarus_simulator", false, "Fine-tune Verilog netlists to support icarus simulator");
-
   /* Add an option '--print_user_defined_template' */
   shell_cmd.add_option("print_user_defined_template", false, "Generate a template Verilog files for user-defined circuit models");
 
@@ -72,6 +66,10 @@ ShellCommandId add_openfpga_write_verilog_testbench_command(openfpga::Shell<Open
   shell_cmd.set_option_short_name(output_opt, "f");
   shell_cmd.set_option_require_value(output_opt, openfpga::OPT_STRING);
 
+  /* Add an option '--fabric_netlist_file_path'*/
+  CommandOptionId fabric_netlist_opt = shell_cmd.add_option("fabric_netlist_file_path", false, "Specify the file path to the fabric Verilog netlist");
+  shell_cmd.set_option_require_value(fabric_netlist_opt, openfpga::OPT_STRING);
+
   /* Add an option '--reference_benchmark_file_path'*/
   CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", true, "Specify the file path to the reference Verilog netlist");
   shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);
@@ -94,6 +92,12 @@ ShellCommandId add_openfpga_write_verilog_testbench_command(openfpga::Shell<Open
 
   /* Add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false, "Use explicit port mapping in Verilog netlists");
+
+  /* Add an option '--include_signal_init' */
+  shell_cmd.add_option("include_signal_init", false, "Initialize all the signals in Verilog testbenches");
+
+  /* Add an option '--support_icarus_simulator' */
+  shell_cmd.add_option("support_icarus_simulator", false, "Fine-tune Verilog testbenches to support icarus simulator");
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");

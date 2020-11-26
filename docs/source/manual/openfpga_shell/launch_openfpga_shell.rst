@@ -11,8 +11,6 @@ To launch OpenFPGA shell, users can choose two modes.
 
   Launch OpenFPGA in interactive mode where users type-in command by command and get runtime results
 
-  .. warning:: Currently OpenFPGA does not support continued lines and comments
-
 .. option::	--file or -f
 
   Launch OpenFPGA in script mode where users write commands in scripts and FPGA will execute them

@@ -88,43 +88,6 @@ void print_verilog_submodule_timing(std::fstream& fp,
 
 }
 
-void print_verilog_submodule_signal_init(std::fstream& fp, 
-                                         const CircuitLibrary& circuit_lib,
-                                         const CircuitModelId& circuit_model) {
-  /* Ensure a valid file handler*/
-  VTR_ASSERT(true == valid_file_stream(fp));
-
-  fp << std::endl;
-  fp << "`ifdef " << VERILOG_SIGNAL_INIT_PREPROC_FLAG << std::endl;
-  print_verilog_comment(fp, std::string("------ BEGIN driver initialization -----"));
-  fp << "\tinitial begin" << std::endl;
-  fp << "\t`ifdef " << VERILOG_FORMAL_VERIFICATION_PREPROC_FLAG << std::endl;
-
-  /* Only for formal verification: deposite a zero signal values */
-  /* Initialize each input port */
-  for (const auto& input_port : circuit_lib.model_input_ports(circuit_model)) {
-    BasicPort input_port_info(circuit_lib.port_lib_name(input_port), circuit_lib.port_size(input_port));
-    fp << "\t\t$deposit(";
-    fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info);
-    fp << ", " <<  circuit_lib.port_size(input_port) << "'b" << std::string(circuit_lib.port_size(input_port), '0');
-    fp << ");" << std::endl;
-  }
-  fp << "\t`else" << std::endl;
-
-  /* Regular case: deposite initial signal values: a random value */
-  for (const auto& input_port : circuit_lib.model_input_ports(circuit_model)) {
-    BasicPort input_port_info(circuit_lib.port_lib_name(input_port), circuit_lib.port_size(input_port));
-    fp << "\t\t$deposit(";
-    fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info);
-    fp << ", $random);" << std::endl;
-  }
-
-  fp << "\t`endif\n" << std::endl;
-  fp << "\tend" << std::endl;
-  print_verilog_comment(fp, std::string("------ END driver initialization -----"));
-  fp << "`endif" << std::endl;
-}
-
 /*********************************************************************
  * Register all the user-defined modules in the module manager
  * Walk through the circuit library and add user-defined circuit models

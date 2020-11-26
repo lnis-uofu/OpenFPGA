@@ -6,7 +6,8 @@
  *******************************************************************/
 #include <string>
 #include <vector>
-#include "circuit_library.h"
+#include "module_manager.h"
+#include "fabric_global_port_info.h"
 
 /********************************************************************
  * Function declaration
@@ -18,8 +19,9 @@ namespace openfpga {
 void print_pnr_sdc_global_ports(const std::string& sdc_dir, 
                                 const float& programming_critical_path_delay,
                                 const float& operating_critical_path_delay,
-                                const CircuitLibrary& circuit_lib,
-                                const std::vector<CircuitPortId>& global_ports,
+                                const ModuleManager& module_manager,
+                                const ModuleId& top_module,
+                                const FabricGlobalPortInfo& global_ports,
                                 const bool& constrain_non_clock_port);
 
 } /* end namespace openfpga */

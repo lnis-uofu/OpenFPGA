@@ -49,6 +49,74 @@ Similar to the Switch Boxes and Connection Blocks, the channel wire segments in 
 
 - ``circuit_model_name="<string>"`` should match a circuit model whose type is ``chan_wire`` defined in :ref:`circuit_library`.
 
+Physical Tile Annotation
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Original VPR architecture description contains ``<tile>`` XML nodes to define physical tile pins.
+OpenFPGA allows users to define pin/port of physical tiles as global ports.
+
+Here is an example:
+
+.. code-block:: xml
+
+  <tile_annotations>
+    <global_port name="<string>" tile_port="<string>" is_clock="<bool>" is_reset="<bool>" is_set="<bool>"/>
+  </tile_annotations>
+
+- ``name="<string>"`` is the port name to appear in the top-level FPGA fabric.
+
+- ``tile_port="<string>"`` is the port name of a physical tile, e.g., ``tile_port="clb.clk"``.
+
+.. note:: The port of physical tile must be a valid port of the physical definition in VPR architecture!
+
+.. note:: The linked port of physical tile must meet the following requirements:
+
+            - If the ``global_port`` is set as clock through ``is_clock="true"``, the port of the physical tile must also be a clock port.
+            - If not a clock, the port of the physical tile must be defined as non-clock global
+            - The port of the physical tile should have zero connectivity (``Fc=0``) in VPR architecture
+
+- ``is_clock="<bool>"`` define if the global port is a clock port at the top-level FPGA fabric. An operating clock port will be driven by proper signals in auto-generated testbenches.
+
+- ``is_reset="<bool>"`` define if the global port is a reset port at the top-level FPGA fabric. An operating reset port will be driven by proper signals in testbenches.
+
+- ``is_set="<bool>"`` define if the global port is a set port at the top-level FPGA fabric. An operating set port will be driven by proper signals in testbenches.
+
+.. note:: A port can only be defined as ``clock`` or ``set`` or ``reset``.
+
+.. note:: All the global port from a physical tile port is only used in operating phase. Any ports for programmable use are not allowed!
+
+A more illustrative example:
+
+:numref:`fig_global_tile_ports` illustrates the difference between the global ports defined through ``circuit_model`` and ``tile_annotation``.
+
+.. _fig_global_tile_ports:
+
+.. figure:: ./figures/global_tile_ports.png
+   :scale: 100%
+   :alt: Difference between global port definition through circuit model and tile annotation
+
+   Difference between global port definition through circuit model and tile annotation
+
+When a global port, e.g., ``clk``, is defined in ``circuit_model`` using the following code:
+
+.. code-block:: xml
+
+  <circuit_model>
+    <port name="clk" is_global="true" is_clock="true"/>
+  </circuit_model>
+
+Dedicated feedthrough wires will be created across all the modules from top-level to primitive.
+
+When a global port, e.g., ``clk``, is defined in ``tile_annotation`` using the following code:
+
+.. code-block:: xml
+
+  <tile_annotations>
+    <global_port name="clk" tile_port="clb.clk" is_clock="true"/>
+  </tile_annotations>
+
+Clock port ``clk`` of each ``clb`` tile will be connected to a common clock port of the top module, while local clock network is customizable through VPR's architecture description language. For instance, the local clock network can be a programmable clock network. 
+
 Primitive Blocks inside Multi-mode Configurable Logic Blocks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

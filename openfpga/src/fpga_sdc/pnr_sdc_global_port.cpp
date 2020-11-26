@@ -61,21 +61,22 @@ static
 void print_pnr_sdc_global_clock_ports(std::fstream& fp, 
                                       const float& programming_critical_path_delay,
                                       const float& operating_critical_path_delay,
-                                      const CircuitLibrary& circuit_lib,
-                                      const std::vector<CircuitPortId>& global_ports) {
+                                      const ModuleManager& module_manager,
+                                      const ModuleId& top_module,
+                                      const FabricGlobalPortInfo& fabric_global_port_info) {
 
   valid_file_stream(fp);
 
   /* Get clock port from the global port */
-  for (const CircuitPortId& clock_port : global_ports) {
-    if (CIRCUIT_MODEL_PORT_CLOCK != circuit_lib.port_type(clock_port)) {
+  for (const FabricGlobalPortId& global_port : fabric_global_port_info.global_ports()) {
+    if (false == fabric_global_port_info.global_port_is_clock(global_port)) {
       continue;
     }
     /* Reach here, it means a clock port and we need print constraints */
     float clock_period = operating_critical_path_delay; 
 
     /* For programming clock, we give a fixed period */
-    if (true == circuit_lib.port_is_prog(clock_port)) {
+    if (true == fabric_global_port_info.global_port_is_prog(global_port)) {
       clock_period = programming_critical_path_delay;
       /* Print comments */
       fp << "##################################################" << std::endl; 
@@ -88,8 +89,9 @@ void print_pnr_sdc_global_clock_ports(std::fstream& fp,
       fp << "##################################################" << std::endl; 
     }
 
-    for (const size_t& pin : circuit_lib.pins(clock_port)) {
-      BasicPort port_to_constrain(circuit_lib.port_prefix(clock_port), pin, pin);
+    BasicPort clock_port = module_manager.module_port(top_module, fabric_global_port_info.global_module_port(global_port));
+    for (const size_t& pin : clock_port.pins()) {
+      BasicPort port_to_constrain(clock_port.get_name(), pin, pin);
 
       print_pnr_sdc_clock_port(fp, 
                                port_to_constrain,
@@ -109,14 +111,15 @@ void print_pnr_sdc_global_clock_ports(std::fstream& fp,
 static 
 void print_pnr_sdc_global_non_clock_ports(std::fstream& fp, 
                                           const float& operating_critical_path_delay,
-                                          const CircuitLibrary& circuit_lib,
-                                          const std::vector<CircuitPortId>& global_ports) {
+                                          const ModuleManager& module_manager,
+                                          const ModuleId& top_module,
+                                          const FabricGlobalPortInfo& fabric_global_port_info) {
 
   valid_file_stream(fp);
 
   /* For non-clock port from the global port: give a fixed period */
-  for (const CircuitPortId& global_port : global_ports) {
-    if (CIRCUIT_MODEL_PORT_CLOCK == circuit_lib.port_type(global_port)) {
+  for (const FabricGlobalPortId& global_port : fabric_global_port_info.global_ports()) {
+    if (true == fabric_global_port_info.global_port_is_clock(global_port)) {
       continue;
     }
 
@@ -127,8 +130,9 @@ void print_pnr_sdc_global_non_clock_ports(std::fstream& fp,
 
     /* Reach here, it means a non-clock global port and we need print constraints */
     float clock_period = operating_critical_path_delay; 
-    for (const size_t& pin : circuit_lib.pins(global_port)) {
-      BasicPort port_to_constrain(circuit_lib.port_prefix(global_port), pin, pin);
+    BasicPort non_clock_port = module_manager.module_port(top_module, fabric_global_port_info.global_module_port(global_port));
+    for (const size_t& pin : non_clock_port.pins()) {
+      BasicPort port_to_constrain(non_clock_port.get_name(), pin, pin);
 
       print_pnr_sdc_clock_port(fp, 
                                port_to_constrain,
@@ -151,8 +155,9 @@ void print_pnr_sdc_global_non_clock_ports(std::fstream& fp,
 void print_pnr_sdc_global_ports(const std::string& sdc_dir, 
                                 const float& programming_critical_path_delay,
                                 const float& operating_critical_path_delay,
-                                const CircuitLibrary& circuit_lib,
-                                const std::vector<CircuitPortId>& global_ports,
+                                const ModuleManager& module_manager,
+                                const ModuleId& top_module,
+                                const FabricGlobalPortInfo& global_ports,
                                 const bool& constrain_non_clock_port) {
 
   /* Create the file name for Verilog netlist */
@@ -174,13 +179,13 @@ void print_pnr_sdc_global_ports(const std::string& sdc_dir,
   print_pnr_sdc_global_clock_ports(fp, 
                                    programming_critical_path_delay,
                                    operating_critical_path_delay,
-                                   circuit_lib,
+                                   module_manager, top_module,
                                    global_ports);
 
   if (true == constrain_non_clock_port) {
     print_pnr_sdc_global_non_clock_ports(fp, 
                                          operating_critical_path_delay,
-                                         circuit_lib,
+                                         module_manager, top_module,
                                          global_ports);
 
   }

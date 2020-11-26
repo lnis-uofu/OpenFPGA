@@ -129,6 +129,11 @@ void load_rr_file(const t_graph_type graph_type,
 
         VTR_LOG("Starting build routing resource graph...\n");
 
+        /* Add segments */
+        for (const auto& inf : segment_inf) {
+            device_ctx.rr_graph.create_segment(inf);
+        }
+
         next_component = get_first_child(rr_graph, "channels", loc_data);
         t_chan_width nodes_per_chan;
         process_channels(nodes_per_chan, grid, next_component, loc_data);
@@ -163,6 +168,15 @@ void load_rr_file(const t_graph_type graph_type,
         //edge subsets. Must be done after RR switches have been allocated
         device_ctx.rr_graph.rebuild_node_edges();
 
+        //sets the cost index and seg id information
+        next_component = get_single_child(rr_graph, "rr_nodes", loc_data);
+        set_cost_indices(next_component, loc_data, is_global_graph, segment_inf.size());
+
+        alloc_and_load_rr_indexed_data(segment_inf, device_ctx.rr_graph,
+                                       max_chan_width, *wire_to_rr_ipin_switch, base_cost_type);
+
+        process_seg_id(next_component, loc_data);
+
         /* Essential check for rr_graph, build look-up */
         if (false == device_ctx.rr_graph.validate()) {
             /* Error out if built-in validator of rr_graph fails */
@@ -172,14 +186,6 @@ void load_rr_file(const t_graph_type graph_type,
                       "Fundamental errors occurred when validating rr_graph object!\n");
         }
 
-        //sets the cost index and seg id information
-        next_component = get_single_child(rr_graph, "rr_nodes", loc_data);
-        set_cost_indices(next_component, loc_data, is_global_graph, segment_inf.size());
-
-        alloc_and_load_rr_indexed_data(segment_inf, device_ctx.rr_graph,
-                                       max_chan_width, *wire_to_rr_ipin_switch, base_cost_type);
-
-        process_seg_id(next_component, loc_data);
 
         device_ctx.chan_width = nodes_per_chan;
         device_ctx.read_rr_graph_filename = std::string(read_rr_graph_name);
@@ -292,6 +298,10 @@ void process_seg_id(pugi::xml_node parent, const pugiutil::loc_data& loc_data) {
             if (attribute) {
                 int seg_id = get_attribute(segmentSubnode, "segment_id", loc_data).as_int(0);
                 device_ctx.rr_indexed_data[device_ctx.rr_graph.node_cost_index(node)].seg_index = seg_id;
+
+                // Assign node to a segment
+                device_ctx.rr_graph.set_node_segment(node, RRSegmentId(seg_id));
+
             } else {
                 //-1 for non chanx or chany nodes
                 device_ctx.rr_indexed_data[device_ctx.rr_graph.node_cost_index(node)].seg_index = -1;

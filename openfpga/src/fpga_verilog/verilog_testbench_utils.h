@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include "module_manager.h"
+#include "circuit_library.h"
 #include "vpr_context.h"
 #include "io_location_map.h"
 #include "vpr_netlist_annotation.h"
@@ -93,6 +94,12 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
                                           const std::string& fpga_output_port_postfix,
                                           const std::string& check_flag_port_postfix,
                                           const std::string& autocheck_preprocessing_flag);
+
+void print_verilog_testbench_signal_initialization(std::fstream& fp,
+                                                   const std::string& top_instance_name,
+                                                   const CircuitLibrary& circuit_lib,
+                                                   const ModuleManager& module_manager,
+                                                   const ModuleId& top_module);
 
 } /* end namespace openfpga */
 

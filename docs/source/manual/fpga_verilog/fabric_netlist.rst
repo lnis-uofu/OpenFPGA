@@ -48,18 +48,6 @@ Top-level Netlists
 
    .. note:: We strongly recommend users to turn on this flag as it can help simulators to converge quickly.
 
-   - ```define ENABLE_SIGNAL_INITIALIZATION`` When enabled, all the outputs of primitive Verilog modules will be initialized with a random value. This flag is added when ``--include_signal_init`` option is enabled when calling the ``write_fabric_verilog`` command. 
-
-   .. note:: We strongly recommend users to turn on this flag as it can help simulators to converge quickly.
-   
-   - ```define ICARUS_SIMULATOR`` When enabled, Verilog netlists are generated to be compatible with the syntax required by `icarus iVerilog simulator`__. This flag is added when ``--support_icarus_simulator`` option is enabled when calling the ``write_fabric_verilog`` command. 
-
-   .. warning:: Please disable this flag if you are not using icarus iVerilog simulator.
-
-__ iverilog_website_
-
-.. _iverilog_website: http://iverilog.icarus.com/
-
 Logic Blocks
 ~~~~~~~~~~~~
 This sub-directory contains all the Verilog modules modeling configurable logic blocks, heterogeneous blocks as well as I/O blocks.

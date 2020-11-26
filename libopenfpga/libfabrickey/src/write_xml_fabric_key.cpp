@@ -9,6 +9,8 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
+
+/* Headers from openfpga util library */
 #include "openfpga_digest.h"
 
 /* Headers from arch openfpga library */
@@ -33,7 +35,8 @@ int write_xml_fabric_component_key(std::fstream& fp,
     return 2;
   }
 
-  fp << "\t" << "<key";
+  openfpga::write_tab_to_file(fp, 2);
+  fp << "<key";
 
   if (false == fabric_key.valid_key_id(component_key)) {
     return 1;
@@ -79,12 +82,21 @@ int write_xml_fabric_key(const char* fname,
 
   int err_code = 0;
 
-  /* Write component by component */ 
-  for (const FabricKeyId& key : fabric_key.keys()) {
-    err_code = write_xml_fabric_component_key(fp, fabric_key, key);
-    if (0 != err_code) {
-      return err_code;
+  /* Write region by region */ 
+  for (const FabricRegionId& region : fabric_key.regions()) {
+    openfpga::write_tab_to_file(fp, 1);
+    fp << "<region id=\"" << size_t(region) << "\"" << ">\n";
+
+    /* Write component by component */ 
+    for (const FabricKeyId& key : fabric_key.region_keys(region)) {
+      err_code = write_xml_fabric_component_key(fp, fabric_key, key);
+      if (0 != err_code) {
+        return err_code;
+      }
     }
+
+    openfpga::write_tab_to_file(fp, 1);
+    fp << "</region>" << "\n";
   }
 
   /* Finish writing the root node */

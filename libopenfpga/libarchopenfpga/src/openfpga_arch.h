@@ -9,6 +9,7 @@
 #include "simulation_setting.h"
 #include "config_protocol.h"
 #include "arch_direct.h"
+#include "tile_annotation.h"
 #include "pb_type_annotation.h"
 
 /* namespace openfpga begins */
@@ -50,6 +51,11 @@ struct Arch {
    * to circuit models in circuit library 
    */
   ArchDirect arch_direct;
+
+  /* Physical tile annotations:
+   * Global port definition for tile ports
+   */  
+  TileAnnotation tile_annotations;
 
   /* Pb type annotations 
    * Bind from operating to physical

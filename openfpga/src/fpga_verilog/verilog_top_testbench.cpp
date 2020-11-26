@@ -6,7 +6,6 @@
 #include <iomanip>
 #include <algorithm>
 
-
 /* Headers from vtrutil library */
 #include "vtr_log.h"
 #include "vtr_assert.h"
@@ -22,6 +21,9 @@
 #include "openfpga_naming.h"
 #include "simulation_utils.h"
 #include "openfpga_atom_netlist_utils.h"
+
+#include "fabric_bitstream_utils.h"
+#include "fabric_global_port_info_utils.h"
 
 #include "verilog_constants.h"
 #include "verilog_writer_utils.h"
@@ -88,18 +90,22 @@ void print_verilog_top_testbench_flatten_memory_port(std::fstream& fp,
  * Print local wires for configuration chain protocols
  *******************************************************************/
 static
-void print_verilog_top_testbench_config_chain_port(std::fstream& fp) {
+void print_verilog_top_testbench_config_chain_port(std::fstream& fp,
+                                                   const ModuleManager& module_manager,
+                                                   const ModuleId& top_module) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
   /* Print the head of configuraion-chains here */
   print_verilog_comment(fp, std::string("---- Configuration-chain head -----"));
-  BasicPort config_chain_head_port(generate_configuration_chain_head_name(), 1);
+  ModulePortId cc_head_port_id = module_manager.find_module_port(top_module, generate_configuration_chain_head_name());
+  BasicPort config_chain_head_port = module_manager.module_port(top_module, cc_head_port_id);
   fp << generate_verilog_port(VERILOG_PORT_REG, config_chain_head_port) << ";" << std::endl;
 
   /* Print the tail of configuration-chains here */
   print_verilog_comment(fp, std::string("---- Configuration-chain tail -----"));
-  BasicPort config_chain_tail_port(generate_configuration_chain_tail_name(), 1);
+  ModulePortId cc_tail_port_id = module_manager.find_module_port(top_module, generate_configuration_chain_tail_name());
+  BasicPort config_chain_tail_port = module_manager.module_port(top_module, cc_tail_port_id);
   fp << generate_verilog_port(VERILOG_PORT_WIRE, config_chain_tail_port) << ";" << std::endl;
 }
 
@@ -130,21 +136,34 @@ void print_verilog_top_testbench_memory_bank_port(std::fstream& fp,
   fp << generate_verilog_port(VERILOG_PORT_REG, wl_addr_port) << ";" << std::endl;
 
   /* Print the data-input port for the frame-based decoder here */
-  print_verilog_comment(fp, std::string("---- Data input port for frame-based decoder -----"));
+  print_verilog_comment(fp, std::string("---- Data input port for memory decoders -----"));
   ModulePortId din_port_id = module_manager.find_module_port(top_module,
                                                              std::string(DECODER_DATA_IN_PORT_NAME));
   BasicPort din_port = module_manager.module_port(top_module, din_port_id);
   fp << generate_verilog_port(VERILOG_PORT_REG, din_port) << ";" << std::endl;
 
-  /* Wire the INVERTED programming clock to the enable signal !!! */
-  print_verilog_comment(fp, std::string("---- Wire enable port of frame-based decoder to inverted programming clock -----"));
+  /* Generate enable signal waveform here:
+   * which is a 90 degree phase shift than the programming clock   
+   */
+  print_verilog_comment(fp, std::string("---- Wire enable port of memory decoders  -----"));
   ModulePortId en_port_id = module_manager.find_module_port(top_module,
                                                             std::string(DECODER_ENABLE_PORT_NAME));
   BasicPort en_port = module_manager.module_port(top_module, en_port_id);
-  BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
+  BasicPort en_register_port(std::string(en_port.get_name() + std::string(TOP_TB_CLOCK_REG_POSTFIX)), 1);
+
+  BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
 
   fp << generate_verilog_port(VERILOG_PORT_WIRE, en_port) << ";" << std::endl;
-  print_verilog_wire_connection(fp, en_port, prog_clock_port, true);
+  fp << generate_verilog_port(VERILOG_PORT_REG, en_register_port) << ";" << std::endl;
+
+  write_tab_to_file(fp, 1);
+  fp << "assign ";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, en_port);
+  fp << "= ";
+  fp << "~" << generate_verilog_port(VERILOG_PORT_CONKT, en_register_port);
+  fp << " & ";
+  fp << "~" << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port);
+  fp << ";" << std::endl;
 }
 
 
@@ -173,15 +192,28 @@ void print_verilog_top_testbench_frame_decoder_port(std::fstream& fp,
   BasicPort din_port = module_manager.module_port(top_module, din_port_id);
   fp << generate_verilog_port(VERILOG_PORT_REG, din_port) << ";" << std::endl;
 
-  /* Wire the INVERTED programming clock to the enable signal !!! */
-  print_verilog_comment(fp, std::string("---- Wire enable port of frame-based decoder to inverted programming clock -----"));
+  /* Generate enable signal waveform here:
+   * which is a 90 degree phase shift than the programming clock   
+   */
+  print_verilog_comment(fp, std::string("---- Wire enable port of frame-based decoders  -----"));
   ModulePortId en_port_id = module_manager.find_module_port(top_module,
                                                             std::string(DECODER_ENABLE_PORT_NAME));
   BasicPort en_port = module_manager.module_port(top_module, en_port_id);
-  BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
+  BasicPort en_register_port(std::string(en_port.get_name() + std::string(TOP_TB_CLOCK_REG_POSTFIX)), 1);
+
+  BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
 
   fp << generate_verilog_port(VERILOG_PORT_WIRE, en_port) << ";" << std::endl;
-  print_verilog_wire_connection(fp, en_port, prog_clock_port, true);
+  fp << generate_verilog_port(VERILOG_PORT_REG, en_register_port) << ";" << std::endl;
+
+  write_tab_to_file(fp, 1);
+  fp << "assign ";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, en_port);
+  fp << "= ";
+  fp << "~" << generate_verilog_port(VERILOG_PORT_CONKT, en_register_port);
+  fp << " & ";
+  fp << "~" << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port);
+  fp << ";" << std::endl;
 }
 
 /********************************************************************
@@ -189,21 +221,22 @@ void print_verilog_top_testbench_frame_decoder_port(std::fstream& fp,
  *******************************************************************/
 static
 void print_verilog_top_testbench_config_protocol_port(std::fstream& fp,
-                                                      const e_config_protocol_type& sram_orgz_type,
+                                                      const ConfigProtocol& config_protocol,
                                                       const ModuleManager& module_manager,
                                                       const ModuleId& top_module) {
-  switch(sram_orgz_type) {
+  switch(config_protocol.type()) {
   case CONFIG_MEM_STANDALONE:
     print_verilog_top_testbench_flatten_memory_port(fp, module_manager, top_module);
     break;
   case CONFIG_MEM_SCAN_CHAIN:
-    print_verilog_top_testbench_config_chain_port(fp);
+    print_verilog_top_testbench_config_chain_port(fp, module_manager, top_module);
     break;
   case CONFIG_MEM_MEMORY_BANK:
     print_verilog_top_testbench_memory_bank_port(fp, module_manager, top_module);
     break;
   case CONFIG_MEM_FRAME_BASED:
-    print_verilog_top_testbench_frame_decoder_port(fp, module_manager, top_module);
+    print_verilog_top_testbench_frame_decoder_port(fp,
+                                                   module_manager, top_module);
     break;
   default:
     VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -219,16 +252,17 @@ static
 void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
                                                       const ModuleManager& module_manager,
                                                       const ModuleId& top_module,
-                                                      const CircuitLibrary& circuit_lib,
-                                                      const std::vector<CircuitPortId>& global_ports) {
+                                                      const FabricGlobalPortInfo& fabric_global_port_info,
+                                                      const bool& active_global_prog_reset,
+                                                      const bool& active_global_prog_set) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
   print_verilog_comment(fp, std::string("----- Begin connecting global ports of FPGA fabric to stimuli -----"));
 
   /* Connect global clock ports to operating or programming clock signal */
-  for (const CircuitPortId& model_global_port : global_ports) {
-    if (CIRCUIT_MODEL_PORT_CLOCK != circuit_lib.port_type(model_global_port)) {
+  for (const FabricGlobalPortId& fabric_global_port : fabric_global_port_info.global_ports()) {
+    if (false == fabric_global_port_info.global_port_is_clock(fabric_global_port)) {
       continue;
     }
     /* Reach here, it means we have a global clock to deal with:
@@ -238,15 +272,15 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
      *    connect it to the local wire of operating clock
      */
     /* Find the module port */
-    ModulePortId module_global_port = module_manager.find_module_port(top_module, circuit_lib.port_prefix(model_global_port));
+    ModulePortId module_global_port = fabric_global_port_info.global_module_port(fabric_global_port);
     VTR_ASSERT(true == module_manager.valid_module_port_id(top_module, module_global_port));
 
     BasicPort stimuli_clock_port;
-    if (true == circuit_lib.port_is_prog(model_global_port)) {
+    if (true == fabric_global_port_info.global_port_is_prog(fabric_global_port)) {
       stimuli_clock_port.set_name(std::string(TOP_TB_PROG_CLOCK_PORT_NAME));
       stimuli_clock_port.set_width(1);
     } else {
-      VTR_ASSERT_SAFE(false == circuit_lib.port_is_prog(model_global_port));
+      VTR_ASSERT_SAFE(false == fabric_global_port_info.global_port_is_prog(fabric_global_port));
       stimuli_clock_port.set_name(std::string(TOP_TB_OP_CLOCK_PORT_NAME));
       stimuli_clock_port.set_width(1);
     }
@@ -256,21 +290,21 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
      */
     print_verilog_wire_connection(fp, module_manager.module_port(top_module, module_global_port),
                                   stimuli_clock_port,
-                                  1 == circuit_lib.port_default_value(model_global_port));
+                                  1 == fabric_global_port_info.global_port_default_value(fabric_global_port));
   }
 
   /* Connect global configuration done ports to configuration done signal */
-  for (const CircuitPortId& model_global_port : global_ports) {
+  for (const FabricGlobalPortId& fabric_global_port : fabric_global_port_info.global_ports()) {
     /* Bypass clock signals, they have been processed */
-    if (CIRCUIT_MODEL_PORT_CLOCK == circuit_lib.port_type(model_global_port)) {
+    if (true == fabric_global_port_info.global_port_is_clock(fabric_global_port)) {
       continue;
     }
-    if (false == circuit_lib.port_is_config_enable(model_global_port)) {
+    if (false == fabric_global_port_info.global_port_is_config_enable(fabric_global_port)) {
       continue;
     }
     /* Reach here, it means we have a configuration done port to deal with */
     /* Find the module port */
-    ModulePortId module_global_port = module_manager.find_module_port(top_module, circuit_lib.port_prefix(model_global_port));
+    ModulePortId module_global_port = fabric_global_port_info.global_module_port(fabric_global_port);
     VTR_ASSERT(true == module_manager.valid_module_port_id(top_module, module_global_port));
 
     BasicPort stimuli_config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
@@ -280,34 +314,37 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
      */
     print_verilog_wire_connection(fp, module_manager.module_port(top_module, module_global_port),
                                   stimuli_config_done_port,
-                                  1 == circuit_lib.port_default_value(model_global_port));
+                                  1 == fabric_global_port_info.global_port_default_value(fabric_global_port));
   }
 
   /* Connect global reset ports to operating or programming reset signal */
-  for (const CircuitPortId& model_global_port : global_ports) {
+  for (const FabricGlobalPortId& fabric_global_port : fabric_global_port_info.global_ports()) {
     /* Bypass clock signals, they have been processed */
-    if (CIRCUIT_MODEL_PORT_CLOCK == circuit_lib.port_type(model_global_port)) {
+    if (true == fabric_global_port_info.global_port_is_clock(fabric_global_port)) {
       continue;
     }
     /* Bypass config_done signals, they have been processed */
-    if (true == circuit_lib.port_is_config_enable(model_global_port)) {
+    if (true == fabric_global_port_info.global_port_is_config_enable(fabric_global_port)) {
       continue;
     }
 
-    if (false == circuit_lib.port_is_reset(model_global_port)) {
+    if (false == fabric_global_port_info.global_port_is_reset(fabric_global_port)) {
       continue;
     }
     /* Reach here, it means we have a reset port to deal with */
     /* Find the module port */
-    ModulePortId module_global_port = module_manager.find_module_port(top_module, circuit_lib.port_prefix(model_global_port));
+    ModulePortId module_global_port = fabric_global_port_info.global_module_port(fabric_global_port);
     VTR_ASSERT(true == module_manager.valid_module_port_id(top_module, module_global_port));
 
+    /* For global programming reset port, we will active only when specified */
     BasicPort stimuli_reset_port;
-    if (true == circuit_lib.port_is_prog(model_global_port)) {
+    bool activate = true;
+    if (true == fabric_global_port_info.global_port_is_prog(fabric_global_port)) {
       stimuli_reset_port.set_name(std::string(TOP_TB_PROG_RESET_PORT_NAME));
       stimuli_reset_port.set_width(1);
+      activate = active_global_prog_reset;
     } else {
-      VTR_ASSERT_SAFE(false == circuit_lib.port_is_prog(model_global_port));
+      VTR_ASSERT_SAFE(false == fabric_global_port_info.global_port_is_prog(fabric_global_port));
       stimuli_reset_port.set_name(std::string(TOP_TB_RESET_PORT_NAME));
       stimuli_reset_port.set_width(1);
     }
@@ -315,41 +352,50 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
      * The wiring will be inverted if the default value of the global port is 1
      * Otherwise, the wiring will not be inverted!
      */
-    print_verilog_wire_connection(fp, module_manager.module_port(top_module, module_global_port),
-                                  stimuli_reset_port,
-                                  1 == circuit_lib.port_default_value(model_global_port));
+    if (true == activate) {
+      print_verilog_wire_connection(fp, module_manager.module_port(top_module, module_global_port),
+                                    stimuli_reset_port,
+                                    1 == fabric_global_port_info.global_port_default_value(fabric_global_port));
+    } else {
+      VTR_ASSERT_SAFE(false == activate);
+      print_verilog_wire_constant_values(fp, module_manager.module_port(top_module, module_global_port),
+                                         std::vector<size_t>(1, fabric_global_port_info.global_port_default_value(fabric_global_port)));
+    }
   }
 
   /* Connect global set ports to operating or programming set signal */
-  for (const CircuitPortId& model_global_port : global_ports) {
+  for (const FabricGlobalPortId& fabric_global_port : fabric_global_port_info.global_ports()) {
     /* Bypass clock signals, they have been processed */
-    if (CIRCUIT_MODEL_PORT_CLOCK == circuit_lib.port_type(model_global_port)) {
+    if (true == fabric_global_port_info.global_port_is_clock(fabric_global_port)) {
       continue;
     }
     /* Bypass config_done signals, they have been processed */
-    if (true == circuit_lib.port_is_config_enable(model_global_port)) {
+    if (true == fabric_global_port_info.global_port_is_config_enable(fabric_global_port)) {
       continue;
     }
 
     /* Bypass reset signals, they have been processed */
-    if (true == circuit_lib.port_is_reset(model_global_port)) {
+    if (true == fabric_global_port_info.global_port_is_reset(fabric_global_port)) {
       continue;
     }
 
-    if (false == circuit_lib.port_is_set(model_global_port)) {
+    if (false == fabric_global_port_info.global_port_is_set(fabric_global_port)) {
       continue;
     }
     /* Reach here, it means we have a set port to deal with */
     /* Find the module port */
-    ModulePortId module_global_port = module_manager.find_module_port(top_module, circuit_lib.port_prefix(model_global_port));
+    ModulePortId module_global_port = fabric_global_port_info.global_module_port(fabric_global_port);
     VTR_ASSERT(true == module_manager.valid_module_port_id(top_module, module_global_port));
 
+    /* For global programming set port, we will active only when specified */
     BasicPort stimuli_set_port;
-    if (true == circuit_lib.port_is_prog(model_global_port)) {
+    bool activate = true;
+    if (true == fabric_global_port_info.global_port_is_prog(fabric_global_port)) {
       stimuli_set_port.set_name(std::string(TOP_TB_PROG_SET_PORT_NAME));
       stimuli_set_port.set_width(1);
+      activate = active_global_prog_set;
     } else {
-      VTR_ASSERT_SAFE(false == circuit_lib.port_is_prog(model_global_port));
+      VTR_ASSERT_SAFE(false == fabric_global_port_info.global_port_is_prog(fabric_global_port));
       stimuli_set_port.set_name(std::string(TOP_TB_SET_PORT_NAME));
       stimuli_set_port.set_width(1);
     }
@@ -357,53 +403,54 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
      * The wiring will be inverted if the default value of the global port is 1
      * Otherwise, the wiring will not be inverted!
      */
-    print_verilog_wire_connection(fp, module_manager.module_port(top_module, module_global_port),
-                                  stimuli_set_port,
-                                  1 == circuit_lib.port_default_value(model_global_port));
+    if (true == activate) {
+      print_verilog_wire_connection(fp, module_manager.module_port(top_module, module_global_port),
+                                    stimuli_set_port,
+                                    1 == fabric_global_port_info.global_port_default_value(fabric_global_port));
+    } else {
+      VTR_ASSERT_SAFE(false == activate);
+      print_verilog_wire_constant_values(fp, module_manager.module_port(top_module, module_global_port),
+                                         std::vector<size_t>(1, fabric_global_port_info.global_port_default_value(fabric_global_port)));
+    }
   }
 
   /* For the rest of global ports, wire them to constant signals */
-  for (const CircuitPortId& model_global_port : global_ports) {
+  for (const FabricGlobalPortId& fabric_global_port : fabric_global_port_info.global_ports()) {
     /* Bypass clock signals, they have been processed */
-    if (CIRCUIT_MODEL_PORT_CLOCK == circuit_lib.port_type(model_global_port)) {
+    if (true == fabric_global_port_info.global_port_is_clock(fabric_global_port)) {
       continue;
     }
     /* Bypass config_done signals, they have been processed */
-    if (true == circuit_lib.port_is_config_enable(model_global_port)) {
+    if (true == fabric_global_port_info.global_port_is_config_enable(fabric_global_port)) {
       continue;
     }
 
     /* Bypass reset signals, they have been processed */
-    if (true == circuit_lib.port_is_reset(model_global_port)) {
+    if (true == fabric_global_port_info.global_port_is_reset(fabric_global_port)) {
       continue;
     }
 
     /* Bypass set signals, they have been processed */
-    if (true == circuit_lib.port_is_set(model_global_port)) {
+    if (true == fabric_global_port_info.global_port_is_set(fabric_global_port)) {
       continue;
     }
 
     /* Bypass io signals, they do not need any drivers */
-    if (true == circuit_lib.port_is_io(model_global_port)) {
+    if (true == fabric_global_port_info.global_port_is_io(fabric_global_port)) {
       continue;
     }
 
     /* Find the port name, gpio port has special names */
     std::string port_name;
-    if (true == circuit_lib.port_is_io(model_global_port)) {
-      port_name = generate_fpga_global_io_port_name(std::string(GIO_INOUT_PREFIX), circuit_lib, circuit_lib.port_parent_model(model_global_port), model_global_port);
-    } else {
-      VTR_ASSERT_SAFE(false == circuit_lib.port_is_io(model_global_port));
-      port_name = circuit_lib.port_prefix(model_global_port);
-    }
+    VTR_ASSERT_SAFE(false == fabric_global_port_info.global_port_is_io(fabric_global_port));
 
     /* Reach here, it means we have a port to deal with */
     /* Find the module port and wire it to constant values */
-    ModulePortId module_global_port = module_manager.find_module_port(top_module, port_name);
+    ModulePortId module_global_port = fabric_global_port_info.global_module_port(fabric_global_port);
     VTR_ASSERT(true == module_manager.valid_module_port_id(top_module, module_global_port));
 
     BasicPort module_port = module_manager.module_port(top_module, module_global_port);
-    std::vector<size_t> default_values(module_port.get_width(), circuit_lib.port_default_value(model_global_port));
+    std::vector<size_t> default_values(module_port.get_width(), fabric_global_port_info.global_port_default_value(fabric_global_port));
     print_verilog_wire_constant_values(fp, module_port, default_values);
   }
 
@@ -434,7 +481,7 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
                                        const AtomContext& atom_ctx,
                                        const VprNetlistAnnotation& netlist_annotation,
                                        const std::vector<std::string>& clock_port_names,
-                                       const e_config_protocol_type& sram_orgz_type,
+                                       const ConfigProtocol& config_protocol,
                                        const std::string& circuit_name){
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -508,7 +555,7 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
   fp << generate_verilog_port(VERILOG_PORT_REG, set_port) << ";" << std::endl;
 
   /* Configuration ports depend on the organization of SRAMs */
-  print_verilog_top_testbench_config_protocol_port(fp, sram_orgz_type,
+  print_verilog_top_testbench_config_protocol_port(fp, config_protocol,
                                                    module_manager, top_module);
 
   /* Create a clock port if the benchmark have one but not in the default name!
@@ -546,8 +593,8 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
   /* Instantiate an integer to count the number of error and
    * determine if the simulation succeed or failed
    */
-  print_verilog_comment(fp, std::string("----- Error counter -----"));
-  fp << "\tinteger " << TOP_TESTBENCH_ERROR_COUNTER << "= 0;" << std::endl;
+  print_verilog_comment(fp, std::string("----- Error counter: Deposit an error for config_done signal is not raised at the beginning -----"));
+  fp << "\tinteger " << TOP_TESTBENCH_ERROR_COUNTER << "= 1;" << std::endl;
 }
 
 /********************************************************************
@@ -561,9 +608,13 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
 static
 size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz_type,
                                          const bool& fast_configuration,
+                                         const bool& bit_value_to_skip,
                                          const BitstreamManager& bitstream_manager,
                                          const FabricBitstream& fabric_bitstream) {
-  size_t num_config_clock_cycles = 1 + fabric_bitstream.num_bits();
+  /* Find the longest regional bitstream */
+  size_t regional_bitstream_max_size = find_fabric_regional_bitstream_max_size(fabric_bitstream);
+
+  size_t num_config_clock_cycles = 1 + regional_bitstream_max_size;
 
   /* Branch on the type of configuration protocol */
   switch (sram_orgz_type) {
@@ -574,36 +625,44 @@ size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz
     num_config_clock_cycles = 2;
     break;
   case CONFIG_MEM_SCAN_CHAIN:
-    /* For fast configuraiton, the bitstream size counts from the first bit '1' */
+    /* For fast configuration, the bitstream size counts from the first bit '1' */
+    if (true == fast_configuration) {
+      /* For fast configuration, the number of bits to be skipped
+       * depends on each regional bitstream
+       * For example:
+       *   Region 0: 000000001111101010
+       *   Region 1:     00000011010101
+       *   Region 2:   0010101111000110
+       * The number of bits that can be skipped is limited by Region 2
+       */
+      size_t num_bits_to_skip = find_configuration_chain_fabric_bitstream_size_to_be_skipped(fabric_bitstream, bitstream_manager, bit_value_to_skip);
+
+      num_config_clock_cycles = 1 + regional_bitstream_max_size - num_bits_to_skip;
+
+      VTR_LOG("Fast configuration reduces number of configuration clock cycles from %lu to %lu (compression_rate = %f%)\n",
+              1 + regional_bitstream_max_size,
+              num_config_clock_cycles,
+              100. * ((float)num_config_clock_cycles / (float)(1 + regional_bitstream_max_size) - 1.));
+    }
+    break;
+  case CONFIG_MEM_MEMORY_BANK: {
+    /* For fast configuration, we will skip all the zero data points */
+    num_config_clock_cycles = 1 + build_memory_bank_fabric_bitstream_by_address(fabric_bitstream).size();
     if (true == fast_configuration) {
       size_t full_num_config_clock_cycles = num_config_clock_cycles;
-      size_t num_bits_to_skip = 0;
-      for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
-        if (true == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id))) {
-          break;
-        }
-        num_bits_to_skip++;
-      }
-
-      num_config_clock_cycles = full_num_config_clock_cycles - num_bits_to_skip;
-
+      num_config_clock_cycles = 1 + find_memory_bank_fast_configuration_fabric_bitstream_size(fabric_bitstream, bit_value_to_skip);
       VTR_LOG("Fast configuration reduces number of configuration clock cycles from %lu to %lu (compression_rate = %f%)\n",
               full_num_config_clock_cycles,
               num_config_clock_cycles,
               100. * ((float)num_config_clock_cycles / (float)full_num_config_clock_cycles - 1.));
     }
     break;
-  case CONFIG_MEM_MEMORY_BANK:
+  }
   case CONFIG_MEM_FRAME_BASED: {
-    /* For fast configuration, we will skip all the zero data points */
+    num_config_clock_cycles = 1 + build_frame_based_fabric_bitstream_by_address(fabric_bitstream).size();
     if (true == fast_configuration) {
       size_t full_num_config_clock_cycles = num_config_clock_cycles;
-      num_config_clock_cycles = 1;
-      for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
-        if (true == fabric_bitstream.bit_din(bit_id)) {
-          num_config_clock_cycles++;
-        }
-      }
+      num_config_clock_cycles = 1 + find_frame_based_fast_configuration_fabric_bitstream_size(fabric_bitstream, bit_value_to_skip);
       VTR_LOG("Fast configuration reduces number of configuration clock cycles from %lu to %lu (compression_rate = %f%)\n",
               full_num_config_clock_cycles,
               num_config_clock_cycles,
@@ -674,14 +733,17 @@ void print_verilog_top_testbench_benchmark_instance(std::fstream& fp,
  * During each programming cycle, we feed the input of scan chain with a memory bit
  *******************************************************************/
 static
-void print_verilog_top_testbench_load_bitstream_task_configuration_chain(std::fstream& fp) {
+void print_verilog_top_testbench_load_bitstream_task_configuration_chain(std::fstream& fp,
+                                                                         const ModuleManager& module_manager,
+                                                                         const ModuleId& top_module) {
 
   /* Validate the file stream */
   valid_file_stream(fp);
 
   BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
-  BasicPort cc_head_port(generate_configuration_chain_head_name(), 1);
-  BasicPort cc_head_value(generate_configuration_chain_head_name() + std::string("_val"), 1);
+  ModulePortId cc_head_port_id = module_manager.find_module_port(top_module, generate_configuration_chain_head_name());
+  BasicPort cc_head_port = module_manager.module_port(top_module, cc_head_port_id);
+  BasicPort cc_head_value(generate_configuration_chain_head_name() + std::string("_val"), cc_head_port.get_width());
 
   /* Add an empty line as splitter */
   fp << std::endl;
@@ -724,9 +786,7 @@ void print_verilog_top_testbench_load_bitstream_task_memory_bank(std::fstream& f
   /* Validate the file stream */
   valid_file_stream(fp);
 
-  ModulePortId en_port_id = module_manager.find_module_port(top_module,
-                                                            std::string(DECODER_ENABLE_PORT_NAME));
-  BasicPort en_port = module_manager.module_port(top_module, en_port_id);
+  BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
 
   ModulePortId bl_addr_port_id = module_manager.find_module_port(top_module,
                                                                  std::string(DECODER_BL_ADDRESS_PORT_NAME));
@@ -759,7 +819,7 @@ void print_verilog_top_testbench_load_bitstream_task_memory_bank(std::fstream& f
   fp << generate_verilog_port(VERILOG_PORT_INPUT, wl_addr_value) << ";" << std::endl;
   fp << generate_verilog_port(VERILOG_PORT_INPUT, din_value) << ";" << std::endl;
   fp << "\tbegin" << std::endl;
-  fp << "\t\t@(posedge " << generate_verilog_port(VERILOG_PORT_CONKT, en_port) << ");" << std::endl;
+  fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
 
   fp << "\t\t\t";
   fp << generate_verilog_port(VERILOG_PORT_CONKT, bl_addr_port);
@@ -806,9 +866,7 @@ void print_verilog_top_testbench_load_bitstream_task_frame_decoder(std::fstream&
   /* Validate the file stream */
   valid_file_stream(fp);
 
-  ModulePortId en_port_id = module_manager.find_module_port(top_module,
-                                                            std::string(DECODER_ENABLE_PORT_NAME));
-  BasicPort en_port = module_manager.module_port(top_module, en_port_id);
+  BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
 
   ModulePortId addr_port_id = module_manager.find_module_port(top_module,
                                                               std::string(DECODER_ADDRESS_PORT_NAME));
@@ -834,7 +892,7 @@ void print_verilog_top_testbench_load_bitstream_task_frame_decoder(std::fstream&
   fp << generate_verilog_port(VERILOG_PORT_INPUT, addr_value) << ";" << std::endl;
   fp << generate_verilog_port(VERILOG_PORT_INPUT, din_value) << ";" << std::endl;
   fp << "\tbegin" << std::endl;
-  fp << "\t\t@(posedge " << generate_verilog_port(VERILOG_PORT_CONKT, en_port) << ");" << std::endl;
+  fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
 
   fp << "\t\t\t";
   fp << generate_verilog_port(VERILOG_PORT_CONKT, addr_port);
@@ -870,7 +928,9 @@ void print_verilog_top_testbench_load_bitstream_task(std::fstream& fp,
     /* No need to have a specific task. Loading is done in 1 clock cycle */
     break;
   case CONFIG_MEM_SCAN_CHAIN:
-    print_verilog_top_testbench_load_bitstream_task_configuration_chain(fp);
+    print_verilog_top_testbench_load_bitstream_task_configuration_chain(fp,
+                                                                        module_manager,
+                                                                        top_module);
     break;
   case CONFIG_MEM_MEMORY_BANK:
     print_verilog_top_testbench_load_bitstream_task_memory_bank(fp,
@@ -985,11 +1045,11 @@ void print_verilog_top_testbench_generic_stimulus(std::fstream& fp,
   fp << std::endl;
 
   /* Programming set signal for configuration circuit : always disabled */
-  print_verilog_comment(fp, "----- Begin programming set signal generation: always disabled -----");
+  print_verilog_comment(fp, "----- Begin programming set signal generation -----");
   print_verilog_pulse_stimuli(fp, prog_set_port,
-                              0, /* Initial value */
+                              1, /* Initial value */
                               prog_clock_period / timescale, 0);
-  print_verilog_comment(fp, "----- End programming set signal generation: always disabled -----");
+  print_verilog_comment(fp, "----- End programming set signal generation -----");
 
   fp << std::endl;
 
@@ -1019,6 +1079,49 @@ void print_verilog_top_testbench_generic_stimulus(std::fstream& fp,
   print_verilog_comment(fp, "----- End operating set signal generation: always disabled -----");
 
   fp << std::endl;
+}
+
+/********************************************************************
+ * Print input stimuli for configuration protocol
+ * include:
+ * - memory bank 
+ *   1. the enable signal 
+ * - frame-based 
+ *   1. the enable signal 
+ *******************************************************************/
+static
+void print_verilog_top_testbench_configuration_protocol_stimulus(std::fstream& fp,
+                                                                 const e_config_protocol_type& config_protocol_type, 
+                                                                 const ModuleManager& module_manager,
+                                                                 const ModuleId& top_module,
+                                                                 const float& prog_clock_period,
+                                                                 const float& timescale) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  /* Branch on the type of configuration protocol */
+  switch (config_protocol_type) {
+  case CONFIG_MEM_STANDALONE:
+    break;
+  case CONFIG_MEM_SCAN_CHAIN:
+    break;
+  case CONFIG_MEM_MEMORY_BANK:
+  case CONFIG_MEM_FRAME_BASED: {
+    ModulePortId en_port_id = module_manager.find_module_port(top_module,
+                                                              std::string(DECODER_ENABLE_PORT_NAME));
+    BasicPort en_port = module_manager.module_port(top_module, en_port_id);
+    BasicPort en_register_port(std::string(en_port.get_name() + std::string(TOP_TB_CLOCK_REG_POSTFIX)), 1);
+    print_verilog_comment(fp, std::string("---- Generate enable signal waveform  -----"));
+    print_verilog_shifted_clock_stimuli(fp, en_register_port,
+                                        0.25 * prog_clock_period / timescale,
+                                        0.5 * prog_clock_period / timescale, 0);
+    break;
+  }
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid SRAM organization type!\n");
+    exit(1);
+  }
 }
 
 /********************************************************************
@@ -1113,6 +1216,102 @@ void print_verilog_top_testbench_vanilla_bitstream(std::fstream& fp,
 }
 
 /********************************************************************
+ * Decide if we should use reset or set signal to acheive fast configuration
+ * - If only one type signal is specified, we use that type
+ *   For example, only reset signal is defined, we will use reset  
+ * - If both are defined, pick the one that will bring bigger reduction
+ *   i.e., larger number of configuration bits can be skipped
+ *******************************************************************/
+static 
+bool find_bit_value_to_skip_for_fast_configuration(const e_config_protocol_type& config_protocol_type,  
+                                                   const bool& fast_configuration,
+                                                   const std::vector<FabricGlobalPortId>& global_prog_reset_ports,
+                                                   const std::vector<FabricGlobalPortId>& global_prog_set_ports,
+                                                   const BitstreamManager& bitstream_manager,
+                                                   const FabricBitstream& fabric_bitstream) {
+
+  /* Early exit conditions */
+  if (!global_prog_reset_ports.empty() && global_prog_set_ports.empty()) {
+    return false; 
+  } else if (!global_prog_set_ports.empty() && global_prog_reset_ports.empty()) {
+    return true; 
+  } else if (global_prog_set_ports.empty() && global_prog_reset_ports.empty()) {
+    /* If both types of ports are not defined, the fast configuration should be turned off */
+    VTR_ASSERT(false == fast_configuration); 
+    return false;
+  }
+
+  VTR_ASSERT(!global_prog_set_ports.empty() && !global_prog_reset_ports.empty());
+  bool bit_value_to_skip = false;
+
+  VTR_LOG("Both reset and set ports are defined for programming controls, selecting the best-fit one...\n");
+
+  size_t num_ones_to_skip = 0;
+  size_t num_zeros_to_skip = 0;
+
+  /* Branch on the type of configuration protocol */
+  switch (config_protocol_type) {
+  case CONFIG_MEM_STANDALONE:
+    break;
+  case CONFIG_MEM_SCAN_CHAIN: {
+    /* We can only skip the ones/zeros at the beginning of the bitstream */
+    /* Count how many logic '1' bits we can skip */
+    for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
+      if (false == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id))) {
+        break;
+      }
+      VTR_ASSERT(true == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)));
+      num_ones_to_skip++;
+    }
+    /* Count how many logic '0' bits we can skip */
+    for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
+      if (true == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id))) {
+        break;
+      }
+      VTR_ASSERT(false == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)));
+      num_zeros_to_skip++;
+    }
+    break;
+  }
+  case CONFIG_MEM_MEMORY_BANK:
+  case CONFIG_MEM_FRAME_BASED: {
+    /* Count how many logic '1' and logic '0' bits we can skip */
+    for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
+      if (false == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id))) {
+        num_zeros_to_skip++;
+      } else {
+        VTR_ASSERT(true == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)));
+        num_ones_to_skip++;
+      }
+    }
+    break;
+  }
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid SRAM organization type!\n");
+    exit(1);
+  }
+
+  VTR_LOG("Using reset will skip %g% (%lu/%lu) of configuration bitstream.\n",
+          100. * (float) num_zeros_to_skip / (float) fabric_bitstream.num_bits(),
+          num_zeros_to_skip, fabric_bitstream.num_bits());
+
+  VTR_LOG("Using set will skip %g% (%lu/%lu) of configuration bitstream.\n",
+          100. * (float) num_ones_to_skip / (float) fabric_bitstream.num_bits(),
+          num_ones_to_skip, fabric_bitstream.num_bits());
+
+  /* By default, we prefer to skip zeros (when the numbers are the same */
+  if (num_ones_to_skip > num_zeros_to_skip) {
+    VTR_LOG("Will use set signal in fast configuration\n");
+    bit_value_to_skip = true;
+  } else {
+    VTR_LOG("Will use reset signal in fast configuration\n");
+  }
+
+  return bit_value_to_skip;
+}
+
+/********************************************************************
  * Print stimulus for a FPGA fabric with a configuration chain protocol
  * where configuration bits are programming in serial (one by one)
  * Task list:
@@ -1127,6 +1326,9 @@ void print_verilog_top_testbench_vanilla_bitstream(std::fstream& fp,
 static
 void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
                                                                const bool& fast_configuration,
+                                                               const bool& bit_value_to_skip,
+                                                               const ModuleManager& module_manager,
+                                                               const ModuleId& top_module,
                                                                const BitstreamManager& bitstream_manager,
                                                                const FabricBitstream& fabric_bitstream) {
   /* Validate the file stream */
@@ -1138,7 +1340,8 @@ void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
    * We do not care the value of scan_chain head during the first programming cycle
    * It is reset anyway
    */
-  BasicPort config_chain_head_port(generate_configuration_chain_head_name(), 1);
+  ModulePortId cc_head_port_id = module_manager.find_module_port(top_module, generate_configuration_chain_head_name());
+  BasicPort config_chain_head_port = module_manager.module_port(top_module, cc_head_port_id);
   std::vector<size_t> initial_values(config_chain_head_port.get_width(), 0);
 
   print_verilog_comment(fp, "----- Begin bitstream loading during configuration phase -----");
@@ -1151,26 +1354,60 @@ void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
 
   fp << std::endl;
 
+  /* Find the longest bitstream */
+  size_t regional_bitstream_max_size = find_fabric_regional_bitstream_max_size(fabric_bitstream);
+
+  /* For fast configuration, the bitstream size counts from the first bit '1' */
+  size_t num_bits_to_skip = 0;
+  if (true == fast_configuration) {
+    num_bits_to_skip = find_configuration_chain_fabric_bitstream_size_to_be_skipped(fabric_bitstream, bitstream_manager, bit_value_to_skip);
+  }
+  VTR_ASSERT(num_bits_to_skip < regional_bitstream_max_size);
+
+  /* Reorganize the regional bitstreams to be the same size */
+  std::vector<std::vector<bool>> regional_bitstreams;
+  regional_bitstreams.reserve(fabric_bitstream.regions().size());
+  for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
+    std::vector<bool> curr_regional_bitstream;
+    curr_regional_bitstream.resize(regional_bitstream_max_size, false);
+    /* Starting index should consider the offset between the current bitstream size and 
+     * the maximum size of regional bitstream
+     */
+    size_t offset = regional_bitstream_max_size - fabric_bitstream.region_bits(region).size();
+    for (const FabricBitId& bit_id : fabric_bitstream.region_bits(region)) {
+      curr_regional_bitstream[offset] = bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id));
+      offset++;
+    }
+    VTR_ASSERT(offset == regional_bitstream_max_size);
+   
+    /* Add the adapt sub-bitstream */
+    regional_bitstreams.push_back(curr_regional_bitstream);
+  }
+
   /* Attention: when the fast configuration is enabled, we will start from the first bit '1'
    * This requires a reset signal (as we forced in the first clock cycle)
+   *
+   * Note that bitstream may come from different regions
+   * The bitstream value to be loaded should be organized as follows
+   *
+   *        cycleA
+   *              |
+   *   Region 0: 0|00000001111101010
+   *   Region 1:  |   00000011010101
+   *   Region 2:  | 0010101111000110
+   *
+   *   Zero bits will be added to the head of those bitstreams are shorter 
+   *   than the longest bitstream
    */
-  bool start_config = false;
-  for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
-    if ( (false == start_config)
-      && (true == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)))) {
-      start_config = true;
-    } 
-
-    /* In fast configuration mode, we do not output anything
-     * until we have to (the first bit '1' detected)
-     */
-    if ( (true == fast_configuration)
-      && (false == start_config)) {
-      continue;
+  for (size_t ibit = num_bits_to_skip; ibit < regional_bitstream_max_size; ++ibit) { 
+    std::vector<size_t> curr_cc_head_val;
+    curr_cc_head_val.reserve(fabric_bitstream.regions().size());
+    for (const auto& region_bitstream : regional_bitstreams) {
+      curr_cc_head_val.push_back((size_t)region_bitstream[ibit]);
     }
 
     fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
-    fp << "(1'b" << (size_t)bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)) << ");" << std::endl;
+    fp << "(" << generate_verilog_constant_values(curr_cc_head_val) << ");" << std::endl;
   }
 
   /* Raise the flag of configuration done when bitstream loading is complete */
@@ -1198,6 +1435,7 @@ void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
 static
 void print_verilog_top_testbench_memory_bank_bitstream(std::fstream& fp,
                                                        const bool& fast_configuration,
+                                                       const bool& bit_value_to_skip,
                                                        const ModuleManager& module_manager,
                                                        const ModuleId& top_module,
                                                        const FabricBitstream& fabric_bitstream) {
@@ -1232,6 +1470,7 @@ void print_verilog_top_testbench_memory_bank_bitstream(std::fstream& fp,
   fp << ";";
   fp << std::endl;
 
+  fp << "\t\t";
   fp << generate_verilog_port_constant_values(wl_addr_port, initial_wl_addr_values);
   fp << ";";
   fp << std::endl;
@@ -1243,37 +1482,49 @@ void print_verilog_top_testbench_memory_bank_bitstream(std::fstream& fp,
 
   fp << std::endl;
 
-  /* Attention: the configuration chain protcol requires the last configuration bit is fed first
-   * We will visit the fabric bitstream in a reverse way
-   */
-  for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
-    /* When fast configuration is enabled, we skip zero data_in values */
-    if ((true == fast_configuration)
-      && (false == fabric_bitstream.bit_din(bit_id))) {
-      continue;
+  /* Reorganize the fabric bitstream by the same address across regions */
+  std::map<std::pair<std::string, std::string>, std::vector<bool>> fabric_bits_by_addr = build_memory_bank_fabric_bitstream_by_address(fabric_bitstream);
+
+  for (const auto& addr_din_pair : fabric_bits_by_addr) {
+    /* When fast configuration is enabled,
+     * the rule to skip any configuration bit should consider the whole data input values.
+     * Only all the bits in the din port match the value to be skipped,
+     * the programming cycle can be skipped!
+     */
+    if (true == fast_configuration) {
+      bool skip_curr_bits = true;
+      for (const bool& bit : addr_din_pair.second) {
+        if (bit_value_to_skip != bit) {
+          skip_curr_bits = false;
+          break;
+        }
+      }
+
+      if (true == skip_curr_bits) {
+        continue;
+      }
     }
 
     fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
     fp << "(" << bl_addr_port.get_width() << "'b";
-    VTR_ASSERT(bl_addr_port.get_width() == fabric_bitstream.bit_bl_address(bit_id).size());
-    for (const char& addr_bit : fabric_bitstream.bit_bl_address(bit_id)) {
-      fp << addr_bit;
-    }
+    VTR_ASSERT(bl_addr_port.get_width() == addr_din_pair.first.first.length());
+    fp << addr_din_pair.first.first;
 
     fp << ", ";
     fp << wl_addr_port.get_width() << "'b";
-    VTR_ASSERT(wl_addr_port.get_width() == fabric_bitstream.bit_wl_address(bit_id).size());
-    for (const char& addr_bit : fabric_bitstream.bit_wl_address(bit_id)) {
-      fp << addr_bit;
-    }
+    VTR_ASSERT(wl_addr_port.get_width() == addr_din_pair.first.second.length());
+    fp << addr_din_pair.first.second;
 
     fp << ", ";
-    fp <<"1'b";
-    if (true == fabric_bitstream.bit_din(bit_id)) {
-      fp << "1";
-    } else {
-      VTR_ASSERT(false == fabric_bitstream.bit_din(bit_id));
-      fp << "0";
+    fp << din_port.get_width() << "'b";
+    VTR_ASSERT(din_port.get_width() == addr_din_pair.second.size());
+    for (const bool& din_value : addr_din_pair.second) {
+      if (true == din_value) {
+        fp << "1";
+      } else {
+        VTR_ASSERT(false == din_value);
+        fp << "0";
+      }
     }
     fp << ");" << std::endl;
   }
@@ -1303,6 +1554,7 @@ void print_verilog_top_testbench_memory_bank_bitstream(std::fstream& fp,
 static
 void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
                                                          const bool& fast_configuration,
+                                                         const bool& bit_value_to_skip,
                                                          const ModuleManager& module_manager,
                                                          const ModuleId& top_module,
                                                          const FabricBitstream& fabric_bitstream) {
@@ -1339,34 +1591,48 @@ void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
 
   fp << std::endl;
 
-  /* Attention: the configuration chain protcol requires the last configuration bit is fed first
-   * We will visit the fabric bitstream in a reverse way
-   */
-  for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
-    /* When fast configuration is enabled, we skip zero data_in values */
-    if ((true == fast_configuration)
-      && (false == fabric_bitstream.bit_din(bit_id))) {
-      continue;
+  /* Reorganize the fabric bitstream by the same address across regions */
+  std::map<std::string, std::vector<bool>> fabric_bits_by_addr = build_frame_based_fabric_bitstream_by_address(fabric_bitstream);
+
+  for (const auto& addr_din_pair : fabric_bits_by_addr) {
+    /* When fast configuration is enabled,
+     * the rule to skip any configuration bit should consider the whole data input values.
+     * Only all the bits in the din port match the value to be skipped,
+     * the programming cycle can be skipped!
+     */
+    if (true == fast_configuration) {
+      bool skip_curr_bits = true;
+      for (const bool& bit : addr_din_pair.second) {
+        if (bit_value_to_skip != bit) {
+          skip_curr_bits = false;
+          break;
+        }
+      }
+
+      if (true == skip_curr_bits) {
+        continue;
+      }
     }
 
     fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
     fp << "(" << addr_port.get_width() << "'b";
-    VTR_ASSERT(addr_port.get_width() == fabric_bitstream.bit_address(bit_id).size());
-    for (const char& addr_bit : fabric_bitstream.bit_address(bit_id)) {
-      fp << addr_bit;
-    }
+    VTR_ASSERT(addr_port.get_width() == addr_din_pair.first.size());
+    fp << addr_din_pair.first;
     fp << ", ";
-    fp <<"1'b";
-    if (true == fabric_bitstream.bit_din(bit_id)) {
-      fp << "1";
-    } else {
-      VTR_ASSERT(false == fabric_bitstream.bit_din(bit_id));
-      fp << "0";
+    fp << din_port.get_width() << "'b";
+    VTR_ASSERT(din_port.get_width() == addr_din_pair.second.size());
+    for (const bool& din_value : addr_din_pair.second) {
+      if (true == din_value) {
+        fp << "1";
+      } else {
+        VTR_ASSERT(false == din_value);
+        fp << "0";
+      }
     }
     fp << ");" << std::endl;
   }
 
-  /* Disable the address and din */
+  /* Disable the address and din 
   fp << "\t\t" << std::string(TOP_TESTBENCH_PROG_TASK_NAME);
   fp << "(" << addr_port.get_width() << "'b";
   std::vector<size_t> all_zero_addr(addr_port.get_width(), 0);
@@ -1374,8 +1640,9 @@ void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
     fp << addr_bit;
   }
   fp << ", ";
-  fp <<"1'b0";
+  fp << generate_verilog_constant_values(initial_din_values);
   fp << ");" << std::endl;
+  */
 
   /* Raise the flag of configuration done when bitstream loading is complete */
   BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
@@ -1401,14 +1668,16 @@ void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
  *******************************************************************/
 static
 void print_verilog_top_testbench_bitstream(std::fstream& fp,
-                                           const e_config_protocol_type& sram_orgz_type,
+                                           const e_config_protocol_type& config_protocol_type,
                                            const bool& fast_configuration,
+                                           const bool& bit_value_to_skip,
                                            const ModuleManager& module_manager,
                                            const ModuleId& top_module,
                                            const BitstreamManager& bitstream_manager,
                                            const FabricBitstream& fabric_bitstream) {
+
   /* Branch on the type of configuration protocol */
-  switch (sram_orgz_type) {
+  switch (config_protocol_type) {
   case CONFIG_MEM_STANDALONE:
     print_verilog_top_testbench_vanilla_bitstream(fp,
                                                   module_manager, top_module,
@@ -1416,15 +1685,19 @@ void print_verilog_top_testbench_bitstream(std::fstream& fp,
     break;
   case CONFIG_MEM_SCAN_CHAIN:
     print_verilog_top_testbench_configuration_chain_bitstream(fp, fast_configuration, 
+                                                              bit_value_to_skip,
+                                                              module_manager, top_module,
                                                               bitstream_manager, fabric_bitstream);
     break;
   case CONFIG_MEM_MEMORY_BANK:
     print_verilog_top_testbench_memory_bank_bitstream(fp, fast_configuration,
+                                                      bit_value_to_skip,
                                                       module_manager, top_module,
                                                       fabric_bitstream);
     break;
   case CONFIG_MEM_FRAME_BASED:
     print_verilog_top_testbench_frame_decoder_bitstream(fp, fast_configuration,
+                                                        bit_value_to_skip,
                                                         module_manager, top_module,
                                                         fabric_bitstream);
     break;
@@ -1433,6 +1706,44 @@ void print_verilog_top_testbench_bitstream(std::fstream& fp,
                    "Invalid SRAM organization type!\n");
     exit(1);
   }
+}
+
+/********************************************************************
+ * Add auto-check codes for the full testbench
+ * in particular for the configuration phase:
+ * - Check that the configuration done signal is raised, indicating
+ *   that the configuration phase is finished
+ *******************************************************************/
+static
+void print_verilog_top_testbench_check(std::fstream& fp, 
+                                       const std::string& autochecked_preprocessing_flag,
+                                       const std::string& config_done_port_name,
+                                       const std::string& error_counter_name) {
+
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  /* Add output autocheck conditionally: only when a preprocessing flag is enable */
+  print_verilog_preprocessing_flag(fp, autochecked_preprocessing_flag); 
+
+  print_verilog_comment(fp, std::string("----- Configuration done must be raised in the end -------"));
+
+  BasicPort config_done_port(config_done_port_name, 1);
+
+  write_tab_to_file(fp, 1);
+  fp << "always@(posedge " << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port) << ") begin" << std::endl;
+
+  write_tab_to_file(fp, 2);
+  fp << error_counter_name << " = " << error_counter_name << " - 1;" << std::endl;
+
+  write_tab_to_file(fp, 1);
+  fp << "end" << std::endl;
+
+  /* Condition ends */
+  print_verilog_endif(fp);
+
+  /* Add an empty line as splitter */
+  fp << std::endl;
 }
 
 /********************************************************************
@@ -1458,9 +1769,9 @@ void print_verilog_top_testbench_bitstream(std::fstream& fp,
 void print_verilog_top_testbench(const ModuleManager& module_manager,
                                  const BitstreamManager& bitstream_manager,
                                  const FabricBitstream& fabric_bitstream,
-                                 const e_config_protocol_type& sram_orgz_type,
                                  const CircuitLibrary& circuit_lib,
-                                 const std::vector<CircuitPortId>& global_ports,
+                                 const ConfigProtocol& config_protocol,
+                                 const FabricGlobalPortInfo& global_ports,
                                  const AtomContext& atom_ctx,
                                  const PlacementContext& place_ctx,
                                  const IoLocationMap& io_location_map,
@@ -1494,17 +1805,36 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   /* Preparation: find all the clock ports */
   std::vector<std::string> clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
 
+  /* Preparation: find all the reset/set ports for programming usage */
+  std::vector<FabricGlobalPortId> global_prog_reset_ports = find_fabric_global_programming_reset_ports(global_ports);
+  std::vector<FabricGlobalPortId> global_prog_set_ports = find_fabric_global_programming_set_ports(global_ports);
+
+  /* Identify if we can apply fast configuration */
+  bool apply_fast_configuration = fast_configuration;
+  if ( (global_prog_set_ports.empty() && global_prog_reset_ports.empty())
+     && (true == fast_configuration)) {
+    VTR_LOG_WARN("None of global reset and set ports are defined for programming purpose. Fast configuration is turned off\n");
+    apply_fast_configuration = false;
+  }
+  bool bit_value_to_skip = find_bit_value_to_skip_for_fast_configuration(config_protocol.type(),
+                                                                         apply_fast_configuration,
+                                                                         global_prog_reset_ports, 
+                                                                         global_prog_set_ports, 
+                                                                         bitstream_manager, fabric_bitstream);
+
   /* Start of testbench */
   print_verilog_top_testbench_ports(fp, module_manager, top_module,
                                     atom_ctx, netlist_annotation, clock_port_names,
-                                    sram_orgz_type, circuit_name);
+                                    config_protocol,
+                                    circuit_name);
 
   /* Find the clock period */
   float prog_clock_period = (1./simulation_parameters.programming_clock_frequency());
   float op_clock_period = (1./simulation_parameters.operating_clock_frequency());
   /* Estimate the number of configuration clock cycles */
-  size_t num_config_clock_cycles = calculate_num_config_clock_cycles(sram_orgz_type,
-                                                                     fast_configuration,
+  size_t num_config_clock_cycles = calculate_num_config_clock_cycles(config_protocol.type(),
+                                                                     apply_fast_configuration,
+                                                                     bit_value_to_skip,
                                                                      bitstream_manager,
                                                                      fabric_bitstream);
 
@@ -1515,10 +1845,45 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                                op_clock_period,
                                                VERILOG_SIM_TIMESCALE);
 
+  /* Generate stimuli for programming interface */
+  print_verilog_top_testbench_configuration_protocol_stimulus(fp, 
+                                                              config_protocol.type(),
+                                                              module_manager, top_module,
+                                                              prog_clock_period,
+                                                              VERILOG_SIM_TIMESCALE);
+                                                      
+  /* Identify the stimulus for global reset/set for programming purpose:
+   * - If only reset port is seen we turn on Reset 
+   * - If only set port is seen we turn on Reset 
+   * - If both reset and set port is defined,
+   *   we pick the one which is consistent with the bit value to be skipped
+   */
+  bool active_global_prog_reset = false; 
+  bool active_global_prog_set = false; 
+
+  if (!global_prog_reset_ports.empty()) {
+    active_global_prog_reset = true;
+  }
+
+  if (!global_prog_set_ports.empty()) {
+    active_global_prog_set = true;
+  }
+
+  /* Ensure that at most only one of the two switches is activated */
+  if ( (true == active_global_prog_reset)
+    && (true == active_global_prog_set) ) { 
+    /* If we will skip logic '0', we will activate programming reset */
+    active_global_prog_reset = !bit_value_to_skip;
+    /* If we will skip logic '1', we will activate programming set */
+    active_global_prog_set = bit_value_to_skip;
+  }
+
   /* Generate stimuli for global ports or connect them to existed signals */
   print_verilog_top_testbench_global_ports_stimuli(fp,
                                                    module_manager, top_module,
-                                                   circuit_lib, global_ports);
+                                                   global_ports,
+                                                   active_global_prog_reset,
+                                                   active_global_prog_set);
 
   /* Instanciate FPGA top-level module */
   print_verilog_testbench_fpga_instance(fp, module_manager, top_module,
@@ -1542,14 +1907,22 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
 
   /* Print tasks used for loading bitstreams */
   print_verilog_top_testbench_load_bitstream_task(fp,
-                                                  sram_orgz_type,
+                                                  config_protocol.type(),
                                                   module_manager, top_module);
 
   /* load bitstream to FPGA fabric in a configuration phase */
-  print_verilog_top_testbench_bitstream(fp, sram_orgz_type,
-                                        fast_configuration,
+  print_verilog_top_testbench_bitstream(fp, config_protocol.type(),
+                                        apply_fast_configuration,
+                                        bit_value_to_skip,
                                         module_manager, top_module,
                                         bitstream_manager, fabric_bitstream);
+
+  /* Add signal initialization */
+  print_verilog_testbench_signal_initialization(fp,
+                                                std::string(TOP_TESTBENCH_FPGA_INSTANCE_NAME),
+                                                circuit_lib,
+                                                module_manager,
+                                                top_module);
 
   /* Add stimuli for reset, set, clock and iopad signals */
   print_verilog_testbench_random_stimuli(fp, atom_ctx,
@@ -1570,6 +1943,12 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                 netlist_annotation,
                                 clock_port_names,
                                 std::string(TOP_TB_OP_CLOCK_PORT_NAME));
+
+  /* Add autocheck for configuration phase */
+  print_verilog_top_testbench_check(fp, 
+                                    std::string(AUTOCHECKED_SIMULATION_FLAG),
+                                    std::string(TOP_TB_CONFIG_DONE_PORT_NAME),
+                                    std::string(TOP_TESTBENCH_ERROR_COUNTER));
 
   /* Find simulation time */
   float simulation_time = find_simulation_time_period(VERILOG_SIM_TIMESCALE,

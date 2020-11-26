@@ -26,6 +26,7 @@
 #include "build_top_module_directs.h"
 
 #include "build_module_graph_utils.h"
+#include "openfpga_device_grid_utils.h"
 #include "build_top_module.h"
 
 /* begin namespace openfpga */
@@ -92,7 +93,6 @@ size_t add_top_module_grid_instance(ModuleManager& module_manager,
 static 
 vtr::Matrix<size_t> add_top_module_grid_instances(ModuleManager& module_manager,
                                                   const ModuleId& top_module,
-                                                  IoLocationMap& io_location_map,
                                                   const DeviceGrid& grids) {
 
   vtr::ScopedStartFinishTimer timer("Add grid instances to top module");
@@ -132,32 +132,9 @@ vtr::Matrix<size_t> add_top_module_grid_instances(ModuleManager& module_manager,
 
   /* Instanciate I/O grids */
   /* Create the coordinate range for each side of FPGA fabric */
-  std::vector<e_side> io_sides{TOP, RIGHT, BOTTOM, LEFT};
-  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates;
+  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates = generate_perimeter_grid_coordinates( grids);
 
-  /* TOP side*/
-  for (size_t ix = 1; ix < grids.width() - 1; ++ix) { 
-    io_coordinates[TOP].push_back(vtr::Point<size_t>(ix, grids.height() - 1));
-  } 
-
-  /* RIGHT side */
-  for (size_t iy = 1; iy < grids.height() - 1; ++iy) { 
-    io_coordinates[RIGHT].push_back(vtr::Point<size_t>(grids.width() - 1, iy));
-  } 
-
-  /* BOTTOM side*/
-  for (size_t ix = 1; ix < grids.width() - 1; ++ix) { 
-    io_coordinates[BOTTOM].push_back(vtr::Point<size_t>(ix, 0));
-  } 
-
-  /* LEFT side */
-  for (size_t iy = 1; iy < grids.height() - 1; ++iy) { 
-    io_coordinates[LEFT].push_back(vtr::Point<size_t>(0, iy));
-  }
-
-  /* Add instances of I/O grids to top_module */
-  size_t io_counter = 0;
-  for (const e_side& io_side : io_sides) {
+  for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
     for (const vtr::Point<size_t>& io_coordinate : io_coordinates[io_side]) {
       /* Bypass EMPTY grid */
       if (true == is_empty_type(grids[io_coordinate.x()][io_coordinate.y()].type)) {
@@ -178,21 +155,6 @@ vtr::Matrix<size_t> add_top_module_grid_instances(ModuleManager& module_manager,
 
       /* Add a grid module to top_module*/
       grid_instance_ids[io_coordinate.x()][io_coordinate.y()] = add_top_module_grid_instance(module_manager, top_module, grids[io_coordinate.x()][io_coordinate.y()].type, io_side, io_coordinate);
-
-      /* MUST DO: register in io location mapping!
-       * I/O location mapping is a critical look-up for testbench generators
-       * As we add the I/O grid instances to top module by following order:
-       * TOP -> RIGHT -> BOTTOM -> LEFT
-       * The I/O index will increase in this way as well.
-       * This organization I/O indices is also consistent to the way 
-       * that GPIOs are wired in function connect_gpio_module()
-       *
-       * Note: if you change the GPIO function, you should update here as well!
-       */
-      for (int z = 0; z < grids[io_coordinate.x()][io_coordinate.y()].type->capacity; ++z) {
-        io_location_map.set_io_index(io_coordinate.x(), io_coordinate.y(), z, io_counter);
-        io_counter++;
-      }
     }
   }
 
@@ -322,15 +284,15 @@ vtr::Matrix<size_t> add_top_module_connection_block_instances(ModuleManager& mod
  * 5. Add module nets/submodules to connect configuration ports
  *******************************************************************/
 int build_top_module(ModuleManager& module_manager,
-                     IoLocationMap& io_location_map,
                      DecoderLibrary& decoder_lib,
                      const CircuitLibrary& circuit_lib,
                      const DeviceGrid& grids,
+                     const TileAnnotation& tile_annotation,
                      const RRGraph& rr_graph,
                      const DeviceRRGSB& device_rr_gsb,
                      const TileDirect& tile_direct,
                      const ArchDirect& arch_direct,
-                     const e_config_protocol_type& sram_orgz_type,
+                     const ConfigProtocol& config_protocol,
                      const CircuitModelId& sram_model,
                      const bool& frame_view,
                      const bool& compact_routing_hierarchy,
@@ -353,7 +315,7 @@ int build_top_module(ModuleManager& module_manager,
  
   /* Add sub modules, which are grid, SB and CBX/CBY modules as instances */
   /* Add all the grids across the fabric */
-  vtr::Matrix<size_t> grid_instance_ids = add_top_module_grid_instances(module_manager, top_module, io_location_map, grids);
+  vtr::Matrix<size_t> grid_instance_ids = add_top_module_grid_instances(module_manager, top_module, grids);
   /* Add all the SBs across the fabric */
   vtr::Matrix<size_t> sb_instance_ids = add_top_module_switch_block_instances(module_manager, top_module, device_rr_gsb, compact_routing_hierarchy);
   /* Add all the CBX and CBYs across the fabric */
@@ -384,6 +346,12 @@ int build_top_module(ModuleManager& module_manager,
    */
   add_module_global_ports_from_child_modules(module_manager, top_module);
 
+  /* Add global ports from grid ports that are defined as global in tile annotation */
+  status = add_top_module_global_ports_from_grid_modules(module_manager, top_module, tile_annotation, grids, grid_instance_ids);
+  if (CMD_EXEC_FATAL_ERROR == status) {
+    return status;
+  }
+
   /* Add GPIO ports from the sub-modules under this Verilog module 
    * This is a much easier job after adding sub modules (instances), 
    * we just need to find all the I/O ports from the child modules and build a list of it
@@ -396,13 +364,24 @@ int build_top_module(ModuleManager& module_manager,
    */
   if (true == fabric_key.empty()) {
     organize_top_module_memory_modules(module_manager, top_module, 
-                                       circuit_lib, sram_orgz_type, sram_model,
+                                       circuit_lib, config_protocol, sram_model,
                                        grids, grid_instance_ids, 
                                        device_rr_gsb, sb_instance_ids, cb_instance_ids,
                                        compact_routing_hierarchy);
   } else {
     VTR_ASSERT_SAFE(false == fabric_key.empty());
+    /* Give a warning message that the fabric key may overwrite existing region organization.
+     * Only applicable when number of regions defined in configuration protocol is different
+     * than the number of regions defined in the fabric key 
+     */
+    if (size_t(config_protocol.num_regions()) != fabric_key.regions().size()) {
+      VTR_LOG_WARN("Fabric key will overwrite the region organization (='%ld') than architecture definition (=%d)!\n",
+                   fabric_key.regions().size(),
+                   config_protocol.num_regions());
+    }
+
     status = load_top_module_memory_modules_from_fabric_key(module_manager, top_module,
+                                                            circuit_lib, config_protocol,
                                                             fabric_key); 
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
@@ -411,7 +390,7 @@ int build_top_module(ModuleManager& module_manager,
 
   /* Shuffle the configurable children in a random sequence */
   if (true == generate_random_fabric_key) {
-    shuffle_top_module_configurable_children(module_manager, top_module);
+    shuffle_top_module_configurable_children(module_manager, top_module, config_protocol);
   }
 
   /* Add shared SRAM ports from the sub-modules under this Verilog module
@@ -427,11 +406,13 @@ int build_top_module(ModuleManager& module_manager,
    * This is a much easier job after adding sub modules (instances), 
    * we just need to find all the I/O ports from the child modules and build a list of it
    */
-  size_t module_num_config_bits = find_module_num_config_bits_from_child_modules(module_manager, top_module, circuit_lib, sram_model, sram_orgz_type); 
-  if (0 < module_num_config_bits) {
+  vtr::vector<ConfigRegionId, size_t> top_module_num_config_bits = find_top_module_regional_num_config_bit(module_manager, top_module, circuit_lib, sram_model, config_protocol.type());
+
+  if (!top_module_num_config_bits.empty()) {
     add_top_module_sram_ports(module_manager, top_module,
                               circuit_lib, sram_model,
-                              sram_orgz_type, module_num_config_bits);
+                              config_protocol,
+                              top_module_num_config_bits);
   }
 
   /* Add module nets to connect memory cells inside
@@ -440,8 +421,8 @@ int build_top_module(ModuleManager& module_manager,
   if (0 < module_manager.configurable_children(top_module).size()) {
     add_top_module_nets_memory_config_bus(module_manager, decoder_lib,
                                           top_module, 
-                                          sram_orgz_type, circuit_lib.design_tech_type(sram_model),
-                                          module_num_config_bits);
+                                          config_protocol, circuit_lib.design_tech_type(sram_model),
+                                          top_module_num_config_bits);
   }
 
   return status;

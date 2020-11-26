@@ -18,9 +18,9 @@ We will simply execute the following openfpga task-run by
 
 .. code-block:: shell
 
-  python3 openfpga_flow/scripts/run_fpga_task.py openfpga_shell/full_testbench/configuration_chain
+  python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_chain
 
-Detailed settings, such as architecture XML files and RTL designs, can be found at ``${OPENFPGA_PATH}/openfpga_flow/tasks/openfpga_shell/full_testbench/configuration_chain/config/task.conf``.
+Detailed settings, such as architecture XML files and RTL designs, can be found at ``${OPENFPGA_PATH}/openfpga_flow/tasks/basic_tests/full_testbench/configuration_chain/config/task.conf``.
 
 .. note:: ``${OPENFPGA_PATH}`` is the root directory of OpenFPGA 
 
@@ -28,7 +28,7 @@ After this task-run, you can find all the generated netlists and testbenches at
 
 .. code-block:: shell
 
-  ${OPENFPGA_PATH}/openfpga_flow/tasks/openfpga_shell/full_testbench/configuration_chain/latest/k4_N4_tileable_40nm/and2/MIN_ROUTE_CHAN_WIDTH/SRC/
+  ${OPENFPGA_PATH}/openfpga_flow/tasks/basic_tests/full_testbench/configuration_chain/latest/k4_N4_tileable_40nm/and2/MIN_ROUTE_CHAN_WIDTH/SRC/
    
 .. note:: See :ref:`fabric_netlists` and :ref:`fpga_verilog_testbench` for the netlist details. 
 
@@ -43,7 +43,7 @@ The simulation results are logged in
 
 .. code-block:: shell
 
-  ${OPENFPGA_PATH}/openfpga_flow/tasks/openfpga_shell/full_testbench/configuration_chain/latest/k4_N4_tileable_40nm/and2/MIN_ROUTE_CHAN_WIDTH/vvp_sim_output.txt
+  ${OPENFPGA_PATH}/openfpga_flow/tasks/basic_tests/full_testbench/configuration_chain/latest/k4_N4_tileable_40nm/and2/MIN_ROUTE_CHAN_WIDTH/vvp_sim_output.txt
 
 If the verification passed, you should be able to see ``Simulation Succeed`` in the log file.
 
@@ -53,7 +53,7 @@ To visualize the waveforms, you can use the `GTKWave
 
 .. code-block:: shell
 
-  gtkwave ${OPENFPGA_PATH}/openfpga_flow/tasks/openfpga_shell/full_testbench/configuration_chain/latest/k4_N4_tileable_40nm/and2/MIN_ROUTE_CHAN_WIDTH/and2_formal.vcd &
+  gtkwave ${OPENFPGA_PATH}/openfpga_flow/tasks/basic_tests/full_testbench/configuration_chain/latest/k4_N4_tileable_40nm/and2/MIN_ROUTE_CHAN_WIDTH/and2_formal.vcd &
 
 Manual Method
 ^^^^^^^^^^^^^
@@ -62,7 +62,7 @@ If you want to run iVerilog simulation manually, you can follow these steps:
 
 .. code-block:: shell
 
-  cd ${OPENFPGA_PATH}/openfpga_flow/tasks/openfpga_shell/full_testbench/configuration_chain/latest/k4_N4_tileable_40nm/and2/MIN_ROUTE_CHAN_WIDTH
+  cd ${OPENFPGA_PATH}/openfpga_flow/tasks/basic_tests/full_testbench/configuration_chain/latest/k4_N4_tileable_40nm/and2/MIN_ROUTE_CHAN_WIDTH
 
   source iverilog_output.txt
   
@@ -75,7 +75,7 @@ If you want to apply full visibility to the signals, you need to change the foll
 
 .. code-block:: shell 
 
-  ${OPENFPGA_PATH}/openfpga_flow/tasks/openfpga_shell/full_testbench/configuration_chain/latest/k4_N4_tileable_40nm/and2/MIN_ROUTE_CHAN_WIDTH/SRC/and2_autocheck_top_tb.v
+  ${OPENFPGA_PATH}/openfpga_flow/tasks/basic_tests/full_testbench/configuration_chain/latest/k4_N4_tileable_40nm/and2/MIN_ROUTE_CHAN_WIDTH/SRC/and2_autocheck_top_tb.v
    
 from 
 
@@ -94,19 +94,21 @@ Run Modelsim Simulation
 ~~~~~~~~~~~~~~~~~~~~~~~
 Alternatively, you can run Modelsim simulations through openfpga_flow scripts or manually.
 
+.. note:: Before starting, please ensure that Mentor Modelsim has been correctly installed on your local environment.
+
 Through OpenFPGA Scripts
 ^^^^^^^^^^^^^^^^^^^^^^^^
 You can simply call the python script in the following line:
 
 .. code-block:: shell
 
-  python3 openfpga_flow/scripts/run_modelsim.py openfpga_shell/full_testbench/configuration_chain --run_sim
+  python3 openfpga_flow/scripts/run_modelsim.py basic_tests/full_testbench/configuration_chain --run_sim
 
 The script will automatically create a Modelsim project at  
 
 .. code-block:: shell
 
-  ${OPENFPGA_PATH}/openfpga_flow/tasks/openfpga_shell/full_testbench/configuration_chain/latest/k4_N4_tileable_40nm/and2/MIN_ROUTE_CHAN_WIDTH/MSIM2/
+  ${OPENFPGA_PATH}/openfpga_flow/tasks/basic_tests/full_testbench/configuration_chain/latest/k4_N4_tileable_40nm/and2/MIN_ROUTE_CHAN_WIDTH/MSIM2/
 
 and run the simulation.
 
@@ -131,7 +133,7 @@ Create a folder ``MSIM`` under
 
 .. code-block:: shell
 
-  ${OPENFPGA_PATH}/openfpga_flow/tasks/openfpga_shell/full_testbench/configuration_chain/latest/k4_N4_tileable_40nm/and2/MIN_ROUTE_CHAN_WIDTH/
+  ${OPENFPGA_PATH}/openfpga_flow/tasks/basic_tests/full_testbench/configuration_chain/latest/k4_N4_tileable_40nm/and2/MIN_ROUTE_CHAN_WIDTH/
 
 Under the ``MSIM`` folder, create symbolic links to ``SRC`` folder and reference benchmarks by
 
@@ -149,7 +151,7 @@ Add the following file to your project:
 
 .. code-block:: shell
 
-  ${OPENFPGA_PATH}/openfpga_flow/tasks/openfpga_shell/full_testbench/configuration_chain/latest/k4_N4_tileable_40nm/and2/MIN_ROUTE_CHAN_WIDTH/SRC/and2_include_netlists.v
+  ${OPENFPGA_PATH}/openfpga_flow/tasks/basic_tests/full_testbench/configuration_chain/latest/k4_N4_tileable_40nm/and2/MIN_ROUTE_CHAN_WIDTH/SRC/and2_include_netlists.v
 
 Compile the netlists, create a simulation configuration and specify ``and2_autocheck_top_tb`` at the top unit.
 

@@ -256,7 +256,15 @@ void rename_primitive_module_port_names(ModuleManager& module_manager,
     /* We only care about user-defined models */
     if ( (true == circuit_lib.model_verilog_netlist(model).empty())
       && (true == circuit_lib.model_spice_netlist(model).empty()) ) {
-      continue;
+      /* Exception circuit models as primitive cells
+       * - Inverter, buffer, pass-gate logic, logic gate
+       * which should be renamed even when auto-generated
+       */
+      if ( (CIRCUIT_MODEL_INVBUF != circuit_lib.model_type(model))
+          && (CIRCUIT_MODEL_PASSGATE != circuit_lib.model_type(model))
+          && (CIRCUIT_MODEL_GATE != circuit_lib.model_type(model)) ) {
+        continue;
+      }
     }
     /* Skip Routing channel wire models because they need a different name. Do it later */
     if (CIRCUIT_MODEL_CHAN_WIRE == circuit_lib.model_type(model)) {

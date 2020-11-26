@@ -36,7 +36,7 @@
       <design_technology type="cmos" power_gated="true" topology="inverter" size="1"/>
       <device_technology device_model_name="logic"/>
       <port type="input" prefix="in" size="1"/>
-      <port type="input" prefix="en" size="1" is_global="true" default_val="0" is_config_enable="true"/>
+      <port type="input" prefix="DIR" size="1" is_global="true" default_val="0" is_config_enable="true"/>
       <port type="input" prefix="enb" size="1" is_global="true" default_val="1" is_config_enable="true"/>
       <port type="output" prefix="out" size="1"/>
       <delay_matrix type="rise" in_port="in" out_port="out">
@@ -130,15 +130,15 @@
       <port type="sram" prefix="sram" size="1"/>
     </circuit_model>
     <!--DFF subckt ports should be defined as <D> <Q> <CLK> <RESET> <SET>  -->
-    <circuit_model type="ff" name="static_dff" prefix="dff" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/ff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/ff.v">
+    <circuit_model type="ff" name="DFFSRQ" prefix="DFFSRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
        <port type="input" prefix="D" size="1"/>
-       <port type="input" prefix="set" size="1" is_global="true" default_val="0" is_set="true"/>
-       <port type="input" prefix="reset" size="1" is_global="true" default_val="0" is_reset="true"/>
+       <port type="input" prefix="set" lib_name="SET" size="1" is_global="true" default_val="0" is_set="true"/>
+       <port type="input" prefix="reset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true"/>
        <port type="output" prefix="Q" size="1"/>
-       <port type="clock" prefix="clk" size="1" is_global="true" default_val="0" />
+       <port type="clock" prefix="clk" lib_name="CK" size="1" is_global="true" default_val="0" />
     </circuit_model>
     <circuit_model type="lut" name="lut4" prefix="lut4" dump_structural_verilog="true">
       <design_technology type="cmos"/>
@@ -152,29 +152,28 @@
       <port type="sram" prefix="sram" size="16"/>
     </circuit_model>
     <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-    <circuit_model type="sram" name="config_latch" prefix="config_latch" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/config_latch.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/config_latch.v">
+    <circuit_model type="sram" name="LATCHR" prefix="LATCHR" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/latch.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/latch.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
-       <port type="input" prefix="pReset" lib_name="reset" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
-       <port type="bl" prefix="bl" size="1"/>
-       <port type="wl" prefix="wl" size="1"/>
-       <port type="output" prefix="Q" size="1"/>
-       <port type="output" prefix="Qb" size="1"/>
-       <port type="clock" prefix="prog_clk" lib_name="clk" size="1" is_global="true" default_val="0" is_prog="true"/>
+       <port type="input" prefix="pReset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
+       <port type="bl" prefix="bl" lib_name="D" size="1"/>
+       <port type="wl" prefix="wl" lib_name="WE" size="1"/>
+       <port type="output" prefix="Q" lib_name="Q" size="1"/>
+       <port type="output" prefix="Qb" lib_name="QN" size="1"/>
     </circuit_model>
-    <circuit_model type="iopad" name="iopad" prefix="iopad" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/SpiceNetlists/io.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/VerilogNetlists/io.v">
+    <circuit_model type="iopad" name="GPIO" prefix="GPIO" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/gpio.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/gpio.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <port type="inout" prefix="pad" size="1" is_global="true" is_io="true"/>
-      <port type="sram" prefix="en" size="1" mode_select="true" circuit_model_name="config_latch" default_val="1"/>
-      <port type="input" prefix="outpad" size="1"/>
-      <port type="output" prefix="inpad" size="1"/>
+      <port type="inout" prefix="PAD" size="1" is_global="true" is_io="true" is_data_io="true"/>
+      <port type="sram" prefix="DIR" size="1" mode_select="true" circuit_model_name="LATCHR" default_val="1"/>
+      <port type="input" prefix="outpad" lib_name="A" size="1"/>
+      <port type="output" prefix="inpad" lib_name="Y" size="1"/>
     </circuit_model>
   </circuit_library>
   <configuration_protocol>
-    <organization type="frame_based" circuit_model_name="config_latch"/>
+    <organization type="frame_based" circuit_model_name="LATCHR"/>
   </configuration_protocol>
   <connection_block>
     <switch name="ipin_cblock" circuit_model_name="mux_2level_tapbuf"/>
@@ -188,7 +187,7 @@
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
     <pb_type name="io" physical_mode_name="physical" idle_mode_name="inpad"/>
-    <pb_type name="io[physical].iopad" circuit_model_name="iopad" mode_bits="1"/> 
+    <pb_type name="io[physical].iopad" circuit_model_name="GPIO" mode_bits="1"/> 
     <pb_type name="io[inpad].inpad" physical_pb_type_name="io[physical].iopad" mode_bits="1"/> 
     <pb_type name="io[outpad].outpad" physical_pb_type_name="io[physical].iopad" mode_bits="0"/> 
     <!-- End physical pb_type binding in complex block IO -->
@@ -200,7 +199,7 @@
       <interconnect name="crossbar" circuit_model_name="mux_2level"/>
     </pb_type>
     <pb_type name="clb.fle[n1_lut4].ble4.lut4" circuit_model_name="lut4"/>
-    <pb_type name="clb.fle[n1_lut4].ble4.ff" circuit_model_name="static_dff"/>
+    <pb_type name="clb.fle[n1_lut4].ble4.ff" circuit_model_name="DFFSRQ"/>
     <!-- End physical pb_type binding in complex block IO -->
   </pb_type_annotations>
 </openfpga_architecture>

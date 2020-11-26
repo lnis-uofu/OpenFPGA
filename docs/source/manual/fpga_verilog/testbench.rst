@@ -5,6 +5,16 @@ Testbench
 
 In this part, we will introduce the hierarchy, dependency and functionality of each Verilog testbench, which are generated to verify a FPGA fabric implemented with an application.
 
++-----------------+---------+----------------+---------------+
+| Testbench Type  | Runtime | Test Vector    | Test Coverage |
++=================+=========+================+===============+
+| Full            | Long    | Random Stimuli | Full fabric   |
++-----------------+---------+----------------+---------------+
+| Formal-oriented | Short   | Random Stimuli | Programmable  |
+|                 |         |                | fabric only   |
+|                 |         | Formal Method  |               |
++-----------------+---------+----------------+---------------+
+
 OpenFPGA can auto-generate two types of Verilog testbenches to validate the correctness of the fabric: full and formal-oriented.
 Both testbenches share the same organization, as depicted in :numref:`fig_verilog_testbench_organization` (a).
 To enable self-testing, the FPGA and user's RTL design (simulate using an HDL simulator) are driven by the same input stimuli, and any mismatch on their outputs will raise an error flag.
@@ -70,6 +80,22 @@ Inside the directory, the Verilog testbenches are organized as illustrated in :n
 
    .. note:: To run full testbenches, both flags ``ENABLE_FORMAL_VERIFICATION`` and ``ENABLE_FORMAL_SIMULATION`` must be disabled!
 
+   - ```define ENABLE_SIGNAL_INITIALIZATION`` When enabled, all the outputs of primitive Verilog modules will be initialized with a random value. This flag is added when ``--include_signal_init`` option is enabled when calling the ``write_verilog_testbench`` command. 
+
+   .. note:: We strongly recommend users to turn on this flag as it can help simulators to converge quickly.
+
+   .. warning:: Signal initialization is only applied to the datapath inputs of routing multiplexers (considering the fact that they are indispensible cells of FPGAs)! If your FPGA does not contain any multiplexer cells, signal initialization is not applicable.
+   
+   - ```define ICARUS_SIMULATOR`` When enabled, Verilog netlists are generated to be compatible with the syntax required by `icarus iVerilog simulator`__. This flag is added when ``--support_icarus_simulator`` option is enabled when calling the ``write_verilog_testbench`` command. 
+
+   .. warning:: Please disable this flag if you are not using icarus iVerilog simulator.
+
+__ iverilog_website_
+
+.. _iverilog_website: http://iverilog.icarus.com/
+
+
+
 .. option:: <bench_name>_autocheck_top_tb.v
 
   This is the netlist for full testbench.
@@ -88,7 +114,7 @@ Inside the directory, the Verilog testbenches are organized as illustrated in :n
 .. _fig_preconfig_module:
 
 .. figure:: ./figures/preconfig_module.png
-   :scale: 100%
+   :scale: 25%
 
    Internal structure of a pre-configured FPGA module
 

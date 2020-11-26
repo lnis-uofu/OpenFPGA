@@ -12,6 +12,7 @@
 #include "module_manager.h"
 #include "mux_library.h"
 #include "circuit_library.h"
+#include "fabric_global_port_info.h"
 #include "pnr_sdc_option.h"
 
 /********************************************************************
@@ -30,7 +31,7 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
                    const ModuleManager& module_manager,
                    const MuxLibrary& mux_lib,
                    const CircuitLibrary& circuit_lib,
-                   const std::vector<CircuitPortId>& global_ports,
+                   const FabricGlobalPortInfo& global_ports,
                    const bool& compact_routing_hierarchy);
 
 } /* end namespace openfpga */

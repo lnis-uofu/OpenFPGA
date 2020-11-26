@@ -7,6 +7,7 @@
  *******************************************************************/
 #include <algorithm>
 #include <iomanip>
+#include <map>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
@@ -15,7 +16,11 @@
 #include "openfpga_port.h"
 #include "openfpga_digest.h"
 
+#include "openfpga_naming.h"
+
 #include "verilog_port_types.h"
+
+#include "module_manager_utils.h"
 
 #include "verilog_constants.h"
 #include "verilog_writer_utils.h"
@@ -147,78 +152,129 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
   /* Validate the file stream */
   valid_file_stream(fp);
 
-  /* In this function, we support only 1 type of I/Os */
-  std::vector<BasicPort> module_io_ports = module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GPIO_PORT);
+  /* Only mappable i/o ports can be considered */
+  std::vector<ModulePortId> module_io_ports;
+  for (const ModuleManager::e_module_port_type& module_io_port_type : MODULE_IO_PORT_TYPES) {
+    for (const ModulePortId& gpio_port_id : module_manager.module_port_ids_by_type(top_module, module_io_port_type)) {
+      /* Only care mappable I/O */
+      if (false == module_manager.port_is_mappable_io(top_module, gpio_port_id)) {
+        continue;
+      }
+      module_io_ports.push_back(gpio_port_id);
+    }
+  }
 
   /* Keep tracking which I/Os have been used */
-  for (const BasicPort& module_io_port : module_io_ports) {
-    std::vector<bool> io_used(module_io_port.get_width(), false);
+  std::map<ModulePortId, std::vector<bool>> io_used;
+  for (const ModulePortId& module_io_port_id :  module_io_ports) {
+    const BasicPort& module_io_port = module_manager.module_port(top_module, module_io_port_id);
+    io_used[module_io_port_id] = std::vector<bool>(module_io_port.get_width(), false);
+  }
 
-    /* See if this I/O should be wired to a benchmark input/output */
-    /* Add signals from blif benchmark and short-wire them to FPGA I/O PADs
-     * This brings convenience to checking functionality  
-     */
-    print_verilog_comment(fp, std::string("----- Link BLIF Benchmark I/Os to FPGA I/Os -----"));
+  /* Type mapping between VPR block and Module port */
+  std::map<AtomBlockType, ModuleManager::e_module_port_type> atom_block_type_to_module_port_type;
+  atom_block_type_to_module_port_type[AtomBlockType::INPAD] = ModuleManager::MODULE_GPIN_PORT;
+  atom_block_type_to_module_port_type[AtomBlockType::OUTPAD] = ModuleManager::MODULE_GPOUT_PORT;
 
-    for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
-      /* Bypass non-I/O atom blocks ! */
-      if ( (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk))
-        && (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) ) {
+  /* See if this I/O should be wired to a benchmark input/output */
+  /* Add signals from blif benchmark and short-wire them to FPGA I/O PADs
+   * This brings convenience to checking functionality  
+   */
+  print_verilog_comment(fp, std::string("----- Link BLIF Benchmark I/Os to FPGA I/Os -----"));
+
+  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+    /* Bypass non-I/O atom blocks ! */
+    if ( (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk))
+      && (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) ) {
+      continue;
+    }
+    
+    /* If there is a GPIO port, use it directly
+     * Otherwise, should find a GPIN for INPAD
+     *         or should find a GPOUT for OUTPAD
+     */ 
+    std::pair<ModulePortId, size_t> mapped_module_io_info = std::make_pair(ModulePortId::INVALID(), -1);
+    for (const ModulePortId& module_io_port_id : module_io_ports) {
+      const BasicPort& module_io_port = module_manager.module_port(top_module, module_io_port_id);
+
+      /* Find the index of the mapped GPIO in top-level FPGA fabric */
+      size_t temp_io_index = io_location_map.io_index(place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
+                                                      place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
+                                                      place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.z,
+                                                      module_io_port.get_name());
+
+      /* Bypass invalid index (not mapped to this GPIO port) */
+      if (size_t(-1) == temp_io_index) {
         continue;
       }
 
-      /* Find the index of the mapped GPIO in top-level FPGA fabric */
-      size_t io_index = io_location_map.io_index(place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
-                                                 place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
-                                                 place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.z);
-
-      /* Ensure that IO index is in range */
-      BasicPort module_mapped_io_port = module_io_port; 
-      /* Set the port pin index */ 
-      VTR_ASSERT(io_index < module_mapped_io_port.get_width());
-      module_mapped_io_port.set_width(io_index, io_index);
-
-      /* The block may be renamed as it contains special characters which violate Verilog syntax */
-      std::string block_name = atom_ctx.nlist.block_name(atom_blk);
-      if (true == netlist_annotation.is_block_renamed(atom_blk)) {
-        block_name = netlist_annotation.block_name(atom_blk);
-      } 
-
-      /* Create the port for benchmark I/O, due to BLIF benchmark, each I/O always has a size of 1 
-       * In addition, the input and output ports may have different postfix in naming
-       * due to verification context! Here, we give full customization on naming 
-       */
-      BasicPort benchmark_io_port;
-      if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
-        benchmark_io_port.set_name(std::string(block_name + io_input_port_name_postfix)); 
-        benchmark_io_port.set_width(1);
-        print_verilog_comment(fp, std::string("----- Blif Benchmark input " + block_name + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
-        print_verilog_wire_connection(fp, module_mapped_io_port, benchmark_io_port, false);
-      } else {
-        VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
-        benchmark_io_port.set_name(std::string(block_name + io_output_port_name_postfix)); 
-        benchmark_io_port.set_width(1);
-        print_verilog_comment(fp, std::string("----- Blif Benchmark output " + block_name + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
-        print_verilog_wire_connection(fp, benchmark_io_port, module_mapped_io_port, false);
+      /* If the port is an GPIO port, just use it */
+      if (ModuleManager::MODULE_GPIO_PORT == module_manager.port_type(top_module, module_io_port_id)) {
+        mapped_module_io_info = std::make_pair(module_io_port_id, temp_io_index);
+        break;
       }
 
-      /* Mark this I/O has been used/wired */
-      io_used[io_index] = true;
+      /* If this is an INPAD, we can use an GPIN port (if available) */
+      if (atom_block_type_to_module_port_type[atom_ctx.nlist.block_type(atom_blk)] == module_manager.port_type(top_module, module_io_port_id)) {
+        mapped_module_io_info = std::make_pair(module_io_port_id, temp_io_index);
+        break;
+      }
     }
+
+    /* We must find a valid one */
+    VTR_ASSERT(true == module_manager.valid_module_port_id(top_module, mapped_module_io_info.first));
+    VTR_ASSERT(size_t(-1) != mapped_module_io_info.second);
+
+    /* Ensure that IO index is in range */
+    BasicPort module_mapped_io_port = module_manager.module_port(top_module, mapped_module_io_info.first); 
+    size_t io_index = mapped_module_io_info.second;
+
+    /* Set the port pin index */ 
+    VTR_ASSERT(io_index < module_mapped_io_port.get_width());
+    module_mapped_io_port.set_width(io_index, io_index);
+
+    /* The block may be renamed as it contains special characters which violate Verilog syntax */
+    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+      block_name = netlist_annotation.block_name(atom_blk);
+    } 
+
+    /* Create the port for benchmark I/O, due to BLIF benchmark, each I/O always has a size of 1 
+     * In addition, the input and output ports may have different postfix in naming
+     * due to verification context! Here, we give full customization on naming 
+     */
+    BasicPort benchmark_io_port;
+    if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
+      benchmark_io_port.set_name(std::string(block_name + io_input_port_name_postfix)); 
+      benchmark_io_port.set_width(1);
+      print_verilog_comment(fp, std::string("----- Blif Benchmark input " + block_name + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
+      print_verilog_wire_connection(fp, module_mapped_io_port, benchmark_io_port, false);
+    } else {
+      VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
+      benchmark_io_port.set_name(std::string(block_name + io_output_port_name_postfix)); 
+      benchmark_io_port.set_width(1);
+      print_verilog_comment(fp, std::string("----- Blif Benchmark output " + block_name + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
+      print_verilog_wire_connection(fp, benchmark_io_port, module_mapped_io_port, false);
+    }
+
+    /* Mark this I/O has been used/wired */
+    io_used[mapped_module_io_info.first][io_index] = true;
 
     /* Add an empty line as a splitter */
     fp << std::endl;
+  }
 
-    /* Wire the unused iopads to a constant */
-    print_verilog_comment(fp, std::string("----- Wire unused FPGA I/Os to constants -----"));
-    for (size_t io_index = 0; io_index < io_used.size(); ++io_index) {
+  /* Wire the unused iopads to a constant */
+  print_verilog_comment(fp, std::string("----- Wire unused FPGA I/Os to constants -----"));
+  for (const ModulePortId& module_io_port_id : module_io_ports) {
+    for (size_t io_index = 0; io_index < io_used[module_io_port_id].size(); ++io_index) {
       /* Bypass used iopads */
-      if (true == io_used[io_index]) {
+      if (true == io_used[module_io_port_id][io_index]) {
         continue;
       }
 
       /* Wire to a contant */
-      BasicPort module_unused_io_port = module_io_port; 
+      BasicPort module_unused_io_port = module_manager.module_port(top_module, module_io_port_id);
       /* Set the port pin index */ 
       module_unused_io_port.set_width(io_index, io_index);
 
@@ -676,6 +732,157 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
 
   /* Add an empty line as splitter */
   fp << std::endl;
+}
+
+/********************************************************************
+ * Print signal initialization which
+ * deposit initial values for the input ports of primitive circuit models
+ * This function recusively walk through from the parent_module
+ * until reaching a primitive module that matches the circuit_model name
+ * The hierarchy walkthrough collects the full paths for the primitive modules
+ * in the graph of modules
+ *******************************************************************/
+static 
+void rec_print_verilog_testbench_primitive_module_signal_initialization(std::fstream& fp,
+                                                                        const std::string& hie_path,
+                                                                        const CircuitLibrary& circuit_lib,
+                                                                        const CircuitModelId& circuit_model,
+                                                                        const std::vector<CircuitPortId>& circuit_input_ports,
+                                                                        const ModuleManager& module_manager,
+                                                                        const ModuleId& parent_module,
+                                                                        const ModuleId& primitive_module) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  /* Return if the current module has no children */
+  if (0 == module_manager.child_modules(parent_module).size()) {
+    return;
+  }
+
+  /* Go through child modules */
+  for (const ModuleId& child_module : module_manager.child_modules(parent_module)) {
+    /* If the child module is not the primitive module, 
+     * we recursively visit the child module
+     */
+    for (const size_t& child_instance : module_manager.child_module_instances(parent_module, child_module)) {
+      std::string instance_name = module_manager.instance_name(parent_module, child_module, child_instance);
+      /* Use default instanec name if not assigned */
+      if (true == instance_name.empty()) {
+        instance_name = generate_instance_name(module_manager.module_name(child_module), child_instance);
+      }
+   
+      std::string child_hie_path = hie_path + "." + instance_name;
+
+      if (child_module != primitive_module) {
+        rec_print_verilog_testbench_primitive_module_signal_initialization(fp,
+                                                                           child_hie_path,
+                                                                           circuit_lib, circuit_model, circuit_input_ports,
+                                                                           module_manager, child_module,
+                                                                           primitive_module);
+      } else {
+        /* If the child module is the primitive module, 
+         * we output the signal initialization codes for the input ports
+         */
+        VTR_ASSERT_SAFE(child_module == primitive_module);
+
+        print_verilog_comment(fp, std::string("------ BEGIN driver initialization -----"));
+        fp << "\tinitial begin" << std::endl;
+        fp << "\t`ifdef " << VERILOG_FORMAL_VERIFICATION_PREPROC_FLAG << std::endl;
+
+        for (const auto& input_port : circuit_input_ports) {
+          /* Only for formal verification: deposite a zero signal values */
+          /* Initialize each input port */
+          BasicPort input_port_info(circuit_lib.port_lib_name(input_port), circuit_lib.port_size(input_port));
+          fp << "\t\t$deposit(";
+          fp << child_hie_path << ".";
+          fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info);
+          fp << ", " <<  circuit_lib.port_size(input_port) << "'b" << std::string(circuit_lib.port_size(input_port), '0');
+          fp << ");" << std::endl;
+        }
+        fp << "\t`else" << std::endl;
+
+        /* Regular case: deposite initial signal values: a random value */
+        for (const auto& input_port : circuit_input_ports) {
+          BasicPort input_port_info(circuit_lib.port_lib_name(input_port), circuit_lib.port_size(input_port));
+          fp << "\t\t$deposit(";
+          fp << child_hie_path << ".";
+          fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info);
+          fp << ", $random % 2 ? 1'b1 : 1'b0);" << std::endl;
+        }
+
+        fp << "\t`endif\n" << std::endl;
+        fp << "\tend" << std::endl;
+        print_verilog_comment(fp, std::string("------ END driver initialization -----"));
+      }
+    }
+  }
+}
+
+/********************************************************************
+ * Print signal initialization for Verilog testbenches
+ * which aim to deposit initial values for the input ports of primitive circuit models:
+ * - Passgate
+ * - Logic gates (ONLY for MUX2)
+ *******************************************************************/
+void print_verilog_testbench_signal_initialization(std::fstream& fp,
+                                                   const std::string& top_instance_name,
+                                                   const CircuitLibrary& circuit_lib,
+                                                   const ModuleManager& module_manager,
+                                                   const ModuleId& top_module) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  /* Collect circuit models that need signal initialization */
+  std::vector<CircuitModelId> signal_init_circuit_models;
+
+  /* Collect the input ports that require signal initialization */
+  std::map<CircuitModelId, std::vector<CircuitPortId>> signal_init_circuit_ports;
+
+  for (const CircuitModelId& model : circuit_lib.models_by_type(CIRCUIT_MODEL_PASSGATE)) {
+    signal_init_circuit_models.push_back(model);
+    /* Only 1 input requires signal initialization,
+     * which is the first port, i.e., the datapath inputs
+     */
+    std::vector<CircuitPortId> input_ports = circuit_lib.model_input_ports(model);
+    VTR_ASSERT(0 < input_ports.size());
+    signal_init_circuit_ports[model].push_back(input_ports[0]); 
+  }
+
+  for (const CircuitModelId& model : circuit_lib.models_by_type(CIRCUIT_MODEL_GATE)) {
+    if (CIRCUIT_MODEL_GATE_MUX2 == circuit_lib.gate_type(model)) {
+      signal_init_circuit_models.push_back(model);
+      /* Only 2 input requires signal initialization,
+       * which is the first two port, i.e., the datapath inputs
+       */
+      std::vector<CircuitPortId> input_ports = circuit_lib.model_input_ports(model);
+      VTR_ASSERT(1 < input_ports.size());
+      signal_init_circuit_ports[model].push_back(input_ports[0]); 
+      signal_init_circuit_ports[model].push_back(input_ports[1]); 
+    }
+  }
+
+  /* If there is no circuit model in the list, return directly */
+  if (signal_init_circuit_models.empty()) {
+    return;
+  }
+
+  /* Add signal initialization Verilog codes */
+  fp << std::endl;
+  fp << "`ifdef " << VERILOG_SIGNAL_INIT_PREPROC_FLAG << std::endl;
+  for (const CircuitModelId& signal_init_circuit_model : signal_init_circuit_models) {
+    /* Find the module id corresponding to the circuit model from module graph */
+    ModuleId primitive_module = module_manager.find_module(circuit_lib.model_name(signal_init_circuit_model));
+    VTR_ASSERT(true == module_manager.valid_module_id(primitive_module));
+
+    /* Find all the instances created by the circuit model across the fabric*/
+    rec_print_verilog_testbench_primitive_module_signal_initialization(fp,
+                                                                       top_instance_name,
+                                                                       circuit_lib, signal_init_circuit_model, signal_init_circuit_ports.at(signal_init_circuit_model),
+                                                                       module_manager, top_module,
+                                                                       primitive_module);
+  }
+
+  fp << "`endif" << std::endl;
 }
 
 } /* end namespace openfpga */

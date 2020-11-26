@@ -107,29 +107,38 @@ void print_verilog_simulation_info(const std::string& ini_fname,
      * For unused ports, by default we assume it is configured as inputs
      * TODO: this should be reworked to be consistent with bitstream
      */
-    std::string io_direction(total_gpio_width, '1');
-    for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
-      /* Bypass non-I/O atom blocks ! */
-      if ( (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk))
-        && (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) ) {
-        continue;
-      }
+    for (const BasicPort& module_io_port : module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GPIO_PORT)) {
+      std::string io_direction(module_io_port.get_width(), '1');
+      for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+        /* Bypass non-I/O atom blocks ! */
+        if ( (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk))
+          && (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) ) {
+          continue;
+        }
 
-      /* Find the index of the mapped GPIO in top-level FPGA fabric */
-      size_t io_index = io_location_map.io_index(place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
-                                                 place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
-                                                 place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.z);
+        /* Find the index of the mapped GPIO in top-level FPGA fabric */
+        size_t io_index = io_location_map.io_index(place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
+                                                   place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
+                                                   place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.z,
+                                                   module_io_port.get_name());
 
-      if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
-        io_direction[io_index] = '1';
-      } else {
-        VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
-        io_direction[io_index] = '0';
+        if (size_t(-1) == io_index) {
+          continue;
+        }
+
+        if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
+          io_direction[io_index] = '1';
+        } else {
+          VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
+          io_direction[io_index] = '0';
+        }
+   
+        std::string io_tag = "IO" + module_io_port.get_name();
+    
+        /* Organize the vector to string */   
+        ini["SIMULATION_DECK"][io_tag] = io_direction;
       }
     }
-    
-    /* Organize the vector to string */   
-    ini["SIMULATION_DECK"]["IO"] = io_direction;
   }
 
   mINI::INIFile file(ini_fname);

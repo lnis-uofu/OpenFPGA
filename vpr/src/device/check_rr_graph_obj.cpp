@@ -70,7 +70,7 @@ static bool check_rr_graph_dangling_nodes(const RRGraph& rr_graph) {
         if ((0 == rr_graph.node_fan_in(node))
             && (0 == rr_graph.node_fan_out(node))) {
             /* Print a warning! */
-            VTR_LOG_WARN("Node %s is dangling (zero fan-in and zero fan-out)!\n",
+            VTR_LOG_WARN("Node %d is dangling (zero fan-in and zero fan-out)!\n",
                          node);
             VTR_LOG_WARN("Node details for debugging:\n");
             rr_graph.print_node(node);
