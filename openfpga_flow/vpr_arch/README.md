@@ -1,7 +1,9 @@
 # Naming convention for VPR architecture files
 Please reveal the following architecture features in the names to help quickly spot architecture files.
 
-- k<lut\_size>\_<frac>: Look-Up Table (LUT) size of FPGA. If you have fracturable LUTs or multiple LUT circuits, this should be largest input size. The keyword 'frac' is to specify if fracturable LUT is used or not.
+- k<lut\_size>\_<frac><Native>: Look-Up Table (LUT) size of FPGA. If you have fracturable LUTs or multiple LUT circuits, this should be largest input size. 
+  * The keyword 'frac' is to specify if fracturable LUT is used or not.
+  * The keyword 'Native' is to specify if fracturable LUT design is a native one (without mode switch) or a standard one (with mode switch).
 - N<le\_size>: Number of logic elements for a CLB. If you have multiple CLB architectures, this should be largest number.
 - tileable: If the routing architecture is tileable or not.
 - adder\_chain: If hard adder/carry chain is used inside CLBs
