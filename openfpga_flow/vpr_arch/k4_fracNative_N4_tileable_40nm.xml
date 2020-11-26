@@ -301,10 +301,10 @@
         </mode>
         <!-- Physical mode definition end (physical implementation of the fle) -->
         <!-- 3-LUT + LUT4 with shared inputs mode definition begin -->
-        <mode name="shared_lut4_lut3">
-          <pb_type name="ble4" num_pb="1">
-            <input name="in" num_pins="4"/>
-            <output name="out" num_pins="2"/>
+        <mode name="shared_lut3_lut4">
+          <pb_type name="ble3" num_pb="1">
+            <input name="in" num_pins="3"/>
+            <output name="out" num_pins="1"/>
             <clock name="clk" num_pins="1"/>
             <!-- Define LUT3 -->
             <pb_type name="lut3" blif_model=".names" num_pb="1" class="lut">
@@ -317,6 +317,32 @@
                 235e-12
               </delay_matrix>
             </pb_type>
+            <!-- Define the flip-flop -->
+            <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
+              <input name="D" num_pins="1" port_class="D"/>
+              <output name="Q" num_pins="1" port_class="Q"/>
+              <clock name="clk" num_pins="1" port_class="clock"/>
+              <T_setup value="66e-12" port="ff.D" clock="clk"/>
+              <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+           </pb_type>
+           <interconnect>
+             <direct name="direct1" input="ble3.in[2:0]" output="lut3[0:0].in[2:0]"/>
+             <direct name="direct2" input="lut3[0:0].out" output="ff[0:0].D">
+               <!-- Advanced user option that tells CAD tool to find LUT+FF pairs in netlist -->
+               <pack_pattern name="ble3" in_port="lut3[0:0].out" out_port="ff[0:0].D"/>
+             </direct>
+             <direct name="direct3" input="ble3.clk" output="ff[0:0].clk"/>
+             <mux name="mux1" input="ff[0:0].Q lut3.out[0:0]" output="ble3.out[0:0]">
+               <!-- LUT to output is faster than FF to output on a Stratix IV -->
+               <delay_constant max="25e-12" in_port="lut3.out[0:0]" out_port="ble3.out[0:0]"/>
+               <delay_constant max="45e-12" in_port="ff[0:0].Q" out_port="ble3.out[0:0]"/>
+             </mux>
+           </interconnect>
+          </pb_type>
+          <pb_type name="ble4" num_pb="1">
+            <input name="in" num_pins="4"/>
+            <output name="out" num_pins="1"/>
+            <clock name="clk" num_pins="1"/>
             <!-- Define LUT4 -->
             <pb_type name="lut4" blif_model=".names" num_pb="1" class="lut">
               <input name="in" num_pins="4" port_class="lut_in"/>
@@ -330,7 +356,7 @@
               </delay_matrix>
             </pb_type>
             <!-- Define the flip-flop -->
-            <pb_type name="ff" blif_model=".latch" num_pb="2" class="flipflop">
+            <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
               <input name="D" num_pins="1" port_class="D"/>
               <output name="Q" num_pins="1" port_class="Q"/>
               <clock name="clk" num_pins="1" port_class="clock"/>
@@ -338,33 +364,26 @@
               <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
            </pb_type>
            <interconnect>
-             <direct name="direct1" input="ble4.in[2:0]" output="lut3[0:0].in[2:0]"/>
-             <direct name="direct2" input="ble4.in[3:0]" output="lut4[0:0].in[3:0]"/>
-             <direct name="direct3" input="lut3[0:0].out" output="ff[0:0].D">
+             <direct name="direct1" input="ble4.in[3:0]" output="lut4[0:0].in[3:0]"/>
+             <direct name="direct2" input="lut4[0:0].out" output="ff[0:0].D">
                <!-- Advanced user option that tells CAD tool to find LUT+FF pairs in netlist -->
-               <pack_pattern name="ble3" in_port="lut3[0:0].out" out_port="ff[0:0].D"/>
+               <pack_pattern name="ble4" in_port="lut4[0:0].out" out_port="ff[0:0].D"/>
              </direct>
-             <direct name="direct4" input="lut4[0:0].out" output="ff[1:1].D">
-               <!-- Advanced user option that tells CAD tool to find LUT+FF pairs in netlist -->
-               <pack_pattern name="ble3" in_port="lut4[0:0].out" out_port="ff[1:1].D"/>
-             </direct>
-             <direct name="direct5" input="ble4.clk" output="ff[0:0].clk"/>
-             <mux name="mux1" input="ff[0:0].Q lut3.out[0:0]" output="ble4.out[0:0]">
+             <direct name="direct3" input="ble4.clk" output="ff[0:0].clk"/>
+             <mux name="mux1" input="ff[0:0].Q lut4.out[0:0]" output="ble4.out[0:0]">
                <!-- LUT to output is faster than FF to output on a Stratix IV -->
-               <delay_constant max="25e-12" in_port="lut3.out[0:0]" out_port="ble4.out[0:0]"/>
+               <delay_constant max="25e-12" in_port="lut4.out[0:0]" out_port="ble4.out[0:0]"/>
                <delay_constant max="45e-12" in_port="ff[0:0].Q" out_port="ble4.out[0:0]"/>
-             </mux>
-             <mux name="mux2" input="ff[1:1].Q lut4.out[0:0]" output="ble4.out[1:1]">
-               <!-- LUT to output is faster than FF to output on a Stratix IV -->
-               <delay_constant max="25e-12" in_port="lut4.out[0:0]" out_port="ble4.out[1:1]"/>
-               <delay_constant max="45e-12" in_port="ff[1:1].Q" out_port="ble4.out[1:1]"/>
              </mux>
            </interconnect>
           </pb_type>
           <interconnect>
-            <direct name="direct1" input="fle.in[3:0]" output="ble4.in"/>
-            <direct name="direct2" input="ble4.out" output="fle.out"/>
-            <direct name="direct3" input="fle.clk" output="ble4.clk"/>
+            <direct name="direct1" input="fle.in[2:0]" output="ble3.in"/>
+            <direct name="direct2" input="fle.in[3:0]" output="ble4.in"/>
+            <direct name="direct3" input="ble3.out" output="fle.out[0:0]"/>
+            <direct name="direct4" input="ble4.out" output="fle.out[1:1]"/>
+            <direct name="direct5" input="fle.clk" output="ble3.clk"/>
+            <direct name="direct6" input="fle.clk" output="ble4.clk"/>
           </interconnect>
         </mode>
         <!-- Dual 3-LUT mode definition end -->

@@ -199,17 +199,46 @@
     <pb_type name="clb.fle[physical].fabric.frac_logic.frac_lut4" circuit_model_name="frac_lut4"/>
     <pb_type name="clb.fle[physical].fabric.ff" circuit_model_name="DFFSRQ"/>
     <!-- Binding operating pb_type to physical pb_type -->
-    <pb_type name="clb.fle[shared_lut3_lut4].ble4.lut3" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut4">
+    <!-- BLE3 LUT uses the frac_LUT4 of physical mode: 
+         Index in CLB of BLE3 LUT  -> Index in CLB of physical mode LUT
+         LUT[0]                    -> LUT[0]
+         LUT[1]                    -> LUT[1]
+         LUT[2]                    -> LUT[2]
+         ... 
+      -->
+    <pb_type name="clb.fle[shared_lut3_lut4].ble3.lut3" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut4">
       <!-- Binding the lut3 to the first 3 inputs of fracturable lut4 -->
       <port name="in" physical_mode_port="in[0:2]"/>
       <port name="out" physical_mode_port="lut3_out[0:0]"/>
     </pb_type>
-    <pb_type name="clb.fle[shared_lut4_lut4].ble4.lut4" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut4">
+    <!-- BLE4 LUT uses the frac_LUT4 of physical mode: 
+         Index in CLB of BLE4 LUT  -> Index in CLB of physical mode LUT
+         LUT[0]                    -> LUT[0]
+         LUT[1]                    -> LUT[1]
+         LUT[2]                    -> LUT[2]
+         ... 
+      -->
+    <pb_type name="clb.fle[shared_lut3_lut4].ble4.lut4" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut4">
       <!-- Binding the lut4 to the first 4 inputs of fracturable lut4 -->
       <port name="in" physical_mode_port="in[0:3]"/>
       <port name="out" physical_mode_port="lut4_out"/>
     </pb_type>
-    <pb_type name="clb.fle[shared_lut3_lut4].ble4.ff" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
+    <!-- BLE3 FF uses the first FF of physical mode: 
+         Index in CLB of BLE3 FF  -> Index in CLB of physical mode FFs
+         FF[0]                    -> FF[0]
+         FF[1]                    -> FF[2]
+         FF[2]                    -> FF[4]
+         ... 
+      -->
+    <pb_type name="clb.fle[shared_lut3_lut4].ble3.ff" physical_pb_type_name="clb.fle[physical].fabric.ff" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
+    <!-- BLE3 FF uses the second FF of physical mode: 
+         Index in CLB of BLE3 FF  -> Index in CLB of physical mode FFs
+         FF[0]                    -> FF[1]
+         FF[1]                    -> FF[3]
+         FF[2]                    -> FF[5]
+         ... 
+      -->
+    <pb_type name="clb.fle[shared_lut3_lut4].ble4.ff" physical_pb_type_name="clb.fle[physical].fabric.ff" physical_pb_type_index_factor="2" physical_pb_type_index_offset="1"/>
     <!-- End physical pb_type binding in complex block IO -->
   </pb_type_annotations>
 </openfpga_architecture>
