@@ -73,7 +73,8 @@ void build_lut_module(ModuleManager& module_manager,
     VTR_ASSERT (1 == lut_input_ports.size());
     VTR_ASSERT (1 <= lut_output_ports.size());
     VTR_ASSERT (1 == lut_regular_sram_ports.size()); 
-    VTR_ASSERT (1 == lut_mode_select_sram_ports.size()); 
+    VTR_ASSERT ( (0 == lut_mode_select_sram_ports.size()) 
+              || (1 == lut_mode_select_sram_ports.size())); 
   }
 
   /*********************************************** 
@@ -268,7 +269,8 @@ void build_lut_module(ModuleManager& module_manager,
   }
 
   /* Sanitity check */
-  if ( true == circuit_lib.is_lut_fracturable(lut_model) ) {
+  if ( (true == circuit_lib.is_lut_fracturable(lut_model))
+    && (false == lut_mode_select_sram_ports.empty()) ) {
     if (mode_select_port_lsb != circuit_lib.port_size(lut_mode_select_sram_ports[0])) {
       VTR_LOGF_ERROR(__FILE__, __LINE__,
                      "Circuit model '%s' has a unmatched tri-state map '%s' implied by mode_port size='%d'!\n",
