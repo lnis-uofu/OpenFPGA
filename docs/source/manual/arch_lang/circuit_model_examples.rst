@@ -724,7 +724,15 @@ Template
 
   - ``circuit_model_name="<string>"`` Specify the ``circuit_model`` that will be used to build these buffers
 
-  - ``location_map="[1|-]"`` Customize the location of buffers in intermediate stages. Users can define an integer array consisting of '1' and '-'. For example, ``-1-1-`` indicates buffer inseration to every two stages of the LUT multiplexer tree, considering a 6-input LUT. 
+  - ``location_map="[1|-]"`` Customize the location of buffers in intermediate stages. Users can define an integer array consisting of '1' and '-'. Take the example in :numref:`fig_lut_intermediate_buffer_example`, ``-1-`` indicates buffer inseration to the second stage of the LUT multiplexer tree, considering a 3-input LUT. 
+
+.. _fig_lut_intermediate_buffer_example:
+
+.. figure:: ./figures/lut_intermediate_buffer_example.svg
+   :scale: 80%
+   :alt: detailed lut composition
+
+   An example of adding intermediate buffers to a 3-input Look-Up Table (LUT).
 
 .. note:: For a LUT, three types of ports (``input``, ``output`` and ``sram``) should be defined. If the user provides an customized Verilog/SPICE netlist, the bandwidth of ports should be defined to the same as the Verilog/SPICE netlist. To support customizable LUTs, each type of port contain special keywords. 
 
@@ -757,40 +765,89 @@ Template
 Single-Output LUT
 `````````````````
 
-:numref:`fig_lut` illustrates an example of LUT modeling, which consists of input/output buffers and a transmission-gate-based tree structure.
+:numref:`fig_single_lut3_example` illustrates an example of LUT modeling, which consists of input/output buffers and a transmission-gate-based tree structure.
 
-.. _fig_lut:
+.. _fig_single_lut3_example:
 
-.. figure:: ./figures/lut.png
+.. figure:: ./figures/single_lut3_example.svg
    :scale: 80%
-   :alt: Detailed LUT composition
+   :alt: detailed lut composition
 
-   An example of a LUT with transistor-level design parameters.
+   An example of a single-output 3-input LUT.
 
 The code describing this LUT is:
 
 .. code-block:: xml
 
-  <circuit_model type="lut" name="lut6" prefix="lut6">
+  <circuit_model type="lut" name="lut3" prefix="lut3">
     <input_buffer exist="on" circuit_model="inv1x"/>
     <output_buffer exist="on" circuit_model_name="inv1x"/>
     <lut_input_buffer exist="on" circuit_model_name="buf2"/>
     <lut_input_inverter exist="on" circuit_model_name="inv1x"/>
     <pass_gate_logic circuit_model_name="tgate"/>
-    <port type="input" prefix="in" size="6"/>
+    <port type="input" prefix="in" size="3"/>
     <port type="output" prefix="out" size="1"/>
-    <port type="sram" prefix="sram" size="64"/>
+    <port type="sram" prefix="sram" size="8"/>
   </circuit_model>
 
 This example shows:
-  - A 6-input LUT which is configurable by 64 SRAM cells.
-  - The multiplexer inside LUT will be built with transmission gate using circuuit model ``inv1x``
+  - A 3-input LUT which is configurable by 8 SRAM cells.
+  - The multiplexer inside LUT will be built with transmission gate using circuit model ``inv1x``
   - There are no internal buffered inserted to any intermediate stage of a LUT
 
 .. _circuit_model_frac_lut_example:
 
-Fracturable LUT
-```````````````
+Standard Fracturable LUT
+`````````````````````````
+
+:numref:`fig_frac_lut3_example` illustrates a typical example of 3-input fracturable LUT modeling, which consists of input/output buffers and a transmission-gate-based tree structure.
+
+.. _fig_frac_lut3_example:
+
+.. figure:: ./figures/frac_lut3_example.svg
+   :scale: 80%
+   :alt: detailed lut composition
+
+   An example of a fracturable 3-input LUT.
+
+The code describing this LUT is:
+
+.. code-block:: xml
+
+  <circuit_model type="lut" name="frac_lut3" prefix="frac_lut3" dump_structural_verilog="true">
+    <design_technology type="cmos" fracturable_lut="true"/>
+    <input_buffer exist="true" circuit_model_name="inv1x"/>
+    <output_buffer exist="true" circuit_model_name="inv1x"/>
+    <lut_input_inverter exist="true" circuit_model_name="inv1x"/>
+    <lut_input_buffer exist="true" circuit_model_name="buf4"/>
+    <pass_gate_logic circuit_model_name="tgate"/>
+    <port type="input" prefix="in" size="3" tri_state_map="--1" circuit_model_name="OR2"/>
+    <port type="output" prefix="lut2_out" size="1" lut_frac_level="3" lut_output_mask="0"/>
+    <port type="output" prefix="lut3_out" size="1" lut_output_mask="0"/>
+    <port type="sram" prefix="sram" size="8"/>
+    <port type="sram" prefix="mode" size="1" mode_select="true" circuit_model_name="ccff" default_val="1"/>
+  </circuit_model>
+
+This example shows:
+  - Fracturable 3-input LUT which is configurable by 9 SRAM cells.
+  - There is a SRAM cell to switch the operating mode of this LUT, configured by a configuration-chain flip-flop ``ccff``
+  - The last input ``in[2]`` of LUT will be tri-stated in dual-LUT2 mode.
+  - An 2-input OR gate will be wired to the last input ``in[2]`` to tri-state the input. The mode-select SRAM will be wired to an input of the OR gate. 
+    It means that when the mode-selection bit is '1', the LUT will operate in dual-LUT5 mode.
+  - There will be two outputs wired to the 5th stage of routing multiplexer (the outputs of dual 5-input LUTs) 
+  - By default, the mode-selection configuration bit will be '1', indicating that by default the LUT will operate in dual-LUT2 mode.
+
+:numref:`fig_std_frac_lut` illustrates the detailed schematic of a standard fracturable 6-input LUT, where the 5th and 6th inputs can be pull up/down to a fixed logic value to enable LUT4 and LUT5 outputs.
+
+.. _fig_std_frac_lut:
+
+.. figure:: ./figures/std_frac_lut.svg
+   :scale: 80%
+   :alt: detailed lut composition
+
+   Detailed schematic of a standard fracturable 6-input LUT.
+
+The code describing this LUT is:
 
 .. code-block:: xml
 
@@ -800,24 +857,60 @@ Fracturable LUT
     <output_buffer exist="true" circuit_model_name="inv1x"/>
     <lut_input_inverter exist="true" circuit_model_name="inv1x"/>
     <lut_input_buffer exist="true" circuit_model_name="buf4"/>
-    <lut_intermediate_buffer exist="true" circuit_model_name="buf4" location_map="-1-1-"/>
     <pass_gate_logic circuit_model_name="tgate"/>
-    <port type="input" prefix="in" size="6" tri_state_map="-----1" circuit_model_name="OR2"/>
+    <port type="input" prefix="in" size="6" tri_state_map="----11" circuit_model_name="OR2"/>
+    <port type="output" prefix="lut4_out" size="2" lut_frac_level="4" lut_output_mask="0,2"/>
     <port type="output" prefix="lut5_out" size="2" lut_frac_level="5" lut_output_mask="0,1"/>
     <port type="output" prefix="lut6_out" size="1" lut_output_mask="0"/>
     <port type="sram" prefix="sram" size="64"/>
-    <port type="sram" prefix="mode" size="1" mode_select="true" circuit_model_name="ccff" default_val="1"/>
+    <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="ccff" default_val="1"/>
   </circuit_model>
 
 This example shows:
-  - Fracturable 6-input LUT which is configurable by 65 SRAM cells.
-  - Intermedate buffers are added to every two stages of the internal multiplexer
-  - There is a SRAM cell to switch the operating mode of this LUT, configured by a configuration-chain flip-flop ``ccff``
-  - The last input ``in[5]`` of LUT will be tri-stated in dual-LUT5 mode.
-  - An 2-input OR gate will be wired to the last input ``in[5]`` to tri-state the input. The mode-select SRAM will be wired to an input of the OR gate. 
-    It means that when the mode-selection bit is '1', the LUT will operate in dual-LUT5 mode.
+  - Fracturable 6-input LUT which is configurable by 66 SRAM cells.
+  - There are two SRAM cells to switch the operating mode of this LUT, configured by two configuration-chain flip-flops ``ccff``
+  - The inputs ``in[4]`` and ``in[5]`` of LUT will be tri-stated in dual-LUT4 and dual-LUT5 modes respectively.
+  - An 2-input OR gate will be wired to the inputs ``in[4]`` and ``in[5]`` to tri-state them. The mode-select SRAM will be wired to an input of the OR gate. 
+  - There will be two outputs wired to the 4th stage of routing multiplexer (the outputs of dual 4-input LUTs) 
   - There will be two outputs wired to the 5th stage of routing multiplexer (the outputs of dual 5-input LUTs) 
-  - By default, the mode-selection configuration bit will be '1', indicating that by default the LUT will operate in dual-LUT5 mode.
+  - By default, the mode-selection configuration bit will be '11', indicating that by default the LUT will operate in dual-LUT4 mode.
+
+Native Fracturable LUT
+``````````````````````
+
+:numref:`fig_native_frac_lut` illustrates the detailed schematic of a native fracturable 6-input LUT, where LUT4, LUT5 and LUT6 outputs are always active and there are no tri-state buffers.
+
+.. _fig_native_frac_lut:
+
+.. figure:: ./figures/native_frac_lut.svg
+   :scale: 80%
+   :alt: detailed lut composition
+
+   Detailed schematic of a native fracturable 6-input LUT.
+
+The code describing this LUT is:
+
+.. code-block:: xml
+
+  <circuit_model type="lut" name="frac_lut6" prefix="frac_lut6" dump_structural_verilog="true">
+    <design_technology type="cmos" fracturable_lut="true"/>
+    <input_buffer exist="true" circuit_model_name="inv1x"/>
+    <output_buffer exist="true" circuit_model_name="inv1x"/>
+    <lut_input_inverter exist="true" circuit_model_name="inv1x"/>
+    <lut_input_buffer exist="true" circuit_model_name="buf4"/>
+    <pass_gate_logic circuit_model_name="tgate"/>
+    <port type="input" prefix="in" size="6"/>
+    <port type="output" prefix="lut4_out" size="2" lut_frac_level="4" lut_output_mask="0,2"/>
+    <port type="output" prefix="lut5_out" size="2" lut_frac_level="5" lut_output_mask="0,1"/>
+    <port type="output" prefix="lut6_out" size="1" lut_output_mask="0"/>
+    <port type="sram" prefix="sram" size="64"/>
+  </circuit_model>
+
+This example shows:
+  - Fracturable 6-input LUT which is configurable by 64 SRAM cells.
+  - There will be two outputs wired to the 4th stage of routing multiplexer (the outputs of dual 4-input LUTs) 
+  - There will be two outputs wired to the 5th stage of routing multiplexer (the outputs of dual 5-input LUTs) 
+
 
 Flip-Flops
 ~~~~~~~~~~
