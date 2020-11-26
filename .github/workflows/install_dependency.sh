@@ -46,3 +46,5 @@ sudo apt-get install g++-9
 sudo apt-get install gcc-9
 sudo apt-get install clang-6.0
 sudo apt-get install clang-8
+# Python dependencies
+python3 -m pip install requirements.txt
