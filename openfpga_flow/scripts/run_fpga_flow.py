@@ -14,9 +14,11 @@ import time
 from datetime import timedelta
 import shlex
 import glob
+import json
 import argparse
 from configparser import ConfigParser, ExtendedInterpolation
 import logging
+from envyaml import EnvYAML
 import glob
 import subprocess
 import threading
@@ -84,6 +86,8 @@ parser.add_argument('--run_dir', type=str,
 parser.add_argument('--openfpga_shell_template', type=str,
                     help="Sample openfpga shell script")
 parser.add_argument('--openfpga_arch_file', type=str,
+                    help="Openfpga architecture file for shell")
+parser.add_argument('--arch_variable_file', type=str, default=None,
                     help="Openfpga architecture file for shell")
 # parser.add_argument('--openfpga_sim_setting_file', type=str,
 #                     help="Openfpga simulation file for shell")
@@ -312,6 +316,15 @@ def read_script_config():
     if not "CAD_TOOLS_PATH" in config.sections():
         clean_up_and_exit("Missing CAD_TOOLS_PATH in openfpga_flow config")
     cad_tools = config["CAD_TOOLS_PATH"]
+
+    if args.arch_variable_file:
+        _, file_extension = os.path.splitext(args.arch_variable_file)
+        if file_extension in [".yml", ".yaml"]:
+            script_env_vars["PATH"].update(
+                EnvYAML(args.arch_variable_file, include_environment=False))
+        if file_extension in [".json", ]:
+            with open(args.arch_variable_file, "r") as fp:
+                script_env_vars["PATH"].update(json.load(fp))
 
 
 def validate_command_line_arguments():
