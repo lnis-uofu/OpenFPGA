@@ -1,6 +1,5 @@
 # Getting Started with OpenFPGA <img src="./docs/source/overview/figures/OpenFPGA_logo.png" width="200" align="right">
-![Github Actions Status](https://github.com/LNIS-Projects/OpenFPGA/workflows/OpenFPGA%20Tests/badge.svg)
-[![Build Status](https://travis-ci.com/LNIS-Projects/OpenFPGA.svg?branch=master)](https://travis-ci.com/LNIS-Projects/OpenFPGA)
+[![linux build](https://github.com/LNIS-Projects/OpenFPGA/workflows/linux_build/badge.svg)](https://github.com/LNIS-Projects/OpenFPGA/actions?query=workflow%3Alinux_build)
 [![Documentation Status](https://readthedocs.org/projects/openfpga/badge/?version=master)](https://openfpga.readthedocs.io/en/master/?badge=master)
 
 ## Introduction
