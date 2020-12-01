@@ -57,3 +57,23 @@ module EMBEDDED_IO (
   assign SOC_DIR = FPGA_DIR;
 endmodule
 
+//-----------------------------------------------------
+// Function    : An embedded I/O with an protection circuit
+//               which can force the I/O in input mode
+//               The enable signal IO_ISOL_N is active-low 
+//-----------------------------------------------------
+module EMBEDDED_IO_ISOLN (
+  input SOC_IN, // Input to drive the inpad signal
+  output SOC_OUT, // Output the outpad signal
+  output SOC_DIR, // Output the directionality
+  output FPGA_IN, // Input data to FPGA
+  input FPGA_OUT, // Output data from FPGA
+  input FPGA_DIR, // direction control 
+  input IO_ISOL_N // Active-low signal to set the I/O in input mode
+);
+
+  assign FPGA_IN = IO_ISOL_N ? SOC_IN : 1'bz;
+  assign SOC_OUT = IO_ISOL_N ? FPGA_OUT : 1'bz;
+  // Direction signal is set to logic '0' when in input mode 
+  assign SOC_DIR = IO_ISOL_N ? FPGA_DIR : 1'b0;
+endmodule
