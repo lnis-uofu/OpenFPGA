@@ -105,3 +105,4 @@ python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/tile_organization/bot
 
 echo -e "Testing global port definition from tiles";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/global_tile_ports/global_tile_clock --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/global_tile_ports/global_tile_reset --debug --show_thread_logs
