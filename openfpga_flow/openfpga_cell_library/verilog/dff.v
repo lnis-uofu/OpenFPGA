@@ -335,6 +335,37 @@ endmodule //End Of Module
 //-----------------------------------------------------
 // Function    : D-type flip-flop with 
 //               - asynchronous active high reset
+//               - scan-chain input
+//               - a scan-chain enable 
+//-----------------------------------------------------
+module SDFFRQ (
+  input RST, // Reset input
+  input CK, // Clock Input
+  input SE, // Scan-chain Enable
+  input D, // Data Input
+  input SI, // Scan-chain input
+  output Q // Q output
+);
+//------------Internal Variables--------
+reg q_reg;
+
+//-------------Code Starts Here---------
+always @ ( posedge CK or posedge RST)
+if (RST) begin
+  q_reg <= 1'b0;
+end else if (SE) begin
+  q_reg <= SI;
+end else begin
+  q_reg <= D;
+end
+
+assign Q = q_reg;
+
+endmodule //End Of Module
+
+//-----------------------------------------------------
+// Function    : D-type flip-flop with 
+//               - asynchronous active high reset
 //               - asynchronous active high set
 //               - scan-chain input
 //               - a scan-chain enable 
