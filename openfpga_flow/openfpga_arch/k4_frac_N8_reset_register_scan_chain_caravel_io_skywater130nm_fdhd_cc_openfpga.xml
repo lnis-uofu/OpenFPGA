@@ -181,7 +181,7 @@
       <port type="input" prefix="D" size="1"/>
       <port type="output" prefix="Q" size="1"/>
       <port type="clock" prefix="prog_clk" lib_name="CK" size="1" is_global="true" default_val="0" is_prog="true"/>
-      <port type="input" prefix="prog_reset" lib_name="RST" size="1" is_global="true" default_val="0" is_prog="true" is_reset="true"/> 
+      <port type="input" prefix="pReset" lib_name="RST" size="1" is_global="true" default_val="0" is_prog="true" is_reset="true"/> 
     </circuit_model>
     <circuit_model type="iopad" name="EMBEDDED_IO_ISOLN" prefix="EMBEDDED_IO_ISOLN" is_default="true" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/gpio.v">
       <design_technology type="cmos"/>
