@@ -159,9 +159,11 @@ int link_arch(OpenfpgaContext& openfpga_ctx,
    * TODO: This will be removed when openfpga flow is updated  
    */
   //openfpga_ctx.mutable_simulation_setting() = openfpga_ctx.mutable_arch().sim_setting;
-  annotate_simulation_setting(g_vpr_ctx.atom(),
-                              openfpga_ctx.net_activity(),
-                              openfpga_ctx.mutable_simulation_setting());
+  if (CMD_EXEC_FATAL_ERROR == annotate_simulation_setting(g_vpr_ctx.atom(),
+                                                          openfpga_ctx.net_activity(),
+                                                          openfpga_ctx.mutable_simulation_setting())) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
 
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;

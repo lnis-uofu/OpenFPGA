@@ -299,7 +299,7 @@ void print_verilog_timeout_and_vcd(std::fstream& fp,
                                    const std::string& vcd_fname,
                                    const std::string& simulation_start_counter_name,
                                    const std::string& error_counter_name,
-                                   const int& simulation_time) {
+                                   const float& simulation_time) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -328,7 +328,7 @@ void print_verilog_timeout_and_vcd(std::fstream& fp,
   fp << "\t$timeformat(-9, 2, \"ns\", 20);" << std::endl;
   fp << "\t$display(\"Simulation start\");" << std::endl;
   print_verilog_comment(fp, std::string("----- Can be changed by the user for his/her need -------"));
-  fp << "\t#" << simulation_time << std::endl;
+  fp << "\t#" << std::setprecision(10) << simulation_time << std::endl;
   fp << "\tif(" << error_counter_name << " == 0) begin" << std::endl;
   fp << "\t\t$display(\"Simulation Succeed\");" << std::endl;
   fp << "\tend else begin" << std::endl;
