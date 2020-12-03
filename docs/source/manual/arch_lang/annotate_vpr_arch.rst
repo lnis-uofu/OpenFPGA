@@ -60,7 +60,7 @@ Here is an example:
 .. code-block:: xml
 
   <tile_annotations>
-    <global_port name="<string>" tile_port="<string>" is_clock="<bool>" is_reset="<bool>" is_set="<bool>"/>
+    <global_port name="<string>" tile_port="<string>" is_clock="<bool>" is_reset="<bool>" is_set="<bool>" default_val="<int>"/>
   </tile_annotations>
 
 - ``name="<string>"`` is the port name to appear in the top-level FPGA fabric.
@@ -84,6 +84,8 @@ Here is an example:
 .. note:: A port can only be defined as ``clock`` or ``set`` or ``reset``.
 
 .. note:: All the global port from a physical tile port is only used in operating phase. Any ports for programmable use are not allowed!
+
+- ``default_val="<int>"`` define if the default value for the global port when initialized in testbenches. Valid values are either ``0`` or ``1``. For example, the default value of an active-high reset pin is ``0``, while an active-low reset pin is ``1``.
 
 A more illustrative example:
 

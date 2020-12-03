@@ -218,7 +218,7 @@
   </direct_connection>
   <tile_annotations>
     <global_port name="clk" tile_port="clb.clk" is_clock="true" default_val="0"/>
-    <global_port name="reset" tile_port="clb.reset" is_reset="true" default_val="1"/>
+    <global_port name="reset" tile_port="clb.reset" is_reset="true" default_val="0"/>
   </tile_annotations>
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
