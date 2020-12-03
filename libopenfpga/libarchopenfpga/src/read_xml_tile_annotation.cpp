@@ -67,7 +67,7 @@ void read_xml_tile_global_port_annotation(pugi::xml_node& xml_tile,
   tile_annotation.set_global_port_is_reset(tile_global_port_id, get_attribute(xml_tile, "is_reset", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
 
   /* Get default_value attributes */
-  tile_annotation.set_global_port_default_value(tile_global_port_id, get_attribute(xml_tile, "default_value", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(0));
+  tile_annotation.set_global_port_default_value(tile_global_port_id, get_attribute(xml_tile, "default_val", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(0));
 
   /* Ensure valid port attributes */
   if (false == tile_annotation.valid_global_port_attributes(tile_global_port_id)) {
