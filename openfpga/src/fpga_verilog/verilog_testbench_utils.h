@@ -58,7 +58,7 @@ void print_verilog_timeout_and_vcd(std::fstream& fp,
                                    const std::string& vcd_fname,
                                    const std::string& simulation_start_counter_name,
                                    const std::string& error_counter_name,
-                                   const int& simulation_time);
+                                   const float& simulation_time);
 
 BasicPort generate_verilog_testbench_clock_port(const std::vector<std::string>& clock_port_names,
                                                 const std::string& default_clock_name);
