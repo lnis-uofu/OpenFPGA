@@ -93,7 +93,7 @@ parser.add_argument('--arch_variable_file', type=str, default=None,
 #                     help="Openfpga simulation file for shell")
 # parser.add_argument('--external_fabric_key_file', type=str,
 #                     help="Key file for shell")
-parser.add_argument('--yosys_tmpl', type=str,
+parser.add_argument('--yosys_tmpl', type=str, default=None,
                     help="Alternate yosys template, generates top_module.blif")
 parser.add_argument('--disp', action="store_true",
                     help="Open display while running VPR")
@@ -487,7 +487,7 @@ def run_yosys_with_abc():
         "LUT_SIZE": lut_size,
         "OUTPUT_BLIF": args.top_module+"_yosys_out.blif",
     }
-    yosys_template = os.path.join(
+    yosys_template = args.yosys_tmpl if args.yosys_tmpl else os.path.join(
         cad_tools["misc_dir"], "ys_tmpl_yosys_vpr_flow.ys")
     tmpl = Template(open(yosys_template, encoding='utf-8').read())
     with open("yosys.ys", 'w') as archfile:
