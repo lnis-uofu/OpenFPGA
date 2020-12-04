@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns:xl="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="156.96 182.62277 710.0226 370.8663" width="710.0226" height="370.8663">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" viewBox="156.96 182.62277 710.0226 370.8663" width="710.0226" height="370.8663">
   <defs>
     <font-face font-family="Times New Roman" font-size="15" panose-1="2 2 8 3 7 5 5 2 3 4" units-per-em="1000" underline-position="-108.88672" underline-thickness="95.21484" slope="0" x-height="456.54297" cap-height="662.1094" ascent="891.1133" descent="-216.3086" font-weight="700">
       <font-face-src>
@@ -33,8 +33,8 @@
       </font-face-src>
     </font-face>
   </defs>
-  <metadata> Produced by OmniGraffle 7.18\n2020-11-26 19:31:38 +0000</metadata>
-  <g id="std_frac_lut" fill="none" stroke="none" stroke-opacity="1" stroke-dasharray="none" fill-opacity="1">
+  <metadata> Produced by OmniGraffle 7.18\n2020-12-04 21:35:09 +0000</metadata>
+  <g id="std_frac_lut" stroke-dasharray="none" stroke="none" fill="none" fill-opacity="1" stroke-opacity="1">
     <title>std_frac_lut</title>
     <g id="std_frac_lut_Schematic">
       <title>Schematic</title>
@@ -203,33 +203,33 @@
         <line x1="457.1989" y1="435.57314" x2="478.98" y2="435.3829" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
       </g>
       <g id="Graphic_56">
-        <text transform="translate(159.95758 219.6969)" fill="black">
-          <tspan font-family="Times New Roman" font-size="15" font-style="italic" font-weight="700" fill="black" x="0" y="13">in0</tspan>
+        <text transform="translate(161.95758 219.6969)" fill="black">
+          <tspan font-family="Times New Roman" font-size="15" font-style="italic" font-weight="700" fill="black" x="0" y="13">in5</tspan>
         </text>
       </g>
       <g id="Graphic_55">
         <text transform="translate(161.22984 239.87654)" fill="black">
-          <tspan font-family="Times New Roman" font-size="15" font-style="italic" font-weight="700" fill="black" x="0" y="13">in1</tspan>
+          <tspan font-family="Times New Roman" font-size="15" font-style="italic" font-weight="700" fill="black" x="0" y="13">in4</tspan>
         </text>
       </g>
       <g id="Graphic_54">
         <text transform="translate(160.95758 273.70744)" fill="black">
-          <tspan font-family="Times New Roman" font-size="15" font-style="italic" font-weight="700" fill="black" x="0" y="13">in2</tspan>
+          <tspan font-family="Times New Roman" font-size="15" font-style="italic" font-weight="700" fill="black" x="0" y="13">in3</tspan>
         </text>
       </g>
       <g id="Graphic_53">
         <text transform="translate(159.95758 284.87993)" fill="black">
-          <tspan font-family="Times New Roman" font-size="15" font-style="italic" font-weight="700" fill="black" x="0" y="13">in3</tspan>
+          <tspan font-family="Times New Roman" font-size="15" font-style="italic" font-weight="700" fill="black" x="0" y="13">in2</tspan>
         </text>
       </g>
       <g id="Graphic_52">
         <text transform="translate(158.9574 297.61358)" fill="black">
-          <tspan font-family="Times New Roman" font-size="15" font-style="italic" font-weight="700" fill="black" x="0" y="13">in4</tspan>
+          <tspan font-family="Times New Roman" font-size="15" font-style="italic" font-weight="700" fill="black" x="0" y="13">in1</tspan>
         </text>
       </g>
       <g id="Graphic_51">
         <text transform="translate(158.9574 309.19286)" fill="black">
-          <tspan font-family="Times New Roman" font-size="15" font-style="italic" font-weight="700" fill="black" x="0" y="13">in5</tspan>
+          <tspan font-family="Times New Roman" font-size="15" font-style="italic" font-weight="700" fill="black" x="0" y="13">in0</tspan>
         </text>
       </g>
       <g id="Group_43">
