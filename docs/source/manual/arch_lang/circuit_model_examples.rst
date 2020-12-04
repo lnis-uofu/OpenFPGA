@@ -833,8 +833,8 @@ This example shows:
   - There is a SRAM cell to switch the operating mode of this LUT, configured by a configuration-chain flip-flop ``ccff``
   - The last input ``in[2]`` of LUT will be tri-stated in dual-LUT2 mode.
   - An 2-input OR gate will be wired to the last input ``in[2]`` to tri-state the input. The mode-select SRAM will be wired to an input of the OR gate. 
-    It means that when the mode-selection bit is '0', the LUT will operate in dual-LUT2 mode.
-  - There will be two outputs wired to the 5th stage of routing multiplexer (the outputs of dual 5-input LUTs) 
+    It means that when the mode-selection bit is '0', the LUT will operate in dual-LUT3 mode.
+  - There will be two outputs wired to the 2th stage of routing multiplexer (the outputs of dual 2-input LUTs) 
   - By default, the mode-selection configuration bit will be '0', indicating that by default the LUT will operate in dual-LUT2 mode.
 
 :numref:`fig_std_frac_lut` illustrates the detailed schematic of a standard fracturable 6-input LUT, where the 5th and 6th inputs can be pull up/down to a fixed logic value to enable LUT4 and LUT5 outputs.
