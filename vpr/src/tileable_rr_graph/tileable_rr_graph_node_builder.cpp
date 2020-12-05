@@ -379,7 +379,7 @@ void load_one_grid_opin_nodes_basic_info(RRGraph& rr_graph,
         SideManager side_manager(side);
         /* skip unwanted sides */
         if ( (true == is_io_type(cur_grid.type))
-          && (side != io_side_manager.to_size_t()) ) { 
+          && (side != io_side_manager.to_size_t()) && (NUM_SIDES != io_side) ) { 
           continue;
         }
         /* Find OPINs */
@@ -442,7 +442,7 @@ void load_one_grid_ipin_nodes_basic_info(RRGraph& rr_graph,
         SideManager side_manager(side);
         /* skip unwanted sides */
         if ( (true == is_io_type(cur_grid.type))
-          && (side != io_side_manager.to_size_t()) ) { 
+          && (side != io_side_manager.to_size_t()) && (NUM_SIDES != io_side) ) { 
           continue;
         }
 
