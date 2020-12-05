@@ -6,6 +6,7 @@
  * and the full multiplexer
  **********************************************/
 #include <string>
+#include <map>
 #include <algorithm>
 
 /* Headers from vtrutil library */
@@ -580,10 +581,17 @@ void generate_verilog_mux_branch_module(ModuleManager& module_manager,
                                         const CircuitLibrary& circuit_lib, 
                                         std::fstream& fp, 
                                         const CircuitModelId& mux_model, 
-                                        const size_t& mux_size, 
                                         const MuxGraph& mux_graph,
-                                        const bool& use_explicit_port_map) {
-  std::string module_name = generate_mux_branch_subckt_name(circuit_lib, mux_model, mux_size, mux_graph.num_inputs(), VERILOG_MUX_BASIS_POSTFIX);
+                                        const bool& use_explicit_port_map,
+                                        std::map<std::string, bool>& branch_mux_module_is_outputted) {
+  std::string module_name = generate_mux_branch_subckt_name(circuit_lib, mux_model, mux_graph.num_inputs(), mux_graph.num_memory_bits(), VERILOG_MUX_BASIS_POSTFIX);
+
+  /* Skip outputting if the module has already been outputted */
+  auto result = branch_mux_module_is_outputted.find(module_name);
+  if ((result != branch_mux_module_is_outputted.end())
+    && (true == result->second)) {
+    return;
+  }
 
   /* Multiplexers built with different technology is in different organization */
   switch (circuit_lib.design_tech_type(mux_model)) {
@@ -618,6 +626,9 @@ void generate_verilog_mux_branch_module(ModuleManager& module_manager,
                    circuit_lib.model_name(mux_model).c_str()); 
     exit(1);
   }
+
+  /* Record that this branch module has been outputted */
+  branch_mux_module_is_outputted[module_name] = true;
 }
 
 /********************************************************************
@@ -809,9 +820,6 @@ void generate_verilog_rram_mux_module_multiplexing_structure(ModuleManager& modu
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
-  /* Find the actual mux size */
-  size_t mux_size = find_mux_num_datapath_inputs(circuit_lib, circuit_model, mux_graph.num_inputs());
-
   /* Get the BL and WL ports from the mux */
   std::vector<CircuitPortId> mux_blb_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_BLB, true);
   std::vector<CircuitPortId> mux_wl_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_WL, true);
@@ -876,7 +884,7 @@ void generate_verilog_rram_mux_module_multiplexing_structure(ModuleManager& modu
 
     /* Instanciate the branch module which is a tgate-based module  
      */
-    std::string branch_module_name= generate_mux_branch_subckt_name(circuit_lib, circuit_model, mux_size, branch_size, VERILOG_MUX_BASIS_POSTFIX);
+    std::string branch_module_name= generate_mux_branch_subckt_name(circuit_lib, circuit_model, branch_size, mems.size(), VERILOG_MUX_BASIS_POSTFIX);
     /* Get the moduleId for the submodule */
     ModuleId branch_module_id = module_manager.find_module(branch_module_name);
     /* We must have one */
@@ -1244,6 +1252,11 @@ void print_verilog_submodule_mux_primitives(ModuleManager& module_manager,
 
   print_verilog_file_header(fp, "Multiplexer primitives"); 
 
+  /* Record if the branch module has been outputted
+   * since different sizes of routing multiplexers may share the same branch module
+   */
+  std::map<std::string, bool> branch_mux_module_is_outputted;
+
   /* Generate basis sub-circuit for unique branches shared by the multiplexers */
   for (auto mux : mux_lib.muxes()) {
     const MuxGraph& mux_graph = mux_lib.mux_graph(mux);
@@ -1253,8 +1266,8 @@ void print_verilog_submodule_mux_primitives(ModuleManager& module_manager,
     /* Create branch circuits, which are N:1 one-level or 2:1 tree-like MUXes */
     for (auto branch_mux_graph : branch_mux_graphs) {
       generate_verilog_mux_branch_module(module_manager, circuit_lib, fp, mux_circuit_model, 
-                                         find_mux_num_datapath_inputs(circuit_lib, mux_circuit_model, mux_graph.num_inputs()), 
-                                         branch_mux_graph, use_explicit_port_map);
+                                         branch_mux_graph, use_explicit_port_map,
+                                         branch_mux_module_is_outputted);
     }
   }
 

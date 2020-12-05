@@ -6,6 +6,7 @@
  * and the full multiplexer
  **********************************************/
 #include <string>
+#include <map>
 #include <algorithm>
 
 /* Headers from vtrutil library */
@@ -49,9 +50,16 @@ void generate_spice_mux_branch_subckt(const ModuleManager& module_manager,
                                       const CircuitLibrary& circuit_lib, 
                                       std::fstream& fp, 
                                       const CircuitModelId& mux_model, 
-                                      const size_t& mux_size, 
-                                      const MuxGraph& mux_graph) {
-  std::string module_name = generate_mux_branch_subckt_name(circuit_lib, mux_model, mux_size, mux_graph.num_inputs(), SPICE_MUX_BASIS_POSTFIX);
+                                      const MuxGraph& mux_graph,
+                                      std::map<std::string, bool>& branch_mux_module_is_outputted) {
+  std::string module_name = generate_mux_branch_subckt_name(circuit_lib, mux_model, mux_graph.num_inputs(), mux_graph.num_memory_bits(), SPICE_MUX_BASIS_POSTFIX);
+
+  /* Skip outputting if the module has already been outputted */
+  auto result = branch_mux_module_is_outputted.find(module_name);
+  if ((result != branch_mux_module_is_outputted.end())
+    && (true == result->second)) {
+    return;
+  }
 
   /* Multiplexers built with different technology is in different organization */
   switch (circuit_lib.design_tech_type(mux_model)) {
@@ -84,6 +92,9 @@ void generate_spice_mux_branch_subckt(const ModuleManager& module_manager,
                    circuit_lib.model_name(mux_model).c_str()); 
     exit(1);
   }
+
+  /* Record that this branch module has been outputted */
+  branch_mux_module_is_outputted[module_name] = true;
 }
 
 /***********************************************
@@ -127,14 +138,73 @@ void generate_spice_mux_subckt(const ModuleManager& module_manager,
 }
 
 /***********************************************
- * Generate SPICE subcircuits for all the unique
+ * Generate primitive SPICE subcircuits for all the unique
  * multiplexers in the FPGA device
  **********************************************/
-int print_spice_submodule_muxes(NetlistManager& netlist_manager,
-                                const ModuleManager& module_manager,
-                                const MuxLibrary& mux_lib,
-                                const CircuitLibrary& circuit_lib,
-                                const std::string& submodule_dir) {
+static 
+int print_spice_submodule_mux_primitives(NetlistManager& netlist_manager,
+                                         const ModuleManager& module_manager,
+                                         const MuxLibrary& mux_lib,
+                                         const CircuitLibrary& circuit_lib,
+                                         const std::string& submodule_dir) {
+  int status = CMD_EXEC_SUCCESS;
+
+  std::string spice_fname(submodule_dir + std::string(MUX_PRIMITIVES_SPICE_FILE_NAME));
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(spice_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_stream(spice_fname.c_str(), fp);
+
+  /* Print out debugging information for if the file is not opened/created properly */
+  VTR_LOG("Writing SPICE netlist for Multiplexer primitives '%s' ...",
+          spice_fname.c_str()); 
+
+  print_spice_file_header(fp, "Multiplexer primitives"); 
+
+  /* Record if the branch module has been outputted
+   * since different sizes of routing multiplexers may share the same branch module
+   */
+  std::map<std::string, bool> branch_mux_module_is_outputted;
+
+  /* Generate basis sub-circuit for unique branches shared by the multiplexers */
+  for (auto mux : mux_lib.muxes()) {
+    const MuxGraph& mux_graph = mux_lib.mux_graph(mux);
+    CircuitModelId mux_circuit_model = mux_lib.mux_circuit_model(mux); 
+    /* Create a mux graph for the branch circuit */
+    std::vector<MuxGraph> branch_mux_graphs = mux_graph.build_mux_branch_graphs();
+    /* Create branch circuits, which are N:1 one-level or 2:1 tree-like MUXes */
+    for (auto branch_mux_graph : branch_mux_graphs) {
+      generate_spice_mux_branch_subckt(module_manager, circuit_lib, fp, mux_circuit_model, 
+                                       branch_mux_graph,
+                                       branch_mux_module_is_outputted);
+    }
+  }
+
+  /* Close the file stream */
+  fp.close();
+
+  /* Add fname to the netlist name list */
+  NetlistId nlist_id = netlist_manager.add_netlist(spice_fname);
+  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  netlist_manager.set_netlist_type(nlist_id, NetlistManager::SUBMODULE_NETLIST);
+
+  VTR_LOG("Done\n");
+
+  return status;
+}
+
+/***********************************************
+ * Generate top-level SPICE subcircuits for all the unique
+ * multiplexers in the FPGA device
+ **********************************************/
+static 
+int print_spice_submodule_mux_top_subckt(NetlistManager& netlist_manager,
+                                         const ModuleManager& module_manager,
+                                         const MuxLibrary& mux_lib,
+                                         const CircuitLibrary& circuit_lib,
+                                         const std::string& submodule_dir) {
   int status = CMD_EXEC_SUCCESS;
 
   std::string spice_fname(submodule_dir + std::string(MUXES_SPICE_FILE_NAME));
@@ -150,20 +220,6 @@ int print_spice_submodule_muxes(NetlistManager& netlist_manager,
           spice_fname.c_str()); 
 
   print_spice_file_header(fp, "Multiplexers"); 
-
-  /* Generate basis sub-circuit for unique branches shared by the multiplexers */
-  for (auto mux : mux_lib.muxes()) {
-    const MuxGraph& mux_graph = mux_lib.mux_graph(mux);
-    CircuitModelId mux_circuit_model = mux_lib.mux_circuit_model(mux); 
-    /* Create a mux graph for the branch circuit */
-    std::vector<MuxGraph> branch_mux_graphs = mux_graph.build_mux_branch_graphs();
-    /* Create branch circuits, which are N:1 one-level or 2:1 tree-like MUXes */
-    for (auto branch_mux_graph : branch_mux_graphs) {
-      generate_spice_mux_branch_subckt(module_manager, circuit_lib, fp, mux_circuit_model, 
-                                       find_mux_num_datapath_inputs(circuit_lib, mux_circuit_model, mux_graph.num_inputs()), 
-                                       branch_mux_graph);
-    }
-  }
 
   /* Generate unique Verilog modules for the multiplexers */
   for (auto mux : mux_lib.muxes()) {
@@ -182,6 +238,40 @@ int print_spice_submodule_muxes(NetlistManager& netlist_manager,
   netlist_manager.set_netlist_type(nlist_id, NetlistManager::SUBMODULE_NETLIST);
 
   VTR_LOG("Done\n");
+
+  return status;
+}
+
+/***********************************************
+ * Generate SPICE modules for all the unique
+ * multiplexers in the FPGA device
+ * Output to two SPICE netlists:
+ * - A SPICE netlist contains all the primitive
+ *   cells for build the routing multiplexers
+ * - A SPICE netlist contains all the top-level
+ *   module for routing multiplexers
+ **********************************************/
+int print_spice_submodule_muxes(NetlistManager& netlist_manager,
+                                const ModuleManager& module_manager,
+                                const MuxLibrary& mux_lib,
+                                const CircuitLibrary& circuit_lib,
+                                const std::string& submodule_dir) {
+  int status = CMD_EXEC_SUCCESS;
+
+  status = print_spice_submodule_mux_primitives(netlist_manager, module_manager,
+                                                mux_lib, circuit_lib, submodule_dir);
+
+  if (CMD_EXEC_FATAL_ERROR == status) {
+    return status;
+  }
+
+  status = print_spice_submodule_mux_top_subckt(netlist_manager, module_manager,
+                                                mux_lib, circuit_lib, submodule_dir);
+
+  if (CMD_EXEC_FATAL_ERROR == status) {
+    return status;
+  }
+
 
   return status;
 }
