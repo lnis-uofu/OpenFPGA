@@ -333,9 +333,13 @@ static
 void build_mux_branch_module(ModuleManager& module_manager,
                              const CircuitLibrary& circuit_lib, 
                              const CircuitModelId& mux_model, 
-                             const size_t& mux_size, 
                              const MuxGraph& mux_graph) {
-  std::string module_name = generate_mux_branch_subckt_name(circuit_lib, mux_model, mux_size, mux_graph.num_inputs(), MUX_BASIS_MODULE_POSTFIX);
+  std::string module_name = generate_mux_branch_subckt_name(circuit_lib, mux_model, mux_graph.num_inputs(), MUX_BASIS_MODULE_POSTFIX);
+
+  /* Skip the module building if it is already there */
+  if (module_manager.valid_module_id(module_manager.find_module(module_name))) {
+    return;
+  }
 
   /* Multiplexers built with different technology is in different organization */
   switch (circuit_lib.design_tech_type(mux_model)) {
@@ -547,8 +551,6 @@ void build_cmos_mux_module_tgate_multiplexing_structure(ModuleManager& module_ma
                                                         const vtr::vector<MuxMemId, ModuleNetId>& mux_module_mem_nets, 
                                                         const vtr::vector<MuxMemId, ModuleNetId>& mux_module_mem_inv_nets, 
                                                         const MuxGraph& mux_graph) {
-  /* Find the actual mux size */
-  size_t mux_size = find_mux_num_datapath_inputs(circuit_lib, circuit_model, mux_graph.num_inputs());
 
   /* Get the regular (non-mode-select) sram ports from the mux */
   std::vector<CircuitPortId> mux_regular_sram_ports = find_circuit_regular_sram_ports(circuit_lib, circuit_model);
@@ -574,7 +576,7 @@ void build_cmos_mux_module_tgate_multiplexing_structure(ModuleManager& module_ma
 
     /* Instanciate the branch module which is a tgate-based module  
      */
-    std::string branch_module_name= generate_mux_branch_subckt_name(circuit_lib, circuit_model, mux_size, branch_size, MUX_BASIS_MODULE_POSTFIX);
+    std::string branch_module_name= generate_mux_branch_subckt_name(circuit_lib, circuit_model, branch_size, MUX_BASIS_MODULE_POSTFIX);
     /* Get the moduleId for the submodule */
     ModuleId branch_module_id = module_manager.find_module(branch_module_name);
     /* We must have one */
@@ -1404,7 +1406,6 @@ void build_mux_modules(ModuleManager& module_manager,
     /* Create branch circuits, which are N:1 one-level or 2:1 tree-like MUXes */
     for (auto branch_mux_graph : branch_mux_graphs) {
       build_mux_branch_module(module_manager, circuit_lib, mux_circuit_model, 
-                              find_mux_num_datapath_inputs(circuit_lib, mux_circuit_model, mux_graph.num_inputs()), 
                               branch_mux_graph);
     }
   }

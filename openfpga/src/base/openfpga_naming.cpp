@@ -112,7 +112,6 @@ std::string generate_mux_subckt_name(const CircuitLibrary& circuit_lib,
  ***********************************************/
 std::string generate_mux_branch_subckt_name(const CircuitLibrary& circuit_lib, 
                                             const CircuitModelId& circuit_model, 
-                                            const size_t& mux_size, 
                                             const size_t& branch_mux_size, 
                                             const std::string& postfix) {
   /* If the tgate circuit model of this MUX is a MUX2 standard cell,
@@ -125,7 +124,15 @@ std::string generate_mux_branch_subckt_name(const CircuitLibrary& circuit_lib,
   }
   std::string branch_postfix = postfix + "_size" + std::to_string(branch_mux_size);
 
-  return generate_mux_subckt_name(circuit_lib, circuit_model, mux_size, branch_postfix);
+  std::string module_name = circuit_lib.model_name(circuit_model); 
+  if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(circuit_model)) {
+    module_name += "_mux";
+  } else {  
+    VTR_ASSERT(CIRCUIT_MODEL_MUX == circuit_lib.model_type(circuit_model));
+  }
+  module_name += branch_postfix; 
+
+  return module_name;
 }
 
 /************************************************

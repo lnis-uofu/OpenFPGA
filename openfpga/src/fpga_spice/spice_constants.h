@@ -10,6 +10,7 @@ constexpr char* TRANSISTOR_WRAPPER_POSTFIX = "_wrapper";
 
 constexpr char* TRANSISTORS_SPICE_FILE_NAME = "transistor.sp";
 constexpr char* SUPPLY_WRAPPER_SPICE_FILE_NAME = "supply_wrapper.sp";
+constexpr char* MUX_PRIMITIVES_SPICE_FILE_NAME = "mux_primitives.sp";
 constexpr char* MUXES_SPICE_FILE_NAME = "muxes.sp";
 constexpr char* LUTS_SPICE_FILE_NAME = "luts.sp";
 constexpr char* MEMORIES_SPICE_FILE_NAME = "memories.sp";
