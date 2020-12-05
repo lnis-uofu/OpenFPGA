@@ -710,8 +710,6 @@ void build_grid_bitstream(BitstreamManager& bitstream_manager,
         || (0 < grids[ix][iy].height_offset) ) {
         continue;
       }
-      /* We should not meet any I/O grid */
-      VTR_ASSERT(true != is_io_type(grids[ix][iy].type));
       /* Add a grid module to top_module*/
       vtr::Point<size_t> grid_coord(ix, iy);
       build_physical_block_bitstream(bitstream_manager, top_block, module_manager,

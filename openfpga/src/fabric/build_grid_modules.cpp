@@ -52,7 +52,7 @@ void add_grid_module_pb_type_ports(ModuleManager& module_manager,
    * Otherwise, we will iterate all the 4 sides  
    */
   if (true == is_io_type(grid_type_descriptor)) {
-    grid_pin_sides.push_back(find_grid_module_pin_side(grid_type_descriptor, border_side));
+    grid_pin_sides = find_grid_module_pin_sides(grid_type_descriptor, border_side);
   } else {
     grid_pin_sides = {TOP, RIGHT, BOTTOM, LEFT}; 
   }
@@ -981,11 +981,6 @@ void build_physical_tile_module(ModuleManager& module_manager,
                                 const e_side& border_side,
                                 const bool& duplicate_grid_pin,
                                 const bool& verbose) {
-  /* Check code: if this is an IO block, the border side MUST be valid */
-  if (true == is_io_type(phy_block_type)) {
-    VTR_ASSERT(NUM_SIDES != border_side);
-  }
-
   /* Create a Module for the top-level physical block, and add to module manager */
   std::string grid_module_name = generate_grid_block_module_name(std::string(GRID_MODULE_NAME_PREFIX), 
                                                                  std::string(phy_block_type->name),

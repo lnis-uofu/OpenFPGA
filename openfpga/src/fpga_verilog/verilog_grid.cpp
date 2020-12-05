@@ -286,11 +286,6 @@ void print_verilog_physical_tile_netlist(NetlistManager& netlist_manager,
                                          t_physical_tile_type_ptr phy_block_type,
                                          const e_side& border_side,
                                          const bool& use_explicit_mapping) {
-  /* Check code: if this is an IO block, the border side MUST be valid */
-  if (true == is_io_type(phy_block_type)) {
-    VTR_ASSERT(NUM_SIDES != border_side);
-  }
-  
   /* Give a name to the Verilog netlist */
   /* Create the file name for Verilog */
   std::string verilog_fname(subckt_dir 

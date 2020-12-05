@@ -1003,7 +1003,7 @@ std::string generate_grid_block_netlist_name(const std::string& block_name,
   /* Add the name of physical block */
   std::string module_name(block_name);
 
-  if (true == is_block_io) {
+  if ((true == is_block_io) && (NUM_SIDES != io_side)) {
     SideManager side_manager(io_side);
     module_name += std::string("_");
     module_name += std::string(side_manager.to_string());

@@ -99,6 +99,65 @@ IoLocationMap build_fabric_io_location_map(const ModuleManager& module_manager,
     }
   }
 
+  /* Walk through all the center grids, which may include I/O grids */
+  for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
+    for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
+      /* Bypass EMPTY grid */
+      if (true == is_empty_type(grids[ix][iy].type)) {
+        continue;
+      } 
+
+      /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
+      if ( (0 < grids[ix][iy].width_offset)
+        || (0 < grids[ix][iy].height_offset)) {
+        continue;
+      }
+
+      t_physical_tile_type_ptr grid_type = grids[ix][iy].type;
+
+      /* Find the module name for this type of grid */
+      std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
+      std::string grid_module_name = generate_grid_block_module_name(grid_module_name_prefix, std::string(grid_type->name), is_io_type(grid_type), NUM_SIDES);
+      ModuleId grid_module = module_manager.find_module(grid_module_name);
+      VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
+
+      /* Find all the GPIO ports in the grid module */
+
+      /* MUST DO: register in io location mapping!
+       * I/O location mapping is a critical look-up for testbench generators
+       * As we add the I/O grid instances to top module by following order:
+       * TOP -> RIGHT -> BOTTOM -> LEFT
+       * The I/O index will increase in this way as well.
+       * This organization I/O indices is also consistent to the way 
+       * that GPIOs are wired in function connect_gpio_module()
+       *
+       * Note: if you change the GPIO function, you should update here as well!
+       */
+      for (int z = 0; z < grids[ix][iy].type->capacity; ++z) {
+        for (const ModuleManager::e_module_port_type& module_io_port_type : MODULE_IO_PORT_TYPES) {
+          for (const ModulePortId& gpio_port_id : module_manager.module_port_ids_by_type(grid_module, module_io_port_type)) {
+            /* Only care mappable I/O */
+            if (false == module_manager.port_is_mappable_io(grid_module, gpio_port_id)) {
+              continue;
+            }
+
+            const BasicPort& gpio_port = module_manager.module_port(grid_module, gpio_port_id);
+
+            auto curr_io_index = io_counter.find(gpio_port.get_name());
+            /* Index always start from zero */
+            if (curr_io_index == io_counter.end()) {
+              io_counter[gpio_port.get_name()] = 0;
+            }
+            io_location_map.set_io_index(ix, iy, z,
+                                         gpio_port.get_name(),
+                                         io_counter[gpio_port.get_name()]);
+            io_counter[gpio_port.get_name()]++;
+          }
+        }
+      }
+    }
+  }
+
   /* Check all the GPIO ports in the top-level module has been mapped */
   std::string top_module_name = generate_fpga_top_module_name();
   ModuleId top_module = module_manager.find_module(top_module_name);
