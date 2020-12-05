@@ -32,6 +32,7 @@ constexpr char* SUBMODULE_VERILOG_FILE_NAME = "sub_module.v";
 constexpr char* LOGIC_BLOCK_VERILOG_FILE_NAME = "logic_blocks.v";
 constexpr char* LUTS_VERILOG_FILE_NAME = "luts.v";
 constexpr char* ROUTING_VERILOG_FILE_NAME = "routing.v";
+constexpr char* MUX_PRIMITIVES_VERILOG_FILE_NAME = "mux_primitives.v";
 constexpr char* MUXES_VERILOG_FILE_NAME = "muxes.v";
 constexpr char* LOCAL_ENCODER_VERILOG_FILE_NAME = "local_encoder.v";
 constexpr char* ARCH_ENCODER_VERILOG_FILE_NAME = "arch_encoder.v";
