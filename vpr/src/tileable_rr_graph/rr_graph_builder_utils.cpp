@@ -115,7 +115,7 @@ size_t get_grid_num_pins(const t_grid_tile& cur_grid,
   for (const e_side& side : {TOP, RIGHT, BOTTOM, LEFT}) {
     /* skip unwanted sides */
     if ( (true == is_io_type(cur_grid.type))
-      && (side != io_side) ) { 
+      && (side != io_side) && (NUM_SIDES != io_side)) { 
       continue;
     }
     /* Get pin list */
