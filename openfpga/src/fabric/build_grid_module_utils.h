@@ -17,8 +17,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-e_side find_grid_module_pin_side(t_physical_tile_type_ptr grid_type_descriptor,
-                                 const e_side& border_side);
+std::vector<e_side> find_grid_module_pin_sides(t_physical_tile_type_ptr grid_type_descriptor,
+                                               const e_side& border_side);
 
 void add_grid_module_net_connect_pb_graph_pin(ModuleManager& module_manager,
                                               const ModuleId& grid_module,

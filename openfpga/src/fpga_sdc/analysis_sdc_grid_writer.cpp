@@ -618,9 +618,6 @@ void print_analysis_sdc_disable_unused_grids(std::fstream& fp,
   /* Process unused core grids */
   for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
     for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
-      /* We should not meet any I/O grid */
-      VTR_ASSERT(false == is_io_type(grids[ix][iy].type));
-
       print_analysis_sdc_disable_unused_grid(fp, vtr::Point<size_t>(ix, iy),
                                              grids, device_annotation, cluster_annotation, place_annotation,
                                              module_manager, NUM_SIDES);

@@ -23,13 +23,19 @@ namespace openfpga {
  * 2. I/O grids on the right  side of FPGA only have ports on its left   side
  * 3. I/O grids on the bottom side of FPGA only have ports on its top    side
  * 4. I/O grids on the left   side of FPGA only have ports on its right side
+ * 5. I/O grids in the center part of FPGA can have ports on any side
  *******************************************************************/
-e_side find_grid_module_pin_side(t_physical_tile_type_ptr grid_type_descriptor,
-                                 const e_side& border_side) {
+std::vector<e_side> find_grid_module_pin_sides(t_physical_tile_type_ptr grid_type_descriptor,
+                                               const e_side& border_side) {
   /* We must have an regular (non-I/O) type here */
   VTR_ASSERT(true == is_io_type(grid_type_descriptor));
   SideManager side_manager(border_side);
-  return side_manager.get_opposite(); 
+
+  if (NUM_SIDES == border_side) {
+    return {TOP, RIGHT, BOTTOM, LEFT}; 
+  }
+
+  return std::vector<e_side>(1, side_manager.get_opposite()); 
 }
 
 /********************************************************************
@@ -50,12 +56,9 @@ void add_grid_module_net_connect_pb_graph_pin(ModuleManager& module_manager,
    * Otherwise, we will iterate all the 4 sides  
    */
   if (true == is_io_type(grid_type_descriptor)) {
-    grid_pin_sides.push_back(find_grid_module_pin_side(grid_type_descriptor, border_side));
+    grid_pin_sides = find_grid_module_pin_sides(grid_type_descriptor, border_side);
   } else {
-    grid_pin_sides.push_back(TOP); 
-    grid_pin_sides.push_back(RIGHT); 
-    grid_pin_sides.push_back(BOTTOM); 
-    grid_pin_sides.push_back(LEFT); 
+    grid_pin_sides = {TOP, RIGHT, BOTTOM, LEFT}; 
   }
 
   /* num_pins/capacity = the number of pins that each type_descriptor has.

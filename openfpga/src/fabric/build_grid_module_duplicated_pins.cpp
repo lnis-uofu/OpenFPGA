@@ -66,7 +66,7 @@ void add_grid_module_duplicated_pb_type_ports(ModuleManager& module_manager,
    * Otherwise, we will iterate all the 4 sides  
    */
   if (true == is_io_type(grid_type_descriptor)) {
-    grid_pin_sides.push_back(find_grid_module_pin_side(grid_type_descriptor, border_side));
+    grid_pin_sides = find_grid_module_pin_sides(grid_type_descriptor, border_side);
   } else {
     grid_pin_sides = {TOP, RIGHT, BOTTOM, LEFT}; 
   }
@@ -147,12 +147,9 @@ void add_grid_module_net_connect_duplicated_pb_graph_pin(ModuleManager& module_m
    * Otherwise, we will iterate all the 4 sides  
    */
   if (true == is_io_type(grid_type_descriptor)) {
-    grid_pin_sides.push_back(find_grid_module_pin_side(grid_type_descriptor, border_side));
+    grid_pin_sides = find_grid_module_pin_sides(grid_type_descriptor, border_side);
   } else {
-    grid_pin_sides.push_back(TOP); 
-    grid_pin_sides.push_back(RIGHT); 
-    grid_pin_sides.push_back(BOTTOM); 
-    grid_pin_sides.push_back(LEFT); 
+    grid_pin_sides = {TOP, RIGHT, BOTTOM, LEFT}; 
   }
 
   /* num_pins/capacity = the number of pins that each type_descriptor has.
