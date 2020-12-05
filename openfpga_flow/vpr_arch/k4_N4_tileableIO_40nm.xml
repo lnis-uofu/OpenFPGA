@@ -72,6 +72,12 @@
       <row type="io" starty="H-2" priority="100"/>
       <!-- A column of I/O in the W-2 column -->
       <col type="io" startx="W-2" priority="100"/>
+      <!-- Bottom-left corner should be empty -->
+      <single type="EMPTY" x="0" y="0" priority="101"/>
+      <!-- Top-left corner should be empty -->
+      <single type="EMPTY" x="0" y="H-2" priority="101"/>
+      <!-- Bottom-right corner should be empty -->
+      <single type="EMPTY" x="W-2" y="0" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
     </auto_layout>
@@ -86,6 +92,12 @@
       <row type="io" starty="H-2" priority="100"/>
       <!-- A column of I/O in the W-2 column -->
       <col type="io" startx="W-2" priority="100"/>
+      <!-- Bottom-left corner should be empty -->
+      <single type="EMPTY" x="0" y="0" priority="101"/>
+      <!-- Top-left corner should be empty -->
+      <single type="EMPTY" x="0" y="H-2" priority="101"/>
+      <!-- Bottom-right corner should be empty -->
+      <single type="EMPTY" x="W-2" y="0" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
     </fixed_layout>
