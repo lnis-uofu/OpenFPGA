@@ -52,11 +52,15 @@ e_side determine_io_grid_pin_side(const vtr::Point<size_t>& device_size,
     return TOP; /* Such I/O has only Top side pins */
   } else if (0 == grid_coordinate.x()) { /* LEFT side IO of FPGA */
     return RIGHT; /* Such I/O has only Right side pins */
-  } else {
-    VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "I/O Grid is in the center part of FPGA! Currently unsupported!\n");
-    exit(1);
+  } else if ((grid_coordinate.x() < device_size.x()) && (grid_coordinate.y() < device_size.y())) {
+    /* I/O grid in the center grid */
+    return NUM_SIDES;
   }
+  VTR_LOGF_ERROR(__FILE__, __LINE__,
+                 "Invalid coordinate (%lu, %lu) for I/O Grid whose size is (%lu, %lu)!\n",
+                grid_coordinate.x(), grid_coordinate.y(),
+                device_size.x(), device_size.y());
+  exit(1);
 }
 
 /* Deteremine the side of a pin of a grid */
