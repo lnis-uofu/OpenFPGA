@@ -157,8 +157,6 @@ void update_pb_pin_with_post_routing_results(const DeviceContext& device_ctx,
       if (true == is_empty_type(device_ctx.grid[x][y].type)) {
         continue;
       }
-      /* We must have an regular (non-I/O) type here */
-      VTR_ASSERT(false == is_io_type(device_ctx.grid[x][y].type));
       /* Get the mapped blocks to this grid */
       for (const ClusterBlockId& cluster_blk_id : placement_ctx.grid_blocks[x][y].blocks) {
         /* Skip invalid ids */ 
