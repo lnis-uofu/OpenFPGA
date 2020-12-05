@@ -52,7 +52,7 @@ void generate_spice_mux_branch_subckt(const ModuleManager& module_manager,
                                       const CircuitModelId& mux_model, 
                                       const MuxGraph& mux_graph,
                                       std::map<std::string, bool>& branch_mux_module_is_outputted) {
-  std::string module_name = generate_mux_branch_subckt_name(circuit_lib, mux_model, mux_graph.num_inputs(), SPICE_MUX_BASIS_POSTFIX);
+  std::string module_name = generate_mux_branch_subckt_name(circuit_lib, mux_model, mux_graph.num_inputs(), mux_graph.num_memory_bits(), SPICE_MUX_BASIS_POSTFIX);
 
   /* Skip outputting if the module has already been outputted */
   auto result = branch_mux_module_is_outputted.find(module_name);

@@ -584,7 +584,7 @@ void generate_verilog_mux_branch_module(ModuleManager& module_manager,
                                         const MuxGraph& mux_graph,
                                         const bool& use_explicit_port_map,
                                         std::map<std::string, bool>& branch_mux_module_is_outputted) {
-  std::string module_name = generate_mux_branch_subckt_name(circuit_lib, mux_model, mux_graph.num_inputs(), VERILOG_MUX_BASIS_POSTFIX);
+  std::string module_name = generate_mux_branch_subckt_name(circuit_lib, mux_model, mux_graph.num_inputs(), mux_graph.num_memory_bits(), VERILOG_MUX_BASIS_POSTFIX);
 
   /* Skip outputting if the module has already been outputted */
   auto result = branch_mux_module_is_outputted.find(module_name);
@@ -884,7 +884,7 @@ void generate_verilog_rram_mux_module_multiplexing_structure(ModuleManager& modu
 
     /* Instanciate the branch module which is a tgate-based module  
      */
-    std::string branch_module_name= generate_mux_branch_subckt_name(circuit_lib, circuit_model, branch_size, VERILOG_MUX_BASIS_POSTFIX);
+    std::string branch_module_name= generate_mux_branch_subckt_name(circuit_lib, circuit_model, branch_size, mems.size(), VERILOG_MUX_BASIS_POSTFIX);
     /* Get the moduleId for the submodule */
     ModuleId branch_module_id = module_manager.find_module(branch_module_name);
     /* We must have one */

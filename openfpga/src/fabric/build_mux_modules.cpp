@@ -334,7 +334,7 @@ void build_mux_branch_module(ModuleManager& module_manager,
                              const CircuitLibrary& circuit_lib, 
                              const CircuitModelId& mux_model, 
                              const MuxGraph& mux_graph) {
-  std::string module_name = generate_mux_branch_subckt_name(circuit_lib, mux_model, mux_graph.num_inputs(), MUX_BASIS_MODULE_POSTFIX);
+  std::string module_name = generate_mux_branch_subckt_name(circuit_lib, mux_model, mux_graph.num_inputs(), mux_graph.num_memory_bits(), MUX_BASIS_MODULE_POSTFIX);
 
   /* Skip the module building if it is already there */
   if (module_manager.valid_module_id(module_manager.find_module(module_name))) {
@@ -574,9 +574,19 @@ void build_cmos_mux_module_tgate_multiplexing_structure(ModuleManager& module_ma
      */
     size_t branch_size = mux_graph.node_in_edges(node).size();
 
-    /* Instanciate the branch module which is a tgate-based module  
-     */
-    std::string branch_module_name= generate_mux_branch_subckt_name(circuit_lib, circuit_model, branch_size, MUX_BASIS_MODULE_POSTFIX);
+    /* Get the mems in the branch circuits */
+    std::vector<MuxMemId> mems; 
+    for (const auto& edge : mux_graph.node_in_edges(node)) {
+      /* Get the mem control the edge */
+      MuxMemId mem = mux_graph.find_edge_mem(edge);
+      /* Add the mem if it is not in the list */
+      if (mems.end() == std::find(mems.begin(), mems.end(), mem)) {
+        mems.push_back(mem);
+      }
+    }
+
+    /* Instanciate the branch module which is a tgate-based module */
+    std::string branch_module_name= generate_mux_branch_subckt_name(circuit_lib, circuit_model, branch_size, mems.size(), MUX_BASIS_MODULE_POSTFIX);
     /* Get the moduleId for the submodule */
     ModuleId branch_module_id = module_manager.find_module(branch_module_name);
     /* We must have one */
@@ -614,17 +624,6 @@ void build_cmos_mux_module_tgate_multiplexing_structure(ModuleManager& module_ma
     module_nets_by_level[output_node_level][output_node_index_at_level] = branch_net;
 
     /* Wire the branch module memory ports to the nets of MUX memory ports */
-    /* Get the mems in the branch circuits */
-    std::vector<MuxMemId> mems; 
-    for (const auto& edge : mux_graph.node_in_edges(node)) {
-      /* Get the mem control the edge */
-      MuxMemId mem = mux_graph.find_edge_mem(edge);
-      /* Add the mem if it is not in the list */
-      if (mems.end() == std::find(mems.begin(), mems.end(), mem)) {
-        mems.push_back(mem);
-      }
-    }
-
     /* Get mem/mem_inv ports of branch module */
     ModulePortId branch_module_mem_port_id = module_manager.find_module_port(branch_module_id, std::string("mem")); 
     BasicPort branch_module_mem_port = module_manager.module_port(branch_module_id, branch_module_mem_port_id);
