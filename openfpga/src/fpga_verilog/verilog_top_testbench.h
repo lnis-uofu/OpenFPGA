@@ -16,6 +16,7 @@
 #include "fabric_global_port_info.h"
 #include "vpr_netlist_annotation.h"
 #include "simulation_setting.h"
+#include "verilog_testbench_options.h"
 
 /********************************************************************
  * Function declaration
@@ -37,8 +38,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                  const std::string& circuit_name,
                                  const std::string& verilog_fname,
                                  const SimulationSetting& simulation_parameters,
-                                 const bool& fast_configuration,
-                                 const bool& explicit_port_mapping);
+                                 const VerilogTestbenchOption& options);
 
 } /* end namespace openfpga */
 

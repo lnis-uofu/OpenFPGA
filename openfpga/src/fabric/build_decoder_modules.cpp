@@ -232,8 +232,11 @@ void build_mux_local_decoder_module(ModuleManager& module_manager,
   module_manager.add_port(module_id, data_port, ModuleManager::MODULE_OUTPUT_PORT);
   /* Data port is registered. It should be outputted as 
    *   output reg [lsb:msb] data 
+   * Only applicable to data port size > 1
    */
-  module_manager.set_port_is_register(module_id, data_port.get_name(), true);
+  if (1 < data_port.get_width()) {
+    module_manager.set_port_is_register(module_id, data_port.get_name(), true);
+  }
   /* Add data_in port */
   BasicPort data_inv_port(generate_mux_local_decoder_data_inv_port_name(), data_size);
   VTR_ASSERT(true == decoder_lib.use_data_inv_port(decoder));
