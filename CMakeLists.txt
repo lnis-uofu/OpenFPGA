@@ -196,13 +196,8 @@ include(CMakeParseArguments)
 
 ##project(yosys)
 
-# Version number 
-set(YOSYS_VERSION_MAJOR 0.7)
-set(YOSYS_VERSION_MINOR 0)
-set(YOSYS_VERSION_PATCH 0)
-
 # Options to enable/disable dependencies
-option(YOSYS_ENABLE_TCL, "Enable TCL parser integrated in yosys" ON)
+option(YOSYS_ENABLE_TCL, "Enable TCL parser integrated in yosys" OFF)
 option(YOSYS_ENABLE_ABC, "Enable ABC library integrated in yosys" ON)
 option(YOSYS_ENABLE_PLUGINS, "Enable plug-in in yosys" ON)
 option(YOSYS_ENABLE_READLINE, "Enable readline library in yosys" ON)
