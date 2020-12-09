@@ -27,6 +27,7 @@ sudo apt-get install libxml++2.6-dev
 sudo apt-get install perl
 sudo apt-get install python
 sudo apt-get install python-lxml
+sudo apt-get install tcllib
 sudo apt-get install texinfo
 sudo apt-get install time
 sudo apt-get install valgrind
