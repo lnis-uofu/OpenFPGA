@@ -1,2 +1,20 @@
-# Ignore everything
-*
+abc
+ace2
+build
+cmake
+CMakeLists.txt
+deploy_key.enc
+docker
+Dockerfile
+docs
+libopenfpga
+libs
+LICENSE
+openfpga
+openfpga_flow
+openfpga.sh
+README.md
+run_local.bat
+run_local.sh
+vpr
+yosys
