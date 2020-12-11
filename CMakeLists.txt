@@ -239,17 +239,6 @@ add_custom_target(
 
 # yosys compilation ends
 
-# yosys-symbiflow-plugins compilation starts
-
-add_custom_target(
-    yosys-symbiflow-plugins ALL
-    COMMAND $(MAKE) all
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-symbiflow-plugins
-    COMMENT "Compile yosys-symbiflow-plugins with given Makefile"
-)
-
-# yosys-symbiflow-plugins compilation ends
-
 # run make to extract compiler options, linker options and list of source files
 #add_custom_target(
 #  yosys
