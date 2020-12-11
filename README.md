@@ -21,9 +21,7 @@ It also includes detailed information about docker image.
 ```bash
 # Clone the repository and go inside it
 git clone https://github.com/LNIS-Projects/OpenFPGA.git && cd OpenFPGA
-mkdir build && cd build            # Create a folder named build in the OpenPFGA repository
-cmake ..                           # Create a Makefile in this folder using cmake
-make                               # Compile the tool and its dependencies
+make all
 ```
 
 ---
