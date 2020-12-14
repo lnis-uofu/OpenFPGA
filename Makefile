@@ -6,21 +6,25 @@ else
 CMAKE_COMMAND := ${CMAKE_COMMAND}
 endif
 
-.PHONY: all env
+.PHONY: all checkout compile
 
-all: env
+all: checkout
+	mkdir -p build && cd build && $(CMAKE_COMMAND) ${CMAKE_FLAGS} ..
+	cd build && $(MAKE)
+
+checkout: 
+	git submodule init
+	git submodule update --init --recursive
+
+compile:
+	mkdir -p build && cd build && $(CMAKE_COMMAND) ${CMAKE_FLAGS} ..
 	cd build && $(MAKE)
 
 clean:
 	rm -rf build
 
-env:
-	git submodule init
-	git submodule update --init --recursive
-	mkdir -p build && cd build && $(CMAKE_COMMAND) ${CMAKE_FLAGS} ..
-
 build/Makefile:
-	make env
+	make checkout
 
 .PHONY: Makefile
 
