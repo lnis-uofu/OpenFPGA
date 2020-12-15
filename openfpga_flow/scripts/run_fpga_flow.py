@@ -14,9 +14,11 @@ import time
 from datetime import timedelta
 import shlex
 import glob
+import json
 import argparse
 from configparser import ConfigParser, ExtendedInterpolation
 import logging
+from envyaml import EnvYAML
 import glob
 import subprocess
 import threading
@@ -85,11 +87,13 @@ parser.add_argument('--openfpga_shell_template', type=str,
                     help="Sample openfpga shell script")
 parser.add_argument('--openfpga_arch_file', type=str,
                     help="Openfpga architecture file for shell")
+parser.add_argument('--arch_variable_file', type=str, default=None,
+                    help="Openfpga architecture file for shell")
 # parser.add_argument('--openfpga_sim_setting_file', type=str,
 #                     help="Openfpga simulation file for shell")
 # parser.add_argument('--external_fabric_key_file', type=str,
 #                     help="Key file for shell")
-parser.add_argument('--yosys_tmpl', type=str,
+parser.add_argument('--yosys_tmpl', type=str, default=None,
                     help="Alternate yosys template, generates top_module.blif")
 parser.add_argument('--disp', action="store_true",
                     help="Open display while running VPR")
@@ -313,6 +317,15 @@ def read_script_config():
         clean_up_and_exit("Missing CAD_TOOLS_PATH in openfpga_flow config")
     cad_tools = config["CAD_TOOLS_PATH"]
 
+    if args.arch_variable_file:
+        _, file_extension = os.path.splitext(args.arch_variable_file)
+        if file_extension in [".yml", ".yaml"]:
+            script_env_vars["PATH"].update(
+                EnvYAML(args.arch_variable_file, include_environment=False))
+        if file_extension in [".json", ]:
+            with open(args.arch_variable_file, "r") as fp:
+                script_env_vars["PATH"].update(json.load(fp))
+
 
 def validate_command_line_arguments():
     """
@@ -411,7 +424,7 @@ def prepare_run_directory(run_dir):
     arch_filename = os.path.basename(args.arch_file)
     args.arch_file = os.path.join(run_dir, "arch", arch_filename)
     with open(args.arch_file, 'w', encoding='utf-8') as archfile:
-        archfile.write(tmpl.substitute(script_env_vars["PATH"]))
+        archfile.write(tmpl.safe_substitute(script_env_vars["PATH"]))
 
     if (args.openfpga_arch_file):
         tmpl = Template(
@@ -419,7 +432,7 @@ def prepare_run_directory(run_dir):
         arch_filename = os.path.basename(args.openfpga_arch_file)
         args.openfpga_arch_file = os.path.join(run_dir, "arch", arch_filename)
         with open(args.openfpga_arch_file, 'w', encoding='utf-8') as archfile:
-            archfile.write(tmpl.substitute(script_env_vars["PATH"]))
+            archfile.write(tmpl.safe_substitute(script_env_vars["PATH"]))
 
     # Sanitize provided openshell template, if provided
     if (args.openfpga_shell_template):
@@ -474,11 +487,11 @@ def run_yosys_with_abc():
         "LUT_SIZE": lut_size,
         "OUTPUT_BLIF": args.top_module+"_yosys_out.blif",
     }
-    yosys_template = os.path.join(
+    yosys_template = args.yosys_tmpl if args.yosys_tmpl else os.path.join(
         cad_tools["misc_dir"], "ys_tmpl_yosys_vpr_flow.ys")
     tmpl = Template(open(yosys_template, encoding='utf-8').read())
     with open("yosys.ys", 'w') as archfile:
-        archfile.write(tmpl.substitute(ys_params))
+        archfile.write(tmpl.safe_substitute(ys_params))
     try:
         with open('yosys_output.txt', 'w+') as output:
             process = subprocess.run([cad_tools["yosys_path"], 'yosys.ys'],
@@ -701,7 +714,7 @@ def run_openfpga_shell():
         path_variables[tmpVar] = OpenFPGAArgs[indx+1]
 
     with open(args.top_module+"_run.openfpga", 'w', encoding='utf-8') as archfile:
-        archfile.write(tmpl.substitute(path_variables))
+        archfile.write(tmpl.safe_substitute(path_variables))
     command = [cad_tools["openfpga_shell_path"], "-f",
                args.top_module+"_run.openfpga"]
     run_command("OpenFPGA Shell Run", "openfpgashell.log", command)
@@ -721,7 +734,7 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
                ]
     if not args.disp:
         command += ["--disp", "off"]
-    else:  
+    else:
         command += ["--disp", "on"]
 
     if route_only:

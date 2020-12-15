@@ -26,6 +26,7 @@ sudo apt-get install libxft-dev
 sudo apt-get install libxml++2.6-dev
 sudo apt-get install perl
 sudo apt-get install python
+sudo apt-get install python3-setuptools
 sudo apt-get install python-lxml
 sudo apt-get install tcllib
 sudo apt-get install tcl8.6-dev
@@ -48,3 +49,5 @@ sudo apt-get install g++-9
 sudo apt-get install gcc-9
 sudo apt-get install clang-6.0
 sudo apt-get install clang-8
+# Python dependencies
+python3 -m pip install -r /home/runner/work/OpenFPGA/OpenFPGA/requirements.txt

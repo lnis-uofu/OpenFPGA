@@ -371,6 +371,9 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, param, task_conf):
         command += ["--power"]
         command += ["--power_tech", task_gc.get("power_tech_file")]
 
+    if task_gc.get("arch_variable_file"):
+        command += ["--arch_variable_file", task_gc.get("arch_variable_file")]
+
     if task_gc.getboolean("spice_output"):
         command += ["--vpr_fpga_spice"]
 

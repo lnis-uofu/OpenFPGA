@@ -1,10 +1,11 @@
 <!-- Architecture annotation for OpenFPGA framework
-     This annotation supports the k6_N8_40nm.xml 
+     This annotation supports the k6_N8_40nm.xml
      - General purpose logic block
        - K = 6, N = 8, I = 32
        - Single mode
      - Routing architecture
        - L = 4, fc_in = 0.15, fc_out = 0.1
+    TEST_VARIABLE = ${TEST_VARIABLE}
   -->
 <openfpga_architecture>
   <technology_library>
@@ -101,7 +102,8 @@
       <output_buffer exist="false"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
-      <wire_param model_type="pi" R="101" C="22.5e-15" num_level="1"/> <!-- model_type could be T, res_val and cap_val DON'T CARE -->
+      <wire_param model_type="pi" R="101" C="22.5e-15" num_level="1"/>
+      <!-- model_type could be T, res_val and cap_val DON'T CARE -->
     </circuit_model>
     <circuit_model type="wire" name="direct_interc" prefix="direct_interc" is_default="true">
       <design_technology type="cmos"/>
@@ -109,7 +111,8 @@
       <output_buffer exist="false"/>
       <port type="input" prefix="in" size="1"/>
       <port type="output" prefix="out" size="1"/>
-      <wire_param model_type="pi" R="0" C="0" num_level="1"/> <!-- model_type could be T, res_val cap_val should be defined -->
+      <wire_param model_type="pi" R="0" C="0" num_level="1"/>
+      <!-- model_type could be T, res_val cap_val should be defined -->
     </circuit_model>
     <circuit_model type="mux" name="mux_2level" prefix="mux_2level" dump_structural_verilog="true">
       <design_technology type="cmos" structure="multi_level" num_level="2" add_const_input="true" const_input_val="1"/>
@@ -199,9 +202,9 @@
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
     <pb_type name="io" physical_mode_name="physical" idle_mode_name="inpad"/>
-    <pb_type name="io[physical].iopad" circuit_model_name="GPIO" mode_bits="1"/> 
-    <pb_type name="io[inpad].inpad" physical_pb_type_name="io[physical].iopad" mode_bits="1"/> 
-    <pb_type name="io[outpad].outpad" physical_pb_type_name="io[physical].iopad" mode_bits="0"/> 
+    <pb_type name="io[physical].iopad" circuit_model_name="GPIO" mode_bits="1"/>
+    <pb_type name="io[inpad].inpad" physical_pb_type_name="io[physical].iopad" mode_bits="1"/>
+    <pb_type name="io[outpad].outpad" physical_pb_type_name="io[physical].iopad" mode_bits="0"/>
     <!-- End physical pb_type binding in complex block IO -->
 
     <!-- physical pb_type binding in complex block CLB -->
