@@ -19,6 +19,7 @@
 #include "fabric_bitstream.h"
 #include "device_rr_gsb.h"
 #include "io_location_map.h"
+#include "fabric_global_port_info.h"
 
 /********************************************************************
  * This file includes the declaration of the date structure 
@@ -65,6 +66,7 @@ class OpenfpgaContext : public Context  {
     const openfpga::BitstreamManager& bitstream_manager() const { return bitstream_manager_; }
     const openfpga::FabricBitstream& fabric_bitstream() const { return fabric_bitstream_; }
     const openfpga::IoLocationMap& io_location_map() const { return io_location_map_; }
+    const openfpga::FabricGlobalPortInfo& fabric_global_port_info() const { return fabric_global_port_info_; }
     const std::unordered_map<AtomNetId, t_net_power>& net_activity() const { return net_activity_; }
     const openfpga::NetlistManager& verilog_netlists() const { return verilog_netlists_; }
     const openfpga::NetlistManager& spice_netlists() const { return spice_netlists_; }
@@ -85,6 +87,7 @@ class OpenfpgaContext : public Context  {
     openfpga::BitstreamManager& mutable_bitstream_manager() { return bitstream_manager_; }
     openfpga::FabricBitstream& mutable_fabric_bitstream() { return fabric_bitstream_; }
     openfpga::IoLocationMap& mutable_io_location_map() { return io_location_map_; }
+    openfpga::FabricGlobalPortInfo& mutable_fabric_global_port_info() { return fabric_global_port_info_; }
     std::unordered_map<AtomNetId, t_net_power>& mutable_net_activity() { return net_activity_; }
     openfpga::NetlistManager& mutable_verilog_netlists() { return verilog_netlists_; }
     openfpga::NetlistManager& mutable_spice_netlists() { return spice_netlists_; }
@@ -123,6 +126,7 @@ class OpenfpgaContext : public Context  {
     /* Fabric module graph */
     openfpga::ModuleManager module_graph_;
     openfpga::IoLocationMap io_location_map_;
+    openfpga::FabricGlobalPortInfo fabric_global_port_info_;
 
     /* Bitstream database */
     openfpga::BitstreamManager bitstream_manager_;

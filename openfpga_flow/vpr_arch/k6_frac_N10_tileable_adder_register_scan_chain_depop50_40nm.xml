@@ -143,18 +143,34 @@
     -->
   <layout tileable="true">
     <auto_layout aspect_ratio="1.0">
-    <!-- Apply a fixed layout of 2x2 core array.
-         VPR8 considers the I/O ring in the array size
-         Therefore the height and width are both 4
-      -->
-    <!-- fixed_layout name="32x32" width="34" height="34" -->
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="100"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
-    <!-- /fixed_layout -->
     </auto_layout>
+    <!-- Apply a fixed layout of 96x96 core array.
+         VPR8 considers the I/O ring in the array size
+         Therefore the height and width are both 34
+      -->
+    <fixed_layout name="96x96" width="98" height="98">
+      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
+      <perimeter type="io" priority="100"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+    </fixed_layout>
+    <!-- Apply a fixed layout of 48x48 core array.
+         VPR8 considers the I/O ring in the array size
+         Therefore the height and width are both 34
+      -->
+    <fixed_layout name="48x48" width="50" height="50">
+      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
+      <perimeter type="io" priority="100"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+    </fixed_layout>
   </layout>
   <device>
     <sizing R_minW_nmos="8926" R_minW_pmos="16067"/>

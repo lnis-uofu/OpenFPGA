@@ -7,9 +7,10 @@ Welcome to OpenFPGA's documentation!
 ====================================
 
 .. toctree::
-   :caption: Motivation
+   :maxdepth: 2
+   :caption: Overview
 
-   motivation
+   overview/index
 
 .. toctree::
    :maxdepth: 2

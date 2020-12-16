@@ -45,8 +45,9 @@ class VprDeviceAnnotation {
     bool is_physical_pb_type(t_pb_type* pb_type) const;
     t_mode* physical_mode(t_pb_type* pb_type) const;
     t_pb_type* physical_pb_type(t_pb_type* pb_type) const;
-    t_port* physical_pb_port(t_port* pb_port) const;
-    BasicPort physical_pb_port_range(t_port* pb_port) const;
+    std::vector<t_port*> physical_pb_port(t_port* pb_port) const;
+    BasicPort physical_pb_port_range(t_port* operating_pb_port,
+                                     t_port* physical_pb_port) const;
     CircuitModelId pb_type_circuit_model(t_pb_type* physical_pb_type) const;
     CircuitModelId interconnect_circuit_model(t_interconnect* pb_interconnect) const;
     e_interconnect interconnect_physical_type(t_interconnect* pb_interconnect) const;
@@ -60,7 +61,11 @@ class VprDeviceAnnotation {
     float physical_pb_type_index_factor(t_pb_type* pb_type) const;
     int physical_pb_type_index_offset(t_pb_type* pb_type) const;
 
-    int physical_pb_pin_rotate_offset(t_port* pb_port) const;
+    int physical_pb_pin_initial_offset(t_port* operating_pb_port,
+                                       t_port* physical_pb_port) const;
+
+    int physical_pb_pin_rotate_offset(t_port* operating_pb_port,
+                                      t_port* physical_pb_port) const;
 
     /**This function returns an accumulated offset. Note that the
      * accumulated offset is NOT the pin rotate offset specified by users
@@ -69,7 +74,8 @@ class VprDeviceAnnotation {
      * by the pin rotate offset value
      * The accumulated offset will be reset to 0 when it exceeds the msb() of the physical port
      */
-    int physical_pb_pin_offset(t_port* pb_port) const;
+    int physical_pb_pin_offset(t_port* operating_pb_port,
+                               t_port* physical_pb_port) const;
     t_pb_graph_pin* physical_pb_graph_pin(const t_pb_graph_pin* pb_graph_pin) const;
     CircuitModelId rr_switch_circuit_model(const RRSwitchId& rr_switch) const;
     CircuitModelId rr_segment_circuit_model(const RRSegmentId& rr_segment) const;
@@ -78,8 +84,11 @@ class VprDeviceAnnotation {
   public:  /* Public mutators */
     void add_pb_type_physical_mode(t_pb_type* pb_type, t_mode* physical_mode);
     void add_physical_pb_type(t_pb_type* operating_pb_type, t_pb_type* physical_pb_type);
-    void add_physical_pb_port(t_port* operating_pb_port, t_port* physical_pb_port);
-    void add_physical_pb_port_range(t_port* operating_pb_port, const BasicPort& port_range);
+    void add_physical_pb_port(t_port* operating_pb_port,
+                              t_port* physical_pb_port);
+    void add_physical_pb_port_range(t_port* operating_pb_port,
+                                    t_port* physical_pb_port,
+                                    const BasicPort& port_range);
     void add_pb_type_circuit_model(t_pb_type* physical_pb_type, const CircuitModelId& circuit_model);
     void add_interconnect_circuit_model(t_interconnect* pb_interconnect, const CircuitModelId& circuit_model);
     void add_interconnect_physical_type(t_interconnect* pb_interconnect, const e_interconnect& physical_type);
@@ -90,7 +99,12 @@ class VprDeviceAnnotation {
                                     t_pb_graph_node* physical_pb_graph_node);
     void add_physical_pb_type_index_factor(t_pb_type* pb_type, const float& factor);
     void add_physical_pb_type_index_offset(t_pb_type* pb_type, const int& offset);
-    void add_physical_pb_pin_rotate_offset(t_port* pb_port, const int& offset);
+    void add_physical_pb_pin_initial_offset(t_port* operating_pb_port,
+                                            t_port* physical_pb_port,
+                                            const int& offset);
+    void add_physical_pb_pin_rotate_offset(t_port* operating_pb_port,
+                                           t_port* physical_pb_port,
+                                           const int& offset);
     void add_physical_pb_graph_pin(const t_pb_graph_pin* operating_pb_graph_pin, t_pb_graph_pin* physical_pb_graph_pin);
     void add_rr_switch_circuit_model(const RRSwitchId& rr_switch, const CircuitModelId& circuit_model);
     void add_rr_segment_circuit_model(const RRSegmentId& rr_segment, const CircuitModelId& circuit_model);
@@ -139,17 +153,18 @@ class VprDeviceAnnotation {
      * Note:
      * - the parent of physical pb_port MUST be a physical pb_type
      */
-    std::map<t_port*, t_port*> physical_pb_ports_;
-    std::map<t_port*, int> physical_pb_pin_rotate_offsets_;
+    std::map<t_port*, std::vector<t_port*>> physical_pb_ports_;
+    std::map<t_port*, std::map<t_port*, int>> physical_pb_pin_initial_offsets_;
+    std::map<t_port*, std::map<t_port*, int>> physical_pb_pin_rotate_offsets_;
 
     /* Accumulated offsets for a physical pb_type port, just for internal usage */
-    std::map<t_port*, int> physical_pb_pin_offsets_;
+    std::map<t_port*, std::map<t_port*, int>> physical_pb_pin_offsets_;
 
     /* Pair a pb_port to its LSB and MSB of a physical pb_port 
      * Note:
      * - the LSB and MSB MUST be in range of the physical pb_port
      */
-    std::map<t_port*, BasicPort> physical_pb_port_ranges_;
+    std::map<t_port*, std::map<t_port*, BasicPort>> physical_pb_port_ranges_;
 
     /* Pair a pb_port to a circuit port in circuit model
      * Note:

@@ -20,10 +20,6 @@ void print_verilog_submodule_timing(std::fstream& fp,
                                     const CircuitLibrary& circuit_lib,
                                     const CircuitModelId& circuit_model);
 
-void print_verilog_submodule_signal_init(std::fstream& fp, 
-                                         const CircuitLibrary& circuit_lib,
-                                         const CircuitModelId& circuit_model);
-
 void add_user_defined_verilog_modules(ModuleManager& module_manager, 
                                       const CircuitLibrary& circuit_lib);
 

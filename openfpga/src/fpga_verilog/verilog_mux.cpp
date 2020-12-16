@@ -6,6 +6,7 @@
  * and the full multiplexer
  **********************************************/
 #include <string>
+#include <map>
 #include <algorithm>
 
 /* Headers from vtrutil library */
@@ -580,10 +581,17 @@ void generate_verilog_mux_branch_module(ModuleManager& module_manager,
                                         const CircuitLibrary& circuit_lib, 
                                         std::fstream& fp, 
                                         const CircuitModelId& mux_model, 
-                                        const size_t& mux_size, 
                                         const MuxGraph& mux_graph,
-                                        const bool& use_explicit_port_map) {
-  std::string module_name = generate_mux_branch_subckt_name(circuit_lib, mux_model, mux_size, mux_graph.num_inputs(), VERILOG_MUX_BASIS_POSTFIX);
+                                        const bool& use_explicit_port_map,
+                                        std::map<std::string, bool>& branch_mux_module_is_outputted) {
+  std::string module_name = generate_mux_branch_subckt_name(circuit_lib, mux_model, mux_graph.num_inputs(), mux_graph.num_memory_bits(), VERILOG_MUX_BASIS_POSTFIX);
+
+  /* Skip outputting if the module has already been outputted */
+  auto result = branch_mux_module_is_outputted.find(module_name);
+  if ((result != branch_mux_module_is_outputted.end())
+    && (true == result->second)) {
+    return;
+  }
 
   /* Multiplexers built with different technology is in different organization */
   switch (circuit_lib.design_tech_type(mux_model)) {
@@ -618,6 +626,9 @@ void generate_verilog_mux_branch_module(ModuleManager& module_manager,
                    circuit_lib.model_name(mux_model).c_str()); 
     exit(1);
   }
+
+  /* Record that this branch module has been outputted */
+  branch_mux_module_is_outputted[module_name] = true;
 }
 
 /********************************************************************
@@ -809,9 +820,6 @@ void generate_verilog_rram_mux_module_multiplexing_structure(ModuleManager& modu
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
-  /* Find the actual mux size */
-  size_t mux_size = find_mux_num_datapath_inputs(circuit_lib, circuit_model, mux_graph.num_inputs());
-
   /* Get the BL and WL ports from the mux */
   std::vector<CircuitPortId> mux_blb_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_BLB, true);
   std::vector<CircuitPortId> mux_wl_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_WL, true);
@@ -876,7 +884,7 @@ void generate_verilog_rram_mux_module_multiplexing_structure(ModuleManager& modu
 
     /* Instanciate the branch module which is a tgate-based module  
      */
-    std::string branch_module_name= generate_mux_branch_subckt_name(circuit_lib, circuit_model, mux_size, branch_size, VERILOG_MUX_BASIS_POSTFIX);
+    std::string branch_module_name= generate_mux_branch_subckt_name(circuit_lib, circuit_model, branch_size, mems.size(), VERILOG_MUX_BASIS_POSTFIX);
     /* Get the moduleId for the submodule */
     ModuleId branch_module_id = module_manager.find_module(branch_module_name);
     /* We must have one */
@@ -1218,18 +1226,74 @@ void generate_verilog_mux_module(ModuleManager& module_manager,
   }
 }
 
-
 /***********************************************
- * Generate Verilog modules for all the unique
+ * Generate primitive Verilog modules for all the unique
  * multiplexers in the FPGA device
  **********************************************/
-void print_verilog_submodule_muxes(ModuleManager& module_manager,
-                                   NetlistManager& netlist_manager,
-                                   const MuxLibrary& mux_lib,
-                                   const CircuitLibrary& circuit_lib,
-                                   const std::string& submodule_dir,
-                                   const bool& use_explicit_port_map) {
+static 
+void print_verilog_submodule_mux_primitives(ModuleManager& module_manager,
+                                            NetlistManager& netlist_manager,
+                                            const MuxLibrary& mux_lib,
+                                            const CircuitLibrary& circuit_lib,
+                                            const std::string& submodule_dir,
+                                            const bool& use_explicit_port_map) {
+  /* Output primitive cells for MUX modules */ 
+  std::string verilog_fname(submodule_dir + std::string(MUX_PRIMITIVES_VERILOG_FILE_NAME));
 
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  check_file_stream(verilog_fname.c_str(), fp);
+
+  /* Print out debugging information for if the file is not opened/created properly */
+  VTR_LOG("Writing Verilog netlist for Multiplexer primitives '%s' ...",
+          verilog_fname.c_str()); 
+
+  print_verilog_file_header(fp, "Multiplexer primitives"); 
+
+  /* Record if the branch module has been outputted
+   * since different sizes of routing multiplexers may share the same branch module
+   */
+  std::map<std::string, bool> branch_mux_module_is_outputted;
+
+  /* Generate basis sub-circuit for unique branches shared by the multiplexers */
+  for (auto mux : mux_lib.muxes()) {
+    const MuxGraph& mux_graph = mux_lib.mux_graph(mux);
+    CircuitModelId mux_circuit_model = mux_lib.mux_circuit_model(mux); 
+    /* Create a mux graph for the branch circuit */
+    std::vector<MuxGraph> branch_mux_graphs = mux_graph.build_mux_branch_graphs();
+    /* Create branch circuits, which are N:1 one-level or 2:1 tree-like MUXes */
+    for (auto branch_mux_graph : branch_mux_graphs) {
+      generate_verilog_mux_branch_module(module_manager, circuit_lib, fp, mux_circuit_model, 
+                                         branch_mux_graph, use_explicit_port_map,
+                                         branch_mux_module_is_outputted);
+    }
+  }
+
+  /* Close the file stream */
+  fp.close();
+
+  /* Add fname to the netlist name list */
+  NetlistId nlist_id = netlist_manager.add_netlist(verilog_fname);
+  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  netlist_manager.set_netlist_type(nlist_id, NetlistManager::SUBMODULE_NETLIST);
+
+  VTR_LOG("Done\n");
+}
+
+/***********************************************
+ * Generate top-level Verilog modules for all the unique
+ * multiplexers in the FPGA device
+ **********************************************/
+static 
+void print_verilog_submodule_mux_top_modules(ModuleManager& module_manager,
+                                             NetlistManager& netlist_manager,
+                                             const MuxLibrary& mux_lib,
+                                             const CircuitLibrary& circuit_lib,
+                                             const std::string& submodule_dir,
+                                             const bool& use_explicit_port_map) {
+  /* Output top-level MUX modules */ 
   std::string verilog_fname(submodule_dir + std::string(MUXES_VERILOG_FILE_NAME));
 
   /* Create the file stream */
@@ -1244,19 +1308,6 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
 
   print_verilog_file_header(fp, "Multiplexers"); 
 
-  /* Generate basis sub-circuit for unique branches shared by the multiplexers */
-  for (auto mux : mux_lib.muxes()) {
-    const MuxGraph& mux_graph = mux_lib.mux_graph(mux);
-    CircuitModelId mux_circuit_model = mux_lib.mux_circuit_model(mux); 
-    /* Create a mux graph for the branch circuit */
-    std::vector<MuxGraph> branch_mux_graphs = mux_graph.build_mux_branch_graphs();
-    /* Create branch circuits, which are N:1 one-level or 2:1 tree-like MUXes */
-    for (auto branch_mux_graph : branch_mux_graphs) {
-      generate_verilog_mux_branch_module(module_manager, circuit_lib, fp, mux_circuit_model, 
-                                         find_mux_num_datapath_inputs(circuit_lib, mux_circuit_model, mux_graph.num_inputs()), 
-                                         branch_mux_graph, use_explicit_port_map);
-    }
-  }
 
   /* Generate unique Verilog modules for the multiplexers */
   for (auto mux : mux_lib.muxes()) {
@@ -1275,6 +1326,36 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
   netlist_manager.set_netlist_type(nlist_id, NetlistManager::SUBMODULE_NETLIST);
 
   VTR_LOG("Done\n");
+}
+
+/***********************************************
+ * Generate Verilog modules for all the unique
+ * multiplexers in the FPGA device
+ * Output to two Verilog netlists:
+ * - A Verilog netlist contains all the primitive
+ *   cells for build the routing multiplexers
+ * - A Verilog netlist contains all the top-level
+ *   module for routing multiplexers
+ **********************************************/
+void print_verilog_submodule_muxes(ModuleManager& module_manager,
+                                   NetlistManager& netlist_manager,
+                                   const MuxLibrary& mux_lib,
+                                   const CircuitLibrary& circuit_lib,
+                                   const std::string& submodule_dir,
+                                   const bool& use_explicit_port_map) {
+  print_verilog_submodule_mux_primitives(module_manager,
+                                         netlist_manager,
+                                         mux_lib,
+                                         circuit_lib,
+                                         submodule_dir,
+                                         use_explicit_port_map);
+
+  print_verilog_submodule_mux_top_modules(module_manager,
+                                          netlist_manager,
+                                          mux_lib,
+                                          circuit_lib,
+                                          submodule_dir,
+                                          use_explicit_port_map);
 }
 
 } /* end namespace openfpga */

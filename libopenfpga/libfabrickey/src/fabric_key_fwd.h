@@ -12,8 +12,10 @@
 
 #include "vtr_strong_id.h"
 
+struct fabric_region_id_tag;
 struct fabric_key_id_tag;
 
+typedef vtr::StrongId<fabric_region_id_tag> FabricRegionId;
 typedef vtr::StrongId<fabric_key_id_tag> FabricKeyId;
 
 /* Short declaration of class */

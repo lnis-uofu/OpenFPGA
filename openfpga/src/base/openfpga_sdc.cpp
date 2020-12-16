@@ -80,11 +80,6 @@ int write_pnr_sdc(const OpenfpgaContext& openfpga_ctx,
     options.set_generate_sdc_pnr(true);
   }
 
-  /* Collect global ports from the circuit library:
-   * TODO: should we place this in the OpenFPGA context?
-   */
-  std::vector<CircuitPortId> global_ports = find_circuit_library_global_ports(openfpga_ctx.arch().circuit_lib);
-  
   /* Execute only when sdc is enabled */
   if (true == options.generate_sdc_pnr()) { 
     print_pnr_sdc(options,
@@ -96,7 +91,7 @@ int write_pnr_sdc(const OpenfpgaContext& openfpga_ctx,
                   openfpga_ctx.module_graph(),
                   openfpga_ctx.mux_lib(),
                   openfpga_ctx.arch().circuit_lib,
-                  global_ports,
+                  openfpga_ctx.fabric_global_port_info(),
                   openfpga_ctx.flow_manager().compress_routing());
   }
 
@@ -193,17 +188,11 @@ int write_analysis_sdc(const OpenfpgaContext& openfpga_ctx,
     options.set_time_unit(string_to_time_unit(cmd_context.option_value(cmd, opt_time_unit)));
   }
 
-  /* Collect global ports from the circuit library:
-   * TODO: should we place this in the OpenFPGA context?
-   */
-  std::vector<CircuitPortId> global_ports = find_circuit_library_global_ports(openfpga_ctx.arch().circuit_lib);
-
   if (true == options.generate_sdc_analysis()) {
     print_analysis_sdc(options,
                        1./openfpga_ctx.simulation_setting().operating_clock_frequency(),
                        g_vpr_ctx, 
                        openfpga_ctx,
-                       global_ports,
                        openfpga_ctx.flow_manager().compress_routing());
   }
 

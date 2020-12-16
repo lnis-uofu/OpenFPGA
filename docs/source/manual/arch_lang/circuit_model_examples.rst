@@ -30,6 +30,8 @@ Template
 
   - ``f_per_stage="<float>"`` Define the ratio of driving strength between the levels of a tapered inverter/buffer. Default value is 4.
 
+.. _circuit_model_inverter_1x_example:
+
 Inverter 1x Example
 ```````````````````
 
@@ -59,6 +61,8 @@ This example shows:
   - Size of 1 for the output strength
   - The tapered parameter is not declared and is ``false`` by default
 
+.. _circuit_model_power_gated_inverter_example:
+
 Power-gated Inverter 1x example
 ```````````````````````````````
 
@@ -74,7 +78,9 @@ The XML code describing an inverter which can be power-gated by the control sign
     <port type="output" prefix="out" size="1" lib_name="Z"/>
   </circuit_model>
 
-.. note:: For power-gated inverters: all the control signals must be set as ``config_enable`` so that the testbench generation will generate testing waveforms. If the power-gated inverters are auto-generated , all the ``config_enable`` signals must be ``global`` signals as well. If the pwoer-gated inverters come from user-defined netlists, restrictions on ``global`` signals are free.
+.. note:: For power-gated inverters: all the control signals must be set as ``config_enable`` so that the testbench generation will generate testing waveforms. If the power-gated inverters are auto-generated, all the ``config_enable`` signals must be ``global`` signals as well. If the power-gated inverters come from user-defined netlists, restrictions on ``global`` signals are free.
+
+.. _circuit_model_buffer_2x_example:
 
 Buffer 2x example
 `````````````````
@@ -104,6 +110,26 @@ This example shows:
   - Size of 2 for the output strength
   - The tapered parameter is not declared and is ``false`` by default
 
+.. _circuit_model_power_gated_buffer_example:
+
+Power-gated Buffer 4x example
+`````````````````````````````
+
+The XML code describing a buffer which can be power-gated by the control signals ``EN`` and ``ENB`` :
+
+.. code-block:: xml
+
+  <circuit_model type="inv_buf" name="buf_4x" prefix="buf_4x">
+    <design_technology type="cmos" topology="buffer" size="4" power_gated="true"/>
+    <port type="input" prefix="in" size="1" lib_name="I"/>
+    <port type="input" prefix="EN" size="1" lib_name="EN" is_global="true" default_val="0" is_config_enable="true"/>
+    <port type="input" prefix="ENB" size="1" lib_name="ENB" is_global="true" default_val="1" is_config_enable="true"/>
+    <port type="output" prefix="out" size="1" lib_name="Z"/>
+  </circuit_model>
+
+.. note:: For power-gated buffers: all the control signals must be set as ``config_enable`` so that the testbench generation will generate testing waveforms. If the power-gated buffers are auto-generated, all the ``config_enable`` signals must be ``global`` signals as well. If the power-gated buffers come from user-defined netlists, restrictions on ``global`` signals are free.
+
+.. _circuit_model_tapered_inv_16x_example:
 
 Tapered inverter 16x example
 ````````````````````````````
@@ -123,7 +149,7 @@ The XML code describing this inverter is:
 .. code-block:: xml
 
   <circuit_model type="inv_buf" name="tapdrive4" prefix="tapdrive4">
-    <design_technology type="cmos" topology=”inverter" size="1" num_level="3" f_per_stage="4"/>
+    <design_technology type="cmos" topology="inverter" size="1" num_level="3" f_per_stage="4"/>
     <port type="input" prefix="in" size="1"/>
     <port type="output" prefix="out" size="1"/>
   </circuit_model>
@@ -133,7 +159,30 @@ This example shows:
   - The topology chosen as inverter
   - Size of 1 for the first stage output strength
   - The number of stage is set to 3 by
-  - f_per_stage is set to 4. Then 2nd stage output strength is 4* the 1st stage output strength (so 4*1 = 4) and the 3rd stage output strength is 4* the 2nd stage output strength (so 4*4 =  16).
+  - f_per_stage is set to 4. As a result, 2nd stage output strength is 4x, and the 3rd stage output strength is 16x.
+
+.. _circuit_model_tapered_buffer_64x_example:
+
+Tapered buffer 64x example
+``````````````````````````
+
+The XML code describing a 4-stage buffer is:
+
+.. code-block:: xml
+
+  <circuit_model type="inv_buf" name="tapbuf_16x" prefix="tapbuf_16x">
+    <design_technology type="cmos" topology="buffer" size="1" num_level="4" f_per_stage="4"/>
+    <port type="input" prefix="in" size="1"/>
+    <port type="output" prefix="out" size="1"/>
+  </circuit_model>
+
+
+This example shows:
+  - The topology chosen as buffer
+  - Size of 1 for the first stage output strength
+  - The number of stage is set to 4 by
+  - f_per_stage is set to 2. As a result, 2nd stage output strength is 4*, the 3rd stage output strength is 16*, and the 4th stage output strength is 64x.
+
 
 Pass-gate Logic
 ~~~~~~~~~~~~~~~
@@ -151,7 +200,15 @@ Template
     <port type="output" prefix="<string>" size="<int>"/>
   </circuit_model>
 
-.. note:: Please do not add input and output buffers to pass-gate logic.
+.. note:: The port sequence really matters! And all the input ports must have an input size of 1!
+
+          - The first input must be the datapath input, e.g., ``in``.
+
+          - The second input must be the select input, e.g., ``sel``.
+
+          - The third input (if applicable) must be the inverted select input, e.g., ``selb``.
+
+.. warning:: Please do **NOT** add input and output buffers to pass-gate logic.
 
 .. option:: <design_technology type="cmos" topology="<string>" nmos_size="<float>" pmos_size="<float>"/>
 
@@ -162,6 +219,8 @@ Template
   - ``pmos_size="<float>"`` the size of *p*-type transistor in a transmission gate, expressed in terms of the minimum width ``min_width`` defined in the transistor model in :ref:`technology_library`.
 
 .. note:: ``nmos_size`` and ``pmos_size`` are required for FPGA-SPICE
+
+.. _circuit_model_tgate_example:
 
 Transmission-gate Example
 `````````````````````````
@@ -191,6 +250,8 @@ The XML code describing this pass-gate is:
 This example shows:
   - A ``transmission_gate`` built with a *n*-type transistor in the size of 1 and a *p*-type transistor in the size of 2.
   - 3 inputs considered, 1 for datapath signal and 2 to turn on/off the transistors gates
+
+.. _circuit_model_pass_transistor_example:
 
 Pass-transistor Example
 ```````````````````````
@@ -240,6 +301,8 @@ Template
 
 .. note:: The information of input and output buffer should be clearly specified according to the customized Verilog/SPICE netlist! The existence of input/output buffers will influence the decision in creating testbenches, which may leads to larger errors in power analysis.
 
+.. _circuit_model_sram_blwl_example:
+
 SRAM with BL/WL
 ```````````````
 .. _fig_sram_blwl:
@@ -267,6 +330,8 @@ The following XML codes describes the SRAM cell shown in :numref:`fig_sram_blwl`
 .. note:: OpenFPGA always assume that a ``WL`` port should be the write/read enable signal, while a ``BL`` port is the data input.
 
 .. note:: When the ``memory_bank`` type of configuration procotol is specified, SRAM modules should have a BL and a WL.
+
+.. _circuit_model_config_latch_example:
 
 Configurable Latch
 ``````````````````
@@ -319,8 +384,43 @@ Template
   
   - ``topology="AND|OR|MUX2"`` Specify the logic functionality of a gate. As for standard cells, the size of each port is limited to 1. Currently, only 2-input and single-output logic gates are supported.
 
-2-input OR Gate Example
-```````````````````````
+.. note:: The port sequence really matters for MUX2 logic gates! 
+
+          - The first two inputs must be the datapath inputs, e.g., ``in0`` and ``in1``.
+
+          - The third input must be the select input, e.g., ``sel``.
+
+.. _circuit_model_and2_example:
+
+2-input AND Gate
+````````````````
+
+.. code-block:: xml
+
+    <circuit_model type="gate" name="AND2" prefix="AND2" is_default="true">
+      <design_technology type="cmos" topology="AND"/>
+      <input_buffer exist="false"/>
+      <output_buffer exist="false"/>
+      <port type="input" prefix="a" size="1"/>
+      <port type="input" prefix="b" size="1"/>
+      <port type="output" prefix="out" size="1"/>
+      <delay_matrix type="rise" in_port="a b" out_port="out">
+        10e-12 8e-12
+      </delay_matrix>
+      <delay_matrix type="fall" in_port="a b" out_port="out">
+        10e-12 7e-12
+      </delay_matrix>
+    </circuit_model>
+
+This example shows:
+  - A 2-input AND gate without any input and output buffers
+  - Propagation delay from input ``a`` to ``out`` is 10ps in rising edge and and 8ps in falling edge
+  - Propagation delay from input ``b`` to ``out`` is 10ps in rising edge and 7ps in falling edge
+
+.. _circuit_model_or2_example:
+
+2-input OR Gate
+```````````````
 
 .. code-block:: xml
 
@@ -344,8 +444,10 @@ This example shows:
   - Propagation delay from input ``a`` to ``out`` is 10ps in rising edge and and 8ps in falling edge
   - Propagation delay from input ``b`` to ``out`` is 10ps in rising edge and 7ps in falling edge
 
-MUX2 Gate Example
-```````````````````````
+.. _circuit_model_mux2_gate_example:
+
+MUX2 Gate
+`````````
 
 .. code-block:: xml
 
@@ -409,7 +511,9 @@ Template
 
 .. note:: When multiplexers are not provided by users, the size of ports do not have to be consistent with actual numbers in the architecture.
 
-One-level Mux Example
+.. _circuit_model_mux_1level_example:
+
+One-level Multiplexer
 `````````````````````
 
 :numref:`fig_mux1` illustrates an example of multiplexer modelling, which consists of input/output buffers and a transmission-gate-based tree structure.
@@ -443,8 +547,10 @@ This example shows:
   - The multiplexer will be built by transmission gate using the circuit model ``tgate``
   - The multiplexer will have 4 inputs and 4 SRAMs to control which datapath to propagate
 
-Tree-like Multiplexer Example
-`````````````````````````````
+.. _circuit_model_mux_tree_example:
+
+Tree-like Multiplexer
+`````````````````````
 
 :numref:`fig_mux` illustrates an example of multiplexer modelling, which consists of input/output buffers and a transmission-gate-based tree structure.
 
@@ -477,8 +583,10 @@ This example shows:
   - The multiplexer will be built by transmission gate using the circuit model ``tgate``
   - The multiplexer will have 4 inputs and 3 SRAMs to control which datapath to propagate
 
-Standard Cell Multiplexer Example
-`````````````````````````````````
+.. _circuit_model_mux_stdcell_example:
+
+Standard Cell Multiplexer
+`````````````````````````
 .. code-block:: xml
 
   <circuit_model type="mux" name="mux_stdcell" prefix="mux_stdcell">
@@ -496,6 +604,74 @@ This example shows:
   - All the inputs will be buffered using the circuit model ``inv1x``
   - All the outputs will be buffered using the circuit model ``tapbuf4``
   - The multiplexer will have 4 inputs and 3 SRAMs to control which datapath to propagate
+
+.. _circuit_model_mux_multilevel_example:
+
+Multi-level Multiplexer
+```````````````````````
+.. code-block:: xml
+
+  <circuit_model type="mux" name="mux_2level" prefix="mux_stdcell">
+    <design_technology type="cmos" structure="multi_level" num_level="2"/>
+    <input_buffer exist="on" circuit_model_name="inv1x"/>
+    <output_buffer exist="on" circuit_model_name="tapdrive4"/>
+    <pass_gate_logic circuit_model_name="TGATE"/>
+    <port type="input" prefix="in" size="16"/>
+    <port type="output" prefix="out" size="1"/>
+    <port type="sram" prefix="sram" size="8"/>
+  </circuit_model>
+
+This example shows:
+  - A two-level 16-input CMOS multiplexer built by the transmission gate ``TGATE``
+  - All the inputs will be buffered using the circuit model ``inv1x``
+  - All the outputs will be buffered using the circuit model ``tapbuf4``
+  - The multiplexer will have 16 inputs and 8 SRAMs to control which datapath to propagate
+
+.. _circuit_model_mux_local_encoder_example:
+
+Multiplexer with Local Encoder
+``````````````````````````````
+.. code-block:: xml
+
+  <circuit_model type="mux" name="mux_2level" prefix="mux_stdcell">
+    <design_technology type="cmos" structure="multi_level" num_level="2" local_encoder="true"/>
+    <input_buffer exist="on" circuit_model_name="inv1x"/>
+    <output_buffer exist="on" circuit_model_name="tapdrive4"/>
+    <pass_gate_logic circuit_model_name="TGATE"/>
+    <port type="input" prefix="in" size="16"/>
+    <port type="output" prefix="out" size="1"/>
+    <port type="sram" prefix="sram" size="4"/>
+  </circuit_model>
+
+This example shows:
+  - A two-level 16-input CMOS multiplexer built by the transmission gate ``TGATE``
+  - All the inputs will be buffered using the circuit model ``inv1x``
+  - All the outputs will be buffered using the circuit model ``tapbuf4``
+  - The multiplexer will have 16 inputs and 4 SRAMs to control which datapath to propagate
+  - Two local encoders are generated between the SRAMs and multiplexing structure to reduce the number of configurable memories required.
+
+.. _circuit_model_mux_const_input_example:
+
+Multiplexer with Constant Input
+```````````````````````````````
+.. code-block:: xml
+
+  <circuit_model type="mux" name="mux_2level" prefix="mux_stdcell">
+    <design_technology type="cmos" structure="multi_level" num_level="2" add_const_input="true" const_input_val="1"/>
+    <input_buffer exist="on" circuit_model_name="inv1x"/>
+    <output_buffer exist="on" circuit_model_name="tapdrive4"/>
+    <pass_gate_logic circuit_model_name="TGATE"/>
+    <port type="input" prefix="in" size="14"/>
+    <port type="output" prefix="out" size="1"/>
+    <port type="sram" prefix="sram" size="8"/>
+  </circuit_model>
+
+This example shows:
+  - A two-level 16-input CMOS multiplexer built by the transmission gate ``TGATE``
+  - All the inputs will be buffered using the circuit model ``inv1x``
+  - All the outputs will be buffered using the circuit model ``tapbuf4``
+  - The multiplexer will have 15 inputs and 8 SRAMs to control which datapath to propagate
+  - An constant input toggled at logic '1' is added in addition to the 14 regular inputs
 
 Look-Up Tables
 ~~~~~~~~~~~~~~
@@ -548,7 +724,15 @@ Template
 
   - ``circuit_model_name="<string>"`` Specify the ``circuit_model`` that will be used to build these buffers
 
-  - ``location_map="[1|-]"`` Customize the location of buffers in intermediate stages. Users can define an integer array consisting of '1' and '-'. For example, ``-1-1-`` indicates buffer inseration to every two stages of the LUT multiplexer tree, considering a 6-input LUT. 
+  - ``location_map="[1|-]"`` Customize the location of buffers in intermediate stages. Users can define an integer array consisting of '1' and '-'. Take the example in :numref:`fig_lut_intermediate_buffer_example`, ``-1-`` indicates buffer inseration to the second stage of the LUT multiplexer tree, considering a 3-input LUT. 
+
+.. _fig_lut_intermediate_buffer_example:
+
+.. figure:: ./figures/lut_intermediate_buffer_example.svg
+   :scale: 80%
+   :alt: detailed lut composition
+
+   An example of adding intermediate buffers to a 3-input Look-Up Table (LUT).
 
 .. note:: For a LUT, three types of ports (``input``, ``output`` and ``sram``) should be defined. If the user provides an customized Verilog/SPICE netlist, the bandwidth of ports should be defined to the same as the Verilog/SPICE netlist. To support customizable LUTs, each type of port contain special keywords. 
 
@@ -576,41 +760,94 @@ Template
 
 .. note:: The size of a mode-selection SRAM port should be consistent to the number of '1s' or '0s' in the ``tri_state_map``.
 
-Single-Output LUT Example
-`````````````````````````
+.. _circuit_model_single_output_lut_example:
 
-:numref:`fig_lut` illustrates an example of LUT modeling, which consists of input/output buffers and a transmission-gate-based tree structure.
+Single-Output LUT
+`````````````````
 
-.. _fig_lut:
+:numref:`fig_single_lut3_example` illustrates an example of LUT modeling, which consists of input/output buffers and a transmission-gate-based tree structure.
 
-.. figure:: ./figures/lut.png
+.. _fig_single_lut3_example:
+
+.. figure:: ./figures/single_lut3_example.svg
    :scale: 80%
-   :alt: Detailed LUT composition
+   :alt: detailed lut composition
 
-   An example of a LUT with transistor-level design parameters.
+   An example of a single-output 3-input LUT.
 
 The code describing this LUT is:
 
 .. code-block:: xml
 
-  <circuit_model type="lut" name="lut6" prefix="lut6">
+  <circuit_model type="lut" name="lut3" prefix="lut3">
     <input_buffer exist="on" circuit_model="inv1x"/>
     <output_buffer exist="on" circuit_model_name="inv1x"/>
     <lut_input_buffer exist="on" circuit_model_name="buf2"/>
     <lut_input_inverter exist="on" circuit_model_name="inv1x"/>
     <pass_gate_logic circuit_model_name="tgate"/>
-    <port type="input" prefix="in" size="6"/>
+    <port type="input" prefix="in" size="3"/>
     <port type="output" prefix="out" size="1"/>
-    <port type="sram" prefix="sram" size="64"/>
+    <port type="sram" prefix="sram" size="8"/>
   </circuit_model>
 
 This example shows:
-  - A 6-input LUT which is configurable by 64 SRAM cells.
-  - The multiplexer inside LUT will be built with transmission gate using circuuit model ``inv1x``
+  - A 3-input LUT which is configurable by 8 SRAM cells.
+  - The multiplexer inside LUT will be built with transmission gate using circuit model ``inv1x``
   - There are no internal buffered inserted to any intermediate stage of a LUT
 
-Fracturable LUT Example
+.. _circuit_model_frac_lut_example:
+
+Standard Fracturable LUT
 `````````````````````````
+
+:numref:`fig_frac_lut3_example` illustrates a typical example of 3-input fracturable LUT modeling, which consists of input/output buffers and a transmission-gate-based tree structure.
+
+.. _fig_frac_lut3_example:
+
+.. figure:: ./figures/frac_lut3_example.svg
+   :scale: 80%
+   :alt: detailed lut composition
+
+   An example of a fracturable 3-input LUT.
+
+The code describing this LUT is:
+
+.. code-block:: xml
+
+  <circuit_model type="lut" name="frac_lut3" prefix="frac_lut3" dump_structural_verilog="true">
+    <design_technology type="cmos" fracturable_lut="true"/>
+    <input_buffer exist="true" circuit_model_name="inv1x"/>
+    <output_buffer exist="true" circuit_model_name="inv1x"/>
+    <lut_input_inverter exist="true" circuit_model_name="inv1x"/>
+    <lut_input_buffer exist="true" circuit_model_name="buf4"/>
+    <pass_gate_logic circuit_model_name="tgate"/>
+    <port type="input" prefix="in" size="3" tri_state_map="--1" circuit_model_name="OR2"/>
+    <port type="output" prefix="lut2_out" size="1" lut_frac_level="3" lut_output_mask="0"/>
+    <port type="output" prefix="lut3_out" size="1" lut_output_mask="0"/>
+    <port type="sram" prefix="sram" size="8"/>
+    <port type="sram" prefix="mode" size="1" mode_select="true" circuit_model_name="ccff" default_val="0"/>
+  </circuit_model>
+
+This example shows:
+  - Fracturable 3-input LUT which is configurable by 9 SRAM cells.
+  - There is a SRAM cell to switch the operating mode of this LUT, configured by a configuration-chain flip-flop ``ccff``
+  - The last input ``in[2]`` of LUT will be tri-stated in dual-LUT2 mode.
+  - An 2-input OR gate will be wired to the last input ``in[2]`` to tri-state the input. The mode-select SRAM will be wired to an input of the OR gate. 
+    It means that when the mode-selection bit is '0', the LUT will operate in dual-LUT3 mode.
+  - There will be two outputs wired to the 2th stage of routing multiplexer (the outputs of dual 2-input LUTs) 
+  - By default, the mode-selection configuration bit will be '0', indicating that by default the LUT will operate in dual-LUT2 mode.
+
+:numref:`fig_std_frac_lut` illustrates the detailed schematic of a standard fracturable 6-input LUT, where the 5th and 6th inputs can be pull up/down to a fixed logic value to enable LUT4 and LUT5 outputs.
+
+.. _fig_std_frac_lut:
+
+.. figure:: ./figures/std_frac_lut.svg
+   :scale: 80%
+   :alt: detailed lut composition
+
+   Detailed schematic of a standard fracturable 6-input LUT.
+
+The code describing this LUT is:
 
 .. code-block:: xml
 
@@ -620,24 +857,60 @@ Fracturable LUT Example
     <output_buffer exist="true" circuit_model_name="inv1x"/>
     <lut_input_inverter exist="true" circuit_model_name="inv1x"/>
     <lut_input_buffer exist="true" circuit_model_name="buf4"/>
-    <lut_intermediate_buffer exist="true" circuit_model_name="buf4" location_map="-1-1-"/>
     <pass_gate_logic circuit_model_name="tgate"/>
-    <port type="input" prefix="in" size="6" tri_state_map="-----1" circuit_model_name="OR2"/>
+    <port type="input" prefix="in" size="6" tri_state_map="----11" circuit_model_name="OR2"/>
+    <port type="output" prefix="lut4_out" size="2" lut_frac_level="4" lut_output_mask="0,2"/>
     <port type="output" prefix="lut5_out" size="2" lut_frac_level="5" lut_output_mask="0,1"/>
     <port type="output" prefix="lut6_out" size="1" lut_output_mask="0"/>
     <port type="sram" prefix="sram" size="64"/>
-    <port type="sram" prefix="mode" size="1" mode_select="true" circuit_model_name="ccff" default_val="1"/>
+    <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="ccff" default_val="1"/>
   </circuit_model>
 
 This example shows:
-  - Fracturable 6-input LUT which is configurable by 65 SRAM cells.
-  - Intermedate buffers are added to every two stages of the internal multiplexer
-  - There is a SRAM cell to switch the operating mode of this LUT, configured by a configuration-chain flip-flop ``ccff``
-  - The last input ``in[5]`` of LUT will be tri-stated in dual-LUT5 mode.
-  - An 2-input OR gate will be wired to the last input ``in[5]`` to tri-state the input. The mode-select SRAM will be wired to an input of the OR gate. 
-    It means that when the mode-selection bit is '1', the LUT will operate in dual-LUT5 mode.
+  - Fracturable 6-input LUT which is configurable by 66 SRAM cells.
+  - There are two SRAM cells to switch the operating mode of this LUT, configured by two configuration-chain flip-flops ``ccff``
+  - The inputs ``in[4]`` and ``in[5]`` of LUT will be tri-stated in dual-LUT4 and dual-LUT5 modes respectively.
+  - An 2-input OR gate will be wired to the inputs ``in[4]`` and ``in[5]`` to tri-state them. The mode-select SRAM will be wired to an input of the OR gate. 
+  - There will be two outputs wired to the 4th stage of routing multiplexer (the outputs of dual 4-input LUTs) 
   - There will be two outputs wired to the 5th stage of routing multiplexer (the outputs of dual 5-input LUTs) 
-  - By default, the mode-selection configuration bit will be '1', indicating that by default the LUT will operate in dual-LUT5 mode.
+  - By default, the mode-selection configuration bit will be '11', indicating that by default the LUT will operate in dual-LUT4 mode.
+
+Native Fracturable LUT
+``````````````````````
+
+:numref:`fig_native_frac_lut` illustrates the detailed schematic of a native fracturable 6-input LUT, where LUT4, LUT5 and LUT6 outputs are always active and there are no tri-state buffers.
+
+.. _fig_native_frac_lut:
+
+.. figure:: ./figures/native_frac_lut.svg
+   :scale: 80%
+   :alt: detailed lut composition
+
+   Detailed schematic of a native fracturable 6-input LUT.
+
+The code describing this LUT is:
+
+.. code-block:: xml
+
+  <circuit_model type="lut" name="frac_lut6" prefix="frac_lut6" dump_structural_verilog="true">
+    <design_technology type="cmos" fracturable_lut="true"/>
+    <input_buffer exist="true" circuit_model_name="inv1x"/>
+    <output_buffer exist="true" circuit_model_name="inv1x"/>
+    <lut_input_inverter exist="true" circuit_model_name="inv1x"/>
+    <lut_input_buffer exist="true" circuit_model_name="buf4"/>
+    <pass_gate_logic circuit_model_name="tgate"/>
+    <port type="input" prefix="in" size="6"/>
+    <port type="output" prefix="lut4_out" size="2" lut_frac_level="4" lut_output_mask="0,2"/>
+    <port type="output" prefix="lut5_out" size="2" lut_frac_level="5" lut_output_mask="0,1"/>
+    <port type="output" prefix="lut6_out" size="1" lut_output_mask="0"/>
+    <port type="sram" prefix="sram" size="64"/>
+  </circuit_model>
+
+This example shows:
+  - Fracturable 6-input LUT which is configurable by 64 SRAM cells.
+  - There will be two outputs wired to the 4th stage of routing multiplexer (the outputs of dual 4-input LUTs) 
+  - There will be two outputs wired to the 5th stage of routing multiplexer (the outputs of dual 5-input LUTs) 
+
 
 Flip-Flops
 ~~~~~~~~~~
@@ -666,14 +939,16 @@ Template
 
   - ``type="ccff|ff"`` Specify the type of a flip-flop. ``ff`` is a regular flip-flop while ``ccff`` denotes a configuration-chain flip-flop
 
-.. note:: A flip-flop should have three types of ports, ``input``, ``output`` and ``clock``.
+.. note:: A flip-flop should at least have three types of ports, ``input``, ``output`` and ``clock``.
 
 .. note:: If the user provides a customized Verilog/SPICE netlist, the bandwidth of ports should be defined to the same as the Verilog/SPICE netlist.
 
 .. note:: In a valid FPGA architecture, users should provide at least either a ``ccff`` or ``sram`` circuit model, so that the configurations can loaded to core logic. 
 
-Flip-Flop example
-`````````````````
+.. _circuit_model_dff_example:
+
+D-type Flip-Flop
+````````````````
 
 :numref:`fig_ff` illustrates an example of regular flip-flop.
 
@@ -702,8 +977,10 @@ This example shows:
   - The flip-flop has ``set`` and ``reset`` functionalities
   - The flip-flop port names defined differently in standard cell library and VPR architecture. The ``lib_name`` capture the port name defined in standard cells, while ``prefix`` capture the port name defined in ``pb_type`` of VPR architecture file
 
-Configuration-chain Flip-flop Example
-`````````````````````````````````````
+.. _circuit_model_ccff_example:
+
+Configuration-chain Flip-flop
+`````````````````````````````
 
 :numref:`fig_ccff` illustrates an example of scan-chain flop-flop used to build a configuration chain.
 
@@ -721,7 +998,8 @@ The code describing this FF is:
 
   <circuit_model type="ccff" name="ccff" prefix="ccff" verilog_netlist="ccff.v" spice_netlist="ccff.sp">
     <port type="input" prefix="D" size="1"/>
-    <port type="output" prefix="Q" size="2"/>
+    <port type="output" prefix="Q" size="1"/>
+    <port type="output" prefix="Qb" size="1"/>
     <port type="clock" prefix="CK" size="1" is_global="true"/>
   </circuit_model>
 
@@ -756,8 +1034,10 @@ Template
 
 .. note::  The information of input and output buffer should be clearly specified according to the customized Verilog/SPICE netlist! The existence of input/output buffers will influence the decision in creating SPICE testbenches, which may leads to larger errors in power analysis.
 
-1-bit Full Adder Example
-````````````````````````
+.. _circuit_model_full_adder_example:
+
+Full Adder
+``````````
 
 .. code-block:: xml
 
@@ -857,10 +1137,12 @@ Template
 
 .. note:: The information of input and output buffer should be clearly specified according to the customized netlist! The existence of input/output buffers will influence the decision in creating testbenches, which may leads to larger errors in power analysis.
 
-I/O Pad Example
-```````````````
+.. _circuit_model_gpio_example:
 
-:numref:`fig_iopad` depicts an I/O pad.
+General Purpose I/O
+```````````````````
+
+:numref:`fig_iopad` depicts a general purpose I/O pad.
 
 .. _fig_iopad:
 
@@ -870,7 +1152,7 @@ I/O Pad Example
 
    An example of an IO-Pad
 
-The code describing this IO-Pad is:
+The code describing this I/O-Pad is:
 
 .. code-block:: xml
 
@@ -879,7 +1161,7 @@ The code describing this IO-Pad is:
     <input_buffer exist="true" circuit_model_name="INVTX1"/>
     <output_buffer exist="true" circuit_model_name="INVTX1"/>
     <pass_gate_logic circuit_model_name="TGATE"/>
-    <port type="inout" prefix="pad" size="1"/>
+    <port type="inout" prefix="pad" size="1" is_global="true" is_io="true" is_data_io="true"/>
     <port type="sram" prefix="en" size="1" mode_select="true" circuit_model_name="ccff" default_val="1"/>
     <port type="input" prefix="outpad" size="1"/>
     <port type="output" prefix="inpad" size="1"/>

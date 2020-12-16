@@ -1,0 +1,103 @@
+# See https://github.com/actions/labeler#common-examples for defining patterns.
+# The globs use "minimatch" syntax found at https://github.com/isaacs/minimatch
+#
+# WARNING: Due to this file being yaml, any string starting with `*` must be
+# wrapped in quotes.
+
+# Third-party tools
+ABC:
+ - abc/*
+ - abc/**/*
+ACE2:
+ - ace2/*
+ - ace2/**/*
+VPR:
+ - vpr/*
+ - vpr/**/*
+ - libs/**/*
+
+# General areas
+documentation:
+ - docs/*
+ - docs/**/*
+ - "*README*"
+ - "*.md"
+ - tutorial
+ - "*.rst"
+ - ".readthedocs.yml"
+github:
+ - .github/*
+ - .github/**/*
+docker:
+ - Dockerfile
+ - "*docker*"
+build:
+ - Makefile
+ - "*.make"
+ - CMakeLists.txt
+ - cmake
+libopenfpga:
+ - "libopenfpga/**"
+libopenfpga-bitstream:
+ - "libopenfpga/libfpgabitstream/**"
+libopenfpga-arch-parser:
+ - "libopenfpga/libarchopenfpga/**"
+libopenfpga-fabric-key:
+ - "libopenfpga/libfabrickey/**"
+libopenfpga-shell:
+ - "libopenfpga/libopenfpgashell/**"
+libopenfpga-utils:
+ - "libopenfpga/libopenfpgautil/**"
+openfpga-tools:
+ - "openfpga/**"
+openfpga-verilog:
+ - "openfpga/*/fpga_verilog/**"
+openfpga-sdc:
+ - "openfpga/*/fpga_sdc/**"
+openfpga-bitstream:
+ - "openfpga/*/fpga_bitstream/**"
+openfpga-spice:
+ - "openfpga/*/fpga_spice/**"
+flow-scripts:
+ - "openfpga_flow/scripts/**"
+ - "openfpga_flow/openfpga_shell_scripts/**"
+ - "openfpga_flow/openfpga_simulation_settings/**"
+ - "openfpga_flow/misc/**"
+architecture-description:
+ - "openfpga_flow/vpr_arch/**"
+ - "openfpga_flow/openfpga_arch/**"
+ - "openfpga_flow/fabric_keys/**"
+bitstream:
+ - "openfpga_flow/fabric_keys/**"
+cell-library:
+ - "openfpga_flow/openfpga_cell_library/**"
+ - "openfpga_flow/tech/**"
+benchmarks:
+ - "openfpga_flow/benchmarks/**"
+tests:
+ - "openfpga_flow/tasks/**"
+
+# Tag pull requests with the languages used to make it easy to see what is
+# being used.
+lang-hdl:
+ - "*.v"
+ - "*.sv"
+lang-cpp:
+ - "*.c*"
+ - "*.h"
+lang-perl:
+ - "*.pl"
+ - "*perl*"
+lang-python:
+ - "*.py"
+lang-shell:
+ - "*.sh"
+lang-netlist:
+ - "*.blif"
+ - "*.eblif"
+ - "*.edif"
+ - "*.vqm"
+lang-make:
+ - "*.make"
+ - Makefile
+ - CMakeLists.txt

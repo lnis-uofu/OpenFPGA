@@ -21,6 +21,7 @@
 #include "read_xml_simulation_setting.h"
 #include "read_xml_config_protocol.h"
 #include "read_xml_routing_circuit.h"
+#include "read_xml_tile_annotation.h"
 #include "read_xml_pb_type_annotation.h"
 #include "read_xml_openfpga_arch.h"
 #include "openfpga_arch_linker.h"
@@ -51,6 +52,9 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
      */
     auto xml_circuit_models = get_single_child(xml_openfpga_arch, "circuit_library", loc_data);
     openfpga_arch.circuit_lib = read_xml_circuit_library(xml_circuit_models, loc_data);
+
+    /* Automatically identify the default models for circuit library */
+    openfpga_arch.circuit_lib.auto_detect_default_models();
 
     /* Build the internal links for the circuit library */
     openfpga_arch.circuit_lib.build_model_links();
@@ -99,6 +103,9 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
     /* Parse the direct circuit definition */
     openfpga_arch.arch_direct = read_xml_direct_circuit(xml_openfpga_arch, loc_data,
                                                         openfpga_arch.circuit_lib);
+
+    /* Parse the pb_type annotation */
+    openfpga_arch.tile_annotations = read_xml_tile_annotations(xml_openfpga_arch, loc_data);
 
     /* Parse the pb_type annotation */
     openfpga_arch.pb_type_annotations = read_xml_pb_type_annotations(xml_openfpga_arch, loc_data);

@@ -38,29 +38,56 @@ static
 void rec_build_module_fabric_dependent_chain_bitstream(const BitstreamManager& bitstream_manager,
                                                        const ConfigBlockId& parent_block,
                                                        const ModuleManager& module_manager,
+                                                       const ModuleId& top_module,
                                                        const ModuleId& parent_module,
-                                                       FabricBitstream& fabric_bitstream) {
+                                                       const ConfigRegionId& config_region,
+                                                       FabricBitstream& fabric_bitstream,
+                                                       const FabricBitRegionId& fabric_bitstream_region) {
 
   /* Depth-first search: if we have any children in the parent_block, 
    * we dive to the next level first! 
    */
   if (0 < bitstream_manager.block_children(parent_block).size()) {
-    for (size_t child_id = 0; child_id < module_manager.configurable_children(parent_module).size(); ++child_id) {
-      ModuleId child_module = module_manager.configurable_children(parent_module)[child_id]; 
-      size_t child_instance = module_manager.configurable_child_instances(parent_module)[child_id]; 
-      /* Get the instance name and ensure it is not empty */
-      std::string instance_name = module_manager.instance_name(parent_module, child_module, child_instance);
-       
-      /* Find the child block that matches the instance name! */ 
-      ConfigBlockId child_block = bitstream_manager.find_child_block(parent_block, instance_name); 
-      /* We must have one valid block id! */
-      if (true != bitstream_manager.valid_block_id(child_block))
-      VTR_ASSERT(true == bitstream_manager.valid_block_id(child_block));
+    if (parent_module == top_module) {
+      for (size_t child_id = 0; child_id < module_manager.region_configurable_children(parent_module, config_region).size(); ++child_id) {
+        ModuleId child_module = module_manager.region_configurable_children(parent_module, config_region)[child_id]; 
+        size_t child_instance = module_manager.region_configurable_child_instances(parent_module, config_region)[child_id]; 
+        /* Get the instance name and ensure it is not empty */
+        std::string instance_name = module_manager.instance_name(parent_module, child_module, child_instance);
+         
+        /* Find the child block that matches the instance name! */ 
+        ConfigBlockId child_block = bitstream_manager.find_child_block(parent_block, instance_name); 
+        /* We must have one valid block id! */
+        VTR_ASSERT(true == bitstream_manager.valid_block_id(child_block));
 
-      /* Go recursively */
-      rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, child_block,
-                                                        module_manager, child_module,
-                                                        fabric_bitstream);
+        /* Go recursively */
+        rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, child_block,
+                                                          module_manager, top_module,
+                                                          child_module,
+                                                          config_region,
+                                                          fabric_bitstream,
+                                                          fabric_bitstream_region);
+      }
+    } else { 
+      for (size_t child_id = 0; child_id < module_manager.configurable_children(parent_module).size(); ++child_id) {
+        ModuleId child_module = module_manager.configurable_children(parent_module)[child_id]; 
+        size_t child_instance = module_manager.configurable_child_instances(parent_module)[child_id]; 
+        /* Get the instance name and ensure it is not empty */
+        std::string instance_name = module_manager.instance_name(parent_module, child_module, child_instance);
+         
+        /* Find the child block that matches the instance name! */ 
+        ConfigBlockId child_block = bitstream_manager.find_child_block(parent_block, instance_name); 
+        /* We must have one valid block id! */
+        VTR_ASSERT(true == bitstream_manager.valid_block_id(child_block));
+
+        /* Go recursively */
+        rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, child_block,
+                                                          module_manager, top_module,
+                                                          child_module,
+                                                          config_region,
+                                                          fabric_bitstream,
+                                                          fabric_bitstream_region);
+      }
     }
     /* Ensure that there should be no configuration bits in the parent block */
     VTR_ASSERT(0 == bitstream_manager.block_bits(parent_block).size());
@@ -71,7 +98,8 @@ void rec_build_module_fabric_dependent_chain_bitstream(const BitstreamManager& b
    * And then, we can return
    */
   for (const ConfigBitId& config_bit : bitstream_manager.block_bits(parent_block)) {
-    fabric_bitstream.add_bit(config_bit);
+    FabricBitId fabric_bit = fabric_bitstream.add_bit(config_bit);
+    fabric_bitstream.add_bit_to_region(fabric_bitstream_region, fabric_bit);
   }
 }
 
@@ -96,52 +124,97 @@ void rec_build_module_fabric_dependent_memory_bank_bitstream(const BitstreamMana
                                                              const ModuleManager& module_manager,
                                                              const ModuleId& top_module,
                                                              const ModuleId& parent_module,
+                                                             const ConfigRegionId& config_region,
                                                              const size_t& bl_addr_size,
                                                              const size_t& wl_addr_size,
                                                              const size_t& num_bls,
                                                              const size_t& num_wls, 
                                                              size_t& cur_mem_index,
-                                                             FabricBitstream& fabric_bitstream) {
+                                                             FabricBitstream& fabric_bitstream,
+                                                             const FabricBitRegionId& fabric_bitstream_region) {
 
   /* Depth-first search: if we have any children in the parent_block, 
    * we dive to the next level first! 
    */
   if (0 < bitstream_manager.block_children(parent_block).size()) {
-    /* For top module, we will skip the two decoders at the end of the configurable children list */
-    std::vector<ModuleId> configurable_children = module_manager.configurable_children(parent_module);
-
-    size_t num_configurable_children = configurable_children.size();
+    /* For top module:
+     *   - Use regional configurable children
+     *   - we will skip the two decoders at the end of the configurable children list
+     */
     if (parent_module == top_module) {
+      std::vector<ModuleId> configurable_children = module_manager.region_configurable_children(parent_module, config_region);
+
       VTR_ASSERT(2 <= configurable_children.size()); 
-      num_configurable_children -= 2;
-    }
+      size_t num_configurable_children = configurable_children.size() - 2;
 
-    /* Early exit if there is no configurable children */
-    if (0 == num_configurable_children) {
-      /* Ensure that there should be no configuration bits in the parent block */
-      VTR_ASSERT(0 == bitstream_manager.block_bits(parent_block).size());
-      return;
-    }
+      /* Early exit if there is no configurable children */
+      if (0 == num_configurable_children) {
+        /* Ensure that there should be no configuration bits in the parent block */
+        VTR_ASSERT(0 == bitstream_manager.block_bits(parent_block).size());
+        return;
+      }
 
-    for (size_t child_id = 0; child_id < num_configurable_children; ++child_id) {
-      ModuleId child_module = configurable_children[child_id]; 
-      size_t child_instance = module_manager.configurable_child_instances(parent_module)[child_id]; 
-      /* Get the instance name and ensure it is not empty */
-      std::string instance_name = module_manager.instance_name(parent_module, child_module, child_instance);
-       
-      /* Find the child block that matches the instance name! */ 
-      ConfigBlockId child_block = bitstream_manager.find_child_block(parent_block, instance_name); 
-      /* We must have one valid block id! */
-      if (true != bitstream_manager.valid_block_id(child_block)) 
-      VTR_ASSERT(true == bitstream_manager.valid_block_id(child_block));
+      for (size_t child_id = 0; child_id < num_configurable_children; ++child_id) {
+        ModuleId child_module = configurable_children[child_id]; 
+        size_t child_instance = module_manager.region_configurable_child_instances(parent_module, config_region)[child_id]; 
 
-      /* Go recursively */
-      rec_build_module_fabric_dependent_memory_bank_bitstream(bitstream_manager, child_block,
-                                                              module_manager, top_module, child_module,
-                                                              bl_addr_size, wl_addr_size,
-                                                              num_bls, num_wls,
-                                                              cur_mem_index,
-                                                              fabric_bitstream);
+        /* Get the instance name and ensure it is not empty */
+        std::string instance_name = module_manager.instance_name(parent_module, child_module, child_instance);
+         
+        /* Find the child block that matches the instance name! */ 
+        ConfigBlockId child_block = bitstream_manager.find_child_block(parent_block, instance_name); 
+        /* We must have one valid block id! */
+        VTR_ASSERT(true == bitstream_manager.valid_block_id(child_block));
+
+        /* Go recursively */
+        rec_build_module_fabric_dependent_memory_bank_bitstream(bitstream_manager, child_block,
+                                                                module_manager, top_module, child_module,
+                                                                config_region,
+                                                                bl_addr_size, wl_addr_size,
+                                                                num_bls, num_wls,
+                                                                cur_mem_index,
+                                                                fabric_bitstream,
+                                                                fabric_bitstream_region);
+      }
+    } else {
+      VTR_ASSERT(parent_module != top_module);
+      /* For other modules:
+       *   - Use configurable children directly
+       *   - no need to exclude decoders as they are not there
+       */
+      std::vector<ModuleId> configurable_children = module_manager.configurable_children(parent_module);
+
+      size_t num_configurable_children = configurable_children.size();
+
+      /* Early exit if there is no configurable children */
+      if (0 == num_configurable_children) {
+        /* Ensure that there should be no configuration bits in the parent block */
+        VTR_ASSERT(0 == bitstream_manager.block_bits(parent_block).size());
+        return;
+      }
+
+      for (size_t child_id = 0; child_id < num_configurable_children; ++child_id) {
+        ModuleId child_module = configurable_children[child_id]; 
+        size_t child_instance = module_manager.configurable_child_instances(parent_module)[child_id]; 
+
+        /* Get the instance name and ensure it is not empty */
+        std::string instance_name = module_manager.instance_name(parent_module, child_module, child_instance);
+         
+        /* Find the child block that matches the instance name! */ 
+        ConfigBlockId child_block = bitstream_manager.find_child_block(parent_block, instance_name); 
+        /* We must have one valid block id! */
+        VTR_ASSERT(true == bitstream_manager.valid_block_id(child_block));
+
+        /* Go recursively */
+        rec_build_module_fabric_dependent_memory_bank_bitstream(bitstream_manager, child_block,
+                                                                module_manager, top_module, child_module,
+                                                                config_region,
+                                                                bl_addr_size, wl_addr_size,
+                                                                num_bls, num_wls,
+                                                                cur_mem_index,
+                                                                fabric_bitstream,
+                                                                fabric_bitstream_region);
+      }
     }
     /* Ensure that there should be no configuration bits in the parent block */
     VTR_ASSERT(0 == bitstream_manager.block_bits(parent_block).size());
@@ -172,6 +245,9 @@ void rec_build_module_fabric_dependent_memory_bank_bitstream(const BitstreamMana
     
     /* Set data input */
     fabric_bitstream.set_bit_din(fabric_bit, bitstream_manager.bit_value(config_bit));
+
+    /* Add the bit to the region */
+    fabric_bitstream.add_bit_to_region(fabric_bitstream_region, fabric_bit);
 
     /* Increase the memory index */
     cur_mem_index++;
@@ -205,9 +281,13 @@ static
 void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& bitstream_manager,
                                                        const std::vector<ConfigBlockId>& parent_blocks,
                                                        const ModuleManager& module_manager,
+                                                       const ModuleId& top_module,
+                                                       const ConfigRegionId& config_region,
                                                        const std::vector<ModuleId>& parent_modules,
                                                        const std::vector<char>& addr_code,
-                                                       FabricBitstream& fabric_bitstream) {
+                                                       const char& bitstream_dont_care_char,
+                                                       FabricBitstream& fabric_bitstream,
+                                                       FabricBitRegionId& fabric_bitstream_region) {
 
   /* Depth-first search: if we have any children in the parent_block, 
    * we dive to the next level first! 
@@ -216,7 +296,18 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
     const ConfigBlockId& parent_block = parent_blocks.back();
     const ModuleId& parent_module = parent_modules.back();
 
-    size_t num_configurable_children = module_manager.configurable_children(parent_modules.back()).size();
+    std::vector<ModuleId> configurable_children;
+    std::vector<size_t> configurable_child_instances;
+    if (top_module == parent_module) {
+      configurable_children = module_manager.region_configurable_children(parent_module, config_region);
+      configurable_child_instances = module_manager.region_configurable_child_instances(parent_module, config_region);
+    } else {
+      VTR_ASSERT(top_module != parent_module);
+      configurable_children = module_manager.configurable_children(parent_module);
+      configurable_child_instances = module_manager.configurable_child_instances(parent_module);
+    }
+
+    size_t num_configurable_children = configurable_children.size();
  
     size_t max_child_addr_code_size = 0;
     bool add_addr_code = true;
@@ -235,33 +326,37 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
     if (1 == num_configurable_children) {
       add_addr_code = false;
     } else {
-    /* For more than 2 children, there is a decoder in the tail of the list
-     * We will not decode that, but will access the address size from that module
-     * So, we reduce the number of children by 1
-     */
+     /* For more than 2 children, there is a decoder in the tail of the list
+      * We will not decode that, but will access the address size from that module
+      * So, we reduce the number of children by 1
+      */
       VTR_ASSERT(2 < num_configurable_children);
       num_configurable_children--;
-      decoder_module = module_manager.configurable_children(parent_module).back();
+      decoder_module = configurable_children.back();
 
-      /* The address code size is the max. of address port of all the configurable children */
-      for (size_t child_id = 0; child_id < num_configurable_children; ++child_id) {
-        ModuleId child_module = module_manager.configurable_children(parent_module)[child_id]; 
+      /* The max address code size is the max address code size of all the 
+       * configurable children in all the regions
+       */
+      for (const ModuleId& child_module : module_manager.configurable_children(parent_module)) {
+        /* Bypass any decoder module (which no configurable children */
+        if (module_manager.configurable_children(child_module).empty()) {
+          continue;
+        }
         const ModulePortId& child_addr_port_id = module_manager.find_module_port(child_module, std::string(DECODER_ADDRESS_PORT_NAME));
         const BasicPort& child_addr_port = module_manager.module_port(child_module, child_addr_port_id);
-        max_child_addr_code_size = std::max((int)child_addr_port.get_width(), (int)max_child_addr_code_size);
-      } 
+        max_child_addr_code_size = std::max(child_addr_port.get_width(), max_child_addr_code_size);
+      }
     }
 
     for (size_t child_id = 0; child_id < num_configurable_children; ++child_id) {
-      ModuleId child_module = module_manager.configurable_children(parent_module)[child_id]; 
-      size_t child_instance = module_manager.configurable_child_instances(parent_module)[child_id]; 
+      ModuleId child_module = configurable_children[child_id]; 
+      size_t child_instance = configurable_child_instances[child_id]; 
       /* Get the instance name and ensure it is not empty */
       std::string instance_name = module_manager.instance_name(parent_module, child_module, child_instance);
        
       /* Find the child block that matches the instance name! */ 
       ConfigBlockId child_block = bitstream_manager.find_child_block(parent_block, instance_name); 
       /* We must have one valid block id! */
-      if (true != bitstream_manager.valid_block_id(child_block))
       VTR_ASSERT(true == bitstream_manager.valid_block_id(child_block));
 
       /* Pass on the list of blocks, modules and address lists */
@@ -280,7 +375,15 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
         const BasicPort& decoder_addr_port = module_manager.module_port(decoder_module, decoder_addr_port_id);
         std::vector<char> addr_bits_vec = itobin_charvec(child_id, decoder_addr_port.get_width());
 
-        child_addr_code.insert(child_addr_code.begin(), addr_bits_vec.begin(), addr_bits_vec.end());
+        /* For top-level module, the child address should be added to the tail 
+         * For other modules, the child address should be added to the head
+         */
+        if (top_module == parent_module) {
+          child_addr_code.insert(child_addr_code.end(), addr_bits_vec.begin(), addr_bits_vec.end());
+        } else {
+          VTR_ASSERT_SAFE(top_module != parent_module);
+          child_addr_code.insert(child_addr_code.begin(), addr_bits_vec.begin(), addr_bits_vec.end());
+        }
 
         /* Note that the address port size of the child module may be smaller than the maximum
          * of other child modules at this level.
@@ -293,8 +396,8 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
          *  we should add dummy '0' to fill the gap
          *
          *  Addr_code for child[0]: '000' + addr_bits_vec
-         *  Addr_code for child[1]: '0'  + addr_bits_vec 
-         *  Addr_code for child[2]: addr_bits_vec 
+         *  Addr_code for child[1]: '00'  + addr_bits_vec 
+         *  Addr_code for child[2]: '0' + addr_bits_vec 
          *
          *                   Addr[6:8]
          *                     |
@@ -303,7 +406,7 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
          *  |            Decoder Module                 |
          *  +-------------------------------------------+
          *   
-         *     Addr[0:2]       Addr[0:4]        Addr[0:5]
+         *     Addr[0:2]       Addr[0:3]        Addr[0:4]
          *        |                |               |
          *        v                v               v
          * +-----------+  +-------------+  +------------+
@@ -316,16 +419,22 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
         const ModulePortId& child_addr_port_id = module_manager.find_module_port(child_module, std::string(DECODER_ADDRESS_PORT_NAME));
         const BasicPort& child_addr_port = module_manager.module_port(child_module, child_addr_port_id);
         if (0 < max_child_addr_code_size - child_addr_port.get_width()) {
-          std::vector<char> dummy_codes(max_child_addr_code_size - child_addr_port.get_width(), '0');
+          /* Deposit don't care state for the dummy bits */
+          std::vector<char> dummy_codes(max_child_addr_code_size - child_addr_port.get_width(), bitstream_dont_care_char);
           child_addr_code.insert(child_addr_code.begin(), dummy_codes.begin(), dummy_codes.end());
         }
       }
 
       /* Go recursively */
       rec_build_module_fabric_dependent_frame_bitstream(bitstream_manager, child_blocks,
-                                                        module_manager, child_modules,
+                                                        module_manager,
+                                                        top_module,
+                                                        config_region,
+                                                        child_modules,
                                                         child_addr_code,
-                                                        fabric_bitstream);
+                                                        bitstream_dont_care_char,
+                                                        fabric_bitstream,
+                                                        fabric_bitstream_region);
     }
     /* Ensure that there should be no configuration bits in the parent block */
     VTR_ASSERT(0 == bitstream_manager.block_bits(parent_block).size());
@@ -339,9 +448,15 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
    * We will find the address bit and add it to addr_code
    * Then we can add the configuration bits to the fabric_bitstream.
    */
-  if (!(1 < module_manager.configurable_children(parent_modules.back()).size()))
-  VTR_ASSERT(1 < module_manager.configurable_children(parent_modules.back()).size());
-  ModuleId decoder_module = module_manager.configurable_children(parent_modules.back()).back();
+  std::vector<ModuleId> configurable_children;
+  if (top_module == parent_modules.back()) {
+    configurable_children = module_manager.region_configurable_children(parent_modules.back(), config_region);
+  } else {
+    VTR_ASSERT(top_module != parent_modules.back());
+    configurable_children = module_manager.configurable_children(parent_modules.back());
+  }
+
+  ModuleId decoder_module = configurable_children.back();
   /* Find the address port from the decoder module */
   const ModulePortId& decoder_addr_port_id = module_manager.find_module_port(decoder_module, std::string(DECODER_ADDRESS_PORT_NAME));
   const BasicPort& decoder_addr_port = module_manager.module_port(decoder_module, decoder_addr_port_id);
@@ -362,6 +477,9 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
     
     /* Set data input */
     fabric_bitstream.set_bit_din(fabric_bit, bitstream_manager.bit_value(config_bit));
+
+    /* Add the bit to the region */
+    fabric_bitstream.add_bit_to_region(fabric_bitstream_region, fabric_bit);
   }
 }
 
@@ -382,45 +500,42 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
     /* Reserve bits before build-up */
     fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
 
-    rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, top_block,
-                                                      module_manager, top_module, 
-                                                      fabric_bitstream);
+    for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+      FabricBitRegionId fabric_bitstream_region = fabric_bitstream.add_region();
+      rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, top_block,
+                                                        module_manager, top_module, 
+                                                        top_module,
+                                                        config_region,
+                                                        fabric_bitstream,
+                                                        fabric_bitstream_region);
+    }
+
     break;
   }
   case CONFIG_MEM_SCAN_CHAIN: { 
     /* Reserve bits before build-up */
     fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
 
-    rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, top_block,
-                                                      module_manager, top_module, 
-                                                      fabric_bitstream);
-    fabric_bitstream.reverse();
+    for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+      FabricBitRegionId fabric_bitstream_region = fabric_bitstream.add_region();
+      rec_build_module_fabric_dependent_chain_bitstream(bitstream_manager, top_block,
+                                                        module_manager, top_module, 
+                                                        top_module,
+                                                        config_region,
+                                                        fabric_bitstream,
+                                                        fabric_bitstream_region);
+      fabric_bitstream.reverse_region_bits(fabric_bitstream_region);
+    }
     break;
   }
   case CONFIG_MEM_MEMORY_BANK: { 
-
-    size_t cur_mem_index = 0;
-    /* Find BL address port size */
+    /* Find global BL address port size */
     ModulePortId bl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_BL_ADDRESS_PORT_NAME));
     BasicPort bl_addr_port_info = module_manager.module_port(top_module, bl_addr_port);
 
-    /* Find WL address port size */
+    /* Find global WL address port size */
     ModulePortId wl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_WL_ADDRESS_PORT_NAME));
     BasicPort wl_addr_port_info = module_manager.module_port(top_module, wl_addr_port);
-
-    /* Find BL and WL decoders which are the last two configurable children*/
-    std::vector<ModuleId> configurable_children = module_manager.configurable_children(top_module);
-    VTR_ASSERT(2 <= configurable_children.size()); 
-    ModuleId bl_decoder_module = configurable_children[configurable_children.size() - 2];
-    VTR_ASSERT(0 == module_manager.configurable_child_instances(top_module)[configurable_children.size() - 2]);
-    ModuleId wl_decoder_module = configurable_children[configurable_children.size() - 1];
-    VTR_ASSERT(0 == module_manager.configurable_child_instances(top_module)[configurable_children.size() - 1]);
-
-    ModulePortId bl_port = module_manager.find_module_port(bl_decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
-    BasicPort bl_port_info = module_manager.module_port(bl_decoder_module, bl_port);
-
-    ModulePortId wl_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
-    BasicPort wl_port_info = module_manager.module_port(wl_decoder_module, wl_port);
 
     /* Reserve bits before build-up */
     fabric_bitstream.set_use_address(true);
@@ -429,13 +544,35 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
     fabric_bitstream.set_wl_address_length(wl_addr_port_info.get_width());
     fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
 
-    rec_build_module_fabric_dependent_memory_bank_bitstream(bitstream_manager, top_block,
-                                                            module_manager, top_module, top_module, 
-                                                            bl_addr_port_info.get_width(),
-                                                            wl_addr_port_info.get_width(),
-                                                            bl_port_info.get_width(),
-                                                            wl_port_info.get_width(),
-                                                            cur_mem_index, fabric_bitstream);
+    /* Build bitstreams by region */
+    for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+      size_t cur_mem_index = 0;
+
+      /* Find port information for local BL and WL decoder in this region */
+      std::vector<ModuleId> configurable_children = module_manager.region_configurable_children(top_module, config_region);
+      VTR_ASSERT(2 <= configurable_children.size()); 
+      ModuleId bl_decoder_module = configurable_children[configurable_children.size() - 2];
+      ModuleId wl_decoder_module = configurable_children[configurable_children.size() - 1];
+
+      ModulePortId bl_port = module_manager.find_module_port(bl_decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
+      BasicPort bl_port_info = module_manager.module_port(bl_decoder_module, bl_port);
+
+      ModulePortId wl_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
+      BasicPort wl_port_info = module_manager.module_port(wl_decoder_module, wl_port);
+
+      /* Build the bitstream for all the blocks in this region */
+      FabricBitRegionId fabric_bitstream_region = fabric_bitstream.add_region();
+      rec_build_module_fabric_dependent_memory_bank_bitstream(bitstream_manager, top_block,
+                                                              module_manager, top_module, top_module, 
+                                                              config_region,
+                                                              bl_addr_port_info.get_width(),
+                                                              wl_addr_port_info.get_width(),
+                                                              bl_port_info.get_width(),
+                                                              wl_port_info.get_width(),
+                                                              cur_mem_index,
+                                                              fabric_bitstream,
+                                                              fabric_bitstream_region);
+    }
     break;
   }
   case CONFIG_MEM_FRAME_BASED: {
@@ -449,12 +586,67 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
     fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
     fabric_bitstream.set_address_length(addr_port_info.get_width());
 
-    rec_build_module_fabric_dependent_frame_bitstream(bitstream_manager,
-                                                      std::vector<ConfigBlockId>(1, top_block),
-                                                      module_manager,
-                                                      std::vector<ModuleId>(1, top_module),
-													  std::vector<char>(),
-                                                      fabric_bitstream);
+    /* Avoid use don't care if there is only a region */
+    char bitstream_dont_care_char = DONT_CARE_CHAR;
+    if (1 == module_manager.regions(top_module).size()) {
+      bitstream_dont_care_char = '0';
+    }
+
+    /* Find the maximum decoder address among all the configurable regions */
+    size_t max_decoder_addr_size = 0;
+    for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+      std::vector<ModuleId> configurable_children = module_manager.region_configurable_children(top_module, config_region);
+      /* Bypass the regions that have no decoders */
+      if ( (0 == configurable_children.size())
+        || (1 == configurable_children.size())) {
+        continue;
+      }
+      ModuleId decoder_module = configurable_children.back();
+      ModulePortId decoder_addr_port_id = module_manager.find_module_port(decoder_module, DECODER_ADDRESS_PORT_NAME);
+      BasicPort decoder_addr_port = module_manager.module_port(decoder_module, decoder_addr_port_id);
+      max_decoder_addr_size = std::max(max_decoder_addr_size, decoder_addr_port.get_width()); 
+    }
+
+    for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+      std::vector<ModuleId> configurable_children = module_manager.region_configurable_children(top_module, config_region);
+
+      /* Bypass non-configurable regions */
+      if (0 == configurable_children.size()) {
+        continue;
+      }
+
+      /* Find the idle address bit which should be added to the head of the address bit
+       * This depends on the number of address bits required by this region
+       * For example:
+       *   Top-level address is addr[0:4]
+       *   There are 4 decoders in the top-level module, whose address sizes are
+       *     decoder A: addr[0:4]
+       *     decoder B: addr[0:3]
+       *     decoder C: addr[0:2]
+       *     decoder D: addr[0:3]
+       *   For decoder A, the address fit well
+       *   For decoder B, an idle bit should be added '0' + addr[0:3] 
+       *   For decoder C, two idle bits should be added '00' + addr[0:2] 
+       *   For decoder D, an idle bit should be added '0' + addr[0:3] 
+       */
+      ModuleId decoder_module = configurable_children.back();
+      ModulePortId decoder_addr_port_id = module_manager.find_module_port(decoder_module, DECODER_ADDRESS_PORT_NAME);
+      BasicPort decoder_addr_port = module_manager.module_port(decoder_module, decoder_addr_port_id);
+      VTR_ASSERT(max_decoder_addr_size >= decoder_addr_port.get_width());
+      std::vector<char> idle_addr_bits(max_decoder_addr_size - decoder_addr_port.get_width(), bitstream_dont_care_char);
+     
+      FabricBitRegionId fabric_bitstream_region = fabric_bitstream.add_region();
+      rec_build_module_fabric_dependent_frame_bitstream(bitstream_manager,
+                                                        std::vector<ConfigBlockId>(1, top_block),
+                                                        module_manager,
+                                                        top_module,
+                                                        config_region,
+                                                        std::vector<ModuleId>(1, top_module),
+	  												    idle_addr_bits,
+                                                        bitstream_dont_care_char,
+                                                        fabric_bitstream,
+                                                        fabric_bitstream_region);
+    }
     break;
   }
   default:

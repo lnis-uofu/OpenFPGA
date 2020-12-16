@@ -30,10 +30,10 @@ namespace openfpga {
  * This does NOT include any testbenches!
  * Some netlists are open to compile under specific preprocessing flags
  *******************************************************************/
-void print_fabric_include_netlist(const NetlistManager& netlist_manager,
-                                  const std::string& src_dir,
-                                  const CircuitLibrary& circuit_lib) {
-  std::string verilog_fname = src_dir + std::string(FABRIC_INCLUDE_NETLIST_FILE_NAME);
+void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
+                                          const std::string& src_dir,
+                                          const CircuitLibrary& circuit_lib) {
+  std::string verilog_fname = src_dir + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME);
 
   /* Create the file stream */
   std::fstream fp;
@@ -94,10 +94,11 @@ void print_fabric_include_netlist(const NetlistManager& netlist_manager,
  * that have been generated and user-defined.
  * Some netlists are open to compile under specific preprocessing flags
  *******************************************************************/
-void print_include_netlists(const std::string& src_dir,
-                            const std::string& circuit_name,
-                            const std::string& reference_benchmark_file) {
-  std::string verilog_fname = src_dir + circuit_name + std::string(TOP_INCLUDE_NETLIST_FILE_NAME_POSTFIX);
+void print_verilog_testbench_include_netlists(const std::string& src_dir,
+                                              const std::string& circuit_name,
+                                              const std::string& fabric_netlist_file,
+                                              const std::string& reference_benchmark_file) {
+  std::string verilog_fname = src_dir + circuit_name + std::string(TOP_VERILOG_TESTBENCH_INCLUDE_NETLIST_FILE_NAME_POSTFIX);
 
   /* Create the file stream */
   std::fstream fp;
@@ -116,7 +117,12 @@ void print_include_netlists(const std::string& src_dir,
 
   /* Include FPGA top module */
   print_verilog_comment(fp, std::string("------ Include fabric top-level netlists -----"));
-  print_verilog_include_netlist(fp, src_dir + std::string(FABRIC_INCLUDE_NETLIST_FILE_NAME));
+  if (true == fabric_netlist_file.empty()) {
+    print_verilog_include_netlist(fp, src_dir + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME));
+  } else {
+    VTR_ASSERT_SAFE(false == fabric_netlist_file.empty());
+    print_verilog_include_netlist(fp, fabric_netlist_file);
+  }
   fp << std::endl;
 
   /* Include reference benchmark netlist only when auto-check flag is enabled */
@@ -178,18 +184,6 @@ void print_verilog_preprocessing_flags_netlist(const std::string& src_dir,
     fp << std::endl;
   } 
 
-  /* To enable timing */
-  if (true == fabric_verilog_opts.include_signal_init()) {
-    print_verilog_define_flag(fp, std::string(VERILOG_SIGNAL_INIT_PREPROC_FLAG), 1);
-    fp << std::endl;
-  } 
-
-  /* To enable functional verfication with Icarus */
-  if (true == fabric_verilog_opts.support_icarus_simulator()) {
-    print_verilog_define_flag(fp, std::string(ICARUS_SIMULATOR_FLAG), 1);
-    fp << std::endl;
-  } 
-
   /* Close the file stream */
   fp.close();
 }
@@ -211,6 +205,18 @@ void print_verilog_simulation_preprocessing_flags(const std::string& src_dir,
 
   /* Print the title */
   print_verilog_file_header(fp, std::string("Preprocessing flags to enable/disable simulation features")); 
+
+  /* To enable signal initialization */
+  if (true == verilog_testbench_opts.include_signal_init()) {
+    print_verilog_define_flag(fp, std::string(VERILOG_SIGNAL_INIT_PREPROC_FLAG), 1);
+    fp << std::endl;
+  } 
+
+  /* To enable functional verfication with Icarus */
+  if (true == verilog_testbench_opts.support_icarus_simulator()) {
+    print_verilog_define_flag(fp, std::string(ICARUS_SIMULATOR_FLAG), 1);
+    fp << std::endl;
+  } 
 
   /* To enable manualy checked simulation */
   if (true == verilog_testbench_opts.print_top_testbench()) {

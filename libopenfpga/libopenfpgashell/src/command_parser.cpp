@@ -67,7 +67,7 @@ bool parse_command(const std::vector<std::string>& argv,
   /* Validate that the command name matches argv[0] */
   if (argv[0] != cmd.name()) { 
     VTR_LOG("Unexpected command name '%s'!\n",
-            argv[0]);
+            argv[0].c_str());
     return false;
   }
 

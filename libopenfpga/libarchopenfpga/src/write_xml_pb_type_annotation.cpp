@@ -66,6 +66,7 @@ std::string generate_physical_pb_type_hierarchy_name(const PbTypeAnnotation& pb_
 }
 
 /********************************************************************
+ * FIXME: Use a common function to output ports
  * Generate the full hierarchy name for a operating pb_type
  *******************************************************************/
 static 
@@ -116,8 +117,33 @@ void write_xml_pb_port_annotation(std::fstream& fp,
   fp << "\t\t\t" << "<port";
  
   write_xml_attribute(fp, "name", port_name.c_str());
-  write_xml_attribute(fp, "physical_mode_port", generate_physical_pb_port_name(pb_type_annotation.physical_pb_type_port(port_name)).c_str());
-  write_xml_attribute(fp, "physical_mode_pin_rotate_offset", pb_type_annotation.physical_pin_rotate_offset(port_name));
+
+  std::string physical_mode_port_attr;
+  for (const auto& physical_pb_port_pair : pb_type_annotation.physical_pb_type_port(port_name)) {
+    if (false == physical_mode_port_attr.empty()) {
+      physical_mode_port_attr += " ";
+    }
+    physical_mode_port_attr += generate_physical_pb_port_name(physical_pb_port_pair.first);
+  }
+  write_xml_attribute(fp, "physical_mode_port", physical_mode_port_attr.c_str());
+
+  std::string physical_mode_pin_initial_offset_attr;
+  for (const auto& physical_pb_port_pair : pb_type_annotation.physical_pb_type_port(port_name)) {
+    if (false == physical_mode_pin_initial_offset_attr.empty()) {
+      physical_mode_pin_initial_offset_attr += " ";
+    }
+    physical_mode_pin_initial_offset_attr += std::to_string(physical_pb_port_pair.second[0]);
+  }
+  write_xml_attribute(fp, "physical_mode_pin_initial_offset", physical_mode_pin_initial_offset_attr.c_str()); 
+
+  std::string physical_mode_pin_rotate_offset_attr;
+  for (const auto& physical_pb_port_pair : pb_type_annotation.physical_pb_type_port(port_name)) {
+    if (false == physical_mode_pin_rotate_offset_attr.empty()) {
+      physical_mode_pin_rotate_offset_attr += " ";
+    }
+    physical_mode_pin_rotate_offset_attr += std::to_string(physical_pb_port_pair.second[1]);
+  }
+  write_xml_attribute(fp, "physical_mode_pin_rotate_offset", physical_mode_pin_rotate_offset_attr.c_str()); 
 
   fp << "/>" << "\n";
 }

@@ -19,6 +19,9 @@ std::vector<ConfigBlockId> find_bitstream_manager_block_hierarchy(const Bitstrea
 
 std::vector<ConfigBlockId> find_bitstream_manager_top_blocks(const BitstreamManager& bitstream_manager);
 
+size_t find_bitstream_manager_config_bit_index_in_parent_block(const BitstreamManager& bitstream_manager,
+                                                               const ConfigBitId& bit_id);
+
 } /* end namespace openfpga */
 
 #endif

@@ -10,6 +10,7 @@
 #include "device_grid.h"
 #include "rr_graph_obj.h"
 #include "device_rr_gsb.h"
+#include "tile_annotation.h"
 #include "module_manager.h"
 
 /********************************************************************
@@ -29,6 +30,12 @@ void add_top_module_nets_connect_grids_and_gsbs(ModuleManager& module_manager,
                                                 const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
                                                 const bool& compact_routing_hierarchy,
                                                 const bool& duplicate_grid_pin);
+
+int add_top_module_global_ports_from_grid_modules(ModuleManager& module_manager,
+                                                  const ModuleId& top_module,
+                                                  const TileAnnotation& tile_annotation,
+                                                  const DeviceGrid& grids,
+                                                  const vtr::Matrix<size_t>& grid_instance_ids);
 
 } /* end namespace openfpga */
 

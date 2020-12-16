@@ -27,6 +27,8 @@
 #include "module_manager_utils.h"
 
 #include "build_mux_bitstream.h"
+#include "openfpga_device_grid_utils.h"
+
 #include "build_grid_bitstream.h"
 
 /* begin namespace openfpga */
@@ -708,8 +710,6 @@ void build_grid_bitstream(BitstreamManager& bitstream_manager,
         || (0 < grids[ix][iy].height_offset) ) {
         continue;
       }
-      /* We should not meet any I/O grid */
-      VTR_ASSERT(true != is_io_type(grids[ix][iy].type));
       /* Add a grid module to top_module*/
       vtr::Point<size_t> grid_coord(ix, iy);
       build_physical_block_bitstream(bitstream_manager, top_block, module_manager,
@@ -725,31 +725,10 @@ void build_grid_bitstream(BitstreamManager& bitstream_manager,
   VTR_LOGV(verbose, "Generating bitstream for I/O grids...");
 
   /* Create the coordinate range for each side of FPGA fabric */
-  std::vector<e_side> io_sides{TOP, RIGHT, BOTTOM, LEFT};
-  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates;
-
-  /* TOP side*/
-  for (size_t ix = 1; ix < grids.width() - 1; ++ix) { 
-    io_coordinates[TOP].push_back(vtr::Point<size_t>(ix, grids.height() - 1));
-  } 
-
-  /* RIGHT side */
-  for (size_t iy = 1; iy < grids.height() - 1; ++iy) { 
-    io_coordinates[RIGHT].push_back(vtr::Point<size_t>(grids.width() - 1, iy));
-  } 
-
-  /* BOTTOM side*/
-  for (size_t ix = 1; ix < grids.width() - 1; ++ix) { 
-    io_coordinates[BOTTOM].push_back(vtr::Point<size_t>(ix, 0));
-  } 
-
-  /* LEFT side */
-  for (size_t iy = 1; iy < grids.height() - 1; ++iy) { 
-    io_coordinates[LEFT].push_back(vtr::Point<size_t>(0, iy));
-  }
+  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates = generate_perimeter_grid_coordinates( grids);
 
   /* Add instances of I/O grids to top_module */
-  for (const e_side& io_side : io_sides) {
+  for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
     for (const vtr::Point<size_t>& io_coordinate : io_coordinates[io_side]) {
       /* Bypass EMPTY grid */
       if (true == is_empty_type(grids[io_coordinate.x()][io_coordinate.y()].type)) {

@@ -211,32 +211,39 @@ bool pair_operating_and_physical_pb_types(t_pb_type* operating_pb_type,
    * if not found, we assume that the physical port is the same as the operating pb_port
    */
   for (t_port* operating_pb_port : pb_type_ports(operating_pb_type)) {
-    /* Try to find the port in the pb_type_annotation */
-    BasicPort expected_physical_pb_port = pb_type_annotation.physical_pb_type_port(std::string(operating_pb_port->name));
-    if (true == expected_physical_pb_port.get_name().empty()) {
-      /* Not found, we reset the port information to be consistent as the operating pb_port */
+    std::map<BasicPort, std::array<int, 2>> expected_physical_pb_ports = pb_type_annotation.physical_pb_type_port(std::string(operating_pb_port->name));
+  
+    /* If not defined in the annotation, set the default pair:
+     * rotate_offset is 0 by default!
+     */
+    if (true == expected_physical_pb_ports.empty()) {
+      BasicPort expected_physical_pb_port;
       expected_physical_pb_port.set_name(std::string(operating_pb_port->name));
       expected_physical_pb_port.set_width(operating_pb_port->num_pins);
+      expected_physical_pb_ports[expected_physical_pb_port] = {0, 0};
     }
 
-    /* Try to find the expected port in the physical pb_type */
-    t_port* physical_pb_port = find_pb_type_port(physical_pb_type, expected_physical_pb_port.get_name());
-    /* Not found, mapping fails */
-    if (nullptr == physical_pb_port) {
-      return false;
+    for (const auto& expected_physical_pb_port : expected_physical_pb_ports) {
+      /* Try to find the expected port in the physical pb_type */
+      t_port* physical_pb_port = find_pb_type_port(physical_pb_type, expected_physical_pb_port.first.get_name());
+      /* Not found, mapping fails */
+      if (nullptr == physical_pb_port) {
+        return false;
+      }
+      /* If the port range does not match, mapping fails */
+      if (false == BasicPort(physical_pb_port->name, physical_pb_port->num_pins).contained(expected_physical_pb_port.first)) {
+        return false;
+      }
+      /* Now, port mapping should succeed, we update the vpr_device_annotation 
+       * - port binding
+       * - port range
+       * - port pin rotate offset
+       */
+      vpr_device_annotation.add_physical_pb_port(operating_pb_port, physical_pb_port);
+      vpr_device_annotation.add_physical_pb_port_range(operating_pb_port, physical_pb_port, expected_physical_pb_port.first);
+      vpr_device_annotation.add_physical_pb_pin_initial_offset(operating_pb_port, physical_pb_port, expected_physical_pb_port.second[0]);
+      vpr_device_annotation.add_physical_pb_pin_rotate_offset(operating_pb_port, physical_pb_port, expected_physical_pb_port.second[1]);
     }
-    /* If the port range does not match, mapping fails */
-    if (false == BasicPort(physical_pb_port->name, physical_pb_port->num_pins).contained(expected_physical_pb_port)) {
-      return false;
-    }
-    /* Now, port mapping should succeed, we update the vpr_device_annotation 
-     * - port binding
-     * - port range
-     * - port pin rotate offset
-     */
-    vpr_device_annotation.add_physical_pb_port(operating_pb_port, physical_pb_port);
-    vpr_device_annotation.add_physical_pb_port_range(operating_pb_port, expected_physical_pb_port);
-    vpr_device_annotation.add_physical_pb_pin_rotate_offset(operating_pb_port, pb_type_annotation.physical_pin_rotate_offset(std::string(operating_pb_port->name)));
   }
 
   /* Now, pb_type mapping should succeed, we update the vpr_device_annotation
@@ -365,7 +372,7 @@ bool self_pair_physical_pb_types(t_pb_type* physical_pb_type,
   for (t_port* physical_pb_port : pb_type_ports(physical_pb_type)) {
     BasicPort physical_port_range(physical_pb_port->name, physical_pb_port->num_pins);
     vpr_device_annotation.add_physical_pb_port(physical_pb_port, physical_pb_port);
-    vpr_device_annotation.add_physical_pb_port_range(physical_pb_port, physical_port_range);
+    vpr_device_annotation.add_physical_pb_port_range(physical_pb_port, physical_pb_port, physical_port_range);
   }
 
   /* Now, pb_type mapping should succeed, we update the vpr_device_annotation */

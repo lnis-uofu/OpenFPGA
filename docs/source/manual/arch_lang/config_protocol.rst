@@ -41,6 +41,13 @@ Template
   - ``memory_bank`` requires a circuit model type of ``sram``
   - ``standalone`` requires a circuit model type of ``sram``
 
+.. option:: num_regions="<int>"
+
+  Specify the number of configuration regions to be used across the fabrics. By default, it will be only 1 configuration region. Each configuration region contains independent configuration protocols, but the whole fabric should employ the same type of configuration protocols. For example, an FPGA fabric consists of 4 configuration regions, each of which includes a configuration chain. The more configuration chain to be used, the fast configuration runtime will be, but at the cost of more I/Os in the FPGA fabrics. The organization of each configurable region can be customized through the fabric key (see details in :ref:`fabric_key`).
+
+  .. warning:: Currently, multiple configuration regions is not applicable to ``standalone`` configuration protocol.
+
+
 Configuration Chain Example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The following XML code describes a scan-chain circuitry to configure the core logic of FPGA, as illustrated in :numref:`fig_ccff_fpga`.
@@ -49,7 +56,7 @@ It will use the circuit model defined in :numref:`fig_ccff`.
 .. code-block:: xml
 
   <configuration_protocol>
-    <organization type="scan_chain" circuit_model_name="ccff"/>
+    <organization type="scan_chain" circuit_model_name="ccff" num_regions="<int>"/>
   </configuration_protocol>
 
 .. _fig_ccff_fpga:
@@ -59,6 +66,14 @@ It will use the circuit model defined in :numref:`fig_ccff`.
    :alt: map to buried treasure
  
    Example of a configuration chain to program core logic of a FPGA 
+
+
+.. figure:: figures/multi_region_config_chains.png
+   :scale: 100%
+   :alt: map to buried treasure
+ 
+   Examples of single- and multiple- region configuration chains
+
 
 Frame-based Example
 ~~~~~~~~~~~~~~~~~~~
@@ -102,10 +117,13 @@ When the decoder of sub block, e.g., the LUT, is enabled, each memory cells can 
 
 .. warning:: Please do NOT add inverted Bit-Line and Word-Line inputs. It is not supported yet!
 
+When multiple configuration region is applied, the configuration frames will be grouped into different configuration regions. Each region has a separated data input bus and dedicated address decoders. As such, the configuration frame groups can be programmed in parallel.
+
 Memory bank Example
 ~~~~~~~~~~~~~~~~~~~
-The following XML code describes a memory-bank circuitry to configure the core logic of FPGA, as illustrated in :numref:`fig_sram`.
+The following XML code describes a memory-bank circuitry to configure the core logic of FPGA, as illustrated in :numref:`fig_memory_bank`.
 It will use the circuit model defined in :numref:`fig_sram_blwl`.
+Users can customized the number of memory banks to be used across the fabrics. By default, it will be only 1 memory bank. :numref:`fig_memory_bank` shows an example where 4 memory banks are defined. The more memory bank to be used, the fast configuration runtime will be, but at the cost of more I/Os in the FPGA fabrics. The organization of each configurable region can be customized through the fabric key (see details in :ref:`fabric_key`).
 
 .. code-block:: xml
 
@@ -113,13 +131,13 @@ It will use the circuit model defined in :numref:`fig_sram_blwl`.
     <organization type="memory_bank" circuit_model_name="sram_blwl"/>
   </configuration_protocol>
 
-.. _fig_sram:
+.. _fig_memory_bank:
 
-.. figure:: figures/sram.png
-   :scale: 60%
+.. figure:: figures/memory_bank.png
+   :scale: 30%
    :alt: map to buried treasure
  
-   Example of a memory organization using memory decoders 
+   Example of (a) a memory organization using memory decoders; (b) single memory bank across the fabric; and (c) multiple memory banks across the fabric.
 
 .. note:: Memory-bank decoders does require a memory cell to have 
 

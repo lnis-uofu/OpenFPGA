@@ -52,11 +52,15 @@ e_side determine_io_grid_pin_side(const vtr::Point<size_t>& device_size,
     return TOP; /* Such I/O has only Top side pins */
   } else if (0 == grid_coordinate.x()) { /* LEFT side IO of FPGA */
     return RIGHT; /* Such I/O has only Right side pins */
-  } else {
-    VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "I/O Grid is in the center part of FPGA! Currently unsupported!\n");
-    exit(1);
+  } else if ((grid_coordinate.x() < device_size.x()) && (grid_coordinate.y() < device_size.y())) {
+    /* I/O grid in the center grid */
+    return NUM_SIDES;
   }
+  VTR_LOGF_ERROR(__FILE__, __LINE__,
+                 "Invalid coordinate (%lu, %lu) for I/O Grid whose size is (%lu, %lu)!\n",
+                grid_coordinate.x(), grid_coordinate.y(),
+                device_size.x(), device_size.y());
+  exit(1);
 }
 
 /* Deteremine the side of a pin of a grid */
@@ -111,7 +115,7 @@ size_t get_grid_num_pins(const t_grid_tile& cur_grid,
   for (const e_side& side : {TOP, RIGHT, BOTTOM, LEFT}) {
     /* skip unwanted sides */
     if ( (true == is_io_type(cur_grid.type))
-      && (side != io_side) ) { 
+      && (side != io_side) && (NUM_SIDES != io_side)) { 
       continue;
     }
     /* Get pin list */
@@ -172,7 +176,21 @@ size_t get_grid_num_classes(const t_grid_tile& cur_grid,
  *  When height_offset == height - 1, it means that the grid is at the top side of this multi-width and multi-height block
  ***********************************************************************/
 bool is_chanx_exist(const DeviceGrid& grids,
-                    const vtr::Point<size_t>& chanx_coord) {
+                    const vtr::Point<size_t>& chanx_coord,
+                    const bool& through_channel) {
+
+  if ((1 > chanx_coord.x()) || (chanx_coord.x() > grids.width() - 2)) {
+    return false;
+  }
+
+  if (chanx_coord.y() > grids.height() - 2) {
+    return false;
+  }
+
+  if (true == through_channel) {
+    return true;
+  }
+
   return (grids[chanx_coord.x()][chanx_coord.y()].height_offset == grids[chanx_coord.x()][chanx_coord.y()].type->height - 1);
 }
 
@@ -192,9 +210,26 @@ bool is_chanx_exist(const DeviceGrid& grids,
  *  If the CHANY is in the middle of a multi-width and multi-height grid
  *  it should locate at a grid whose width_offset is lower than the its width defined in physical_tile
  *  When height_offset == height - 1, it means that the grid is at the top side of this multi-width and multi-height block
+ *
+ *  If through channel is allowed, the chany will always exists
+ *  unless it falls out of the grid array
  ***********************************************************************/
 bool is_chany_exist(const DeviceGrid& grids,
-                    const vtr::Point<size_t>& chany_coord) {
+                    const vtr::Point<size_t>& chany_coord,
+                    const bool& through_channel) {
+
+  if (chany_coord.x() > grids.width() - 2) {
+    return false;
+  }
+
+  if ((1 > chany_coord.y()) || (chany_coord.y() > grids.height() - 2)) {
+    return false;
+  }
+
+  if (true == through_channel) {
+    return true;
+  }
+
   return (grids[chany_coord.x()][chany_coord.y()].width_offset == grids[chany_coord.x()][chany_coord.y()].type->width - 1);
 }
 

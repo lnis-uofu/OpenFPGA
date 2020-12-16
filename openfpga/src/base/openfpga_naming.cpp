@@ -112,8 +112,8 @@ std::string generate_mux_subckt_name(const CircuitLibrary& circuit_lib,
  ***********************************************/
 std::string generate_mux_branch_subckt_name(const CircuitLibrary& circuit_lib, 
                                             const CircuitModelId& circuit_model, 
-                                            const size_t& mux_size, 
                                             const size_t& branch_mux_size, 
+                                            const size_t& branch_mem_size, 
                                             const std::string& postfix) {
   /* If the tgate circuit model of this MUX is a MUX2 standard cell,
    * the mux_subckt name will be the name of the standard cell
@@ -123,9 +123,23 @@ std::string generate_mux_branch_subckt_name(const CircuitLibrary& circuit_lib,
     VTR_ASSERT (CIRCUIT_MODEL_GATE_MUX2 == circuit_lib.gate_type(subckt_model));
     return circuit_lib.model_name(subckt_model);
   }
-  std::string branch_postfix = postfix + "_size" + std::to_string(branch_mux_size);
 
-  return generate_mux_subckt_name(circuit_lib, circuit_model, mux_size, branch_postfix);
+  /* Include memory size as a second unique signature for the branch module
+   * This is due to some branch modules have the same input sizes but different memory sizes 
+   */
+  std::string branch_postfix = postfix
+                             + "_input" + std::to_string(branch_mux_size) 
+                             + "_mem" + std::to_string(branch_mem_size);
+
+  std::string module_name = circuit_lib.model_name(circuit_model); 
+  if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(circuit_model)) {
+    module_name += "_mux";
+  } else {  
+    VTR_ASSERT(CIRCUIT_MODEL_MUX == circuit_lib.model_type(circuit_model));
+  }
+  module_name += branch_postfix; 
+
+  return module_name;
 }
 
 /************************************************
@@ -238,7 +252,7 @@ std::string generate_routing_block_netlist_name(const std::string& prefix,
 std::string generate_routing_block_netlist_name(const std::string& prefix, 
                                                 const vtr::Point<size_t>& coordinate,
                                                 const std::string& postfix) {
-  return std::string( prefix + std::to_string(coordinate.x()) + std::string("_") + std::to_string(coordinate.y()) + postfix );
+  return std::string( prefix + std::to_string(coordinate.x()) + std::string("__") + std::to_string(coordinate.y()) + std::string("_") + postfix );
 }
 
 /*********************************************************************
@@ -968,10 +982,8 @@ std::string generate_mux_sram_port_name(const CircuitLibrary& circuit_lib,
 std::string generate_logical_tile_netlist_name(const std::string& prefix,
                                                const t_pb_graph_node* pb_graph_head,
                                                const std::string& postfix) {
-  /* This must be the root node */
-  VTR_ASSERT(true == pb_graph_head->is_root());
   /* Add the name of physical block */
-  std::string module_name = prefix + std::string(pb_graph_head->pb_type->name);
+  std::string module_name = prefix + generate_physical_block_module_name(pb_graph_head->pb_type);
 
   module_name += postfix;
 
@@ -1005,7 +1017,7 @@ std::string generate_grid_block_netlist_name(const std::string& block_name,
   /* Add the name of physical block */
   std::string module_name(block_name);
 
-  if (true == is_block_io) {
+  if ((true == is_block_io) && (NUM_SIDES != io_side)) {
     SideManager side_manager(io_side);
     module_name += std::string("_");
     module_name += std::string(side_manager.to_string());
@@ -1183,8 +1195,9 @@ std::string generate_grid_block_instance_name(const std::string& prefix,
   module_name += generate_grid_block_netlist_name(block_name, is_block_io, io_side, std::string());
   module_name += std::string("_");
   module_name += std::to_string(grid_coord.x());
-  module_name += std::string("_");
+  module_name += std::string("__");
   module_name += std::to_string(grid_coord.y());
+  module_name += std::string("_");
 
   return module_name;
 }
@@ -1243,7 +1256,6 @@ std::string generate_physical_block_module_name(t_pb_type* physical_pb_type) {
 
   return module_name;
 }
-
 
 /*********************************************************************
  * Generate the instance name for physical block with a given index 
@@ -1445,6 +1457,16 @@ std::string generate_const_value_module_name(const size_t& const_val) {
  ********************************************************************/
 std::string generate_const_value_module_output_port_name(const size_t& const_val) {
   return generate_const_value_module_name(const_val);
+}
+
+/*********************************************************************
+ * Generate the analysis SDC file name
+ * The format is
+ *   <circuit_name>_<postfix>
+ ********************************************************************/
+std::string generate_analysis_sdc_file_name(const std::string& circuit_name,
+                                            const std::string& file_name_postfix) {
+  return circuit_name + "_" + file_name_postfix;
 }
 
 } /* end namespace openfpga */

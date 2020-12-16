@@ -157,20 +157,29 @@ ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager,
    */
   for (const auto& port : circuit_lib.model_global_ports(circuit_model, false)) {
     BasicPort port_info(circuit_lib.port_prefix(port), circuit_lib.port_size(port));
+    ModulePortId module_port = ModulePortId::INVALID();
+
     if ( (CIRCUIT_MODEL_PORT_INPUT == circuit_lib.port_type(port))
       && (false == circuit_lib.port_is_io(port)) ) {
-      module_manager.add_port(module, port_info, ModuleManager::MODULE_GLOBAL_PORT);  
+      module_port = module_manager.add_port(module, port_info, ModuleManager::MODULE_GLOBAL_PORT);  
     } else if (CIRCUIT_MODEL_PORT_CLOCK == circuit_lib.port_type(port)) {
-      module_manager.add_port(module, port_info, ModuleManager::MODULE_GLOBAL_PORT);  
+      module_port = module_manager.add_port(module, port_info, ModuleManager::MODULE_GLOBAL_PORT);  
     } else if ( (CIRCUIT_MODEL_PORT_INPUT == circuit_lib.port_type(port))
              && (true == circuit_lib.port_is_io(port)) ) {
-      module_manager.add_port(module, port_info, ModuleManager::MODULE_GPIN_PORT);  
+      module_port = module_manager.add_port(module, port_info, ModuleManager::MODULE_GPIN_PORT);  
     } else if (CIRCUIT_MODEL_PORT_OUTPUT == circuit_lib.port_type(port)) {
       VTR_ASSERT(true == circuit_lib.port_is_io(port));
-      module_manager.add_port(module, port_info, ModuleManager::MODULE_GPOUT_PORT);  
+      module_port = module_manager.add_port(module, port_info, ModuleManager::MODULE_GPOUT_PORT);  
     } else if ( (CIRCUIT_MODEL_PORT_INOUT == circuit_lib.port_type(port)) 
              && (true == circuit_lib.port_is_io(port)) ) {
-      module_manager.add_port(module, port_info, ModuleManager::MODULE_GPIO_PORT);  
+      module_port = module_manager.add_port(module, port_info, ModuleManager::MODULE_GPIO_PORT);  
+    }
+
+    /* Specify if the port can be mapped to an data signal */
+    if (true == module_manager.valid_module_port_id(module, module_port)) {
+      if (true == circuit_lib.port_is_data_io(port)) {
+        module_manager.set_port_is_mappable_io(module, module_port, true);
+      }
     }
   }
 
@@ -555,7 +564,6 @@ void add_primitive_pb_type_module_nets(ModuleManager& module_manager,
     BasicPort des_port = module_manager.module_port(child_module, des_module_port_id);
 
     /* Port size must match */
-    if (src_port.get_width() != des_port.get_width()) 
     VTR_ASSERT(src_port.get_width() == des_port.get_width());
 
     /* For each pin, generate the nets.
@@ -579,9 +587,9 @@ void add_primitive_pb_type_module_nets(ModuleManager& module_manager,
       for (size_t pin_id = 0; pin_id < src_port.pins().size(); ++pin_id) {
         ModuleNetId net = module_manager.create_module_net(pb_type_module);
         /* Add net source */
-        module_manager.add_module_net_sink(pb_type_module, net, pb_type_module, 0, src_module_port_id, src_port.pins()[pin_id]);
-        /* Add net sink */
         module_manager.add_module_net_source(pb_type_module, net, child_module, child_instance_id, des_module_port_id, des_port.pins()[pin_id]);
+        /* Add net sink */
+        module_manager.add_module_net_sink(pb_type_module, net, pb_type_module, 0, src_module_port_id, src_port.pins()[pin_id]);
       }
       break;
     default:
@@ -767,7 +775,7 @@ void add_module_nets_between_logic_and_memory_sram_bus(ModuleManager& module_man
 
   /* Do wiring only when we have sramb ports */
   if ( (false == logic_module_sramb_port_ids.empty())
-    || (ModulePortId::INVALID() == mem_module_sramb_port_id) ) {
+    && (ModulePortId::INVALID() != mem_module_sramb_port_id) ) {
     add_module_nets_between_logic_and_memory_sram_ports(module_manager, parent_module, 
                                                         logic_module, logic_instance_id,
                                                         memory_module, memory_instance_id,
@@ -1454,20 +1462,27 @@ void add_module_io_ports_from_child_modules(ModuleManager& module_manager,
                                             const ModuleId& module_id,
                                             const ModuleManager::e_module_port_type& module_port_type) {
   std::vector<BasicPort> gpio_ports_to_add;
+  std::vector<bool> mappable_gpio_ports;
 
   /* Iterate over the child modules */
   for (const ModuleId& child : module_manager.child_modules(module_id)) {
     /* Iterate over the child instances */
     for (size_t i = 0; i < module_manager.num_instance(module_id, child); ++i) {
       /* Find all the global ports, whose port type is special */
-      for (BasicPort gpio_port : module_manager.module_ports_by_type(child, module_port_type)) {
+      for (const ModulePortId& gpio_port_id : module_manager.module_port_ids_by_type(child, module_port_type)) {
+        const BasicPort& gpio_port = module_manager.module_port(child, gpio_port_id);
         /* If this port is not mergeable, we update the list */
         bool is_mergeable = false;
-        for (BasicPort& gpio_port_to_add : gpio_ports_to_add) {
+        for (size_t i_gpio_port_to_add = 0; i_gpio_port_to_add < gpio_ports_to_add.size(); ++i_gpio_port_to_add) {
+          BasicPort& gpio_port_to_add = gpio_ports_to_add[i_gpio_port_to_add];
           if (false == gpio_port_to_add.mergeable(gpio_port)) {
             continue;
           }
           is_mergeable = true;
+          /* Mappable I/O property must match! Mismatch rarely happened
+           * but should error out avoid silent bugs!
+           */
+          VTR_ASSERT(module_manager.port_is_mappable_io(child, gpio_port_id) == mappable_gpio_ports[i_gpio_port_to_add]);
           /* For mergeable ports, we combine the port
            * Note: do NOT use the merge() method!
            * the GPIO ports should be accumulated by the sizes of ports
@@ -1479,6 +1494,8 @@ void add_module_io_ports_from_child_modules(ModuleManager& module_manager,
         if (false == is_mergeable) {
           /* Reach here, this is an unique gpio port, update the list */
           gpio_ports_to_add.push_back(gpio_port);
+          /* If the gpio port is a mappable I/O, we should herit from the child module */
+          mappable_gpio_ports.push_back(module_manager.port_is_mappable_io(child, gpio_port_id));
         }
       }
     }
@@ -1487,9 +1504,13 @@ void add_module_io_ports_from_child_modules(ModuleManager& module_manager,
   /* Record the port id for each type of GPIO port */
   std::vector<ModulePortId> gpio_port_ids;
   /* Add the gpio ports for the module */
-  for (const BasicPort& gpio_port_to_add : gpio_ports_to_add) {
+  for (size_t iport = 0; iport < gpio_ports_to_add.size(); ++iport) {
+    const BasicPort& gpio_port_to_add = gpio_ports_to_add[iport];
     ModulePortId port_id = module_manager.add_port(module_id, gpio_port_to_add, module_port_type);
     gpio_port_ids.push_back(port_id);
+    if (true == mappable_gpio_ports[iport]) { 
+      module_manager.set_port_is_mappable_io(module_id, port_id, true);
+    }
   } 
 
   /* Set up a counter for each type of GPIO port */
@@ -1793,6 +1814,7 @@ ModuleNetId create_module_source_pin_net(ModuleManager& module_manager,
  * - des_module should be the cur_module or a child of it
  * - src_instance should be valid and des_instance should be valid as well
  * - src port size should match the des port size
+ *
  *******************************************************************/
 void add_module_bus_nets(ModuleManager& module_manager,
                          const ModuleId& cur_module_id,

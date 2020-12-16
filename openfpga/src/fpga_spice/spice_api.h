@@ -9,7 +9,11 @@
 #include <vector>
 #include "netlist_manager.h"
 #include "module_manager.h"
-#include "technology_library.h"
+#include "openfpga_arch.h"
+#include "mux_library.h"
+#include "vpr_context.h"
+#include "vpr_device_annotation.h"
+#include "device_rr_gsb.h"
 #include "fabric_spice_options.h"
 
 /********************************************************************
@@ -21,7 +25,11 @@ namespace openfpga {
 
 int fpga_fabric_spice(const ModuleManager& module_manager,
                       NetlistManager& netlist_manager,
-                      const TechnologyLibrary& tech_lib,
+                      const Arch& openfpga_arch,
+                      const MuxLibrary& mux_lib,
+                      const DeviceContext &device_ctx,
+                      const VprDeviceAnnotation &device_annotation,
+                      const DeviceRRGSB &device_rr_gsb,
                       const FabricSpiceOption& options);
 
 } /* end namespace openfpga */

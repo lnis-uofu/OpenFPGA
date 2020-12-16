@@ -62,37 +62,68 @@ size_t rec_estimate_device_bitstream_num_blocks(const ModuleManager& module_mana
 static 
 size_t rec_estimate_device_bitstream_num_bits(const ModuleManager& module_manager,
                                               const ModuleId& top_module,
+                                              const ModuleId& parent_module,
                                               const e_config_protocol_type& config_protocol_type) {
   size_t num_bits = 0;
 
   /* If a child module has no configurable children, this is a leaf node 
    * We can count it in. Otherwise, we should go recursively.
    */
-  if (0 == module_manager.configurable_children(top_module).size()) {
+  if (0 == module_manager.configurable_children(parent_module).size()) {
     return 1;
   }
 
-  size_t num_configurable_children = module_manager.configurable_children(top_module).size();
-  /* Frame-based configuration protocol will have 1 decoder
-   * if there are more than 1 configurable children
+  /* Two cases to walk through configurable children:
+   * - For top-level module:
+   *   Iterate over the multiple regions and visit each configuration child under any region
+   *   In each region, frame-based configuration protocol or memory bank protocol will contain
+   *   decoders. We should bypass them when count the bitstream size
+   * - For other modules:
+   *   Iterate over the configurable children regardless of regions
    */
-  if ( (CONFIG_MEM_FRAME_BASED == config_protocol_type)
-    && (2 <= num_configurable_children)) {
-    num_configurable_children--;
-  }
+  if (parent_module == top_module) {
+    for (const ConfigRegionId& config_region : module_manager.regions(parent_module)) {
+      size_t curr_region_num_config_child = module_manager.region_configurable_children(parent_module, config_region).size();
 
-  /* Memory configuration protocol will have 2 decoders
-   * at the top-level
-   */
-  if (CONFIG_MEM_MEMORY_BANK == config_protocol_type) {
-    std::string top_block_name = generate_fpga_top_module_name();
-    if (top_module == module_manager.find_module(top_block_name)) {
-      num_configurable_children -= 2;
+      /* Frame-based configuration protocol will have 1 decoder
+       * if there are more than 1 configurable children
+       */
+      if ( (CONFIG_MEM_FRAME_BASED == config_protocol_type)
+        && (2 <= curr_region_num_config_child)) {
+        curr_region_num_config_child--;
+      }
+
+      /* Memory configuration protocol will have 2 decoders
+       * at the top-level
+       */
+      if (CONFIG_MEM_MEMORY_BANK == config_protocol_type) {
+        VTR_ASSERT(2 <= curr_region_num_config_child);
+        curr_region_num_config_child -= 2;
+      }
+
+      /* Visit all the children in a recursively way */
+      for (size_t ichild = 0; ichild < curr_region_num_config_child; ++ichild) {
+        ModuleId child_module = module_manager.region_configurable_children(parent_module, config_region)[ichild];
+        num_bits += rec_estimate_device_bitstream_num_bits(module_manager, top_module, child_module, config_protocol_type);
+      }
     }
-  }
-  for (size_t ichild = 0; ichild < num_configurable_children; ++ichild) {
-    ModuleId child_module = module_manager.configurable_children(top_module)[ichild];
-    num_bits += rec_estimate_device_bitstream_num_bits(module_manager, child_module, config_protocol_type);
+  } else {
+    VTR_ASSERT_SAFE(parent_module != top_module);
+
+    size_t num_configurable_children = module_manager.configurable_children(parent_module).size();
+
+    /* Frame-based configuration protocol will have 1 decoder
+     * if there are more than 1 configurable children
+     */
+    if ( (CONFIG_MEM_FRAME_BASED == config_protocol_type)
+      && (2 <= num_configurable_children)) {
+      num_configurable_children--;
+    }
+
+    for (size_t ichild = 0; ichild < num_configurable_children; ++ichild) {
+      ModuleId child_module = module_manager.configurable_children(parent_module)[ichild];
+      num_bits += rec_estimate_device_bitstream_num_bits(module_manager, top_module, child_module, config_protocol_type);
+    }
   }
 
   return num_bits;
@@ -121,10 +152,6 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
   /* Bitstream manager to be built */
   BitstreamManager bitstream_manager;
 
-  /* Assign the SRAM model applied to the FPGA fabric */
-  CircuitModelId sram_model = openfpga_ctx.arch().config_protocol.memory_model();  
-  VTR_ASSERT(true == openfpga_ctx.arch().circuit_lib.valid_model_id(sram_model));
-
   /* Create the top-level block for bitstream 
    * This is related to the top-level module of fpga  
    */
@@ -141,6 +168,7 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
 
   /* Estimate the number of bits to be added to the database */
   size_t num_bits_to_reserve = rec_estimate_device_bitstream_num_bits(openfpga_ctx.module_graph(),
+                                                                      top_module,
                                                                       top_module,
                                                                       openfpga_ctx.arch().config_protocol.type());
   bitstream_manager.reserve_bits(num_bits_to_reserve);

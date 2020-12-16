@@ -23,6 +23,7 @@ class VerilogTestbenchOption {
     VerilogTestbenchOption();
   public: /* Public accessors */
     std::string output_directory() const;
+    std::string fabric_netlist_file_path() const;
     std::string reference_benchmark_file_path() const;
     bool fast_configuration() const;
     bool print_formal_verification_top_netlist() const;
@@ -31,6 +32,8 @@ class VerilogTestbenchOption {
     bool print_simulation_ini() const;
     std::string simulation_ini_path() const;
     bool explicit_port_mapping() const;
+    bool include_signal_init() const;
+    bool support_icarus_simulator() const;
     bool verbose_output() const;
   public: /* Public validator */
     bool validate() const;
@@ -42,6 +45,10 @@ class VerilogTestbenchOption {
      * If the file path is empty, the above testbench generation will not be enabled 
      */
     void set_reference_benchmark_file_path(const std::string& reference_benchmark_file_path);
+    /* The fabric netlist file path is an optional parameter 
+     * to allow users to specify a fabric netlist at another location
+     */
+    void set_fabric_netlist_file_path(const std::string& fabric_netlist_file_path);
     void set_print_formal_verification_top_netlist(const bool& enabled);
     /* The preconfig top testbench generation can be enabled only when formal verification top netlist is enabled */
     void set_print_preconfig_top_testbench(const bool& enabled);
@@ -49,9 +56,12 @@ class VerilogTestbenchOption {
     void set_print_top_testbench(const bool& enabled);
     void set_print_simulation_ini(const std::string& simulation_ini_path);
     void set_explicit_port_mapping(const bool& enabled);
+    void set_include_signal_init(const bool& enabled);
+    void set_support_icarus_simulator(const bool& enabled);
     void set_verbose_output(const bool& enabled);
   private: /* Internal Data */
     std::string output_directory_;
+    std::string fabric_netlist_file_path_;
     std::string reference_benchmark_file_path_;
     bool fast_configuration_;
     bool print_formal_verification_top_netlist_;
@@ -60,6 +70,8 @@ class VerilogTestbenchOption {
     /* Print simulation ini is enabled only when the path is not empty */
     std::string simulation_ini_path_;
     bool explicit_port_mapping_;
+    bool support_icarus_simulator_;
+    bool include_signal_init_;
     bool verbose_output_;
 };
 

@@ -5,6 +5,9 @@
 #include <cmath>
 #include <iterator>
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -18,6 +21,8 @@
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+constexpr int MIN_NUM_SIM_OPERATING_CLOCK_CYCLES = 2;
 
 /********************************************************************
  * Find the average signal density for all the nets of user's benchmark
@@ -164,6 +169,13 @@ size_t recommend_num_sim_clock_cycle(const AtomContext& atom_ctx,
   
   VTR_ASSERT(0 < recmd_num_clock_cycles);
 
+  /* Minimum number of clock cycles should be at least 2
+   * so that self-testing testbench can work!!!
+   */
+  if (MIN_NUM_SIM_OPERATING_CLOCK_CYCLES > recmd_num_clock_cycles) {
+    recmd_num_clock_cycles = MIN_NUM_SIM_OPERATING_CLOCK_CYCLES;
+  }
+
   return recmd_num_clock_cycles; 
 }
 
@@ -174,9 +186,9 @@ size_t recommend_num_sim_clock_cycle(const AtomContext& atom_ctx,
  *  - If the number of clock cycles in simulation is set to be automatically determined,
  *    we will infer the number based on the average signal density
  *******************************************************************/
-void annotate_simulation_setting(const AtomContext& atom_ctx, 
-                                 const std::unordered_map<AtomNetId, t_net_power>& net_activity, 
-                                 SimulationSetting& sim_setting) {
+int annotate_simulation_setting(const AtomContext& atom_ctx, 
+                                const std::unordered_map<AtomNetId, t_net_power>& net_activity, 
+                                SimulationSetting& sim_setting) {
 
   /* Find if the operating frequency is binded to vpr results */
   if (0. == sim_setting.operating_clock_frequency()) {
@@ -218,10 +230,22 @@ void annotate_simulation_setting(const AtomContext& atom_ctx,
                                                             net_activity, 
                                                             0.5);
     sim_setting.set_num_clock_cycles(num_clock_cycles);
-
-    VTR_LOG("Will apply %lu operating clock cycles to simulations\n",
-            sim_setting.num_clock_cycles());
   }
+
+  /* Minimum number of clock cycles should be at least 2
+   * so that self-testing testbench can work!!!
+   */
+  if (MIN_NUM_SIM_OPERATING_CLOCK_CYCLES > sim_setting.num_clock_cycles()) {
+    VTR_LOG_ERROR("Minimum number of operating clock cycles applicable to simulations is %d, while the specified number is %lu!\n",
+                  MIN_NUM_SIM_OPERATING_CLOCK_CYCLES,
+                  sim_setting.num_clock_cycles());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  VTR_LOG("Will apply %lu operating clock cycles to simulations\n",
+          sim_setting.num_clock_cycles());
+
+  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */

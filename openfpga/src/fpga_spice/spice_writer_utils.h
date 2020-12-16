@@ -39,13 +39,36 @@ void print_spice_include_netlist(std::fstream& fp,
 void print_spice_comment(std::fstream& fp, 
                          const std::string& comment);
 
-std::string generate_spice_port(const BasicPort& port);
+std::string generate_spice_port(const BasicPort& port,
+                                const bool& omit_pin_zero = false);
 
 void print_spice_subckt_definition(std::fstream& fp, 
-                                   const ModuleManager& module_manager, const ModuleId& module_id);
+                                   const ModuleManager& module_manager,
+                                   const ModuleId& module_id,
+                                   const bool& include_supply_ports = true);
 
 void print_spice_subckt_end(std::fstream& fp, 
                             const std::string& module_name);
+
+void print_spice_resistor(std::fstream& fp,
+                          const std::string& input_port,
+                          const std::string& output_port,
+                          const float& resistance);
+
+void print_spice_capacitor(std::fstream& fp,
+                          const std::string& input_port,
+                          const std::string& output_port,
+                          const float& capacitance);
+
+void print_spice_short_connection(std::fstream& fp,
+                                  const std::string& input_port,
+                                  const std::string& output_port);
+
+void print_spice_subckt_instance(std::fstream& fp, 
+                                 const ModuleManager& module_manager, 
+                                 const ModuleId& module_id,
+                                 const std::string& instance_name,
+                                 const std::map<std::string, BasicPort>& port2port_name_map);
 
 } /* end namespace openfpga */
 

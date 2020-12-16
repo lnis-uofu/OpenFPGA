@@ -109,6 +109,10 @@ build_fabric
 
   - ``--write_fabric_key <xml_file>`` Output current fabric key to an XML file
 
+  - ``--frame_view`` Create only frame views of the module graph. When enabled, top-level module will not include any nets. This option is made for save runtime and memory.
+
+    .. warning:: Recommend to turn the option on when bitstream generation is the only purpose of the flow. Do not use it when you need generate netlists!
+
   - ``--verbose`` Show verbose log
 
   .. note:: This is a must-run command before launching FPGA-Verilog, FPGA-Bitstream, FPGA-SDC and FPGA-SPICE

@@ -118,8 +118,7 @@ namespace openfpga
   static void print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
                                                                       const ModuleManager &module_manager,
                                                                       const ModuleId &top_module,
-                                                                      const CircuitLibrary &circuit_lib,
-                                                                      const std::vector<CircuitPortId> &global_ports,
+                                                                      const FabricGlobalPortInfo &fabric_global_ports,
                                                                       const std::vector<std::string> &benchmark_clock_port_names)
   {
     /* Validate the file stream */
@@ -127,40 +126,16 @@ namespace openfpga
 
     print_verilog_comment(fp, std::string("----- Begin Connect Global ports of FPGA top module -----"));
 
-    /* Global ports of the top module in module manager do not carry any attributes,
-   * such as is_clock, is_set, etc.
-   * Therefore, for each global port in the top module, we find the circuit port in the circuit library
-   * which share the same name. We can access to the attributes.
-   * To gurantee the correct link between global ports in module manager and those in circuit library
-   * We have performed some critical check in check_circuit_library() for global ports,
-   * where we guarantee all the global ports share the same name must have the same attributes.
-   * So that each global port with the same name is unique!
-   */
-    for (const BasicPort &module_global_port : module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GLOBAL_PORT))
-    {
-      CircuitPortId linked_circuit_port_id = CircuitPortId::INVALID();
-      /* Find the circuit port with the same name */
-      for (const CircuitPortId &circuit_port_id : global_ports)
-      {
-        if (0 != module_global_port.get_name().compare(circuit_lib.port_prefix(circuit_port_id)))
-        {
-          continue;
-        }
-        linked_circuit_port_id = circuit_port_id;
-        break;
-      }
-      /* Must find one valid circuit port */
-      VTR_ASSERT(CircuitPortId::INVALID() != linked_circuit_port_id);
-      /* Port size should match! */
-      VTR_ASSERT(module_global_port.get_width() == circuit_lib.port_size(linked_circuit_port_id));
+    for (const FabricGlobalPortId& global_port_id : fabric_global_ports.global_ports()) {
+      ModulePortId module_global_port_id = fabric_global_ports.global_module_port(global_port_id);
+      VTR_ASSERT(ModuleManager::MODULE_GLOBAL_PORT == module_manager.port_type(top_module, module_global_port_id));
+      BasicPort module_global_port = module_manager.module_port(top_module, module_global_port_id);
       /* Now, for operating clock port, we should wire it to the clock of benchmark! */
-      if ((CIRCUIT_MODEL_PORT_CLOCK == circuit_lib.port_type(linked_circuit_port_id)) && (false == circuit_lib.port_is_prog(linked_circuit_port_id)))
-      {
+      if ((true == fabric_global_ports.global_port_is_clock(global_port_id)) 
+       && (false == fabric_global_ports.global_port_is_prog(global_port_id))) {
         /* Wiring to each pin of the global port: benchmark clock is always 1-bit */
-        for (const size_t &pin : module_global_port.pins())
-        {
-          for (const std::string &clock_port_name : benchmark_clock_port_names)
-          {
+        for (const size_t &pin : module_global_port.pins()) {
+          for (const std::string &clock_port_name : benchmark_clock_port_names) {
             BasicPort module_clock_pin(module_global_port.get_name(), pin, pin);
             BasicPort benchmark_clock_pin(clock_port_name + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), 1);
             print_verilog_wire_connection(fp, module_clock_pin, benchmark_clock_pin, false);
@@ -171,7 +146,7 @@ namespace openfpga
       }
 
       /* For other ports, give an default value */
-      std::vector<size_t> default_values(module_global_port.get_width(), circuit_lib.port_default_value(linked_circuit_port_id));
+      std::vector<size_t> default_values(module_global_port.get_width(), fabric_global_ports.global_port_default_value(global_port_id));
       print_verilog_wire_constant_values(fp, module_global_port, default_values);
     }
 
@@ -189,7 +164,8 @@ namespace openfpga
   static void print_verilog_preconfig_top_module_assign_bitstream(std::fstream &fp,
                                                                   const ModuleManager &module_manager,
                                                                   const ModuleId &top_module,
-                                                                  const BitstreamManager &bitstream_manager)
+                                                                  const BitstreamManager &bitstream_manager,
+                                                                  const bool& output_datab_bits)
   {
     /* Validate the file stream */
     valid_file_stream(fp);
@@ -231,43 +207,45 @@ namespace openfpga
       print_verilog_wire_constant_values(fp, config_data_port, config_data_values);
     }
 
-    fp << "initial begin" << std::endl;
+    if (true == output_datab_bits) {
+      fp << "initial begin" << std::endl;
 
-    for (const ConfigBlockId &config_block_id : bitstream_manager.blocks())
-    {
-      /* We only cares blocks with configuration bits */
-      if (0 == bitstream_manager.block_bits(config_block_id).size())
+      for (const ConfigBlockId &config_block_id : bitstream_manager.blocks())
       {
-        continue;
-      }
-      /* Build the hierarchical path of the configuration bit in modules */
-      std::vector<ConfigBlockId> block_hierarchy = find_bitstream_manager_block_hierarchy(bitstream_manager, config_block_id);
-      /* Drop the first block, which is the top module, it should be replaced by the instance name here */
-      /* Ensure that this is the module we want to drop! */
-      VTR_ASSERT(0 == module_manager.module_name(top_module).compare(bitstream_manager.block_name(block_hierarchy[0])));
-      block_hierarchy.erase(block_hierarchy.begin());
-      /* Build the full hierarchy path */
-      std::string bit_hierarchy_path(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME);
-      for (const ConfigBlockId &temp_block : block_hierarchy)
-      {
+        /* We only cares blocks with configuration bits */
+        if (0 == bitstream_manager.block_bits(config_block_id).size())
+        {
+          continue;
+        }
+        /* Build the hierarchical path of the configuration bit in modules */
+        std::vector<ConfigBlockId> block_hierarchy = find_bitstream_manager_block_hierarchy(bitstream_manager, config_block_id);
+        /* Drop the first block, which is the top module, it should be replaced by the instance name here */
+        /* Ensure that this is the module we want to drop! */
+        VTR_ASSERT(0 == module_manager.module_name(top_module).compare(bitstream_manager.block_name(block_hierarchy[0])));
+        block_hierarchy.erase(block_hierarchy.begin());
+        /* Build the full hierarchy path */
+        std::string bit_hierarchy_path(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME);
+        for (const ConfigBlockId &temp_block : block_hierarchy)
+        {
+          bit_hierarchy_path += std::string(".");
+          bit_hierarchy_path += bitstream_manager.block_name(temp_block);
+        }
         bit_hierarchy_path += std::string(".");
-        bit_hierarchy_path += bitstream_manager.block_name(temp_block);
-      }
-      bit_hierarchy_path += std::string(".");
 
-      /* Find the bit index in the parent block */
-      BasicPort config_datab_port(bit_hierarchy_path + generate_configurable_memory_inverted_data_out_name(),
-                                  bitstream_manager.block_bits(config_block_id).size());
+        /* Find the bit index in the parent block */
+        BasicPort config_datab_port(bit_hierarchy_path + generate_configurable_memory_inverted_data_out_name(),
+                                    bitstream_manager.block_bits(config_block_id).size());
 
-      std::vector<size_t> config_datab_values;
-      for (const ConfigBitId config_bit : bitstream_manager.block_bits(config_block_id))
-      {
-        config_datab_values.push_back(!bitstream_manager.bit_value(config_bit));
+        std::vector<size_t> config_datab_values;
+        for (const ConfigBitId config_bit : bitstream_manager.block_bits(config_block_id))
+        {
+          config_datab_values.push_back(!bitstream_manager.bit_value(config_bit));
+        }
+        print_verilog_force_wire_constant_values(fp, config_datab_port, config_datab_values);
       }
-      print_verilog_force_wire_constant_values(fp, config_datab_port, config_datab_values);
+
+      fp << "end" << std::endl;
     }
-
-    fp << "end" << std::endl;
 
     print_verilog_comment(fp, std::string("----- End assign bitstream to configuration memories -----"));
   }
@@ -279,7 +257,8 @@ namespace openfpga
   static void print_verilog_preconfig_top_module_deposit_bitstream(std::fstream &fp,
                                                                    const ModuleManager &module_manager,
                                                                    const ModuleId &top_module,
-                                                                   const BitstreamManager &bitstream_manager)
+                                                                   const BitstreamManager &bitstream_manager,
+                                                                   const bool& output_datab_bits)
   {
     /* Validate the file stream */
     valid_file_stream(fp);
@@ -314,9 +293,6 @@ namespace openfpga
       BasicPort config_data_port(bit_hierarchy_path + generate_configurable_memory_data_out_name(),
                                  bitstream_manager.block_bits(config_block_id).size());
 
-      BasicPort config_datab_port(bit_hierarchy_path + generate_configurable_memory_inverted_data_out_name(),
-                                  bitstream_manager.block_bits(config_block_id).size());
-
       /* Wire it to the configuration bit: access both data out and data outb ports */
       std::vector<size_t> config_data_values;
       for (const ConfigBitId config_bit : bitstream_manager.block_bits(config_block_id))
@@ -324,6 +300,15 @@ namespace openfpga
         config_data_values.push_back(bitstream_manager.bit_value(config_bit));
       }
       print_verilog_deposit_wire_constant_values(fp, config_data_port, config_data_values);
+
+      /* Skip datab ports if specified */
+      if (false == output_datab_bits) {
+        continue;
+      }
+
+      BasicPort config_datab_port(bit_hierarchy_path + generate_configurable_memory_inverted_data_out_name(),
+                                  bitstream_manager.block_bits(config_block_id).size());
+
 
       std::vector<size_t> config_datab_values;
       for (const ConfigBitId config_bit : bitstream_manager.block_bits(config_block_id))
@@ -347,19 +332,37 @@ namespace openfpga
   static void print_verilog_preconfig_top_module_load_bitstream(std::fstream &fp,
                                                                 const ModuleManager &module_manager,
                                                                 const ModuleId &top_module,
+                                                                const CircuitLibrary& circuit_lib,
+                                                                const CircuitModelId& mem_model,
                                                                 const BitstreamManager &bitstream_manager)
   {
+
+    /* Skip the datab port if there is only 1 output port in memory model
+     * Currently, it assumes that the data output port is always defined while datab is optional
+     * If we see only 1 port, we assume datab is not defined by default.
+     * TODO: this switch could be smarter: it should identify if only data or datab
+     * ports are defined.
+     */
+    bool output_datab_bits = true;
+    if (1 == circuit_lib.model_ports_by_type(mem_model, CIRCUIT_MODEL_PORT_OUTPUT).size()) {
+      output_datab_bits = false;
+    }
+
     print_verilog_comment(fp, std::string("----- Begin load bitstream to configuration memories -----"));
 
     print_verilog_preprocessing_flag(fp, std::string(ICARUS_SIMULATOR_FLAG));
 
     /* Use assign syntax for Icarus simulator */
-    print_verilog_preconfig_top_module_assign_bitstream(fp, module_manager, top_module, bitstream_manager);
+    print_verilog_preconfig_top_module_assign_bitstream(fp, module_manager, top_module,
+                                                        bitstream_manager,
+                                                        output_datab_bits);
 
     fp << "`else" << std::endl;
 
     /* Use assign syntax for Icarus simulator */
-    print_verilog_preconfig_top_module_deposit_bitstream(fp, module_manager, top_module, bitstream_manager);
+    print_verilog_preconfig_top_module_deposit_bitstream(fp, module_manager, top_module,
+                                                         bitstream_manager,
+                                                         output_datab_bits);
 
     print_verilog_endif(fp);
 
@@ -400,8 +403,9 @@ namespace openfpga
  *******************************************************************/
   void print_verilog_preconfig_top_module(const ModuleManager &module_manager,
                                           const BitstreamManager &bitstream_manager,
+                                          const ConfigProtocol &config_protocol,
                                           const CircuitLibrary &circuit_lib,
-                                          const std::vector<CircuitPortId> &global_ports,
+                                          const FabricGlobalPortInfo &global_ports,
                                           const AtomContext &atom_ctx,
                                           const PlacementContext &place_ctx,
                                           const IoLocationMap &io_location_map,
@@ -446,7 +450,7 @@ namespace openfpga
 
     /* Connect FPGA top module global ports to constant or benchmark global signals! */
     print_verilog_preconfig_top_module_connect_global_ports(fp, module_manager, top_module,
-                                                            circuit_lib, global_ports,
+                                                            global_ports,
                                                             benchmark_clock_port_names);
 
     /* Connect I/Os to benchmark I/Os or constant driver */
@@ -457,9 +461,21 @@ namespace openfpga
                                              std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
                                              (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
+    /* Assign the SRAM model applied to the FPGA fabric */
+    CircuitModelId sram_model = config_protocol.memory_model();  
+    VTR_ASSERT(true == circuit_lib.valid_model_id(sram_model));
+
     /* Assign FPGA internal SRAM/Memory ports to bitstream values */
     print_verilog_preconfig_top_module_load_bitstream(fp, module_manager, top_module,
+                                                      circuit_lib, sram_model, 
                                                       bitstream_manager);
+
+    /* Add signal initialization */
+    print_verilog_testbench_signal_initialization(fp,
+                                                  std::string(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME),
+                                                  circuit_lib,
+                                                  module_manager,
+                                                  top_module);
 
     /* Testbench ends*/
     print_verilog_module_end(fp, std::string(circuit_name) + std::string(FORMAL_VERIFICATION_TOP_MODULE_POSTFIX));

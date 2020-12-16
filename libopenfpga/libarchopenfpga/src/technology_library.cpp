@@ -157,6 +157,18 @@ float TechnologyLibrary::transistor_model_min_width(const TechnologyModelId& mod
   return transistor_model_min_widths_[model_id][transistor_type]; 
 }
 
+/* Access the maximum width of a transistor (either PMOS or NMOS) for a technology model
+ * Note: This is ONLY applicable to transistor model 
+ */
+float TechnologyLibrary::transistor_model_max_width(const TechnologyModelId& model_id,
+                                                    const e_tech_lib_transistor_type& transistor_type) const {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  /* This is only applicable to transistor model */
+  VTR_ASSERT(TECH_LIB_MODEL_TRANSISTOR == model_type(model_id));
+  return transistor_model_max_widths_[model_id][transistor_type]; 
+}
+
 /* Access the minimum width of a transistor (either PMOS or NMOS) for a technology model
  * Note: This is ONLY applicable to transistor model 
  */
@@ -270,6 +282,7 @@ TechnologyModelId TechnologyLibrary::add_model(const std::string& name) {
   transistor_model_names_.emplace_back();
   transistor_model_chan_lengths_.emplace_back();
   transistor_model_min_widths_.emplace_back();
+  transistor_model_max_widths_.emplace_back();
   transistor_model_variation_names_.emplace_back();
   transistor_model_variation_ids_.push_back(std::array<TechnologyVariationId, 2>{TechnologyVariationId::INVALID(), TechnologyVariationId::INVALID()});
 
@@ -391,6 +404,19 @@ void TechnologyLibrary::set_transistor_model_min_width(const TechnologyModelId& 
   VTR_ASSERT(valid_model_id(model_id));
   VTR_ASSERT(TECH_LIB_MODEL_TRANSISTOR == model_type(model_id));
   transistor_model_min_widths_[model_id][transistor_type] = min_width;
+  return;
+}
+
+/* Set the maximum width for either PMOS or NMOS of a model in the library 
+ * This is ONLY applicable to transistors
+ */
+void TechnologyLibrary::set_transistor_model_max_width(const TechnologyModelId& model_id, 
+                                                       const e_tech_lib_transistor_type& transistor_type,
+                                                       const float& max_width) {
+  /* validate the model_id */
+  VTR_ASSERT(valid_model_id(model_id));
+  VTR_ASSERT(TECH_LIB_MODEL_TRANSISTOR == model_type(model_id));
+  transistor_model_max_widths_[model_id][transistor_type] = max_width;
   return;
 }
 

@@ -26,8 +26,6 @@ int write_fabric_verilog(OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
   CommandOptionId opt_include_timing = cmd.option("include_timing");
-  CommandOptionId opt_include_signal_init = cmd.option("include_signal_init");
-  CommandOptionId opt_support_icarus_simulator = cmd.option("support_icarus_simulator");
   CommandOptionId opt_print_user_defined_template = cmd.option("print_user_defined_template");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
@@ -38,8 +36,6 @@ int write_fabric_verilog(OpenfpgaContext& openfpga_ctx,
   options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
   options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
   options.set_include_timing(cmd_context.option_enable(cmd, opt_include_timing));
-  options.set_include_signal_init(cmd_context.option_enable(cmd, opt_include_signal_init));
-  options.set_support_icarus_simulator(cmd_context.option_enable(cmd, opt_support_icarus_simulator));
   options.set_print_user_defined_template(cmd_context.option_enable(cmd, opt_print_user_defined_template));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_compress_routing(openfpga_ctx.flow_manager().compress_routing());
@@ -65,6 +61,7 @@ int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
                             const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_output_dir = cmd.option("file");
+  CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
   CommandOptionId opt_print_top_testbench = cmd.option("print_top_testbench");
   CommandOptionId opt_fast_configuration = cmd.option("fast_configuration");
@@ -72,6 +69,8 @@ int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_print_preconfig_top_testbench = cmd.option("print_preconfig_top_testbench");
   CommandOptionId opt_print_simulation_ini = cmd.option("print_simulation_ini");
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
+  CommandOptionId opt_include_signal_init = cmd.option("include_signal_init");
+  CommandOptionId opt_support_icarus_simulator = cmd.option("support_icarus_simulator");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
@@ -79,6 +78,7 @@ int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
    */
   VerilogTestbenchOption options;
   options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
+  options.set_fabric_netlist_file_path(cmd_context.option_value(cmd, opt_fabric_netlist));
   options.set_reference_benchmark_file_path(cmd_context.option_value(cmd, opt_reference_benchmark));
   options.set_print_formal_verification_top_netlist(cmd_context.option_enable(cmd, opt_print_formal_verification_top_netlist));
   options.set_print_preconfig_top_testbench(cmd_context.option_enable(cmd, opt_print_preconfig_top_testbench));
@@ -86,6 +86,8 @@ int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
   options.set_print_top_testbench(cmd_context.option_enable(cmd, opt_print_top_testbench));
   options.set_print_simulation_ini(cmd_context.option_value(cmd, opt_print_simulation_ini));
   options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
+  options.set_include_signal_init(cmd_context.option_enable(cmd, opt_include_signal_init));
+  options.set_support_icarus_simulator(cmd_context.option_enable(cmd, opt_support_icarus_simulator));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   
   fpga_verilog_testbench(openfpga_ctx.module_graph(),
@@ -94,10 +96,11 @@ int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
                          g_vpr_ctx.atom(),
                          g_vpr_ctx.placement(),
                          openfpga_ctx.io_location_map(),
+                         openfpga_ctx.fabric_global_port_info(),
                          openfpga_ctx.vpr_netlist_annotation(),
                          openfpga_ctx.arch().circuit_lib,
                          openfpga_ctx.simulation_setting(),
-                         openfpga_ctx.arch().config_protocol.type(),
+                         openfpga_ctx.arch().config_protocol,
                          options);
 
   /* TODO: should identify the error code from internal function execution */

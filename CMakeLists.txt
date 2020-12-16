@@ -185,11 +185,59 @@ endif()
 #add_subdirectory(iverilog)
 add_subdirectory(libs)
 add_subdirectory(libopenfpga)
-add_subdirectory(yosys)
+#add_subdirectory(yosys)
 add_subdirectory(abc)
 add_subdirectory(ace2)
 add_subdirectory(vpr)
 add_subdirectory(openfpga)
+
+# yosys compilation starts
+
+# Compilation options for yosys
+include(CMakeParseArguments)
+
+##project(yosys)
+
+# Options to enable/disable dependencies
+option(YOSYS_ENABLE_TCL, "Enable TCL parser integrated in yosys" ON)
+option(YOSYS_ENABLE_ABC, "Enable ABC library integrated in yosys" ON)
+option(YOSYS_ENABLE_PLUGINS, "Enable plug-in in yosys" ON)
+option(YOSYS_ENABLE_READLINE, "Enable readline library in yosys" ON)
+option(YOSYS_ENABLE_VERIFIC, "Enable verification library in yosys" OFF)
+option(YOSYS_ENABLE_COVER, "Enable coverage test in yosys" ON)
+option(YOSYS_ENABLE_LIBYOSYS, "Enable static library compiled yosys" OFF)
+option(YOSYS_ENABLE_GPROF, "Enable profiling in compiled yosys" OFF)
+option(YOSYS_ENABLE_NDEBUG, "Enable non-debugging feature in compiled yosys" OFF)
+
+#
+## Search and link dependent packages
+## We need readline to compile 
+if (YOSYS_ENABLE_READLINE)
+  find_package(Readline REQUIRED)
+endif()
+
+#
+#########################
+##                      #
+## Compiler Flags Setup #
+##                      #
+#########################
+#
+## Compiler flag configuration checks
+include(CheckCCompilerFlag)
+include(CheckCXXCompilerFlag)
+#
+
+# run makefile provided, we pass-on the options to the local make file 
+add_custom_target(
+    yosys ALL 
+    COMMAND $(MAKE) config-gcc
+    COMMAND $(MAKE) 
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys
+    COMMENT "Compile Yosys with given Makefile"
+)
+
+# yosys compilation ends
 
 # run make to extract compiler options, linker options and list of source files
 #add_custom_target(

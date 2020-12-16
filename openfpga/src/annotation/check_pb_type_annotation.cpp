@@ -114,7 +114,7 @@ void check_vpr_physical_primitive_pb_type_annotation(t_pb_type* cur_pb_type,
 
   /* Now we need to check each port of the pb_type */ 
   for (t_port* pb_port : pb_type_ports(cur_pb_type)) {
-    if (nullptr == vpr_device_annotation.physical_pb_port(pb_port)) {
+    if (0 == vpr_device_annotation.physical_pb_port(pb_port).size()) {
       VTR_LOG_ERROR("Find a port '%s' of pb_type '%s' which has not been mapped to any physical port!\n",
                     pb_port->name, cur_pb_type->name);
       VTR_LOG_ERROR("Please specify in the OpenFPGA architecture\n");
@@ -194,7 +194,7 @@ void rec_check_vpr_pb_type_circuit_model_annotation(t_pb_type* cur_pb_type,
     /* Every physical pb_type should be linked to a valid circuit model */
     if (CircuitModelId::INVALID() == vpr_device_annotation.pb_type_circuit_model(cur_pb_type)) {
       VTR_LOG_ERROR("Found a physical pb_type '%s' missing circuit model binding!\n",
-                    cur_pb_type->name);
+                    generate_pb_type_hierarchy_path(cur_pb_type).c_str());
       num_err++;
       return; /* Invalid id already, further check is not applicable */
     }
@@ -202,7 +202,8 @@ void rec_check_vpr_pb_type_circuit_model_annotation(t_pb_type* cur_pb_type,
     for (t_port* port : pb_type_ports(cur_pb_type)) {
       if (CircuitPortId::INVALID() == vpr_device_annotation.pb_circuit_port(port)) {
         VTR_LOG_ERROR("Found a port '%s' of physical pb_type '%s' missing circuit port binding!\n",
-                      port->name, cur_pb_type->name);
+                      port->name,
+                      generate_pb_type_hierarchy_path(cur_pb_type).c_str());
         num_err++;
       }
     }
@@ -217,7 +218,7 @@ void rec_check_vpr_pb_type_circuit_model_annotation(t_pb_type* cur_pb_type,
       VTR_LOG_ERROR("Found an interconnect '%s' under physical mode '%s' of pb_type '%s' missing circuit model binding!\n",
                     interc->name,
                     physical_mode->name,
-                    cur_pb_type->name);
+                    generate_pb_type_hierarchy_path(cur_pb_type).c_str());
       num_err++;
       continue;
     }
@@ -226,7 +227,7 @@ void rec_check_vpr_pb_type_circuit_model_annotation(t_pb_type* cur_pb_type,
       VTR_LOG_ERROR("Found an interconnect '%s' under physical mode '%s' of pb_type '%s' linked to a circuit model '%s' with a wrong type!\nExpect: '%s' Linked: '%s'\n",
                     interc->name,
                     physical_mode->name, 
-                    cur_pb_type->name,
+                    generate_pb_type_hierarchy_path(cur_pb_type).c_str(),
                     circuit_lib.model_name(interc_circuit_model).c_str(),
                     CIRCUIT_MODEL_TYPE_STRING[circuit_lib.model_type(interc_circuit_model)],
                     CIRCUIT_MODEL_TYPE_STRING[required_circuit_model_type]);

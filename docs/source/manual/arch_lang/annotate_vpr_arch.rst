@@ -49,6 +49,76 @@ Similar to the Switch Boxes and Connection Blocks, the channel wire segments in 
 
 - ``circuit_model_name="<string>"`` should match a circuit model whose type is ``chan_wire`` defined in :ref:`circuit_library`.
 
+Physical Tile Annotation
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Original VPR architecture description contains ``<tile>`` XML nodes to define physical tile pins.
+OpenFPGA allows users to define pin/port of physical tiles as global ports.
+
+Here is an example:
+
+.. code-block:: xml
+
+  <tile_annotations>
+    <global_port name="<string>" tile_port="<string>" is_clock="<bool>" is_reset="<bool>" is_set="<bool>" default_val="<int>"/>
+  </tile_annotations>
+
+- ``name="<string>"`` is the port name to appear in the top-level FPGA fabric.
+
+- ``tile_port="<string>"`` is the port name of a physical tile, e.g., ``tile_port="clb.clk"``.
+
+.. note:: The port of physical tile must be a valid port of the physical definition in VPR architecture!
+
+.. note:: The linked port of physical tile must meet the following requirements:
+
+            - If the ``global_port`` is set as clock through ``is_clock="true"``, the port of the physical tile must also be a clock port.
+            - If not a clock, the port of the physical tile must be defined as non-clock global
+            - The port of the physical tile should have zero connectivity (``Fc=0``) in VPR architecture
+
+- ``is_clock="<bool>"`` define if the global port is a clock port at the top-level FPGA fabric. An operating clock port will be driven by proper signals in auto-generated testbenches.
+
+- ``is_reset="<bool>"`` define if the global port is a reset port at the top-level FPGA fabric. An operating reset port will be driven by proper signals in testbenches.
+
+- ``is_set="<bool>"`` define if the global port is a set port at the top-level FPGA fabric. An operating set port will be driven by proper signals in testbenches.
+
+.. note:: A port can only be defined as ``clock`` or ``set`` or ``reset``.
+
+.. note:: All the global port from a physical tile port is only used in operating phase. Any ports for programmable use are not allowed!
+
+- ``default_val="<int>"`` define if the default value for the global port when initialized in testbenches. Valid values are either ``0`` or ``1``. For example, the default value of an active-high reset pin is ``0``, while an active-low reset pin is ``1``.
+
+A more illustrative example:
+
+:numref:`fig_global_tile_ports` illustrates the difference between the global ports defined through ``circuit_model`` and ``tile_annotation``.
+
+.. _fig_global_tile_ports:
+
+.. figure:: ./figures/global_tile_ports.png
+   :scale: 100%
+   :alt: Difference between global port definition through circuit model and tile annotation
+
+   Difference between global port definition through circuit model and tile annotation
+
+When a global port, e.g., ``clk``, is defined in ``circuit_model`` using the following code:
+
+.. code-block:: xml
+
+  <circuit_model>
+    <port name="clk" is_global="true" is_clock="true"/>
+  </circuit_model>
+
+Dedicated feedthrough wires will be created across all the modules from top-level to primitive.
+
+When a global port, e.g., ``clk``, is defined in ``tile_annotation`` using the following code:
+
+.. code-block:: xml
+
+  <tile_annotations>
+    <global_port name="clk" tile_port="clb.clk" is_clock="true"/>
+  </tile_annotations>
+
+Clock port ``clk`` of each ``clb`` tile will be connected to a common clock port of the top module, while local clock network is customizable through VPR's architecture description language. For instance, the local clock network can be a programmable clock network. 
+
 Primitive Blocks inside Multi-mode Configurable Logic Blocks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -103,12 +173,15 @@ The ``circuit_model_name`` should match the given name of a ``circuit_model`` de
 
 .. note:: OpenFPGA will infer the physical mode for a single-mode ``pb_type`` defined in VPR architecture
 
-.. option:: <pb_type name="<string>" physical_pb_type_name="<string>" circuit_model_name="<string>" 
-  mode_bits="<int>" physical_pb_type_index_factor="<float>" physical_pb_type_index_offset="<int>">
+.. option:: <pb_type name="<string>" physical_pb_type_name="<string>"
+             circuit_model_name="<string>" mode_bits="<int>"
+             physical_pb_type_index_factor="<float>" physical_pb_type_index_offset="<int>">
 
   Specify the physical implementation for a primitive ``pb_type`` in VPR architecture
 
   .. note:: This should be applied to primitive ``pb_type``, i.e., ``pb_type`` have no children.
+
+  .. note:: This definition should be placed directly under the XML node ``<pb_type_annotation>`` without any intermediate XML nodes!
 
   - ``name="<string>"`` specifiy the full name of a ``pb_type`` in the hierarchy of VPR architecture.
 
@@ -124,11 +197,14 @@ The ``circuit_model_name`` should match the given name of a ``circuit_model`` de
 
 .. option:: <interconnect name="<string>" circuit_model_name="<string>">
 
-  - ``name="<string>"`` specifiy the name of a ``interconnect`` in VPR architecture. Different from ``pb_type``, hierarchical name is not required here.
+  - ``name="<string>"`` specify the name of a ``interconnect`` in VPR architecture. Different from ``pb_type``, hierarchical name is not required here.
 
   - ``circuit_model_name="<string>"`` For the interconnection type direct, the type of the linked circuit model should be wire. For multiplexers, the type of linked circuit model should be ``mux``. For complete, the type of the linked circuit model can be either ``mux`` or ``wire``, depending on the case.
 
-.. option:: <port name="<string>" physical_mode_port="<string>" physical_mode_pin_rotate_offset="<int>"/>
+  .. note:: A ``<pb_type name="<string>">`` parent XML node is required for the interconnect-to-circuit bindings whose interconnects are defined under the ``pb_type`` in VPR architecture description. 
+
+.. option:: <port name="<string>" physical_mode_port="<string>"
+             physical_mode_pin_initial_offset="<int>" physical_mode_pin_rotate_offset="<int>"/>
 
    Link a port of an operating ``pb_type`` to a port of a physical ``pb_type``
 
@@ -136,7 +212,38 @@ The ``circuit_model_name`` should match the given name of a ``circuit_model`` de
 
   - ``physical_mode_pin="<string>" creates the link of ``port`` of ``pb_type`` between operating and physical modes. This syntax is mandatory for every primitive ``pb_type`` in an operating mode ``pb_type``. It should be a valid ``port`` name of leaf ``pb_type`` in physical mode and the port size should also match. 
 
-  - ``physical_mode_pin_rotate_offset="<int>"`` aims to align the pin indices for ``port`` of ``pb_type`` between operating and physical modes, especially when an operating mode contains multiple ``pb_type`` (``num_pb``>1) that are linked to the same physical ``pb_type``. When ``physical_mode_pin_rotate_offset`` is larger than zero, the pin index of ``pb_type`` (whose index is large than 1) will be shifted by the given offset. 
+    .. note:: Users can define multiple ports. For example: ``physical_mode_pin="a[0:1] b[2:2]"``. When multiple ports are used, the ``physical_mode_pin_initial_offset`` and ``physical_mode_pin_rotate_offset`` should also be adapt. For example: ``physical_mode_pin_rotate_offset="1 0"``)
+
+
+  - ``physical_mode_pin_initial_offset="<int>"`` aims to align the pin indices for ``port`` of ``pb_type`` between operating and physical modes, especially when part of port of operating mode is mapped to a port in physical ``pb_type``. When ``physical_mode_pin_initial_offset`` is larger than zero, the pin index of ``pb_type`` (whose index is large than 1) will be shifted by the given offset. 
+
+    .. note:: A quick example to understand the initial offset
+              For example, an initial offset of -32 is used to map 
+
+              - operating pb_type ``bram[0].dout[32]`` with a full path ``memory[dual_port].bram[0]``
+              - operating pb_type ``bram[0].dout[33]`` with a full path ``memory[dual_port].bram[0]``
+
+              to 
+
+              - physical pb_type ``bram[0].dout_a[0]`` with a full path ``memory[physical].bram[0]``
+              - physical pb_type ``bram[0].dout_a[1]`` with a full path ``memory[physical].bram[0]``
+
+    .. note:: If not defined, the default value of ``physical_mode_pin_initial_offset`` is set to ``0``.
+
+  - ``physical_mode_pin_rotate_offset="<int>"`` aims to align the pin indices for ``port`` of ``pb_type`` between operating and physical modes, especially when an operating mode contains multiple ``pb_type`` (``num_pb``>1) that are linked to the same physical ``pb_type``. When ``physical_mode_pin_rotate_offset`` is larger than zero, the pin index of ``pb_type`` (whose index is large than 1) will be shifted by the given offset.
+  
+    .. note:: A quick example to understand the rotate offset
+              For example, a rotating offset of 9 is used to map 
+
+              - operating pb_type ``mult_9x9[0].a[0:8]`` with a full path ``mult[frac].mult_9x9[0]``
+              - operating pb_type ``mult_9x9[1].a[0:8]`` with a full path ``mult[frac].mult_9x9[1]``
+
+               to 
+
+              - physical pb_type ``mult_36x36.a[0:8]`` with a full path ``mult[physical].mult_36x36[0]``
+              - physical pb_type ``mult_36x36.a[9:17]`` with a full path ``mult[physical].mult_36x36[0]``
+
+    .. note:: If not defined, the default value of ``physical_mode_pin_rotate_offset`` is set to ``0``.
 
 .. note::
   It is highly recommended that only one physical mode is defined for a multi-mode configurable block. Try not to use nested physical mode definition. This will ease the debugging and lead to clean XML description. 

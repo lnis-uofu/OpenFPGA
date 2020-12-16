@@ -23,20 +23,11 @@
  *******************************************************************/
 static 
 e_config_protocol_type string_to_config_protocol_type(const std::string& type_string) {
-  if (std::string("standalone") == type_string) {
-    return CONFIG_MEM_STANDALONE;
-  }
-
-  if (std::string("scan_chain") == type_string) {
-    return CONFIG_MEM_SCAN_CHAIN;
-  }
-
-  if (std::string("memory_bank") == type_string) {
-    return CONFIG_MEM_MEMORY_BANK;
-  }
-
-  if (std::string("frame_based") == type_string) {
-    return CONFIG_MEM_FRAME_BASED;
+  
+  for (size_t itype = 0; itype < NUM_CONFIG_PROTOCOL_TYPES; ++itype) {
+    if (std::string(CONFIG_PROTOCOL_TYPE_STRING[itype]) == type_string) {
+      return static_cast<e_config_protocol_type>(itype); 
+    }
   }
 
   return NUM_CONFIG_PROTOCOL_TYPES;
@@ -62,8 +53,18 @@ void read_xml_config_organization(pugi::xml_node& xml_config_orgz,
 
   config_protocol.set_type(config_orgz_type);
 
+  /* Find the circuit model used by the configuration protocol */
   config_protocol.set_memory_model_name(get_attribute(xml_config_orgz, "circuit_model_name", loc_data).as_string());
 
+  /* Parse the number of configurable regions
+   * At least 1 region should be defined, otherwise error out 
+   */
+  config_protocol.set_num_regions(get_attribute(xml_config_orgz, "num_regions", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(1));
+  if (1 > config_protocol.num_regions()) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_config_orgz),
+                   "Invalid 'num_region=%d' definition. At least 1 region should be defined!\n",
+                   config_protocol.num_regions());
+  }
 }
 
 /********************************************************************

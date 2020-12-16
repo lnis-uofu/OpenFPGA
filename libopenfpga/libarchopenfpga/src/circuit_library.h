@@ -48,7 +48,7 @@
  *                          It should be the same as user-defined Verilog modules, if it is not auto-generated
  * 4. model_prefix_: the prefix of a circuit model when it is instanciated  
  * 5. verilog_netlist_: specified path and file name of Verilog netlist if a circuit model is not auto-generated
- * 6. circuit_netlist_: specified path and file name of CIRCUIT netlist if a circuit model is not auto-generated
+ * 6. spice_netlist_: specified path and file name of CIRCUIT netlist if a circuit model is not auto-generated
  * 7. is_default_: indicate if the circuit model is the default one among all those in the same type 
  * 8. sub_models_: the sub circuit models included by a circuit model. It is a collection of unique circuit model ids
  *                 found in the CircuitModelId of pass-gate/buffers/port-related circuit models.
@@ -79,27 +79,29 @@
  *  2. pass_gate_logic_model_id_: specify the id of circuit model for the pass gate logic 
  *
  *  ------ Port information ------
- * 1. port_ids_: unique id of ports belonging to a circuit model 
- * 1. port_model_ids_: unique id of the parent circuit model for the port
- * 2. port_types_: types of ports belonging to a circuit model 
- * 3. port_sizes_: width of ports belonging to a circuit model
- * 4. port_prefix_: prefix of a port when instance of a circuit model 
- * 5. port_lib_names_: port name in the standard cell library, only used when explicit_port_mapping is enabled   
- * 6. port_inv_prefix_: the prefix to be added for the inverted port. This is mainly used by SRAM ports, which have an coupled inverterd port 
- * 7. port_is_mode_select: specify if this port is used to select operating modes of the circuit model  
- * 8. port_is_global: specify if this port is a global signal shared by other circuit model
- * 9. port_is_reset: specify if this port is a reset signal which needs special pulse widths in testbenches 
- * 10. port_is_set: specify if this port is a set signal which needs special pulse widths in testbenches 
- * 11. port_is_config_enable: specify if this port is a config_enable signal which needs special pulse widths in testbenches 
- * 12. port_is_prog: specify if this port is for FPGA programming use which needs special pulse widths in testbenches 
- * 13. port_tri_state_model_name: the name of circuit model linked to tri-state the port  
- * 14. port_tri_state_model_ids_: the Id of circuit model linked to tri-state the port 
- * 15. port_inv_model_names_: the name of inverter circuit model linked to the port 
- * 16. port_inv_model_ids_: the Id of inverter circuit model linked to the port
- * 17. port_tri_state_map_: only applicable to inputs of LUTs, the tri-state map applied to each pin of this port 
- * 18. port_lut_frac_level_:  only applicable to outputs of LUTs, indicate which level of outputs inside LUT multiplexing structure will be used
- * 19. port_lut_output_mask_: only applicable to outputs of LUTs, indicate which output at an internal level of LUT multiplexing structure will be used
- * 20. port_sram_orgz_: only applicable to SRAM ports, indicate how the SRAMs will be organized, either memory decoders or scan-chains
+ * - port_ids_: unique id of ports belonging to a circuit model 
+ * - port_model_ids_: unique id of the parent circuit model for the port
+ * - port_types_: types of ports belonging to a circuit model 
+ * - port_sizes_: width of ports belonging to a circuit model
+ * - port_prefix_: prefix of a port when instance of a circuit model 
+ * - port_lib_names_: port name in the standard cell library, only used when explicit_port_mapping is enabled   
+ * - port_inv_prefix_: the prefix to be added for the inverted port. This is mainly used by SRAM ports, which have an coupled inverterd port 
+ * - port_is_mode_select: specify if this port is used to select operating modes of the circuit model  
+ * - port_is_io: specify if this port is an io port
+ * - port_is_data_io: specify if this port is an io port that can be mapped to a signal from netlist
+ * - port_is_global: specify if this port is a global signal shared by other circuit model
+ * - port_is_reset: specify if this port is a reset signal which needs special pulse widths in testbenches 
+ * - port_is_set: specify if this port is a set signal which needs special pulse widths in testbenches 
+ * - port_is_config_enable: specify if this port is a config_enable signal which needs special pulse widths in testbenches 
+ * - port_is_prog: specify if this port is for FPGA programming use which needs special pulse widths in testbenches 
+ * - port_tri_state_model_name: the name of circuit model linked to tri-state the port  
+ * - port_tri_state_model_ids_: the Id of circuit model linked to tri-state the port 
+ * - port_inv_model_names_: the name of inverter circuit model linked to the port 
+ * - port_inv_model_ids_: the Id of inverter circuit model linked to the port
+ * - port_tri_state_map_: only applicable to inputs of LUTs, the tri-state map applied to each pin of this port 
+ * - port_lut_frac_level_:  only applicable to outputs of LUTs, indicate which level of outputs inside LUT multiplexing structure will be used
+ * - port_lut_output_mask_: only applicable to outputs of LUTs, indicate which output at an internal level of LUT multiplexing structure will be used
+ * - port_sram_orgz_: only applicable to SRAM ports, indicate how the SRAMs will be organized, either memory decoders or scan-chains
  *
  *  ------ Delay information ------
  * 1. delay_types_: type of pin-to-pin delay, either rising_edge of falling_edge
@@ -190,7 +192,7 @@ class CircuitLibrary {
     std::string model_name(const CircuitModelId& model_id) const;
     std::string model_prefix(const CircuitModelId& model_id) const;
     std::string model_verilog_netlist(const CircuitModelId& model_id) const;
-    std::string model_circuit_netlist(const CircuitModelId& model_id) const;
+    std::string model_spice_netlist(const CircuitModelId& model_id) const;
     bool model_is_default(const CircuitModelId& model_id) const;
     bool dump_structural_verilog(const CircuitModelId& model_id) const;
     bool dump_explicit_port_map(const CircuitModelId& model_id) const;
@@ -279,6 +281,7 @@ class CircuitLibrary {
     std::string port_inv_prefix(const CircuitPortId& circuit_port_id) const;
     size_t port_default_value(const CircuitPortId& circuit_port_id) const;
     bool port_is_io(const CircuitPortId& circuit_port_id) const;
+    bool port_is_data_io(const CircuitPortId& circuit_port_id) const;
     bool port_is_mode_select(const CircuitPortId& circuit_port_id) const;
     bool port_is_global(const CircuitPortId& circuit_port_id) const;
     bool port_is_reset(const CircuitPortId& circuit_port_id) const;
@@ -314,7 +317,7 @@ class CircuitLibrary {
     void set_model_name(const CircuitModelId& model_id, const std::string& name);
     void set_model_prefix(const CircuitModelId& model_id, const std::string& prefix);
     void set_model_verilog_netlist(const CircuitModelId& model_id, const std::string& verilog_netlist);
-    void set_model_circuit_netlist(const CircuitModelId& model_id, const std::string& circuit_netlist);
+    void set_model_spice_netlist(const CircuitModelId& model_id, const std::string& spice_netlist);
     void set_model_is_default(const CircuitModelId& model_id, const bool& is_default);
     /* Verilog generator options */ 
     void set_model_dump_structural_verilog(const CircuitModelId& model_id, const bool& dump_structural_verilog);
@@ -354,6 +357,8 @@ class CircuitLibrary {
                                 const size_t& default_val);
     void set_port_is_io(const CircuitPortId& circuit_port_id, 
                         const bool& is_io);
+    void set_port_is_data_io(const CircuitPortId& circuit_port_id, 
+                             const bool& is_data_io);
     void set_port_is_mode_select(const CircuitPortId& circuit_port_id, 
                                  const bool& is_mode_select);
     void set_port_is_global(const CircuitPortId& circuit_port_id, 
@@ -461,6 +466,10 @@ class CircuitLibrary {
   public: /* Public Mutators: builders */
     void build_model_links();
     void build_timing_graphs();
+    /* Automatically identify the default models for each type,
+     * suggest to do this after circuit library is built
+     */
+    void auto_detect_default_models();
   public: /* Internal mutators: build timing graphs */
     void add_edge(const CircuitModelId& model_id,
                   const CircuitPortId& from_port, const size_t& from_pin, 
@@ -495,7 +504,7 @@ class CircuitLibrary {
     vtr::vector<CircuitModelId, std::string> model_names_;
     vtr::vector<CircuitModelId, std::string> model_prefix_;
     vtr::vector<CircuitModelId, std::string> model_verilog_netlists_;
-    vtr::vector<CircuitModelId, std::string> model_circuit_netlists_;
+    vtr::vector<CircuitModelId, std::string> model_spice_netlists_;
     vtr::vector<CircuitModelId, bool> model_is_default_;
 
     /* Submodules that a circuit model contains */
@@ -541,6 +550,7 @@ class CircuitLibrary {
     vtr::vector<CircuitPortId, std::string> port_inv_prefix_;
     vtr::vector<CircuitPortId, size_t> port_default_values_;
     vtr::vector<CircuitPortId, bool> port_is_io_;
+    vtr::vector<CircuitPortId, bool> port_is_data_io_;
     vtr::vector<CircuitPortId, bool> port_is_mode_select_;
     vtr::vector<CircuitPortId, bool> port_is_global_;
     vtr::vector<CircuitPortId, bool> port_is_reset_;

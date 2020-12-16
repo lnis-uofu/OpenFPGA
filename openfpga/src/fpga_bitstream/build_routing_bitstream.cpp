@@ -463,6 +463,11 @@ void build_connection_block_bitstreams(BitstreamManager& bitstream_manager,
       ModuleId cb_module = module_manager.find_module(cb_module_name);
       VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
 
+      /* Bypass empty blocks which have none configurable children */
+      if (0 == count_module_manager_module_configurable_children(module_manager, cb_module)) {
+        continue;
+      } 
+
       /* Create a block for the bitstream which corresponds to the Switch block */
       ConfigBlockId cb_configurable_block = bitstream_manager.add_block(generate_connection_block_module_name(cb_type, cb_coord));
       /* Set switch block as a child of top block */
@@ -529,6 +534,11 @@ void build_routing_bitstream(BitstreamManager& bitstream_manager,
       } 
       ModuleId sb_module = module_manager.find_module(sb_module_name);
       VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
+
+      /* Bypass empty blocks which have none configurable children */
+      if (0 == count_module_manager_module_configurable_children(module_manager, sb_module)) {
+        continue;
+      } 
 
       /* Create a block for the bitstream which corresponds to the Switch block */
       ConfigBlockId sb_configurable_block = bitstream_manager.add_block(generate_switch_block_module_name(sb_coord));

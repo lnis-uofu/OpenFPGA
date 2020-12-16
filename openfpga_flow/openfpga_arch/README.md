@@ -2,8 +2,9 @@
 Please reveal the following architecture features in the names to help quickly spot architecture files.
 Note that an OpenFPGA architecture can be applied to multiple VPR architecture files.
 
-- k<lut\_size>: Look-Up Table (LUT) size of FPGA. If you have fracturable LUTs or multiple LUT circuits, this should be largest input size.
-- frac: If fracturable LUT is used or not.
+- k<lut\_size>\_<frac><Native>: Look-Up Table (LUT) size of FPGA. If you have fracturable LUTs or multiple LUT circuits, this should be largest input size.
+  * The keyword 'frac' is to specify if fracturable LUT is used or not.
+  * The keyword 'Native' is to specify if fracturable LUT design is a native one (without mode switch) or a standard one (with mode switch).
 - N<le\_size>: Number of logic elements for a CLB. If you have multiple CLB architectures, this should be largest number.
 - adder\_chain: If hard adder/carry chain is used inside CLBs
 - register\_chain: If shift register chain is used inside CLBs
@@ -23,5 +24,6 @@ Note that an OpenFPGA architecture can be applied to multiple VPR architecture f
 - stdcell: If circuit designs are built with standard cells only
 - tree\_mux: If routing multiplexers are built with a tree-like structure
 - <feature_size>: The technology node which the delay numbers are extracted from.
+- powergate : The FPGA has power-gating techniques applied. If not defined, there is no power-gating.
 
 Other features are used in naming should be listed here.

@@ -12,16 +12,15 @@ In general, please follow the steps to compile
 
   git clone https://github.com/LNIS-Projects/OpenFPGA.git
   cd OpenFPGA
-  mkdir build
-  cd build            
-  cmake ..
-  make                             
+  make all
 
 .. note:: OpenFPGA requires gcc/g++ version >5
 
 .. note:: cmake3.12+ is recommended to compile OpenFPGA with GUI
 
 .. note:: recommand to use ``make -j`` to accelerate the compilation
+
+.. note:: VPR's GUI requires gtk-3, and can be enabled with ``cmake .. -DVPR_USE_EZGL=on``
 
 **Quick Compilation Verification**
 

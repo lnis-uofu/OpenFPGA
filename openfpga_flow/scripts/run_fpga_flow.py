@@ -14,9 +14,11 @@ import time
 from datetime import timedelta
 import shlex
 import glob
+import json
 import argparse
 from configparser import ConfigParser, ExtendedInterpolation
 import logging
+from envyaml import EnvYAML
 import glob
 import subprocess
 import threading
@@ -70,6 +72,8 @@ parser = argparse.ArgumentParser(formatter_class=formatter)
 # Mandatory arguments
 parser.add_argument('arch_file', type=str)
 parser.add_argument('benchmark_files', type=str, nargs='+')
+# parser.add_argument('extraArgs', nargs=argparse.REMAINDER)
+parser.add_argument('otherthings', nargs='*')
 
 # Optional arguments
 parser.add_argument('--top_module', type=str, default="top")
@@ -83,11 +87,13 @@ parser.add_argument('--openfpga_shell_template', type=str,
                     help="Sample openfpga shell script")
 parser.add_argument('--openfpga_arch_file', type=str,
                     help="Openfpga architecture file for shell")
-parser.add_argument('--openfpga_sim_setting_file', type=str,
-                    help="Openfpga simulation file for shell")
-parser.add_argument('--external_fabric_key_file', type=str,
-                    help="Key file for shell")
-parser.add_argument('--yosys_tmpl', type=str,
+parser.add_argument('--arch_variable_file', type=str, default=None,
+                    help="Openfpga architecture file for shell")
+# parser.add_argument('--openfpga_sim_setting_file', type=str,
+#                     help="Openfpga simulation file for shell")
+# parser.add_argument('--external_fabric_key_file', type=str,
+#                     help="Key file for shell")
+parser.add_argument('--yosys_tmpl', type=str, default=None,
                     help="Alternate yosys template, generates top_module.blif")
 parser.add_argument('--disp', action="store_true",
                     help="Open display while running VPR")
@@ -311,6 +317,15 @@ def read_script_config():
         clean_up_and_exit("Missing CAD_TOOLS_PATH in openfpga_flow config")
     cad_tools = config["CAD_TOOLS_PATH"]
 
+    if args.arch_variable_file:
+        _, file_extension = os.path.splitext(args.arch_variable_file)
+        if file_extension in [".yml", ".yaml"]:
+            script_env_vars["PATH"].update(
+                EnvYAML(args.arch_variable_file, include_environment=False))
+        if file_extension in [".json", ]:
+            with open(args.arch_variable_file, "r") as fp:
+                script_env_vars["PATH"].update(json.load(fp))
+
 
 def validate_command_line_arguments():
     """
@@ -409,7 +424,7 @@ def prepare_run_directory(run_dir):
     arch_filename = os.path.basename(args.arch_file)
     args.arch_file = os.path.join(run_dir, "arch", arch_filename)
     with open(args.arch_file, 'w', encoding='utf-8') as archfile:
-        archfile.write(tmpl.substitute(script_env_vars["PATH"]))
+        archfile.write(tmpl.safe_substitute(script_env_vars["PATH"]))
 
     if (args.openfpga_arch_file):
         tmpl = Template(
@@ -417,7 +432,7 @@ def prepare_run_directory(run_dir):
         arch_filename = os.path.basename(args.openfpga_arch_file)
         args.openfpga_arch_file = os.path.join(run_dir, "arch", arch_filename)
         with open(args.openfpga_arch_file, 'w', encoding='utf-8') as archfile:
-            archfile.write(tmpl.substitute(script_env_vars["PATH"]))
+            archfile.write(tmpl.safe_substitute(script_env_vars["PATH"]))
 
     # Sanitize provided openshell template, if provided
     if (args.openfpga_shell_template):
@@ -472,11 +487,11 @@ def run_yosys_with_abc():
         "LUT_SIZE": lut_size,
         "OUTPUT_BLIF": args.top_module+"_yosys_out.blif",
     }
-    yosys_template = os.path.join(
+    yosys_template = args.yosys_tmpl if args.yosys_tmpl else os.path.join(
         cad_tools["misc_dir"], "ys_tmpl_yosys_vpr_flow.ys")
     tmpl = Template(open(yosys_template, encoding='utf-8').read())
     with open("yosys.ys", 'w') as archfile:
-        archfile.write(tmpl.substitute(ys_params))
+        archfile.write(tmpl.safe_substitute(ys_params))
     try:
         with open('yosys_output.txt', 'w+') as output:
             process = subprocess.run([cad_tools["yosys_path"], 'yosys.ys'],
@@ -594,7 +609,7 @@ def run_pro_blif_3arg():
 def collect_files_for_vpr():
     # Sanitize provided Benchmark option
     if len(args.benchmark_files) > 1:
-        logger.error("Expecting Single Benchmark BLif file.")
+        logger.error("Expecting Single Benchmark Blif file.")
     if not os.path.isfile(args.benchmark_files[0] or ""):
         clean_up_and_exit("Provided Blif file not found")
     shutil.copy(args.benchmark_files[0], args.top_module+".blif")
@@ -620,7 +635,7 @@ def run_vpr():
         args.top_module,
         args.top_module)
     cmd += r"| sed 's/$/./' | fold -s -w80 "
-    cmd += r"| sed 's/[^.]$/ \\/' | sed 's/[.]$/ /'"
+    cmd += r"| sed 's/[^.]$/ \\/' | sed 's/[.]$//'"
     cmd += " > %s.blif" % args.top_module
     os.system(cmd)
     if not args.fix_route_chan_width:
@@ -670,7 +685,7 @@ def run_vpr():
                     min_channel_width)
         extract_vpr_stats(args.top_module+"_fr_chan_width_vpr.txt")
     else:
-        extract_vpr_stats(args.top_module+"_min_chan_width.txt")
+        extract_vpr_stats(args.top_module+"_min_chan_width_vpr.txt")
     if args.power:
         extract_vpr_stats(logfile=args.top_module+".power",
                           r_filename="vpr_power_stat",
@@ -687,14 +702,19 @@ def run_openfpga_shell():
     path_variables = script_env_vars["PATH"]
     path_variables["VPR_ARCH_FILE"] = args.arch_file
     path_variables["OPENFPGA_ARCH_FILE"] = args.openfpga_arch_file
-    path_variables["OPENFPGA_SIM_SETTING_FILE"] = args.openfpga_sim_setting_file
-    path_variables["EXTERNAL_FABRIC_KEY_FILE"] = args.external_fabric_key_file
+    # path_variables["OPENFPGA_SIM_SETTING_FILE"] = args.openfpga_sim_setting_file
+    # path_variables["EXTERNAL_FABRIC_KEY_FILE"] = args.external_fabric_key_file
     path_variables["VPR_TESTBENCH_BLIF"] = args.top_module+".blif"
     path_variables["ACTIVITY_FILE"] = args.top_module+"_ace_out.act"
     path_variables["REFERENCE_VERILOG_TESTBENCH"] = args.top_module + \
         "_output_verilog.v"
+
+    for indx in range(0, len(OpenFPGAArgs), 2):
+        tmpVar = OpenFPGAArgs[indx][2:].upper()
+        path_variables[tmpVar] = OpenFPGAArgs[indx+1]
+
     with open(args.top_module+"_run.openfpga", 'w', encoding='utf-8') as archfile:
-        archfile.write(tmpl.substitute(path_variables))
+        archfile.write(tmpl.safe_substitute(path_variables))
     command = [cad_tools["openfpga_shell_path"], "-f",
                args.top_module+"_run.openfpga"]
     run_command("OpenFPGA Shell Run", "openfpgashell.log", command)
@@ -709,11 +729,14 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
                "--net_file", args.top_module+"_vpr.net",
                "--place_file", args.top_module+"_vpr.place",
                "--route_file", args.top_module+"_vpr.route",
-               "--full_stats",
+               "--full_stats", "on",
                "--activity_file", args.top_module+"_ace_out.act",
                ]
     if not args.disp:
-        command += ["--nodisp"]
+        command += ["--disp", "off"]
+    else:
+        command += ["--disp", "on"]
+
     if route_only:
         command += ["--route"]
     # Power options
@@ -980,5 +1003,6 @@ def filter_failed_process_output(vpr_output):
 
 if __name__ == "__main__":
     ExecTime["Start"] = time.time()
-    args = parser.parse_args()
+    # args = parser.parse_args()
+    args, OpenFPGAArgs = parser.parse_known_args()
     main()

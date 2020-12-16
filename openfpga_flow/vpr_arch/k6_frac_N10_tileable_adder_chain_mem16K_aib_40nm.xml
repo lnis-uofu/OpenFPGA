@@ -224,7 +224,18 @@
   <!-- ODIN II specific config ends -->
   <!-- Physical descriptions begin -->
   <layout tileable="true" through_channel="false">
-    <!--auto_layout aspect_ratio="1.0"-->
+    <auto_layout aspect_ratio="1.0">
+      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
+      <perimeter type="io" priority="10"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="1"/>
+      <!--Column of 'memory' with 'EMPTY' blocks wherever a 'memory' does not fit. Vertical offset by 1 for perimeter.-->
+      <col type="memory" startx="2" starty="1" repeatx="8" priority="20"/>
+      <col type="EMPTY" startx="2" repeatx="8" starty="1" priority="19"/>
+      <!-- Single instance of an AIB interface -->
+      <single type="aib" x="4" y="1" priority="20"/>
+    </auto_layout>
     <fixed_layout name="3x4" width="5" height="6">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="10"/>
@@ -237,7 +248,6 @@
       <!-- Single instance of an AIB interface -->
       <single type="aib" x="4" y="1" priority="20"/>
     </fixed_layout>
-    <!-- /auto_layout -->
   </layout>
   <device>
     <!-- VB & JL: Using Ian Kuon's transistor sizing and drive strength data for routing, at 40 nm. Ian used BPTM 

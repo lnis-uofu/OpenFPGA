@@ -93,8 +93,10 @@ class FabricBitstream {
     class lazy_id_iterator;
 
     typedef lazy_id_iterator<FabricBitId> fabric_bit_iterator;
+    typedef lazy_id_iterator<FabricBitRegionId> fabric_bit_region_iterator;
 
     typedef vtr::Range<fabric_bit_iterator> fabric_bit_range;
+    typedef vtr::Range<fabric_bit_region_iterator> fabric_bit_region_range;
 
   public: /* Public constructor */
     FabricBitstream();
@@ -103,6 +105,11 @@ class FabricBitstream {
     /* Find all the configuration bits */
     size_t num_bits() const;
     fabric_bit_range bits() const;
+
+    /* Find all the configuration regions */
+    size_t num_regions() const;
+    fabric_bit_region_range regions() const;
+    std::vector<FabricBitId> region_bits(const FabricBitRegionId& region_id) const;
 
   public:  /* Public Accessors */
     /* Find the configuration bit id in architecture bitstream database */
@@ -139,6 +146,18 @@ class FabricBitstream {
     void set_bit_din(const FabricBitId& bit_id,
                      const char& din);
 
+    /* Reserve regions */
+    void reserve_regions(const size_t& num_regions);
+
+    /* Add a new configuration region */
+    FabricBitRegionId add_region();
+
+    void add_bit_to_region(const FabricBitRegionId& region_id,
+                           const FabricBitId& bit_id);
+
+    /* Reserve bits by region */
+    void reverse_region_bits(const FabricBitRegionId& region_id);
+
     /* Reverse bit sequence of the fabric bitstream
      * This is required by configuration chain protocol 
      */
@@ -162,9 +181,15 @@ class FabricBitstream {
     void set_wl_address_length(const size_t& length);
 
   public:  /* Public Validators */
-    char valid_bit_id(const FabricBitId& bit_id) const;
+    bool valid_bit_id(const FabricBitId& bit_id) const;
+    bool valid_region_id(const FabricBitRegionId& bit_id) const;
 
   private: /* Internal data */
+    /* Unique id of a region in the Bitstream */
+    size_t num_regions_; 
+    std::unordered_set<FabricBitRegionId> invalid_region_ids_;
+    vtr::vector<FabricBitRegionId, std::vector<FabricBitId>> region_bit_ids_; 
+
     /* Unique id of a bit in the Bitstream */
     size_t num_bits_; 
     std::unordered_set<FabricBitId> invalid_bit_ids_;
@@ -182,9 +207,13 @@ class FabricBitstream {
      * to the configuration protocol directly 
      *
      * We use a 2-element array, as we may have a BL address and a WL address
+     *
+     * TODO: use nested vector may cause large memory footprint 
+     *       when bitstream size increases
+     *       NEED TO THINK ABOUT A COMPACT MODELING
      */
-    vtr::vector<FabricBitId, size_t> bit_addresses_;
-    vtr::vector<FabricBitId, size_t> bit_wl_addresses_;
+    vtr::vector<FabricBitId, std::vector<char>> bit_addresses_;
+    vtr::vector<FabricBitId, std::vector<char>> bit_wl_addresses_;
 
     /* Data input (Din) bits: this is designed for memory decoders */
     vtr::vector<FabricBitId, char> bit_dins_;

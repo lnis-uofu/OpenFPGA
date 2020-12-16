@@ -292,7 +292,7 @@ bool try_route(int width_fac,
                     segment_inf,
                     router_opts.base_cost_type,
                     router_opts.trim_empty_channels,
-                    router_opts.trim_obs_channels,
+                    router_opts.trim_obs_channels || det_routing_arch->through_channel,
                     router_opts.clock_modeling,
                     directs, num_directs,
                     &warning_count);
