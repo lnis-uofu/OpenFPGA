@@ -12,10 +12,7 @@ In general, please follow the steps to compile
 
   git clone https://github.com/LNIS-Projects/OpenFPGA.git
   cd OpenFPGA
-  mkdir build
-  cd build            
-  cmake ..
-  make                             
+  make all
 
 .. note:: OpenFPGA requires gcc/g++ version >5
 
