@@ -2,5 +2,5 @@
 # Read verilog files
 ${READ_VERILOG_FILE}
 
-synth_quicklogic -blif ${TOP_MODULE}.eblif -family ap3 -top ${TOP_MODULE}
+synth_quicklogic -blif ${TOP_MODULE}.eblif -family ap3 -vpr -top ${TOP_MODULE}
 
