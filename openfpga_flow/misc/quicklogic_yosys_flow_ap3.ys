@@ -3,3 +3,4 @@
 ${READ_VERILOG_FILE}
 
 synth_quicklogic -blif ${OUTPUT_BLIF} -family ap3 -vpr -openfpga -top ${TOP_MODULE}
+
