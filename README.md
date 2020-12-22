@@ -6,7 +6,7 @@
 
 The award-winning OpenFPGA framework is the **first open-source FPGA IP generator** supporting highly-customizable homogeneous FPGA architectures. OpenFPGA provides a full set of EDA support for customized FPGAs, including Verilog-to-bitstream generation and self-testing verification. OpenFPGA opens the door to democratizing FPGA technology and EDA techniques, with agile prototyping approaches and constantly evolving EDA tools for chip designers and researchers.
 
-A quick overview of OpenFPGA tools can be found [**here**](https://openfpga.readthedocs.io/en/master/tutorials/tools.html).
+A quick overview of OpenFPGA tools can be found [**here**](https://openfpga.readthedocs.io/en/master/tutorials/tools/).
 We also recommend potential users to checkout the summary of [**technical capabilities**](https://openfpga.readthedocs.io/en/master/overview/tech_highlights.html) before compiling.
 
 ## Compilation
@@ -21,9 +21,7 @@ It also includes detailed information about docker image.
 ```bash
 # Clone the repository and go inside it
 git clone https://github.com/LNIS-Projects/OpenFPGA.git && cd OpenFPGA
-mkdir build && cd build            # Create a folder named build in the OpenPFGA repository
-cmake ..                           # Create a Makefile in this folder using cmake
-make                               # Compile the tool and its dependencies
+make all
 ```
 
 ---
