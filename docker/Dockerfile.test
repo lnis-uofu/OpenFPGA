@@ -1,7 +1,6 @@
 FROM ubuntu:18.04
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y \
-    libc6 libffi6 libgcc1 libreadline7 libstdc++6 libtcl8.6 python3 zlib1g libbz2-1.0
-RUN apt-get install -y libdatetime-perl iverilog python3-pip
+ADD .github/workflows/install_dependencies_test.sh install_dependencies_test.sh
+RUN bash install_dependencies_test.sh
 ADD requirements.txt requirements.txt
 RUN python3 -m pip install -r requirements.txt
