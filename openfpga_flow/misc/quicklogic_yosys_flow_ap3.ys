@@ -1,0 +1,6 @@
+# Yosys synthesis script for ${TOP_MODULE}
+# Read verilog files
+${READ_VERILOG_FILE}
+
+synth_quicklogic -blif ${OUTPUT_BLIF} -family ap3 -vpr -openfpga -top ${TOP_MODULE}
+
