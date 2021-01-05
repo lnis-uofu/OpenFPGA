@@ -979,18 +979,18 @@ This example shows:
 
 .. _circuit_model_ccff_example:
 
-Configuration-chain Flip-flop
-`````````````````````````````
+Regular Configuration-chain Flip-flop
+`````````````````````````````````````
 
-:numref:`fig_ccff` illustrates an example of scan-chain flop-flop used to build a configuration chain.
+:numref:`fig_ccff_config_chain` illustrates an example of standard flip-flops used to build a configuration chain.
 
-.. _fig_ccff:
+.. _fig_ccff_config_chain:
 
-.. figure:: ./figures/scff.png
+.. figure:: ./figures/config_chain.svg
    :scale: 50%
    :alt: SCFF symbol
 
-   An example of a Scan-Chain Flip-Flop.
+   An example of a Flip-Flop organized in a chain.
 
 The code describing this FF is:
 
@@ -999,13 +999,93 @@ The code describing this FF is:
   <circuit_model type="ccff" name="ccff" prefix="ccff" verilog_netlist="ccff.v" spice_netlist="ccff.sp">
     <port type="input" prefix="D" size="1"/>
     <port type="output" prefix="Q" size="1"/>
-    <port type="output" prefix="Qb" size="1"/>
-    <port type="clock" prefix="CK" size="1" is_global="true"/>
+    <port type="output" prefix="QN" size="1"/>
+    <port type="clock" prefix="CK" size="1" is_global="true" is_prog="true" is_clock="true"/>
   </circuit_model>
 
 This example shows:
   - A configuration-chain flip-flop which is defined in a Verilog netlist ``ccff.v`` and a SPICE netlist ``ccff.sp``
   - The flip-flop has a global clock port, ``CK``, which will be wired a global programming clock 
+
+.. note::
+  The output ports of the configuration flip-flop must follow a fixed sequence in definition:
+    - The first output port **MUST** be the data output port, e.g., ``Q``.
+    - The second output port **MUST** be the **inverted** data output port, e.g., ``QN``.
+
+Configuration-chain Flip-flop with Configure Enable Signals
+```````````````````````````````````````````````````````````
+
+Configuration chain could be built with flip-flops with outputs that are enabled by specific signals.
+Consider the example in :numref:`fig_ccff_config_chain_config_enable`, the flip-flop has 
+
+- a configure enable signal ``CFG_EN`` to release the data output ``Q`` and ``QN``
+- a pair of data outputs ``Q`` and ``QN`` which are controlled by the configure enable signal ``CFG_EN``
+- a regular data output ``SCAN_Q`` which outputs registered data
+
+.. _fig_ccff_config_chain_config_enable:
+
+.. figure:: ./figures/config_chain_config_enable.svg
+   :scale: 50%
+   :alt: SCFF symbol
+
+   An example of a Flip-Flop with config enable feature organized in a chain.
+
+The code describing this FF is:
+
+.. code-block:: xml
+
+  <circuit_model type="ccff" name="ccff" prefix="ccff" verilog_netlist="ccff.v" spice_netlist="ccff.sp">
+    <port type="input" prefix="CFG_EN" size="1" is_global="true" is_config_enable="true"/>
+    <port type="input" prefix="D" size="1"/>
+    <port type="output" prefix="SCAN_Q" size="1"/>
+    <port type="output" prefix="QN" size="1"/>
+    <port type="output" prefix="Q" size="1"/>
+    <port type="clock" prefix="CK" size="1" is_global="true" is_prog="true" is_clock="true"/>
+  </circuit_model>
+
+.. note::
+  The output ports of the configuration flip-flop must follow a fixed sequence in definition:
+    - The first output port **MUST** be the regular data output port, e.g., ``SCAN_Q``.
+    - The second output port **MUST** be the **inverted** data output port which is activated by the configure enable signal, e.g., ``QN``.
+    - The second output port **MUST** be the data output port which is activated by the configure enable signal, e.g., ``Q``.
+
+Configuration-chain Flip-flop with Scan Input
+`````````````````````````````````````````````
+
+Configuration chain could be built with flip-flops with a scan chain input .
+Consider the example in :numref:`fig_ccff_config_chain_scan_capable`, the flip-flop has 
+
+- an additional input ``SI`` to enable scan-chain capabaility
+- a configure enable signal ``CFG_EN`` to release the data output ``Q`` and ``QN``
+- a pair of data outputs ``Q`` and ``QN`` which are controlled by the configure enable signal ``CFG_EN``
+- a regular data output ``SCAN_Q`` which outputs registered data
+
+.. _fig_ccff_config_chain_scan_capable:
+
+.. figure:: ./figures/config_chain_scan_capable.svg
+   :scale: 50%
+   :alt: SCFF symbol
+
+   An example of a Flip-Flop with scan input organized in a chain.
+
+The code describing this FF is:
+
+.. code-block:: xml
+
+  <circuit_model type="ccff" name="ccff" prefix="ccff" verilog_netlist="ccff.v" spice_netlist="ccff.sp">
+    <port type="input" prefix="CFG_EN" size="1" is_global="true" is_config_enable="true"/>
+    <port type="input" prefix="D" size="1"/>
+    <port type="input" prefix="SI" size="1"/>
+    <port type="output" prefix="SCAN_Q" size="1"/>
+    <port type="output" prefix="QN" size="1"/>
+    <port type="output" prefix="Q" size="1"/>
+    <port type="clock" prefix="CK" size="1" is_global="true" is_prog="true" is_clock="true"/>
+  </circuit_model>
+
+.. note::
+  The input ports of the configuration flip-flop must follow a fixed sequence in definition:
+    - The first input port **MUST** be the regular data input port, e.g., ``D``.
+    - The second input port **MUST** be the scan input port, e.g., ``SI``.
 
 Hard Logics
 ~~~~~~~~~~~

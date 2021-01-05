@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xl="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" viewBox="85.49984 288 687.9915 211.40894" width="687.9915" height="211.40894">
+  <defs>
+    <font-face font-family="Times New Roman" font-size="12" panose-1="2 2 5 3 5 4 5 9 3 4" units-per-em="1000" underline-position="-108.88672" underline-thickness="48.828125" slope="-1361.0827" x-height="430.1758" cap-height="662.1094" ascent="891.1133" descent="-216.3086" font-style="italic" font-weight="400">
+      <font-face-src>
+        <font-face-name name="TimesNewRomanPS-ItalicMT"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Times New Roman" font-size="14" panose-1="2 2 5 3 5 4 5 9 3 4" units-per-em="1000" underline-position="-108.88672" underline-thickness="48.828125" slope="-1166.6423" x-height="430.1758" cap-height="662.1094" ascent="891.1133" descent="-216.3086" font-style="italic" font-weight="400">
+      <font-face-src>
+        <font-face-name name="TimesNewRomanPS-ItalicMT"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Times New Roman" font-size="14" panose-1="2 2 6 3 5 4 5 2 3 4" units-per-em="1000" underline-position="-108.88672" underline-thickness="48.828125" slope="0" x-height="447.2656" cap-height="662.1094" ascent="891.1133" descent="-216.3086" font-weight="400">
+      <font-face-src>
+        <font-face-name name="TimesNewRomanPSMT"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Times New Roman" font-size="9" panose-1="2 2 6 3 5 4 5 2 3 4" units-per-em="1000" underline-position="-108.88672" underline-thickness="48.828125" slope="0" x-height="447.2656" cap-height="662.1094" ascent="891.1133" descent="-216.3086" font-weight="400">
+      <font-face-src>
+        <font-face-name name="TimesNewRomanPSMT"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Times New Roman" font-size="12" panose-1="2 2 8 3 7 5 5 2 3 4" units-per-em="1000" underline-position="-108.88672" underline-thickness="95.21484" slope="0" x-height="456.54297" cap-height="662.1094" ascent="891.1133" descent="-216.3086" font-weight="700">
+      <font-face-src>
+        <font-face-name name="TimesNewRomanPS-BoldMT"/>
+      </font-face-src>
+    </font-face>
+  </defs>
+  <metadata> Produced by OmniGraffle 7.18.1\n2021-01-05 01:03:21 +0000</metadata>
+  <g id="config_enable" stroke-opacity="1" stroke="none" fill-opacity="1" fill="none" stroke-dasharray="none">
+    <title>config_enable</title>
+    <g id="config_enable_Layer_1">
+      <title>Layer 1</title>
+      <g id="Line_35813">
+        <line x1="123.76164" y1="420.2495" x2="580.523" y2="418.25" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_35816">
+        <line x1="164.16" y1="392.51084" x2="164.11552" y2="417.301" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_35817">
+        <text transform="translate(96.08 413.06613)" fill="black">
+          <tspan font-family="Times New Roman" font-size="12" font-style="italic" font-weight="400" fill="black" x="0" y="11">CLK</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35818">
+        <text transform="translate(90.49984 355.6251)" fill="black">
+          <tspan font-family="Times New Roman" font-size="12" font-style="italic" font-weight="400" fill="black" x="0" y="11">CCFF_HEAD</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35822">
+        <ellipse cx="294.0701" cy="419.42256" rx="2.47010548958708" ry="2.52000397038635" fill="black"/>
+        <ellipse cx="294.0701" cy="419.42256" rx="2.47010548958708" ry="2.52000397038635" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_35823">
+        <ellipse cx="164.1101" cy="420.321" rx="2.47010548958709" ry="2.52000397038635" fill="black"/>
+        <ellipse cx="164.1101" cy="420.321" rx="2.47010548958709" ry="2.52000397038635" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_35839">
+        <text transform="translate(560.84 352.07)" fill="black">
+          <tspan font-family="Times New Roman" font-size="14" font-style="italic" font-weight="400" fill="black" x="0" y="12">…</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35840">
+        <ellipse cx="417.7701" cy="419.80915" rx="2.47010548958708" ry="2.52000397038635" fill="black"/>
+        <ellipse cx="417.7701" cy="419.80915" rx="2.47010548958708" ry="2.52000397038635" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_35842">
+        <text transform="translate(680.8373 354.9051)" fill="black">
+          <tspan font-family="Times New Roman" font-size="12" font-style="italic" font-weight="400" fill="black" x="0" y="11">CCFF_TAIL</tspan>
+        </text>
+      </g>
+      <g id="Line_35843">
+        <line x1="511.0022" y1="362.7562" x2="553.6052" y2="362.52" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_35849">
+        <line x1="580.523" y1="392.26084" x2="580.523" y2="418.25" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_35851">
+        <text transform="translate(189.32 452.48)" fill="black">
+          <tspan font-family="Times New Roman" font-size="12" font-style="italic" font-weight="400" fill="black" x="0" y="11">mem_out[0]</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35852">
+        <text transform="translate(232.16 433.04)" fill="black">
+          <tspan font-family="Times New Roman" font-size="12" font-style="italic" font-weight="400" fill="black" x="0" y="11">mem_outb[0]</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35853">
+        <text transform="translate(318.56 449.6)" fill="black">
+          <tspan font-family="Times New Roman" font-size="12" font-style="italic" font-weight="400" fill="black" x="0" y="11">mem_out[1]</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35854">
+        <text transform="translate(362.9025 430.88)" fill="black">
+          <tspan font-family="Times New Roman" font-size="12" font-style="italic" font-weight="400" fill="black" x="0" y="11">mem_outb[1]</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35856">
+        <text transform="translate(442.04 452.48)" fill="black">
+          <tspan font-family="Times New Roman" font-size="12" font-style="italic" font-weight="400" fill="black" x="0" y="11">mem_out[2]</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35855">
+        <text transform="translate(486.68 430.88)" fill="black">
+          <tspan font-family="Times New Roman" font-size="12" font-style="italic" font-weight="400" fill="black" x="0" y="11">mem_outb[2]</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35858">
+        <text transform="translate(606.2 446.72)" fill="black">
+          <tspan font-family="Times New Roman" font-size="12" font-style="italic" font-weight="400" fill="black" x="0" y="11">mem_out[n]</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35857">
+        <text transform="translate(650.12 429.8)" fill="black">
+          <tspan font-family="Times New Roman" font-size="12" font-style="italic" font-weight="400" fill="black" x="0" y="11">mem_outb[n]</tspan>
+        </text>
+      </g>
+      <g id="Group_35863">
+        <g id="Graphic_35772">
+          <rect x="176.97979" y="347.32" width="67.44001" height="58.68" fill="#ffffc0"/>
+          <rect x="176.97979" y="347.32" width="67.44001" height="58.68" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+          <text transform="translate(181.97979 368.86263)" fill="black">
+            <tspan font-family="Times New Roman" font-size="14" font-weight="400" fill="black" x="11.595982" y="12">CCFF</tspan>
+          </text>
+        </g>
+        <g id="Graphic_35775">
+          <text transform="translate(178.04028 358.26883)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">D</tspan>
+          </text>
+        </g>
+        <g id="Graphic_35776">
+          <text transform="translate(185.1764 387.8059)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">CLK</tspan>
+          </text>
+        </g>
+        <g id="Line_35778">
+          <line x1="175.8488" y1="362.96" x2="164.16" y2="362.9738" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        </g>
+        <g id="Line_35779">
+          <line x1="175.8488" y1="392.49704" x2="164.16" y2="392.51084" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        </g>
+        <g id="Line_35781">
+          <line x1="257.2396" y1="362.96" x2="245.5508" y2="362.97366" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        </g>
+        <g id="Graphic_35785">
+          <path d="M 176.97979 388.91704 L 184.53979 392.99704 L 176.97979 397.07704 Z" fill="#ccc"/>
+          <path d="M 176.97979 388.91704 L 184.53979 392.99704 L 176.97979 397.07704 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        </g>
+        <g id="Graphic_35786">
+          <text transform="translate(207.96647 358.26883)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">SCAN_Q</tspan>
+          </text>
+        </g>
+        <g id="Graphic_35859">
+          <text transform="translate(226.63794 395.36767)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">QN</tspan>
+          </text>
+        </g>
+        <g id="Graphic_35860">
+          <text transform="translate(214.92 395.61767)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">Q</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Line_35861">
+        <line x1="218.88" y1="405.90486" x2="218.96188" y2="447.48" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_35862">
+        <line x1="235.8" y1="406" x2="235.8" y2="432.84513" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Group_35864">
+        <g id="Graphic_35874">
+          <rect x="306.9398" y="347.32" width="67.44001" height="58.68" fill="#ffffc0"/>
+          <rect x="306.9398" y="347.32" width="67.44001" height="58.68" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+          <text transform="translate(311.9398 368.86263)" fill="black">
+            <tspan font-family="Times New Roman" font-size="14" font-weight="400" fill="black" x="11.595982" y="12">CCFF</tspan>
+          </text>
+        </g>
+        <g id="Graphic_35873">
+          <text transform="translate(308.00027 358.26883)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">D</tspan>
+          </text>
+        </g>
+        <g id="Graphic_35872">
+          <text transform="translate(315.1364 387.8059)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">CLK</tspan>
+          </text>
+        </g>
+        <g id="Line_35871">
+          <line x1="305.8088" y1="362.96" x2="294.12" y2="362.9738" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        </g>
+        <g id="Line_35870">
+          <line x1="305.8088" y1="392.49704" x2="294.12" y2="392.51084" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        </g>
+        <g id="Line_35869">
+          <line x1="387.1996" y1="362.96" x2="375.5108" y2="362.97366" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        </g>
+        <g id="Graphic_35868">
+          <path d="M 306.9398 388.91704 L 314.4998 392.99704 L 306.9398 397.07704 Z" fill="#ccc"/>
+          <path d="M 306.9398 388.91704 L 314.4998 392.99704 L 306.9398 397.07704 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        </g>
+        <g id="Graphic_35867">
+          <text transform="translate(337.92647 358.26883)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">SCAN_Q</tspan>
+          </text>
+        </g>
+        <g id="Graphic_35866">
+          <text transform="translate(356.59794 395.36767)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">QN</tspan>
+          </text>
+        </g>
+        <g id="Graphic_35865">
+          <text transform="translate(344.88 395.61767)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">Q</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Line_35875">
+        <line x1="257.2396" y1="362.96" x2="294.12" y2="362.9738" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Group_35877">
+        <g id="Graphic_35887">
+          <rect x="430.7424" y="347.07" width="67.44001" height="58.68" fill="#ffffc0"/>
+          <rect x="430.7424" y="347.07" width="67.44001" height="58.68" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+          <text transform="translate(435.7424 368.61263)" fill="black">
+            <tspan font-family="Times New Roman" font-size="14" font-weight="400" fill="black" x="11.595982" y="12">CCFF</tspan>
+          </text>
+        </g>
+        <g id="Graphic_35886">
+          <text transform="translate(431.8029 358.01883)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">D</tspan>
+          </text>
+        </g>
+        <g id="Graphic_35885">
+          <text transform="translate(438.939 387.5559)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">CLK</tspan>
+          </text>
+        </g>
+        <g id="Line_35884">
+          <line x1="429.6114" y1="362.71" x2="417.9226" y2="362.7238" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        </g>
+        <g id="Line_35883">
+          <line x1="429.6114" y1="392.24704" x2="417.9226" y2="392.26084" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        </g>
+        <g id="Line_35882">
+          <line x1="511.0022" y1="362.71" x2="499.3134" y2="362.72366" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        </g>
+        <g id="Graphic_35881">
+          <path d="M 430.7424 388.66704 L 438.3024 392.74704 L 430.7424 396.82704 Z" fill="#ccc"/>
+          <path d="M 430.7424 388.66704 L 438.3024 392.74704 L 430.7424 396.82704 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        </g>
+        <g id="Graphic_35880">
+          <text transform="translate(461.7291 358.01883)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">SCAN_Q</tspan>
+          </text>
+        </g>
+        <g id="Graphic_35879">
+          <text transform="translate(480.40056 395.11767)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">QN</tspan>
+          </text>
+        </g>
+        <g id="Graphic_35878">
+          <text transform="translate(468.6826 395.36767)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">Q</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Line_35888">
+        <line x1="387.1996" y1="362.96" x2="417.9226" y2="362.7238" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Group_35889">
+        <g id="Graphic_35899">
+          <rect x="593.3428" y="347.07" width="67.44001" height="58.68" fill="#ffffc0"/>
+          <rect x="593.3428" y="347.07" width="67.44001" height="58.68" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+          <text transform="translate(598.3428 368.61263)" fill="black">
+            <tspan font-family="Times New Roman" font-size="14" font-weight="400" fill="black" x="11.595982" y="12">CCFF</tspan>
+          </text>
+        </g>
+        <g id="Graphic_35898">
+          <text transform="translate(594.4033 358.01883)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">D</tspan>
+          </text>
+        </g>
+        <g id="Graphic_35897">
+          <text transform="translate(601.5394 387.5559)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">CLK</tspan>
+          </text>
+        </g>
+        <g id="Line_35896">
+          <line x1="592.2118" y1="362.71" x2="580.523" y2="362.7238" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        </g>
+        <g id="Line_35895">
+          <line x1="592.2118" y1="392.24704" x2="580.523" y2="392.26084" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        </g>
+        <g id="Line_35894">
+          <line x1="673.6026" y1="362.71" x2="661.9138" y2="362.72366" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        </g>
+        <g id="Graphic_35893">
+          <path d="M 593.3428 388.66704 L 600.9028 392.74704 L 593.3428 396.82704 Z" fill="#ccc"/>
+          <path d="M 593.3428 388.66704 L 600.9028 392.74704 L 593.3428 396.82704 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        </g>
+        <g id="Graphic_35892">
+          <text transform="translate(624.32946 358.01883)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">SCAN_Q</tspan>
+          </text>
+        </g>
+        <g id="Graphic_35891">
+          <text transform="translate(643.0009 395.11767)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">QN</tspan>
+          </text>
+        </g>
+        <g id="Graphic_35890">
+          <text transform="translate(631.283 395.36767)" fill="black">
+            <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">Q</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Line_35901">
+        <line x1="348.32055" y1="406.1741" x2="348.24887" y2="444.6" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_35900">
+        <line x1="365.24055" y1="406" x2="365.24055" y2="432.84513" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_35903">
+        <line x1="471.725" y1="405.73076" x2="471.7103" y2="447.48" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_35902">
+        <line x1="488.645" y1="405.55665" x2="488.645" y2="432.4018" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_35905">
+        <line x1="635.885" y1="406.47363" x2="635.8709" y2="441.72" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_35904">
+        <line x1="652.805" y1="406.29953" x2="652.805" y2="433.14467" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_35906">
+        <line x1="417.9226" y1="393.48" x2="417.9226" y2="419.46915" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_35907">
+        <line x1="294.12" y1="392.51084" x2="294.0757" y2="416.40256" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_35909">
+        <text transform="translate(189 347.32)" fill="black">
+          <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">CONFIG_EN</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35910">
+        <text transform="translate(188.0328 309.2)" fill="black">
+          <tspan font-family="Times New Roman" font-size="12" font-style="italic" font-weight="400" fill="black" x="0" y="11">CFG_EN</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35911">
+        <text transform="translate(318.24 347.07)" fill="black">
+          <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">CONFIG_EN</tspan>
+        </text>
+      </g>
+      <g id="Line_35914">
+        <line x1="210.6998" y1="328.70976" x2="210.6998" y2="346.32" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_35915">
+        <line x1="341.7405" y1="338.41742" x2="341.7405" y2="346.75" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_35917">
+        <text transform="translate(439.644 347.07)" fill="black">
+          <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">CONFIG_EN</tspan>
+        </text>
+      </g>
+      <g id="Line_35916">
+        <line x1="463.1445" y1="338.12" x2="463.1445" y2="346.75" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_35919">
+        <text transform="translate(603.804 347.07)" fill="black">
+          <tspan font-family="Times New Roman" font-size="9" font-weight="400" fill="black" x="0" y="8">CONFIG_EN</tspan>
+        </text>
+      </g>
+      <g id="Line_35918">
+        <line x1="627.3045" y1="334.08" x2="627.3045" y2="346.75" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_35920">
+        <line x1="213.16987" y1="336.11768" x2="627.3045" y2="334.08" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_35921">
+        <ellipse cx="463.1445" cy="335.1" rx="2.47010548958708" ry="2.52000397038632" fill="black"/>
+        <ellipse cx="463.1445" cy="335.1" rx="2.47010548958708" ry="2.52000397038632" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_35922">
+        <ellipse cx="341.7405" cy="335.39742" rx="2.47010548958708" ry="2.52000397038629" fill="black"/>
+        <ellipse cx="341.7405" cy="335.39742" rx="2.47010548958708" ry="2.52000397038629" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_35923">
+        <ellipse cx="210.6998" cy="336.12983" rx="2.47010548958711" ry="2.5200039703863" fill="black"/>
+        <ellipse cx="210.6998" cy="336.12983" rx="2.47010548958711" ry="2.5200039703863" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Line_35926">
+        <line x1="99.34016" y1="472.63047" x2="772.9913" y2="468.9238" stroke="#ff2600" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4.0,4.0" stroke-width="1"/>
+      </g>
+      <g id="Graphic_35925">
+        <text transform="translate(96.8972 479.89917)" fill="#ff2600">
+          <tspan font-family="Times New Roman" font-size="12" font-weight="700" fill="#ff2600" x="0" y="11">Configurable Circuits</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35924">
+        <text transform="translate(93.2 293)" fill="#ff2600">
+          <tspan font-family="Times New Roman" font-size="12" font-weight="700" fill="#ff2600" x="0" y="11">Configuration Chain</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>
