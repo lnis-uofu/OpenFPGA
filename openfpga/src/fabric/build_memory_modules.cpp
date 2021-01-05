@@ -532,8 +532,17 @@ void build_memory_chain_module(ModuleManager& module_manager,
         VTR_ASSERT( 1 == iport);
         port_name = generate_configurable_memory_inverted_data_out_name();
       }
+      /* Find the proper data output port
+       * The exception is when there are 3 output ports defined
+       * The 3rd port is the regular data output port to be used
+       */
+      CircuitPortId data_output_port_to_connect = sram_output_ports[iport];
+      if ((3 == sram_output_ports.size()) && (0 == iport)) {
+        data_output_port_to_connect = sram_output_ports.back();
+      }
+      
       std::vector<ModuleNetId> output_nets = add_module_output_nets_to_chain_mem_modules(module_manager, mem_module, 
-                                                                                         port_name, circuit_lib, sram_output_ports[iport],
+                                                                                         port_name, circuit_lib, data_output_port_to_connect,
                                                                                          sram_mem_module, i, sram_mem_instance);
     }
   }
