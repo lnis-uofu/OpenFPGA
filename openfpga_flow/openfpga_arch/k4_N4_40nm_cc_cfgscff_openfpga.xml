@@ -143,7 +143,7 @@
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
        <port type="input" prefix="pReset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
        <port type="input" prefix="SE" size="1" is_global="true" default_val="0"/>
-       <port type="input" prefix="config_done" lib_name="CFGE" size="1" is_global="true" default_val="0" is_config_enable="true"/>
+       <port type="input" prefix="config_enable" lib_name="CFGE" size="1" is_global="true" default_val="0" is_config_enable="true"/>
        <port type="input" prefix="D" size="1"/>
        <port type="input" prefix="SI" size="1"/>
        <port type="output" prefix="Q" size="1"/>
