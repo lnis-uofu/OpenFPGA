@@ -553,8 +553,10 @@ void build_memory_chain_module(ModuleManager& module_manager,
   /* If there is a second input defined, 
    * add nets to short wire the 2nd inputs to the first inputs 
    */
-  add_module_nets_to_cmos_memory_scan_chain_module(module_manager, mem_module,
-                                                   circuit_lib, sram_input_ports[1], sram_output_ports[0]);
+  if (2 == sram_input_ports.size()) {
+    add_module_nets_to_cmos_memory_scan_chain_module(module_manager, mem_module,
+                                                     circuit_lib, sram_input_ports[1], sram_output_ports[0]);
+  }
 
   /* Add global ports to the pb_module:
    * This is a much easier job after adding sub modules (instances), 
