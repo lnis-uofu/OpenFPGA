@@ -414,12 +414,12 @@ module CFGSDFFR (
   input SI, // Scan-chain input
   input CFGE, // Configure enable
   output Q, // Regular Q output
-  output QN, // Regular Qb output
   output CFGQ, // Data Q output which is released when configure enable is activated
   output CFGQN // Data Qb output which is released when configure enable is activated
 );
 //------------Internal Variables--------
 reg q_reg;
+wire QN;
 
 //-------------Code Starts Here---------
 always @ ( posedge CK or posedge RST)
@@ -432,7 +432,7 @@ end else begin
 end
 
 assign CFGQ = CFGE ? Q : 1'b0;
-assign CFGQN = CFGE ? QN : 1'b0;
+assign CFGQN = CFGE ? QN : 1'b1;
 
 `ifndef ENABLE_FORMAL_VERIFICATION
 // Wire q_reg to Q
