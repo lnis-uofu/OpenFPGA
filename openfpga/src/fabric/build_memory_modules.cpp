@@ -279,8 +279,7 @@ void add_module_nets_to_cmos_memory_scan_chain_module(ModuleManager& module_mana
                                                       const CircuitLibrary& circuit_lib,
                                                       const CircuitPortId& model_input_port,
                                                       const CircuitPortId& model_output_port) {
-  /* Last module does not need any scan-chain connection. So it is skipped */
-  for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size() - 1; ++mem_index) {
+  for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size(); ++mem_index) {
     ModuleId net_src_module_id;
     size_t net_src_instance_id;
     ModulePortId net_src_port_id;
