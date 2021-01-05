@@ -147,9 +147,8 @@
        <port type="input" prefix="D" size="1"/>
        <port type="input" prefix="SI" size="1"/>
        <port type="output" prefix="Q" size="1"/>
-       <port type="output" prefix="QN" size="1"/>
-       <port type="output" prefix="CFGQ" size="1"/>
        <port type="output" prefix="CFGQN" size="1"/>
+       <port type="output" prefix="CFGQ" size="1"/>
        <port type="clock" prefix="prog_clk" lib_name="CK" size="1" is_global="true" default_val="0" is_prog="true"/>
     </circuit_model>
     <circuit_model type="iopad" name="GPIO" prefix="GPIO" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/gpio.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/gpio.v">
