@@ -77,8 +77,6 @@ void add_module_input_nets_to_mem_modules(ModuleManager& module_manager,
  *     j-th pin of output port of the i-th child module is wired to the j + i*W -th
  *     pin of output port of the memory module, where W is the size of port 
  * 3. It assumes fixed port name for output ports
- * 
- * We cache the module nets that have been created because they will be used later
  ********************************************************************/
 static 
 std::vector<ModuleNetId> add_module_output_nets_to_chain_mem_modules(ModuleManager& module_manager,
@@ -165,15 +163,11 @@ void add_module_output_nets_to_mem_modules(ModuleManager& module_manager,
  *      add_module_nets_cmos_memory_chain_config_bus() !!!
  *********************************************************************/
 static 
-void add_module_nets_to_cmos_memory_chain_module(ModuleManager& module_manager,
-                                                 const ModuleId& parent_module,
-                                                 const std::vector<ModuleNetId>& output_nets,
-                                                 const CircuitLibrary& circuit_lib,
-                                                 const CircuitPortId& model_input_port,
-                                                 const CircuitPortId& model_output_port) {
-  /* Counter for the nets */
-  size_t net_counter = 0;
-
+void add_module_nets_to_cmos_memory_config_chain_module(ModuleManager& module_manager,
+                                                        const ModuleId& parent_module,
+                                                        const CircuitLibrary& circuit_lib,
+                                                        const CircuitPortId& model_input_port,
+                                                        const CircuitPortId& model_output_port) {
   for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size(); ++mem_index) {
     ModuleId net_src_module_id;
     size_t net_src_instance_id;
@@ -219,21 +213,9 @@ void add_module_nets_to_cmos_memory_chain_module(ModuleManager& module_manager,
     /* Create a net for each pin */
     for (size_t pin_id = 0; pin_id < net_src_port.pins().size(); ++pin_id) {
       /* Create a net and add source and sink to it */
-      ModuleNetId net;
-      if (0 == mem_index) {
-        net = module_manager.create_module_net(parent_module);
-      } else {
-        net = output_nets[net_counter];
-      }
-      /* Add net source */
-      module_manager.add_module_net_source(parent_module, net, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
+      ModuleNetId net = create_module_source_pin_net(module_manager, parent_module, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
       /* Add net sink */
       module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[pin_id]);
-
-      /* Update net counter */
-      if (0 < mem_index) {
-        net_counter++;
-      }
     }
   }
 
@@ -263,17 +245,90 @@ void add_module_nets_to_cmos_memory_chain_module(ModuleManager& module_manager,
   /* Create a net for each pin */
   for (size_t pin_id = 0; pin_id < net_src_port.pins().size(); ++pin_id) {
     /* Create a net and add source and sink to it */
-    ModuleNetId net = output_nets[net_counter];
-    /* Add net source */
-    module_manager.add_module_net_source(parent_module, net, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
+    ModuleNetId net = create_module_source_pin_net(module_manager, parent_module, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
     /* Add net sink */
     module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[pin_id]);
-
-    /* Update net counter */
-    net_counter++;
   }
+}
 
-  VTR_ASSERT(net_counter == output_nets.size());
+/********************************************************************
+ * Connect the scan input of all the memory modules 
+ * under the parent module in a chain
+ * 
+ *                +--------+    +--------+            +--------+
+ *  ccff_head --->| Memory |--->| Memory |--->... --->| Memory |
+ *                | Module |    | Module |            | Module |
+ *                |   [0]  |    |   [1]  |            |  [N-1] |             
+ *                +--------+    +--------+            +--------+
+ *  For the 1st memory module:
+ *    net source is the configuration chain head of the primitive module
+ *    net sink is the scan input of the next memory module
+ *
+ *  For the rest of memory modules:
+ *    net source is the configuration chain tail of the previous memory module
+ *    net sink is the scan input of the next memory module
+ *
+ *  Note that:
+ *    This function is designed for memory modules ONLY!
+ *    Do not use it to replace the 
+ *      add_module_nets_cmos_memory_chain_config_bus() !!!
+ *********************************************************************/
+static 
+void add_module_nets_to_cmos_memory_scan_chain_module(ModuleManager& module_manager,
+                                                      const ModuleId& parent_module,
+                                                      const CircuitLibrary& circuit_lib,
+                                                      const CircuitPortId& model_input_port,
+                                                      const CircuitPortId& model_output_port) {
+  for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size(); ++mem_index) {
+    ModuleId net_src_module_id;
+    size_t net_src_instance_id;
+    ModulePortId net_src_port_id;
+
+    ModuleId net_sink_module_id;
+    size_t net_sink_instance_id;
+    ModulePortId net_sink_port_id;
+
+    if (0 == mem_index) {
+      /* Find the port name of configuration chain head */
+      std::string src_port_name = generate_configuration_chain_head_name();
+      net_src_module_id = parent_module; 
+      net_src_instance_id = 0;
+      net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+
+      /* Find the port name of next memory module */
+      std::string sink_port_name = circuit_lib.port_prefix(model_input_port);
+      net_sink_module_id = module_manager.configurable_children(parent_module)[mem_index]; 
+      net_sink_instance_id = module_manager.configurable_child_instances(parent_module)[mem_index];
+      net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+    } else {
+      /* Find the port name of previous memory module */
+      std::string src_port_name = circuit_lib.port_prefix(model_output_port);
+      net_src_module_id = module_manager.configurable_children(parent_module)[mem_index - 1]; 
+      net_src_instance_id = module_manager.configurable_child_instances(parent_module)[mem_index - 1];
+      net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+
+      /* Find the port name of next memory module */
+      std::string sink_port_name = circuit_lib.port_prefix(model_input_port);
+      net_sink_module_id = module_manager.configurable_children(parent_module)[mem_index]; 
+      net_sink_instance_id = module_manager.configurable_child_instances(parent_module)[mem_index];
+      net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+    }
+
+    /* Get the pin id for source port */
+    BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
+    /* Get the pin id for sink port */
+    BasicPort net_sink_port = module_manager.module_port(net_sink_module_id, net_sink_port_id); 
+    /* Port sizes of source and sink should match */
+    VTR_ASSERT(net_src_port.get_width() == net_sink_port.get_width());
+    
+    /* Create a net for each pin */
+    for (size_t pin_id = 0; pin_id < net_src_port.pins().size(); ++pin_id) {
+      /* Create a net and add source and sink to it */
+      ModuleNetId net = create_module_source_pin_net(module_manager, parent_module, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
+      /* Add net sink */
+      module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[pin_id]);
+    }
+  }
 }
 
 /*********************************************************************
@@ -382,7 +437,7 @@ void build_memory_flatten_module(ModuleManager& module_manager,
  *  scan-chain--->| CCFF  |--->| CCFF  |--->... --->| CCFF  |---->scan-chain
  *  input&clock   |  [0]  |    |  [1]  |            | [N-1] |       output
  *                +-------+    +-------+            +-------+
- *                    |            |      ...           |
+ *                    |            |      ...           | config-memory output
  *                    v            v                    v
  *                +-----------------------------------------+
  *                |   Multiplexer Configuration port        |
@@ -397,12 +452,15 @@ void build_memory_chain_module(ModuleManager& module_manager,
 
   /* Get the input ports from the SRAM */
   std::vector<CircuitPortId> sram_input_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_INPUT, true);
-  /* Should have only 1 input port */
-  VTR_ASSERT( 1 == sram_input_ports.size() );
+  /* Should have only 1 or 2 input port */
+  VTR_ASSERT( (1 == sram_input_ports.size())
+           || (2 == sram_input_ports.size()) );
   /* Get the output ports from the SRAM */
   std::vector<CircuitPortId> sram_output_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_OUTPUT, true);
-  /* Should have only 1 or 2 output port */
-  VTR_ASSERT( (1 == sram_output_ports.size()) || ( 2 == sram_output_ports.size()) );
+  /* Should have only 1 or 2 or 3 output port */
+  VTR_ASSERT( (1 == sram_output_ports.size())
+           || (2 == sram_output_ports.size())
+           || (3 == sram_output_ports.size()) );
 
   /* Create a module and add to the module manager */
   ModuleId mem_module = module_manager.add_module(module_name); 
@@ -428,13 +486,27 @@ void build_memory_chain_module(ModuleManager& module_manager,
                             circuit_lib.port_size(sram_output_ports[0]));
   module_manager.add_port(mem_module, chain_tail_port, ModuleManager::MODULE_OUTPUT_PORT);
 
-  /* Add each output port: port width should match the number of memories */
-  for (size_t iport = 0; iport < sram_output_ports.size(); ++iport) {
+  /* There could be 3 conditions w.r.t. the number of output ports:
+   * - Only one output port is defined. In this case, the 1st port is the Q
+   *   In such case, only Q will be considered as data output ports
+   * - Two output port is defined. In this case, the 1st port is the Q while the 2nd port is the QN
+   *   In such case, both Q and QN will be considered as data output ports
+   * - Three output port is defined. 
+   *   In this case: 
+   *   - the 1st port is the Q (the chain output) 
+   *   - the 2nd port is the QN (the inverted data output)
+   *   - the 3nd port is the configure-enabled Q
+   *   In such case, configure-enabled Q and QN will be considered as data output ports
+   */
+  size_t num_data_output_ports = sram_output_ports.size();
+  if (3 == sram_output_ports.size()) {
+    num_data_output_ports = 2;
+  } 
+  for (size_t iport = 0; iport < num_data_output_ports; ++iport) {
     std::string port_name;
     if (0 == iport) {
       port_name = generate_configurable_memory_data_out_name();
-    } else {
-      VTR_ASSERT( 1 == iport);
+    } else if (1 == iport) {
       port_name = generate_configurable_memory_inverted_data_out_name();
     }
     BasicPort output_port(port_name, num_mems);
@@ -444,9 +516,6 @@ void build_memory_chain_module(ModuleManager& module_manager,
   /* Find the sram module in the module manager */
   ModuleId sram_mem_module = module_manager.find_module(circuit_lib.model_name(sram_model));
 
-  /* Cache the output nets for non-inverted data output */
-  std::vector<ModuleNetId> mem_output_nets; 
-
   /* Instanciate each submodule */
   for (size_t i = 0; i < num_mems; ++i) {
     size_t sram_mem_instance = module_manager.num_instance(mem_module, sram_mem_module);
@@ -454,7 +523,7 @@ void build_memory_chain_module(ModuleManager& module_manager,
     module_manager.add_configurable_child(mem_module, sram_mem_module, sram_mem_instance);
 
     /* Build module nets to wire outputs of sram modules to outputs of memory module */
-    for (size_t iport = 0; iport < sram_output_ports.size(); ++iport) {
+    for (size_t iport = 0; iport < num_data_output_ports; ++iport) {
       std::string port_name;
       if (0 == iport) {
         port_name = generate_configurable_memory_data_out_name();
@@ -462,20 +531,32 @@ void build_memory_chain_module(ModuleManager& module_manager,
         VTR_ASSERT( 1 == iport);
         port_name = generate_configurable_memory_inverted_data_out_name();
       }
+      /* Find the proper data output port
+       * The exception is when there are 3 output ports defined
+       * The 3rd port is the regular data output port to be used
+       */
+      CircuitPortId data_output_port_to_connect = sram_output_ports[iport];
+      if ((3 == sram_output_ports.size()) && (0 == iport)) {
+        data_output_port_to_connect = sram_output_ports.back();
+      }
+      
       std::vector<ModuleNetId> output_nets = add_module_output_nets_to_chain_mem_modules(module_manager, mem_module, 
-                                                                                         port_name, circuit_lib, sram_output_ports[iport],
+                                                                                         port_name, circuit_lib, data_output_port_to_connect,
                                                                                          sram_mem_module, i, sram_mem_instance);
-      /* Cache only for regular data outputs */
-      if (0 == iport) { 
-        mem_output_nets.insert(mem_output_nets.end(), output_nets.begin(), output_nets.end());
-      } 
     }
   }
 
   /* Build module nets to wire the configuration chain */
-  add_module_nets_to_cmos_memory_chain_module(module_manager, mem_module, mem_output_nets, 
-                                              circuit_lib, sram_input_ports[0], sram_output_ports[0]);
+  add_module_nets_to_cmos_memory_config_chain_module(module_manager, mem_module,
+                                                     circuit_lib, sram_input_ports[0], sram_output_ports[0]);
 
+  /* If there is a second input defined, 
+   * add nets to short wire the 2nd inputs to the first inputs 
+   */
+  if (2 == sram_input_ports.size()) {
+    add_module_nets_to_cmos_memory_scan_chain_module(module_manager, mem_module,
+                                                     circuit_lib, sram_input_ports[1], sram_output_ports[0]);
+  }
 
   /* Add global ports to the pb_module:
    * This is a much easier job after adding sub modules (instances), 

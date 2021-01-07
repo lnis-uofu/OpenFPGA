@@ -708,7 +708,7 @@ std::string generate_formal_verification_sram_port_name(const CircuitLibrary& ci
  * TODO: This could be replaced as a constexpr string
  *********************************************************************/
 std::string generate_configuration_chain_head_name() {
-  return std::string("ccff_head");
+  return std::string(CONFIGURABLE_MEMORY_CHAIN_IN_NAME);
 }
 
 /*********************************************************************
@@ -716,7 +716,7 @@ std::string generate_configuration_chain_head_name() {
  * TODO: This could be replaced as a constexpr string
  *********************************************************************/
 std::string generate_configuration_chain_tail_name() {
-  return std::string("ccff_tail");
+  return std::string(CONFIGURABLE_MEMORY_CHAIN_OUT_NAME);
 }
 
 /*********************************************************************
@@ -732,7 +732,7 @@ std::string generate_configurable_memory_data_out_name() {
  * TODO: This could be replaced as a constexpr string
  *********************************************************************/
 std::string generate_configurable_memory_inverted_data_out_name() {
-  return std::string("mem_outb");
+  return std::string(CONFIGURABLE_MEMORY_INVERTED_DATA_OUT_NAME);
 }
 
 /*********************************************************************

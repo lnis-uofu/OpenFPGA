@@ -14,6 +14,7 @@ python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/config
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_chain_use_set --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_chain_use_setb --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_chain_use_set_reset --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_chain_config_enable_scff --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/multi_region_configuration_chain --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/fast_configuration_chain --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/fast_configuration_chain_use_set --debug --show_thread_logs
