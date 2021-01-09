@@ -170,7 +170,7 @@
   </routing_segment>
   <tile_annotations>
     <global_port name="clk" is_clock="true" default_val="0">
-      <tile name="clb" port="clk"/>
+      <tile name="clb" port="clk" x="-1" y="-1"/>
     </global_port>
   </tile_annotations>
   <pb_type_annotations>
