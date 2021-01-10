@@ -86,13 +86,13 @@ Here is an example:
 
 - ``name="<string>"`` is the name of a physical tile, e.g., ``name="clb"``.
 
-- ``port="<string>"`` is the port name of a physical tile, e.g., ``port="clk[0:0]"``.
+- ``port="<string>"`` is the port name of a physical tile, e.g., ``port="clk[0:3]"``.
 
 - ``x="<int>"`` is the x coordinate of a physical tile, e.g., ``x="1"``. If the x coordinate is set to ``-1``, it means all the valid x coordinates of the selected physical tile in the FPGA device will be considered. 
 
 - ``y="<int>"`` is the y coordinate of a physical tile, e.g., ``y="1"``. If the y coordinate is set to ``-1``, it means all the valid y coordinates of the selected physical tile in the FPGA device will be considered. 
 
-.. note:: The port of physical tile must be a valid port of the physical definition in VPR architecture!
+.. note:: The port of physical tile must be a valid port of the physical definition in VPR architecture! If you define a multi-bit port, it must be explicitly defined in the port, e.g., clk[0:3], which must be in the range of the port definition in physical tiles of VPR architecture files!!! 
 
 .. note:: The linked port of physical tile must meet the following requirements:
 
