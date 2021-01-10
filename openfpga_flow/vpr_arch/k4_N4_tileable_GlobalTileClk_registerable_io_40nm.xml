@@ -206,7 +206,7 @@
           <direct name="inpad" input="inpad.inpad" output="ff.D">
             <pack_pattern name="registered_io" in_port="inpad.inpad" out_port="ff.D"/>
           </direct>
-          <direct name="ff2inpad" input="ff.Q" output="io.inpad">
+          <direct name="ff2inpad" input="ff.Q" output="io.inpad"/>
         </interconnect>
       </mode>
       <mode name="outpad">

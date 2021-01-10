@@ -180,6 +180,7 @@
     <pb_type name="io[physical].iopad" circuit_model_name="GPIO" mode_bits="1"/> 
     <pb_type name="io[physical].ff" circuit_model_name="DFFSRQ"/> 
     <pb_type name="io[inpad].inpad" physical_pb_type_name="io[physical].iopad" mode_bits="1"/> 
+    <pb_type name="io[inpad_registered].inpad" physical_pb_type_name="io[physical].iopad" mode_bits="1"/> 
     <pb_type name="io[inpad_registered].ff" physical_pb_type_name="io[physical].ff"/> 
     <pb_type name="io[outpad].outpad" physical_pb_type_name="io[physical].iopad" mode_bits="0"/> 
     <!-- End physical pb_type binding in complex block IO -->
