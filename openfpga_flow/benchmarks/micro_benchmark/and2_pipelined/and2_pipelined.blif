@@ -1,0 +1,12 @@
+.model and2_pipelined
+.inputs clk a b
+.outputs c
+
+.latch a a_reg re clk 0
+.latch b b_reg re clk 0
+.latch c_reg c re clk 0
+
+.names a_reg b_reg c_reg
+11 1
+
+.end
