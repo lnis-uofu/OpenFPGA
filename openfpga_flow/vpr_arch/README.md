@@ -15,6 +15,7 @@ Please reveal the following architecture features in the names to help quickly s
 - aib: If the Advanced Interface Bus (AIB) is used in place of some I/Os.
 - multi\_io\_capacity: If I/O capacity is different on each side of FPGAs.
 - reduced\_io: If I/Os only appear a certain or multiple sides of FPGAs 
+- registerable\_io: If I/Os are registerable (can be either combinational or sequential)
 - <feature\_size>: The technology node which the delay numbers are extracted from.
 - TileOrgz<Type>: How tile is organized. 
   * Top-left (Tl): the pins of a tile are placed on the top side and left side only
