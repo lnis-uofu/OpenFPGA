@@ -22,7 +22,7 @@ reg c_reg;
 
 always @(posedge clk) begin
   a_reg <= a;
-  b_reg <= a;
+  b_reg <= b;
 end
 
 always @(posedge clk) begin
