@@ -21,6 +21,9 @@ FabricBitstream::FabricBitstream() {
 
   num_regions_ = 0;
   invalid_region_ids_.clear();
+
+  use_address_ = false;
+  use_wl_address_ = false;
 }
 
 /**************************************************
