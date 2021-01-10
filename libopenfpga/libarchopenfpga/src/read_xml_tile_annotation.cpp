@@ -60,8 +60,8 @@ void read_xml_tile_global_port_annotation(pugi::xml_node& xml_tile,
     openfpga::PortParser tile_port_parser(port_name_attr);
     
     /* Parse tile coordinates */
-    vtr::Point<size_t> tile_coord(get_attribute(xml_tile_port, "x", loc_data).as_int(-1), 
-                                  get_attribute(xml_tile_port, "y", loc_data).as_int(-1));
+    vtr::Point<size_t> tile_coord(get_attribute(xml_tile_port, "x", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(-1), 
+                                  get_attribute(xml_tile_port, "y", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(-1));
 
     /* Add tile port information */ 
     tile_annotation.add_global_port_tile_information(tile_global_port_id,
