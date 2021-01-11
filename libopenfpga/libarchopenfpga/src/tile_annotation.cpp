@@ -30,14 +30,19 @@ std::string TileAnnotation::global_port_name(const TileGlobalPortId& global_port
   return global_port_names_[global_port_id];
 }
 
-std::string TileAnnotation::global_port_tile_name(const TileGlobalPortId& global_port_id) const {
+std::vector<std::string> TileAnnotation::global_port_tile_names(const TileGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_tile_names_[global_port_id];
 }
 
-BasicPort TileAnnotation::global_port_tile_port(const TileGlobalPortId& global_port_id) const {
+std::vector<BasicPort> TileAnnotation::global_port_tile_ports(const TileGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_tile_ports_[global_port_id];
+}
+
+std::vector<vtr::Point<size_t>> TileAnnotation::global_port_tile_coordinates(const TileGlobalPortId& global_port_id) const {
+  VTR_ASSERT(valid_global_port_id(global_port_id));
+  return global_port_tile_coordinates_[global_port_id];
 }
 
 bool TileAnnotation::global_port_is_clock(const TileGlobalPortId& global_port_id) const {
@@ -63,9 +68,7 @@ size_t TileAnnotation::global_port_default_value(const TileGlobalPortId& global_
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
-TileGlobalPortId TileAnnotation::create_global_port(const std::string& port_name,
-                                                    const std::string& tile_name,
-                                                    const BasicPort& tile_port) {
+TileGlobalPortId TileAnnotation::create_global_port(const std::string& port_name) {
   /* Ensure that the name is unique */
   std::map<std::string, TileGlobalPortId>::iterator it = global_port_name2ids_.find(port_name);
   if (it != global_port_name2ids_.end()) {
@@ -76,8 +79,9 @@ TileGlobalPortId TileAnnotation::create_global_port(const std::string& port_name
   TileGlobalPortId port_id = TileGlobalPortId(global_port_ids_.size());
   global_port_ids_.push_back(port_id);
   global_port_names_.push_back(port_name);
-  global_port_tile_names_.push_back(tile_name);
-  global_port_tile_ports_.push_back(tile_port);
+  global_port_tile_names_.emplace_back();
+  global_port_tile_ports_.emplace_back();
+  global_port_tile_coordinates_.emplace_back();
   global_port_is_clock_.push_back(false);
   global_port_is_set_.push_back(false);
   global_port_is_reset_.push_back(false);
@@ -87,6 +91,16 @@ TileGlobalPortId TileAnnotation::create_global_port(const std::string& port_name
   global_port_name2ids_[port_name] = port_id;
 
   return port_id;
+}
+
+void TileAnnotation::add_global_port_tile_information(const TileGlobalPortId& global_port_id,
+                                                      const std::string& tile_name, 
+                                                      const BasicPort& tile_port,
+                                                      const vtr::Point<size_t>& tile_coord) {
+  VTR_ASSERT(valid_global_port_id(global_port_id));
+  global_port_tile_names_[global_port_id].push_back(tile_name);
+  global_port_tile_ports_[global_port_id].push_back(tile_port);
+  global_port_tile_coordinates_[global_port_id].push_back(tile_coord);
 }
 
 void TileAnnotation::set_global_port_is_clock(const TileGlobalPortId& global_port_id,
