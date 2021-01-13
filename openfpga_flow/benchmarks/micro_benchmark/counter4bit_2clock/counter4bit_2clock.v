@@ -1,4 +1,4 @@
-module counter4bit_2clock(clk0, q0, rst0, clk1, q1, rst1);
+module counter4bit_2clock(clk0, rst0, clk1, rst1, q0, q1);
 
     input clk0;
     input rst0;
