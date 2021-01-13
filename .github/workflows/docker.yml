@@ -23,7 +23,6 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile.base
-          add_git_labels: true
           push: true
           tags: ghcr.io/lnis-uofu/openfpga-buildenv-base:latest
       - name: Build test image
@@ -31,17 +30,8 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile.test
-          add_git_labels: true
           push: true
           tags: ghcr.io/lnis-uofu/openfpga-buildenv-test:latest
-      - name: Build run time image
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./docker/Dockerfile.run
-          add_git_labels: true
-          push: true
-          tags: ghcr.io/lnis-uofu/openfpga-buildenv-run:latest
   compiler_images:
     name: Build ${{ matrix.compiler }} compiler image
     needs: base_images
@@ -74,6 +64,5 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile.${{ matrix.compiler }}
-          add_git_labels: true
           push: true
           tags: ghcr.io/lnis-uofu/openfpga-buildenv-${{ matrix.compiler }}:latest

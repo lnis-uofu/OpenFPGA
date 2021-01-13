@@ -1,4 +1,8 @@
 FROM ubuntu:18.04
 ENV DEBIAN_FRONTEND=noninteractive
-ADD .github/workflows/install_dependencies_runtime.sh install_dependencies_runtime.sh
+COPY .github/workflows/install_dependencies_runtime.sh install_dependencies_runtime.sh
 RUN bash install_dependencies_runtime.sh
+RUN mkdir /opt/openfpga
+COPY abc/abc ace2/ace openfpga/openfpga vpr/vpr yosys/yosys yosys/yosys-abc yosys/yosys-config yosys/yosys-filterlib yosys/yosys-smtbmc /opt/openfpga/
+RUN cd /opt/openfpga && chmod +x abc ace openfpga vpr yosys yosys-abc yosys-config yosys-filterlib yosys-smtbmc
+ENV PATH="/opt/openfpga:${PATH}"

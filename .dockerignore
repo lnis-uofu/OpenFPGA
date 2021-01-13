@@ -19,3 +19,13 @@ run_local.bat
 run_local.sh
 vpr
 yosys
+
+!abc/abc
+!ace2/ace
+!openfpga/openfpga
+!vpr/vpr
+!yosys/yosys
+!yosys/yosys-abc
+!yosys/yosys-config
+!yosys/yosys-filterlib
+!yosys/yosys-smtbmc
