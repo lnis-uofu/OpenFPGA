@@ -1,11 +1,16 @@
 name: linux_build
 
 # Run CI on
-# - each push
-# - each pull request
-# - scheduled weekly
+# - each push if no code has changed
 on:
   push:
+    paths:
+      - '**.c'
+      - '**.cc'
+      - '**.c\+\+'
+      - '**.cpp'
+      - '**.h'
+      - '**.hh'
   pull_request:
   schedule:
     - cron: '0 0 * * 0 ' # weekly
@@ -137,6 +142,7 @@ jobs:
             yosys/yosys-smtbmc
   docker_distribution:
     name: Build docker image for distribution
+    if: ${{ github.ref == 'refs/heads/master'}}
     runs-on: ubuntu-latest
     needs: linux_build
     steps:
@@ -156,13 +162,20 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.CR_PAT }}
-      - name: Build and push
+      - name: Build and push runtime image
         uses: docker/build-push-action@v2
         with:
           context: .
           file: ./docker/Dockerfile.run
           push: true
           tags: ghcr.io/lnis-uofu/openfpga-run:latest
+      - name: Build and push test image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./docker/Dockerfile.test
+          push: true
+          tags: ghcr.io/lnis-uofu/openfpga-regression-tests:latest
   regression_tests:
     name: Regression tests
     runs-on: ubuntu-18.04

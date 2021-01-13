@@ -1,0 +1,39 @@
+name: regression_tests
+
+# Run regressions on each push if no code has changed
+on:
+  push:
+    paths-ignore:
+      - '**.c'
+      - '**.cc'
+      - '**.c\+\+'
+      - '**.cpp'
+      - '**.h'
+      - '**.hh'
+
+# Multiple job to tests
+jobs:
+  regression_tests:
+    name: Regression tests
+    runs-on: ubuntu-18.04
+    container: ghcr.io/lnis-uofu/openfpga-regression-tests:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: "Basic Regression Tests: GCC-8 (Ubuntu 18.04)"
+            script: basic_reg_test.sh
+          - name: "FPGA-Verilog Regression Tests: GCC-8 (Ubuntu 18.04)"
+            script: fpga_verilog_reg_test.sh
+          - name: "FPGA-Bitstream Regression Tests: GCC-8 (Ubuntu 18.04)"
+            script: fpga_bitstream_reg_test.sh
+          - name: "FPGA-SDC Regression Tests: GCC-8 (Ubuntu 18.04)"
+            script: fpga_sdc_reg_test.sh
+          - name: "FPGA-SPICE Regression Tests: GCC-8 (Ubuntu 18.04)"
+            script: fpga_spice_reg_test.sh
+    steps:
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v2
+      - name: ${{matrix.config.name}}
+        shell: bash
+        run: source .github/workflows/${{matrix.config.script}}
