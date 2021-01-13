@@ -288,9 +288,16 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
      * The wiring will be inverted if the default value of the global port is 1
      * Otherwise, the wiring will not be inverted!
      */
-    print_verilog_wire_connection(fp, module_manager.module_port(top_module, module_global_port),
-                                  stimuli_clock_port,
-                                  1 == fabric_global_port_info.global_port_default_value(fabric_global_port));
+    for (const size_t& pin : module_manager.module_port(top_module, module_global_port).pins()) {
+      BasicPort global_port_to_connect(module_manager.module_port(top_module, module_global_port).get_name(), pin, pin);
+      /* TODO: This is a temporary fix to make the testbench generator run in multi-clock scenario
+       * Need to consider multiple clock sources to connect 
+       * each of which may operate in different ferquency!!!
+       */
+      print_verilog_wire_connection(fp, global_port_to_connect,
+                                    stimuli_clock_port,
+                                    1 == fabric_global_port_info.global_port_default_value(fabric_global_port));
+    }
   }
 
   /* Connect global configuration done ports to configuration done signal */
@@ -1935,7 +1942,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                          netlist_annotation,
                                          clock_port_names,
                                          std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
-                                         BasicPort(std::string(TOP_TB_OP_CLOCK_PORT_NAME), 1));
+                                         std::vector<BasicPort>(1, BasicPort(std::string(TOP_TB_OP_CLOCK_PORT_NAME), 1)));
 
   /* Add output autocheck */
   print_verilog_testbench_check(fp,

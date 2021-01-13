@@ -65,9 +65,11 @@ void print_verilog_top_random_testbench_ports(std::fstream& fp,
   /* Create a clock port if the benchmark does not have one! 
    * The clock is used for counting and synchronizing input stimulus 
    */
-  BasicPort clock_port = generate_verilog_testbench_clock_port(clock_port_names, std::string(DEFAULT_CLOCK_NAME));
+  std::vector<BasicPort> clock_ports = generate_verilog_testbench_clock_port(clock_port_names, std::string(DEFAULT_CLOCK_NAME));
   print_verilog_comment(fp, std::string("----- Default clock port is added here since benchmark does not contain one -------"));
-  fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, clock_port) << ";" << std::endl;
+  for (const BasicPort& clock_port : clock_ports) {
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, clock_port) << ";" << std::endl;
+  }
 
   /* Add an empty line as splitter */
   fp << std::endl;
@@ -227,16 +229,16 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
                                                         explicit_port_mapping);
 
   /* Find clock port to be used */
-  BasicPort clock_port = generate_verilog_testbench_clock_port(clock_port_names, std::string(DEFAULT_CLOCK_NAME));
+  std::vector<BasicPort> clock_ports = generate_verilog_testbench_clock_port(clock_port_names, std::string(DEFAULT_CLOCK_NAME));
 
   /* Add stimuli for reset, set, clock and iopad signals */
   print_verilog_testbench_clock_stimuli(fp, simulation_parameters, 
-                                        clock_port);
+                                        clock_ports);
   print_verilog_testbench_random_stimuli(fp, atom_ctx,
                                          netlist_annotation, 
                                          clock_port_names, 
                                          std::string(CHECKFLAG_PORT_POSTFIX),
-                                         clock_port);
+                                         clock_ports);
 
   print_verilog_testbench_check(fp, 
                                 std::string(AUTOCHECKED_SIMULATION_FLAG),
