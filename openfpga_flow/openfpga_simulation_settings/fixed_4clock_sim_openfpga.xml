@@ -11,7 +11,7 @@
          define specific frequency using <clock> line will overwrite the default value
          Note that the clock name must match clock port definition in OpenFPGA architecture XML!!!
       -->
-    <operating frequency="50e6" num_cycles="100" slack="0.2">
+    <operating frequency="50e6" num_cycles="20" slack="0.2">
       <clock name="clk[0:0]" frequency="10e6"/>
       <clock name="clk[1:1]" frequency="20e6"/>
       <clock name="clk[2:2]" frequency="30e6"/>
