@@ -14,6 +14,7 @@ python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/config
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_chain_use_set --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_chain_use_setb --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_chain_use_set_reset --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/configuration_chain_config_enable_scff --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/multi_region_configuration_chain --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/fast_configuration_chain --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/full_testbench/fast_configuration_chain_use_set --debug --show_thread_logs
@@ -108,3 +109,6 @@ python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/tile_organization/til
 echo -e "Testing global port definition from tiles";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/global_tile_ports/global_tile_clock --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/global_tile_ports/global_tile_reset --debug --show_thread_logs
+
+echo -e "Testing yosys flow using custom ys script for running quicklogic device";
+python3 openfpga_flow/scripts/run_fpga_task.py quicklogic_tests/flow_test --debug --show_thread_logs

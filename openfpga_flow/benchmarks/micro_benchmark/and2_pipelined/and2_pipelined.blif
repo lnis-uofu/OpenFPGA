@@ -1,0 +1,16 @@
+# Benchmark "and2_pipelined" written by ABC on Sun Jan 10 10:26:01 2021
+.model and2_pipelined
+.inputs clk a b
+.outputs c
+
+.latch        n10          c  2
+.latch        n13      a_reg  2
+.latch        n17      b_reg  2
+
+.names a_reg b_reg n10
+11 1
+.names a n13
+1 1
+.names b n17
+1 1
+.end

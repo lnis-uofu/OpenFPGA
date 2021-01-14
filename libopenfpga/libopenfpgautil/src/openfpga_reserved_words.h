@@ -13,7 +13,10 @@ namespace openfpga {
 /* Top-level module name */
 constexpr char* FPGA_TOP_MODULE_NAME = "fpga_top";
 
+constexpr char* CONFIGURABLE_MEMORY_CHAIN_IN_NAME = "ccff_head";
+constexpr char* CONFIGURABLE_MEMORY_CHAIN_OUT_NAME = "ccff_tail";
 constexpr char* CONFIGURABLE_MEMORY_DATA_OUT_NAME = "mem_out";
+constexpr char* CONFIGURABLE_MEMORY_INVERTED_DATA_OUT_NAME = "mem_outb";
 
 /* IO PORT */
 /* Prefix of global input, output and inout ports of FPGA fabric */

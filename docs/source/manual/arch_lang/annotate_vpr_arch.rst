@@ -60,20 +60,13 @@ Here is an example:
 .. code-block:: xml
 
   <tile_annotations>
-    <global_port name="<string>" tile_port="<string>" is_clock="<bool>" is_reset="<bool>" is_set="<bool>" default_val="<int>"/>
+    <global_port name="<string>" is_clock="<bool>" is_reset="<bool>" is_set="<bool>" default_val="<int>">
+      <tile name="<string>" port="<string>" x="<int>" y="<int>"/>
+      ...
+    </global_port>
   </tile_annotations>
 
 - ``name="<string>"`` is the port name to appear in the top-level FPGA fabric.
-
-- ``tile_port="<string>"`` is the port name of a physical tile, e.g., ``tile_port="clb.clk"``.
-
-.. note:: The port of physical tile must be a valid port of the physical definition in VPR architecture!
-
-.. note:: The linked port of physical tile must meet the following requirements:
-
-            - If the ``global_port`` is set as clock through ``is_clock="true"``, the port of the physical tile must also be a clock port.
-            - If not a clock, the port of the physical tile must be defined as non-clock global
-            - The port of the physical tile should have zero connectivity (``Fc=0``) in VPR architecture
 
 - ``is_clock="<bool>"`` define if the global port is a clock port at the top-level FPGA fabric. An operating clock port will be driven by proper signals in auto-generated testbenches.
 
@@ -86,6 +79,26 @@ Here is an example:
 .. note:: All the global port from a physical tile port is only used in operating phase. Any ports for programmable use are not allowed!
 
 - ``default_val="<int>"`` define if the default value for the global port when initialized in testbenches. Valid values are either ``0`` or ``1``. For example, the default value of an active-high reset pin is ``0``, while an active-low reset pin is ``1``.
+
+.. note:: A global port could be connected from different tiles by defining multiple <tile> lines under a global port!!!
+
+.. option:: <tile name="<string>" port="<string>" x="<int>" y="<int>"/>
+
+- ``name="<string>"`` is the name of a physical tile, e.g., ``name="clb"``.
+
+- ``port="<string>"`` is the port name of a physical tile, e.g., ``port="clk[0:3]"``.
+
+- ``x="<int>"`` is the x coordinate of a physical tile, e.g., ``x="1"``. If the x coordinate is set to ``-1``, it means all the valid x coordinates of the selected physical tile in the FPGA device will be considered. 
+
+- ``y="<int>"`` is the y coordinate of a physical tile, e.g., ``y="1"``. If the y coordinate is set to ``-1``, it means all the valid y coordinates of the selected physical tile in the FPGA device will be considered. 
+
+.. note:: The port of physical tile must be a valid port of the physical definition in VPR architecture! If you define a multi-bit port, it must be explicitly defined in the port, e.g., clk[0:3], which must be in the range of the port definition in physical tiles of VPR architecture files!!! 
+
+.. note:: The linked port of physical tile must meet the following requirements:
+
+            - If the ``global_port`` is set as clock through ``is_clock="true"``, the port of the physical tile must also be a clock port.
+            - If not a clock, the port of the physical tile must be defined as non-clock global
+            - The port of the physical tile should have zero connectivity (``Fc=0``) in VPR architecture
 
 A more illustrative example:
 
@@ -114,7 +127,9 @@ When a global port, e.g., ``clk``, is defined in ``tile_annotation`` using the f
 .. code-block:: xml
 
   <tile_annotations>
-    <global_port name="clk" tile_port="clb.clk" is_clock="true"/>
+    <global_port name="clk" is_clock="true">
+      <tile name="clb" port="clk"/>
+    </global_port>
   </tile_annotations>
 
 Clock port ``clk`` of each ``clb`` tile will be connected to a common clock port of the top module, while local clock network is customizable through VPR's architecture description language. For instance, the local clock network can be a programmable clock network. 

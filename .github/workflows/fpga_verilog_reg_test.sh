@@ -49,6 +49,9 @@ python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/io/embedded_io --deb
 echo -e "Testing Verilog generation with SoC I/Os for an FPGA ";
 python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/io/soc_io --debug --show_thread_logs
 
+echo -e "Testing Verilog generation with registerable I/Os for an FPGA ";
+python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/io/registerable_io --debug --show_thread_logs
+
 echo -e "Testing Verilog generation with adder chain across an FPGA";
 python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/fabric_chain/adder_chain --debug --show_thread_logs
 

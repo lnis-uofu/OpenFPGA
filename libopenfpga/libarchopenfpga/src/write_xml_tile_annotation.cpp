@@ -51,11 +51,6 @@ void write_xml_tile_annotation_global_port(std::fstream& fp,
 
   write_xml_attribute(fp, "name", tile_annotation.global_port_name(global_port_id).c_str());
 
-  std::string tile_port_attr = tile_annotation.global_port_tile_name(global_port_id)
-                             + "."
-                             + generate_tile_port_name(tile_annotation.global_port_tile_port(global_port_id));
-  write_xml_attribute(fp, "tile_port", tile_port_attr.c_str()); 
-
   write_xml_attribute(fp, "is_clock", tile_annotation.global_port_is_clock(global_port_id)); 
 
   write_xml_attribute(fp, "is_set", tile_annotation.global_port_is_set(global_port_id)); 
@@ -64,7 +59,18 @@ void write_xml_tile_annotation_global_port(std::fstream& fp,
 
   write_xml_attribute(fp, "default_value", tile_annotation.global_port_default_value(global_port_id)); 
   
-  fp << "/>" << "\n";
+  fp << ">" << "\n";
+
+  for (size_t tile_info_id = 0; tile_info_id < tile_annotation.global_port_tile_names(global_port_id).size(); ++tile_info_id) {
+    fp << "\t\t\t" << "<tile ";
+    write_xml_attribute(fp, "name", tile_annotation.global_port_tile_names(global_port_id)[tile_info_id].c_str());
+    write_xml_attribute(fp, "port", generate_tile_port_name(tile_annotation.global_port_tile_ports(global_port_id)[tile_info_id]).c_str());
+    write_xml_attribute(fp, "x", tile_annotation.global_port_tile_coordinates(global_port_id)[tile_info_id].x());
+    write_xml_attribute(fp, "y", tile_annotation.global_port_tile_coordinates(global_port_id)[tile_info_id].y());
+    fp << "/>";
+  }
+
+  fp << "\t\t" << "</global_port>";
 }
 
 /********************************************************************
