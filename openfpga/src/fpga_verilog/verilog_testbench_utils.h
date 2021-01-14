@@ -60,8 +60,8 @@ void print_verilog_timeout_and_vcd(std::fstream& fp,
                                    const std::string& error_counter_name,
                                    const float& simulation_time);
 
-BasicPort generate_verilog_testbench_clock_port(const std::vector<std::string>& clock_port_names,
-                                                const std::string& default_clock_name);
+std::vector<BasicPort> generate_verilog_testbench_clock_port(const std::vector<std::string>& clock_port_names,
+                                                             const std::string& default_clock_name);
 
 void print_verilog_testbench_check(std::fstream& fp,
                                    const std::string& autochecked_preprocessing_flag,
@@ -77,14 +77,14 @@ void print_verilog_testbench_check(std::fstream& fp,
 
 void print_verilog_testbench_clock_stimuli(std::fstream& fp,
                                            const SimulationSetting& simulation_parameters,
-                                           const BasicPort& clock_port);
+                                           const std::vector<BasicPort>& clock_ports);
 
 void print_verilog_testbench_random_stimuli(std::fstream& fp,
                                             const AtomContext& atom_ctx,
                                             const VprNetlistAnnotation& netlist_annotation,
                                             const std::vector<std::string>& clock_port_names,
                                             const std::string& check_flag_port_postfix,
-                                            const BasicPort& clock_port);
+                                            const std::vector<BasicPort>& clock_ports);
 
 void print_verilog_testbench_shared_ports(std::fstream& fp,
                                           const AtomContext& atom_ctx,
