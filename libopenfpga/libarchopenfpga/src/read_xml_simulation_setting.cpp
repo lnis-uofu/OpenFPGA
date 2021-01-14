@@ -33,6 +33,20 @@ e_sim_accuracy_type string_to_sim_accuracy_type(const std::string& type_string) 
 }
 
 /********************************************************************
+ * Parse XML codes of a <clock> line to an object of simulation setting
+ *******************************************************************/
+static 
+void read_xml_operating_clock_override_setting(pugi::xml_node& xml_clock_override_setting,
+                                               const pugiutil::loc_data& loc_data,
+                                               openfpga::SimulationSetting& sim_setting) {
+  /* Create a new clock override object in the sim_setting object with the given name */
+  SimulationClockId clock_id = sim_setting.create_simulation_clock(get_attribute(xml_clock_override_setting, "name", loc_data).as_string());
+  VTR_ASSERT(sim_setting.valid_clock_id(clock_id));
+
+  sim_setting.set_simulation_clock_frequency(clock_id, get_attribute(xml_clock_override_setting, "frequency", loc_data).as_float(0.));
+}
+
+/********************************************************************
  * Parse XML codes of a <clock_setting> to an object of simulation setting
  *******************************************************************/
 static 
@@ -42,7 +56,7 @@ void read_xml_clock_setting(pugi::xml_node& xml_clock_setting,
   /* Parse operating clock setting */
   pugi::xml_node xml_operating_clock_setting = get_single_child(xml_clock_setting, "operating", loc_data);
 
-  sim_setting.set_operating_clock_frequency(get_attribute(xml_operating_clock_setting, "frequency", loc_data).as_float(0.));
+  sim_setting.set_default_operating_clock_frequency(get_attribute(xml_operating_clock_setting, "frequency", loc_data).as_float(0.));
 
   /* Parse number of clock cycles to be used in simulation
    * Valid keywords is "auto" or other integer larger than 0
@@ -58,6 +72,15 @@ void read_xml_clock_setting(pugi::xml_node& xml_clock_setting,
   }
 
   sim_setting.set_operating_clock_frequency_slack(get_attribute(xml_operating_clock_setting, "slack", loc_data).as_float(0.));
+
+  /* Iterate over multiple operating clock settings and parse one by one */
+  for (pugi::xml_node xml_clock : xml_operating_clock_setting.children()) {
+    /* Error out if the XML child has an invalid name! */
+    if (xml_clock.name() != std::string("clock")) {
+      bad_tag(xml_clock, loc_data, xml_operating_clock_setting, {"clock"});
+    }
+    read_xml_operating_clock_override_setting(xml_clock, loc_data, sim_setting);
+  } 
 
   /* Parse programming clock setting */
   pugi::xml_node xml_programming_clock_setting = get_single_child(xml_clock_setting, "programming", loc_data);

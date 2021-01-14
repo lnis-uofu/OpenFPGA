@@ -191,7 +191,7 @@ int annotate_simulation_setting(const AtomContext& atom_ctx,
                                 SimulationSetting& sim_setting) {
 
   /* Find if the operating frequency is binded to vpr results */
-  if (0. == sim_setting.operating_clock_frequency()) {
+  if (0. == sim_setting.default_operating_clock_frequency()) {
     VTR_LOG("User specified the operating clock frequency to use VPR results\n");
     /* Run timing analysis and collect critical path delay
      * This code is copied from function vpr_analysis() in vpr_api.h 
@@ -212,12 +212,12 @@ int annotate_simulation_setting(const AtomContext& atom_ctx,
 
     /* Get critical path delay. Update simulation settings */
     float T_crit = timing_info->least_slack_critical_path().delay() * (1. + sim_setting.operating_clock_frequency_slack());
-    sim_setting.set_operating_clock_frequency(1 / T_crit); 
+    sim_setting.set_default_operating_clock_frequency(1 / T_crit); 
     VTR_LOG("Use VPR critical path delay %g [ns] with a %g [%] slack in OpenFPGA.\n",
             T_crit / 1e9, sim_setting.operating_clock_frequency_slack() * 100);
   }
   VTR_LOG("Will apply operating clock frequency %g [MHz] to simulations\n",
-          sim_setting.operating_clock_frequency() / 1e6);
+          sim_setting.default_operating_clock_frequency() / 1e6);
 
   if (0. == sim_setting.num_clock_cycles()) {
     /* Find the number of clock cycles to be used in simulation 

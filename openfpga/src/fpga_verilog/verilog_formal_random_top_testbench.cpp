@@ -254,7 +254,7 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
 
   float simulation_time = find_operating_phase_simulation_time(MAGIC_NUMBER_FOR_SIMULATION_TIME,
                                                                simulation_parameters.num_clock_cycles(),
-                                                               1./simulation_parameters.operating_clock_frequency(),
+                                                               1./simulation_parameters.default_operating_clock_frequency(),
                                                                VERILOG_SIM_TIMESCALE);
 
   /* Add Icarus requirement */

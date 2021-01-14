@@ -1839,7 +1839,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
 
   /* Find the clock period */
   float prog_clock_period = (1./simulation_parameters.programming_clock_frequency());
-  float op_clock_period = (1./simulation_parameters.operating_clock_frequency());
+  float op_clock_period = (1./simulation_parameters.default_operating_clock_frequency());
   /* Estimate the number of configuration clock cycles */
   size_t num_config_clock_cycles = calculate_num_config_clock_cycles(config_protocol.type(),
                                                                      apply_fast_configuration,
@@ -1968,7 +1968,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                                       num_config_clock_cycles,
 										              1./simulation_parameters.programming_clock_frequency(),
                                                       simulation_parameters.num_clock_cycles(),
-                                                      1./simulation_parameters.operating_clock_frequency());
+                                                      1./simulation_parameters.default_operating_clock_frequency());
 
 
   /* Add Icarus requirement: 

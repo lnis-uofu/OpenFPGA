@@ -488,7 +488,7 @@ void print_verilog_testbench_clock_stimuli(std::fstream& fp,
     /* Create clock stimuli */
     fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << " <= 1'b0;" << std::endl;
     fp << "\t\twhile(1) begin" << std::endl;
-    fp << "\t\t\t#" << std::setprecision(10) << ((0.5/simulation_parameters.operating_clock_frequency())/VERILOG_SIM_TIMESCALE) << std::endl;
+    fp << "\t\t\t#" << std::setprecision(10) << ((0.5/simulation_parameters.default_operating_clock_frequency())/VERILOG_SIM_TIMESCALE) << std::endl;
     fp << "\t\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
     fp << " <= !";
     fp << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
