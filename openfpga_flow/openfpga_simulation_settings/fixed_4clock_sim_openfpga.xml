@@ -9,13 +9,15 @@
     <!-- The frequency defined in the operating line will be 
          the default operating clock frequency for all the clocks
          define specific frequency using <clock> line will overwrite the default value
-         Note that the clock name must match clock port definition in OpenFPGA architecture XML!!!
+         Note that 
+         - clock name must be unique as it is used in testbench genertion
+         - the clock port must match clock port definition in OpenFPGA architecture XML!!!
       -->
     <operating frequency="50e6" num_cycles="20" slack="0.2">
-      <clock name="clk[0:0]" frequency="10e6"/>
-      <clock name="clk[1:1]" frequency="20e6"/>
-      <clock name="clk[2:2]" frequency="30e6"/>
-      <clock name="clk[3:3]" frequency="40e6"/>
+      <clock name="clk_10MHz" port="clk[0:0]" frequency="10e6"/>
+      <clock name="clk_20MHz" port="clk[1:1]" frequency="20e6"/>
+      <clock name="clk_30MHz" port="clk[2:2]" frequency="30e6"/>
+      <clock name="clk_40MHz" port="clk[3:3]" frequency="40e6"/>
     </operating>
     <programming frequency="100e6"/>
   </clock_setting>
