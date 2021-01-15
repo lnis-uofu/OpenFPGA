@@ -319,8 +319,6 @@ void print_pnr_sdc_compact_routing_disable_switch_block_outputs(const std::strin
  * 4. Design constraints for breaking the combinational loops in FPGA fabric
  *******************************************************************/
 void print_pnr_sdc(const PnrSdcOption& sdc_options,
-                   const float& programming_critical_path_delay,
-                   const float& operating_critical_path_delay,
                    const DeviceContext& device_ctx,
                    const VprDeviceAnnotation& device_annotation,
                    const DeviceRRGSB& device_rr_gsb,
@@ -328,6 +326,7 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
                    const MuxLibrary& mux_lib,
                    const CircuitLibrary& circuit_lib,
                    const FabricGlobalPortInfo& global_ports,
+                   const SimulationSetting& sim_setting,
                    const bool& compact_routing_hierarchy) {
 
   std::string top_module_name = generate_fpga_top_module_name();
@@ -337,9 +336,8 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
   /* Constrain global ports */
   if (true == sdc_options.constrain_global_port()) {
     print_pnr_sdc_global_ports(sdc_options.sdc_dir(),
-                               programming_critical_path_delay,
-                               operating_critical_path_delay,
                                module_manager, top_module, global_ports,
+                               sim_setting,
                                sdc_options.constrain_non_clock_global_port());
   }
 

@@ -44,6 +44,7 @@ void write_xml_clock_setting(std::fstream& fp,
   for (const SimulationClockId& clock_id : sim_setting.clocks()) {
     fp << "\t\t\t" << "<clock";
     write_xml_attribute(fp, "name", sim_setting.clock_name(clock_id).c_str());
+    write_xml_attribute(fp, "port", generate_xml_port_name(sim_setting.clock_port(clock_id)).c_str());
     write_xml_attribute(fp, "frequency", std::to_string(sim_setting.clock_frequency(clock_id)).c_str());
     fp << ">" << "\n";
   }

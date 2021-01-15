@@ -12,6 +12,9 @@
 /* Headers from vtr util library */
 #include "vtr_assert.h"
 
+/* Headers from openfpga util library */
+#include "openfpga_port_parser.h"
+
 /* Headers from libarchfpga */
 #include "arch_error.h"
 #include "read_xml_util.h"
@@ -39,11 +42,24 @@ static
 void read_xml_operating_clock_override_setting(pugi::xml_node& xml_clock_override_setting,
                                                const pugiutil::loc_data& loc_data,
                                                openfpga::SimulationSetting& sim_setting) {
-  /* Create a new clock override object in the sim_setting object with the given name */
-  SimulationClockId clock_id = sim_setting.create_simulation_clock(get_attribute(xml_clock_override_setting, "name", loc_data).as_string());
-  VTR_ASSERT(sim_setting.valid_clock_id(clock_id));
+  std::string clock_name = get_attribute(xml_clock_override_setting, "name", loc_data).as_string();
 
-  sim_setting.set_simulation_clock_frequency(clock_id, get_attribute(xml_clock_override_setting, "frequency", loc_data).as_float(0.));
+  /* Create a new clock override object in the sim_setting object with the given name */
+  SimulationClockId clock_id = sim_setting.create_clock(clock_name);
+ 
+  /* Report if the clock creation failed, this is due to a conflicts in naming*/
+  if (false == sim_setting.valid_clock_id(clock_id)) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_clock_override_setting),
+                   "Fail to create simulation clock '%s', it may share the same name as other simulation clock definition!\n",
+                   clock_name.c_str());
+  }
+
+  /* Parse port information */
+  openfpga::PortParser clock_port_parser(get_attribute(xml_clock_override_setting, "port", loc_data).as_string());
+  sim_setting.set_clock_port(clock_id, clock_port_parser.port());
+
+  /* Parse frequency information */
+  sim_setting.set_clock_frequency(clock_id, get_attribute(xml_clock_override_setting, "frequency", loc_data).as_float(0.));
 }
 
 /********************************************************************

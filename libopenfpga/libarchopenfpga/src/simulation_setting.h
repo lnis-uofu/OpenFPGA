@@ -7,9 +7,12 @@
  *******************************************************************/
 #include <string>
 #include <array>
+#include <map>
 
 #include "vtr_vector.h" 
 #include "vtr_geometry.h" 
+
+#include "openfpga_port.h" 
 
 #include "simulation_setting_fwd.h" 
 
@@ -64,6 +67,7 @@ class SimulationSetting {
     float programming_clock_frequency() const;
     size_t num_simulation_clock_cycles() const;
     std::string clock_name(const SimulationClockId& clock_id) const;
+    BasicPort clock_port(const SimulationClockId& clock_id) const;
     float clock_frequency(const SimulationClockId& clock_id) const;
     bool auto_select_num_clock_cycles() const;
     size_t num_clock_cycles() const;
@@ -89,12 +93,15 @@ class SimulationSetting {
     void set_programming_clock_frequency(const float& clock_freq);
     /* Add a new simulation clock with 
      * - a given name
+     * - a given port description
      * - a default zero frequency which can be overwritten by 
      *   the operating_clock_frequency()
      */
-    SimulationClockId create_simulation_clock(const std::string& name);
-    void set_simulation_clock_frequency(const SimulationClockId& clock_id,
-                                        const float& frequency);
+    SimulationClockId create_clock(const std::string& name);
+    void set_clock_port(const SimulationClockId& clock_id,
+                        const BasicPort& port);
+    void set_clock_frequency(const SimulationClockId& clock_id,
+                             const float& frequency);
     void set_num_clock_cycles(const size_t& num_clk_cycles);
     void set_operating_clock_frequency_slack(const float& op_clk_freq_slack);
     void set_simulation_temperature(const float& sim_temp);
@@ -134,13 +141,18 @@ class SimulationSetting {
     /* Multiple simulation clocks with detailed information
      * Each clock has 
      * - a unique id
-     * - a unique name which is supposed 
+     * - a unique name
+     * - a unique port definition which is supposed 
      *   to match the clock port definition in OpenFPGA documentation
      * - a frequency which is only applicable to this clock name
      */
     vtr::vector<SimulationClockId, SimulationClockId> clock_ids_;
     vtr::vector<SimulationClockId, std::string> clock_names_;
+    vtr::vector<SimulationClockId, BasicPort> clock_ports_;
     vtr::vector<SimulationClockId, float> clock_frequencies_;
+
+    /* Fast name-to-id lookup */
+    std::map<std::string, SimulationClockId> clock_name2ids_;
 
     /* Number of clock cycles to be used in simulation
      * If the value is 0, the clock cycles can be automatically 

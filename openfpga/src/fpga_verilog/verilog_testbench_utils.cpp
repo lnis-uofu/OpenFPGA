@@ -484,11 +484,23 @@ void print_verilog_testbench_clock_stimuli(std::fstream& fp,
   for (const BasicPort& clock_port : clock_ports) {
     print_verilog_comment(fp, std::string("----- Clock '") + clock_port.get_name() + std::string("' Initialization -------"));
 
+    /* Find the corresponding clock frequency from the simulation parameters */
+    float clk_freq_to_use = (0.5 / simulation_parameters.default_operating_clock_frequency()) / VERILOG_SIM_TIMESCALE;
+    /* FIXME: This could be buggy because the implementation clock names do NOT have to 
+     *        be the same as the clock definition in simulation settings!!!
+     */
+    for (const SimulationClockId& sim_clock_id : simulation_parameters.clocks()) {
+      /* If the clock name matches, we can use the clock frequency */
+      if (simulation_parameters.clock_port(sim_clock_id) == clock_port) {
+        clk_freq_to_use = (0.5 / simulation_parameters.clock_frequency(sim_clock_id)) / VERILOG_SIM_TIMESCALE;
+      }
+    }
+
     fp << "\tinitial begin" << std::endl;
     /* Create clock stimuli */
     fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << " <= 1'b0;" << std::endl;
     fp << "\t\twhile(1) begin" << std::endl;
-    fp << "\t\t\t#" << std::setprecision(10) << ((0.5/simulation_parameters.default_operating_clock_frequency())/VERILOG_SIM_TIMESCALE) << std::endl;
+    fp << "\t\t\t#" << std::setprecision(10) << clk_freq_to_use << std::endl;
     fp << "\t\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);
     fp << " <= !";
     fp << generate_verilog_port(VERILOG_PORT_CONKT, clock_port);

@@ -241,7 +241,10 @@ void print_analysis_sdc(const AnalysisSdcOption& option,
   ModuleId top_module = openfpga_ctx.module_graph().find_module(generate_fpga_top_module_name());
   VTR_ASSERT(true == openfpga_ctx.module_graph().valid_module_id(top_module));
 
-  /* Create clock and set I/O ports with input/output delays */
+  /* Create clock and set I/O ports with input/output delays
+   * FIXME: Now different I/Os have different delays due to multiple clock frequency
+   *        We need to consider these impacts and constrain different I/Os with different delays!!!
+   */
   print_analysis_sdc_io_delays(fp, option.time_unit(),
                                vpr_ctx.atom(), vpr_ctx.placement(),
                                openfpga_ctx.vpr_netlist_annotation(), openfpga_ctx.io_location_map(),

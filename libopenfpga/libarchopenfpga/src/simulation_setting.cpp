@@ -43,6 +43,11 @@ std::string SimulationSetting::clock_name(const SimulationClockId& clock_id) con
   return clock_names_[clock_id];
 }
 
+BasicPort SimulationSetting::clock_port(const SimulationClockId& clock_id) const {
+  VTR_ASSERT(valid_clock_id(clock_id));
+  return clock_ports_[clock_id];
+}
+
 float SimulationSetting::clock_frequency(const SimulationClockId& clock_id) const {
   VTR_ASSERT(valid_clock_id(clock_id));
   return clock_frequencies_[clock_id];
@@ -139,17 +144,34 @@ void SimulationSetting::set_programming_clock_frequency(const float& clock_freq)
   default_clock_frequencies_.set_y(clock_freq);
 }
 
-SimulationClockId SimulationSetting::create_simulation_clock(const std::string& name) {
+SimulationClockId SimulationSetting::create_clock(const std::string& name) {
+  /* Ensure a unique name for the clock definition */
+  std::map<std::string, SimulationClockId>::iterator it = clock_name2ids_.find(name);
+  if (it != clock_name2ids_.end()) {
+    return SimulationClockId::INVALID();
+  }
+
+  /* This is a legal name. we can create a new id */
   SimulationClockId clock_id = SimulationClockId(clock_ids_.size());
   clock_ids_.push_back(clock_id);
   clock_names_.push_back(name);
+  clock_ports_.emplace_back();
   clock_frequencies_.push_back(0.);
+
+  /* Register in the name-to-id map */
+  clock_name2ids_[name] = clock_id;
 
   return clock_id;
 }
 
-void SimulationSetting::set_simulation_clock_frequency(const SimulationClockId& clock_id,
-                                                       const float& frequency) {
+void SimulationSetting::set_clock_port(const SimulationClockId& clock_id,
+                                       const BasicPort& port) {
+  VTR_ASSERT(valid_clock_id(clock_id));
+  clock_ports_[clock_id] = port;
+}
+
+void SimulationSetting::set_clock_frequency(const SimulationClockId& clock_id,
+                                            const float& frequency) {
   VTR_ASSERT(valid_clock_id(clock_id));
   clock_frequencies_[clock_id] = frequency;
 }

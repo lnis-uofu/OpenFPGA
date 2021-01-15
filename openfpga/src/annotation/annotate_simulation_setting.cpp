@@ -219,6 +219,18 @@ int annotate_simulation_setting(const AtomContext& atom_ctx,
   VTR_LOG("Will apply operating clock frequency %g [MHz] to simulations\n",
           sim_setting.default_operating_clock_frequency() / 1e6);
 
+  /* Walk through all the clock information */
+  for (const SimulationClockId& clock_id : sim_setting.clocks()) {
+    if (0. == sim_setting.clock_frequency(clock_id)) {
+      sim_setting.set_clock_frequency(clock_id, sim_setting.default_operating_clock_frequency());
+    }
+    VTR_LOG("Will apply clock frequency %g [MHz] to clock '%s[%d:%d]' in simulations\n",
+            sim_setting.clock_frequency(clock_id) / 1e6,
+            sim_setting.clock_port(clock_id).get_name().c_str(),
+            sim_setting.clock_port(clock_id).get_lsb(),
+            sim_setting.clock_port(clock_id).get_msb());
+  }
+
   if (0. == sim_setting.num_clock_cycles()) {
     /* Find the number of clock cycles to be used in simulation 
      * by average over the signal activity 
