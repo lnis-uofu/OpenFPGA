@@ -49,6 +49,8 @@ Similar to the Switch Boxes and Connection Blocks, the channel wire segments in 
 
 - ``circuit_model_name="<string>"`` should match a circuit model whose type is ``chan_wire`` defined in :ref:`circuit_library`.
 
+.. _annotate_vpr_arch_physical_tile_annotation:
+
 Physical Tile Annotation
 ~~~~~~~~~~~~~~~~~~~~~~~~
 

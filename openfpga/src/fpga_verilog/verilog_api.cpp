@@ -226,7 +226,7 @@ void fpga_verilog_testbench(const ModuleManager &module_manager,
                                   bitstream_manager.num_bits(),
                                   simulation_setting.num_clock_cycles(),
                                   simulation_setting.programming_clock_frequency(),
-                                  simulation_setting.operating_clock_frequency());
+                                  simulation_setting.default_operating_clock_frequency());
   }
 
   /* Generate a Verilog file including all the netlists that have been generated */

@@ -10,6 +10,13 @@ namespace openfpga {
  ***********************************************************************/
 
 /************************************************************************
+ * Public Accessors : aggregates
+ ***********************************************************************/
+SimulationSetting::simulation_clock_range SimulationSetting::clocks() const {
+  return vtr::make_range(clock_ids_.begin(), clock_ids_.end());
+}
+
+/************************************************************************
  * Constructors
  ***********************************************************************/
 SimulationSetting::SimulationSetting() {
@@ -19,12 +26,31 @@ SimulationSetting::SimulationSetting() {
 /************************************************************************
  * Public Accessors
  ***********************************************************************/
-float SimulationSetting::operating_clock_frequency() const {
-  return clock_frequencies_.x();
+float SimulationSetting::default_operating_clock_frequency() const {
+  return default_clock_frequencies_.x();
 }
 
 float SimulationSetting::programming_clock_frequency() const {
-  return clock_frequencies_.y();
+  return default_clock_frequencies_.y();
+}
+
+size_t SimulationSetting::num_simulation_clock_cycles() const {
+  return clock_ids_.size();
+}
+
+std::string SimulationSetting::clock_name(const SimulationClockId& clock_id) const {
+  VTR_ASSERT(valid_clock_id(clock_id));
+  return clock_names_[clock_id];
+}
+
+BasicPort SimulationSetting::clock_port(const SimulationClockId& clock_id) const {
+  VTR_ASSERT(valid_clock_id(clock_id));
+  return clock_ports_[clock_id];
+}
+
+float SimulationSetting::clock_frequency(const SimulationClockId& clock_id) const {
+  VTR_ASSERT(valid_clock_id(clock_id));
+  return clock_frequencies_[clock_id];
 }
 
 bool SimulationSetting::auto_select_num_clock_cycles() const {
@@ -110,12 +136,44 @@ float SimulationSetting::stimuli_input_slew(const e_sim_signal_type& signal_type
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
-void SimulationSetting::set_operating_clock_frequency(const float& clock_freq) {
-  clock_frequencies_.set_x(clock_freq);
+void SimulationSetting::set_default_operating_clock_frequency(const float& clock_freq) {
+  default_clock_frequencies_.set_x(clock_freq);
 }
 
 void SimulationSetting::set_programming_clock_frequency(const float& clock_freq) {
-  clock_frequencies_.set_y(clock_freq);
+  default_clock_frequencies_.set_y(clock_freq);
+}
+
+SimulationClockId SimulationSetting::create_clock(const std::string& name) {
+  /* Ensure a unique name for the clock definition */
+  std::map<std::string, SimulationClockId>::iterator it = clock_name2ids_.find(name);
+  if (it != clock_name2ids_.end()) {
+    return SimulationClockId::INVALID();
+  }
+
+  /* This is a legal name. we can create a new id */
+  SimulationClockId clock_id = SimulationClockId(clock_ids_.size());
+  clock_ids_.push_back(clock_id);
+  clock_names_.push_back(name);
+  clock_ports_.emplace_back();
+  clock_frequencies_.push_back(0.);
+
+  /* Register in the name-to-id map */
+  clock_name2ids_[name] = clock_id;
+
+  return clock_id;
+}
+
+void SimulationSetting::set_clock_port(const SimulationClockId& clock_id,
+                                       const BasicPort& port) {
+  VTR_ASSERT(valid_clock_id(clock_id));
+  clock_ports_[clock_id] = port;
+}
+
+void SimulationSetting::set_clock_frequency(const SimulationClockId& clock_id,
+                                            const float& frequency) {
+  VTR_ASSERT(valid_clock_id(clock_id));
+  clock_frequencies_[clock_id] = frequency;
 }
 
 void SimulationSetting::set_num_clock_cycles(const size_t& num_clk_cycles) {
@@ -211,5 +269,10 @@ void SimulationSetting::set_stimuli_input_slew(const e_sim_signal_type& signal_t
 bool SimulationSetting::valid_signal_threshold(const float& threshold) const {
   return (0. < threshold) && (threshold < 1);
 }
+
+bool SimulationSetting::valid_clock_id(const SimulationClockId& clock_id) const {
+  return ( size_t(clock_id) < clock_ids_.size() ) && ( clock_id == clock_ids_[clock_id] ); 
+}
+
 
 } /* namespace openfpga ends */
