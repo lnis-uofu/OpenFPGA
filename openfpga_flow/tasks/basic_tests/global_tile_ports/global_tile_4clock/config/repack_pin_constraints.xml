@@ -1,0 +1,5 @@
+<repack_pin_constraints>
+  <pin_constraint tile="clb" name="clk[0]" net="clk0"/>
+  <pin_constraint tile="clb" name="clk[1]" net="clk1"/>
+</repack_pin_constraints>
+
