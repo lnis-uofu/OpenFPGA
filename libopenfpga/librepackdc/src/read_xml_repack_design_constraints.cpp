@@ -38,8 +38,8 @@ void read_xml_pin_constraint(pugi::xml_node& xml_pin_constraint,
                    "Fail to create design constraint!\n");
   }
 
-  repack_design_constraints.set_tile(design_constraint_id,
-                                     get_attribute(xml_pin_constraint, "tile", loc_data).as_string());
+  repack_design_constraints.set_pb_type(design_constraint_id,
+                                        get_attribute(xml_pin_constraint, "pb_type", loc_data).as_string());
 
   openfpga::PortParser port_parser(get_attribute(xml_pin_constraint, "pin", loc_data).as_string());
 

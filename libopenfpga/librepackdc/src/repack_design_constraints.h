@@ -49,8 +49,8 @@ class RepackDesignConstraints {
     /* Get the type of constraint */
     e_design_constraint_type type(const RepackDesignConstraintId& repack_design_constraint_id) const;
 
-    /* Get the tile name to be constrained */
-    std::string tile(const RepackDesignConstraintId& repack_design_constraint_id) const;
+    /* Get the pb_type name to be constrained */
+    std::string pb_type(const RepackDesignConstraintId& repack_design_constraint_id) const;
 
     /* Get the pin to be constrained */
     openfpga::BasicPort pin(const RepackDesignConstraintId& repack_design_constraint_id) const;
@@ -69,9 +69,9 @@ class RepackDesignConstraints {
     /* Add a design constraint to storage */
     RepackDesignConstraintId create_design_constraint(const e_design_constraint_type& repack_design_constraint_type);
 
-    /* Set the tile name to be constrained */
-    void set_tile(const RepackDesignConstraintId& repack_design_constraint_id,
-                  const std::string& tile);
+    /* Set the pb_type name to be constrained */
+    void set_pb_type(const RepackDesignConstraintId& repack_design_constraint_id,
+                     const std::string& pb_type);
 
     /* Set the pin to be constrained */
     void set_pin(const RepackDesignConstraintId& repack_design_constraint_id,
@@ -91,7 +91,7 @@ class RepackDesignConstraints {
     vtr::vector<RepackDesignConstraintId, e_design_constraint_type> repack_design_constraint_types_;
 
     /* Tiles to constraint */
-    vtr::vector<RepackDesignConstraintId, std::string> repack_design_constraint_tiles_;
+    vtr::vector<RepackDesignConstraintId, std::string> repack_design_constraint_pb_types_;
 
     /* Pins to constraint */
     vtr::vector<RepackDesignConstraintId, openfpga::BasicPort> repack_design_constraint_pins_;

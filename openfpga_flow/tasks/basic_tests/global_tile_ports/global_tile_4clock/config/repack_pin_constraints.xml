@@ -6,9 +6,9 @@
        - the clk[2] port of all the clb tiles available in the FPGA fabric
        - the clk[3] port of all the clb tiles available in the FPGA fabric
     -->
-  <pin_constraint tile="clb" pin="clk[0]" net="clk0"/>
-  <pin_constraint tile="clb" pin="clk[1]" net="clk1"/>
-  <pin_constraint tile="clb" pin="clk[2]" net="OPEN"/>
-  <pin_constraint tile="clb" pin="clk[3]" net="OPEN"/>
+  <pin_constraint pb_type="clb" pin="clk[0]" net="clk0"/>
+  <pin_constraint pb_type="clb" pin="clk[1]" net="clk1"/>
+  <pin_constraint pb_type="clb" pin="clk[2]" net="OPEN"/>
+  <pin_constraint pb_type="clb" pin="clk[3]" net="OPEN"/>
 </repack_pin_constraints>
 

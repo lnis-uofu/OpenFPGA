@@ -32,10 +32,10 @@ RepackDesignConstraints::e_design_constraint_type RepackDesignConstraints::type(
   return repack_design_constraint_types_[repack_design_constraint_id]; 
 }
 
-std::string RepackDesignConstraints::tile(const RepackDesignConstraintId& repack_design_constraint_id) const {
+std::string RepackDesignConstraints::pb_type(const RepackDesignConstraintId& repack_design_constraint_id) const {
   /* validate the design_constraint_id */
   VTR_ASSERT(valid_design_constraint_id(repack_design_constraint_id));
-  return repack_design_constraint_tiles_[repack_design_constraint_id]; 
+  return repack_design_constraint_pb_types_[repack_design_constraint_id]; 
 }
 
 openfpga::BasicPort RepackDesignConstraints::pin(const RepackDesignConstraintId& repack_design_constraint_id) const {
@@ -60,7 +60,7 @@ bool RepackDesignConstraints::empty() const {
 void RepackDesignConstraints::reserve_design_constraints(const size_t& num_design_constraints) {
   repack_design_constraint_ids_.reserve(num_design_constraints);
   repack_design_constraint_types_.reserve(num_design_constraints);
-  repack_design_constraint_tiles_.reserve(num_design_constraints);
+  repack_design_constraint_pb_types_.reserve(num_design_constraints);
   repack_design_constraint_pins_.reserve(num_design_constraints);
   repack_design_constraint_nets_.reserve(num_design_constraints);
 }
@@ -71,18 +71,18 @@ RepackDesignConstraintId RepackDesignConstraints::create_design_constraint(const
   
   repack_design_constraint_ids_.push_back(repack_design_constraint_id);
   repack_design_constraint_types_.push_back(repack_design_constraint_type);
-  repack_design_constraint_tiles_.emplace_back();
+  repack_design_constraint_pb_types_.emplace_back();
   repack_design_constraint_pins_.emplace_back();
   repack_design_constraint_nets_.emplace_back();
   
   return repack_design_constraint_id;
 }
 
-void RepackDesignConstraints::set_tile(const RepackDesignConstraintId& repack_design_constraint_id,
-                                       const std::string& tile) {
+void RepackDesignConstraints::set_pb_type(const RepackDesignConstraintId& repack_design_constraint_id,
+                                          const std::string& pb_type) {
   /* validate the design_constraint_id */
   VTR_ASSERT(valid_design_constraint_id(repack_design_constraint_id));
-  repack_design_constraint_tiles_[repack_design_constraint_id] = tile;
+  repack_design_constraint_pb_types_[repack_design_constraint_id] = pb_type;
 }
 
 void RepackDesignConstraints::set_pin(const RepackDesignConstraintId& repack_design_constraint_id,
