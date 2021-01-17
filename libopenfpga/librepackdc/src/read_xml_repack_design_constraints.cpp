@@ -66,7 +66,7 @@ RepackDesignConstraints read_xml_repack_design_constraints(const char* design_co
   try {
     loc_data = pugiutil::load_xml(doc, design_constraint_fname);
 
-    pugi::xml_node xml_root = get_single_child(doc, "repack_design_constraint", loc_data);
+    pugi::xml_node xml_root = get_single_child(doc, "repack_design_constraints", loc_data);
 
     size_t num_design_constraints = std::distance(xml_root.children().begin(), xml_root.children().end());
     /* Reserve memory space for the region */
