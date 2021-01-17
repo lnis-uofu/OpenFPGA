@@ -410,6 +410,33 @@ void add_lb_router_nets(LbRouter& lb_router,
 
     /* Find the net mapped to this pin in clustering results*/
     AtomNetId atom_net_id = pb_pin_mapped_nets[source_pb_pin];
+
+    /* Check if the net information is constrained or not */
+    std::string constrained_net_name;
+    for (const RepackDesignConstraintId& design_constraint : design_constraints.design_constraints()) {
+      /* All the pin must have only 1 bit */
+      VTR_ASSERT_SAFE(1 == design_constraints.pin(design_constraint).get_width());
+      /* If found a constraint, record the net name */
+      if ( (std::string(lb_type->pb_type->name) == design_constraints.pb_type(design_constraint))
+         && (std::string(source_pb_pin->port->name) == design_constraints.pin(design_constraint).get_name()) 
+         && (size_t(source_pb_pin->pin_number) == design_constraints.pin(design_constraint).get_lsb())) {
+        constrained_net_name = design_constraints.net(design_constraint);
+        break;
+      }
+    }
+    /* If the pin is constrained, we need to 
+     * - if this is an open net, for invalid net then
+     * - if this is valid net name, find the net id from atom_netlist and overwrite the atom net id to mapped
+     */
+    if (!constrained_net_name.empty()) {
+      if (std::string(REPACK_DESIGN_CONSTRAINT_OPEN_NET) == constrained_net_name) {
+        atom_net_id == AtomNetId::INVALID();
+      } else {
+        VTR_ASSERT_SAFE(std::string(REPACK_DESIGN_CONSTRAINT_OPEN_NET) != constrained_net_name);
+        atom_net_id = atom_ctx.nlist.find_net(constrained_net_name); 
+      }
+    }
+
     /* Bypass unmapped pins */
     if (AtomNetId::INVALID() == atom_net_id) {
       continue;
