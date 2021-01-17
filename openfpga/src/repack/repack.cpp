@@ -339,6 +339,7 @@ void add_lb_router_nets(LbRouter& lb_router,
                         const VprDeviceAnnotation& device_annotation,
                         const ClusteringContext& clustering_ctx,
                         const VprClusteringAnnotation& clustering_annotation,
+                        const RepackDesignConstraints& design_constraints,
                         const ClusterBlockId& block_id,
                         const bool& verbose) {
   size_t net_counter = 0;
@@ -542,6 +543,7 @@ void repack_cluster(const AtomContext& atom_ctx,
                     const ClusteringContext& clustering_ctx,
                     const VprDeviceAnnotation& device_annotation,
                     VprClusteringAnnotation& clustering_annotation,
+                    const RepackDesignConstraints& design_constraints,
                     const ClusterBlockId& block_id,
                     const bool& verbose) {
   /* Get the pb graph that current clustered block is mapped to */
@@ -563,6 +565,7 @@ void repack_cluster(const AtomContext& atom_ctx,
   /* Add nets to be routed with source and terminals */
   add_lb_router_nets(lb_router, lb_type, lb_rr_graph, atom_ctx, device_annotation,
                      clustering_ctx, const_cast<const VprClusteringAnnotation&>(clustering_annotation),
+                     design_constraints,
                      block_id, verbose);
 
   /* Initialize the modes to expand routing trees with the physical modes in device annotation
@@ -607,12 +610,15 @@ void repack_clusters(const AtomContext& atom_ctx,
                      const ClusteringContext& clustering_ctx,
                      const VprDeviceAnnotation& device_annotation,
                      VprClusteringAnnotation& clustering_annotation,
+                     const RepackDesignConstraints& design_constraints,
                      const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Repack clustered blocks to physical implementation of logical tile");
 
   for (auto blk_id : clustering_ctx.clb_nlist.blocks()) {
     repack_cluster(atom_ctx, clustering_ctx, 
-                   device_annotation, clustering_annotation, 
+                   device_annotation,
+                   clustering_annotation, 
+                   design_constraints,
                    blk_id, verbose);
   }
 }
@@ -632,6 +638,7 @@ void pack_physical_pbs(const DeviceContext& device_ctx,
                        const ClusteringContext& clustering_ctx,
                        VprDeviceAnnotation& device_annotation,
                        VprClusteringAnnotation& clustering_annotation,
+                       const RepackDesignConstraints& design_constraints,
                        const bool& verbose) {
 
   /* build the routing resource graph for each logical tile */
@@ -642,6 +649,7 @@ void pack_physical_pbs(const DeviceContext& device_ctx,
   /* Call the LbRouter to re-pack each clustered block to physical implementation */ 
   repack_clusters(atom_ctx, clustering_ctx, 
                   const_cast<const VprDeviceAnnotation&>(device_annotation), clustering_annotation, 
+                  design_constraints,
                   verbose);
 }
 
