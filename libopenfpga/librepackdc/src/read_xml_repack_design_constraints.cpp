@@ -41,11 +41,6 @@ void read_xml_pin_constraint(pugi::xml_node& xml_pin_constraint,
   repack_design_constraints.set_tile(design_constraint_id,
                                      get_attribute(xml_pin_constraint, "tile", loc_data).as_string());
 
-  repack_design_constraints.set_tile_coordinate(design_constraint_id,
-                                                vtr::Point<size_t>(get_attribute(xml_pin_constraint, "x", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(-1),
-                                                get_attribute(xml_pin_constraint, "y", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(-1)));
-
-
   openfpga::PortParser port_parser(get_attribute(xml_pin_constraint, "pin", loc_data).as_string());
 
   repack_design_constraints.set_pin(design_constraint_id,

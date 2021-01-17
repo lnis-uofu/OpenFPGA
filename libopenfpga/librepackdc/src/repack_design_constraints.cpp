@@ -38,13 +38,6 @@ std::string RepackDesignConstraints::tile(const RepackDesignConstraintId& repack
   return repack_design_constraint_tiles_[repack_design_constraint_id]; 
 }
 
-vtr::Point<size_t> RepackDesignConstraints::tile_coordinate(const RepackDesignConstraintId& repack_design_constraint_id) const {
-  /* validate the design_constraint_id */
-  VTR_ASSERT(valid_design_constraint_id(repack_design_constraint_id));
-  return vtr::Point<size_t>(repack_design_constraint_tiles_x_[repack_design_constraint_id],
-                            repack_design_constraint_tiles_y_[repack_design_constraint_id]);
-}
-
 openfpga::BasicPort RepackDesignConstraints::pin(const RepackDesignConstraintId& repack_design_constraint_id) const {
   /* validate the design_constraint_id */
   VTR_ASSERT(valid_design_constraint_id(repack_design_constraint_id));
@@ -68,8 +61,6 @@ void RepackDesignConstraints::reserve_design_constraints(const size_t& num_desig
   repack_design_constraint_ids_.reserve(num_design_constraints);
   repack_design_constraint_types_.reserve(num_design_constraints);
   repack_design_constraint_tiles_.reserve(num_design_constraints);
-  repack_design_constraint_tiles_x_.reserve(num_design_constraints);
-  repack_design_constraint_tiles_y_.reserve(num_design_constraints);
   repack_design_constraint_pins_.reserve(num_design_constraints);
   repack_design_constraint_nets_.reserve(num_design_constraints);
 }
@@ -81,8 +72,6 @@ RepackDesignConstraintId RepackDesignConstraints::create_design_constraint(const
   repack_design_constraint_ids_.push_back(repack_design_constraint_id);
   repack_design_constraint_types_.push_back(repack_design_constraint_type);
   repack_design_constraint_tiles_.emplace_back();
-  repack_design_constraint_tiles_x_.push_back(size_t(-1));
-  repack_design_constraint_tiles_y_.push_back(size_t(-1));
   repack_design_constraint_pins_.emplace_back();
   repack_design_constraint_nets_.emplace_back();
   
@@ -94,14 +83,6 @@ void RepackDesignConstraints::set_tile(const RepackDesignConstraintId& repack_de
   /* validate the design_constraint_id */
   VTR_ASSERT(valid_design_constraint_id(repack_design_constraint_id));
   repack_design_constraint_tiles_[repack_design_constraint_id] = tile;
-}
-
-void RepackDesignConstraints::set_tile_coordinate(const RepackDesignConstraintId& repack_design_constraint_id,
-                                                  const vtr::Point<size_t>& tile_coordinate) {
-  /* validate the design_constraint_id */
-  VTR_ASSERT(valid_design_constraint_id(repack_design_constraint_id));
-  repack_design_constraint_tiles_x_[repack_design_constraint_id] = tile_coordinate.x();
-  repack_design_constraint_tiles_y_[repack_design_constraint_id] = tile_coordinate.y();
 }
 
 void RepackDesignConstraints::set_pin(const RepackDesignConstraintId& repack_design_constraint_id,

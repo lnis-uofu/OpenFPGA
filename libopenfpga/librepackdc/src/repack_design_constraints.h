@@ -52,9 +52,6 @@ class RepackDesignConstraints {
     /* Get the tile name to be constrained */
     std::string tile(const RepackDesignConstraintId& repack_design_constraint_id) const;
 
-    /* Get the tile coordinate to be constrained */
-    vtr::Point<size_t> tile_coordinate(const RepackDesignConstraintId& repack_design_constraint_id) const;
-
     /* Get the pin to be constrained */
     openfpga::BasicPort pin(const RepackDesignConstraintId& repack_design_constraint_id) const;
 
@@ -76,10 +73,6 @@ class RepackDesignConstraints {
     void set_tile(const RepackDesignConstraintId& repack_design_constraint_id,
                   const std::string& tile);
 
-    /* Set the tile coordinate to be constrained */
-    void set_tile_coordinate(const RepackDesignConstraintId& repack_design_constraint_id,
-                             const vtr::Point<size_t>& tile_coordinate);
-
     /* Set the pin to be constrained */
     void set_pin(const RepackDesignConstraintId& repack_design_constraint_id,
                  const openfpga::BasicPort& pin);
@@ -99,12 +92,6 @@ class RepackDesignConstraints {
 
     /* Tiles to constraint */
     vtr::vector<RepackDesignConstraintId, std::string> repack_design_constraint_tiles_;
-
-    /* Coordinates of tiles to constraint
-     * Avoid using an object but a flatten way to be memory efficient
-     */
-    vtr::vector<RepackDesignConstraintId, size_t> repack_design_constraint_tiles_x_;
-    vtr::vector<RepackDesignConstraintId, size_t> repack_design_constraint_tiles_y_;
 
     /* Pins to constraint */
     vtr::vector<RepackDesignConstraintId, openfpga::BasicPort> repack_design_constraint_pins_;
