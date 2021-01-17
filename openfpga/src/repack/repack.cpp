@@ -240,9 +240,9 @@ std::vector<t_pb_graph_pin*> find_routed_pb_graph_pins_atom_net(const t_pb* pb,
  * Note: this is ONLY applicable to the pb_pin of top-level pb_graph_node 
  ***************************************************************************************/
 static 
-int find_pb_route_remapped_source_pb_pin(const t_pb* pb,
-                                         const t_pb_graph_pin* source_pb_pin,
-                                         const AtomNetId& atom_net_id) {
+std::vector<int> find_pb_route_remapped_source_pb_pin(const t_pb* pb,
+                                                      const t_pb_graph_pin* source_pb_pin,
+                                                      const AtomNetId& atom_net_id) {
   VTR_ASSERT(true == source_pb_pin->parent_node->is_root()); 
 
   std::vector<int> pb_route_indices;
@@ -268,9 +268,7 @@ int find_pb_route_remapped_source_pb_pin(const t_pb* pb,
     } 
   }
 
-  VTR_ASSERT(1 == pb_route_indices.size());
-
-  return pb_route_indices[0];
+  return pb_route_indices;
 }
 
 /***************************************************************************************
@@ -424,23 +422,51 @@ void add_lb_router_nets(LbRouter& lb_router,
         break;
       }
     }
+
+    /* Find the constrained net mapped to this pin in clustering results */
+    AtomNetId constrained_atom_net_id = AtomNetId::INVALID();
+
     /* If the pin is constrained, we need to 
      * - if this is an open net, for invalid net then
-     * - if this is valid net name, find the net id from atom_netlist and overwrite the atom net id to mapped
+     * - if this is valid net name, find the net id from atom_netlist 
+     *   and overwrite the atom net id to mapped
      */
     if (!constrained_net_name.empty()) {
-      if (std::string(REPACK_DESIGN_CONSTRAINT_OPEN_NET) == constrained_net_name) {
-        atom_net_id == AtomNetId::INVALID();
-      } else {
-        VTR_ASSERT_SAFE(std::string(REPACK_DESIGN_CONSTRAINT_OPEN_NET) != constrained_net_name);
-        atom_net_id = atom_ctx.nlist.find_net(constrained_net_name); 
+      if (std::string(REPACK_DESIGN_CONSTRAINT_OPEN_NET) != constrained_net_name) {
+        constrained_atom_net_id = atom_ctx.nlist.find_net(constrained_net_name); 
+        if (false == atom_ctx.nlist.valid_net_id(constrained_atom_net_id)) {
+          VTR_LOG_WARN("Invalid net '%s' to be constrained! Will drop the constraint in repacking\n", 
+                       constrained_net_name.c_str());
+        }
       }
+    } else {
+      VTR_ASSERT_SAFE(constrained_net_name.empty());
+      constrained_atom_net_id = atom_net_id;
     }
 
-    /* Bypass unmapped pins */
-    if (AtomNetId::INVALID() == atom_net_id) {
+    /* Bypass unmapped pins. There are 4 conditions to consider
+     * +======+=================+=============+================================+
+     * | Case | Packing results | Constraints | Decision to route              |
+     * +======+=================+=============+================================+
+     * |  0   |  Unmapped       | Unmapped    | No routing needed              |
+     * +======+=================+=============+================================+
+     * |  1   |  Unmapped       | Mapped      | Find the pb source pin that    |
+     * |      |                 |             | drives the constrained net and |
+     * |      |                 |             | use it to find sink nodes      |
+     * +======+=================+=============+================================+
+     * |  2   |  Mapped         | Unmapped    | No routing needed              |
+     * +======+=================+=============+================================+
+     * |  3   |  Mapped         | Mapped      | Route with the constrained net |
+     * |      |                 |             | but use the packing net id to  |
+     * |      |                 |             | find the sink nodes to route   |
+     * +======+=================+=============+================================+
+     */
+    if (AtomNetId::INVALID() == constrained_atom_net_id) {
       continue;
     }
+
+    /* If we have a net to route, it must be the constrained net */
+    AtomNetId atom_net_id_to_route = constrained_atom_net_id;
 
     /* The outputs of pb_graph_node is INTERMEDIATE node in the routing resource graph,
      * they are all connected to a common source node
@@ -448,20 +474,35 @@ void add_lb_router_nets(LbRouter& lb_router,
     LbRRNodeId source_lb_rr_node = lb_rr_graph.find_node(LB_INTERMEDIATE, source_pb_pin);
     VTR_ASSERT(true == lb_rr_graph.valid_node_id(source_lb_rr_node));
 
-    int pb_route_index = find_pb_route_remapped_source_pb_pin(pb, source_pb_pin, atom_net_id);
+    /* As the pin remapping is allowed during routing, we should
+     * - Find the routing traces from packing results which is mapped to the net 
+     *   from the same port (as remapping is allowed for pins in the same port only)
+     * - Find the source pb_graph_pin that drives the routing traces during packing
+     * - Then we can find the sink nodes
+     */
+    std::vector<int> pb_route_indices = find_pb_route_remapped_source_pb_pin(pb, source_pb_pin, atom_net_id_to_route);
+    /* It could happen that the constrained net is NOT used in this clb, we just skip it for routing 
+     * For example, a clkB net is never mapped to any ports in the pb that is clocked by clkA net 
+     * */
+    int pb_route_index;
+    if (0 == pb_route_indices.size()) {
+      continue;
+    } else {
+      VTR_ASSERT(1 == pb_route_indices.size());
+      pb_route_index = pb_route_indices[0];
+    }
     t_pb_graph_pin* packing_source_pb_pin = get_pb_graph_node_pin_from_block_pin(block_id, pb_route_index);
     VTR_ASSERT(nullptr != packing_source_pb_pin);
 
     /* Find all the sink pins in the pb_route, we walk through the input pins and find the pin  */
-    std::vector<t_pb_graph_pin*> sink_pb_graph_pins = find_routed_pb_graph_pins_atom_net(pb, source_pb_pin, packing_source_pb_pin, atom_net_id, device_annotation, pb_pin_mapped_nets, pb_graph_pin_lookup_from_index);
+    std::vector<t_pb_graph_pin*> sink_pb_graph_pins = find_routed_pb_graph_pins_atom_net(pb, source_pb_pin, packing_source_pb_pin, atom_net_id_to_route, device_annotation, pb_pin_mapped_nets, pb_graph_pin_lookup_from_index);
     std::vector<LbRRNodeId> sink_lb_rr_nodes = find_lb_net_physical_sink_lb_rr_nodes(lb_rr_graph, sink_pb_graph_pins, device_annotation);
     VTR_ASSERT(sink_lb_rr_nodes.size() == sink_pb_graph_pins.size());
 
-    /* Printf for debugging only, may be enabled if verbose is enabled
-     */
+    /* Output verbose messages for debugging only */
     VTR_LOGV(verbose,
              "Pb route for Net %s:\n", 
-             atom_ctx.nlist.net_name(atom_net_id).c_str());
+             atom_ctx.nlist.net_name(atom_net_id_to_route).c_str());
     VTR_LOGV(verbose,
              "Source node:\n\t%s -> %s\n",
              source_pb_pin->to_string().c_str(),
@@ -477,7 +518,7 @@ void add_lb_router_nets(LbRouter& lb_router,
     add_lb_router_net_to_route(lb_router, lb_rr_graph,
                                std::vector<LbRRNodeId>(1, source_lb_rr_node),
                                sink_lb_rr_nodes,
-                               atom_ctx, atom_net_id);
+                               atom_ctx, atom_net_id_to_route);
 
     net_counter++;
   }
