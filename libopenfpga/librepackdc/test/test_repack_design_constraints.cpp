@@ -25,7 +25,7 @@ int main(int argc, const char** argv) {
    * This is optional only used when there is a second argument
    */
   if (3 <= argc) { 
-    write_xml_repack_design_constraints(argv[2], test_key);
+    write_xml_repack_design_constraints(argv[2], design_constraints);
     VTR_LOG("Echo the repack design constraints to an XML file: %s.\n",
             argv[2]);
   }
