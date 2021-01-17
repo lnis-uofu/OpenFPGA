@@ -42,8 +42,8 @@ void read_xml_pin_constraint(pugi::xml_node& xml_pin_constraint,
                                      get_attribute(xml_pin_constraint, "tile", loc_data).as_string());
 
   repack_design_constraints.set_tile_coordinate(design_constraint_id,
-                                                get_attribute(xml_pin_constraint, "x", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(-1),
-                                                get_attribute(xml_pin_constraint, "y", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(-1));
+                                                vtr::Point<size_t>(get_attribute(xml_pin_constraint, "x", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(-1),
+                                                get_attribute(xml_pin_constraint, "y", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(-1)));
 
 
   openfpga::PortParser port_parser(get_attribute(xml_pin_constraint, "pin", loc_data).as_string());
@@ -73,9 +73,9 @@ RepackDesignConstraints read_xml_repack_design_constraints(const char* design_co
 
     pugi::xml_node xml_root = get_single_child(doc, "repack_design_constraint", loc_data);
 
-    size_t num_design_constraintss = std::distance(xml_root.children().begin(), xml_root.children().end());
+    size_t num_design_constraints = std::distance(xml_root.children().begin(), xml_root.children().end());
     /* Reserve memory space for the region */
-    fabric_key.reserve_design_constraints(num_design_constraints);
+    repack_design_constraints.reserve_design_constraints(num_design_constraints);
 
     for (pugi::xml_node xml_design_constraint : xml_root.children()) {
       /* Error out if the XML child has an invalid name! */
@@ -89,6 +89,6 @@ RepackDesignConstraints read_xml_repack_design_constraints(const char* design_co
                    "%s", e.what());
   }
 
-  return fabric_key; 
+  return repack_design_constraints; 
 }
 

@@ -45,7 +45,7 @@ int write_xml_pin_constraint(std::fstream& fp,
   write_xml_attribute(fp, "tile", repack_design_constraints.tile(design_constraint).c_str());
   write_xml_attribute(fp, "x", repack_design_constraints.tile_coordinate(design_constraint).x());
   write_xml_attribute(fp, "y", repack_design_constraints.tile_coordinate(design_constraint).y());
-  write_xml_attribute(fp, "pin", generate_xml_port_name(repack_design_constraints.net(design_constraint)).c_str());
+  write_xml_attribute(fp, "pin", generate_xml_port_name(repack_design_constraints.pin(design_constraint)).c_str());
   write_xml_attribute(fp, "net", repack_design_constraints.net(design_constraint).c_str());
 
   fp << "/>" << "\n";

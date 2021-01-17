@@ -10,6 +10,10 @@
 
 /* Headers from vtrutil library */
 #include "vtr_vector.h"
+#include "vtr_geometry.h"
+
+/* Headers from openfpgautil library */
+#include "openfpga_port.h"
 
 #include "repack_design_constraints_fwd.h"
 
@@ -52,7 +56,7 @@ class RepackDesignConstraints {
     vtr::Point<size_t> tile_coordinate(const RepackDesignConstraintId& repack_design_constraint_id) const;
 
     /* Get the pin to be constrained */
-    BasicPort pin(const RepackDesignConstraintId& repack_design_constraint_id) const;
+    openfpga::BasicPort pin(const RepackDesignConstraintId& repack_design_constraint_id) const;
 
     /* Get the net to be constrained */
     std::string net(const RepackDesignConstraintId& repack_design_constraint_id) const;
@@ -78,7 +82,7 @@ class RepackDesignConstraints {
 
     /* Set the pin to be constrained */
     void set_pin(const RepackDesignConstraintId& repack_design_constraint_id,
-                 const BasicPort& pin);
+                 const openfpga::BasicPort& pin);
 
     /* Set the net to be constrained */
     void set_net(const RepackDesignConstraintId& repack_design_constraint_id,
@@ -103,7 +107,7 @@ class RepackDesignConstraints {
     vtr::vector<RepackDesignConstraintId, size_t> repack_design_constraint_tiles_y_;
 
     /* Pins to constraint */
-    vtr::vector<RepackDesignConstraintId, BasicPort> repack_design_constraint_pins_;
+    vtr::vector<RepackDesignConstraintId, openfpga::BasicPort> repack_design_constraint_pins_;
 
     /* Nets to constraint */
     vtr::vector<RepackDesignConstraintId, std::string> repack_design_constraint_nets_;
