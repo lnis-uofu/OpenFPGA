@@ -20,6 +20,7 @@ set_target_properties(librepackdc PROPERTIES PREFIX "") #Avoid extra 'lib' prefi
 #Specify link-time dependancies
 target_link_libraries(librepackdc
                       libopenfpgautil
+                      libarchopenfpga
                       libvtrutil
                       libpugixml
                       libpugiutil)
