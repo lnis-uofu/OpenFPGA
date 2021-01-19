@@ -27,9 +27,9 @@
  * Return 2 if fail when creating files
  *******************************************************************/
 static 
-int write_xml_io_constraint(std::fstream& fp,
-                            const PinConstraints& pin_constraints,
-                            const PinConstraintId& pin_constraint) {
+int write_xml_pin_constraint(std::fstream& fp,
+                             const PinConstraints& pin_constraints,
+                             const PinConstraintId& pin_constraint) {
   /* Validate the file stream */
   if (false == openfpga::valid_file_stream(fp)) {
     return 2;
