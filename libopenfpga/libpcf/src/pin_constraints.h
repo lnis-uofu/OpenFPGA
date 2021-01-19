@@ -17,6 +17,9 @@
 
 #include "pin_constraints_fwd.h"
 
+/* Constants */
+constexpr char* PIN_CONSTRAINT_OPEN_NET = "OPEN";
+
 /********************************************************************
  * A data structure to describe the pin constraints for FPGA fabrics
  * This data structure may include a number of pin constraints

@@ -11,6 +11,9 @@
 #include "verilog_api.h"
 #include "openfpga_verilog.h"
 
+/* Headers from pcf library */
+#include "read_xml_pin_constraints.h"
+
 /* Include global variables of VPR */
 #include "globals.h"
 
@@ -62,6 +65,7 @@ int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
 
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
+  CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
   CommandOptionId opt_print_top_testbench = cmd.option("print_top_testbench");
   CommandOptionId opt_fast_configuration = cmd.option("fast_configuration");
@@ -89,22 +93,26 @@ int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
   options.set_include_signal_init(cmd_context.option_enable(cmd, opt_include_signal_init));
   options.set_support_icarus_simulator(cmd_context.option_enable(cmd, opt_support_icarus_simulator));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
-  
-  fpga_verilog_testbench(openfpga_ctx.module_graph(),
-                         openfpga_ctx.bitstream_manager(),
-                         openfpga_ctx.fabric_bitstream(),
-                         g_vpr_ctx.atom(),
-                         g_vpr_ctx.placement(),
-                         openfpga_ctx.io_location_map(),
-                         openfpga_ctx.fabric_global_port_info(),
-                         openfpga_ctx.vpr_netlist_annotation(),
-                         openfpga_ctx.arch().circuit_lib,
-                         openfpga_ctx.simulation_setting(),
-                         openfpga_ctx.arch().config_protocol,
-                         options);
 
-  /* TODO: should identify the error code from internal function execution */
-  return CMD_EXEC_SUCCESS;
+  /* If pin constraints are enabled by command options, read the file */
+  PinConstraints pin_constraints;
+  if (true == cmd_context.option_enable(cmd, opt_pcf)) {
+    pin_constraints = read_xml_pin_constraints(cmd_context.option_value(cmd, opt_pcf).c_str());
+  }
+  
+  return fpga_verilog_testbench(openfpga_ctx.module_graph(),
+                                openfpga_ctx.bitstream_manager(),
+                                openfpga_ctx.fabric_bitstream(),
+                                g_vpr_ctx.atom(),
+                                g_vpr_ctx.placement(),
+                                pin_constraints,
+                                openfpga_ctx.io_location_map(),
+                                openfpga_ctx.fabric_global_port_info(),
+                                openfpga_ctx.vpr_netlist_annotation(),
+                                openfpga_ctx.arch().circuit_lib,
+                                openfpga_ctx.simulation_setting(),
+                                openfpga_ctx.arch().config_protocol,
+                                options);
 } 
 
 } /* end namespace openfpga */

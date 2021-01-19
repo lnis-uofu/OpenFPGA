@@ -7,6 +7,8 @@
 #include "vtr_assert.h"
 #include "vtr_time.h"
 
+#include "command_exit_codes.h"
+
 #include "circuit_library_utils.h"
 
 /* Headers from openfpgautil library */
@@ -147,24 +149,27 @@ void fpga_fabric_verilog(ModuleManager &module_manager,
  *    This testbench is created for quick verification and formal verification purpose.
  *  - Verilog netlist including preprocessing flags and all the Verilog netlists that have been generated
  ********************************************************************/
-void fpga_verilog_testbench(const ModuleManager &module_manager,
-                            const BitstreamManager &bitstream_manager,
-                            const FabricBitstream &fabric_bitstream,
-                            const AtomContext &atom_ctx,
-                            const PlacementContext &place_ctx,
-                            const IoLocationMap &io_location_map,
-                            const FabricGlobalPortInfo &fabric_global_port_info,
-                            const VprNetlistAnnotation &netlist_annotation,
-                            const CircuitLibrary &circuit_lib,
-                            const SimulationSetting &simulation_setting,
-                            const ConfigProtocol &config_protocol,
-                            const VerilogTestbenchOption &options) {
+int fpga_verilog_testbench(const ModuleManager &module_manager,
+                           const BitstreamManager &bitstream_manager,
+                           const FabricBitstream &fabric_bitstream,
+                           const AtomContext &atom_ctx,
+                           const PlacementContext &place_ctx,
+                           const PinConstraints& pin_constraints,
+                           const IoLocationMap &io_location_map,
+                           const FabricGlobalPortInfo &fabric_global_port_info,
+                           const VprNetlistAnnotation &netlist_annotation,
+                           const CircuitLibrary &circuit_lib,
+                           const SimulationSetting &simulation_setting,
+                           const ConfigProtocol &config_protocol,
+                           const VerilogTestbenchOption &options) {
 
   vtr::ScopedStartFinishTimer timer("Write Verilog testbenches for FPGA fabric\n");
 
   std::string src_dir_path = format_dir_path(options.output_directory());
 
   std::string netlist_name = atom_ctx.nlist.netlist_name();
+
+  int status = CMD_EXEC_SUCCESS;
 
   /* Create directories */
   create_directory(src_dir_path);
@@ -176,14 +181,19 @@ void fpga_verilog_testbench(const ModuleManager &module_manager,
   /* Generate wrapper module for FPGA fabric (mapped by the input benchmark and pre-configured testbench for verification */
   if (true == options.print_formal_verification_top_netlist()) {
     std::string formal_verification_top_netlist_file_path = src_dir_path + netlist_name + std::string(FORMAL_VERIFICATION_VERILOG_FILE_POSTFIX);
-    print_verilog_preconfig_top_module(module_manager, bitstream_manager,
-                                       config_protocol,
-                                       circuit_lib, fabric_global_port_info,
-                                       atom_ctx, place_ctx, io_location_map,
-                                       netlist_annotation,
-                                       netlist_name,
-                                       formal_verification_top_netlist_file_path,
-                                       options.explicit_port_mapping());
+    status = print_verilog_preconfig_top_module(module_manager, bitstream_manager,
+                                                config_protocol,
+                                                circuit_lib, fabric_global_port_info,
+                                                atom_ctx, place_ctx,
+                                                pin_constraints,
+                                                io_location_map,
+                                                netlist_annotation,
+                                                netlist_name,
+                                                formal_verification_top_netlist_file_path,
+                                                options.explicit_port_mapping());
+    if (status == CMD_EXEC_FATAL_ERROR) {
+      return status;
+    }
   }
 
   if (true == options.print_preconfig_top_testbench()) {
@@ -234,6 +244,8 @@ void fpga_verilog_testbench(const ModuleManager &module_manager,
                                            netlist_name,
                                            options.fabric_netlist_file_path(),
                                            options.reference_benchmark_file_path());
+
+  return status;
 }
 
 } /* end namespace openfpga */

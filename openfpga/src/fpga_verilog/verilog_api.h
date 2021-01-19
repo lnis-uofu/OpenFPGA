@@ -19,6 +19,7 @@
 #include "bitstream_manager.h"
 #include "fabric_bitstream.h"
 #include "simulation_setting.h"
+#include "pin_constraints.h"
 #include "io_location_map.h"
 #include "fabric_global_port_info.h"
 #include "vpr_netlist_annotation.h"
@@ -42,18 +43,19 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
                          const DeviceRRGSB& device_rr_gsb,
                          const FabricVerilogOption& options);
 
-void fpga_verilog_testbench(const ModuleManager& module_manager,
-                            const BitstreamManager& bitstream_manager, 
-                            const FabricBitstream& fabric_bitstream, 
-                            const AtomContext& atom_ctx, 
-                            const PlacementContext& place_ctx, 
-                            const IoLocationMap& io_location_map,
-                            const FabricGlobalPortInfo &fabric_global_port_info,
-                            const VprNetlistAnnotation& netlist_annotation, 
-                            const CircuitLibrary& circuit_lib,
-                            const SimulationSetting& simulation_parameters,
-                            const ConfigProtocol& config_protocol,
-                            const VerilogTestbenchOption& options);
+int fpga_verilog_testbench(const ModuleManager& module_manager,
+                           const BitstreamManager& bitstream_manager, 
+                           const FabricBitstream& fabric_bitstream, 
+                           const AtomContext& atom_ctx, 
+                           const PlacementContext& place_ctx, 
+                           const PinConstraints& pin_constraints,
+                           const IoLocationMap& io_location_map,
+                           const FabricGlobalPortInfo &fabric_global_port_info,
+                           const VprNetlistAnnotation& netlist_annotation, 
+                           const CircuitLibrary& circuit_lib,
+                           const SimulationSetting& simulation_parameters,
+                           const ConfigProtocol& config_protocol,
+                           const VerilogTestbenchOption& options);
 
 
 } /* end namespace openfpga */
