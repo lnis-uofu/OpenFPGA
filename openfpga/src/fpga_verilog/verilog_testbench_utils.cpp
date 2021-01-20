@@ -476,6 +476,7 @@ void print_verilog_testbench_check(std::fstream& fp,
  * but be only used as a synchronizer in verification
  *******************************************************************/
 void print_verilog_testbench_clock_stimuli(std::fstream& fp,
+                                           const PinConstraints& pin_constraints,
                                            const SimulationSetting& simulation_parameters,
                                            const std::vector<BasicPort>& clock_ports) {
   /* Validate the file stream */
@@ -486,13 +487,23 @@ void print_verilog_testbench_clock_stimuli(std::fstream& fp,
 
     /* Find the corresponding clock frequency from the simulation parameters */
     float clk_freq_to_use = (0.5 / simulation_parameters.default_operating_clock_frequency()) / VERILOG_SIM_TIMESCALE;
-    /* FIXME: This could be buggy because the implementation clock names do NOT have to 
-     *        be the same as the clock definition in simulation settings!!!
+    /* Check pin constraints to see if this clock is constrained to a specific pin
+     * If constrained, 
+     * - connect this clock to default values if it is set to be OPEN
+     * - connect this clock to a specific clock source from simulation settings!!!
      */
-    for (const SimulationClockId& sim_clock_id : simulation_parameters.clocks()) {
-      /* If the clock name matches, we can use the clock frequency */
-      if (simulation_parameters.clock_port(sim_clock_id) == clock_port) {
-        clk_freq_to_use = (0.5 / simulation_parameters.clock_frequency(sim_clock_id)) / VERILOG_SIM_TIMESCALE;
+    VTR_ASSERT(1 == clock_port.get_width());
+    for (const PinConstraintId& pin_constraint : pin_constraints.pin_constraints()) {
+      if (clock_port.get_name() != pin_constraints.net(pin_constraint)) {
+        continue;
+      }
+      /* Skip all the unrelated pin constraints */
+      VTR_ASSERT(clock_port.get_name() == pin_constraints.net(pin_constraint));
+      /* Try to find which clock source is considered in simulation settings for this pin */
+      for (const SimulationClockId& sim_clock_id : simulation_parameters.clocks()) {
+        if (pin_constraints.pin(pin_constraint) == simulation_parameters.clock_port(sim_clock_id)) {
+          clk_freq_to_use = (0.5 / simulation_parameters.clock_frequency(sim_clock_id)) / VERILOG_SIM_TIMESCALE;
+        }
       }
     }
 

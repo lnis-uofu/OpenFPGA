@@ -203,6 +203,7 @@ int fpga_verilog_testbench(const ModuleManager &module_manager,
                                        random_top_testbench_file_path,
                                        atom_ctx,
                                        netlist_annotation,
+                                       pin_constraints,
                                        simulation_setting,
                                        options.explicit_port_mapping());
   }
