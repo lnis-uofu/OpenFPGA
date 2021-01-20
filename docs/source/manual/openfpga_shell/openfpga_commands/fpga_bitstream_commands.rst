@@ -21,7 +21,7 @@ Repack's functionality are in the following aspects:
   Apply design constraints from an external file. 
   Normally, repack takes the net mapping from VPR packing and routing results. 
   Alternatively, repack can accept the design constraints, in particular, net remapping, from an XML-based design constraint description.
-  See details in :ref:`fpga_bitstream_repack_design_constraints`.
+  See details in :ref:`file_formats_repack_design_constraints`.
 
 .. warning:: Design constraints are designed to help repacker to identify which clock net to be mapped to which pin, so that multi-clock benchmarks can be correctly implemented, in the case that VPR may not have sufficient vision on clock net mapping. **Try not to use design constraints to remap any other types of nets!!!**
    

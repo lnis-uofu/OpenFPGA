@@ -1,7 +1,7 @@
 .. _file_format_pin_constraints_file:
 
-Pin Constraints File
---------------------
+Pin Constraints File (.xml)
+---------------------------
 
 The *Pin Constraints File* (PCF) aims to create pin binding between an implementation and an FPGA fabric
 
