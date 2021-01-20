@@ -5,5 +5,7 @@
     -->
   <set_io pin="clk[0]" net="clk0"/>
   <set_io pin="clk[1]" net="clk1"/>
+  <set_io pin="clk[2]" net="OPEN"/>
+  <set_io pin="clk[3]" net="OPEN"/>
 </pin_constraints>
 
