@@ -26,6 +26,7 @@ target_link_libraries(libopenfpga
                       librepackdc
                       libfpgabitstream
                       libini
+                      libpcf
                       libvtrutil
                       libvpr)
 

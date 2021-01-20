@@ -12,6 +12,7 @@
 #include "vpr_context.h"
 #include "io_location_map.h"
 #include "vpr_netlist_annotation.h"
+#include "pin_constraints.h"
 #include "simulation_setting.h"
 
 /********************************************************************
@@ -76,6 +77,7 @@ void print_verilog_testbench_check(std::fstream& fp,
                                    const std::string& default_clock_name);
 
 void print_verilog_testbench_clock_stimuli(std::fstream& fp,
+                                           const PinConstraints& pin_constraints,
                                            const SimulationSetting& simulation_parameters,
                                            const std::vector<BasicPort>& clock_ports);
 

@@ -194,6 +194,7 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
                                         const std::string& verilog_fname,
                                         const AtomContext& atom_ctx,
                                         const VprNetlistAnnotation& netlist_annotation,
+                                        const PinConstraints& pin_constraints,
                                         const SimulationSetting& simulation_parameters,
                                         const bool& explicit_port_mapping) {
   std::string timer_message = std::string("Write configuration-skip testbench for FPGA top-level Verilog netlist implemented by '") + circuit_name.c_str() + std::string("'");
@@ -232,7 +233,9 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
   std::vector<BasicPort> clock_ports = generate_verilog_testbench_clock_port(clock_port_names, std::string(DEFAULT_CLOCK_NAME));
 
   /* Add stimuli for reset, set, clock and iopad signals */
-  print_verilog_testbench_clock_stimuli(fp, simulation_parameters, 
+  print_verilog_testbench_clock_stimuli(fp,
+                                        pin_constraints, 
+                                        simulation_parameters, 
                                         clock_ports);
   print_verilog_testbench_random_stimuli(fp, atom_ctx,
                                          netlist_annotation, 

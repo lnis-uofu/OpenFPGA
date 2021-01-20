@@ -12,6 +12,7 @@
 #include "circuit_library.h"
 #include "config_protocol.h"
 #include "vpr_context.h"
+#include "pin_constraints.h"
 #include "io_location_map.h"
 #include "fabric_global_port_info.h"
 #include "vpr_netlist_annotation.h"
@@ -33,6 +34,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                  const FabricGlobalPortInfo& global_ports,
                                  const AtomContext& atom_ctx,
                                  const PlacementContext& place_ctx,
+                                 const PinConstraints& pin_constraints,
                                  const IoLocationMap& io_location_map,
                                  const VprNetlistAnnotation& netlist_annotation,
                                  const std::string& circuit_name,
