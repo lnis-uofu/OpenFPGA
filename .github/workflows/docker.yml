@@ -1,6 +1,5 @@
 name: Build docker CI images
-on:
-  - workflow_dispatch
+on: push
 jobs:
   base_images:
     name: Push Docker images
@@ -24,14 +23,14 @@ jobs:
           context: .
           file: ./docker/Dockerfile.base
           push: true
-          tags: ghcr.io/lnis-uofu/openfpga-buildenv-base:latest
-      - name: Build test image
+          tags: ghcr.io/lnis-uofu/openfpga-build-base:latest
+      - name: Build environment image
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./docker/Dockerfile.test
+          file: ./docker/Dockerfile.env
           push: true
-          tags: ghcr.io/lnis-uofu/openfpga-buildenv-test:latest
+          tags: ghcr.io/lnis-uofu/openfpga-env:latest
   compiler_images:
     name: Build ${{ matrix.compiler }} compiler image
     needs: base_images
@@ -65,4 +64,4 @@ jobs:
           context: .
           file: ./docker/Dockerfile.${{ matrix.compiler }}
           push: true
-          tags: ghcr.io/lnis-uofu/openfpga-buildenv-${{ matrix.compiler }}:latest
+          tags: ghcr.io/lnis-uofu/openfpga-build-${{ matrix.compiler }}:latest
