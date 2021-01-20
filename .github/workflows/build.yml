@@ -1,16 +1,9 @@
 name: linux_build
 
-# Run CI on
-# - each push if no code has changed
+# Run CI on push, PR, and weekly.
 on:
   push:
-    paths:
-      - '**.c'
-      - '**.cc'
-      - '**.c\+\+'
-      - '**.cpp'
-      - '**.h'
-      - '**.hh'
+  pull_request:
   schedule:
     - cron: '0 0 * * 0 ' # weekly
 
@@ -22,8 +15,27 @@ env:
 
 # Multiple job to tests
 jobs:
+  change_detect:
+    name: "Detect code changes"
+    runs-on: ubuntu-18.04
+    outputs:
+      source_modified: ${{ steps.changes.outputs.status_code != '0'}}
+    steps:
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: Check for source code changes
+        id: changes
+        run: |
+          if ! git diff origin/master HEAD --name-status --exit-code -- . ':!openfpga_flow' ':!docs'; then
+            echo "::set-output name=status_code::$?"
+          fi
   # Test the compilation compatibility
   linux_build:
+    needs: change_detect
+    if: ${{needs.change_detect.outputs.source_modified || github.ref == 'refs/heads/master' }}
     name: ${{ matrix.config.name }}
     runs-on: ubuntu-18.04
     container: ghcr.io/lnis-uofu/openfpga-buildenv-${{ matrix.config.cc}}
@@ -141,7 +153,7 @@ jobs:
             yosys/yosys-smtbmc
   docker_distribution:
     name: Build docker image for distribution
-    if: ${{ github.ref == 'refs/heads/master'}}
+    if: ${{ github.ref == 'refs/heads/master' }}
     runs-on: ubuntu-latest
     needs: linux_build
     steps:
@@ -175,8 +187,8 @@ jobs:
           file: ./docker/Dockerfile.test
           push: true
           tags: ghcr.io/lnis-uofu/openfpga-regression-tests:latest
-  regression_tests:
-    name: Regression tests
+  artifact_regression_tests:
+    name: Regression tests on code changes
     runs-on: ubuntu-18.04
     container: ghcr.io/lnis-uofu/openfpga-buildenv-test
     needs: linux_build
@@ -212,6 +224,32 @@ jobs:
           chmod +x yosys/yosys-config
           chmod +x yosys/yosys-filterlib
           chmod +x yosys/yosys-smtbmc
+      - name: ${{matrix.config.name}}
+        shell: bash
+        run: source .github/workflows/${{matrix.config.script}}
+  docker_regression_tests:
+    needs: change_detect
+    if: ${{ !needs.change_detect.outputs.source_modified }}
+    name: Regression tests against master artifacts
+    runs-on: ubuntu-18.04
+    container: ghcr.io/lnis-uofu/openfpga-regression-tests:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: "Basic Regression Tests: GCC-8 (Ubuntu 18.04)"
+            script: basic_reg_test.sh
+          - name: "FPGA-Verilog Regression Tests: GCC-8 (Ubuntu 18.04)"
+            script: fpga_verilog_reg_test.sh
+          - name: "FPGA-Bitstream Regression Tests: GCC-8 (Ubuntu 18.04)"
+            script: fpga_bitstream_reg_test.sh
+          - name: "FPGA-SDC Regression Tests: GCC-8 (Ubuntu 18.04)"
+            script: fpga_sdc_reg_test.sh
+          - name: "FPGA-SPICE Regression Tests: GCC-8 (Ubuntu 18.04)"
+            script: fpga_spice_reg_test.sh
+    steps:
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v2
       - name: ${{matrix.config.name}}
         shell: bash
         run: source .github/workflows/${{matrix.config.script}}
