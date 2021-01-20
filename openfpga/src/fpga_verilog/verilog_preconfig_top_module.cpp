@@ -143,8 +143,9 @@ int print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
           }
         }
 
-        /* If constrained to an open net, we assign it to a default value */
-        if (std::string(PIN_CONSTRAINT_OPEN_NET) == constrained_net_name) {
+        /* If constrained to an open net or there is no clock in the benchmark, we assign it to a default value */
+        if ( (std::string(PIN_CONSTRAINT_OPEN_NET) == constrained_net_name)
+          || (true == benchmark_clock_port_names.empty())) {
           std::vector<size_t> default_values(1, fabric_global_ports.global_port_default_value(global_port_id));
           print_verilog_wire_constant_values(fp, module_clock_pin, default_values);
           continue;
