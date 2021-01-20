@@ -53,9 +53,9 @@ write_verilog_testbench
 
     Must specify the reference benchmark Verilog file if you want to output any testbenches. For example, ``--reference_benchmark_file_path /temp/benchmark/counter_post_synthesis.v``
 
-  .. option:: --pin_constraints_file <string>
+  .. option:: --pin_constraints_file <string> or -pcf <string>
 
-    Specify the *Pin Constraints File* (PCF) if you want to custom stimulus in testbenches. For example, ``pin_constraints_file pin_constraints.xml``
+    Specify the *Pin Constraints File* (PCF) if you want to custom stimulus in testbenches. For example, ``-pin_constraints_file pin_constraints.xml``
     Strongly recommend for multi-clock simulations. See detailed file format about :ref:`file_format_pin_constraints_file`.
 
   .. option:: --fast_configuration
