@@ -1,5 +1,6 @@
 name: Build docker CI images
-on: push
+on:
+  - workflow_dispatch
 jobs:
   base_images:
     name: Push Docker images

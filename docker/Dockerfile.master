@@ -1,5 +1,10 @@
 FROM ghcr.io/lnis-uofu/openfpga-env
-RUN mkdir /opt/openfpga
-COPY abc/abc ace2/ace openfpga/openfpga vpr/vpr yosys/yosys yosys/yosys-abc yosys/yosys-config yosys/yosys-filterlib yosys/yosys-smtbmc /opt/openfpga/
-RUN cd /opt/openfpga && chmod +x abc ace openfpga vpr yosys yosys-abc yosys-config yosys-filterlib yosys-smtbmc
-ENV PATH="/opt/openfpga:${PATH}"
+RUN mkdir /opt/openfpga /opt/openfpga/abc /opt/openfpga/ace2 /opt/openfpga/vpr /opt/openfpga/yosys
+COPY openfpga/openfpga /opt/openfpga/openfpga
+COPY abc/abc /opt/openfpga/abc/
+COPY ace2/ace /opt/openfpga/ace2/
+COPY vpr/vpr /opt/openfpga/vpr/
+COPY yosys/yosys yosys/yosys-abc yosys/yosys-config yosys/yosys-filterlib yosys/yosys-smtbmc /opt/openfpga/yosys/
+COPY yosys/share /opt/openfpga/yosys/share
+RUN cd /opt/openfpga && chmod +x abc/abc ace2/ace openfpga vpr/vpr yosys/yosys yosys/yosys-abc yosys/yosys-config yosys/yosys-filterlib yosys/yosys-smtbmc
+ENV PATH="/opt/openfpga:/opt/openfpga/yosys:/opt/openfpga/ace2:/opt/openfpga/abc:/opt/openfpga/vpr:${PATH}"

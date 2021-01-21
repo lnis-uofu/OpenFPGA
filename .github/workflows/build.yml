@@ -3,11 +3,10 @@ name: linux_build
 # Run CI on push, PR, and weekly.
 
 on:
-  workflow_dispatch:
-  # push:
-  # pull_request:
-  # schedule:
-  #   - cron: '0 0 * * 0 ' # weekly
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 0 * * 0 ' # weekly
 
 # Environment variables
 env:
@@ -21,7 +20,8 @@ jobs:
     name: "Detect code changes"
     runs-on: ubuntu-18.04
     outputs:
-      source_modified: ${{ steps.changes.outputs.status_code != '0'}}
+      # this is output as string, see https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
+      source_modified: ${{ steps.changes.outputs.status_code == '0' }}
     steps:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
@@ -32,14 +32,14 @@ jobs:
         id: changes
         run: |
           if git diff origin/master HEAD --name-status --exit-code -- . ':!openfpga_flow' ':!docs'; then
-            echo "::set-output name=status_code::$?"
-          else
             echo "::set-output name=status_code::0"
+          else
+            echo "::set-output name=status_code::$?"
           fi
   # Test the compilation compatibility
   linux_build:
     needs: change_detect
-    if: ${{needs.change_detect.outputs.source_modified || github.ref == 'refs/heads/master' }}
+    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) || github.ref == 'refs/heads/master' }}
     name: ${{ matrix.config.name }}
     runs-on: ubuntu-18.04
     container: ghcr.io/lnis-uofu/openfpga-build-${{ matrix.config.cc}}
@@ -226,7 +226,7 @@ jobs:
         run: source .github/workflows/${{matrix.config.script}}
   docker_regression_tests:
     needs: change_detect
-    #if: ${{ !needs.change_detect.outputs.source_modified }}
+    if: ${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
     name: Regression tests against master artifacts
     runs-on: ubuntu-18.04
     container: ghcr.io/lnis-uofu/openfpga-master:latest
@@ -247,16 +247,19 @@ jobs:
     steps:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
+        with:
+          submodules: true
       - name: ${{matrix.config.name}}
         shell: bash
-        run:
-          ln -s /opt/openfpga/abc abc/abc
-          ln -s /opt/openfpga/ace ace2/ace
-          ln -s /opt/openfpga/openfpga openfpga/openfpga
-          ln -s /opt/openfpga/vpr vpr/vpr
-          ln -s /opt/openfpga/yosys yosys/yosys
-          ln -s /opt/openfpga/yosys-abc yosys/yosys-abc
-          ln -s /opt/openfpga/yosys-config yosys/yosys-config
-          ln -s /opt/openfpga/yosys-filterlib yosys/yosys-filterlib
-          ln -s /opt/openfpga/yosys-smtbmc yosys/yosys-smtbmc
+        run: |
+          cp /opt/openfpga/abc/abc abc/abc
+          cp /opt/openfpga/ace2/ace ace2/ace
+          cp /opt/openfpga/openfpga openfpga/openfpga
+          cp /opt/openfpga/vpr/vpr vpr/vpr
+          cp /opt/openfpga/yosys/yosys yosys/yosys
+          cp /opt/openfpga/yosys/yosys-abc yosys/yosys-abc
+          cp /opt/openfpga/yosys/yosys-config yosys/yosys-config
+          cp /opt/openfpga/yosys/yosys-filterlib yosys/yosys-filterlib
+          cp /opt/openfpga/yosys/yosys-smtbmc yosys/yosys-smtbmc
+          cp -r /opt/openfpga/yosys/share yosys/share
           source .github/workflows/${{matrix.config.script}}
