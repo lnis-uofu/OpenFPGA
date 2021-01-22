@@ -30,3 +30,4 @@ yosys
 !yosys/yosys-filterlib
 !yosys/yosys-smtbmc
 !yosys/share
+!openfpga_flow
