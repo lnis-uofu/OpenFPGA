@@ -27,7 +27,7 @@ void write_xml_clock_setting(std::fstream& fp,
   fp << "\t" << "<clock_setting>" << "\n";
 
   fp << "\t\t" << "<operating";
-  write_xml_attribute(fp, "frequency", sim_setting.operating_clock_frequency());
+  write_xml_attribute(fp, "frequency", sim_setting.default_operating_clock_frequency());
 
   if (true == sim_setting.auto_select_num_clock_cycles()) {
     write_xml_attribute(fp, "num_cycles", "auto");
@@ -37,8 +37,20 @@ void write_xml_clock_setting(std::fstream& fp,
   }
 
   write_xml_attribute(fp, "slack", std::to_string(sim_setting.operating_clock_frequency_slack()).c_str());
+
+  fp << ">" << "\n";
   
-  fp << "/>" << "\n";
+  /* Output clock information one by one */
+  for (const SimulationClockId& clock_id : sim_setting.clocks()) {
+    fp << "\t\t\t" << "<clock";
+    write_xml_attribute(fp, "name", sim_setting.clock_name(clock_id).c_str());
+    write_xml_attribute(fp, "port", generate_xml_port_name(sim_setting.clock_port(clock_id)).c_str());
+    write_xml_attribute(fp, "frequency", std::to_string(sim_setting.clock_frequency(clock_id)).c_str());
+    fp << ">" << "\n";
+  }
+  
+  fp << "\t\t" << "</operating";
+  fp << ">" << "\n";
 
   fp << "\t\t" << "<operating";
   write_xml_attribute(fp, "frequency", sim_setting.programming_clock_frequency());
@@ -219,7 +231,7 @@ void write_xml_simulation_setting(std::fstream& fp,
                                   const openfpga::SimulationSetting& sim_setting) {
   /* Validate the file stream */
   openfpga::check_file_stream(fname, fp);
-  
+
   /* Write the root node <openfpga_simulation_setting>
    */
   fp << "<openfpga_simulation_setting>" << "\n";

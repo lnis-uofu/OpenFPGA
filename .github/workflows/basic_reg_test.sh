@@ -109,6 +109,7 @@ python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/tile_organization/til
 echo -e "Testing global port definition from tiles";
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/global_tile_ports/global_tile_clock --debug --show_thread_logs
 python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/global_tile_ports/global_tile_reset --debug --show_thread_logs
+python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/global_tile_ports/global_tile_4clock --debug --show_thread_logs
 
 echo -e "Testing yosys flow using custom ys script for running quicklogic device";
 python3 openfpga_flow/scripts/run_fpga_task.py quicklogic_tests/flow_test --debug --show_thread_logs

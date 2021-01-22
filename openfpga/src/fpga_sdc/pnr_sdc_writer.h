@@ -12,6 +12,7 @@
 #include "module_manager.h"
 #include "mux_library.h"
 #include "circuit_library.h"
+#include "simulation_setting.h"
 #include "fabric_global_port_info.h"
 #include "pnr_sdc_option.h"
 
@@ -23,8 +24,6 @@
 namespace openfpga {
 
 void print_pnr_sdc(const PnrSdcOption& sdc_options,
-                   const float& programming_critical_path_delay,
-                   const float& operating_critical_path_delay,
                    const DeviceContext& device_ctx,
                    const VprDeviceAnnotation& device_annotation,
                    const DeviceRRGSB& device_rr_gsb,
@@ -32,6 +31,7 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
                    const MuxLibrary& mux_lib,
                    const CircuitLibrary& circuit_lib,
                    const FabricGlobalPortInfo& global_ports,
+                   const SimulationSetting& sim_setting,
                    const bool& compact_routing_hierarchy);
 
 } /* end namespace openfpga */

@@ -710,6 +710,7 @@ int build_top_module_global_net_for_given_grid_module(ModuleManager& module_mana
 
   /* Find the port of the grid module according to the tile annotation */
   int grid_pin_start_index = physical_tile->num_pins;
+  t_physical_tile_port physical_tile_port;
   for (const t_physical_tile_port& tile_port : physical_tile->ports) { 
     if (std::string(tile_port.name) == tile_port_to_connect.get_name()) {
       BasicPort ref_tile_port(tile_port.name, tile_port.num_pins);
@@ -726,6 +727,7 @@ int build_top_module_global_net_for_given_grid_module(ModuleManager& module_mana
         return CMD_EXEC_FATAL_ERROR;
       }
       grid_pin_start_index = tile_port.absolute_first_pin_index;
+      physical_tile_port = tile_port;
       break;
     }
   }
@@ -741,32 +743,39 @@ int build_top_module_global_net_for_given_grid_module(ModuleManager& module_mana
 
   VTR_ASSERT(1 == physical_tile->equivalent_sites.size());
 
+  /* Ensure port width is in range */
+  BasicPort src_port = module_manager.module_port(top_module, top_module_port);
+  VTR_ASSERT(src_port.get_width() >= size_t(physical_tile_port.num_pins));
+
   /* A tile may consist of multiple subtile, connect to all the pins from sub tiles */
   for (int iz = 0; iz < physical_tile->capacity; ++iz) {
-    /* TODO: This should be replaced by using a pin mapping data structure from physical tile! */
-    int grid_pin_index = grid_pin_start_index + iz * physical_tile->equivalent_sites[0]->pb_type->num_pins;
-    /* Find the module pin */
-    size_t grid_pin_width = physical_tile->pin_width_offset[grid_pin_index];
-    size_t grid_pin_height = physical_tile->pin_height_offset[grid_pin_index];
-    std::vector<e_side> pin_sides = find_physical_tile_pin_side(physical_tile, grid_pin_index, border_side);
-    for (const e_side& pin_side : pin_sides) {
-      std::string grid_port_name = generate_grid_port_name(grid_coordinate,
-                                                           grid_pin_width, grid_pin_height,
-                                                           pin_side,
-                                                           grid_pin_index, false);
-      ModulePortId grid_port_id = module_manager.find_module_port(grid_module, grid_port_name);
-      VTR_ASSERT(true == module_manager.valid_module_port_id(grid_module, grid_port_id));
+    for (size_t pin_id = 0; pin_id < size_t(physical_tile_port.num_pins); ++pin_id) {
+      /* TODO: This should be replaced by using a pin mapping data structure from physical tile! */
+      int grid_pin_index = grid_pin_start_index + iz * physical_tile->equivalent_sites[0]->pb_type->num_pins + pin_id;
+      /* Find the module pin */
+      size_t grid_pin_width = physical_tile->pin_width_offset[grid_pin_index];
+      size_t grid_pin_height = physical_tile->pin_height_offset[grid_pin_index];
+      std::vector<e_side> pin_sides = find_physical_tile_pin_side(physical_tile, grid_pin_index, border_side);
 
       /* Build nets */
-      BasicPort src_port = module_manager.module_port(top_module, top_module_port);
-      for (size_t pin_id = 0; pin_id < tile_port_to_connect.pins().size(); ++pin_id) {
-         ModuleNetId net = create_module_source_pin_net(module_manager, top_module, 
-                                                        top_module, 0, 
-                                                        top_module_port, src_port.pins()[pin_id]);
-         VTR_ASSERT(ModuleNetId::INVALID() != net);
-      
-         /* Configure the net sink */
-         module_manager.add_module_net_sink(top_module, net, grid_module, grid_instance, grid_port_id, tile_port_to_connect.pins()[pin_id]);
+      for (const e_side& pin_side : pin_sides) {
+        std::string grid_port_name = generate_grid_port_name(grid_coordinate,
+                                                             grid_pin_width, grid_pin_height,
+                                                             pin_side,
+                                                             grid_pin_index, false);
+        ModulePortId grid_port_id = module_manager.find_module_port(grid_module, grid_port_name);
+        VTR_ASSERT(true == module_manager.valid_module_port_id(grid_module, grid_port_id));
+
+        VTR_ASSERT(1 == module_manager.module_port(grid_module, grid_port_id).get_width());
+
+        ModuleNetId net = create_module_source_pin_net(module_manager, top_module, 
+                                                       top_module, 0, 
+                                                       top_module_port, src_port.pins()[pin_id]);
+        VTR_ASSERT(ModuleNetId::INVALID() != net);
+        
+        /* Configure the net sink */
+        BasicPort sink_port = module_manager.module_port(grid_module, grid_port_id);
+        module_manager.add_module_net_sink(top_module, net, grid_module, grid_instance, grid_port_id, sink_port.pins()[0]);
       }
     }
   }

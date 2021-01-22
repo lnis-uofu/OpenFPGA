@@ -21,6 +21,9 @@ ShellCommandId add_openfpga_repack_command(openfpga::Shell<OpenfpgaContext>& she
                                            const ShellCommandClassId& cmd_class_id,
                                            const std::vector<ShellCommandId>& dependent_cmds) {
   Command shell_cmd("repack");
+  /* Add an option '--design_constraints' */
+  CommandOptionId opt_design_constraints = shell_cmd.add_option("design_constraints", false, "file path to the design constraints");
+  shell_cmd.set_option_require_value(opt_design_constraints, openfpga::OPT_STRING);
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
   

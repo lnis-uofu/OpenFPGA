@@ -56,11 +56,23 @@ constexpr char* TOP_TB_PROG_RESET_PORT_NAME = "prog_reset";
 constexpr char* TOP_TB_PROG_SET_PORT_NAME = "prog_set";
 constexpr char* TOP_TB_CONFIG_DONE_PORT_NAME = "config_done";
 constexpr char* TOP_TB_OP_CLOCK_PORT_NAME = "op_clock";
+constexpr char* TOP_TB_OP_CLOCK_PORT_PREFIX = "operating_clk_";
 constexpr char* TOP_TB_PROG_CLOCK_PORT_NAME = "prog_clock";
 constexpr char* TOP_TB_INOUT_REG_POSTFIX = "_reg";
 constexpr char* TOP_TB_CLOCK_REG_POSTFIX = "_reg";
 
 constexpr char* AUTOCHECK_TOP_TESTBENCH_VERILOG_MODULE_POSTFIX = "_autocheck_top_tb";
+
+/********************************************************************
+ * Generate a simulation clock port name
+ * This function is designed to produce a uniform clock naming for these ports
+ *******************************************************************/
+static 
+std::string generate_top_testbench_clock_name(const std::string& prefix, 
+                                              const std::string& port_name) {
+  return prefix + port_name;
+}
+
 
 /********************************************************************
  * Print local wires for flatten memory (standalone) configuration protocols
@@ -253,6 +265,7 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
                                                       const ModuleManager& module_manager,
                                                       const ModuleId& top_module,
                                                       const FabricGlobalPortInfo& fabric_global_port_info,
+                                                      const SimulationSetting& simulation_parameters,
                                                       const bool& active_global_prog_reset,
                                                       const bool& active_global_prog_set) {
   /* Validate the file stream */
@@ -288,9 +301,21 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
      * The wiring will be inverted if the default value of the global port is 1
      * Otherwise, the wiring will not be inverted!
      */
-    print_verilog_wire_connection(fp, module_manager.module_port(top_module, module_global_port),
-                                  stimuli_clock_port,
-                                  1 == fabric_global_port_info.global_port_default_value(fabric_global_port));
+    for (const size_t& pin : module_manager.module_port(top_module, module_global_port).pins()) {
+      BasicPort global_port_to_connect(module_manager.module_port(top_module, module_global_port).get_name(), pin, pin);
+      /* Should try to find a port defintion from simulation parameters
+       * If found, it means that we need to use special clock name! 
+       */
+      for (const SimulationClockId& sim_clock : simulation_parameters.clocks()) { 
+        if (global_port_to_connect == simulation_parameters.clock_port(sim_clock)) {
+          stimuli_clock_port.set_name(generate_top_testbench_clock_name(std::string(TOP_TB_OP_CLOCK_PORT_PREFIX), simulation_parameters.clock_name(sim_clock)));
+        }
+      }
+
+      print_verilog_wire_connection(fp, global_port_to_connect,
+                                    stimuli_clock_port,
+                                    1 == fabric_global_port_info.global_port_default_value(fabric_global_port));
+    }
   }
 
   /* Connect global configuration done ports to configuration done signal */
@@ -458,6 +483,71 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
 }
 
 /********************************************************************
+ * This function prints the clock ports for all the benchmark clock nets
+ * It will search the pin constraints to see if a clock is constrained to a specific pin
+ * If constrained, 
+ * - connect this clock to default values if it is set to be OPEN
+ * - connect this clock to a specific clock source from simulation settings!!!
+ * Otherwise,
+ * - connect this clock to the default clock port
+ *******************************************************************/
+static 
+void print_verilog_top_testbench_benchmark_clock_ports(std::fstream& fp,
+                                                       const ModuleManager& module_manager,
+                                                       const ModuleId& top_module,
+                                                       const std::vector<std::string>& clock_port_names,
+                                                       const PinConstraints& pin_constraints,
+                                                       const SimulationSetting& simulation_parameters,
+                                                       const BasicPort& default_clock_port) {
+  /* Create a clock port if the benchmark have one but not in the default name!
+   * We will wire the clock directly to the operating clock directly
+   */
+  for (const std::string clock_port_name : clock_port_names) {
+    if (0 == clock_port_name.compare(default_clock_port.get_name())) {
+      continue;
+    }
+    /* Ensure the clock port name is not a duplication of global ports of the FPGA module */
+    bool print_clock_port = true;
+    for (const BasicPort& module_port : module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GLOBAL_PORT)) {
+      if (0 == clock_port_name.compare(module_port.get_name())) {
+        print_clock_port = false;
+      }
+    }
+    if (false == print_clock_port) {
+      continue;
+    }
+
+    BasicPort clock_source_to_connect = default_clock_port;
+   
+    /* Check pin constraints to see if this clock is constrained to a specific pin
+     * If constrained, 
+     * - connect this clock to default values if it is set to be OPEN
+     * - connect this clock to a specific clock source from simulation settings!!!
+     */
+    for (const PinConstraintId& pin_constraint : pin_constraints.pin_constraints()) {
+      if (clock_port_name != pin_constraints.net(pin_constraint)) {
+        continue;
+      }
+      /* Skip all the unrelated pin constraints */
+      VTR_ASSERT(clock_port_name == pin_constraints.net(pin_constraint));
+      /* Try to find which clock source is considered in simulation settings for this pin */
+      for (const SimulationClockId& sim_clock_id : simulation_parameters.clocks()) {
+        if (pin_constraints.pin(pin_constraint) == simulation_parameters.clock_port(sim_clock_id)) {
+          std::string sim_clock_port_name = generate_top_testbench_clock_name(std::string(TOP_TB_OP_CLOCK_PORT_PREFIX), simulation_parameters.clock_name(sim_clock_id));
+          clock_source_to_connect = BasicPort(sim_clock_port_name, 1);
+        }
+      }
+    }
+
+    /* Print the clock and wire it to the clock source */
+    print_verilog_comment(fp, std::string("----- Create a clock for benchmark and wire it to " + clock_source_to_connect.get_name() + " -------"));
+    BasicPort clock_port(clock_port_name, 1);
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, clock_port) << ";" << std::endl;
+    print_verilog_wire_connection(fp, clock_port, clock_source_to_connect, false);
+  }
+}
+
+/********************************************************************
  * This function prints the top testbench module declaration
  * and internal wires/port declaration
  * Ports can be classified in two categories:
@@ -481,6 +571,8 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
                                        const AtomContext& atom_ctx,
                                        const VprNetlistAnnotation& netlist_annotation,
                                        const std::vector<std::string>& clock_port_names,
+                                       const PinConstraints& pin_constraints,
+                                       const SimulationSetting& simulation_parameters,
                                        const ConfigProtocol& config_protocol,
                                        const std::string& circuit_name){
   /* Validate the file stream */
@@ -536,7 +628,21 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
   BasicPort prog_clock_register_port(std::string(std::string(TOP_TB_PROG_CLOCK_PORT_NAME) + std::string(TOP_TB_CLOCK_REG_POSTFIX)), 1);
   fp << generate_verilog_port(VERILOG_PORT_REG, prog_clock_register_port) << ";" << std::endl;
 
-  /* Operating clock */
+  /* Multiple operating clocks based on the simulation settings */
+  for (const SimulationClockId& sim_clock : simulation_parameters.clocks()) {
+    std::string sim_clock_port_name = generate_top_testbench_clock_name(std::string(TOP_TB_OP_CLOCK_PORT_PREFIX), simulation_parameters.clock_name(sim_clock));
+    BasicPort sim_clock_port(sim_clock_port_name, 1);
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, sim_clock_port) << ";" << std::endl;
+    BasicPort sim_clock_register_port(std::string(sim_clock_port_name + std::string(TOP_TB_CLOCK_REG_POSTFIX)), 1);
+    fp << generate_verilog_port(VERILOG_PORT_REG, sim_clock_register_port) << ";" << std::endl;
+  }
+
+  /* FIXME: Actually, for multi-clock implementations, input and output ports
+   *        should be synchronized by different clocks. Currently, we lack the information 
+   *        about what inputs are driven by which clock. Therefore, we use a unified clock 
+   *        signal to do the job. However, this has to be fixed later!!! 
+   * Create an operating clock_port to synchronize checkers stimulus generator 
+   */
   BasicPort op_clock_port(std::string(TOP_TB_OP_CLOCK_PORT_NAME), 1);
   fp << generate_verilog_port(VERILOG_PORT_WIRE, op_clock_port) << ";" << std::endl;
   BasicPort op_clock_register_port(std::string(std::string(TOP_TB_OP_CLOCK_PORT_NAME) + std::string(TOP_TB_CLOCK_REG_POSTFIX)), 1);
@@ -558,30 +664,13 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
   print_verilog_top_testbench_config_protocol_port(fp, config_protocol,
                                                    module_manager, top_module);
 
-  /* Create a clock port if the benchmark have one but not in the default name!
-   * We will wire the clock directly to the operating clock directly
-   */
-  for (const std::string clock_port_name : clock_port_names) {
-    if (0 == clock_port_name.compare(op_clock_port.get_name())) {
-      continue;
-    }
-    /* Ensure the clock port name is not a duplication of global ports of the FPGA module */
-    bool print_clock_port = true;
-    for (const BasicPort& module_port : module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GLOBAL_PORT)) {
-      if (0 == clock_port_name.compare(module_port.get_name())) {
-        print_clock_port = false;
-      }
-    }
-    if (false == print_clock_port) {
-      continue;
-    }
-
-    /* Print the clock and wire it to op_clock */
-    print_verilog_comment(fp, std::string("----- Create a clock for benchmark and wire it to op_clock -------"));
-    BasicPort clock_port(clock_port_name, 1);
-    fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, clock_port) << ";" << std::endl;
-    print_verilog_wire_connection(fp, clock_port, op_clock_port, false);
-  }
+  /* Print clock ports */
+  print_verilog_top_testbench_benchmark_clock_ports(fp,
+                                                    module_manager, top_module,
+                                                    clock_port_names,
+                                                    pin_constraints,
+                                                    simulation_parameters,
+                                                    op_clock_port);
 
   print_verilog_testbench_shared_ports(fp, atom_ctx, netlist_annotation,
                                        clock_port_names,
@@ -962,6 +1051,7 @@ void print_verilog_top_testbench_load_bitstream_task(std::fstream& fp,
  *******************************************************************/
 static
 void print_verilog_top_testbench_generic_stimulus(std::fstream& fp,
+                                                  const SimulationSetting& simulation_parameters,
                                                   const size_t& num_config_clock_cycles,
                                                   const float& prog_clock_period,
                                                   const float& op_clock_period,
@@ -1013,6 +1103,32 @@ void print_verilog_top_testbench_generic_stimulus(std::fstream& fp,
   fp << ";" << std::endl;
 
   fp << std::endl;
+
+  /* Generate stimuli waveform for multiple user-defined operating clock signals */
+  for (const SimulationClockId& sim_clock : simulation_parameters.clocks()) {
+    print_verilog_comment(fp, "----- Begin raw operating clock signal '" + simulation_parameters.clock_name(sim_clock) + "' generation -----");
+    std::string sim_clock_port_name = generate_top_testbench_clock_name(std::string(TOP_TB_OP_CLOCK_PORT_PREFIX), simulation_parameters.clock_name(sim_clock));
+    BasicPort sim_clock_port(sim_clock_port_name, 1);
+    BasicPort sim_clock_register_port(std::string(sim_clock_port_name + std::string(TOP_TB_CLOCK_REG_POSTFIX)), 1);
+
+    float sim_clock_period = 1. / simulation_parameters.clock_frequency(sim_clock); 
+    print_verilog_clock_stimuli(fp, sim_clock_register_port,
+                                0, /* Initial value */
+                                0.5 * sim_clock_period / timescale,
+                                std::string("~" + reset_port.get_name()));
+    print_verilog_comment(fp, "----- End raw operating clock signal generation -----");
+
+    /* Operation clock should be enabled after programming phase finishes.
+     * Before configuration is done (config_done is enabled), operation clock should be always zero.
+     */
+    print_verilog_comment(fp, std::string("----- Actual operating clock is triggered only when " + config_done_port.get_name() + " is enabled -----"));
+    fp << "\tassign " << generate_verilog_port(VERILOG_PORT_CONKT, sim_clock_port);
+    fp << " = " << generate_verilog_port(VERILOG_PORT_CONKT, sim_clock_register_port);
+    fp << " & " << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port);
+    fp << ";" << std::endl;
+
+    fp << std::endl;
+  }
 
   /* Generate stimuli waveform for operating clock signals */
   print_verilog_comment(fp, "----- Begin raw operating clock signal generation -----");
@@ -1774,6 +1890,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                  const FabricGlobalPortInfo& global_ports,
                                  const AtomContext& atom_ctx,
                                  const PlacementContext& place_ctx,
+                                 const PinConstraints& pin_constraints,
                                  const IoLocationMap& io_location_map,
                                  const VprNetlistAnnotation& netlist_annotation,
                                  const std::string& circuit_name,
@@ -1826,13 +1943,20 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
 
   /* Start of testbench */
   print_verilog_top_testbench_ports(fp, module_manager, top_module,
-                                    atom_ctx, netlist_annotation, clock_port_names,
-                                    config_protocol,
+                                    atom_ctx, netlist_annotation,
+                                    clock_port_names,
+                                    pin_constraints,
+                                    simulation_parameters, config_protocol,
                                     circuit_name);
 
   /* Find the clock period */
   float prog_clock_period = (1./simulation_parameters.programming_clock_frequency());
-  float op_clock_period = (1./simulation_parameters.operating_clock_frequency());
+  float default_op_clock_period = (1./simulation_parameters.default_operating_clock_frequency());
+  float max_op_clock_period = 0.;
+  for (const SimulationClockId& clock_id : simulation_parameters.clocks()) {
+    max_op_clock_period = std::max(max_op_clock_period, (float)(1./simulation_parameters.clock_frequency(clock_id)));
+  }
+
   /* Estimate the number of configuration clock cycles */
   size_t num_config_clock_cycles = calculate_num_config_clock_cycles(config_protocol.type(),
                                                                      apply_fast_configuration,
@@ -1842,9 +1966,10 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
 
   /* Generate stimuli for general control signals */
   print_verilog_top_testbench_generic_stimulus(fp,
+                                               simulation_parameters,
                                                num_config_clock_cycles,
                                                prog_clock_period,
-                                               op_clock_period,
+                                               default_op_clock_period,
                                                VERILOG_SIM_TIMESCALE);
 
   /* Generate stimuli for programming interface */
@@ -1884,6 +2009,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   print_verilog_top_testbench_global_ports_stimuli(fp,
                                                    module_manager, top_module,
                                                    global_ports,
+                                                   simulation_parameters,
                                                    active_global_prog_reset,
                                                    active_global_prog_set);
 
@@ -1935,7 +2061,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                          netlist_annotation,
                                          clock_port_names,
                                          std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
-                                         BasicPort(std::string(TOP_TB_OP_CLOCK_PORT_NAME), 1));
+                                         std::vector<BasicPort>(1, BasicPort(std::string(TOP_TB_OP_CLOCK_PORT_NAME), 1)));
 
   /* Add output autocheck */
   print_verilog_testbench_check(fp,
@@ -1961,7 +2087,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                                       num_config_clock_cycles,
 										              1./simulation_parameters.programming_clock_frequency(),
                                                       simulation_parameters.num_clock_cycles(),
-                                                      1./simulation_parameters.operating_clock_frequency());
+                                                      1./simulation_parameters.default_operating_clock_frequency());
 
 
   /* Add Icarus requirement: 

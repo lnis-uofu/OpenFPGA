@@ -12,3 +12,5 @@ FPGA-Bitstream can generate two types of bitstreams:
    generic_bitstream
 
    fabric_dependent_bitstream
+
+   repack_design_constraints

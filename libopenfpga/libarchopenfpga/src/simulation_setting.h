@@ -7,8 +7,14 @@
  *******************************************************************/
 #include <string>
 #include <array>
+#include <map>
 
+#include "vtr_vector.h" 
 #include "vtr_geometry.h" 
+
+#include "openfpga_port.h" 
+
+#include "simulation_setting_fwd.h" 
 
 /********************************************************************
  * Types of signal type in measurement and stimuli
@@ -48,11 +54,21 @@ namespace openfpga {
  *
  *******************************************************************/
 class SimulationSetting {
+  public: /* Types */
+    typedef vtr::vector<SimulationClockId, SimulationClockId>::const_iterator simulation_clock_iterator;
+    /* Create range */
+    typedef vtr::Range<simulation_clock_iterator> simulation_clock_range;
   public:  /* Constructors */
     SimulationSetting();
+  public: /* Accessors: aggregates */
+    simulation_clock_range clocks() const;
   public: /* Public Accessors */
-    float operating_clock_frequency() const;
+    float default_operating_clock_frequency() const;
     float programming_clock_frequency() const;
+    size_t num_simulation_clock_cycles() const;
+    std::string clock_name(const SimulationClockId& clock_id) const;
+    BasicPort clock_port(const SimulationClockId& clock_id) const;
+    float clock_frequency(const SimulationClockId& clock_id) const;
     bool auto_select_num_clock_cycles() const;
     size_t num_clock_cycles() const;
     float operating_clock_frequency_slack() const;
@@ -73,8 +89,19 @@ class SimulationSetting {
     e_sim_accuracy_type stimuli_input_slew_type(const e_sim_signal_type& signal_type) const;
     float stimuli_input_slew(const e_sim_signal_type& signal_type) const;
   public: /* Public Mutators */
-    void set_operating_clock_frequency(const float& clock_freq);
+    void set_default_operating_clock_frequency(const float& clock_freq);
     void set_programming_clock_frequency(const float& clock_freq);
+    /* Add a new simulation clock with 
+     * - a given name
+     * - a given port description
+     * - a default zero frequency which can be overwritten by 
+     *   the operating_clock_frequency()
+     */
+    SimulationClockId create_clock(const std::string& name);
+    void set_clock_port(const SimulationClockId& clock_id,
+                        const BasicPort& port);
+    void set_clock_frequency(const SimulationClockId& clock_id,
+                             const float& frequency);
     void set_num_clock_cycles(const size_t& num_clk_cycles);
     void set_operating_clock_frequency_slack(const float& op_clk_freq_slack);
     void set_simulation_temperature(const float& sim_temp);
@@ -102,13 +129,30 @@ class SimulationSetting {
                                 const float& input_slew);
   public: /* Public Validators */
     bool valid_signal_threshold(const float& threshold) const;
+    bool valid_clock_id(const SimulationClockId& clock_id) const;
   private: /* Internal data */
-    /* Operating clock frequency: the clock frequency to be applied to users' implemetation on FPGA 
+    /* Operating clock frequency: the default clock frequency to be applied to users' implemetation on FPGA 
      *                            This will be stored in the x() part of vtr::Point
      * Programming clock frequency: the clock frequency to be applied to configuration protocol of FPGA 
      *                            This will be stored in the y() part of vtr::Point
      */
-    vtr::Point<float> clock_frequencies_;
+    vtr::Point<float> default_clock_frequencies_;
+
+    /* Multiple simulation clocks with detailed information
+     * Each clock has 
+     * - a unique id
+     * - a unique name
+     * - a unique port definition which is supposed 
+     *   to match the clock port definition in OpenFPGA documentation
+     * - a frequency which is only applicable to this clock name
+     */
+    vtr::vector<SimulationClockId, SimulationClockId> clock_ids_;
+    vtr::vector<SimulationClockId, std::string> clock_names_;
+    vtr::vector<SimulationClockId, BasicPort> clock_ports_;
+    vtr::vector<SimulationClockId, float> clock_frequencies_;
+
+    /* Fast name-to-id lookup */
+    std::map<std::string, SimulationClockId> clock_name2ids_;
 
     /* Number of clock cycles to be used in simulation
      * If the value is 0, the clock cycles can be automatically 
