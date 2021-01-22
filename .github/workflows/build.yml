@@ -225,6 +225,8 @@ jobs:
         shell: bash
         run: source .github/workflows/${{matrix.config.script}}
   docker_regression_tests:
+    env:
+      OPENFPGA_PATH: /__w/OpenFPGA/OpenFPGA
     needs: change_detect
     if: ${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
     name: Regression tests against master artifacts
