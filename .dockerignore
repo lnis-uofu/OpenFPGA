@@ -12,8 +12,6 @@ libs
 LICENSE
 Makefile
 openfpga
-openfpga_flow
-openfpga.sh
 README.md
 run_local.bat
 run_local.sh
@@ -30,4 +28,3 @@ yosys
 !yosys/yosys-filterlib
 !yosys/yosys-smtbmc
 !yosys/share
-!openfpga_flow

@@ -254,7 +254,7 @@ jobs:
         run: |
           cp /opt/openfpga/abc/abc abc/abc
           cp /opt/openfpga/ace2/ace ace2/ace
-          cp /opt/openfpga/openfpga openfpga/openfpga
+          cp /opt/openfpga/openfpga/openfpga openfpga/openfpga
           cp /opt/openfpga/vpr/vpr vpr/vpr
           cp /opt/openfpga/yosys/yosys yosys/yosys
           cp /opt/openfpga/yosys/yosys-abc yosys/yosys-abc
