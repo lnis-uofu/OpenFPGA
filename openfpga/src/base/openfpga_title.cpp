@@ -3,6 +3,7 @@
  * which introduces generality of OpenFPGA framework
  *******************************************************************/
 #include "openfpga_title.h"
+#include "openfpga_version.h"
 
 /********************************************************************
  * Generate a string of openfpga title introduction
@@ -47,6 +48,14 @@ std::string create_openfpga_title() {
   title += std::string("LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n");
   title += std::string("OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n");
   title += std::string("THE SOFTWARE.\n");
+  title += std::string("\n");
+
+  /* Display version */
+  title += std::string("Version: " + std::string(openfpga::VERSION) + "\n");
+  title += std::string("Revision: " + std::string(openfpga::VCS_REVISION) + "\n");
+  title += std::string("Compiled: " + std::string(openfpga::BUILD_TIMESTAMP) + "\n");
+  title += std::string("Compiler: " + std::string(openfpga::COMPILER) + "\n");
+  title += std::string("Build Info: " + std::string(openfpga::BUILD_INFO) + "\n");
   title += std::string("\n");
 
   return title;
