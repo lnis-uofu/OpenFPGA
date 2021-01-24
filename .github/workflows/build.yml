@@ -131,7 +131,7 @@ jobs:
         shell: bash
         # Execute the build.  You can specify a specific target with "--target <NAME>"
         run: |
-          cmake --build . --config $BUILD_TYPE
+          cmake --build . --config $BUILD_TYPE -- -j
 
       # Check the cache size and see if it is over the limit
       - name: Check ccache size
