@@ -40,7 +40,7 @@ jobs:
   # Test the compilation compatibility
   linux_build:
     needs: change_detect
-    if: true #${{ fromJSON(needs.change_detect.outputs.source_modified) || github.ref == 'refs/heads/master' }}
+    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) || github.ref == 'refs/heads/master' }}
     name: ${{ matrix.config.name }}
     runs-on: ubuntu-18.04
     container: ghcr.io/lnis-uofu/openfpga-build-${{ matrix.config.cc}}
@@ -131,7 +131,7 @@ jobs:
         shell: bash
         # Execute the build.  You can specify a specific target with "--target <NAME>"
         run: |
-          cmake --build . --config $BUILD_TYPE -- -j
+          cmake --build . --config $BUILD_TYPE
 
       # Check the cache size and see if it is over the limit
       - name: Check ccache size
@@ -158,7 +158,7 @@ jobs:
             yosys/yosys-smtbmc
   docker_distribution:
     name: Build docker image for distribution
-    if: true #${{ github.ref == 'refs/heads/master' }}
+    if: ${{ github.ref == 'refs/heads/master' }}
     runs-on: ubuntu-latest
     needs: linux_build
     steps:
@@ -229,7 +229,7 @@ jobs:
     env:
       OPENFPGA_PATH: /__w/OpenFPGA/OpenFPGA
     needs: change_detect
-    if: false #${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
+    if: ${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
     name: Regression tests against master artifacts
     runs-on: ubuntu-18.04
     container: ghcr.io/lnis-uofu/openfpga-master:latest
