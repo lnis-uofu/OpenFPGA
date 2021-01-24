@@ -15,7 +15,7 @@ clean
 abc -lut ${LUT_SIZE}
 
 # Check
-synth -run check
+synth1 -run check
 
 # Clean and output blif
 opt_clean -purge
