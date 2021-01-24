@@ -272,7 +272,9 @@ void Shell<T>::run_interactive_mode(T& context, const bool& quiet_mode) {
 }
 
 template <class T>
-void Shell<T>::run_script_mode(const char* script_file_name, T& context) {
+void Shell<T>::run_script_mode(const char* script_file_name,
+                               T& context,
+                               const bool& batch_mode) {
 
   time_start_ = std::clock();
 
@@ -356,17 +358,24 @@ void Shell<T>::run_script_mode(const char* script_file_name, T& context) {
       /* Empty the line ready to start a new line */
       cmd_line.clear();
 
-      /* Check the execution status of the command, if fatal error happened, we should abort immediately */
+      /* Check the execution status of the command, 
+       * if fatal error happened, we should abort immediately 
+       */
       if (CMD_EXEC_FATAL_ERROR == status) {
-        VTR_LOG("Fatal error occurred!\nAbort and enter interactive mode\n");
+        VTR_LOG("Fatal error occurred!\n");
+        /* If not in the batch mode, we will got to interactive mode */ 
+        VTR_LOGV(batch_mode, "OpenFPGA Abort\n");
+        VTR_LOGV(!batch_mode, "Enter interactive mode\n");
         break;
       }
     }
   }
   fp.close();
 
-  /* Return to interactive mode, stay tuned */
-  run_interactive_mode(context, true); 
+  /* If not in batch mode, switch to interactive mode, stay tuned */
+  if (!batch_mode) {
+    run_interactive_mode(context, true); 
+  }
 }
 
 template <class T>
