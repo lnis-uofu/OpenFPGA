@@ -148,6 +148,10 @@ class Shell {
                          const bool& batch_mode = false);
     /* Print all the commands by their classes. This is actually the help desk */
     void print_commands() const;
+    /* Find the exit code (assume quit shell now) */
+    int exit_code() const;
+    /* Show statistics of errors during command execution */
+    int execution_errors() const;
     /* Quit the shell */
     void exit() const;
   private: /* Private executors */

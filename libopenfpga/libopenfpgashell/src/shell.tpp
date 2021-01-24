@@ -401,7 +401,7 @@ void Shell<T>::print_commands() const {
 }
 
 template <class T>
-void Shell<T>::exit() const {
+int Shell<T>::exit_code() const {
   /* Check all the command status, if we see fatal errors or minor errors, we drop an error code */
   int exit_code = 0;
   for (const int& status : command_status_) {
@@ -412,23 +412,41 @@ void Shell<T>::exit() const {
     }
   } 
 
+  return exit_code;
+}
+
+template <class T>
+int Shell<T>::execution_errors() const {
   /* Show error message if we detect any errors */
   int num_err = 0;
-  if (0 != exit_code) {
-    VTR_LOG("\n");
-    for (const ShellCommandId& cmd : commands()) {
-      if (command_status_[cmd] == CMD_EXEC_FATAL_ERROR) {
-        VTR_LOG_ERROR("Command '%s' execution has fatal errors\n",
-                      commands_[cmd].name().c_str());
-        num_err++;
-      }
-        
-      if (command_status_[cmd] == CMD_EXEC_MINOR_ERROR) {
-        VTR_LOG_ERROR("Command '%s' execution has minor errors\n",
-                      commands_[cmd].name().c_str());
-        num_err++;
-      }
+
+  for (const ShellCommandId& cmd : commands()) {
+    if (command_status_[cmd] == CMD_EXEC_FATAL_ERROR) {
+      VTR_LOG_ERROR("Command '%s' execution has fatal errors\n",
+                    commands_[cmd].name().c_str());
+      num_err++;
     }
+      
+    if (command_status_[cmd] == CMD_EXEC_MINOR_ERROR) {
+      VTR_LOG_ERROR("Command '%s' execution has minor errors\n",
+                    commands_[cmd].name().c_str());
+      num_err++;
+    }
+  }
+
+  return num_err;
+}
+
+template <class T>
+void Shell<T>::exit() const {
+  /* Check all the command status, if we see fatal errors or minor errors, we drop an error code */
+  int shell_exit_code = exit_code();
+
+  /* Show error message if we detect any errors */
+  int num_err = 0;
+  if (0 != shell_exit_code) {
+    VTR_LOG("\n");
+    num_err = execution_errors();
   }
 
   VTR_LOG("\nFinish execution with %d errors\n",
@@ -440,7 +458,7 @@ void Shell<T>::exit() const {
   VTR_LOG("\nThank you for using %s!\n",
           name().c_str());
 
-  std::exit(exit_code);
+  std::exit(shell_exit_code);
 }
 
 /************************************************************************

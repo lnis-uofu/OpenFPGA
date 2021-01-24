@@ -99,18 +99,21 @@ int main(int argc, char** argv) {
     if (true == start_cmd_context.option_enable(start_cmd, opt_interactive)) {
 
       shell.run_interactive_mode(openfpga_context);
-      return 0;
+      return shell.exit_code();
     } 
 
     if (true == start_cmd_context.option_enable(start_cmd, opt_script_mode)) {
       shell.run_script_mode(start_cmd_context.option_value(start_cmd, opt_script_mode).c_str(),
                             openfpga_context,
                             start_cmd_context.option_enable(start_cmd, opt_batch_exec));
-      return 0;
+      return shell.exit_code();
     }
     /* Reach here there is something wrong, show the help desk */
     openfpga::print_command_options(start_cmd);
   }
 
-  return 0;
+  /* Reach here, it means shell execution has critical errors.
+   * Return a code with fatal errors  
+   */
+  return 1;
 }
