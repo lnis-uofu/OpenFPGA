@@ -15,6 +15,13 @@ To launch OpenFPGA shell, users can choose two modes.
 
   Launch OpenFPGA in script mode where users write commands in scripts and FPGA will execute them
 
+.. option::	--batch_execution or -batch
+
+  Execute OpenFPGA script in batch mode. This option is only valid for script mode.
+
+  - If in batch mode, OpenFPGA will abort immediately when fatal errors occurred.
+  - If not in batch mode, OpenFPGA will enter interactive mode when fatal errors occurred.
+
 .. option::	--help or -h
 	
   Show the help desk
