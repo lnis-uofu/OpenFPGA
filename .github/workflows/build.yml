@@ -226,8 +226,6 @@ jobs:
         shell: bash
         run: source .github/workflows/${{matrix.config.script}}
   docker_regression_tests:
-    env:
-      OPENFPGA_PATH: /__w/OpenFPGA/OpenFPGA
     needs: change_detect
     if: ${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
     name: Regression tests against master artifacts
@@ -250,19 +248,9 @@ jobs:
     steps:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
-        with:
-          submodules: true
       - name: ${{matrix.config.name}}
         shell: bash
         run: |
-          cp /opt/openfpga/abc/abc abc/abc
-          cp /opt/openfpga/ace2/ace ace2/ace
-          cp /opt/openfpga/openfpga/openfpga openfpga/openfpga
-          cp /opt/openfpga/vpr/vpr vpr/vpr
-          cp /opt/openfpga/yosys/yosys yosys/yosys
-          cp /opt/openfpga/yosys/yosys-abc yosys/yosys-abc
-          cp /opt/openfpga/yosys/yosys-config yosys/yosys-config
-          cp /opt/openfpga/yosys/yosys-filterlib yosys/yosys-filterlib
-          cp /opt/openfpga/yosys/yosys-smtbmc yosys/yosys-smtbmc
-          cp -r /opt/openfpga/yosys/share yosys/share
-          source .github/workflows/${{matrix.config.script}}
+          cp -r .github /opt/openfpga/
+          cp -r openfpga_flow /opt/openfpga/
+          cd /opt/openfpga/ && source openfpga.sh && source .github/workflows/${{matrix.config.script}}
