@@ -273,6 +273,11 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
         continue;
       }
 
+      /* Bypass unused output pads */
+      if (ModuleManager::MODULE_GPOUT_PORT == module_manager.port_type(top_module, module_io_port_id)) {
+        continue;
+      }
+
       /* Wire to a contant */
       BasicPort module_unused_io_port = module_manager.module_port(top_module, module_io_port_id);
       /* Set the port pin index */ 
