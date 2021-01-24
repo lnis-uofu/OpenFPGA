@@ -254,3 +254,11 @@ jobs:
           cp -r .github /opt/openfpga/
           cp -r openfpga_flow /opt/openfpga/
           cd /opt/openfpga/ && source openfpga.sh && source .github/workflows/${{matrix.config.script}}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: failed_${{matrix.config.script}}_regression_log
+          retention-days: 1
+          path: |
+            openfpga_flow/**/*.log
