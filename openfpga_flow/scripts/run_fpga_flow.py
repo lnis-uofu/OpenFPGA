@@ -11,6 +11,7 @@ import os
 import sys
 import shutil
 import time
+import traceback
 from datetime import timedelta
 import shlex
 import glob
@@ -84,6 +85,9 @@ parser.add_argument('--run_dir', type=str,
                     default=os.path.join(openfpga_base_dir,  'tmp'),
                     help="Directory to store intermidiate file & final results")
 parser.add_argument('--openfpga_shell_template', type=str,
+                    default=os.path.join("openfpga_flow",
+                                         "openfpga_shell_scripts",
+                                         "example_script.openfpga"),
                     help="Sample openfpga shell script")
 parser.add_argument('--openfpga_arch_file', type=str,
                     help="Openfpga architecture file for shell")
@@ -264,11 +268,8 @@ def main():
     #     run_abc_vtr()
     # if (args.fpga_flow == "vtr_standard"):
     #     run_abc_for_standarad()
-    if args.openfpga_shell_template:
-        logger.info("Runing OpenFPGA Shell Engine ")
-        run_openfpga_shell()
-    else:
-        run_vpr()
+    logger.info("Runing OpenFPGA Shell Engine ")
+    run_openfpga_shell()
     if args.end_flow_with_test:
         run_netlists_verification()
 
@@ -328,10 +329,21 @@ def read_script_config():
 
 
 def validate_command_line_arguments():
-    """
-    TODO :
-    This funtion validates all supplied paramters
-    """
+    '''
+    This function validate the command line arguments
+    FLOW_SCRIPT_CONFIG->valid_flows :
+        Key is used to validate if the request flow is supported by the script
+    CMD_ARGUMENT_DEPENDANCY :
+        Validates the dependencies of the command arguments
+
+    Checks the following file exists and replaces them with an absolute path
+    - All architecture files
+    - Benchmark files
+    - Power tech files
+    - Run directory
+    - Activity file
+    - Base verilog file
+    '''
     logger.info("Validating commnad line arguments")
 
     if args.debug:
@@ -351,10 +363,17 @@ def validate_command_line_arguments():
                     clean_up_and_exit("'%s' argument depends on (%s) argumets" %
                                       (eacharg, ", ".join(dependent).replace("|", " or ")))
 
-    # Filter provided architecture files
+    # Check if architecrue files exists
     args.arch_file = os.path.abspath(args.arch_file)
     if not os.path.isfile(args.arch_file):
-        clean_up_and_exit("Architecture file not found. -%s", args.arch_file)
+        clean_up_and_exit(
+            "VPR architecture file not found. -%s",
+            args.arch_file)
+    args.openfpga_arch_file = os.path.abspath(args.openfpga_arch_file)
+    if not os.path.isfile(args.openfpga_arch_file):
+        clean_up_and_exit(
+            "OpenFPGA architecture file not found. -%s",
+            args.openfpga_arch_file)
 
     # Filter provided benchmark files
     for index, everyinput in enumerate(args.benchmark_files):
@@ -384,18 +403,6 @@ def validate_command_line_arguments():
         args.base_verilog = os.path.abspath(args.base_verilog)
 
 
-def ask_user_quetion(condition, question):
-    if condition:
-        reply = str(input(question+' (y/n): ')).lower().strip()
-        if reply[:1] in ['n', 'no']:
-            return False
-        elif reply[:1] in ['y', 'yes']:
-            return True
-        else:
-            return ask_user_quetion(question, condition)
-    return True
-
-
 def prepare_run_directory(run_dir):
     """
     Prepares run directory to run
@@ -406,13 +413,7 @@ def prepare_run_directory(run_dir):
     logger.info("Run directory : %s" % run_dir)
     if os.path.isdir(run_dir):
         no_of_files = len(next(os.walk(run_dir))[2])
-        if not ask_user_quetion((no_of_files > 100),
-                                ("[run_dir:%s] already exist and contains %d " +
-                                 "files script will remove all the file, " +
-                                 "continue? ") % (run_dir, no_of_files)):
-            clean_up_and_exit("Aborted by user")
-        else:
-            shutil.rmtree(run_dir)
+        shutil.rmtree(run_dir)
     os.makedirs(run_dir)
     # Clean run_dir is created change working directory
     os.chdir(run_dir)
@@ -492,22 +493,9 @@ def run_yosys_with_abc():
     tmpl = Template(open(yosys_template, encoding='utf-8').read())
     with open("yosys.ys", 'w') as archfile:
         archfile.write(tmpl.safe_substitute(ys_params))
-    try:
-        with open('yosys_output.txt', 'w+') as output:
-            process = subprocess.run([cad_tools["yosys_path"], 'yosys.ys'],
-                                     check=True,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE,
-                                     universal_newlines=True)
-            output.write(process.stdout)
-            if process.returncode:
-                logger.info("Yosys failed with returncode %d",
-                            process.returncode)
-                raise subprocess.CalledProcessError(0, command)
-    except:
-        logger.exception("Failed to run yosys")
-        clean_up_and_exit("")
-    logger.info("Yosys output is written in file yosys_output.txt")
+
+    run_command("Run yosys", "yosys_output.log",
+                [cad_tools["yosys_path"], 'yosys.ys'])
 
 
 def run_odin2():
@@ -627,72 +615,6 @@ def collect_files_for_vpr():
     shutil.copy(args.base_verilog, args.top_module+"_output_verilog.v")
 
 
-def run_vpr():
-    ExecTime["VPRStart"] = time.time()
-    # Format the BLIF File
-    cmd = r"mv %s.blif %s.blif.bak && cat %s.blif.bak" % (
-        args.top_module,
-        args.top_module,
-        args.top_module)
-    cmd += r"| sed 's/$/./' | fold -s -w80 "
-    cmd += r"| sed 's/[^.]$/ \\/' | sed 's/[.]$//'"
-    cmd += " > %s.blif" % args.top_module
-    os.system(cmd)
-    if not args.fix_route_chan_width:
-        # Run Standard VPR Flow
-        min_channel_width = run_standard_vpr(
-            args.top_module+".blif",
-            -1,
-            args.top_module+"_min_chan_width_vpr.txt")
-        logger.info("Standard VPR flow routed with minimum %d Channels" %
-                    min_channel_width)
-
-    # Minimum routing channel width
-    if (args.min_route_chan_width):
-        min_channel_width *= args.min_route_chan_width
-        min_channel_width = int(min_channel_width)
-        min_channel_width += 1 if (min_channel_width % 2) else 0
-        logger.info(("Trying to route using %d channels" % min_channel_width) +
-                    " (Slack of %d%%)" % ((args.min_route_chan_width-1)*100))
-
-        while(1):
-            res = run_standard_vpr(args.top_module+".blif",
-                                   int(min_channel_width),
-                                   args.top_module+"_reroute_vpr.txt",
-                                   route_only=True)
-
-            if res:
-                logger.info("Routing with channel width=%d successful" %
-                            min_channel_width)
-                break
-            elif args.max_route_width_retry < (min_channel_width-2):
-                clean_up_and_exit("Failed to route within maximum " +
-                                  "iteration of channel width")
-            else:
-                logger.info("Unable to route using channel width %d" %
-                            min_channel_width)
-            min_channel_width += 2
-
-        extract_vpr_stats(args.top_module+"_reroute_vpr.txt")
-
-    # Fixed routing channel width
-    elif args.fix_route_chan_width:
-        min_channel_width = run_standard_vpr(
-            args.top_module+".blif",
-            args.fix_route_chan_width,
-            args.top_module+"_fr_chan_width_vpr.txt")
-        logger.info("Fixed routing channel successfully routed with %d width" %
-                    min_channel_width)
-        extract_vpr_stats(args.top_module+"_fr_chan_width_vpr.txt")
-    else:
-        extract_vpr_stats(args.top_module+"_min_chan_width_vpr.txt")
-    if args.power:
-        extract_vpr_stats(logfile=args.top_module+".power",
-                          r_filename="vpr_power_stat",
-                          parse_section="power")
-    ExecTime["VPREnd"] = time.time()
-
-
 def run_openfpga_shell():
     ExecTime["VPRStart"] = time.time()
     # bench_blif, fixed_chan_width, logfile, route_only=False
@@ -702,8 +624,6 @@ def run_openfpga_shell():
     path_variables = script_env_vars["PATH"]
     path_variables["VPR_ARCH_FILE"] = args.arch_file
     path_variables["OPENFPGA_ARCH_FILE"] = args.openfpga_arch_file
-    # path_variables["OPENFPGA_SIM_SETTING_FILE"] = args.openfpga_sim_setting_file
-    # path_variables["EXTERNAL_FABRIC_KEY_FILE"] = args.external_fabric_key_file
     path_variables["VPR_TESTBENCH_BLIF"] = args.top_module+".blif"
     path_variables["ACTIVITY_FILE"] = args.top_module+"_ace_out.act"
     path_variables["REFERENCE_VERILOG_TESTBENCH"] = args.top_module + \
@@ -720,162 +640,6 @@ def run_openfpga_shell():
     run_command("OpenFPGA Shell Run", "openfpgashell.log", command)
     ExecTime["VPREnd"] = time.time()
     extract_vpr_stats("vpr_stdout.log")
-
-
-def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
-    command = [cad_tools["vpr_path"],
-               args.arch_file,
-               bench_blif,
-               "--net_file", args.top_module+"_vpr.net",
-               "--place_file", args.top_module+"_vpr.place",
-               "--route_file", args.top_module+"_vpr.route",
-               "--full_stats", "on",
-               "--activity_file", args.top_module+"_ace_out.act",
-               ]
-    if not args.disp:
-        command += ["--disp", "off"]
-    else:
-        command += ["--disp", "on"]
-
-    if route_only:
-        command += ["--route"]
-    # Power options
-    if args.power:
-        command += ["--power",
-                    "--tech_properties", args.power_tech]
-    # packer options
-    if args.vpr_timing_pack_off:
-        command += ["--timing_driven_clustering", "off"]
-    #  channel width option
-    if fixed_chan_width >= 0:
-        command += ["--route_chan_width", "%d" % fixed_chan_width]
-    if args.vpr_use_tileable_route_chan_width:
-        command += ["--use_tileable_route_chan_width"]
-
-    if args.vpr_fpga_x2p_compact_routing_hierarchy:
-        command += ["--fpga_x2p_compact_routing_hierarchy"]
-
-    # FPGA_Spice Options
-    if (args.vpr_fpga_spice):
-        command += ["--fpga_spice"]
-        if args.vpr_fpga_x2p_signal_density_weight:
-            command += ["--fpga_x2p_signal_density_weight",
-                        args.vpr_fpga_x2p_signal_density_weight]
-        if args.vpr_fpga_x2p_sim_window_size:
-            command += ["--fpga_x2p_sim_window_size",
-                        args.vpr_fpga_x2p_sim_window_size]
-
-        if args.vpr_fpga_spice_sim_mt_num:
-            command += ["--fpga_spice_sim_mt_num",
-                        args.vpr_fpga_spice_sim_mt_num]
-        if args.vpr_fpga_spice_simulator_path:
-            command += ["--fpga_spice_simulator_path",
-                        args.vpr_fpga_spice_simulator_path]
-        if args.vpr_fpga_spice_print_component_tb:
-            command += ["--fpga_spice_print_lut_testbench",
-                        "--fpga_spice_print_hardlogic_testbench",
-                        "--fpga_spice_print_pb_mux_testbench",
-                        "--fpga_spice_print_cb_mux_testbench",
-                        "--fpga_spice_print_sb_mux_testbench"
-                        ]
-        if args.vpr_fpga_spice_print_grid_tb:
-            command += ["--fpga_spice_print_grid_testbench",
-                        "--fpga_spice_print_cb_testbench",
-                        "--fpga_spice_print_sb_testbench"
-                        ]
-        if args.vpr_fpga_spice_print_top_testbench:
-            command += ["--fpga_spice_print_top_testbench"]
-        if args.vpr_fpga_spice_leakage_only:
-            command += ["--fpga_spice_leakage_only"]
-        if args.vpr_fpga_spice_parasitic_net_estimation_off:
-            command += ["--fpga_spice_parasitic_net_estimation", "off"]
-        if args.vpr_fpga_spice_testbench_load_extraction_off:
-            command += ["--fpga_spice_testbench_load_extraction", "off"]
-
-    # FPGA Verilog options
-    if args.vpr_fpga_verilog:
-        command += ["--fpga_verilog"]
-        if args.vpr_fpga_verilog_dir:
-            command += ["--fpga_verilog_dir", args.vpr_fpga_verilog_dir]
-        if args.vpr_fpga_verilog_print_top_tb:
-            command += ["--fpga_verilog_print_top_testbench"]
-        if args.vpr_fpga_verilog_print_input_blif_tb:
-            command += ["--fpga_verilog_print_input_blif_testbench"]
-        if args.vpr_fpga_verilog_print_autocheck_top_testbench:
-            command += ["--fpga_verilog_print_autocheck_top_testbench",
-                        # args.vpr_fpga_verilog_print_autocheck_top_testbench]
-                        os.path.join(args.run_dir, args.top_module+"_output_verilog.v")]
-        if args.vpr_fpga_verilog_include_timing:
-            command += ["--fpga_verilog_include_timing"]
-        if args.vpr_fpga_verilog_explicit_mapping:
-            command += ["--fpga_verilog_explicit_mapping"]
-        if args.vpr_fpga_x2p_duplicate_grid_pin:
-            command += ["--fpga_x2p_duplicate_grid_pin"]
-        if args.vpr_fpga_verilog_include_signal_init:
-            command += ["--fpga_verilog_include_signal_init"]
-        if args.vpr_fpga_verilog_formal_verification_top_netlist:
-            command += ["--fpga_verilog_print_formal_verification_top_netlist"]
-        if args.vpr_fpga_verilog_print_simulation_ini:
-            command += ["--fpga_verilog_print_simulation_ini"]
-        if args.vpr_fpga_verilog_include_icarus_simulator:
-            command += ["--fpga_verilog_include_icarus_simulator"]
-        if args.vpr_fpga_verilog_print_report_timing_tcl:
-            command += ["--fpga_verilog_print_report_timing_tcl"]
-        if args.vpr_fpga_verilog_report_timing_rpt_path:
-            command += ["--fpga_verilog_report_timing_rpt_path",
-                        args.vpr_fpga_verilog_report_timing_rpt_path]
-        if args.vpr_fpga_verilog_print_sdc_pnr:
-            command += ["--fpga_verilog_print_sdc_pnr"]
-        if args.vpr_fpga_verilog_print_user_defined_template:
-            command += ["--fpga_verilog_print_user_defined_template"]
-        if args.vpr_fpga_verilog_print_sdc_analysis:
-            command += ["--fpga_verilog_print_sdc_analysis"]
-
-    # FPGA Bitstream Genration options
-    if args.vpr_fpga_verilog_print_sdc_analysis:
-        command += ["--fpga_bitstream_generator"]
-
-    if args.vpr_fpga_x2p_rename_illegal_port or \
-            args.vpr_fpga_spice or \
-            args.vpr_fpga_verilog:
-        command += ["--fpga_x2p_rename_illegal_port"]
-
-    # Other VPR options
-    if args.vpr_place_clb_pin_remap:
-        command += ["--place_clb_pin_remap"]
-    if args.vpr_route_breadthfirst:
-        command += ["--router_algorithm", "breadth_first"]
-    if args.vpr_max_router_iteration:
-        command += ["--max_router_iterations", args.vpr_max_router_iteration]
-
-    chan_width = None
-    try:
-        logger.debug("Running VPR : " + " ".join(command))
-        with open(logfile, 'w+') as output:
-            output.write(" ".join(command)+"\n")
-            process = subprocess.run(command,
-                                     check=True,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE,
-                                     universal_newlines=True)
-            for line in process.stdout.split('\n'):
-                if "Best routing" in line:
-                    chan_width = int(re.search(
-                        r"channel width factor of ([0-9]+)", line).group(1))
-                if "Circuit successfully routed" in line:
-                    chan_width = int(re.search(
-                        r"a channel width factor of ([0-9]+)", line).group(1))
-            output.write(process.stdout)
-            if process.returncode:
-                logger.info("Standard VPR run failed with returncode %d",
-                            process.returncode)
-                raise subprocess.CalledProcessError(0, command)
-    except (Exception, subprocess.CalledProcessError) as e:
-        logger.exception("Failed to run VPR")
-        filter_failed_process_output(e.output)
-        clean_up_and_exit("")
-    logger.info("VPR output is written in file %s" % logfile)
-    return chan_width
 
 
 def extract_vpr_stats(logfile, r_filename="vpr_stat", parse_section="vpr"):
@@ -927,7 +691,7 @@ def run_rewrite_verilog():
         "write_verilog %s" % args.top_module+"_output_verilog.v"
     ]
     command = [cad_tools["yosys_path"], "-p", "; ".join(script_cmd)]
-    run_command("Yosys", "yosys_output.txt", command)
+    run_command("Yosys", "yosys_rewrit.log", command)
 
 
 def run_netlists_verification(exit_if_fail=True):
@@ -972,25 +736,27 @@ def run_netlists_verification(exit_if_fail=True):
 
 def run_command(taskname, logfile, command, exit_if_fail=True):
     logger.info("Launching %s " % taskname)
-    with open(logfile, 'w+') as output:
+    with open(logfile, 'w') as output:
         try:
             output.write(" ".join(command)+"\n")
             process = subprocess.run(command,
-                                     check=True,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE,
+                                     capture_output=True,
                                      universal_newlines=True)
             output.write(process.stdout)
+            output.write(process.stderr)
+            output.write(str(process.returncode))
+
             if process.returncode:
                 logger.error("%s run failed with returncode %d" %
                              (taskname, process.returncode))
-        except (Exception, subprocess.CalledProcessError) as e:
-            logger.exception("failed to execute %s" % taskname)
-            filter_failed_process_output(e.output)
-            output.write(e.output)
+                filter_failed_process_output(process.stderr)
+                if exit_if_fail:
+                    clean_up_and_exit("Failed to run %s task" % taskname)
+        except Exception:
+            logger.error("%s failed to execute" % (taskname))
+            traceback.print_exc(file=output)
             if exit_if_fail:
                 clean_up_and_exit("Failed to run %s task" % taskname)
-            return None
     logger.info("%s is written in file %s" % (taskname, logfile))
     return process.stdout
 

@@ -12,7 +12,7 @@ all: checkout
 	mkdir -p build && cd build && $(CMAKE_COMMAND) ${CMAKE_FLAGS} ..
 	cd build && $(MAKE)
 
-checkout: 
+checkout:
 	git submodule init
 	git submodule update --init --recursive
 

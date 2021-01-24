@@ -26,6 +26,8 @@ import pprint
 from importlib import util
 from collections import OrderedDict
 
+if util.find_spec("coloredlogs"):
+    import coloredlogs
 if util.find_spec("humanize"):
     import humanize
 
@@ -35,8 +37,13 @@ if sys.version_info[0] < 3:
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 # Configure logging system
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-logging.basicConfig(level=logging.INFO, stream=sys.stdout,
-                    format='%(levelname)s (%(threadName)15s) - %(message)s')
+LOG_FORMAT = "%(levelname)5s (%(threadName)15s) - %(message)s"
+if util.find_spec("coloredlogs"):
+    coloredlogs.install(level='INFO', stream=sys.stdout,
+                        fmt=LOG_FORMAT)
+else:
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout,
+                        format=LOG_FORMAT)
 logger = logging.getLogger('OpenFPGA_Task_logs')
 
 
