@@ -1,0 +1,2 @@
+FROM ghcr.io/lnis-uofu/openfpga-build-base
+RUN apt-get update && apt-get install -y clang-format-7 clang-6.0
