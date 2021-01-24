@@ -740,7 +740,8 @@ def run_command(taskname, logfile, command, exit_if_fail=True):
         try:
             output.write(" ".join(command)+"\n")
             process = subprocess.run(command,
-                                     capture_output=True,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE,
                                      universal_newlines=True)
             output.write(process.stdout)
             output.write(process.stderr)
@@ -753,7 +754,7 @@ def run_command(taskname, logfile, command, exit_if_fail=True):
                 if exit_if_fail:
                     clean_up_and_exit("Failed to run %s task" % taskname)
         except Exception:
-            logger.error("%s failed to execute" % (taskname))
+            logger.exception("%s failed to execute" % (taskname))
             traceback.print_exc(file=output)
             if exit_if_fail:
                 clean_up_and_exit("Failed to run %s task" % taskname)
