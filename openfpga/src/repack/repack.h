@@ -8,6 +8,7 @@
 #include "vpr_device_annotation.h"
 #include "vpr_clustering_annotation.h"
 #include "vpr_routing_annotation.h"
+#include "repack_design_constraints.h"
 
 /********************************************************************
  * Function declaration
@@ -21,6 +22,7 @@ void pack_physical_pbs(const DeviceContext& device_ctx,
                        const ClusteringContext& clustering_ctx,
                        VprDeviceAnnotation& device_annotation,
                        VprClusteringAnnotation& clustering_annotation,
+                       const RepackDesignConstraints& design_constraints,
                        const bool& verbose);
 
 } /* end namespace openfpga */

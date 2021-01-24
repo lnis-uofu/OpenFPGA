@@ -136,6 +136,8 @@ Pass Gate Logic
 .. note:: pass-gate logic are used in building multiplexers and LUTs.
 
 
+.. _circuit_library_circuit_port:
+
 Circuit Port
 ^^^^^^^^^^^^
 

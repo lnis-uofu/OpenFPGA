@@ -70,6 +70,11 @@ ShellCommandId add_openfpga_write_verilog_testbench_command(openfpga::Shell<Open
   CommandOptionId fabric_netlist_opt = shell_cmd.add_option("fabric_netlist_file_path", false, "Specify the file path to the fabric Verilog netlist");
   shell_cmd.set_option_require_value(fabric_netlist_opt, openfpga::OPT_STRING);
 
+  /* Add an option '--pin_constraints_file in short '-pcf' */
+  CommandOptionId pcf_opt = shell_cmd.add_option("pin_constraints_file", false, "Specify the file path to the pin constraints");
+  shell_cmd.set_option_short_name(pcf_opt, "pcf");
+  shell_cmd.set_option_require_value(pcf_opt, openfpga::OPT_STRING);
+
   /* Add an option '--reference_benchmark_file_path'*/
   CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", true, "Specify the file path to the reference Verilog netlist");
   shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);

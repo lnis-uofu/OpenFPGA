@@ -90,3 +90,21 @@ void write_xml_attribute(std::fstream& fp,
   fp << std::scientific << value;
   fp << "\""; 
 }
+
+/********************************************************************
+ * FIXME: Use a common function to output ports
+ * Generate the full hierarchy name for a operating pb_type
+ *******************************************************************/
+std::string generate_xml_port_name(const openfpga::BasicPort& pb_port) {
+  std::string port_name;
+
+  /* Output format: <port_name>[<LSB>:<MSB>] */
+  port_name += pb_port.get_name();
+  port_name += std::string("[");
+  port_name += std::to_string(pb_port.get_lsb());
+  port_name += std::string(":");
+  port_name += std::to_string(pb_port.get_msb());
+  port_name += std::string("]");
+
+  return port_name;
+}

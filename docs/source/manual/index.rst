@@ -16,3 +16,5 @@
 
    fpga_bitstream/index
 
+   file_formats/index
+

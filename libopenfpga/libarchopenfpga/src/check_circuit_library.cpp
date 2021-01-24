@@ -290,17 +290,35 @@ size_t check_ccff_circuit_model_ports(const CircuitLibrary& circuit_lib,
   VTR_ASSERT(CIRCUIT_MODEL_CCFF == circuit_lib.model_type(circuit_model));
 
   /* Check if we have D, Set and Reset */
+  /* We can have either 1 input which is D or 2 inputs which are D and scan input */
+  size_t num_input_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_INPUT, true).size();
+  if ((1 != num_input_ports) && (2 != num_input_ports)) {
+    VTR_LOG_ERROR("Configuration flip-flop '%s' must have either 1 or 2 %s ports!\n\tAmong which:\n\t\tthe first input is a regular input (e.g., D)\n\t\tand the other could be scan-chain input (e.g., SI)\n",
+                  circuit_lib.model_name(circuit_model).c_str(),
+                  CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(CIRCUIT_MODEL_PORT_INPUT)]);
+    num_err++;
+  }
+
   num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
                                                                  CIRCUIT_MODEL_PORT_INPUT,
-                                                                 1, 1, false);
+                                                                 num_input_ports, 1, false);
   /* Check if we have a clock */
   num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
                                                                  CIRCUIT_MODEL_PORT_CLOCK,
                                                                  1, 1, true);
 
 
-  /* Check if we have 1 or 2 outputs */
+  /* Check if we have 1 or 2 or 3 outputs */
   size_t num_output_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_OUTPUT, true).size();
+  if ((1 != num_output_ports) 
+   && (2 != num_output_ports)
+   && (3 != num_output_ports)) {
+    VTR_LOG_ERROR("Configuration flip-flop '%s' must have either 1 or 2 or 3 %s ports!\n\tAmong which:\n\t\tthe first port is the manadatory regular data output (e.g., Q) and \n\t\tthe second port could be the inverted data output which can optionally be enabled by configure-enable signal (e.g., QN or cgf_en_QN) and \n\t\tthe third port could be the data output which can optionally be enabled by configure-enable signal (e.g., cgf_en_Q)\n",
+                  circuit_lib.model_name(circuit_model).c_str(),
+                  CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(CIRCUIT_MODEL_PORT_OUTPUT)]);
+    num_err++;
+  }
+
   num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
                                                                  CIRCUIT_MODEL_PORT_OUTPUT,
                                                                  num_output_ports, 1, false);

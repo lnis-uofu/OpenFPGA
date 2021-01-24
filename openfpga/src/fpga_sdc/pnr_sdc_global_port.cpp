@@ -59,11 +59,10 @@ void print_pnr_sdc_clock_port(std::fstream& fp,
  *******************************************************************/
 static 
 void print_pnr_sdc_global_clock_ports(std::fstream& fp, 
-                                      const float& programming_critical_path_delay,
-                                      const float& operating_critical_path_delay,
                                       const ModuleManager& module_manager,
                                       const ModuleId& top_module,
-                                      const FabricGlobalPortInfo& fabric_global_port_info) {
+                                      const FabricGlobalPortInfo& fabric_global_port_info,
+                                      const SimulationSetting& sim_setting) {
 
   valid_file_stream(fp);
 
@@ -73,11 +72,11 @@ void print_pnr_sdc_global_clock_ports(std::fstream& fp,
       continue;
     }
     /* Reach here, it means a clock port and we need print constraints */
-    float clock_period = operating_critical_path_delay; 
+    float clock_period = 1./sim_setting.default_operating_clock_frequency();
 
     /* For programming clock, we give a fixed period */
     if (true == fabric_global_port_info.global_port_is_prog(global_port)) {
-      clock_period = programming_critical_path_delay;
+      clock_period =  1./sim_setting.programming_clock_frequency();
       /* Print comments */
       fp << "##################################################" << std::endl; 
       fp << "# Create programmable clock                       " << std::endl;
@@ -92,6 +91,15 @@ void print_pnr_sdc_global_clock_ports(std::fstream& fp,
     BasicPort clock_port = module_manager.module_port(top_module, fabric_global_port_info.global_module_port(global_port));
     for (const size_t& pin : clock_port.pins()) {
       BasicPort port_to_constrain(clock_port.get_name(), pin, pin);
+
+      /* Should try to find a port defintion from simulation parameters
+       * If found, it means that we need to use special clock name! 
+       */
+      for (const SimulationClockId& sim_clock : sim_setting.clocks()) { 
+        if (port_to_constrain == sim_setting.clock_port(sim_clock)) {
+          clock_period = 1./sim_setting.clock_frequency(sim_clock);
+        }
+      }
 
       print_pnr_sdc_clock_port(fp, 
                                port_to_constrain,
@@ -153,11 +161,10 @@ void print_pnr_sdc_global_non_clock_ports(std::fstream& fp,
  * In general, we do not recommend to do this
  *******************************************************************/
 void print_pnr_sdc_global_ports(const std::string& sdc_dir, 
-                                const float& programming_critical_path_delay,
-                                const float& operating_critical_path_delay,
                                 const ModuleManager& module_manager,
                                 const ModuleId& top_module,
                                 const FabricGlobalPortInfo& global_ports,
+                                const SimulationSetting& sim_setting,
                                 const bool& constrain_non_clock_port) {
 
   /* Create the file name for Verilog netlist */
@@ -177,14 +184,12 @@ void print_pnr_sdc_global_ports(const std::string& sdc_dir,
   print_sdc_file_header(fp, std::string("Clock contraints for PnR"));
 
   print_pnr_sdc_global_clock_ports(fp, 
-                                   programming_critical_path_delay,
-                                   operating_critical_path_delay,
                                    module_manager, top_module,
-                                   global_ports);
+                                   global_ports, sim_setting);
 
   if (true == constrain_non_clock_port) {
     print_pnr_sdc_global_non_clock_ports(fp, 
-                                         operating_critical_path_delay,
+                                         1./sim_setting.default_operating_clock_frequency(),
                                          module_manager, top_module,
                                          global_ports);
 

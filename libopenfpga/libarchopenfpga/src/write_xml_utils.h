@@ -6,6 +6,7 @@
  *******************************************************************/
 #include <fstream>
 #include "circuit_library.h"
+#include "openfpga_port.h" 
 
 /********************************************************************
  * Function declaration
@@ -29,5 +30,7 @@ void write_xml_attribute(std::fstream& fp,
 void write_xml_attribute(std::fstream& fp, 
                          const char* attr,
                          const size_t& value);
+
+std::string generate_xml_port_name(const openfpga::BasicPort& pb_port);
 
 #endif

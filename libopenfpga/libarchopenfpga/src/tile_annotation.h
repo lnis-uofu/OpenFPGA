@@ -9,6 +9,7 @@
 #include <array>
 
 #include "vtr_vector.h"
+#include "vtr_geometry.h"
 
 #include "openfpga_port.h"
 
@@ -39,8 +40,9 @@ class TileAnnotation {
     global_port_range global_ports() const;
   public:  /* Public accessors */
     std::string global_port_name(const TileGlobalPortId& global_port_id) const;
-    std::string global_port_tile_name(const TileGlobalPortId& global_port_id) const;
-    BasicPort global_port_tile_port(const TileGlobalPortId& global_port_id) const;
+    std::vector<std::string> global_port_tile_names(const TileGlobalPortId& global_port_id) const;
+    std::vector<BasicPort> global_port_tile_ports(const TileGlobalPortId& global_port_id) const;
+    std::vector<vtr::Point<size_t>> global_port_tile_coordinates(const TileGlobalPortId& global_port_id) const;
     bool global_port_is_clock(const TileGlobalPortId& global_port_id) const;
     bool global_port_is_set(const TileGlobalPortId& global_port_id) const;
     bool global_port_is_reset(const TileGlobalPortId& global_port_id) const;
@@ -49,9 +51,12 @@ class TileAnnotation {
     /* By default, we do not set it as a clock.
      * Users should set it through the set_global_port_is_clock() function
      */
-    TileGlobalPortId create_global_port(const std::string& port_name,
-                                        const std::string& tile_name,
-                                        const BasicPort& tile_port);
+    TileGlobalPortId create_global_port(const std::string& port_name);
+    /* Add tile port information */ 
+    void add_global_port_tile_information(const TileGlobalPortId& global_port_id,
+                                          const std::string& tile_name, 
+                                          const BasicPort& tile_port,
+                                          const vtr::Point<size_t>& tile_coord);
     void set_global_port_is_clock(const TileGlobalPortId& global_port_id,
                                   const bool& is_clock);
     void set_global_port_is_set(const TileGlobalPortId& global_port_id,
@@ -70,8 +75,9 @@ class TileAnnotation {
     /* Global port information for tiles */
     vtr::vector<TileGlobalPortId, TileGlobalPortId> global_port_ids_;
     vtr::vector<TileGlobalPortId, std::string> global_port_names_;
-    vtr::vector<TileGlobalPortId, std::string> global_port_tile_names_;
-    vtr::vector<TileGlobalPortId, BasicPort> global_port_tile_ports_;
+    vtr::vector<TileGlobalPortId, std::vector<std::string>> global_port_tile_names_;
+    vtr::vector<TileGlobalPortId, std::vector<vtr::Point<size_t>>> global_port_tile_coordinates_;
+    vtr::vector<TileGlobalPortId, std::vector<BasicPort>> global_port_tile_ports_;
     vtr::vector<TileGlobalPortId, bool> global_port_is_clock_;
     vtr::vector<TileGlobalPortId, bool> global_port_is_reset_;
     vtr::vector<TileGlobalPortId, bool> global_port_is_set_;

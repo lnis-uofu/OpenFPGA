@@ -21,9 +21,11 @@ Note that an OpenFPGA architecture can be applied to multiple VPR architecture f
 - behavioral: If behavioral Verilog modeling is specified
 - local\_encoder: If local encoders are used in routing multiplexer design
 - spyio/spypad: If spy I/Os are used
+- registerable\_io: If I/Os are registerable (can be either combinational or sequential)
 - stdcell: If circuit designs are built with standard cells only
 - tree\_mux: If routing multiplexers are built with a tree-like structure
 - <feature_size>: The technology node which the delay numbers are extracted from.
 - powergate : The FPGA has power-gating techniques applied. If not defined, there is no power-gating.
+- GlobalTile<Int>Clk: How many clocks are defined through global ports from physical tiles. <Int> is the number of clocks 
 
 Other features are used in naming should be listed here.

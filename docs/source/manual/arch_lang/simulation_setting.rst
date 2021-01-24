@@ -10,7 +10,10 @@ General organization is as follows
 
     <openfpga_simulation_setting>
       <clock_setting>
-        <operating frequency="<int>|<string>" num_cycles="<int>|<string>" slack="<float>"/>
+        <operating frequency="<int>|<string>" num_cycles="<int>|<string>" slack="<float>">
+          <clock name="<string>" port="<string>" frequency="<float>"/>
+          ...
+        </operating>
         <programming frequency="<int>"/>
       </clock_setting>
       <simulator_option>
@@ -54,13 +57,17 @@ We should the full syntax in the code block below and then provide details on ea
 .. code-block:: xml
 
   <clock_setting>
-    <operating frequency="<float>|<string>" num_cycles="<int>|<string>" slack="<float>"/>
+    <operating frequency="<float>|<string>" num_cycles="<int>|<string>" slack="<float>">
+      <clock name="<string>" port="<string>" frequency="<float>"/>
+      ...
+    </operating>
     <programming frequency="<float>"/>
   </clock_setting>
 
 Operating clock setting
 ^^^^^^^^^^^^^^^^^^^^^^^
 Operating clocks are defined under the XML node ``<operating>``
+To support FPGA fabrics with multiple clocks, OpenFPGA allows users to define a default operating clock frequency as well as a set of clock ports using different frequencies.
 
 .. option:: <operating frequency="<float>|<string>" num_cycles="<int>|<string>" slack="<float>"/>
 
@@ -69,6 +76,8 @@ Operating clocks are defined under the XML node ``<operating>``
   Alternatively, users can bind the frequency to the maximum clock frequency analyzed by VPR STA engine.
   This is very useful to validate the maximum operating frequency for users' implementations
   In such case, the value of this attribute should be a reserved word ``auto``.
+
+.. note:: The frequency is considered as a default operating clock frequency, which will be used when a clock pin of a multi-clock FPGA fabric lacks explicit clock definition.
 
 - ``num_cycles="<int>|<string>"``
   can be either ``auto`` or an integer. When set to ``auto``, OpenFPGA will infer the number of clock cycles from the average/median of all the signal activities.
@@ -85,6 +94,22 @@ Operating clocks are defined under the XML node ``<operating>``
 .. note:: Only valid when option ``frequency`` is set to ``auto``
 
 .. warning:: Avoid to use a negative slack! This may cause your simulation to fail!
+
+.. option:: <clock name="<string>" port="<string>" frequency="<float>"/>
+
+- ``name="<string>``
+  Specify a unique name for a clock signal. The name will be used in generating clock stimulus in testbenches.
+
+- ``port="<string>``
+  Specify the clock port which the clock signal should be applied to. The clock port must be a valid clock port defined in OpenFPGA architecture description. Explicit index is required, e.g., ``clk[1:1]``. Otherwise, default index ``0`` will be considered, e.g., ``clk`` will be translated as ``clk[0:0]``.
+
+.. note:: You can define clock ports either through the tile annotation in :ref:`annotate_vpr_arch_physical_tile_annotation` or :ref:`circuit_library_circuit_port`.
+
+- ``frequency="<float>``
+  Specify frequency of a clock signal in the unit of ``[Hz]`` 
+
+.. warning:: Currently, we only allow operating clocks to be overwritten!!!
+
 
 Programming clock setting
 ^^^^^^^^^^^^^^^^^^^^^^^^^
