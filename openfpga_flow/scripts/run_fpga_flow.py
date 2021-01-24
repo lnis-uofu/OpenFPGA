@@ -635,7 +635,7 @@ def run_openfpga_shell():
 
     with open(args.top_module+"_run.openfpga", 'w', encoding='utf-8') as archfile:
         archfile.write(tmpl.safe_substitute(path_variables))
-    command = [cad_tools["openfpga_shell_path"], "-f",
+    command = [cad_tools["openfpga_shell_path"], "-batch", "-f",
                args.top_module+"_run.openfpga"]
     run_command("OpenFPGA Shell Run", "openfpgashell.log", command)
     ExecTime["VPREnd"] = time.time()
