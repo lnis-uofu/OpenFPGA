@@ -58,6 +58,15 @@ run-regression-local () {
     bash .github/workflows/*reg_test.sh
 }
 
+# Run regression test locally
+run-regression-local-docker () {
+    cd ${OPENFPGA_PATH}
+    docker run \
+        -v $(pwd)/openfpga_flow:/opt/openfpga/ \
+        -v $(pwd)/.github:/opt/openfpga/ \
+        ghcr.io/lnis-uofu/openfpga-master:latest "bash .github/workflows/*reg_test.sh"
+}
+
 # Changes directory to task directory [goto_task <task_name> <run_num[default 0]>]
 goto-task () {
     if [ -z $1 ]; then
