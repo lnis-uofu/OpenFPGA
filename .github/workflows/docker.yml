@@ -1,0 +1,68 @@
+name: Build docker CI images
+on:
+  - workflow_dispatch
+jobs:
+  base_images:
+    name: Push Docker images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+      - name: Build base
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./docker/Dockerfile.base
+          push: true
+          tags: ghcr.io/lnis-uofu/openfpga-build-base:latest
+      - name: Build environment image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./docker/Dockerfile.env
+          push: true
+          tags: ghcr.io/lnis-uofu/openfpga-env:latest
+  compiler_images:
+    name: Build ${{ matrix.compiler }} compiler image
+    needs: base_images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler:
+          - gcc-5
+          - gcc-6
+          - gcc-7
+          - gcc-8
+          - gcc-9
+          - clang-6.0
+          - clang-8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+      - name: Build ${{ matrix.compiler }} image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./docker/Dockerfile.${{ matrix.compiler }}
+          push: true
+          tags: ghcr.io/lnis-uofu/openfpga-build-${{ matrix.compiler }}:latest
