@@ -29,9 +29,10 @@ int main(int argc, char** argv) {
 
   /* Create the command to launch shell in different modes */
   openfpga::Command start_cmd("OpenFPGA");
-  /* Add two options:
+  /* Add options:
    * '--interactive', -i': launch the interactive mode 
    * '--file', -f': launch the script mode 
+   * '--batch_execution': execute the script in batch mode. Will exit immediately when fatal errors occurred
    */
   openfpga::CommandOptionId opt_interactive = start_cmd.add_option("interactive", false, "Launch OpenFPGA in interactive mode");
   start_cmd.set_option_short_name(opt_interactive, "i");
@@ -39,6 +40,9 @@ int main(int argc, char** argv) {
   openfpga::CommandOptionId opt_script_mode = start_cmd.add_option("file", false, "Launch OpenFPGA in script mode");
   start_cmd.set_option_require_value(opt_script_mode, openfpga::OPT_STRING);
   start_cmd.set_option_short_name(opt_script_mode, "f");
+
+  openfpga::CommandOptionId opt_batch_exec = start_cmd.add_option("batch_execution", false, "Launch OpenFPGA in batch  mode when running scripts");
+  start_cmd.set_option_short_name(opt_batch_exec, "batch");
 
   openfpga::CommandOptionId opt_help = start_cmd.add_option("help", false, "Help desk"); 
   start_cmd.set_option_short_name(opt_help, "h");
@@ -95,17 +99,21 @@ int main(int argc, char** argv) {
     if (true == start_cmd_context.option_enable(start_cmd, opt_interactive)) {
 
       shell.run_interactive_mode(openfpga_context);
-      return 0;
+      return shell.exit_code();
     } 
 
     if (true == start_cmd_context.option_enable(start_cmd, opt_script_mode)) {
       shell.run_script_mode(start_cmd_context.option_value(start_cmd, opt_script_mode).c_str(),
-                            openfpga_context);
-      return 0;
+                            openfpga_context,
+                            start_cmd_context.option_enable(start_cmd, opt_batch_exec));
+      return shell.exit_code();
     }
     /* Reach here there is something wrong, show the help desk */
     openfpga::print_command_options(start_cmd);
   }
 
-  return 0;
+  /* Reach here, it means shell execution has critical errors.
+   * Return a code with fatal errors  
+   */
+  return 1;
 }
