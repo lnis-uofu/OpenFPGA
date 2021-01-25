@@ -146,7 +146,7 @@ build_fabric
 
     Load an external fabric key from an XML file. For example, ``--load_fabric_key fpga_2x2.xml`` See details in :ref:`file_formats_fabric_key`.
 
-  .. option:: --generate_fabric_key
+  .. option:: --generate_random_fabric_key
 
     Generate a fabric key in a random way
 
