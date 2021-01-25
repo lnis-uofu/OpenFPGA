@@ -1,9 +1,7 @@
 name: linux_build
 
-# Run CI on
-# - each push
-# - each pull request
-# - scheduled weekly
+# Run CI on push, PR, and weekly.
+
 on:
   push:
   pull_request:
@@ -18,123 +16,79 @@ env:
 
 # Multiple job to tests
 jobs:
+  change_detect:
+    name: "Detect code changes"
+    runs-on: ubuntu-18.04
+    outputs:
+      # this is output as string, see https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
+      source_modified: ${{ steps.changes.outputs.status_code == '0' }}
+    steps:
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: Check for source code changes
+        id: changes
+        run: |
+          if git diff origin/master HEAD --name-status --exit-code -- . ':!openfpga_flow' ':!docs'; then
+            echo "::set-output name=status_code::0"
+          else
+            echo "::set-output name=status_code::$?"
+          fi
   # Test the compilation compatibility
   linux_build:
+    needs: change_detect
+    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) || github.ref == 'refs/heads/master' }}
     name: ${{ matrix.config.name }}
-    runs-on: ${{ matrix.config.os }}
-
+    runs-on: ubuntu-18.04
+    container: ghcr.io/lnis-uofu/openfpga-build-${{ matrix.config.cc}}
     # Branch on different OS and settings
     strategy:
       fail-fast: false
       matrix:
         config:
-        - {
-            name: "Build Compatibility: GCC-5 (Ubuntu 18.04)",
-            artifact: "OpenFPGA-ubuntu-18.04-gcc5-build.7z",
-            os: ubuntu-18.04,
-            cc: "gcc-5", cxx: "g++-5"
-          }
-
-        - {
-            name: "Build Compatibility: GCC-6 (Ubuntu 18.04)",
-            artifact: "OpenFPGA-ubuntu-18.04-gcc6-build.7z",
-            os: ubuntu-18.04,
-            cc: "gcc-6", cxx: "g++-6"
-          }
-
-        - {
-            name: "Build Compatibility: GCC-7 (Ubuntu 18.04)",
-            artifact: "OpenFPGA-ubuntu-18.04-gcc7-build.7z",
-            os: ubuntu-18.04,
-            cc: "gcc-7", cxx: "g++-7"
-          }
-
-        - {
-            name: "Build Compatibility: GCC-8 (Ubuntu 18.04)",
-            artifact: "OpenFPGA-ubuntu-18.04-gcc8-build.7z",
-            os: ubuntu-18.04,
-            cc: "gcc-8", cxx: "g++-8"
-          }
-
-        - {
-            name: "Build Compatibility: GCC-9 (Ubuntu 18.04)",
-            artifact: "OpenFPGA-ubuntu-18.04-gcc9-build.7z",
-            os: ubuntu-18.04,
-            cc: "gcc-9", cxx: "g++-9"
-          }
-
-        - {
-            name: "Build Compatibility: Clang-6 (Ubuntu 18.04)",
-            artifact: "OpenFPGA-ubuntu-18.04-clang6-build.7z",
-            os: ubuntu-18.04,
-            cc: "clang-6.0", cxx: "clang++-6.0"
-          }
-
-        - {
-            name: "Build Compatibility: Clang-8 (Ubuntu 18.04)",
-            artifact: "OpenFPGA-ubuntu-18.04-clang8-build.7z",
-            os: ubuntu-18.04,
-            cc: "clang-8", cxx: "clang++-8"
-          }
-
-        - {
-            name: "Basic Regression Tests: GCC-8 (Ubuntu 18.04)",
-            artifact: "OpenFPGA-basic-tests-ubuntu-18.04-gcc8-build.7z",
-            os: ubuntu-18.04,
-            cc: "gcc-8", cxx: "g++-8",
-            reg_script: "basic_reg_test.sh"
-          }
-
-        - {
-            name: "FPGA-Verilog Regression Tests: GCC-8 (Ubuntu 18.04)",
-            artifact: "OpenFPGA-fpga-verilog-tests-ubuntu-18.04-gcc8-build.7z",
-            os: ubuntu-18.04,
-            cc: "gcc-8", cxx: "g++-8",
-            reg_script: "fpga_verilog_reg_test.sh"
-          }
-
-        - {
-            name: "FPGA-Bitstream Regression Tests: GCC-8 (Ubuntu 18.04)",
-            artifact: "OpenFPGA-fpga-bitstream-tests-ubuntu-18.04-gcc8-build.7z",
-            os: ubuntu-18.04,
-            cc: "gcc-8", cxx: "g++-8",
-            reg_script: "fpga_bitstream_reg_test.sh"
-          }
-
-        - {
-            name: "FPGA-SDC Regression Tests: GCC-8 (Ubuntu 18.04)",
-            artifact: "OpenFPGA-fpga-sdc-tests-ubuntu-18.04-gcc8-build.7z",
-            os: ubuntu-18.04,
-            cc: "gcc-8", cxx: "g++-8",
-            reg_script: "fpga_sdc_reg_test.sh"
-          }
-
-        - {
-            name: "FPGA-SPICE Regression Tests: GCC-8 (Ubuntu 18.04)",
-            artifact: "OpenFPGA-fpga-spice-tests-ubuntu-18.04-gcc8-build.7z",
-            os: ubuntu-18.04,
-            cc: "gcc-8", cxx: "g++-8",
-            reg_script: "fpga_spice_reg_test.sh"
-          }
-
-
+        - name: "Build Compatibility: GCC-5 (Ubuntu 18.04)"
+          cc: gcc-5
+          cxx: g++-5
+        - name: "Build Compatibility: GCC-6 (Ubuntu 18.04)"
+          cc: gcc-6
+          cxx: g++-6
+        - name: "Build Compatibility: GCC-7 (Ubuntu 18.04)"
+          cc: gcc-7
+          cxx: g++-7
+        - name: "Build Compatibility: GCC-8 (Ubuntu 18.04)"
+          cc: gcc-8
+          cxx: g++-8
+        - name: "Build Compatibility: GCC-9 (Ubuntu 18.04)"
+          cc: gcc-9
+          cxx: g++-9
+        - name: "Build Compatibility: Clang-6 (Ubuntu 18.04)"
+          cc: clang-6.0
+          cxx: clang++-6.0
+        - name: "Build Compatibility: Clang-8 (Ubuntu 18.04)"
+          cc: clang-8
+          cxx: clang++-8
     # Define the steps to run the build job
+    env:
+      CC: ${{ matrix.config.cc }}
+      CXX: ${{ matrix.config.cxx }}
+      CCACHE_COMPRESS: "true"
+      CCACHE_COMPRESSLEVEL: "6"
+      CCACHE_MAXSIZE: "400M"
+      CCACHE_LOGFILE: ccache_log
+      CCACHE_DIR: /__w/OpenFPGA/.ccache
     steps:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
         with:
             submodules: true
 
-      - name: Install dependency
-        run: source ./.github/workflows/install_dependency.sh 
-
-      - name: Checkout CMake version
-        run: cmake --version 
-
-      - name: Checkout iVerilog version
+      - name: Dump tool versions
         run: |
-          iverilog -V 
-          vvp -V 
+          cmake --version
+          iverilog -V
+          vvp -V
 
       - name: Prepare ccache timestamp
         id: ccache_cache_timestamp
@@ -146,58 +100,164 @@ jobs:
       - name: Create CMake build environment
         # Some projects don't allow in-source building, so create a separate build directory
         # We'll use this as our working directory for all subsequent commands
-        run: cmake -E make_directory ${{runner.workspace}}/build
-      
-      - name: ccache cache files
+        run: cmake -E make_directory build
+
+      - name: Setup ccache
         uses: actions/cache@v2
         with:
-          path: ${{runner.workspace}}/.ccache
-          key: ${{ matrix.config.name }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
+          path: |
+            /__w/OpenFPGA/.ccache
+          key: ${{ matrix.config.cc }}-ccache-${{ github.ref}}
           restore-keys: |
-            ${{ matrix.config.name }}-ccache-
-
-      # Set up the paths for ccache and control the size under 400MB
-      - name: Configure ccache
-        shell: cmake -P {0}
-        run: |
-          file(TO_CMAKE_PATH ${{runner.workspace}} ccache_basedir)
-          set(ENV{CCACHE_BASEDIR} "${ccache_basedir}")
-          set(ENV{CCACHE_DIR} "${ccache_basedir}/.ccache")
-          set(ENV{CCACHE_COMPRESS} "true")
-          set(ENV{CCACHE_COMPRESSLEVEL} "6")
-          set(ENV{CCACHE_MAXSIZE} "400M")
-
-          execute_process(COMMAND ccache -p)
-          execute_process(COMMAND ccache -z)
+            ${{ matrix.config.cc }}-ccache-
 
       - name: Configure CMake
         # Use a bash shell so we can use the same syntax for environment variable
         # access regardless of the host operating system
         shell: bash
-        working-directory: ${{runner.workspace}}/build
-        # Note the current convention is to use the -S and -B options here to specify source 
-        # and build directories, but this is only available with CMake 3.13 and higher.  
+        working-directory: build
+        # Note the current convention is to use the -S and -B options here to specify source
+        # and build directories, but this is only available with CMake 3.13 and higher.
         # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
+        #
         run: |
-          export CC=${{ matrix.config.cc }}
-          export CXX=${{ matrix.config.cxx }}
-          cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          ccache -p
+          ccache -z
+          cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE
 
       - name: Build
-        working-directory: ${{runner.workspace}}/build
+        working-directory: build
         shell: bash
         # Execute the build.  You can specify a specific target with "--target <NAME>"
         run: |
-          cmake --build . --config $BUILD_TYPE 
+          cmake --build . --config $BUILD_TYPE
 
       # Check the cache size and see if it is over the limit
       - name: Check ccache size
-        shell: cmake -P {0}
+        run: ccache -s
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        if: ${{ matrix.config.cc == 'gcc-8'}}
+        with:
+          name: openfpga
+          path: |
+            abc/abc
+            abc/libabc.a
+            ace2/ace
+            ace2/libace.a
+            openfpga/libopenfpga.a
+            openfpga/openfpga
+            vpr/libvpr.a
+            vpr/vpr
+            yosys/share/
+            yosys/yosys
+            yosys/yosys-abc
+            yosys/yosys-config
+            yosys/yosys-filterlib
+            yosys/yosys-smtbmc
+  docker_distribution:
+    name: Build docker image for distribution
+    if: ${{ github.ref == 'refs/heads/master' }}
+    runs-on: ubuntu-latest
+    needs: linux_build
+    steps:
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v2
+      - name: Download a built artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: openfpga
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+      - name: Build and push master image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./docker/Dockerfile.master
+          push: true
+          tags: ghcr.io/lnis-uofu/openfpga-master:latest
+  artifact_regression_tests:
+    name: Regression tests on code changes
+    runs-on: ubuntu-18.04
+    container: ghcr.io/lnis-uofu/openfpga-env
+    needs: linux_build
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: basic_reg_test
+          - name: fpga_verilog_reg_test
+          - name: fpga_bitstream_reg_test
+          - name: fpga_sdc_reg_test
+          - name: fpga_spice_reg_test
+    steps:
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v2
+      - name: Download a built artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: openfpga
+      - name: chmod
         run: |
-          execute_process(COMMAND ccache -s)
-
-      - name: ${{matrix.config.name}}
-        if: contains(matrix.config.name, 'Regression Test')
+          chmod +x abc/abc
+          chmod +x ace2/ace
+          chmod +x openfpga/openfpga
+          chmod +x vpr/vpr
+          chmod +x yosys/yosys
+          chmod +x yosys/yosys-abc
+          chmod +x yosys/yosys-config
+          chmod +x yosys/yosys-filterlib
+          chmod +x yosys/yosys-smtbmc
+      - name: ${{matrix.config.name}}_GCC-8_(Ubuntu 18.04)
         shell: bash
-        # Execute the test. 
-        run: source ./.github/workflows/${{matrix.config.reg_script}}
+        run: source openfpga.sh && source .github/workflows/${{matrix.config.name}}.sh
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: failed_${{matrix.config.name}}_regression_log
+          retention-days: 1
+          path: |
+            openfpga_flow/**/*.log
+  docker_regression_tests:
+    needs: change_detect
+    if: ${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
+    name: Regression tests against master artifacts
+    runs-on: ubuntu-18.04
+    container: ghcr.io/lnis-uofu/openfpga-master:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: basic_reg_test
+          - name: fpga_verilog_reg_test
+          - name: fpga_bitstream_reg_test
+          - name: fpga_sdc_reg_test
+          - name: fpga_spice_reg_test
+    steps:
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: ${{matrix.config.name}}_GCC-8_(Ubuntu 18.04)
+        shell: bash
+        run: |
+          bash .github/workflows/install_dependencies_run.sh
+          python3 -m pip install -r requirements.txt
+          rsync -am --exclude='openfpga_flow/**' /opt/openfpga/. .
+          source openfpga.sh && source .github/workflows/${{matrix.config.name}}.sh
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: failed_${{matrix.config.name}}_regression_log
+          retention-days: 1
+          path: openfpga_flow/**/*.log
