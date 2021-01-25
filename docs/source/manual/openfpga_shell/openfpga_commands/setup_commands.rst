@@ -152,7 +152,7 @@ build_fabric
 
   .. option:: --write_fabric_key <string>.
 
-    Output current fabric key to an XML file. For example, ``--load_fabric_key fpga_2x2.xml`` See details in :ref:`file_formats_fabric_key`.
+    Output current fabric key to an XML file. For example, ``--write_fabric_key fpga_2x2.xml`` See details in :ref:`file_formats_fabric_key`.
 
   .. option:: --frame_view
 
