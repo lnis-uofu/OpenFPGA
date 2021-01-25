@@ -17,7 +17,6 @@ env:
 # Multiple job to tests
 jobs:
   change_detect:
-    if: false
     name: "Detect code changes"
     runs-on: ubuntu-18.04
     outputs:
@@ -40,7 +39,7 @@ jobs:
   # Test the compilation compatibility
   linux_build:
     needs: change_detect
-    if: true #${{ fromJSON(needs.change_detect.outputs.source_modified) || github.ref == 'refs/heads/master' }}
+    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) || github.ref == 'refs/heads/master' }}
     name: ${{ matrix.config.name }}
     runs-on: ubuntu-18.04
     container: ghcr.io/lnis-uofu/openfpga-build-${{ matrix.config.cc}}
@@ -158,7 +157,7 @@ jobs:
             yosys/yosys-smtbmc
   docker_distribution:
     name: Build docker image for distribution
-    if: true #${{ github.ref == 'refs/heads/master' }}
+    if: ${{ github.ref == 'refs/heads/master' }}
     runs-on: ubuntu-latest
     needs: linux_build
     steps:
@@ -229,7 +228,7 @@ jobs:
     env:
       OPENFPGA_PATH: /__w/OpenFPGA/OpenFPGA
     needs: change_detect
-    if: false #${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
+    if: ${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
     name: Regression tests against master artifacts
     runs-on: ubuntu-18.04
     container: ghcr.io/lnis-uofu/openfpga-master:latest
