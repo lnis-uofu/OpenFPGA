@@ -88,9 +88,18 @@ in which case the docker image compiled for the latest master branch is used for
     A functional regression test is run for every commit on every branch.
 
 
+How to debug failed regression test
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In case the ``funtional regression test`` fails,
+the actions script will collect all ``.log`` files from
+the task directory and upload as a artifacts on github storage.
+These artifacts can be downloaded from the github website actions tab, for more reference follow `this <https://docs.github.com/en/actions/managing-workflow-runs/downloading-workflow-artifacts>`_ article.
+
+**NOTE** : The retention time of these artifacts is 1 day,
+so in case user want to reserve the failure log for longer duration back it up locally
+
 Release Docker Images
 ^^^^^^^^^^^^^^^^^^^^^^
-
 
 .. option:: ghcr.io/lnis-uofu/openfpga-master:latest
 
