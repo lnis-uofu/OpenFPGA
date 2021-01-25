@@ -194,16 +194,11 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: "Basic Regression Tests: GCC-8 (Ubuntu 18.04)"
-            script: basic_reg_test.sh
-          - name: "FPGA-Verilog Regression Tests: GCC-8 (Ubuntu 18.04)"
-            script: fpga_verilog_reg_test.sh
-          - name: "FPGA-Bitstream Regression Tests: GCC-8 (Ubuntu 18.04)"
-            script: fpga_bitstream_reg_test.sh
-          - name: "FPGA-SDC Regression Tests: GCC-8 (Ubuntu 18.04)"
-            script: fpga_sdc_reg_test.sh
-          - name: "FPGA-SPICE Regression Tests: GCC-8 (Ubuntu 18.04)"
-            script: fpga_spice_reg_test.sh
+          - name: basic_reg_test
+          - name: fpga_verilog_reg_test
+          - name: fpga_bitstream_reg_test
+          - name: fpga_sdc_reg_test
+          - name: fpga_spice_reg_test
     steps:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
@@ -222,9 +217,17 @@ jobs:
           chmod +x yosys/yosys-config
           chmod +x yosys/yosys-filterlib
           chmod +x yosys/yosys-smtbmc
-      - name: ${{matrix.config.name}}
+      - name: ${{matrix.config.name}}_GCC-8_(Ubuntu 18.04)
         shell: bash
-        run: source .github/workflows/${{matrix.config.script}}
+        run: source openfpga.sh && source .github/workflows/${{matrix.config.name}}.sh
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: failed_${{matrix.config.name}}_regression_log
+          retention-days: 1
+          path: |
+            openfpga_flow/**/*.log
   docker_regression_tests:
     needs: change_detect
     if: ${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
@@ -235,22 +238,25 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: "Basic Regression Tests: GCC-8 (Ubuntu 18.04)"
-            script: basic_reg_test.sh
-          - name: "FPGA-Verilog Regression Tests: GCC-8 (Ubuntu 18.04)"
-            script: fpga_verilog_reg_test.sh
-          - name: "FPGA-Bitstream Regression Tests: GCC-8 (Ubuntu 18.04)"
-            script: fpga_bitstream_reg_test.sh
-          - name: "FPGA-SDC Regression Tests: GCC-8 (Ubuntu 18.04)"
-            script: fpga_sdc_reg_test.sh
-          - name: "FPGA-SPICE Regression Tests: GCC-8 (Ubuntu 18.04)"
-            script: fpga_spice_reg_test.sh
+          - name: basic_reg_test
+          - name: fpga_verilog_reg_test
+          - name: fpga_bitstream_reg_test
+          - name: fpga_sdc_reg_test
+          - name: fpga_spice_reg_test
     steps:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
-      - name: ${{matrix.config.name}}
+      - name: ${{matrix.config.name}}_GCC-8_(Ubuntu 18.04)
         shell: bash
         run: |
-          cp -r .github /opt/openfpga/
-          cp -r openfpga_flow /opt/openfpga/
-          cd /opt/openfpga/ && source openfpga.sh && source .github/workflows/${{matrix.config.script}}
+          bash .github/workflows/install_dependencies_run.sh
+          python3 -m pip install -r requirements.txt
+          rsync -am --exclude='openfpga_flow/**' /opt/openfpga/. .
+          source openfpga.sh && source .github/workflows/${{matrix.config.name}}.sh
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: failed_${{matrix.config.name}}_regression_log
+          retention-days: 1
+          path: openfpga_flow/**/*.log
