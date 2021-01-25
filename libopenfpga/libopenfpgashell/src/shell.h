@@ -153,7 +153,7 @@ class Shell {
     /* Show statistics of errors during command execution */
     int execution_errors() const;
     /* Quit the shell */
-    void exit() const;
+    void exit(const int& init_err = 0) const;
   private: /* Private executors */
     /* Execute a command, the command line is the user's input to launch a command
      * The common_context is the data structure to exchange data between commands
