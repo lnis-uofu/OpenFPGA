@@ -487,6 +487,7 @@ int Shell<T>::execute_command(const char* cmd_line,
               commands_[dep_cmd].name().c_str(), commands_[cmd_id].name().c_str());
       /* Echo the command help desk */
       print_command_options(commands_[cmd_id]);
+      command_status_[cmd_id] = CMD_EXEC_FATAL_ERROR;
       return CMD_EXEC_FATAL_ERROR;
     } 
   }
@@ -521,6 +522,7 @@ int Shell<T>::execute_command(const char* cmd_line,
   if (false == parse_command(tokens, commands_[cmd_id], command_contexts_[cmd_id])) {
     /* Echo the command */
     print_command_options(commands_[cmd_id]);
+    command_status_[cmd_id] = CMD_EXEC_FATAL_ERROR;
     return CMD_EXEC_FATAL_ERROR;
   }
  
