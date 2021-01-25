@@ -746,10 +746,12 @@ def run_command(taskname, logfile, command, exit_if_fail=True):
             output.write(process.stdout)
             output.write(process.stderr)
             output.write(str(process.returncode))
-
+            if "openfpgashell" in logfile:
+                filter_openfpga_output(process.stdout)
             if process.returncode:
                 logger.error("%s run failed with returncode %d" %
                              (taskname, process.returncode))
+                logger.error("command %s" % " ".join(command))
                 filter_failed_process_output(process.stderr)
                 if exit_if_fail:
                     clean_up_and_exit("Failed to run %s task" % taskname)
@@ -760,6 +762,18 @@ def run_command(taskname, logfile, command, exit_if_fail=True):
                 clean_up_and_exit("Failed to run %s task" % taskname)
     logger.info("%s is written in file %s" % (taskname, logfile))
     return process.stdout
+
+
+def filter_openfpga_output(vpr_output):
+    stdout = iter(vpr_output.split("\n"))
+    try:
+        for i in range(50):
+            if "Version:" in next(stdout):
+                logger.info("OpenFPGAShell %s %s" %
+                            (next(stdout), next(stdout)))
+                break
+    except StopIteration:
+        pass
 
 
 def filter_failed_process_output(vpr_output):
