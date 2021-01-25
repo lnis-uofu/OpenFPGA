@@ -8,43 +8,78 @@ write_fabric_verilog
 
   Write the Verilog netlist for FPGA fabric based on module graph
 
-  - ``--file`` or ``-f`` Specify the output directory for the Verilog netlists
+  .. option:: --file <string> or -f <string> 
 
-  - ``--explicit_port_mapping`` Use explicit port mapping when writing the Verilog netlists
+    Specify the output directory for the Verilog netlists. For example, ``--file /temp/fabric_netlist/``
 
-  - ``--include_timing`` Output timing information to Verilog netlists for primitive modules
+  .. option:: --explicit_port_mapping
+
+    Use explicit port mapping when writing the Verilog netlists
+
+  .. option:: --include_timing
+
+    Output timing information to Verilog netlists for primitive modules
  
-  - ``--include_signal_init`` Output signal initialization to Verilog netlists for primitive modules
+  .. option:: --include_signal_init
 
-  - ``--support_icarus_simulator`` Output Verilog netlists with syntax that iVerilog simulatorcan accept
+    Output signal initialization to Verilog netlists for primitive modules
 
-  - ``--print_user_defined_template`` Output a template Verilog netlist for all the user-defined ``circuit models`` in :ref:`circuit_library`. This aims to help engineers to check what is the port sequence required by top-level Verilog netlists
+  .. option:: --support_icarus_simulator
+     
+    Output Verilog netlists with syntax that iVerilog simulatorcan accept
 
-  - ``--verbose`` Show verbose log
+  .. option:: --print_user_defined_template
+
+    Output a template Verilog netlist for all the user-defined ``circuit models`` in :ref:`circuit_library`. This aims to help engineers to check what is the port sequence required by top-level Verilog netlists
+
+  .. option:: --verbose
+
+    Show verbose log
 
 write_verilog_testbench
 ~~~~~~~~~~~~~~~~~~~~~~~
  
   Write the Verilog testbench for FPGA fabric
 
-  - ``--file`` or ``-f`` The output directory for all the testbench netlists. We suggest the use of same output directory as fabric Verilog netlists
+  .. option:: --file <string> or -f <string>
+     
+    The output directory for all the testbench netlists. We suggest the use of same output directory as fabric Verilog netlists. For example, ``--file /temp/testbench``
 
-  - ``--fabric_netlist_file_path`` Specify the fabric Verilog file if they are not in the same directory as the testbenches to be generated. If not specified, OpenFPGA will assume that the fabric netlists are the in the same directory as testbenches and assign default names.
+  .. option:: --fabric_netlist_file_path <string>
 
-  - ``--reference_benchmark_file_path`` Must specify the reference benchmark Verilog file if you want to output any testbenches
+    Specify the fabric Verilog file if they are not in the same directory as the testbenches to be generated. If not specified, OpenFPGA will assume that the fabric netlists are the in the same directory as testbenches and assign default names. For example, ``--file /temp/fabric/fabric_netlists.v``
 
-  - ``--pin_constraints_file`` specify the *Pin Constraints File* (PCF) if you want to custom stimulus in  testbenches. Strongly recommend for multi-clock simulations. See detailed file format about :ref:`file_format_pin_constraints_file`.
+  .. option:: --reference_benchmark_file_path <string>
 
-  - ``--fast_configuration`` Enable fast configuration phase for the top-level testbench in order to reduce runtime of simulations. It is applicable to configuration chain, memory bank and frame-based configuration protocols. For configuration chain, when enabled, the zeros at the head of the bitstream will be skipped. For memory bank and frame-based, when enabled, all the zero configuration bits will be skipped. So ensure that your memory cells can be correctly reset to zero with a reset signal. 
+    Must specify the reference benchmark Verilog file if you want to output any testbenches. For example, ``--reference_benchmark_file_path /temp/benchmark/counter_post_synthesis.v``
+
+  .. option:: --pin_constraints_file <string> or -pcf <string>
+
+    Specify the *Pin Constraints File* (PCF) if you want to custom stimulus in testbenches. For example, ``-pin_constraints_file pin_constraints.xml``
+    Strongly recommend for multi-clock simulations. See detailed file format about :ref:`file_format_pin_constraints_file`.
+
+  .. option:: --fast_configuration
+
+    Enable fast configuration phase for the top-level testbench in order to reduce runtime of simulations. It is applicable to configuration chain, memory bank and frame-based configuration protocols. For configuration chain, when enabled, the zeros at the head of the bitstream will be skipped. For memory bank and frame-based, when enabled, all the zero configuration bits will be skipped. So ensure that your memory cells can be correctly reset to zero with a reset signal. 
 
     .. note:: If both reset and set ports are defined in the circuit modeling for programming, OpenFPGA will pick the one that will bring largest benefit in speeding up configuration.
 
-  - ``--print_top_testbench`` Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
+  .. option:: --print_top_testbench
 
-  - ``--print_formal_verification_top_netlist`` Generate a top-level module which can be used in formal verification
+    Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
 
-  - ``--print_preconfig_top_testbench`` Enable pre-configured top-level testbench which is a fast verification skipping programming phase
+  .. option:: --print_formal_verification_top_netlist
 
-  - ``--print_simulation_ini`` Output an exchangeable simulation ini file, which is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
+    Generate a top-level module which can be used in formal verification
 
-  - ``--explicit_port_mapping`` Use explicit port mapping when writing the Verilog netlists
+  .. option:: --print_preconfig_top_testbench
+
+    Enable pre-configured top-level testbench which is a fast verification skipping programming phase
+
+  .. option:: --print_simulation_ini <string>
+
+    Output an exchangeable simulation ini file, which is needed only when you need to interface different HDL simulators using openfpga flow-run scripts. For example, ``--print_simulation_ini /temp/testbench/sim.ini``
+
+  .. option:: --explicit_port_mapping
+
+    Use explicit port mapping when writing the Verilog netlists
