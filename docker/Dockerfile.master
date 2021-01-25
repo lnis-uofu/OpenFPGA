@@ -10,5 +10,5 @@ RUN cd /opt/openfpga && chmod +x abc/abc ace2/ace openfpga/openfpga vpr/vpr yosy
 COPY openfpga_flow /opt/openfpga/openfpga_flow
 COPY openfpga.sh /opt/openfpga/openfpga.sh
 ENV PATH="/opt/openfpga/openfpga:/opt/openfpga/yosys:/opt/openfpga/ace2:/opt/openfpga/abc:/opt/openfpga/vpr:${PATH}"
-ENV OPENFPGA_PATH="/opt/openfpga:${PATH}"
+ENV OPENFPGA_PATH="/opt/openfpga"
 WORKDIR /opt/openfpga
