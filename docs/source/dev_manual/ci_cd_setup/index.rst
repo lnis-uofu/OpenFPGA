@@ -78,7 +78,7 @@ in which case the docker image compiled for the latest master branch is used for
       #. clang-6.0
       #. clang-8
 
-    The docker images for these build enviroment are avaialble on `github packages <https://github.com/orgs/lnis-uofu/packages>`_.
+    The docker images for these build enviroment are available on `github packages <https://github.com/orgs/lnis-uofu/packages>`_.
 
 .. option:: Functional regeression test
 
