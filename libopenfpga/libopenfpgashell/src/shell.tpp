@@ -363,8 +363,12 @@ void Shell<T>::run_script_mode(const char* script_file_name,
        */
       if (CMD_EXEC_FATAL_ERROR == status) {
         VTR_LOG("Fatal error occurred!\n");
-        /* If not in the batch mode, we will got to interactive mode */ 
+        /* If in the batch mode, we will exit with errors */ 
         VTR_LOGV(batch_mode, "OpenFPGA Abort\n");
+        if (batch_mode) {
+          exit(CMD_EXEC_FATAL_ERROR);
+        }
+        /* If not in the batch mode, we will got to interactive mode */ 
         VTR_LOGV(!batch_mode, "Enter interactive mode\n");
         break;
       }
@@ -438,15 +442,15 @@ int Shell<T>::execution_errors() const {
 }
 
 template <class T>
-void Shell<T>::exit() const {
+void Shell<T>::exit(const int& init_err) const {
   /* Check all the command status, if we see fatal errors or minor errors, we drop an error code */
-  int shell_exit_code = exit_code();
+  int shell_exit_code = exit_code() | init_err;
 
   /* Show error message if we detect any errors */
-  int num_err = 0;
-  if (0 != shell_exit_code) {
+  int num_err = init_err;
+  if (CMD_EXEC_SUCCESS != shell_exit_code) {
     VTR_LOG("\n");
-    num_err = execution_errors();
+    num_err += execution_errors();
   }
 
   VTR_LOG("\nFinish execution with %d errors\n",

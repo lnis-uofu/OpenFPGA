@@ -17,15 +17,15 @@ OpenFPGA also provides native bitstream generation support based the same XML-ba
 OpenFPGA can support any architecture that VPR can describe, covering most of the architecture enhancements available in modern FPGAs, and hence unlocks a large design space in prototyping customizable FPGAs. In addition, OpenFPGA provides enriched syntax which allows users to customized primitive circuit designed downto transistor-level parameters. This helps developers to customize the P.P.A. (Power, Performance and Area) to the best. All these features open the door of prototyping/studying flexible FPGAs to a small group of junior engineers or researchers. 
 
 In terms of tool functionality, OpenFPGA consists of the following parts: FPGA-Verilog, FPGA-SDC, FPGA-Bitstream and FPGA-SPICE.
-The rest of this section will focus on detailed motivation on each of them, as depicted in :numref:`fig_openfpga_flow`. 
+The rest of this section will focus on detailed motivation on each of them, as depicted in :numref:`fig_openfpga_framework`. 
 
-.. _fig_openfpga_flow:
+.. _fig_openfpga_framework:
 
-.. figure:: ./figures/openfpga_flow.png
+.. figure:: ./figures/openfpga_framework.svg
    :scale: 50%
-   :alt: Design flows avaiable in OpenFPGA
+   :alt: OpenFPGA framework
 
-   Design flows in different purposes using OpenFPGA
+   OpenFPGA: a unified framework for chip designer and FPGA programmer
 
 Fully Customizable Architecture
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -59,7 +59,7 @@ FPGA-Verilog is designed to output flexible and standard Verilog netlists, enabl
 
 .. _fig_fpga_verilog_motivation:
 
-.. figure:: ./figures/fpga_verilog_motivation.png
+.. figure:: ./figures/fpga_verilog_motivation.svg
    :scale: 25%
    :alt: Flexible netlist format support by FPGA-Verilog to enable various backend choices
 
@@ -73,6 +73,7 @@ FPGA-SDC
 Design constraints are indepensible in modern ASIC design flows to guarantee the performance level.
 OpenFPGA includes a rich SDC generator in the OpenFPGA framework to deal with both PnR constraints and sign-off timing analysis.
 Our flow automatically generates two sets of SDC files.
+
 - The first set of SDC is designed for the P&R flow, where all the combinational loops are broken to enable wellcontrolled timing-driven P&R. In addition, there are SDC files devoted to constrain pin-to-pin timing for all the resources in FPGAs, in order to obtain nicely constrained and homogeneous delays across the fabric. OpenFPGA allows users to define timing constraints in the architecture description and outputs timing constraints in standard format, enabling fully timing constrained backend flow (see :ref:`fig_fpga_sdc_motivation`).
 - The second set of SDC is designed for the timing analysis of a benchmark at the post P&R stage.
 

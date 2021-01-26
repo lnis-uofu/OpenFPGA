@@ -17,7 +17,6 @@ env:
 # Multiple job to tests
 jobs:
   change_detect:
-    if: true
     name: "Detect code changes"
     runs-on: ubuntu-18.04
     outputs:
@@ -246,11 +245,13 @@ jobs:
     steps:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
+        with:
+          submodules: true
       - name: ${{matrix.config.name}}_GCC-8_(Ubuntu 18.04)
         shell: bash
         run: |
           bash .github/workflows/install_dependencies_run.sh
-          python3 -m pip install -r requirements.txt
+          ${PYTHON_EXEC} -m pip install -r requirements.txt
           rsync -am --exclude='openfpga_flow/**' /opt/openfpga/. .
           source openfpga.sh && source .github/workflows/${{matrix.config.name}}.sh
       - name: Upload artifact

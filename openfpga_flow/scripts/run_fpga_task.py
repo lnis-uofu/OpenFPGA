@@ -416,7 +416,7 @@ def run_single_script(s, eachJob, job_list):
             with open(logfile, 'w+') as output:
                 output.write("* "*20 + '\n')
                 output.write("RunDirectory : %s\n" % os.getcwd())
-                command = [gc["python_path"], gc["script_default"]] + \
+                command = [os.getenv('PYTHON_EXEC', gc["python_path"]), gc["script_default"]] + \
                     eachJob["commands"]
                 output.write(" ".join(command) + '\n')
                 output.write("* "*20 + '\n')
