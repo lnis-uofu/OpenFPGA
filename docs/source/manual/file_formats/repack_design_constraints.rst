@@ -1,7 +1,7 @@
-.. _fpga_bitstream_repack_design_constraints:
+.. _file_formats_repack_design_constraints:
 
-Repack Design Constraints
--------------------------
+Repack Design Constraints (.xml)
+--------------------------------
 
 An example of design constraints is shown as follows.
 

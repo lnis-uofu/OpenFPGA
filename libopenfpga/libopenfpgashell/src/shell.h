@@ -143,11 +143,17 @@ class Shell {
     /* Start the interactive mode, where users will type-in command by command */
     void run_interactive_mode(T& context, const bool& quiet_mode = false);
     /* Start the script mode, where users provide a file which includes all the commands to run */
-    void run_script_mode(const char* script_file_name, T& context);
+    void run_script_mode(const char* script_file_name,
+                         T& context,
+                         const bool& batch_mode = false);
     /* Print all the commands by their classes. This is actually the help desk */
     void print_commands() const;
+    /* Find the exit code (assume quit shell now) */
+    int exit_code() const;
+    /* Show statistics of errors during command execution */
+    int execution_errors() const;
     /* Quit the shell */
-    void exit() const;
+    void exit(const int& init_err = 0) const;
   private: /* Private executors */
     /* Execute a command, the command line is the user's input to launch a command
      * The common_context is the data structure to exchange data between commands
