@@ -2,6 +2,7 @@
 
 set -e
 source openfpga.sh
+PYTHON_EXEC=python3.8
 ###############################################
 # OpenFPGA Shell with VPR8
 ##############################################
