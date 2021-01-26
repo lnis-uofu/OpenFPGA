@@ -10,7 +10,7 @@ To enable various design purposes, OpenFPGA integrates several tools to i.e., FP
 
 .. _fig_openfpga_tools:
 
-.. figure:: figures/openfpga_tools.png
+.. figure:: figures/openfpga_tools.svg
    :scale: 25%
    :alt: map to buried treasure
 

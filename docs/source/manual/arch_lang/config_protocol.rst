@@ -51,7 +51,7 @@ Template
 Configuration Chain Example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The following XML code describes a scan-chain circuitry to configure the core logic of FPGA, as illustrated in :numref:`fig_ccff_fpga`.
-It will use the circuit model defined in :numref:`fig_ccff`.
+It will use the circuit model defined in :numref:`fig_ccff_config_chain`.
 
 .. code-block:: xml
 
