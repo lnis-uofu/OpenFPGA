@@ -73,6 +73,7 @@ FPGA-SDC
 Design constraints are indepensible in modern ASIC design flows to guarantee the performance level.
 OpenFPGA includes a rich SDC generator in the OpenFPGA framework to deal with both PnR constraints and sign-off timing analysis.
 Our flow automatically generates two sets of SDC files.
+
 - The first set of SDC is designed for the P&R flow, where all the combinational loops are broken to enable wellcontrolled timing-driven P&R. In addition, there are SDC files devoted to constrain pin-to-pin timing for all the resources in FPGAs, in order to obtain nicely constrained and homogeneous delays across the fabric. OpenFPGA allows users to define timing constraints in the architecture description and outputs timing constraints in standard format, enabling fully timing constrained backend flow (see :ref:`fig_fpga_sdc_motivation`).
 - The second set of SDC is designed for the timing analysis of a benchmark at the post P&R stage.
 
