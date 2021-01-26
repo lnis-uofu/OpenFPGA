@@ -79,12 +79,7 @@ unset-openfpga (){
 if [[ $(ps -p $$ -oargs=) == *"zsh"* ]]; then
     autoload -U +X bashcompinit; bashcompinit;
 fi
-# TaskList=$(ls -tdalh ${OPENFPGA_TASK_PATH}/* | awk '{system("basename " $9)}' |  awk '{printf("%s ",$1)}')
-TaskList=$(ls -tdalh ${OPENFPGA_TASK_PATH}/**/task.conf  |
-awk '{print $9}' | sed -e "s/\/config\/task.conf//" |
-sed -e "s/${OPENFPGA_PATH//\//\\/}\/openfpga_flow\/tasks\///" |
-awk '{printf("%s ",$1)}')
-
+TaskList=$(ls -tdalh ${OPENFPGA_TASK_PATH}/* | awk '{system("basename " $9)}' |  awk '{printf("%s ",$1)}')
 complete -W "${TaskList}" goto-task
 complete -W "${TaskList}" run-task
 complete -W "${TaskList}" run-shell-task
