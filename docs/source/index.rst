@@ -26,6 +26,12 @@ Welcome to OpenFPGA's documentation!
 
 .. toctree::
    :maxdepth: 2
+   :caption: Developers Manual
+
+   dev_manual/index
+
+.. toctree::
+   :maxdepth: 2
    :caption: Appendix
 
    contact
