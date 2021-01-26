@@ -1,2 +1,3 @@
 envyaml==1.0.201125
 humanize==3.1.0
+coloredlogs==9.1
