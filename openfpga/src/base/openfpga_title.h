@@ -11,4 +11,6 @@
  *******************************************************************/
 std::string create_openfpga_title();
 
+void print_openfpga_version_info();
+
 #endif

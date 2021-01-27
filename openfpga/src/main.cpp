@@ -29,21 +29,27 @@ int main(int argc, char** argv) {
 
   /* Create the command to launch shell in different modes */
   openfpga::Command start_cmd("OpenFPGA");
-  /* Add options:
-   * '--interactive', -i': launch the interactive mode 
-   * '--file', -f': launch the script mode 
-   * '--batch_execution': execute the script in batch mode. Will exit immediately when fatal errors occurred
-   */
+  /* Add options to openfpga shell interface */
+  /* '--interactive', -i': launch the interactive mode */
   openfpga::CommandOptionId opt_interactive = start_cmd.add_option("interactive", false, "Launch OpenFPGA in interactive mode");
   start_cmd.set_option_short_name(opt_interactive, "i");
 
+  /* '--file', -f': launch the script mode */
   openfpga::CommandOptionId opt_script_mode = start_cmd.add_option("file", false, "Launch OpenFPGA in script mode");
   start_cmd.set_option_require_value(opt_script_mode, openfpga::OPT_STRING);
   start_cmd.set_option_short_name(opt_script_mode, "f");
 
+  /* '--batch_execution': execute the script in batch mode. 
+   * Will exit immediately when fatal errors occurred 
+   */
   openfpga::CommandOptionId opt_batch_exec = start_cmd.add_option("batch_execution", false, "Launch OpenFPGA in batch  mode when running scripts");
   start_cmd.set_option_short_name(opt_batch_exec, "batch");
 
+  /* '--version', -v': print version information */
+  openfpga::CommandOptionId opt_version = start_cmd.add_option("version", false, "Show OpenFPGA version");
+  start_cmd.set_option_short_name(opt_version, "v");
+
+  /* '--help', -h': print help desk */
   openfpga::CommandOptionId opt_help = start_cmd.add_option("help", false, "Help desk"); 
   start_cmd.set_option_short_name(opt_help, "h");
 
@@ -95,7 +101,13 @@ int main(int argc, char** argv) {
     /* Parse fail: Echo the command */
     openfpga::print_command_options(start_cmd);
   } else {
-    /* Parse succeed. Start a shell */ 
+    /* Parse succeed. Branch on options */ 
+    /* Show version */
+    if (true == start_cmd_context.option_enable(start_cmd, opt_version)) {
+      print_openfpga_version_info();
+      return 0;
+    }
+    /* Start a shell */ 
     if (true == start_cmd_context.option_enable(start_cmd, opt_interactive)) {
 
       shell.run_interactive_mode(openfpga_context);

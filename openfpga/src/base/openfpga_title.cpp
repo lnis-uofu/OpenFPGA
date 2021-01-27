@@ -2,6 +2,8 @@
  * This file includes the functions to create the title page
  * which introduces generality of OpenFPGA framework
  *******************************************************************/
+#include "vtr_log.h"
+
 #include "openfpga_title.h"
 #include "openfpga_version.h"
 
@@ -50,13 +52,19 @@ std::string create_openfpga_title() {
   title += std::string("THE SOFTWARE.\n");
   title += std::string("\n");
 
-  /* Display version */
-  title += std::string("Version: " + std::string(openfpga::VERSION) + "\n");
-  title += std::string("Revision: " + std::string(openfpga::VCS_REVISION) + "\n");
-  title += std::string("Compiled: " + std::string(openfpga::BUILD_TIMESTAMP) + "\n");
-  title += std::string("Compiler: " + std::string(openfpga::COMPILER) + "\n");
-  title += std::string("Build Info: " + std::string(openfpga::BUILD_INFO) + "\n");
-  title += std::string("\n");
-
   return title;
+}
+
+/********************************************************************
+ * Generate a string of openfpga title introduction
+ * This is mainly used when launching OpenFPGA shell 
+ *******************************************************************/
+void print_openfpga_version_info() {
+  /* Display version */
+  VTR_LOG("Version: %s\n", openfpga::VERSION);
+  VTR_LOG("Revision: %s\n", openfpga::VCS_REVISION);
+  VTR_LOG("Compiled: %s\n", openfpga::BUILD_TIMESTAMP);
+  VTR_LOG("Compiler: %s\n", openfpga::COMPILER);
+  VTR_LOG("Build Info: %s\n", openfpga::BUILD_INFO);
+  VTR_LOG("\n");
 }
