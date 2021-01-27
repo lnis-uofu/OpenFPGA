@@ -26,8 +26,6 @@ import pprint
 from importlib import util
 from collections import OrderedDict
 
-if util.find_spec("coloredlogs"):
-    import coloredlogs
 if util.find_spec("humanize"):
     import humanize
 
@@ -37,13 +35,8 @@ if sys.version_info[0] < 3:
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 # Configure logging system
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-LOG_FORMAT = "%(levelname)5s (%(threadName)15s) - %(message)s"
-if util.find_spec("coloredlogs"):
-    coloredlogs.install(level='INFO', stream=sys.stdout,
-                        fmt=LOG_FORMAT)
-else:
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout,
-                        format=LOG_FORMAT)
+logging.basicConfig(level=logging.INFO, stream=sys.stdout,
+                    format='%(levelname)s (%(threadName)15s) - %(message)s')
 logger = logging.getLogger('OpenFPGA_Task_logs')
 
 
@@ -416,7 +409,7 @@ def run_single_script(s, eachJob, job_list):
             with open(logfile, 'w+') as output:
                 output.write("* "*20 + '\n')
                 output.write("RunDirectory : %s\n" % os.getcwd())
-                command = [os.getenv('PYTHON_EXEC', gc["python_path"]), gc["script_default"]] + \
+                command = [gc["python_path"], gc["script_default"]] + \
                     eachJob["commands"]
                 output.write(" ".join(command) + '\n')
                 output.write("* "*20 + '\n')
