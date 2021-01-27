@@ -1,30 +1,6 @@
-abc
-ace2
-build
-cmake
-CMakeLists.txt
-deploy_key.enc
-docker
-Dockerfile
-docs
-libopenfpga
-libs
-LICENSE
-Makefile
-openfpga
-README.md
-run_local.bat
-run_local.sh
-vpr
-yosys
+# Ignore everything
+**
 
-!abc/abc
-!ace2/ace
-!openfpga/openfpga
-!vpr/vpr
-!yosys/yosys
-!yosys/yosys-abc
-!yosys/yosys-config
-!yosys/yosys-filterlib
-!yosys/yosys-smtbmc
-!yosys/share
+# Allow files and directories
+!/.github/**
+!/*.*
