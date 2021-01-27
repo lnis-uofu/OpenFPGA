@@ -155,6 +155,8 @@ jobs:
             yosys/yosys-config
             yosys/yosys-filterlib
             yosys/yosys-smtbmc
+            openfpga_flow
+            openfpga.sh
   docker_distribution:
     name: Build docker image for distribution
     if: ${{ github.ref == 'refs/heads/master' }}
