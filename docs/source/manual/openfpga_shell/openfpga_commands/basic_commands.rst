@@ -3,6 +3,11 @@
 Basic Commands
 --------------
 
+version
+~~~~~~~
+
+  Show OpenFPGA version information
+
 help
 ~~~~
 

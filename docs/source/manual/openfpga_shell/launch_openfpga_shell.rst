@@ -22,6 +22,10 @@ To launch OpenFPGA shell, users can choose two modes.
   - If in batch mode, OpenFPGA will abort immediately when fatal errors occurred.
   - If not in batch mode, OpenFPGA will enter interactive mode when fatal errors occurred.
 
+.. option::	--version or -v
+
+  Print version information of OpenFPGA
+
 .. option::	--help or -h
 	
   Show the help desk
