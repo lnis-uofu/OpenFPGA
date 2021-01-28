@@ -22,6 +22,7 @@ jobs:
     outputs:
       # this is output as string, see https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
       source_modified: ${{ steps.changes.outputs.status_code == '0' }}
+      force_upload: true
     steps:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
@@ -159,7 +160,7 @@ jobs:
             openfpga.sh
   docker_distribution:
     name: Build docker image for distribution
-    if: ${{ github.ref == 'refs/heads/master' }}
+    if: ${{ github.ref == 'refs/heads/master' || fromJSON(needs.change_detect.outputs.force_upload) }}
     runs-on: ubuntu-latest
     needs: linux_build
     steps:
