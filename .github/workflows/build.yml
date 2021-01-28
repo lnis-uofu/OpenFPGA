@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-18.04
     outputs:
       # this is output as string, see https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
-      source_modified: ${{ steps.changes.outputs.status_code == '0' }}
+      source_modified: ${{ steps.changes.outputs.status_code == '1' }}
       force_upload: true
     steps:
       - name: Checkout OpenFPGA repo
@@ -32,6 +32,7 @@ jobs:
       - name: Check for source code changes
         id: changes
         run: |
+          git diff origin/master HEAD --name-status -- . ':!openfpga_flow' ':!docs'
           if git diff origin/master HEAD --name-status --exit-code -- . ':!openfpga_flow' ':!docs'; then
             echo "::set-output name=status_code::0"
           else
