@@ -316,7 +316,7 @@
               <input name="addr" num_pins="2"/>
               <input name="d_in" num_pins="1"/>
               <output name="d_out" num_pins="1"/>
-			  <clock name="clk" num_pins="1" port_class="clock"/>
+              <clock name="clk" num_pins="1" port_class="clock"/>
           		<T_setup value="509e-12" port="spram_4x1.wr_en" clock="clk"/>
           		<T_setup value="509e-12" port="spram_4x1.addr" clock="clk"/>
          		<T_setup value="509e-12" port="spram_4x1.d_in" clock="clk"/>
