@@ -174,7 +174,7 @@ jobs:
       - name: Update dockerignore to add openfpga_flow
         run: |
           echo '' >> .dockerignore
-          echo 'openfpga_flow' >> .dockerignore
+          echo '!/openfpga_flow' >> .dockerignore
           cat .dockerignore
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
