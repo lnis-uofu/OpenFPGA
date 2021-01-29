@@ -22,7 +22,7 @@ jobs:
     outputs:
       # this is output as string, see https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
       source_modified: ${{ steps.changes.outputs.status_code == '1' }}
-      force_upload: true
+      force_upload: false
     steps:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
@@ -190,7 +190,7 @@ jobs:
           context: .
           file: ./docker/Dockerfile.master
           push: true
-          tags: ghcr.io/lnis-uofu/openfpga-master-test:latest
+          tags: ghcr.io/lnis-uofu/openfpga-master:latest
   artifact_regression_tests:
     name: Regression tests on code changes
     runs-on: ubuntu-18.04
