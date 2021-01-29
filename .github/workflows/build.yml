@@ -38,10 +38,14 @@ jobs:
           else
             echo "::set-output name=status_code::$?"
           fi
+          if [[ ${GITHUB_REF} == 'refs/heads/master' ]]; then
+            echo "Current brnach is master forcing source_modified"
+            echo "::set-output name=status_code::0"
+          fi
   # Test the compilation compatibility
   linux_build:
     needs: change_detect
-    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) || github.ref == 'refs/heads/master' }}
+    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
     name: ${{ matrix.config.name }}
     runs-on: ubuntu-18.04
     container: ghcr.io/lnis-uofu/openfpga-build-${{ matrix.config.cc}}
