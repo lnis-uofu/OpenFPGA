@@ -67,7 +67,6 @@ class OpenfpgaContext : public Context  {
     const openfpga::FabricBitstream& fabric_bitstream() const { return fabric_bitstream_; }
     const openfpga::IoLocationMap& io_location_map() const { return io_location_map_; }
     const openfpga::FabricGlobalPortInfo& fabric_global_port_info() const { return fabric_global_port_info_; }
-    const std::unordered_map<AtomNetId, t_net_power>& net_activity() const { return net_activity_; }
     const openfpga::NetlistManager& verilog_netlists() const { return verilog_netlists_; }
     const openfpga::NetlistManager& spice_netlists() const { return spice_netlists_; }
   public:  /* Public mutators */
@@ -88,7 +87,6 @@ class OpenfpgaContext : public Context  {
     openfpga::FabricBitstream& mutable_fabric_bitstream() { return fabric_bitstream_; }
     openfpga::IoLocationMap& mutable_io_location_map() { return io_location_map_; }
     openfpga::FabricGlobalPortInfo& mutable_fabric_global_port_info() { return fabric_global_port_info_; }
-    std::unordered_map<AtomNetId, t_net_power>& mutable_net_activity() { return net_activity_; }
     openfpga::NetlistManager& mutable_verilog_netlists() { return verilog_netlists_; }
     openfpga::NetlistManager& mutable_spice_netlists() { return spice_netlists_; }
   private: /* Internal data */
@@ -138,9 +136,6 @@ class OpenfpgaContext : public Context  {
     openfpga::NetlistManager verilog_netlists_;
     openfpga::NetlistManager spice_netlists_;
 
-    /* Net activities of users' implementation */
-    std::unordered_map<AtomNetId, t_net_power> net_activity_; 
- 
     /* Flow status */
     openfpga::FlowManager flow_manager_;
 };
