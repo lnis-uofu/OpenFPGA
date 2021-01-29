@@ -90,6 +90,8 @@ echo -e "Testing K4N4 without local routing architecture";
 run-task basic_tests/k4_series/k4n4_no_local_routing --debug --show_thread_logs
 echo -e "Testing K4N4 with block RAM";
 run-task basic_tests/k4_series/k4n4_bram --debug --show_thread_logs
+echo -e "Testing K4N4 with LUTRAM";
+run-task basic_tests/k4_series/k4n4_lutram --debug --show_thread_logs
 echo -e "Testing K4N4 with multiple lengths of routing segments";
 run-task basic_tests/k4_series/k4n4_L124 --debug --show_thread_logs
 echo -e "Testing K4N4 with 32-bit fracturable multiplier";

@@ -1,0 +1,16 @@
+.model asyn_spram_4x1
+.inputs clk addr_0 addr_1 d_in wr_en
+.outputs d_out
+
+.subckt spram_4x1 clk=clk addr[0]=addr_0 addr[1]=addr_1 d_in=d_in wr_en=wr_en d_out=int
+
+.names int d_out
+1 1
+
+.end
+
+.model spram_4x1
+.blackbox
+.inputs clk addr[0] addr[1] d_in wr_en
+.outputs d_out
+.end
