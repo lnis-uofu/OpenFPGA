@@ -21,7 +21,8 @@ jobs:
     runs-on: ubuntu-18.04
     outputs:
       # this is output as string, see https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
-      source_modified: ${{ steps.changes.outputs.status_code == '0' }}
+      source_modified: ${{ steps.changes.outputs.status_code == '1' }}
+      force_upload: false
     steps:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
@@ -31,6 +32,7 @@ jobs:
       - name: Check for source code changes
         id: changes
         run: |
+          git diff origin/master HEAD --name-status -- . ':!openfpga_flow' ':!docs'
           if git diff origin/master HEAD --name-status --exit-code -- . ':!openfpga_flow' ':!docs'; then
             echo "::set-output name=status_code::0"
           else
@@ -159,7 +161,7 @@ jobs:
             openfpga.sh
   docker_distribution:
     name: Build docker image for distribution
-    if: ${{ github.ref == 'refs/heads/master' }}
+    if: ${{ github.ref == 'refs/heads/master' || fromJSON(needs.change_detect.outputs.force_upload) }}
     runs-on: ubuntu-latest
     needs: linux_build
     steps:
@@ -169,6 +171,9 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: openfpga
+      - name: Update dockerignore to add openfpga_flow
+        run: |
+          cat .dockerignore
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx

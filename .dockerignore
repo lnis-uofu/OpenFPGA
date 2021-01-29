@@ -4,3 +4,20 @@
 # Allow files and directories
 !/.github/**
 !/*.*
+!/abc/abc
+!/abc/libabc.a
+!/ace2/ace
+!/ace2/libace.a
+!/openfpga/libopenfpga.a
+!/openfpga/openfpga
+!/vpr/libvpr.a
+!/vpr/vpr
+!/yosys/share/
+!/yosys/yosys
+!/yosys/yosys-abc
+!/yosys/yosys-config
+!/yosys/yosys-filterlib
+!/yosys/yosys-smtbmc
+!/openfpga_flow
+!/openfpga.sh
+!/openfpga_flow/
