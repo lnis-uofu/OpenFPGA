@@ -12,7 +12,11 @@ read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
 
 # Annotate the OpenFPGA architecture to VPR data base
 # to debug use --verbose options
-link_openfpga_arch --activity_file ${ACTIVITY_FILE} --sort_gsb_chan_node_in_edges
+# Note: no need to assign activity file when you used a fixed number 
+#       of clock cycles in simulation settings
+#       Also, ACE2 does not support multiple clocks
+#       Therefore, activity file is not recommended for multi-clock fabric/implementations
+link_openfpga_arch --sort_gsb_chan_node_in_edges
 
 # Check and correct any naming conflicts in the BLIF netlist
 check_netlist_naming_conflict --fix --report ./netlist_renaming.xml
