@@ -176,9 +176,6 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: openfpga
-      - name: Update dockerignore to add openfpga_flow
-        run: |
-          cat .dockerignore
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -198,8 +195,8 @@ jobs:
           tags: |
             ghcr.io/lnis-uofu/openfpga-master:latest
             ghcr.io/lnis-uofu/openfpga-master:${{ needs.change_detect.outputs.sha_short }}
-  artifact_regression_tests:
-    name: Regression tests on code changes
+  linux_regression_tests:
+    name: linux_regression_tests
     runs-on: ubuntu-18.04
     container: ghcr.io/lnis-uofu/openfpga-env
     needs: linux_build
@@ -244,7 +241,7 @@ jobs:
   docker_regression_tests:
     needs: change_detect
     if: ${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
-    name: Regression tests against master artifacts
+    name: docker_regression_tests
     runs-on: ubuntu-18.04
     container: ghcr.io/lnis-uofu/openfpga-master:latest
     strategy:
