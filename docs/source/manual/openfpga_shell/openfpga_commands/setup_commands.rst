@@ -49,7 +49,8 @@ write_openfpga_simulation_setting
 
   .. option:: --file <string> or -f <string>
      
-    Specify the file name. For example, ``--file auto_simulation_setting_echo.xml`` 
+    Specify the file name. For example, ``--file auto_simulation_setting_echo.xml``.
+    See details about file format at :ref:`simulation_setting`.
 
   .. option:: --verbose
 
@@ -62,7 +63,8 @@ link_openfpga_arch
 
   .. option:: --activity_file <string>
 
-    Specify the signal activity file. For example, ``--activity_file counter.act``
+    Specify the signal activity file. For example, ``--activity_file counter.act``.
+    This is required when users wants OpenFPGA to automatically find the number of clocks in simulations. See details at :ref:`simulation_setting`.
 
   .. option:: --sort_gsb_chan_node_in_edges
 

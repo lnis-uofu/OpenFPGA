@@ -237,6 +237,12 @@ int annotate_simulation_setting(const AtomContext& atom_ctx,
      */
     VTR_LOG("User specified the number of operating clock cycles to be inferred from signal activities\n");
 
+    /* Error out if net activity is not defined */ 
+    if (true == net_activity.empty()) {
+      VTR_LOG_ERROR("Signal activities are not defined!\nPlease check if activity file is given and properly generated!\n");
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
     /* Use a fixed simulation window size now. TODO: this could be specified by users */
     size_t num_clock_cycles = recommend_num_sim_clock_cycle(atom_ctx,
                                                             net_activity, 
