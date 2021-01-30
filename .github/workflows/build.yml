@@ -198,7 +198,7 @@ jobs:
           push: true
           tags: |
             ghcr.io/lnis-uofu/openfpga-master:latest
-            ghcr.io/lnis-uofu/openfpga-master:${{ fromJSON(needs.change_detect.outputs.sha_short) }}
+            ghcr.io/lnis-uofu/openfpga-master:${{ needs.change_detect.outputs.sha_short }}
   artifact_regression_tests:
     name: Regression tests on code changes
     runs-on: ubuntu-18.04
