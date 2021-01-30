@@ -167,9 +167,8 @@ jobs:
             openfpga.sh
   docker_distribution:
     name: Build docker image for distribution
-    if: ${{ github.ref == 'refs/heads/master' || fromJSON(needs.change_detect.outputs.force_upload) }}
     runs-on: ubuntu-latest
-    needs: linux_build
+    needs: [linux_build, change_detect]
     steps:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
@@ -177,9 +176,6 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: openfpga
-      - name: Update dockerignore to add openfpga_flow
-        run: |
-          cat .dockerignore
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -195,12 +191,12 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile.master
-          push: true
+          push: ${{ github.ref == 'refs/heads/master' || needs.change_detect.outputs.force_upload }}
           tags: |
             ghcr.io/lnis-uofu/openfpga-master:latest
-            ghcr.io/lnis-uofu/openfpga-master:${{ fromJSON(needs.change_detect.outputs.sha_short) }}
-  artifact_regression_tests:
-    name: Regression tests on code changes
+            ghcr.io/lnis-uofu/openfpga-master:${{ needs.change_detect.outputs.sha_short }}
+  linux_regression_tests:
+    name: linux_regression_tests
     runs-on: ubuntu-18.04
     container: ghcr.io/lnis-uofu/openfpga-env
     needs: linux_build
@@ -245,7 +241,7 @@ jobs:
   docker_regression_tests:
     needs: change_detect
     if: ${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
-    name: Regression tests against master artifacts
+    name: docker_regression_tests
     runs-on: ubuntu-18.04
     container: ghcr.io/lnis-uofu/openfpga-master:latest
     strategy:
