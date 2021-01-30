@@ -23,6 +23,7 @@ jobs:
       # this is output as string, see https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
       source_modified: ${{ steps.changes.outputs.status_code == '1' }}
       force_upload: false
+      sha_short: ${{ steps.changes.outputs.sha_short }}
     steps:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
@@ -40,8 +41,9 @@ jobs:
           fi
           if [[ ${GITHUB_REF} == 'refs/heads/master' ]]; then
             echo "Current brnach is master forcing source_modified"
-            echo "::set-output name=status_code::0"
+            echo "::set-output name=status_code::1"
           fi
+          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
   # Test the compilation compatibility
   linux_build:
     needs: change_detect
@@ -194,7 +196,9 @@ jobs:
           context: .
           file: ./docker/Dockerfile.master
           push: true
-          tags: ghcr.io/lnis-uofu/openfpga-master:latest
+          tags: |
+            ghcr.io/lnis-uofu/openfpga-master:latest
+            ghcr.io/lnis-uofu/openfpga-master:${{ fromJSON(needs.change_detect.outputs.sha_short) }}
   artifact_regression_tests:
     name: Regression tests on code changes
     runs-on: ubuntu-18.04
