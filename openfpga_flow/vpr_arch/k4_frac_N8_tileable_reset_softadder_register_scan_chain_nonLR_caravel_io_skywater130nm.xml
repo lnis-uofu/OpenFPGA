@@ -437,10 +437,12 @@
             </pb_type>         
             <interconnect>
               <direct name="direct1" input="fabric.in" output="frac_logic.in"/>
-              <direct name="direct2" input="fabric.sc_in" output="ff[0].DI"/>
-              <direct name="direct3" input="ff[0].Q" output="ff[1].DI"/>
-              <direct name="direct4" input="ff[1].Q" output="fabric.sc_out"/>
-              <direct name="direct5" input="ff[1].Q" output="fabric.reg_out"/>
+              <direct name="direct2" input="fabric.cin" output="frac_logic.cin"/>
+              <direct name="direct3" input="fabric.sc_in" output="ff[0].DI"/>
+              <direct name="direct4" input="ff[0].Q" output="ff[1].DI"/>
+              <direct name="direct5" input="ff[1].Q" output="fabric.sc_out"/>
+              <direct name="direct6" input="ff[1].Q" output="fabric.reg_out"/>
+              <direct name="direct7" input="frac_logic.cout" output="fabric.cout"/>
               <complete name="complete1" input="fabric.clk" output="ff[1:0].clk"/>
               <complete name="complete2" input="fabric.reset" output="ff[1:0].reset"/>
               <mux name="mux1" input="frac_logic.out[0:0] fabric.reg_in" output="ff[0:0].D">
