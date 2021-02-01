@@ -253,9 +253,7 @@
     <pb_type name="clb.fle[physical].fabric.ff" circuit_model_name="SDFFRQ"/>
     <!-- Binding operating pb_type to physical pb_type -->
     <!-- Binding operating pb_types in mode 'arithmetic' -->
-    <pb_type name="clb.fle[arithmetic].soft_adder.adder_lut4" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut4" mode_bits="1">
-      <external_bitstream source="eblif" attribute=".param" keyword_to_ignore="LUT"/>
-    </pb_type>
+    <pb_type name="clb.fle[arithmetic].soft_adder.adder_lut4" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut4" mode_bits="1"/>
     <pb_type name="clb.fle[arithmetic].soft_adder.ff" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
     <pb_type name="clb.fle[arithmetic].soft_adder.carry_follower" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.carry_follower"/>
     <!-- Binding operating pb_types in mode 'n2_lut3' -->
