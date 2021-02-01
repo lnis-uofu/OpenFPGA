@@ -63,8 +63,6 @@ endmodule
 //-----------------------------------------------------
 
 module CARRY_MUX2(
-    // iVerilog is buggy on the 'input A' declaration when deposit initial
-    // values 
 	input [0:0] A,   // Data input 0
 	input [0:0] B,   // Data input 1
 	input [0:0] S0, // Select port
