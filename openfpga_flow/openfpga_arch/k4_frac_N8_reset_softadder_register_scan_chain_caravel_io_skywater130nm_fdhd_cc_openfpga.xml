@@ -252,6 +252,12 @@
     <pb_type name="clb.fle[physical].fabric.frac_logic.carry_follower" circuit_model_name="CARRY_MUX2"/>
     <pb_type name="clb.fle[physical].fabric.ff" circuit_model_name="SDFFRQ"/>
     <!-- Binding operating pb_type to physical pb_type -->
+    <!-- Binding operating pb_types in mode 'arithmetic' -->
+    <pb_type name="clb.fle[arithmetic].soft_adder.adder_lut4" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut4" mode_bits="1">
+    </pb_type>
+    <pb_type name="clb.fle[arithmetic].soft_adder.ff" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
+    <pb_type name="clb.fle[arithmetic].soft_adder.carry_follower" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.carry_follower"/>
+    <!-- Binding operating pb_types in mode 'n2_lut3' -->
     <pb_type name="clb.fle[n2_lut3].lut3inter.ble3.lut3" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut4" mode_bits="1" physical_pb_type_index_factor="0.5">
       <!-- Binding the lut3 to the first 3 inputs of fracturable lut4 -->
       <port name="in" physical_mode_port="in[0:2]"/>
