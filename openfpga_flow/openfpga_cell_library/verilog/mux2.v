@@ -63,13 +63,13 @@ endmodule
 //-----------------------------------------------------
 
 module CARRY_MUX2(
-	input [0:0] A,   // Data input 0
-	input [0:0] B,   // Data input 1
-	input [0:0] S0, // Select port
+	input [0:0] A0,   // Data input 0
+	input [0:0] A1,   // Data input 1
+	input [0:0] S, // Select port
 	output [0:0] Y  // Data output
 	);
   
-	assign Y = S0 ? B : A;
+	assign Y = S ? A1 : A0;
 
 // Note: 
 //	 MUX2 appears in the datapath logic driven by carry-in and LUT outputs
