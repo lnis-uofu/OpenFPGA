@@ -53,3 +53,28 @@ module MUX2(
 `endif
 
 endmodule
+
+//-----------------------------------------------------
+// Design Name : CARRY_MUX2
+// File Name   : mux2.v
+// Function    : Standard cell (static gate) implementation
+//               of 2-input multiplexers to be used by carry logic 
+// Coder       : Xifan Tang
+//-----------------------------------------------------
+
+module CARRY_MUX2(
+    // iVerilog is buggy on the 'input A' declaration when deposit initial
+    // values 
+	input [0:0] A,   // Data input 0
+	input [0:0] B,   // Data input 1
+	input [0:0] S0, // Select port
+	output [0:0] Y  // Data output
+	);
+  
+	assign Y = S0 ? B : A;
+
+// Note: 
+//	 MUX2 appears in the datapath logic driven by carry-in and LUT outputs
+//	 where initial values and signal deposit are not required
+
+endmodule
