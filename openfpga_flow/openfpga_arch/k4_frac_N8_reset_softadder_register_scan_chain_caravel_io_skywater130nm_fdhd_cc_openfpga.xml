@@ -196,7 +196,7 @@
       <port type="input" prefix="outpad" lib_name="FPGA_OUT" size="1"/>
       <port type="sram" prefix="en" lib_name="FPGA_DIR" size="1" mode_select="true" circuit_model_name="DFFRQ" default_val="1"/>
     </circuit_model>
-    <circuit_model type="hard_logic" name="CARRY_MUX2" prefix="CARRY_MUX2" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/mux2.v">
+    <circuit_model type="hard_logic" name="CARRY_MUX2" prefix="CARRY_MUX2" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/mux2.v">
       <design_technology type="cmos"/>
       <device_technology device_model_name="logic"/>
       <input_buffer exist="false"/>
