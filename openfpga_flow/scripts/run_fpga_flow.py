@@ -252,11 +252,12 @@ def main():
     if (args.fpga_flow == "yosys_vpr"):
         logger.info('Running "yosys_vpr" Flow')
         run_yosys_with_abc()
+        shutil.copy(args.top_module+'_yosys_out.blif', args.top_module+".blif")
         # TODO Make it optional if activity file is provided
-        run_ace2()
-        run_pro_blif_3arg()
-        if args.power:
-            run_rewrite_verilog()
+       # run_ace2()
+        #run_pro_blif_3arg()
+        #if args.power:
+         #   run_rewrite_verilog()
     if (args.fpga_flow == "vpr_blif"):
         collect_files_for_vpr()
     # if (args.fpga_flow == "vtr"):
@@ -577,7 +578,7 @@ def run_ace2():
                 raise subprocess.CalledProcessError(0, command)
     except:
         logger.exception("Failed to run ACE2")
-        clean_up_and_exit("")
+        #clean_up_and_exit("")
     logger.info("ACE2 output is written in file %s" % filename)
 
 
@@ -850,7 +851,7 @@ def run_standard_vpr(bench_blif, fixed_chan_width, logfile, route_only=False):
 
     chan_width = None
     try:
-        logger.debug("Running VPR : " + " ".join(command))
+        logger.info("Running VPR : " + " ".join(command))
         with open(logfile, 'w+') as output:
             output.write(" ".join(command)+"\n")
             process = subprocess.run(command,
