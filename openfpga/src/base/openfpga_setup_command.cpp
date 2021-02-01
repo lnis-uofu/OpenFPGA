@@ -125,7 +125,7 @@ ShellCommandId add_openfpga_link_arch_command(openfpga::Shell<OpenfpgaContext>& 
   Command shell_cmd("link_openfpga_arch");
 
   /* Add an option '--activity_file'*/
-  CommandOptionId opt_act_file = shell_cmd.add_option("activity_file", true, "file path to the signal activity");
+  CommandOptionId opt_act_file = shell_cmd.add_option("activity_file", false, "file path to the signal activity");
   shell_cmd.set_option_require_value(opt_act_file, openfpga::OPT_STRING);
 
   /* Add an option '--sort_gsb_chan_node_in_edges'*/

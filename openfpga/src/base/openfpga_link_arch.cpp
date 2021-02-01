@@ -148,8 +148,11 @@ int link_arch(OpenfpgaContext& openfpga_ctx,
    *   should be inferred from FPGA implmentation
    * - When FPGA-SPICE is enabled
    */
-  openfpga_ctx.mutable_net_activity() = read_activity(g_vpr_ctx.atom().nlist,
-                                                      cmd_context.option_value(cmd, opt_activity_file).c_str());
+  std::unordered_map<AtomNetId, t_net_power> net_activity;
+  if (true == cmd_context.option_enable(cmd, opt_activity_file)) {
+    net_activity = read_activity(g_vpr_ctx.atom().nlist,
+                                 cmd_context.option_value(cmd, opt_activity_file).c_str());
+  }
 
   /* TODO: Annotate the number of clock cycles and clock frequency by following VPR results
    * We SHOULD create a new simulation setting for OpenFPGA use only
@@ -160,7 +163,7 @@ int link_arch(OpenfpgaContext& openfpga_ctx,
    */
   //openfpga_ctx.mutable_simulation_setting() = openfpga_ctx.mutable_arch().sim_setting;
   if (CMD_EXEC_FATAL_ERROR == annotate_simulation_setting(g_vpr_ctx.atom(),
-                                                          openfpga_ctx.net_activity(),
+                                                          net_activity,
                                                           openfpga_ctx.mutable_simulation_setting())) {
     return CMD_EXEC_FATAL_ERROR;
   }

@@ -23,6 +23,7 @@ jobs:
       # this is output as string, see https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
       source_modified: ${{ steps.changes.outputs.status_code == '1' }}
       force_upload: false
+      sha_short: ${{ steps.changes.outputs.sha_short }}
     steps:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
@@ -38,10 +39,15 @@ jobs:
           else
             echo "::set-output name=status_code::$?"
           fi
+          if [[ ${GITHUB_REF} == 'refs/heads/master' ]]; then
+            echo "Current brnach is master forcing source_modified"
+            echo "::set-output name=status_code::1"
+          fi
+          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
   # Test the compilation compatibility
   linux_build:
     needs: change_detect
-    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) || github.ref == 'refs/heads/master' }}
+    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
     name: ${{ matrix.config.name }}
     runs-on: ubuntu-18.04
     container: ghcr.io/lnis-uofu/openfpga-build-${{ matrix.config.cc}}
@@ -161,9 +167,8 @@ jobs:
             openfpga.sh
   docker_distribution:
     name: Build docker image for distribution
-    if: ${{ github.ref == 'refs/heads/master' || fromJSON(needs.change_detect.outputs.force_upload) }}
     runs-on: ubuntu-latest
-    needs: linux_build
+    needs: [linux_build, change_detect]
     steps:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
@@ -171,9 +176,6 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: openfpga
-      - name: Update dockerignore to add openfpga_flow
-        run: |
-          cat .dockerignore
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -189,10 +191,12 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile.master
-          push: true
-          tags: ghcr.io/lnis-uofu/openfpga-master:latest
-  artifact_regression_tests:
-    name: Regression tests on code changes
+          push: ${{ github.ref == 'refs/heads/master' || needs.change_detect.outputs.force_upload }}
+          tags: |
+            ghcr.io/lnis-uofu/openfpga-master:latest
+            ghcr.io/lnis-uofu/openfpga-master:${{ needs.change_detect.outputs.sha_short }}
+  linux_regression_tests:
+    name: linux_regression_tests
     runs-on: ubuntu-18.04
     container: ghcr.io/lnis-uofu/openfpga-env
     needs: linux_build
@@ -237,7 +241,7 @@ jobs:
   docker_regression_tests:
     needs: change_detect
     if: ${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
-    name: Regression tests against master artifacts
+    name: docker_regression_tests
     runs-on: ubuntu-18.04
     container: ghcr.io/lnis-uofu/openfpga-master:latest
     strategy:
