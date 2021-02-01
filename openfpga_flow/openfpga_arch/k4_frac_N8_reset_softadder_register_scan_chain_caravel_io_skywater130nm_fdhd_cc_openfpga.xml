@@ -196,7 +196,7 @@
       <port type="input" prefix="outpad" lib_name="FPGA_OUT" size="1"/>
       <port type="sram" prefix="en" lib_name="FPGA_DIR" size="1" mode_select="true" circuit_model_name="DFFRQ" default_val="1"/>
     </circuit_model>
-    <circuit_model type="hard_logic" name="sky130_fd_sc_hd__mux2_1_wrapper" prefix="sky130_fd_sc_hd__mux2_1_wrapper" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/sky130_fd_sc_hd_wrapper.v">
+    <circuit_model type="hard_logic" name="CARRY_MUX2" prefix="CARRY_MUX2" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/mux2.v">
       <design_technology type="cmos"/>
       <device_technology device_model_name="logic"/>
       <input_buffer exist="false"/>
@@ -204,7 +204,7 @@
       <port type="input" prefix="a" lib_name="A0" size="1"/>
       <port type="input" prefix="b" lib_name="A1" size="1"/>
       <port type="input" prefix="cin" lib_name="S" size="1"/>
-      <port type="output" prefix="cout" lib_name="X" size="1"/>
+      <port type="output" prefix="cout" lib_name="Y" size="1"/>
     </circuit_model>
   </circuit_library>
   <configuration_protocol>
@@ -249,7 +249,7 @@
     <!-- physical mode will be the default mode if not specified -->
     <pb_type name="clb.fle" physical_mode_name="physical"/>
     <pb_type name="clb.fle[physical].fabric.frac_logic.frac_lut4" circuit_model_name="frac_lut4" mode_bits="0"/>
-    <pb_type name="clb.fle[physical].fabric.frac_logic.carry_follower" circuit_model_name="sky130_fd_sc_hd__mux2_1_wrapper"/>
+    <pb_type name="clb.fle[physical].fabric.frac_logic.carry_follower" circuit_model_name="CARRY_MUX2"/>
     <pb_type name="clb.fle[physical].fabric.ff" circuit_model_name="SDFFRQ"/>
     <!-- Binding operating pb_type to physical pb_type -->
     <pb_type name="clb.fle[n2_lut3].lut3inter.ble3.lut3" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut4" mode_bits="1" physical_pb_type_index_factor="0.5">
