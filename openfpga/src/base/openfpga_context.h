@@ -4,6 +4,7 @@
 #include <vector>
 #include "vpr_context.h"
 #include "openfpga_arch.h"
+#include "simulation_setting.h"
 #include "vpr_netlist_annotation.h"
 #include "vpr_device_annotation.h"
 #include "vpr_clustering_annotation.h"

@@ -23,6 +23,7 @@
 #include "read_xml_routing_circuit.h"
 #include "read_xml_tile_annotation.h"
 #include "read_xml_pb_type_annotation.h"
+#include "read_xml_bitstream_setting.h"
 #include "read_xml_openfpga_arch.h"
 #include "openfpga_arch_linker.h"
 
@@ -147,5 +148,36 @@ openfpga::SimulationSetting read_xml_openfpga_simulation_settings(const char* si
   }
 
   return openfpga_sim_setting; 
+}
+
+/********************************************************************
+ * Top-level function to parse an XML file and load data to bitstream settings
+ *******************************************************************/
+openfpga::BitstreamSetting read_xml_openfpga_bitstream_settings(const char* bitstream_setting_file_name) {
+  vtr::ScopedStartFinishTimer timer("Read OpenFPGA bitstream settings");
+
+  openfpga::BitstreamSetting openfpga_bitstream_setting;
+
+  pugi::xml_node Next;
+
+  /* Parse the file */
+  pugi::xml_document doc;
+  pugiutil::loc_data loc_data;
+
+  try {
+    loc_data = pugiutil::load_xml(doc, bitstream_setting_file_name);
+
+    /* Second node should be <openfpga_simulation_setting> */
+    auto xml_bitstream_settings = get_single_child(doc, "openfpga_bitstream_setting", loc_data); 
+
+    /* Parse simulation settings to data structure */
+    openfpga_bitstream_setting = read_xml_bitstream_setting(xml_bitstream_settings, loc_data);
+
+  } catch (pugiutil::XmlError& e) {
+    archfpga_throw(bitstream_setting_file_name, e.line(),
+                   "%s", e.what());
+  }
+
+  return openfpga_bitstream_setting; 
 }
 
