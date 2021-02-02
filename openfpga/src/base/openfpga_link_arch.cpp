@@ -21,6 +21,7 @@
 #include "annotate_routing.h"
 #include "annotate_rr_graph.h"
 #include "annotate_simulation_setting.h"
+#include "annotate_bitstream_setting.h"
 #include "mux_library_builder.h"
 #include "build_tile_direct.h"
 #include "annotate_placement.h"
@@ -167,6 +168,14 @@ int link_arch(OpenfpgaContext& openfpga_ctx,
                                                           openfpga_ctx.mutable_simulation_setting())) {
     return CMD_EXEC_FATAL_ERROR;
   }
+
+  /* Build bitstream annotation based on bitstream settings */
+  if (CMD_EXEC_FATAL_ERROR == annotate_bitstream_setting(openfpga_ctx.bitstream_setting(),
+                                                         g_vpr_ctx.device(),
+                                                         openfpga_ctx.mutable_vpr_bitstream_annotation())) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
 
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;

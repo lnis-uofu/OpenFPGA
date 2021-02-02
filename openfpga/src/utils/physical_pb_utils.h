@@ -10,6 +10,7 @@
 #include <vector>
 #include "physical_types.h"
 #include "vpr_device_annotation.h"
+#include "vpr_bitstream_annotation.h"
 #include "vpr_context.h"
 #include "physical_pb.h"
 
@@ -29,6 +30,7 @@ void rec_update_physical_pb_from_operating_pb(PhysicalPb& phy_pb,
                                               const t_pb_routes& pb_route,
                                               const AtomContext& atom_ctx,
                                               const VprDeviceAnnotation& device_annotation,
+                                              const VprBitstreamAnnotation& bitstream_annotation,
                                               const bool& verbose);
 
 } /* end namespace openfpga */

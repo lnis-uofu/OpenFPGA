@@ -445,6 +445,23 @@ void build_lut_bitstream(BitstreamManager& bitstream_manager,
                                              device_annotation,
                                              physical_pb.truth_tables(lut_pb_id),
                                              circuit_lib.port_default_value(lut_regular_sram_ports[0]));
+    /* If the physical pb contains fixed bitstream, overload here */
+    if (false == physical_pb.fixed_bitstream(lut_pb_id).empty()) {
+      std::string fixed_bitstream = physical_pb.fixed_bitstream(lut_pb_id);
+      /* Ensure the length matches!!! */
+      if (lut_bitstream.size() != fixed_bitstream.size()) {
+        VTR_LOG_ERROR("Unmatched length of fixed bitstream %s!Expected to be %ld bits\n",
+                      fixed_bitstream.c_str(),
+                      lut_bitstream.size()); 
+        exit(1);
+      }
+      /* Overload here */
+      lut_bitstream.clear();
+      for (const char& fixed_bit : fixed_bitstream) {
+        VTR_ASSERT('0' == fixed_bit || '1' == fixed_bit);
+        lut_bitstream.push_back('1' == fixed_bit);
+      }
+    }
   }
   
   /* Generate bitstream for mode-select ports */

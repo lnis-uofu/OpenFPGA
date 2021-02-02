@@ -6,6 +6,9 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
+/* Headers from openfpgautil library */
+#include "openfpga_tokenizer.h"
+
 #include "openfpga_naming.h"
 #include "pb_type_utils.h"
 #include "physical_pb_utils.h"
@@ -278,6 +281,7 @@ void rec_update_physical_pb_from_operating_pb(PhysicalPb& phy_pb,
                                               const t_pb_routes& pb_route,
                                               const AtomContext& atom_ctx,
                                               const VprDeviceAnnotation& device_annotation,
+                                              const VprBitstreamAnnotation& bitstream_annotation,
                                               const bool& verbose) {
   t_pb_graph_node* pb_graph_node = op_pb->pb_graph_node;
   t_pb_type* pb_type = pb_graph_node->pb_type;
@@ -297,6 +301,29 @@ void rec_update_physical_pb_from_operating_pb(PhysicalPb& phy_pb,
     VTR_ASSERT(atom_blk);
 
     phy_pb.add_atom_block(physical_pb, atom_blk);
+    
+    /* if the operating pb type has bitstream annotation,
+     * bind the bitstream value from atom block to the physical pb 
+     */
+    if (VprBitstreamAnnotation::e_bitstream_source_type::BITSTREAM_SOURCE_EBLIF == bitstream_annotation.pb_type_bitstream_source(pb_type)) {
+      StringToken tokenizer = bitstream_annotation.pb_type_bitstream_content(pb_type);
+      std::vector<std::string> tokens = tokenizer.split(" ");
+      /* FIXME: The token-level check should be done much earlier!!! */
+      VTR_ASSERT(2 == tokens.size());
+      if (std::string(".param") == tokens[0]) {
+        for (const auto& param_search : atom_ctx.nlist.block_params(atom_blk)) {
+          if (param_search.first == tokens[1]) {
+            phy_pb.set_fixed_bitstream(physical_pb, param_search.second); 
+          } 
+        }
+      } else if (std::string(".attr") == tokens[0]) {
+        for (const auto& attr_search : atom_ctx.nlist.block_attrs(atom_blk)) {
+          if (attr_search.first == tokens[1]) {
+            phy_pb.set_fixed_bitstream(physical_pb, attr_search.second); 
+          } 
+        }
+      }
+    }
 
     /* Iterate over ports and annotate the atom pins */
     synchronize_primitive_physical_pb_atom_nets(phy_pb, physical_pb,
@@ -318,6 +345,7 @@ void rec_update_physical_pb_from_operating_pb(PhysicalPb& phy_pb,
                                                  pb_route,
                                                  atom_ctx,
                                                  device_annotation,
+                                                 bitstream_annotation,
                                                  verbose);
       } else {
         /* Some pb may be used just in routing purpose, find out the output nets  */

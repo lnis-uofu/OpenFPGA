@@ -7,6 +7,7 @@
 #include "vpr_context.h"
 #include "vpr_device_annotation.h"
 #include "vpr_clustering_annotation.h"
+#include "vpr_bitstream_annotation.h"
 #include "circuit_library.h"
 
 /********************************************************************
