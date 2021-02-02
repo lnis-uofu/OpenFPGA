@@ -50,7 +50,7 @@ void write_xml_bitstream_pb_type_setting(std::fstream& fp,
   /* Validate the file stream */
   openfpga::check_file_stream(fname, fp);
 
-  fp << "\t\t" << "<pb_type";
+  fp << "\t" << "<pb_type";
 
   /* Generate the full hierarchy name of the pb_type */
   write_xml_attribute(fp, "name", generate_bitstream_setting_pb_type_hierarchy_name(bitstream_setting, bitstream_pb_type_setting_id).c_str());
