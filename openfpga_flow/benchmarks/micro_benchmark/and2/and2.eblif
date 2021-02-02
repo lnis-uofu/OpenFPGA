@@ -7,7 +7,13 @@
 .inputs a b
 .outputs c
 
-.subckt adder_lut in[3]=unconn in[2]=unconn in[1]=a in[0]=b lut2_out[1]=unconn lut2_out[0]=unconn lut4_out[0]=c
+.subckt adder_lut in[1]=a in[0]=b lut4_out[0]=c
 .param LUT 1010101010101010
 
+.end
+
+.model adder_lut4
+.inputs in[3] in[2] in[1] in[0]
+.outputs lut2_out[1] lut2_out[0] lut4_out[0]
+.blackbox
 .end
