@@ -29,6 +29,10 @@ run-task () {
     $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_fpga_task.py "$@"
 }
 
+clean-run () {
+    rm -rf ./openfpga_flow/**/run???
+}
+
 run-modelsim () {
     $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_modelsim.py "$@"
 }
@@ -48,6 +52,21 @@ goto-root () {
     cd $OPENFPGA_PATH
 }
 
+# Run regression test locally
+run-regression-local () {
+    cd ${OPENFPGA_PATH}
+    bash .github/workflows/*reg_test.sh
+}
+
+# Run regression test locally
+run-regression-local-docker () {
+    cd ${OPENFPGA_PATH}
+    docker run \
+        -v $(pwd)/openfpga_flow:/opt/openfpga/ \
+        -v $(pwd)/.github:/opt/openfpga/ \
+        ghcr.io/lnis-uofu/openfpga-master:latest "bash .github/workflows/*reg_test.sh"
+}
+
 # Changes directory to task directory [goto_task <task_name> <run_num[default 0]>]
 goto-task () {
     if [ -z $1 ]; then
@@ -55,6 +74,7 @@ goto-task () {
         return
     fi
     goto_path=$OPENFPGA_TASK_PATH/$1
+    # Selects the run directory
     run_num=""
     if [ ! -d $goto_path ]; then echo "Task directory not found"; return; fi
     if [[ "$2" =~ '^[0-9]+$' ]] ; then
@@ -67,6 +87,12 @@ goto-task () {
         echo "Switching current dirctory to" $goto_path/$run_num
         cd $goto_path/$run_num
     fi
+    # Selects benchmark directory
+    select benchRun in $(ls -d **/arch | sed "s/\/arch//" | head -n 20)
+    do
+        [ -d ${benchRun} ] && cd ${benchRun}
+        break
+    done
 }
 
 # Clears enviroment variables and fucntions
