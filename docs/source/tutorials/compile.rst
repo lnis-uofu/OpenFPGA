@@ -32,7 +32,7 @@ To quickly verify the tool is well compiled, user can run the following command 
 
 Dependencies
 ~~~~~~~~~~~~
-Full list of dependencies can be found at travis_setup_link_
+Full list of dependencies can be found at install_dependencies_build_
 In particular, OpenFPGA requires specific versions for the following dependencies:
 
 :cmake:
@@ -41,7 +41,7 @@ In particular, OpenFPGA requires specific versions for the following dependencie
 :iverilog:
   version 10.1+ is required to run Verilog-to-Verification flow
 
-.. _travis_setup_link: https://github.com/LNIS-Projects/OpenFPGA/blob/0cfb88a49f152aab0a06f309ff160f222bb51ed7/.travis.yml#L34
+.. _install_dependencies_build: https://github.com/lnis-uofu/OpenFPGA/blob/master/.github/workflows/install_dependencies_build.sh
 
 Docker
 ~~~~~~
