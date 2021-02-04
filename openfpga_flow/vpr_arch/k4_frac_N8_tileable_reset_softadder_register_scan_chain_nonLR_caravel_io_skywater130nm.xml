@@ -42,6 +42,16 @@
         <port name="lut4_out"/>
       </output_ports>
     </model>
+    <model name="carry_follower">
+      <input_ports>
+        <port name="a" combinational_sink_ports="cout"/>
+        <port name="b" combinational_sink_ports="cout"/>
+        <port name="cin" combinational_sink_ports="cout"/>
+      </input_ports>
+      <output_ports>
+        <port name="cout"/>
+      </output_ports>
+    </model>
     <model name="frac_lut4">
       <input_ports>
         <port name="in"/>
@@ -52,7 +62,7 @@
         <port name="lut4_out"/>
       </output_ports>
     </model>
-    <model name="carry_follower">
+    <model name="carry_follower_physical">
       <input_ports>
         <port name="a" combinational_sink_ports="cout"/>
         <port name="b" combinational_sink_ports="cout"/>
@@ -412,7 +422,7 @@
                 <output name="lut3_out" num_pins="2"/>
                 <output name="lut4_out" num_pins="1"/>
               </pb_type>
-              <pb_type name="carry_follower" blif_model=".subckt carry_follower" num_pb="1">
+              <pb_type name="carry_follower" blif_model=".subckt carry_follower_physical" num_pb="1">
                 <input name="a" num_pins="1"/>
                 <input name="b" num_pins="1"/>
                 <input name="cin" num_pins="1"/>
@@ -495,9 +505,8 @@
           <pb_type name="soft_adder" num_pb="1">
             <input name="in" num_pins="4"/>
             <input name="cin" num_pins="1"/>
-            <output name="out" num_pins="1"/>
+            <output name="sumout" num_pins="1"/>
             <output name="cout" num_pins="1"/>
-            <clock name="clk" num_pins="1"/>
             <!-- Define special LUT marco to be used as adder -->
             <pb_type name="adder_lut4" blif_model=".subckt adder_lut4" num_pb="1">
               <input name="in" num_pins="4"/>
@@ -515,49 +524,41 @@
               <delay_constant max="0.3e-9" in_port="carry_follower.b" out_port="carry_follower.cout"/>
               <delay_constant max="0.3e-9" in_port="carry_follower.cin" out_port="carry_follower.cout"/>
             </pb_type>
-            <!-- Define flip-flop -->
-            <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
-              <input name="D" num_pins="1" port_class="D"/>
-              <output name="Q" num_pins="1" port_class="Q"/>
-              <clock name="clk" num_pins="1" port_class="clock"/>
-              <T_setup value="66e-12" port="ff.D" clock="clk"/>
-              <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
-            </pb_type>
             <interconnect>
               <direct name="direct1" input="soft_adder.in[0:1]" output="adder_lut4.in[0:1]"/>
               <direct name="direct2" input="soft_adder.in[3:3]" output="adder_lut4.in[3:3]"/>
               <direct name="direct3" input="soft_adder.cin" output="carry_follower.b">
+                <!-- Pack pattern to build an adder chain connection considered by packer -->
                 <pack_pattern name="chain" in_port="soft_adder.cin" out_port="carry_follower.b"/>
               </direct>
               <direct name="direct4" input="adder_lut4.lut2_out[1:1]" output="carry_follower.a">
-                <pack_pattern name="chain" in_port="adder_lut4.lut2_out[1:1]" out_port="carry_follower.a"/>
+                <!-- Pack pattern to pair adder_lut4 and carry_follower into a molecule 
+                     considered by packer -->
+                <pack_pattern name="lut_follower" in_port="adder_lut4.lut2_out[1:1]" out_port="carry_follower.a"/>
               </direct>
               <direct name="direct5" input="adder_lut4.lut2_out[0:0]" output="carry_follower.cin">
-                <!--pack_pattern name="chain" in_port="adder_lut4.lut2_out[0:0]" out_port="carry_follower.cin"/-->
               </direct>
               <direct name="direct6" input="carry_follower.cout" output="soft_adder.cout">
+                <!-- Pack pattern to build an adder chain connection considered by packer -->
                 <pack_pattern name="chain" in_port="carry_follower.cout" out_port="soft_adder.cout"/>
               </direct>
-              <direct name="direct7" input="adder_lut4.lut4_out[0:0]" output="ff[0:0].D">
-                <pack_pattern name="ble" in_port="adder_lut4.lut4_out[0:0]" out_port="ff[0:0].D"/>
+              <direct name="direct7" input="adder_lut4.lut4_out" output="soft_adder.sumout[0:0]">
               </direct>
-              <complete name="complete1" input="soft_adder.clk" output="ff[0:0].clk"/>
               <mux name="mux1" input="soft_adder.cin soft_adder.in[2:2]" output="adder_lut4.in[2:2]">
-                <delay_constant max="25e-12" in_port="soft_adder.cin" out_port="adder_lut4.in[2:2]"/>
-                <delay_constant max="45e-12" in_port="soft_adder.in[2:2]" out_port="adder_lut4.in[2:2]"/>
-              </mux>
-              <mux name="mux2" input="adder_lut4.lut4_out[0:0] ff[0:0].Q" output="soft_adder.out[0:0]">
-                <delay_constant max="25e-12" in_port="adder_lut4.lut4_out[0:0]" out_port="soft_adder.out[0:0]"/>
-                <delay_constant max="45e-12" in_port="ff[0:0].Q" out_port="soft_adder.out[0:0]"/>
               </mux>
             </interconnect>
           </pb_type>
           <interconnect>
             <direct name="direct1" input="fle.in" output="soft_adder.in"/>
-            <direct name="direct2" input="fle.cin" output="soft_adder.cin"/>
-            <direct name="direct3" input="soft_adder.out" output="fle.out[0:0]"/>
-            <direct name="direct4" input="soft_adder.cout" output="fle.cout"/>
-            <direct name="direct5" input="fle.clk" output="soft_adder.clk"/>
+            <direct name="direct2" input="fle.cin" output="soft_adder.cin">
+              <!-- Pack pattern to build an adder chain connection considered by packer -->
+              <pack_pattern name="chain" in_port="fle.cin" out_port="soft_adder.cin"/>
+            </direct>
+            <direct name="direct3" input="soft_adder.sumout" output="fle.out[0:0]"/>
+            <direct name="direct4" input="soft_adder.cout" output="fle.cout">
+              <!-- Pack pattern to build an adder chain connection considered by packer -->
+              <pack_pattern name="chain" in_port="soft_adder.cout" out_port="fle.cout"/>
+            </direct>
           </interconnect>
         </mode>
         <!-- Arithmetic mode definition end -->
