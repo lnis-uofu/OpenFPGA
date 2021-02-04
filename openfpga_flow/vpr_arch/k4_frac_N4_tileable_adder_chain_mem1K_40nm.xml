@@ -238,7 +238,7 @@
       <!-- A mode denotes the physical implementation of an I/O 
            This mode will be not packable but is mainly used for fabric verilog generation   
         -->
-      <mode name="physical" disabled_in_pack="true">
+      <mode name="physical" disable_packing="true">
         <pb_type name="iopad" blif_model=".subckt io" num_pb="1">
           <input name="outpad" num_pins="1"/>
           <output name="inpad" num_pins="1"/>
@@ -314,7 +314,7 @@
         <output name="cout" num_pins="1"/>
         <clock name="clk" num_pins="1"/>
         <!-- Physical mode definition begin (physical implementation of the fle) -->
-        <mode name="physical" disabled_in_pack="true">
+        <mode name="physical" disable_packing="true">
           <pb_type name="fabric" num_pb="1">
             <input name="in" num_pins="4"/>
             <input name="cin" num_pins="1"/>
