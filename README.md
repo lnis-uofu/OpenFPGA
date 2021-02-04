@@ -11,7 +11,7 @@ We also recommend potential users to checkout the summary of [**technical capabi
 
 ## Compilation
 
-Before start, we strongly recommend you to read the required dependencies at [**compilation guidelines**](https://openfpga.readthedocs.io/en/master/tutorials/compile.html).
+Before start, we strongly recommend you to read the required dependencies at [**compilation guidelines**](https://openfpga.readthedocs.io/en/master/tutorials/compile).
 It also includes detailed information about docker image. 
 
 ---
