@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xl="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="289.48 461.02 601.66 264.52" width="601.66" height="264.52">
+  <defs>
+    <font-face font-family="Times New Roman" font-size="16" panose-1="2 2 6 3 5 4 5 2 3 4" units-per-em="1000" underline-position="-108.88672" underline-thickness="48.828125" slope="0" x-height="447.2656" cap-height="662.1094" ascent="891.1133" descent="-216.3086" font-weight="400">
+      <font-face-src>
+        <font-face-name name="TimesNewRomanPSMT"/>
+      </font-face-src>
+    </font-face>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -3 5 6" markerWidth="5" markerHeight="6" color="black">
+      <g>
+        <path d="M 2.88 0 L 0 -1.08 L 0 1.08 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <font-face font-family="Helvetica Neue" font-size="16" panose-1="2 0 5 3 0 0 0 2 0 4" units-per-em="1000" underline-position="-100" underline-thickness="50" slope="0" x-height="517" cap-height="714" ascent="951.9958" descent="-212.99744" font-weight="400">
+      <font-face-src>
+        <font-face-name name="HelveticaNeue"/>
+      </font-face-src>
+    </font-face>
+  </defs>
+  <metadata> Produced by OmniGraffle 7.18.2\n2021-01-26 20:54:28 +0000</metadata>
+  <g id="Canvas_1" fill="none" stroke-dasharray="none" stroke-opacity="1" fill-opacity="1" stroke="none">
+    <title>Canvas 1</title>
+    <g id="Canvas_1_Layer_1">
+      <title>Layer 1</title>
+      <g id="Graphic_35908">
+        <path d="M 294.48 633.6 L 890.64 633.6 L 890.64 725.04 L 294.48 725.04 Z" stroke="#0432ff" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4.0,4.0" stroke-width="1"/>
+      </g>
+      <g id="Graphic_35895">
+        <path d="M 397.44 461.52 L 890.64 461.52 L 890.64 552.96 L 397.44 552.96 Z" stroke="#ff2600" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4.0,4.0" stroke-width="1"/>
+      </g>
+      <g id="Graphic_35796">
+        <path d="M 439.7753 493.74546 L 470.7761 493.74546 C 481.10967 493.74546 486.27647 493.74546 492.4766 494.7033 C 497.6434 495.6611 502.8102 498.05564 504.87693 500.4502 C 506.94365 503.32364 506.94365 505.7182 506.94365 510.5073 L 506.94365 524.87457 C 506.94365 529.66366 506.94365 532.0582 504.87693 534.93166 C 502.8102 537.3262 497.6434 539.72076 492.4766 540.6786 C 486.27647 541.6364 481.10967 541.6364 470.7761 541.6364 L 439.7753 541.6364 C 429.4417 541.6364 424.2749 541.6364 418.07475 540.6786 C 412.90795 539.72076 407.74115 537.3262 405.67443 534.93166 C 403.6077 532.0582 403.6077 529.66366 403.6077 524.87457 L 403.6077 510.5073 C 403.6077 505.7182 403.6077 503.32364 405.67443 500.4502 C 407.74115 498.05564 412.90795 495.6611 418.07475 494.7033 C 424.2749 493.74546 429.4417 493.74546 439.7753 493.74546 M 439.7753 493.74546" fill="#ffffc0"/>
+        <path d="M 439.7753 493.74546 L 470.7761 493.74546 C 481.10967 493.74546 486.27647 493.74546 492.4766 494.7033 C 497.6434 495.6611 502.8102 498.05564 504.87693 500.4502 C 506.94365 503.32364 506.94365 505.7182 506.94365 510.5073 L 506.94365 524.87457 C 506.94365 529.66366 506.94365 532.0582 504.87693 534.93166 C 502.8102 537.3262 497.6434 539.72076 492.4766 540.6786 C 486.27647 541.6364 481.10967 541.6364 470.7761 541.6364 L 439.7753 541.6364 C 429.4417 541.6364 424.2749 541.6364 418.07475 540.6786 C 412.90795 539.72076 407.74115 537.3262 405.67443 534.93166 C 403.6077 532.0582 403.6077 529.66366 403.6077 524.87457 L 403.6077 510.5073 C 403.6077 505.7182 403.6077 503.32364 405.67443 500.4502 C 407.74115 498.05564 412.90795 495.6611 418.07475 494.7033 C 424.2749 493.74546 429.4417 493.74546 439.7753 493.74546 M 439.7753 493.74546" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(408.6077 500.01124)" fill="black">
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="11.570312" y="14">Behavioral</tspan>
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="23.117188" y="31.679688">Verilog</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35804">
+        <rect x="653.76" y="498.96" width="116.90455" height="37.08" fill="#ccc"/>
+        <rect x="653.76" y="498.96" width="116.90455" height="37.08" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(658.76 499.8203)" fill="black">
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="1.6788368" y="14">Physical Design </tspan>
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="38.901493" y="31.679688">Tool</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35808"/>
+      <g id="Line_35842">
+        <line x1="771.6645" y1="517.5881" x2="789.7645" y2="517.6149" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_35856">
+        <line x1="507.94365" y1="517.6124" x2="532.1" y2="517.5764" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_35882">
+        <path d="M 828.6785 498.96 L 853.4105 498.96 C 861.6545 498.96 865.7765 498.96 870.7229 499.7092 C 874.8449 500.45846 878.9669 502.33156 880.6157 504.20465 C 882.2645 506.45236 882.2645 508.32546 882.2645 512.07164 L 882.2645 523.3102 C 882.2645 527.0564 882.2645 528.9295 880.6157 531.1772 C 878.9669 533.0503 874.8449 534.9234 870.7229 535.6726 C 865.7765 536.42186 861.6545 536.42186 853.4105 536.42186 L 828.6785 536.42186 C 820.4345 536.42186 816.3125 536.42186 811.3661 535.6726 C 807.2441 534.9234 803.1221 533.0503 801.4733 531.1772 C 799.8245 528.9295 799.8245 527.0564 799.8245 523.3102 L 799.8245 512.07164 C 799.8245 508.32546 799.8245 506.45236 801.4733 504.20465 C 803.1221 502.33156 807.2441 500.45846 811.3661 499.7092 C 816.3125 498.96 820.4345 498.96 828.6785 498.96 M 828.6785 498.96" fill="#ffffc0"/>
+        <path d="M 828.6785 498.96 L 853.4105 498.96 C 861.6545 498.96 865.7765 498.96 870.7229 499.7092 C 874.8449 500.45846 878.9669 502.33156 880.6157 504.20465 C 882.2645 506.45236 882.2645 508.32546 882.2645 512.07164 L 882.2645 523.3102 C 882.2645 527.0564 882.2645 528.9295 880.6157 531.1772 C 878.9669 533.0503 874.8449 534.9234 870.7229 535.6726 C 865.7765 536.42186 861.6545 536.42186 853.4105 536.42186 L 828.6785 536.42186 C 820.4345 536.42186 816.3125 536.42186 811.3661 535.6726 C 807.2441 534.9234 803.1221 533.0503 801.4733 531.1772 C 799.8245 528.9295 799.8245 527.0564 799.8245 523.3102 L 799.8245 512.07164 C 799.8245 508.32546 799.8245 506.45236 801.4733 504.20465 C 803.1221 502.33156 807.2441 500.45846 811.3661 499.7092 C 816.3125 498.96 820.4345 498.96 828.6785 498.96 M 828.6785 498.96" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(804.8245 508.8511)" fill="black">
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="14.887966" y="14">GDSII</tspan>
+        </text>
+      </g>
+      <g id="Line_35884">
+        <line x1="366.49906" y1="576.98546" x2="411.5833" y2="546.8734" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_35787">
+        <rect x="294.48" y="577.98546" width="72.44088" height="45.820313" fill="#c0ffc0"/>
+        <rect x="294.48" y="577.98546" width="72.44088" height="45.820313" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(299.48 583.2159)" fill="black">
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="8.103254" y="14">FPGA-</tspan>
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="7.669661" y="31.679688">Verilog</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35885">
+        <path d="M 482.472 577.98546 L 526.968 577.98546 C 541.8 577.98546 549.216 577.98546 558.1152 578.9433 C 565.5312 579.9011 572.9472 582.29564 575.9136 584.6902 C 578.88 587.56364 578.88 589.9582 578.88 594.7473 L 578.88 609.11456 C 578.88 613.90366 578.88 616.2982 575.9136 619.17166 C 572.9472 621.5662 565.5312 623.96075 558.1152 624.9186 C 549.216 625.8764 541.8 625.8764 526.968 625.8764 L 482.472 625.8764 C 467.64 625.8764 460.224 625.8764 451.3248 624.9186 C 443.9088 623.96075 436.4928 621.5662 433.5264 619.17166 C 430.56 616.2982 430.56 613.90366 430.56 609.11456 L 430.56 594.7473 C 430.56 589.9582 430.56 587.56364 433.5264 584.6902 C 436.4928 582.29564 443.9088 579.9011 451.3248 578.9433 C 460.224 577.98546 467.64 577.98546 482.472 577.98546 M 482.472 577.98546" fill="#ffffc0"/>
+        <path d="M 482.472 577.98546 L 526.968 577.98546 C 541.8 577.98546 549.216 577.98546 558.1152 578.9433 C 565.5312 579.9011 572.9472 582.29564 575.9136 584.6902 C 578.88 587.56364 578.88 589.9582 578.88 594.7473 L 578.88 609.11456 C 578.88 613.90366 578.88 616.2982 575.9136 619.17166 C 572.9472 621.5662 565.5312 623.96075 558.1152 624.9186 C 549.216 625.8764 541.8 625.8764 526.968 625.8764 L 482.472 625.8764 C 467.64 625.8764 460.224 625.8764 451.3248 624.9186 C 443.9088 623.96075 436.4928 621.5662 433.5264 619.17166 C 430.56 616.2982 430.56 613.90366 430.56 609.11456 L 430.56 594.7473 C 430.56 589.9582 430.56 587.56364 433.5264 584.6902 C 436.4928 582.29564 443.9088 579.9011 451.3248 578.9433 C 460.224 577.98546 467.64 577.98546 482.472 577.98546 M 482.472 577.98546" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(435.56 584.25124)" fill="black">
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="3.519371" y="14">Technology-mapped </tspan>
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="45.609215" y="31.679688">Verilog</tspan>
+        </text>
+      </g>
+      <g id="Line_35886">
+        <line x1="367.92088" y1="601.11705" x2="420.50015" y2="601.4299" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_35887">
+        <rect x="542.16" y="498.96" width="82.44" height="37.08" fill="#ccc"/>
+        <rect x="542.16" y="498.96" width="82.44" height="37.08" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(547.16 499.8203)" fill="black">
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="5.5481224" y="14">Synthesis </tspan>
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="21.669216" y="31.679688">Tool</tspan>
+        </text>
+      </g>
+      <g id="Line_35888">
+        <line x1="625.6" y1="517.5" x2="643.7" y2="517.5" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_35892">
+        <rect x="653.76" y="583.58186" width="116.90455" height="37.08" fill="#ccc"/>
+        <rect x="653.76" y="583.58186" width="116.90455" height="37.08" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(658.76 584.4422)" fill="black">
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="1.6788368" y="14">Physical Design </tspan>
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="38.901493" y="31.679688">Tool</tspan>
+        </text>
+      </g>
+      <g id="Line_35891">
+        <line x1="771.6645" y1="602.03375" x2="789.7645" y2="602.0069" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_35890">
+        <path d="M 828.6785 583.2 L 853.4105 583.2 C 861.6545 583.2 865.7765 583.2 870.7229 583.9492 C 874.8449 584.69846 878.9669 586.57156 880.6157 588.44465 C 882.2645 590.69236 882.2645 592.56546 882.2645 596.31164 L 882.2645 607.5502 C 882.2645 611.2964 882.2645 613.1695 880.6157 615.4172 C 878.9669 617.2903 874.8449 619.1634 870.7229 619.9126 C 865.7765 620.66186 861.6545 620.66186 853.4105 620.66186 L 828.6785 620.66186 C 820.4345 620.66186 816.3125 620.66186 811.3661 619.9126 C 807.2441 619.1634 803.1221 617.2903 801.4733 615.4172 C 799.8245 613.1695 799.8245 611.2964 799.8245 607.5502 L 799.8245 596.31164 C 799.8245 592.56546 799.8245 590.69236 801.4733 588.44465 C 803.1221 586.57156 807.2441 584.69846 811.3661 583.9492 C 816.3125 583.2 820.4345 583.2 828.6785 583.2 M 828.6785 583.2" fill="#ffffc0"/>
+        <path d="M 828.6785 583.2 L 853.4105 583.2 C 861.6545 583.2 865.7765 583.2 870.7229 583.9492 C 874.8449 584.69846 878.9669 586.57156 880.6157 588.44465 C 882.2645 590.69236 882.2645 592.56546 882.2645 596.31164 L 882.2645 607.5502 C 882.2645 611.2964 882.2645 613.1695 880.6157 615.4172 C 878.9669 617.2903 874.8449 619.1634 870.7229 619.9126 C 865.7765 620.66186 861.6545 620.66186 853.4105 620.66186 L 828.6785 620.66186 C 820.4345 620.66186 816.3125 620.66186 811.3661 619.9126 C 807.2441 619.1634 803.1221 617.2903 801.4733 615.4172 C 799.8245 613.1695 799.8245 611.2964 799.8245 607.5502 L 799.8245 596.31164 C 799.8245 592.56546 799.8245 590.69236 801.4733 588.44465 C 803.1221 586.57156 807.2441 584.69846 811.3661 583.9492 C 816.3125 583.2 820.4345 583.2 828.6785 583.2 M 828.6785 583.2" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(804.8245 593.0911)" fill="black">
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="14.887966" y="14">GDSII</tspan>
+        </text>
+      </g>
+      <g id="Line_35889">
+        <line x1="579.88" y1="602.0001" x2="643.7" y2="602.0588" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_35896">
+        <text transform="translate(402.44 466.52)" fill="#ff2600">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="#ff2600" x="2842171e-19" y="15">Standard ASIC design flow</tspan>
+        </text>
+      </g>
+      <g id="Line_35903">
+        <line x1="505.01695" y1="626.8764" x2="505.26204" y2="647.4654" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_35902">
+        <rect x="416.0047" y="657.52475" width="179.43062" height="56.81985" fill="#c0ffc0"/>
+        <rect x="416.0047" y="657.52475" width="179.43062" height="56.81985" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(421.0047 659.4151)" fill="black">
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x=".043434143" y="14">OpenFPGA Floorplanning </tspan>
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="28.062965" y="31.679688">and Feed-through </tspan>
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="49.176247" y="49.359375">Generation</tspan>
+        </text>
+      </g>
+      <g id="Line_35900">
+        <line x1="596.4353" y1="686.4579" x2="643.7001" y2="686.7305" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_35906">
+        <rect x="653.76" y="668.5856" width="116.90455" height="37.08" fill="#ccc"/>
+        <rect x="653.76" y="668.5856" width="116.90455" height="37.08" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(658.76 669.4459)" fill="black">
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="1.6788368" y="14">Physical Design </tspan>
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="38.901493" y="31.679688">Tool</tspan>
+        </text>
+      </g>
+      <g id="Line_35905">
+        <line x1="771.6645" y1="687.0375" x2="789.7645" y2="687.0107" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_35904">
+        <path d="M 828.6785 668.2037 L 853.4105 668.2037 C 861.6545 668.2037 865.7765 668.2037 870.7229 668.953 C 874.8449 669.7022 878.9669 671.5753 880.6157 673.4484 C 882.2645 675.6961 882.2645 677.5692 882.2645 681.3154 L 882.2645 692.55395 C 882.2645 696.3001 882.2645 698.1732 880.6157 700.42094 C 878.9669 702.294 874.8449 704.1671 870.7229 704.9164 C 865.7765 705.6656 861.6545 705.6656 853.4105 705.6656 L 828.6785 705.6656 C 820.4345 705.6656 816.3125 705.6656 811.3661 704.9164 C 807.2441 704.1671 803.1221 702.294 801.4733 700.42094 C 799.8245 698.1732 799.8245 696.3001 799.8245 692.55395 L 799.8245 681.3154 C 799.8245 677.5692 799.8245 675.6961 801.4733 673.4484 C 803.1221 671.5753 807.2441 669.7022 811.3661 668.953 C 816.3125 668.2037 820.4345 668.2037 828.6785 668.2037 M 828.6785 668.2037" fill="#ffffc0"/>
+        <path d="M 828.6785 668.2037 L 853.4105 668.2037 C 861.6545 668.2037 865.7765 668.2037 870.7229 668.953 C 874.8449 669.7022 878.9669 671.5753 880.6157 673.4484 C 882.2645 675.6961 882.2645 677.5692 882.2645 681.3154 L 882.2645 692.55395 C 882.2645 696.3001 882.2645 698.1732 880.6157 700.42094 C 878.9669 702.294 874.8449 704.1671 870.7229 704.9164 C 865.7765 705.6656 861.6545 705.6656 853.4105 705.6656 L 828.6785 705.6656 C 820.4345 705.6656 816.3125 705.6656 811.3661 704.9164 C 807.2441 704.1671 803.1221 702.294 801.4733 700.42094 C 799.8245 698.1732 799.8245 696.3001 799.8245 692.55395 L 799.8245 681.3154 C 799.8245 677.5692 799.8245 675.6961 801.4733 673.4484 C 803.1221 671.5753 807.2441 669.7022 811.3661 668.953 C 816.3125 668.2037 820.4345 668.2037 828.6785 668.2037 M 828.6785 668.2037" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(804.8245 678.0948)" fill="black">
+          <tspan font-family="Times New Roman" font-size="16" font-weight="400" fill="black" x="14.887966" y="14">GDSII</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35907">
+        <text transform="translate(294.48 655.0006)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="6.083999" y="15">FPGA-oriented </tspan>
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="15.268" y="33.448">ASIC design </tspan>
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="44.764" y="51.895996">flow</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>

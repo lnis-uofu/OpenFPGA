@@ -12,3 +12,10 @@ OpenFPGA widely uses XML format for interchangable files
 
    pin_constraints_file
 
+   repack_design_constraints
+
+   architecture_bitstream
+
+   fabric_bitstream
+
+   fabric_key

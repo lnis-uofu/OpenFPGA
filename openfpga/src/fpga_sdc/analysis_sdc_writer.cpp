@@ -85,7 +85,7 @@ void print_analysis_sdc_io_delays(std::fstream& fp,
   /* There should be only one operating clock!
    * TODO: this should be changed when developing multi-clock support!!!
    */
-  VTR_ASSERT(1 == operating_clock_ports.size());
+  //VTR_ASSERT(1 == operating_clock_ports.size());
 
   /* In this function, we support only 1 type of I/Os */
   std::vector<BasicPort> module_io_ports = module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GPIO_PORT);

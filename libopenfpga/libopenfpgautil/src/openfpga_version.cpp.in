@@ -1,0 +1,21 @@
+#include "openfpga_version.h"
+
+//This file is automatically processed by CMAKE and replaces
+//the values between ampersand's with the releveant CMAKE variable
+//before being compiled.
+namespace openfpga {
+    const char* VERSION = "@OPENFPGA_VERSION@";
+    const char* VERSION_SHORT = "@OPENFPGA_VERSION_SHORT@";
+
+    const size_t VERSION_MAJOR = @OPENFPGA_VERSION_MAJOR@;
+    const size_t VERSION_MINOR = @OPENFPGA_VERSION_MINOR@;
+    const size_t VERSION_PATCH = @OPENFPGA_VERSION_PATCH@;
+    const char* VERSION_PRERELEASE = "@OPENFPGA_VERSION_PRERELEASE@";
+
+    const char* VCS_REVISION = "@OPENFPGA_VCS_REVISION@";
+    const char* VCS_REVISION_SHORT = "@OPENFPGA_VCS_REVISION_SHORT@";
+
+    const char* COMPILER = "@OPENFPGA_COMPILER_INFO@";
+    const char* BUILD_TIMESTAMP = "@OPENFPGA_BUILD_TIMESTAMP@";
+    const char* BUILD_INFO = "@OPENFPGA_BUILD_INFO@";
+}

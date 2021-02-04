@@ -46,3 +46,5 @@ build/
 
 message.txt
 deploy_key
+openfpga/openfpga
+vpr/vpr
