@@ -14,13 +14,13 @@ Each ``<pb_type>`` should contain a ``<mode>`` that describe the physical implem
 
 .. note:: Currently, OpenFPGA only supports 1 ``<equivalent_sites>`` to be defined under each ``<tile>``
 
-.. option:: <mode packable="<bool">/>
+.. option:: <mode disable_packing="<bool">/>
 
-  OpenFPGA allows users to define it a mode is packable for VPR.
-  By default, the packable is set to ``true``. 
+  OpenFPGA allows users to define it a mode is disabled for VPR packer.
+  By default, the ``disable_packing`` is set to ``false``. 
   This is mainly used for the mode that describes the physical implementation, which is typically not packable. Disable it in the packing and signficantly accelerate the packing runtime.
 
-  .. note:: Once a mode is set to unpackable, its child modes will be unpackable as well.
+  .. note:: Once a mode is disabled in packing, its child modes will be disabled as well.
 
 Layout
 ~~~~~~
