@@ -1963,7 +1963,7 @@ static void ProcessMode(pugi::xml_node Parent, t_mode* mode, const bool timing_e
         mode->packable = mode->parent_pb_type->parent_mode->packable;
     }
     /* Override if user specify */
-    mode->packable = ~get_attribute(Parent, "disable_packing", loc_data, ReqOpt::OPTIONAL).as_bool(~mode->packable);
+    mode->packable = !get_attribute(Parent, "disable_packing", loc_data, ReqOpt::OPTIONAL).as_bool(!mode->packable);
     if (false == mode->packable) {
         VTR_LOG("mode '%s[%s]' is disabled in packing by user\n",
                  mode->parent_pb_type->name,
