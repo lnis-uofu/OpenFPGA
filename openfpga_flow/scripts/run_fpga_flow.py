@@ -257,17 +257,12 @@ def main():
         logger.info('Running "yosys_vpr" Flow')
         run_yosys_with_abc()
         # TODO Make it optional if activity file is provided
-        run_ace2()
-        run_pro_blif_3arg()
         if args.power:
+            run_ace2()
+            run_pro_blif_3arg()
             run_rewrite_verilog()
     if (args.fpga_flow == "vpr_blif"):
         collect_files_for_vpr()
-    # if (args.fpga_flow == "vtr"):
-    #     run_odin2()
-    #     run_abc_vtr()
-    # if (args.fpga_flow == "vtr_standard"):
-    #     run_abc_for_standarad()
     logger.info("Runing OpenFPGA Shell Engine ")
     run_openfpga_shell()
     if args.end_flow_with_test:
