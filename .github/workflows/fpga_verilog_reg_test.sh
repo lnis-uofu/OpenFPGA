@@ -30,7 +30,10 @@ echo -e "Testing Verilog generation with VPR's untileable routing architecture "
 run-task fpga_verilog/untileable --debug --show_thread_logs
 
 echo -e "Testing Verilog generation with hard adder chain in CLBs ";
-run-task fpga_verilog/hard_adder --debug --show_thread_logs
+run-task fpga_verilog/adder/hard_adder --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with soft adder chain in CLBs ";
+run-task fpga_verilog/adder/soft_adder --debug --show_thread_logs
 
 echo -e "Testing Verilog generation with 16k block RAMs ";
 run-task fpga_verilog/bram/dpram16k --debug --show_thread_logs

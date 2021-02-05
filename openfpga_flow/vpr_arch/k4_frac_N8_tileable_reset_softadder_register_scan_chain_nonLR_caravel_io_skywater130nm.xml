@@ -33,7 +33,25 @@
         <port name="inpad"/>
       </output_ports>
     </model>
-
+    <model name="adder_lut4">
+      <input_ports>
+        <port name="in" combinational_sink_ports="lut2_out lut4_out"/>
+      </input_ports>
+      <output_ports>
+        <port name="lut2_out"/>
+        <port name="lut4_out"/>
+      </output_ports>
+    </model>
+    <model name="carry_follower">
+      <input_ports>
+        <port name="a" combinational_sink_ports="cout"/>
+        <port name="b" combinational_sink_ports="cout"/>
+        <port name="cin" combinational_sink_ports="cout"/>
+      </input_ports>
+      <output_ports>
+        <port name="cout"/>
+      </output_ports>
+    </model>
     <model name="frac_lut4">
       <input_ports>
         <port name="in"/>
@@ -44,11 +62,11 @@
         <port name="lut4_out"/>
       </output_ports>
     </model>
-    <model name="carry_follower">
+    <model name="carry_follower_physical">
       <input_ports>
-        <port name="a"/>
-        <port name="b"/>
-        <port name="cin"/>
+        <port name="a" combinational_sink_ports="cout"/>
+        <port name="b" combinational_sink_ports="cout"/>
+        <port name="cin" combinational_sink_ports="cout"/>
       </input_ports>
       <output_ports>
         <port name="cout"/>
@@ -404,11 +422,14 @@
                 <output name="lut3_out" num_pins="2"/>
                 <output name="lut4_out" num_pins="1"/>
               </pb_type>
-              <pb_type name="carry_follower" blif_model=".subckt carry_follower" num_pb="1">
+              <pb_type name="carry_follower" blif_model=".subckt carry_follower_physical" num_pb="1">
                 <input name="a" num_pins="1"/>
                 <input name="b" num_pins="1"/>
                 <input name="cin" num_pins="1"/>
                 <output name="cout" num_pins="1"/>
+                <delay_constant max="0.3e-9" in_port="carry_follower.a" out_port="carry_follower.cout"/>
+                <delay_constant max="0.3e-9" in_port="carry_follower.b" out_port="carry_follower.cout"/>
+                <delay_constant max="0.3e-9" in_port="carry_follower.cin" out_port="carry_follower.cout"/>
               </pb_type>
               <interconnect>
                 <direct name="direct1" input="frac_logic.in[0:1]" output="frac_lut4.in[0:1]"/>
@@ -437,10 +458,12 @@
             </pb_type>         
             <interconnect>
               <direct name="direct1" input="fabric.in" output="frac_logic.in"/>
-              <direct name="direct2" input="fabric.sc_in" output="ff[0].DI"/>
-              <direct name="direct3" input="ff[0].Q" output="ff[1].DI"/>
-              <direct name="direct4" input="ff[1].Q" output="fabric.sc_out"/>
-              <direct name="direct5" input="ff[1].Q" output="fabric.reg_out"/>
+              <direct name="direct2" input="fabric.cin" output="frac_logic.cin"/>
+              <direct name="direct3" input="fabric.sc_in" output="ff[0].DI"/>
+              <direct name="direct4" input="ff[0].Q" output="ff[1].DI"/>
+              <direct name="direct5" input="ff[1].Q" output="fabric.sc_out"/>
+              <direct name="direct6" input="ff[1].Q" output="fabric.reg_out"/>
+              <direct name="direct7" input="frac_logic.cout" output="fabric.cout"/>
               <complete name="complete1" input="fabric.clk" output="ff[1:0].clk"/>
               <complete name="complete2" input="fabric.reset" output="ff[1:0].reset"/>
               <mux name="mux1" input="frac_logic.out[0:0] fabric.reg_in" output="ff[0:0].D">
@@ -477,6 +500,68 @@
           </interconnect>
         </mode>
         <!-- Physical mode definition end (physical implementation of the fle) -->
+        <!-- Arithmetic mode definition begin -->
+        <mode name="arithmetic">
+          <pb_type name="soft_adder" num_pb="1">
+            <input name="in" num_pins="4"/>
+            <input name="cin" num_pins="1"/>
+            <output name="sumout" num_pins="1"/>
+            <output name="cout" num_pins="1"/>
+            <!-- Define special LUT marco to be used as adder -->
+            <pb_type name="adder_lut4" blif_model=".subckt adder_lut4" num_pb="1">
+              <input name="in" num_pins="4"/>
+              <output name="lut2_out" num_pins="2"/>
+              <output name="lut4_out" num_pins="1"/>
+              <delay_constant max="0.3e-9" in_port="adder_lut4.in" out_port="adder_lut4.lut2_out"/>
+              <delay_constant max="0.3e-9" in_port="adder_lut4.in" out_port="adder_lut4.lut4_out"/>
+            </pb_type>
+            <pb_type name="carry_follower" blif_model=".subckt carry_follower" num_pb="1">
+              <input name="a" num_pins="1"/>
+              <input name="b" num_pins="1"/>
+              <input name="cin" num_pins="1"/>
+              <output name="cout" num_pins="1"/>
+              <delay_constant max="0.3e-9" in_port="carry_follower.a" out_port="carry_follower.cout"/>
+              <delay_constant max="0.3e-9" in_port="carry_follower.b" out_port="carry_follower.cout"/>
+              <delay_constant max="0.3e-9" in_port="carry_follower.cin" out_port="carry_follower.cout"/>
+            </pb_type>
+            <interconnect>
+              <direct name="direct1" input="soft_adder.in[0:1]" output="adder_lut4.in[0:1]"/>
+              <direct name="direct2" input="soft_adder.in[3:3]" output="adder_lut4.in[3:3]"/>
+              <direct name="direct3" input="soft_adder.cin" output="carry_follower.b">
+                <!-- Pack pattern to build an adder chain connection considered by packer -->
+                <pack_pattern name="chain" in_port="soft_adder.cin" out_port="carry_follower.b"/>
+              </direct>
+              <direct name="direct4" input="adder_lut4.lut2_out[1:1]" output="carry_follower.a">
+                <!-- Pack pattern to pair adder_lut4 and carry_follower into a molecule 
+                     considered by packer -->
+                <pack_pattern name="lut_follower" in_port="adder_lut4.lut2_out[1:1]" out_port="carry_follower.a"/>
+              </direct>
+              <direct name="direct5" input="adder_lut4.lut2_out[0:0]" output="carry_follower.cin">
+              </direct>
+              <direct name="direct6" input="carry_follower.cout" output="soft_adder.cout">
+                <!-- Pack pattern to build an adder chain connection considered by packer -->
+                <pack_pattern name="chain" in_port="carry_follower.cout" out_port="soft_adder.cout"/>
+              </direct>
+              <direct name="direct7" input="adder_lut4.lut4_out" output="soft_adder.sumout[0:0]">
+              </direct>
+              <mux name="mux1" input="soft_adder.cin soft_adder.in[2:2]" output="adder_lut4.in[2:2]">
+              </mux>
+            </interconnect>
+          </pb_type>
+          <interconnect>
+            <direct name="direct1" input="fle.in" output="soft_adder.in"/>
+            <direct name="direct2" input="fle.cin" output="soft_adder.cin">
+              <!-- Pack pattern to build an adder chain connection considered by packer -->
+              <pack_pattern name="chain" in_port="fle.cin" out_port="soft_adder.cin"/>
+            </direct>
+            <direct name="direct3" input="soft_adder.sumout" output="fle.out[0:0]"/>
+            <direct name="direct4" input="soft_adder.cout" output="fle.cout">
+              <!-- Pack pattern to build an adder chain connection considered by packer -->
+              <pack_pattern name="chain" in_port="soft_adder.cout" out_port="fle.cout"/>
+            </direct>
+          </interconnect>
+        </mode>
+        <!-- Arithmetic mode definition end -->
         <!-- Dual 3-LUT mode definition begin -->
         <mode name="n2_lut3">
           <pb_type name="lut3inter" num_pb="1">
@@ -722,11 +807,14 @@
         <!-- Carry chain links -->
         <direct name="carry_chain_in" input="clb.cin" output="fle[0:0].cin">
           <!-- Put all inter-block carry chain delay on this one edge -->
+          <pack_pattern name="chain" in_port="clb.cin" out_port="fle[0:0].cin"/>
           <delay_constant max="0.16e-9" in_port="clb.cin" out_port="fle[0:0].cin"/>
         </direct>
         <direct name="carry_chain_out" input="fle[7:7].cout" output="clb.cout">
+          <pack_pattern name="chain" in_port="fle[7:7].cout" out_port="clb.cout"/>
         </direct>
         <direct name="carry_chain_link" input="fle[6:0].cout" output="fle[7:1].cin">
+          <pack_pattern name="chain" in_port="fle[6:0].cout" out_port="fle[7:1].cin"/>
         </direct>
       </interconnect>
       <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 10% of the tracks in a channel -->

@@ -45,6 +45,7 @@ int repack(OpenfpgaContext& openfpga_ctx,
                     g_vpr_ctx.clustering(),
                     openfpga_ctx.mutable_vpr_device_annotation(),
                     openfpga_ctx.mutable_vpr_clustering_annotation(),
+                    openfpga_ctx.vpr_bitstream_annotation(),
                     repack_design_constraints,
                     cmd_context.option_enable(cmd, opt_verbose));
 

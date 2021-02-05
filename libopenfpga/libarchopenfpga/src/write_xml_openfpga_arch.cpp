@@ -14,6 +14,7 @@
 #include "write_xml_circuit_library.h"
 #include "write_xml_technology_library.h"
 #include "write_xml_simulation_setting.h"
+#include "write_xml_bitstream_setting.h"
 #include "write_xml_config_protocol.h"
 #include "write_xml_routing_circuit.h"
 #include "write_xml_tile_annotation.h"
@@ -88,6 +89,28 @@ void write_xml_openfpga_simulation_settings(const char* fname,
 
   /* Write the simulation */
   write_xml_simulation_setting(fp, fname, openfpga_sim_setting);
+
+  /* Close the file stream */
+  fp.close();
+}
+
+/********************************************************************
+ * A writer to output an OpenFPGA bitstream setting database to XML format
+ *******************************************************************/
+void write_xml_openfpga_bitstream_settings(const char* fname, 
+                                           const openfpga::BitstreamSetting& openfpga_bitstream_setting) {
+  vtr::ScopedStartFinishTimer timer("Write OpenFPGA bitstream settings");
+
+  /* Create a file handler */
+  std::fstream fp;
+  /* Open the file stream */
+  fp.open(std::string(fname), std::fstream::out | std::fstream::trunc);
+
+  /* Validate the file stream */
+  openfpga::check_file_stream(fname, fp);
+
+  /* Write the simulation */
+  write_xml_bitstream_setting(fp, fname, openfpga_bitstream_setting);
 
   /* Close the file stream */
   fp.close();

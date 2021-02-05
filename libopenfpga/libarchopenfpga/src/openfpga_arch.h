@@ -6,7 +6,6 @@
 
 #include "circuit_library.h"
 #include "technology_library.h"
-#include "simulation_setting.h"
 #include "config_protocol.h"
 #include "arch_direct.h"
 #include "tile_annotation.h"

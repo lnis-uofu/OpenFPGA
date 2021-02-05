@@ -152,5 +152,59 @@ int write_simulation_setting(const OpenfpgaContext& openfpga_context,
   return CMD_EXEC_SUCCESS;
 } 
 
+/********************************************************************
+ * Top-level function to read an OpenFPGA bitstream setting file
+ * we use the APIs from the libarchopenfpga library 
+ *
+ * The command will accept an option '--file' which is the bitstream setting
+ * file provided by users  
+ *******************************************************************/
+int read_bitstream_setting(OpenfpgaContext& openfpga_context,
+                           const Command& cmd, const CommandContext& cmd_context) {
+  /* Check the option '--file' is enabled or not 
+   * Actually, it must be enabled as the shell interface will check 
+   * before reaching this fuction
+   */
+  CommandOptionId opt_file = cmd.option("file");
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  std::string arch_file_name = cmd_context.option_value(cmd, opt_file);
+
+  VTR_LOG("Reading XML bitstream setting '%s'...\n",
+          arch_file_name.c_str());
+  openfpga_context.mutable_bitstream_setting() = read_xml_openfpga_bitstream_settings(arch_file_name.c_str());
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
+ * A function to write an OpenFPGA bitstream setting file
+ * we use the APIs from the libarchopenfpga library 
+ *
+ * The command will accept an option '--file' which is the simulation setting
+ * file provided by users  
+ *******************************************************************/
+int write_bitstream_setting(const OpenfpgaContext& openfpga_context,
+                             const Command& cmd, const CommandContext& cmd_context) {
+  /* Check the option '--file' is enabled or not 
+   * Actually, it must be enabled as the shell interface will check 
+   * before reaching this fuction
+   */
+  CommandOptionId opt_file = cmd.option("file");
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  std::string arch_file_name = cmd_context.option_value(cmd, opt_file);
+
+  VTR_LOG("Writing XML bitstream setting to '%s'...\n",
+          arch_file_name.c_str());
+  write_xml_openfpga_bitstream_settings(arch_file_name.c_str(), openfpga_context.bitstream_setting());
+
+  /* TODO: should identify the error code from internal function execution */
+  return CMD_EXEC_SUCCESS;
+} 
+
 } /* end namespace openfpga */
 

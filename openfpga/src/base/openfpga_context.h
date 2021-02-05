@@ -4,11 +4,14 @@
 #include <vector>
 #include "vpr_context.h"
 #include "openfpga_arch.h"
+#include "simulation_setting.h"
+#include "bitstream_setting.h"
 #include "vpr_netlist_annotation.h"
 #include "vpr_device_annotation.h"
 #include "vpr_clustering_annotation.h"
 #include "vpr_placement_annotation.h"
 #include "vpr_routing_annotation.h"
+#include "vpr_bitstream_annotation.h"
 #include "mux_library.h"
 #include "decoder_library.h"
 #include "tile_direct.h"
@@ -52,11 +55,13 @@ class OpenfpgaContext : public Context  {
   public:  /* Public accessors */
     const openfpga::Arch& arch() const { return arch_; }
     const openfpga::SimulationSetting& simulation_setting() const { return sim_setting_; }
+    const openfpga::BitstreamSetting& bitstream_setting() const { return bitstream_setting_; }
     const openfpga::VprDeviceAnnotation& vpr_device_annotation() const { return vpr_device_annotation_; }
     const openfpga::VprNetlistAnnotation& vpr_netlist_annotation() const { return vpr_netlist_annotation_; }
     const openfpga::VprClusteringAnnotation& vpr_clustering_annotation() const { return vpr_clustering_annotation_; }
     const openfpga::VprPlacementAnnotation& vpr_placement_annotation() const { return vpr_placement_annotation_; }
     const openfpga::VprRoutingAnnotation& vpr_routing_annotation() const { return vpr_routing_annotation_; }
+    const openfpga::VprBitstreamAnnotation& vpr_bitstream_annotation() const { return vpr_bitstream_annotation_; }
     const openfpga::DeviceRRGSB& device_rr_gsb() const { return device_rr_gsb_; }
     const openfpga::MuxLibrary& mux_lib() const { return mux_lib_; }
     const openfpga::DecoderLibrary& decoder_lib() const { return decoder_lib_; }
@@ -72,11 +77,13 @@ class OpenfpgaContext : public Context  {
   public:  /* Public mutators */
     openfpga::Arch& mutable_arch() { return arch_; }
     openfpga::SimulationSetting& mutable_simulation_setting() { return sim_setting_; }
+    openfpga::BitstreamSetting& mutable_bitstream_setting() { return bitstream_setting_; }
     openfpga::VprDeviceAnnotation& mutable_vpr_device_annotation() { return vpr_device_annotation_; }
     openfpga::VprNetlistAnnotation& mutable_vpr_netlist_annotation() { return vpr_netlist_annotation_; }
     openfpga::VprClusteringAnnotation& mutable_vpr_clustering_annotation() { return vpr_clustering_annotation_; }
     openfpga::VprPlacementAnnotation& mutable_vpr_placement_annotation() { return vpr_placement_annotation_; }
     openfpga::VprRoutingAnnotation& mutable_vpr_routing_annotation() { return vpr_routing_annotation_; }
+    openfpga::VprBitstreamAnnotation& mutable_vpr_bitstream_annotation() { return vpr_bitstream_annotation_; }
     openfpga::DeviceRRGSB& mutable_device_rr_gsb() { return device_rr_gsb_; }
     openfpga::MuxLibrary& mutable_mux_lib() { return mux_lib_; }
     openfpga::DecoderLibrary& mutable_decoder_lib() { return decoder_lib_; }
@@ -93,6 +100,7 @@ class OpenfpgaContext : public Context  {
     /* Data structure to store information from read_openfpga_arch library */
     openfpga::Arch arch_;
     openfpga::SimulationSetting sim_setting_;
+    openfpga::BitstreamSetting bitstream_setting_;
 
     /* Annotation to pb_type of VPR */
     openfpga::VprDeviceAnnotation vpr_device_annotation_;
@@ -108,6 +116,9 @@ class OpenfpgaContext : public Context  {
 
     /* Routing results annotation */ 
     openfpga::VprRoutingAnnotation vpr_routing_annotation_;
+
+    /* Annotation to pb_type of VPR */
+    openfpga::VprBitstreamAnnotation vpr_bitstream_annotation_;
 
     /* Device-level annotation */
     openfpga::DeviceRRGSB device_rr_gsb_;

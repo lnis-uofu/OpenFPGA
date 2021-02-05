@@ -56,6 +56,33 @@ write_openfpga_simulation_setting
 
     Show verbose log
 
+read_openfpga_bitstream_setting
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Read the XML file about bitstream settings (see details in :ref:`file_formats_bitstream_setting`)
+
+  .. option:: --file <string> or -f <string>
+     
+    Specify the file name. For example, ``--file bitstream_setting.xml`` 
+
+  .. option:: --verbose
+
+    Show verbose log
+
+write_openfpga_bitstream_setting
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Write the OpenFPGA XML bitstream settings to a file
+
+  .. option:: --file <string> or -f <string>
+     
+    Specify the file name. For example, ``--file auto_bitstream_setting_echo.xml``.
+    See details about file format at :ref:`file_formats_bitstream_setting`.
+
+  .. option:: --verbose
+
+    Show verbose log
+
 link_openfpga_arch
 ~~~~~~~~~~~~~~~~~~
 

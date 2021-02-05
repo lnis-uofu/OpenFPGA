@@ -102,6 +102,11 @@ std::vector<size_t> PhysicalPb::mode_bits(const PhysicalPbId& pb) const {
   return mode_bits_[pb];
 }
 
+std::string PhysicalPb::fixed_bitstream(const PhysicalPbId& pb) const {
+  VTR_ASSERT(true == valid_pb_id(pb));
+  return fixed_bitstreams_[pb];
+}
+
 /******************************************************************************
  * Private Mutators
  ******************************************************************************/
@@ -128,6 +133,7 @@ PhysicalPbId PhysicalPb::create_pb(const t_pb_graph_node* pb_graph_node) {
 
   truth_tables_.emplace_back();
   mode_bits_.emplace_back();
+  fixed_bitstreams_.emplace_back();
 
   /* Register in the name2id map */
   type2id_map_[pb_graph_node] = pb;
@@ -204,6 +210,12 @@ void PhysicalPb::set_wire_lut_output(const PhysicalPbId& pb,
   }
 
   wire_lut_outputs_[pb][pb_graph_pin] = wire_lut_output;
+}
+
+void PhysicalPb::set_fixed_bitstream(const PhysicalPbId& pb,
+                                     const std::string& fixed_bitstream) {
+  VTR_ASSERT(true == valid_pb_id(pb)); 
+  fixed_bitstreams_[pb] = fixed_bitstream;
 }
 
 /******************************************************************************
