@@ -7,8 +7,8 @@
 .inputs a b
 .outputs c
 
-.subckt adder_lut in[1]=a in[0]=b lut4_out[0]=c
-.param LUT 1010101010101010
+.subckt adder_lut4 in[1]=a in[0]=b lut4_out[0]=c
+.param LUT 1000100010001000
 
 .end
 
