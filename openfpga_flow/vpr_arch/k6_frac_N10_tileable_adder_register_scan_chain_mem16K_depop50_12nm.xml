@@ -260,7 +260,7 @@
       <!-- A mode denotes the physical implementation of an I/O 
            This mode will be not packable but is mainly used for fabric verilog generation   
         -->
-      <mode name="physical" packable="false">
+      <mode name="physical" disable_packing="true">
         <pb_type name="iopad" blif_model=".subckt io" num_pb="1">
           <input name="outpad" num_pins="1"/>
           <output name="inpad" num_pins="1"/>
@@ -351,7 +351,7 @@
         <!-- Timing annotation is not require for unpackable mode
              It will not be used by timing analyzer
           -->
-        <mode name="physical" packable="false">
+        <mode name="physical" disable_packing="true">
           <pb_type name="frac_logic" num_pb="1">
             <input name="in" num_pins="6"/>
             <input name="cin" num_pins="1"/>
@@ -423,7 +423,7 @@
         </mode>
         <!-- Define physical mode begins -->
         <!-- Define n2_lut5 mode begins -->
-        <mode name="n2_lut5" packable="true">
+        <mode name="n2_lut5" disable_packing="false">
           <pb_type name="lut5inter" num_pb="1">
             <input name="in" num_pins="5"/>
             <input name="cin" num_pins="1"/>
