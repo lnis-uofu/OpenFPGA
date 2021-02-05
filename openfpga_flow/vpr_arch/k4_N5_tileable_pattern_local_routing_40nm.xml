@@ -144,7 +144,7 @@
       <!-- A mode denotes the physical implementation of an I/O 
            This mode will be not packable but is mainly used for fabric verilog generation   
         -->
-      <mode name="physical" packable="false">
+      <mode name="physical" disable_packing="true">
         <pb_type name="iopad" blif_model=".subckt io" num_pb="1">
           <input name="outpad" num_pins="1"/>
           <output name="inpad" num_pins="1"/>
