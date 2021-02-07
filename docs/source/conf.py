@@ -75,6 +75,8 @@ extensions = [
     'sphinxcontrib.bibtex',
     'sphinx.ext.autosectionlabel',
     'sphinxcontrib.yt',
+#    'sphinxcontrib.svg2pdfconverter',
+    'sphinxcontrib.ext.imgconverter',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
