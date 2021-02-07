@@ -3,9 +3,11 @@
 Generate Fabric Netlists
 ------------------------
 
-.. note:: You may watch the video representation of this tutorial
+.. note:: You may watch the `video <https://youtu.be/aJ0OkZ1uh68>`_ representation of this tutorial
 
-.. youtube:: aJ0OkZ1uh68
+.. only:: html
+
+  .. youtube:: aJ0OkZ1uh68
 
 This tutorial will show an example how to 
   - generate Verilog netlists for a FPGA fabric

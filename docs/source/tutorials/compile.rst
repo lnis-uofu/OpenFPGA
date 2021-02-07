@@ -3,9 +3,11 @@
 How to Compile
 --------------
 
-.. note:: We recommend you to watch a tutorial video about how-to-compile before getting started
+.. note:: We recommend you to watch a tutorial `video <https://youtu.be/F9sMRmDewM0>`_ about how-to-compile before getting started
 
-.. youtube:: F9sMRmDewM0
+.. only:: html
+
+  .. youtube:: F9sMRmDewM0
 
 General Guidelines
 ~~~~~~~~~~~~~~~~~~
