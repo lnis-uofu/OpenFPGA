@@ -38,8 +38,8 @@ except ImportError:
     have_sphinxcontrib_youtube = False
 
 # Import sphinxcontrib.svg2pdfconverter
-#have_sphinxcontrib_svg2pdfconverter = True
-have_sphinx_ext_imgconverter = True
+have_sphinxcontrib_svg2pdfconverter = True
+#have_sphinx_ext_imgconverter = True
 try:
     import sphinxcontrib.svg2pdfconverter
 #    import sphinx.ext.imgconverter
@@ -75,7 +75,7 @@ extensions = [
     'sphinxcontrib.bibtex',
     'sphinx.ext.autosectionlabel',
     'sphinxcontrib.yt',
-    'sphinxcontrib.svg2pdfconverter',
+    'sphinxcontrib.cairosvgconverter',
 #    'sphinx.ext.imgconverter',
 ]
 
