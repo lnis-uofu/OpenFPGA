@@ -39,13 +39,13 @@ except ImportError:
 
 # Import sphinxcontrib.svg2pdfconverter
 #have_sphinxcontrib_svg2pdfconverter = True
-have_sphinxcontrib_ext_imgconverter = True
+have_sphinx_ext_imgconverter = True
 try:
 #    import sphinxcontrib.svg2pdfconverter
-    import sphinxcontrib.ext.imgconverter
+    import sphinx.ext.imgconverter
 except ImportError:
 #    have_sphinxcontrib_svg2pdfconverter = False
-    have_sphinxcontrib_ext_imgconverter = False
+    have_sphinx_ext_imgconverter = False
 
 # -- Project information -----------------------------------------------------
 
@@ -76,7 +76,7 @@ extensions = [
     'sphinx.ext.autosectionlabel',
     'sphinxcontrib.yt',
 #    'sphinxcontrib.svg2pdfconverter',
-    'sphinxcontrib.ext.imgconverter',
+    'sphinx.ext.imgconverter',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
