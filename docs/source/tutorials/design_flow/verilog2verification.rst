@@ -8,6 +8,8 @@ This tutorial will show an example how to
   - generate Verilog testbenches for a RTL design
   - run HDL simulation to verify the functional correctness of the implemented FPGA fabric
 
+.. note:: Before running any design flows, please checkout the tutorial :ref:`tutorial_compile`, to ensure that you have an operating copy of OpenFPGA installed on your computer.
+
 Netlist Generation
 ~~~~~~~~~~~~~~~~~~
 We will use the openfpga_flow scripts (see details in :ref:`run_fpga_task`) to generate the Verilog netlists and testbenches.

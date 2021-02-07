@@ -1,4 +1,4 @@
-.. _compile:
+.. _tutorial_compile:
 
 How to Compile
 --------------
