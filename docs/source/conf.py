@@ -23,29 +23,12 @@ import sphinx_rtd_theme
 #html_theme = "sphinx_rtd_theme"
 #html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
-# Import sphinxcontrib.bibtex
-have_sphinxcontrib_bibtex = True
-try:
-    import sphinxcontrib.bibtex
-except ImportError:
-    have_sphinxcontrib_bibtex = False
-
-# Import sphinxcontrib.yt
-have_sphinxcontrib_youtube = True
-try:
-    import sphinxcontrib.yt
-except ImportError:
-    have_sphinxcontrib_youtube = False
-
-# Import sphinxcontrib.svg2pdfconverter
-have_sphinxcontrib_svg2pdfconverter = True
-have_sphinx_ext_imgconverter = True
-try:
-    import sphinxcontrib.svg2pdfconverter
-    import sphinx.ext.imgconverter
-except ImportError:
-    have_sphinxcontrib_svg2pdfconverter = False
-    have_sphinx_ext_imgconverter = False
+# For bibtex support
+import sphinxcontrib.bibtex
+# For embedded youtube
+import sphinxcontrib.yt
+# For converting SVG to PNG
+import sphinx.ext.imgconverter
 
 # -- Project information -----------------------------------------------------
 
@@ -75,8 +58,7 @@ extensions = [
     'sphinxcontrib.bibtex',
     'sphinx.ext.autosectionlabel',
     'sphinxcontrib.yt',
-    'sphinxcontrib.cairosvgconverter',
-#    'sphinx.ext.imgconverter',
+    'sphinx.ext.imgconverter',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -170,8 +152,6 @@ latex_elements = {
     # Latex figure (float) alignment
     #
     # 'figure_align': 'htbp',
-    'preamble': '\\usepackage{tikz}',
-    'preamble': '\\usepackage{svg}',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
