@@ -170,6 +170,8 @@ latex_elements = {
     # Latex figure (float) alignment
     #
     # 'figure_align': 'htbp',
+    'preamble': '\\usepackage{tikz}',
+    'preamble': '\\usepackage{svg}',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
