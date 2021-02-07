@@ -5,6 +5,10 @@
 # Required configuration file version
 version: 2
 
+# Specify docker image for building the doc
+build:
+  image: latest
+
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
   builder: dirhtml
