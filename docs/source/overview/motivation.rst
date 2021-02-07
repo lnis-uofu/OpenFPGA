@@ -1,7 +1,9 @@
 Why OpenFPGA?
 -------------
 
-.. note:: If this is the first time you learn OpenFPGA, we strongly recommend you to watch the `introduction video <https://youtu.be/ocODUGcYGqo>`_ .
+.. note:: If this is the first time you learn OpenFPGA, we strongly recommend you to watch the introduction video.
+   
+.. youtube:: ocODUGcYGqo
 
 OpenFPGA aims to be an open-source framework that enables rapid prototyping of customizable FPGA architectures. As shown in :numref:`fig_openfpga_motivation`, a conventional approach will take a large group of experienced engineers more than one year to achieve production-ready layout and assoicated CAD tools. In fact, most of the engineering efforts are spent on manual layouts and developing ad-hoc CAD support.
 

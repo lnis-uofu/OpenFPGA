@@ -3,7 +3,9 @@
 How to Compile
 --------------
 
-.. note:: A tutorial video about how-to-compile can be found `here <https://youtu.be/F9sMRmDewM0>`_
+.. note:: We recommend you to watch a tutorial video about how-to-compile before getting started
+
+.. youtube:: F9sMRmDewM0
 
 General Guidelines
 ~~~~~~~~~~~~~~~~~~
