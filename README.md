@@ -6,10 +6,14 @@
 
 The award-winning OpenFPGA framework is the **first open-source FPGA IP generator** supporting highly-customizable homogeneous FPGA architectures. OpenFPGA provides a full set of EDA support for customized FPGAs, including Verilog-to-bitstream generation and self-testing verification. OpenFPGA opens the door to democratizing FPGA technology and EDA techniques, with agile prototyping approaches and constantly evolving EDA tools for chip designers and researchers.
 
+**If this is the first time you learn OpenFPGA, we strongly recommend you to watch the [introduction video about OpenFPGA](https://youtu.be/ocODUGcYGqo)**
+
 A quick overview of OpenFPGA tools can be found [**here**](https://openfpga.readthedocs.io/en/master/tutorials/tools/).
 We also recommend potential users to checkout the summary of [**technical capabilities**](https://openfpga.readthedocs.io/en/master/overview/tech_highlights.html) before compiling.
 
 ## Compilation
+
+**A tutorial video about how-to-compile can be found [here](https://youtu.be/F9sMRmDewM0)**
 
 Before start, we strongly recommend you to read the required dependencies at [**compilation guidelines**](https://openfpga.readthedocs.io/en/master/tutorials/compile).
 It also includes detailed information about docker image. 

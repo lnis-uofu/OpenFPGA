@@ -30,6 +30,14 @@ try:
 except ImportError:
     have_sphinxcontrib_bibtex = False
 
+# Import sphinxcontrib.yt
+have_sphinxcontrib_youtube = True
+try:
+    import sphinxcontrib.yt
+except ImportError:
+    have_sphinxcontrib_youtube = False
+
+
 # -- Project information -----------------------------------------------------
 
 project = u'OpenFPGA'
@@ -57,6 +65,7 @@ extensions = [
     'sphinx.ext.graphviz',
     'sphinxcontrib.bibtex',
     'sphinx.ext.autosectionlabel',
+    'sphinxcontrib.yt',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

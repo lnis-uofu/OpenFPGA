@@ -1,7 +1,11 @@
-.. _compile:
+.. _tutorial_compile:
 
 How to Compile
 --------------
+
+.. note:: We recommend you to watch a tutorial video about how-to-compile before getting started
+
+.. youtube:: F9sMRmDewM0
 
 General Guidelines
 ~~~~~~~~~~~~~~~~~~
