@@ -12,7 +12,7 @@ sphinxcontrib-bibtex<2.0.0
 sphinxcontrib-yt
 
 # Package required to convert svg for pdf builder
-sphinxcontrib-svg2pdfconverter[CairoSVG]
+#sphinxcontrib-svg2pdfconverter[CairoSVG]
 #sphinx-ext-imgconverter
 
 #Work-around bug "AttributeError: 'Values' object has no attribute 'character_level_inline_markup'" with docutils 0.13.1
