@@ -3,6 +3,8 @@
 How to Compile
 --------------
 
+.. note:: A tutorial video about how-to-compile can be found `here <https://youtu.be/F9sMRmDewM0>`_
+
 General Guidelines
 ~~~~~~~~~~~~~~~~~~
 OpenFPGA uses CMake to generate the Makefile scripts
