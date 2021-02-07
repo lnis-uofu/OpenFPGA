@@ -37,6 +37,12 @@ try:
 except ImportError:
     have_sphinxcontrib_youtube = False
 
+# Import sphinxcontrib.svg2pdfconverter
+have_sphinxcontrib_svg2pdfconverter = True
+try:
+    import sphinxcontrib.svg2pdfconverter
+except ImportError:
+    have_sphinxcontrib_svg2pdfconverter = False
 
 # -- Project information -----------------------------------------------------
 
