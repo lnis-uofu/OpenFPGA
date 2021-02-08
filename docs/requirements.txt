@@ -11,6 +11,9 @@ sphinxcontrib-bibtex<2.0.0
 # Package required to embed youtube video
 sphinxcontrib-yt
 
+# Package required to convert SVG for latex building
+sphinxcontrib-svg2pdfconverter
+
 #Work-around bug "AttributeError: 'Values' object has no attribute 'character_level_inline_markup'" with docutils 0.13.1
 #See:
 #  * https://github.com/sphinx-doc/sphinx/issues/3951
