@@ -49,28 +49,31 @@ In particular, OpenFPGA requires specific versions for the following dependencie
 
 .. _install_dependencies_build: https://github.com/lnis-uofu/OpenFPGA/blob/master/.github/workflows/install_dependencies_build.sh
 
-Docker
-~~~~~~
-If some of these dependencies are not installed on your machine, you can choose to use a Docker (the Docker tool needs to be installed).
-For the ease of the customer first experience, a Dockerfile is provided in the OpenFPGA folder. A container ready to use can be created with the following command
 
-.. code-block:: shell
+Running with the docker image
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  docker run lnis/open_fpga:release
+Users can skip the traditional installation process by using Dockerized version
+of the OpenFPGA tool. OpenFPGA project maintains the docker image/Github package of
+the latest stable version of OpenFPGA in the following repository
+`openfpga-master <https://github.com/orgs/lnis-uofu/packages/container/package/openfpga-master>`_.
+This image contains precompiled OpenFPGA binaries with all prerequisites installed.
 
-.. note:: This command is for quick testing. If you want to conserve your work, you should certainly use other options, such as ``-v``.
+.. code-block:: bash
 
-Otherwise, a container where you can build OpenFPGA yourself can be created with the following commands
+   # To get the docker image from the repository, docker pull ghcr.io/lnis-uofu/openfpga-master:latest
 
-.. code-block:: shell
+   # To invoke openfpga_shell
+   docker run -it ghcr.io/lnis-uofu/openfpga-master:latest openfpga/openfpga -i
 
-  docker build . -t open_fpga
-  docker run -it --rm -v $PWD:/localfile/OpenFPGA -w="/localfile/OpenFPGA" open_fpga bash
+   # To run the task that already exists in the repository.
+   docker run -it ghcr.io/lnis-uofu/openfpga-master:latest bash -c "source openfpga.sh && run-task compilation_verification"
 
-For more information about dock, see dock_download_link_
+   # To run a task from a local machine
+   mkdir <<task_name>>/config
+   vi <<task_name>>/config/task.config # Create your task configuration
+   TASK_NAME=<<task_name>> docker run -it -v ${PWD}/${TASK_NAME}:/opt/openfpga/openfpga_flow/tasks/${TASK_NAME} ghcr.io/lnis-uofu/openfpga-master:latest bash -c "source openfpga.sh && run-task ${TASK_NAME}"
 
-.. _dock_download_link: https://www.docker.com/products/docker-desktop
-
-To build the tool, go in the OpenFPGA folder and follow the compilation steps
-
-.. note:: Using docker, you cannot use ``make -j``, errors will happen
+.. note::
+   While running local task using docker, make sure all the additional files
+   are maintained in the task_directory and reference using variable ${TASK_DIR}
