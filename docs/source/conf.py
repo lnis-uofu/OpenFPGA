@@ -27,8 +27,8 @@ import sphinx_rtd_theme
 import sphinxcontrib.bibtex
 # For embedded youtube
 import sphinxcontrib.yt
-# For converting SVG to PNG using inkscape
-import sphinxcontrib.inkscapeconverter
+# For converting SVG to PNG using rsvg
+import sphinxcontrib.rsvgconverter
 
 # -- Project information -----------------------------------------------------
 
@@ -58,7 +58,7 @@ extensions = [
     'sphinxcontrib.bibtex',
     'sphinx.ext.autosectionlabel',
     'sphinxcontrib.yt',
-    'sphinxcontrib.inkscapeconverter',
+    'sphinxcontrib.rsvgconverter',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
