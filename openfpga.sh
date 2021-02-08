@@ -5,7 +5,13 @@
 #author          : Ganesh Gore <ganesh.gore@utah.edu>
 #==============================================================================
 
-export OPENFPGA_PATH=$(dirname $(readlink -f $0))
+if [ -z $OPENFPGA_PATH ]; then
+    echo "OPENFPGA_PATH variable not found"
+    export OPENFPGA_PATH=$(pwd);
+    echo "Setting OPENFPGA_PATH=${OPENFPGA_PATH}"
+else
+    echo "OPENFPGA_PATH=${OPENFPGA_PATH}"
+fi
 export OPENFPGA_SCRIPT_PATH="${OPENFPGA_PATH}/openfpga_flow/scripts"
 export OPENFPGA_TASK_PATH="${OPENFPGA_PATH}/openfpga_flow/tasks"
 if [ -z $PYTHON_EXEC ]; then export PYTHON_EXEC="python3"; fi
