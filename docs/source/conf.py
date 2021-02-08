@@ -23,26 +23,12 @@ import sphinx_rtd_theme
 #html_theme = "sphinx_rtd_theme"
 #html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
-# Import sphinxcontrib.bibtex
-have_sphinxcontrib_bibtex = True
-try:
-    import sphinxcontrib.bibtex
-except ImportError:
-    have_sphinxcontrib_bibtex = False
-
-# Import sphinxcontrib.yt
-have_sphinxcontrib_youtube = True
-try:
-    import sphinxcontrib.yt
-except ImportError:
-    have_sphinxcontrib_youtube = False
-
-# Import sphinxcontrib.svg2pdfconverter
-have_sphinxcontrib_svg2pdfconverter = True
-try:
-    import sphinxcontrib.svg2pdfconverter
-except ImportError:
-    have_sphinxcontrib_svg2pdfconverter = False
+# For bibtex support
+import sphinxcontrib.bibtex
+# For embedded youtube
+import sphinxcontrib.yt
+# For converting SVG to PNG using rsvg
+import sphinxcontrib.rsvgconverter
 
 # -- Project information -----------------------------------------------------
 
@@ -72,6 +58,7 @@ extensions = [
     'sphinxcontrib.bibtex',
     'sphinx.ext.autosectionlabel',
     'sphinxcontrib.yt',
+    'sphinxcontrib.rsvgconverter',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

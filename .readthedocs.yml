@@ -5,6 +5,10 @@
 # Required configuration file version
 version: 2
 
+# Specify docker image for building the doc
+build:
+  image: latest
+
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
   builder: dirhtml
@@ -16,5 +20,6 @@ formats: all
 # Optionally set the version of Python and requirements required to build your docs
 python:
   version: 3.7
+  system_packages: true
   install:
     - requirements: docs/requirements.txt

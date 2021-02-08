@@ -1160,7 +1160,7 @@ Template
 
 .. option:: <wire_param model_type="<string>" R="<float>" C="<float>" num_level="<int>"/>
 
-  - ``model_type="pi|T"`` Specify the type of RC models for this wire segement. Currently, OpenFPGA supports the π-type and T-type multi-level RC models.
+  - ``model_type="pi|T"`` Specify the type of RC models for this wire segement. Currently, OpenFPGA supports the :math:`\pi`-type and T-type multi-level RC models.
   - ``R="<float>"`` Specify the total resistance of the wire
   - ``C="<float>"`` Specify the total capacitance of the wire.
   - ``num_level="<int>"`` Specify the number of levels of the RC wire model.
@@ -1193,7 +1193,7 @@ The code describing this wire is:
 
 This example shows
   - A routing track wire has 1 input and output 
-  - The routing wire will be modelled as a 1-level π-type RC wire model with a total resistance of :math:`103.84\Omega` and a total capacitance of :math:`13.89fF`
+  - The routing wire will be modelled as a 1-level :math:`\pi`-type RC wire model with a total resistance of :math:`103.84\Omega` and a total capacitance of :math:`13.89fF`
 
 I/O pads
 ~~~~~~~~
