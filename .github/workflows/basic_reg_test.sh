@@ -118,5 +118,5 @@ echo -e "Testing yosys flow using custom ys script for running quicklogic device
 run-task quicklogic_tests/flow_test --debug --show_thread_logs
 
 # Repgression test to test multi-user enviroment
-cp -r */*/fpga_sdc/sdc_time_unit /tmp/
-cd /tmp/ && run-task sdc_time_unit
+cp -r */*/basic_test/full_testbench/configuration_chain /tmp/
+cd /tmp/ && run-task configuration_chain
