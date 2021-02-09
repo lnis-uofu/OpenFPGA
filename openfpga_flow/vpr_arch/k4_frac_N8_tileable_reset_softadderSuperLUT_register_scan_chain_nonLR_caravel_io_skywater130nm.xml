@@ -35,20 +35,20 @@
     </model>
     <model name="adder_lut4">
       <input_ports>
-        <port name="in" combinational_sink_ports="lut2_out lut4_out"/>
+        <port name="in" combinational_sink_ports="lut4_out cout"/>
+        <port name="cin" combinational_sink_ports="lut4_out cout"/>
       </input_ports>
       <output_ports>
-        <port name="lut2_out"/>
         <port name="lut4_out"/>
+        <port name="cout"/>
       </output_ports>
     </model>
     <model name="frac_lut4_arith">
       <input_ports>
-        <port name="in"/>
-        <port name="cin"/>
+        <port name="in" combinational_sink_ports="lut3_out lut4_out cout"/>
+        <port name="cin" combinational_sink_ports="lut3_out lut4_out cout"/>
       </input_ports>
       <output_ports>
-        <port name="lut2_out"/>
         <port name="lut3_out"/>
         <port name="lut4_out"/>
         <port name="cout"/>
@@ -400,10 +400,16 @@
               <!-- Define LUT -->
               <pb_type name="frac_lut4_arith" blif_model=".subckt frac_lut4_arith" num_pb="1">
                 <input name="in" num_pins="4"/>
-                <input name="cin" num_pins="4"/>
+                <input name="cin" num_pins="1"/>
                 <output name="lut3_out" num_pins="2"/>
                 <output name="lut4_out" num_pins="1"/>
                 <output name="cout" num_pins="1"/>
+                <delay_constant max="0.3e-9" in_port="frac_lut4_arith.cin" out_port="frac_lut4_arith.lut3_out"/>
+                <delay_constant max="0.3e-9" in_port="frac_lut4_arith.cin" out_port="frac_lut4_arith.lut4_out"/>
+                <delay_constant max="0.3e-9" in_port="frac_lut4_arith.cin" out_port="frac_lut4_arith.cout"/>
+                <delay_constant max="0.3e-9" in_port="frac_lut4_arith.in" out_port="frac_lut4_arith.lut3_out"/>
+                <delay_constant max="0.3e-9" in_port="frac_lut4_arith.in" out_port="frac_lut4_arith.lut4_out"/>
+                <delay_constant max="0.3e-9" in_port="frac_lut4_arith.in" out_port="frac_lut4_arith.cout"/>
               </pb_type>
               <interconnect>
                 <direct name="direct1" input="frac_logic.in[0:3]" output="frac_lut4_arith.in[0:3]"/>
@@ -483,7 +489,10 @@
               <input name="in" num_pins="4"/>
               <output name="lut4_out" num_pins="1"/>
               <output name="cout" num_pins="1"/>
+              <delay_constant max="0.3e-9" in_port="adder_lut4.cin" out_port="adder_lut4.lut4_out"/>
+              <delay_constant max="0.3e-9" in_port="adder_lut4.cin" out_port="adder_lut4.cout"/>
               <delay_constant max="0.3e-9" in_port="adder_lut4.in" out_port="adder_lut4.lut4_out"/>
+              <delay_constant max="0.3e-9" in_port="adder_lut4.in" out_port="adder_lut4.cout"/>
             </pb_type>
             <interconnect>
               <direct name="direct1" input="soft_adder.in[0:1]" output="adder_lut4.in[0:1]"/>
