@@ -60,6 +60,7 @@ write_verilog_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE
 # Write the SDC files for PnR backend
 #  - Turn on every options here
 write_pnr_sdc --time_unit ns --flatten_names --file ./SDC
+write_pnr_sdc --time_unit ns --flatten_names --hierarchical --file ./SDC_leaf
 
 # Write SDC to disable timing for configure ports
 write_sdc_disable_timing_configure_ports --file ./SDC/disable_configure_ports.sdc
