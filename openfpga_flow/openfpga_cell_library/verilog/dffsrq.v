@@ -25,7 +25,7 @@ output reg [0:0] Q;
 always @(posedge CK) begin
   if(RST) begin
     Q <= 1'b0;
-  else if(SET) begin
+  end else if(SET) begin
     Q <= 1'b1;
   end else begin
     Q <= D;
