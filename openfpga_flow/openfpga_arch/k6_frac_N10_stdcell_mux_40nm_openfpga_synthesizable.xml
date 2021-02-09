@@ -52,7 +52,7 @@
         10e-12
       </delay_matrix>
     </circuit_model>
-    <circuit_model type="inv_buf" name="tap_buf4" prefix="tap_buf4" is_default="false">
+    <circuit_model type="inv_buf" name="tap_buf4" prefix="tap_buf4" is_default="false" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/tap_buf4.v>
       <design_technology type="cmos" topology="buffer" size="1" num_level="3" f_per_stage="4"/>
       <device_technology device_model_name="logic"/>
       <port type="input" prefix="in" size="1"/>
@@ -131,7 +131,7 @@
       <port type="sram" prefix="sram" size="1"/>
     </circuit_model>
     <!--DFF subckt ports should be defined as <D> <Q> <CLK> <RESET> <SET>  -->
-    <circuit_model type="ff" name="DFFSRQ" prefix="DFFSRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dffsrq.v">
+    <circuit_model type="ff" name="DFFSRQ" prefix="DFFSRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
@@ -156,7 +156,7 @@
       <port type="sram" prefix="mode" size="1" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
     </circuit_model>
     <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-    <circuit_model type="ccff" name="DFFR" prefix="DFFR" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dffr.v">
+    <circuit_model type="ccff" name="DFFR" prefix="DFFR" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
