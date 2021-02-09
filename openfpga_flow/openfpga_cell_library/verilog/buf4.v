@@ -1,3 +1,9 @@
+// ----- Verilog module for const0 -----
+module const0(const0);
+output [0:0] const0;
+assign const0[0] = 1'b0;
+endmodule
+
 // ----- Verilog module for buf4 -----
 module buf4(in,
             out);
