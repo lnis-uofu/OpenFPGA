@@ -116,3 +116,7 @@ run-task basic_tests/global_tile_ports/global_tile_4clock --debug --show_thread_
 
 echo -e "Testing yosys flow using custom ys script for running quicklogic device";
 run-task quicklogic_tests/flow_test --debug --show_thread_logs
+
+# Repgression test to test multi-user enviroment
+cp -r */*/basic_tests/full_testbench/configuration_chain /tmp/
+cd /tmp/ && run-task configuration_chain --debug --show_thread_logs
