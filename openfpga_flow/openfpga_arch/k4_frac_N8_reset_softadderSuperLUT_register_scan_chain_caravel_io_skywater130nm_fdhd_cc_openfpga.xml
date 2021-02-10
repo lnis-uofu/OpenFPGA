@@ -168,10 +168,10 @@
       <lut_intermediate_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__buf_2" location_map="-1-"/>
       <pass_gate_logic circuit_model_name="sky130_fd_sc_hd__mux2_1"/>
       <port type="input" prefix="in" size="4" tri_state_map="---1" circuit_model_name="sky130_fd_sc_hd__or2_1"/>
-      <port type="input" prefix="cin" size="1" hard_io="true"/>
+      <port type="input" prefix="cin" size="1" is_harden_lut_port="true"/>
       <port type="output" prefix="lut3_out" size="2" lut_frac_level="3" lut_output_mask="0,1"/>
       <port type="output" prefix="lut4_out" size="1" lut_output_mask="0"/>
-      <port type="output" prefix="cout" size="1" hard_io="true"/>
+      <port type="output" prefix="cout" size="1" is_harden_lut_port="true"/>
       <port type="sram" prefix="sram" size="16"/>
       <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="DFFRQ" default_val="1"/>
     </circuit_model>
