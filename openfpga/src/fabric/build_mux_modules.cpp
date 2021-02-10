@@ -740,7 +740,7 @@ vtr::vector<MuxInputId, ModuleNetId> build_mux_module_input_buffers(ModuleManage
    */
   std::vector<CircuitPortId> mux_input_ports;
   if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(mux_model)) {
-     mux_input_ports = find_lut_circuit_model_input_port(circuit_lib, mux_model, false);
+     mux_input_ports = find_lut_circuit_model_input_port(circuit_lib, mux_model, false, false);
   } else {
      VTR_ASSERT(CIRCUIT_MODEL_MUX == circuit_lib.model_type(mux_model));
      mux_input_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_INPUT, true);
@@ -866,7 +866,7 @@ vtr::vector<MuxOutputId, ModuleNetId> build_mux_module_output_buffers(ModuleMana
    */
   std::vector<CircuitPortId> mux_output_ports;
   if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(mux_model)) {
-     mux_output_ports = find_lut_circuit_model_output_port(circuit_lib, mux_model, false, false);
+     mux_output_ports = find_lut_circuit_model_output_port(circuit_lib, mux_model, false, true);
   } else {
      VTR_ASSERT(CIRCUIT_MODEL_MUX == circuit_lib.model_type(mux_model));
      mux_output_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_OUTPUT, false);
@@ -1123,7 +1123,7 @@ void build_cmos_mux_module(ModuleManager& module_manager,
    */
   std::vector<CircuitPortId> mux_input_ports;
   if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(mux_model)) {
-     mux_input_ports = find_lut_circuit_model_input_port(circuit_lib, mux_model, false);
+     mux_input_ports = find_lut_circuit_model_input_port(circuit_lib, mux_model, false, false);
   } else {
      VTR_ASSERT(CIRCUIT_MODEL_MUX == circuit_lib.model_type(mux_model));
      mux_input_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_INPUT, true);
@@ -1136,7 +1136,7 @@ void build_cmos_mux_module(ModuleManager& module_manager,
    */
   std::vector<CircuitPortId> mux_output_ports;
   if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(mux_model)) {
-     mux_output_ports = find_lut_circuit_model_output_port(circuit_lib, mux_model, false, false);
+     mux_output_ports = find_lut_circuit_model_output_port(circuit_lib, mux_model, false, true);
   } else {
      VTR_ASSERT(CIRCUIT_MODEL_MUX == circuit_lib.model_type(mux_model));
      mux_output_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_OUTPUT, false);
