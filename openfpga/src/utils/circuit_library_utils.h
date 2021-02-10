@@ -51,6 +51,16 @@ CircuitPortId find_circuit_model_power_gate_en_port(const CircuitLibrary& circui
 CircuitPortId find_circuit_model_power_gate_enb_port(const CircuitLibrary& circuit_lib,
                                                      const CircuitModelId& circuit_model);
 
+std::vector<CircuitPortId> find_lut_circuit_model_input_port(const CircuitLibrary& circuit_lib,
+                                                             const CircuitModelId& circuit_model,
+                                                             const bool& include_harden_port,
+                                                             const bool& include_global_port = true);
+
+std::vector<CircuitPortId> find_lut_circuit_model_output_port(const CircuitLibrary& circuit_lib,
+                                                              const CircuitModelId& circuit_model,
+                                                              const bool& include_harden_port,
+                                                              const bool& include_global_port = true);
+
 } /* end namespace openfpga */
 
 #endif

@@ -368,4 +368,54 @@ CircuitPortId find_circuit_model_power_gate_enb_port(const CircuitLibrary& circu
   return enb_port;
 }
 
+/************************************************************************
+ * Try to find the input ports for a LUT circuit model (EXCLUDE the global ports)
+ * which can optionally include those ports drives or is driven by hard logic 
+ ***********************************************************************/
+std::vector<CircuitPortId> find_lut_circuit_model_input_port(const CircuitLibrary& circuit_lib,
+                                                             const CircuitModelId& circuit_model,
+                                                             const bool& include_harden_port,
+                                                             const bool& include_global_port) {
+  VTR_ASSERT(CIRCUIT_MODEL_LUT == circuit_lib.model_type(circuit_model));
+
+  std::vector<CircuitPortId> input_ports;
+
+  /* Find all the non-global input ports */
+  for (const auto& port : circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_INPUT, !include_global_port)) {
+    /* Skip harden ports if specified */
+    if ( (true == circuit_lib.port_is_harden_lut_port(port))
+      && (false == include_harden_port)) {
+      continue;
+    }
+    input_ports.push_back(port);
+  }
+
+  return input_ports;
+}
+
+/************************************************************************
+ * Try to find the output ports for a LUT circuit model (EXCLUDE the global ports)
+ * which can optionally include those ports drives or is driven by hard logic 
+ ***********************************************************************/
+std::vector<CircuitPortId> find_lut_circuit_model_output_port(const CircuitLibrary& circuit_lib,
+                                                              const CircuitModelId& circuit_model,
+                                                              const bool& include_harden_port,
+                                                              const bool& include_global_port) {
+  VTR_ASSERT(CIRCUIT_MODEL_LUT == circuit_lib.model_type(circuit_model));
+
+  std::vector<CircuitPortId> output_ports;
+
+  /* Find all the non-global input ports */
+  for (const auto& port : circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_OUTPUT, !include_global_port)) {
+    /* Skip harden ports if specified */
+    if ( (true == circuit_lib.port_is_harden_lut_port(port))
+      && (false == include_harden_port)) {
+      continue;
+    }
+    output_ports.push_back(port);
+  }
+
+  return output_ports;
+}
+
 } /* end namespace openfpga */

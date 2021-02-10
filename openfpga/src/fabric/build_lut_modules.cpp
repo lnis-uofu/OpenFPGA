@@ -45,8 +45,13 @@ void build_lut_module(ModuleManager& module_manager,
   std::vector<CircuitPortId> lut_global_ports = circuit_lib.model_global_ports_by_type(lut_model, CIRCUIT_MODEL_PORT_INPUT, false, true);
   /* Get the input ports from the mux */
   std::vector<CircuitPortId> lut_input_ports = circuit_lib.model_ports_by_type(lut_model, CIRCUIT_MODEL_PORT_INPUT, true);
+  /* Find the inputs that drive the internal LUT MUX */
+  std::vector<CircuitPortId> lut_mux_input_ports = find_lut_circuit_model_input_port(circuit_lib, lut_model, false);
+
   /* Get the output ports from the mux */
   std::vector<CircuitPortId> lut_output_ports = circuit_lib.model_ports_by_type(lut_model, CIRCUIT_MODEL_PORT_OUTPUT, false);
+  /* Find the outputs that are driven the internal LUT MUX */
+  std::vector<CircuitPortId> lut_mux_output_ports = find_lut_circuit_model_output_port(circuit_lib, lut_model, false);
 
   /* Classify SRAM ports into two categories: regular (not for mode select) and mode-select */
   std::vector<CircuitPortId> lut_regular_sram_ports = find_circuit_regular_sram_ports(circuit_lib, lut_model);
@@ -60,8 +65,8 @@ void build_lut_module(ModuleManager& module_manager,
     /* Single-output LUTs: 
      * We should have only 1 input port, 1 output port and 1 SRAM port
      */
-    VTR_ASSERT (1 == lut_input_ports.size());
-    VTR_ASSERT (1 == lut_output_ports.size());
+    VTR_ASSERT (1 == lut_mux_input_ports.size());
+    VTR_ASSERT (1 == lut_mux_output_ports.size());
     VTR_ASSERT (1 == lut_regular_sram_ports.size()); 
     VTR_ASSERT (0 == lut_mode_select_sram_ports.size()); 
   } else {
@@ -70,8 +75,8 @@ void build_lut_module(ModuleManager& module_manager,
      * We should have only 1 input port, a few output ports (fracturable outputs)
      * and two SRAM ports
      */
-    VTR_ASSERT (1 == lut_input_ports.size());
-    VTR_ASSERT (1 <= lut_output_ports.size());
+    VTR_ASSERT (1 == lut_mux_input_ports.size());
+    VTR_ASSERT (1 <= lut_mux_output_ports.size());
     VTR_ASSERT (1 == lut_regular_sram_ports.size()); 
     VTR_ASSERT ( (0 == lut_mode_select_sram_ports.size()) 
               || (1 == lut_mode_select_sram_ports.size())); 
@@ -155,10 +160,10 @@ void build_lut_module(ModuleManager& module_manager,
    *  +--------------------------------------+
    */
   /* Get the tri-state port map for the input ports*/
-  std::string tri_state_map = circuit_lib.port_tri_state_map(lut_input_ports[0]);
+  std::string tri_state_map = circuit_lib.port_tri_state_map(lut_mux_input_ports[0]);
   size_t mode_select_port_lsb = 0;
-  for (const auto& pin : circuit_lib.pins(lut_input_ports[0])) {
-    ModulePortId lut_module_input_port_id = module_manager.find_module_port(lut_module, circuit_lib.port_prefix(lut_input_ports[0]));
+  for (const auto& pin : circuit_lib.pins(lut_mux_input_ports[0])) {
+    ModulePortId lut_module_input_port_id = module_manager.find_module_port(lut_module, circuit_lib.port_prefix(lut_mux_input_ports[0]));
     VTR_ASSERT(true == module_manager.valid_module_port_id(lut_module, lut_module_input_port_id));
 
     /* Create a module net for the connection */
@@ -200,7 +205,7 @@ void build_lut_module(ModuleManager& module_manager,
        required_gate_type = CIRCUIT_MODEL_GATE_OR;
     } 
     /* Get the circuit model of the gate */
-    CircuitModelId gate_model = circuit_lib.port_tri_state_model(lut_input_ports[0]);
+    CircuitModelId gate_model = circuit_lib.port_tri_state_model(lut_mux_input_ports[0]);
     /* Check this is the gate we want ! */
     VTR_ASSERT (required_gate_type == circuit_lib.gate_type(gate_model));
 
@@ -290,7 +295,7 @@ void build_lut_module(ModuleManager& module_manager,
 
   std::vector<ModuleNetId> lut_mux_sram_inv_nets;
   /* Now we need to add inverters by instanciating the modules */
-  for (size_t pin = 0; pin < circuit_lib.port_size(lut_input_ports[0]); ++pin) {
+  for (size_t pin = 0; pin < circuit_lib.port_size(lut_mux_input_ports[0]); ++pin) {
     ModuleNetId lut_mux_sram_inv_net = add_inverter_buffer_child_module_and_nets(module_manager, lut_module, 
                                                                                  circuit_lib, input_inverter_model,
                                                                                  mode_selected_nets[pin]); 
@@ -308,7 +313,7 @@ void build_lut_module(ModuleManager& module_manager,
 
   std::vector<ModuleNetId> lut_mux_sram_nets;
   /* Now we need to add inverters by instanciating the modules and add module nets */
-  for (size_t pin = 0; pin < circuit_lib.port_size(lut_input_ports[0]); ++pin) {
+  for (size_t pin = 0; pin < circuit_lib.port_size(lut_mux_input_ports[0]); ++pin) {
     ModuleNetId lut_mux_sram_net = add_inverter_buffer_child_module_and_nets(module_manager, lut_module, 
                                                                              circuit_lib, input_buffer_model,
                                                                              mode_selected_nets[pin]); 
@@ -362,7 +367,7 @@ void build_lut_module(ModuleManager& module_manager,
    */  
   ModulePortId lut_sram_port_id = module_manager.find_module_port(lut_module, circuit_lib.port_prefix(lut_regular_sram_ports[0]));
   BasicPort lut_sram_port = module_manager.module_port(lut_module, lut_sram_port_id);
-  ModulePortId lut_mux_input_port_id = module_manager.find_module_port(lut_mux_module, circuit_lib.port_prefix(lut_input_ports[0]));
+  ModulePortId lut_mux_input_port_id = module_manager.find_module_port(lut_mux_module, circuit_lib.port_prefix(lut_mux_input_ports[0]));
   BasicPort lut_mux_input_port = module_manager.module_port(lut_mux_module, lut_mux_input_port_id);
   VTR_ASSERT(lut_mux_input_port.get_width() == lut_sram_port.get_width());
   /* Wire the port to lut_mux_sram_net */
@@ -372,7 +377,7 @@ void build_lut_module(ModuleManager& module_manager,
     module_manager.add_module_net_sink(lut_module, net, lut_mux_module, lut_mux_instance, lut_mux_input_port_id, lut_mux_input_port.pins()[pin_id]);
   } 
 
-  for (const auto& port : lut_output_ports) {
+  for (const auto& port : lut_mux_output_ports) {
     ModulePortId lut_output_port_id = module_manager.find_module_port(lut_module, circuit_lib.port_prefix(port));
     BasicPort lut_output_port = module_manager.module_port(lut_module, lut_output_port_id);
     ModulePortId lut_mux_output_port_id = module_manager.find_module_port(lut_mux_module, circuit_lib.port_prefix(port));
@@ -405,6 +410,11 @@ void build_lut_modules(ModuleManager& module_manager,
   for (const auto& lut_model : circuit_lib.models()) {
     /* Bypas non-LUT modules */
     if (CIRCUIT_MODEL_LUT != circuit_lib.model_type(lut_model)) {
+      continue;
+    }
+    /* We skip user-defined models */
+    if ( (false == circuit_lib.model_verilog_netlist(lut_model).empty())
+      || (false == circuit_lib.model_spice_netlist(lut_model).empty()) ) {
       continue;
     }
     build_lut_module(module_manager, circuit_lib, lut_model);

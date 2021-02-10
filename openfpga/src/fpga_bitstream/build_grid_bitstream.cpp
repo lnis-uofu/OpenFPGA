@@ -407,7 +407,7 @@ void build_lut_bitstream(BitstreamManager& bitstream_manager,
   VTR_ASSERT(CIRCUIT_MODEL_LUT == circuit_lib.model_type(lut_model));
 
   /* Find the input ports for LUT size, this is used to decode the LUT memory bits! */
-  std::vector<CircuitPortId> model_input_ports = circuit_lib.model_ports_by_type(lut_model, CIRCUIT_MODEL_PORT_INPUT, true);
+  std::vector<CircuitPortId> model_input_ports = find_lut_circuit_model_input_port(circuit_lib, lut_model, false);
   VTR_ASSERT(1 == model_input_ports.size());
   size_t lut_size = circuit_lib.port_size(model_input_ports[0]);
 
