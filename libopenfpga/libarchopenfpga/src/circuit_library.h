@@ -289,6 +289,7 @@ class CircuitLibrary {
     bool port_is_config_enable(const CircuitPortId& circuit_port_id) const;
     bool port_is_prog(const CircuitPortId& circuit_port_id) const;
     size_t port_lut_frac_level(const CircuitPortId& circuit_port_id) const;
+    bool port_is_harden_lut_port(const CircuitPortId& circuit_port_id) const;
     std::vector<size_t> port_lut_output_mask(const CircuitPortId& circuit_port_id) const;
     std::string port_tri_state_map(const CircuitPortId& circuit_port_id) const;
     CircuitModelId port_tri_state_model(const CircuitPortId& circuit_port_id) const;
@@ -383,6 +384,8 @@ class CircuitLibrary {
                                 const std::string& tri_state_map);
     void set_port_lut_frac_level(const CircuitPortId& circuit_port_id, 
                                  const size_t& lut_frac_level);
+    void set_port_is_harden_lut_port(const CircuitPortId& circuit_port_id, 
+                                     const bool& is_harden_lut_port);
     void set_port_lut_output_mask(const CircuitPortId& circuit_port_id, 
                                   const std::vector<size_t>& lut_output_masks);
     void set_port_sram_orgz(const CircuitPortId& circuit_port_id, 
@@ -563,6 +566,7 @@ class CircuitLibrary {
     vtr::vector<CircuitPortId, CircuitModelId> port_inv_model_ids_;
     vtr::vector<CircuitPortId, std::string> port_tri_state_maps_;
     vtr::vector<CircuitPortId, size_t> port_lut_frac_level_;
+    vtr::vector<CircuitPortId, bool> port_is_harden_lut_port_;
     vtr::vector<CircuitPortId, std::vector<size_t>> port_lut_output_masks_;
     vtr::vector<CircuitPortId, enum e_config_protocol_type> port_sram_orgz_;
 

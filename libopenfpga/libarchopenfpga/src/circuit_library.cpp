@@ -964,6 +964,13 @@ size_t CircuitLibrary::port_lut_frac_level(const CircuitPortId& circuit_port_id)
   return port_lut_frac_level_[circuit_port_id];
 }
 
+/* Return if the port drives or is driven by a harden logic inside a LUT */
+bool CircuitLibrary::port_is_harden_lut_port(const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_is_harden_lut_port_[circuit_port_id];
+}
+
 /* Return indices of internal nodes in a LUT multiplexing structure to which the output port is wired to */
 std::vector<size_t> CircuitLibrary::port_lut_output_mask(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
@@ -1390,6 +1397,7 @@ CircuitPortId CircuitLibrary::add_model_port(const CircuitModelId& model_id,
   port_inv_model_ids_.push_back(CircuitModelId::INVALID());
   port_tri_state_maps_.emplace_back();
   port_lut_frac_level_.push_back(-1);
+  port_is_harden_lut_port_.push_back(false);
   port_lut_output_masks_.emplace_back();
   port_sram_orgz_.push_back(NUM_CONFIG_PROTOCOL_TYPES);
 
@@ -1573,6 +1581,17 @@ void CircuitLibrary::set_port_lut_frac_level(const CircuitPortId& circuit_port_i
   /* Make sure this is a LUT */
   VTR_ASSERT(CIRCUIT_MODEL_LUT == model_type(port_model_ids_[circuit_port_id]));
   port_lut_frac_level_[circuit_port_id] = lut_frac_level;
+  return;
+}
+
+/* Set the LUT fracturable level for a port of a circuit model, only applicable to LUTs */
+void CircuitLibrary::set_port_is_harden_lut_port(const CircuitPortId& circuit_port_id, 
+                                                 const bool& is_harden_lut_port) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  /* Make sure this is a LUT */
+  VTR_ASSERT(CIRCUIT_MODEL_LUT == model_type(port_model_ids_[circuit_port_id]));
+  port_is_harden_lut_port_[circuit_port_id] = is_harden_lut_port;
   return;
 }
 

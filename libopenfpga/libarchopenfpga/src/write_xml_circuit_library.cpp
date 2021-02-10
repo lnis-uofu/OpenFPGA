@@ -186,6 +186,14 @@ void write_xml_circuit_port(std::fstream& fp,
     }
   }
 
+  /* LUT harden port attributes */
+  if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(model)) {
+    if (true == circuit_lib.port_is_harden_lut_port(port)) {
+      write_xml_attribute(fp, "is_harden_lut_port", "true"); 
+    }
+  }
+
+
   /* I/O port attributes */
   if (true == circuit_lib.port_is_io(port)) {
     write_xml_attribute(fp, "is_io", "true"); 
