@@ -5,6 +5,10 @@
 //               - mode_bit[0] switch between arithmetic mode and LUT mode
 //               - mode_bit[1] switch between regular LUT mode and fracturable
 //               mode
+// Note        : The HDL is a technology mapped netlist based on the Skywater
+//               130nm High-Density cell library. 
+//               TODO: Create a behavioral HDL version so that we are portable
+//               between PDKs
 // Coder       : Xifan TANG
 //-----------------------------------------------------
 module frac_lut4_arith (
