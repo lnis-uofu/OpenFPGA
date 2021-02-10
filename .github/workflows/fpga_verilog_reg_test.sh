@@ -14,6 +14,9 @@ run-task fpga_verilog/lut_design/single_mode --debug --show_thread_logs
 echo -e "Testing Verilog generation for LUTs: simple fracturable LUT4 ";
 run-task fpga_verilog/lut_design/frac_lut4 --debug --show_thread_logs
 
+echo -e "Testing Verilog generation for LUTs: fracturable LUT4 with embedded carry logic";
+run-task fpga_verilog/lut_design/frac_lut4_arith --debug --show_thread_logs
+
 echo -e "Testing Verilog generation for LUTs: native fracturable LUT4 ";
 run-task fpga_verilog/lut_design/frac_native_lut4 --debug --show_thread_logs
 
