@@ -166,8 +166,14 @@ def generate_each_task_actions(taskname):
     """
 
     # Check if task directory exists and consistent
-    curr_task_dir = os.path.join(gc["task_dir"], *(taskname))
-    if not os.path.isdir(curr_task_dir):
+    local_tasks = os.path.join(*(taskname))
+    repo_tasks = os.path.join(gc["task_dir"], *(taskname))
+    if os.path.isdir(local_tasks):
+        os.chdir(local_tasks)
+        curr_task_dir = os.path.abspath(os.getcwd())
+    elif os.path.isdir(repo_tasks):
+        curr_task_dir = repo_tasks
+    else:
         clean_up_and_exit("Task directory [%s] not found" % curr_task_dir)
     os.chdir(curr_task_dir)
 
