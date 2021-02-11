@@ -4,11 +4,7 @@
 .. toctree::
    :maxdepth: 2
 
-   compile
-
-   shell_shortcuts
-
-   tools
+   getting_started/index
 
    design_flow/index
 
