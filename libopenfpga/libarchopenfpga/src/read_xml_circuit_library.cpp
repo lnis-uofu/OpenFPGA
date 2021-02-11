@@ -454,6 +454,16 @@ void read_xml_circuit_port(pugi::xml_node& xml_port,
     circuit_lib.set_port_lut_frac_level(port, get_attribute(xml_port, "lut_frac_level", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(-1));
   }
 
+  /* Identify if the port carries a harden functionality rather than a reconfigurable port
+   * This is only applicable to LUT circuit models.
+   * The super LUT circuit model (whose netlists are supposed to be provided by users) contains
+   * some hard logic inside, e.g., a carry logic.
+   * By default, a port does NOT carry a hard functionality
+   */
+  if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(model)) {
+    circuit_lib.set_port_is_harden_lut_port(port, get_attribute(xml_port, "is_harden_lut_port", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
+  }
+
   /* Identify the output mask of the port in LUTs, by default it will be applied to each pin of this port
    * This is only applicable to output ports of a LUT
    */

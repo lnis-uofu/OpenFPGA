@@ -734,8 +734,18 @@ vtr::vector<MuxInputId, ModuleNetId> build_mux_module_input_buffers(ModuleManage
                                                                     const MuxGraph& mux_graph) {
   vtr::vector<MuxInputId, ModuleNetId> mux_input_nets(mux_graph.num_inputs(), ModuleNetId::INVALID());
 
-  /* Get the input ports from the mux */
-  std::vector<CircuitPortId> mux_input_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_INPUT, true);
+  /* Get the input ports from the mux:
+   * - LUT may have ports that are driven by harden logic, 
+   *   which should not be included when building the mux graph
+   */
+  std::vector<CircuitPortId> mux_input_ports;
+  if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(mux_model)) {
+     mux_input_ports = find_lut_circuit_model_input_port(circuit_lib, mux_model, false, false);
+  } else {
+     VTR_ASSERT(CIRCUIT_MODEL_MUX == circuit_lib.model_type(mux_model));
+     mux_input_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_INPUT, true);
+  }
+
   /* We should have only 1 input port! */
   VTR_ASSERT(1 == mux_input_ports.size());
 
@@ -849,8 +859,18 @@ vtr::vector<MuxOutputId, ModuleNetId> build_mux_module_output_buffers(ModuleMana
   /* Create module nets for output ports */
   vtr::vector<MuxOutputId, ModuleNetId> mux_output_nets(mux_graph.num_outputs(), ModuleNetId::INVALID());
 
-  /* Get the output ports from the mux */
-  std::vector<CircuitPortId> mux_output_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_OUTPUT, false);
+  /* Get the output ports from the mux:
+   * - LUT may have ports that are driven by harden logic, 
+   *   which should not be included when building the mux graph
+   * - LUT may have global output ports that are wired directly to top-level module 
+   */
+  std::vector<CircuitPortId> mux_output_ports;
+  if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(mux_model)) {
+     mux_output_ports = find_lut_circuit_model_output_port(circuit_lib, mux_model, false, true);
+  } else {
+     VTR_ASSERT(CIRCUIT_MODEL_MUX == circuit_lib.model_type(mux_model));
+     mux_output_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_OUTPUT, false);
+  }
 
   /* Iterate over all the outputs in the MUX module */
   for (const auto& output_port : mux_output_ports) {
@@ -1096,10 +1116,32 @@ void build_cmos_mux_module(ModuleManager& module_manager,
                            const MuxGraph& mux_graph) {
   /* Get the global ports required by MUX (and any submodules) */
   std::vector<CircuitPortId> mux_global_ports = circuit_lib.model_global_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_INPUT, true, true);
-  /* Get the input ports from the mux */
-  std::vector<CircuitPortId> mux_input_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_INPUT, true);
-  /* Get the output ports from the mux */
-  std::vector<CircuitPortId> mux_output_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_OUTPUT, false);
+
+  /* Get the input ports from the mux:
+   * - LUT may have ports that are driven by harden logic, 
+   *   which should not be included when building the mux graph
+   */
+  std::vector<CircuitPortId> mux_input_ports;
+  if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(mux_model)) {
+     mux_input_ports = find_lut_circuit_model_input_port(circuit_lib, mux_model, false, false);
+  } else {
+     VTR_ASSERT(CIRCUIT_MODEL_MUX == circuit_lib.model_type(mux_model));
+     mux_input_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_INPUT, true);
+  }
+
+  /* Get the output ports from the mux:
+   * - LUT may have ports that are driven by harden logic, 
+   *   which should not be included when building the mux graph
+   * - LUT may have global output ports that are wired directly to top-level module 
+   */
+  std::vector<CircuitPortId> mux_output_ports;
+  if (CIRCUIT_MODEL_LUT == circuit_lib.model_type(mux_model)) {
+     mux_output_ports = find_lut_circuit_model_output_port(circuit_lib, mux_model, false, true);
+  } else {
+     VTR_ASSERT(CIRCUIT_MODEL_MUX == circuit_lib.model_type(mux_model));
+     mux_output_ports = circuit_lib.model_ports_by_type(mux_model, CIRCUIT_MODEL_PORT_OUTPUT, false);
+  }
+
   /* Get the sram ports from the mux 
    * Multiplexing structure does not mode_sram_ports, they are handled in LUT modules
    * Here we just bypass it.

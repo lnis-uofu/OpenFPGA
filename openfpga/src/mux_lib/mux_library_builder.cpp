@@ -11,6 +11,7 @@
 /* Headers from readarchopenfpga library */
 #include "circuit_types.h"
 #include "circuit_library.h"
+#include "circuit_library_utils.h"
 
 #include "mux_utils.h"
 #include "pb_type_utils.h"
@@ -182,7 +183,7 @@ void build_lut_mux_library(MuxLibrary& mux_lib,
     }
     /* Find the MUX size required by the LUT */
     /* Get input ports which are not global ports! */
-    std::vector<CircuitPortId> input_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_INPUT, true);
+    std::vector<CircuitPortId> input_ports = find_lut_circuit_model_input_port(circuit_lib, circuit_model, false);
     VTR_ASSERT(1 == input_ports.size());
     /* MUX size = 2^lut_size */
     size_t lut_mux_size = (size_t)pow(2., (double)(circuit_lib.port_size(input_ports[0])));

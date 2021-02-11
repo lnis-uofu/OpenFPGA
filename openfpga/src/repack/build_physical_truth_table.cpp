@@ -50,39 +50,47 @@ static
 std::vector<int> generate_lut_rotated_input_pin_map(const std::vector<AtomNetId>& input_nets,
                                                     const AtomContext& atom_ctx,
                                                     const AtomBlockId& atom_blk,
+                                                    const VprDeviceAnnotation& device_annotation,
+                                                    const CircuitLibrary& circuit_lib,
                                                     const t_pb_graph_node* pb_graph_node) { 
   /* Find the pin rotation status and record it ,
    * Note that some LUT inputs may not be used, we set them to be open by default
    */
   std::vector<int> rotated_pin_map(input_nets.size(), -1);
 
-  VTR_ASSERT(1 == pb_graph_node->num_input_ports);
+  for (int iport = 0; iport < pb_graph_node->num_input_ports; ++iport) {
+    for (int ipin = 0; ipin < pb_graph_node->num_input_pins[iport]; ++ipin) {
+      /* Skip the input pin that do not drive by LUT MUXes */
+      CircuitPortId circuit_port = device_annotation.pb_circuit_port(pb_graph_node->input_pins[iport][ipin].port);
+      if (true == circuit_lib.port_is_harden_lut_port(circuit_port)) {
+        continue;
+      }
 
-  for (int ipin = 0; ipin < pb_graph_node->num_input_pins[0]; ++ipin) {
-    /* The lut pb_graph_node may not be the primitive node 
-     * because VPR adds two default modes to its LUT pb_type
-     * If so, we will use the LUT mode of the pb_graph node
-     */
-    t_port* lut_pb_type_in_port = pb_graph_node->input_pins[0][ipin].port; 
-    if (0 != pb_graph_node->pb_type->num_modes) {
-      VTR_ASSERT(2 == pb_graph_node->pb_type->num_modes);
-      VTR_ASSERT(1 == pb_graph_node->pb_type->modes[VPR_PB_TYPE_LUT_MODE].num_pb_type_children);
-      lut_pb_type_in_port = &(pb_graph_node->pb_type->modes[VPR_PB_TYPE_LUT_MODE].pb_type_children[0].ports[0]);
-      VTR_ASSERT(std::string(lut_pb_type_in_port->name) == std::string(pb_graph_node->input_pins[0][ipin].port->name));
-      VTR_ASSERT(lut_pb_type_in_port->num_pins == pb_graph_node->input_pins[0][ipin].port->num_pins);
-    }
+      /* The lut pb_graph_node may not be the primitive node 
+       * because VPR adds two default modes to its LUT pb_type
+       * If so, we will use the LUT mode of the pb_graph node
+       */
+      t_port* lut_pb_type_in_port = pb_graph_node->input_pins[iport][ipin].port; 
+      if (0 != pb_graph_node->pb_type->num_modes) {
+        VTR_ASSERT(2 == pb_graph_node->pb_type->num_modes);
+        VTR_ASSERT(1 == pb_graph_node->pb_type->modes[VPR_PB_TYPE_LUT_MODE].num_pb_type_children);
+        lut_pb_type_in_port = &(pb_graph_node->pb_type->modes[VPR_PB_TYPE_LUT_MODE].pb_type_children[0].ports[iport]);
+        VTR_ASSERT(std::string(lut_pb_type_in_port->name) == std::string(pb_graph_node->input_pins[iport][ipin].port->name));
+        VTR_ASSERT(lut_pb_type_in_port->num_pins == pb_graph_node->input_pins[iport][ipin].port->num_pins);
+      }
 
-    /* Port exists (some LUTs may have no input and hence no port in the atom netlist) */
-    AtomPortId atom_port = atom_ctx.nlist.find_atom_port(atom_blk, lut_pb_type_in_port->model_port);
-    if (!atom_port) { 
-      continue;
-    }
+      /* Port exists (some LUTs may have no input and hence no port in the atom netlist) */
+      AtomPortId atom_port = atom_ctx.nlist.find_atom_port(atom_blk, lut_pb_type_in_port->model_port);
+      if (!atom_port) { 
+        continue;
+      }
 
-    for (AtomPinId atom_pin : atom_ctx.nlist.port_pins(atom_port)) {
-      AtomNetId atom_pin_net = atom_ctx.nlist.pin_net(atom_pin);
-      if (atom_pin_net == input_nets[ipin]) {
-        rotated_pin_map[ipin] = atom_ctx.nlist.pin_port_bit(atom_pin);
-        break;
+      for (AtomPinId atom_pin : atom_ctx.nlist.port_pins(atom_port)) {
+        AtomNetId atom_pin_net = atom_ctx.nlist.pin_net(atom_pin);
+        if (atom_pin_net == input_nets[ipin]) {
+          rotated_pin_map[ipin] = atom_ctx.nlist.pin_port_bit(atom_pin);
+          break;
+        }
       }
     }
   }
@@ -109,15 +117,27 @@ void build_physical_pb_lut_truth_tables(PhysicalPb& physical_pb,
 
   /* Find all the nets mapped to each inputs */
   std::vector<AtomNetId> input_nets;
-  VTR_ASSERT(1 == pb_graph_node->num_input_ports);
-  for (int ipin = 0; ipin < pb_graph_node->num_input_pins[0]; ++ipin) {
-    input_nets.push_back(physical_pb.pb_graph_pin_atom_net(lut_pb_id, &(pb_graph_node->input_pins[0][ipin]))); 
+  for (int iport = 0; iport < pb_graph_node->num_input_ports; ++iport) {
+    for (int ipin = 0; ipin < pb_graph_node->num_input_pins[iport]; ++ipin) {
+      /* Skip the input pin that do not drive by LUT MUXes */
+      CircuitPortId circuit_port = device_annotation.pb_circuit_port(pb_graph_node->input_pins[iport][ipin].port);
+      if (true == circuit_lib.port_is_harden_lut_port(circuit_port)) {
+        continue;
+      }
+      input_nets.push_back(physical_pb.pb_graph_pin_atom_net(lut_pb_id, &(pb_graph_node->input_pins[iport][ipin]))); 
+    }
   }
 
   /* Find all the nets mapped to each outputs */
   for (int iport = 0; iport < pb_graph_node->num_output_ports; ++iport) {
     for (int ipin = 0; ipin < pb_graph_node->num_output_pins[iport]; ++ipin) {
       const t_pb_graph_pin* output_pin = &(pb_graph_node->output_pins[iport][ipin]);
+      /* Skip the output ports that are not driven by LUT MUXes */
+      CircuitPortId circuit_port = device_annotation.pb_circuit_port(output_pin->port);
+      if (true == circuit_lib.port_is_harden_lut_port(circuit_port)) {
+        continue;
+      }
+
       AtomNetId output_net = physical_pb.pb_graph_pin_atom_net(lut_pb_id, output_pin); 
       /* Bypass unmapped pins */
       if (AtomNetId::INVALID() == output_net) {
@@ -135,7 +155,7 @@ void build_physical_pb_lut_truth_tables(PhysicalPb& physical_pb,
         VTR_ASSERT(true == atom_ctx.nlist.valid_block_id(atom_blk));
         const AtomNetlist::TruthTable& orig_tt = atom_ctx.nlist.block_truth_table(atom_blk);
 
-        std::vector<int> rotated_pin_map = generate_lut_rotated_input_pin_map(input_nets, atom_ctx, atom_blk, pb_graph_node);
+        std::vector<int> rotated_pin_map = generate_lut_rotated_input_pin_map(input_nets, atom_ctx, atom_blk, device_annotation, circuit_lib, pb_graph_node);
         adapt_tt = lut_truth_table_adaption(orig_tt, rotated_pin_map);
       }
 

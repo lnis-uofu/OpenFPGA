@@ -89,7 +89,9 @@ int print_sdc_disable_lut_configure_ports(std::fstream& fp,
       }
 
       const std::string& sram_inv_port_name = circuit_lib.port_lib_name(sram_port) + INV_PORT_POSTFIX;
-      VTR_ASSERT(true == module_manager.valid_module_port_id(programmable_module, module_manager.find_module_port(programmable_module, sram_inv_port_name)));
+      if (false == module_manager.valid_module_port_id(programmable_module, module_manager.find_module_port(programmable_module, sram_inv_port_name))) {
+        continue;
+      }
       if (CMD_EXEC_FATAL_ERROR == 
             rec_print_sdc_disable_timing_for_module_ports(fp,
                                                           flatten_names,

@@ -689,8 +689,8 @@ Template
     <lut_input_inverter exist="<string>" circuit_model_name="<string>"/>
     <lut_intermediate_buffer exist="<string>" circuit_model_name="<string>" location_map="<string>"/>
     <pass_gate_logic type="<string>" circuit_model_name="<string>"/>
-    <port type="input" prefix="<string>" size="<int>" tri_state_map="<string>" circuit_model_name="<string>"/>
-    <port type="output" prefix="<string>" size="<int>" lut_frac_level="<int>" lut_output_mask="<int>"/>
+    <port type="input" prefix="<string>" size="<int>" tri_state_map="<string>" circuit_model_name="<string>" is_harden_lut_port="<bool>"/>
+    <port type="output" prefix="<string>" size="<int>" lut_frac_level="<int>" lut_output_mask="<int>" is_harden_lut_port="<bool>"/>
     <port type="sram" prefix="<string>" size="<int>" mode_select="<bool>" circuit_model_name="<string>" default_val="<int>"/>
   </circuit_model>
 
@@ -736,17 +736,21 @@ Template
 
 .. note:: For a LUT, three types of ports (``input``, ``output`` and ``sram``) should be defined. If the user provides an customized Verilog/SPICE netlist, the bandwidth of ports should be defined to the same as the Verilog/SPICE netlist. To support customizable LUTs, each type of port contain special keywords. 
 
-.. option:: <port type="input" prefix="<string>" size="<int>" tri_state_map="<string>" circuit_model_name="<string>"/>
+.. option:: <port type="input" prefix="<string>" size="<int>" tri_state_map="<string>" circuit_model_name="<string>" is_harden_lut_port="<bool>"/>
 
   - ``tri_state_map="[-|1]"`` Customize which inputs are fixed to constant values when the LUT is in fracturable modes. For example, ``tri_state_map="----11"`` indicates that the last two inputs will be fixed to be logic '1' when a 6-input LUT is in fracturable modes. 
 
   - ``circuit_model_name="<string>"`` Specify the circuit model to build logic gates in order to tri-state the inputs in fracturable LUT modes. It is required to use an ``AND`` gate to force logic '0' or an ``OR`` gate to force logic '1' for the input ports.
 
-.. option:: <port type="output" prefix="<string>" size="<int>" lut_frac_level="<int>" lut_output_mask="<int>"/>
+  - ``is_harden_lut_port="[true|false]"`` Specify if the input drives a harden logic inside a LUT. A harden input is supposed **NOT** to drive any multiplexer input (the internal multiplexer of LUT). As a result, such inputs are not considered to implement any truth table mapped to the LUT. If enabled, the input will **NOT** be considered for wiring to internal multiplexers as well as bitstream generation. By default, an input port is treated **NOT** to be a harden LUT port.
+
+.. option:: <port type="output" prefix="<string>" size="<int>" lut_frac_level="<int>" lut_output_mask="<int>" is_harden_lut_port="<bool>"/>
 
   - ``lut_frac_level="<int>"`` Specify the level in LUT multiplexer tree where the output port are wired to. For example, ``lut_frac_level="4"`` in a fracturable LUT6 means that the output are potentially wired to the 4th stage of a LUT multiplexer and it is an output of a LUT4. 
   
   - ``lut_output_mask="<int>"`` Describe which fracturable outputs are used. For instance, in a 6-LUT, there are potentially four LUT4 outputs can be wired out. ``lut_output_mask="0,2"`` indicates that only the first and the thrid LUT4 outputs will be used in fracturable mode.
+
+  - ``is_harden_lut_port="[true|false]"`` Specify if the output is driven by a harden logic inside a LUT. A harden input is supposed **NOT** to be driven by any multiplexer output (the internal multiplexer of LUT). As a result, such outputs are not considered to implement any truth table mapped to the LUT. If enabled, the output will **NOT** be considered for wiring to internal multiplexers as well as bitstream generation. By default, an output port is treated **NOT** to be a harden LUT port.
 
 .. note:: The size of the output port should be consistent to the length of ``lut_output_mask``. 
 
@@ -912,6 +916,54 @@ This example shows:
   - There will be two outputs wired to the 5th stage of routing multiplexer (the outputs of dual 5-input LUTs) 
 
 
+.. _circuit_model_lut_harden_logic_example:
+
+LUT with Harden Logic
+`````````````````````
+:numref:`fig_lut_arith` illustrates the detailed schematic of a fracturable 4-input LUT coupled with carry logic gates. For fracturable LUT schematic, please refer to :numref:`fig_std_frac_lut`.
+This feature allows users to fully customize their LUT circuit implementation while being compatible with OpenFPGA's bitstream generator when mapping truth tables to the LUTs. 
+
+.. warning:: OpenFPGA does **NOT** support netlist autogeneration for the LUT with harden logic. Users should build their own netlist and use ``verilog_netlist`` syntax of :ref:`circuit_library` to include it.
+
+.. _fig_lut_arith:
+
+.. figure:: ./figures/lut_arith_example.svg
+   :scale: 80%
+   :alt: detailed lut composition
+
+   Detailed schematic of a fracturable 4-input LUT with embedded carry logic.
+
+The code describing this LUT is:
+
+.. code-block:: xml
+
+  <circuit_model type="lut" name="frac_lut4_arith" prefix="frac_lut4_arith" dump_structural_verilog="true" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/frac_lut4_arith.v">
+    <design_technology type="cmos" fracturable_lut="true"/>
+    <input_buffer exist="false"/>
+    <output_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__buf_2"/>
+    <lut_input_inverter exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
+    <lut_input_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__buf_2"/>
+    <lut_intermediate_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__buf_2" location_map="-1-"/>
+    <pass_gate_logic circuit_model_name="sky130_fd_sc_hd__mux2_1"/>
+    <port type="input" prefix="in" size="4" tri_state_map="---1" circuit_model_name="sky130_fd_sc_hd__or2_1"/>
+    <port type="input" prefix="cin" size="1" is_harden_lut_port="true"/>
+    <port type="output" prefix="lut3_out" size="2" lut_frac_level="3" lut_output_mask="0,1"/>
+    <port type="output" prefix="lut4_out" size="1" lut_output_mask="0"/>
+    <port type="output" prefix="cout" size="1" is_harden_lut_port="true"/>
+    <port type="sram" prefix="sram" size="16"/>
+    <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="DFFRQ" default_val="1"/>
+  </circuit_model>
+
+This example shows:
+  - Fracturable 4-input LUT which is configurable by 16 SRAM cells.
+  - There are two output wired to the 3th stage of routing multiplexer (the outputs of dual 3-input LUTs) 
+  - There are two outputs wired to the 2th stage of routing multiplexer (the outputs of 2-input LUTs in the in the lower part of SRAM cells). Note that the two outputs drive the embedded carry logic 
+  - There is a harden carry logic, i.e., a 2-input MUX, to implement high-performance carry function.
+  - There is a mode-switch multiplexer at ``cin`` port, which is used to switch between arithemetic mode and regular LUT mode.
+
+.. note:: If the embedded harden logic are driven partially by LUT outputs, users may use the :ref:`file_formats_bitstream_setting` to gaurantee correct bitstream generation for the LUTs.
+
+
 Flip-Flops
 ~~~~~~~~~~
 
@@ -1012,6 +1064,8 @@ This example shows:
     - The first output port **MUST** be the data output port, e.g., ``Q``.
     - The second output port **MUST** be the **inverted** data output port, e.g., ``QN``.
 
+.. _circuit_model_ccff_enable_example:
+
 Configuration-chain Flip-flop with Configure Enable Signals
 ```````````````````````````````````````````````````````````
 
@@ -1048,6 +1102,9 @@ The code describing this FF is:
     - The first output port **MUST** be the regular data output port, e.g., ``SCAN_Q``.
     - The second output port **MUST** be the **inverted** data output port which is activated by the configure enable signal, e.g., ``QN``.
     - The second output port **MUST** be the data output port which is activated by the configure enable signal, e.g., ``Q``.
+
+
+.. _circuit_model_ccff_scanable_example:
 
 Configuration-chain Flip-flop with Scan Input
 `````````````````````````````````````````````
