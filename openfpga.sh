@@ -5,9 +5,15 @@
 #author          : Ganesh Gore <ganesh.gore@utah.edu>
 #==============================================================================
 
-export OPENFPGA_PATH="$(pwd)"
-export OPENFPGA_SCRIPT_PATH="$(pwd)/openfpga_flow/scripts"
-export OPENFPGA_TASK_PATH="$(pwd)/openfpga_flow/tasks"
+if [ -z $OPENFPGA_PATH ]; then
+    echo "OPENFPGA_PATH variable not found"
+    export OPENFPGA_PATH=$(pwd);
+    echo "Setting OPENFPGA_PATH=${OPENFPGA_PATH}"
+else
+    echo "OPENFPGA_PATH=${OPENFPGA_PATH}"
+fi
+export OPENFPGA_SCRIPT_PATH="${OPENFPGA_PATH}/openfpga_flow/scripts"
+export OPENFPGA_TASK_PATH="${OPENFPGA_PATH}/openfpga_flow/tasks"
 if [ -z $PYTHON_EXEC ]; then export PYTHON_EXEC="python3"; fi
 
 # This function checks the path and
@@ -44,7 +50,7 @@ run-flow () {
 # lists all the configure task in task directory
 list-tasks () {
     check_execution_path "$(pwd)"
-    ls -tdalh ${OPENFPGA_TASK_PATH}/* | awk '{printf("%-4s | %s %-3s | ", $5, $6, $7) ;system("basename " $9)}'
+    tree -P 'task.conf' --prune | sed "/.* task.conf/d" | sed "/.* config/d" | sed '$d'
 }
 
 # Switch directory to root of OpenFPGA
@@ -56,15 +62,6 @@ goto-root () {
 run-regression-local () {
     cd ${OPENFPGA_PATH}
     bash .github/workflows/*reg_test.sh
-}
-
-# Run regression test locally
-run-regression-local-docker () {
-    cd ${OPENFPGA_PATH}
-    docker run \
-        -v $(pwd)/openfpga_flow:/opt/openfpga/ \
-        -v $(pwd)/.github:/opt/openfpga/ \
-        ghcr.io/lnis-uofu/openfpga-master:latest "bash .github/workflows/*reg_test.sh"
 }
 
 # Changes directory to task directory [goto_task <task_name> <run_num[default 0]>]
@@ -105,7 +102,14 @@ unset-openfpga (){
 if [[ $(ps -p $$ -oargs=) == *"zsh"* ]]; then
     autoload -U +X bashcompinit; bashcompinit;
 fi
-TaskList=$(ls -tdalh ${OPENFPGA_TASK_PATH}/* | awk '{system("basename " $9)}' |  awk '{printf("%s ",$1)}')
+
+command -v shopt && shopt -s globstar
+# TaskList=$(ls -tdalh ${OPENFPGA_TASK_PATH}/* | awk '{system("basename " $9)}' |  awk '{printf("%s ",$1)}')
+TaskList=$(ls -tdalh ${OPENFPGA_TASK_PATH}/**/task.conf  |
+awk '{print $9}' | sed -e "s/\/config\/task.conf//" |
+sed -e "s/${OPENFPGA_PATH//\//\\/}\/openfpga_flow\/tasks\///" |
+awk '{printf("%s ",$1)}')
+
 complete -W "${TaskList}" goto-task
 complete -W "${TaskList}" run-task
 complete -W "${TaskList}" run-shell-task
