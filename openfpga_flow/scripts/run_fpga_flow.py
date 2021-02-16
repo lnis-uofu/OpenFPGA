@@ -260,9 +260,13 @@ def main():
         if args.power:
             run_ace2()
             run_pro_blif_3arg()
-            run_rewrite_verilog()
         else: 
+            # Make a copy of the blif file to be compatible with vpr flow
             shutil.copy(args.top_module+'_yosys_out.blif', args.top_module+".blif")
+
+        # Always Generate the post-synthesis verilog files
+        run_rewrite_verilog()
+
     if (args.fpga_flow == "vpr_blif"):
         collect_files_for_vpr()
     logger.info("Runing OpenFPGA Shell Engine ")
