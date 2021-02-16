@@ -230,7 +230,7 @@ jobs:
           chmod +x yosys/yosys-smtbmc
       - name: ${{matrix.config.name}}_GCC-8_(Ubuntu 18.04)
         shell: bash
-        run: source openfpga.sh && source .github/workflows/${{matrix.config.name}}.sh
+        run: source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         if: ${{ failure() }}
@@ -266,7 +266,7 @@ jobs:
           bash .github/workflows/install_dependencies_run.sh
           ${PYTHON_EXEC} -m pip install -r requirements.txt
           rsync -am --exclude='openfpga_flow/**' /opt/openfpga/. .
-          source openfpga.sh && source .github/workflows/${{matrix.config.name}}.sh
+          source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         if: ${{ failure() }}
