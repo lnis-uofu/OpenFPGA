@@ -1,0 +1,16 @@
+# Benchmark "routing_test" written by ABC on Tue Apr 21 18:25:21 2020 
+.model routing_test 
+.inputs IN0 IN1 IN2 clk  
+.outputs OUT0 OUT1 OUT2  
+ 
+.latch n15 OUT1 re clk 2 
+.latch n18 OUT0 re clk 2 
+.latch n21 OUT2 re clk 2 
+ 
+.names IN1 n15 
+1 1 
+.names IN0 n18 
+1 1 
+.names IN2 n21 
+1 1 
+.end 
