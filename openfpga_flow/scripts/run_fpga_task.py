@@ -175,6 +175,7 @@ def generate_each_task_actions(taskname):
         curr_task_dir = repo_tasks
     else:
         clean_up_and_exit("Task directory [%s] not found" % curr_task_dir)
+    
     os.chdir(curr_task_dir)
 
     curr_task_conf_file = os.path.join(curr_task_dir, "config", "task.conf")
