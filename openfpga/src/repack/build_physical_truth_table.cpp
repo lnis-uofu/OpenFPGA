@@ -149,6 +149,11 @@ void build_physical_pb_lut_truth_tables(PhysicalPb& physical_pb,
         /* Double check: ensure that the output nets appear in the input net !!! */
         VTR_ASSERT(true == is_wired_lut(input_nets, output_net));
         adapt_tt = build_wired_lut_truth_table(input_nets.size(), std::find(input_nets.begin(), input_nets.end(), output_net) - input_nets.begin()); 
+      } else if (true == is_wired_lut(input_nets, output_net)) {
+        /* Another round of check:
+         * new wired LUTs may be created during repacking rather than original packing results
+         */
+        adapt_tt = build_wired_lut_truth_table(input_nets.size(), std::find(input_nets.begin(), input_nets.end(), output_net) - input_nets.begin()); 
       } else {
         /* Find the truth table from atom block which drives the atom net */
         const AtomBlockId& atom_blk = atom_ctx.nlist.net_driver_block(output_net); 
@@ -183,6 +188,12 @@ void build_physical_pb_lut_truth_tables(PhysicalPb& physical_pb,
 
       VTR_ASSERT(AtomNetId::INVALID() != output_net);
       VTR_LOGV(verbose, "Output net: %s\n", atom_ctx.nlist.net_name(output_net).c_str());
+
+      VTR_LOGV(verbose,
+               "Truth table before adaption to fracturable LUT'\n");
+      for (const std::string& tt_line : truth_table_to_string(adapt_tt)) {
+        VTR_LOGV(verbose, "\t%s\n", tt_line.c_str());
+      }
 
       VTR_LOGV(verbose,
                "Add following truth table to pb_graph_pin '%s[%d]'\n", 
