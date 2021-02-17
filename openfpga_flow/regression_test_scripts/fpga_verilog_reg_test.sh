@@ -95,6 +95,9 @@ run-task fpga_verilog/mux_design/no_const_input --debug --show_thread_logs
 echo -e "Testing Verilog generation with behavioral description";
 run-task fpga_verilog/behavioral_verilog --debug --show_thread_logs
 
+echo -e "Testing synthesizable Verilog generation with external standard cells";
+run-task fpga_verilog/synthesizable_verilog --debug --show_thread_logs
+
 echo -e "Testing implicit Verilog generation";
 run-task fpga_verilog/implicit_verilog --debug --show_thread_logs
 
