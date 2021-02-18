@@ -266,6 +266,7 @@ jobs:
           bash .github/workflows/install_dependencies_run.sh
           ${PYTHON_EXEC} -m pip install -r requirements.txt
           rsync -am --exclude='openfpga_flow/**' /opt/openfpga/. .
+          unset OPENFPGA_PATH
           source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh
       - name: Upload artifact
         uses: actions/upload-artifact@v2
