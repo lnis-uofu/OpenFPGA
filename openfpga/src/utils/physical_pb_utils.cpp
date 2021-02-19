@@ -2,6 +2,8 @@
  * Function to perform fundamental operation for the physical pb using
  * data structures
  ***********************************************************************/
+#include <algorithm>
+
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -10,6 +12,7 @@
 #include "openfpga_tokenizer.h"
 
 #include "openfpga_naming.h"
+#include "lut_utils.h"
 #include "pb_type_utils.h"
 #include "physical_pb_utils.h"
 
@@ -398,5 +401,133 @@ void rec_update_physical_pb_from_operating_pb(PhysicalPb& phy_pb,
     }
   }
 }
+
+/***************************************************************************************
+ * This function will identify all the wire LUTs that is created by repacker only
+ * under a physical pb
+ *
+ * A practical example of wire LUT that is created by VPR packer:
+ *
+ *           LUT
+ *           +------------+
+ *           |            |
+ * netA ---->+----+       |
+ *           |    |-------+-----> netC
+ * netB ---->+----+       |
+ *           |            |
+ * netC ---->+------------+-----> netC
+ *           |            |
+ *           +------------+
+ *
+ * A fracturable LUT may be mapped to two functions:
+ *  - a function which involves netA, netB and netC
+ *    the function is defined in an atom block atomA
+ *    In this case, netC's driver block in atom context is atomA
+ *  - a function which just wire netC through the LUT
+ *    the function is NOT defined in any atom block
+ *    Such wire LUT is created by VPR's packer
+ *
+ * THIS CASE IS WHAT THIS FUNCTION IS HANDLING
+ * A practical example of wire LUT that is created by repacker:
+ *
+ *           LUT
+ *           +------------+
+ *           |            |
+ * netA ---->+----+       |
+ *           |    |-------+-----> netC
+ * netB ---->+----+       |
+ *           |            |
+ * netD ---->+------------+-----> netD
+ *           |            |
+ *           +------------+
+ *
+ * A fracturable LUT may be mapped to two functions:
+ *  - a function which involves netA, netB and netC
+ *    the function is defined in an atom block atomA
+ *    In this case, netC's driver block in atom context is atomA
+ *  - a function which just wire netD through the LUT
+ *    the function is NOT defined in any atom block
+ *    netD is driven by another atom block atomB which is not mapped to the LUT
+ *    Such wire LUT is created by repacker
+ *
+ * Return the number of wire LUTs that are found
+ ***************************************************************************************/
+int identify_one_physical_pb_wire_lut_created_by_repack(PhysicalPb& physical_pb,
+                                                        const PhysicalPbId& lut_pb_id,
+                                                        const VprDeviceAnnotation& device_annotation,
+                                                        const AtomContext& atom_ctx,
+                                                        const CircuitLibrary& circuit_lib,
+                                                        const bool& verbose) {
+  int wire_lut_counter = 0;
+  const t_pb_graph_node* pb_graph_node = physical_pb.pb_graph_node(lut_pb_id);
+
+  CircuitModelId lut_model = device_annotation.pb_type_circuit_model(physical_pb.pb_graph_node(lut_pb_id)->pb_type);
+  VTR_ASSERT(CIRCUIT_MODEL_LUT == circuit_lib.model_type(lut_model));
+
+  /* Find all the nets mapped to each inputs */
+  std::vector<AtomNetId> input_nets;
+  for (int iport = 0; iport < pb_graph_node->num_input_ports; ++iport) {
+    for (int ipin = 0; ipin < pb_graph_node->num_input_pins[iport]; ++ipin) {
+      /* Skip the input pin that do not drive by LUT MUXes */
+      CircuitPortId circuit_port = device_annotation.pb_circuit_port(pb_graph_node->input_pins[iport][ipin].port);
+      if (true == circuit_lib.port_is_harden_lut_port(circuit_port)) {
+        continue;
+      }
+      input_nets.push_back(physical_pb.pb_graph_pin_atom_net(lut_pb_id, &(pb_graph_node->input_pins[iport][ipin]))); 
+    }
+  }
+
+  /* Find all the nets mapped to each outputs */
+  for (int iport = 0; iport < pb_graph_node->num_output_ports; ++iport) {
+    for (int ipin = 0; ipin < pb_graph_node->num_output_pins[iport]; ++ipin) {
+      const t_pb_graph_pin* output_pin = &(pb_graph_node->output_pins[iport][ipin]);
+      /* Skip the output ports that are not driven by LUT MUXes */
+      CircuitPortId circuit_port = device_annotation.pb_circuit_port(output_pin->port);
+      if (true == circuit_lib.port_is_harden_lut_port(circuit_port)) {
+        continue;
+      }
+
+      AtomNetId output_net = physical_pb.pb_graph_pin_atom_net(lut_pb_id, output_pin); 
+      /* Bypass unmapped pins */
+      if (AtomNetId::INVALID() == output_net) {
+        continue;
+      }
+      /* Exclude all the LUTs that 
+       * - have been used as wires 
+       * - the driver atom block of the output_net is part of the atom blocks
+       *   If so, the driver atom block is already mapped to this pb
+       *   and the LUT is not used for wiring
+       */
+      if (true == physical_pb.is_wire_lut_output(lut_pb_id, output_pin)) {
+        continue;
+      }
+
+      std::vector<AtomBlockId> pb_atom_blocks = physical_pb.atom_blocks(lut_pb_id);
+
+      if (pb_atom_blocks.end() != std::find(pb_atom_blocks.begin(), pb_atom_blocks.end(), atom_ctx.nlist.net_driver_block(output_net))) {
+        continue;
+      }
+     
+      /* Bypass the net is NOT routed through the LUT */
+      if (false == is_wired_lut(input_nets, output_net)) {
+        continue;
+      }
+
+      /* Print debug info */
+      VTR_LOGV(verbose,
+               "Identify physical pb_graph pin '%s.%s[%d]' as wire LUT output created by repacker\n",
+               output_pin->parent_node->pb_type->name,
+               output_pin->port->name,
+               output_pin->pin_number);
+
+      /* Label the pins in physical_pb as driven by wired LUT*/
+      physical_pb.set_wire_lut_output(lut_pb_id, output_pin, true);
+      wire_lut_counter++;
+    }
+  }
+
+  return wire_lut_counter;
+}
+
 
 } /* end namespace openfpga */
