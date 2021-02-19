@@ -2,6 +2,8 @@
  * Function to perform fundamental operation for the physical pb using
  * data structures
  ***********************************************************************/
+#include <algorithm>
+
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -403,11 +405,57 @@ void rec_update_physical_pb_from_operating_pb(PhysicalPb& phy_pb,
 /***************************************************************************************
  * This function will identify all the wire LUTs that is created by repacker only
  * under a physical pb
+ *
+ * A practical example of wire LUT that is created by VPR packer:
+ *
+ *           LUT
+ *           +------------+
+ *           |            |
+ * netA ---->+----+       |
+ *           |    |-------+-----> netC
+ * netB ---->+----+       |
+ *           |            |
+ * netC ---->+------------+-----> netC
+ *           |            |
+ *           +------------+
+ *
+ * A fracturable LUT may be mapped to two functions:
+ *  - a function which involves netA, netB and netC
+ *    the function is defined in an atom block atomA
+ *    In this case, netC's driver block in atom context is atomA
+ *  - a function which just wire netC through the LUT
+ *    the function is NOT defined in any atom block
+ *    Such wire LUT is created by VPR's packer
+ *
+ * THIS CASE IS WHAT THIS FUNCTION IS HANDLING
+ * A practical example of wire LUT that is created by repacker:
+ *
+ *           LUT
+ *           +------------+
+ *           |            |
+ * netA ---->+----+       |
+ *           |    |-------+-----> netC
+ * netB ---->+----+       |
+ *           |            |
+ * netD ---->+------------+-----> netD
+ *           |            |
+ *           +------------+
+ *
+ * A fracturable LUT may be mapped to two functions:
+ *  - a function which involves netA, netB and netC
+ *    the function is defined in an atom block atomA
+ *    In this case, netC's driver block in atom context is atomA
+ *  - a function which just wire netD through the LUT
+ *    the function is NOT defined in any atom block
+ *    netD is driven by another atom block atomB which is not mapped to the LUT
+ *    Such wire LUT is created by repacker
+ *
  * Return the number of wire LUTs that are found
  ***************************************************************************************/
 int identify_one_physical_pb_wire_lut_created_by_repack(PhysicalPb& physical_pb,
                                                         const PhysicalPbId& lut_pb_id,
                                                         const VprDeviceAnnotation& device_annotation,
+                                                        const AtomContext& atom_ctx,
                                                         const CircuitLibrary& circuit_lib,
                                                         const bool& verbose) {
   int wire_lut_counter = 0;
@@ -444,21 +492,37 @@ int identify_one_physical_pb_wire_lut_created_by_repack(PhysicalPb& physical_pb,
       if (AtomNetId::INVALID() == output_net) {
         continue;
       }
-      /* Check if this is a LUT used as wiring */
-      if ( (false == physical_pb.is_wire_lut_output(lut_pb_id, output_pin))
-        && (true == physical_pb.atom_blocks(lut_pb_id).empty())
-        && (true == is_wired_lut(input_nets, output_net))) {
-        /* Print debug info */
-        VTR_LOGV(verbose,
-                 "Identify physical pb_graph pin '%s.%s[%d]' as wire LUT output created by repacker\n",
-                 output_pin->parent_node->pb_type->name,
-                 output_pin->port->name,
-                 output_pin->pin_number);
-
-        /* Label the pins in physical_pb as driven by wired LUT*/
-        physical_pb.set_wire_lut_output(lut_pb_id, output_pin, true);
-        wire_lut_counter++;
+      /* Exclude all the LUTs that 
+       * - have been used as wires 
+       * - the driver atom block of the output_net is part of the atom blocks
+       *   If so, the driver atom block is already mapped to this pb
+       *   and the LUT is not used for wiring
+       */
+      if (true == physical_pb.is_wire_lut_output(lut_pb_id, output_pin)) {
+        continue;
       }
+
+      std::vector<AtomBlockId> pb_atom_blocks = physical_pb.atom_blocks(lut_pb_id);
+
+      if (pb_atom_blocks.end() != std::find(pb_atom_blocks.begin(), pb_atom_blocks.end(), atom_ctx.nlist.net_driver_block(output_net))) {
+        continue;
+      }
+     
+      /* Bypass the net is NOT routed through the LUT */
+      if (false == is_wired_lut(input_nets, output_net)) {
+        continue;
+      }
+
+      /* Print debug info */
+      VTR_LOGV(verbose,
+               "Identify physical pb_graph pin '%s.%s[%d]' as wire LUT output created by repacker\n",
+               output_pin->parent_node->pb_type->name,
+               output_pin->port->name,
+               output_pin->pin_number);
+
+      /* Label the pins in physical_pb as driven by wired LUT*/
+      physical_pb.set_wire_lut_output(lut_pb_id, output_pin, true);
+      wire_lut_counter++;
     }
   }
 

@@ -38,6 +38,7 @@ void rec_update_physical_pb_from_operating_pb(PhysicalPb& phy_pb,
 int identify_one_physical_pb_wire_lut_created_by_repack(PhysicalPb& physical_pb,
                                                         const PhysicalPbId& lut_pb_id,
                                                         const VprDeviceAnnotation& device_annotation,
+                                                        const AtomContext& atom_ctx,
                                                         const CircuitLibrary& circuit_lib,
                                                         const bool& verbose);
 

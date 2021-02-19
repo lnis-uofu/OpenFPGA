@@ -704,6 +704,7 @@ void repack_clusters(const AtomContext& atom_ctx,
  ***************************************************************************************/
 static 
 void identify_physical_pb_wire_lut_created_by_repack(VprClusteringAnnotation& cluster_annotation,
+                                                     const AtomContext& atom_ctx,
                                                      const ClusteringContext& cluster_ctx,
                                                      const VprDeviceAnnotation& device_annotation,
                                                      const CircuitLibrary& circuit_lib,
@@ -722,7 +723,7 @@ void identify_physical_pb_wire_lut_created_by_repack(VprClusteringAnnotation& cl
       }
     
       /* Reach here, we have a LUT to deal with. Find the wire LUT that mapped to the LUT */
-      wire_lut_counter += identify_one_physical_pb_wire_lut_created_by_repack(physical_pb, primitive_pb, device_annotation, circuit_lib, verbose);
+      wire_lut_counter += identify_one_physical_pb_wire_lut_created_by_repack(physical_pb, primitive_pb, device_annotation, atom_ctx, circuit_lib, verbose);
     }
   }
 
@@ -769,6 +770,7 @@ void pack_physical_pbs(const DeviceContext& device_ctx,
    * This is a MUST RUN!
    */
   identify_physical_pb_wire_lut_created_by_repack(clustering_annotation,
+                                                  atom_ctx,
                                                   clustering_ctx,
                                                   device_annotation,
                                                   circuit_lib,

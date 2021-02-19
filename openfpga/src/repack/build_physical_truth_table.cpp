@@ -132,6 +132,13 @@ void build_physical_pb_lut_truth_tables(PhysicalPb& physical_pb,
 
         std::vector<int> rotated_pin_map = generate_lut_rotated_input_pin_map(input_nets, atom_ctx, atom_blk, device_annotation, circuit_lib, pb_graph_node);
         adapt_tt = lut_truth_table_adaption(orig_tt, rotated_pin_map);
+
+        VTR_LOGV(verbose, "Driver atom block: '%ld'\n", size_t(atom_blk));
+        VTR_LOGV(verbose, "Pb atom blocks:");
+        for (const AtomBlockId& pb_atom_blk : physical_pb.atom_blocks(lut_pb_id)) {
+          VTR_LOGV(verbose, "'%ld', ", size_t(pb_atom_blk));
+        }
+        VTR_LOGV(verbose, "\n");
       }
 
       /* Adapt the truth table for fracturable lut implementation and add to physical pb */
