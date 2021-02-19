@@ -46,7 +46,7 @@ parser.add_argument('--modelsim_ini', type=str,
 parser.add_argument('--skip_prompt', action='store_true',
                     help='Skip any confirmation')
 parser.add_argument('--ini_filename', type=str,
-                    default="simulation_deck_info.ini",
+                    default="simulation_deck.ini",
                     help='default INI filename in in fun dir')
 args = parser.parse_args()
 
@@ -108,10 +108,8 @@ def main():
         os.chdir(curr_task_dir)
 
         # = = = = = = = Create a current script log file handler = = = =
-        logfile_path = os.path.join(curr_task_dir, 
-                                    taskname, task_run, "modelsim_run.log")
-        resultfile_path = os.path.join(curr_task_dir,
-                                       taskname, task_run, "modelsim_result.csv")
+        logfile_path = os.path.join(curr_task_dir, task_run, "modelsim_run.log")
+        resultfile_path = os.path.join(curr_task_dir,task_run, "modelsim_result.csv")
         logfilefh = logging.FileHandler(logfile_path, "w")
         logfilefh.setFormatter(logging.Formatter(FILE_LOG_FORMAT))
         logger.addHandler(logfilefh)
@@ -119,7 +117,7 @@ def main():
         # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
         # = = = = Read Task log file and extract run directory = = =
-        logfile = os.path.join(curr_task_dir, taskname, task_run, "*_out.log")
+        logfile = os.path.join(curr_task_dir, task_run, "*_out.log")
         logfiles = glob.glob(logfile)
         if not len(logfiles):
             clean_up_and_exit("No successful run found in [%s]" % temp_dir)
@@ -132,6 +130,7 @@ def main():
                 run_dir = filter(bool, run_dir)
                 for each_run in run_dir:
                     INIfile = os.path.join(each_run[0], args.ini_filename)
+                    print(INIfile)
                     if os.path.isfile(INIfile):
                         task_ini_files.append(INIfile)
         logger.info(f"Found {len(task_ini_files)} INI files")
