@@ -93,17 +93,24 @@ def main():
         if len(args.files) > 1:
             task_run = f"run{int(args.files[1]):03}"
 
-        temp_dir = os.path.join(gc["task_dir"], taskname)
-        if not os.path.isdir(temp_dir):
-            clean_up_and_exit("Task directory [%s] not found" % temp_dir)
-        temp_dir = os.path.join(gc["task_dir"], taskname, task_run)
-        if not os.path.isdir(temp_dir):
-            clean_up_and_exit("Task run directory [%s] not found" % temp_dir)
+
+        # Check if task directory exists and consistent
+        local_tasks = os.path.join(*(taskname))
+        repo_tasks = os.path.join(gc["task_dir"], *(taskname))
+        if os.path.isdir(local_tasks):
+            os.chdir(local_tasks)
+            curr_task_dir = os.path.abspath(os.getcwd())
+        elif os.path.isdir(repo_tasks):
+            curr_task_dir = repo_tasks
+        else:
+            clean_up_and_exit("Task directory [%s] not found" % curr_task_dir)
+
+        os.chdir(curr_task_dir)
 
         # = = = = = = = Create a current script log file handler = = = =
-        logfile_path = os.path.join(gc["task_dir"],
+        logfile_path = os.path.join(cur_task_dir, 
                                     taskname, task_run, "modelsim_run.log")
-        resultfile_path = os.path.join(gc["task_dir"],
+        resultfile_path = os.path.join(cur_task_dir,
                                        taskname, task_run, "modelsim_result.csv")
         logfilefh = logging.FileHandler(logfile_path, "w")
         logfilefh.setFormatter(logging.Formatter(FILE_LOG_FORMAT))
@@ -112,7 +119,7 @@ def main():
         # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
         # = = = = Read Task log file and extract run directory = = =
-        logfile = os.path.join(gc["task_dir"], taskname, task_run, "*_out.log")
+        logfile = os.path.join(cur_task_dir, taskname, task_run, "*_out.log")
         logfiles = glob.glob(logfile)
         if not len(logfiles):
             clean_up_and_exit("No successful run found in [%s]" % temp_dir)
