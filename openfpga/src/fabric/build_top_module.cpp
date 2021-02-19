@@ -368,14 +368,14 @@ int build_top_module(ModuleManager& module_manager,
                                        compact_routing_hierarchy);
   } else {
     VTR_ASSERT_SAFE(false == fabric_key.empty());
-    /* Give a warning message that the fabric key may overwrite existing region organization.
-     * Only applicable when number of regions defined in configuration protocol is different
-     * than the number of regions defined in the fabric key 
+    /* Throw a fatal error when the fabric key has a mismatch in region organization.
+     * between architecture file and fabric key
      */
     if (size_t(config_protocol.num_regions()) != fabric_key.regions().size()) {
-      VTR_LOG_WARN("Fabric key will overwrite the region organization (='%ld') than architecture definition (=%d)!\n",
-                   fabric_key.regions().size(),
-                   config_protocol.num_regions());
+      VTR_LOG_ERROR("Fabric key has a different number of configurable regions (='%ld') than architecture definition (=%d)!\n",
+                    fabric_key.regions().size(),
+                    config_protocol.num_regions());
+      return CMD_EXEC_FATAL_ERROR;
     }
 
     status = load_top_module_memory_modules_from_fabric_key(module_manager, top_module,
