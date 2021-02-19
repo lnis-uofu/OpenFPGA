@@ -13,7 +13,7 @@ Template
 .. code-block:: xml
 
   <configuration_protocol>
-    <organization type="<string>" circuit_model_name="<string>"/>
+    <organization type="<string>" circuit_model_name="<string>" num_regions="<int>"/>
   </configuration_protocol>
 
 .. option:: type="scan_chain|memory_bank|standalone"
