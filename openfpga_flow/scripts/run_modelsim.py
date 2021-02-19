@@ -95,8 +95,8 @@ def main():
 
 
         # Check if task directory exists and consistent
-        local_tasks = os.path.join(*(taskname))
-        repo_tasks = os.path.join(gc["task_dir"], *(taskname))
+        local_tasks = os.path.join(taskname)
+        repo_tasks = os.path.join(gc["task_dir"], taskname)
         if os.path.isdir(local_tasks):
             os.chdir(local_tasks)
             curr_task_dir = os.path.abspath(os.getcwd())
