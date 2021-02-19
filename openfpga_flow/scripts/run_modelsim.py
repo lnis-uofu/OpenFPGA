@@ -108,9 +108,9 @@ def main():
         os.chdir(curr_task_dir)
 
         # = = = = = = = Create a current script log file handler = = = =
-        logfile_path = os.path.join(cur_task_dir, 
+        logfile_path = os.path.join(curr_task_dir, 
                                     taskname, task_run, "modelsim_run.log")
-        resultfile_path = os.path.join(cur_task_dir,
+        resultfile_path = os.path.join(curr_task_dir,
                                        taskname, task_run, "modelsim_result.csv")
         logfilefh = logging.FileHandler(logfile_path, "w")
         logfilefh.setFormatter(logging.Formatter(FILE_LOG_FORMAT))
@@ -119,7 +119,7 @@ def main():
         # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
         # = = = = Read Task log file and extract run directory = = =
-        logfile = os.path.join(cur_task_dir, taskname, task_run, "*_out.log")
+        logfile = os.path.join(curr_task_dir, taskname, task_run, "*_out.log")
         logfiles = glob.glob(logfile)
         if not len(logfiles):
             clean_up_and_exit("No successful run found in [%s]" % temp_dir)
