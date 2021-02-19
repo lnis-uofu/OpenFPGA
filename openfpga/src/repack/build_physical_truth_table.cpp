@@ -19,31 +19,6 @@
 namespace openfpga {
 
 /***************************************************************************************
- * Identify if LUT is used as wiring 
- * In this case, LUT functions as a buffer
- *         +------+
- *  in0 -->|---   |
- *         |   \  |
- *  in1 -->|    --|--->out
- *  ...
- *
- *  Note that this function judge the LUT operating mode from the input nets and output
- *  nets that are mapped to inputs and outputs. 
- *  If the output net appear in the list of input nets, this LUT is used as a wire 
- ***************************************************************************************/
-static 
-bool is_wired_lut(const std::vector<AtomNetId>& input_nets,
-                  const AtomNetId& output_net) {
-  for (const AtomNetId& input_net : input_nets) {
-    if (input_net == output_net) {
-      return true;
-    }
-  }
-  
-  return false;
-}
-
-/***************************************************************************************
  * Create pin rotation map for a LUT
  ***************************************************************************************/
 static 
@@ -148,11 +123,6 @@ void build_physical_pb_lut_truth_tables(PhysicalPb& physical_pb,
       if (true == physical_pb.is_wire_lut_output(lut_pb_id, output_pin)) {
         /* Double check: ensure that the output nets appear in the input net !!! */
         VTR_ASSERT(true == is_wired_lut(input_nets, output_net));
-        adapt_tt = build_wired_lut_truth_table(input_nets.size(), std::find(input_nets.begin(), input_nets.end(), output_net) - input_nets.begin()); 
-      } else if (true == is_wired_lut(input_nets, output_net)) {
-        /* Another round of check:
-         * new wired LUTs may be created during repacking rather than original packing results
-         */
         adapt_tt = build_wired_lut_truth_table(input_nets.size(), std::find(input_nets.begin(), input_nets.end(), output_net) - input_nets.begin()); 
       } else {
         /* Find the truth table from atom block which drives the atom net */

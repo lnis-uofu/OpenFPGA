@@ -10,6 +10,7 @@
 #include "openfpga_tokenizer.h"
 
 #include "openfpga_naming.h"
+#include "lut_utils.h"
 #include "pb_type_utils.h"
 #include "physical_pb_utils.h"
 
@@ -398,5 +399,71 @@ void rec_update_physical_pb_from_operating_pb(PhysicalPb& phy_pb,
     }
   }
 }
+
+/***************************************************************************************
+ * This function will identify all the wire LUTs that is created by repacker only
+ * under a physical pb
+ * Return the number of wire LUTs that are found
+ ***************************************************************************************/
+int identify_one_physical_pb_wire_lut_created_by_repack(PhysicalPb& physical_pb,
+                                                        const PhysicalPbId& lut_pb_id,
+                                                        const VprDeviceAnnotation& device_annotation,
+                                                        const CircuitLibrary& circuit_lib,
+                                                        const bool& verbose) {
+  int wire_lut_counter = 0;
+  const t_pb_graph_node* pb_graph_node = physical_pb.pb_graph_node(lut_pb_id);
+
+  CircuitModelId lut_model = device_annotation.pb_type_circuit_model(physical_pb.pb_graph_node(lut_pb_id)->pb_type);
+  VTR_ASSERT(CIRCUIT_MODEL_LUT == circuit_lib.model_type(lut_model));
+
+  /* Find all the nets mapped to each inputs */
+  std::vector<AtomNetId> input_nets;
+  for (int iport = 0; iport < pb_graph_node->num_input_ports; ++iport) {
+    for (int ipin = 0; ipin < pb_graph_node->num_input_pins[iport]; ++ipin) {
+      /* Skip the input pin that do not drive by LUT MUXes */
+      CircuitPortId circuit_port = device_annotation.pb_circuit_port(pb_graph_node->input_pins[iport][ipin].port);
+      if (true == circuit_lib.port_is_harden_lut_port(circuit_port)) {
+        continue;
+      }
+      input_nets.push_back(physical_pb.pb_graph_pin_atom_net(lut_pb_id, &(pb_graph_node->input_pins[iport][ipin]))); 
+    }
+  }
+
+  /* Find all the nets mapped to each outputs */
+  for (int iport = 0; iport < pb_graph_node->num_output_ports; ++iport) {
+    for (int ipin = 0; ipin < pb_graph_node->num_output_pins[iport]; ++ipin) {
+      const t_pb_graph_pin* output_pin = &(pb_graph_node->output_pins[iport][ipin]);
+      /* Skip the output ports that are not driven by LUT MUXes */
+      CircuitPortId circuit_port = device_annotation.pb_circuit_port(output_pin->port);
+      if (true == circuit_lib.port_is_harden_lut_port(circuit_port)) {
+        continue;
+      }
+
+      AtomNetId output_net = physical_pb.pb_graph_pin_atom_net(lut_pb_id, output_pin); 
+      /* Bypass unmapped pins */
+      if (AtomNetId::INVALID() == output_net) {
+        continue;
+      }
+      /* Check if this is a LUT used as wiring */
+      if ( (false == physical_pb.is_wire_lut_output(lut_pb_id, output_pin))
+        && (true == physical_pb.atom_blocks(lut_pb_id).empty())
+        && (true == is_wired_lut(input_nets, output_net))) {
+        /* Print debug info */
+        VTR_LOGV(verbose,
+                 "Identify physical pb_graph pin '%s.%s[%d]' as wire LUT output created by repacker\n",
+                 output_pin->parent_node->pb_type->name,
+                 output_pin->port->name,
+                 output_pin->pin_number);
+
+        /* Label the pins in physical_pb as driven by wired LUT*/
+        physical_pb.set_wire_lut_output(lut_pb_id, output_pin, true);
+        wire_lut_counter++;
+      }
+    }
+  }
+
+  return wire_lut_counter;
+}
+
 
 } /* end namespace openfpga */
