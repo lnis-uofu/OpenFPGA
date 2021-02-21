@@ -147,12 +147,10 @@
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <lut_input_inverter exist="true" circuit_model_name="INVTX1"/>
       <lut_input_buffer exist="true" circuit_model_name="buf4"/>
-      <lut_intermediate_buffer exist="true" circuit_model_name="buf4" location_map="-1-1-"/>
       <pass_gate_logic circuit_model_name="MUX2"/>
       <port type="input" prefix="in" size="6"/>
       <port type="output" prefix="out" size="1"/>
       <port type="sram" prefix="sram" size="64"/>
-      <port type="sram" prefix="mode" size="1" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
     </circuit_model>
     <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
     <circuit_model type="ccff" name="DFFR" prefix="DFFR" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
