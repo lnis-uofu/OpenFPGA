@@ -8,7 +8,7 @@
     -->
   <pin_constraint pb_type="clb" pin="clk[0]" net="wb_clk_i"/>
   <pin_constraint pb_type="clb" pin="clk[1]" net="sd_clk_i_pad"/>
-  <pin_constraint pb_type="clb" pin="clk[2]" net="OPEN"/>
+  <pin_constraint pb_type="clb" pin="clk[2]" net="sd_clk_o_pad"/>
   <pin_constraint pb_type="clb" pin="clk[3]" net="OPEN"/>
   <pin_constraint pb_type="clb" pin="clk[4]" net="OPEN"/>
   <pin_constraint pb_type="clb" pin="clk[5]" net="OPEN"/>

@@ -5,5 +5,6 @@
     -->
   <set_io pin="clk[0]" net="wb_clk_i"/>
   <set_io pin="clk[1]" net="sd_clk_i_pad"/>
+  <set_io pin="clk[2]" net="sd_clk_o_pad"/>
 </pin_constraints>
 
