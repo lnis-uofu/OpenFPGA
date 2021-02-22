@@ -5,7 +5,7 @@
   - General purpose logic block: 
     K = 4, N = 4
   - Routing architecture: L = 4, fc_in = 0.15, Fc_out = 0.1
-  - 5 operating clocks which can be selected for each logic element
+  - 8 operating clocks which can be selected for each logic element
 
   Details on Modelling:
 
@@ -56,7 +56,7 @@
       </equivalent_sites>
       <input name="I" num_pins="10" equivalent="full"/>
       <output name="O" num_pins="4" equivalent="none"/>
-      <clock name="clk" num_pins="5"/>
+      <clock name="clk" num_pins="8"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
         <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
       </fc>
@@ -208,7 +208,7 @@
     <pb_type name="clb">
       <input name="I" num_pins="10" equivalent="full"/>
       <output name="O" num_pins="4" equivalent="none"/>
-      <clock name="clk" num_pins="5"/>
+      <clock name="clk" num_pins="8"/>
       <!-- Describe basic logic element.  
              Each basic logic element has a 4-LUT that can be optionally registered
         -->
