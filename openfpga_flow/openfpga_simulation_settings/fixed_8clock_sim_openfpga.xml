@@ -1,0 +1,59 @@
+<!-- Simulation Setting for OpenFPGA framework
+     This file will use automatic inference for any settings
+     including:
+     - auto select the number of simulation cycles
+     - auto select the simulation clock frequency from VPR results
+  -->
+<openfpga_simulation_setting>
+  <clock_setting>
+    <!-- The frequency defined in the operating line will be 
+         the default operating clock frequency for all the clocks
+         define specific frequency using <clock> line will overwrite the default value
+         Note that 
+         - clock name must be unique as it is used in testbench genertion
+         - the clock port must match clock port definition in OpenFPGA architecture XML!!!
+
+         Note: This clock setting is also applicable to architectures with 8+ clocks
+               In that case, the first 8-bit of the clock port will be driven by different clock frequencies
+               while the rest bits of the clock port will be driven by the default clock frequency
+      -->
+    <operating frequency="50e6" num_cycles="20" slack="0.2">
+      <clock name="clk_10MHz" port="clk[0:0]" frequency="10e6"/>
+      <clock name="clk_20MHz" port="clk[1:1]" frequency="20e6"/>
+      <clock name="clk_30MHz" port="clk[2:2]" frequency="30e6"/>
+      <clock name="clk_40MHz" port="clk[3:3]" frequency="40e6"/>
+      <clock name="clk_50MHz" port="clk[4:4]" frequency="50e6"/>
+      <clock name="clk_60MHz" port="clk[5:5]" frequency="60e6"/>
+      <clock name="clk_70MHz" port="clk[6:6]" frequency="70e6"/>
+      <clock name="clk_80MHz" port="clk[7:7]" frequency="80e6"/>
+    </operating>
+    <programming frequency="100e6"/>
+  </clock_setting>
+  <simulator_option>
+    <operating_condition temperature="25"/>
+    <output_log verbose="false" captab="false"/>
+    <accuracy type="abs" value="1e-13"/>
+    <runtime fast_simulation="true"/>
+  </simulator_option>
+  <monte_carlo num_simulation_points="2"/>
+  <measurement_setting>
+    <slew>
+      <rise upper_thres_pct="0.95" lower_thres_pct="0.05"/>
+      <fall upper_thres_pct="0.05" lower_thres_pct="0.95"/>
+    </slew>
+    <delay>
+      <rise input_thres_pct="0.5" output_thres_pct="0.5"/>
+      <fall input_thres_pct="0.5" output_thres_pct="0.5"/>
+    </delay>
+  </measurement_setting>
+  <stimulus>
+    <clock>
+      <rise slew_type="abs" slew_time="20e-12" />
+      <fall slew_type="abs" slew_time="20e-12" />
+    </clock>
+    <input>
+      <rise slew_type="abs" slew_time="25e-12" />
+      <fall slew_type="abs" slew_time="25e-12" />
+    </input>
+  </stimulus>
+</openfpga_simulation_setting>
