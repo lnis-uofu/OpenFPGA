@@ -3,9 +3,10 @@
        - the clk0 signal to the clk[0] port of the FPGA fabric
        - the clk1 signal to the clk[1] port of the FPGA fabric
     -->
-  <set_io pin="clk[0]" net="clk0"/>
-  <set_io pin="clk[1]" net="clk1"/>
-  <set_io pin="clk[2]" net="OPEN"/>
-  <set_io pin="clk[3]" net="OPEN"/>
+  <set_io pin="clk[0]" net="clk1"/>
+  <set_io pin="clk[1]" net="clk2"/>
+  <set_io pin="clk[2]" net="clk3"/>
+  <set_io pin="clk[3]" net="clk4"/>
+  <set_io pin="clk[4]" net="clk5"/>
 </pin_constraints>
 
