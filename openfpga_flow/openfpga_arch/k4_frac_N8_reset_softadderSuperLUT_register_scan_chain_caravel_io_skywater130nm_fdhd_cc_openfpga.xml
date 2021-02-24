@@ -206,9 +206,9 @@
     <!-- A dummy model to include the adder_lut verilog code in testbench netlists
          so that HDL simulation can be run when adder lut is used in users' implementations
      -->
-    <circuit_model type="inv_buf" name="dummy1" prefix="dummy1" verilog_netlist="${OPENFPGA_PATH}/yosys/techlibs/quicklogic/openfpga_cells_sim.v">
+    <!--circuit_model type="inv_buf" name="dummy1" prefix="dummy1" verilog_netlist="${OPENFPGA_PATH}/yosys/techlibs/quicklogic/openfpga_cells_sim.v">
       <design_technology type="cmos" topology="inverter" size="1"/>
-    </circuit_model>
+    </circuit_model-->
   </circuit_library>
   <configuration_protocol>
     <organization type="scan_chain" circuit_model_name="DFFRQ" num_regions="1"/>
