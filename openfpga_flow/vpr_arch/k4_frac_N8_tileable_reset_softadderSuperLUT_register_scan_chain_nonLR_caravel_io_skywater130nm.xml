@@ -125,21 +125,21 @@
       <equivalent_sites>
         <site pb_type="clb"/>
       </equivalent_sites>
-      <input name="I0" num_pins="2" equivalent="full"/>
+      <input name="I0" num_pins="2" equivalent="none"/>
       <input name="I0i" num_pins="2" equivalent="none"/>
-      <input name="I1" num_pins="2" equivalent="full"/>
+      <input name="I1" num_pins="2" equivalent="none"/>
       <input name="I1i" num_pins="2" equivalent="none"/>
-      <input name="I2" num_pins="2" equivalent="full"/>
+      <input name="I2" num_pins="2" equivalent="none"/>
       <input name="I2i" num_pins="2" equivalent="none"/>
-      <input name="I3" num_pins="2" equivalent="full"/>
+      <input name="I3" num_pins="2" equivalent="none"/>
       <input name="I3i" num_pins="2" equivalent="none"/>
-      <input name="I4" num_pins="2" equivalent="full"/>
+      <input name="I4" num_pins="2" equivalent="none"/>
       <input name="I4i" num_pins="2" equivalent="none"/>
-      <input name="I5" num_pins="2" equivalent="full"/>
+      <input name="I5" num_pins="2" equivalent="none"/>
       <input name="I5i" num_pins="2" equivalent="none"/>
-      <input name="I6" num_pins="2" equivalent="full"/>
+      <input name="I6" num_pins="2" equivalent="none"/>
       <input name="I6i" num_pins="2" equivalent="none"/>
-      <input name="I7" num_pins="2" equivalent="full"/>
+      <input name="I7" num_pins="2" equivalent="none"/>
       <input name="I7i" num_pins="2" equivalent="none"/>
       <input name="reg_in" num_pins="1"/>
       <input name="sc_in" num_pins="1"/>
@@ -333,27 +333,27 @@
     </pb_type>
     <!-- Define I/O pads ends -->
     <!-- Define general purpose logic block (CLB) begin -->
-    <!-- -Due to the absence of local routing, 
-         the 4 inputs of fracturable LUT4 are no longer equivalent, 
-         because the 4th input can not be switched when the dual-LUT3 modes are used.
-         So pin equivalence should be applied to the first 3 inputs only
+    <!-- Due to that LUT bitstream may be overwritten by .eblif files
+         Pin equivalence of CLB inputs are all disabled.
+         This is because the hard coded bitstream in .eblif cannot be
+         adapted to the net swapping from VPR's routing optimization
 	  -->
     <pb_type name="clb">
-      <input name="I0" num_pins="2" equivalent="full"/>
+      <input name="I0" num_pins="2" equivalent="none"/>
       <input name="I0i" num_pins="2" equivalent="none"/>
-      <input name="I1" num_pins="2" equivalent="full"/>
+      <input name="I1" num_pins="2" equivalent="none"/>
       <input name="I1i" num_pins="2" equivalent="none"/>
-      <input name="I2" num_pins="2" equivalent="full"/>
+      <input name="I2" num_pins="2" equivalent="none"/>
       <input name="I2i" num_pins="2" equivalent="none"/>
-      <input name="I3" num_pins="2" equivalent="full"/>
+      <input name="I3" num_pins="2" equivalent="none"/>
       <input name="I3i" num_pins="2" equivalent="none"/>
-      <input name="I4" num_pins="2" equivalent="full"/>
+      <input name="I4" num_pins="2" equivalent="none"/>
       <input name="I4i" num_pins="2" equivalent="none"/>
-      <input name="I5" num_pins="2" equivalent="full"/>
+      <input name="I5" num_pins="2" equivalent="none"/>
       <input name="I5i" num_pins="2" equivalent="none"/>
-      <input name="I6" num_pins="2" equivalent="full"/>
+      <input name="I6" num_pins="2" equivalent="none"/>
       <input name="I6i" num_pins="2" equivalent="none"/>
-      <input name="I7" num_pins="2" equivalent="full"/>
+      <input name="I7" num_pins="2" equivalent="none"/>
       <input name="I7i" num_pins="2" equivalent="none"/>
       <input name="reg_in" num_pins="1"/>
       <input name="sc_in" num_pins="1"/>
@@ -507,9 +507,8 @@
               </direct>
               <direct name="direct5" input="adder_lut4.lut4_out" output="soft_adder.sumout[0:0]">
               </direct>
-              <!-- The MUX may not be needed once we limit the number of inputs of adder_lut4 to be 2 -->
-              <mux name="mux1" input="soft_adder.cin soft_adder.in[2:2]" output="adder_lut4.in[2:2]">
-              </mux>
+              <direct name="direct6" input="soft_adder.in[2:2]" output="adder_lut4.in[2:2]">
+              </direct>
             </interconnect>
           </pb_type>
           <interconnect>
