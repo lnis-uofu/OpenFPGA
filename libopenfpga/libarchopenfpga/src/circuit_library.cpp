@@ -1214,6 +1214,16 @@ CircuitModelId CircuitLibrary::add_model(const enum e_circuit_model_type& type) 
   /* Build the fast look-up for circuit models */
   build_model_lookup();
 
+  /* Add a placeholder in the fast look-up for model port
+   * This is to avoid memory holes when a circuit model
+   * does not have any ports. 
+   * As a result, the fast look-up may not even create an entry
+   * for this model id, which cause fast look-up abort when there is
+   * a query on the model 
+   */
+  model_port_lookup_.resize(model_ids_.size());
+  model_port_lookup_[model_id].resize(NUM_CIRCUIT_MODEL_PORT_TYPES);
+
   return model_id;
 }
 
