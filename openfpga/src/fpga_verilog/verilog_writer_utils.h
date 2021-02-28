@@ -85,7 +85,8 @@ void print_verilog_module_end(std::fstream& fp,
                               const std::string& module_name);
 
 std::string generate_verilog_port(const enum e_dump_verilog_port_type& dump_port_type,
-                                  const BasicPort& port_info);
+                                  const BasicPort& port_info,
+                                  const bool& must_print_port_size = true);
 
 bool two_verilog_ports_mergeable(const BasicPort& portA,
                                  const BasicPort& portB);

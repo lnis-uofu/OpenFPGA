@@ -823,9 +823,10 @@ void rec_print_verilog_testbench_primitive_module_signal_initialization(std::fst
           /* Only for formal verification: deposite a zero signal values */
           /* Initialize each input port */
           BasicPort input_port_info(circuit_lib.port_lib_name(input_port), circuit_lib.port_size(input_port));
+          input_port_info.set_origin_port_width(input_port_info.get_width());
           fp << "\t\t$deposit(";
           fp << child_hie_path << ".";
-          fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info);
+          fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info, false);
           fp << ", " <<  circuit_lib.port_size(input_port) << "'b" << std::string(circuit_lib.port_size(input_port), '0');
           fp << ");" << std::endl;
         }
@@ -834,9 +835,10 @@ void rec_print_verilog_testbench_primitive_module_signal_initialization(std::fst
         /* Regular case: deposite initial signal values: a random value */
         for (const auto& input_port : circuit_input_ports) {
           BasicPort input_port_info(circuit_lib.port_lib_name(input_port), circuit_lib.port_size(input_port));
+          input_port_info.set_origin_port_width(input_port_info.get_width());
           fp << "\t\t$deposit(";
           fp << child_hie_path << ".";
-          fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info);
+          fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info, false);
           fp << ", $random % 2 ? 1'b1 : 1'b0);" << std::endl;
         }
 

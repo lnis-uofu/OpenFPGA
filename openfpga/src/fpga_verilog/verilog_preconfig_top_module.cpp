@@ -448,6 +448,9 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
   std::string title = std::string("Verilog netlist for pre-configured FPGA fabric by design: ") + circuit_name;
   print_verilog_file_header(fp, title);
 
+  print_verilog_default_net_type_declaration(fp,
+                                             VERILOG_DEFAULT_NET_TYPE_NONE);
+
   /* Print module declaration and ports */
   print_verilog_preconfig_top_module_ports(fp, circuit_name, atom_ctx, netlist_annotation);
 

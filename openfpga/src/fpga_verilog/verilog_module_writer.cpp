@@ -65,6 +65,7 @@ static
 BasicPort generate_verilog_port_for_module_net(const ModuleManager& module_manager,
                                                const ModuleId& module_id,
                                                const ModuleNetId& module_net) {
+  BasicPort port_to_return;
   /* Check all the sink modules of the net, 
    * if we have a source module is the current module, this is not local wire 
    */
@@ -73,7 +74,10 @@ BasicPort generate_verilog_port_for_module_net(const ModuleManager& module_manag
       /* Here, this is not a local wire, return the port name of the src_port */
       ModulePortId net_src_port = module_manager.net_source_ports(module_id, module_net)[src_id];
       size_t src_pin_index = module_manager.net_source_pins(module_id, module_net)[src_id];
-      return BasicPort(module_manager.module_port(module_id, net_src_port).get_name(), src_pin_index, src_pin_index);
+      port_to_return.set(module_manager.module_port(module_id, net_src_port));
+      port_to_return.set_width(src_pin_index, src_pin_index);
+      port_to_return.set_origin_port_width(module_manager.module_port(module_id, net_src_port).get_width());
+      return port_to_return;
     }
   }
 
@@ -83,7 +87,10 @@ BasicPort generate_verilog_port_for_module_net(const ModuleManager& module_manag
       /* Here, this is not a local wire, return the port name of the sink_port */
       ModulePortId net_sink_port = module_manager.net_sink_ports(module_id, module_net)[sink_id];
       size_t sink_pin_index = module_manager.net_sink_pins(module_id, module_net)[sink_id];
-      return BasicPort(module_manager.module_port(module_id, net_sink_port).get_name(), sink_pin_index, sink_pin_index);
+      port_to_return.set(module_manager.module_port(module_id, net_sink_port));
+      port_to_return.set_width(sink_pin_index, sink_pin_index);
+      port_to_return.set_origin_port_width(module_manager.module_port(module_id, net_sink_port).get_width());
+      return port_to_return;
     }
   }
 
@@ -110,8 +117,11 @@ BasicPort generate_verilog_port_for_module_net(const ModuleManager& module_manag
     net_name += std::string("_") + std::to_string(net_src_instance) + std::string("_");
     net_name += module_manager.module_port(net_src_module, net_src_port).get_name();
   }
-  
-  return BasicPort(net_name, net_src_pin, net_src_pin);
+
+  port_to_return.set_name(net_name);
+  port_to_return.set_width(net_src_pin, net_src_pin);
+  port_to_return.set_origin_port_width(module_manager.module_port(net_src_module, net_src_port).get_width());
+  return port_to_return;
 }
 
 /********************************************************************
@@ -422,6 +432,7 @@ void write_verilog_instance_to_file(std::fstream& fp,
 
       /* Create the port name and width to be used by the instance */
       std::vector<BasicPort> instance_ports; 
+      std::vector<bool> instance_ports_is_single_bit; 
       for (size_t child_pin : child_port.pins()) {
         /* Find the net linked to the pin */
         ModuleNetId net = module_manager.module_instance_port_net(parent_module, child_module, instance_id, 
@@ -431,6 +442,7 @@ void write_verilog_instance_to_file(std::fstream& fp,
           /* We give the same port name as child module, this case happens to global ports */
           instance_port.set_name(generate_verilog_undriven_local_wire_name(module_manager, parent_module, child_module, instance_id, child_port_id));
           instance_port.set_width(child_pin, child_pin); 
+          instance_port.set_origin_port_width(module_manager.module_port(child_module, child_port_id).get_width());
         } else {
           /* Find the name for this child port */
           instance_port = generate_verilog_port_for_module_net(module_manager, parent_module, net);
@@ -478,13 +490,17 @@ void write_verilog_module_to_file(std::fstream& fp,
   /* Print an empty line as splitter */
   fp << std::endl;
    
-  /* Print internal wires only when default net type is NOT wire */
-  if (VERILOG_DEFAULT_NET_TYPE_WIRE != default_net_type) {
-    std::map<std::string, std::vector<BasicPort>> local_wires = find_verilog_module_local_wires(module_manager, module_id);
-    for (std::pair<std::string, std::vector<BasicPort>> port_group : local_wires) {
-      for (const BasicPort& local_wire : port_group.second) {
-        fp << generate_verilog_port(VERILOG_PORT_WIRE, local_wire) << ";" << std::endl;
+  /* Print internal wires */
+  std::map<std::string, std::vector<BasicPort>> local_wires = find_verilog_module_local_wires(module_manager, module_id);
+  for (std::pair<std::string, std::vector<BasicPort>> port_group : local_wires) {
+    for (const BasicPort& local_wire : port_group.second) {
+      /* When default net type is wire, we can skip single-bit wires whose LSB is 0 */
+      if ( (VERILOG_DEFAULT_NET_TYPE_WIRE == default_net_type)
+        && (1 == local_wire.get_width())
+        && (0 == local_wire.get_lsb())) {
+        continue;
       }
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, local_wire) << ";" << std::endl;
     }
   }
 

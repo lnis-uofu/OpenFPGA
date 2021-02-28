@@ -460,7 +460,8 @@ void print_verilog_module_end(std::fstream& fp,
  * Generate a string of a Verilog port  
  ***********************************************/
 std::string generate_verilog_port(const enum e_dump_verilog_port_type& verilog_port_type,
-                                  const BasicPort& port_info) {  
+                                  const BasicPort& port_info,
+                                  const bool& must_print_port_size) {  
   std::string verilog_line;
 
   /* Ensure the port type is valid */
@@ -472,8 +473,22 @@ std::string generate_verilog_port(const enum e_dump_verilog_port_type& verilog_p
    * others require a format of <port_type> [<lsb>:<msb>] <port_name> 
    */
   if (VERILOG_PORT_CONKT == verilog_port_type) {
-    /* When LSB == MSB, we can use a simplified format <port_type>[<lsb>]*/
-    if ( 1 == port_info.get_width()) {
+    /* Simplication:
+     * - When LSB == MSB == 0, we do not need to specify size when the user option allows
+     *   Note that user option is essential, otherwise what could happen is that 
+     *   a multi-bit verilog port used in instance port mapping is printed as a single-bit net
+     *   For example,
+     *     input [1:0] in;
+     *     inv inv_inst (.A(in), .Y(out));
+     *   The original port width is the reference to backtrace the defintion of the port
+     * - When LSB == MSB, we can use a simplified format <port_type>[<lsb>]
+     */
+    if ((false == must_print_port_size)
+     && (1 == port_info.get_width())
+     && (0 == port_info.get_lsb())
+     && (1 == port_info.get_origin_port_width())) {
+      size_str.clear();
+    } else if ((1 == port_info.get_width()) && (0 != port_info.get_lsb())) {
       size_str = "[" + std::to_string(port_info.get_lsb()) + "]";
     }
     verilog_line = port_info.get_name() + size_str;
@@ -582,7 +597,7 @@ std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports) {
   VTR_ASSERT(0 < merged_ports.size());
   if ( 1 == merged_ports.size()) {
     /* Use connection type of verilog port */
-    return generate_verilog_port(VERILOG_PORT_CONKT, merged_ports[0]);  
+    return generate_verilog_port(VERILOG_PORT_CONKT, merged_ports[0], false);  
   }
 
   std::string verilog_line = "{";
@@ -591,7 +606,7 @@ std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports) {
     if (&port != &merged_ports[0]) {
       verilog_line += ", ";
     }
-    verilog_line += generate_verilog_port(VERILOG_PORT_CONKT, port);  
+    verilog_line += generate_verilog_port(VERILOG_PORT_CONKT, port, false);  
   }
   verilog_line += "}";
 

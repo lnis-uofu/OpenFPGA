@@ -22,27 +22,33 @@ BasicPort::BasicPort() {
   /* By default we set an invalid port, which size is 0 */
   lsb_ = 1;
   msb_ = 0;
+
+  origin_port_width_ = -1;
 }
 
 /* Quick constructor */
 BasicPort::BasicPort(const char* name, const size_t& lsb, const size_t& msb) {
   set_name(std::string(name));
   set_width(lsb, msb);
+  set_origin_port_width(-1);
 }
 
 BasicPort::BasicPort(const std::string& name, const size_t& lsb, const size_t& msb) {
   set_name(name);
   set_width(lsb, msb);
+  set_origin_port_width(-1);
 }
 
 BasicPort::BasicPort(const char* name, const size_t& width) {
   set_name(std::string(name));
   set_width(width);
+  set_origin_port_width(-1);
 }
 
 BasicPort::BasicPort(const std::string& name, const size_t& width) {
   set_name(name);
   set_width(width);
+  set_origin_port_width(-1);
 }
 
 /* Copy constructor */
@@ -107,6 +113,11 @@ bool BasicPort::contained(const BasicPort& portA) const {
   return ( lsb_ <= portA.get_lsb() && portA.get_msb() <= msb_ );
 }
 
+/* Set original port width */
+size_t BasicPort::get_origin_port_width() const {
+  return origin_port_width_;
+} 
+
 /************************************************************************
  * Overloaded operators 
  ***********************************************************************/
@@ -142,6 +153,7 @@ void BasicPort::set(const BasicPort& basic_port) {
   name_ = basic_port.get_name();
   lsb_ = basic_port.get_lsb(); 
   msb_ = basic_port.get_msb(); 
+  origin_port_width_ = basic_port.get_origin_port_width();
 
   return;
 }
@@ -182,6 +194,11 @@ void BasicPort::set_lsb(const size_t& lsb) {
 
 void BasicPort::set_msb(const size_t& msb) {
   msb_ = msb;
+  return;
+}
+
+void BasicPort::set_origin_port_width(const size_t& origin_port_width) {
+  origin_port_width_ = origin_port_width;
   return;
 }
 
@@ -291,6 +308,8 @@ void BasicPort::merge(const BasicPort& portA) {
   lsb_ = std::min((int)lsb_, (int)portA.get_lsb());
   /* MSB follows the minium MSB of the two ports */
   msb_ = std::max((int)msb_, (int)portA.get_msb());
+  /* Origin port width follows the maximum of the two ports */
+  msb_ = std::max((int)origin_port_width_, (int)portA.get_origin_port_width());
   return;
 }
 
