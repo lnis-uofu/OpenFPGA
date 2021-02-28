@@ -101,6 +101,9 @@ run-task fpga_verilog/verilog_netlist_formats/synthesizable_verilog --debug --sh
 echo -e "Testing implicit Verilog generation";
 run-task fpga_verilog/verilog_netlist_formats/implicit_verilog --debug --show_thread_logs
 
+echo -e "Testing implicit Verilog generation";
+run-task fpga_verilog/verilog_netlist_formats/explicit_port_mapping_default_nettype_wire --debug --show_thread_logs
+
 echo -e "Testing Verilog generation with flatten routing modules";
 run-task fpga_verilog/flatten_routing --debug --show_thread_logs
 
