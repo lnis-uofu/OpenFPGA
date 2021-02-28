@@ -7,6 +7,7 @@
 #include <string>
 #include "module_manager.h"
 #include "netlist_manager.h"
+#include "fabric_verilog_options.h"
 
 /********************************************************************
  * Function declaration
@@ -18,7 +19,7 @@ namespace openfpga {
 void print_verilog_top_module(NetlistManager& netlist_manager,
                               const ModuleManager& module_manager,
                               const std::string& verilog_dir,
-                              const bool& use_explicit_mapping);
+                              const FabricVerilogOption& options);
 
 } /* end namespace openfpga */
 

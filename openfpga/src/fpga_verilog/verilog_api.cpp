@@ -88,12 +88,12 @@ void fpga_fabric_verilog(ModuleManager &module_manager,
                                             options);
 
   /* Generate primitive Verilog modules, which are corner stones of FPGA fabric
- * Note that this function MUST be called before Verilog generation of
- * core logic (i.e., logic blocks and routing resources) !!!
- * This is because that this function will add the primitive Verilog modules to
- * the module manager.
- * Without the modules in the module manager, core logic generation is not possible!!!
- */
+   * Note that this function MUST be called before Verilog generation of
+   * core logic (i.e., logic blocks and routing resources) !!!
+   * This is because that this function will add the primitive Verilog modules to
+   * the module manager.
+   * Without the modules in the module manager, core logic generation is not possible!!!
+   */
   print_verilog_submodule(module_manager, netlist_manager,
                           mux_lib, decoder_lib, circuit_lib,
                           submodule_dir_path,
@@ -105,14 +105,14 @@ void fpga_fabric_verilog(ModuleManager &module_manager,
                                          const_cast<const ModuleManager &>(module_manager),
                                          device_rr_gsb,
                                          rr_dir_path,
-                                         options.explicit_port_mapping());
+                                         options);
   } else {
     VTR_ASSERT(false == options.compress_routing());
     print_verilog_flatten_routing_modules(netlist_manager,
                                           const_cast<const ModuleManager &>(module_manager),
                                           device_rr_gsb,
                                           rr_dir_path,
-                                          options.explicit_port_mapping());
+                                          options);
   }
 
   /* Generate grids */
@@ -120,14 +120,14 @@ void fpga_fabric_verilog(ModuleManager &module_manager,
                       const_cast<const ModuleManager &>(module_manager),
                       device_ctx, device_annotation,
                       lb_dir_path,
-                      options.explicit_port_mapping(),
+                      options,
                       options.verbose_output());
 
   /* Generate FPGA fabric */
   print_verilog_top_module(netlist_manager,
                            const_cast<const ModuleManager &>(module_manager),
                            src_dir_path,
-                           options.explicit_port_mapping());
+                           options);
 
   /* Generate an netlist including all the fabric-related netlists */
   print_verilog_fabric_include_netlist(const_cast<const NetlistManager &>(netlist_manager),

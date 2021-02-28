@@ -2,6 +2,7 @@
  * Memember functions for data structure FabricVerilogOption
  ******************************************************************************/
 #include "vtr_assert.h"
+#include "vtr_log.h"
 
 #include "fabric_verilog_options.h"
 
@@ -17,6 +18,7 @@ FabricVerilogOption::FabricVerilogOption() {
   explicit_port_mapping_ = false;
   compress_routing_ = false;
   print_user_defined_template_ = false;
+  default_net_type_ = VERILOG_DEFAULT_NET_TYPE_NONE;
   verbose_output_ = false;
 }
 
@@ -41,6 +43,10 @@ bool FabricVerilogOption::compress_routing() const {
 
 bool FabricVerilogOption::print_user_defined_template() const {
   return print_user_defined_template_;
+}
+
+e_verilog_default_net_type FabricVerilogOption::default_net_type() const {
+  return default_net_type_;
 }
 
 bool FabricVerilogOption::verbose_output() const {
@@ -68,6 +74,20 @@ void FabricVerilogOption::set_compress_routing(const bool& enabled) {
 
 void FabricVerilogOption::set_print_user_defined_template(const bool& enabled) {
   print_user_defined_template_ = enabled;
+}
+
+void FabricVerilogOption::set_default_net_type(const std::string& default_net_type) {
+  /* Decode from net type string */;
+  if (default_net_type == std::string(VERILOG_DEFAULT_NET_TYPE_STRING[VERILOG_DEFAULT_NET_TYPE_NONE])) {
+    default_net_type_ = VERILOG_DEFAULT_NET_TYPE_NONE;
+  } else if (default_net_type == std::string(VERILOG_DEFAULT_NET_TYPE_STRING[VERILOG_DEFAULT_NET_TYPE_WIRE])) {
+    default_net_type_ = VERILOG_DEFAULT_NET_TYPE_WIRE;
+  } else {
+    VTR_LOG_WARN("Invalid default net type: '%s'! Expect ['%s'|'%s']\n",
+                 default_net_type.c_str(),
+                 VERILOG_DEFAULT_NET_TYPE_STRING[VERILOG_DEFAULT_NET_TYPE_NONE],
+                 VERILOG_DEFAULT_NET_TYPE_STRING[VERILOG_DEFAULT_NET_TYPE_WIRE]);
+  }
 }
 
 void FabricVerilogOption::set_verbose_output(const bool& enabled) {

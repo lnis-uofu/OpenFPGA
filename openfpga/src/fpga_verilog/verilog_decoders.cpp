@@ -46,7 +46,8 @@ static
 void print_verilog_mux_local_decoder_module(std::fstream& fp, 
                                             const ModuleManager& module_manager,
                                             const DecoderLibrary& decoder_lib,
-                                            const DecoderId& decoder) {
+                                            const DecoderId& decoder,
+                                            const e_verilog_default_net_type& default_net_type) {
   /* Get the number of inputs */
   size_t addr_size = decoder_lib.addr_size(decoder);
   size_t data_size = decoder_lib.data_size(decoder);
@@ -73,7 +74,7 @@ void print_verilog_mux_local_decoder_module(std::fstream& fp,
   VTR_ASSERT(true == decoder_lib.use_data_inv_port(decoder));
 
   /* dump module definition + ports */
-  print_verilog_module_declaration(fp, module_manager, module_id);
+  print_verilog_module_declaration(fp, module_manager, module_id, default_net_type);
   /* Finish dumping ports */
 
   print_verilog_comment(fp, std::string("----- BEGIN Verilog codes for Decoder convert " + std::to_string(addr_size) + "-bit addr to " + std::to_string(data_size) + "-bit data -----"));
@@ -164,7 +165,8 @@ void print_verilog_submodule_mux_local_decoders(const ModuleManager& module_mana
                                                 NetlistManager& netlist_manager,
                                                 const MuxLibrary& mux_lib,
                                                 const CircuitLibrary& circuit_lib,
-                                                const std::string& submodule_dir) {
+                                                const std::string& submodule_dir,
+                                                const e_verilog_default_net_type& default_net_type) {
   std::string verilog_fname(submodule_dir + std::string(LOCAL_ENCODER_VERILOG_FILE_NAME));
 
   /* Create the file stream */
@@ -212,7 +214,7 @@ void print_verilog_submodule_mux_local_decoders(const ModuleManager& module_mana
 
   /* Generate Verilog modules for the found unique local encoders */
   for (const auto& decoder : decoder_lib.decoders()) {
-    print_verilog_mux_local_decoder_module(fp, module_manager, decoder_lib, decoder);
+    print_verilog_mux_local_decoder_module(fp, module_manager, decoder_lib, decoder, default_net_type);
   }
 
   /* Close the file stream */
@@ -253,7 +255,8 @@ static
 void print_verilog_arch_decoder_module(std::fstream& fp, 
                                        const ModuleManager& module_manager,
                                        const DecoderLibrary& decoder_lib,
-                                       const DecoderId& decoder) {
+                                       const DecoderId& decoder,
+                                       const e_verilog_default_net_type& default_net_type) {
   /* Get the number of inputs */
   size_t addr_size = decoder_lib.addr_size(decoder);
   size_t data_size = decoder_lib.data_size(decoder);
@@ -287,7 +290,7 @@ void print_verilog_arch_decoder_module(std::fstream& fp,
   }
 
   /* dump module definition + ports */
-  print_verilog_module_declaration(fp, module_manager, module_id);
+  print_verilog_module_declaration(fp, module_manager, module_id, default_net_type);
   /* Finish dumping ports */
 
   print_verilog_comment(fp, std::string("----- BEGIN Verilog codes for Decoder convert " + std::to_string(addr_size) + "-bit addr to " + std::to_string(data_size) + "-bit data -----"));
@@ -406,7 +409,8 @@ static
 void print_verilog_arch_decoder_with_data_in_module(std::fstream& fp, 
                                                     const ModuleManager& module_manager,
                                                     const DecoderLibrary& decoder_lib,
-                                                    const DecoderId& decoder) {
+                                                    const DecoderId& decoder,
+                                                    const e_verilog_default_net_type& default_net_type) {
   /* Get the number of inputs */
   size_t addr_size = decoder_lib.addr_size(decoder);
   size_t data_size = decoder_lib.data_size(decoder);
@@ -444,7 +448,7 @@ void print_verilog_arch_decoder_with_data_in_module(std::fstream& fp,
   }
 
   /* dump module definition + ports */
-  print_verilog_module_declaration(fp, module_manager, module_id);
+  print_verilog_module_declaration(fp, module_manager, module_id, default_net_type);
   /* Finish dumping ports */
 
   print_verilog_comment(fp, std::string("----- BEGIN Verilog codes for Decoder convert " + std::to_string(addr_size) + "-bit addr to " + std::to_string(data_size) + "-bit data -----"));
@@ -548,7 +552,8 @@ void print_verilog_arch_decoder_with_data_in_module(std::fstream& fp,
 void print_verilog_submodule_arch_decoders(const ModuleManager& module_manager,
                                            NetlistManager& netlist_manager,
                                            const DecoderLibrary& decoder_lib,
-                                           const std::string& submodule_dir) {
+                                           const std::string& submodule_dir,
+                                           const e_verilog_default_net_type& default_net_type) {
   std::string verilog_fname(submodule_dir + std::string(ARCH_ENCODER_VERILOG_FILE_NAME));
 
   /* Create the file stream */
@@ -566,9 +571,9 @@ void print_verilog_submodule_arch_decoders(const ModuleManager& module_manager,
   /* Generate Verilog modules for the found unique local encoders */
   for (const auto& decoder : decoder_lib.decoders()) {
     if (true == decoder_lib.use_data_in(decoder)) {
-      print_verilog_arch_decoder_with_data_in_module(fp, module_manager, decoder_lib, decoder);
+      print_verilog_arch_decoder_with_data_in_module(fp, module_manager, decoder_lib, decoder, default_net_type);
     } else {
-      print_verilog_arch_decoder_module(fp, module_manager, decoder_lib, decoder);
+      print_verilog_arch_decoder_module(fp, module_manager, decoder_lib, decoder, default_net_type);
     }
   }
 
@@ -582,6 +587,5 @@ void print_verilog_submodule_arch_decoders(const ModuleManager& module_manager,
 
   VTR_LOG("Done\n");
 }
-
 
 } /* end namespace openfpga */

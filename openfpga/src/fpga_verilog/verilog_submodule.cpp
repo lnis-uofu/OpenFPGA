@@ -48,13 +48,15 @@ void print_verilog_submodule(ModuleManager& module_manager,
   print_verilog_submodule_essentials(const_cast<const ModuleManager&>(module_manager), 
                                      netlist_manager,
                                      submodule_dir,
-                                     circuit_lib);
+                                     circuit_lib,
+                                     fpga_verilog_opts.default_net_type());
 
   /* Decoders for architecture */
   print_verilog_submodule_arch_decoders(const_cast<const ModuleManager&>(module_manager),
                                         netlist_manager, 
                                         decoder_lib, 
-                                        submodule_dir);
+                                        submodule_dir,
+                                        fpga_verilog_opts.default_net_type());
 
   /* Routing multiplexers */
   /* NOTE: local decoders generation must go before the MUX generation!!! 
@@ -63,35 +65,38 @@ void print_verilog_submodule(ModuleManager& module_manager,
   print_verilog_submodule_mux_local_decoders(const_cast<const ModuleManager&>(module_manager),
                                              netlist_manager, 
                                              mux_lib, circuit_lib, 
-                                             submodule_dir);
+                                             submodule_dir,
+                                             fpga_verilog_opts.default_net_type());
   print_verilog_submodule_muxes(module_manager, netlist_manager, mux_lib, circuit_lib,
                                 submodule_dir,
-                                fpga_verilog_opts.explicit_port_mapping());
+                                fpga_verilog_opts);
 
  
   /* LUTes */
   print_verilog_submodule_luts(const_cast<const ModuleManager&>(module_manager),
                                netlist_manager, circuit_lib,
                                submodule_dir,
-                               fpga_verilog_opts.explicit_port_mapping());
+                               fpga_verilog_opts);
 
   /* Hard wires */
   print_verilog_submodule_wires(const_cast<const ModuleManager&>(module_manager),
                                 netlist_manager, circuit_lib,
-                                submodule_dir);
+                                submodule_dir,
+                                fpga_verilog_opts.default_net_type());
 
   /* 4. Memories */
   print_verilog_submodule_memories(const_cast<const ModuleManager&>(module_manager),
                                    netlist_manager,
                                    mux_lib, circuit_lib, 
                                    submodule_dir,
-                                   fpga_verilog_opts.explicit_port_mapping());
+                                   fpga_verilog_opts);
 
   /* 5. Dump template for all the modules */
   if (true == fpga_verilog_opts.print_user_defined_template()) { 
     print_verilog_submodule_templates(const_cast<const ModuleManager&>(module_manager),
                                       circuit_lib,
-                                      submodule_dir);
+                                      submodule_dir,
+                                      fpga_verilog_opts.default_net_type());
   }
 
   /* Create a header file to include all the subckts */

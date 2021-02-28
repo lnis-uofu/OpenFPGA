@@ -11,6 +11,7 @@
 #include "mux_library.h"
 #include "module_manager.h"
 #include "netlist_manager.h"
+#include "fabric_verilog_options.h"
 
 /********************************************************************
  * Function declaration
@@ -24,7 +25,7 @@ void print_verilog_submodule_memories(const ModuleManager& module_manager,
                                       const MuxLibrary& mux_lib,
                                       const CircuitLibrary& circuit_lib,
                                       const std::string& submodule_dir,
-                                      const bool& use_explicit_port_map);
+                                      const FabricVerilogOption& options);
 
 } /* end namespace openfpga */
 

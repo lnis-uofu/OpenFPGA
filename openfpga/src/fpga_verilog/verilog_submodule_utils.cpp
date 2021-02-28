@@ -132,7 +132,8 @@ void add_user_defined_verilog_modules(ModuleManager& module_manager,
 static 
 void print_one_verilog_template_module(const ModuleManager& module_manager,
                                        std::fstream& fp,
-                                       const std::string& module_name) {
+                                       const std::string& module_name,
+                                       const e_verilog_default_net_type& default_net_type) {
   /* Ensure a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -144,7 +145,7 @@ void print_one_verilog_template_module(const ModuleManager& module_manager,
   VTR_ASSERT(ModuleId::INVALID() != template_module);
 
   /* dump module definition + ports */
-  print_verilog_module_declaration(fp, module_manager, template_module);
+  print_verilog_module_declaration(fp, module_manager, template_module, default_net_type);
   /* Finish dumping ports */
 
   print_verilog_comment(fp, std::string("----- Internal logic should start here -----"));
@@ -170,7 +171,8 @@ void print_one_verilog_template_module(const ModuleManager& module_manager,
  ********************************************************************/
 void print_verilog_submodule_templates(const ModuleManager& module_manager,
                                        const CircuitLibrary& circuit_lib,
-                                       const std::string& submodule_dir) {
+                                       const std::string& submodule_dir,
+                                       const e_verilog_default_net_type& default_net_type) {
   std::string verilog_fname(submodule_dir + USER_DEFINED_TEMPLATE_VERILOG_FILE_NAME);
 
   /* Create the file stream */
@@ -196,7 +198,10 @@ void print_verilog_submodule_templates(const ModuleManager& module_manager,
       continue;
     }
     /* Print a Verilog template for the circuit model */
-    print_one_verilog_template_module(module_manager, fp, circuit_lib.model_name(model)); 
+    print_one_verilog_template_module(module_manager,
+                                      fp,
+                                      circuit_lib.model_name(model),
+                                      default_net_type); 
   }
 
   /* close file stream */

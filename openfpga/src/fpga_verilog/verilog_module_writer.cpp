@@ -464,7 +464,8 @@ void write_verilog_instance_to_file(std::fstream& fp,
 void write_verilog_module_to_file(std::fstream& fp,
                                   const ModuleManager& module_manager,
                                   const ModuleId& module_id,
-                                  const bool& use_explicit_port_map) {
+                                  const bool& use_explicit_port_map,
+                                  const e_verilog_default_net_type& default_net_type) {
 
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -472,16 +473,18 @@ void write_verilog_module_to_file(std::fstream& fp,
   VTR_ASSERT(module_manager.valid_module_id(module_id)); 
 
   /* Print module declaration */
-  print_verilog_module_declaration(fp, module_manager, module_id);
+  print_verilog_module_declaration(fp, module_manager, module_id, default_net_type);
 
   /* Print an empty line as splitter */
   fp << std::endl;
    
-  /* Print internal wires */
-  std::map<std::string, std::vector<BasicPort>> local_wires = find_verilog_module_local_wires(module_manager, module_id);
-  for (std::pair<std::string, std::vector<BasicPort>> port_group : local_wires) {
-    for (const BasicPort& local_wire : port_group.second) {
-      fp << generate_verilog_port(VERILOG_PORT_WIRE, local_wire) << ";" << std::endl;
+  /* Print internal wires only when default net type is NOT wire */
+  if (VERILOG_DEFAULT_NET_TYPE_WIRE != default_net_type) {
+    std::map<std::string, std::vector<BasicPort>> local_wires = find_verilog_module_local_wires(module_manager, module_id);
+    for (std::pair<std::string, std::vector<BasicPort>> port_group : local_wires) {
+      for (const BasicPort& local_wire : port_group.second) {
+        fp << generate_verilog_port(VERILOG_PORT_WIRE, local_wire) << ";" << std::endl;
+      }
     }
   }
 
@@ -512,6 +515,9 @@ void write_verilog_module_to_file(std::fstream& fp,
 
   /* Print an end for the module */
   print_verilog_module_end(fp, module_manager.module_name(module_id)); 
+
+  /* Print an empty line as splitter */
+  fp << std::endl;
 
   /* Print an empty line as splitter */
   fp << std::endl;
