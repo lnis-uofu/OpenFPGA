@@ -47,7 +47,7 @@ write_fabric_bitstream --file fabric_bitstream.xml --format xml
 
 # Write the Verilog netlist for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
-write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --print_user_defined_template --default_net_type ${OPENFPGA_VERILOG_NET_TYPE} --verbose
+write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --print_user_defined_template --verbose
 
 # Write the Verilog testbench for FPGA fabric
 #  - We suggest the use of same output directory as fabric Verilog netlists
