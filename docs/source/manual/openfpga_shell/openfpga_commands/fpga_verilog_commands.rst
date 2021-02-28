@@ -12,6 +12,10 @@ write_fabric_verilog
 
     Specify the output directory for the Verilog netlists. For example, ``--file /temp/fabric_netlist/``
 
+  .. option:: --default_net_type <string>
+
+    Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
+
   .. option:: --explicit_port_mapping
 
     Use explicit port mapping when writing the Verilog netlists
