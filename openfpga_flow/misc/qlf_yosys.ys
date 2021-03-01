@@ -2,5 +2,5 @@
 # Read verilog files
 ${READ_VERILOG_FILE}
 
-synth_quicklogic -blif ${OUTPUT_BLIF} -family qlf_k4n8 -top ${TOP_MODULE}
+synth_quicklogic -blif ${OUTPUT_BLIF} -family qlf_k4n8 -no_adder -top ${TOP_MODULE}
 
