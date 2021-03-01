@@ -66,15 +66,17 @@ void print_verilog_submodule_timing(std::fstream& fp,
      CircuitPortId src_port = circuit_lib.timing_edge_src_port(timing_edge);
      size_t src_pin = circuit_lib.timing_edge_src_pin(timing_edge);
      BasicPort src_port_info(circuit_lib.port_lib_name(src_port), src_pin, src_pin); 
+     src_port_info.set_origin_port_width(src_port_info.get_width());
 
      CircuitPortId sink_port = circuit_lib.timing_edge_sink_port(timing_edge);
      size_t sink_pin = circuit_lib.timing_edge_sink_pin(timing_edge);
      BasicPort sink_port_info(circuit_lib.port_lib_name(sink_port), sink_pin, sink_pin); 
+     sink_port_info.set_origin_port_width(sink_port_info.get_width());
    
      fp << "\t\t";
-     fp << "(" << generate_verilog_port(VERILOG_PORT_CONKT, src_port_info);
+     fp << "(" << generate_verilog_port(VERILOG_PORT_CONKT, src_port_info, false);
      fp << " => ";
-     fp << generate_verilog_port(VERILOG_PORT_CONKT, sink_port_info) << ")";
+     fp << generate_verilog_port(VERILOG_PORT_CONKT, sink_port_info, false) << ")";
      fp << " = ";
      fp << "(" << std::setprecision(FLOAT_PRECISION) << circuit_lib.timing_edge_delay(timing_edge, CIRCUIT_MODEL_DELAY_RISE) / VERILOG_SIM_TIMESCALE;
      fp << ", ";
