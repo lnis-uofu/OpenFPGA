@@ -578,6 +578,9 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
   /* Validate the file stream */
   valid_file_stream(fp);
 
+  print_verilog_default_net_type_declaration(fp,
+                                             VERILOG_DEFAULT_NET_TYPE_NONE);
+
   /* Print module definition */
   fp << "module " << circuit_name << std::string(AUTOCHECK_TOP_TESTBENCH_VERILOG_MODULE_POSTFIX);
   fp << ";" << std::endl;

@@ -30,6 +30,7 @@ int write_fabric_verilog(OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
   CommandOptionId opt_include_timing = cmd.option("include_timing");
   CommandOptionId opt_print_user_defined_template = cmd.option("print_user_defined_template");
+  CommandOptionId opt_default_net_type = cmd.option("default_net_type");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
@@ -40,6 +41,9 @@ int write_fabric_verilog(OpenfpgaContext& openfpga_ctx,
   options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
   options.set_include_timing(cmd_context.option_enable(cmd, opt_include_timing));
   options.set_print_user_defined_template(cmd_context.option_enable(cmd, opt_print_user_defined_template));
+  if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
+    options.set_default_net_type(cmd_context.option_value(cmd, opt_default_net_type));
+  }
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_compress_routing(openfpga_ctx.flow_manager().compress_routing());
   

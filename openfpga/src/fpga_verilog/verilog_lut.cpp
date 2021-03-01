@@ -33,7 +33,7 @@ void print_verilog_submodule_luts(const ModuleManager& module_manager,
                                   NetlistManager& netlist_manager,
                                   const CircuitLibrary& circuit_lib,
                                   const std::string& submodule_dir,
-                                  const bool& use_explicit_port_map) {
+                                  const FabricVerilogOption& options) {
   std::string verilog_fname = submodule_dir + std::string(LUTS_VERILOG_FILE_NAME);
 
   std::fstream fp;
@@ -60,7 +60,8 @@ void print_verilog_submodule_luts(const ModuleManager& module_manager,
     ModuleId lut_module = module_manager.find_module(circuit_lib.model_name(lut_model));
     VTR_ASSERT(true == module_manager.valid_module_id(lut_module));
     write_verilog_module_to_file(fp, module_manager, lut_module, 
-                                 use_explicit_port_map || circuit_lib.dump_explicit_port_map(lut_model));
+                                 options.explicit_port_mapping() || circuit_lib.dump_explicit_port_map(lut_model),
+                                 options.default_net_type());
   }
 
   /* Close the file handler */

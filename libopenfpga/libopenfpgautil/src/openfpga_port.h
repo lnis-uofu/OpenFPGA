@@ -31,6 +31,7 @@ class BasicPort {
     std::vector<size_t> pins() const; /* Make a range of the pin indices */
     bool mergeable(const BasicPort& portA) const; /* Check if a port can be merged with this port */
     bool contained(const BasicPort& portA) const; /* Check if a port is contained by this port */
+    size_t get_origin_port_width() const;
   public: /* Mutators */
     void set(const BasicPort& basic_port); /* copy */
     void set_name(const std::string& name); /* set the port LSB and MSB */
@@ -45,12 +46,14 @@ class BasicPort {
     void reset(); /* Reset to initial port */
     void combine(const BasicPort& port); /* Combine two ports */
     void merge(const BasicPort& portA);
+    void set_origin_port_width(const size_t& origin_port_width);
   private: /* internal functions */
     void make_invalid(); /* Make a port invalid */
   private: /* Internal Data */
     std::string name_; /* Name of this port */
     size_t msb_; /* Most Significant Bit of this port */
     size_t lsb_; /* Least Significant Bit of this port */
+    size_t origin_port_width_; /* Original port width of a port, used by traceback port conversion history  */
 };
 
 /* Configuration ports:

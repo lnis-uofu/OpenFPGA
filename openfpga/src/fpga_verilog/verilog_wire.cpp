@@ -38,7 +38,8 @@ static
 void print_verilog_wire_module(const ModuleManager& module_manager, 
                                const CircuitLibrary& circuit_lib,
                                std::fstream& fp,
-                               const CircuitModelId& wire_model) {
+                               const CircuitModelId& wire_model,
+                               const e_verilog_default_net_type& default_net_type) {
   /* Ensure a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -58,7 +59,7 @@ void print_verilog_wire_module(const ModuleManager& module_manager,
   VTR_ASSERT(true == module_manager.valid_module_id(wire_module));
 
   /* dump module definition + ports */
-  print_verilog_module_declaration(fp, module_manager, wire_module);
+  print_verilog_module_declaration(fp, module_manager, wire_module, default_net_type);
   /* Finish dumping ports */
 
   /* Print the internal logic of Verilog module */
@@ -95,7 +96,8 @@ void print_verilog_wire_module(const ModuleManager& module_manager,
 void print_verilog_submodule_wires(const ModuleManager& module_manager,
                                    NetlistManager& netlist_manager,
                                    const CircuitLibrary& circuit_lib,
-                                   const std::string& submodule_dir) {
+                                   const std::string& submodule_dir,
+                                   const e_verilog_default_net_type& default_net_type) {
   std::string verilog_fname(submodule_dir + std::string(WIRES_VERILOG_FILE_NAME));
 
   /* Create the file stream */
@@ -117,7 +119,7 @@ void print_verilog_submodule_wires(const ModuleManager& module_manager,
     if (!circuit_lib.model_verilog_netlist(model).empty()) {
       continue;
     }
-    print_verilog_wire_module(module_manager, circuit_lib, fp, model);
+    print_verilog_wire_module(module_manager, circuit_lib, fp, model, default_net_type);
   }
   print_verilog_comment(fp, std::string("----- END Verilog modules for regular wires -----"));
 

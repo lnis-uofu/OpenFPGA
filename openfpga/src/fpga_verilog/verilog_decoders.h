@@ -14,6 +14,7 @@
 #include "decoder_library.h"
 #include "module_manager.h"
 #include "netlist_manager.h"
+#include "verilog_port_types.h"
 
 /********************************************************************
  * Function declaration
@@ -26,12 +27,14 @@ void print_verilog_submodule_mux_local_decoders(const ModuleManager& module_mana
                                                 NetlistManager& netlist_manager,
                                                 const MuxLibrary& mux_lib,
                                                 const CircuitLibrary& circuit_lib,
-                                                const std::string& submodule_dir);
+                                                const std::string& submodule_dir,
+                                                const e_verilog_default_net_type& default_net_type);
 
 void print_verilog_submodule_arch_decoders(const ModuleManager& module_manager,
                                            NetlistManager& netlist_manager,
                                            const DecoderLibrary& decoder_lib,
-                                           const std::string& submodule_dir);
+                                           const std::string& submodule_dir,
+                                           const e_verilog_default_net_type& default_net_type);
 
 
 } /* end namespace openfpga */

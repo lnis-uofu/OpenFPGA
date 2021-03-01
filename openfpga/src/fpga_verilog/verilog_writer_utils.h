@@ -31,6 +31,9 @@ namespace openfpga {
  * as well maintain a easy way to identify the functions
  */
 
+void print_verilog_default_net_type_declaration(std::fstream& fp,
+                                                const e_verilog_default_net_type& default_net_type);
+
 void print_verilog_file_header(std::fstream& fp,
                                const std::string& usage);
 
@@ -56,10 +59,14 @@ void print_verilog_module_definition(std::fstream& fp,
                                      const ModuleManager& module_manager, const ModuleId& module_id);
 
 void print_verilog_module_ports(std::fstream& fp, 
-                                const ModuleManager& module_manager, const ModuleId& module_id);
+                                const ModuleManager& module_manager,
+                                const ModuleId& module_id,
+                                const e_verilog_default_net_type& default_net_type);
 
 void print_verilog_module_declaration(std::fstream& fp, 
-                                      const ModuleManager& module_manager, const ModuleId& module_id);
+                                      const ModuleManager& module_manager,
+                                      const ModuleId& module_id,
+                                      const e_verilog_default_net_type& default_net_type);
 
 void print_verilog_module_instance(std::fstream& fp, 
                                    const ModuleManager& module_manager, 
@@ -78,7 +85,8 @@ void print_verilog_module_end(std::fstream& fp,
                               const std::string& module_name);
 
 std::string generate_verilog_port(const enum e_dump_verilog_port_type& dump_port_type,
-                                  const BasicPort& port_info);
+                                  const BasicPort& port_info,
+                                  const bool& must_print_port_size = true);
 
 bool two_verilog_ports_mergeable(const BasicPort& portA,
                                  const BasicPort& portB);

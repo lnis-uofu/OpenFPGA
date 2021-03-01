@@ -9,6 +9,7 @@
 #include "module_manager.h"
 #include "netlist_manager.h"
 #include "vpr_device_annotation.h"
+#include "fabric_verilog_options.h"
 
 /********************************************************************
  * Function declaration
@@ -22,7 +23,7 @@ void print_verilog_grids(NetlistManager& netlist_manager,
                          const DeviceContext& device_ctx,
                          const VprDeviceAnnotation& device_annotation,
                          const std::string& subckt_dir,
-                         const bool& use_explicit_mapping,
+                         const FabricVerilogOption& options,
                          const bool& verbose);
 
 
