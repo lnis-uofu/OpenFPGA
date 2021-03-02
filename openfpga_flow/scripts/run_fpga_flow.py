@@ -99,6 +99,10 @@ parser.add_argument('--arch_variable_file', type=str, default=None,
 #                     help="Key file for shell")
 parser.add_argument('--yosys_tmpl', type=str, default=None,
                     help="Alternate yosys template, generates top_module.blif")
+parser.add_argument('--yosys_mode', type=str, default=None,
+                    help="Specify adder/no_adder mode for yosys run. Default is adder")
+parser.add_argument('--yosys_family', type=str, default="qlf_k4n8",
+                    help="Specify device family for yosys run")
 parser.add_argument('--disp', action="store_true",
                     help="Open display while running VPR")
 parser.add_argument('--debug', action="store_true",
@@ -480,6 +484,16 @@ def run_yosys_with_abc():
         logger.exception("Failed to extract lut_size from XML file")
         clean_up_and_exit("")
     args.K = lut_size
+
+    YS_MODE=""
+    # Yosys valid mode option is "no_adder".
+    if args.yosys_mode is not None:
+        if args.yosys_mode.lower() == "no_adder":
+            YS_MODE = "-" + args.yosys_mode
+        else:
+            logger.warning("Invalid value '" + args.yosys_mode + "' specified for synthesis_param 'bench_yosys_mode'")
+            logger.warning("Considering default yosys mode i.e. adder mode")
+
     # Yosys script parameter mapping
     ys_params = {
         "READ_VERILOG_FILE": " \n".join([
@@ -488,6 +502,8 @@ def run_yosys_with_abc():
         "TOP_MODULE": args.top_module,
         "LUT_SIZE": lut_size,
         "OUTPUT_BLIF": args.top_module+"_yosys_out.blif",
+        "YOSYS_FAMILY": args.yosys_family,
+        "YOSYS_MODE": YS_MODE,
     }
     yosys_template = args.yosys_tmpl if args.yosys_tmpl else os.path.join(
         cad_tools["misc_dir"], "ys_tmpl_yosys_vpr_flow.ys")
