@@ -93,10 +93,18 @@ echo -e "Testing Verilog generation with routing multiplexers without constant i
 run-task fpga_verilog/mux_design/no_const_input --debug --show_thread_logs
 
 echo -e "Testing Verilog generation with behavioral description";
-run-task fpga_verilog/behavioral_verilog --debug --show_thread_logs
+run-task fpga_verilog/verilog_netlist_formats/behavioral_verilog --debug --show_thread_logs
+run-task fpga_verilog/verilog_netlist_formats/behavioral_verilog_default_nettype_wire --debug --show_thread_logs
+
+echo -e "Testing synthesizable Verilog generation with external standard cells";
+run-task fpga_verilog/verilog_netlist_formats/synthesizable_verilog --debug --show_thread_logs
 
 echo -e "Testing implicit Verilog generation";
-run-task fpga_verilog/implicit_verilog --debug --show_thread_logs
+run-task fpga_verilog/verilog_netlist_formats/implicit_verilog --debug --show_thread_logs
+run-task fpga_verilog/verilog_netlist_formats/implicit_verilog_default_nettype_wire --debug --show_thread_logs
+
+echo -e "Testing explicit Verilog generation";
+run-task fpga_verilog/verilog_netlist_formats/explicit_port_mapping_default_nettype_wire --debug --show_thread_logs
 
 echo -e "Testing Verilog generation with flatten routing modules";
 run-task fpga_verilog/flatten_routing --debug --show_thread_logs

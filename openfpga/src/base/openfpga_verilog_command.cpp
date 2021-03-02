@@ -36,6 +36,10 @@ ShellCommandId add_openfpga_write_fabric_verilog_command(openfpga::Shell<Openfpg
   /* Add an option '--print_user_defined_template' */
   shell_cmd.add_option("print_user_defined_template", false, "Generate a template Verilog files for user-defined circuit models");
 
+  /* Add an option '--default_net_type' */
+  CommandOptionId default_net_type_opt = shell_cmd.add_option("default_net_type", false, "Set the default net type for Verilog netlists. Default value is 'none'");
+  shell_cmd.set_option_require_value(default_net_type_opt, openfpga::OPT_STRING);
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
   

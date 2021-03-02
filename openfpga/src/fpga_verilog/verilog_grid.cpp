@@ -61,13 +61,16 @@ namespace openfpga {
  *     |                                       | 
  *     +---------------------------------------+
  *
+ * Note that the primitive may be mapped to a standard cell, we force to use 
+ * explict port mapping. This aims to avoid any port sequence issues!!!
+ *
  *******************************************************************/
 static 
 void print_verilog_primitive_block(NetlistManager& netlist_manager,
                                    const ModuleManager& module_manager,
                                    const std::string& subckt_dir,
                                    t_pb_graph_node* primitive_pb_graph_node,
-                                   const bool& use_explicit_mapping,
+                                   const FabricVerilogOption& options,
                                    const bool& verbose) {
   /* Ensure a valid pb_graph_node */ 
   if (nullptr == primitive_pb_graph_node) {
@@ -107,7 +110,11 @@ void print_verilog_primitive_block(NetlistManager& netlist_manager,
            module_manager.module_name(primitive_module).c_str());
   
   /* Write the verilog module */
-  write_verilog_module_to_file(fp, module_manager, primitive_module, use_explicit_mapping);
+  write_verilog_module_to_file(fp,
+                               module_manager,
+                               primitive_module,
+                               true,
+                               options.default_net_type());
 
   /* Close file handler */
   fp.close();
@@ -141,7 +148,7 @@ void rec_print_verilog_logical_tile(NetlistManager& netlist_manager,
                                     const VprDeviceAnnotation& device_annotation,
                                     const std::string& subckt_dir,
                                     t_pb_graph_node* physical_pb_graph_node,
-                                    const bool& use_explicit_mapping,
+                                    const FabricVerilogOption& options,
                                     const bool& verbose) {
 
   /* Check cur_pb_graph_node*/
@@ -167,21 +174,18 @@ void rec_print_verilog_logical_tile(NetlistManager& netlist_manager,
                                      module_manager, device_annotation,
                                      subckt_dir, 
                                      &(physical_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ipb][0]),
-                                     use_explicit_mapping,
+                                     options,
                                      verbose);
     }
   }
 
-  /* For leaf node, a primitive Verilog module will be generated.
-   * Note that the primitive may be mapped to a standard cell, we force to use 
-   * explict port mapping. This aims to avoid any port sequence issues!!!
-   */
+  /* For leaf node, a primitive Verilog module will be generated. */
   if (true == is_primitive_pb_type(physical_pb_type)) { 
     print_verilog_primitive_block(netlist_manager,
                                   module_manager,
                                   subckt_dir,
                                   physical_pb_graph_node, 
-                                  true, 
+                                  options, 
                                   verbose);
     /* Finish for primitive node, return */
     return;
@@ -220,7 +224,11 @@ void rec_print_verilog_logical_tile(NetlistManager& netlist_manager,
   print_verilog_comment(fp, std::string("----- BEGIN Physical programmable logic block Verilog module: " + std::string(physical_pb_type->name) + " -----"));
 
   /* Write the verilog module */
-  write_verilog_module_to_file(fp, module_manager, pb_module, use_explicit_mapping);
+  write_verilog_module_to_file(fp,
+                               module_manager,
+                               pb_module,
+                               options.explicit_port_mapping(),
+                               options.default_net_type());
 
   print_verilog_comment(fp, std::string("----- END Physical programmable logic block Verilog module: " + std::string(physical_pb_type->name) + " -----"));
 
@@ -245,7 +253,7 @@ void print_verilog_logical_tile_netlist(NetlistManager& netlist_manager,
                                         const VprDeviceAnnotation& device_annotation,
                                         const std::string& subckt_dir,
                                         t_pb_graph_node* pb_graph_head,
-                                        const bool& use_explicit_mapping,
+                                        const FabricVerilogOption& options,
                                         const bool& verbose) {
 
   VTR_LOG("Writing Verilog netlists for logic tile '%s' ...",
@@ -264,7 +272,7 @@ void print_verilog_logical_tile_netlist(NetlistManager& netlist_manager,
                                  device_annotation, 
                                  subckt_dir,
                                  pb_graph_head,
-                                 use_explicit_mapping,
+                                 options,
                                  verbose);
 
   VTR_LOG("Done\n");
@@ -285,7 +293,7 @@ void print_verilog_physical_tile_netlist(NetlistManager& netlist_manager,
                                          const std::string& subckt_dir,
                                          t_physical_tile_type_ptr phy_block_type,
                                          const e_side& border_side,
-                                         const bool& use_explicit_mapping) {
+                                         const FabricVerilogOption& options) {
   /* Give a name to the Verilog netlist */
   /* Create the file name for Verilog */
   std::string verilog_fname(subckt_dir 
@@ -321,7 +329,11 @@ void print_verilog_physical_tile_netlist(NetlistManager& netlist_manager,
 
   /* Write the verilog module */
   print_verilog_comment(fp, std::string("----- BEGIN Grid Verilog module: " + module_manager.module_name(grid_module) + " -----"));
-  write_verilog_module_to_file(fp, module_manager, grid_module, use_explicit_mapping);
+  write_verilog_module_to_file(fp,
+                               module_manager,
+                               grid_module,
+                               options.explicit_port_mapping(),
+                               options.default_net_type());
 
   print_verilog_comment(fp, std::string("----- END Grid Verilog module: " + module_manager.module_name(grid_module) + " -----"));
 
@@ -350,7 +362,7 @@ void print_verilog_grids(NetlistManager& netlist_manager,
                          const DeviceContext& device_ctx,
                          const VprDeviceAnnotation& device_annotation,
                          const std::string& subckt_dir,
-                         const bool& use_explicit_mapping,
+                         const FabricVerilogOption& options,
                          const bool& verbose) {
   /* Create a vector to contain all the Verilog netlist names that have been generated in this function */
   std::vector<std::string> netlist_names;
@@ -374,7 +386,7 @@ void print_verilog_grids(NetlistManager& netlist_manager,
                                        device_annotation,
                                        subckt_dir,
                                        logical_tile.pb_graph_head,
-                                       use_explicit_mapping,
+                                       options,
                                        verbose);
   }
   VTR_LOG("Writing logical tiles...");
@@ -408,7 +420,7 @@ void print_verilog_grids(NetlistManager& netlist_manager,
                                             subckt_dir, 
                                             &physical_tile,
                                             io_type_side,
-                                            use_explicit_mapping);
+                                            options);
       } 
       continue;
     } else {
@@ -418,7 +430,7 @@ void print_verilog_grids(NetlistManager& netlist_manager,
                                           subckt_dir, 
                                           &physical_tile,
                                           NUM_SIDES,
-                                          use_explicit_mapping);
+                                          options);
     }
   }
   VTR_LOG("Building physical tiles...");

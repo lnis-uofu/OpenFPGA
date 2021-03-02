@@ -39,6 +39,9 @@ std::vector<bool> build_frac_lut_bitstream(const CircuitLibrary& circuit_lib,
                                            const std::map<const t_pb_graph_pin*, AtomNetlist::TruthTable>& truth_tables,
                                            const size_t& default_sram_bit_value);
 
+bool is_wired_lut(const std::vector<AtomNetId>& input_nets,
+                  const AtomNetId& output_net);
+
 } /* end namespace openfpga */
 
 #endif

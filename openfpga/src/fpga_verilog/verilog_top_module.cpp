@@ -37,7 +37,7 @@ namespace openfpga {
 void print_verilog_top_module(NetlistManager& netlist_manager,
                               const ModuleManager& module_manager,
                               const std::string& verilog_dir,
-                              const bool& use_explicit_mapping) {
+                              const FabricVerilogOption& options) {
   /* Create a module as the top-level fabric, and add it to the module manager */
   std::string top_module_name = generate_fpga_top_module_name();
   ModuleId top_module = module_manager.find_module(top_module_name);
@@ -59,7 +59,11 @@ void print_verilog_top_module(NetlistManager& netlist_manager,
   print_verilog_file_header(fp, std::string("Top-level Verilog module for FPGA")); 
 
   /* Write the module content in Verilog format */
-  write_verilog_module_to_file(fp, module_manager, top_module, use_explicit_mapping);
+  write_verilog_module_to_file(fp,
+                               module_manager,
+                               top_module,
+                               options.explicit_port_mapping(),
+                               options.default_net_type());
 
   /* Add an empty line as a splitter */
   fp << std::endl;

@@ -10,6 +10,7 @@
 #include "vpr_routing_annotation.h"
 #include "vpr_bitstream_annotation.h"
 #include "repack_design_constraints.h"
+#include "circuit_library.h"
 
 /********************************************************************
  * Function declaration
@@ -25,6 +26,7 @@ void pack_physical_pbs(const DeviceContext& device_ctx,
                        VprClusteringAnnotation& clustering_annotation,
                        const VprBitstreamAnnotation& bitstream_annotation,
                        const RepackDesignConstraints& design_constraints,
+                       const CircuitLibrary& circuit_lib,
                        const bool& verbose);
 
 } /* end namespace openfpga */

@@ -505,5 +505,28 @@ std::vector<bool> build_frac_lut_bitstream(const CircuitLibrary& circuit_lib,
   return lut_bitstream; 
 }
 
+/***************************************************************************************
+ * Identify if LUT is used as wiring 
+ * In this case, LUT functions as a buffer
+ *         +------+
+ *  in0 -->|---   |
+ *         |   \  |
+ *  in1 -->|    --|--->out
+ *  ...
+ *
+ *  Note that this function judge the LUT operating mode from the input nets and output
+ *  nets that are mapped to inputs and outputs. 
+ *  If the output net appear in the list of input nets, this LUT is used as a wire 
+ ***************************************************************************************/
+bool is_wired_lut(const std::vector<AtomNetId>& input_nets,
+                  const AtomNetId& output_net) {
+  for (const AtomNetId& input_net : input_nets) {
+    if (input_net == output_net) {
+      return true;
+    }
+  }
+  
+  return false;
+}
 
 } /* end namespace openfpga */

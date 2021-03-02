@@ -27,6 +27,18 @@
 namespace openfpga {
 
 /************************************************
+ * Generate the declaration for default net type
+ ***********************************************/
+void print_verilog_default_net_type_declaration(std::fstream& fp,
+                                                const e_verilog_default_net_type& default_net_type) {
+  VTR_ASSERT(true == valid_file_stream(fp));
+
+  fp << "//----- Default net type -----" << std::endl;
+  fp << "`default_nettype " << VERILOG_DEFAULT_NET_TYPE_STRING[default_net_type] << std::endl;
+  fp << std::endl;
+}
+
+/************************************************
  * Generate header comments for a Verilog netlist
  * include the description 
  ***********************************************/
@@ -184,7 +196,9 @@ void print_verilog_module_definition(std::fstream& fp,
  * Print a Verilog module ports based on the module id 
  ***********************************************/
 void print_verilog_module_ports(std::fstream& fp, 
-                                const ModuleManager& module_manager, const ModuleId& module_id) {
+                                const ModuleManager& module_manager,
+                                const ModuleId& module_id,
+                                const e_verilog_default_net_type& default_net_type) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
   /* port type2type mapping */
@@ -222,38 +236,39 @@ void print_verilog_module_ports(std::fstream& fp,
     }
   }
 
-  /* Output any port that is also wire connection */
-  fp << std::endl;
-  fp << "//----- BEGIN wire-connection ports -----" << std::endl; 
-  for (const auto& kv : port_type2type_map) {
-    for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
-      /* Skip the ports that are not registered */
-      ModulePortId port_id = module_manager.find_module_port(module_id, port.get_name());
-      VTR_ASSERT(ModulePortId::INVALID() != port_id);
-      if (false == module_manager.port_is_wire(module_id, port_id)) {
-        continue;
-      }
+  /* Output any port that is also wire connection when default net type is not wire! */
+  if (VERILOG_DEFAULT_NET_TYPE_WIRE != default_net_type) {
+    fp << std::endl;
+    fp << "//----- BEGIN wire-connection ports -----" << std::endl; 
+    for (const auto& kv : port_type2type_map) {
+      for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
+        /* Skip the ports that are not registered */
+        ModulePortId port_id = module_manager.find_module_port(module_id, port.get_name());
+        VTR_ASSERT(ModulePortId::INVALID() != port_id);
+        if (false == module_manager.port_is_wire(module_id, port_id)) {
+          continue;
+        }
 
-      /* Print pre-processing flag for a port, if defined */
-      std::string preproc_flag = module_manager.port_preproc_flag(module_id, port_id);
-      if (false == preproc_flag.empty()) {
-        /* Print an ifdef Verilog syntax */
-        print_verilog_preprocessing_flag(fp, preproc_flag);
-      }
+        /* Print pre-processing flag for a port, if defined */
+        std::string preproc_flag = module_manager.port_preproc_flag(module_id, port_id);
+        if (false == preproc_flag.empty()) {
+          /* Print an ifdef Verilog syntax */
+          print_verilog_preprocessing_flag(fp, preproc_flag);
+        }
 
-      /* Print port */
-      fp << generate_verilog_port(VERILOG_PORT_WIRE, port);
-      fp << ";" << std::endl;
+        /* Print port */
+        fp << generate_verilog_port(VERILOG_PORT_WIRE, port);
+        fp << ";" << std::endl;
 
-      if (false == preproc_flag.empty()) {
-        /* Print an endif to pair the ifdef */
-        print_verilog_endif(fp);
+        if (false == preproc_flag.empty()) {
+          /* Print an endif to pair the ifdef */
+          print_verilog_endif(fp);
+        }
       }
     }
+    fp << "//----- END wire-connection ports -----" << std::endl; 
+    fp << std::endl;
   }
-  fp << "//----- END wire-connection ports -----" << std::endl; 
-  fp << std::endl;
-
  
   /* Output any port that is registered */
   fp << std::endl;
@@ -295,12 +310,18 @@ void print_verilog_module_ports(std::fstream& fp,
  * <tab><port definition with direction> 
  ***********************************************/
 void print_verilog_module_declaration(std::fstream& fp, 
-                                      const ModuleManager& module_manager, const ModuleId& module_id) {
+                                      const ModuleManager& module_manager,
+                                      const ModuleId& module_id,
+                                      const e_verilog_default_net_type& default_net_type) {
   VTR_ASSERT(true == valid_file_stream(fp));
+
+  /* Apply default net type from user's option */
+  print_verilog_default_net_type_declaration(fp,
+                                             default_net_type); 
 
   print_verilog_module_definition(fp, module_manager, module_id);
 
-  print_verilog_module_ports(fp, module_manager, module_id);
+  print_verilog_module_ports(fp, module_manager, module_id, default_net_type);
 }
 
 
@@ -429,13 +450,18 @@ void print_verilog_module_end(std::fstream& fp,
   fp << "endmodule" << std::endl;
   print_verilog_comment(fp, std::string("----- END Verilog module for " + module_name + " -----"));
   fp << std::endl;
+
+  /* Reset default net type to be none */
+  print_verilog_default_net_type_declaration(fp,
+                                             VERILOG_DEFAULT_NET_TYPE_NONE); 
 }
 
 /************************************************
  * Generate a string of a Verilog port  
  ***********************************************/
 std::string generate_verilog_port(const enum e_dump_verilog_port_type& verilog_port_type,
-                                  const BasicPort& port_info) {  
+                                  const BasicPort& port_info,
+                                  const bool& must_print_port_size) {  
   std::string verilog_line;
 
   /* Ensure the port type is valid */
@@ -447,8 +473,22 @@ std::string generate_verilog_port(const enum e_dump_verilog_port_type& verilog_p
    * others require a format of <port_type> [<lsb>:<msb>] <port_name> 
    */
   if (VERILOG_PORT_CONKT == verilog_port_type) {
-    /* When LSB == MSB, we can use a simplified format <port_type>[<lsb>]*/
-    if ( 1 == port_info.get_width()) {
+    /* Simplication:
+     * - When LSB == MSB == 0, we do not need to specify size when the user option allows
+     *   Note that user option is essential, otherwise what could happen is that 
+     *   a multi-bit verilog port used in instance port mapping is printed as a single-bit net
+     *   For example,
+     *     input [1:0] in;
+     *     inv inv_inst (.A(in), .Y(out));
+     *   The original port width is the reference to backtrace the defintion of the port
+     * - When LSB == MSB, we can use a simplified format <port_type>[<lsb>]
+     */
+    if ((false == must_print_port_size)
+     && (1 == port_info.get_width())
+     && (0 == port_info.get_lsb())
+     && (1 == port_info.get_origin_port_width())) {
+      size_str.clear();
+    } else if ((1 == port_info.get_width()) && (0 != port_info.get_lsb())) {
       size_str = "[" + std::to_string(port_info.get_lsb()) + "]";
     }
     verilog_line = port_info.get_name() + size_str;
@@ -557,7 +597,7 @@ std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports) {
   VTR_ASSERT(0 < merged_ports.size());
   if ( 1 == merged_ports.size()) {
     /* Use connection type of verilog port */
-    return generate_verilog_port(VERILOG_PORT_CONKT, merged_ports[0]);  
+    return generate_verilog_port(VERILOG_PORT_CONKT, merged_ports[0], false);  
   }
 
   std::string verilog_line = "{";
@@ -566,7 +606,7 @@ std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports) {
     if (&port != &merged_ports[0]) {
       verilog_line += ", ";
     }
-    verilog_line += generate_verilog_port(VERILOG_PORT_CONKT, port);  
+    verilog_line += generate_verilog_port(VERILOG_PORT_CONKT, port, false);  
   }
   verilog_line += "}";
 

@@ -47,7 +47,7 @@ void print_verilog_mux_memory_module(const ModuleManager& module_manager,
                                      std::fstream& fp,
                                      const CircuitModelId& mux_model,
                                      const MuxGraph& mux_graph,
-                                     const bool& use_explicit_port_map) {
+                                     const FabricVerilogOption& options) {
   /* Multiplexers built with different technology is in different organization */
   switch (circuit_lib.design_tech_type(mux_model)) {
   case CIRCUIT_MODEL_DESIGN_CMOS: {
@@ -59,7 +59,8 @@ void print_verilog_mux_memory_module(const ModuleManager& module_manager,
     VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
     /* Write the module content in Verilog format */
     write_verilog_module_to_file(fp, module_manager, mem_module, 
-                                 use_explicit_port_map || circuit_lib.dump_explicit_port_map(mux_model));
+                                 options.explicit_port_mapping() || circuit_lib.dump_explicit_port_map(mux_model),
+                                 options.default_net_type());
 
     /* Add an empty line as a splitter */
     fp << std::endl;
@@ -101,7 +102,7 @@ void print_verilog_submodule_memories(const ModuleManager& module_manager,
                                       const MuxLibrary& mux_lib,
                                       const CircuitLibrary& circuit_lib,
                                       const std::string& submodule_dir,
-                                      const bool& use_explicit_port_map) {
+                                      const FabricVerilogOption& options) {
   /* Plug in with the mux subckt */
   std::string verilog_fname(submodule_dir + std::string(MEMORIES_VERILOG_FILE_NAME));
 
@@ -129,7 +130,12 @@ void print_verilog_submodule_memories(const ModuleManager& module_manager,
       continue;
     }
     /* Create a Verilog module for the memories used by the multiplexer */
-    print_verilog_mux_memory_module(module_manager, circuit_lib, fp, mux_model, mux_graph, use_explicit_port_map);
+    print_verilog_mux_memory_module(module_manager,
+                                    circuit_lib,
+                                    fp,
+                                    mux_model,
+                                    mux_graph,
+                                    options);
   }
 
   /* Create the memory circuits for non-MUX circuit models.
@@ -174,7 +180,8 @@ void print_verilog_submodule_memories(const ModuleManager& module_manager,
     VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
     /* Write the module content in Verilog format */
     write_verilog_module_to_file(fp, module_manager, mem_module, 
-                                 use_explicit_port_map || circuit_lib.dump_explicit_port_map(model));
+                                 options.explicit_port_mapping() || circuit_lib.dump_explicit_port_map(model),
+                                 options.default_net_type());
 
     /* Add an empty line as a splitter */
     fp << std::endl;

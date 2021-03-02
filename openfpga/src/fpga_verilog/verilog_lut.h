@@ -10,6 +10,7 @@
 #include "circuit_library.h"
 #include "module_manager.h"
 #include "netlist_manager.h"
+#include "fabric_verilog_options.h"
 
 /********************************************************************
  * Function declaration
@@ -22,7 +23,7 @@ void print_verilog_submodule_luts(const ModuleManager& module_manager,
                                   NetlistManager& netlist_manager,
                                   const CircuitLibrary& circuit_lib,
                                   const std::string& submodule_dir,
-                                  const bool& use_explicit_port_map);
+                                  const FabricVerilogOption& options);
 
 } /* end namespace openfpga */
 

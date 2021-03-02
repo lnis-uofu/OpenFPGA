@@ -1,6 +1,0 @@
-# Yosys synthesis script for ${TOP_MODULE}
-# Read verilog files
-${READ_VERILOG_FILE}
-
-synth_quicklogic -blif ${OUTPUT_BLIF} -openfpga -top ${TOP_MODULE}
-

@@ -19,31 +19,6 @@
 namespace openfpga {
 
 /***************************************************************************************
- * Identify if LUT is used as wiring 
- * In this case, LUT functions as a buffer
- *         +------+
- *  in0 -->|---   |
- *         |   \  |
- *  in1 -->|    --|--->out
- *  ...
- *
- *  Note that this function judge the LUT operating mode from the input nets and output
- *  nets that are mapped to inputs and outputs. 
- *  If the output net appear in the list of input nets, this LUT is used as a wire 
- ***************************************************************************************/
-static 
-bool is_wired_lut(const std::vector<AtomNetId>& input_nets,
-                  const AtomNetId& output_net) {
-  for (const AtomNetId& input_net : input_nets) {
-    if (input_net == output_net) {
-      return true;
-    }
-  }
-  
-  return false;
-}
-
-/***************************************************************************************
  * Create pin rotation map for a LUT
  ***************************************************************************************/
 static 
@@ -157,6 +132,13 @@ void build_physical_pb_lut_truth_tables(PhysicalPb& physical_pb,
 
         std::vector<int> rotated_pin_map = generate_lut_rotated_input_pin_map(input_nets, atom_ctx, atom_blk, device_annotation, circuit_lib, pb_graph_node);
         adapt_tt = lut_truth_table_adaption(orig_tt, rotated_pin_map);
+
+        VTR_LOGV(verbose, "Driver atom block: '%ld'\n", size_t(atom_blk));
+        VTR_LOGV(verbose, "Pb atom blocks:");
+        for (const AtomBlockId& pb_atom_blk : physical_pb.atom_blocks(lut_pb_id)) {
+          VTR_LOGV(verbose, "'%ld', ", size_t(pb_atom_blk));
+        }
+        VTR_LOGV(verbose, "\n");
       }
 
       /* Adapt the truth table for fracturable lut implementation and add to physical pb */
@@ -183,6 +165,12 @@ void build_physical_pb_lut_truth_tables(PhysicalPb& physical_pb,
 
       VTR_ASSERT(AtomNetId::INVALID() != output_net);
       VTR_LOGV(verbose, "Output net: %s\n", atom_ctx.nlist.net_name(output_net).c_str());
+
+      VTR_LOGV(verbose,
+               "Truth table before adaption to fracturable LUT'\n");
+      for (const std::string& tt_line : truth_table_to_string(adapt_tt)) {
+        VTR_LOGV(verbose, "\t%s\n", tt_line.c_str());
+      }
 
       VTR_LOGV(verbose,
                "Add following truth table to pb_graph_pin '%s[%d]'\n", 

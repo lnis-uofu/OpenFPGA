@@ -66,15 +66,17 @@ void print_verilog_submodule_timing(std::fstream& fp,
      CircuitPortId src_port = circuit_lib.timing_edge_src_port(timing_edge);
      size_t src_pin = circuit_lib.timing_edge_src_pin(timing_edge);
      BasicPort src_port_info(circuit_lib.port_lib_name(src_port), src_pin, src_pin); 
+     src_port_info.set_origin_port_width(src_port_info.get_width());
 
      CircuitPortId sink_port = circuit_lib.timing_edge_sink_port(timing_edge);
      size_t sink_pin = circuit_lib.timing_edge_sink_pin(timing_edge);
      BasicPort sink_port_info(circuit_lib.port_lib_name(sink_port), sink_pin, sink_pin); 
+     sink_port_info.set_origin_port_width(sink_port_info.get_width());
    
      fp << "\t\t";
-     fp << "(" << generate_verilog_port(VERILOG_PORT_CONKT, src_port_info);
+     fp << "(" << generate_verilog_port(VERILOG_PORT_CONKT, src_port_info, false);
      fp << " => ";
-     fp << generate_verilog_port(VERILOG_PORT_CONKT, sink_port_info) << ")";
+     fp << generate_verilog_port(VERILOG_PORT_CONKT, sink_port_info, false) << ")";
      fp << " = ";
      fp << "(" << std::setprecision(FLOAT_PRECISION) << circuit_lib.timing_edge_delay(timing_edge, CIRCUIT_MODEL_DELAY_RISE) / VERILOG_SIM_TIMESCALE;
      fp << ", ";
@@ -132,7 +134,8 @@ void add_user_defined_verilog_modules(ModuleManager& module_manager,
 static 
 void print_one_verilog_template_module(const ModuleManager& module_manager,
                                        std::fstream& fp,
-                                       const std::string& module_name) {
+                                       const std::string& module_name,
+                                       const e_verilog_default_net_type& default_net_type) {
   /* Ensure a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -144,7 +147,7 @@ void print_one_verilog_template_module(const ModuleManager& module_manager,
   VTR_ASSERT(ModuleId::INVALID() != template_module);
 
   /* dump module definition + ports */
-  print_verilog_module_declaration(fp, module_manager, template_module);
+  print_verilog_module_declaration(fp, module_manager, template_module, default_net_type);
   /* Finish dumping ports */
 
   print_verilog_comment(fp, std::string("----- Internal logic should start here -----"));
@@ -170,7 +173,8 @@ void print_one_verilog_template_module(const ModuleManager& module_manager,
  ********************************************************************/
 void print_verilog_submodule_templates(const ModuleManager& module_manager,
                                        const CircuitLibrary& circuit_lib,
-                                       const std::string& submodule_dir) {
+                                       const std::string& submodule_dir,
+                                       const e_verilog_default_net_type& default_net_type) {
   std::string verilog_fname(submodule_dir + USER_DEFINED_TEMPLATE_VERILOG_FILE_NAME);
 
   /* Create the file stream */
@@ -196,7 +200,10 @@ void print_verilog_submodule_templates(const ModuleManager& module_manager,
       continue;
     }
     /* Print a Verilog template for the circuit model */
-    print_one_verilog_template_module(module_manager, fp, circuit_lib.model_name(model)); 
+    print_one_verilog_template_module(module_manager,
+                                      fp,
+                                      circuit_lib.model_name(model),
+                                      default_net_type); 
   }
 
   /* close file stream */

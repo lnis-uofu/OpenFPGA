@@ -80,7 +80,7 @@ void print_verilog_routing_connection_box_unique_module(NetlistManager& netlist_
                                                         const std::string& subckt_dir, 
                                                         const RRGSB& rr_gsb,
                                                         const t_rr_type& cb_type,
-                                                        const bool& use_explicit_port_map) {
+                                                        const FabricVerilogOption& options) {
   /* Create the netlist */
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
   std::string verilog_fname(subckt_dir + generate_connection_block_netlist_name(cb_type, gsb_coordinate, std::string(VERILOG_NETLIST_FILE_POSTFIX)));
@@ -98,7 +98,10 @@ void print_verilog_routing_connection_box_unique_module(NetlistManager& netlist_
   VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
 
   /* Write the verilog module */
-  write_verilog_module_to_file(fp, module_manager, cb_module, use_explicit_port_map);
+  write_verilog_module_to_file(fp,
+                               module_manager, cb_module,
+                               options.explicit_port_mapping(),
+                               options.default_net_type());
  
   /* Add an empty line as a splitter */
   fp << std::endl;
@@ -180,7 +183,7 @@ void print_verilog_routing_switch_box_unique_module(NetlistManager& netlist_mana
                                                     const ModuleManager& module_manager, 
                                                     const std::string& subckt_dir, 
                                                     const RRGSB& rr_gsb,
-                                                    const bool& use_explicit_port_map) {
+                                                    const FabricVerilogOption& options) {
   /* Create the netlist */
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
   std::string verilog_fname(subckt_dir + generate_routing_block_netlist_name(SB_VERILOG_FILE_NAME_PREFIX, gsb_coordinate, std::string(VERILOG_NETLIST_FILE_POSTFIX)));
@@ -198,7 +201,11 @@ void print_verilog_routing_switch_box_unique_module(NetlistManager& netlist_mana
   VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
 
   /* Write the verilog module */
-  write_verilog_module_to_file(fp, module_manager, sb_module, use_explicit_port_map);
+  write_verilog_module_to_file(fp,
+                               module_manager,
+                               sb_module,
+                               options.explicit_port_mapping(),
+                               options.default_net_type());
  
   /* Close file handler */
   fp.close();
@@ -219,7 +226,7 @@ void print_verilog_flatten_connection_block_modules(NetlistManager& netlist_mana
                                                     const DeviceRRGSB& device_rr_gsb,
                                                     const std::string& subckt_dir,
                                                     const t_rr_type& cb_type,
-                                                    const bool& use_explicit_port_map) {
+                                                    const FabricVerilogOption& options) {
   /* Build unique X-direction connection block modules */
   vtr::Point<size_t> cb_range = device_rr_gsb.get_gsb_range();
 
@@ -237,7 +244,7 @@ void print_verilog_flatten_connection_block_modules(NetlistManager& netlist_mana
                                                          module_manager,
                                                          subckt_dir, 
                                                          rr_gsb, cb_type,  
-                                                         use_explicit_port_map);
+                                                         options);
     }
   }
 }
@@ -255,7 +262,7 @@ void print_verilog_flatten_routing_modules(NetlistManager& netlist_manager,
                                            const ModuleManager& module_manager,
                                            const DeviceRRGSB& device_rr_gsb,
                                            const std::string& subckt_dir,
-                                           const bool& use_explicit_port_map) {
+                                           const FabricVerilogOption& options) {
   /* Create a vector to contain all the Verilog netlist names that have been generated in this function */
   std::vector<std::string> netlist_names;
 
@@ -272,13 +279,23 @@ void print_verilog_flatten_routing_modules(NetlistManager& netlist_manager,
                                                      module_manager, 
                                                      subckt_dir, 
                                                      rr_gsb, 
-                                                     use_explicit_port_map);
+                                                     options);
     }
   }
 
-  print_verilog_flatten_connection_block_modules(netlist_manager, module_manager, device_rr_gsb, subckt_dir, CHANX, use_explicit_port_map);
+  print_verilog_flatten_connection_block_modules(netlist_manager,
+                                                 module_manager,
+                                                 device_rr_gsb,
+                                                 subckt_dir,
+                                                 CHANX,
+                                                 options);
 
-  print_verilog_flatten_connection_block_modules(netlist_manager, module_manager, device_rr_gsb, subckt_dir, CHANY, use_explicit_port_map);
+  print_verilog_flatten_connection_block_modules(netlist_manager,
+                                                 module_manager,
+                                                 device_rr_gsb,
+                                                 subckt_dir,
+                                                 CHANY,
+                                                 options);
 
   /*
   VTR_LOG("Writing header file for routing submodules '%s'...",
@@ -306,7 +323,7 @@ void print_verilog_unique_routing_modules(NetlistManager& netlist_manager,
                                           const ModuleManager& module_manager,
                                           const DeviceRRGSB& device_rr_gsb,
                                           const std::string& subckt_dir,
-                                          const bool& use_explicit_port_map) {
+                                          const FabricVerilogOption& options) {
   /* Create a vector to contain all the Verilog netlist names that have been generated in this function */
   std::vector<std::string> netlist_names;
 
@@ -317,7 +334,7 @@ void print_verilog_unique_routing_modules(NetlistManager& netlist_manager,
                                                    module_manager,
                                                    subckt_dir, 
                                                    unique_mirror, 
-                                                   use_explicit_port_map);
+                                                   options);
   }
 
   /* Build unique X-direction connection block modules */
@@ -328,7 +345,7 @@ void print_verilog_unique_routing_modules(NetlistManager& netlist_manager,
                                                        module_manager,
                                                        subckt_dir, 
                                                        unique_mirror, CHANX,  
-                                                       use_explicit_port_map);
+                                                       options);
   }
 
   /* Build unique X-direction connection block modules */
@@ -339,7 +356,7 @@ void print_verilog_unique_routing_modules(NetlistManager& netlist_manager,
                                                        module_manager,
                                                        subckt_dir, 
                                                        unique_mirror, CHANY,  
-                                                       use_explicit_port_map);
+                                                       options);
   }
 
   /*

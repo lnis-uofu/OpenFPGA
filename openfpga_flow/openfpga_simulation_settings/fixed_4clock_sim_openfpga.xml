@@ -12,6 +12,10 @@
          Note that 
          - clock name must be unique as it is used in testbench genertion
          - the clock port must match clock port definition in OpenFPGA architecture XML!!!
+
+         Note: This clock setting is also applicable to architectures with 4+ clocks
+               In that case, the first 4-bit of the clock port will be driven by different clock frequencies
+               while the rest bits of the clock port will be driven by the default clock frequency
       -->
     <operating frequency="50e6" num_cycles="20" slack="0.2">
       <clock name="clk_10MHz" port="clk[0:0]" frequency="10e6"/>

@@ -259,13 +259,25 @@ std::vector<int> find_pb_route_remapped_source_pb_pin(const t_pb* pb,
     /* Only care the pin has the same parent port as source_pb_pin 
      * Due to that the source_pb_pin may be swapped during routing
      * the pb_route is out-of-date
+     *
+     * For those parent port is defined as non-equivalent,
+     * the source pin and the pin recorded in the routing trace must match!
+     *
      * TODO: should update pb_route by post routing results
      * On the other side, the swapping can only happen between equivalent pins
      * in a port. So the port must match here!
      */
-    if (source_pb_pin->port == pb->pb_route.at(pin).pb_graph_pin->port) {
-      pb_route_indices.push_back(pin);
-    } 
+    if (PortEquivalence::FULL == source_pb_pin->port->equivalent) {
+      if (source_pb_pin->port == pb->pb_route.at(pin).pb_graph_pin->port) {
+        pb_route_indices.push_back(pin);
+      } 
+    } else {
+      /* NOTE: INSTANCE is NOT supported! We support only NONE equivalent */
+      VTR_ASSERT (PortEquivalence::NONE == source_pb_pin->port->equivalent);
+      if (source_pb_pin == pb->pb_route.at(pin).pb_graph_pin) {
+        pb_route_indices.push_back(pin);
+      } 
+    }
   }
 
   return pb_route_indices;
@@ -696,6 +708,44 @@ void repack_clusters(const AtomContext& atom_ctx,
 }
 
 /***************************************************************************************
+ * VPR's packer may create wire LUTs for routing
+ * Repacker will not remove these wire LUTs
+ * But repacker may create more wire LUTs for routing
+ * by exploiting the routability of the physical mode of a programmable block
+ * This is why this annotation is required
+ ***************************************************************************************/
+static 
+void identify_physical_pb_wire_lut_created_by_repack(VprClusteringAnnotation& cluster_annotation,
+                                                     const AtomContext& atom_ctx,
+                                                     const ClusteringContext& cluster_ctx,
+                                                     const VprDeviceAnnotation& device_annotation,
+                                                     const CircuitLibrary& circuit_lib,
+                                                     const bool& verbose) {
+  vtr::ScopedStartFinishTimer timer("Identify wire LUTs created by repacking");
+  int wire_lut_counter = 0;
+
+  for (auto blk_id : cluster_ctx.clb_nlist.blocks()) {
+    PhysicalPb& physical_pb = cluster_annotation.mutable_physical_pb(blk_id);
+    /* Find the LUT physical pb id */
+    for (const PhysicalPbId& primitive_pb : physical_pb.primitive_pbs()) {
+      CircuitModelId circuit_model = device_annotation.pb_type_circuit_model(physical_pb.pb_graph_node(primitive_pb)->pb_type);
+      VTR_ASSERT(true == circuit_lib.valid_model_id(circuit_model));
+      if (CIRCUIT_MODEL_LUT != circuit_lib.model_type(circuit_model)) {
+        continue;
+      }
+    
+      /* Reach here, we have a LUT to deal with. Find the wire LUT that mapped to the LUT */
+      wire_lut_counter += identify_one_physical_pb_wire_lut_created_by_repack(physical_pb, primitive_pb, device_annotation, atom_ctx, circuit_lib, verbose);
+    }
+  }
+
+  VTR_LOG("Identified %d wire LUTs created by repacker\n",
+          wire_lut_counter);
+}
+
+
+
+/***************************************************************************************
  * Top-level function to pack physical pb_graph 
  * This function will do :
  *  - create physical lb_rr_graph for each pb_graph considering physical modes only
@@ -712,6 +762,7 @@ void pack_physical_pbs(const DeviceContext& device_ctx,
                        VprClusteringAnnotation& clustering_annotation,
                        const VprBitstreamAnnotation& bitstream_annotation,
                        const RepackDesignConstraints& design_constraints,
+                       const CircuitLibrary& circuit_lib,
                        const bool& verbose) {
 
   /* build the routing resource graph for each logical tile */
@@ -726,6 +777,16 @@ void pack_physical_pbs(const DeviceContext& device_ctx,
                   bitstream_annotation,
                   design_constraints,
                   verbose);
+
+  /* Annnotate wire LUTs that are ONLY created by repacker!!!
+   * This is a MUST RUN!
+   */
+  identify_physical_pb_wire_lut_created_by_repack(clustering_annotation,
+                                                  atom_ctx,
+                                                  clustering_ctx,
+                                                  device_annotation,
+                                                  circuit_lib,
+                                                  verbose);
 }
 
 } /* end namespace openfpga */

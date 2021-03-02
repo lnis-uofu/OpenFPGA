@@ -58,6 +58,9 @@ void print_verilog_top_random_testbench_ports(std::fstream& fp,
                                               const VprNetlistAnnotation& netlist_annotation) {
   /* Validate the file stream */
   valid_file_stream(fp);
+
+  print_verilog_default_net_type_declaration(fp,
+                                             VERILOG_DEFAULT_NET_TYPE_NONE);
  
   /* Print the declaration for the module */
   fp << "module " << circuit_name << FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX << ";" << std::endl;

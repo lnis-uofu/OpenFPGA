@@ -47,6 +47,7 @@ int repack(OpenfpgaContext& openfpga_ctx,
                     openfpga_ctx.mutable_vpr_clustering_annotation(),
                     openfpga_ctx.vpr_bitstream_annotation(),
                     repack_design_constraints,
+                    openfpga_ctx.arch().circuit_lib,
                     cmd_context.option_enable(cmd, opt_verbose));
 
   build_physical_lut_truth_tables(openfpga_ctx.mutable_vpr_clustering_annotation(),
