@@ -99,10 +99,6 @@ parser.add_argument('--arch_variable_file', type=str, default=None,
 #                     help="Key file for shell")
 parser.add_argument('--yosys_tmpl', type=str, default=None,
                     help="Alternate yosys template, generates top_module.blif")
-parser.add_argument('--yosys_mode', type=str, default=None,
-                    help="Specify adder/no_adder mode for yosys run. Default is adder")
-parser.add_argument('--yosys_family', type=str, default="qlf_k4n8",
-                    help="Specify device family for yosys run")
 parser.add_argument('--disp', action="store_true",
                     help="Open display while running VPR")
 parser.add_argument('--debug', action="store_true",
@@ -484,16 +480,6 @@ def run_yosys_with_abc():
         logger.exception("Failed to extract lut_size from XML file")
         clean_up_and_exit("")
     args.K = lut_size
-
-    YS_MODE=""
-    # Yosys valid mode option is "no_adder".
-    if args.yosys_mode is not None:
-        if args.yosys_mode.lower() == "no_adder":
-            YS_MODE = "-" + args.yosys_mode
-        else:
-            logger.warning("Invalid value '" + args.yosys_mode + "' specified for synthesis_param 'bench_yosys_mode'")
-            logger.warning("Considering default yosys mode i.e. adder mode")
-
     # Yosys script parameter mapping
     ys_params = {
         "READ_VERILOG_FILE": " \n".join([
@@ -502,9 +488,22 @@ def run_yosys_with_abc():
         "TOP_MODULE": args.top_module,
         "LUT_SIZE": lut_size,
         "OUTPUT_BLIF": args.top_module+"_yosys_out.blif",
-        "YOSYS_FAMILY": args.yosys_family,
-        "YOSYS_MODE": YS_MODE,
     }
+
+    for indx in range(0, len(OpenFPGAArgs), 2):
+        tmpVar = OpenFPGAArgs[indx][2:].upper()
+        ys_params[tmpVar] = OpenFPGAArgs[indx+1]
+    
+    if 'YOSYS_FAMILY' not in ys_params.keys():
+        # define default family as 'qlf_k4n8'
+        ys_params['YOSYS_FAMILY'] = "qlf_k4n8"
+
+    # prefix value of YOSYS_MODE with '-' as an option in yosys script
+    if 'YOSYS_MODE' in ys_params.keys():
+        ys_params['YOSYS_MODE'] = "-" + ys_params['YOSYS_MODE']
+    else:
+        ys_params['YOSYS_MODE'] = ""
+
     yosys_template = args.yosys_tmpl if args.yosys_tmpl else os.path.join(
         cad_tools["misc_dir"], "ys_tmpl_yosys_vpr_flow.ys")
     tmpl = Template(open(yosys_template, encoding='utf-8').read())

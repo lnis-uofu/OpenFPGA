@@ -255,8 +255,6 @@ def generate_each_task_actions(taskname):
         # Read provided benchmark configurations
         # Common configurations
         ys_for_task_common = SynthSection.get("bench_yosys_common")
-        ys_yosys_mode = SynthSection.get("bench_yosys_mode")
-        ys_yosys_family = SynthSection.get("bench_yosys_family")
         chan_width_common = SynthSection.get("bench_chan_width_common")
 
         # Individual benchmark configuration
@@ -265,10 +263,6 @@ def generate_each_task_actions(taskname):
                                                        fallback="top")
         CurrBenchPara["ys_script"] = SynthSection.get(bech_name+"_yosys",
                                                       fallback=ys_for_task_common)
-        CurrBenchPara["yosys_mode"] = SynthSection.get(bech_name+"_yosys_mode",
-                                                      fallback=ys_yosys_mode)
-        CurrBenchPara["yosys_family"] = SynthSection.get(bech_name+"_yosys_family",
-                                                      fallback=ys_yosys_family)
         CurrBenchPara["chan_width"] = SynthSection.get(bech_name+"_chan_width",
                                                        fallback=chan_width_common)
 
@@ -386,12 +380,6 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, param, task_conf):
 
     if benchmark_obj.get("ys_script"):
         command += ["--yosys_tmpl", benchmark_obj["ys_script"]]
-
-    if benchmark_obj.get("yosys_mode"):
-        command += ["--yosys_mode", benchmark_obj["yosys_mode"]]
-
-    if benchmark_obj.get("yosys_family"):
-        command += ["--yosys_family", benchmark_obj["yosys_family"]]
 
     if task_gc.getboolean("power_analysis"):
         command += ["--power"]
