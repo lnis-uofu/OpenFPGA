@@ -4,3 +4,4 @@ ${READ_VERILOG_FILE}
 
 synth_quicklogic -blif ${OUTPUT_BLIF} -family ${YOSYS_FAMILY} -top ${TOP_MODULE} ${YOSYS_MODE}
 
+write_verilog -noattr -nohex ${TOP_MODULE}.v
