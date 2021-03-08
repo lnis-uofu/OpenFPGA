@@ -698,6 +698,7 @@ def run_rewrite_verilog():
             "write_verilog %s" % args.top_module+"_output_verilog.v"
         ]
         command = [cad_tools["yosys_path"], "-p", "; ".join(script_cmd)]
+        run_command("Yosys", "yosys_rewrite.log", command)
     else:
         ys_rewrite_params = {
             "INPUT_BLIF": args.top_module+".blif",
@@ -705,8 +706,13 @@ def run_rewrite_verilog():
         }
         for indx in range(0, len(OpenFPGAArgs), 2):
             tmpVar = OpenFPGAArgs[indx][2:].upper()
-            ys_rewrite_params[tmpVar] = OpenFPGAArgs[indx+1]
-    run_command("Yosys", "yosys_rewrite.log", command)
+            ys_rewrite_params[tmpVar] = OpenFPGAArgs[indx + 1]
+        tmpl = Template(open(args.ys_rewrite_tmpl, encoding='utf-8').read())
+        with open("yosys_rewrite.ys", 'w') as archfile:
+            archfile.write(tmpl.safe_substitute(ys_params))
+        run_command("Run yosys", "yosys_rewrite_output.log",
+                [cad_tools["yosys_path"], 'yosys_rewrite.ys'])
+
 
 
 def run_netlists_verification(exit_if_fail=True):
