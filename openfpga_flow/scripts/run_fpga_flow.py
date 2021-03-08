@@ -494,16 +494,6 @@ def run_yosys_with_abc():
         tmpVar = OpenFPGAArgs[indx][2:].upper()
         ys_params[tmpVar] = OpenFPGAArgs[indx+1]
     
-    if 'YOSYS_FAMILY' not in ys_params.keys():
-        # define default family as 'qlf_k4n8'
-        ys_params['YOSYS_FAMILY'] = "qlf_k4n8"
-
-    # prefix value of YOSYS_MODE with '-' as an option in yosys script
-    if 'YOSYS_MODE' in ys_params.keys():
-        ys_params['YOSYS_MODE'] = "-" + ys_params['YOSYS_MODE']
-    else:
-        ys_params['YOSYS_MODE'] = ""
-
     yosys_template = args.yosys_tmpl if args.yosys_tmpl else os.path.join(
         cad_tools["misc_dir"], "ys_tmpl_yosys_vpr_flow.ys")
     tmpl = Template(open(yosys_template, encoding='utf-8').read())
