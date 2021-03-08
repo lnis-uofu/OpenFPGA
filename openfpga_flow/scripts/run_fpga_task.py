@@ -175,7 +175,7 @@ def generate_each_task_actions(taskname):
         curr_task_dir = repo_tasks
     else:
         clean_up_and_exit("Task directory [%s] not found" % curr_task_dir)
-    
+
     os.chdir(curr_task_dir)
 
     curr_task_conf_file = os.path.join(curr_task_dir, "config", "task.conf")
@@ -262,6 +262,8 @@ def generate_each_task_actions(taskname):
         CurrBenchPara["top_module"] = SynthSection.get(bech_name+"_top",
                                                        fallback="top")
         CurrBenchPara["ys_script"] = SynthSection.get(bech_name+"_yosys",
+                                                      fallback=ys_for_task_common)
+        CurrBenchPara["ys_rewrite_script"] = SynthSection.get(bech_name+"_yosys_rewrite",
                                                       fallback=ys_for_task_common)
         CurrBenchPara["chan_width"] = SynthSection.get(bech_name+"_chan_width",
                                                        fallback=chan_width_common)
@@ -380,6 +382,9 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, param, task_conf):
 
     if benchmark_obj.get("ys_script"):
         command += ["--yosys_tmpl", benchmark_obj["ys_script"]]
+
+    if benchmark_obj.get("ys_rewrite_script"):
+        command += ["--ys_rewrite_tmpl", benchmark_obj["ys_rewrite_script"]]
 
     if task_gc.getboolean("power_analysis"):
         command += ["--power"]
