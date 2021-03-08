@@ -491,9 +491,11 @@ def run_yosys_with_abc():
         "LUT_SIZE": lut_size,
         "OUTPUT_BLIF": args.top_module+"_yosys_out.blif",
     }
+
     for indx in range(0, len(OpenFPGAArgs), 2):
         tmpVar = OpenFPGAArgs[indx][2:].upper()
         ys_params[tmpVar] = OpenFPGAArgs[indx+1]
+    
     yosys_template = args.yosys_tmpl if args.yosys_tmpl else os.path.join(
         cad_tools["misc_dir"], "ys_tmpl_yosys_vpr_flow.ys")
     tmpl = Template(open(yosys_template, encoding='utf-8').read())
