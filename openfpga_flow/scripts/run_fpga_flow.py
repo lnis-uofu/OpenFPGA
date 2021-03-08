@@ -711,7 +711,7 @@ def run_rewrite_verilog():
             ys_rewrite_params[tmpVar] = OpenFPGAArgs[indx + 1]
         tmpl = Template(open(args.ys_rewrite_tmpl, encoding='utf-8').read())
         with open("yosys_rewrite.ys", 'w') as archfile:
-            archfile.write(tmpl.safe_substitute(ys_params))
+            archfile.write(tmpl.safe_substitute(ys_rewrite_params))
         run_command("Run yosys", "yosys_rewrite_output.log",
                 [cad_tools["yosys_path"], 'yosys_rewrite.ys'])
 
