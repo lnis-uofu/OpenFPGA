@@ -694,6 +694,8 @@ def extract_vpr_stats(logfile, r_filename="vpr_stat", parse_section="vpr"):
 
 def run_rewrite_verilog():
     # Rewrite the verilog after optimization
+    # If there is no template script provided, use a default template
+    # If there is a template script provided, replace parameters from configuration
     if not args.ys_rewrite_tmpl:
         script_cmd = [
             "read_blif %s" % args.top_module+".blif",
@@ -702,10 +704,17 @@ def run_rewrite_verilog():
         command = [cad_tools["yosys_path"], "-p", "; ".join(script_cmd)]
         run_command("Yosys", "yosys_rewrite.log", command)
     else:
+        # Yosys script parameter mapping
         ys_rewrite_params = {
+            "READ_VERILOG_FILE": " \n".join([
+                "read_verilog -nolatches " + shlex.quote(eachfile)
+                for eachfile in args.benchmark_files]),
+            "TOP_MODULE": args.top_module,
+            "OUTPUT_BLIF": args.top_module+"_yosys_out.blif",
             "INPUT_BLIF": args.top_module+".blif",
             "OUTPUT_VERILOG": args.top_module+"_output_verilog.v"
         }
+
         for indx in range(0, len(OpenFPGAArgs), 2):
             tmpVar = OpenFPGAArgs[indx][2:].upper()
             ys_rewrite_params[tmpVar] = OpenFPGAArgs[indx + 1]
