@@ -279,12 +279,13 @@ def generate_each_task_actions(taskname):
                                   "for vpr_blif flow")
             CurrBenchPara["activity_file"] = SynthSection.get(bech_name+"_act")
 
-            # Check if base verilog file exists
-            if not SynthSection.get(bech_name+"_verilog"):
-                clean_up_and_exit("Missing argument %s for vpr_blif flow" %
-                                  (bech_name+"_verilog"))
-            CurrBenchPara["verilog_file"] = SynthSection.get(
-                bech_name+"_verilog")
+        # Allow user to specify a post-synthesis verilog file for simulation usage
+        # Check if base verilog file exists
+        if not SynthSection.get(bech_name+"_verilog"):
+            clean_up_and_exit("Missing argument %s for vpr_blif flow" %
+                              (bech_name+"_verilog"))
+        CurrBenchPara["verilog_file"] = SynthSection.get(
+            bech_name+"_verilog")
 
         # Add script parameter list in current benchmark
         ScriptSections = [x for x in TaskFileSections if "SCRIPT_PARAM" in x]
