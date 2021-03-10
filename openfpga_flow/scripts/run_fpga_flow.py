@@ -719,11 +719,16 @@ def run_rewrite_verilog():
         for indx in range(0, len(OpenFPGAArgs), 2):
             tmpVar = OpenFPGAArgs[indx][2:].upper()
             ys_rewrite_params[tmpVar] = OpenFPGAArgs[indx + 1]
-        tmpl = Template(open(args.ys_rewrite_tmpl, encoding='utf-8').read())
-        with open("yosys_rewrite.ys", 'w') as archfile:
-            archfile.write(tmpl.safe_substitute(ys_rewrite_params))
-        run_command("Run yosys", "yosys_rewrite_output.log",
-                [cad_tools["yosys_path"], 'yosys_rewrite.ys'])
+
+        # Split a series of scripts by delim ';'
+        # And execute the scripts serially
+        for iteration_idx, curr_rewrite_tmpl in enumerate(args.ys_rewrite_tmpl.split(";")):
+            tmpl = Template(open(curr_rewrite_tmpl, encoding='utf-8').read())
+            logger.info("Yosys rewrite iteration: " + str(iteration_idx))
+            with open("yosys_rewrite_" + str(iteration_idx) + ".ys", 'w') as archfile:
+                archfile.write(tmpl.safe_substitute(ys_rewrite_params))
+            run_command("Run yosys", "yosys_rewrite_output.log",
+                    [cad_tools["yosys_path"], "yosys_rewrite_" + str(iteration_idx) + ".ys"])
 
 
 
