@@ -254,7 +254,11 @@ def generate_each_task_actions(taskname):
 
         # Read provided benchmark configurations
         # Common configurations
+        # - All the benchmarks may share the same yosys synthesis template script
+        # - All the benchmarks may share the same rewrite yosys template script, which converts post-synthesis .v netlist to be compatible with .blif port definition. This is required for correct verification at the end of flows
+        # - All the benchmarks may share the same routing channel width in VPR runs. This is designed to enable architecture evaluations for a fixed device model
         ys_for_task_common = SynthSection.get("bench_yosys_common")
+        ys_rewrite_for_task_common = SynthSection.get("bench_yosys_rewrite_common")
         chan_width_common = SynthSection.get("bench_chan_width_common")
 
         # Individual benchmark configuration
@@ -264,7 +268,7 @@ def generate_each_task_actions(taskname):
         CurrBenchPara["ys_script"] = SynthSection.get(bech_name+"_yosys",
                                                       fallback=ys_for_task_common)
         CurrBenchPara["ys_rewrite_script"] = SynthSection.get(bech_name+"_yosys_rewrite",
-                                                      fallback=ys_for_task_common)
+                                                      fallback=ys_rewrite_for_task_common)
         CurrBenchPara["chan_width"] = SynthSection.get(bech_name+"_chan_width",
                                                        fallback=chan_width_common)
 

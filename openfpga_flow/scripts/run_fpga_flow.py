@@ -490,6 +490,7 @@ def run_yosys_with_abc():
         "TOP_MODULE": args.top_module,
         "LUT_SIZE": lut_size,
         "OUTPUT_BLIF": args.top_module+"_yosys_out.blif",
+        "OUTPUT_VERILOG": args.top_module+"_output_verilog.v"
     }
 
     for indx in range(0, len(OpenFPGAArgs), 2):
