@@ -20,11 +20,3 @@ synth -run check
 # Clean and output blif
 opt_clean -purge
 write_blif rewritten_${OUTPUT_BLIF}
-
-# Clear all the designs
-design -reset
-
-# Rewrite the .blif to Verilog
-# so that the pin sequence matches
-read_blif rewritten_${OUTPUT_BLIF}
-write_verilog ${OUTPUT_VERILOG}
