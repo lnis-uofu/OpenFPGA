@@ -38,6 +38,36 @@ std::string VprBitstreamAnnotation::pb_type_bitstream_content(t_pb_type* pb_type
   return std::string();
 }
 
+bool VprBitstreamAnnotation::pb_type_contain_mode_select_bitstream(t_pb_type* pb_type) const {
+  auto result = contain_mode_select_bitstreams_.find(pb_type);
+  if (result != contain_mode_select_bitstreams_.end()) {
+    return result->second;
+  }
+
+  /* Not found, return false as default */
+  return false;
+}
+
+size_t VprBitstreamAnnotation::pb_type_bitstream_offset(t_pb_type* pb_type) const {
+  auto result = bitstream_offsets_.find(pb_type);
+  if (result != bitstream_offsets_.end()) {
+    return result->second;
+  }
+
+  /* Not found, return an zero offset */
+  return 0;
+}
+
+size_t VprBitstreamAnnotation::pb_type_mode_select_bitstream_offset(t_pb_type* pb_type) const {
+  auto result = mode_select_bitstream_offsets_.find(pb_type);
+  if (result != mode_select_bitstream_offsets_.end()) {
+    return result->second;
+  }
+
+  /* Not found, return an zero offset */
+  return 0;
+}
+
 /************************************************************************
  * Public mutators
  ***********************************************************************/
@@ -45,10 +75,25 @@ void VprBitstreamAnnotation::set_pb_type_bitstream_source(t_pb_type* pb_type,
                                                           const e_bitstream_source_type& bitstream_source) {
   bitstream_sources_[pb_type] = bitstream_source; 
 }
+
 void VprBitstreamAnnotation::set_pb_type_bitstream_content(t_pb_type* pb_type,
                                                            const std::string& bitstream_content) {
   bitstream_contents_[pb_type] = bitstream_content; 
 }
 
+void VprBitstreamAnnotation::set_pb_type_contain_mode_select_bitstream(t_pb_type* pb_type,
+                                                                       const bool& contain_mode_select_bitstream) {
+  contain_mode_select_bitstreams_[pb_type] = contain_mode_select_bitstream; 
+}
+
+void VprBitstreamAnnotation::set_pb_type_bitstream_offset(t_pb_type* pb_type,
+                                                          const size_t& offset) {
+  bitstream_offsets_[pb_type] = offset; 
+}
+
+void VprBitstreamAnnotation::set_pb_type_mode_select_bitstream_offset(t_pb_type* pb_type,
+                                                                      const size_t& offset) {
+  mode_select_bitstream_offsets_[pb_type] = offset; 
+}
 
 } /* End namespace openfpga*/

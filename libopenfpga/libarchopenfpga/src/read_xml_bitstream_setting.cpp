@@ -36,11 +36,18 @@ void read_xml_bitstream_pb_type_setting(pugi::xml_node& xml_pb_type,
   openfpga::PbParser operating_pb_parser(name_attr);
 
   /* Add to bitstream setting */
-  bitstream_setting.add_bitstream_pb_type_setting(operating_pb_parser.leaf(),
-                                                  operating_pb_parser.parents(),
-                                                  operating_pb_parser.modes(),
-                                                  source_attr,
-                                                  content_attr);
+  BitstreamPbTypeSettingId bitstream_pb_type_id = bitstream_setting.add_bitstream_pb_type_setting(operating_pb_parser.leaf(),
+                                                                                                  operating_pb_parser.parents(),
+                                                                                                  operating_pb_parser.modes(),
+                                                                                                  source_attr,
+                                                                                                  content_attr);
+
+  /* Parse if the bitstream overwritting is applied to mode bits of a pb_type */
+  const bool& is_mode_select_bitstream = get_attribute(xml_pb_type, "is_mode_select_bitstream", loc_data).as_bool(false);
+  bitstream_setting.set_mode_select_bitstream(bitstream_pb_type_id, is_mode_select_bitstream); 
+
+  const int& offset = get_attribute(xml_pb_type, "bitstream_offset", loc_data).as_int(0);
+  bitstream_setting.set_bitstream_offset(bitstream_pb_type_id, offset); 
 }
 
 /********************************************************************

@@ -448,15 +448,19 @@ void build_lut_bitstream(BitstreamManager& bitstream_manager,
     /* If the physical pb contains fixed bitstream, overload here */
     if (false == physical_pb.fixed_bitstream(lut_pb_id).empty()) {
       std::string fixed_bitstream = physical_pb.fixed_bitstream(lut_pb_id);
+      size_t start_index = physical_pb.fixed_bitstream_offset(lut_pb_id);
       /* Ensure the length matches!!! */
-      if (lut_bitstream.size() != fixed_bitstream.size()) {
+      if (lut_bitstream.size() - start_index != fixed_bitstream.size()) {
         VTR_LOG_ERROR("Unmatched length of fixed bitstream %s!Expected to be %ld bits\n",
                       fixed_bitstream.c_str(),
                       lut_bitstream.size()); 
         exit(1);
       }
-      /* Overload here */
-      lut_bitstream.clear();
+      /* Overload here
+       * - if there is a non-zero offset, we just erase part of the bitstream
+       * - otherwise, overwrite the whole bitstream 
+       */
+      lut_bitstream.erase(lut_bitstream.begin() + start_index, lut_bitstream.end());
       for (const char& fixed_bit : fixed_bitstream) {
         VTR_ASSERT('0' == fixed_bit || '1' == fixed_bit);
         lut_bitstream.push_back('1' == fixed_bit);
@@ -472,6 +476,29 @@ void build_lut_bitstream(BitstreamManager& bitstream_manager,
     } else { /* get default mode_bits */
       mode_select_bitstream = generate_mode_select_bitstream(device_annotation.pb_type_mode_bits(lut_pb_type));
     }
+
+    /* If the physical pb contains fixed mode-select bitstream, overload here */
+    if (false == physical_pb.fixed_mode_select_bitstream(lut_pb_id).empty()) {
+      std::string fixed_mode_select_bitstream = physical_pb.fixed_mode_select_bitstream(lut_pb_id);
+      size_t mode_bits_start_index = physical_pb.fixed_mode_select_bitstream_offset(lut_pb_id);
+      /* Ensure the length matches!!! */
+      if (mode_select_bitstream.size() - mode_bits_start_index != fixed_mode_select_bitstream.size()) {
+        VTR_LOG_ERROR("Unmatched length of fixed mode_select_bitstream %s!Expected to be %ld bits\n",
+                      fixed_mode_select_bitstream.c_str(),
+                      mode_select_bitstream.size()); 
+        exit(1);
+      }
+      /* Overload here
+       * - if there is a non-zero offset, we just erase part of the bitstream
+       * - otherwise, overwrite the whole bitstream 
+       */
+      mode_select_bitstream.erase(mode_select_bitstream.begin() + mode_bits_start_index, mode_select_bitstream.end());
+      for (const char& fixed_bit : fixed_mode_select_bitstream) {
+        VTR_ASSERT('0' == fixed_bit || '1' == fixed_bit);
+        mode_select_bitstream.push_back('1' == fixed_bit);
+      }
+    }
+
     /* Conjunct the mode-select bitstream to the lut bitstream */
     for (const bool& bit : mode_select_bitstream) {
       lut_bitstream.push_back(bit);
