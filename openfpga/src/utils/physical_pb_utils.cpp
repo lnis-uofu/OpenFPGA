@@ -304,7 +304,7 @@ void rec_update_physical_pb_from_operating_pb(PhysicalPb& phy_pb,
     VTR_ASSERT(atom_blk);
 
     phy_pb.add_atom_block(physical_pb, atom_blk);
-    
+
     /* if the operating pb type has bitstream annotation,
      * bind the bitstream value from atom block to the physical pb 
      */
@@ -320,14 +320,8 @@ void rec_update_physical_pb_from_operating_pb(PhysicalPb& phy_pb,
           if (param_search.first != tokens[1]) {
             continue;
           }
-          if (false == bitstream_annotation.pb_type_contain_mode_select_bitstream(pb_type)) {
-            phy_pb.set_fixed_bitstream(physical_pb, param_search.second); 
-            phy_pb.set_fixed_bitstream_offset(physical_pb, bitstream_annotation.pb_type_bitstream_offset(pb_type));
-          } else {
-            VTR_ASSERT_SAFE(true == bitstream_annotation.pb_type_contain_mode_select_bitstream(pb_type));
-            phy_pb.set_fixed_mode_select_bitstream(physical_pb, param_search.second); 
-            phy_pb.set_fixed_mode_select_bitstream_offset(physical_pb, bitstream_annotation.pb_type_mode_select_bitstream_offset(pb_type));
-          } 
+          phy_pb.set_fixed_bitstream(physical_pb, param_search.second); 
+          phy_pb.set_fixed_bitstream_offset(physical_pb, bitstream_annotation.pb_type_bitstream_offset(pb_type));
         }
       } else if (std::string(".attr") == tokens[0]) {
         for (const auto& attr_search : atom_ctx.nlist.block_attrs(atom_blk)) {
@@ -335,14 +329,39 @@ void rec_update_physical_pb_from_operating_pb(PhysicalPb& phy_pb,
           if (attr_search.first == tokens[1]) {
             continue;
           }
-          if (false == bitstream_annotation.pb_type_contain_mode_select_bitstream(pb_type)) {
-            phy_pb.set_fixed_bitstream(physical_pb, attr_search.second); 
-            phy_pb.set_fixed_bitstream_offset(physical_pb, bitstream_annotation.pb_type_bitstream_offset(pb_type));
-          } else {
-            VTR_ASSERT_SAFE(true == bitstream_annotation.pb_type_contain_mode_select_bitstream(pb_type));
-            phy_pb.set_fixed_mode_select_bitstream(physical_pb, attr_search.second); 
-            phy_pb.set_fixed_mode_select_bitstream_offset(physical_pb, bitstream_annotation.pb_type_mode_select_bitstream_offset(pb_type));
-          } 
+          phy_pb.set_fixed_bitstream(physical_pb, attr_search.second); 
+          phy_pb.set_fixed_bitstream_offset(physical_pb, bitstream_annotation.pb_type_bitstream_offset(pb_type));
+        }
+      }
+    }
+
+    
+    /* if the operating pb type has mode-select bitstream annotation,
+     * bind the bitstream value from atom block to the physical pb 
+     */
+    if (VprBitstreamAnnotation::e_bitstream_source_type::BITSTREAM_SOURCE_EBLIF == bitstream_annotation.pb_type_mode_select_bitstream_source(pb_type)) {
+      StringToken tokenizer = bitstream_annotation.pb_type_mode_select_bitstream_content(pb_type);
+      std::vector<std::string> tokens = tokenizer.split(" ");
+      /* FIXME: The token-level check should be done much earlier!!! */
+      VTR_ASSERT(2 == tokens.size());
+      /* The token is typically organized as <.param|.attr> <identifier string> */
+      if (std::string(".param") == tokens[0]) {
+        for (const auto& param_search : atom_ctx.nlist.block_params(atom_blk)) {
+          /* Bypass unmatched parameter identifier */
+          if (param_search.first != tokens[1]) {
+            continue;
+          }
+          phy_pb.set_fixed_mode_select_bitstream(physical_pb, param_search.second); 
+          phy_pb.set_fixed_mode_select_bitstream_offset(physical_pb, bitstream_annotation.pb_type_mode_select_bitstream_offset(pb_type));
+        }
+      } else if (std::string(".attr") == tokens[0]) {
+        for (const auto& attr_search : atom_ctx.nlist.block_attrs(atom_blk)) {
+          /* Bypass unmatched parameter identifier */
+          if (attr_search.first == tokens[1]) {
+            continue;
+          }
+          phy_pb.set_fixed_mode_select_bitstream(physical_pb, attr_search.second); 
+          phy_pb.set_fixed_mode_select_bitstream_offset(physical_pb, bitstream_annotation.pb_type_mode_select_bitstream_offset(pb_type));
         }
       }
     }

@@ -43,10 +43,10 @@ void read_xml_bitstream_pb_type_setting(pugi::xml_node& xml_pb_type,
                                                                                                   content_attr);
 
   /* Parse if the bitstream overwritting is applied to mode bits of a pb_type */
-  const bool& is_mode_select_bitstream = get_attribute(xml_pb_type, "is_mode_select_bitstream", loc_data).as_bool(false);
+  const bool& is_mode_select_bitstream = get_attribute(xml_pb_type, "is_mode_select_bitstream", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false);
   bitstream_setting.set_mode_select_bitstream(bitstream_pb_type_id, is_mode_select_bitstream); 
 
-  const int& offset = get_attribute(xml_pb_type, "bitstream_offset", loc_data).as_int(0);
+  const int& offset = get_attribute(xml_pb_type, "bitstream_offset", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(0);
   bitstream_setting.set_bitstream_offset(bitstream_pb_type_id, offset); 
 }
 

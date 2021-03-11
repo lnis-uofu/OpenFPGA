@@ -33,29 +33,39 @@ class VprBitstreamAnnotation {
   public:  /* Public accessors */
     e_bitstream_source_type pb_type_bitstream_source(t_pb_type* pb_type) const;
     std::string pb_type_bitstream_content(t_pb_type* pb_type) const;
-    bool pb_type_contain_mode_select_bitstream(t_pb_type* pb_type) const;
     size_t pb_type_bitstream_offset(t_pb_type* pb_type) const;
+
+    e_bitstream_source_type pb_type_mode_select_bitstream_source(t_pb_type* pb_type) const;
+    std::string pb_type_mode_select_bitstream_content(t_pb_type* pb_type) const;
     size_t pb_type_mode_select_bitstream_offset(t_pb_type* pb_type) const;
   public:  /* Public mutators */
     void set_pb_type_bitstream_source(t_pb_type* pb_type,
                                       const e_bitstream_source_type& bitstream_source);
     void set_pb_type_bitstream_content(t_pb_type* pb_type,
                                        const std::string& bitstream_content);
-    void set_pb_type_contain_mode_select_bitstream(t_pb_type* pb_type,
-                                                   const bool& contain_mode_select_bitstream);
     void set_pb_type_bitstream_offset(t_pb_type* pb_type,
                                       const size_t& offset);
+
+    void set_pb_type_mode_select_bitstream_source(t_pb_type* pb_type,
+                                                  const e_bitstream_source_type& bitstream_source);
+    void set_pb_type_mode_select_bitstream_content(t_pb_type* pb_type,
+                                                   const std::string& bitstream_content);
     void set_pb_type_mode_select_bitstream_offset(t_pb_type* pb_type,
                                                   const size_t& offset);
   private: /* Internal data */
+    /* For regular bitstreams */
     /* A look up for pb type to find bitstream source type */
     std::map<t_pb_type*, e_bitstream_source_type> bitstream_sources_;
     /* Binding from pb type to bitstream content */
     std::map<t_pb_type*, std::string> bitstream_contents_;
-    /* A flag to identify if the pb_type has an external mode-select bitstream */
-    std::map<t_pb_type*, bool> contain_mode_select_bitstreams_;
     /* Offset to be applied to bitstream */
     std::map<t_pb_type*, size_t> bitstream_offsets_;
+
+    /* For mode-select bitstreams */
+    /* A look up for pb type to find bitstream source type */
+    std::map<t_pb_type*, e_bitstream_source_type> mode_select_bitstream_sources_;
+    /* Binding from pb type to bitstream content */
+    std::map<t_pb_type*, std::string> mode_select_bitstream_contents_;
     /* Offset to be applied to mode-select bitstream */
     std::map<t_pb_type*, size_t> mode_select_bitstream_offsets_;
 };
