@@ -135,13 +135,11 @@ std::string generate_pb_memory_instance_name(const std::string& prefix,
                                              t_pb_graph_pin* pb_graph_pin, 
                                              const std::string& postfix);
 
-std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
-                                    const size_t& width, 
+std::string generate_grid_port_name(const size_t& width, 
                                     const size_t& height, 
                                     const int& subtile_index, 
                                     const e_side& side, 
-                                    const BasicPort& pin_info,
-                                    const bool& for_top_netlist);
+                                    const BasicPort& pin_info);
 
 std::string generate_grid_duplicated_port_name(const size_t& width,
                                                const size_t& height, 

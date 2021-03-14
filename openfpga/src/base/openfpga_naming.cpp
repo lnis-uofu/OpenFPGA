@@ -505,32 +505,14 @@ std::string generate_connection_block_module_name(const t_rr_type& cb_type,
  * This function will generate a full port name including coordinates
  * so that each pin in top-level netlists is unique!
  *********************************************************************/
-std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
-                                    const size_t& width, 
+std::string generate_grid_port_name(const size_t& width, 
                                     const size_t& height, 
                                     const int& subtile_index, 
                                     const e_side& side, 
-                                    const BasicPort& pin_info,
-                                    const bool& for_top_netlist) {
+                                    const BasicPort& pin_info) {
+  /* Ensure that the pin is 1-bit ONLY !!! */
   VTR_ASSERT(1 == pin_info.get_width());
-  if (true == for_top_netlist) {
-    std::string port_name = std::string("grid_");
-    port_name += std::to_string(coordinate.x());
-    port_name += std::string("__");
-    port_name += std::to_string(coordinate.y());
-    port_name += std::string("__pin_");
-    port_name += std::to_string(height);
-    port_name += std::string("__");
-    port_name += std::to_string(size_t(side));
-    port_name += std::string("__");
-    port_name += pin_info.get_name();
-    port_name += std::string("_");
-    port_name += std::to_string(pin_info.get_lsb());
-    port_name += std::string("_");
-    return port_name;
-  } 
-  /* For non-top netlist */
-  VTR_ASSERT( false == for_top_netlist );
+
   SideManager side_manager(side);
   std::string port_name = std::string(side_manager.to_string());
   port_name += std::string("_width_");
@@ -559,8 +541,9 @@ std::string generate_grid_duplicated_port_name(const size_t& width,
                                                const e_side& side, 
                                                const BasicPort& pin_info,
                                                const bool& upper_port) {
+  /* Ensure that the pin is 1-bit ONLY !!! */
   VTR_ASSERT(1 == pin_info.get_width());
-  /* For non-top netlist */
+
   SideManager side_manager(side);
   std::string port_name = std::string(side_manager.to_string());
   port_name += std::string("_width_");
@@ -585,12 +568,11 @@ std::string generate_grid_duplicated_port_name(const size_t& width,
   return port_name;
 }
 
-
 /*********************************************************************
  * Generate the port name for a grid in the context of a module
  * To keep a short and simple name, this function will not 
  * include any grid coorindate information!
- *********************************************************************/
+ **********************************************************************/
 std::string generate_grid_module_port_name(const size_t& pin_id) {
   /* For non-top netlist */
   std::string port_name = std::string("grid_");

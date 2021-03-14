@@ -100,8 +100,7 @@ void add_grid_module_duplicated_pb_type_ports(ModuleManager& module_manager,
             /* Xifan: I assume that each direct connection pin must have Fc=0. */
             || ( (DRIVER == pin_class_type)
               && (0. == find_physical_tile_pin_Fc(grid_type_descriptor, ipin)) ) ) {
-            vtr::Point<size_t> dummy_coordinate;
-            std::string port_name = generate_grid_port_name(dummy_coordinate, iwidth, iheight, subtile_index, side, pin_info, false);
+            std::string port_name = generate_grid_port_name(iwidth, iheight, subtile_index, side, pin_info);
             BasicPort grid_port(port_name, 0, 0);
             /* Add the port to the module */
             module_manager.add_port(grid_module, grid_port, pin_type2type_map[pin_class_type]);
@@ -188,8 +187,7 @@ void add_grid_module_net_connect_duplicated_pb_graph_pin(ModuleManager& module_m
       /* Create a net to connect the grid pin to child module pin */
       ModuleNetId net = module_manager.create_module_net(grid_module);
       /* Find the port in grid_module */
-      vtr::Point<size_t> dummy_coordinate;
-      std::string grid_port_name = generate_grid_port_name(dummy_coordinate, pin_width, pin_height, subtile_index, side, pin_info, false);
+      std::string grid_port_name = generate_grid_port_name(pin_width, pin_height, subtile_index, side, pin_info);
       ModulePortId grid_module_port_id = module_manager.find_module_port(grid_module, grid_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(grid_module, grid_module_port_id));
 

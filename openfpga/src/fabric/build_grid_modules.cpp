@@ -77,12 +77,11 @@ void add_grid_module_pb_type_ports(ModuleManager& module_manager,
           /* Generate the pin name, 
            * we give a empty coordinate but it will not be used (see details in the function 
            */
-          vtr::Point<size_t> dummy_coordinate;
           BasicPort pin_info = vpr_device_annotation.physical_tile_pin_port_info(grid_type_descriptor, ipin);
           VTR_ASSERT(true == pin_info.is_valid());
           int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(grid_type_descriptor, ipin);
           VTR_ASSERT(OPEN != subtile_index && subtile_index < grid_type_descriptor->capacity);
-          std::string port_name = generate_grid_port_name(dummy_coordinate, iwidth, iheight, subtile_index, side, pin_info, false);
+          std::string port_name = generate_grid_port_name(iwidth, iheight, subtile_index, side, pin_info);
           BasicPort grid_port(port_name, 0, 0);
           /* Add the port to the module */
           module_manager.add_port(grid_module, grid_port, pin_type2type_map[pin_class_type]);

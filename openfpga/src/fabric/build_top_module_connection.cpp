@@ -121,9 +121,9 @@ void add_top_module_nets_connect_grids_and_sb(ModuleManager& module_manager,
       VTR_ASSERT(true == src_grid_pin_info.is_valid());
       int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(grid_type_descriptor, src_grid_pin_index);
       VTR_ASSERT(OPEN != subtile_index && subtile_index < grid_type_descriptor->capacity);
-      std::string src_grid_port_name = generate_grid_port_name(grid_coordinate, src_grid_pin_width, src_grid_pin_height, subtile_index,
+      std::string src_grid_port_name = generate_grid_port_name(src_grid_pin_width, src_grid_pin_height, subtile_index,
                                                                rr_graph.node_side(rr_gsb.get_opin_node(side_manager.get_side(), inode)),
-                                                               src_grid_pin_info, false);
+                                                               src_grid_pin_info);
       ModulePortId src_grid_port_id = module_manager.find_module_port(src_grid_module, src_grid_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(src_grid_module, src_grid_port_id));
       BasicPort src_grid_port = module_manager.module_port(src_grid_module, src_grid_port_id); 
@@ -267,9 +267,9 @@ void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(ModuleManager
        */
       std::string src_grid_port_name;
       if (0. == find_physical_tile_pin_Fc(grid_type_descriptor, src_grid_pin_index)) {
-        src_grid_port_name = generate_grid_port_name(grid_coordinate, src_grid_pin_width, src_grid_pin_height, subtile_index,
+        src_grid_port_name = generate_grid_port_name(src_grid_pin_width, src_grid_pin_height, subtile_index,
                                                      rr_graph.node_side(rr_gsb.get_opin_node(side_manager.get_side(), inode)),
-                                                     src_grid_pin_info, false);
+                                                     src_grid_pin_info);
       } else {
        src_grid_port_name = generate_grid_duplicated_port_name(src_grid_pin_width, src_grid_pin_height, subtile_index, 
                                                                rr_graph.node_side(rr_gsb.get_opin_node(side_manager.get_side(), inode)),
@@ -438,9 +438,9 @@ void add_top_module_nets_connect_grids_and_cb(ModuleManager& module_manager,
       VTR_ASSERT(true == sink_grid_pin_info.is_valid());
       int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(grid_type_descriptor, sink_grid_pin_index);
       VTR_ASSERT(OPEN != subtile_index && subtile_index < grid_type_descriptor->capacity);
-      std::string sink_grid_port_name = generate_grid_port_name(grid_coordinate, sink_grid_pin_width, sink_grid_pin_height, subtile_index,
+      std::string sink_grid_port_name = generate_grid_port_name(sink_grid_pin_width, sink_grid_pin_height, subtile_index,
                                                                 rr_graph.node_side(rr_gsb.get_ipin_node(cb_ipin_side, inode)),
-                                                                sink_grid_pin_info, false);
+                                                                sink_grid_pin_info);
       ModulePortId sink_grid_port_id = module_manager.find_module_port(sink_grid_module, sink_grid_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(sink_grid_module, sink_grid_port_id));
       BasicPort sink_grid_port = module_manager.module_port(sink_grid_module, sink_grid_port_id); 
@@ -792,10 +792,9 @@ int build_top_module_global_net_for_given_grid_module(ModuleManager& module_mana
 
       /* Build nets */
       for (const e_side& pin_side : pin_sides) {
-        std::string grid_port_name = generate_grid_port_name(grid_coordinate,
-                                                             grid_pin_width, grid_pin_height, subtile_index,
+        std::string grid_port_name = generate_grid_port_name(grid_pin_width, grid_pin_height, subtile_index,
                                                              pin_side,
-                                                             grid_pin_info, false);
+                                                             grid_pin_info);
         ModulePortId grid_port_id = module_manager.find_module_port(grid_module, grid_port_name);
         VTR_ASSERT(true == module_manager.valid_module_port_id(grid_module, grid_port_id));
 
