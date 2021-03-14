@@ -15,6 +15,7 @@
 #include "vtr_geometry.h"
 #include "circuit_library.h"
 #include "device_grid.h"
+#include "openfpga_port.h"
 
 /********************************************************************
  * Function declaration
@@ -137,22 +138,19 @@ std::string generate_pb_memory_instance_name(const std::string& prefix,
 std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
                                     const size_t& width, 
                                     const size_t& height, 
+                                    const int& subtile_index, 
                                     const e_side& side, 
-                                    const size_t& pin_id,
+                                    const BasicPort& pin_info,
                                     const bool& for_top_netlist);
 
 std::string generate_grid_duplicated_port_name(const size_t& width,
                                                const size_t& height, 
+                                               const int& subtile_index, 
                                                const e_side& side, 
-                                               const size_t& pin_id,
+                                               const BasicPort& pin_info,
                                                const bool& upper_port);
 
 std::string generate_grid_module_port_name(const size_t& pin_id);
-
-std::string generate_grid_side_port_name(const DeviceGrid& grids,
-                                         const vtr::Point<size_t>& coordinate,
-                                         const e_side& side, 
-                                         const size_t& pin_id);
 
 std::string generate_sb_module_grid_port_name(const e_side& sb_side,
                                               const e_side& grid_side, 

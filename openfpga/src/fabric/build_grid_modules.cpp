@@ -41,6 +41,7 @@ namespace openfpga {
 static 
 void add_grid_module_pb_type_ports(ModuleManager& module_manager,
                                    const ModuleId& grid_module,
+                                   const VprDeviceAnnotation& vpr_device_annotation,
                                    t_physical_tile_type_ptr grid_type_descriptor,
                                    const e_side& border_side) {
   /* Ensure that we have a valid grid_type_descriptor */
@@ -77,7 +78,11 @@ void add_grid_module_pb_type_ports(ModuleManager& module_manager,
            * we give a empty coordinate but it will not be used (see details in the function 
            */
           vtr::Point<size_t> dummy_coordinate;
-          std::string port_name = generate_grid_port_name(dummy_coordinate, iwidth, iheight, side, ipin, false);
+          BasicPort pin_info = vpr_device_annotation.physical_tile_pin_port_info(grid_type_descriptor, ipin);
+          VTR_ASSERT(true == pin_info.is_valid());
+          int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(grid_type_descriptor, ipin);
+          VTR_ASSERT(OPEN != subtile_index && subtile_index < grid_type_descriptor->capacity);
+          std::string port_name = generate_grid_port_name(dummy_coordinate, iwidth, iheight, subtile_index, side, pin_info, false);
           BasicPort grid_port(port_name, 0, 0);
           /* Add the port to the module */
           module_manager.add_port(grid_module, grid_port, pin_type2type_map[pin_class_type]);
@@ -99,6 +104,7 @@ void add_grid_module_nets_connect_pb_type_ports(ModuleManager& module_manager,
                                                 const ModuleId& grid_module,
                                                 const ModuleId& child_module,
                                                 const size_t& child_instance,
+                                                const VprDeviceAnnotation& vpr_device_annotation,
                                                 t_physical_tile_type_ptr grid_type_descriptor,
                                                 const e_side& border_side) {
   /* Ensure that we have a valid grid_type_descriptor */
@@ -112,6 +118,7 @@ void add_grid_module_nets_connect_pb_type_ports(ModuleManager& module_manager,
       for (int ipin = 0; ipin < top_pb_graph_node->num_input_pins[iport]; ++ipin) {
         add_grid_module_net_connect_pb_graph_pin(module_manager, grid_module,
                                                  child_module, child_instance,
+                                                 vpr_device_annotation,
                                                  grid_type_descriptor,
                                                  &(top_pb_graph_node->input_pins[iport][ipin]),
                                                  border_side,
@@ -124,6 +131,7 @@ void add_grid_module_nets_connect_pb_type_ports(ModuleManager& module_manager,
       for (int ipin = 0; ipin < top_pb_graph_node->num_output_pins[iport]; ++ipin) {
         add_grid_module_net_connect_pb_graph_pin(module_manager, grid_module,
                                                  child_module, child_instance,
+                                                 vpr_device_annotation,
                                                  grid_type_descriptor,
                                                  &(top_pb_graph_node->output_pins[iport][ipin]),
                                                  border_side,
@@ -135,6 +143,7 @@ void add_grid_module_nets_connect_pb_type_ports(ModuleManager& module_manager,
       for (int ipin = 0; ipin < top_pb_graph_node->num_clock_pins[iport]; ++ipin) {
         add_grid_module_net_connect_pb_graph_pin(module_manager, grid_module,
                                                  child_module, child_instance,
+                                                 vpr_device_annotation,
                                                  grid_type_descriptor,
                                                  &(top_pb_graph_node->clock_pins[iport][ipin]),
                                                  border_side,
@@ -974,6 +983,7 @@ void rec_build_logical_tile_modules(ModuleManager& module_manager,
 static 
 void build_physical_tile_module(ModuleManager& module_manager,
                                 DecoderLibrary& decoder_lib,
+                                const VprDeviceAnnotation& vpr_device_annotation,
                                 const CircuitLibrary& circuit_lib,
                                 const e_config_protocol_type& sram_orgz_type,
                                 const CircuitModelId& sram_model,
@@ -1035,6 +1045,7 @@ void build_physical_tile_module(ModuleManager& module_manager,
   if (false == duplicate_grid_pin) {
     /* Default way to add these ports by following the definition in pb_types */
     add_grid_module_pb_type_ports(module_manager, grid_module,
+                                  vpr_device_annotation,
                                   phy_block_type, border_side);
     /* Add module nets to connect the pb_type ports to sub modules */
     for (t_logical_block_type_ptr lb_type : phy_block_type->equivalent_sites) {
@@ -1048,6 +1059,7 @@ void build_physical_tile_module(ModuleManager& module_manager,
       for (const size_t& child_instance : module_manager.child_module_instances(grid_module, pb_module)) {
         add_grid_module_nets_connect_pb_type_ports(module_manager, grid_module,
                                                    pb_module, child_instance,
+                                                   vpr_device_annotation,
                                                    phy_block_type, border_side);
       }
     }
@@ -1055,6 +1067,7 @@ void build_physical_tile_module(ModuleManager& module_manager,
     VTR_ASSERT_SAFE(true == duplicate_grid_pin);
     /* Add these ports with duplication */
     add_grid_module_duplicated_pb_type_ports(module_manager, grid_module,
+                                             vpr_device_annotation,
                                              phy_block_type, border_side);
     
     /* Add module nets to connect the duplicated pb_type ports to sub modules */
@@ -1069,6 +1082,7 @@ void build_physical_tile_module(ModuleManager& module_manager,
       for (const size_t& child_instance : module_manager.child_module_instances(grid_module, pb_module)) {
         add_grid_module_nets_connect_duplicated_pb_type_ports(module_manager, grid_module,
                                                               pb_module, child_instance,
+                                                              vpr_device_annotation,
                                                               phy_block_type, border_side);
       }
     }
@@ -1186,6 +1200,7 @@ void build_grid_modules(ModuleManager& module_manager,
                                                                            &physical_tile);
       for (const e_side& io_type_side : io_type_sides) {
         build_physical_tile_module(module_manager, decoder_lib,
+                                   device_annotation,
                                    circuit_lib,
                                    sram_orgz_type, sram_model,
                                    &physical_tile,
@@ -1196,6 +1211,7 @@ void build_grid_modules(ModuleManager& module_manager,
     } else {
       /* For CLB and heterogenenous blocks */
       build_physical_tile_module(module_manager, decoder_lib,
+                                 device_annotation,
                                  circuit_lib, 
                                  sram_orgz_type, sram_model,
                                  &physical_tile,

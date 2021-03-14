@@ -508,9 +508,11 @@ std::string generate_connection_block_module_name(const t_rr_type& cb_type,
 std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
                                     const size_t& width, 
                                     const size_t& height, 
+                                    const int& subtile_index, 
                                     const e_side& side, 
-                                    const size_t& pin_id,
+                                    const BasicPort& pin_info,
                                     const bool& for_top_netlist) {
+  VTR_ASSERT(1 == pin_info.get_width());
   if (true == for_top_netlist) {
     std::string port_name = std::string("grid_");
     port_name += std::to_string(coordinate.x());
@@ -521,7 +523,9 @@ std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
     port_name += std::string("__");
     port_name += std::to_string(size_t(side));
     port_name += std::string("__");
-    port_name += std::to_string(pin_id);
+    port_name += pin_info.get_name();
+    port_name += std::string("_");
+    port_name += std::to_string(pin_info.get_lsb());
     port_name += std::string("_");
     return port_name;
   } 
@@ -533,8 +537,12 @@ std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
   port_name += std::to_string(width);
   port_name += std::string("_height_");
   port_name += std::to_string(height);
+  port_name += std::string("_subtile_");
+  port_name += std::to_string(subtile_index);
   port_name += std::string("__pin_");
-  port_name += std::to_string(pin_id);
+  port_name += pin_info.get_name();
+  port_name += std::string("_");
+  port_name += std::to_string(pin_info.get_lsb());
   port_name += std::string("_");
   return port_name;
 }
@@ -547,9 +555,11 @@ std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
  *********************************************************************/
 std::string generate_grid_duplicated_port_name(const size_t& width,
                                                const size_t& height, 
+                                               const int& subtile_index, 
                                                const e_side& side, 
-                                               const size_t& pin_id,
+                                               const BasicPort& pin_info,
                                                const bool& upper_port) {
+  VTR_ASSERT(1 == pin_info.get_width());
   /* For non-top netlist */
   SideManager side_manager(side);
   std::string port_name = std::string(side_manager.to_string());
@@ -557,8 +567,12 @@ std::string generate_grid_duplicated_port_name(const size_t& width,
   port_name += std::to_string(width);
   port_name += std::string("_height_");
   port_name += std::to_string(height);
+  port_name += std::string("_subtile_");
+  port_name += std::to_string(subtile_index);
   port_name += std::string("__pin_");
-  port_name += std::to_string(pin_id);
+  port_name += pin_info.get_name();
+  port_name += std::string("_");
+  port_name += std::to_string(pin_info.get_lsb());
   port_name += std::string("_");
 
   if (true == upper_port) {
@@ -584,27 +598,6 @@ std::string generate_grid_module_port_name(const size_t& pin_id) {
   port_name += std::to_string(pin_id);
   port_name += std::string("_");
   return port_name;
-}
-
-/*********************************************************************
- * Generate the port name for a Grid
- * This is a wrapper function for generate_port_name()
- * which can automatically decode the port name by the pin side and height
- *********************************************************************/
-std::string generate_grid_side_port_name(const DeviceGrid& grids,
-                                         const vtr::Point<size_t>& coordinate,
-                                         const e_side& side, 
-                                         const size_t& pin_id) {
-  /* Output the pins on the side*/ 
-  size_t width = grids[coordinate.x()][coordinate.y()].type->pin_width_offset[pin_id];
-  size_t height = grids[coordinate.x()][coordinate.y()].type->pin_height_offset[pin_id];
-  if (true != grids[coordinate.x()][coordinate.y()].type->pinloc[width][height][side][pin_id]) {
-    SideManager side_manager(side);
-    VTR_LOG_ERROR("Fail to generate a grid pin (x=%lu, y=%lu, width=%lu, height=%lu, side=%s, index=%d)\n",
-                  coordinate.x(), coordinate.y(), width, height, side_manager.c_str(), pin_id);
-    exit(1);
-  } 
-  return generate_grid_port_name(coordinate, width, height, side, pin_id, true);
 }
 
 /*********************************************************************

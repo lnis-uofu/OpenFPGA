@@ -55,6 +55,7 @@ namespace openfpga {
  *******************************************************************/
 void add_grid_module_duplicated_pb_type_ports(ModuleManager& module_manager,
                                               const ModuleId& grid_module,
+                                              const VprDeviceAnnotation& vpr_device_annotation,
                                               t_physical_tile_type_ptr grid_type_descriptor,
                                               const e_side& border_side) {
   /* Ensure that we have a valid grid_type_descriptor */
@@ -87,6 +88,11 @@ void add_grid_module_duplicated_pb_type_ports(ModuleManager& module_manager,
           /* Reach here, it means this pin is on this side */
           int class_id = grid_type_descriptor->pin_class[ipin];
           e_pin_type pin_class_type = grid_type_descriptor->class_inf[class_id].type;
+
+          BasicPort pin_info = vpr_device_annotation.physical_tile_pin_port_info(grid_type_descriptor, ipin);
+          VTR_ASSERT(true == pin_info.is_valid());
+          int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(grid_type_descriptor, ipin);
+          VTR_ASSERT(OPEN != subtile_index && subtile_index < grid_type_descriptor->capacity);
           /* Generate the pin name 
            * For each RECEIVER PIN or DRIVER PIN for direct connection, 
            * we do not duplicate in these cases */
@@ -95,7 +101,7 @@ void add_grid_module_duplicated_pb_type_ports(ModuleManager& module_manager,
             || ( (DRIVER == pin_class_type)
               && (0. == find_physical_tile_pin_Fc(grid_type_descriptor, ipin)) ) ) {
             vtr::Point<size_t> dummy_coordinate;
-            std::string port_name = generate_grid_port_name(dummy_coordinate, iwidth, iheight, side, ipin, false);
+            std::string port_name = generate_grid_port_name(dummy_coordinate, iwidth, iheight, subtile_index, side, pin_info, false);
             BasicPort grid_port(port_name, 0, 0);
             /* Add the port to the module */
             module_manager.add_port(grid_module, grid_port, pin_type2type_map[pin_class_type]);
@@ -105,12 +111,12 @@ void add_grid_module_duplicated_pb_type_ports(ModuleManager& module_manager,
              * The other with a postfix of lower, indicating it is located on the lower part of a side
              */
             VTR_ASSERT(DRIVER == pin_class_type);
-            std::string upper_port_name = generate_grid_duplicated_port_name(iwidth, iheight, side, ipin, true);
+            std::string upper_port_name = generate_grid_duplicated_port_name(iwidth, iheight, subtile_index, side, pin_info, true);
             BasicPort grid_upper_port(upper_port_name, 0, 0);
             /* Add the port to the module */
             module_manager.add_port(grid_module, grid_upper_port, pin_type2type_map[pin_class_type]);
 
-            std::string lower_port_name = generate_grid_duplicated_port_name(iwidth, iheight, side, ipin, false);
+            std::string lower_port_name = generate_grid_duplicated_port_name(iwidth, iheight, subtile_index, side, pin_info, false);
             BasicPort grid_lower_port(lower_port_name, 0, 0);
             /* Add the port to the module */
             module_manager.add_port(grid_module, grid_lower_port, pin_type2type_map[pin_class_type]);
@@ -134,6 +140,7 @@ void add_grid_module_net_connect_duplicated_pb_graph_pin(ModuleManager& module_m
                                                          const ModuleId& grid_module,
                                                          const ModuleId& child_module,
                                                          const size_t& child_instance,
+                                                         const VprDeviceAnnotation& vpr_device_annotation,
                                                          t_physical_tile_type_ptr grid_type_descriptor,
                                                          t_pb_graph_pin* pb_graph_pin,
                                                          const e_side& border_side,
@@ -162,6 +169,12 @@ void add_grid_module_net_connect_duplicated_pb_graph_pin(ModuleManager& module_m
 
   int pin_width = grid_type_descriptor->pin_width_offset[grid_pin_index];
   int pin_height = grid_type_descriptor->pin_height_offset[grid_pin_index];
+
+  BasicPort pin_info = vpr_device_annotation.physical_tile_pin_port_info(grid_type_descriptor, grid_pin_index);
+  VTR_ASSERT(true == pin_info.is_valid());
+  int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(grid_type_descriptor, grid_pin_index);
+  VTR_ASSERT(OPEN != subtile_index && subtile_index < grid_type_descriptor->capacity);
+
   for (const e_side& side : grid_pin_sides) {
     if (true != grid_type_descriptor->pinloc[pin_width][pin_height][side][grid_pin_index]) {
       continue;
@@ -176,7 +189,7 @@ void add_grid_module_net_connect_duplicated_pb_graph_pin(ModuleManager& module_m
       ModuleNetId net = module_manager.create_module_net(grid_module);
       /* Find the port in grid_module */
       vtr::Point<size_t> dummy_coordinate;
-      std::string grid_port_name = generate_grid_port_name(dummy_coordinate, pin_width, pin_height, side, grid_pin_index, false);
+      std::string grid_port_name = generate_grid_port_name(dummy_coordinate, pin_width, pin_height, subtile_index, side, pin_info, false);
       ModulePortId grid_module_port_id = module_manager.find_module_port(grid_module, grid_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(grid_module, grid_module_port_id));
 
@@ -200,12 +213,12 @@ void add_grid_module_net_connect_duplicated_pb_graph_pin(ModuleManager& module_m
     /* Create a net to connect the grid pin to child module pin */
     ModuleNetId net = module_manager.create_module_net(grid_module);
     /* Find the upper port in grid_module */
-    std::string grid_upper_port_name = generate_grid_duplicated_port_name(pin_width, pin_height, side, grid_pin_index, true);
+    std::string grid_upper_port_name = generate_grid_duplicated_port_name(pin_width, pin_height, subtile_index, side, pin_info, true);
     ModulePortId grid_module_upper_port_id = module_manager.find_module_port(grid_module, grid_upper_port_name);
     VTR_ASSERT(true == module_manager.valid_module_port_id(grid_module, grid_module_upper_port_id));
 
     /* Find the lower port in grid_module */
-    std::string grid_lower_port_name = generate_grid_duplicated_port_name(pin_width, pin_height, side, grid_pin_index, false);
+    std::string grid_lower_port_name = generate_grid_duplicated_port_name(pin_width, pin_height, subtile_index, side, pin_info, false);
     ModulePortId grid_module_lower_port_id = module_manager.find_module_port(grid_module, grid_lower_port_name);
     VTR_ASSERT(true == module_manager.valid_module_port_id(grid_module, grid_module_lower_port_id));
 
@@ -238,6 +251,7 @@ void add_grid_module_nets_connect_duplicated_pb_type_ports(ModuleManager& module
                                                            const ModuleId& grid_module,
                                                            const ModuleId& child_module,
                                                            const size_t& child_instance,
+                                                           const VprDeviceAnnotation& vpr_device_annotation,
                                                            t_physical_tile_type_ptr grid_type_descriptor,
                                                            const e_side& border_side) {
   /* Ensure that we have a valid grid_type_descriptor */
@@ -251,6 +265,7 @@ void add_grid_module_nets_connect_duplicated_pb_type_ports(ModuleManager& module
       for (int ipin = 0; ipin < top_pb_graph_node->num_input_pins[iport]; ++ipin) {
         add_grid_module_net_connect_pb_graph_pin(module_manager, grid_module,
                                                  child_module, child_instance,
+                                                 vpr_device_annotation,
                                                  grid_type_descriptor,
                                                  &(top_pb_graph_node->input_pins[iport][ipin]),
                                                  border_side,
@@ -263,6 +278,7 @@ void add_grid_module_nets_connect_duplicated_pb_type_ports(ModuleManager& module
       for (int ipin = 0; ipin < top_pb_graph_node->num_output_pins[iport]; ++ipin) {
         add_grid_module_net_connect_duplicated_pb_graph_pin(module_manager, grid_module,
                                                             child_module, child_instance,
+                                                            vpr_device_annotation,
                                                             grid_type_descriptor,
                                                             &(top_pb_graph_node->output_pins[iport][ipin]),
                                                             border_side,
@@ -274,6 +290,7 @@ void add_grid_module_nets_connect_duplicated_pb_type_ports(ModuleManager& module
       for (int ipin = 0; ipin < top_pb_graph_node->num_clock_pins[iport]; ++ipin) {
         add_grid_module_net_connect_pb_graph_pin(module_manager, grid_module,
                                                  child_module, child_instance,
+                                                 vpr_device_annotation,
                                                  grid_type_descriptor,
                                                  &(top_pb_graph_node->clock_pins[iport][ipin]),
                                                  border_side,

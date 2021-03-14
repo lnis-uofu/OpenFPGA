@@ -41,6 +41,7 @@ static
 void add_module_nets_tile_direct_connection(ModuleManager& module_manager, 
                                             const ModuleId& top_module,  
                                             const CircuitLibrary& circuit_lib, 
+                                            const VprDeviceAnnotation& vpr_device_annotation,
                                             const DeviceGrid& grids,
                                             const vtr::Matrix<size_t>& grid_instance_ids,
                                             const TileDirect& tile_direct,
@@ -92,9 +93,16 @@ void add_module_nets_tile_direct_connection(ModuleManager& module_manager,
   /* Generate the pin name of source port/pin in the grid */
   e_side src_pin_grid_side = tile_direct.from_tile_side(tile_direct_id);
   size_t src_tile_pin = tile_direct.from_tile_pin(tile_direct_id);
-  size_t src_pin_width = grids[src_clb_coord.x()][src_clb_coord.y()].type->pin_width_offset[src_tile_pin]; 
-  size_t src_pin_height = grids[src_clb_coord.x()][src_clb_coord.y()].type->pin_height_offset[src_tile_pin]; 
-  std::string src_port_name = generate_grid_port_name(src_clb_coord, src_pin_width, src_pin_height, src_pin_grid_side, src_tile_pin, false);
+
+  t_physical_tile_type_ptr src_grid_type_descriptor = grids[src_clb_coord.x()][src_clb_coord.y()].type;
+  size_t src_pin_width = src_grid_type_descriptor->pin_width_offset[src_tile_pin]; 
+  size_t src_pin_height = src_grid_type_descriptor->pin_height_offset[src_tile_pin]; 
+
+  BasicPort src_pin_info = vpr_device_annotation.physical_tile_pin_port_info(src_grid_type_descriptor, src_tile_pin);
+  VTR_ASSERT(true == src_pin_info.is_valid());
+  int src_subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(src_grid_type_descriptor, src_tile_pin);
+  VTR_ASSERT(OPEN != src_subtile_index && src_subtile_index < src_grid_type_descriptor->capacity);
+  std::string src_port_name = generate_grid_port_name(src_clb_coord, src_pin_width, src_pin_height, src_subtile_index, src_pin_grid_side, src_pin_info, false);
   ModulePortId src_port_id = module_manager.find_module_port(src_grid_module, src_port_name); 
   if (true != module_manager.valid_module_port_id(src_grid_module, src_port_id)) {
     VTR_LOG_ERROR("Fail to find port '%s[%lu][%lu].%s'\n",
@@ -107,10 +115,16 @@ void add_module_nets_tile_direct_connection(ModuleManager& module_manager,
   /* Generate the pin name of sink port/pin in the grid */
   e_side sink_pin_grid_side = tile_direct.to_tile_side(tile_direct_id);
   size_t sink_tile_pin = tile_direct.to_tile_pin(tile_direct_id);
-  size_t sink_pin_width = grids[des_clb_coord.x()][des_clb_coord.y()].type->pin_width_offset[src_tile_pin]; 
-  size_t sink_pin_height = grids[des_clb_coord.x()][des_clb_coord.y()].type->pin_height_offset[src_tile_pin]; 
 
-  std::string sink_port_name = generate_grid_port_name(des_clb_coord, sink_pin_width, sink_pin_height, sink_pin_grid_side, sink_tile_pin, false);
+  t_physical_tile_type_ptr sink_grid_type_descriptor = grids[des_clb_coord.x()][des_clb_coord.y()].type;
+  size_t sink_pin_width = sink_grid_type_descriptor->pin_width_offset[src_tile_pin]; 
+  size_t sink_pin_height = sink_grid_type_descriptor->pin_height_offset[src_tile_pin]; 
+
+  BasicPort sink_pin_info = vpr_device_annotation.physical_tile_pin_port_info(sink_grid_type_descriptor, sink_tile_pin);
+  VTR_ASSERT(true == sink_pin_info.is_valid());
+  int sink_subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(sink_grid_type_descriptor, sink_tile_pin);
+  VTR_ASSERT(OPEN != src_subtile_index && src_subtile_index < sink_grid_type_descriptor->capacity);
+  std::string sink_port_name = generate_grid_port_name(des_clb_coord, sink_pin_width, sink_pin_height, sink_subtile_index, sink_pin_grid_side, sink_pin_info, false);
   ModulePortId sink_port_id = module_manager.find_module_port(sink_grid_module, sink_port_name); 
   VTR_ASSERT(true == module_manager.valid_module_port_id(sink_grid_module, sink_port_id));
   VTR_ASSERT(1 == module_manager.module_port(sink_grid_module, sink_port_id).get_width());
@@ -141,6 +155,7 @@ void add_module_nets_tile_direct_connection(ModuleManager& module_manager,
 void add_top_module_nets_tile_direct_connections(ModuleManager& module_manager, 
                                                  const ModuleId& top_module, 
                                                  const CircuitLibrary& circuit_lib, 
+                                                 const VprDeviceAnnotation& vpr_device_annotation,
                                                  const DeviceGrid& grids,
                                                  const vtr::Matrix<size_t>& grid_instance_ids,
                                                  const TileDirect& tile_direct,
@@ -150,6 +165,7 @@ void add_top_module_nets_tile_direct_connections(ModuleManager& module_manager,
 
   for (const TileDirectId& tile_direct_id : tile_direct.directs()) {
     add_module_nets_tile_direct_connection(module_manager, top_module, circuit_lib, 
+                                           vpr_device_annotation,
                                            grids, grid_instance_ids,
                                            tile_direct, tile_direct_id,  
                                            arch_direct);
