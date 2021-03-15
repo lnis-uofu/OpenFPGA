@@ -1,3 +1,4 @@
 <openfpga_bitstream_setting>
   <pb_type name="clb.fle[arithmetic].soft_adder.adder_lut4" source="eblif" content=".param LUT"/>
+  <pb_type name="clb.fle[arithmetic].soft_adder.adder_lut4" source="eblif" content=".param IN2_IS_CIN" is_mode_select_bitstream="true" bitstream_offset="0"/>
 </openfpga_bitstream_setting>

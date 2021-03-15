@@ -136,6 +136,8 @@ When a global port, e.g., ``clk``, is defined in ``tile_annotation`` using the f
 
 Clock port ``clk`` of each ``clb`` tile will be connected to a common clock port of the top module, while local clock network is customizable through VPR's architecture description language. For instance, the local clock network can be a programmable clock network. 
 
+.. _annotate_vpr_arch_pb_type_annotation:
+
 Primitive Blocks inside Multi-mode Configurable Logic Blocks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

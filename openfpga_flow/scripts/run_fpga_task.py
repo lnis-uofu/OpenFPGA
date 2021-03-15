@@ -175,7 +175,7 @@ def generate_each_task_actions(taskname):
         curr_task_dir = repo_tasks
     else:
         clean_up_and_exit("Task directory [%s] not found" % curr_task_dir)
-    
+
     os.chdir(curr_task_dir)
 
     curr_task_conf_file = os.path.join(curr_task_dir, "config", "task.conf")
@@ -254,7 +254,11 @@ def generate_each_task_actions(taskname):
 
         # Read provided benchmark configurations
         # Common configurations
+        # - All the benchmarks may share the same yosys synthesis template script
+        # - All the benchmarks may share the same rewrite yosys template script, which converts post-synthesis .v netlist to be compatible with .blif port definition. This is required for correct verification at the end of flows
+        # - All the benchmarks may share the same routing channel width in VPR runs. This is designed to enable architecture evaluations for a fixed device model
         ys_for_task_common = SynthSection.get("bench_yosys_common")
+        ys_rewrite_for_task_common = SynthSection.get("bench_yosys_rewrite_common")
         chan_width_common = SynthSection.get("bench_chan_width_common")
 
         # Individual benchmark configuration
@@ -263,6 +267,8 @@ def generate_each_task_actions(taskname):
                                                        fallback="top")
         CurrBenchPara["ys_script"] = SynthSection.get(bech_name+"_yosys",
                                                       fallback=ys_for_task_common)
+        CurrBenchPara["ys_rewrite_script"] = SynthSection.get(bech_name+"_yosys_rewrite",
+                                                      fallback=ys_rewrite_for_task_common)
         CurrBenchPara["chan_width"] = SynthSection.get(bech_name+"_chan_width",
                                                        fallback=chan_width_common)
 
@@ -380,6 +386,9 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, param, task_conf):
 
     if benchmark_obj.get("ys_script"):
         command += ["--yosys_tmpl", benchmark_obj["ys_script"]]
+
+    if benchmark_obj.get("ys_rewrite_script"):
+        command += ["--ys_rewrite_tmpl", benchmark_obj["ys_rewrite_script"]]
 
     if task_gc.getboolean("power_analysis"):
         command += ["--power"]
