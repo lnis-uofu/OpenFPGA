@@ -23,6 +23,7 @@
 #include "openfpga_device_grid_utils.h"
 #include "module_manager_utils.h"
 
+#include "build_routing_module_utils.h"
 #include "build_top_module_utils.h"
 #include "build_top_module_connection.h"
 
@@ -131,10 +132,12 @@ void add_top_module_nets_connect_grids_and_sb(ModuleManager& module_manager,
       /* Collect sink-related information */
       vtr::Point<size_t> sink_sb_port_coord(rr_graph.node_xlow(module_sb.get_opin_node(side_manager.get_side(), inode)),
                                             rr_graph.node_ylow(module_sb.get_opin_node(side_manager.get_side(), inode)));
-      size_t sink_grid_pin_index = rr_graph.node_pin_num(module_sb.get_opin_node(side_manager.get_side(), inode));
       std::string sink_sb_port_name = generate_sb_module_grid_port_name(side_manager.get_side(),
                                                                         rr_graph.node_side(module_sb.get_opin_node(side_manager.get_side(), inode)),
-                                                                        sink_grid_pin_index); 
+                                                                        grids,
+                                                                        vpr_device_annotation,
+                                                                        rr_graph,
+                                                                        module_sb.get_opin_node(side_manager.get_side(), inode)); 
       ModulePortId sink_sb_port_id = module_manager.find_module_port(sink_sb_module, sink_sb_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(sink_sb_module, sink_sb_port_id));
       BasicPort sink_sb_port =  module_manager.module_port(sink_sb_module, sink_sb_port_id); 
@@ -282,10 +285,12 @@ void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(ModuleManager
       /* Collect sink-related information */
       vtr::Point<size_t> sink_sb_port_coord(rr_graph.node_xlow(module_sb.get_opin_node(side_manager.get_side(), inode)),
                                             rr_graph.node_ylow(module_sb.get_opin_node(side_manager.get_side(), inode)));
-      size_t sink_grid_pin_index = rr_graph.node_pin_num(module_sb.get_opin_node(side_manager.get_side(), inode));
       std::string sink_sb_port_name = generate_sb_module_grid_port_name(side_manager.get_side(),
                                                                         rr_graph.node_side(module_sb.get_opin_node(side_manager.get_side(), inode)),
-                                                                        sink_grid_pin_index); 
+                                                                        grids,
+                                                                        vpr_device_annotation,
+                                                                        rr_graph,
+                                                                        module_sb.get_opin_node(side_manager.get_side(), inode)); 
       ModulePortId sink_sb_port_id = module_manager.find_module_port(sink_sb_module, sink_sb_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(sink_sb_module, sink_sb_port_id));
       BasicPort sink_sb_port =  module_manager.module_port(sink_sb_module, sink_sb_port_id); 
@@ -413,7 +418,10 @@ void add_top_module_nets_connect_grids_and_cb(ModuleManager& module_manager,
       vtr::Point<size_t> cb_src_port_coord(rr_graph.node_xlow(module_ipin_node),
                                            rr_graph.node_ylow(module_ipin_node));
       std::string src_cb_port_name = generate_cb_module_grid_port_name(cb_ipin_side,
-                                                                       rr_graph.node_pin_num(module_ipin_node)); 
+                                                                       grids,
+                                                                       vpr_device_annotation,
+                                                                       rr_graph,
+                                                                       module_ipin_node); 
       ModulePortId src_cb_port_id = module_manager.find_module_port(src_cb_module, src_cb_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(src_cb_module, src_cb_port_id));
       BasicPort src_cb_port = module_manager.module_port(src_cb_module, src_cb_port_id); 

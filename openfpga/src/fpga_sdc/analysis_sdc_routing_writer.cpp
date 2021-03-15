@@ -16,6 +16,7 @@
 #include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
 
+#include "build_routing_module_utils.h"
 #include "sdc_writer_utils.h"
 #include "analysis_sdc_writer_utils.h"
 #include "analysis_sdc_routing_writer.h"
@@ -33,6 +34,8 @@ static
 void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp, 
                                                     const AtomContext& atom_ctx, 
                                                     const ModuleManager& module_manager, 
+                                                    const VprDeviceAnnotation& device_annotation, 
+                                                    const DeviceGrid& grids, 
                                                     const RRGraph& rr_graph, 
                                                     const VprRoutingAnnotation& routing_annotation, 
                                                     const DeviceRRGSB& device_rr_gsb,
@@ -140,7 +143,10 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
       }
 
       std::string port_name = generate_cb_module_grid_port_name(cb_ipin_side,
-                                                                rr_graph.node_pin_num(ipin_node)); 
+                                                                grids,
+                                                                device_annotation,
+                                                                rr_graph,
+                                                                ipin_node); 
 
       /* Find the port in unique mirror! */
       if (true == compact_routing_hierarchy) {
@@ -149,7 +155,10 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
         const RRGSB& unique_mirror = device_rr_gsb.get_cb_unique_module(cb_type, cb_coord);
         const RRNodeId& unique_mirror_ipin_node = unique_mirror.get_ipin_node(cb_ipin_side, inode);
         port_name = generate_cb_module_grid_port_name(cb_ipin_side, 
-                                                      rr_graph.node_pin_num(unique_mirror_ipin_node)); 
+                                                      grids,
+                                                      device_annotation,
+                                                      rr_graph,
+                                                      unique_mirror_ipin_node); 
       }
 
       /* Ensure we have this port in the module! */
@@ -211,6 +220,8 @@ static
 void print_analysis_sdc_disable_unused_cb_ports(std::fstream& fp,
                                                 const AtomContext& atom_ctx, 
                                                 const ModuleManager& module_manager, 
+                                                const VprDeviceAnnotation& device_annotation, 
+                                                const DeviceGrid& grids, 
                                                 const RRGraph& rr_graph, 
                                                 const VprRoutingAnnotation& routing_annotation, 
                                                 const DeviceRRGSB& device_rr_gsb,
@@ -233,6 +244,8 @@ void print_analysis_sdc_disable_unused_cb_ports(std::fstream& fp,
       print_analysis_sdc_disable_cb_unused_resources(fp, 
                                                      atom_ctx, 
                                                      module_manager, 
+                                                     device_annotation,
+                                                     grids,
                                                      rr_graph, 
                                                      routing_annotation, 
                                                      device_rr_gsb, 
@@ -250,6 +263,8 @@ void print_analysis_sdc_disable_unused_cb_ports(std::fstream& fp,
 void print_analysis_sdc_disable_unused_cbs(std::fstream& fp,
                                            const AtomContext& atom_ctx, 
                                            const ModuleManager& module_manager, 
+                                           const VprDeviceAnnotation& device_annotation, 
+                                           const DeviceGrid& grids, 
                                            const RRGraph& rr_graph, 
                                            const VprRoutingAnnotation& routing_annotation, 
                                            const DeviceRRGSB& device_rr_gsb,
@@ -257,6 +272,8 @@ void print_analysis_sdc_disable_unused_cbs(std::fstream& fp,
 
   print_analysis_sdc_disable_unused_cb_ports(fp, atom_ctx,
                                              module_manager, 
+                                             device_annotation, 
+                                             grids, 
                                              rr_graph, 
                                              routing_annotation,
                                              device_rr_gsb,
@@ -264,6 +281,8 @@ void print_analysis_sdc_disable_unused_cbs(std::fstream& fp,
 
   print_analysis_sdc_disable_unused_cb_ports(fp, atom_ctx,
                                              module_manager, 
+                                             device_annotation, 
+                                             grids, 
                                              rr_graph, 
                                              routing_annotation,
                                              device_rr_gsb,
@@ -280,6 +299,8 @@ static
 void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp, 
                                                     const AtomContext& atom_ctx, 
                                                     const ModuleManager& module_manager, 
+                                                    const VprDeviceAnnotation& device_annotation, 
+                                                    const DeviceGrid& grids, 
                                                     const RRGraph& rr_graph, 
                                                     const VprRoutingAnnotation& routing_annotation, 
                                                     const DeviceRRGSB& device_rr_gsb,
@@ -370,7 +391,10 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
 
       std::string port_name = generate_sb_module_grid_port_name(side_manager.get_side(), 
                                                                 rr_graph.node_side(opin_node),
-                                                                rr_graph.node_pin_num(opin_node)); 
+                                                                grids,
+                                                                device_annotation,
+                                                                rr_graph,
+                                                                opin_node); 
 
       if (true == compact_routing_hierarchy) {
         /* Note: use GSB coordinate when inquire for unique modules!!! */
@@ -380,7 +404,10 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
 
         port_name = generate_sb_module_grid_port_name(side_manager.get_side(),
                                                       rr_graph.node_side(unique_mirror_opin_node),
-                                                      rr_graph.node_pin_num(unique_mirror_opin_node)); 
+                                                      grids,
+                                                      device_annotation,
+                                                      rr_graph,
+                                                      unique_mirror_opin_node); 
       }
 
 
@@ -432,7 +459,10 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
 
       std::string port_name = generate_sb_module_grid_port_name(side_manager.get_side(),
                                                                 rr_graph.node_side(opin_node),
-                                                                rr_graph.node_pin_num(opin_node)); 
+                                                                grids,
+                                                                device_annotation,
+                                                                rr_graph,
+                                                                opin_node); 
 
       if (true == compact_routing_hierarchy) {
         /* Note: use GSB coordinate when inquire for unique modules!!! */
@@ -442,7 +472,10 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
 
         port_name = generate_sb_module_grid_port_name(side_manager.get_side(),
                                                       rr_graph.node_side(unique_mirror_opin_node),
-                                                      rr_graph.node_pin_num(unique_mirror_opin_node)); 
+                                                      grids,
+                                                      device_annotation,
+                                                      rr_graph,
+                                                      unique_mirror_opin_node); 
       }
 
 
@@ -512,6 +545,8 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
 void print_analysis_sdc_disable_unused_sbs(std::fstream& fp,
                                            const AtomContext& atom_ctx, 
                                            const ModuleManager& module_manager, 
+                                           const VprDeviceAnnotation& device_annotation, 
+                                           const DeviceGrid& grids, 
                                            const RRGraph& rr_graph, 
                                            const VprRoutingAnnotation& routing_annotation, 
                                            const DeviceRRGSB& device_rr_gsb,
@@ -534,6 +569,8 @@ void print_analysis_sdc_disable_unused_sbs(std::fstream& fp,
       print_analysis_sdc_disable_sb_unused_resources(fp,
                                                      atom_ctx, 
                                                      module_manager, 
+                                                     device_annotation,
+                                                     grids, 
                                                      rr_graph, 
                                                      routing_annotation, 
                                                      device_rr_gsb, 

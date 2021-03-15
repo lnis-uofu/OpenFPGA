@@ -148,14 +148,11 @@ std::string generate_grid_duplicated_port_name(const size_t& width,
                                                const BasicPort& pin_info,
                                                const bool& upper_port);
 
-std::string generate_grid_module_port_name(const size_t& pin_id);
-
-std::string generate_sb_module_grid_port_name(const e_side& sb_side,
-                                              const e_side& grid_side, 
-                                              const size_t& pin_id);
-
-std::string generate_cb_module_grid_port_name(const e_side& cb_side, 
-                                              const size_t& pin_id);
+std::string generate_routing_module_grid_port_name(const size_t& width, 
+                                                   const size_t& height, 
+                                                   const int& subtile_index, 
+                                                   const e_side& side, 
+                                                   const BasicPort& pin_info);
 
 std::string generate_reserved_sram_port_name(const e_circuit_model_port_type& port_type);
 
