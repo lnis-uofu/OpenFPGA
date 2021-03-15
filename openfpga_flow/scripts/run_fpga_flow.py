@@ -99,6 +99,8 @@ parser.add_argument('--arch_variable_file', type=str, default=None,
 #                     help="Key file for shell")
 parser.add_argument('--yosys_tmpl', type=str, default=None,
                     help="Alternate yosys template, generates top_module.blif")
+parser.add_argument('--ys_rewrite_tmpl', type=str, default=None,
+                    help="Alternate yosys template, to rewrite verilog netlist")
 parser.add_argument('--disp', action="store_true",
                     help="Open display while running VPR")
 parser.add_argument('--debug', action="store_true",
@@ -260,7 +262,7 @@ def main():
         if args.power:
             run_ace2()
             run_pro_blif_3arg()
-        else: 
+        else:
             # Make a copy of the blif file to be compatible with vpr flow
             shutil.copy(args.top_module+'_yosys_out.blif', args.top_module+".blif")
 
@@ -488,6 +490,7 @@ def run_yosys_with_abc():
         "TOP_MODULE": args.top_module,
         "LUT_SIZE": lut_size,
         "OUTPUT_BLIF": args.top_module+"_yosys_out.blif",
+        "OUTPUT_VERILOG": args.top_module+"_output_verilog.v"
     }
 
     for indx in range(0, len(OpenFPGAArgs), 2):
@@ -692,12 +695,41 @@ def extract_vpr_stats(logfile, r_filename="vpr_stat", parse_section="vpr"):
 
 def run_rewrite_verilog():
     # Rewrite the verilog after optimization
-    script_cmd = [
-        "read_blif %s" % args.top_module+".blif",
-        "write_verilog %s" % args.top_module+"_output_verilog.v"
-    ]
-    command = [cad_tools["yosys_path"], "-p", "; ".join(script_cmd)]
-    run_command("Yosys", "yosys_rewrite.log", command)
+    # If there is no template script provided, use a default template
+    # If there is a template script provided, replace parameters from configuration
+    if not args.ys_rewrite_tmpl:
+        script_cmd = [
+            "read_blif %s" % args.top_module+".blif",
+            "write_verilog %s" % args.top_module+"_output_verilog.v"
+        ]
+        command = [cad_tools["yosys_path"], "-p", "; ".join(script_cmd)]
+        run_command("Yosys", "yosys_rewrite.log", command)
+    else:
+        # Yosys script parameter mapping
+        ys_rewrite_params = {
+            "READ_VERILOG_FILE": " \n".join([
+                "read_verilog -nolatches " + shlex.quote(eachfile)
+                for eachfile in args.benchmark_files]),
+            "TOP_MODULE": args.top_module,
+            "OUTPUT_BLIF": args.top_module+"_yosys_out.blif",
+            "INPUT_BLIF": args.top_module+".blif",
+            "OUTPUT_VERILOG": args.top_module+"_output_verilog.v"
+        }
+
+        for indx in range(0, len(OpenFPGAArgs), 2):
+            tmpVar = OpenFPGAArgs[indx][2:].upper()
+            ys_rewrite_params[tmpVar] = OpenFPGAArgs[indx + 1]
+
+        # Split a series of scripts by delim ';'
+        # And execute the scripts serially
+        for iteration_idx, curr_rewrite_tmpl in enumerate(args.ys_rewrite_tmpl.split(";")):
+            tmpl = Template(open(curr_rewrite_tmpl, encoding='utf-8').read())
+            logger.info("Yosys rewrite iteration: " + str(iteration_idx))
+            with open("yosys_rewrite_" + str(iteration_idx) + ".ys", 'w') as archfile:
+                archfile.write(tmpl.safe_substitute(ys_rewrite_params))
+            run_command("Run yosys", "yosys_rewrite_output.log",
+                    [cad_tools["yosys_path"], "yosys_rewrite_" + str(iteration_idx) + ".ys"])
+
 
 
 def run_netlists_verification(exit_if_fail=True):

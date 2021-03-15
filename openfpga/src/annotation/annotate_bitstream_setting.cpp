@@ -56,17 +56,30 @@ int annotate_bitstream_setting(const BitstreamSetting& bitstream_setting,
       if (nullptr == target_pb_type) {
         continue;
       }
+
       /* Found one, build annotation */
-      if (std::string("eblif") == bitstream_setting.pb_type_bitstream_source(bitstream_pb_type_setting_id)) {
-        vpr_bitstream_annotation.set_pb_type_bitstream_source(target_pb_type, VprBitstreamAnnotation::e_bitstream_source_type::BITSTREAM_SOURCE_EBLIF);
-      } else {
+      if (std::string("eblif") != bitstream_setting.pb_type_bitstream_source(bitstream_pb_type_setting_id)) {
         /* Invalid source, error out! */
         VTR_LOG_ERROR("Invalid bitstream source '%s' for pb_type '%s' which is defined in bitstream setting\n",
                       bitstream_setting.pb_type_bitstream_source(bitstream_pb_type_setting_id).c_str(),
                       target_pb_type_names[0].c_str());
         return CMD_EXEC_FATAL_ERROR;
       }
-      vpr_bitstream_annotation.set_pb_type_bitstream_content(target_pb_type, bitstream_setting.pb_type_bitstream_content(bitstream_pb_type_setting_id));
+
+      /* Depending on the bitstream type, annotate through different entrances
+       * - For regular bitstream, set bitstream content, flags etc. 
+       * - For mode-select bitstream, set mode-select bitstream content, flags etc. 
+       */
+      if (false == bitstream_setting.is_mode_select_bitstream(bitstream_pb_type_setting_id)) {
+        vpr_bitstream_annotation.set_pb_type_bitstream_source(target_pb_type, VprBitstreamAnnotation::e_bitstream_source_type::BITSTREAM_SOURCE_EBLIF);
+        vpr_bitstream_annotation.set_pb_type_bitstream_content(target_pb_type, bitstream_setting.pb_type_bitstream_content(bitstream_pb_type_setting_id));
+        vpr_bitstream_annotation.set_pb_type_bitstream_offset(target_pb_type, bitstream_setting.bitstream_offset(bitstream_pb_type_setting_id));
+      } else {
+        VTR_ASSERT_SAFE(false == bitstream_setting.is_mode_select_bitstream(bitstream_pb_type_setting_id));
+        vpr_bitstream_annotation.set_pb_type_mode_select_bitstream_source(target_pb_type, VprBitstreamAnnotation::e_bitstream_source_type::BITSTREAM_SOURCE_EBLIF);
+        vpr_bitstream_annotation.set_pb_type_mode_select_bitstream_content(target_pb_type, bitstream_setting.pb_type_bitstream_content(bitstream_pb_type_setting_id));
+        vpr_bitstream_annotation.set_pb_type_mode_select_bitstream_offset(target_pb_type, bitstream_setting.bitstream_offset(bitstream_pb_type_setting_id));
+      }
 
       link_success = true;
     }
