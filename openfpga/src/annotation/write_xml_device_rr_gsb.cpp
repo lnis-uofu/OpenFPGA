@@ -60,6 +60,7 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
       fp << "\t<" << rr_node_typename[rr_graph.node_type(cur_rr_node)]
          << " side=\"" << gsb_side_manager.to_string() 
          << "\" index=\"" << inode 
+         << "\" node_id=\"" << size_t(cur_rr_node)
          << "\" mux_size=\"" << get_rr_graph_configurable_driver_nodes(rr_graph, cur_rr_node).size()
          << "\">" 
          << std::endl; 
@@ -85,6 +86,7 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
 
         fp << "\t\t<driver_node type=\"" << rr_node_typename[rr_graph.node_type(driver_node)]
            << "\" side=\"" << chan_side_manager.to_string() 
+           << "\" node_id=\"" << size_t(driver_node)
            << "\" index=\"" << driver_node_index 
            << "\" segment_id=\"" << size_t(des_segment_id)
            << "\"/>" 
@@ -116,6 +118,7 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
       fp << "\t<" << rr_node_typename[rr_graph.node_type(cur_rr_node)]
          << " side=\"" << gsb_side_manager.to_string() 
          << "\" index=\"" << inode 
+         << "\" node_id=\"" << size_t(cur_rr_node)
          << "\" segment_id=\"" << size_t(src_segment_id)
          << "\" mux_size=\"" << driver_rr_edges.size()
          << "\">" 
@@ -126,7 +129,8 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
         SideManager oppo_side =  gsb_side_manager.get_opposite();
         fp << "\t\t<driver_node type=\"" << rr_node_typename[rr_graph.node_type(cur_rr_node)]
            << "\" side=\"" << oppo_side.to_string() 
-           << "\" index=\"" << rr_gsb.get_node_index(rr_graph, cur_rr_node, oppo_side.get_side(), IN_PORT) 
+           << "\" index=\"" << rr_gsb.get_node_index(rr_graph, cur_rr_node, oppo_side.get_side(), IN_PORT)
+           << "\" node_id=\"" << size_t(cur_rr_node)
            << "\" segment_id=\"" << size_t(src_segment_id)
            << "\"/>" 
            << std::endl; 
@@ -144,6 +148,7 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
             fp << "\t\t<driver_node type=\"" << rr_node_typename[OPIN]
                << "\" side=\"" << driver_side.to_string() 
                << "\" index=\"" << driver_node_index  
+               << "\" node_id=\"" << size_t(driver_rr_node)
                << "\" grid_side=\"" <<  grid_side.to_string() 
                <<"\"/>" 
                << std::endl; 
@@ -152,6 +157,7 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
             fp << "\t\t<driver_node type=\"" << rr_node_typename[rr_graph.node_type(driver_rr_node)]
                << "\" side=\"" << driver_side.to_string() 
                << "\" index=\"" << driver_node_index 
+               << "\" node_id=\"" << size_t(driver_rr_node)
                << "\" segment_id=\"" << size_t(des_segment_id)
                << "\"/>" 
                << std::endl; 
