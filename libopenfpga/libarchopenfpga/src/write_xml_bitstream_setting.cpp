@@ -57,6 +57,8 @@ void write_xml_bitstream_pb_type_setting(std::fstream& fp,
 
   write_xml_attribute(fp, "source", bitstream_setting.pb_type_bitstream_source(bitstream_pb_type_setting_id).c_str());
   write_xml_attribute(fp, "content", bitstream_setting.pb_type_bitstream_content(bitstream_pb_type_setting_id).c_str());
+  write_xml_attribute(fp, "is_mode_select_bitstream", bitstream_setting.is_mode_select_bitstream(bitstream_pb_type_setting_id));
+  write_xml_attribute(fp, "bitstream_offset", bitstream_setting.bitstream_offset(bitstream_pb_type_setting_id));
 
   fp << "/>" << "\n";
 }

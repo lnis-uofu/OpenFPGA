@@ -63,7 +63,7 @@ wire [0:0] sky130_fd_sc_hd__or2_1_0_X;
 		.A(in[1]),
 		.Y(sky130_fd_sc_hd__inv_1_1_Y[0]));
 
-  assign arith_in2 = mode[0] ? in[2] : cin;
+  assign arith_in2 = mode[0] ? cin : in[2];
 
 	sky130_fd_sc_hd__inv_1 sky130_fd_sc_hd__inv_1_2_ (
 		.A(arith_in2),
@@ -82,7 +82,7 @@ wire [0:0] sky130_fd_sc_hd__or2_1_0_X;
 		.X(sky130_fd_sc_hd__buf_2_1_X[0]));
 
 	sky130_fd_sc_hd__buf_2 sky130_fd_sc_hd__buf_2_2_ (
-		.A(in[2]),
+		.A(arith_in2),
 		.X(sky130_fd_sc_hd__buf_2_2_X[0]));
 
 	sky130_fd_sc_hd__buf_2 sky130_fd_sc_hd__buf_2_3_ (
