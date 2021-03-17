@@ -48,30 +48,4 @@ module dual_port_sram (
 
 endmodule
 
-//---------------------------------------
-// A single-port 32x8bit RAM 
-// This module is tuned for VTR's benchmarks
-//---------------------------------------
-module single_port_ram (
-	input clk,
-	input we,
-	input [4:0] addr,
-	input [7:0] data,
-	output [7:0] out );
 
-	reg [7:0] ram[31:0];
-	reg [7:0] internal;
-
-	assign out = internal;
-
-	always @(posedge clk) begin
-		if(wen) begin
-			ram[addr] <= data;
-		end
-
-		if(ren) begin
-			internal <= ram[addr];
-		end
-	end
-
-endmodule
