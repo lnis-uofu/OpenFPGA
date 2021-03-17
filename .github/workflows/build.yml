@@ -256,6 +256,7 @@ jobs:
           - name: fpga_sdc_reg_test
           - name: fpga_spice_reg_test
           - name: quicklogic_reg_test
+          - name: vtr_benchmark_reg_test
     steps:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
