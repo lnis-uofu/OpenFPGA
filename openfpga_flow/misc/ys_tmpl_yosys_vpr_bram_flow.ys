@@ -6,7 +6,7 @@
 # Read verilog files
 ${READ_VERILOG_FILE}
 # Read technology library
-read_verilog -lib -specify ${OPENFPGA_PATH}/openfpga_flow/openfpga_yosys_techlib/openfpga_brams_sim.v
+read_verilog -lib -specify ${YOSYS_CELL_SIM_VERILOG}
 
 #########################
 # Prepare for synthesis
@@ -40,8 +40,8 @@ opt_clean
 #########################
 # Map logics to BRAMs
 #########################
-memory_bram -rules ${OPENFPGA_PATH}/openfpga_flow/openfpga_yosys_techlib/openfpga_brams.txt
-techmap -map ${OPENFPGA_PATH}/openfpga_flow/openfpga_yosys_techlib/openfpga_brams_map.v
+memory_bram -rules ${YOSYS_BRAM_MAP_RULES}
+techmap -map ${YOSYS_BRAM_MAP_VERILOG}
 opt -fast -mux_undef -undriven -fine
 memory_map
 opt -undriven -fine
