@@ -16,6 +16,7 @@
 
 #include "vpr_device_annotation.h"
 #include "pb_type_utils.h"
+#include "annotate_physical_tiles.h"
 #include "annotate_pb_types.h"
 #include "annotate_pb_graph.h"
 #include "annotate_routing.h"
@@ -71,6 +72,10 @@ int link_arch(OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_activity_file = cmd.option("activity_file");
   CommandOptionId opt_sort_edge = cmd.option("sort_gsb_chan_node_in_edges");
   CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* Build fast look-up between physical tile pin index and port information */
+  build_physical_tile_pin2port_info(g_vpr_ctx.device(),
+                                    openfpga_ctx.mutable_vpr_device_annotation());
 
   /* Annotate pb_type graphs
    * - physical pb_type

@@ -10,12 +10,111 @@
 #include "vtr_assert.h"
 #include "vtr_geometry.h"
 
+#include "openfpga_side_manager.h"
 #include "openfpga_naming.h"
 
 #include "build_routing_module_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+/*********************************************************************
+ * Generate the port name of a grid pin for a routing module,
+ * which could be a switch block or a connection block
+ * Note that to ensure unique grid port name in the context of a routing module,
+ * we need a prefix which denotes the relative location of the port in the routing module
+ *
+ * The prefix is created by considering the the grid coordinate 
+ * and switch block coordinate
+ * Detailed rules in conversion is as follows:
+ *
+ *             top_left         top_right
+ *             +------------------------+
+ *    left_top |                        | right_top
+ *             |      Switch Block      |
+ *             |         [x][y]         |
+ *             |                        |
+ *             |                        |
+ *  left_right |                        | right_bottom
+ *             +------------------------+
+ *              bottom_left  bottom_right
+ *
+ *  +--------------------------------------------------------
+ *  | Grid Coordinate | Pin side of grid | module side 
+ *  +--------------------------------------------------------
+ *  | [x][y+1]        | right            | top_left
+ *  +--------------------------------------------------------
+ *  | [x][y+1]        | bottom           | left_top
+ *  +--------------------------------------------------------
+ *  | [x+1][y+1]      | left             | top_right
+ *  +--------------------------------------------------------
+ *  | [x+1][y+1]      | bottom           | right_top
+ *  +--------------------------------------------------------
+ *  | [x][y]          | top              | left_right
+ *  +--------------------------------------------------------
+ *  | [x][y]          | right            | bottom_left
+ *  +--------------------------------------------------------
+ *  | [x+1][y]        | top              | right_bottom
+ *  +--------------------------------------------------------
+ *  | [x+1][y]        | left             | bottom_right
+ *  +--------------------------------------------------------
+ *
+ *********************************************************************/
+std::string generate_sb_module_grid_port_name(const e_side& sb_side,
+                                              const e_side& grid_side, 
+                                              const DeviceGrid& vpr_device_grid,
+                                              const VprDeviceAnnotation& vpr_device_annotation,
+                                              const RRGraph& rr_graph,
+                                              const RRNodeId& rr_node) {
+  SideManager sb_side_manager(sb_side);
+  SideManager grid_side_manager(grid_side);
+  /* Relative location is opposite to the side in grid context */
+  grid_side_manager.set_opposite();
+  std::string prefix = sb_side_manager.to_string() + std::string("_") + grid_side_manager.to_string();
+
+  /* Collect the attributes of the rr_node required to generate the port name */
+  int pin_id = rr_graph.node_pin_num(rr_node);
+  e_side pin_side = rr_graph.node_side(rr_node);
+  t_physical_tile_type_ptr physical_tile = vpr_device_grid[rr_graph.node_xlow(rr_node)][rr_graph.node_ylow(rr_node)].type;
+  int pin_width_offset = physical_tile->pin_width_offset[pin_id]; 
+  int pin_height_offset = physical_tile->pin_height_offset[pin_id]; 
+  BasicPort pin_info = vpr_device_annotation.physical_tile_pin_port_info(physical_tile, pin_id);
+  VTR_ASSERT(true == pin_info.is_valid());
+  int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(physical_tile, pin_id);
+  VTR_ASSERT(OPEN != subtile_index && subtile_index < physical_tile->capacity);
+
+  return prefix + std::string("_") + generate_routing_module_grid_port_name(pin_width_offset, pin_height_offset, subtile_index, pin_side, pin_info);
+}
+
+/*********************************************************************
+ * Generate the port name of a grid pin for a routing module,
+ * which could be a switch block or a connection block
+ * Note that to ensure unique grid port name in the context of a routing module,
+ * we need a prefix which denotes the relative location of the port in the routing module
+ *********************************************************************/
+std::string generate_cb_module_grid_port_name(const e_side& cb_side, 
+                                              const DeviceGrid& vpr_device_grid,
+                                              const VprDeviceAnnotation& vpr_device_annotation,
+                                              const RRGraph& rr_graph,
+                                              const RRNodeId& rr_node) {
+
+  SideManager side_manager(cb_side);
+  std::string prefix = side_manager.to_string();
+
+  /* Collect the attributes of the rr_node required to generate the port name */
+  int pin_id = rr_graph.node_pin_num(rr_node);
+  e_side pin_side = rr_graph.node_side(rr_node);
+  t_physical_tile_type_ptr physical_tile = vpr_device_grid[rr_graph.node_xlow(rr_node)][rr_graph.node_ylow(rr_node)].type;
+  int pin_width_offset = physical_tile->pin_width_offset[pin_id]; 
+  int pin_height_offset = physical_tile->pin_height_offset[pin_id]; 
+  BasicPort pin_info = vpr_device_annotation.physical_tile_pin_port_info(physical_tile, pin_id);
+  VTR_ASSERT(true == pin_info.is_valid());
+  int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(physical_tile, pin_id);
+  VTR_ASSERT(OPEN != subtile_index && subtile_index < physical_tile->capacity);
+
+  return prefix + std::string("_") + generate_routing_module_grid_port_name(pin_width_offset, pin_height_offset, subtile_index, pin_side, pin_info);
+}
+
 
 /*********************************************************************
  * Find the port id and pin id for a routing track in the switch 
@@ -64,6 +163,8 @@ ModulePinInfo find_switch_block_module_chan_port(const ModuleManager& module_man
  ********************************************************************/
 ModulePinInfo find_switch_block_module_input_port(const ModuleManager& module_manager,
                                                   const ModuleId& sb_module, 
+                                                  const DeviceGrid& grids,
+                                                  const VprDeviceAnnotation& vpr_device_annotation,
                                                   const RRGraph& rr_graph,
                                                   const RRGSB& rr_gsb, 
                                                   const e_side& input_side,
@@ -84,7 +185,10 @@ ModulePinInfo find_switch_block_module_input_port(const ModuleManager& module_ma
 
     std::string input_port_name = generate_sb_module_grid_port_name(input_side,
                                                                     grid_pin_side,
-                                                                    rr_graph.node_pin_num(input_rr_node)); 
+                                                                    grids,
+                                                                    vpr_device_annotation,
+                                                                    rr_graph,
+                                                                    input_rr_node); 
     /* Must find a valid port id in the Switch Block module */
     input_port.first = module_manager.find_module_port(sb_module, input_port_name); 
     VTR_ASSERT(true == module_manager.valid_module_port_id(sb_module, input_port.first));
@@ -109,6 +213,8 @@ ModulePinInfo find_switch_block_module_input_port(const ModuleManager& module_ma
  ********************************************************************/
 std::vector<ModulePinInfo> find_switch_block_module_input_ports(const ModuleManager& module_manager,
                                                                 const ModuleId& sb_module, 
+                                                                const DeviceGrid& grids,
+                                                                const VprDeviceAnnotation& vpr_device_annotation,
                                                                 const RRGraph& rr_graph,
                                                                 const RRGSB& rr_gsb, 
                                                                 const std::vector<RRNodeId>& input_rr_nodes) {
@@ -123,7 +229,7 @@ std::vector<ModulePinInfo> find_switch_block_module_input_ports(const ModuleMana
     VTR_ASSERT(NUM_SIDES != input_pin_side);
     VTR_ASSERT(-1 != index);
 
-    input_ports.push_back(find_switch_block_module_input_port(module_manager, sb_module, rr_graph, rr_gsb, input_pin_side, input_rr_node));
+    input_ports.push_back(find_switch_block_module_input_port(module_manager, sb_module, grids, vpr_device_annotation, rr_graph, rr_gsb, input_pin_side, input_rr_node));
   }
 
   return input_ports;
@@ -169,6 +275,8 @@ ModulePinInfo find_connection_block_module_chan_port(const ModuleManager& module
  ********************************************************************/
 ModulePortId find_connection_block_module_ipin_port(const ModuleManager& module_manager,
                                                     const ModuleId& cb_module, 
+                                                    const DeviceGrid& grids,
+                                                    const VprDeviceAnnotation& vpr_device_annotation,
                                                     const RRGraph& rr_graph,
                                                     const RRGSB& rr_gsb, 
                                                     const RRNodeId& src_rr_node) {
@@ -184,7 +292,10 @@ ModulePortId find_connection_block_module_ipin_port(const ModuleManager& module_
   /* We need to be sure that drive_rr_node is part of the CB */
   VTR_ASSERT((-1 != cb_ipin_index)&&(NUM_SIDES != cb_ipin_side));
   std::string port_name = generate_cb_module_grid_port_name(cb_ipin_side, 
-                                                            rr_graph.node_pin_num(rr_gsb.get_ipin_node(cb_ipin_side, cb_ipin_index))); 
+                                                            grids,
+                                                            vpr_device_annotation,
+                                                            rr_graph,
+                                                            rr_gsb.get_ipin_node(cb_ipin_side, cb_ipin_index)); 
 
   /* Must find a valid port id in the Switch Block module */
   ModulePortId ipin_port_id = module_manager.find_module_port(cb_module, port_name); 
