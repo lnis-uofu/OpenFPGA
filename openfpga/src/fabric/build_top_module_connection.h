@@ -11,6 +11,7 @@
 #include "rr_graph_obj.h"
 #include "device_rr_gsb.h"
 #include "tile_annotation.h"
+#include "vpr_device_annotation.h"
 #include "module_manager.h"
 
 /********************************************************************
@@ -22,6 +23,7 @@ namespace openfpga {
 
 void add_top_module_nets_connect_grids_and_gsbs(ModuleManager& module_manager, 
                                                 const ModuleId& top_module, 
+                                                const VprDeviceAnnotation& vpr_device_annotation,
                                                 const DeviceGrid& grids,
                                                 const vtr::Matrix<size_t>& grid_instance_ids,
                                                 const RRGraph& rr_graph,
@@ -34,6 +36,7 @@ void add_top_module_nets_connect_grids_and_gsbs(ModuleManager& module_manager,
 int add_top_module_global_ports_from_grid_modules(ModuleManager& module_manager,
                                                   const ModuleId& top_module,
                                                   const TileAnnotation& tile_annotation,
+                                                  const VprDeviceAnnotation& vpr_device_annotation,
                                                   const DeviceGrid& grids,
                                                   const vtr::Matrix<size_t>& grid_instance_ids);
 

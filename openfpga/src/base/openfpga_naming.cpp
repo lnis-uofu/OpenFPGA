@@ -505,36 +505,26 @@ std::string generate_connection_block_module_name(const t_rr_type& cb_type,
  * This function will generate a full port name including coordinates
  * so that each pin in top-level netlists is unique!
  *********************************************************************/
-std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
-                                    const size_t& width, 
+std::string generate_grid_port_name(const size_t& width, 
                                     const size_t& height, 
+                                    const int& subtile_index, 
                                     const e_side& side, 
-                                    const size_t& pin_id,
-                                    const bool& for_top_netlist) {
-  if (true == for_top_netlist) {
-    std::string port_name = std::string("grid_");
-    port_name += std::to_string(coordinate.x());
-    port_name += std::string("__");
-    port_name += std::to_string(coordinate.y());
-    port_name += std::string("__pin_");
-    port_name += std::to_string(height);
-    port_name += std::string("__");
-    port_name += std::to_string(size_t(side));
-    port_name += std::string("__");
-    port_name += std::to_string(pin_id);
-    port_name += std::string("_");
-    return port_name;
-  } 
-  /* For non-top netlist */
-  VTR_ASSERT( false == for_top_netlist );
+                                    const BasicPort& pin_info) {
+  /* Ensure that the pin is 1-bit ONLY !!! */
+  VTR_ASSERT(1 == pin_info.get_width());
+
   SideManager side_manager(side);
   std::string port_name = std::string(side_manager.to_string());
   port_name += std::string("_width_");
   port_name += std::to_string(width);
   port_name += std::string("_height_");
   port_name += std::to_string(height);
+  port_name += std::string("_subtile_");
+  port_name += std::to_string(subtile_index);
   port_name += std::string("__pin_");
-  port_name += std::to_string(pin_id);
+  port_name += pin_info.get_name();
+  port_name += std::string("_");
+  port_name += std::to_string(pin_info.get_lsb());
   port_name += std::string("_");
   return port_name;
 }
@@ -547,18 +537,25 @@ std::string generate_grid_port_name(const vtr::Point<size_t>& coordinate,
  *********************************************************************/
 std::string generate_grid_duplicated_port_name(const size_t& width,
                                                const size_t& height, 
+                                               const int& subtile_index, 
                                                const e_side& side, 
-                                               const size_t& pin_id,
+                                               const BasicPort& pin_info,
                                                const bool& upper_port) {
-  /* For non-top netlist */
+  /* Ensure that the pin is 1-bit ONLY !!! */
+  VTR_ASSERT(1 == pin_info.get_width());
+
   SideManager side_manager(side);
   std::string port_name = std::string(side_manager.to_string());
   port_name += std::string("_width_");
   port_name += std::to_string(width);
   port_name += std::string("_height_");
   port_name += std::to_string(height);
+  port_name += std::string("_subtile_");
+  port_name += std::to_string(subtile_index);
   port_name += std::string("__pin_");
-  port_name += std::to_string(pin_id);
+  port_name += pin_info.get_name();
+  port_name += std::string("_");
+  port_name += std::to_string(pin_info.get_lsb());
   port_name += std::string("_");
 
   if (true == upper_port) {
@@ -571,106 +568,19 @@ std::string generate_grid_duplicated_port_name(const size_t& width,
   return port_name;
 }
 
-
 /*********************************************************************
- * Generate the port name for a grid in the context of a module
+ * Generate the port name for a grid in the context of a routing module
  * To keep a short and simple name, this function will not 
  * include any grid coorindate information!
- *********************************************************************/
-std::string generate_grid_module_port_name(const size_t& pin_id) {
+ **********************************************************************/
+std::string generate_routing_module_grid_port_name(const size_t& width, 
+                                                   const size_t& height, 
+                                                   const int& subtile_index, 
+                                                   const e_side& side, 
+                                                   const BasicPort& pin_info) {
   /* For non-top netlist */
   std::string port_name = std::string("grid_");
-  port_name += std::string("pin_");
-  port_name += std::to_string(pin_id);
-  port_name += std::string("_");
-  return port_name;
-}
-
-/*********************************************************************
- * Generate the port name for a Grid
- * This is a wrapper function for generate_port_name()
- * which can automatically decode the port name by the pin side and height
- *********************************************************************/
-std::string generate_grid_side_port_name(const DeviceGrid& grids,
-                                         const vtr::Point<size_t>& coordinate,
-                                         const e_side& side, 
-                                         const size_t& pin_id) {
-  /* Output the pins on the side*/ 
-  size_t width = grids[coordinate.x()][coordinate.y()].type->pin_width_offset[pin_id];
-  size_t height = grids[coordinate.x()][coordinate.y()].type->pin_height_offset[pin_id];
-  if (true != grids[coordinate.x()][coordinate.y()].type->pinloc[width][height][side][pin_id]) {
-    SideManager side_manager(side);
-    VTR_LOG_ERROR("Fail to generate a grid pin (x=%lu, y=%lu, width=%lu, height=%lu, side=%s, index=%d)\n",
-                  coordinate.x(), coordinate.y(), width, height, side_manager.c_str(), pin_id);
-    exit(1);
-  } 
-  return generate_grid_port_name(coordinate, width, height, side, pin_id, true);
-}
-
-/*********************************************************************
- * Generate the port name of a grid pin for a routing module,
- * which could be a switch block or a connection block
- * Note that to ensure unique grid port name in the context of a routing module,
- * we need a prefix which denotes the relative location of the port in the routing module
- *
- * The prefix is created by considering the the grid coordinate 
- * and switch block coordinate
- * Detailed rules in conversion is as follows:
- *
- *             top_left         top_right
- *             +------------------------+
- *    left_top |                        | right_top
- *             |      Switch Block      |
- *             |         [x][y]         |
- *             |                        |
- *             |                        |
- *  left_right |                        | right_bottom
- *             +------------------------+
- *              bottom_left  bottom_right
- *
- *  +--------------------------------------------------------
- *  | Grid Coordinate | Pin side of grid | module side 
- *  +--------------------------------------------------------
- *  | [x][y+1]        | right            | top_left
- *  +--------------------------------------------------------
- *  | [x][y+1]        | bottom           | left_top
- *  +--------------------------------------------------------
- *  | [x+1][y+1]      | left             | top_right
- *  +--------------------------------------------------------
- *  | [x+1][y+1]      | bottom           | right_top
- *  +--------------------------------------------------------
- *  | [x][y]          | top              | left_right
- *  +--------------------------------------------------------
- *  | [x][y]          | right            | bottom_left
- *  +--------------------------------------------------------
- *  | [x+1][y]        | top              | right_bottom
- *  +--------------------------------------------------------
- *  | [x+1][y]        | left             | bottom_right
- *  +--------------------------------------------------------
- *
- *********************************************************************/
-std::string generate_sb_module_grid_port_name(const e_side& sb_side,
-                                              const e_side& grid_side, 
-                                              const size_t& pin_id) {
-  SideManager sb_side_manager(sb_side);
-  SideManager grid_side_manager(grid_side);
-  /* Relative location is opposite to the side in grid context */
-  grid_side_manager.set_opposite();
-  std::string prefix = sb_side_manager.to_string() + std::string("_") + grid_side_manager.to_string();
-  return prefix + std::string("_") + generate_grid_module_port_name(pin_id);
-}
-
-/*********************************************************************
- * Generate the port name of a grid pin for a routing module,
- * which could be a switch block or a connection block
- * Note that to ensure unique grid port name in the context of a routing module,
- * we need a prefix which denotes the relative location of the port in the routing module
- *********************************************************************/
-std::string generate_cb_module_grid_port_name(const e_side& cb_side, 
-                                              const size_t& pin_id) {
-  SideManager side_manager(cb_side);
-  std::string prefix = side_manager.to_string();
-  return prefix + std::string("_") + generate_grid_module_port_name(pin_id);
+  return port_name + generate_grid_port_name(width, height, subtile_index, side, pin_info);
 }
 
 /*********************************************************************

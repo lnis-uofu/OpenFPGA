@@ -278,6 +278,46 @@ LbRRGraph VprDeviceAnnotation::physical_lb_rr_graph(t_pb_graph_node* pb_graph_he
   return physical_lb_rr_graphs_.at(pb_graph_head);
 }
 
+BasicPort VprDeviceAnnotation::physical_tile_pin_port_info(t_physical_tile_type_ptr physical_tile,
+                                                           const int& pin_index) const {
+  /* Try to find the physical tile in the fast look-up */
+  auto physical_tile_search_result = physical_tile_pin2port_info_map_.find(physical_tile);
+  if (physical_tile_search_result == physical_tile_pin2port_info_map_.end()) {
+    /* Not found. Return an invalid port */
+    return BasicPort();
+  }
+
+  /* Try to find the physical tile port info with pin index */
+  auto pin_search_result = physical_tile_search_result->second.find(pin_index);
+  if (pin_search_result == physical_tile_search_result->second.end()) {
+    /* Not found. Return an invalid port */
+    return BasicPort();
+  }
+  
+  /* Reach here, we should find a port. Return the port information */
+  return pin_search_result->second;
+}
+
+int VprDeviceAnnotation::physical_tile_pin_subtile_index(t_physical_tile_type_ptr physical_tile,
+                                                         const int& pin_index) const {
+  /* Try to find the physical tile in the fast look-up */
+  auto physical_tile_search_result = physical_tile_pin_subtile_indices_.find(physical_tile);
+  if (physical_tile_search_result == physical_tile_pin_subtile_indices_.end()) {
+    /* Not found. Return an invalid index */
+    return -1;
+  }
+
+  /* Try to find the physical tile port info with pin index */
+  auto pin_search_result = physical_tile_search_result->second.find(pin_index);
+  if (pin_search_result == physical_tile_search_result->second.end()) {
+    /* Not found. Return an invalid index */
+    return -1;
+  }
+  
+  /* Reach here, we should find a port. Return the port information */
+  return pin_search_result->second;
+}
+
 /************************************************************************
  * Public mutators
  ***********************************************************************/
@@ -531,6 +571,18 @@ void VprDeviceAnnotation::add_physical_lb_rr_graph(t_pb_graph_node* pb_graph_hea
   }
 
   physical_lb_rr_graphs_[pb_graph_head] = lb_rr_graph;
+}
+
+void VprDeviceAnnotation::add_physical_tile_pin2port_info_pair(t_physical_tile_type_ptr physical_tile,
+                                                               const int& pin_index,
+                                                               const BasicPort& port) {
+  physical_tile_pin2port_info_map_[physical_tile][pin_index] = port;
+}
+
+void VprDeviceAnnotation::add_physical_tile_pin_subtile_index(t_physical_tile_type_ptr physical_tile,
+                                                              const int& pin_index,
+                                                              const int& subtile_index) {
+  physical_tile_pin_subtile_indices_[physical_tile][pin_index] = subtile_index;
 }
 
 } /* End namespace openfpga*/
