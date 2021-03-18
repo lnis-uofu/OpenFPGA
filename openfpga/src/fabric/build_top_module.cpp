@@ -284,6 +284,7 @@ vtr::Matrix<size_t> add_top_module_connection_block_instances(ModuleManager& mod
 int build_top_module(ModuleManager& module_manager,
                      DecoderLibrary& decoder_lib,
                      const CircuitLibrary& circuit_lib,
+                     const VprDeviceAnnotation& vpr_device_annotation,
                      const DeviceGrid& grids,
                      const TileAnnotation& tile_annotation,
                      const RRGraph& rr_graph,
@@ -329,11 +330,13 @@ int build_top_module(ModuleManager& module_manager,
 
     /* Add module nets to connect the sub modules */
     add_top_module_nets_connect_grids_and_gsbs(module_manager, top_module, 
+                                               vpr_device_annotation, 
                                                grids, grid_instance_ids, 
                                                rr_graph, device_rr_gsb, sb_instance_ids, cb_instance_ids,
                                                compact_routing_hierarchy, duplicate_grid_pin);
     /* Add inter-CLB direct connections */
     add_top_module_nets_tile_direct_connections(module_manager, top_module, circuit_lib, 
+                                                vpr_device_annotation,
                                                 grids, grid_instance_ids,
                                                 tile_direct, arch_direct);
   }
@@ -345,7 +348,7 @@ int build_top_module(ModuleManager& module_manager,
   add_module_global_ports_from_child_modules(module_manager, top_module);
 
   /* Add global ports from grid ports that are defined as global in tile annotation */
-  status = add_top_module_global_ports_from_grid_modules(module_manager, top_module, tile_annotation, grids, grid_instance_ids);
+  status = add_top_module_global_ports_from_grid_modules(module_manager, top_module, tile_annotation, vpr_device_annotation, grids, grid_instance_ids);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }

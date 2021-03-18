@@ -46,6 +46,7 @@ void add_grid_module_net_connect_pb_graph_pin(ModuleManager& module_manager,
                                               const ModuleId& grid_module,
                                               const ModuleId& child_module,
                                               const size_t& child_instance,
+                                              const VprDeviceAnnotation& vpr_device_annotation,
                                               t_physical_tile_type_ptr grid_type_descriptor,
                                               t_pb_graph_pin* pb_graph_pin,
                                               const e_side& border_side,
@@ -78,8 +79,11 @@ void add_grid_module_net_connect_pb_graph_pin(ModuleManager& module_manager,
     /* Create a net to connect the grid pin to child module pin */
     ModuleNetId net = module_manager.create_module_net(grid_module);
     /* Find the port in grid_module */
-    vtr::Point<size_t> dummy_coordinate;
-    std::string grid_port_name = generate_grid_port_name(dummy_coordinate, pin_width, pin_height, side, grid_pin_index, false);
+    BasicPort pin_info = vpr_device_annotation.physical_tile_pin_port_info(grid_type_descriptor, grid_pin_index);
+    VTR_ASSERT(true == pin_info.is_valid());
+    int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(grid_type_descriptor, grid_pin_index);
+    VTR_ASSERT(OPEN != subtile_index && subtile_index < grid_type_descriptor->capacity);
+    std::string grid_port_name = generate_grid_port_name(pin_width, pin_height, subtile_index, side, pin_info);
     ModulePortId grid_module_port_id = module_manager.find_module_port(grid_module, grid_port_name);
     VTR_ASSERT(true == module_manager.valid_module_port_id(grid_module, grid_module_port_id));
     /* Grid port always has only 1 pin, it is assumed when adding these ports to the module
