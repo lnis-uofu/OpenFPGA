@@ -483,15 +483,14 @@ def run_yosys_with_abc():
         clean_up_and_exit("")
     args.K = lut_size
     # Yosys script parameter mapping
-    ys_params = {
-        "READ_VERILOG_FILE": " \n".join([
+    ys_params = script_env_vars["PATH"]
+    ys_params["READ_VERILOG_FILE"] = " \n".join([
             "read_verilog -nolatches " + shlex.quote(eachfile)
-            for eachfile in args.benchmark_files]),
-        "TOP_MODULE": args.top_module,
-        "LUT_SIZE": lut_size,
-        "OUTPUT_BLIF": args.top_module+"_yosys_out.blif",
-        "OUTPUT_VERILOG": args.top_module+"_output_verilog.v"
-    }
+            for eachfile in args.benchmark_files])
+    ys_params["TOP_MODULE"] = args.top_module
+    ys_params["LUT_SIZE"] = lut_size
+    ys_params["OUTPUT_BLIF"] = args.top_module+"_yosys_out.blif"
+    ys_params["OUTPUT_VERILOG"] = args.top_module+"_output_verilog.v"
 
     for indx in range(0, len(OpenFPGAArgs), 2):
         tmpVar = OpenFPGAArgs[indx][2:].upper()
