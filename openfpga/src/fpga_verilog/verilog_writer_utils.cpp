@@ -488,7 +488,7 @@ std::string generate_verilog_port(const enum e_dump_verilog_port_type& verilog_p
      && (0 == port_info.get_lsb())
      && (1 == port_info.get_origin_port_width())) {
       size_str.clear();
-    } else if ((1 == port_info.get_width()) && (0 != port_info.get_lsb())) {
+    } else if ((1 == port_info.get_width())) {
       size_str = "[" + std::to_string(port_info.get_lsb()) + "]";
     }
     verilog_line = port_info.get_name() + size_str;
