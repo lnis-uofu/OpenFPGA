@@ -9,6 +9,7 @@
 #include "vtr_ndmatrix.h"
 #include "arch_direct.h"
 #include "tile_direct.h"
+#include "vpr_device_annotation.h"
 #include "device_grid.h"
 #include "module_manager.h"
 #include "circuit_library.h"
@@ -23,6 +24,7 @@ namespace openfpga {
 void add_top_module_nets_tile_direct_connections(ModuleManager& module_manager, 
                                                  const ModuleId& top_module, 
                                                  const CircuitLibrary& circuit_lib, 
+                                                 const VprDeviceAnnotation& vpr_device_annotation,
                                                  const DeviceGrid& grids,
                                                  const vtr::Matrix<size_t>& grid_instance_ids,
                                                  const TileDirect& tile_direct,
