@@ -57,3 +57,16 @@ module dpram_1024x8 (
 
 endmodule
 
+//-----------------------------
+// 36-bit multiplier
+//-----------------------------
+module mult_36(
+  input [35:0] A,
+  input [35:0] B,
+  output [71:0] Y
+);
+
+assign Y = A * B;
+
+endmodule
+
