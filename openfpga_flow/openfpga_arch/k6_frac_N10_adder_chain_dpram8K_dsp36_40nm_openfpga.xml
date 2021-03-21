@@ -206,6 +206,16 @@
       <port type="output" prefix="data_out" size="8"/>
       <port type="clock" prefix="clk" size="1" is_global="true" default_val="0"/>
     </circuit_model>
+    <circuit_model type="hard_logic" name="mult_36x36" prefix="mult_36x36" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/mult_36x36.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/mult_36x36.v">
+      <design_technology type="cmos"/>
+      <input_buffer exist="true" circuit_model_name="INVTX1"/>
+      <output_buffer exist="true" circuit_model_name="INVTX1"/>
+      <port type="input" prefix="A" lib_name="A" size="36"/>
+      <port type="input" prefix="B" lib_name="B" size="36"/>
+      <port type="output" prefix="Y" lib_name="out" size="72"/>
+      <!-- As a fracturable multiplier, it requires 2 configuration bits to operate in 4 different modes -->
+      <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
+    </circuit_model>
   </circuit_library>
   <configuration_protocol>
     <organization type="scan_chain" circuit_model_name="DFFR"/>
@@ -265,6 +275,10 @@
     <pb_type name="clb.fle[n1_lut6].ble6.ff" physical_pb_type_name="clb.fle[physical].fabric.ff" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
     <!-- End physical pb_type binding in complex block clb -->
 
+    <!-- physical pb_type binding in complex block dsp -->
+    <pb_type name="mult_36" physical_mode_name="mult_36x36" idle_mode_name="mult_36x36"/>
+    <!-- Bind the primitive pb_type in the physical mode to a circuit model --> 
+    <pb_type name="mult_36[mult_36x36].mult_36x36_slice.mult_36x36" circuit_model_name="mult_36x36" mode_bits="00"/>
 
     <!-- physical pb_type binding in complex block memory -->
     <pb_type name="memory[mem_1024x8_dp].mem_1024x8_dp" circuit_model_name="dpram_1024x8"/>
