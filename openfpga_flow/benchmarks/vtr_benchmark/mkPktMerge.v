@@ -516,16 +516,16 @@ input	[`dw-1:0]	din;
 input			we;
 output	[`dw-1:0]	dout;
 input			re;
-output			full, full_r;
-output			empty, empty_r;
-output			full_n, full_n_r;
-output			empty_n, empty_n_r;
-output	[1:0]		level;
+output			full_r;
+output			empty_r;
+output			full_n_r;
+output			empty_n_r;
  
 ////////////////////////////////////////////////////////////////////
 //
 // Local Wires
 //
+wire	[1:0]		level;
  
 reg	[`aw-1:0]	wp;
 wire	[`aw-1:0]	wp_pl1;
@@ -913,17 +913,16 @@ input	[`dw-1:0]	din;
 input			we;
 output	[`dw-1:0]	dout;
 input			re;
-output			full, full_r;
-output			empty, empty_r;
-output			full_n, full_n_r;
-output			empty_n, empty_n_r;
-output	[1:0]		level;
+output			full_r;
+output			empty_r;
+output			full_n_r;
+output			empty_n_r;
  
 ////////////////////////////////////////////////////////////////////
 //
 // Local Wires
 //
- 
+wire	[1:0]		level;
 reg	[`aw-1:0]	wp;
 wire	[`aw-1:0]	wp_pl1;
 wire	[`aw-1:0]	wp_pl2;
@@ -1311,17 +1310,17 @@ input	[`dw-1:0]	din;
 input			we;
 output	[`dw-1:0]	dout;
 input			re;
-output			full, full_r;
-output			empty, empty_r;
-output			full_n, full_n_r;
-output			empty_n, empty_n_r;
-output	[1:0]		level;
+output			full_r;
+output			empty_r;
+output			full_n_r;
+output			empty_n_r;
  
 ////////////////////////////////////////////////////////////////////
 //
 // Local Wires
 //
  
+wire	[1:0]		level;
 reg	[`aw-1:0]	wp;
 wire	[`aw-1:0]	wp_pl1;
 wire	[`aw-1:0]	wp_pl2;
@@ -1491,4 +1490,49 @@ begin
 end
 endmodule
 
- 
+//---------------------------------------
+// A dual-port RAM 
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module dual_port_ram (
+	input clk,
+	input we1,
+	input we2,
+	input [`aw - 1 : 0] addr1,
+	input [`dw - 1 : 0] data1,
+	output [`dw - 1 : 0] out1,
+	input [`aw - 1 : 0] addr2,
+	input [`dw - 1 : 0] data2,
+	output [`dw - 1 : 0] out2
+);
+
+	reg [`dw - 1 : 0] ram[2**`aw - 1 : 0];
+	reg [`dw - 1 : 0] data_out1;
+	reg [`dw - 1 : 0] data_out2;
+
+	assign out1 = data_out1;
+	assign out2 = data_out2;
+
+    // If writen enable 1 is activated,
+    // data1 will be loaded through addr1
+    // Otherwise, data will be read out through addr1
+	always @(posedge clk) begin
+		if (we1) begin
+			ram[addr1] <= data1;
+        end else begin
+			data_out1 <= ram[addr1];
+		end
+	end
+
+    // If writen enable 2 is activated,
+    // data1 will be loaded through addr2
+    // Otherwise, data will be read out through addr2
+	always @(posedge clk) begin
+		if (we2) begin
+			ram[addr2] <= data2;
+		end else begin
+			data_out2 <= ram[addr2];
+		end
+	end
+
+endmodule
