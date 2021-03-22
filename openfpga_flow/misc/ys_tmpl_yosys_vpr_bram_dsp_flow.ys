@@ -40,6 +40,9 @@ opt_clean
 # Map multipliers
 # Inspired from synth_xilinx.cc
 #########################
+# Avoid merging any registers into DSP, reserve memory port registers first
+memory_dff
+wreduce t:$mul
 techmap -map +/mul2dsp.v -map ${YOSYS_DSP_MAP_VERILOG} ${YOSYS_DSP_MAP_PARAMETERS}
 select a:mul2dsp
 setattr -unset mul2dsp
