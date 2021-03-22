@@ -29,8 +29,10 @@ lut_truth_table_fixup
 
 # Build the module graph
 #  - Enabled compression on routing architecture modules
-#  - Enable pin duplication on grid modules
-build_fabric --compress_routing #--verbose
+#  - Enabled frame view creation to save runtime and memory
+#    Note that this is turned on when bitstream generation 
+#    is the ONLY purpose of the flow!!!
+build_fabric --compress_routing --frame_view #--verbose
 
 # Write the fabric hierarchy of module graph to a file
 # This is used by hierarchical PnR flows
