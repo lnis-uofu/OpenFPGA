@@ -232,7 +232,7 @@ include(CheckCXXCompilerFlag)
 add_custom_target(
     yosys ALL 
     COMMAND $(MAKE) config-gcc
-    COMMAND $(MAKE) install PREFIX=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
+    COMMAND $(MAKE) install PREFIX=$ENV{OPENFPGA_PATH}/yosys/install
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys
     COMMENT "Compile Yosys with given Makefile"
 )
