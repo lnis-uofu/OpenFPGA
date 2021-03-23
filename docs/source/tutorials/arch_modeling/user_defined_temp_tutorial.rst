@@ -18,7 +18,10 @@ Go to line 187 and remove the path for the verilog_netlist. The modified file sh
 
 .. figure:: ./figures/modified_arch_file.png
    :scale: 50%
-   The Modified k6_frac_N10_adder_chain_40nm_openfpga.xml File
+   
+   
+The Modified k6_frac_N10_adder_chain_40nm_openfpga.xml File
+
 Motivation
 ~~~~~~~~~~
 From the OpenFPGA root directory run the command
@@ -31,7 +34,10 @@ Running this command should fail and produce output similar to :numref:`fig_Erro
 
 .. figure:: ./figures/Error_log.png
    :scale: 50%
-   Errors Created by k6_frac_N10_adder_chain_40nm_openfpga.xml File Modification
+   
+   
+Errors Created by k6_frac_N10_adder_chain_40nm_openfpga.xml File Modification
+
 This command failed during the verification step because the path to the module definition for ADDF is missing. In our architecture file, user-defined verilog modules are those ``<circuit_model>`` with the key term verilog_netlist. The user_defined_templates.v file provides a module template for incorporating Hard IPs with no external library into the architecture. 
 
 Fixing the Error
@@ -55,9 +61,13 @@ This file contains user-defined verilog modules that are found in the openfpga_c
 To implement our own ADDF module, we need to remove all other module definitions (they are already defined elsewhere and will cause an error if left in). The file should resemble :numref:`fig_modified_templates_file`
 
 .. _fig_modified_templates_file:
+
 .. figure:: ./figures/modified_user_defined_templates_file.png
    :scale: 50%
-   The Finished user_defined_templates.v File
+   
+   
+The Finished user_defined_templates.v File
+
 We can now link this user_defined_templates.v into k6_frac_N10_adder_chain_40nm_openfpga.xml.
 
 .. note:: Be sure to select the run where you modified the user_defined_templates.v!
