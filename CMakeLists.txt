@@ -241,6 +241,7 @@ add_custom_target(
 # yosys compilation ends
 
 # yosys-plugins compilation starts
+# run makefile provided, we pass-on the options to the local make file 
 add_custom_target(
     yosys-plugins ALL 
     COMMAND $(MAKE) 
@@ -249,7 +250,7 @@ add_custom_target(
     COMMENT "Compile Yosys-plugins with given Makefile"
 )
 
-add_dependencies(yosys-plugins yosys) 
+add_dependencies(yosys-plugins yosys)
 
 # yosys-plugins compilation ends
 
