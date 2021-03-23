@@ -37,6 +37,9 @@ parser.add_argument('--reference_csv_file', required=True,
                     help='Specify the reference csv file constaining flow-run information')
 parser.add_argument('--metric_checklist_csv_file', required=True,
                     help='Specify the csv file constaining metrics to be checked')
+# By default, allow a 50% tolerance when checking metrics
+parser.add_argument('--check_tolerance', default="0.5,1.5",
+                    help='Specify the tolerance when checking metrics. Format <lower_bound>,<upper_bound>')
 args = parser.parse_args()
 
 #####################################################################
@@ -78,6 +81,12 @@ for row in ref_csv_content:
   ref_results[row[csv_name_tag]] = row;
 
 #####################################################################
+# Parse the tolerance to be applied when checking metrics
+#####################################################################
+lower_bound_factor = float(args.check_tolerance.split(",")[0])
+upper_bound_factor = float(args.check_tolerance.split(",")[1])
+
+#####################################################################
 # Parse the csv file to check
 #####################################################################
 with open(args.check_csv_file, newline='') as check_csv_file:
@@ -87,9 +96,10 @@ with open(args.check_csv_file, newline='') as check_csv_file:
   for row in results_to_check:
     # Start from line 1 and check information
     for metric_to_check in metric_checklist:
-      if (ref_results[row[csv_name_tag]][metric_to_check] > row[metric_to_check]):
+      # Check if the metric is in a range
+      if (lower_bound_factor * float(ref_results[row[csv_name_tag]][metric_to_check]) > float(row[metric_to_check])) or (upper_bound_factor * float(ref_results[row[csv_name_tag]][metric_to_check]) < float(row[metric_to_check])) :
         # Check QoR failed, error out
-        logging.error("Benchmark " + str(row[csv_name_tag]) + " failed in checking '" + str(metric_to_check) +"'\n" + "Found: " + str(row[metric_to_check]) + " but expected: " + str(ref_results[row[csv_name_tag]][metric_to_check]))      
+        logging.error("Benchmark " + str(row[csv_name_tag]) + " failed in checking '" + str(metric_to_check) +"'\n" + "Found: " + str(row[metric_to_check]) + " but expected: " + str(ref_results[row[csv_name_tag]][metric_to_check]) + " outside range [" + str(lower_bound_factor * 100) + "%, " + str(upper_bound_factor * 100) + "%]")      
         check_error_count += 1
       # Pass this metric check, increase counter
       checkpoint_count += 1
