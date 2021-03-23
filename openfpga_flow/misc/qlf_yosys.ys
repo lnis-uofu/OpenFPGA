@@ -1,4 +1,7 @@
 # Yosys synthesis script for ${TOP_MODULE}
+
+plugin -i ql-qlf-k4n8
+
 # Read verilog files
 ${READ_VERILOG_FILE}
 
