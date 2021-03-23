@@ -16,7 +16,7 @@ Go to line 187 and replace it with:
 
 .. code-block:: XML
 
-<circuit_model type="hard_logic" name="ADDF" prefix="ADDF" is_default="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/adder.sp" verilog_netlist="">
+   <circuit_model type="hard_logic" name="ADDF" prefix="ADDF" is_default="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/adder.sp"     verilog_netlist="">
 
 Motivation
 ~~~~~~~~~~
@@ -58,52 +58,52 @@ To implement our own ADDF module, we need to remove all other module definitions
 
 .. code-block:: Verilog
 
-//-------------------------------------------
-//      FPGA Synthesizable Verilog Netlist
-//      Description: Template for user-defined Verilog modules
-//      Author: Xifan TANG
-//      Organization: University of Utah
-//      Date: Fri Mar 19 10:05:32 2021
-//-------------------------------------------
-//----- Time scale -----
-`timescale 1ns / 1ps
+   //-------------------------------------------
+   //      FPGA Synthesizable Verilog Netlist
+   //      Description: Template for user-defined Verilog modules
+   //      Author: Xifan TANG
+   //      Organization: University of Utah
+   //      Date: Fri Mar 19 10:05:32 2021
+   //-------------------------------------------
+   //----- Time scale -----
+   `timescale 1ns / 1ps
+   
+   
+   
+   // ----- Template Verilog module for ADDF -----
+   //----- Default net type -----
+   `default_nettype none
+
+   // ----- Verilog module for ADDF -----
+   module ADDF(A,
+               B,
+               CI,
+               SUM,
+               CO);
+   //----- INPUT PORTS -----
+   input [0:0] A;
+   //----- INPUT PORTS -----
+   input [0:0] B;
+   //----- INPUT PORTS -----
+   input [0:0] CI;
+   //----- OUTPUT PORTS -----
+   output [0:0] SUM;
+   //----- OUTPUT PORTS -----
+   output [0:0] CO;
+
+   //----- BEGIN wire-connection ports -----
+   //----- END wire-connection ports -----
 
 
+   //----- BEGIN Registered ports -----
+   //----- END Registered ports -----
 
-// ----- Template Verilog module for ADDF -----
-//----- Default net type -----
-`default_nettype none
-
-// ----- Verilog module for ADDF -----
-module ADDF(A,
-            B,
-            CI,
-            SUM,
-            CO);
-//----- INPUT PORTS -----
-input [0:0] A;
-//----- INPUT PORTS -----
-input [0:0] B;
-//----- INPUT PORTS -----
-input [0:0] CI;
-//----- OUTPUT PORTS -----
-output [0:0] SUM;
-//----- OUTPUT PORTS -----
-output [0:0] CO;
-
-//----- BEGIN wire-connection ports -----
-//----- END wire-connection ports -----
-
-
-//----- BEGIN Registered ports -----
-//----- END Registered ports -----
-
-// ----- Internal logic should start here -----
-   assign SUM = A ^ B ^ CI;
-   assign CO  = (A & B) | (A & CI) | (B & CI);
-// ----- Internal logic should end here -----
-endmodule
-// ----- END Verilog module for ADDF -----
+   // ----- Internal logic should start here -----
+      assign SUM = A ^ B ^ CI;
+      assign CO  = (A & B) | (A & CI) | (B & CI);
+   // ----- Internal logic should end here -----
+   endmodule
+   // ----- END Verilog module for ADDF -----
 
 We can now link this ``user_defined_templates.v`` into ``k6_frac_N10_adder_chain_40nm_openfpga.xml``.
 
