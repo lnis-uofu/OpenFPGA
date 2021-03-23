@@ -138,7 +138,7 @@ jobs:
         shell: bash
         # Execute the build.  You can specify a specific target with "--target <NAME>"
         run: |
-          source openfpga.sh && cmake --build . --config $BUILD_TYPE
+          source ../openfpga.sh && cmake --build . --config $BUILD_TYPE
 
       # Check the cache size and see if it is over the limit
       - name: Check ccache size
