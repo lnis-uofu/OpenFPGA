@@ -1,7 +1,7 @@
 module mult_36x36 (
-  input [35:0] A,
-  input [35:0] B,
-  output [71:0] Y
+  input [0:35] A,
+  input [0:35] B,
+  output [0:71] Y
 );
   parameter A_SIGNED = 0;
   parameter B_SIGNED = 0;

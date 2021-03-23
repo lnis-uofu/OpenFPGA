@@ -5,15 +5,15 @@
 module dpram_1024x8_core (
   input wclk,
   input wen,
-  input [9:0] waddr,
-  input [7:0] data_in,
+  input [0:9] waddr,
+  input [0:7] data_in,
   input rclk,
   input ren,
-  input [9:0] raddr,
-  output [7:0] data_out );
+  input [0:9] raddr,
+  output [0:7] data_out );
 
-  reg [7:0] ram[1023:0];
-  reg [7:0] internal;
+  reg [0:7] ram[0:1023];
+  reg [0:7] internal;
 
   assign data_out = internal;
 
@@ -40,10 +40,10 @@ module dpram_1024x8 (
   input clk,
   input wen,
   input ren,
-  input [9:0] waddr,
-  input [9:0] raddr,
-  input [7:0] data_in,
-  output [7:0] data_out );
+  input [0:9] waddr,
+  input [0:9] raddr,
+  input [0:7] data_in,
+  output [0:7] data_out );
 
     dpram_1024x8_core memory_0 (
       .wclk    (clk),
@@ -61,9 +61,9 @@ endmodule
 // 36-bit multiplier
 //-----------------------------
 module mult_36(
-  input [35:0] A,
-  input [35:0] B,
-  output [71:0] Y
+  input [0:35] A,
+  input [0:35] B,
+  output [0:71] Y
 );
 
 assign Y = A * B;
