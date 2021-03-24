@@ -2974,3 +2974,30 @@ module fifo3 (datain, writeen, dataout, shiften, globalreset, clk);
     end 
  endmodule
 
+//---------------------------------------
+// A single-port 256x21bit RAM 
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module single_port_ram (
+	input clk,
+	input we,
+	input [7:0] addr,
+	input [20:0] data,
+	output [20:0] out );
+
+	reg [20:0] ram[255:0];
+	reg [20:0] internal;
+
+	assign out = internal;
+
+	always @(posedge clk) begin
+		if(wen) begin
+			ram[addr] <= data;
+		end
+
+		if(ren) begin
+			internal <= ram[addr];
+		end
+	end
+
+endmodule
