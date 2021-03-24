@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns:xl="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="39.1 77.74509 628.8097 564.4792" width="628.8097" height="564.4792">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.1" viewBox="39.1 77.74509 628.8097 564.4792" width="628.8097" height="564.4792">
   <defs>
     <font-face font-family="Courier" font-size="10" units-per-em="1000" underline-position="-178.22266" underline-thickness="57.61719" slope="0" x-height="456.54297" cap-height="586.91406" ascent="753.90625" descent="-246.09375" font-weight="400">
       <font-face-src>
@@ -48,8 +48,8 @@
       </font-face-src>
     </font-face>
   </defs>
-  <metadata> Produced by OmniGraffle 7.18\n2020-11-26 19:26:01 +0000</metadata>
-  <g id="frac_lut3_example" fill="none" stroke="none" stroke-opacity="1" stroke-dasharray="none" fill-opacity="1">
+  <metadata> Produced by OmniGraffle 7.18.4\n2021-03-15 17:35:45 +0000</metadata>
+  <g id="frac_lut3_example" fill="none" fill-opacity="1" stroke-opacity="1" stroke="none" stroke-dasharray="none">
     <title>frac_lut3_example</title>
     <g id="frac_lut3_example_Legend">
       <title>Legend</title>
@@ -267,12 +267,12 @@
           <line x1="440.54647" y1="244.04755" x2="440.36464" y2="232.12676" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
         </g>
         <g id="Graphic_8317">
-          <text transform="translate(386.73545 243.0684)" fill="black">
+          <text transform="translate(428.70654 243.0684)" fill="black">
             <tspan font-family="Times New Roman" font-size="12" font-style="italic" font-weight="400" fill="black" x="0" y="11">in_buf</tspan>
           </text>
         </g>
         <g id="Graphic_8316">
-          <text transform="translate(428.097 243.0684)" fill="black">
+          <text transform="translate(391.0045 243.0684)" fill="black">
             <tspan font-family="Times New Roman" font-size="12" font-style="italic" font-weight="400" fill="black" x="0" y="11">in_inv</tspan>
           </text>
         </g>
