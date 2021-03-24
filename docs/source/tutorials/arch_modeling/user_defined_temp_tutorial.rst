@@ -64,7 +64,7 @@ This error log can be found by running the following command from the root direc
 
    cat openfpga_flow/tasks/fpga_verilog/adder/hard_adder/latest/00_and2_MIN_ROUTE_CHAN_WIDTH_out.log
 
-This command failed during the verification step because the path to the module definition for ADDF is missing. In our architecture file, user-defined verilog modules are those ``<circuit_model>`` with the key term verilog_netlist. The `user_defined_templates.v` file provides a module template for incorporating Hard IPs with no external library into the architecture. 
+This command failed during the verification step because the path to the module definition for ADDF is missing. In our architecture file, user-defined verilog modules are those ``<circuit_model>`` with the key term `verilog_netlist`. The ``user_defined_templates.v`` file provides a module template for incorporating Hard IPs with no external library into the architecture. 
 
 Fixing the Error
 ~~~~~~~~~~~~~~~~
