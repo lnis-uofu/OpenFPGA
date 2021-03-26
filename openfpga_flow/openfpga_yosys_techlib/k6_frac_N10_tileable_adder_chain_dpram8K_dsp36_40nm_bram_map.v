@@ -1,9 +1,9 @@
 module $__MY_DPRAM_1024x8 (
-  output [7:0] B1DATA,
+  output [0:7] B1DATA,
   input CLK1,
-  input [9:0] B1ADDR,
-  input [9:0] A1ADDR,
-  input [7:0] A1DATA,
+  input [0:9] B1ADDR,
+  input [0:9] A1ADDR,
+  input [0:7] A1DATA,
   input A1EN,
   input B1EN );
 

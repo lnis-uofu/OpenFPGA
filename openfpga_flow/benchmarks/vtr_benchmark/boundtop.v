@@ -1656,7 +1656,33 @@ single_port_ram new_ram(
   
  endmodule
 
-    
+//---------------------------------------
+// A single-port 1024x32bit RAM 
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module single_port_ram (
+	input clk,
+	input we,
+	input [9:0] addr,
+	input [31:0] data,
+	output [31:0] out );
+
+	reg [31:0] ram[1023:0];
+	reg [31:0] internal;
+
+	assign out = internal;
+
+	always @(posedge clk) begin
+		if(wen) begin
+			ram[addr] <= data;
+		end
+
+		if(ren) begin
+			internal <= ram[addr];
+		end
+	end
+
+endmodule
     
     
     
