@@ -249,7 +249,7 @@ add_custom_target(
     COMMENT "Compile Yosys-plugins with given Makefile"
 )
 
-#add_dependencies(yosys-plugins yosys ) #YosysVariables)
+add_dependencies(yosys-plugins yosys) 
 
 # yosys-plugins compilation ends
 
