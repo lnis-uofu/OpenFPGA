@@ -231,33 +231,22 @@ include(CheckCXXCompilerFlag)
 # run makefile provided, we pass-on the options to the local make file 
 add_custom_target(
     yosys ALL 
-    COMMAND rm -rf ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install 
+    COMMAND rm -rf ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
     COMMAND $(MAKE) config-gcc
     COMMAND $(MAKE) install PREFIX=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys
-    COMMENT "Compile Yosys with given Makefile: ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install"
+    COMMENT "Compile Yosys with given Makefile"
 )
 
 # yosys compilation ends
 
 # yosys-plugins compilation starts
 add_custom_target(
-  YosysVariables ALL ${CMAKE_COMMAND} 
-  -D YOSYS_INSTALL=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
-  -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/YosysVars.cmake
-  COMMENT "Getting Yosys variables to use in yosys-plugins build: ${YS_CXX}"
-)
-add_dependencies(YosysVariables yosys)
-
-# run makefile provided, we pass-on the options to the local make file 
-add_custom_target(
     yosys-plugins ALL 
-    COMMAND $(MAKE) CXX=${YS_CXX} CXXFLAGS=${YS_CXXFLAGS} LDFLAGS=${YS_LDFLAGS}
-     LDLIBS=${YS_LDLIBS} PLUGINS_DIR=${YS_DATA_DIR}/plugins DATA_DIR=${YS_DATA_DIR}
-    COMMAND $(MAKE) install CXX=${YS_CXX} CXXFLAGS=${YS_CXXFLAGS} LDFLAGS=${YS_LDFLAGS}
-    LDLIBS=${YS_LDLIBS} PLUGINS_DIR=${YS_DATA_DIR}/plugins DATA_DIR=${YS_DATA_DIR}
-   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-plugins
-    COMMENT "Compile Yosys-plugins with given Makefile: ${YS_CXX}"
+    COMMAND $(MAKE) 
+    COMMAND $(MAKE) install 
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-plugins
+    COMMENT "Compile Yosys-plugins with given Makefile"
 )
 
 #add_dependencies(yosys-plugins yosys ) #YosysVariables)
