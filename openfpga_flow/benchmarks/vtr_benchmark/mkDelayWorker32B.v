@@ -1503,7 +1503,7 @@ module mkDelayWorker32B(wciS0_Clk,
 wire [255:0] dp_out_not_used1;
 wire [255:0] dp_out_not_used2;
 
-  dual_port_ram dpram1 (
+  dual_port_ram_1024x256 dpram1 (
 						.clk(wciS0_Clk),
 					    .addr1(mesgRF_memory__ADDRA),
 					    .addr2(mesgRF_memory__ADDRB),
@@ -1521,7 +1521,7 @@ wire [255:0] dp_out_not_used2;
 //	  .DATA_WIDTH(32'b1056),
 //	  .MEMSIZE(11'b1024)) mesgWF_memory(
 	  
- dual_port_ram dpram2   (
+ dual_port_ram_1024x256 dpram2   (
 						.clk(wciS0_Clk),
 					    .addr1(mesgWF_memory__ADDRA),
 					    .addr2(mesgWF_memory__ADDRB),
@@ -4083,17 +4083,17 @@ input	[`dwa-1:0]	din;
 input			we;
 output	[`dwa-1:0]	dout;
 input			re;
-output			full, full_r;
-output			empty, empty_r;
-output			full_n, full_n_r;
-output			empty_n, empty_n_r;
-output	[1:0]		level;
+output			full_r;
+output			empty_r;
+output			full_n_r;
+output			empty_n_r;
  
 ////////////////////////////////////////////////////////////////////
 //
 // Local Wires
 //
  
+wire	[1:0]		level;
 reg	[`awa-1:0]	wp;
 wire	[`awa-1:0]	wp_pl1;
 wire	[`awa-1:0]	wp_pl2;
@@ -4120,7 +4120,7 @@ reg			full_n_r, empty_n_r;
  // manually assign
  assign junk_in = 32'b00000000000000000000000000000000;
  
-dual_port_ram   ram1(
+dual_port_ram_16x32   ram1(
 	.clk(		clk		),
 	.addr1(		rp		),
 	.addr2(		wp		),
@@ -4468,17 +4468,17 @@ input	[`dwa-1:0]	din;
 input			we;
 output	[`dwa-1:0]	dout;
 input			re;
-output			full, full_r;
-output			empty, empty_r;
-output			full_n, full_n_r;
-output			empty_n, empty_n_r;
-output	[1:0]		level;
+output			full_r;
+output			empty_r;
+output			full_n_r;
+output			empty_n_r;
  
 ////////////////////////////////////////////////////////////////////
 //
 // Local Wires
 //
  
+wire	[1:0]		level;
 reg	[`awa-1:0]	wp;
 wire	[`awa-1:0]	wp_pl1;
 wire	[`awa-1:0]	wp_pl2;
@@ -4505,7 +4505,7 @@ reg			full_n_r, empty_n_r;
  // manually assign
  assign junk_in = 32'b00000000000000000000000000000000;
  
-dual_port_ram   ram1(
+dual_port_ram_16x32   ram1(
 	.clk(		clk		),
 	.addr1(		rp		),
 	.addr2(		wp		),
@@ -4857,17 +4857,17 @@ input	[`dwc-1:0]	din;
 input			we;
 output	[`dwc-1:0]	dout;
 input			re;
-output			full, full_r;
-output			empty, empty_r;
-output			full_n, full_n_r;
-output			empty_n, empty_n_r;
-output	[1:0]		level;
+output			full_r;
+output			empty_r;
+output			full_n_r;
+output			empty_n_r;
  
 ////////////////////////////////////////////////////////////////////
 //
 // Local Wires
 //
  
+wire	[1:0]		level;
 reg	[`awa-1:0]	wp;
 wire	[`awa-1:0]	wp_pl1;
 wire	[`awa-1:0]	wp_pl2;
@@ -4894,7 +4894,7 @@ reg			full_n_r, empty_n_r;
  // manually assign
  assign junk_in = 128'b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
  
-dual_port_ram   ram1(
+dual_port_ram_16x128   ram1(
 	.clk(		clk		),
 	.addr1(		rp		),
 	.addr2(		wp		),
@@ -5246,17 +5246,17 @@ input	[`dwd-1:0]	din;
 input			we;
 output	[`dwd-1:0]	dout;
 input			re;
-output			full, full_r;
-output			empty, empty_r;
-output			full_n, full_n_r;
-output			empty_n, empty_n_r;
-output	[1:0]		level;
+output			full_r;
+output			empty_r;
+output			full_n_r;
+output			empty_n_r;
  
 ////////////////////////////////////////////////////////////////////
 //
 // Local Wires
 //
  
+wire	[1:0]		level;
 reg	[`awa-1:0]	wp;
 wire	[`awa-1:0]	wp_pl1;
 wire	[`awa-1:0]	wp_pl2;
@@ -5283,7 +5283,7 @@ reg			full_n_r, empty_n_r;
  // manually assign
  assign junk_in = 128'b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
  
-dual_port_ram   ram1(
+dual_port_ram_16x128   ram1(
 	.clk(		clk		),
 	.addr1(		rp		),
 	.addr2(		wp		),
@@ -5636,17 +5636,17 @@ input	[`dwc-1:0]	din;
 input			we;
 output	[`dwc-1:0]	dout;
 input			re;
-output			full, full_r;
-output			empty, empty_r;
-output			full_n, full_n_r;
-output			empty_n, empty_n_r;
-output	[1:0]		level;
+output			full_r;
+output			empty_r;
+output			full_n_r;
+output			empty_n_r;
  
 ////////////////////////////////////////////////////////////////////
 //
 // Local Wires
 //
  
+wire	[1:0]		level;
 reg	[`awc-1:0]	wp;
 wire	[`awc-1:0]	wp_pl1;
 wire	[`awc-1:0]	wp_pl2;
@@ -5673,7 +5673,7 @@ reg			full_n_r, empty_n_r;
  // manually assign
  assign junk_in = 60'b000000000000000000000000000000000000000000000000000000000000;
  
-dual_port_ram   ram1(
+dual_port_ram_8x60   ram1(
 	.clk(		clk		),
 	.addr1(		rp		),
 	.addr2(		wp		),
@@ -6023,17 +6023,17 @@ input	[`dwf-1:0]	din;
 input			we;
 output	[`dwf-1:0]	dout;
 input			re;
-output			full, full_r;
-output			empty, empty_r;
-output			full_n, full_n_r;
-output			empty_n, empty_n_r;
-output	[1:0]		level;
+output			full_r;
+output			empty_r;
+output			full_n_r;
+output			empty_n_r;
  
 ////////////////////////////////////////////////////////////////////
 //
 // Local Wires
 //
  
+wire	[1:0]		level;
 reg	[`awf-1:0]	wp;
 wire	[`awf-1:0]	wp_pl1;
 wire	[`awf-1:0]	wp_pl2;
@@ -6060,7 +6060,7 @@ reg			full_n_r, empty_n_r;
  // manually assign
  assign junk_in = 313'b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
  
-dual_port_ram   ram1(
+dual_port_ram_8x313   ram1(
 	.clk(		clk		),
 	.addr1(		rp		),
 	.addr2(		wp		),
@@ -6413,17 +6413,17 @@ input	[`dwx-1:0]	din;
 input			we;
 output	[`dwx-1:0]	dout;
 input			re;
-output			full, full_r;
-output			empty, empty_r;
-output			full_n, full_n_r;
-output			empty_n, empty_n_r;
-output	[1:0]		level;
+output			full_r;
+output			empty_r;
+output			full_n_r;
+output			empty_n_r;
  
 ////////////////////////////////////////////////////////////////////
 //
 // Local Wires
 //
  
+wire	[1:0]		level;
 reg	[`awx-1:0]	wp;
 wire	[`awx-1:0]	wp_pl1;
 wire	[`awx-1:0]	wp_pl2;
@@ -6450,7 +6450,7 @@ reg			full_n_r, empty_n_r;
  // manually assign
  assign junk_in = 131'b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
  
-dual_port_ram   ram1(
+dual_port_ram_4x131   ram1(
 	.clk(		clk		),
 	.addr1(		rp		),
 	.addr2(		wp		),
@@ -6578,5 +6578,281 @@ always @(posedge clk )
 	if(we & (cnt >= (`max_size-`n) ) & !re)	full_n_r <=  1'b1;
 	else
 	if(re & (cnt <= (`max_size-`n+1)) & !we)	full_n_r <=  1'b0;
+
+endmodule
+
+//---------------------------------------
+// A dual-port RAM 1024x256 
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module dual_port_ram_1024x256 (
+	input clk,
+	input we1,
+	input we2,
+	input [10 - 1 : 0] addr1,
+	input [256 - 1 : 0] data1,
+	output [256 - 1 : 0] out1,
+	input [10 - 1 : 0] addr2,
+	input [256 - 1 : 0] data2,
+	output [256 - 1 : 0] out2
+);
+	reg [256 - 1 : 0] ram[2**10 - 1 : 0];
+	reg [256 - 1 : 0] data_out1;
+	reg [256 - 1 : 0] data_out2;
+
+	assign out1 = data_out1;
+	assign out2 = data_out2;
+
+    // If writen enable 1 is activated,
+    // data1 will be loaded through addr1
+    // Otherwise, data will be read out through addr1
+	always @(posedge clk) begin
+		if (we1) begin
+			ram[addr1] <= data1;
+        end else begin
+			data_out1 <= ram[addr1];
+		end
+	end
+
+    // If writen enable 2 is activated,
+    // data1 will be loaded through addr2
+    // Otherwise, data will be read out through addr2
+	always @(posedge clk) begin
+		if (we2) begin
+			ram[addr2] <= data2;
+		end else begin
+			data_out2 <= ram[addr2];
+		end
+	end
+
+endmodule
+
+//---------------------------------------
+// A dual-port RAM 16x32 
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module dual_port_ram_16x32 (
+	input clk,
+	input we1,
+	input we2,
+	input [4 - 1 : 0] addr1,
+	input [32 - 1 : 0] data1,
+	output [32 - 1 : 0] out1,
+	input [4 - 1 : 0] addr2,
+	input [32 - 1 : 0] data2,
+	output [32 - 1 : 0] out2
+);
+	reg [32 - 1 : 0] ram[2**4 - 1 : 0];
+	reg [32 - 1 : 0] data_out1;
+	reg [32 - 1 : 0] data_out2;
+
+	assign out1 = data_out1;
+	assign out2 = data_out2;
+
+    // If writen enable 1 is activated,
+    // data1 will be loaded through addr1
+    // Otherwise, data will be read out through addr1
+	always @(posedge clk) begin
+		if (we1) begin
+			ram[addr1] <= data1;
+        end else begin
+			data_out1 <= ram[addr1];
+		end
+	end
+
+    // If writen enable 2 is activated,
+    // data1 will be loaded through addr2
+    // Otherwise, data will be read out through addr2
+	always @(posedge clk) begin
+		if (we2) begin
+			ram[addr2] <= data2;
+		end else begin
+			data_out2 <= ram[addr2];
+		end
+	end
+
+endmodule
+
+//---------------------------------------
+// A dual-port RAM 16x128 
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module dual_port_ram_16x128 (
+	input clk,
+	input we1,
+	input we2,
+	input [4 - 1 : 0] addr1,
+	input [128 - 1 : 0] data1,
+	output [128 - 1 : 0] out1,
+	input [4 - 1 : 0] addr2,
+	input [128 - 1 : 0] data2,
+	output [128 - 1 : 0] out2
+);
+	reg [128 - 1 : 0] ram[2**4 - 1 : 0];
+	reg [128 - 1 : 0] data_out1;
+	reg [128 - 1 : 0] data_out2;
+
+	assign out1 = data_out1;
+	assign out2 = data_out2;
+
+    // If writen enable 1 is activated,
+    // data1 will be loaded through addr1
+    // Otherwise, data will be read out through addr1
+	always @(posedge clk) begin
+		if (we1) begin
+			ram[addr1] <= data1;
+        end else begin
+			data_out1 <= ram[addr1];
+		end
+	end
+
+    // If writen enable 2 is activated,
+    // data1 will be loaded through addr2
+    // Otherwise, data will be read out through addr2
+	always @(posedge clk) begin
+		if (we2) begin
+			ram[addr2] <= data2;
+		end else begin
+			data_out2 <= ram[addr2];
+		end
+	end
+
+endmodule
+
+//---------------------------------------
+// A dual-port RAM 8x60 
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module dual_port_ram_8x60 (
+	input clk,
+	input we1,
+	input we2,
+	input [3 - 1 : 0] addr1,
+	input [60 - 1 : 0] data1,
+	output [60 - 1 : 0] out1,
+	input [3 - 1 : 0] addr2,
+	input [60 - 1 : 0] data2,
+	output [60 - 1 : 0] out2
+);
+	reg [60 - 1 : 0] ram[2**3 - 1 : 0];
+	reg [60 - 1 : 0] data_out1;
+	reg [60 - 1 : 0] data_out2;
+
+	assign out1 = data_out1;
+	assign out2 = data_out2;
+
+    // If writen enable 1 is activated,
+    // data1 will be loaded through addr1
+    // Otherwise, data will be read out through addr1
+	always @(posedge clk) begin
+		if (we1) begin
+			ram[addr1] <= data1;
+        end else begin
+			data_out1 <= ram[addr1];
+		end
+	end
+
+    // If writen enable 2 is activated,
+    // data1 will be loaded through addr2
+    // Otherwise, data will be read out through addr2
+	always @(posedge clk) begin
+		if (we2) begin
+			ram[addr2] <= data2;
+		end else begin
+			data_out2 <= ram[addr2];
+		end
+	end
+
+endmodule
+
+//---------------------------------------
+// A dual-port RAM 8x313 
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module dual_port_ram_8x313 (
+	input clk,
+	input we1,
+	input we2,
+	input [3 - 1 : 0] addr1,
+	input [313 - 1 : 0] data1,
+	output [313 - 1 : 0] out1,
+	input [3 - 1 : 0] addr2,
+	input [313 - 1 : 0] data2,
+	output [313 - 1 : 0] out2
+);
+	reg [313 - 1 : 0] ram[2**3 - 1 : 0];
+	reg [313 - 1 : 0] data_out1;
+	reg [313 - 1 : 0] data_out2;
+
+	assign out1 = data_out1;
+	assign out2 = data_out2;
+
+    // If writen enable 1 is activated,
+    // data1 will be loaded through addr1
+    // Otherwise, data will be read out through addr1
+	always @(posedge clk) begin
+		if (we1) begin
+			ram[addr1] <= data1;
+        end else begin
+			data_out1 <= ram[addr1];
+		end
+	end
+
+    // If writen enable 2 is activated,
+    // data1 will be loaded through addr2
+    // Otherwise, data will be read out through addr2
+	always @(posedge clk) begin
+		if (we2) begin
+			ram[addr2] <= data2;
+		end else begin
+			data_out2 <= ram[addr2];
+		end
+	end
+
+endmodule
+
+//---------------------------------------
+// A dual-port RAM 4x131 
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module dual_port_ram_4x131 (
+	input clk,
+	input we1,
+	input we2,
+	input [2 - 1 : 0] addr1,
+	input [131 - 1 : 0] data1,
+	output [131 - 1 : 0] out1,
+	input [2 - 1 : 0] addr2,
+	input [131 - 1 : 0] data2,
+	output [131 - 1 : 0] out2
+);
+	reg [131 - 1 : 0] ram[2**2 - 1 : 0];
+	reg [131 - 1 : 0] data_out1;
+	reg [131 - 1 : 0] data_out2;
+
+	assign out1 = data_out1;
+	assign out2 = data_out2;
+
+    // If writen enable 1 is activated,
+    // data1 will be loaded through addr1
+    // Otherwise, data will be read out through addr1
+	always @(posedge clk) begin
+		if (we1) begin
+			ram[addr1] <= data1;
+        end else begin
+			data_out1 <= ram[addr1];
+		end
+	end
+
+    // If writen enable 2 is activated,
+    // data1 will be loaded through addr2
+    // Otherwise, data will be read out through addr2
+	always @(posedge clk) begin
+		if (we2) begin
+			ram[addr2] <= data2;
+		end else begin
+			data_out2 <= ram[addr2];
+		end
+	end
 
 endmodule

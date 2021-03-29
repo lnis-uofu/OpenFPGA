@@ -138,6 +138,15 @@
         <port name="data_out" clock="clk"/>
       </output_ports>
     </model>
+    <model name="mult_36">
+      <input_ports>
+        <port name="A" combinational_sink_ports="Y"/>
+        <port name="B" combinational_sink_ports="Y"/>
+      </input_ports>
+      <output_ports>
+        <port name="Y"/>
+      </output_ports>
+    </model>
   </models>
   <tiles>
     <tile name="io" capacity="8" area="0">
@@ -196,6 +205,23 @@
         <loc side="bottom">memory.waddr[9:5] memory.raddr[9:5] memory.data_in[7:4] memory.ren memory.data_out[7:4]</loc>
       </pinlocations>
     </tile>
+    <tile name="mult_36" height="6" area="396000">
+      <equivalent_sites>
+        <site pb_type="mult_36" pin_mapping="direct"/>
+      </equivalent_sites>
+      <input name="a" num_pins="36"/>
+      <input name="b" num_pins="36"/>
+      <output name="out" num_pins="72"/>
+      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+      <!--  Highly recommand to customize pin location when direct connection is used!!! -->
+      <!-- pinlocations are designed to spread pin on 4 sides evenly -->
+      <pinlocations pattern="custom">
+        <loc side="left">mult_36.b[0:9] mult_36.b[10:35] mult_36.out[36:71]</loc>
+        <loc side="top"></loc>
+        <loc side="right">mult_36.a[0:9] mult_36.a[10:35] mult_36.out[0:35]</loc>
+        <loc side="bottom"></loc>
+      </pinlocations>
+    </tile>
   </tiles>
   <!-- ODIN II specific config ends -->
   <!-- Physical descriptions begin -->
@@ -208,6 +234,8 @@
       <fill type="clb" priority="10"/>
       <!--Column of 'memory' with 'EMPTY' blocks wherever a 'memory' does not fit. Vertical offset by 1 for perimeter.-->
       <col type="memory" startx="2" starty="1" repeatx="8" priority="20"/>
+      <!--Column of 'mult_36' with 'EMPTY' blocks wherever a 'mult_36' does not fit. Vertical offset by 1 for perimeter.-->
+      <col type="mult_36" startx="6" starty="1" repeatx="8" priority="20"/>
       <col type="EMPTY" startx="2" repeatx="8" starty="1" priority="19"/>
     </auto_layout>
     <fixed_layout name="3x2" width="5" height="4">
@@ -686,6 +714,58 @@
       </interconnect>
     </pb_type>
     <!-- Define general purpose logic block (CLB) ends -->
+    <!-- Define 36-bit multiplier begin -->
+    <pb_type name="mult_36">
+      <input name="a" num_pins="36"/>
+      <input name="b" num_pins="36"/>
+      <output name="out" num_pins="72"/>
+      <mode name="mult_36x36">
+        <pb_type name="mult_36x36_slice" num_pb="1">
+          <input name="A_cfg" num_pins="36"/>
+          <input name="B_cfg" num_pins="36"/>
+          <output name="OUT_cfg" num_pins="72"/>
+          <pb_type name="mult_36x36" blif_model=".subckt mult_36" num_pb="1">
+            <input name="A" num_pins="36"/>
+            <input name="B" num_pins="36"/>
+            <output name="Y" num_pins="72"/>
+            <delay_constant max="1.523e-9" min="0.776e-9" in_port="mult_36x36.A" out_port="mult_36x36.Y"/>
+            <delay_constant max="1.523e-9" min="0.776e-9" in_port="mult_36x36.B" out_port="mult_36x36.Y"/>
+          </pb_type>
+          <interconnect>
+            <direct name="a2a" input="mult_36x36_slice.A_cfg" output="mult_36x36.A">
+            </direct>
+            <direct name="b2b" input="mult_36x36_slice.B_cfg" output="mult_36x36.B">
+            </direct>
+            <direct name="out2out" input="mult_36x36.Y" output="mult_36x36_slice.OUT_cfg">
+            </direct>
+          </interconnect>
+          <power method="pin-toggle">
+            <port name="A_cfg" energy_per_toggle="2.13e-12"/>
+            <port name="B_cfg" energy_per_toggle="2.13e-12"/>
+            <static_power power_per_instance="0.0"/>
+          </power>
+        </pb_type>
+        <interconnect>
+          <!-- Stratix IV input delay of 207ps is conservative for this architecture because this architecture does not have an input crossbar in the multiplier. 
+		   Subtract 72.5 ps delay, which is already in the connection block input mux, leading
+		   to a 134 ps delay.
+				The interconnect difference for DSP blocks is 0.5523, which leads to a minimum delay of 74 ps
+              -->
+          <direct name="a2a" input="mult_36.a" output="mult_36x36_slice.A_cfg">
+            <delay_constant max="134e-12" min="74e-12" in_port="mult_36.a" out_port="mult_36x36_slice.A_cfg"/>
+          </direct>
+          <direct name="b2b" input="mult_36.b" output="mult_36x36_slice.B_cfg">
+            <delay_constant max="134e-12" min="74e-12" in_port="mult_36.b" out_port="mult_36x36_slice.B_cfg"/>
+          </direct>
+          <direct name="out2out" input="mult_36x36_slice.OUT_cfg" output="mult_36.out">
+            <delay_constant max="1.93e-9" min="74e-12" in_port="mult_36x36_slice.OUT_cfg" out_port="mult_36.out"/>
+          </direct>
+        </interconnect>
+      </mode>
+      <!-- Place this multiplier block every 8 columns from (and including) the sixth column -->
+      <power method="sum-of-children"/>
+    </pb_type>
+    <!-- Define fracturable multiplier end -->
     <!-- Define single-mode dual-port memory begin -->
     <pb_type name="memory">
       <input name="waddr" num_pins="10"/>

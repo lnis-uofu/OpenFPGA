@@ -1749,9 +1749,10 @@ wire [31:0] dont_care_out;
 
 assign const_zero = 1'b0;
 assign const_zero_data = 32'b00000000000000000000000000000000;
-assign dont_care_out = 32'b00000000000000000000000000000000;
+//Comment out for don't care outputs
+//assign dont_care_out = 32'b00000000000000000000000000000000;
 	
-dual_port_ram dpram1(	
+dual_port_ram_8192x32 dpram1(	
   .clk (clk),
   .we1(wren),
   .we2(const_zero),
@@ -1784,9 +1785,10 @@ wire [31:0] dont_care_out;
 
 assign const_zero = 1'b0;
 assign const_zero_data = 32'b00000000000000000000000000000000;
-assign dont_care_out = 32'b00000000000000000000000000000000;
+//Comment out for don't care outputs
+//assign dont_care_out = 32'b00000000000000000000000000000000;
 	
-dual_port_ram dpram1(	
+dual_port_ram_8192x32 dpram1(	
   .clk (clk),
   .we1(wren),
   .we2(const_zero),
@@ -1819,9 +1821,10 @@ wire [31:0] dont_care_out;
 
 assign const_zero = 1'b0;
 assign const_zero_data = 32'b00000000000000000000000000000000;
-assign dont_care_out = 32'b00000000000000000000000000000000;
+//Comment out for don't care outputs
+//assign dont_care_out = 32'b00000000000000000000000000000000;
 	
-dual_port_ram dpram1(	
+dual_port_ram_8192x32 dpram1(	
   .clk (clk),
   .we1(wren),
   .we2(const_zero),
@@ -1854,9 +1857,10 @@ wire [31:0] dont_care_out;
 
 assign const_zero = 1'b0;
 assign const_zero_data = 32'b00000000000000000000000000000000;
-assign dont_care_out = 32'b00000000000000000000000000000000;
+//Comment out for don't care outputs
+//assign dont_care_out = 32'b00000000000000000000000000000000;
 	
-dual_port_ram dpram1(	
+dual_port_ram_8192x32 dpram1(	
   .clk (clk),
   .we1(wren),
   .we2(const_zero),
@@ -1888,9 +1892,10 @@ wire [35:0] dont_care_out;
 
 assign const_zero = 1'b0;
 assign const_zero_data = 36'b000000000000000000000000000000000000;
-assign dont_care_out = 36'b000000000000000000000000000000000000;
+//Comment out for don't care outputs
+//assign dont_care_out = 36'b000000000000000000000000000000000000;
 	
-dual_port_ram dpram1(	
+dual_port_ram_65536x36 dpram1(	
   .clk (clk),
   .we1(wren),
   .we2(const_zero),
@@ -1922,9 +1927,10 @@ wire [17:0] dont_care_out;
 
 assign const_zero = 1'b0;
 assign const_zero_data = 18'b000000000000000000;
-assign dont_care_out = 18'b000000000000000000;
+//Comment out for don't care outputs
+//assign dont_care_out = 18'b000000000000000000;
 	
-dual_port_ram dpram1(	
+dual_port_ram_65536x18 dpram1(	
   .clk (clk),
   .we1(wren),
   .we2(const_zero),
@@ -1956,9 +1962,10 @@ wire [7:0] dont_care_out;
 
 assign const_zero = 1'b0;
 assign const_zero_data = 8'b00000000;
-assign dont_care_out = 8'b00000000;
+//Comment out for don't care outputs
+//assign dont_care_out = 8'b00000000;
 	
-dual_port_ram dpram1(	
+dual_port_ram_65536x8 dpram1(	
   .clk (clk),
   .we1(wren),
   .we2(const_zero),
@@ -18279,8 +18286,8 @@ output	[31:0]			cosp;
 //Instantiate a single port ram for odin
 wire [31:0]blank;
 assign blank = 32'b000000000000000000000000000000;
-single_port_ram sinp_replace(.clk (clock), .addr (pindex), .data (blank), .we (1'b0), .out (sinp));
-single_port_ram cosp_replace(.clk (clock), .addr (pindex), .data (blank), .we (1'b0), .out (cosp));
+single_port_ram_1024x32 sinp_replace(.clk (clock), .addr (pindex), .data (blank), .we (1'b0), .out (sinp));
+single_port_ram_1024x32 cosp_replace(.clk (clock), .addr (pindex), .data (blank), .we (1'b0), .out (cosp));
 
 			
 endmodule
@@ -24774,4 +24781,242 @@ module Sqrt_64b (clk, num_, res);
 	
 endmodule 	
 
+//---------------------------------------
+// A dual-port RAM 8192x32
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module dual_port_ram_8192x32 (
+	input clk,
+	input we1,
+	input we2,
+	input [13 - 1 : 0] addr1,
+	input [32 - 1 : 0] data1,
+	output [32 - 1 : 0] out1,
+	input [13 - 1 : 0] addr2,
+	input [32 - 1 : 0] data2,
+	output [32 - 1 : 0] out2
+);
+	reg [32 - 1 : 0] ram[2**13 - 1 : 0];
+	reg [32 - 1 : 0] data_out1;
+	reg [32 - 1 : 0] data_out2;
 
+	assign out1 = data_out1;
+	assign out2 = data_out2;
+
+    // If writen enable 1 is activated,
+    // data1 will be loaded through addr1
+    // Otherwise, data will be read out through addr1
+	always @(posedge clk) begin
+		if (we1) begin
+			ram[addr1] <= data1;
+        end else begin
+			data_out1 <= ram[addr1];
+		end
+	end
+
+    // If writen enable 2 is activated,
+    // data1 will be loaded through addr2
+    // Otherwise, data will be read out through addr2
+	always @(posedge clk) begin
+		if (we2) begin
+			ram[addr2] <= data2;
+		end else begin
+			data_out2 <= ram[addr2];
+		end
+	end
+
+endmodule
+
+//---------------------------------------
+// A dual-port RAM 65536x36
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module dual_port_ram_65536x36 (
+	input clk,
+	input we1,
+	input we2,
+	input [16 - 1 : 0] addr1,
+	input [36 - 1 : 0] data1,
+	output [36 - 1 : 0] out1,
+	input [16 - 1 : 0] addr2,
+	input [36 - 1 : 0] data2,
+	output [36 - 1 : 0] out2
+);
+	reg [36 - 1 : 0] ram[2**16 - 1 : 0];
+	reg [36 - 1 : 0] data_out1;
+	reg [36 - 1 : 0] data_out2;
+
+	assign out1 = data_out1;
+	assign out2 = data_out2;
+
+    // If writen enable 1 is activated,
+    // data1 will be loaded through addr1
+    // Otherwise, data will be read out through addr1
+	always @(posedge clk) begin
+		if (we1) begin
+			ram[addr1] <= data1;
+        end else begin
+			data_out1 <= ram[addr1];
+		end
+	end
+
+    // If writen enable 2 is activated,
+    // data1 will be loaded through addr2
+    // Otherwise, data will be read out through addr2
+	always @(posedge clk) begin
+		if (we2) begin
+			ram[addr2] <= data2;
+		end else begin
+			data_out2 <= ram[addr2];
+		end
+	end
+
+endmodule
+
+//---------------------------------------
+// A dual-port RAM 65536x18
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module dual_port_ram_65536x18 (
+	input clk,
+	input we1,
+	input we2,
+	input [16 - 1 : 0] addr1,
+	input [18 - 1 : 0] data1,
+	output [18 - 1 : 0] out1,
+	input [16 - 1 : 0] addr2,
+	input [18 - 1 : 0] data2,
+	output [18 - 1 : 0] out2
+);
+	reg [18 - 1 : 0] ram[2**16 - 1 : 0];
+	reg [18 - 1 : 0] data_out1;
+	reg [18 - 1 : 0] data_out2;
+
+	assign out1 = data_out1;
+	assign out2 = data_out2;
+
+    // If writen enable 1 is activated,
+    // data1 will be loaded through addr1
+    // Otherwise, data will be read out through addr1
+	always @(posedge clk) begin
+		if (we1) begin
+			ram[addr1] <= data1;
+        end else begin
+			data_out1 <= ram[addr1];
+		end
+	end
+
+    // If writen enable 2 is activated,
+    // data1 will be loaded through addr2
+    // Otherwise, data will be read out through addr2
+	always @(posedge clk) begin
+		if (we2) begin
+			ram[addr2] <= data2;
+		end else begin
+			data_out2 <= ram[addr2];
+		end
+	end
+
+endmodule
+
+//---------------------------------------
+// A dual-port RAM 65536x8
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module dual_port_ram_65536x8 (
+	input clk,
+	input we1,
+	input we2,
+	input [16 - 1 : 0] addr1,
+	input [8 - 1 : 0] data1,
+	output [8 - 1 : 0] out1,
+	input [16 - 1 : 0] addr2,
+	input [8 - 1 : 0] data2,
+	output [8 - 1 : 0] out2
+);
+	reg [8 - 1 : 0] ram[2**16 - 1 : 0];
+	reg [8 - 1 : 0] data_out1;
+	reg [8 - 1 : 0] data_out2;
+
+	assign out1 = data_out1;
+	assign out2 = data_out2;
+
+    // If writen enable 1 is activated,
+    // data1 will be loaded through addr1
+    // Otherwise, data will be read out through addr1
+	always @(posedge clk) begin
+		if (we1) begin
+			ram[addr1] <= data1;
+        end else begin
+			data_out1 <= ram[addr1];
+		end
+	end
+
+    // If writen enable 2 is activated,
+    // data1 will be loaded through addr2
+    // Otherwise, data will be read out through addr2
+	always @(posedge clk) begin
+		if (we2) begin
+			ram[addr2] <= data2;
+		end else begin
+			data_out2 <= ram[addr2];
+		end
+	end
+
+endmodule
+
+//---------------------------------------
+// A single-port RAM 
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module single_port_ram (
+	input clk,
+	input we,
+	input [`MANTISSA_PRECISION - 1 : 0] addr,
+	input [31:0] data,
+	output [31:0] out );
+
+	reg [31:0] ram[2**`MANTISSA_PRECISION - 1 : 0];
+	reg [31:0] internal;
+
+	assign out = internal;
+
+	always @(posedge clk) begin
+		if(wen) begin
+			ram[addr] <= data;
+		end
+
+		if(ren) begin
+			internal <= ram[addr];
+		end
+	end
+
+endmodule
+
+//---------------------------------------
+// A single-port 1024x32bit RAM 
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module single_port_ram_1024x32 (
+	input clk,
+	input we,
+	input [9:0] addr,
+	input [31:0] data,
+	output [31:0] out );
+
+	reg [31:0] ram[1023:0];
+	reg [31:0] internal;
+
+	assign out = internal;
+
+	always @(posedge clk) begin
+		if(wen) begin
+			ram[addr] <= data;
+		end
+
+		if(ren) begin
+			internal <= ram[addr];
+		end
+	end
+
+endmodule

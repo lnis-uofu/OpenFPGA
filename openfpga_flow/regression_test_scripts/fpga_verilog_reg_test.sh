@@ -44,6 +44,9 @@ run-task fpga_verilog/bram/dpram16k --debug --show_thread_logs
 echo -e "Testing Verilog generation with 16k block RAMs spanning two columns ";
 run-task fpga_verilog/bram/wide_dpram16k --debug --show_thread_logs
 
+echo -e "Testing Verilog generation with heterogeneous fabric using 8-bit single-mode multipliers ";
+run-task fpga_verilog/dsp/single_mode_mult_8x8 --debug --show_thread_logs
+
 echo -e "Testing Verilog generation with different I/O capacities on each side of an FPGA ";
 run-task fpga_verilog/io/multi_io_capacity --debug --show_thread_logs
 
