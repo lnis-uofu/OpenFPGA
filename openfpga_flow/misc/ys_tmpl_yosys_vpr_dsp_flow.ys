@@ -76,6 +76,7 @@ opt_expr
 opt_merge
 opt_clean
 opt
+dfflegalize -cell $_DFF_P_ 0 -cell $_DFF_P??_ 0 -cell $_DFF_N_ 0 -cell $_DFF_N??_ 0
 
 #########################
 # Map LUTs
