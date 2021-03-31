@@ -9,3 +9,4 @@ Architecture Modeling
 
    quick_start
    user_defined_temp_tutorial
+   open_cell_library_tutorial
