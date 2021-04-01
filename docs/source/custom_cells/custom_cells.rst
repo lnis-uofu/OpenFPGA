@@ -73,7 +73,7 @@ Our custom multiplexer provides over a 31\% reduction in propagation delay.
 
 `SKY130_UUOPENFPGA_CC_HD_INVMUX2_1 Cell Characterization`_
 
-.. _`SKY130_UUOPENFPGA_CC_HD_INVMUX2_1 Cell Characterization`: https://github.com/GrantBrown1994/OpenFPGA/blob/master/docs/source/custom_cells/cell_eval/SKY130_UUOPENFPGA_CC_HD_INVMUX2_1.pdf
+.. _`SKY130_UUOPENFPGA_CC_HD_INVMUX2_1 Cell Characterization`: https://github.com/GrantBrown1994/OpenFPGA/blob/documentation/docs/source/custom_cells/cell_eval/SKY130_UUOPENFPGA_CC_HD_INVMUX2_1.pdf
 
 .. INVMUX2_1
 
@@ -128,6 +128,6 @@ Our custom multiplexer provides over a 27\% reduction in propagation delay.
 
 `SKY130_UUOPENFPGA_CC_HD_INVMUX3_1 Cell Characterization`_
 
-.. _`SKY130_UUOPENFPGA_CC_HD_INVMUX3_1 Cell Characterization`: https://github.com/GrantBrown1994/OpenFPGA/blob/master/docs/source/custom_cells/cell_eval/SKY130_UUOPENFPGA_CC_HD_INVMUX3_1.pdf/
+.. _`SKY130_UUOPENFPGA_CC_HD_INVMUX3_1 Cell Characterization`: https://github.com/GrantBrown1994/OpenFPGA/blob/master/docs/documentation/custom_cells/cell_eval/SKY130_UUOPENFPGA_CC_HD_INVMUX3_1.pdf/
 
 .. INVMUX3_1
