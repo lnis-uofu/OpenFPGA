@@ -190,7 +190,7 @@ The simulation waveforms should look similar to the following :numref:`fig_contr
 
 .. _fig_control_output:
 
-.. figure:: ./figures/Control_Waveforms.svg
+.. figure:: ./figures/Control_Waveforms2.svg
    :scale: 100%
 
    Control Circuit Model's Simulation Waveforms
