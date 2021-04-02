@@ -462,7 +462,7 @@ The simulation waveforms should look similar to the following :numref:`fig_custo
 
 .. _fig_custom_output:
 
-.. figure:: ./figures/Custom_Waveforms.svg
+.. figure:: ./figures/Custom_Waveforms2.svg
    :scale: 100%
 
    Custom Circuit Model's Simulation Waveforms
