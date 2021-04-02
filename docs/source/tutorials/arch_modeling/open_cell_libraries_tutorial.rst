@@ -6,7 +6,7 @@ Introduction
 
 **In this tutorial, we will**
    - Showcase how to create an architecture description based on standard cells, using OpenFPGA's circuit modeling language
-   - Use Skywater's Processor Development Kit (``PDK``_) cell library to create an OR Gate circuit model for OpenFPGA
+   - Use Skywater's Processor Development Kit (`PDK`_) cell library to create an OR Gate circuit model for OpenFPGA
    - Verify that the standard cell library file was correctly bound into the selected architecture file by looking at auto-generated OpenFPGA files and checking simulation waveforms in GTKWave
 Through this example, we will show how to bind standard cell library files with OpenFPGA Architectures.
 
@@ -180,7 +180,7 @@ These lines show the instantiation of OpenFPGA's **OR2** cell library.
    `default_nettype none
 
 
-We will also need to look at the control's simulation waveforms. Viewing the waveforms is done through ``GTKWave``_ with the following command:
+We will also need to look at the control's simulation waveforms. Viewing the waveforms is done through `GTKWave`_ with the following command:
 
 .. code-block:: bash
    
@@ -284,7 +284,7 @@ Replace all the text within ``iverilog_output.txt`` with the following:
 
    iverilog -o compiled_and2 ./SRC/and2_include_netlists.v -s and2_top_formal_verification_random_tb -I ${OPENFPGA_PATH}/skywater-pdk/libraries/sky130_fd_sc_ls/latest/cells/or2
 
-We can now manually rerun IVerilog, a tutorial on manually running IVerilog can be found at our From Verilog to ``Verification``_ tutorial. From the root 
+We can now manually rerun IVerilog, a tutorial on manually running IVerilog can be found at our From Verilog to `Verification`_ tutorial. From the root 
 directory, run the following commands:
 
 .. code-block:: bash
@@ -307,6 +307,7 @@ Scrolling through ``luts.v``, this should be present in the file:
 
 .. code-block:: verilog
   :emphasize-lines: 58,59,72,73,74,75,76,77,78,79,80
+   
    //-------------------------------------------
    //	FPGA Synthesizable Verilog Netlist
    //	Description: Look-Up Tables
