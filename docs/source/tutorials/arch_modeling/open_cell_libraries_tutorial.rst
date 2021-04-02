@@ -30,7 +30,7 @@ This will run a prebuilt task with OpenFPGA cell libraries. When the task is fin
 
    vi openfpga_flow/tasks/fpga_verilog/adder/hard_adder/latest/k6_frac_N10_tileable_adder_chain_40nm/and2/MIN_ROUTE_CHAN_WIDTH/SRC/sub_module/luts.v
 
-.. note:: Users can find full details about netlist organization in our documentation: :ref:``fabric_netlists``
+.. note:: Users can find full details about netlist organization in our documentation: :ref:`fabric_netlists`
 
 The ``luts.v`` file represents a Look Up Table within the OpenFPGA architecture. The important lines of this file for the tutorial are highlighted below.
 These lines show the instantiation of OpenFPGA's **OR2** cell library.
@@ -194,7 +194,7 @@ The simulation waveforms should look similar to the following :numref:`fig_contr
 .. _fig_control_output:
 
 .. figure:: ./figures/Control_Waves.png
-   :scale: 100%
+   :scale: 75%
 
    Control Circuit Model's Simulation Waveforms
    
@@ -467,7 +467,7 @@ The simulation waveforms should look similar to the following :numref:`fig_custo
 .. _fig_custom_output:
 
 .. figure:: ./figures/Custom_Waves.png
-   :scale: 100%
+   :scale: 75%
 
    Custom Circuit Model's Simulation Waveforms
 
