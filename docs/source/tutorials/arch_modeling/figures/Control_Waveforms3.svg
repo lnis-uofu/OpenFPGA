@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="300pt" height="300pt" viewBox="0 0 300 300">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="300pt" height="300pt" viewBox="100 100 300 300">
 <g enable-background="new">
 <clipPath id="cp0">
 <path transform="matrix(0,.1,.1,0,0,0)" d="M 710 1463.61 L 5410 1463.61 L 5410 7200 L 710 7200 Z "/>
