@@ -193,8 +193,8 @@ The simulation waveforms should look similar to the following :numref:`fig_contr
 
 .. _fig_control_output:
 
-.. figure:: ./figures/Control_Waves.png
-   :scale: 75%
+.. figure:: ./figures/Control_Waves2.png
+   :scale: 100%
 
    Control Circuit Model's Simulation Waveforms
    
@@ -466,8 +466,8 @@ The simulation waveforms should look similar to the following :numref:`fig_custo
 
 .. _fig_custom_output:
 
-.. figure:: ./figures/Custom_Waves.png
-   :scale: 75%
+.. figure:: ./figures/Custom_Waves2.png
+   :scale: 100%
 
    Custom Circuit Model's Simulation Waveforms
 
