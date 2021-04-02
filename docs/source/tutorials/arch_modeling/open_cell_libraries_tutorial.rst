@@ -6,7 +6,7 @@ Introduction
 
 **In this tutorial, we will**
    - Showcase how to create an architecture description based on standard cells, using OpenFPGA's circuit modeling language
-   - Use Skywater's Process Development Kit (`PDK`_) cell library to create an OR Gate circuit model for OpenFPGA
+   - Use Skywater's Process Design Kit (`PDK`_) cell library to create an OR Gate circuit model for OpenFPGA
    - Verify that the standard cell library file was correctly bound into the selected architecture file by looking at auto-generated OpenFPGA files and checking simulation waveforms in GTKWave
 Through this example, we will show how to bind standard cell library files with OpenFPGA Architectures.
 
@@ -205,7 +205,7 @@ We have now finished creating the control and viewing the important sections for
 
 Clone Skywater PDK into OpenFPGA
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-We will be using the open-source Skywater Processor Development Kit to aid us in creating our circuit model. We start by cloning the Skywater PDK github repository into the OpenFPGA root directory.
+We will be using the open-source Skywater PDK to aid us in creating our circuit model. We start by cloning the Skywater PDK github repository into the OpenFPGA root directory.
 Run the following command in the root directory of OpenFPGA:
 
 .. code-block:: bash
