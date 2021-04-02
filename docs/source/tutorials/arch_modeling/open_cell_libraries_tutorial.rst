@@ -306,7 +306,7 @@ From the root directory, view the ``luts.v`` file with this command:
 Scrolling through ``luts.v``, this should be present in the file:
 
 .. code-block:: verilog
-  :emphasize-lines: 58,59,72,73,74,75,76,77,78,79,80
+  :emphasize-lines: 64,65,72,73,74,75,76,77,78,79,80
    
    //-------------------------------------------
    //	FPGA Synthesizable Verilog Netlist
