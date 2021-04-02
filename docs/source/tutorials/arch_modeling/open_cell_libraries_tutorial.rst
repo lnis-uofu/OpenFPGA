@@ -196,7 +196,7 @@ The simulation waveforms should look similar to the following :numref:`fig_contr
 .. figure:: ./figures/Control_Waves2.png
    :scale: 75%
 
-   Control Circuit Model's Simulation Waveforms
+   Simulation Waveforms with OpenFPGA Circuit Model
    
 
 .. note:: The waveform inputs do not need to exactly match because the testbench provides input in random intervals. 
@@ -469,7 +469,7 @@ The simulation waveforms should look similar to the following :numref:`fig_custo
 .. figure:: ./figures/Custom_Waves2.png
    :scale: 75%
 
-   Custom Circuit Model's Simulation Waveforms
+   Simulation Waveforms with Skywater PDK Circuit Model
 
 We have now verified that the Skywater PDK Cell Library has been instantiated and bound to the OpenFPGA architecture file. If you have any problems, please reach out to us.
 
