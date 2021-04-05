@@ -8,14 +8,14 @@ The award-winning OpenFPGA framework is the **first open-source FPGA IP generato
 
 **If this is the first time you learn OpenFPGA, we strongly recommend you to watch the [introduction video about OpenFPGA](https://youtu.be/ocODUGcYGqo)**
 
-A quick overview of OpenFPGA tools can be found [**here**](https://openfpga.readthedocs.io/en/master/tutorials/tools/).
-We also recommend potential users to checkout the summary of [**technical capabilities**](https://openfpga.readthedocs.io/en/master/overview/tech_highlights.html) before compiling.
+A quick overview of OpenFPGA tools can be found [**here**](https://openfpga.readthedocs.io/en/master/tutorials/getting_started/tools/).
+We also recommend potential users to checkout the summary of [**technical capabilities**](https://openfpga.readthedocs.io/en/master/overview/tech_highlights/#) before compiling.
 
 ## Compilation
 
 **A tutorial video about how-to-compile can be found [here](https://youtu.be/F9sMRmDewM0)**
 
-Before start, we strongly recommend you to read the required dependencies at [**compilation guidelines**](https://openfpga.readthedocs.io/en/master/tutorials/compile).
+Before start, we strongly recommend you to read the required dependencies at [**compilation guidelines**](https://openfpga.readthedocs.io/en/master/tutorials/getting_started/compile/).
 It also includes detailed information about docker image. 
 
 ---
@@ -55,4 +55,4 @@ OpenFPGA's [full documentation](https://openfpga.readthedocs.io/en/master/) incl
 
 ## Tutorials
 
-You can find some tutorials in the [**./tutorials**](./docs/source/tutorials/) folder. This will help you get more familiar with the tool and use OpenFPGA under different configurations. 
+You can find a set of [tutorials](https://openfpga.readthedocs.io/en/master/tutorials/), with which you get familiar with the tool and use OpenFPGA in various purposes. 
