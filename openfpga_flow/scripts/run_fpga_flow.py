@@ -634,6 +634,7 @@ def run_openfpga_shell():
     path_variables["OPENFPGA_ARCH_FILE"] = args.openfpga_arch_file
     path_variables["VPR_TESTBENCH_BLIF"] = args.top_module+".blif"
     path_variables["ACTIVITY_FILE"] = args.top_module+"_ace_out.act"
+    path_variables["TECH_PROPERTIES"] = args.power_tech
     path_variables["REFERENCE_VERILOG_TESTBENCH"] = args.top_module + \
         "_output_verilog.v"
 
