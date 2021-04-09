@@ -10,18 +10,18 @@ Introduction
    - Modify an existing architecture to incorporate Spypads
    - Verify correctness through GTKWave
 
-Through this tutorial, we will show how to create Spypads in OpenFPGA
+Through this tutorial, we will show how to create Spypads in OpenFPGA.
 
 Spypads are physical output pins on a FPGA chip through which you can read out internal signals when doing silicon-level debugging. The XML syntax for spypads and other 
 global signals can be found on our :ref:`circuit_library` documentation page.
 
 To create a spypad, the ``port type`` needs to be set to **output** and ``is_global`` and ``is_io`` need to be set to **true**:
 
-.. code-block:: XML
+.. code-block:: xml
+
    <port type="output" is_global="true" is_io="true"/>
 
-When the port is syntactically correct, the outputs are independently wired from different instances to separated FPGA outputs and would physically look like
- :numref:`fig_gpout`:
+When the port is syntactically correct, the outputs are independently wired from different instances to separated FPGA outputs and would physically look like :numref:`fig_gpout`:
 
 .. _fig_gpout:
 
@@ -39,13 +39,14 @@ An OpenFPGA architecture file that contains spypads and has a task that referenc
 file. We can view ``k6_frac_N10_adder_register_scan_chain_depop50_spypad_40nm_openfpga.xml`` by entering the following command at the root directory of OpenFPGA:
 
 .. code-block:: bash
+
    emacs openfpga_flow/openfpga_arch/k6_frac_N10_adder_register_scan_chain_depop50_spypad_40nm_openfpga.xml
 
 The spypads are defined from **LINE181** to **LINE183** and belong to the ``frac_lut6_spypad`` ``circuit_model`` that begins at **LINE172**
 
-.. code-block:: XML
+.. code-block:: xml
    :emphasize-lines: 10, 11, 12
-
+   
    <circuit_model type="lut" name="frac_lut6_spypad" prefix="frac_lut6_spypad" dump_structural_verilog="true">
       <design_technology type="cmos" fracturable_lut="true"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
@@ -60,7 +61,7 @@ The spypads are defined from **LINE181** to **LINE183** and belong to the ``frac
       <port type="output" prefix="lut6_out" size="1" lut_output_mask="0" is_global="true" is_io="true"/>
       <port type="sram" prefix="sram" size="64"/>
       <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
-    </circuit_model>
+   </circuit_model>
 
 The spypads are instantiated in the top-level verilog module ``fpga_top.v``. ``fpga_top.v`` is automatically generated when we run our task from the OpenFPGA root
 directory. However, we need to modify the task configuration file to run the **full testbench** instead of the **formal testbench** to view the spypads' waveforms in 
@@ -71,6 +72,7 @@ GTKWave.
 To open the task configuration file, run this command from the root directory of OpenFPGA:
 
 .. code-block:: bash
+
    emacs openfpga_flow/tasks/fpga_verilog/spypad/config/task.conf
 
 The last line of the task configuration file (**LINE44**) sets the **formal testbench** to be the desired testbench. To use the **full testbench**, comment out **LINE44**.
@@ -128,6 +130,7 @@ The file will look like this when finished:
 Our OpenFPGA task will now run the full testbench. We run the task with the following command from the root directory of OpenFPGA:
 
 .. code-block:: bash
+
    python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/spypad --debug --show_thread_logs
 
 .. note:: Python 3.8 or later is required to run this task
@@ -135,11 +138,13 @@ Our OpenFPGA task will now run the full testbench. We run the task with the foll
 We can now see the instantiation of these spypads in ``fpga_top.v`` and ``luts.v``. We will start by viewing ``luts.v`` with the following command:
 
 .. code-block:: bash
+
    emacs openfpga_flow/tasks/fpga_verilog/spypad/latest/k6_frac_N10_tileable_adder_register_scan_chain_depop50_spypad_40nm/and2/MIN_ROUTE_CHAN_WIDTH/SRC/sub_module/luts.verilog
 
 The spypads are coming from the ``frac_lut6_spypad`` circuit model. In ``luts.v``, the ``frac_lut6_spypad`` module is defined around **LINE150** and looks as follows:
 
 .. code-block:: verilog
+
    module frac_lut6_spypad(in,
    sram,
    sram_inv,
@@ -168,11 +173,13 @@ The spypads are coming from the ``frac_lut6_spypad`` circuit model. In ``luts.v`
 The ``fpga_top.v`` file has some similarities. We can view the ``fpga_top.v`` file by running the following command:
 
 .. code-block:: bash
+
    emacs openfpga_flow/tasks/fpga_verilog/spypad/latest/k6_frac_N10_tileable_adder_register_scan_chain_depop50_spypad_40nm/and2/MIN_ROUTE_CHAN_WIDTH/SRC/fpga_top.v
 
 If we look at the module definition and ports of ``fpga_top.v`` we should see the following:
 
-..code-block:: verilog
+.. code-block:: verilog
+
    module fpga_top(pReset,
                 prog_clk,
                 TESTEN,
@@ -223,6 +230,7 @@ Using :numref:`fig_gpout` as a guide, we can relate our task like :numref:`fig_g
 We can view testbench waveforms with GTKWave by running the following command from the root directory:
 
 .. code-block:: bash
+
    gtkwave openfpga_flow/tasks/fpga_verilog/spypad/latest/k6_frac_N10_tileable_adder_register_scan_chain_depop50_spypad_40nm/and2/MIN_ROUTE_CHAN_WIDTH/and2_formal.vcd &
 
 .. note::Information on GTKWave can be found on our documentation page located here: :ref:`verilog2verification`
@@ -243,37 +251,44 @@ We will modify the``k6_frac_N10_adder_chain_40nm_openfpga.xml`` file found in Op
 the file by running the following command:
 
 .. code-block:: bash
+
    emacs openfpga_flow/openfpga_arch/k6_frac_N10_adder_chain_40nm_openfpga.xml
 
 Replace **LINE214** with the following:
 
 .. code-block:: xml
+
    <port type="output" prefix="sumout" lib_name="SUM" size="1" is_global=”true” is_io=”true”/>
 
 **sumout** is now a global output. **sumout** will show up in the ``fpga_top.v`` file and will have waveforms in GTKWave if we run the **full testbench**. To run the 
 **full testbench**, we have to modify the ``hard_adder`` configuration file:
 
 .. code-block:: bash
+
    emacs openfpga_flow/tasks/fpga_verilog/adder/hard_adder/config/task.conf
 
 Comment out the last line of the file to run the **full testbench**:
 
 .. code-block:: python
+
    #vpr_fpga_verilog_formal_verification_top_netlist=
 
 We now run the task to see our changes:
 
 .. code-block:: bash
+
    python3 openfpga_flow/scripts/run_fpga_task.py fpga_verilog/adder/hard_adder --debug --show_thread_logs
 
 We can view the global ports in ``fpga_top.v`` by running the following command:
 
 .. code-block:: bash
+
    emacs openfpga_flow/tasks/fpga_verilog/adder/hard_adder/run064/k6_frac_N10_tileable_adder_chain_40nm/and2/MIN_ROUTE_CHAN_WIDTH/SRC/fpga_top.v
 
 The ``fpga_top.v`` should have the following in its module definition:
 
 .. code-block:: verilog
+
    module fpga_top(pReset,
                 prog_clk,
                 set,
@@ -299,6 +314,7 @@ The ``fpga_top.v`` should have the following in its module definition:
 We can view the waveform by running GTKWave:
 
 .. code-block:: bash
+
    gtkwave openfpga_flow/tasks/fpga_verilog/adder/hard_adder/latest/k6_frac_N10_tileable_adder_chain_40nm/and2/MIN_ROUTE_CHAN_WIDTH/and2_formal.vcd &
 
 The waveform should have some changes to its value. An example of what it may look like is displayed in :numref:`fig_spy_adder`
