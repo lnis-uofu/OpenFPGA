@@ -205,7 +205,7 @@ We have now finished creating the control and viewing the important sections for
 
 Clone Skywater PDK into OpenFPGA
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-We will be using the open-source Skywater PDK to aid us in creating our circuit model. We start by cloning the Skywater PDK github repository into the OpenFPGA root directory.
+We will be using the open-source Skywater PDK to create our circuit model. We start by cloning the Skywater PDK github repository into the OpenFPGA root directory.
 Run the following command in the root directory of OpenFPGA:
 
 .. code-block:: bash
@@ -223,15 +223,15 @@ This will take some time to complete due to the size of the libraries. Once the 
 Create and Verify the Standard Cell Library Circuit Model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To create the circuit model, we will modify the ``k6_frac_N10_adder_chain_40nm_openfpga.xml`` OpenFPGA architecture file. We will remove the circuit model 
-for OpenFPGA's **OR2** gate, replace the circuit model with one referencing the Skywater cell library, and modify the LUT that references the old **OR2** 
+To create the circuit model, we will modify the ``k6_frac_N10_adder_chain_40nm_openfpga.xml`` OpenFPGA architecture file by removing the circuit model 
+for OpenFPGA's **OR2** gate, replacing the circuit model with one referencing the Skywater cell library, and modifying the LUT that references the old **OR2** 
 circuit model to reference our new circuit model. We begin by running the following command in the root directory:
 
 .. code-block:: bash
 
     vi openfpga_flow/openfpga_arch/k6_frac_N10_adder_chain_40nm_openfpga.xml
 
-We begin the circuit model creation process by replacing **LINE67** to **LINE81** with the following:
+We continue the circuit model creation process by replacing **LINE67** to **LINE81** with the following:
 
 .. code-block:: xml
 
@@ -299,7 +299,7 @@ directory, run the following commands:
 
    vvp compiled_and2
 
-With IVerilog complete, we can verify the cell library has been bound correctly by viewing the ``luts.v`` file and the waveforms with GTKWave.
+With IVerilog complete, we can verify that the cell library has been bound correctly by viewing the ``luts.v`` file and the waveforms with GTKWave.
 
 From the root directory, view the ``luts.v`` file with this command:
 
@@ -471,10 +471,12 @@ The simulation waveforms should look similar to the following :numref:`fig_custo
 
    Simulation Waveforms with Skywater PDK Circuit Model
 
-We have now verified that the Skywater PDK Cell Library has been instantiated and bound to the OpenFPGA architecture file. If you have any problems, please reach out to us.
+We have now verified that the Skywater PDK Cell Library has been instantiated and bound to the OpenFPGA architecture file. If you have any problems, please `contact`_ us.
 
 .. _Verification: https://openfpga.readthedocs.io/en/master/tutorials/design_flow/verilog2verification/
 
 .. _PDK: https://github.com/google/skywater-pdk
 
 .. _GTKWave: https://github.com/gtkwave/gtkwave
+
+.. _contact: https://openfpga.readthedocs.io/en/master/contact/
