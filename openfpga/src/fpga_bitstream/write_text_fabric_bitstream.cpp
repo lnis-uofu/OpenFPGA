@@ -17,6 +17,7 @@
 #include "openfpga_naming.h"
 
 #include "bitstream_manager_utils.h"
+#include "fabric_bitstream_utils.h"
 #include "write_text_fabric_bitstream.h"
 
 /* begin namespace openfpga */
@@ -80,6 +81,124 @@ int write_fabric_config_bit_to_text_file(std::fstream& fp,
   return 0;
 }
 
+
+/********************************************************************
+ * Write the flatten fabric bitstream to a plain text file 
+ *
+ * Return:
+ *  - 0 if succeed
+ *  - 1 if critical errors occured
+ *******************************************************************/
+static 
+int write_flatten_fabric_bitstream_to_text_file(std::fstream& fp,
+                                                const BitstreamManager& bitstream_manager,
+                                                const FabricBitstream& fabric_bitstream,
+                                                const ConfigProtocol& config_protocol) {
+  int status = 0;
+  for (const FabricBitId& fabric_bit : fabric_bitstream.bits()) {
+    status = write_fabric_config_bit_to_text_file(fp, bitstream_manager,
+                                                  fabric_bitstream,
+                                                  fabric_bit,
+                                                  config_protocol.type());
+    if (1 == status) {
+      return status;
+    }
+  }
+
+  return status;
+}
+
+/********************************************************************
+ * Write the fabric bitstream fitting a configuration chain protocol
+ * to a plain text file 
+ *
+ * Return:
+ *  - 0 if succeed
+ *  - 1 if critical errors occured
+ *******************************************************************/
+static 
+int write_config_chain_fabric_bitstream_to_text_file(std::fstream& fp,
+                                                     const BitstreamManager& bitstream_manager,
+                                                     const FabricBitstream& fabric_bitstream) {
+  int status = 0;
+
+  size_t regional_bitstream_max_size = find_fabric_regional_bitstream_max_size(fabric_bitstream);
+  ConfigChainFabricBitstream regional_bitstreams = build_config_chain_fabric_bitstream_by_region(bitstream_manager, fabric_bitstream);
+
+  for (size_t ibit = 0; ibit < regional_bitstream_max_size; ++ibit) { 
+    for (const auto& region_bitstream : regional_bitstreams) {
+      fp << region_bitstream[ibit];
+    }
+    fp << std::endl;
+  }
+
+  return status;
+}
+
+/********************************************************************
+ * Write the fabric bitstream fitting a memory bank protocol 
+ * to a plain text file 
+ *
+ * Return:
+ *  - 0 if succeed
+ *  - 1 if critical errors occured
+ *******************************************************************/
+static 
+int write_memory_bank_fabric_bitstream_to_text_file(std::fstream& fp,
+                                                     const FabricBitstream& fabric_bitstream) {
+  int status = 0;
+
+  MemoryBankFabricBitstream fabric_bits_by_addr = build_memory_bank_fabric_bitstream_by_address(fabric_bitstream);
+
+  for (const auto& addr_din_pair : fabric_bits_by_addr) {
+    /* Write BL address code */
+    fp << addr_din_pair.first.first;
+    fp << " ";
+
+    /* Write WL address code */
+    fp << addr_din_pair.first.second;
+    fp << " ";
+
+    /* Write data input */
+    for (const bool& din_value : addr_din_pair.second) {
+      fp << din_value;
+    }
+    fp << std::endl;
+  }
+
+  return status;
+}
+
+/********************************************************************
+ * Write the fabric bitstream fitting a frame-based protocol 
+ * to a plain text file 
+ *
+ * Return:
+ *  - 0 if succeed
+ *  - 1 if critical errors occured
+ *******************************************************************/
+static 
+int write_frame_based_fabric_bitstream_to_text_file(std::fstream& fp,
+                                                    const FabricBitstream& fabric_bitstream) {
+  int status = 0;
+
+  FrameFabricBitstream fabric_bits_by_addr = build_frame_based_fabric_bitstream_by_address(fabric_bitstream);
+
+  for (const auto& addr_din_pair : fabric_bits_by_addr) {
+    /* Write address code */
+    fp << addr_din_pair.first;
+    fp << " ";
+
+    /* Write data input */
+    for (const bool& din_value : addr_din_pair.second) {
+      fp << din_value;
+    }
+    fp << std::endl;
+  }
+
+  return status;
+}
+
 /********************************************************************
  * Write the fabric bitstream to a plain text file 
  * Notes: 
@@ -113,15 +232,33 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
 
   /* Output fabric bitstream to the file */
   int status = 0;
-  for (const FabricBitId& fabric_bit : fabric_bitstream.bits()) {
-    status = write_fabric_config_bit_to_text_file(fp, bitstream_manager,
-                                                  fabric_bitstream,
-                                                  fabric_bit,
-                                                  config_protocol.type());
-    if (1 == status) {
-      break;
-    }
+  switch (config_protocol.type()) {
+  case CONFIG_MEM_STANDALONE: 
+    status = write_flatten_fabric_bitstream_to_text_file(fp,
+                                                         bitstream_manager,
+                                                         fabric_bitstream,
+                                                         config_protocol);
+    break;
+  case CONFIG_MEM_SCAN_CHAIN:
+    status = write_config_chain_fabric_bitstream_to_text_file(fp,
+                                                              bitstream_manager,
+                                                              fabric_bitstream);
+    break;
+  case CONFIG_MEM_MEMORY_BANK: 
+    status = write_memory_bank_fabric_bitstream_to_text_file(fp,
+                                                             fabric_bitstream);
+    break;
+  case CONFIG_MEM_FRAME_BASED:
+    status = write_frame_based_fabric_bitstream_to_text_file(fp,
+                                                             fabric_bitstream);
+    break;
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid configuration protocol type!\n");
+    status = 1;
   }
+
+
   /* Print an end to the file here */
   fp << std::endl;
 

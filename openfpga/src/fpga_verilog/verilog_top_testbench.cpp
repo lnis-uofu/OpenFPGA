@@ -1484,24 +1484,7 @@ void print_verilog_top_testbench_configuration_chain_bitstream(std::fstream& fp,
   VTR_ASSERT(num_bits_to_skip < regional_bitstream_max_size);
 
   /* Reorganize the regional bitstreams to be the same size */
-  std::vector<std::vector<bool>> regional_bitstreams;
-  regional_bitstreams.reserve(fabric_bitstream.regions().size());
-  for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
-    std::vector<bool> curr_regional_bitstream;
-    curr_regional_bitstream.resize(regional_bitstream_max_size, false);
-    /* Starting index should consider the offset between the current bitstream size and 
-     * the maximum size of regional bitstream
-     */
-    size_t offset = regional_bitstream_max_size - fabric_bitstream.region_bits(region).size();
-    for (const FabricBitId& bit_id : fabric_bitstream.region_bits(region)) {
-      curr_regional_bitstream[offset] = bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id));
-      offset++;
-    }
-    VTR_ASSERT(offset == regional_bitstream_max_size);
-   
-    /* Add the adapt sub-bitstream */
-    regional_bitstreams.push_back(curr_regional_bitstream);
-  }
+  ConfigChainFabricBitstream regional_bitstreams = build_config_chain_fabric_bitstream_by_region(bitstream_manager, fabric_bitstream);
 
   /* Attention: when the fast configuration is enabled, we will start from the first bit '1'
    * This requires a reset signal (as we forced in the first clock cycle)
@@ -1602,7 +1585,7 @@ void print_verilog_top_testbench_memory_bank_bitstream(std::fstream& fp,
   fp << std::endl;
 
   /* Reorganize the fabric bitstream by the same address across regions */
-  std::map<std::pair<std::string, std::string>, std::vector<bool>> fabric_bits_by_addr = build_memory_bank_fabric_bitstream_by_address(fabric_bitstream);
+  MemoryBankFabricBitstream fabric_bits_by_addr = build_memory_bank_fabric_bitstream_by_address(fabric_bitstream);
 
   for (const auto& addr_din_pair : fabric_bits_by_addr) {
     /* When fast configuration is enabled,
@@ -1711,7 +1694,7 @@ void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
   fp << std::endl;
 
   /* Reorganize the fabric bitstream by the same address across regions */
-  std::map<std::string, std::vector<bool>> fabric_bits_by_addr = build_frame_based_fabric_bitstream_by_address(fabric_bitstream);
+  FrameFabricBitstream fabric_bits_by_addr = build_frame_based_fabric_bitstream_by_address(fabric_bitstream);
 
   for (const auto& addr_din_pair : fabric_bits_by_addr) {
     /* When fast configuration is enabled,
