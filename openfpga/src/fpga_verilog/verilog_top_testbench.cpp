@@ -1602,7 +1602,7 @@ void print_verilog_top_testbench_memory_bank_bitstream(std::fstream& fp,
   fp << std::endl;
 
   /* Reorganize the fabric bitstream by the same address across regions */
-  std::map<std::pair<std::string, std::string>, std::vector<bool>> fabric_bits_by_addr = build_memory_bank_fabric_bitstream_by_address(fabric_bitstream);
+  MemoryBankFabricBitstream fabric_bits_by_addr = build_memory_bank_fabric_bitstream_by_address(fabric_bitstream);
 
   for (const auto& addr_din_pair : fabric_bits_by_addr) {
     /* When fast configuration is enabled,
@@ -1711,7 +1711,7 @@ void print_verilog_top_testbench_frame_decoder_bitstream(std::fstream& fp,
   fp << std::endl;
 
   /* Reorganize the fabric bitstream by the same address across regions */
-  std::map<std::string, std::vector<bool>> fabric_bits_by_addr = build_frame_based_fabric_bitstream_by_address(fabric_bitstream);
+  FrameFabricBitstream fabric_bits_by_addr = build_frame_based_fabric_bitstream_by_address(fabric_bitstream);
 
   for (const auto& addr_din_pair : fabric_bits_by_addr) {
     /* When fast configuration is enabled,

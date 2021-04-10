@@ -78,8 +78,8 @@ size_t find_configuration_chain_fabric_bitstream_size_to_be_skipped(const Fabric
  *
  * Note: the std::map may cause large memory footprint for large bitstream databases!
  *******************************************************************/
-std::map<std::string, std::vector<bool>> build_frame_based_fabric_bitstream_by_address(const FabricBitstream& fabric_bitstream) {
-  std::map<std::string, std::vector<bool>> fabric_bits_by_addr;
+FrameFabricBitstream build_frame_based_fabric_bitstream_by_address(const FabricBitstream& fabric_bitstream) {
+  FrameFabricBitstream fabric_bits_by_addr;
   for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
     for (const FabricBitId& bit_id : fabric_bitstream.region_bits(region)) {
       /* Create string for address */
@@ -129,7 +129,7 @@ std::map<std::string, std::vector<bool>> build_frame_based_fabric_bitstream_by_a
  *******************************************************************/
 size_t find_frame_based_fast_configuration_fabric_bitstream_size(const FabricBitstream& fabric_bitstream,
                                                                  const bool& bit_value_to_skip) {
-  std::map<std::string, std::vector<bool>> fabric_bits_by_addr = build_frame_based_fabric_bitstream_by_address(fabric_bitstream);
+  FrameFabricBitstream fabric_bits_by_addr = build_frame_based_fabric_bitstream_by_address(fabric_bitstream);
 
   size_t num_bits = 0;
 
@@ -161,8 +161,8 @@ size_t find_frame_based_fast_configuration_fabric_bitstream_size(const FabricBit
  *
  * Note: the std::map may cause large memory footprint for large bitstream databases!
  *******************************************************************/
-std::map<std::pair<std::string, std::string>, std::vector<bool>> build_memory_bank_fabric_bitstream_by_address(const FabricBitstream& fabric_bitstream) {
-  std::map<std::pair<std::string, std::string>, std::vector<bool>> fabric_bits_by_addr;
+MemoryBankFabricBitstream build_memory_bank_fabric_bitstream_by_address(const FabricBitstream& fabric_bitstream) {
+  MemoryBankFabricBitstream fabric_bits_by_addr;
   for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
     for (const FabricBitId& bit_id : fabric_bitstream.region_bits(region)) {
       /* Create string for BL address */
@@ -217,7 +217,7 @@ std::map<std::pair<std::string, std::string>, std::vector<bool>> build_memory_ba
  *******************************************************************/
 size_t find_memory_bank_fast_configuration_fabric_bitstream_size(const FabricBitstream& fabric_bitstream,
                                                                  const bool& bit_value_to_skip) {
-  std::map<std::pair<std::string, std::string>, std::vector<bool>> fabric_bits_by_addr = build_memory_bank_fabric_bitstream_by_address(fabric_bitstream);
+  MemoryBankFabricBitstream fabric_bits_by_addr = build_memory_bank_fabric_bitstream_by_address(fabric_bitstream);
 
   size_t num_bits = 0;
 
