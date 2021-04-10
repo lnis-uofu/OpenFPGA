@@ -162,7 +162,7 @@ int write_fabric_regional_config_bit_to_xml_file(std::fstream& fp,
   int status = 0;
 
   write_tab_to_file(fp, xml_hierarchy_depth);
-  fp << "<region";
+  fp << "<region ";
   fp << "id=\"";
   fp << size_t(fabric_region);
   fp << "\"";
