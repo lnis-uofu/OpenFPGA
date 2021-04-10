@@ -68,6 +68,43 @@ size_t find_configuration_chain_fabric_bitstream_size_to_be_skipped(const Fabric
 }
 
 /********************************************************************
+ * Build a fabric bitstream which can be directly loaded to a configuration 
+ * chain (either single-head or multi-bit)
+ * We will organize the bitstreams in each region and align them 
+ * Logic '0' bits may be deposited to those bitstream whose length is smaller
+ * than the maximum bitstream among all the regions
+ * For example:
+ *   Region 0: 000000001111101010 <- max. bitstream length
+ *   Region 1:     00000011010101 <- shorter bitstream than the max.; add zeros to the head
+ *   Region 2:   0010101111000110 <- shorter bitstream than the max.; add zeros to the head
+ *******************************************************************/
+ConfigChainFabricBitstream build_config_chain_fabric_bitstream_by_region(const BitstreamManager& bitstream_manager,
+                                                                         const FabricBitstream& fabric_bitstream) {
+  /* Find the longest bitstream */
+  size_t regional_bitstream_max_size = find_fabric_regional_bitstream_max_size(fabric_bitstream);
+
+  ConfigChainFabricBitstream regional_bitstreams;
+  regional_bitstreams.reserve(fabric_bitstream.regions().size());
+  for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
+    std::vector<bool> curr_regional_bitstream;
+    curr_regional_bitstream.resize(regional_bitstream_max_size, false);
+    /* Starting index should consider the offset between the current bitstream size and 
+     * the maximum size of regional bitstream
+     */
+    size_t offset = regional_bitstream_max_size - fabric_bitstream.region_bits(region).size();
+    for (const FabricBitId& bit_id : fabric_bitstream.region_bits(region)) {
+      curr_regional_bitstream[offset] = bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id));
+      offset++;
+    }
+    VTR_ASSERT(offset == regional_bitstream_max_size);
+   
+    /* Add the adapt sub-bitstream */
+    regional_bitstreams.push_back(curr_regional_bitstream);
+  }
+  return regional_bitstreams;
+}
+
+/********************************************************************
  * Reorganize the fabric bitstream for frame-based protocol
  * by the same address across regions:
  * This is due to that the length of fabric bitstream could be different in each region.

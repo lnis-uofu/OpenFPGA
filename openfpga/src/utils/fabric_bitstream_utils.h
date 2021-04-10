@@ -24,6 +24,12 @@ size_t find_fabric_regional_bitstream_max_size(const FabricBitstream& fabric_bit
 size_t find_configuration_chain_fabric_bitstream_size_to_be_skipped(const FabricBitstream& fabric_bitstream,
                                                                     const BitstreamManager& bitstream_manager,
                                                                     const bool& bit_value_to_skip);
+
+/* Alias to a specific organization of bitstreams for frame-based configuration protocol */
+typedef std::vector<std::vector<bool>> ConfigChainFabricBitstream;
+ConfigChainFabricBitstream build_config_chain_fabric_bitstream_by_region(const BitstreamManager& bitstream_manager,
+                                                                         const FabricBitstream& fabric_bitstream);
+
 /* Alias to a specific organization of bitstreams for frame-based configuration protocol */
 typedef std::map<std::string, std::vector<bool>> FrameFabricBitstream;
 FrameFabricBitstream build_frame_based_fabric_bitstream_by_address(const FabricBitstream& fabric_bitstream);
