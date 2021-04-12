@@ -211,7 +211,7 @@ If we look at the module definition and ports of ``fpga_top.v`` we should see th
 
 Using :ref:`fig_gpout_ports` as a guide, we can relate our task like :numref:`fig_gpout_example`
 
-.. _fig_gpout:
+.. _fig_gpout_example:
 
 .. figure:: ./figures/gpout_ports_example.png
    :scale: 100%
@@ -225,7 +225,7 @@ We can view testbench waveforms with GTKWave by running the following command fr
 
    gtkwave openfpga_flow/tasks/fpga_verilog/spypad/latest/k6_frac_N10_tileable_adder_register_scan_chain_depop50_spypad_40nm/and2/MIN_ROUTE_CHAN_WIDTH/and2_formal.vcd &
 
-.. note::Information on GTKWave can be found on our documentation page located here: :ref:`verilog2verification`
+.. note:: Information on GTKWave can be found on our documentation page located here: :ref:`from_verilog_to_verification`
 
 The waveforms will appear similar to :numref:`fig_spypad_waves`
 
