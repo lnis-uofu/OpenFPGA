@@ -167,4 +167,4 @@ Finally, rerun this command from the OpenFPGA root directory to ensure it is wor
    python3 openfpga_flow/scripts_run_fpga_task.py fpga_verilog/adder/hard_adder --debug --show_thread_logs
 
 
-.. _user_defined_template.v: https://openfpga--274.org.readthedocs.build/en/274/manual/fpga_verilog/fabric_netlist/#cmdoption-arg-user_defined_templates.v
+.. _user_defined_template.v: https://openfpga.readthedocs.io/en/master/manual/fpga_verilog/fabric_netlist/#cmdoption-arg-user_defined_templates.v
