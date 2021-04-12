@@ -246,8 +246,11 @@ We continue the circuit model creation process by replacing **LINE67** to **LINE
 
 .. note:: The name of the circuit model must be consistent with the standard cell!
 
-The most significant differences from the control in this section are changing the ``name`` and ``prefix`` to match the module name from Skywater's cell library and including a path
-to the verilog file using ``verilog_netlist``. The second change to ``k6_frac_N10_adder_chain_40nm_openfpga.xml`` is at **LINE160**, where we will be replacing the line with the following:
+The most significant differences from the OpenFPGA Circuit Model in this section are:
+   - Change the ``name`` and ``prefix`` to match the module name from Skywater's cell library 
+   - Include a path to the verilog file using ``verilog_netlist``. 
+
+The second change to ``k6_frac_N10_adder_chain_40nm_openfpga.xml`` is at **LINE160**, where we will be replacing the line with the following:
 
 .. code-block:: xml
    
@@ -288,7 +291,7 @@ Replace all the text within ``iverilog_output.txt`` with the following:
 
    iverilog -o compiled_and2 ./SRC/and2_include_netlists.v -s and2_top_formal_verification_random_tb -I ${OPENFPGA_PATH}/skywater-pdk/libraries/sky130_fd_sc_ls/latest/cells/or2
 
-We can now manually rerun IVerilog, a tutorial on manually running IVerilog can be found at our From Verilog to `Verification`_ tutorial. From the root 
+We can now manually rerun IVerilog, a tutorial on manually running IVerilog can be found at our :ref:`verilog2verification` tutorial. From the root 
 directory, run the following commands:
 
 .. code-block:: bash
