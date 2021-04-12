@@ -5,9 +5,9 @@ Introduction and Setup
 **In this tutorial, we will**
    - Provide the motivation for generating the user_defined_template.v verilog file
    - Go through a generated user_defined_template.v file to demonstrate how to use it
-Through this example, we will show how and when to use the ``user_defined_template.v`` file.
+Through this tutorial, we will show how and when to use the ``user_defined_template.v`` file.
 
-For this example, we are using a modified version of the hard adder task that comes with OpenFPGA.
+To begin the tutorial, we start with a modified version of the hard adder task that comes with OpenFPGA.
 To follow along, go to the root directory of OpenFPGA and enter: 
 
 .. code-block:: bash
