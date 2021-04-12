@@ -291,7 +291,7 @@ Replace all the text within ``iverilog_output.txt`` with the following:
 
    iverilog -o compiled_and2 ./SRC/and2_include_netlists.v -s and2_top_formal_verification_random_tb -I ${OPENFPGA_PATH}/skywater-pdk/libraries/sky130_fd_sc_ls/latest/cells/or2
 
-We can now manually rerun IVerilog, a tutorial on manually running IVerilog can be found at our :ref:`verilog2verification` tutorial. From the root 
+We can now manually rerun IVerilog, a tutorial on manually running IVerilog can be found at our `From Verilog to Verification <https://openfpga.readthedocs.io/en/master/tutorials/design_flow/verilog2verification/>`_ tutorial. From the root 
 directory, run the following commands:
 
 .. code-block:: bash
