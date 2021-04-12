@@ -247,7 +247,7 @@ The waveforms will appear similar to :numref:`fig_spypad_waves`
 Building Spypads
 ~~~~~~~~~~~~~~~~
 
-We will modify the``k6_frac_N10_adder_chain_40nm_openfpga.xml`` file found in OpenFPGA to expose the **sumout** output from the **ADDF** module. We can start modifying
+We will modify the ``k6_frac_N10_adder_chain_40nm_openfpga.xml`` file found in OpenFPGA to expose the **sumout** output from the **ADDF** module. We can start modifying
 the file by running the following command:
 
 .. code-block:: bash
