@@ -21,21 +21,14 @@ To create a spypad, the ``port type`` needs to be set to **output** and ``is_glo
 
    <port type="output" is_global="true" is_io="true"/>
 
-When the port is syntactically correct, the outputs are independently wired from different instances to separated FPGA outputs and would physically look like :numref:`fig_gpout`:
+When the port is syntactically correct, the outputs are independently wired from different instances to separated FPGA outputs and would physically look like :ref:`fig_gpout_ports` 
 
-.. _fig_gpout:
 
-.. figure:: ./figures/gpout_ports.png
-   :scale: 100%
-
-   Diagram for General Purpose Output
-
-.. note:: The general-purpose outputs are not applicable to routing multiplexer outputs
 
 Pre-Built Spypads
 ~~~~~~~~~~~~~~~~~
 
-An OpenFPGA architecture file that contains spypads and has a task that references it is the ``k6_frac_N10_adder_register_scan_chain_depop50_spypad_40nm_openfpga.xml`` 
+An OpenFPGA architecture file that contains spypads and has a task that references it is the `k6_frac_N10_adder_register_scan_chain_depop50_spypad_40nm_openfpga.xml <https://github.com/lnis-uofu/OpenFPGA/blob/tutorials/openfpga_flow/openfpga_arch/k6_frac_N10_adder_register_scan_chain_depop50_spypad_40nm_openfpga.xml>`_ 
 file. We can view ``k6_frac_N10_adder_register_scan_chain_depop50_spypad_40nm_openfpga.xml`` by entering the following command at the root directory of OpenFPGA:
 
 .. code-block:: bash
@@ -45,7 +38,6 @@ file. We can view ``k6_frac_N10_adder_register_scan_chain_depop50_spypad_40nm_op
 The spypads are defined from **LINE181** to **LINE183** and belong to the ``frac_lut6_spypad`` ``circuit_model`` that begins at **LINE172**
 
 .. code-block:: xml
-   :emphasize-lines: 10, 11, 12
    
    <circuit_model type="lut" name="frac_lut6_spypad" prefix="frac_lut6_spypad" dump_structural_verilog="true">
       <design_technology type="cmos" fracturable_lut="true"/>
@@ -56,9 +48,9 @@ The spypads are defined from **LINE181** to **LINE183** and belong to the ``frac
       <lut_intermediate_buffer exist="true" circuit_model_name="buf4" location_map="-1-1-"/>
       <pass_gate_logic circuit_model_name="TGATE"/>
       <port type="input" prefix="in" size="6" tri_state_map="----11" circuit_model_name="OR2"/>
-      <port type="output" prefix="lut4_out" size="4" lut_frac_level="4" lut_output_mask="0,1,2,3" is_global="true" is_io="true"/>
-      <port type="output" prefix="lut5_out" size="2" lut_frac_level="5" lut_output_mask="0,1" is_global="true" is_io="true"/>
-      <port type="output" prefix="lut6_out" size="1" lut_output_mask="0" is_global="true" is_io="true"/>
+      LINE181 <port type="output" prefix="lut4_out" size="4" lut_frac_level="4" lut_output_mask="0,1,2,3" is_global="true" is_io="true"/>
+      LINE182 <port type="output" prefix="lut5_out" size="2" lut_frac_level="5" lut_output_mask="0,1" is_global="true" is_io="true"/>
+      LINE183 <port type="output" prefix="lut6_out" size="1" lut_output_mask="0" is_global="true" is_io="true"/>
       <port type="sram" prefix="sram" size="64"/>
       <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
    </circuit_model>
@@ -217,7 +209,7 @@ If we look at the module definition and ports of ``fpga_top.v`` we should see th
    //----- OUTPUT PORTS -----
    output [0:0] ccff_tail;
 
-Using :numref:`fig_gpout` as a guide, we can relate our task like :numref:`fig_gpout_example`
+Using :ref:`fig_gpout_ports` as a guide, we can relate our task like :numref:`fig_gpout_example`
 
 .. _fig_gpout:
 
@@ -247,7 +239,7 @@ The waveforms will appear similar to :numref:`fig_spypad_waves`
 Building Spypads
 ~~~~~~~~~~~~~~~~
 
-We will modify the ``k6_frac_N10_adder_chain_40nm_openfpga.xml`` file found in OpenFPGA to expose the **sumout** output from the **ADDF** module. We can start modifying
+We will modify the `k6_frac_N10_adder_chain_40nm_openfpga.xml <https://github.com/lnis-uofu/OpenFPGA/blob/tutorials/openfpga_flow/openfpga_arch/k6_frac_N10_adder_chain_40nm_openfpga.xml>`_ file found in OpenFPGA to expose the **sumout** output from the **ADDF** module. We can start modifying
 the file by running the following command:
 
 .. code-block:: bash
@@ -329,6 +321,4 @@ The waveform should have some changes to its value. An example of what it may lo
 Conclusion
 ~~~~~~~~~~
 
-In this tutorial, we have shown how to build spypads into OpenFPGA Architectures using XML Syntax. If you have any issues, feel free to `contact`_ us.
-
-.. _contact: https://openfpga.readthedocs.io/en/master/contact/
+In this tutorial, we have shown how to build spypads into OpenFPGA Architectures using XML Syntax. If you have any issues, feel free to :ref:`contact` us.
