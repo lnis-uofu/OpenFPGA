@@ -213,10 +213,10 @@ Using :ref:`fig_gpout_ports` as a guide, we can relate our task like :numref:`fi
 
 .. _fig_gpout_example:
 
-.. figure:: ./figures/gpout_ports_example.png
+.. figure:: ./figures/lut6_Example_Spypad.svg
    :scale: 100%
 
-   Diagram for ``lut6_out``
+   Diagram for ``frac_lut6_spypad``
 
    
 We can view testbench waveforms with GTKWave by running the following command from the root directory:
@@ -302,6 +302,15 @@ The ``fpga_top.v`` should have the following in its module definition:
    input [0:0] clk;
    //----- GPOUT PORTS -----
    output [0:19] gfpga_pad_ADDF_sumout;
+   
+The architecture will now look like :numref:`fig_addf_example`
+
+.. _fig_addf_example:
+
+.. figure:: ./figures/ADDF_Example_Spypad.svg
+   :scale: 100%
+   
+   Diagram for ``ADDF``
 
 We can view the waveform by running GTKWave:
 
