@@ -35,7 +35,7 @@ file. We can view ``k6_frac_N10_adder_register_scan_chain_depop50_spypad_40nm_op
 
    emacs openfpga_flow/openfpga_arch/k6_frac_N10_adder_register_scan_chain_depop50_spypad_40nm_openfpga.xml
 
-The spypads are defined from **LINE181** to **LINE183** and belong to the ``frac_lut6_spypad`` ``circuit_model`` that begins at **LINE172**
+In this architecture file, the output ports of a 6-input Look Up Table (LUT) are defined as spypads using the XML syntax ``is_global`` and ``is_io``. As a result, all of the outputs from the 6-input LUT will be visible in the top-level module. The output ports to the 6-input LUT are declared from **LINE181** to **LINE183** and belong to the ``frac_lut6_spypad`` ``circuit_model`` that begins at **LINE172**.
 
 .. code-block:: xml
    
