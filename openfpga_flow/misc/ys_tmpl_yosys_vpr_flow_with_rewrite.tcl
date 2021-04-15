@@ -14,7 +14,11 @@ synth -top ${TOP_MODULE} -flatten
 clean
 
 # LUT mapping
-abc -lut ${LUT_SIZE}
+if { [info exists LUT_SIZE] } {
+    abc -lut ${LUT_SIZE}
+} else {
+    abc -lut 4
+}
 
 # Check
 synth -run check
