@@ -1,4 +1,5 @@
 # Yosys synthesis script for ${TOP_MODULE}
+yosys -import
 
 #########################
 # Parse input files
@@ -14,7 +15,7 @@ read_verilog -lib -specify ${YOSYS_CELL_SIM_VERILOG}
 # Identify top module from hierarchy
 hierarchy -check -top ${TOP_MODULE}
 # - Convert process blocks to AST
-proc
+procs
 # Flatten all the gates/primitives
 flatten
 # Identify tri-state buffers from 'z' signal in AST
@@ -27,6 +28,9 @@ opt_clean
 deminout
 opt
 
+#########################
+# Run coarse synthesis
+#########################
 opt_expr
 opt_clean
 check
@@ -35,29 +39,8 @@ wreduce -keepdc
 peepopt
 pmuxtree
 opt_clean
-
-########################
-# Map multipliers
-# Inspired from synth_xilinx.cc
-#########################
-# Avoid merging any registers into DSP, reserve memory port registers first
-memory_dff
-wreduce t:$mul
-techmap -map +/mul2dsp.v -map ${YOSYS_DSP_MAP_VERILOG} ${YOSYS_DSP_MAP_PARAMETERS}
-select a:mul2dsp
-setattr -unset mul2dsp
-opt_expr -fine
-wreduce
-select -clear
-chtype -set $mul t:$__soft_mul# Extract arithmetic functions
-
-#########################
-# Run coarse synthesis
-#########################
-# Run a tech map with default library
-techmap
+# Extract arithmetic functions
 alumacc
-share
 opt
 fsm
 # Run a quick follow-up optimization to sweep out unused nets/signals

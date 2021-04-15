@@ -497,13 +497,24 @@ def run_yosys_with_abc():
         ys_params[tmpVar] = OpenFPGAArgs[indx+1]
     
     yosys_template = args.yosys_tmpl if args.yosys_tmpl else os.path.join(
-        cad_tools["misc_dir"], "ys_tmpl_yosys_vpr_flow.ys")
+        cad_tools["misc_dir"], "ys_tmpl_yosys_vpr_flow.tcl")
     tmpl = Template(open(yosys_template, encoding='utf-8').read())
-    with open("yosys.ys", 'w') as archfile:
+    with open("yosys.tcl", 'w') as archfile:
         archfile.write(tmpl.safe_substitute(ys_params))
-
+    
+    yosys_path = get_yosys_path()
     run_command("Run yosys", "yosys_output.log",
-                [cad_tools["yosys_path"], 'yosys.ys'])
+                [yosys_path, 'yosys.tcl'])
+
+
+def get_yosys_path():
+    yosys_path=""
+    if 'YOSYS' in os.environ and os.environ['YOSYS'] != '':
+        yosys_path = os.environ.get("YOSYS")
+    else:
+        yosys_path = cad_tools["yosys_path"]
+    
+    return yosys_path
 
 
 def run_odin2():
@@ -696,12 +707,13 @@ def run_rewrite_verilog():
     # Rewrite the verilog after optimization
     # If there is no template script provided, use a default template
     # If there is a template script provided, replace parameters from configuration
+    yosys_path = get_yosys_path()
     if not args.ys_rewrite_tmpl:
         script_cmd = [
             "read_blif %s" % args.top_module+".blif",
             "write_verilog %s" % args.top_module+"_output_verilog.v"
         ]
-        command = [cad_tools["yosys_path"], "-p", "; ".join(script_cmd)]
+        command = [yosys_path, "-p", "; ".join(script_cmd)]
         run_command("Yosys", "yosys_rewrite.log", command)
     else:
         # Yosys script parameter mapping
@@ -724,10 +736,10 @@ def run_rewrite_verilog():
         for iteration_idx, curr_rewrite_tmpl in enumerate(args.ys_rewrite_tmpl.split(";")):
             tmpl = Template(open(curr_rewrite_tmpl, encoding='utf-8').read())
             logger.info("Yosys rewrite iteration: " + str(iteration_idx))
-            with open("yosys_rewrite_" + str(iteration_idx) + ".ys", 'w') as archfile:
+            with open("yosys_rewrite_" + str(iteration_idx) + ".tcl", 'w') as archfile:
                 archfile.write(tmpl.safe_substitute(ys_rewrite_params))
             run_command("Run yosys", "yosys_rewrite_output.log",
-                    [cad_tools["yosys_path"], "yosys_rewrite_" + str(iteration_idx) + ".ys"])
+                    [yosys_path, "yosys_rewrite_" + str(iteration_idx) + ".tcl"])
 
 
 

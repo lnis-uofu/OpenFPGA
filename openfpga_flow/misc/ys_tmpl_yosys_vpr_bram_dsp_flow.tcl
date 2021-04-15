@@ -1,4 +1,5 @@
 # Yosys synthesis script for ${TOP_MODULE}
+yosys -import
 
 #########################
 # Parse input files
@@ -14,7 +15,7 @@ read_verilog -lib -specify ${YOSYS_CELL_SIM_VERILOG}
 # Identify top module from hierarchy
 hierarchy -check -top ${TOP_MODULE}
 # - Convert process blocks to AST
-proc
+procs
 # Flatten all the gates/primitives
 flatten
 # Identify tri-state buffers from 'z' signal in AST
@@ -65,6 +66,15 @@ opt -fast
 # Optimize any memory cells by merging share-able ports and collecting all the ports belonging to memorcy cells  
 memory -nomap
 opt_clean
+
+#########################
+# Map logics to BRAMs
+#########################
+memory_bram -rules ${YOSYS_BRAM_MAP_RULES}
+techmap -map ${YOSYS_BRAM_MAP_VERILOG}
+opt -fast -mux_undef -undriven -fine
+memory_map
+opt -undriven -fine
 
 #########################
 # Map flip-flops
