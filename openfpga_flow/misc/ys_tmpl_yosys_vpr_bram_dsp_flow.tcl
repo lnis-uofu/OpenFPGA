@@ -43,14 +43,14 @@ opt_clean
 #########################
 # Avoid merging any registers into DSP, reserve memory port registers first
 memory_dff
-wreduce t:$mul
+wreduce t:\$mul
 techmap -map +/mul2dsp.v -map ${YOSYS_DSP_MAP_VERILOG} ${YOSYS_DSP_MAP_PARAMETERS}
 select a:mul2dsp
 setattr -unset mul2dsp
 opt_expr -fine
 wreduce
 select -clear
-chtype -set $mul t:$__soft_mul# Extract arithmetic functions
+chtype -set \$mul t:\$__soft_mul# Extract arithmetic functions
 
 #########################
 # Run coarse synthesis
