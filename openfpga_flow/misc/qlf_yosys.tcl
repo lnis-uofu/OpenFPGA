@@ -1,4 +1,9 @@
 # Yosys synthesis script for ${TOP_MODULE}
+yosys -import
+
+if { [info procs ql-qlf] == {} } { plugin -i ql-qlf }
+yosys -import  ;# ingest plugin commands
+
 # Read verilog files
 ${READ_VERILOG_FILE}
 

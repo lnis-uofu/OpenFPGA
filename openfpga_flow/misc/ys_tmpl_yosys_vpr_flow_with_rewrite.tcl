@@ -1,10 +1,12 @@
 # Yosys synthesis script for ${TOP_MODULE}
+yosys -import
+
 # Read verilog files
 ${READ_VERILOG_FILE}
 
 # Technology mapping
 hierarchy -top ${TOP_MODULE}
-proc
+procs
 techmap -D NO_LUT -map +/adff2dff.v
 
 # Synthesis
