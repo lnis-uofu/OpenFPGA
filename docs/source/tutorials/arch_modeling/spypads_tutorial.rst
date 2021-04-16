@@ -72,7 +72,6 @@ The file will look like this when finished:
 
 .. code-block:: python
    :linenos:
-   :emphasize-lines: 44
    
    # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
    # Configuration file for running experiments
@@ -117,7 +116,7 @@ The file will look like this when finished:
 
    [SCRIPT_PARAM_MIN_ROUTE_CHAN_WIDTH]
    end_flow_with_test=
-   #vpr_fpga_verilog_formal_verification_top_netlist=
+   #LINE44 vpr_fpga_verilog_formal_verification_top_netlist=
 
 Our OpenFPGA task will now run the full testbench. We run the task with the following command from the root directory of OpenFPGA:
 
@@ -216,7 +215,7 @@ Using :ref:`fig_gpout_ports` as a guide, we can relate our task like :numref:`fi
 .. figure:: ./figures/lut6_Example_Spypad.svg
    :scale: 100%
 
-   Diagram for ``frac_lut6_spypad``
+   An illustrative example of the ``lut6`` spypad sourced from inside a logic element.
 
    
 We can view testbench waveforms with GTKWave by running the following command from the root directory:
@@ -232,9 +231,9 @@ The waveforms will appear similar to :numref:`fig_spypad_waves`
 .. _fig_spypad_waves:
 
 .. figure:: ./figures/spypad_waveforms.png
-   :scale: 100%
+   :width: 75%
 
-   Spypad Waveforms
+   Waveforms of ``frac_lut6`` Spypads
 
 Building Spypads
 ~~~~~~~~~~~~~~~~
@@ -310,7 +309,7 @@ The architecture will now look like :numref:`fig_addf_example`
 .. figure:: ./figures/ADDF_Example_Spypad.svg
    :scale: 100%
    
-   Diagram for ``ADDF``
+   An illustrative example of the sumout spypad sourced from an adder inside a logic element. There are 10 logic elements in a CLB, and we are looking at the 1st logic element.
 
 We can view the waveform by running GTKWave:
 
@@ -325,7 +324,7 @@ The waveform should have some changes to its value. An example of what it may lo
 .. figure:: ./figures/spyadder_waveform.png
    :scale: 100%
 
-   Sumout Waveform
+   Waveforms of ``sumout`` Spypad
 
 Conclusion
 ~~~~~~~~~~
