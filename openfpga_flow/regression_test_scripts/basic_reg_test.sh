@@ -84,6 +84,8 @@ run-task basic_tests/fabric_key/load_external_key_multi_region_cc_fpga --debug -
 echo -e "Testing K4 series FPGA";
 echo -e "Testing K4N4 with facturable LUTs";
 run-task basic_tests/k4_series/k4n4_frac_lut --debug --show_thread_logs
+echo -e "Testing K4N4 with asynchronous reset";
+run-task basic_tests/k4_series/k4n4_fracff --debug --show_thread_logs
 echo -e "Testing K4N4 with hard adders";
 run-task basic_tests/k4_series/k4n4_adder --debug --show_thread_logs
 echo -e "Testing K4N4 without local routing architecture";
