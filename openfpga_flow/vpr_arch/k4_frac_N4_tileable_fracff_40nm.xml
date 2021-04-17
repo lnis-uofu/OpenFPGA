@@ -1,17 +1,17 @@
 <!-- 
-  Low-cost homogeneous FPGA Architecture.
+  Flagship Heterogeneous Architecture (No Carry Chains) for VTR 7.0.
 
-  - Skywater 130 nm technology
+  - 40 nm technology
   - General purpose logic block: 
-    K = 4, N = 8, fracturable 4 LUTs (can operate as one 4-LUT or two 3-LUTs with all 3 inputs shared) 
+    K = 4, N = 4, fracturable 4 LUTs (can operate as one 4-LUT or two 3-LUTs with all 3 inputs shared) 
     with optionally registered outputs
-  - Routing architecture:
-      - 10% L = 1, fc_in = 0.15, Fc_out = 0.10
-      - 10% L = 2, fc_in = 0.15, Fc_out = 0.10
-      - 80% L = 4, fc_in = 0.15, Fc_out = 0.10
-      - 100 routing tracks per channel
+  - Routing architecture: L = 4, fc_in = 0.15, Fc_out = 0.1
 
-  Authors: Xifan Tang
+  Details on Modelling:
+
+  Based on flagship k4_frac_N4_mem32K_40nm.xml architecture.
+
+  Authors: Jason Luu, Jeff Goeders, Vaughn Betz
 -->
 <architecture>
   <!-- 
@@ -33,7 +33,7 @@
         <port name="inpad"/>
       </output_ports>
     </model>
-
+    <!-- A virtual model for I/O to be used in the physical mode of io block -->
     <model name="frac_lut4">
       <input_ports>
         <port name="in"/>
@@ -43,24 +43,11 @@
         <port name="lut4_out"/>
       </output_ports>
     </model>
-   <!-- A virtual model for scan-chain flip-flop to be used in the physical mode of FF -->
-    <model name="scff">
-      <input_ports>
-        <port name="D" clock="clk"/>
-        <port name="DI" clock="clk"/>
-        <port name="reset" clock="clk"/>
-        <port name="clk" is_clock="1"/>
-      </input_ports>
-      <output_ports>
-        <port name="Q" clock="clk"/>
-      </output_ports>
-    </model>
     <!-- A virtual model for scan-chain flip-flop to be used in the physical mode of FF -->
-    <model name="scff">
+    <model name="dffr">
       <input_ports>
         <port name="D" clock="clk"/>
-        <port name="DI" clock="clk"/>
-        <port name="reset" clock="clk"/>
+        <port name="RST" clock="clk"/>
         <port name="clk" is_clock="1"/>
       </input_ports>
       <output_ports>
@@ -73,8 +60,7 @@
          If you need to register the I/O, define clocks in the circuit models
          These clocks can be handled in back-end
      -->
-    <!-- Top-side has 1 I/O per tile -->
-    <tile name="io_top" capacity="1" area="0">
+    <tile name="io" capacity="8" area="0">
       <equivalent_sites>
         <site pb_type="io"/>
       </equivalent_sites>
@@ -82,88 +68,21 @@
       <output name="inpad" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
       <pinlocations pattern="custom">
-        <loc side="bottom">io_top.outpad io_top.inpad</loc>
+        <loc side="left">io.outpad io.inpad</loc>
+        <loc side="top">io.outpad io.inpad</loc>
+        <loc side="right">io.outpad io.inpad</loc>
+        <loc side="bottom">io.outpad io.inpad</loc>
       </pinlocations>
     </tile>
-    <!-- Right-side has 1 I/O per tile -->
-    <tile name="io_right" capacity="1" area="0">
-      <equivalent_sites>
-        <site pb_type="io"/>
-      </equivalent_sites>
-      <input name="outpad" num_pins="1"/>
-      <output name="inpad" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="custom">
-        <loc side="left">io_right.outpad io_right.inpad</loc>
-      </pinlocations>
-    </tile>
-    <!-- Bottom-side has 9 I/O per tile -->
-    <tile name="io_bottom" capacity="9" area="0">
-      <equivalent_sites>
-        <site pb_type="io"/>
-      </equivalent_sites>
-      <input name="outpad" num_pins="1"/>
-      <output name="inpad" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="custom">
-        <loc side="top">io_bottom.outpad io_bottom.inpad</loc>
-      </pinlocations>
-    </tile>
-    <!-- Left-side has 1 I/O per tile -->
-    <tile name="io_left" capacity="1" area="0">
-      <equivalent_sites>
-        <site pb_type="io"/>
-      </equivalent_sites>
-      <input name="outpad" num_pins="1"/>
-      <output name="inpad" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="custom">
-        <loc side="right">io_left.outpad io_left.inpad</loc>
-      </pinlocations>
-    </tile>
-    <!-- CLB has most pins on the top and right sides -->
     <tile name="clb" area="53894">
       <equivalent_sites>
         <site pb_type="clb"/>
       </equivalent_sites>
-      <input name="I0" num_pins="3" equivalent="full"/>
-      <input name="I0i" num_pins="1" equivalent="none"/>
-      <input name="I1" num_pins="3" equivalent="full"/>
-      <input name="I1i" num_pins="1" equivalent="none"/>
-      <input name="I2" num_pins="3" equivalent="full"/>
-      <input name="I2i" num_pins="1" equivalent="none"/>
-      <input name="I3" num_pins="3" equivalent="full"/>
-      <input name="I3i" num_pins="1" equivalent="none"/>
-      <input name="I4" num_pins="3" equivalent="full"/>
-      <input name="I4i" num_pins="1" equivalent="none"/>
-      <input name="I5" num_pins="3" equivalent="full"/>
-      <input name="I5i" num_pins="1" equivalent="none"/>
-      <input name="I6" num_pins="3" equivalent="full"/>
-      <input name="I6i" num_pins="1" equivalent="none"/>
-      <input name="I7" num_pins="3" equivalent="full"/>
-      <input name="I7i" num_pins="1" equivalent="none"/>
-      <input name="reg_in" num_pins="1"/>
-      <input name="sc_in" num_pins="1"/>
-      <input name="reset" num_pins="1" is_non_clock_global="true"/>
-      <output name="O" num_pins="16" equivalent="none"/>
-      <output name="reg_out" num_pins="1"/>
-      <output name="sc_out" num_pins="1"/>
+      <input name="I" num_pins="12" equivalent="full"/>
+      <output name="O" num_pins="8" equivalent="none"/>
       <clock name="clk" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
-        <fc_override port_name="reg_in" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="reg_out" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="sc_in" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="sc_out" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="reset" fc_type="frac" fc_val="0"/>
-      </fc>
-      <!--pinlocations pattern="spread"/-->
-      <pinlocations pattern="custom">
-        <loc side="left">clb.clk clb.reset</loc>
-        <loc side="top">clb.reg_in clb.sc_in clb.O[7:0] clb.I0 clb.I0i clb.I1 clb.I1i clb.I2 clb.I2i clb.I3 clb.I3i</loc>
-        <loc side="right">clb.O[15:8] clb.I4 clb.I4i clb.I5 clb.I5i clb.I6 clb.I6i clb.I7 clb.I7i</loc>
-        <loc side="bottom">clb.reg_out clb.sc_out</loc>
-      </pinlocations>
+      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+      <pinlocations pattern="spread"/>
     </tile>
   </tiles>
   <!-- ODIN II specific config ends -->
@@ -171,30 +90,21 @@
   <layout tileable="true">
     <auto_layout aspect_ratio="1.0">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
-      <row type="io_top" starty="H-1" priority="100"/>
-      <row type="io_bottom" starty="0" priority="100"/>
-      <col type="io_left" startx="0" priority="100"/>
-      <col type="io_right" startx="W-1" priority="100"/>
+      <perimeter type="io" priority="100"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
     </auto_layout>
     <fixed_layout name="2x2" width="4" height="4">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
-      <row type="io_top" starty="H-1" priority="100"/>
-      <row type="io_bottom" starty="0" priority="100"/>
-      <col type="io_left" startx="0" priority="100"/>
-      <col type="io_right" startx="W-1" priority="100"/>
+      <perimeter type="io" priority="100"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
     </fixed_layout>
-    <fixed_layout name="12x12" width="14" height="14">
+    <fixed_layout name="4x4" width="6" height="6">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
-      <row type="io_top" starty="H-1" priority="100"/>
-      <row type="io_bottom" starty="0" priority="100"/>
-      <col type="io_left" startx="0" priority="100"/>
-      <col type="io_right" startx="W-1" priority="100"/>
+      <perimeter type="io" priority="100"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
@@ -242,9 +152,7 @@
 	       2.5x when looking up in Jeff's tables.
 	       Finally, we choose a switch delay (58 ps) that leads to length 4 wires having a delay equal to that of SIV of 126 ps.
 	       This also leads to the switch being 46% of the total wire delay, which is reasonable. -->
-    <switch type="mux" name="L1_mux" R="551" Cin=".77e-15" Cout="4e-15" Tdel="58e-12" mux_trans_size="2.630740" buf_size="27.645901"/>
-    <switch type="mux" name="L2_mux" R="551" Cin=".77e-15" Cout="4e-15" Tdel="58e-12" mux_trans_size="2.630740" buf_size="27.645901"/>
-    <switch type="mux" name="L4_mux" R="551" Cin=".77e-15" Cout="4e-15" Tdel="58e-12" mux_trans_size="2.630740" buf_size="27.645901"/>
+    <switch type="mux" name="0" R="551" Cin=".77e-15" Cout="4e-15" Tdel="58e-12" mux_trans_size="2.630740" buf_size="27.645901"/>
     <!--switch ipin_cblock resistance set to yeild for 4x minimum drive strength buffer-->
     <switch type="mux" name="ipin_cblock" R="2231.5" Cout="0." Cin="1.47e-15" Tdel="7.247000e-11" mux_trans_size="1.222260" buf_size="auto"/>
   </switchlist>
@@ -253,28 +161,16 @@
 			     With the 96 nm half pitch, such wires would take 60 um of height, vs. a 90 nm high (approximated as square) Stratix IV tile so this seems
 			     reasonable. Using a tile length of 90 nm, corresponding to the length of a Stratix IV tile if it were square. -->
     <!-- GIVE a specific name for the segment! OpenFPGA appreciate that! -->
-    <segment name="L1" freq="0.10" length="1" type="unidir" Rmetal="101" Cmetal="22.5e-15">
-      <mux name="L1_mux"/>
-      <sb type="pattern">1 1</sb>
-      <cb type="pattern">1</cb>
-    </segment>
-    <segment name="L2" freq="0.10" length="2" type="unidir" Rmetal="101" Cmetal="22.5e-15">
-      <mux name="L2_mux"/>
-      <sb type="pattern">1 1 1</sb>
-      <cb type="pattern">1 1</cb>
-    </segment>
-    <segment name="L4" freq="0.80" length="4" type="unidir" Rmetal="101" Cmetal="22.5e-15">
-      <mux name="L4_mux"/>
+    <segment name="L4" freq="1.000000" length="4" type="unidir" Rmetal="101" Cmetal="22.5e-15">
+      <mux name="0"/>
       <sb type="pattern">1 1 1 1 1</sb>
       <cb type="pattern">1 1 1 1</cb>
     </segment>
   </segmentlist>
-  <directlist>
-    <direct name="shift_register" from_pin="clb.reg_out" to_pin="clb.reg_in" x_offset="0" y_offset="-1" z_offset="0"/>
-    <direct name="scan_chain" from_pin="clb.sc_out" to_pin="clb.sc_in" x_offset="0" y_offset="-1" z_offset="0"/>
-  </directlist>
   <complexblocklist>
-    <!-- Define input pads begin -->
+    <!-- Define I/O pads begin -->
+    <!-- Capacity is a unique property of I/Os, it is the maximum number of I/Os that can be placed at the same (X,Y) location on the FPGA -->
+    <!-- Not sure of the area of an I/O (varies widely), and it's not relevant to the design of the FPGA core, so we're setting it to 0. -->
     <pb_type name="io">
       <input name="outpad" num_pins="1"/>
       <output name="inpad" num_pins="1"/>
@@ -325,62 +221,45 @@
           </direct>
         </interconnect>
       </mode>
+      <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 10% of the tracks in a channel -->
+      <!-- IOs go on the periphery of the FPGA, for consistency, 
+          make it physically equivalent on all sides so that only one definition of I/Os is needed.
+          If I do not make a physically equivalent definition, then I need to define 4 different I/Os, one for each side of the FPGA
+        -->
+      <!-- Place I/Os on the sides of the FPGA -->
       <power method="ignore"/>
     </pb_type>
     <!-- Define I/O pads ends -->
     <!-- Define general purpose logic block (CLB) begin -->
-    <!-- -Due to the absence of local routing, 
-         the 4 inputs of fracturable LUT4 are no longer equivalent, 
-         because the 4th input can not be switched when the dual-LUT3 modes are used.
-         So pin equivalence should be applied to the first 3 inputs only
-	  -->
+    <!--- Area calculation: Total Stratix IV tile area is about 8100 um^2, and a minimum width transistor 
+	   area is 60 L^2 yields a tile area of 84375 MWTAs.
+	   Routing at W=300 is 30481 MWTAs, leaving us with a total of 53000 MWTAs for logic block area 
+	   This means that only 37% of our area is in the general routing, and 63% is inside the logic
+	   block. Note that the crossbar / local interconnect is considered part of the logic block
+	   area in this analysis. That is a lower proportion of of routing area than most academics
+	   assume, but note that the total routing area really includes the crossbar, which would push
+	   routing area up significantly, we estimate into the ~70% range. 
+	   -->
     <pb_type name="clb">
-      <input name="I0" num_pins="3" equivalent="full"/>
-      <input name="I0i" num_pins="1" equivalent="none"/>
-      <input name="I1" num_pins="3" equivalent="full"/>
-      <input name="I1i" num_pins="1" equivalent="none"/>
-      <input name="I2" num_pins="3" equivalent="full"/>
-      <input name="I2i" num_pins="1" equivalent="none"/>
-      <input name="I3" num_pins="3" equivalent="full"/>
-      <input name="I3i" num_pins="1" equivalent="none"/>
-      <input name="I4" num_pins="3" equivalent="full"/>
-      <input name="I4i" num_pins="1" equivalent="none"/>
-      <input name="I5" num_pins="3" equivalent="full"/>
-      <input name="I5i" num_pins="1" equivalent="none"/>
-      <input name="I6" num_pins="3" equivalent="full"/>
-      <input name="I6i" num_pins="1" equivalent="none"/>
-      <input name="I7" num_pins="3" equivalent="full"/>
-      <input name="I7i" num_pins="1" equivalent="none"/>
-      <input name="reg_in" num_pins="1"/>
-      <input name="sc_in" num_pins="1"/>
-      <input name="reset" num_pins="1" is_non_clock_global="true"/>
-      <output name="O" num_pins="16" equivalent="none"/>
-      <output name="reg_out" num_pins="1"/>
-      <output name="sc_out" num_pins="1"/>
+      <input name="I" num_pins="12" equivalent="full"/>
+      <input name="reset" num_pins="1"/>
+      <output name="O" num_pins="8" equivalent="none"/>
       <clock name="clk" num_pins="1"/>
       <!-- Describe fracturable logic element.  
              Each fracturable logic element has a 6-LUT that can alternatively operate as two 5-LUTs with shared inputs. 
              The outputs of the fracturable logic element can be optionally registered
         -->
-      <pb_type name="fle" num_pb="8">
+      <pb_type name="fle" num_pb="4">
         <input name="in" num_pins="4"/>
-        <input name="reg_in" num_pins="1"/>
-        <input name="sc_in" num_pins="1"/>
         <input name="reset" num_pins="1"/>
         <output name="out" num_pins="2"/>
-        <output name="reg_out" num_pins="1"/>
-        <output name="sc_out" num_pins="1"/>
         <clock name="clk" num_pins="1"/>
         <!-- Physical mode definition begin (physical implementation of the fle) -->
         <mode name="physical" disable_packing="true">
           <pb_type name="fabric" num_pb="1">
             <input name="in" num_pins="4"/>
-            <input name="reg_in" num_pins="1"/>
-            <input name="sc_in" num_pins="1"/>
             <input name="reset" num_pins="1"/>
             <output name="out" num_pins="2"/>
-            <output name="reg_out" num_pins="1"/>
-            <output name="sc_out" num_pins="1"/>
             <clock name="clk" num_pins="1"/>
             <pb_type name="frac_logic" num_pb="1">
               <input name="in" num_pins="4"/>
@@ -398,40 +277,27 @@
                 <mux name="mux1" input="frac_lut4.lut4_out frac_lut4.lut3_out[0]" output="frac_logic.out[0]"/>
               </interconnect>
             </pb_type>
-            <!-- Define flip-flop with scan-chain capability, DI is the scan-chain data input -->
-            <pb_type name="ff" blif_model=".subckt scff" num_pb="2">
-              <input name="D" num_pins="1"/>
-              <input name="DI" num_pins="1"/>
-              <input name="reset" num_pins="1"/>
-              <output name="Q" num_pins="1"/>
-              <clock name="clk" num_pins="1"/>
+            <!-- Define flip-flop -->
+            <pb_type name="ff" blif_model=".dffr" num_pb="2" class="flipflop">
+              <input name="D" num_pins="1" port_class="D"/>
+              <input name="RST" num_pins="1"/>
+              <output name="Q" num_pins="1" port_class="Q"/>
+              <clock name="clk" num_pins="1" port_class="clock"/>
               <T_setup value="66e-12" port="ff.D" clock="clk"/>
-              <T_setup value="66e-12" port="ff.DI" clock="clk"/>
-              <T_setup value="66e-12" port="ff.reset" clock="clk"/>
+              <T_setup value="66e-12" port="ff.RST" clock="clk"/>
               <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
-            </pb_type>         
+            </pb_type>
             <interconnect>
               <direct name="direct1" input="fabric.in" output="frac_logic.in"/>
-              <direct name="direct2" input="fabric.sc_in" output="ff[0].DI"/>
-              <direct name="direct3" input="ff[0].Q" output="ff[1].DI"/>
-              <direct name="direct4" input="ff[1].Q" output="fabric.sc_out"/>
-              <direct name="direct5" input="ff[1].Q" output="fabric.reg_out"/>
-              <complete name="complete1" input="fabric.clk" output="ff[1:0].clk"/>
-              <complete name="complete2" input="fabric.reset" output="ff[1:0].reset"/>
-              <mux name="mux1" input="frac_logic.out[0:0] fabric.reg_in" output="ff[0:0].D">
-                <delay_constant max="25e-12" in_port="frac_logic.out[0:0]" out_port="ff[0:0].D"/>
-                <delay_constant max="45e-12" in_port="fabric.reg_in" out_port="ff[0:0].D"/>
-              </mux>
-              <mux name="mux2" input="frac_logic.out[1:1] ff[0:0].Q" output="ff[1:1].D">
-                <delay_constant max="25e-12" in_port="frac_logic.out[1:1]" out_port="ff[1:1].D"/>
-                <delay_constant max="45e-12" in_port="ff[0:0].Q" out_port="ff[1:1].D"/>
-              </mux>
-              <mux name="mux3" input="ff[0].Q frac_logic.out[0]" output="fabric.out[0]">
+              <direct name="direct2" input="frac_logic.out[1:0]" output="ff[1:0].D"/>
+              <complete name="direct3" input="fabric.clk" output="ff[1:0].clk"/>
+              <complete name="direct4" input="fabric.reset" output="ff[1:0].RST"/>
+              <mux name="mux1" input="ff[0].Q frac_logic.out[0]" output="fabric.out[0]">
                 <!-- LUT to output is faster than FF to output on a Stratix IV -->
                 <delay_constant max="25e-12" in_port="frac_logic.out[0]" out_port="fabric.out[0]"/>
                 <delay_constant max="45e-12" in_port="ff[0].Q" out_port="fabric.out[0]"/>
               </mux>
-              <mux name="mux4" input="ff[1].Q frac_logic.out[1]" output="fabric.out[1]">
+              <mux name="mux2" input="ff[1].Q frac_logic.out[1]" output="fabric.out[1]">
                 <!-- LUT to output is faster than FF to output on a Stratix IV -->
                 <delay_constant max="25e-12" in_port="frac_logic.out[1]" out_port="fabric.out[1]"/>
                 <delay_constant max="45e-12" in_port="ff[1].Q" out_port="fabric.out[1]"/>
@@ -440,13 +306,9 @@
           </pb_type>
           <interconnect>
             <direct name="direct1" input="fle.in" output="fabric.in"/>
-            <direct name="direct3" input="fle.reg_in" output="fabric.reg_in"/>
-            <direct name="direct4" input="fle.sc_in" output="fabric.sc_in"/>
-            <direct name="direct5" input="fabric.out" output="fle.out"/>
-            <direct name="direct7" input="fabric.reg_out" output="fle.reg_out"/>
-            <direct name="direct8" input="fabric.sc_out" output="fle.sc_out"/>
-            <direct name="direct9" input="fle.clk" output="fabric.clk"/>
-            <direct name="direct10" input="fle.reset" output="fabric.reset"/>
+            <direct name="direct2" input="fabric.out" output="fle.out"/>
+            <direct name="direct3" input="fle.clk" output="fabric.clk"/>
+            <direct name="direct4" input="fle.reset" output="fabric.reset"/>
           </interconnect>
         </mode>
         <!-- Physical mode definition end (physical implementation of the fle) -->
@@ -454,10 +316,12 @@
         <mode name="n2_lut3">
           <pb_type name="lut3inter" num_pb="1">
             <input name="in" num_pins="3"/>
+            <input name="reset" num_pins="1"/>
             <output name="out" num_pins="2"/>
             <clock name="clk" num_pins="1"/>
             <pb_type name="ble3" num_pb="2">
               <input name="in" num_pins="3"/>
+              <input name="reset" num_pins="1"/>
               <output name="out" num_pins="1"/>
               <clock name="clk" num_pins="1"/>
               <!-- Define the LUT -->
@@ -480,8 +344,9 @@
                 </delay_matrix>
               </pb_type>
               <!-- Define the flip-flop -->
-              <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
+              <pb_type name="ff" blif_model=".dffr" num_pb="1" class="flipflop">
                 <input name="D" num_pins="1" port_class="D"/>
+                <input name="RST" num_pins="1"/>
                 <output name="Q" num_pins="1" port_class="Q"/>
                 <clock name="clk" num_pins="1" port_class="clock"/>
                 <T_setup value="66e-12" port="ff.D" clock="clk"/>
@@ -494,6 +359,7 @@
                   <pack_pattern name="ble3" in_port="lut3[0:0].out" out_port="ff[0:0].D"/>
                 </direct>
                 <direct name="direct3" input="ble3.clk" output="ff[0:0].clk"/>
+                <direct name="direct3" input="ble3.reset" output="ff[0:0].RST"/>
                 <mux name="mux1" input="ff[0:0].Q lut3.out[0:0]" output="ble3.out[0:0]">
                   <!-- LUT to output is faster than FF to output on a Stratix IV -->
                   <delay_constant max="25e-12" in_port="lut3.out[0:0]" out_port="ble3.out[0:0]"/>
@@ -506,12 +372,14 @@
               <direct name="direct2" input="lut3inter.in" output="ble3[1:1].in"/>
               <direct name="direct3" input="ble3[1:0].out" output="lut3inter.out"/>
               <complete name="complete1" input="lut3inter.clk" output="ble3[1:0].clk"/>
+              <complete name="complete2" input="lut3inter.reset" output="ble3[1:0].reset"/>
             </interconnect>
           </pb_type>
           <interconnect>
             <direct name="direct1" input="fle.in[2:0]" output="lut3inter.in"/>
             <direct name="direct2" input="lut3inter.out" output="fle.out"/>
             <direct name="direct3" input="fle.clk" output="lut3inter.clk"/>
+            <direct name="direct4" input="fle.reset" output="lut3inter.reset"/>
           </interconnect>
         </mode>
         <!-- Dual 3-LUT mode definition end -->
@@ -520,6 +388,7 @@
           <!-- Define 4-LUT mode -->
           <pb_type name="ble4" num_pb="1">
             <input name="in" num_pins="4"/>
+            <input name="reset" num_pins="1"/>
             <output name="out" num_pins="1"/>
             <clock name="clk" num_pins="1"/>
             <!-- Define LUT -->
@@ -544,11 +413,13 @@
               </delay_matrix>
             </pb_type>
             <!-- Define flip-flop -->
-            <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
+            <pb_type name="ff" blif_model=".dffr" num_pb="1" class="flipflop">
               <input name="D" num_pins="1" port_class="D"/>
+              <input name="RST" num_pins="1" port_class="D"/>
               <output name="Q" num_pins="1" port_class="Q"/>
               <clock name="clk" num_pins="1" port_class="clock"/>
               <T_setup value="66e-12" port="ff.D" clock="clk"/>
+              <T_setup value="66e-12" port="ff.RST" clock="clk"/>
               <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
             </pb_type>
             <interconnect>
@@ -558,6 +429,7 @@
                 <pack_pattern name="ble4" in_port="lut4.out" out_port="ff.D"/>
               </direct>
               <direct name="direct3" input="ble4.clk" output="ff.clk"/>
+              <direct name="direct4" input="ble4.reset" output="ff.RST"/>
               <mux name="mux1" input="ff.Q lut4.out" output="ble4.out">
                 <!-- LUT to output is faster than FF to output on a Stratix IV -->
                 <delay_constant max="25e-12" in_port="lut4.out" out_port="ble4.out"/>
@@ -569,129 +441,35 @@
             <direct name="direct1" input="fle.in" output="ble4.in"/>
             <direct name="direct2" input="ble4.out" output="fle.out[0:0]"/>
             <direct name="direct3" input="fle.clk" output="ble4.clk"/>
+            <direct name="direct4" input="fle.reset" output="ble4.reset"/>
           </interconnect>
         </mode>
-        <!-- 4-LUT mode definition end -->
-        <!-- Define shift register begin -->
-        <mode name="shift_register">
-          <pb_type name="shift_reg" num_pb="1">
-            <input name="reg_in" num_pins="1"/>
-            <output name="ff_out" num_pins="2"/>
-            <output name="reg_out" num_pins="1"/>
-            <clock name="clk" num_pins="1"/>
-            <pb_type name="ff" blif_model=".latch" num_pb="2" class="flipflop">
-              <input name="D" num_pins="1" port_class="D"/>
-              <output name="Q" num_pins="1" port_class="Q"/>
-              <clock name="clk" num_pins="1" port_class="clock"/>
-              <T_setup value="66e-12" port="ff.D" clock="clk"/>
-              <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
-            </pb_type>
-            <interconnect>
-              <direct name="direct1" input="shift_reg.reg_in" output="ff[0].D"/>
-              <direct name="direct2" input="ff[0].Q" output="ff[1].D"/>
-              <direct name="direct3" input="ff[1].Q" output="shift_reg.reg_out"/>
-              <direct name="direct4" input="ff[0].Q" output="shift_reg.ff_out[0:0]"/>
-              <direct name="direct5" input="ff[1].Q" output="shift_reg.ff_out[1:1]"/>
-              <complete name="complete1" input="shift_reg.clk" output="ff.clk"/>
-            </interconnect>
-          </pb_type>
-          <interconnect>
-            <direct name="direct1" input="fle.reg_in" output="shift_reg.reg_in"/>
-            <direct name="direct2" input="shift_reg.reg_out" output="fle.reg_out"/>
-            <direct name="direct3" input="shift_reg.ff_out" output="fle.out"/>
-            <direct name="direct4" input="fle.clk" output="shift_reg.clk"/>
-          </interconnect>
-        </mode>
-        <!-- Define shift register end --> 
+        <!-- 6-LUT mode definition end -->
       </pb_type>
       <interconnect>
-        <!-- We use direct connections to reduce the area to the most
-             The global local routing is going to compensate the loss in routability
-          -->
-        <!-- FIXME: The implicit port definition results in I0[0] connected to
-                    in[2]. Such twisted connection is not expected.
-                    I[0] should be connected to in[0]
-          -->
-        <direct name="direct_fle0" input="clb.I0[0:2]" output="fle[0:0].in[0:2]">
-          <!-- TODO: Timing should be backannotated from post-PnR results -->
-        </direct>
-        <direct name="direct_fle0i" input="clb.I0i" output="fle[0:0].in[3]">
-          <!-- TODO: Timing should be backannotated from post-PnR results -->
-        </direct>
-        <direct name="direct_fle1" input="clb.I1[0:2]" output="fle[1:1].in[0:2]">
-          <!-- TODO: Timing should be backannotated from post-PnR results -->
-        </direct>
-        <direct name="direct_fle1i" input="clb.I1i" output="fle[1:1].in[3]">
-          <!-- TODO: Timing should be backannotated from post-PnR results -->
-        </direct>
-        <direct name="direct_fle2" input="clb.I2[0:2]" output="fle[2:2].in[0:2]">
-          <!-- TODO: Timing should be backannotated from post-PnR results -->
-        </direct>
-        <direct name="direct_fle2i" input="clb.I2i" output="fle[2:2].in[3]">
-          <!-- TODO: Timing should be backannotated from post-PnR results -->
-        </direct>
-        <direct name="direct_fle3" input="clb.I3[0:2]" output="fle[3:3].in[0:2]">
-          <!-- TODO: Timing should be backannotated from post-PnR results -->
-        </direct>
-        <direct name="direct_fle3i" input="clb.I3i" output="fle[3:3].in[3]">
-          <!-- TODO: Timing should be backannotated from post-PnR results -->
-        </direct>
-        <direct name="direct_fle4" input="clb.I4[0:2]" output="fle[4:4].in[0:2]">
-          <!-- TODO: Timing should be backannotated from post-PnR results -->
-        </direct>
-        <direct name="direct_fle4i" input="clb.I4i" output="fle[4:4].in[3]">
-          <!-- TODO: Timing should be backannotated from post-PnR results -->
-        </direct>
-        <direct name="direct_fle5" input="clb.I5[0:2]" output="fle[5:5].in[0:2]">
-          <!-- TODO: Timing should be backannotated from post-PnR results -->
-        </direct>
-        <direct name="direct_fle5i" input="clb.I5i" output="fle[5:5].in[3]">
-          <!-- TODO: Timing should be backannotated from post-PnR results -->
-        </direct>
-        <direct name="direct_fle6" input="clb.I6[0:2]" output="fle[6:6].in[0:2]">
-          <!-- TODO: Timing should be backannotated from post-PnR results -->
-        </direct>
-        <direct name="direct_fle6i" input="clb.I6i" output="fle[6:6].in[3]">
-          <!-- TODO: Timing should be backannotated from post-PnR results -->
-        </direct>
-        <direct name="direct_fle7" input="clb.I7[0:2]" output="fle[7:7].in[0:2]">
-          <!-- TODO: Timing should be backannotated from post-PnR results -->
-        </direct>
-        <direct name="direct_fle7i" input="clb.I7i" output="fle[7:7].in[3]">
-          <!-- TODO: Timing should be backannotated from post-PnR results -->
-        </direct>
-        <complete name="clks" input="clb.clk" output="fle[7:0].clk">
+        <!-- We use a full crossbar to get logical equivalence at inputs of CLB 
+		     The delays below come from Stratix IV. the delay through a connection block
+		     input mux + the crossbar in Stratix IV is 167 ps. We already have a 72 ps 
+		     delay on the connection block input mux (modeled by Ian Kuon), so the remaining
+		     delay within the crossbar is 95 ps. 
+		     The delays of cluster feedbacks in Stratix IV is 100 ps, when driven by a LUT.
+		     Since all our outputs LUT outputs go to a BLE output, and have a delay of 
+		     25 ps to do so, we subtract 25 ps from the 100 ps delay of a feedback
+		     to get the part that should be marked on the crossbar.	 -->
+        <complete name="crossbar" input="clb.I fle[3:0].out" output="fle[3:0].in">
+          <delay_constant max="95e-12" in_port="clb.I" out_port="fle[3:0].in"/>
+          <delay_constant max="75e-12" in_port="fle[3:0].out" out_port="fle[3:0].in"/>
         </complete>
-        <complete name="resets" input="clb.reset" output="fle[7:0].reset">
+        <complete name="clks" input="clb.clk" output="fle[3:0].clk">
+        <complete name="resets" input="clb.reset" output="fle[3:0].reset">
         </complete>
         <!-- This way of specifying direct connection to clb outputs is important because this architecture uses automatic spreading of opins.  
                By grouping to output pins in this fashion, if a logic block is completely filled by 6-LUTs, 
                then the outputs those 6-LUTs take get evenly distributed across all four sides of the CLB instead of clumped on two sides (which is what happens with a more
                naive specification).
           -->
-        <direct name="clbouts1" input="fle[3:0].out[0:1]" output="clb.O[7:0]"/>
-        <direct name="clbouts2" input="fle[7:4].out[0:1]" output="clb.O[15:8]"/>
-        <!-- Shift register chain links -->
-        <direct name="shift_register_in" input="clb.reg_in" output="fle[0:0].reg_in">
-          <!-- Put all inter-block carry chain delay on this one edge -->
-          <delay_constant max="0.16e-9" in_port="clb.reg_in" out_port="fle[0:0].reg_in"/>
-          <!--pack_pattern name="chain" in_port="clb.reg_in" out_port="fle[0:0].reg_in"/-->
-        </direct>
-        <direct name="shift_register_out" input="fle[7:7].reg_out" output="clb.reg_out">
-          <!--pack_pattern name="chain" in_port="fle[7:7].reg_out" out_port="clb.reg_out"/-->
-        </direct>
-        <direct name="shift_register_link" input="fle[6:0].reg_out" output="fle[7:1].reg_in">
-          <!--pack_pattern name="chain" in_port="fle[6:0].reg_out" out_port="fle[7:1].reg_in"/-->
-        </direct>
-        <!-- Scan chain links -->
-        <direct name="scan_chain_in" input="clb.sc_in" output="fle[0:0].sc_in">
-          <!-- Put all inter-block carry chain delay on this one edge -->
-          <delay_constant max="0.16e-9" in_port="clb.sc_in" out_port="fle[0:0].sc_in"/>
-        </direct>
-        <direct name="scan_chain_out" input="fle[7:7].sc_out" output="clb.sc_out">
-        </direct>
-        <direct name="scan_chain_link" input="fle[6:0].sc_out" output="fle[7:1].sc_in">
-        </direct>
+        <direct name="clbouts1" input="fle[3:0].out[0:0]" output="clb.O[3:0]"/>
+        <direct name="clbouts2" input="fle[3:0].out[1:1]" output="clb.O[7:4]"/>
       </interconnect>
       <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 10% of the tracks in a channel -->
       <!-- Place this general purpose logic block in any unspecified column -->
