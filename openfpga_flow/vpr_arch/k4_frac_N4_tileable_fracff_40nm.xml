@@ -79,9 +79,13 @@
         <site pb_type="clb"/>
       </equivalent_sites>
       <input name="I" num_pins="12" equivalent="full"/>
+      <input name="reset" num_pins="1" is_non_clock_global="true"/>
       <output name="O" num_pins="8" equivalent="none"/>
       <clock name="clk" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+        <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
+        <fc_override port_name="reset" fc_type="frac" fc_val="0"/>
+      </fc>
       <pinlocations pattern="spread"/>
     </tile>
   </tiles>
@@ -278,7 +282,7 @@
               </interconnect>
             </pb_type>
             <!-- Define flip-flop -->
-            <pb_type name="ff" blif_model=".dffr" num_pb="2" class="flipflop">
+            <pb_type name="ff" blif_model=".subckt dffr" num_pb="2">
               <input name="D" num_pins="1" port_class="D"/>
               <input name="RST" num_pins="1"/>
               <output name="Q" num_pins="1" port_class="Q"/>
@@ -344,12 +348,13 @@
                 </delay_matrix>
               </pb_type>
               <!-- Define the flip-flop -->
-              <pb_type name="ff" blif_model=".dffr" num_pb="1" class="flipflop">
+              <pb_type name="ff" blif_model=".subckt dffr" num_pb="1">
                 <input name="D" num_pins="1" port_class="D"/>
                 <input name="RST" num_pins="1"/>
                 <output name="Q" num_pins="1" port_class="Q"/>
                 <clock name="clk" num_pins="1" port_class="clock"/>
                 <T_setup value="66e-12" port="ff.D" clock="clk"/>
+                <T_setup value="66e-12" port="ff.RST" clock="clk"/>
                 <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
               </pb_type>
               <interconnect>
@@ -359,7 +364,7 @@
                   <pack_pattern name="ble3" in_port="lut3[0:0].out" out_port="ff[0:0].D"/>
                 </direct>
                 <direct name="direct3" input="ble3.clk" output="ff[0:0].clk"/>
-                <direct name="direct3" input="ble3.reset" output="ff[0:0].RST"/>
+                <direct name="direct4" input="ble3.reset" output="ff[0:0].RST"/>
                 <mux name="mux1" input="ff[0:0].Q lut3.out[0:0]" output="ble3.out[0:0]">
                   <!-- LUT to output is faster than FF to output on a Stratix IV -->
                   <delay_constant max="25e-12" in_port="lut3.out[0:0]" out_port="ble3.out[0:0]"/>
@@ -413,7 +418,7 @@
               </delay_matrix>
             </pb_type>
             <!-- Define flip-flop -->
-            <pb_type name="ff" blif_model=".dffr" num_pb="1" class="flipflop">
+            <pb_type name="ff" blif_model=".subckt dffr" num_pb="1">
               <input name="D" num_pins="1" port_class="D"/>
               <input name="RST" num_pins="1" port_class="D"/>
               <output name="Q" num_pins="1" port_class="Q"/>
@@ -461,6 +466,7 @@
           <delay_constant max="75e-12" in_port="fle[3:0].out" out_port="fle[3:0].in"/>
         </complete>
         <complete name="clks" input="clb.clk" output="fle[3:0].clk">
+        </complete>
         <complete name="resets" input="clb.reset" output="fle[3:0].reset">
         </complete>
         <!-- This way of specifying direct connection to clb outputs is important because this architecture uses automatic spreading of opins.  
