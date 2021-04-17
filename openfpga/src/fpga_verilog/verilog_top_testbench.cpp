@@ -385,13 +385,7 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
       /* Regular reset port can be mapped by a net from user design */
       if (false == fabric_global_port_info.global_port_is_prog(fabric_global_port)) {
         /* If the global port name is in the pin constraints, we should wire it to the constrained pin */
-        std::string constrained_net_name = std::string(PIN_CONSTRAINT_OPEN_NET);
-        for (const PinConstraintId& pin_constraint : pin_constraints.pin_constraints()) {
-          if (module_global_pin == pin_constraints.pin(pin_constraint)) {
-            constrained_net_name = pin_constraints.net(pin_constraint); 
-            break;
-          }
-        }
+        std::string constrained_net_name = pin_constraints.pin_net(module_global_pin);
 
         /* - If constrained to a given net in the benchmark, we connect the global pin to the net */
         if (std::string(PIN_CONSTRAINT_OPEN_NET) != constrained_net_name) {

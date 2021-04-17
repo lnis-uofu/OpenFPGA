@@ -52,6 +52,11 @@ class PinConstraints {
     /* Get the net to be constrained */
     std::string net(const PinConstraintId& pin_constraint_id) const;
 
+    /* Find the net that is constrained on a pin
+     * TODO: this function will only return the first net found in the constraint list    
+     */
+    std::string pin_net(const openfpga::BasicPort& pin) const;
+
     /* Check if there are any pin constraints */
     bool empty() const;
 
