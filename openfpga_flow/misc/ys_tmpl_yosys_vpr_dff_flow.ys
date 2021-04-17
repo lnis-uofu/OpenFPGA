@@ -1,0 +1,24 @@
+# Yosys synthesis script for ${TOP_MODULE}
+# Read verilog files
+${READ_VERILOG_FILE}
+# Read technology library
+read_verilog -lib -specify ${YOSYS_CELL_SIM_VERILOG}
+
+# Technology mapping
+hierarchy -top ${TOP_MODULE}
+proc
+techmap -D NO_LUT -map ${YOSYS_DFF_MAP_VERILOG}
+
+# Synthesis
+synth -top ${TOP_MODULE} -flatten
+clean
+
+# LUT mapping
+abc -lut ${LUT_SIZE}
+
+# Check
+synth -run check
+
+# Clean and output blif
+opt_clean -purge
+write_blif ${OUTPUT_BLIF}
