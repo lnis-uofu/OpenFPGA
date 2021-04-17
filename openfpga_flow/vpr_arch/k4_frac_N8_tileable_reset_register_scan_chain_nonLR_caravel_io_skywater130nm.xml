@@ -43,18 +43,6 @@
         <port name="lut4_out"/>
       </output_ports>
     </model>
-   <!-- A virtual model for scan-chain flip-flop to be used in the physical mode of FF -->
-    <model name="scff">
-      <input_ports>
-        <port name="D" clock="clk"/>
-        <port name="DI" clock="clk"/>
-        <port name="reset" clock="clk"/>
-        <port name="clk" is_clock="1"/>
-      </input_ports>
-      <output_ports>
-        <port name="Q" clock="clk"/>
-      </output_ports>
-    </model>
     <!-- A virtual model for scan-chain flip-flop to be used in the physical mode of FF -->
     <model name="scff">
       <input_ports>
