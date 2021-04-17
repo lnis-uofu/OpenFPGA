@@ -16,6 +16,9 @@ clean
 # LUT mapping
 abc -lut ${LUT_SIZE}
 
+# FF mapping
+techmap -D NO_LUT -map ${YOSYS_DFF_MAP_VERILOG}
+
 # Check
 synth -run check
 
