@@ -264,6 +264,7 @@ static
 void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
                                                       const ModuleManager& module_manager,
                                                       const ModuleId& top_module,
+                                                      const PinConstraints& pin_constraints,
                                                       const FabricGlobalPortInfo& fabric_global_port_info,
                                                       const SimulationSetting& simulation_parameters,
                                                       const bool& active_global_prog_reset,
@@ -373,18 +374,48 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
       stimuli_reset_port.set_name(std::string(TOP_TB_RESET_PORT_NAME));
       stimuli_reset_port.set_width(1);
     }
-    /* Wire the port to the input stimuli:
-     * The wiring will be inverted if the default value of the global port is 1
-     * Otherwise, the wiring will not be inverted!
-     */
-    if (true == activate) {
-      print_verilog_wire_connection(fp, module_manager.module_port(top_module, module_global_port),
-                                    stimuli_reset_port,
-                                    1 == fabric_global_port_info.global_port_default_value(fabric_global_port));
-    } else {
-      VTR_ASSERT_SAFE(false == activate);
-      print_verilog_wire_constant_values(fp, module_manager.module_port(top_module, module_global_port),
-                                         std::vector<size_t>(1, fabric_global_port_info.global_port_default_value(fabric_global_port)));
+
+    BasicPort module_global_port_info = module_manager.module_port(top_module, module_global_port);
+
+    for (size_t pin_id = 0; pin_id < module_global_port_info.pins().size(); ++pin_id) {
+      BasicPort module_global_pin(module_global_port_info.get_name(),
+                                  module_global_port_info.pins()[pin_id],
+                                  module_global_port_info.pins()[pin_id]);
+
+      /* Regular reset port can be mapped by a net from user design */
+      if (false == fabric_global_port_info.global_port_is_prog(fabric_global_port)) {
+        /* If the global port name is in the pin constraints, we should wire it to the constrained pin */
+        std::string constrained_net_name = std::string(PIN_CONSTRAINT_OPEN_NET);
+        for (const PinConstraintId& pin_constraint : pin_constraints.pin_constraints()) {
+          if (module_global_pin == pin_constraints.pin(pin_constraint)) {
+            constrained_net_name = pin_constraints.net(pin_constraint); 
+            break;
+          }
+        }
+
+        /* - If constrained to a given net in the benchmark, we connect the global pin to the net */
+        if (std::string(PIN_CONSTRAINT_OPEN_NET) != constrained_net_name) {
+          BasicPort benchmark_pin(constrained_net_name, 1);
+          print_verilog_wire_connection(fp, module_global_pin,
+                                        benchmark_pin,
+                                        false);
+          continue; /* Finish the net assignment for this reset pin */
+        }
+      }
+      
+      /* Wire the port to the input stimuli:
+       * The wiring will be inverted if the default value of the global port is 1
+       * Otherwise, the wiring will not be inverted!
+       */
+      if (true == activate) {
+        print_verilog_wire_connection(fp, module_global_pin,
+                                      stimuli_reset_port,
+                                      1 == fabric_global_port_info.global_port_default_value(fabric_global_port));
+      } else {
+        VTR_ASSERT_SAFE(false == activate);
+        print_verilog_wire_constant_values(fp, module_global_pin,
+                                           std::vector<size_t>(1, fabric_global_port_info.global_port_default_value(fabric_global_port)));
+      }
     }
   }
 
@@ -1994,6 +2025,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   /* Generate stimuli for global ports or connect them to existed signals */
   print_verilog_top_testbench_global_ports_stimuli(fp,
                                                    module_manager, top_module,
+                                                   pin_constraints,
                                                    global_ports,
                                                    simulation_parameters,
                                                    active_global_prog_reset,
