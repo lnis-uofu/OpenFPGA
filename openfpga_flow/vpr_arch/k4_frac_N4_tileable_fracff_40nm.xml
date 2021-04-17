@@ -46,12 +46,12 @@
     <!-- A virtual model for scan-chain flip-flop to be used in the physical mode of FF -->
     <model name="dffr">
       <input_ports>
-        <port name="D" clock="clk"/>
-        <port name="RST" clock="clk"/>
-        <port name="clk" is_clock="1"/>
+        <port name="D" clock="C"/>
+        <port name="R" clock="C"/>
+        <port name="C" is_clock="1"/>
       </input_ports>
       <output_ports>
-        <port name="Q" clock="clk"/>
+        <port name="Q" clock="C"/>
       </output_ports>
     </model>
   </models>
@@ -284,18 +284,18 @@
             <!-- Define flip-flop -->
             <pb_type name="ff" blif_model=".subckt dffr" num_pb="2">
               <input name="D" num_pins="1" port_class="D"/>
-              <input name="RST" num_pins="1"/>
+              <input name="R" num_pins="1"/>
               <output name="Q" num_pins="1" port_class="Q"/>
-              <clock name="clk" num_pins="1" port_class="clock"/>
-              <T_setup value="66e-12" port="ff.D" clock="clk"/>
-              <T_setup value="66e-12" port="ff.RST" clock="clk"/>
-              <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+              <clock name="C" num_pins="1" port_class="clock"/>
+              <T_setup value="66e-12" port="ff.D" clock="C"/>
+              <T_setup value="66e-12" port="ff.R" clock="C"/>
+              <T_clock_to_Q max="124e-12" port="ff.Q" clock="C"/>
             </pb_type>
             <interconnect>
               <direct name="direct1" input="fabric.in" output="frac_logic.in"/>
               <direct name="direct2" input="frac_logic.out[1:0]" output="ff[1:0].D"/>
-              <complete name="direct3" input="fabric.clk" output="ff[1:0].clk"/>
-              <complete name="direct4" input="fabric.reset" output="ff[1:0].RST"/>
+              <complete name="direct3" input="fabric.clk" output="ff[1:0].C"/>
+              <complete name="direct4" input="fabric.reset" output="ff[1:0].R"/>
               <mux name="mux1" input="ff[0].Q frac_logic.out[0]" output="fabric.out[0]">
                 <!-- LUT to output is faster than FF to output on a Stratix IV -->
                 <delay_constant max="25e-12" in_port="frac_logic.out[0]" out_port="fabric.out[0]"/>
@@ -350,12 +350,12 @@
               <!-- Define the flip-flop -->
               <pb_type name="ff" blif_model=".subckt dffr" num_pb="1">
                 <input name="D" num_pins="1" port_class="D"/>
-                <input name="RST" num_pins="1"/>
+                <input name="R" num_pins="1"/>
                 <output name="Q" num_pins="1" port_class="Q"/>
-                <clock name="clk" num_pins="1" port_class="clock"/>
-                <T_setup value="66e-12" port="ff.D" clock="clk"/>
-                <T_setup value="66e-12" port="ff.RST" clock="clk"/>
-                <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+                <clock name="C" num_pins="1" port_class="clock"/>
+                <T_setup value="66e-12" port="ff.D" clock="C"/>
+                <T_setup value="66e-12" port="ff.R" clock="C"/>
+                <T_clock_to_Q max="124e-12" port="ff.Q" clock="C"/>
               </pb_type>
               <interconnect>
                 <direct name="direct1" input="ble3.in[2:0]" output="lut3[0:0].in[2:0]"/>
@@ -363,8 +363,8 @@
                   <!-- Advanced user option that tells CAD tool to find LUT+FF pairs in netlist -->
                   <pack_pattern name="ble3" in_port="lut3[0:0].out" out_port="ff[0:0].D"/>
                 </direct>
-                <direct name="direct3" input="ble3.clk" output="ff[0:0].clk"/>
-                <direct name="direct4" input="ble3.reset" output="ff[0:0].RST"/>
+                <direct name="direct3" input="ble3.clk" output="ff[0:0].C"/>
+                <direct name="direct4" input="ble3.reset" output="ff[0:0].R"/>
                 <mux name="mux1" input="ff[0:0].Q lut3.out[0:0]" output="ble3.out[0:0]">
                   <!-- LUT to output is faster than FF to output on a Stratix IV -->
                   <delay_constant max="25e-12" in_port="lut3.out[0:0]" out_port="ble3.out[0:0]"/>
@@ -420,12 +420,12 @@
             <!-- Define flip-flop -->
             <pb_type name="ff" blif_model=".subckt dffr" num_pb="1">
               <input name="D" num_pins="1" port_class="D"/>
-              <input name="RST" num_pins="1" port_class="D"/>
+              <input name="R" num_pins="1" port_class="D"/>
               <output name="Q" num_pins="1" port_class="Q"/>
-              <clock name="clk" num_pins="1" port_class="clock"/>
-              <T_setup value="66e-12" port="ff.D" clock="clk"/>
-              <T_setup value="66e-12" port="ff.RST" clock="clk"/>
-              <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+              <clock name="C" num_pins="1" port_class="clock"/>
+              <T_setup value="66e-12" port="ff.D" clock="C"/>
+              <T_setup value="66e-12" port="ff.R" clock="C"/>
+              <T_clock_to_Q max="124e-12" port="ff.Q" clock="C"/>
             </pb_type>
             <interconnect>
               <direct name="direct1" input="ble4.in" output="lut4[0:0].in"/>
@@ -433,8 +433,8 @@
                 <!-- Advanced user option that tells CAD tool to find LUT+FF pairs in netlist -->
                 <pack_pattern name="ble4" in_port="lut4.out" out_port="ff.D"/>
               </direct>
-              <direct name="direct3" input="ble4.clk" output="ff.clk"/>
-              <direct name="direct4" input="ble4.reset" output="ff.RST"/>
+              <direct name="direct3" input="ble4.clk" output="ff.C"/>
+              <direct name="direct4" input="ble4.reset" output="ff.R"/>
               <mux name="mux1" input="ff.Q lut4.out" output="ble4.out">
                 <!-- LUT to output is faster than FF to output on a Stratix IV -->
                 <delay_constant max="25e-12" in_port="lut4.out" out_port="ble4.out"/>

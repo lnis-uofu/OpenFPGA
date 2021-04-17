@@ -145,9 +145,9 @@
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
        <port type="input" prefix="D" size="1"/>
        <port type="input" prefix="set" lib_name="SET" size="1" is_global="true" default_val="0" is_set="true"/>
-       <port type="input" prefix="RST" size="1" default_val="0"/>
+       <port type="input" prefix="R" lib_name="RST" size="1" default_val="0"/>
        <port type="output" prefix="Q" size="1"/>
-       <port type="clock" prefix="clk" lib_name="CK" size="1" default_val="0"/>
+       <port type="clock" prefix="C" lib_name="CK" size="1" default_val="0"/>
     </circuit_model>
     <circuit_model type="lut" name="frac_lut4" prefix="frac_lut4" dump_structural_verilog="true">
       <design_technology type="cmos" fracturable_lut="true"/>
@@ -197,10 +197,10 @@
     <segment name="L4" circuit_model_name="chan_segment"/>
   </routing_segment>
   <tile_annotations>
-    <global_port name="clk" tile_port="clb.clk" is_clock="true" default_val="0">
+    <global_port name="op_clk" tile_port="clb.clk" is_clock="true" default_val="0">
       <tile name="clb" port="clk"/>
     </global_port>
-    <global_port name="reset" is_reset="true" default_val="0">
+    <global_port name="op_reset" is_reset="true" default_val="0">
       <tile name="clb" port="reset"/>
     </global_port>
   </tile_annotations>
