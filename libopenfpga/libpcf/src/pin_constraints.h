@@ -61,7 +61,6 @@ class PinConstraints {
     bool empty() const;
 
   public: /* Public Mutators */
-
     /* Reserve a number of design constraints to be memory efficent */
     void reserve_pin_constraints(const size_t& num_pin_constraints);
 
@@ -70,7 +69,22 @@ class PinConstraints {
                                           const std::string& net);
 
   public: /* Public invalidators/validators */
+    /* Show if the pin constraint id is a valid for data queries */
     bool valid_pin_constraint_id(const PinConstraintId& pin_constraint_id) const;
+
+    /* Show if the net has no constraints (free to map to any pin) 
+     * This function is used to identify the net name returned by APIs:
+     * - pin_net()
+     * - net()
+     */
+    bool unconstrained_net(const std::string& net) const;
+
+    /* Show if the net is defined specifically not to map to any pin 
+     * This function is used to identify the net name returned by APIs:
+     * - pin_net()
+     * - net()
+     */
+    bool unmapped_net(const std::string& net) const;
   private: /* Internal data */
     /* Unique ids for each design constraint */
     vtr::vector<PinConstraintId, PinConstraintId> pin_constraint_ids_;
