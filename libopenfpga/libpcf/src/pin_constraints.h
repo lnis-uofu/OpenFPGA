@@ -57,6 +57,12 @@ class PinConstraints {
      */
     std::string pin_net(const openfpga::BasicPort& pin) const;
 
+    /* Find the pin that a net is constrained to
+     * If not found, the return port will be an invalid BasicPort
+     * TODO: this function will only return the first pin found in the constraint list    
+     */
+    openfpga::BasicPort net_pin(const std::string& net) const; 
+
     /* Check if there are any pin constraints */
     bool empty() const;
 
