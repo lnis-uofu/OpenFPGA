@@ -137,16 +137,15 @@ int print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
         /* If the clock port name is in the pin constraints, we should wire it to the constrained pin */
         std::string constrained_net_name = pin_constraints.pin_net(module_clock_pin);
 
-        /* If constrained to an open net or there is no clock in the benchmark, we assign it to a default value */
-        if ( (std::string(PIN_CONSTRAINT_OPEN_NET) == constrained_net_name)
-          || (true == benchmark_clock_port_names.empty())) {
+        /* If there is no clock in the benchmark, we assign it to a default value */
+        if (true == benchmark_clock_port_names.empty()) {
           std::vector<size_t> default_values(1, fabric_global_ports.global_port_default_value(global_port_id));
           print_verilog_wire_constant_values(fp, module_clock_pin, default_values);
           continue;
         }
 
         std::string clock_name_to_connect;
-        if (!constrained_net_name.empty()) {
+        if (std::string(PIN_CONSTRAINT_OPEN_NET) != constrained_net_name) {
           clock_name_to_connect = constrained_net_name;
         } else {
           /* Otherwise, we must have a clear one-to-one clock net corresponding!!! */
