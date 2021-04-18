@@ -409,7 +409,8 @@ void print_verilog_top_testbench_global_reset_ports_stimuli(std::fstream& fp,
         std::string constrained_net_name = pin_constraints.pin_net(module_global_pin);
 
         /* - If constrained to a given net in the benchmark, we connect the global pin to the net */
-        if (std::string(PIN_CONSTRAINT_OPEN_NET) != constrained_net_name) {
+        if ( (std::string(PIN_CONSTRAINT_OPEN_NET) != constrained_net_name)
+          && (!constrained_net_name.empty())) {
           BasicPort benchmark_pin(constrained_net_name, 1);
           print_verilog_wire_connection(fp, module_global_pin,
                                         benchmark_pin,
