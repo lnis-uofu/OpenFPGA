@@ -135,13 +135,7 @@ int print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
         BasicPort module_clock_pin(module_global_port.get_name(), module_global_port.pins()[pin_id], module_global_port.pins()[pin_id]);
 
         /* If the clock port name is in the pin constraints, we should wire it to the constrained pin */
-        std::string constrained_net_name;
-        for (const PinConstraintId& pin_constraint : pin_constraints.pin_constraints()) {
-          if (module_clock_pin == pin_constraints.pin(pin_constraint)) {
-            constrained_net_name = pin_constraints.net(pin_constraint); 
-            break;
-          }
-        }
+        std::string constrained_net_name = pin_constraints.pin_net(module_clock_pin);
 
         /* If constrained to an open net or there is no clock in the benchmark, we assign it to a default value */
         if ( (std::string(PIN_CONSTRAINT_OPEN_NET) == constrained_net_name)
@@ -173,8 +167,27 @@ int print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
     }
 
     /* For other ports, give an default value */
-    std::vector<size_t> default_values(module_global_port.get_width(), fabric_global_ports.global_port_default_value(global_port_id));
-    print_verilog_wire_constant_values(fp, module_global_port, default_values);
+    for (size_t pin_id = 0; pin_id < module_global_port.pins().size(); ++pin_id) {
+      BasicPort module_global_pin(module_global_port.get_name(),
+                                  module_global_port.pins()[pin_id],
+                                  module_global_port.pins()[pin_id]);
+
+      /* If the global port name is in the pin constraints, we should wire it to the constrained pin */
+      std::string constrained_net_name = pin_constraints.pin_net(module_global_pin);
+
+      /* - If constrained to a given net in the benchmark, we connect the global pin to the net
+       * - If constrained to an open net in the benchmark, we assign it to a default value 
+       */
+      if ( (std::string(PIN_CONSTRAINT_OPEN_NET) != constrained_net_name)
+        && (!constrained_net_name.empty())) {
+        BasicPort benchmark_pin(constrained_net_name + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), 1);
+        print_verilog_wire_connection(fp, module_global_pin, benchmark_pin, false);
+      } else {
+        VTR_ASSERT_SAFE(std::string(PIN_CONSTRAINT_OPEN_NET) == constrained_net_name);
+        std::vector<size_t> default_values(module_global_pin.get_width(), fabric_global_ports.global_port_default_value(global_port_id));
+        print_verilog_wire_constant_values(fp, module_global_pin, default_values);
+      }
+    }
   }
 
   print_verilog_comment(fp, std::string("----- End Connect Global ports of FPGA top module -----"));
