@@ -7,6 +7,8 @@
 #include <string>
 #include "vpr_context.h"
 #include "pin_constraints.h"
+#include "module_manager.h"
+#include "fabric_global_port_info.h"
 #include "simulation_setting.h"
 
 /********************************************************************
@@ -20,6 +22,8 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
                                         const std::string& verilog_fname,
                                         const AtomContext& atom_ctx,
                                         const VprNetlistAnnotation& netlist_annotation,
+                                        const ModuleManager& module_manager,
+                                        const FabricGlobalPortInfo& global_ports,
                                         const PinConstraints& pin_constraints,
                                         const SimulationSetting& simulation_parameters,
                                         const bool& explicit_port_mapping);

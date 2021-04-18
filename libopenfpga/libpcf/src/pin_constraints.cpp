@@ -49,6 +49,17 @@ std::string PinConstraints::pin_net(const openfpga::BasicPort& pin) const {
   return constrained_net_name;
 }
 
+openfpga::BasicPort PinConstraints::net_pin(const std::string& net) const {
+  openfpga::BasicPort constrained_pin;
+  for (const PinConstraintId& pin_constraint : pin_constraints()) {
+    if (net == pin_constraint_nets_[pin_constraint]) {
+      constrained_pin = pin(pin_constraint); 
+      break;
+    }
+  }
+  return constrained_pin;
+} 
+
 bool PinConstraints::empty() const {
   return 0 == pin_constraint_ids_.size();
 }
@@ -80,4 +91,12 @@ PinConstraintId PinConstraints::create_pin_constraint(const openfpga::BasicPort&
 /* Validators */
 bool PinConstraints::valid_pin_constraint_id(const PinConstraintId& pin_constraint_id) const {
   return ( size_t(pin_constraint_id) < pin_constraint_ids_.size() ) && ( pin_constraint_id == pin_constraint_ids_[pin_constraint_id] ); 
+}
+
+bool PinConstraints::unconstrained_net(const std::string& net) const {
+  return net.empty();
+}
+
+bool PinConstraints::unmapped_net(const std::string& net) const {
+  return std::string(PIN_CONSTRAINT_OPEN_NET) == net;
 }

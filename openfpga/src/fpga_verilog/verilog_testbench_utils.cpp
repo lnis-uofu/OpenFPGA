@@ -21,6 +21,7 @@
 #include "verilog_port_types.h"
 
 #include "module_manager_utils.h"
+#include "fabric_global_port_info_utils.h"
 
 #include "verilog_constants.h"
 #include "verilog_writer_utils.h"
@@ -537,6 +538,9 @@ void print_verilog_testbench_clock_stimuli(std::fstream& fp,
 void print_verilog_testbench_random_stimuli(std::fstream& fp,
                                             const AtomContext& atom_ctx,
                                             const VprNetlistAnnotation& netlist_annotation,
+                                            const ModuleManager& module_manager,
+                                            const FabricGlobalPortInfo& global_ports,
+                                            const PinConstraints& pin_constraints,
                                             const std::vector<std::string>& clock_port_names,
                                             const std::string& check_flag_port_postfix,
                                             const std::vector<BasicPort>& clock_ports) {
@@ -560,8 +564,15 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
       block_name = netlist_annotation.block_name(atom_blk);
     } 
 
-    /* Bypass clock ports */
+    /* Bypass clock ports because their stimulus cannot be random */
     if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
+      continue;
+    }
+
+    /* Bypass any constained net that are mapped to a global port of the FPGA fabric
+     * because their stimulus cannot be random
+     */
+    if (true == port_is_fabric_global_reset_port(global_ports, module_manager, pin_constraints.net_pin(block_name))) { 
       continue;
     }
 
@@ -620,8 +631,15 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
       block_name = netlist_annotation.block_name(atom_blk);
     } 
 
-    /* Bypass clock ports */
+    /* Bypass clock ports because their stimulus cannot be random */
     if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
+      continue;
+    }
+
+    /* Bypass any constained net that are mapped to a global port of the FPGA fabric
+     * because their stimulus cannot be random
+     */
+    if (true == port_is_fabric_global_reset_port(global_ports, module_manager, pin_constraints.net_pin(block_name))) { 
       continue;
     }
 
