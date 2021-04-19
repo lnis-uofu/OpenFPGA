@@ -5,9 +5,9 @@ Introduction
 ~~~~~~~~~~~~
 
 **In this tutorial, we will**
-   - Show the XML Syntax for Global Outputs
-   - Showcase an example with Spypads
-   - Modify an existing architecture to incorporate Spypads
+   - Show the XML syntax for global outputs
+   - Showcase an example with spypads
+   - Modify an existing architecture to incorporate spypads
    - Verify correctness through GTKWave
 
 Through this tutorial, we will show how to create spypads in OpenFPGA.
