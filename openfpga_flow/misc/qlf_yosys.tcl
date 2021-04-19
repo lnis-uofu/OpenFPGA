@@ -1,8 +1,10 @@
 # Yosys synthesis script for ${TOP_MODULE}
 yosys -import
-
-if { [info procs ql-qlf] == {} } { plugin -i ql-qlf }
-yosys -import  ;# ingest plugin commands
+if { [info exists ::env(YOSYS)] } {
+    set yosys_dir [file dirname $env(YOSYS)]
+    if { [file exists $yosys_dir/../share/yosys/plugins/ql-qlf.so] == 1 } { plugin -i ql-qlf }
+    yosys -import  ;# ingest plugin commands
+} 
 
 # Read verilog files
 ${READ_VERILOG_FILE}
