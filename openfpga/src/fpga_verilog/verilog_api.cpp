@@ -203,6 +203,8 @@ int fpga_verilog_testbench(const ModuleManager &module_manager,
                                        random_top_testbench_file_path,
                                        atom_ctx,
                                        netlist_annotation,
+                                       module_manager,
+                                       fabric_global_port_info,
                                        pin_constraints,
                                        simulation_setting,
                                        options.explicit_port_mapping());

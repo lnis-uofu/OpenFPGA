@@ -47,7 +47,6 @@ constexpr char* TOP_TESTBENCH_PROG_TASK_NAME = "prog_cycle_task";
 
 constexpr char* TOP_TESTBENCH_SIM_START_PORT_NAME = "sim_start";
 
-constexpr int TOP_TESTBENCH_MAGIC_NUMBER_FOR_SIMULATION_TIME = 200;
 constexpr char* TOP_TESTBENCH_ERROR_COUNTER = "nb_error";
 
 constexpr char* TOP_TB_RESET_PORT_NAME = "greset";
@@ -258,20 +257,16 @@ void print_verilog_top_testbench_config_protocol_port(std::fstream& fp,
 }
 
 /********************************************************************
- * Wire the global ports of FPGA fabric to local wires
+ * Wire the global clock ports of FPGA fabric to local wires
  *******************************************************************/
 static
-void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
-                                                      const ModuleManager& module_manager,
-                                                      const ModuleId& top_module,
-                                                      const FabricGlobalPortInfo& fabric_global_port_info,
-                                                      const SimulationSetting& simulation_parameters,
-                                                      const bool& active_global_prog_reset,
-                                                      const bool& active_global_prog_set) {
+void print_verilog_top_testbench_global_clock_ports_stimuli(std::fstream& fp,
+                                                            const ModuleManager& module_manager,
+                                                            const ModuleId& top_module,
+                                                            const FabricGlobalPortInfo& fabric_global_port_info,
+                                                            const SimulationSetting& simulation_parameters) {
   /* Validate the file stream */
   valid_file_stream(fp);
-
-  print_verilog_comment(fp, std::string("----- Begin connecting global ports of FPGA fabric to stimuli -----"));
 
   /* Connect global clock ports to operating or programming clock signal */
   for (const FabricGlobalPortId& fabric_global_port : fabric_global_port_info.global_ports()) {
@@ -317,6 +312,18 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
                                     1 == fabric_global_port_info.global_port_default_value(fabric_global_port));
     }
   }
+}
+
+/********************************************************************
+ * Wire the global config done ports of FPGA fabric to local wires
+ *******************************************************************/
+static
+void print_verilog_top_testbench_global_config_done_ports_stimuli(std::fstream& fp,
+                                                                  const ModuleManager& module_manager,
+                                                                  const ModuleId& top_module,
+                                                                  const FabricGlobalPortInfo& fabric_global_port_info) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
 
   /* Connect global configuration done ports to configuration done signal */
   for (const FabricGlobalPortId& fabric_global_port : fabric_global_port_info.global_ports()) {
@@ -341,6 +348,20 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
                                   stimuli_config_done_port,
                                   1 == fabric_global_port_info.global_port_default_value(fabric_global_port));
   }
+}
+
+/********************************************************************
+ * Wire the global reset ports of FPGA fabric to local wires
+ *******************************************************************/
+static
+void print_verilog_top_testbench_global_reset_ports_stimuli(std::fstream& fp,
+                                                            const ModuleManager& module_manager,
+                                                            const ModuleId& top_module,
+                                                            const PinConstraints& pin_constraints,
+                                                            const FabricGlobalPortInfo& fabric_global_port_info,
+                                                            const bool& active_global_prog_reset) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
 
   /* Connect global reset ports to operating or programming reset signal */
   for (const FabricGlobalPortId& fabric_global_port : fabric_global_port_info.global_ports()) {
@@ -373,20 +394,58 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
       stimuli_reset_port.set_name(std::string(TOP_TB_RESET_PORT_NAME));
       stimuli_reset_port.set_width(1);
     }
-    /* Wire the port to the input stimuli:
-     * The wiring will be inverted if the default value of the global port is 1
-     * Otherwise, the wiring will not be inverted!
-     */
-    if (true == activate) {
-      print_verilog_wire_connection(fp, module_manager.module_port(top_module, module_global_port),
-                                    stimuli_reset_port,
-                                    1 == fabric_global_port_info.global_port_default_value(fabric_global_port));
-    } else {
-      VTR_ASSERT_SAFE(false == activate);
-      print_verilog_wire_constant_values(fp, module_manager.module_port(top_module, module_global_port),
-                                         std::vector<size_t>(1, fabric_global_port_info.global_port_default_value(fabric_global_port)));
+
+    BasicPort module_global_port_info = module_manager.module_port(top_module, module_global_port);
+
+    for (size_t pin_id = 0; pin_id < module_global_port_info.pins().size(); ++pin_id) {
+      BasicPort module_global_pin(module_global_port_info.get_name(),
+                                  module_global_port_info.pins()[pin_id],
+                                  module_global_port_info.pins()[pin_id]);
+
+      /* Regular reset port can be mapped by a net from user design */
+      if (false == fabric_global_port_info.global_port_is_prog(fabric_global_port)) {
+        /* If the global port name is in the pin constraints, we should wire it to the constrained pin */
+        std::string constrained_net_name = pin_constraints.pin_net(module_global_pin);
+
+        /* - If constrained to a given net in the benchmark, we connect the global pin to the net */
+        if ( (false == pin_constraints.unconstrained_net(constrained_net_name))
+          && (false == pin_constraints.unmapped_net(constrained_net_name))) {
+          BasicPort benchmark_pin(constrained_net_name, 1);
+          print_verilog_wire_connection(fp, module_global_pin,
+                                        benchmark_pin,
+                                        false);
+          continue; /* Finish the net assignment for this reset pin */
+        }
+      }
+      
+      /* Wire the port to the input stimuli:
+       * The wiring will be inverted if the default value of the global port is 1
+       * Otherwise, the wiring will not be inverted!
+       */
+      if (true == activate) {
+        print_verilog_wire_connection(fp, module_global_pin,
+                                      stimuli_reset_port,
+                                      1 == fabric_global_port_info.global_port_default_value(fabric_global_port));
+      } else {
+        VTR_ASSERT_SAFE(false == activate);
+        print_verilog_wire_constant_values(fp, module_global_pin,
+                                           std::vector<size_t>(1, fabric_global_port_info.global_port_default_value(fabric_global_port)));
+      }
     }
   }
+}
+
+/********************************************************************
+ * Wire the global set ports of FPGA fabric to local wires
+ *******************************************************************/
+static
+void print_verilog_top_testbench_global_set_ports_stimuli(std::fstream& fp,
+                                                          const ModuleManager& module_manager,
+                                                          const ModuleId& top_module,
+                                                          const FabricGlobalPortInfo& fabric_global_port_info,
+                                                          const bool& active_global_prog_set) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
 
   /* Connect global set ports to operating or programming set signal */
   for (const FabricGlobalPortId& fabric_global_port : fabric_global_port_info.global_ports()) {
@@ -438,6 +497,18 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
                                          std::vector<size_t>(1, fabric_global_port_info.global_port_default_value(fabric_global_port)));
     }
   }
+}
+
+/********************************************************************
+ * Wire the regular global ports of FPGA fabric to local wires
+ *******************************************************************/
+static
+void print_verilog_top_testbench_regular_global_ports_stimuli(std::fstream& fp,
+                                                              const ModuleManager& module_manager,
+                                                              const ModuleId& top_module,
+                                                              const FabricGlobalPortInfo& fabric_global_port_info) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
 
   /* For the rest of global ports, wire them to constant signals */
   for (const FabricGlobalPortId& fabric_global_port : fabric_global_port_info.global_ports()) {
@@ -478,6 +549,55 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
     std::vector<size_t> default_values(module_port.get_width(), fabric_global_port_info.global_port_default_value(fabric_global_port));
     print_verilog_wire_constant_values(fp, module_port, default_values);
   }
+}
+
+/********************************************************************
+ * Wire the global ports of FPGA fabric to local wires
+ *******************************************************************/
+static
+void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
+                                                      const ModuleManager& module_manager,
+                                                      const ModuleId& top_module,
+                                                      const PinConstraints& pin_constraints,
+                                                      const FabricGlobalPortInfo& fabric_global_port_info,
+                                                      const SimulationSetting& simulation_parameters,
+                                                      const bool& active_global_prog_reset,
+                                                      const bool& active_global_prog_set) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  print_verilog_comment(fp, std::string("----- Begin connecting global ports of FPGA fabric to stimuli -----"));
+
+  print_verilog_top_testbench_global_clock_ports_stimuli(fp,
+                                                         module_manager,
+                                                         top_module,
+                                                         fabric_global_port_info,
+                                                         simulation_parameters);
+
+  print_verilog_top_testbench_global_config_done_ports_stimuli(fp,
+                                                               module_manager,
+                                                               top_module,
+                                                               fabric_global_port_info);
+
+
+  print_verilog_top_testbench_global_reset_ports_stimuli(fp,
+                                                         module_manager,
+                                                         top_module,
+                                                         pin_constraints,
+                                                         fabric_global_port_info,
+                                                         active_global_prog_reset);
+
+  print_verilog_top_testbench_global_set_ports_stimuli(fp,
+                                                       module_manager,
+                                                       top_module,
+                                                       fabric_global_port_info,
+                                                       active_global_prog_set);
+
+
+  print_verilog_top_testbench_regular_global_ports_stimuli(fp,
+                                                           module_manager,
+                                                           top_module,
+                                                           fabric_global_port_info);
 
   print_verilog_comment(fp, std::string("----- End connecting global ports of FPGA fabric to stimuli -----"));
 }
@@ -1811,6 +1931,54 @@ void print_verilog_top_testbench_bitstream(std::fstream& fp,
 }
 
 /********************************************************************
+ * Connect proper stimuli to the reset port
+ * This function is designed to drive the reset port of a benchmark module
+ *******************************************************************/
+static 
+void print_verilog_top_testbench_reset_stimuli(std::fstream& fp,
+                                               const AtomContext& atom_ctx,
+                                               const VprNetlistAnnotation& netlist_annotation,
+                                               const ModuleManager& module_manager,
+                                               const FabricGlobalPortInfo& global_ports,
+                                               const PinConstraints& pin_constraints,
+                                               const std::vector<std::string>& clock_port_names) {
+  valid_file_stream(fp);
+
+  print_verilog_comment(fp, "----- Begin reset signal generation -----");
+
+  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+    /* Bypass non-input atom blocks ! */
+    if (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk)) {
+      continue;
+    }
+
+    /* The block may be renamed as it contains special characters which violate Verilog syntax */
+    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+      block_name = netlist_annotation.block_name(atom_blk);
+    } 
+
+    /* Bypass clock ports because their stimulus cannot be random */
+    if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
+      continue;
+    }
+
+    /* Bypass any constained net that are mapped to a global port of the FPGA fabric
+     * because their stimulus cannot be random
+     */
+    if (false == port_is_fabric_global_reset_port(global_ports, module_manager, pin_constraints.net_pin(block_name))) { 
+      continue;
+    }
+
+    /* Connect stimuli to greset with an optional inversion, depending on the default value */
+    BasicPort reset_port(block_name, 1);
+    print_verilog_wire_connection(fp, reset_port,
+                                  BasicPort(TOP_TB_RESET_PORT_NAME, 1),
+                                  1 == global_ports.global_port_default_value(find_fabric_global_port(global_ports, module_manager, pin_constraints.net_pin(block_name))));
+  }
+}
+
+/********************************************************************
  * Add auto-check codes for the full testbench
  * in particular for the configuration phase:
  * - Check that the configuration done signal is raised, indicating
@@ -1994,6 +2162,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   /* Generate stimuli for global ports or connect them to existed signals */
   print_verilog_top_testbench_global_ports_stimuli(fp,
                                                    module_manager, top_module,
+                                                   pin_constraints,
                                                    global_ports,
                                                    simulation_parameters,
                                                    active_global_prog_reset,
@@ -2042,9 +2211,20 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                                   top_module);
   }
 
+
   /* Add stimuli for reset, set, clock and iopad signals */
+  print_verilog_top_testbench_reset_stimuli(fp, 
+                                            atom_ctx,
+                                            netlist_annotation, 
+                                            module_manager,
+                                            global_ports, 
+                                            pin_constraints, 
+                                            clock_port_names);
   print_verilog_testbench_random_stimuli(fp, atom_ctx,
                                          netlist_annotation,
+                                         module_manager,
+                                         global_ports,
+                                         pin_constraints,
                                          clock_port_names,
                                          std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
                                          std::vector<BasicPort>(1, BasicPort(std::string(TOP_TB_OP_CLOCK_PORT_NAME), 1)));
