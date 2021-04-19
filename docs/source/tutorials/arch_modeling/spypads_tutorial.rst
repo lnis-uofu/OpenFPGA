@@ -10,7 +10,7 @@ Introduction
    - Modify an existing architecture to incorporate Spypads
    - Verify correctness through GTKWave
 
-Through this tutorial, we will show how to create Spypads in OpenFPGA.
+Through this tutorial, we will show how to create spypads in OpenFPGA.
 
 Spypads are physical output pins on a FPGA chip through which you can read out internal signals when doing silicon-level debugging. The XML syntax for spypads and other 
 global signals can be found on our :ref:`circuit_library` documentation page.
@@ -35,7 +35,7 @@ file. We can view ``k6_frac_N10_adder_register_scan_chain_depop50_spypad_40nm_op
 
    emacs openfpga_flow/openfpga_arch/k6_frac_N10_adder_register_scan_chain_depop50_spypad_40nm_openfpga.xml
 
-In this architecture file, the output ports of a 6-input Look Up Table (LUT) are defined as spypads using the XML syntax ``is_global`` and ``is_io``. As a result, all of the outputs from the 6-input LUT will be visible in the top-level module. The output ports to the 6-input LUT are declared from **LINE181** to **LINE183** and belong to the ``frac_lut6_spypad`` ``circuit_model`` that begins at **LINE172**.
+In this architecture file, the output ports of a 6-input lookup table (LUT) are defined as spypads using the XML syntax ``is_global`` and ``is_io``. As a result, all of the outputs from the 6-input LUT will be visible in the top-level module. The output ports to the 6-input LUT are declared from **LINE181** to **LINE183** and belong to the ``frac_lut6_spypad`` ``circuit_model`` that begins at **LINE172**.
 
 .. code-block:: xml
    
@@ -116,7 +116,7 @@ The file will look like this when finished:
 
    [SCRIPT_PARAM_MIN_ROUTE_CHAN_WIDTH]
    end_flow_with_test=
-   #LINE44 vpr_fpga_verilog_formal_verification_top_netlist=
+   #vpr_fpga_verilog_formal_verification_top_netlist=
 
 Our OpenFPGA task will now run the full testbench. We run the task with the following command from the root directory of OpenFPGA:
 
@@ -231,9 +231,9 @@ The waveforms will appear similar to :numref:`fig_spypad_waves`
 .. _fig_spypad_waves:
 
 .. figure:: ./figures/spypad_waveforms.png
-   :width: 75%
+   :width: 100%
 
-   Waveforms of ``frac_lut6`` Spypads
+   Waveforms of ``frac_lut6`` spypads
 
 Building Spypads
 ~~~~~~~~~~~~~~~~
@@ -322,9 +322,9 @@ The waveform should have some changes to its value. An example of what it may lo
 .. _fig_spy_adder:
 
 .. figure:: ./figures/spyadder_waveform.png
-   :scale: 100%
+   :width: 100%
 
-   Waveforms of ``sumout`` Spypad
+   Waveforms of ``sumout`` spypad
 
 Conclusion
 ~~~~~~~~~~
