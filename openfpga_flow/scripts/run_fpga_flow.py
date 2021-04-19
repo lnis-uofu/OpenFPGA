@@ -496,15 +496,22 @@ def run_yosys_with_abc():
         tmpVar = OpenFPGAArgs[indx][2:].upper()
         ys_params[tmpVar] = OpenFPGAArgs[indx+1]
     
+    def_tmpl_yosys_file = "ys_tmpl_yosys_vpr_flow.ys"
+    yosys_file="yosys.ys"
+    file_extension = os.path.splitext(args.yosys_tmpl)[1]
+    if file_extension is not None:
+        def_tmpl_yosys_file = "ys_tmpl_yosys_vpr_flow"+file_extension
+        yosys_file="yosys"+file_extension
+
     yosys_template = args.yosys_tmpl if args.yosys_tmpl else os.path.join(
-        cad_tools["misc_dir"], "ys_tmpl_yosys_vpr_flow.tcl")
+        cad_tools["misc_dir"], def_tmpl_yosys_file)
     tmpl = Template(open(yosys_template, encoding='utf-8').read())
-    with open("yosys.tcl", 'w') as archfile:
+    with open(yosys_file, 'w') as archfile:
         archfile.write(tmpl.safe_substitute(ys_params))
     
     yosys_path = get_yosys_path()
     run_command("Run yosys", "yosys_output.log",
-                [yosys_path, 'yosys.tcl'])
+                [yosys_path, yosys_file])
 
 
 def get_yosys_path():
@@ -736,10 +743,10 @@ def run_rewrite_verilog():
         for iteration_idx, curr_rewrite_tmpl in enumerate(args.ys_rewrite_tmpl.split(";")):
             tmpl = Template(open(curr_rewrite_tmpl, encoding='utf-8').read())
             logger.info("Yosys rewrite iteration: " + str(iteration_idx))
-            with open("yosys_rewrite_" + str(iteration_idx) + ".tcl", 'w') as archfile:
+            with open("yosys_rewrite_" + str(iteration_idx) + ".ys", 'w') as archfile:
                 archfile.write(tmpl.safe_substitute(ys_rewrite_params))
             run_command("Run yosys", "yosys_rewrite_output.log",
-                    [yosys_path, "yosys_rewrite_" + str(iteration_idx) + ".tcl"])
+                    [yosys_path, "yosys_rewrite_" + str(iteration_idx) + ".ys"])
 
 
 
