@@ -74,7 +74,7 @@ This error can be resolved by replacing the **LINE187** of ``k6_frac_N10_adder_c
 
    <circuit_model type="hard_logic" name="ADDF" prefix="ADDF" is_default="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/adder.sp"     verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/adder.v">
 
-The above line provides a path to generate the ``user_defined_template.v`` file. 
+The above line provides a path to generate the :ref:`user_defined_templates.v <fabric_netlists>` file. 
 Now we can return to the root directory and run this command again:
 
 .. code-block:: bash
