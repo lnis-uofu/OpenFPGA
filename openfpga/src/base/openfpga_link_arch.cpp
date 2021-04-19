@@ -177,7 +177,9 @@ int link_arch(OpenfpgaContext& openfpga_ctx,
   /* Build bitstream annotation based on bitstream settings */
   if (CMD_EXEC_FATAL_ERROR == annotate_bitstream_setting(openfpga_ctx.bitstream_setting(),
                                                          g_vpr_ctx.device(),
+                                                         openfpga_ctx.vpr_device_annotation(),
                                                          openfpga_ctx.mutable_vpr_bitstream_annotation())) {
+
     return CMD_EXEC_FATAL_ERROR;
   }
 
