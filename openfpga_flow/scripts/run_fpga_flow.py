@@ -498,10 +498,11 @@ def run_yosys_with_abc():
     
     def_tmpl_yosys_file = "ys_tmpl_yosys_vpr_flow.ys"
     yosys_file="yosys.ys"
-    file_extension = os.path.splitext(args.yosys_tmpl)[1]
-    if file_extension is not None:
-        def_tmpl_yosys_file = "ys_tmpl_yosys_vpr_flow"+file_extension
-        yosys_file="yosys"+file_extension
+    if args.yosys_tmpl:
+        file_extension = os.path.splitext(args.yosys_tmpl)[1]
+        if file_extension is not None:
+            def_tmpl_yosys_file = "ys_tmpl_yosys_vpr_flow"+file_extension
+            yosys_file="yosys"+file_extension
 
     yosys_template = args.yosys_tmpl if args.yosys_tmpl else os.path.join(
         cad_tools["misc_dir"], def_tmpl_yosys_file)
