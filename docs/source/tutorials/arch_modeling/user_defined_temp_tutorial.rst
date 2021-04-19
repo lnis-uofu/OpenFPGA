@@ -5,7 +5,7 @@ Introduction and Setup
 **In this tutorial, we will**
    - Provide the motivation for generating the user_defined_template.v verilog file
    - Go through a generated user_defined_template.v file to demonstrate how to use it
-Through this tutorial, we will show how and when to use the :ref:`user_defined_templates.v <fabric-netlists>` file.
+Through this tutorial, we will show how and when to use the :ref:`user_defined_templates.v <fabric_netlists>` file.
 
 To begin the tutorial, we start with a modified version of the hard adder task that comes with OpenFPGA.
 To follow along, go to the root directory of OpenFPGA and enter: 
@@ -85,7 +85,7 @@ The task should now complete without any errors.
 
 Fixing the Error with user_defined_template.v
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The :ref:`user_defined_templates.v <fabric-netlists>` file can be found starting from the root directory and entering:
+The :ref:`user_defined_templates.v <fabric_netlists>` file can be found starting from the root directory and entering:
 
 .. code-block:: bash
 
