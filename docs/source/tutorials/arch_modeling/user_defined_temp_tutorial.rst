@@ -5,7 +5,7 @@ Introduction and Setup
 **In this tutorial, we will**
    - Provide the motivation for generating the user_defined_template.v verilog file
    - Go through a generated user_defined_template.v file to demonstrate how to use it
-Through this tutorial, we will show how and when to use the :ref:`user_defined_templates.v <fabric_netlists>` file.
+Through this tutorial, we will show how and when to use the :ref:`user_defined_template.v <fabric_netlists>` file.
 
 To begin the tutorial, we start with a modified version of the hard adder task that comes with OpenFPGA.
 To follow along, go to the root directory of OpenFPGA and enter: 
@@ -74,7 +74,7 @@ This error can be resolved by replacing the **LINE187** of ``k6_frac_N10_adder_c
 
    <circuit_model type="hard_logic" name="ADDF" prefix="ADDF" is_default="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/adder.sp"     verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/adder.v">
 
-The above line provides a path to generate the :ref:`user_defined_templates.v <fabric_netlists>` file. 
+The above line provides a path to generate the :ref:`user_defined_template.v <fabric_netlists>` file. 
 Now we can return to the root directory and run this command again:
 
 .. code-block:: bash
@@ -85,7 +85,7 @@ The task should now complete without any errors.
 
 Fixing the Error with user_defined_template.v
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The :ref:`user_defined_templates.v <fabric_netlists>` file can be found starting from the root directory and entering:
+The :ref:`user_defined_template.v <fabric_netlists>` file can be found starting from the root directory and entering:
 
 .. code-block:: bash
 
