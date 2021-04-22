@@ -95,7 +95,7 @@ module dff(
 endmodule
 
 //-----------------------------
-// D-type flip-flop with asynchronous reset
+// D-type flip-flop with active-high asynchronous reset
 //-----------------------------
 (* abc9_flop, lib_whitebox *)
 module dffr(
@@ -120,6 +120,99 @@ module dffr(
             always @(negedge C or posedge R)
                 if (R == 1'b1)
                         Q <= 1'b0;
+                else
+                        Q <= D;
+    endcase
+endmodule
+
+//-----------------------------
+// D-type flip-flop with active-high asynchronous set
+//-----------------------------
+(* abc9_flop, lib_whitebox *)
+module dffs(
+    output reg Q,
+    input D,
+    input S,
+    (* clkbuf_sink *)
+    (* invertible_pin = "IS_C_INVERTED" *)
+    input C
+);
+    parameter [0:0] INIT = 1'b0;
+    parameter [0:0] IS_C_INVERTED = 1'b0;
+    initial Q = INIT;
+    case(|IS_C_INVERTED)
+          1'b0:
+            always @(posedge C or posedge S)
+                if (S == 1'b1)
+                        Q <= 1'b1;
+                else
+                        Q <= D;
+          1'b1:
+            always @(negedge C or posedge S)
+                if (S == 1'b1)
+                        Q <= 1'b1;
+                else
+                        Q <= D;
+    endcase
+endmodule
+
+//-----------------------------
+// D-type flip-flop with active-low asynchronous reset
+//-----------------------------
+(* abc9_flop, lib_whitebox *)
+module dffrn(
+    output reg Q,
+    input D,
+    input RN,
+    (* clkbuf_sink *)
+    (* invertible_pin = "IS_C_INVERTED" *)
+    input C
+);
+    parameter [0:0] INIT = 1'b0;
+    parameter [0:0] IS_C_INVERTED = 1'b0;
+    initial Q = INIT;
+    case(|IS_C_INVERTED)
+          1'b0:
+            always @(posedge C or negedge RN)
+                if (RN == 1'b0)
+                        Q <= 1'b0;
+                else
+                        Q <= D;
+          1'b1:
+            always @(negedge C or negedge RN)
+                if (RN == 1'b0)
+                        Q <= 1'b0;
+                else
+                        Q <= D;
+    endcase
+endmodule
+
+//-----------------------------
+// D-type flip-flop with active-low asynchronous set
+//-----------------------------
+(* abc9_flop, lib_whitebox *)
+module dffsn(
+    output reg Q,
+    input D,
+    input SN,
+    (* clkbuf_sink *)
+    (* invertible_pin = "IS_C_INVERTED" *)
+    input C
+);
+    parameter [0:0] INIT = 1'b0;
+    parameter [0:0] IS_C_INVERTED = 1'b0;
+    initial Q = INIT;
+    case(|IS_C_INVERTED)
+          1'b0:
+            always @(posedge C or negedge SN)
+                if (SN == 1'b0)
+                        Q <= 1'b1;
+                else
+                        Q <= D;
+          1'b1:
+            always @(negedge C or negedge SN)
+                if (SN == 1'b0)
+                        Q <= 1'b1;
                 else
                         Q <= D;
     endcase
