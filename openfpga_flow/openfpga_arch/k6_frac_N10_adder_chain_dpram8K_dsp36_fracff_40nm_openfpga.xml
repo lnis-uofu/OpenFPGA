@@ -139,15 +139,16 @@
       <port type="sram" prefix="sram" size="1"/>
     </circuit_model>
     <!--DFF subckt ports should be defined as <D> <Q> <CLK> <RESET> <SET>  -->
-    <circuit_model type="ff" name="DFFSRQ" prefix="DFFSRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
+    <circuit_model type="ff" name="MULTI_MODE_DFFSRQ" prefix="MULTI_MODE_DFFSRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
        <port type="input" prefix="D" size="1"/>
-       <port type="input" prefix="set" lib_name="SET" size="1" is_global="true" default_val="0" is_set="true"/>
+       <port type="input" prefix="S" lib_name="SET" size="1"/>
        <port type="input" prefix="R" lib_name="RST" size="1"/>
        <port type="output" prefix="Q" size="1"/>
        <port type="clock" prefix="C" lib_name="CK" size="1"/>
+       <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="DFFR" default_val="0"/>
     </circuit_model>
     <circuit_model type="lut" name="frac_lut6" prefix="frac_lut6" dump_structural_verilog="true">
       <design_technology type="cmos" fracturable_lut="true"/>
@@ -240,6 +241,9 @@
     <global_port name="op_reset" is_reset="true" default_val="0">
       <tile name="clb" port="reset"/>
     </global_port>
+    <global_port name="op_set" is_set="true" default_val="0">
+      <tile name="clb" port="set"/>
+    </global_port>
   </tile_annotations>
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
@@ -257,7 +261,7 @@
     </pb_type>
     <pb_type name="clb.fle" physical_mode_name="physical"/>
     <pb_type name="clb.fle[physical].fabric.frac_logic.frac_lut6" circuit_model_name="frac_lut6" mode_bits="11"/>
-    <pb_type name="clb.fle[physical].fabric.ff" circuit_model_name="DFFSRQ"/>
+    <pb_type name="clb.fle[physical].fabric.ff" circuit_model_name="MULTI_MODE_DFFSRQ" mode_bits="00"/>
     <pb_type name="clb.fle[physical].fabric.adder" circuit_model_name="ADDF"/>
     <!-- Binding operating pb_type to physical pb_type -->
     <!-- Binding operating pb_types in mode 'n2_lut5' -->
@@ -266,11 +270,18 @@
       <port name="in" physical_mode_port="in[0:4]"/>
       <port name="out" physical_mode_port="lut5_out[0:0]" physical_mode_pin_rotate_offset="1"/>
     </pb_type>
-    <pb_type name="clb.fle[n2_lut5].ble5.ff[latch].latch" physical_pb_type_name="clb.fle[physical].fabric.ff">
+    <pb_type name="clb.fle[n2_lut5].ble5.ff[latch].latch" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="00">
       <port name="clk" physical_mode_port="C"/>
     </pb_type>
-    <pb_type name="clb.fle[n2_lut5].ble5.ff[dff].dff" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
-    <pb_type name="clb.fle[n2_lut5].ble5.ff[dffr].dffr" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
+    <pb_type name="clb.fle[n2_lut5].ble5.ff[dff].dff" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="00"/>
+    <pb_type name="clb.fle[n2_lut5].ble5.ff[dffr].dffr" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="00"/>
+    <pb_type name="clb.fle[n2_lut5].ble5.ff[dffs].dffs" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="00"/>
+    <pb_type name="clb.fle[n2_lut5].ble5.ff[dffrn].dffrn" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="10">
+      <port name="RN" physical_mode_port="R"/>
+    </pb_type>
+    <pb_type name="clb.fle[n2_lut5].ble5.ff[dffsn].dffsn" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="01">
+      <port name="SN" physical_mode_port="S"/>
+    </pb_type>
     <!-- Binding operating pb_types in mode 'arithmetic' -->
     <pb_type name="clb.fle[arithmetic].arithmetic.lut4" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut6" mode_bits="11" physical_pb_type_index_factor="0.25">
       <!-- Binding the lut4 to the first 4 inputs of fracturable lut6 -->
@@ -278,22 +289,36 @@
       <port name="out" physical_mode_port="lut4_out[0:0]" physical_mode_pin_rotate_offset="1"/>
     </pb_type>
     <pb_type name="clb.fle[arithmetic].arithmetic.adder" physical_pb_type_name="clb.fle[physical].fabric.adder"/>
-    <pb_type name="clb.fle[arithmetic].arithmetic.ff[latch].latch" physical_pb_type_name="clb.fle[physical].fabric.ff">
+    <pb_type name="clb.fle[arithmetic].arithmetic.ff[latch].latch" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="00">
       <port name="clk" physical_mode_port="C"/>
     </pb_type>
-    <pb_type name="clb.fle[arithmetic].arithmetic.ff[dff].dff" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
-    <pb_type name="clb.fle[arithmetic].arithmetic.ff[dffr].dffr" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
+    <pb_type name="clb.fle[arithmetic].arithmetic.ff[dff].dff" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="00"/>
+    <pb_type name="clb.fle[arithmetic].arithmetic.ff[dffr].dffr" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="00"/>
+    <pb_type name="clb.fle[arithmetic].arithmetic.ff[dffs].dffs" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="00"/>
+    <pb_type name="clb.fle[arithmetic].arithmetic.ff[dffrn].dffrn" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="10">
+      <port name="RN" physical_mode_port="R"/>
+    </pb_type>
+    <pb_type name="clb.fle[arithmetic].arithmetic.ff[dffsn].dffsn" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="01">
+      <port name="SN" physical_mode_port="S"/>
+    </pb_type>
     <!-- Binding operating pb_types in mode 'ble6' -->
     <pb_type name="clb.fle[n1_lut6].ble6.lut6" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut6" mode_bits="00">
       <!-- Binding the lut6 to the first 6 inputs of fracturable lut6 -->
       <port name="in" physical_mode_port="in[0:5]"/>
       <port name="out" physical_mode_port="lut6_out"/>
     </pb_type>
-    <pb_type name="clb.fle[n1_lut6].ble6.ff[latch].latch" physical_pb_type_name="clb.fle[physical].fabric.ff" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0">
+    <pb_type name="clb.fle[n1_lut6].ble6.ff[latch].latch" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="00" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0">
       <port name="clk" physical_mode_port="C"/>
     </pb_type>
-    <pb_type name="clb.fle[n1_lut6].ble6.ff[dff].dff" physical_pb_type_name="clb.fle[physical].fabric.ff" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
-    <pb_type name="clb.fle[n1_lut6].ble6.ff[dffr].dffr" physical_pb_type_name="clb.fle[physical].fabric.ff" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
+    <pb_type name="clb.fle[n1_lut6].ble6.ff[dff].dff" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="00" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
+    <pb_type name="clb.fle[n1_lut6].ble6.ff[dffr].dffr" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="00" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
+    <pb_type name="clb.fle[n1_lut6].ble6.ff[dffs].dffs" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="00" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
+    <pb_type name="clb.fle[n1_lut6].ble6.ff[dffrn].dffrn" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="10" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0">
+      <port name="RN" physical_mode_port="R"/>
+    </pb_type>
+    <pb_type name="clb.fle[n1_lut6].ble6.ff[dffsn].dffsn" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="01" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0">
+      <port name="SN" physical_mode_port="S"/>
+    </pb_type>
     <!-- End physical pb_type binding in complex block clb -->
 
     <!-- physical pb_type binding in complex block dsp -->
