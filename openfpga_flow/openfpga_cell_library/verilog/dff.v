@@ -296,7 +296,7 @@ endmodule //End Of Module
 //           - asynchronous set which can be switched 
 //             which can be switched between active-low and active hight
 //-----------------------------------------------------
-module MULTIMODE_DFFSRQ (
+module MULTI_MODE_DFFSRQ (
   input SET, // Set input
   input RST, // Reset input
   input CK, // Clock Input
