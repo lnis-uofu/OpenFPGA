@@ -1,0 +1,6 @@
+##########################################################
+# Metrics to check for IWLS benchmark bitstream generation
+##########################################################
+metric
+mult_blocks
+memory_blocks
