@@ -13,7 +13,7 @@ module frac_mult_16x16 (
 	output [0:31] out,
     input [0:0] mode);
 
-    reg [0:63] out_reg;
+    reg [0:31] out_reg;
 
     always @(mode, a, b) begin 
        if (1'b1 == mode) begin
