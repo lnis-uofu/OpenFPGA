@@ -28,6 +28,8 @@ namespace openfpga {
  * - sink is an input of a primitive pb_type
  * 
  * Note: 
+ *  - This function is applicable ONLY to single-mode pb_types!!! Because their routing traces
+ *    are deterministic: there is only 1 valid path from a source pin to a sink pin!!!
  *  - If there is a fan-out of the current source pb graph pin is not a direct interconnection
  *    the direct search should stop. 
  *  - This function is designed for pb graph without local routing
@@ -57,6 +59,11 @@ bool rec_direct_search_sink_pb_graph_pins(const t_pb_graph_pin* source_pb_pin,
                                           std::vector<t_pb_graph_pin*>& sink_pb_pins) {
 
   std::vector<t_pb_graph_pin*> sink_pb_pins_to_search;
+
+  /* Only support single-mode pb_type!!! */
+  if (1 != source_pb_pin->parent_node->pb_type->num_modes) {
+    return false;
+  }
 
   for (int iedge = 0; iedge < source_pb_pin->num_output_edges; ++iedge) {
     if (DIRECT_INTERC != source_pb_pin->output_edges[iedge]->interconnect->type) {
