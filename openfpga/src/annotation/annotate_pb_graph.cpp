@@ -333,7 +333,7 @@ bool try_match_pb_graph_pin(t_pb_graph_pin* operating_pb_graph_pin,
      *     by the pin rotate offset value
      *     The accumulated offset will be reset to 0 when it exceeds the msb() of the physical port
      */
-    int acc_offset = vpr_device_annotation.physical_pb_pin_offset(operating_pb_graph_pin->port, candidate_port);
+    int acc_offset = vpr_device_annotation.physical_pb_pin_offset(operating_pb_graph_pin->port, candidate_port) + vpr_device_annotation.physical_pb_port_offset(operating_pb_graph_pin->port, candidate_port);
     int init_offset = vpr_device_annotation.physical_pb_pin_initial_offset(operating_pb_graph_pin->port, candidate_port);
     const BasicPort& physical_port_range = vpr_device_annotation.physical_pb_port_range(operating_pb_graph_pin->port, candidate_port);
     if (physical_pb_graph_pin->pin_number != operating_pb_graph_pin->pin_number
@@ -463,6 +463,14 @@ void annotate_physical_pb_graph_node_pins(t_pb_graph_node* operating_pb_graph_no
                                      physical_pb_graph_node, vpr_device_annotation,
                                      verbose_output);
     }
+    /* Finish a port, accumulate the port-level offset affiliated to the port */
+    if (0 == operating_pb_graph_node->num_input_pins[iport]) {
+      continue;
+    }
+    t_pb_graph_pin* operating_pb_graph_pin = &(operating_pb_graph_node->input_pins[iport][0]);
+    for (t_port* candidate_port : vpr_device_annotation.physical_pb_port(operating_pb_graph_pin->port)) {
+      vpr_device_annotation.accumulate_physical_pb_port_rotate_offset(operating_pb_graph_pin->port, candidate_port);
+    }
   }
 
   for (int iport = 0; iport < operating_pb_graph_node->num_output_ports; ++iport) {
@@ -471,6 +479,14 @@ void annotate_physical_pb_graph_node_pins(t_pb_graph_node* operating_pb_graph_no
                                      physical_pb_graph_node, vpr_device_annotation,
                                      verbose_output);
     }
+    /* Finish a port, accumulate the port-level offset affiliated to the port */
+    if (0 == operating_pb_graph_node->num_output_pins[iport]) {
+      continue;
+    }
+    t_pb_graph_pin* operating_pb_graph_pin = &(operating_pb_graph_node->output_pins[iport][0]);
+    for (t_port* candidate_port : vpr_device_annotation.physical_pb_port(operating_pb_graph_pin->port)) {
+      vpr_device_annotation.accumulate_physical_pb_port_rotate_offset(operating_pb_graph_pin->port, candidate_port);
+    }
   }
 
   for (int iport = 0; iport < operating_pb_graph_node->num_clock_ports; ++iport) {
@@ -478,6 +494,14 @@ void annotate_physical_pb_graph_node_pins(t_pb_graph_node* operating_pb_graph_no
       annotate_physical_pb_graph_pin(&(operating_pb_graph_node->clock_pins[iport][ipin]),
                                      physical_pb_graph_node, vpr_device_annotation,
                                      verbose_output);
+    }
+    /* Finish a port, accumulate the port-level offset affiliated to the port */
+    if (0 == operating_pb_graph_node->num_clock_pins[iport]) {
+      continue;
+    }
+    t_pb_graph_pin* operating_pb_graph_pin = &(operating_pb_graph_node->clock_pins[iport][0]);
+    for (t_port* candidate_port : vpr_device_annotation.physical_pb_port(operating_pb_graph_pin->port)) {
+      vpr_device_annotation.accumulate_physical_pb_port_rotate_offset(operating_pb_graph_pin->port, candidate_port);
     }
   }
 }

@@ -206,13 +206,14 @@
       <port type="input" prefix="cin" lib_name="S" size="1"/>
       <port type="output" prefix="cout" lib_name="Y" size="1"/>
     </circuit_model>
-    <circuit_model type="hard_logic" name="mult_8x8" prefix="mult_8x8" is_default="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/mult_8x8.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/mult_8x8.v">
+    <circuit_model type="hard_logic" name="frac_mult_16x16" prefix="frac_mult_16x16" is_default="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/frac_mult_16x16.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/frac_mult_16x16.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <port type="input" prefix="A" lib_name="A" size="8"/>
-      <port type="input" prefix="B" lib_name="B" size="8"/>
-      <port type="output" prefix="Y" lib_name="Y" size="16"/>
+      <port type="input" prefix="A" lib_name="a" size="16"/>
+      <port type="input" prefix="B" lib_name="b" size="16"/>
+      <port type="output" prefix="Y" lib_name="out" size="32"/>
+      <port type="sram" prefix="mode" lib_name="mode" size="1" mode_select="true" circuit_model_name="DFFRQ" default_val="0"/>
     </circuit_model>
   </circuit_library>
   <configuration_protocol>
@@ -282,8 +283,13 @@
     <!-- End physical pb_type binding in complex block IO -->
 
     <!-- physical pb_type binding in complex block dsp -->
-    <pb_type name="mult_8" physical_mode_name="mult_8x8" idle_mode_name="mult_8x8"/>
+    <pb_type name="mult_16" physical_mode_name="mult_16x16"/>
     <!-- Bind the primitive pb_type in the physical mode to a circuit model --> 
-    <pb_type name="mult_8[mult_8x8].mult_8x8_slice.mult_8x8" circuit_model_name="mult_8x8"/>
+    <pb_type name="mult_16[mult_16x16].mult_16x16_slice.mult_16x16" circuit_model_name="frac_mult_16x16" mode_bits="0"/>
+    <pb_type name="mult_16[mult_8x8].mult_8x8_slice.mult_8x8" physical_pb_type_name="mult_16[mult_16x16].mult_16x16_slice.mult_16x16" mode_bits="1" physical_pb_type_index_factor="0">
+      <port name="A" physical_mode_port="A[0:7]" physical_mode_port_rotate_offset="8"/>
+      <port name="B" physical_mode_port="B[0:7]" physical_mode_port_rotate_offset="8"/>
+      <port name="Y" physical_mode_port="Y[0:15]" physical_mode_port_rotate_offset="16"/>
+    </pb_type>
   </pb_type_annotations>
 </openfpga_architecture>

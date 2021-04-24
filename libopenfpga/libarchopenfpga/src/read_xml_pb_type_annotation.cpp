@@ -114,6 +114,31 @@ void read_xml_pb_port_annotation(pugi::xml_node& xml_port,
                                                         std::stoi(rotate_offsets[iport]));
     }
   }
+
+  /* We have an optional attribute: physical_mode_port_rotate_offset
+   * Split based on the number of physical pb_type ports that have been defined
+   */
+  const std::string& physical_port_rotate_offset_attr = get_attribute(xml_port, "physical_mode_port_rotate_offset", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string();
+
+  if (false == physical_port_rotate_offset_attr.empty()) {
+    /* Split the physical mode port attributes with space */
+    openfpga::StringToken offset_tokenizer(physical_port_rotate_offset_attr);
+    const std::vector<std::string> rotate_offsets = offset_tokenizer.split();
+   
+    /* Error out if the offset does not match the port definition */
+    if (physical_mode_ports.size() != rotate_offsets.size()) {
+      archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_port),
+                     "Defined %lu physical mode ports but only %lu physical port rotate offset are defined! Expect size matching.\n",
+                      physical_mode_ports.size(), rotate_offsets.size());
+    }
+
+    for (size_t iport = 0; iport < physical_mode_ports.size(); ++iport) {
+      openfpga::PortParser port_parser(physical_mode_ports[iport]); 
+      pb_type_annotation.set_physical_port_rotate_offset(name_attr,
+                                                         port_parser.port(),
+                                                         std::stoi(rotate_offsets[iport]));
+    }
+  }
 }
 
 /********************************************************************

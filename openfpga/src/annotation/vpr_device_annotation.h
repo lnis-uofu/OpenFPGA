@@ -67,6 +67,9 @@ class VprDeviceAnnotation {
     int physical_pb_pin_rotate_offset(t_port* operating_pb_port,
                                       t_port* physical_pb_port) const;
 
+    int physical_pb_port_rotate_offset(t_port* operating_pb_port,
+                                       t_port* physical_pb_port) const;
+
     /**This function returns an accumulated offset. Note that the
      * accumulated offset is NOT the pin rotate offset specified by users
      * It is an aggregation of the offset during pin pairing
@@ -76,6 +79,8 @@ class VprDeviceAnnotation {
      */
     int physical_pb_pin_offset(t_port* operating_pb_port,
                                t_port* physical_pb_port) const;
+    int physical_pb_port_offset(t_port* operating_pb_port,
+                                t_port* physical_pb_port) const;
     t_pb_graph_pin* physical_pb_graph_pin(const t_pb_graph_pin* pb_graph_pin) const;
     CircuitModelId rr_switch_circuit_model(const RRSwitchId& rr_switch) const;
     CircuitModelId rr_segment_circuit_model(const RRSegmentId& rr_segment) const;
@@ -106,6 +111,11 @@ class VprDeviceAnnotation {
     void add_physical_pb_pin_initial_offset(t_port* operating_pb_port,
                                             t_port* physical_pb_port,
                                             const int& offset);
+    void add_physical_pb_port_rotate_offset(t_port* operating_pb_port,
+                                            t_port* physical_pb_port,
+                                            const int& offset);
+    void accumulate_physical_pb_port_rotate_offset(t_port* operating_pb_port,
+                                                   t_port* physical_pb_port);
     void add_physical_pb_pin_rotate_offset(t_port* operating_pb_port,
                                            t_port* physical_pb_port,
                                            const int& offset);
@@ -166,8 +176,11 @@ class VprDeviceAnnotation {
     std::map<t_port*, std::vector<t_port*>> physical_pb_ports_;
     std::map<t_port*, std::map<t_port*, int>> physical_pb_pin_initial_offsets_;
     std::map<t_port*, std::map<t_port*, int>> physical_pb_pin_rotate_offsets_;
+    std::map<t_port*, std::map<t_port*, int>> physical_pb_port_rotate_offsets_;
 
-    /* Accumulated offsets for a physical pb_type port, just for internal usage */
+    /* Accumulated offsets for a physical pb port, just for internal usage */
+    std::map<t_port*, std::map<t_port*, int>> physical_pb_port_offsets_;
+    /* Accumulated offsets for a physical pb_graph_pin, just for internal usage */
     std::map<t_port*, std::map<t_port*, int>> physical_pb_pin_offsets_;
 
     /* Pair a pb_port to its LSB and MSB of a physical pb_port 
