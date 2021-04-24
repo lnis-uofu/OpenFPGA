@@ -61,9 +61,9 @@ bool rec_direct_search_sink_pb_graph_pins(const t_pb_graph_pin* source_pb_pin,
   std::vector<t_pb_graph_pin*> sink_pb_pins_to_search;
 
   /* Only support single-mode pb_type!!! */
-  if (1 != source_pb_pin->parent_node->pb_type->num_modes) {
-    return false;
-  }
+  //if (1 != source_pb_pin->parent_node->pb_type->num_modes) {
+  //  return false;
+  //}
 
   for (int iedge = 0; iedge < source_pb_pin->num_output_edges; ++iedge) {
     if (DIRECT_INTERC != source_pb_pin->output_edges[iedge]->interconnect->type) {

@@ -49,7 +49,7 @@ class PbTypeAnnotation {
     float physical_pb_type_index_factor() const;
     int physical_pb_type_index_offset() const;
     std::vector<std::string> port_names() const;
-    std::map<BasicPort, std::array<int, 2>> physical_pb_type_port(const std::string& port_name) const;
+    std::map<BasicPort, std::array<int, 3>> physical_pb_type_port(const std::string& port_name) const;
     std::vector<std::string> interconnect_names() const;
     std::string interconnect_circuit_model_name(const std::string& interc_name) const;
   public: /* Public mutators */
@@ -73,6 +73,9 @@ class PbTypeAnnotation {
     void set_physical_pin_rotate_offset(const std::string& operating_pb_port_name,
                                         const BasicPort& physical_pb_port,
                                         const int& physical_pin_rotate_offset);
+    void set_physical_port_rotate_offset(const std::string& operating_pb_port_name,
+                                         const BasicPort& physical_pb_port,
+                                         const int& physical_port_rotate_offset);
     void add_interconnect_circuit_model_pair(const std::string& interc_name,
                                              const std::string& circuit_model_name);
   private: /* Internal data */
@@ -138,10 +141,10 @@ class PbTypeAnnotation {
     int physical_pb_type_index_offset_;
 
     /* Link from the pins under an operating pb_type to pairs of
-     * its physical pb_type and its pin initial & rotating offset
-     *
-     * Note that initial offset is the first element of the std::array
-     * Note that rotating offset is the second element of the std::array
+     * its physical pb_type and 
+     * - its pin initial offset: the first element of the std::array
+     * - pin-level rotating offset: the second element of the std::array
+     * - port-level rotating offset: the third element of the std::array
      *
      * The offsets aim to align the pin indices for port of pb_type 
      * between operating and physical modes, especially when an operating 
@@ -158,14 +161,21 @@ class PbTypeAnnotation {
      *   physical pb_type bram[0].dout_a[0] with a full path memory[physical].bram[0]
      *   physical pb_type bram[0].dout_a[1] with a full path memory[physical].bram[0]
      *
-     * For example, a rotating offset of 9 is used to map 
+     * For example, a pin-level rotating offset of 9 is used to map 
+     *   operating pb_type mult_9x9[0].a[0] with a full path mult[frac].mult_9x9[0]
+     *   operating pb_type mult_9x9[0].a[1] with a full path mult[frac].mult_9x9[1]
+     * to 
+     *   physical pb_type mult_36x36.a[0] with a full path mult[physical].mult_36x36[0]
+     *   physical pb_type mult_36x36.a[9] with a full path mult[physical].mult_36x36[0]
+     *
+     * For example, a port-level rotating offset of 9 is used to map 
      *   operating pb_type mult_9x9[0].a[0:8] with a full path mult[frac].mult_9x9[0]
      *   operating pb_type mult_9x9[1].a[0:8] with a full path mult[frac].mult_9x9[1]
      * to 
      *   physical pb_type mult_36x36.a[0:8] with a full path mult[physical].mult_36x36[0]
      *   physical pb_type mult_36x36.a[9:17] with a full path mult[physical].mult_36x36[0]
      */
-    std::map<std::string, std::map<BasicPort, std::array<int, 2>>> operating_pb_type_ports_;
+    std::map<std::string, std::map<BasicPort, std::array<int, 3>>> operating_pb_type_ports_;
 
     /* Link between the interconnects under this pb_type and circuit model names */
     std::map<std::string, std::string> interconnect_circuit_model_names_;
