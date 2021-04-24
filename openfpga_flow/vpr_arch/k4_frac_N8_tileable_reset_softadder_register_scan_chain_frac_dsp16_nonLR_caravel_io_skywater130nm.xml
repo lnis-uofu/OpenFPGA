@@ -111,7 +111,7 @@
          These clocks can be handled in back-end
      -->
     <!-- Top-side has 1 I/O per tile -->
-    <tile name="io_top" capacity="1" area="0">
+    <tile name="io_top" capacity="9" area="0">
       <equivalent_sites>
         <site pb_type="io"/>
       </equivalent_sites>
@@ -123,7 +123,7 @@
       </pinlocations>
     </tile>
     <!-- Right-side has 1 I/O per tile -->
-    <tile name="io_right" capacity="1" area="0">
+    <tile name="io_right" capacity="9" area="0">
       <equivalent_sites>
         <site pb_type="io"/>
       </equivalent_sites>
@@ -147,7 +147,7 @@
       </pinlocations>
     </tile>
     <!-- Left-side has 1 I/O per tile -->
-    <tile name="io_left" capacity="1" area="0">
+    <tile name="io_left" capacity="9" area="0">
       <equivalent_sites>
         <site pb_type="io"/>
       </equivalent_sites>
@@ -217,10 +217,12 @@
       <!--  Highly recommand to customize pin location when direct connection is used!!! -->
       <!--pinlocations pattern="spread"/-->
       <pinlocations pattern="custom">
-        <loc side="left">mult_16.a[0:5] mult_16.b[0:5] mult_16.out[0:10]</loc>
-        <loc side="top">mult_16.a[6:7] mult_16.b[6:7] mult_16.out[11:15]</loc>
-        <loc side="right">mult_16.a[8:13] mult_16.b[8:13] mult_16.out[16:26]</loc>
-        <loc side="bottom">mult_16.a[14:15] mult_16.b[14:15] mult_16.out[27:31]</loc>
+        <loc side="left" yoffset="0">mult_16.a[0:2] mult_16.b[0:2] mult_16.out[0:5]</loc>
+        <loc side="left" yoffset="1">mult_16.a[3:5] mult_16.b[3:5] mult_16.out[6:10]</loc>
+        <loc side="top"></loc>
+        <loc side="right" yoffset="0">mult_16.a[8:10] mult_16.b[8:10] mult_16.out[16:21]</loc>
+        <loc side="right" yoffset="1">mult_16.a[11:13] mult_16.b[11:13] mult_16.out[22:26]</loc>
+        <loc side="bottom">mult_16.a[6:7] mult_16.b[6:7] mult_16.out[11:15] mult_16.a[14:15] mult_16.b[14:15] mult_16.out[27:31]</loc>
       </pinlocations>
     </tile>
   </tiles>
@@ -239,7 +241,7 @@
       <!--Column of 'mult_8' with 'EMPTY' blocks wherever a 'mult_8' does not fit. Vertical offset by 1 for perimeter.-->
       <col type="mult_16" startx="2" starty="1" repeatx="8" priority="20"/>
     </auto_layout>
-    <fixed_layout name="3x2" width="5" height="4">
+    <fixed_layout name="3x4" width="5" height="6">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <row type="io_top" starty="H-1" priority="100"/>
       <row type="io_bottom" starty="0" priority="100"/>
