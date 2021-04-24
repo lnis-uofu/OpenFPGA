@@ -210,9 +210,9 @@
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <port type="input" prefix="A" lib_name="A" size="16"/>
-      <port type="input" prefix="B" lib_name="B" size="16"/>
-      <port type="output" prefix="Y" lib_name="Y" size="32"/>
+      <port type="input" prefix="A" lib_name="a" size="16"/>
+      <port type="input" prefix="B" lib_name="b" size="16"/>
+      <port type="output" prefix="Y" lib_name="out" size="32"/>
       <port type="sram" prefix="mode" lib_name="mode" size="1" mode_select="true" circuit_model_name="DFFRQ" default_val="0"/>
     </circuit_model>
   </circuit_library>
