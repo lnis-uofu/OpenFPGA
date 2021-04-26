@@ -821,7 +821,34 @@ RRGSB build_one_tileable_rr_gsb(const DeviceGrid& grids,
     opin_grid_side[1] = NUM_SIDES;
   }
 
-  /* Add IPIN nodes from adjacent grids: the 4 grids sitting on the 4 corners of the Switch Block */
+  /* Add IPIN nodes from adjacent grids: the 4 grids sitting on the 4 corners of the Switch Block 
+   *
+   * - The concept of top/bottom side of connection block in GSB domain:
+   *
+   *     |    Grid[x][y+1]       |
+   *     |      BOTTOM side      |
+   *     +-----------------------+
+   *                |
+   *                v
+   *     +-----------------------+
+   *     |        TOP side       |
+   *     |  X- Connection Block  |
+   *     |     BOTTOM side       |
+   *     +-----------------------+
+   *                ^
+   *                |
+   *     +-----------------------+
+   *     |      TOP side         |
+   *     |    Grid[x][y]         |
+   *
+   * - The concept of top/bottom side of connection block in GSB domain:
+   *
+   *   ---------------+  +---------------------- ... ---------------------+  +----------------
+   *     Grid[x][y+1] |->| Y- Connection Block        Y- Connection Block |<-| Grid[x+1][y+1]
+   *    RIGHT side    |  | LEFT side             ...  RIGHT side          |  | LEFT side
+   *    --------------+  +---------------------- ... ---------------------+  +----------------
+   *
+   */
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
     SideManager side_manager(side);
     size_t ix; 
