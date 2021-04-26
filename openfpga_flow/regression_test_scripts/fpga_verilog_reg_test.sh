@@ -50,6 +50,9 @@ run-task fpga_verilog/dsp/single_mode_mult_8x8 --debug --show_thread_logs
 echo -e "Testing Verilog generation with heterogeneous fabric using 16-bit multi-mode multipliers ";
 run-task fpga_verilog/dsp/multi_mode_mult_16x16 --debug --show_thread_logs
 
+echo -e "Testing Verilog generation with heterogeneous fabric using multi-width 16-bit multi-mode multipliers ";
+run-task fpga_verilog/dsp/wide_multi_mode_mult_16x16 --debug --show_thread_logs
+
 echo -e "Testing Verilog generation with different I/O capacities on each side of an FPGA ";
 run-task fpga_verilog/io/multi_io_capacity --debug --show_thread_logs
 
