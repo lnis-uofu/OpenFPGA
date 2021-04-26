@@ -219,10 +219,10 @@
       <pinlocations pattern="custom">
         <loc side="left" yoffset="0">mult_16.a[0:2] mult_16.b[0:2] mult_16.out[0:5]</loc>
         <loc side="left" yoffset="1">mult_16.a[3:5] mult_16.b[3:5] mult_16.out[6:10]</loc>
-        <loc side="top"></loc>
+        <loc side="top" yoffset="1">mult_16.a[6:7] mult_16.b[6:7] mult_16.out[11:15]</loc>
         <loc side="right" yoffset="0">mult_16.a[8:10] mult_16.b[8:10] mult_16.out[16:21]</loc>
         <loc side="right" yoffset="1">mult_16.a[11:13] mult_16.b[11:13] mult_16.out[22:26]</loc>
-        <loc side="bottom">mult_16.a[6:7] mult_16.b[6:7] mult_16.out[11:15] mult_16.a[14:15] mult_16.b[14:15] mult_16.out[27:31]</loc>
+        <loc side="bottom">mult_16.a[14:15] mult_16.b[14:15] mult_16.out[27:31]</loc>
       </pinlocations>
     </tile>
   </tiles>
