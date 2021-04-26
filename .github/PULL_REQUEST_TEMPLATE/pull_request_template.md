@@ -4,17 +4,21 @@
 
 > ### Describe the technical details
 > #### What is currently done? (Provide issue link if applicable)
-> ** Please provide a list of limitations if not specified in any issue **
-> - [ ] <technical details about limitation>
-> - [ ] <more limitations>
+> <!-- Please provide a list of limitations if not specified in any issue -->
+> <!-- Below is a template, uncomment upon your needs -->
+> <!-- Currently, OpenFPGA has the following limitations: -->
+> <!-- - [ ] technical details about limitation  -->
+> <!-- - [ ] more limitations  -->
 >
 > #### What does this pull request change?
-> ** Please provide a list of highlights of your changes. **
-> - [ ] <details about the technical highlight>
-> - [ ] <more technical highlights>
+> <!-- Please provide a list of highlights of your changes. -->
+> <!-- Below is a template, uncomment upon your needs -->
+> <!-- This PR improves in the following aspects: -->
+> <!-- - [ ] details about the technical highlight -->
+> <!-- - [ ] <more technical highlights -->
 
 > ### Which part of the code base require a change
-> **In general, modification on existing submodules are not acceptable. You should push changes to upstream.**
+> <!-- In general, modification on existing submodules are not acceptable. You should push changes to upstream. -->
 > - [ ] VPR
 > - [ ] Tileable routing architecture generator
 > - [ ] OpenFPGA libraries
