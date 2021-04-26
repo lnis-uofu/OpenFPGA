@@ -821,9 +821,8 @@ RRGSB build_one_tileable_rr_gsb(const DeviceGrid& grids,
     opin_grid_side[1] = NUM_SIDES;
   }
 
-  /* SideManager: TOP => 0, RIGHT => 1, BOTTOM => 2, LEFT => 3 */
+  /* Add IPIN nodes from adjacent grids: the 4 grids sitting on the 4 corners of the Switch Block */
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
-    /* Local variables inside this for loop */
     SideManager side_manager(side);
     size_t ix; 
     size_t iy; 
@@ -832,42 +831,34 @@ RRGSB build_one_tileable_rr_gsb(const DeviceGrid& grids,
     enum e_side ipin_rr_node_grid_side;
    
     switch (side) {
-    case TOP: /* TOP = 0 */
-      /* For the bording, we should take special care */
-      /* Check if left side chan width is 0 or not */
+    case TOP:
+      /* Consider the routing channel that is connected to the left side of the switch block */
       chan_side = LEFT;
-      /* Build the connection block: ipin and ipin_grid_side */
-      /* BOTTOM side INPUT Pins of Grid[x][y+1] */
+      /* The input pins of the routing channel come from the bottom side of Grid[x][y+1] */
       ix = rr_gsb.get_sb_x(); 
       iy = rr_gsb.get_sb_y() + 1; 
       ipin_rr_node_grid_side = BOTTOM; 
       break;
-    case RIGHT: /* RIGHT = 1 */
-      /* For the bording, we should take special care */
-      /* Check if TOP side chan width is 0 or not */
+    case RIGHT:
+      /* Consider the routing channel that is connected to the top side of the switch block */
       chan_side = TOP;
-      /* Build the connection block: ipin and ipin_grid_side */
-      /* LEFT side INPUT Pins of Grid[x+1][y+1] */
+      /* The input pins of the routing channel come from the left side of Grid[x+1][y+1] */
       ix = rr_gsb.get_sb_x() + 1; 
       iy = rr_gsb.get_sb_y() + 1; 
       ipin_rr_node_grid_side = LEFT; 
       break;
-    case BOTTOM: /* BOTTOM = 2*/
-      /* For the bording, we should take special care */
-      /* Check if left side chan width is 0 or not */
+    case BOTTOM:
+      /* Consider the routing channel that is connected to the left side of the switch block */
       chan_side = LEFT;
-      /* Build the connection block: ipin and ipin_grid_side */
-      /* TOP side INPUT Pins of Grid[x][y] */
+      /* The input pins of the routing channel come from the top side of Grid[x][y] */
       ix = rr_gsb.get_sb_x(); 
       iy = rr_gsb.get_sb_y(); 
       ipin_rr_node_grid_side = TOP; 
       break;
-    case LEFT: /* LEFT = 3 */
-      /* For the bording, we should take special care */
-      /* Check if left side chan width is 0 or not */
+    case LEFT:
+      /* Consider the routing channel that is connected to the top side of the switch block */
       chan_side = TOP;
-      /* Build the connection block: ipin and ipin_grid_side */
-      /* RIGHT side INPUT Pins of Grid[x][y+1] */
+      /* The input pins of the routing channel come from the right side of Grid[x][y+1] */
       ix = rr_gsb.get_sb_x(); 
       iy = rr_gsb.get_sb_y() + 1; 
       ipin_rr_node_grid_side = RIGHT; 
