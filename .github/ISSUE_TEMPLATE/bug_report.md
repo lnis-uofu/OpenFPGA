@@ -7,8 +7,8 @@ assignees: ''
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+> **Describe the bug**
+> A clear and concise description of what the bug is.
 <!--- Uncomment relevant options --->
 <!-- Which part of OpenFPGA is buggy -->
 <!--- [ ] Documentation --->
@@ -20,25 +20,25 @@ A clear and concise description of what the bug is.
 <!--- [ ] VPR --->
 <!--- [ ] Yosys --->
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Clone OpenFPGA repository and checkout commit id: <The problem commit id>
-2. Execute OpenFPGA task or your own example: <more details>
-3. See error
+> **To Reproduce**
+> Steps to reproduce the behavior:
+> 1. Clone OpenFPGA repository and checkout commit id: <The problem commit id>
+> 2. Execute OpenFPGA task or your own example: <more details>
+> 3. See error
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+> **Expected behavior**
+> A clear and concise description of what you expected to happen.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+> **Screenshots**
+> If applicable, add screenshots to help explain your problem.
 
-**Enviornment (please complete the following information):**
+> **Enviornment (please complete the following information):**
 <!--- Uncomment relevant options --->
- - OS: 
+>  - OS: 
 <!---    - [ ] CentOS 7 --->
 <!---    - [ ] Ubuntu 18.04 --->
 <!---    - [ ] Others. If so, please specify: --->
- - Compiler:
+>  - Compiler:
 <!---    - [ ] gcc-5 --->
 <!---    - [ ] gcc-6 --->
 <!---    - [ ] gcc-7 --->
@@ -47,9 +47,9 @@ If applicable, add screenshots to help explain your problem.
 <!---    - [ ] clang-6 --->
 <!---    - [ ] clang-8 --->
 <!---    - [ ] Others. If so, please specify: --->
- - Version:
+> - Version:
 <!---    - [ ] Current master --->
 <!---    - [ ] Others. If so, please specify Github commit id:  --->
 
-**Additional context**
-Add any other context about the problem here.
+> **Additional context**
+> Add any other context about the problem here.
