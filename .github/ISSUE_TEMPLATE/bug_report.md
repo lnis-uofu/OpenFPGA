@@ -38,7 +38,7 @@ If applicable, add screenshots to help explain your problem.
 <!---    - [ ] CentOS 7 --->
 <!---    - [ ] Ubuntu 18.04 --->
 <!---    - [ ] Others. If so, please specify: --->
- - Compiler
+ - Compiler:
 <!---    - [ ] gcc-5 --->
 <!---    - [ ] gcc-6 --->
 <!---    - [ ] gcc-7 --->
@@ -47,7 +47,7 @@ If applicable, add screenshots to help explain your problem.
 <!---    - [ ] clang-6 --->
 <!---    - [ ] clang-8 --->
 <!---    - [ ] Others. If so, please specify: --->
- - Version
+ - Version:
 <!---    - [ ] Current master --->
 <!---    - [ ] Others. If so, please specify Github commit id:  --->
 
