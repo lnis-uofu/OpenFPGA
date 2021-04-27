@@ -133,7 +133,7 @@ int write_io_mapping_to_xml_file(const IoMap& io_map,
 
   VTR_LOGV(verbose,
            "Outputted %d I/O mapping to file '%s'\n",
-           io_map,
+           io_map_cnt,
            fname.c_str());
 
   /* Close file handler */
