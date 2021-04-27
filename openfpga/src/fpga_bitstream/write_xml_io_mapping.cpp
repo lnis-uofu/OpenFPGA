@@ -66,13 +66,13 @@ int write_io_mapping_pair_to_xml_file(std::fstream& fp,
   fp << "name=\"" << io_port.get_name().c_str() << "[" << io_port.get_lsb() << ":" << io_port.get_msb() << "]" << "\"";
    
   VTR_ASSERT(1 == io_map.io_net(io_map_id).get_width());
-  fp << "net=\"" << io_map.io_net(io_map_id).get_name().c_str() << "\"";
+  fp << " net=\"" << io_map.io_net(io_map_id).get_name().c_str() << "\"";
 
   if (io_map.is_io_input(io_map_id)) {
-    fp << "dir=\"" << "input" << "\"";
+    fp << " dir=\"" << "input" << "\"";
   } else {
     VTR_ASSERT_SAFE(io_map.is_io_output(io_map_id));
-    fp << "dir=\"" << "output" << "\"";
+    fp << " dir=\"" << "output" << "\"";
   }
 
   fp << "/>\n";
