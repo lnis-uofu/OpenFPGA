@@ -15,10 +15,14 @@
 #include "read_xml_arch_bitstream.h"
 #include "write_xml_arch_bitstream.h"
 
+#include "openfpga_naming.h"
+
 #include "build_device_bitstream.h"
 #include "write_text_fabric_bitstream.h"
 #include "write_xml_fabric_bitstream.h"
 #include "build_fabric_bitstream.h"
+#include "build_io_mapping_info.h"
+#include "write_xml_io_mapping.h"
 #include "openfpga_bitstream.h"
 
 /* Include global variables of VPR */
@@ -117,6 +121,46 @@ int write_fabric_bitstream(const OpenfpgaContext& openfpga_ctx,
                                                  cmd_context.option_value(cmd, opt_file),
                                                  cmd_context.option_enable(cmd, opt_verbose));
   }
+  
+  return status;
+} 
+
+/********************************************************************
+ * A wrapper function to call the write_io_mapping() in FPGA bitstream
+ *******************************************************************/
+int write_io_mapping(const OpenfpgaContext& openfpga_ctx,
+                     const Command& cmd, const CommandContext& cmd_context) {
+
+  CommandOptionId opt_verbose = cmd.option("verbose");
+  CommandOptionId opt_file = cmd.option("file");
+
+  /* Write fabric bitstream if required */
+  int status = CMD_EXEC_SUCCESS;
+  
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+
+  std::string src_dir_path = find_path_dir_name(cmd_context.option_value(cmd, opt_file));
+
+  /* Create directories */
+  create_directory(src_dir_path);
+
+  /* Create a module as the top-level fabric, and add it to the module manager */
+  std::string top_module_name = generate_fpga_top_module_name();
+  ModuleId top_module = openfpga_ctx.module_graph().find_module(top_module_name);
+  VTR_ASSERT(true == openfpga_ctx.module_graph().valid_module_id(top_module));
+
+  IoMap io_map = build_fpga_io_mapping_info(openfpga_ctx.module_graph(),
+                                            top_module,
+                                            g_vpr_ctx.atom(),
+                                            g_vpr_ctx.placement(),
+                                            openfpga_ctx.io_location_map(),
+                                            openfpga_ctx.vpr_netlist_annotation(),
+                                            std::string(),
+                                            std::string());
+
+  status = write_io_mapping_to_xml_file(io_map,
+                                        cmd_context.option_value(cmd, opt_file),
+                                        cmd_context.option_enable(cmd, opt_verbose));
   
   return status;
 } 

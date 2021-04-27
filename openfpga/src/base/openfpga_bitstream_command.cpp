@@ -132,6 +132,36 @@ ShellCommandId add_openfpga_write_fabric_bitstream_command(openfpga::Shell<Openf
 }
 
 /********************************************************************
+ * - Add a command to Shell environment: write_io_mapping
+ * - Add associated options 
+ * - Add command dependency
+ *******************************************************************/
+static 
+ShellCommandId add_openfpga_write_io_mapping_command(openfpga::Shell<OpenfpgaContext>& shell,
+                                                     const ShellCommandClassId& cmd_class_id,
+                                                     const std::vector<ShellCommandId>& dependent_cmds) {
+  Command shell_cmd("write_io_mapping");
+
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file = shell_cmd.add_option("file", true, "file path to output the io mapping information");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Enable verbose output");
+
+  /* Add command 'fabric_bitstream' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "Write the I/O mapping information to a file");
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id, write_io_mapping);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
  * Top-level function to add all the commands related to FPGA-Bitstream
  *******************************************************************/
 void add_openfpga_bitstream_commands(openfpga::Shell<OpenfpgaContext>& shell) {
@@ -172,6 +202,14 @@ void add_openfpga_bitstream_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   std::vector<ShellCommandId> cmd_dependency_write_fabric_bitstream;
   cmd_dependency_write_fabric_bitstream.push_back(shell_cmd_build_fabric_bitstream_id);
   add_openfpga_write_fabric_bitstream_command(shell, openfpga_bitstream_cmd_class, cmd_dependency_write_fabric_bitstream);
+
+  /******************************** 
+   * Command 'write_io_mapping' 
+   */
+  /* The 'write_io_mapping' command should NOT be executed before 'build_fabric' */
+  std::vector<ShellCommandId> cmd_dependency_write_io_mapping;
+  cmd_dependency_write_io_mapping.push_back(shell_cmd_build_fabric_id);
+  add_openfpga_write_io_mapping_command(shell, openfpga_bitstream_cmd_class, cmd_dependency_write_io_mapping);
 } 
 
 } /* end namespace openfpga */
