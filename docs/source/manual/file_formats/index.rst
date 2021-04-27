@@ -21,3 +21,5 @@ OpenFPGA widely uses XML format for interchangable files
    bitstream_setting
 
    fabric_key
+
+   io_mapping_file
