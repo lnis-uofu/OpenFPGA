@@ -25,3 +25,6 @@ run-task fpga_bitstream/repack_wire_lut --debug --show_thread_logs
 
 echo -e "Testing overloading default paths for programmable interconnect when generating bitstream";
 run-task fpga_bitstream/overload_mux_default_path --debug --show_thread_logs
+
+echo -e "Testing outputting I/O mapping result to file";
+run-task fpga_bitstream/write_io_mapping --debug --show_thread_logs
