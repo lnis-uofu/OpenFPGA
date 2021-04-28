@@ -118,14 +118,14 @@
         <port name="lut6_out"/>
       </output_ports>
     </model>
-    <model name="dual_port_ram">
+    <model name="dpram_128x8">
       <input_ports>
         <!-- write address lines -->
         <port name="waddr" clock="clk"/>
         <!-- read address lines -->
         <port name="raddr" clock="clk"/>
         <!-- data lines can be broken down into smaller bit widths minimum size 1 -->
-        <port name="d_in" clock="clk"/>
+        <port name="data_in" clock="clk"/>
         <!-- write enable -->
         <port name="wen" clock="clk"/>
         <!-- read enable -->
@@ -135,7 +135,7 @@
       </input_ports>
       <output_ports>
         <!-- output can be broken down into smaller bit widths minimum size 1 -->
-        <port name="d_out" clock="clk"/>
+        <port name="data_out" clock="clk"/>
       </output_ports>
     </model>
   </models>
@@ -164,6 +164,7 @@
       <output name="cout" num_pins="1"/>
       <clock name="clk" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+        <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
         <fc_override port_name="cin" fc_type="frac" fc_val="0"/>
         <fc_override port_name="cout" fc_type="frac" fc_val="0"/>
       </fc>
@@ -176,19 +177,30 @@
         <loc side="bottom">clb.cout clb.O[19:10] clb.I[39:20]</loc>
       </pinlocations>
     </tile>
-    <tile name="memory" height="2" area="548000">
+    <tile name="memory" height="2" width="2" area="548000">
       <equivalent_sites>
         <site pb_type="memory"/>
       </equivalent_sites>
-      <input name="waddr" num_pins="10"/>
-      <input name="raddr" num_pins="10"/>
-      <input name="d_in" num_pins="32"/>
+      <input name="waddr" num_pins="7"/>
+      <input name="raddr" num_pins="7"/>
+      <input name="data_in" num_pins="8"/>
       <input name="wen" num_pins="1"/>
       <input name="ren" num_pins="1"/>
-      <output name="d_out" num_pins="32"/>
+      <output name="data_out" num_pins="8"/>
       <clock name="clk" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="spread"/>
+      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+        <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
+      </fc>
+      <pinlocations pattern="custom">
+        <loc side="left" yoffset="0">memory.clk memory.waddr[0:0] memory.raddr[0:0] memory.data_in[0:0] memory.data_out[0:0]</loc>
+        <loc side="left" yoffset="1">memory.waddr[1:1] memory.raddr[1:1] memory.data_in[1:1] memory.data_out[1:1]</loc>
+        <loc side="top" xoffset="0" yoffset="1">memory.waddr[2:2] memory.raddr[2:2] memory.data_in[2:2] memory.data_out[2:2]</loc>
+        <loc side="top" xoffset="1" yoffset="1">memory.waddr[3:3] memory.raddr[3:3] memory.data_in[3:3] memory.data_out[3:3]</loc>
+        <loc side="right" xoffset="1" yoffset="0">memory.waddr[4:4] memory.raddr[4:4] memory.data_in[4:4] memory.data_out[4:4]</loc>
+        <loc side="right" xoffset="1" yoffset="1">memory.waddr[5:5] memory.raddr[5:5] memory.data_in[5:5] memory.data_out[5:5]</loc>
+        <loc side="bottom" xoffset="0">memory.wen memory.waddr[6:6] memory.raddr[6:6] memory.data_in[6:6] memory.data_out[6:6]</loc>
+        <loc side="bottom" xoffset="1">memory.ren memory.data_in[7:7] memory.data_out[7:7]</loc>
+      </pinlocations>
     </tile>
   </tiles>
   <!-- ODIN II specific config ends -->
@@ -204,7 +216,7 @@
       <col type="memory" startx="2" starty="1" repeatx="8" priority="20"/>
       <col type="EMPTY" startx="2" repeatx="8" starty="1" priority="19"/>
     </auto_layout>
-    <fixed_layout name="3x2" width="5" height="4">
+    <fixed_layout name="4x2" width="6" height="4">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="100"/>
       <corners type="EMPTY" priority="101"/>
@@ -682,57 +694,57 @@
     <!-- Define general purpose logic block (CLB) ends -->
     <!-- Define single-mode dual-port memory begin -->
     <pb_type name="memory">
-      <input name="waddr" num_pins="10"/>
-      <input name="raddr" num_pins="10"/>
-      <input name="d_in" num_pins="32"/>
+      <input name="waddr" num_pins="7"/>
+      <input name="raddr" num_pins="7"/>
+      <input name="data_in" num_pins="8"/>
       <input name="wen" num_pins="1"/>
       <input name="ren" num_pins="1"/>
-      <output name="d_out" num_pins="32"/>
+      <output name="data_out" num_pins="8"/>
       <clock name="clk" num_pins="1"/>
-      <!-- Specify the 512x32=16Kbit memory block
+      <!-- Specify the 128x8=16Kbit memory block
            Note: the delay numbers are extracted from VPR flagship XML without modification
                  Should align to the process technology we using to create the 16K dual-port RAM
         -->
-      <mode name="mem_512x32_dp">
-        <pb_type name="mem_512x32_dp" blif_model=".subckt dual_port_ram" class="memory" num_pb="1">
-          <input name="waddr" num_pins="10" port_class="address"/>
-          <input name="raddr" num_pins="10" port_class="address"/>
-          <input name="d_in" num_pins="32" port_class="data_in"/>
-          <input name="wen" num_pins="1" port_class="write_en"/>
-          <input name="ren" num_pins="1" port_class="write_en"/>
-          <output name="d_out" num_pins="32" port_class="data_out"/>
+      <mode name="mem_128x8_dp">
+        <pb_type name="mem_128x8_dp" blif_model=".subckt dpram_128x8" num_pb="1">
+          <input name="waddr" num_pins="7" port_class="address1"/>
+          <input name="raddr" num_pins="7" port_class="address2"/>
+          <input name="data_in" num_pins="8" port_class="data_in1"/>
+          <input name="wen" num_pins="1" port_class="write_en1"/>
+          <input name="ren" num_pins="1" port_class="write_en2"/>
+          <output name="data_out" num_pins="8" port_class="data_out1"/>
           <clock name="clk" num_pins="1" port_class="clock"/>
-          <T_setup value="509e-12" port="mem_512x32_dp.waddr" clock="clk"/>
-          <T_setup value="509e-12" port="mem_512x32_dp.raddr" clock="clk"/>
-          <T_setup value="509e-12" port="mem_512x32_dp.d_in" clock="clk"/>
-          <T_setup value="509e-12" port="mem_512x32_dp.wen" clock="clk"/>
-          <T_setup value="509e-12" port="mem_512x32_dp.ren" clock="clk"/>
-          <T_clock_to_Q max="1.234e-9" port="mem_512x32_dp.d_out" clock="clk"/>
+          <T_setup value="509e-12" port="mem_128x8_dp.waddr" clock="clk"/>
+          <T_setup value="509e-12" port="mem_128x8_dp.raddr" clock="clk"/>
+          <T_setup value="509e-12" port="mem_128x8_dp.data_in" clock="clk"/>
+          <T_setup value="509e-12" port="mem_128x8_dp.wen" clock="clk"/>
+          <T_setup value="509e-12" port="mem_128x8_dp.ren" clock="clk"/>
+          <T_clock_to_Q max="1.234e-9" port="mem_128x8_dp.data_out" clock="clk"/>
           <power method="pin-toggle">
             <port name="clk" energy_per_toggle="17.9e-12"/>
             <static_power power_per_instance="0.0"/>
           </power>
         </pb_type>
         <interconnect>
-          <direct name="waddress" input="memory.waddr" output="mem_512x32_dp.waddr">
-            <delay_constant max="132e-12" in_port="memory.waddr" out_port="mem_512x32_dp.waddr"/>
+          <direct name="waddress" input="memory.waddr" output="mem_128x8_dp.waddr">
+            <delay_constant max="132e-12" in_port="memory.waddr" out_port="mem_128x8_dp.waddr"/>
           </direct>
-          <direct name="raddress" input="memory.raddr" output="mem_512x32_dp.raddr">
-            <delay_constant max="132e-12" in_port="memory.raddr" out_port="mem_512x32_dp.raddr"/>
+          <direct name="raddress" input="memory.raddr" output="mem_128x8_dp.raddr">
+            <delay_constant max="132e-12" in_port="memory.raddr" out_port="mem_128x8_dp.raddr"/>
           </direct>
-          <direct name="data_input" input="memory.d_in" output="mem_512x32_dp.d_in">
-            <delay_constant max="132e-12" in_port="memory.d_in" out_port="mem_512x32_dp.d_in"/>
+          <direct name="data_input" input="memory.data_in" output="mem_128x8_dp.data_in">
+            <delay_constant max="132e-12" in_port="memory.data_in" out_port="mem_128x8_dp.data_in"/>
           </direct>
-          <direct name="writeen" input="memory.wen" output="mem_512x32_dp.wen">
-            <delay_constant max="132e-12" in_port="memory.wen" out_port="mem_512x32_dp.wen"/>
+          <direct name="writeen" input="memory.wen" output="mem_128x8_dp.wen">
+            <delay_constant max="132e-12" in_port="memory.wen" out_port="mem_128x8_dp.wen"/>
           </direct>
-          <direct name="readen" input="memory.ren" output="mem_512x32_dp.ren">
-            <delay_constant max="132e-12" in_port="memory.ren" out_port="mem_512x32_dp.ren"/>
+          <direct name="readen" input="memory.ren" output="mem_128x8_dp.ren">
+            <delay_constant max="132e-12" in_port="memory.ren" out_port="mem_128x8_dp.ren"/>
           </direct>
-          <direct name="dataout" input="mem_512x32_dp.d_out" output="memory.d_out">
-            <delay_constant max="40e-12" in_port="mem_512x32_dp.d_out" out_port="memory.d_out"/>
+          <direct name="dataout" input="mem_128x8_dp.data_out" output="memory.data_out">
+            <delay_constant max="40e-12" in_port="mem_128x8_dp.data_out" out_port="memory.data_out"/>
           </direct>
-          <direct name="clk" input="memory.clk" output="mem_512x32_dp.clk">
+          <direct name="clk" input="memory.clk" output="mem_128x8_dp.clk">
           </direct>
         </interconnect>
       </mode>
