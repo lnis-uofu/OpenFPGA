@@ -198,7 +198,7 @@
         <loc side="top" xoffset="1" yoffset="1">memory.waddr[3:3] memory.raddr[3:3] memory.data_in[3:3] memory.data_out[3:3]</loc>
         <loc side="right" xoffset="1" yoffset="0">memory.waddr[4:4] memory.raddr[4:4] memory.data_in[4:4] memory.data_out[4:4]</loc>
         <loc side="right" xoffset="1" yoffset="1">memory.waddr[5:5] memory.raddr[5:5] memory.data_in[5:5] memory.data_out[5:5]</loc>
-        <loc side="bottom" xoffset="0">memory.wen memory.waddr[5:5] memory.raddr[5:5] memory.data_in[6:6] memory.data_out[6:6]</loc>
+        <loc side="bottom" xoffset="0">memory.wen memory.waddr[6:6] memory.raddr[6:6] memory.data_in[6:6] memory.data_out[6:6]</loc>
         <loc side="bottom" xoffset="1">memory.ren memory.data_in[7:7] memory.data_out[7:7]</loc>
       </pinlocations>
     </tile>
