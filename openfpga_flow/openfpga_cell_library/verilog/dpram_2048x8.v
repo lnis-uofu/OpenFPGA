@@ -9,8 +9,8 @@ module dpram_2048x8 (
   input clk,
   input wen,
   input ren,
-  input[0:11] waddr,
-  input[0:11] raddr,
+  input[0:10] waddr,
+  input[0:10] raddr,
   input[0:7] data_in,
   output[0:7] data_out );
 
@@ -35,11 +35,11 @@ endmodule
 module dual_port_sram (
   input wclk,
   input wen,
-  input[0:11] waddr,
+  input[0:10] waddr,
   input[0:7] data_in,
   input rclk,
   input ren,
-  input[0:11] raddr,
+  input[0:10] raddr,
   output[0:7] data_out );
 
   reg[0:7] ram[0:2047];
