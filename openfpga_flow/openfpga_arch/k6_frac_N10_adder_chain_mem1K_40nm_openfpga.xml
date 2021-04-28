@@ -200,10 +200,10 @@
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <port type="input" prefix="waddr" size="7"/>
       <port type="input" prefix="raddr" size="7"/>
-      <port type="input" prefix="data_in" size="8"/>
+      <port type="input" prefix="data_in" lib_name="d_in" size="8"/>
       <port type="input" prefix="wen" size="1"/>
       <port type="input" prefix="ren" size="1"/>
-      <port type="output" prefix="data_out" size="8"/>
+      <port type="output" prefix="data_out" lib_name="d_out" size="8"/>
       <port type="clock" prefix="clk" size="1"/>
     </circuit_model>
   </circuit_library>
