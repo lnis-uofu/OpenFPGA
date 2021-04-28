@@ -2,8 +2,8 @@
 // Reference: 
 //   https://embeddedthoughts.com/2016/07/13/fifo-buffer-using-block-ram-on-a-xilinx-spartan-3-fpga/
 module sync_dual_port_ram
-		#( parameter ADDRESS_WIDTH = 12, // number of words in ram
-                     DATA_WIDTH    =  8  // number of bits in word
+		#( parameter ADDRESS_WIDTH = 4, // number of words in ram
+                     DATA_WIDTH    =  4  // number of bits in word
 	 )
 	
 	// IO ports
