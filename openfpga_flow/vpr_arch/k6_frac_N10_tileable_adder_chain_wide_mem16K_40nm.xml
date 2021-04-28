@@ -164,6 +164,7 @@
       <output name="cout" num_pins="1"/>
       <clock name="clk" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+        <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
         <fc_override port_name="cin" fc_type="frac" fc_val="0"/>
         <fc_override port_name="cout" fc_type="frac" fc_val="0"/>
       </fc>
@@ -180,14 +181,16 @@
       <equivalent_sites>
         <site pb_type="memory"/>
       </equivalent_sites>
-      <input name="waddr" num_pins="12"/>
-      <input name="raddr" num_pins="12"/>
+      <input name="waddr" num_pins="11"/>
+      <input name="raddr" num_pins="11"/>
       <input name="data_in" num_pins="8"/>
       <input name="wen" num_pins="1"/>
       <input name="ren" num_pins="1"/>
       <output name="data_out" num_pins="8"/>
       <clock name="clk" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+        <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
+      </fc>
       <pinlocations pattern="custom">
         <loc side="left" yoffset="0">memory.clk memory.waddr[0:1] memory.raddr[0:1] memory.data_in[0:0] memory.data_out[0:0]</loc>
         <loc side="left" yoffset="1">memory.waddr[2:3] memory.raddr[2:3] memory.data_in[1:1] memory.data_out[1:1]</loc>
@@ -196,7 +199,7 @@
         <loc side="right" xoffset="1" yoffset="0">memory.waddr[8:8] memory.raddr[8:8] memory.data_in[4:4] memory.data_out[4:4]</loc>
         <loc side="right" xoffset="1" yoffset="1">memory.waddr[9:9] memory.raddr[9:9] memory.data_in[5:5] memory.data_out[5:5]</loc>
         <loc side="bottom" xoffset="0">memory.wen memory.waddr[10:10] memory.raddr[10:10] memory.data_in[6:6] memory.data_out[6:6]</loc>
-        <loc side="bottom" xoffset="1">memory.ren memory.waddr[11:11] memory.raddr[11:11] memory.data_in[7:7] memory.data_out[7:7]</loc>
+        <loc side="bottom" xoffset="1">memory.ren memory.data_in[7:7] memory.data_out[7:7]</loc>
       </pinlocations>
     </tile>
   </tiles>
@@ -691,8 +694,8 @@
     <!-- Define general purpose logic block (CLB) ends -->
     <!-- Define single-mode dual-port memory begin -->
     <pb_type name="memory">
-      <input name="waddr" num_pins="12"/>
-      <input name="raddr" num_pins="12"/>
+      <input name="waddr" num_pins="11"/>
+      <input name="raddr" num_pins="11"/>
       <input name="data_in" num_pins="8"/>
       <input name="wen" num_pins="1"/>
       <input name="ren" num_pins="1"/>
@@ -704,8 +707,8 @@
         -->
       <mode name="mem_2048x8_dp">
         <pb_type name="mem_2048x8_dp" blif_model=".subckt dpram_2048x8" num_pb="1">
-          <input name="waddr" num_pins="12" port_class="address1"/>
-          <input name="raddr" num_pins="12" port_class="address2"/>
+          <input name="waddr" num_pins="11" port_class="address1"/>
+          <input name="raddr" num_pins="11" port_class="address2"/>
           <input name="data_in" num_pins="8" port_class="data_in1"/>
           <input name="wen" num_pins="1" port_class="write_en1"/>
           <input name="ren" num_pins="1" port_class="write_en2"/>
