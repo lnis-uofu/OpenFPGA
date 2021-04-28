@@ -72,3 +72,19 @@ write_fabric_bitstream
   .. option:: --verbose
 
     Show verbose log
+
+write_io_mapping
+~~~~~~~~~~~~~~~~
+
+  Output the I/O mapping information to a file
+
+  .. option:: --file <string> or -f <string>
+
+    Specify the file name where the I/O mapping will be outputted to.
+    See file formats in :ref:`file_format_io_mapping_file`.
+
+  .. option:: --verbose
+
+    Show verbose log
+
+
