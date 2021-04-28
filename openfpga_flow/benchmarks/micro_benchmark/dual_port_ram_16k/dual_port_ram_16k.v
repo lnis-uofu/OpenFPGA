@@ -1,16 +1,16 @@
 //-----------------------------------------------------
 // Design Name : dual_port_ram_16k
-// File Name   : dpram.v
+// File Name   : dual_port_ram_16k.v
 // Function    : Dual port RAM 2048x8bit
-// Coder       : Aurelien
+// Coder       : Xifan Tang
 //-----------------------------------------------------
 
 module dual_port_ram_16k (
   input clk,
   input wen,
   input ren,
-  input [11:0] waddr,
-  input [11:0] raddr,
+  input [10:0] waddr,
+  input [10:0] raddr,
   input [7:0] din,
   output [7:0] dout
 );
@@ -30,11 +30,11 @@ endmodule
 module dual_port_sram_16kb (
   input wclk,
   input wen,
-  input [11:0] waddr,
+  input [10:0] waddr,
   input [7:0] data_in,
   input rclk,
   input ren,
-  input [11:0] raddr,
+  input [10:0] raddr,
   output [7:0] data_out
 );
 
