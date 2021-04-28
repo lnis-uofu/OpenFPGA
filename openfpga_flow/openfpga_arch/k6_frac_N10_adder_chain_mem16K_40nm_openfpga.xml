@@ -194,17 +194,17 @@
       <port type="output" prefix="sumout" lib_name="SUM" size="1"/>
       <port type="output" prefix="cout" lib_name="CO" size="1"/>
     </circuit_model>
-    <circuit_model type="hard_logic" name="dpram_512x32" prefix="dpram_512x32" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dpram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dpram16k.v">
+    <circuit_model type="hard_logic" name="dpram_2048x8" prefix="dpram_2048x8" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dpram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dpram_2048x8.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <port type="input" prefix="waddr" size="10"/>
-      <port type="input" prefix="raddr" size="10"/>
-      <port type="input" prefix="d_in" size="32"/>
+      <port type="input" prefix="waddr" size="12"/>
+      <port type="input" prefix="raddr" size="12"/>
+      <port type="input" prefix="data_in" size="8"/>
       <port type="input" prefix="wen" size="1"/>
       <port type="input" prefix="ren" size="1"/>
-      <port type="output" prefix="d_out" size="32"/>
-      <port type="clock" prefix="clk" size="1" is_global="true" default_val="0"/>
+      <port type="output" prefix="data_out" size="8"/>
+      <port type="clock" prefix="clk" size="1"/>
     </circuit_model>
   </circuit_library>
   <configuration_protocol>
@@ -222,6 +222,12 @@
   <direct_connection>
     <direct name="adder_carry" circuit_model_name="direct_interc" type="column" x_dir="positive" y_dir="positive"/>
   </direct_connection>
+  <tile_annotations>
+    <global_port name="clk" is_clock="true" default_val="0">
+      <tile name="clb" port="clk"/>
+      <tile name="memory" port="clk"/>
+    </global_port>
+  </tile_annotations>
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
     <pb_type name="io" physical_mode_name="physical" idle_mode_name="inpad"/>
@@ -267,7 +273,7 @@
 
 
     <!-- physical pb_type binding in complex block memory -->
-    <pb_type name="memory[mem_512x32_dp].mem_512x32_dp" circuit_model_name="dpram_512x32"/>
+    <pb_type name="memory[mem_2048x8_dp].mem_2048x8_dp" circuit_model_name="dpram_2048x8"/>
     <!-- END physical pb_type binding in complex block memory -->
   </pb_type_annotations>
 </openfpga_architecture>
