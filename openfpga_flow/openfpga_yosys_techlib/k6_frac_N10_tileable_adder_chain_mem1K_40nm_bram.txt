@@ -1,6 +1,6 @@
-bram $__MY_DPRAM_2048x8
+bram $__MY_DPRAM_128x8
   init 0
-  abits 11
+  abits 7
   dbits 8
   groups 2
   ports  1  1
@@ -11,7 +11,7 @@ bram $__MY_DPRAM_2048x8
   clkpol 1  1
 endbram
 
-match $__MY_DPRAM_2048x8
+match $__MY_DPRAM_128x8
   min efficiency 0
   make_transp
 endmatch

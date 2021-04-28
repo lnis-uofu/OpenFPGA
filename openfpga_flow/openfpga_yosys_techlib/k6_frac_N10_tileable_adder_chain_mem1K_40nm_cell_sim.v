@@ -1,18 +1,18 @@
 //-----------------------------
-// Dual-port RAM 2048x8 bit (8Kbit)
+// Dual-port RAM 128x8 bit (1Kbit)
 // Core logic
 //-----------------------------
-module dpram_2048x8_core (
+module dpram_128x8_core (
   input wclk,
   input wen,
-  input [0:10] waddr,
+  input [0:6] waddr,
   input [0:7] data_in,
   input rclk,
   input ren,
-  input [0:10] raddr,
+  input [0:6] raddr,
   output [0:7] data_out );
 
-  reg [0:7] ram[0:2047];
+  reg [0:7] ram[0:127];
   reg [0:7] internal;
 
   assign data_out = internal;
@@ -32,20 +32,20 @@ module dpram_2048x8_core (
 endmodule
 
 //-----------------------------
-// Dual-port RAM 2048x8 bit (8Kbit) wrapper
+// Dual-port RAM 128x8 bit (1Kbit) wrapper
 // where the read clock and write clock
 // are combined to a unified clock
 //-----------------------------
-module dpram_2048x8 (
+module dpram_128x8 (
   input clk,
   input wen,
   input ren,
-  input [0:10] waddr,
-  input [0:10] raddr,
+  input [0:6] waddr,
+  input [0:6] raddr,
   input [0:7] data_in,
   output [0:7] data_out );
 
-    dpram_2048x8_core memory_0 (
+    dpram_128x8_core memory_0 (
       .wclk    (clk),
       .wen    (wen),
       .waddr    (waddr),

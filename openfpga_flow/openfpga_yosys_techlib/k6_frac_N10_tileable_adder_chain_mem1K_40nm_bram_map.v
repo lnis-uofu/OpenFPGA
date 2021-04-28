@@ -1,14 +1,14 @@
-module $__MY_DPRAM_2048x8 (
+module $__MY_DPRAM_128x8 (
   output [0:7] B1DATA,
   input CLK1,
-  input [0:10] B1ADDR,
-  input [0:10] A1ADDR,
+  input [0:6] B1ADDR,
+  input [0:6] A1ADDR,
   input [0:7] A1DATA,
   input A1EN,
   input B1EN );
 
   generate
-    dpram_2048x8 #() _TECHMAP_REPLACE_ (
+    dpram_128x8 #() _TECHMAP_REPLACE_ (
       .clk    (CLK1),
       .wen    (A1EN),
       .waddr    (A1ADDR),
