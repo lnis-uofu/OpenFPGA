@@ -1,8 +1,8 @@
 module $__MY_DPRAM_2048x8 (
   output [0:7] B1DATA,
   input CLK1,
-  input [0:11] B1ADDR,
-  input [0:11] A1ADDR,
+  input [0:10] B1ADDR,
+  input [0:10] A1ADDR,
   input [0:7] A1DATA,
   input A1EN,
   input B1EN );
