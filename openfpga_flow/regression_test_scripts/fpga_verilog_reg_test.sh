@@ -38,11 +38,11 @@ run-task fpga_verilog/adder/hard_adder --debug --show_thread_logs
 echo -e "Testing Verilog generation with soft adder chain in CLBs ";
 run-task fpga_verilog/adder/soft_adder --debug --show_thread_logs
 
-echo -e "Testing Verilog generation with 16k block RAMs ";
-run-task fpga_verilog/bram/dpram16k --debug --show_thread_logs
+echo -e "Testing Verilog generation with 1k block RAMs ";
+run-task fpga_verilog/bram/dpram1k --debug --show_thread_logs
 
-echo -e "Testing Verilog generation with 16k block RAMs spanning two columns ";
-run-task fpga_verilog/bram/wide_dpram16k --debug --show_thread_logs
+echo -e "Testing Verilog generation with 1k block RAMs spanning two columns ";
+run-task fpga_verilog/bram/wide_dpram1k --debug --show_thread_logs
 
 echo -e "Testing Verilog generation with heterogeneous fabric using 8-bit single-mode multipliers ";
 run-task fpga_verilog/dsp/single_mode_mult_8x8 --debug --show_thread_logs
