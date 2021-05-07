@@ -27,6 +27,9 @@ int write_fabric_bitstream(const OpenfpgaContext& openfpga_ctx,
 int write_io_mapping(const OpenfpgaContext& openfpga_ctx,
                      const Command& cmd, const CommandContext& cmd_context);
 
+int report_bitstream_distribution(const OpenfpgaContext& openfpga_ctx,
+                                  const Command& cmd, const CommandContext& cmd_context);
+
 } /* end namespace openfpga */
 
 #endif

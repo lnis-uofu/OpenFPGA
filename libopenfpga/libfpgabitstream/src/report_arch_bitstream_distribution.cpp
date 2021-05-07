@@ -86,12 +86,13 @@ void rec_report_block_bitstream_distribution_to_xml_file(std::fstream& fp,
  * Notes: 
  *   - The output format is a table whose format is compatible with RST files
  *******************************************************************/
-void report_architecture_bitstream_distribution(const BitstreamManager& bitstream_manager,
-                                                const std::string& fname,
-                                                const size_t& max_hierarchy_level) {
+int report_architecture_bitstream_distribution(const BitstreamManager& bitstream_manager,
+                                               const std::string& fname,
+                                               const size_t& max_hierarchy_level) {
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
     VTR_LOG_ERROR("Received empty file name to report bitstream!\n\tPlease specify a valid file name.\n");
+    return 1;
   }
 
   std::string timer_message = std::string("Report architecture bitstream distribution into XML file '") + fname + std::string("'");
@@ -116,6 +117,8 @@ void report_architecture_bitstream_distribution(const BitstreamManager& bitstrea
 
   /* Close file handler */
   fp.close();
+
+  return 0;
 }
 
 } /* end namespace openfpga */

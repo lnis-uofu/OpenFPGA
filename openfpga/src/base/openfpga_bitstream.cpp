@@ -14,6 +14,7 @@
 /* Headers from fpgabitstream library */
 #include "read_xml_arch_bitstream.h"
 #include "write_xml_arch_bitstream.h"
+#include "report_arch_bitstream_distribution.h"
 
 #include "openfpga_naming.h"
 
@@ -164,5 +165,42 @@ int write_io_mapping(const OpenfpgaContext& openfpga_ctx,
   
   return status;
 } 
+
+/********************************************************************
+ * A wrapper function to call the report_arch_bitstream_distribution() in FPGA bitstream
+ *******************************************************************/
+int report_bitstream_distribution(const OpenfpgaContext& openfpga_ctx,
+                                  const Command& cmd, const CommandContext& cmd_context) {
+
+  CommandOptionId opt_file = cmd.option("file");
+
+  int status = CMD_EXEC_SUCCESS;
+  
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+
+  std::string src_dir_path = find_path_dir_name(cmd_context.option_value(cmd, opt_file));
+
+  /* Create directories */
+  create_directory(src_dir_path);
+
+  /* Default depth requirement, this is to limit the report size by default */
+  int depth = 1;
+  CommandOptionId opt_depth = cmd.option("depth");
+  if (true == cmd_context.option_enable(cmd, opt_depth)) {
+    depth = std::atoi(cmd_context.option_value(cmd, opt_depth).c_str());
+    /* Error out if we have negative depth */
+    if (0 > depth) {
+      VTR_LOG_ERROR("Invalid depth '%d' which should be 0 or a positive number!\n",
+                    depth);
+      return CMD_EXEC_FATAL_ERROR; 
+    }
+  }
+
+  status = report_architecture_bitstream_distribution(openfpga_ctx.bitstream_manager(),
+                                                      cmd_context.option_value(cmd, opt_file),
+                                                      depth);
+  
+  return status;
+}
 
 } /* end namespace openfpga */
