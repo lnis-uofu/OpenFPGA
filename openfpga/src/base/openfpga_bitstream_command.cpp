@@ -90,7 +90,7 @@ ShellCommandId add_openfpga_report_bitstream_distribution_command(openfpga::Shel
 
   /* Add an option '--depth' */
   CommandOptionId opt_depth = shell_cmd.add_option("depth", false, "Specify the max. depth of blocks which will appear in report");
-  shell_cmd.set_option_require_value(opt_depth, openfpga::OPT_INT);
+  shell_cmd.set_option_require_value(opt_depth, openfpga::OPT_STRING);
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
