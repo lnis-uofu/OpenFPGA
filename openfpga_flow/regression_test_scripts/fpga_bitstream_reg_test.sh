@@ -28,3 +28,7 @@ run-task fpga_bitstream/overload_mux_default_path --debug --show_thread_logs
 
 echo -e "Testing outputting I/O mapping result to file";
 run-task fpga_bitstream/write_io_mapping --debug --show_thread_logs
+
+echo -e "Testing report bitstream distribution to file";
+run-task fpga_bitstream/report_bitstream_distribution/default_depth --debug --show_thread_logs
+run-task fpga_bitstream/report_bitstream_distribution/custom_depth --debug --show_thread_logs
