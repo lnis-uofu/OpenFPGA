@@ -10,17 +10,18 @@
 /* Headers from fabric key */
 #include "read_xml_arch_bitstream.h"
 #include "write_xml_arch_bitstream.h"
+#include "report_arch_bitstream_distribution.h"
 
 int main(int argc, const char** argv) {
-  /* Ensure we have only one or two argument */
-  VTR_ASSERT((2 == argc) || (3 == argc));
+  /* Ensure we have only one or two or 3 argument */
+  VTR_ASSERT((2 == argc) || (3 == argc) || (4 == argc));
 
   /* Parse the bitstream from an XML file */
   openfpga::BitstreamManager test_bitstream = openfpga::read_xml_architecture_bitstream(argv[1]);
   VTR_LOG("Read the bitstream from an XML file: %s.\n",
           argv[1]);
 
-  /* Output the circuit library to an XML file
+  /* Output the bitstream database to an XML file
    * This is optional only used when there is a second argument
    */
   if (3 <= argc) { 
@@ -28,6 +29,15 @@ int main(int argc, const char** argv) {
     VTR_LOG("Echo the bitstream to an XML file: %s.\n",
             argv[2]);
   }
+  /* Output the bitstream distribution to an XML file
+   * This is optional only used when there is a third argument
+   */
+  if (4 <= argc) { 
+    openfpga::report_architecture_bitstream_distribution(test_bitstream, argv[3]);
+    VTR_LOG("Echo the bitstream distribution to an XML file: %s.\n",
+            argv[3]);
+  }
+
 }
 
 

@@ -87,4 +87,22 @@ write_io_mapping
 
     Show verbose log
 
+report_bitstream_distribution
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Output the bitstream distribution to a file
+
+  .. option:: --file <string> or -f <string>
+
+    Specify the file name where the bitstream distribution will be outputted to.
+    See file formats in :ref:`file_format_bitstream_distribution_file`.
+
+  .. option:: --depth <int> or -d <int>
+
+    Specify the maximum depth of the block which should appear in the block
+
+  .. option:: --verbose
+
+    Show verbose log
+
 
