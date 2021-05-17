@@ -64,12 +64,12 @@ void SubBytes(unsigned char* state)
 {
     for (unsigned short i = 0; i < stt_lng; i++) { state[i] = s_box[state[i]]; }
 }
-
+/*
 void InvSubBytes(unsigned char* state)
 {
     for (unsigned short i = 0; i < stt_lng; i++) { state[i] = inverted_s_box[state[i]]; }
 }
-
+*/
 
 void ShiftRows(unsigned char* state)
 {
@@ -224,36 +224,3 @@ void AES_Decrypt(unsigned char* ciphertext, unsigned char* expandedKey, unsigned
 
 
 
-/*
-
-Scratch area:
-
-// RotWord rotates left
-unsigned int* q = (unsigned int*)in4;
-*q = (*q >> 8) | ((*q & 0xff) << 24);
-// SubWord substitutes with S - Box value
-in4[0] = s_box[in4[0]];
-in4[1] = s_box[in4[1]];
-in4[2] = s_box[in4[2]];
-in4[3] = s_box[in4[3]];
-
-void printThisRoundKey(int r, unsigned char* RK)
-{
-    printf("round %d key: ", r);
-    for (int i = 0; i < 16; i++)
-    {
-        printf("%X ", RK[i]);
-    }
-    printf("\n");
-}
-
-void printState(unsigned char* state)
-{
-    for (int i = 0; i < 16; i++)
-    {
-        printf("%d ", state[i]);
-    }
-    printf(" state \n");
-}
-
-*/
