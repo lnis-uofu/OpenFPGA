@@ -178,7 +178,7 @@ void AddRoundKey(unsigned char* state, unsigned char* roundKey)
 
 
 // Cipher
-void AES_Encrypt(unsigned char* plaintext, unsigned char* expandedKey, unsigned short Nr, unsigned char* ciphertext)
+void AES_Encrypt(unsigned int* plaintext, unsigned char* expandedKey, unsigned short Nr, unsigned char* ciphertext)
 {
     // Copy plaintext into state
     unsigned char state[stt_lng];
