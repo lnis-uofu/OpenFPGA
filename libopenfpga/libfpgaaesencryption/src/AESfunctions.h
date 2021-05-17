@@ -13,5 +13,5 @@ const unsigned short Nr_max = (Nk_max > Nb) ? Nk_max + 6 : Nb + 6; // max number
 const unsigned short ExtdCipherKeyLenghth_max = (Nr_max + 1) * stt_lng; // max bytes in extended key length
 
 void KeyExpansion(unsigned char*, unsigned short, unsigned char*);
-void AES_Encrypt(unsigned char*, unsigned char*, unsigned short, unsigned char*);
-void AES_Decrypt(unsigned char*, unsigned char*, unsigned short, unsigned char*);
+void AES_Encrypt(unsigned int*, unsigned char*, unsigned short, unsigned char*);
+//void AES_Decrypt(unsigned char*, unsigned char*, unsigned short, unsigned char*);
