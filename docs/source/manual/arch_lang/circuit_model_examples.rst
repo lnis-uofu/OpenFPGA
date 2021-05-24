@@ -284,6 +284,8 @@ This example shows:
 SRAMs
 ~~~~~
 
+.. note:: OpenFPGA does not auto-generate any netlist for SRAM cells. Users should define the HDL modeling in external netlists and ensure consistency to physical designs.
+
 Template
 ````````
 
@@ -966,6 +968,8 @@ This example shows:
 Datapath Flip-Flops
 ~~~~~~~~~~~~~~~~~~~
 
+.. note:: OpenFPGA does not auto-generate any netlist for datapath flip-flops. Users should define the HDL modeling in external netlists and ensure consistency to physical designs.
+
 Template
 ````````
 
@@ -1036,7 +1040,7 @@ Multi-mode Flip-Flop
 .. _fig_multi_mode_ff_circuit_model:
 
 .. figure:: ./figures/multi_mode_ff_circuit_model.svg
-   :scale: 100%
+   :scale: 150%
    :alt: Multi-mode flip-flop example
 
    An example of a flip-flop which can be operate in different modes
@@ -1061,6 +1065,8 @@ This example shows:
 
 Configuration Chain Flip-Flop
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. note:: OpenFPGA does not auto-generate any netlist for configuration chain flip-flops. Users should define the HDL modeling in external netlists and ensure consistency to physical designs.
 
 Template
 ````````
@@ -1206,6 +1212,8 @@ The code describing this FF is:
 Hard Logics
 ~~~~~~~~~~~
 
+.. note:: OpenFPGA does not auto-generate any netlist for the hard logics. Users should define the HDL modeling in external netlists and ensure consistency to physical designs.
+
 Template
 ````````
 
@@ -1247,6 +1255,78 @@ Full Adder
     <port type="output" prefix="cout" size="1"/>
     <port type="output" prefix="sumout" size="1"/>
   </circuit_model>
+
+This example shows:
+  - A 1-bit full adder which is defined in a Verilog netlist ``adder.v`` and a SPICE netlist ``adder.sp``
+  - The adder has three 1-bit inputs, i.e., ``a``, ``b`` and ``cin``, and two 2-bit outputs, i.e., ``cout``, ``sumout``.
+
+
+.. _circuit_model_single_mode_dpram_example:
+
+Dual Port Block RAM
+```````````````````
+
+.. figure:: ./figures/single_mode_dpram128x8_memory_circuit_model.svg
+   :scale: 150%
+   :alt: An example of a dual port block RAM with 128 addresses and 8-bit data width.
+
+   An example of a dual port block RAM with 128 addresses and 8-bit data width.
+
+The code describing this block RAM is:
+
+.. code-block:: xml
+
+  <circuit_model type="hard_logic" name="dpram_128x8" prefix="dpram_128x8" spice_netlist="dpram.sp" verilog_netlist="dpram.v">
+    <design_technology type="cmos"/>
+    <input_buffer exist="true" circuit_model_name="inv1x"/>
+    <output_buffer exist="true" circuit_model_name="inv1x"/>
+    <port type="input" prefix="waddr" size="7"/>
+    <port type="input" prefix="raddr" size="7"/>
+    <port type="input" prefix="data_in" size="8"/>
+    <port type="input" prefix="wen" size="1"/>
+    <port type="input" prefix="ren" size="1"/>
+    <port type="output" prefix="data_out" size="8"/>
+    <port type="clock" prefix="clock" size="1" is_global="true" default_val="0"/>
+  </circuit_model>
+
+This example shows:
+  - A 128x8 dual port RAM which is defined in a Verilog netlist ``dpram.v`` and a SPICE netlist ``dpram.sp``
+  - The clock port of the RAM is controlled by a global signal (see details about global signal definition in :ref:`annotate_vpr_arch_physical_tile_annotation`).
+
+.. _circuit_model_multi_mode_dpram_example:
+
+Multi-mode Dual Port Block RAM
+``````````````````````````````
+
+.. figure:: ./figures/multi_mode_dpram128x8_memory_circuit_model.svg
+   :scale: 150%
+   :alt: An example of a multi-mode dual port block RAM with 128 addresses and 8-bit data width.
+
+   An example of a dual port block RAM which can operate in two modes: 128x8 and 256x4.
+
+The code describing this block RAM is:
+
+.. code-block:: xml
+
+  <circuit_model type="hard_logic" name="frac_dpram_128x8" prefix="frac_dpram_128x8" spice_netlist="frac_dpram.sp" verilog_netlist="frac_dpram.v">
+    <design_technology type="cmos"/>
+    <input_buffer exist="true" circuit_model_name="inv1x"/>
+    <output_buffer exist="true" circuit_model_name="inv1x"/>
+    <port type="input" prefix="waddr" size="8"/>
+    <port type="input" prefix="raddr" size="8"/>
+    <port type="input" prefix="data_in" size="8"/>
+    <port type="input" prefix="wen" size="1"/>
+    <port type="input" prefix="ren" size="1"/>
+    <port type="output" prefix="data_out" size="8"/>
+    <port type="clock" prefix="clock" size="1" is_global="true" default_val="0"/>
+    <port type="sram" prefix="mode" size="1" mode_select="true" circuit_model_name="CCFF" default_value="0"/>
+  </circuit_model>
+
+This example shows:
+  - A fracturable dual port RAM which is defined in a Verilog netlist ``frac_dpram.v`` and a SPICE netlist ``frac_dpram.sp``
+  - The dual port RAM can operate in two modes: (1) 128 addresses with 8-bit data width; (2) 256 addresses with 4-bit data width
+  - The clock port of the RAM is controlled by a global signal (see details about global signal definition in :ref:`annotate_vpr_arch_physical_tile_annotation`).
+  - The mode-selection bit will be generated by a configurable memory outside the flip-flop, which will be implemented by a circuit model ``CCFF`` defined by users (see an example in :ref:`circuit_model_ccff_example`).
 
 Routing Wire Segments
 ~~~~~~~~~~~~~~~~~~~~~
@@ -1313,6 +1393,8 @@ This example shows
 
 I/O pads
 ~~~~~~~~
+
+.. note:: OpenFPGA does not auto-generate any netlist for I/O cells. Users should define the HDL modeling in external netlists and ensure consistency to physical designs.
 
 Template
 ````````

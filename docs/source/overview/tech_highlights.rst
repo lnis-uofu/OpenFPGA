@@ -50,8 +50,8 @@ Supported Circuit Designs
 |                 |              |           | - :ref:`circuit_model_dff_example`                  | 
 |                 |              |           | - :ref:`circuit_model_multi_mode_ff_example`        | 
 |                 |              |           | - Single-port Block RAM                             |
-|                 |              |           | - Dual-port Block RAM                               |
-|                 |              |           | - Multi-mode Block RAM                              |
+|                 |              |           | - :ref:`circuit_model_single_mode_dpram_example`    |
+|                 |              |           | - :ref:`circuit_model_multi_mode_dpram_example`     |
 +-----------------+--------------+-----------+-----------------------------------------------------+
 | | Arithmetic    | No           | Yes       | - **Any size**                                      |
 | | Units         |              |           | - Multiplier                                        |
