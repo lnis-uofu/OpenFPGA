@@ -54,8 +54,9 @@ Supported Circuit Designs
 |                 |              |           | - :ref:`circuit_model_multi_mode_dpram_example`     |
 +-----------------+--------------+-----------+-----------------------------------------------------+
 | | Arithmetic    | No           | Yes       | - **Any size**                                      |
-| | Units         |              |           | - Multiplier                                        |
-|                 |              |           | - :ref:`circuit_model_full_adder_example`           |
+| | Units         |              |           | - :ref:`circuit_model_full_adder_example`           |
+|                 |              |           | - :ref:`circuit_model_single_mode_mult8x8_example`  |
+|                 |              |           | - :ref:`circuit_model_multi_mode_mult8x8_example`   |
 +-----------------+--------------+-----------+-----------------------------------------------------+
 | I/O             | No           | Yes       | - :ref:`circuit_model_gpio_example`                 |
 |                 |              |           | - Bi-directional buffer                             |
