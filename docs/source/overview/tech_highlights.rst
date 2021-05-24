@@ -42,15 +42,16 @@ Supported Circuit Designs
 +-----------------+--------------+-----------+-----------------------------------------------------+
 | | Configurable  |     No       | Yes       | - :ref:`circuit_model_config_latch_example`         | 
 | | Memory        |              |           | - :ref:`circuit_model_sram_blwl_example`            |
-|                 |              |           | - :ref:`circuit_model_dff_example`                  | 
 |                 |              |           | - :ref:`circuit_model_ccff_example`                 | 
 |                 |              |           | - :ref:`circuit_model_ccff_enable_example`          | 
 |                 |              |           | - :ref:`circuit_model_ccff_scanable_example`        | 
 +-----------------+--------------+-----------+-----------------------------------------------------+
-| Block RAM       | No           | Yes       | - **Any size**                                      |
-|                 |              |           | - Single-port                                       |
-|                 |              |           | - Dual-port                                         |
-|                 |              |           | - Fracturable                                       |
+| Data Memory     | No           | Yes       | - **Any size**                                      |
+|                 |              |           | - :ref:`circuit_model_dff_example`                  | 
+|                 |              |           | - :ref:`circuit_model_multi_mode_ff_example`        | 
+|                 |              |           | - Single-port Block RAM                             |
+|                 |              |           | - Dual-port Block RAM                               |
+|                 |              |           | - Multi-mode Block RAM                              |
 +-----------------+--------------+-----------+-----------------------------------------------------+
 | | Arithmetic    | No           | Yes       | - **Any size**                                      |
 | | Units         |              |           | - Multiplier                                        |
