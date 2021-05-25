@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.1" xmlns:xl="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" viewBox="155.08 312.04775 148.51908 123.62449" width="148.51908" height="123.62449">
+  <defs>
+    <font-face font-family="Times New Roman" font-size="14" panose-1="2 2 5 3 5 4 5 9 3 4" units-per-em="1000" underline-position="-108.88672" underline-thickness="48.828125" slope="-1166.6423" x-height="430.1758" cap-height="662.1094" ascent="891.1133" descent="-216.3086" font-style="italic" font-weight="400">
+      <font-face-src>
+        <font-face-name name="TimesNewRomanPS-ItalicMT"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Times New Roman" font-size="13" panose-1="2 2 5 3 5 4 5 9 3 4" units-per-em="1000" underline-position="-108.88672" underline-thickness="48.828125" slope="-1256.384" x-height="430.1758" cap-height="662.1094" ascent="891.1133" descent="-216.3086" font-style="italic" font-weight="400">
+      <font-face-src>
+        <font-face-name name="TimesNewRomanPS-ItalicMT"/>
+      </font-face-src>
+    </font-face>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -2 5 4" markerWidth="5" markerHeight="4" color="black">
+      <g>
+        <path d="M 2.4 0 L 0 -.9 L 0 .9 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
+  <metadata> Produced by OmniGraffle 7.18.5\n2021-05-24 20:57:16 +0000</metadata>
+  <g id="1-bit_full_adder" stroke-opacity="1" fill="none" stroke-dasharray="none" fill-opacity="1" stroke="none">
+    <title>1-bit full adder</title>
+    <g id="1-bit_full_adder_Layer_1">
+      <title>Layer 1</title>
+      <g id="Graphic_35772">
+        <rect x="192.24" y="344.52" width="57.6" height="58.68" fill="#ffffc0"/>
+        <rect x="192.24" y="344.52" width="57.6" height="58.68" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(197.24 366.06263)" fill="black">
+          <tspan font-family="Times New Roman" font-size="14" font-style="italic" font-weight="400" fill="black" x="7.4689445" y="12">adder</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35773"/>
+      <g id="Graphic_35774">
+        <text transform="translate(211.44037 312.04775)" fill="black">
+          <tspan font-family="Times New Roman" font-size="13" font-style="italic" font-weight="400" fill="black" x="1.6587038" y="12">cin</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35775">
+        <text transform="translate(155.08 351.9)" fill="black">
+          <tspan font-family="Times New Roman" font-size="13" font-style="italic" font-weight="400" fill="black" x="2.4363742" y="12">a</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35776">
+        <text transform="translate(155.08 375.26)" fill="black">
+          <tspan font-family="Times New Roman" font-size="13" font-style="italic" font-weight="400" fill="black" x="2.4363742" y="12">b</tspan>
+        </text>
+      </g>
+      <g id="Line_35778">
+        <line x1="166.45275" y1="359.73463" x2="184.14042" y2="359.91665" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_35779">
+        <line x1="166.45275" y1="382.93925" x2="184.14117" y2="382.63795" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_35780">
+        <line x1="250.84" y1="373.86" x2="257.94" y2="373.86" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_35786">
+        <text transform="translate(266.04 366.08387)" fill="black">
+          <tspan font-family="Times New Roman" font-size="13" font-style="italic" font-weight="400" fill="black" x="0" y="12">sumout</tspan>
+        </text>
+      </g>
+      <g id="Line_35787">
+        <line x1="221.04" y1="327.6" x2="221.04" y2="335.42" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_35788">
+        <text transform="translate(206.52018 420.12)" fill="black">
+          <tspan font-family="Times New Roman" font-size="13" font-style="italic" font-weight="400" fill="black" x="3.3288927" y="12">cout</tspan>
+        </text>
+      </g>
+      <g id="Line_35789">
+        <line x1="221.04" y1="404.2" x2="221.04" y2="412.02" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+    </g>
+  </g>
+</svg>

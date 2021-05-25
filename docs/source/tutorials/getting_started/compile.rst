@@ -24,7 +24,7 @@ In general, please follow the steps to compile
 
 .. note:: cmake3.12+ is recommended to compile OpenFPGA with GUI
 
-.. note:: Recommand to use ``make -j`` to accelerate the compilation
+.. note:: Recommand to use ``make -j<int>`` to accelerate the compilation, where ``<int>`` denotes the number of cores to be used in compilation.
 
 .. note:: VPR's GUI requires gtk-3, and can be enabled with ``cmake .. -DVPR_USE_EZGL=on``
 
