@@ -336,6 +336,7 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
   /* Constrain global ports */
   if (true == sdc_options.constrain_global_port()) {
     print_pnr_sdc_global_ports(sdc_options.sdc_dir(),
+                               sdc_options.time_unit(),
                                module_manager, top_module, global_ports,
                                sim_setting,
                                sdc_options.constrain_non_clock_global_port());
