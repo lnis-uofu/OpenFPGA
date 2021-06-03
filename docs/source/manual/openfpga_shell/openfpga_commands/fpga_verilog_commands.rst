@@ -87,3 +87,39 @@ write_verilog_testbench
   .. option:: --explicit_port_mapping
 
     Use explicit port mapping when writing the Verilog netlists
+
+write_full_testbench
+~~~~~~~~~~~~~~~~~~~~~~~
+ 
+  Write the full testbench for FPGA fabric in Verilog format
+
+  .. option:: --file <string> or -f <string>
+     
+    The output directory for all the testbench netlists. We suggest the use of same output directory as fabric Verilog netlists. For example, ``--file /temp/testbench``
+
+  .. option:: --bitstream <string>     
+
+    The bitstream file to be loaded to the full testbench, which should be in the same file format that OpenFPGA can outputs (See detailes in :ref:`file_formats_fabric_bitstream_plain_text`). For example, ``--bitstream and2.bit``
+
+  .. option:: --fabric_netlist_file_path <string>
+
+    Specify the fabric Verilog file if they are not in the same directory as the testbenches to be generated. If not specified, OpenFPGA will assume that the fabric netlists are the in the same directory as testbenches and assign default names. For example, ``--file /temp/fabric/fabric_netlists.v``
+
+  .. option:: --reference_benchmark_file_path <string>
+
+    Must specify the reference benchmark Verilog file if you want to output any testbenches. For example, ``--reference_benchmark_file_path /temp/benchmark/counter_post_synthesis.v``
+
+  .. option:: --pin_constraints_file <string> or -pcf <string>
+
+    Specify the *Pin Constraints File* (PCF) if you want to custom stimulus in testbenches. For example, ``-pin_constraints_file pin_constraints.xml``
+    Strongly recommend for multi-clock simulations. See detailed file format about :ref:`file_format_pin_constraints_file`.
+
+  .. option:: --explicit_port_mapping
+
+    Use explicit port mapping when writing the Verilog netlists
+
+  .. option:: --include_signal_init
+
+    Output signal initialization to Verilog testbench to smooth convergence in HDL simulation
+
+
