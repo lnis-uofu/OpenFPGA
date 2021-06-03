@@ -21,6 +21,9 @@ int write_fabric_verilog(OpenfpgaContext& openfpga_ctx,
 int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
                             const Command& cmd, const CommandContext& cmd_context); 
 
+int write_full_testbench(OpenfpgaContext& openfpga_ctx,
+                         const Command& cmd, const CommandContext& cmd_context); 
+
 } /* end namespace openfpga */
 
 #endif

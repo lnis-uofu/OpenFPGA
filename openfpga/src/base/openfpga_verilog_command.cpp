@@ -122,6 +122,59 @@ ShellCommandId add_openfpga_write_verilog_testbench_command(openfpga::Shell<Open
   return shell_cmd_id;
 }
 
+/********************************************************************
+ * - Add a command to Shell environment: write full testbench
+ * - Add associated options 
+ * - Add command dependency
+ *******************************************************************/
+static 
+ShellCommandId add_openfpga_write_full_testbench_command(openfpga::Shell<OpenfpgaContext>& shell,
+                                                         const ShellCommandClassId& cmd_class_id,
+                                                         const std::vector<ShellCommandId>& dependent_cmds) {
+  Command shell_cmd("write_full_testbench");
+
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId output_opt = shell_cmd.add_option("file", true, "Specify the output directory for HDL netlists");
+  shell_cmd.set_option_short_name(output_opt, "f");
+  shell_cmd.set_option_require_value(output_opt, openfpga::OPT_STRING);
+
+  /* Add an option '--bitstream'*/
+  CommandOptionId bitstream_opt = shell_cmd.add_option("bitstream", true, "Specify the bitstream to be loaded in the testbench");
+  shell_cmd.set_option_require_value(bitstream_opt, openfpga::OPT_STRING);
+
+  /* Add an option '--fabric_netlist_file_path'*/
+  CommandOptionId fabric_netlist_opt = shell_cmd.add_option("fabric_netlist_file_path", false, "Specify the file path to the fabric HDL netlist");
+  shell_cmd.set_option_require_value(fabric_netlist_opt, openfpga::OPT_STRING);
+
+  /* Add an option '--pin_constraints_file in short '-pcf' */
+  CommandOptionId pcf_opt = shell_cmd.add_option("pin_constraints_file", false, "Specify the file path to the pin constraints");
+  shell_cmd.set_option_short_name(pcf_opt, "pcf");
+  shell_cmd.set_option_require_value(pcf_opt, openfpga::OPT_STRING);
+
+  /* Add an option '--reference_benchmark_file_path'*/
+  CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", true, "Specify the file path to the reference Verilog netlist");
+  shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);
+
+  /* Add an option '--explicit_port_mapping' */
+  shell_cmd.add_option("explicit_port_mapping", false, "Use explicit port mapping in Verilog netlists");
+
+  /* Add an option '--include_signal_init' */
+  shell_cmd.add_option("include_signal_init", false, "Initialize all the signals in Verilog testbenches");
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Enable verbose output");
+  
+  /* Add command to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "generate full testbenches for an FPGA fabric");
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id, write_full_testbench);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
 void add_openfpga_verilog_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /* Get the unique id of 'build_fabric' command which is to be used in creating the dependency graph */
   const ShellCommandId& build_fabric_cmd_id = shell.command(std::string("build_fabric"));
@@ -148,6 +201,16 @@ void add_openfpga_verilog_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   add_openfpga_write_verilog_testbench_command(shell,
                                                openfpga_verilog_cmd_class,
                                                verilog_testbench_dependent_cmds);
+
+  /******************************** 
+   * Command 'write_full_testbench' 
+   */
+  /* The command 'write_full_testbench' should NOT be executed before 'build_fabric' */
+  std::vector<ShellCommandId> full_testbench_dependent_cmds;
+  full_testbench_dependent_cmds.push_back(build_fabric_cmd_id);
+  add_openfpga_write_full_testbench_command(shell,
+                                            openfpga_verilog_cmd_class,
+                                            full_testbench_dependent_cmds);
 } 
 
 } /* end namespace openfpga */

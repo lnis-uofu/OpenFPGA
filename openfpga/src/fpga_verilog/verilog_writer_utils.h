@@ -108,7 +108,8 @@ std::string generate_verilog_constant_values(const std::vector<size_t>& const_va
                                              const bool& short_constant = true);
 
 std::string generate_verilog_port_constant_values(const BasicPort& output_port,
-                                                  const std::vector<size_t>& const_values);
+                                                  const std::vector<size_t>& const_values,
+                                                  const bool& is_register = false);
 
 void print_verilog_wire_constant_values(std::fstream& fp,
                                         const BasicPort& output_port,
