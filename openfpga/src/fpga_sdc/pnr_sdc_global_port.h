@@ -18,6 +18,7 @@
 namespace openfpga {
 
 void print_pnr_sdc_global_ports(const std::string& sdc_dir, 
+                                const float& time_unit,
                                 const ModuleManager& module_manager,
                                 const ModuleId& top_module,
                                 const FabricGlobalPortInfo& global_ports,

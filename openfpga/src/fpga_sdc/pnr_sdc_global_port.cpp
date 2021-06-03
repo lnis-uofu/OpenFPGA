@@ -20,6 +20,7 @@
 /* Headers from openfpgautil library */
 #include "openfpga_port.h"
 #include "openfpga_digest.h"
+#include "openfpga_scale.h"
 
 #include "sdc_writer_naming.h"
 #include "sdc_writer_utils.h"
@@ -59,6 +60,7 @@ void print_pnr_sdc_clock_port(std::fstream& fp,
  *******************************************************************/
 static 
 void print_pnr_sdc_global_clock_ports(std::fstream& fp, 
+                                      const float& time_unit,
                                       const ModuleManager& module_manager,
                                       const ModuleId& top_module,
                                       const FabricGlobalPortInfo& fabric_global_port_info,
@@ -103,7 +105,7 @@ void print_pnr_sdc_global_clock_ports(std::fstream& fp,
 
       print_pnr_sdc_clock_port(fp, 
                                port_to_constrain,
-                               clock_period);
+                               clock_period / time_unit);
     }
   }
 }
@@ -118,6 +120,7 @@ void print_pnr_sdc_global_clock_ports(std::fstream& fp,
  *******************************************************************/
 static 
 void print_pnr_sdc_global_non_clock_ports(std::fstream& fp, 
+                                          const float& time_unit,
                                           const float& operating_critical_path_delay,
                                           const ModuleManager& module_manager,
                                           const ModuleId& top_module,
@@ -144,7 +147,7 @@ void print_pnr_sdc_global_non_clock_ports(std::fstream& fp,
 
       print_pnr_sdc_clock_port(fp, 
                                port_to_constrain,
-                               clock_period);
+                               clock_period / time_unit);
     }
   }
 }
@@ -161,6 +164,7 @@ void print_pnr_sdc_global_non_clock_ports(std::fstream& fp,
  * In general, we do not recommend to do this
  *******************************************************************/
 void print_pnr_sdc_global_ports(const std::string& sdc_dir, 
+                                const float& time_unit,
                                 const ModuleManager& module_manager,
                                 const ModuleId& top_module,
                                 const FabricGlobalPortInfo& global_ports,
@@ -183,12 +187,15 @@ void print_pnr_sdc_global_ports(const std::string& sdc_dir,
   /* Generate the descriptions*/
   print_sdc_file_header(fp, std::string("Clock contraints for PnR"));
 
-  print_pnr_sdc_global_clock_ports(fp, 
+  /* Print time unit for the SDC file */
+  print_sdc_timescale(fp, time_unit_to_string(time_unit));
+
+  print_pnr_sdc_global_clock_ports(fp, time_unit, 
                                    module_manager, top_module,
                                    global_ports, sim_setting);
 
   if (true == constrain_non_clock_port) {
-    print_pnr_sdc_global_non_clock_ports(fp, 
+    print_pnr_sdc_global_non_clock_ports(fp, time_unit, 
                                          1./sim_setting.default_operating_clock_frequency(),
                                          module_manager, top_module,
                                          global_ports);
