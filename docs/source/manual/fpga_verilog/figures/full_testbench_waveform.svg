@@ -1,0 +1,2160 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" viewBox="572 193 615 353" width="615" height="353">
+  <defs>
+    <font-face font-family="Helvetica Neue" font-size="18" panose-1="2 0 5 3 0 0 0 2 0 4" units-per-em="1000" underline-position="-100" underline-thickness="50" slope="0" x-height="517" cap-height="714" ascent="951.9958" descent="-212.99744" font-weight="400">
+      <font-face-src>
+        <font-face-name name="HelveticaNeue"/>
+      </font-face-src>
+    </font-face>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -3 7 6" markerWidth="7" markerHeight="6" color="#235e00">
+      <g>
+        <path d="M 4.8 0 L 0 -1.8 L 0 1.8 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker_2" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -3 7 6" markerWidth="7" markerHeight="6" color="#b1001c">
+      <g>
+        <path d="M 4.8 0 L 0 -1.8 L 0 1.8 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <font-face font-family="Helvetica" font-size="16" units-per-em="1000" underline-position="-75.68359" underline-thickness="49.316406" slope="0" x-height="522.9492" cap-height="717.28516" ascent="770.0195" descent="-229.98047" font-weight="400">
+      <font-face-src>
+        <font-face-name name="Helvetica"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Helvetica" font-size="14.666667" units-per-em="1000" underline-position="-75.68359" underline-thickness="49.316406" slope="0" x-height="522.9492" cap-height="717.28516" ascent="770.0195" descent="-229.98047" font-weight="400">
+      <font-face-src>
+        <font-face-name name="Helvetica"/>
+      </font-face-src>
+    </font-face>
+  </defs>
+  <metadata> Produced by OmniGraffle 7.18.5\n2021-06-03 22:42:19 +0000</metadata>
+  <g id="waveform" fill-opacity="1" stroke="none" stroke-opacity="1" stroke-dasharray="none" fill="none">
+    <title>waveform</title>
+    <rect fill="white" x="572" y="193" width="615" height="353"/>
+    <g id="waveform_Layer_1">
+      <title>Layer 1</title>
+      <g id="Graphic_48">
+        <text transform="translate(978 198.5)" fill="#b1001c">
+          <tspan font-family="Helvetica Neue" font-size="18" font-weight="400" fill="#b1001c" x="0" y="17">Operating Phase</tspan>
+        </text>
+      </g>
+      <g id="Graphic_49">
+        <text transform="translate(717.413 198.5)" fill="#235e00">
+          <tspan font-family="Helvetica Neue" font-size="18" font-weight="400" fill="#235e00" x="0" y="17">Configuration Phase</tspan>
+        </text>
+      </g>
+      <g id="Line_51">
+        <line x1="799.25" y1="225.004" x2="799.25" y2="233.1" marker-end="url(#FilledArrow_Marker)" stroke="#235e00" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_52">
+        <line x1="1045.7814" y1="225.004" x2="1046.0048" y2="233.1049" marker-end="url(#FilledArrow_Marker_2)" stroke="#b1001c" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_45">
+        <path d="M 1184.9797 247.5 L 916 247.5 L 916 544 L 1184.9797 544 Z" stroke="#b1001c" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="12.0,12.0" stroke-width="3"/>
+      </g>
+      <g id="Graphic_46">
+        <path d="M 909 247.5 L 689.5 247.5 L 689.5 544 L 909 544 Z" stroke="#235e00" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="12.0,12.0" stroke-width="3"/>
+      </g>
+      <g id="Group_92">
+        <title>waves_0</title>
+        <g id="Group_93">
+          <title>lanes_0</title>
+          <g id="Group_732">
+            <title>gmarks_0</title>
+            <g id="Group_747">
+              <g id="Line_760">
+                <title>gmark_0_0</title>
+                <line x1="696.0813" y1="267.8203" x2="696.0813" y2="537.8203" stroke="#888" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
+              </g>
+              <g id="Line_759">
+                <title>gmark_1_0</title>
+                <line x1="736.0813" y1="267.8203" x2="736.0813" y2="537.8203" stroke="#888" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
+              </g>
+              <g id="Line_758">
+                <title>gmark_2_0</title>
+                <line x1="776.0813" y1="267.8203" x2="776.0813" y2="537.8203" stroke="#888" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
+              </g>
+              <g id="Line_757">
+                <title>gmark_3_0</title>
+                <line x1="816.0813" y1="267.8203" x2="816.0813" y2="537.8203" stroke="#888" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
+              </g>
+              <g id="Line_756">
+                <title>gmark_4_0</title>
+                <line x1="856.0813" y1="267.8203" x2="856.0813" y2="537.8203" stroke="#888" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
+              </g>
+              <g id="Line_755">
+                <title>gmark_5_0</title>
+                <line x1="896.0813" y1="267.8203" x2="896.0813" y2="537.8203" stroke="#888" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
+              </g>
+              <g id="Line_754">
+                <title>gmark_6_0</title>
+                <line x1="936.0813" y1="267.8203" x2="936.0813" y2="537.8203" stroke="#888" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
+              </g>
+              <g id="Line_753">
+                <title>gmark_7_0</title>
+                <line x1="976.0813" y1="267.8203" x2="976.0813" y2="537.8203" stroke="#888" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
+              </g>
+              <g id="Line_752">
+                <title>gmark_8_0</title>
+                <line x1="1016.0813" y1="267.8203" x2="1016.0813" y2="537.8203" stroke="#888" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
+              </g>
+              <g id="Line_751">
+                <title>gmark_9_0</title>
+                <line x1="1056.0813" y1="267.8203" x2="1056.0813" y2="537.8203" stroke="#888" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
+              </g>
+              <g id="Line_750">
+                <title>gmark_10_0</title>
+                <line x1="1096.0813" y1="267.8203" x2="1096.0813" y2="537.8203" stroke="#888" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
+              </g>
+              <g id="Line_749">
+                <title>gmark_11_0</title>
+                <line x1="1136.0813" y1="267.8203" x2="1136.0813" y2="537.8203" stroke="#888" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
+              </g>
+              <g id="Line_748">
+                <title>gmark_12_0</title>
+                <line x1="1176.0813" y1="267.8203" x2="1176.0813" y2="537.8203" stroke="#888" stroke-linecap="butt" stroke-linejoin="round" stroke-width=".5"/>
+              </g>
+            </g>
+            <g id="Group_733">
+              <g id="Graphic_746">
+                <title>Text</title>
+                <text transform="translate(691.63205 247.5)" fill="#aaa">
+                  <tspan font-family="Helvetica" font-size="16" font-weight="400" fill="#aaa" x="0" y="15">0</tspan>
+                </text>
+              </g>
+              <g id="Graphic_745">
+                <title>Text</title>
+                <text transform="translate(731.63205 247.5)" fill="#aaa">
+                  <tspan font-family="Helvetica" font-size="16" font-weight="400" fill="#aaa" x="0" y="15">1</tspan>
+                </text>
+              </g>
+              <g id="Graphic_744">
+                <title>Text</title>
+                <text transform="translate(771.63205 247.5)" fill="#aaa">
+                  <tspan font-family="Helvetica" font-size="16" font-weight="400" fill="#aaa" x="0" y="15">2</tspan>
+                </text>
+              </g>
+              <g id="Graphic_743">
+                <title>Text</title>
+                <text transform="translate(811.63205 247.5)" fill="#aaa">
+                  <tspan font-family="Helvetica" font-size="16" font-weight="400" fill="#aaa" x="0" y="15">3</tspan>
+                </text>
+              </g>
+              <g id="Graphic_742">
+                <title>Text</title>
+                <text transform="translate(851.632 247.5)" fill="#aaa">
+                  <tspan font-family="Helvetica" font-size="16" font-weight="400" fill="#aaa" x="0" y="15">4</tspan>
+                </text>
+              </g>
+              <g id="Graphic_741">
+                <title>Text</title>
+                <text transform="translate(891.632 247.5)" fill="#aaa">
+                  <tspan font-family="Helvetica" font-size="16" font-weight="400" fill="#aaa" x="0" y="15">5</tspan>
+                </text>
+              </g>
+              <g id="Graphic_740">
+                <title>Text</title>
+                <text transform="translate(931.632 247.5)" fill="#aaa">
+                  <tspan font-family="Helvetica" font-size="16" font-weight="400" fill="#aaa" x="0" y="15">6</tspan>
+                </text>
+              </g>
+              <g id="Graphic_739">
+                <title>Text</title>
+                <text transform="translate(971.632 247.5)" fill="#aaa">
+                  <tspan font-family="Helvetica" font-size="16" font-weight="400" fill="#aaa" x="0" y="15">7</tspan>
+                </text>
+              </g>
+              <g id="Graphic_738">
+                <title>Text</title>
+                <text transform="translate(1011.632 247.5)" fill="#aaa">
+                  <tspan font-family="Helvetica" font-size="16" font-weight="400" fill="#aaa" x="0" y="15">8</tspan>
+                </text>
+              </g>
+              <g id="Graphic_737">
+                <title>Text</title>
+                <text transform="translate(1051.632 247.5)" fill="#aaa">
+                  <tspan font-family="Helvetica" font-size="16" font-weight="400" fill="#aaa" x="0" y="15">9</tspan>
+                </text>
+              </g>
+              <g id="Graphic_736">
+                <title>Text</title>
+                <text transform="translate(1087.1828 247.5)" fill="#aaa">
+                  <tspan font-family="Helvetica" font-size="16" font-weight="400" fill="#aaa" x="0" y="15">10</tspan>
+                </text>
+              </g>
+              <g id="Graphic_735">
+                <title>Text</title>
+                <text transform="translate(1127.7727 247.5)" fill="#aaa">
+                  <tspan font-family="Helvetica" font-size="16" font-weight="400" fill="#aaa" x="0" y="15">11</tspan>
+                </text>
+              </g>
+              <g id="Graphic_734">
+                <title>Text</title>
+                <text transform="translate(1167.1828 247.5)" fill="#aaa">
+                  <tspan font-family="Helvetica" font-size="16" font-weight="400" fill="#aaa" x="0" y="15">12</tspan>
+                </text>
+              </g>
+            </g>
+          </g>
+          <g id="Group_669">
+            <title>wavelane_0_0</title>
+            <g id="Graphic_731">
+              <title>Text</title>
+              <text transform="translate(630.6444 274.19336)" fill="#0041c4">
+                <tspan font-family="Helvetica" font-size="14.666667" font-weight="400" fill="#0041c4" x="0" y="14">prog_clk</tspan>
+              </text>
+            </g>
+            <g id="Group_670">
+              <title>wavelane_draw_0_0</title>
+              <g id="Group_728">
+                <title>Pclk</title>
+                <g id="Graphic_730">
+                  <path d="M 693.0813 284.8203 L 696.0813 275.8203 L 699.0813 284.8203 C 697.0813 283.8203 695.0813 283.8203 693.0813 284.8203 Z" fill="black"/>
+                </g>
+                <g id="Graphic_729">
+                  <path d="M 696.0813 292.8203 L 696.0813 272.8203 L 716.0813 272.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_726">
+                <title>nclk</title>
+                <g id="Graphic_727">
+                  <path d="M 716.0813 272.8203 L 716.0813 292.8203 L 736.0813 292.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_723">
+                <title>Pclk</title>
+                <g id="Graphic_725">
+                  <path d="M 733.0813 284.8203 L 736.0813 275.8203 L 739.0813 284.8203 C 737.0813 283.8203 735.0813 283.8203 733.0813 284.8203 Z" fill="black"/>
+                </g>
+                <g id="Graphic_724">
+                  <path d="M 736.0813 292.8203 L 736.0813 272.8203 L 756.0813 272.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_721">
+                <title>nclk</title>
+                <g id="Graphic_722">
+                  <path d="M 756.0813 272.8203 L 756.0813 292.8203 L 776.0813 292.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_718">
+                <title>Pclk</title>
+                <g id="Graphic_720">
+                  <path d="M 773.0813 284.8203 L 776.0813 275.8203 L 779.0813 284.8203 C 777.0813 283.8203 775.0813 283.8203 773.0813 284.8203 Z" fill="black"/>
+                </g>
+                <g id="Graphic_719">
+                  <path d="M 776.0813 292.8203 L 776.0813 272.8203 L 796.0813 272.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_716">
+                <title>nclk</title>
+                <g id="Graphic_717">
+                  <path d="M 796.0813 272.8203 L 796.0813 292.8203 L 816.0813 292.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_713">
+                <title>Pclk</title>
+                <g id="Graphic_715">
+                  <path d="M 813.0813 284.8203 L 816.0813 275.8203 L 819.0813 284.8203 C 817.0813 283.8203 815.0813 283.8203 813.0813 284.8203 Z" fill="black"/>
+                </g>
+                <g id="Graphic_714">
+                  <path d="M 816.0813 292.8203 L 816.0813 272.8203 L 836.0813 272.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_711">
+                <title>nclk</title>
+                <g id="Graphic_712">
+                  <path d="M 836.0813 272.8203 L 836.0813 292.8203 L 856.0813 292.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_708">
+                <title>Pclk</title>
+                <g id="Graphic_710">
+                  <path d="M 853.0813 284.8203 L 856.0813 275.8203 L 859.0813 284.8203 C 857.0813 283.8203 855.0813 283.8203 853.0813 284.8203 Z" fill="black"/>
+                </g>
+                <g id="Graphic_709">
+                  <path d="M 856.0813 292.8203 L 856.0813 272.8203 L 876.0813 272.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_706">
+                <title>nclk</title>
+                <g id="Graphic_707">
+                  <path d="M 876.0813 272.8203 L 876.0813 292.8203 L 896.0813 292.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_703">
+                <title>Pclk</title>
+                <g id="Graphic_705">
+                  <path d="M 893.0813 284.8203 L 896.0813 275.8203 L 899.0813 284.8203 C 897.0813 283.8203 895.0813 283.8203 893.0813 284.8203 Z" fill="black"/>
+                </g>
+                <g id="Graphic_704">
+                  <path d="M 896.0813 292.8203 L 896.0813 272.8203 L 916.0813 272.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_701">
+                <title>nclk</title>
+                <g id="Graphic_702">
+                  <path d="M 916.0813 272.8203 L 916.0813 292.8203 L 936.0813 292.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_698">
+                <title>Pclk</title>
+                <g id="Graphic_700">
+                  <path d="M 933.0813 284.8203 L 936.0813 275.8203 L 939.0813 284.8203 C 937.0813 283.8203 935.0813 283.8203 933.0813 284.8203 Z" fill="black"/>
+                </g>
+                <g id="Graphic_699">
+                  <path d="M 936.0813 292.8203 L 936.0813 272.8203 L 956.0813 272.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_696">
+                <title>nclk</title>
+                <g id="Graphic_697">
+                  <path d="M 956.0813 272.8203 L 956.0813 292.8203 L 976.0813 292.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_693">
+                <title>Pclk</title>
+                <g id="Graphic_695">
+                  <path d="M 973.0813 284.8203 L 976.0813 275.8203 L 979.0813 284.8203 C 977.0813 283.8203 975.0813 283.8203 973.0813 284.8203 Z" fill="black"/>
+                </g>
+                <g id="Graphic_694">
+                  <path d="M 976.0813 292.8203 L 976.0813 272.8203 L 996.0813 272.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_691">
+                <title>nclk</title>
+                <g id="Graphic_692">
+                  <path d="M 996.0813 272.8203 L 996.0813 292.8203 L 1016.0813 292.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_688">
+                <title>Pclk</title>
+                <g id="Graphic_690">
+                  <path d="M 1013.0813 284.8203 L 1016.0813 275.8203 L 1019.0813 284.8203 C 1017.0813 283.8203 1015.0813 283.8203 1013.0813 284.8203 Z" fill="black"/>
+                </g>
+                <g id="Graphic_689">
+                  <path d="M 1016.0813 292.8203 L 1016.0813 272.8203 L 1036.0813 272.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_686">
+                <title>nclk</title>
+                <g id="Graphic_687">
+                  <path d="M 1036.0813 272.8203 L 1036.0813 292.8203 L 1056.0813 292.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_683">
+                <title>Pclk</title>
+                <g id="Graphic_685">
+                  <path d="M 1053.0813 284.8203 L 1056.0813 275.8203 L 1059.0813 284.8203 C 1057.0813 283.8203 1055.0813 283.8203 1053.0813 284.8203 Z" fill="black"/>
+                </g>
+                <g id="Graphic_684">
+                  <path d="M 1056.0813 292.8203 L 1056.0813 272.8203 L 1076.0813 272.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_681">
+                <title>nclk</title>
+                <g id="Graphic_682">
+                  <path d="M 1076.0813 272.8203 L 1076.0813 292.8203 L 1096.0813 292.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_678">
+                <title>Pclk</title>
+                <g id="Graphic_680">
+                  <path d="M 1093.0813 284.8203 L 1096.0813 275.8203 L 1099.0813 284.8203 C 1097.0813 283.8203 1095.0813 283.8203 1093.0813 284.8203 Z" fill="black"/>
+                </g>
+                <g id="Graphic_679">
+                  <path d="M 1096.0813 292.8203 L 1096.0813 272.8203 L 1116.0813 272.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_676">
+                <title>nclk</title>
+                <g id="Graphic_677">
+                  <path d="M 1116.0813 272.8203 L 1116.0813 292.8203 L 1136.0813 292.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_673">
+                <title>Pclk</title>
+                <g id="Graphic_675">
+                  <path d="M 1133.0813 284.8203 L 1136.0813 275.8203 L 1139.0813 284.8203 C 1137.0813 283.8203 1135.0813 283.8203 1133.0813 284.8203 Z" fill="black"/>
+                </g>
+                <g id="Graphic_674">
+                  <path d="M 1136.0813 292.8203 L 1136.0813 272.8203 L 1156.0813 272.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_671">
+                <title>nclk</title>
+                <g id="Graphic_672">
+                  <path d="M 1156.0813 272.8203 L 1156.0813 292.8203 L 1176.0813 292.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+            </g>
+          </g>
+          <g id="Group_618">
+            <title>wavelane_1_0</title>
+            <g id="Graphic_668">
+              <title>Text</title>
+              <text transform="translate(632.2772 304.19336)" fill="#0041c4">
+                <tspan font-family="Helvetica" font-size="14.666667" font-weight="400" fill="#0041c4" x="0" y="14">prog_rst</tspan>
+              </text>
+            </g>
+            <g id="Group_619">
+              <title>wavelane_draw_1_0</title>
+              <g id="Group_666">
+                <title>111</title>
+                <g id="Graphic_667">
+                  <line x1="696.0813" y1="302.8203" x2="716.0813" y2="302.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_664">
+                <title>111</title>
+                <g id="Graphic_665">
+                  <line x1="716.0813" y1="302.8203" x2="736.0813" y2="302.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_662">
+                <title>111</title>
+                <g id="Graphic_663">
+                  <line x1="736.0813" y1="302.8203" x2="756.0813" y2="302.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_660">
+                <title>111</title>
+                <g id="Graphic_661">
+                  <line x1="756.0813" y1="302.8203" x2="776.0813" y2="302.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_658">
+                <title>1m0</title>
+                <g id="Graphic_659">
+                  <path d="M 776.0813 302.8203 L 779.0813 302.8203 L 785.0813 322.8203 L 796.0813 322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_656">
+                <title>000</title>
+                <g id="Graphic_657">
+                  <line x1="796.0813" y1="322.8203" x2="816.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_654">
+                <title>000</title>
+                <g id="Graphic_655">
+                  <line x1="816.0813" y1="322.8203" x2="836.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_652">
+                <title>000</title>
+                <g id="Graphic_653">
+                  <line x1="836.0813" y1="322.8203" x2="856.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_650">
+                <title>000</title>
+                <g id="Graphic_651">
+                  <line x1="856.0813" y1="322.8203" x2="876.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_648">
+                <title>000</title>
+                <g id="Graphic_649">
+                  <line x1="876.0813" y1="322.8203" x2="896.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_646">
+                <title>000</title>
+                <g id="Graphic_647">
+                  <line x1="896.0813" y1="322.8203" x2="916.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_644">
+                <title>000</title>
+                <g id="Graphic_645">
+                  <line x1="916.0813" y1="322.8203" x2="936.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_642">
+                <title>000</title>
+                <g id="Graphic_643">
+                  <line x1="936.0813" y1="322.8203" x2="956.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_640">
+                <title>000</title>
+                <g id="Graphic_641">
+                  <line x1="956.0813" y1="322.8203" x2="976.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_638">
+                <title>000</title>
+                <g id="Graphic_639">
+                  <line x1="976.0813" y1="322.8203" x2="996.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_636">
+                <title>000</title>
+                <g id="Graphic_637">
+                  <line x1="996.0813" y1="322.8203" x2="1016.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_634">
+                <title>000</title>
+                <g id="Graphic_635">
+                  <line x1="1016.0813" y1="322.8203" x2="1036.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_632">
+                <title>000</title>
+                <g id="Graphic_633">
+                  <line x1="1036.0813" y1="322.8203" x2="1056.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_630">
+                <title>000</title>
+                <g id="Graphic_631">
+                  <line x1="1056.0813" y1="322.8203" x2="1076.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_628">
+                <title>000</title>
+                <g id="Graphic_629">
+                  <line x1="1076.0813" y1="322.8203" x2="1096.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_626">
+                <title>000</title>
+                <g id="Graphic_627">
+                  <line x1="1096.0813" y1="322.8203" x2="1116.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_624">
+                <title>000</title>
+                <g id="Graphic_625">
+                  <line x1="1116.0813" y1="322.8203" x2="1136.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_622">
+                <title>000</title>
+                <g id="Graphic_623">
+                  <line x1="1136.0813" y1="322.8203" x2="1156.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_620">
+                <title>000</title>
+                <g id="Graphic_621">
+                  <line x1="1156.0813" y1="322.8203" x2="1176.0813" y2="322.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+            </g>
+          </g>
+          <g id="Group_561">
+            <title>wavelane_2_0</title>
+            <g id="Graphic_617">
+              <title>Text</title>
+              <text transform="translate(668.1561 334.19336)" fill="#0041c4">
+                <tspan font-family="Helvetica" font-size="14.666667" font-weight="400" fill="#0041c4" x="0" y="14">clk</tspan>
+              </text>
+            </g>
+            <g id="Group_562">
+              <title>wavelane_draw_2_0</title>
+              <g id="Group_615">
+                <title>000</title>
+                <g id="Graphic_616">
+                  <line x1="696.0813" y1="352.8203" x2="716.0813" y2="352.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_613">
+                <title>000</title>
+                <g id="Graphic_614">
+                  <line x1="716.0813" y1="352.8203" x2="736.0813" y2="352.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_611">
+                <title>000</title>
+                <g id="Graphic_612">
+                  <line x1="736.0813" y1="352.8203" x2="756.0813" y2="352.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_609">
+                <title>000</title>
+                <g id="Graphic_610">
+                  <line x1="756.0813" y1="352.8203" x2="776.0813" y2="352.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_607">
+                <title>000</title>
+                <g id="Graphic_608">
+                  <line x1="776.0813" y1="352.8203" x2="796.0813" y2="352.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_605">
+                <title>000</title>
+                <g id="Graphic_606">
+                  <line x1="796.0813" y1="352.8203" x2="816.0813" y2="352.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_603">
+                <title>000</title>
+                <g id="Graphic_604">
+                  <line x1="816.0813" y1="352.8203" x2="836.0813" y2="352.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_601">
+                <title>000</title>
+                <g id="Graphic_602">
+                  <line x1="836.0813" y1="352.8203" x2="856.0813" y2="352.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_599">
+                <title>000</title>
+                <g id="Graphic_600">
+                  <line x1="856.0813" y1="352.8203" x2="876.0813" y2="352.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_597">
+                <title>000</title>
+                <g id="Graphic_598">
+                  <line x1="876.0813" y1="352.8203" x2="896.0813" y2="352.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_595">
+                <title>0m0</title>
+                <g id="Graphic_596">
+                  <path d="M 896.0813 352.8203 L 899.0813 352.8203 L 902.0813 342.8203 L 905.0813 352.8203 L 916.0813 352.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_593">
+                <title>000</title>
+                <g id="Graphic_594">
+                  <line x1="916.0813" y1="352.8203" x2="936.0813" y2="352.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_590">
+                <title>Pclk</title>
+                <g id="Graphic_592">
+                  <path d="M 933.0813 344.8203 L 936.0813 335.8203 L 939.0813 344.8203 C 937.0813 343.8203 935.0813 343.8203 933.0813 344.8203 Z" fill="black"/>
+                </g>
+                <g id="Graphic_591">
+                  <path d="M 936.0813 352.8203 L 936.0813 332.8203 L 956.0813 332.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_588">
+                <title>nclk</title>
+                <g id="Graphic_589">
+                  <path d="M 956.0813 332.8203 L 956.0813 352.8203 L 976.0813 352.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_585">
+                <title>Pclk</title>
+                <g id="Graphic_587">
+                  <path d="M 973.0813 344.8203 L 976.0813 335.8203 L 979.0813 344.8203 C 977.0813 343.8203 975.0813 343.8203 973.0813 344.8203 Z" fill="black"/>
+                </g>
+                <g id="Graphic_586">
+                  <path d="M 976.0813 352.8203 L 976.0813 332.8203 L 996.0813 332.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_583">
+                <title>nclk</title>
+                <g id="Graphic_584">
+                  <path d="M 996.0813 332.8203 L 996.0813 352.8203 L 1016.0813 352.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_580">
+                <title>Pclk</title>
+                <g id="Graphic_582">
+                  <path d="M 1013.0813 344.8203 L 1016.0813 335.8203 L 1019.0813 344.8203 C 1017.0813 343.8203 1015.0813 343.8203 1013.0813 344.8203 Z" fill="black"/>
+                </g>
+                <g id="Graphic_581">
+                  <path d="M 1016.0813 352.8203 L 1016.0813 332.8203 L 1036.0813 332.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_578">
+                <title>nclk</title>
+                <g id="Graphic_579">
+                  <path d="M 1036.0813 332.8203 L 1036.0813 352.8203 L 1056.0813 352.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_575">
+                <title>Pclk</title>
+                <g id="Graphic_577">
+                  <path d="M 1053.0813 344.8203 L 1056.0813 335.8203 L 1059.0813 344.8203 C 1057.0813 343.8203 1055.0813 343.8203 1053.0813 344.8203 Z" fill="black"/>
+                </g>
+                <g id="Graphic_576">
+                  <path d="M 1056.0813 352.8203 L 1056.0813 332.8203 L 1076.0813 332.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_573">
+                <title>nclk</title>
+                <g id="Graphic_574">
+                  <path d="M 1076.0813 332.8203 L 1076.0813 352.8203 L 1096.0813 352.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_570">
+                <title>Pclk</title>
+                <g id="Graphic_572">
+                  <path d="M 1093.0813 344.8203 L 1096.0813 335.8203 L 1099.0813 344.8203 C 1097.0813 343.8203 1095.0813 343.8203 1093.0813 344.8203 Z" fill="black"/>
+                </g>
+                <g id="Graphic_571">
+                  <path d="M 1096.0813 352.8203 L 1096.0813 332.8203 L 1116.0813 332.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_568">
+                <title>nclk</title>
+                <g id="Graphic_569">
+                  <path d="M 1116.0813 332.8203 L 1116.0813 352.8203 L 1136.0813 352.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_565">
+                <title>Pclk</title>
+                <g id="Graphic_567">
+                  <path d="M 1133.0813 344.8203 L 1136.0813 335.8203 L 1139.0813 344.8203 C 1137.0813 343.8203 1135.0813 343.8203 1133.0813 344.8203 Z" fill="black"/>
+                </g>
+                <g id="Graphic_566">
+                  <path d="M 1136.0813 352.8203 L 1136.0813 332.8203 L 1156.0813 332.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_563">
+                <title>nclk</title>
+                <g id="Graphic_564">
+                  <path d="M 1156.0813 332.8203 L 1156.0813 352.8203 L 1176.0813 352.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+            </g>
+          </g>
+          <g id="Group_510">
+            <title>wavelane_3_0</title>
+            <g id="Graphic_560">
+              <title>Text</title>
+              <text transform="translate(669.78895 364.19336)" fill="#0041c4">
+                <tspan font-family="Helvetica" font-size="14.666667" font-weight="400" fill="#0041c4" x="0" y="14">rst</tspan>
+              </text>
+            </g>
+            <g id="Group_511">
+              <title>wavelane_draw_3_0</title>
+              <g id="Group_558">
+                <title>111</title>
+                <g id="Graphic_559">
+                  <line x1="696.0813" y1="362.8203" x2="716.0813" y2="362.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_556">
+                <title>111</title>
+                <g id="Graphic_557">
+                  <line x1="716.0813" y1="362.8203" x2="736.0813" y2="362.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_554">
+                <title>111</title>
+                <g id="Graphic_555">
+                  <line x1="736.0813" y1="362.8203" x2="756.0813" y2="362.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_552">
+                <title>111</title>
+                <g id="Graphic_553">
+                  <line x1="756.0813" y1="362.8203" x2="776.0813" y2="362.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_550">
+                <title>111</title>
+                <g id="Graphic_551">
+                  <line x1="776.0813" y1="362.8203" x2="796.0813" y2="362.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_548">
+                <title>111</title>
+                <g id="Graphic_549">
+                  <line x1="796.0813" y1="362.8203" x2="816.0813" y2="362.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_546">
+                <title>111</title>
+                <g id="Graphic_547">
+                  <line x1="816.0813" y1="362.8203" x2="836.0813" y2="362.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_544">
+                <title>111</title>
+                <g id="Graphic_545">
+                  <line x1="836.0813" y1="362.8203" x2="856.0813" y2="362.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_542">
+                <title>111</title>
+                <g id="Graphic_543">
+                  <line x1="856.0813" y1="362.8203" x2="876.0813" y2="362.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_540">
+                <title>111</title>
+                <g id="Graphic_541">
+                  <line x1="876.0813" y1="362.8203" x2="896.0813" y2="362.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_538">
+                <title>111</title>
+                <g id="Graphic_539">
+                  <line x1="896.0813" y1="362.8203" x2="916.0813" y2="362.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_536">
+                <title>111</title>
+                <g id="Graphic_537">
+                  <line x1="916.0813" y1="362.8203" x2="936.0813" y2="362.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_534">
+                <title>1m0</title>
+                <g id="Graphic_535">
+                  <path d="M 936.0813 362.8203 L 939.0813 362.8203 L 945.0813 382.8203 L 956.0813 382.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_532">
+                <title>000</title>
+                <g id="Graphic_533">
+                  <line x1="956.0813" y1="382.8203" x2="976.0813" y2="382.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_530">
+                <title>000</title>
+                <g id="Graphic_531">
+                  <line x1="976.0813" y1="382.8203" x2="996.0813" y2="382.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_528">
+                <title>000</title>
+                <g id="Graphic_529">
+                  <line x1="996.0813" y1="382.8203" x2="1016.0813" y2="382.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_526">
+                <title>000</title>
+                <g id="Graphic_527">
+                  <line x1="1016.0813" y1="382.8203" x2="1036.0813" y2="382.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_524">
+                <title>000</title>
+                <g id="Graphic_525">
+                  <line x1="1036.0813" y1="382.8203" x2="1056.0813" y2="382.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_522">
+                <title>000</title>
+                <g id="Graphic_523">
+                  <line x1="1056.0813" y1="382.8203" x2="1076.0813" y2="382.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_520">
+                <title>000</title>
+                <g id="Graphic_521">
+                  <line x1="1076.0813" y1="382.8203" x2="1096.0813" y2="382.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_518">
+                <title>000</title>
+                <g id="Graphic_519">
+                  <line x1="1096.0813" y1="382.8203" x2="1116.0813" y2="382.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_516">
+                <title>000</title>
+                <g id="Graphic_517">
+                  <line x1="1116.0813" y1="382.8203" x2="1136.0813" y2="382.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_514">
+                <title>000</title>
+                <g id="Graphic_515">
+                  <line x1="1136.0813" y1="382.8203" x2="1156.0813" y2="382.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_512">
+                <title>000</title>
+                <g id="Graphic_513">
+                  <line x1="1156.0813" y1="382.8203" x2="1176.0813" y2="382.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+            </g>
+          </g>
+          <g id="Group_444">
+            <title>wavelane_4_0</title>
+            <g id="Graphic_509">
+              <title>Text</title>
+              <text transform="translate(616.7655 394.19336)" fill="#0041c4">
+                <tspan font-family="Helvetica" font-size="14.666667" font-weight="400" fill="#0041c4" x="0" y="14">prog_input</tspan>
+              </text>
+            </g>
+            <g id="Group_445">
+              <title>wavelane_draw_4_0</title>
+              <g id="Group_507">
+                <title>000</title>
+                <g id="Graphic_508">
+                  <line x1="696.0813" y1="412.8203" x2="716.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_505">
+                <title>000</title>
+                <g id="Graphic_506">
+                  <line x1="716.0813" y1="412.8203" x2="736.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_503">
+                <title>000</title>
+                <g id="Graphic_504">
+                  <line x1="736.0813" y1="412.8203" x2="756.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_501">
+                <title>000</title>
+                <g id="Graphic_502">
+                  <line x1="756.0813" y1="412.8203" x2="776.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_497">
+                <title>0mv-3</title>
+                <g id="Graphic_500">
+                  <path d="M 785.0813 392.8203 L 796.0813 392.8203 L 796.0813 412.8203 L 779.0813 412.8203 Z" fill="#ffffb4"/>
+                </g>
+                <g id="Graphic_499">
+                  <path d="M 779.0813 412.8203 L 785.0813 392.8203 L 796.0813 392.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_498">
+                  <line x1="776.0813" y1="412.8203" x2="796.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_493">
+                <title>vvv-3</title>
+                <g id="Graphic_496">
+                  <path d="M 816.0813 412.8203 L 796.0813 412.8203 L 796.0813 392.8203 L 816.0813 392.8203" fill="#ffffb4"/>
+                </g>
+                <g id="Graphic_495">
+                  <line x1="796.0813" y1="412.8203" x2="816.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_494">
+                  <line x1="796.0813" y1="392.8203" x2="816.0813" y2="392.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_489">
+                <title>vvv-3</title>
+                <g id="Graphic_492">
+                  <path d="M 836.0813 412.8203 L 816.0813 412.8203 L 816.0813 392.8203 L 836.0813 392.8203" fill="#ffffb4"/>
+                </g>
+                <g id="Graphic_491">
+                  <line x1="816.0813" y1="412.8203" x2="836.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_490">
+                  <line x1="816.0813" y1="392.8203" x2="836.0813" y2="392.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_485">
+                <title>vvv-3</title>
+                <g id="Graphic_488">
+                  <path d="M 856.0813 412.8203 L 836.0813 412.8203 L 836.0813 392.8203 L 856.0813 392.8203" fill="#ffffb4"/>
+                </g>
+                <g id="Graphic_487">
+                  <line x1="836.0813" y1="412.8203" x2="856.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_486">
+                  <line x1="836.0813" y1="392.8203" x2="856.0813" y2="392.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_481">
+                <title>vvv-3</title>
+                <g id="Graphic_484">
+                  <path d="M 876.0813 412.8203 L 856.0813 412.8203 L 856.0813 392.8203 L 876.0813 392.8203" fill="#ffffb4"/>
+                </g>
+                <g id="Graphic_483">
+                  <line x1="856.0813" y1="412.8203" x2="876.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_482">
+                  <line x1="856.0813" y1="392.8203" x2="876.0813" y2="392.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_477">
+                <title>vvv-3</title>
+                <g id="Graphic_480">
+                  <path d="M 896.0813 412.8203 L 876.0813 412.8203 L 876.0813 392.8203 L 896.0813 392.8203" fill="#ffffb4"/>
+                </g>
+                <g id="Graphic_479">
+                  <line x1="876.0813" y1="412.8203" x2="896.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_478">
+                  <line x1="876.0813" y1="392.8203" x2="896.0813" y2="392.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_473">
+                <title>vm0-3</title>
+                <g id="Graphic_476">
+                  <path d="M 896.0813 412.8203 L 896.0813 392.8203 L 899.0813 392.8203 L 905.0813 412.8203" fill="#ffffb4"/>
+                </g>
+                <g id="Graphic_475">
+                  <path d="M 896.0813 392.8203 L 899.0813 392.8203 L 905.0813 412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_474">
+                  <line x1="896.0813" y1="412.8203" x2="916.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_471">
+                <title>000</title>
+                <g id="Graphic_472">
+                  <line x1="916.0813" y1="412.8203" x2="936.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_469">
+                <title>000</title>
+                <g id="Graphic_470">
+                  <line x1="936.0813" y1="412.8203" x2="956.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_467">
+                <title>000</title>
+                <g id="Graphic_468">
+                  <line x1="956.0813" y1="412.8203" x2="976.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_465">
+                <title>000</title>
+                <g id="Graphic_466">
+                  <line x1="976.0813" y1="412.8203" x2="996.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_463">
+                <title>000</title>
+                <g id="Graphic_464">
+                  <line x1="996.0813" y1="412.8203" x2="1016.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_461">
+                <title>000</title>
+                <g id="Graphic_462">
+                  <line x1="1016.0813" y1="412.8203" x2="1036.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_459">
+                <title>000</title>
+                <g id="Graphic_460">
+                  <line x1="1036.0813" y1="412.8203" x2="1056.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_457">
+                <title>000</title>
+                <g id="Graphic_458">
+                  <line x1="1056.0813" y1="412.8203" x2="1076.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_455">
+                <title>000</title>
+                <g id="Graphic_456">
+                  <line x1="1076.0813" y1="412.8203" x2="1096.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_453">
+                <title>000</title>
+                <g id="Graphic_454">
+                  <line x1="1096.0813" y1="412.8203" x2="1116.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_451">
+                <title>000</title>
+                <g id="Graphic_452">
+                  <line x1="1116.0813" y1="412.8203" x2="1136.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_449">
+                <title>000</title>
+                <g id="Graphic_450">
+                  <line x1="1136.0813" y1="412.8203" x2="1156.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_447">
+                <title>000</title>
+                <g id="Graphic_448">
+                  <line x1="1156.0813" y1="412.8203" x2="1176.0813" y2="412.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Graphic_446">
+                <title>Text</title>
+                <text transform="translate(811.1115 394.19336)" fill="black">
+                  <tspan font-family="Helvetica" font-size="14.666667" font-weight="400" fill="black" x="0" y="14">Bitstream</tspan>
+                </text>
+              </g>
+            </g>
+          </g>
+          <g id="Group_368">
+            <title>wavelane_5_0</title>
+            <g id="Graphic_443">
+              <title>Text</title>
+              <text transform="translate(595.59624 424.19336)" fill="#0041c4">
+                <tspan font-family="Helvetica" font-size="14.666667" font-weight="400" fill="#0041c4" x="0" y="14">Input stimulus</tspan>
+              </text>
+            </g>
+            <g id="Group_369">
+              <title>wavelane_draw_5_0</title>
+              <g id="Group_441">
+                <title>000</title>
+                <g id="Graphic_442">
+                  <line x1="696.0813" y1="442.8203" x2="716.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_439">
+                <title>000</title>
+                <g id="Graphic_440">
+                  <line x1="716.0813" y1="442.8203" x2="736.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_437">
+                <title>000</title>
+                <g id="Graphic_438">
+                  <line x1="736.0813" y1="442.8203" x2="756.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_435">
+                <title>000</title>
+                <g id="Graphic_436">
+                  <line x1="756.0813" y1="442.8203" x2="776.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_433">
+                <title>000</title>
+                <g id="Graphic_434">
+                  <line x1="776.0813" y1="442.8203" x2="796.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_431">
+                <title>000</title>
+                <g id="Graphic_432">
+                  <line x1="796.0813" y1="442.8203" x2="816.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_429">
+                <title>000</title>
+                <g id="Graphic_430">
+                  <line x1="816.0813" y1="442.8203" x2="836.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_427">
+                <title>000</title>
+                <g id="Graphic_428">
+                  <line x1="836.0813" y1="442.8203" x2="856.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_425">
+                <title>000</title>
+                <g id="Graphic_426">
+                  <line x1="856.0813" y1="442.8203" x2="876.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_423">
+                <title>000</title>
+                <g id="Graphic_424">
+                  <line x1="876.0813" y1="442.8203" x2="896.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_421">
+                <title>000</title>
+                <g id="Graphic_422">
+                  <line x1="896.0813" y1="442.8203" x2="916.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_419">
+                <title>000</title>
+                <g id="Graphic_420">
+                  <line x1="916.0813" y1="442.8203" x2="936.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_415">
+                <title>0mv-4</title>
+                <g id="Graphic_418">
+                  <path d="M 945.0813 422.8203 L 956.0813 422.8203 L 956.0813 442.8203 L 939.0813 442.8203 Z" fill="#ffe0b9"/>
+                </g>
+                <g id="Graphic_417">
+                  <path d="M 939.0813 442.8203 L 945.0813 422.8203 L 956.0813 422.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_416">
+                  <line x1="936.0813" y1="442.8203" x2="956.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_411">
+                <title>vvv-4</title>
+                <g id="Graphic_414">
+                  <path d="M 976.0813 442.8203 L 956.0813 442.8203 L 956.0813 422.8203 L 976.0813 422.8203" fill="#ffe0b9"/>
+                </g>
+                <g id="Graphic_413">
+                  <line x1="956.0813" y1="442.8203" x2="976.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_412">
+                  <line x1="956.0813" y1="422.8203" x2="976.0813" y2="422.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_407">
+                <title>vvv-4</title>
+                <g id="Graphic_410">
+                  <path d="M 996.0813 442.8203 L 976.0813 442.8203 L 976.0813 422.8203 L 996.0813 422.8203" fill="#ffe0b9"/>
+                </g>
+                <g id="Graphic_409">
+                  <line x1="976.0813" y1="442.8203" x2="996.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_408">
+                  <line x1="976.0813" y1="422.8203" x2="996.0813" y2="422.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_403">
+                <title>vvv-4</title>
+                <g id="Graphic_406">
+                  <path d="M 1016.0813 442.8203 L 996.0813 442.8203 L 996.0813 422.8203 L 1016.0813 422.8203" fill="#ffe0b9"/>
+                </g>
+                <g id="Graphic_405">
+                  <line x1="996.0813" y1="442.8203" x2="1016.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_404">
+                  <line x1="996.0813" y1="422.8203" x2="1016.0813" y2="422.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_399">
+                <title>vvv-4</title>
+                <g id="Graphic_402">
+                  <path d="M 1036.0813 442.8203 L 1016.0813 442.8203 L 1016.0813 422.8203 L 1036.0813 422.8203" fill="#ffe0b9"/>
+                </g>
+                <g id="Graphic_401">
+                  <line x1="1016.0813" y1="442.8203" x2="1036.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_400">
+                  <line x1="1016.0813" y1="422.8203" x2="1036.0813" y2="422.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_395">
+                <title>vvv-4</title>
+                <g id="Graphic_398">
+                  <path d="M 1056.0813 442.8203 L 1036.0813 442.8203 L 1036.0813 422.8203 L 1056.0813 422.8203" fill="#ffe0b9"/>
+                </g>
+                <g id="Graphic_397">
+                  <line x1="1036.0813" y1="442.8203" x2="1056.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_396">
+                  <line x1="1036.0813" y1="422.8203" x2="1056.0813" y2="422.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_391">
+                <title>vvv-4</title>
+                <g id="Graphic_394">
+                  <path d="M 1076.0813 442.8203 L 1056.0813 442.8203 L 1056.0813 422.8203 L 1076.0813 422.8203" fill="#ffe0b9"/>
+                </g>
+                <g id="Graphic_393">
+                  <line x1="1056.0813" y1="442.8203" x2="1076.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_392">
+                  <line x1="1056.0813" y1="422.8203" x2="1076.0813" y2="422.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_387">
+                <title>vvv-4</title>
+                <g id="Graphic_390">
+                  <path d="M 1096.0813 442.8203 L 1076.0813 442.8203 L 1076.0813 422.8203 L 1096.0813 422.8203" fill="#ffe0b9"/>
+                </g>
+                <g id="Graphic_389">
+                  <line x1="1076.0813" y1="442.8203" x2="1096.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_388">
+                  <line x1="1076.0813" y1="422.8203" x2="1096.0813" y2="422.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_383">
+                <title>vvv-4</title>
+                <g id="Graphic_386">
+                  <path d="M 1116.0813 442.8203 L 1096.0813 442.8203 L 1096.0813 422.8203 L 1116.0813 422.8203" fill="#ffe0b9"/>
+                </g>
+                <g id="Graphic_385">
+                  <line x1="1096.0813" y1="442.8203" x2="1116.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_384">
+                  <line x1="1096.0813" y1="422.8203" x2="1116.0813" y2="422.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_379">
+                <title>vvv-4</title>
+                <g id="Graphic_382">
+                  <path d="M 1136.0813 442.8203 L 1116.0813 442.8203 L 1116.0813 422.8203 L 1136.0813 422.8203" fill="#ffe0b9"/>
+                </g>
+                <g id="Graphic_381">
+                  <line x1="1116.0813" y1="442.8203" x2="1136.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_380">
+                  <line x1="1116.0813" y1="422.8203" x2="1136.0813" y2="422.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_375">
+                <title>vvv-4</title>
+                <g id="Graphic_378">
+                  <path d="M 1156.0813 442.8203 L 1136.0813 442.8203 L 1136.0813 422.8203 L 1156.0813 422.8203" fill="#ffe0b9"/>
+                </g>
+                <g id="Graphic_377">
+                  <line x1="1136.0813" y1="442.8203" x2="1156.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_376">
+                  <line x1="1136.0813" y1="422.8203" x2="1156.0813" y2="422.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_371">
+                <title>vvv-4</title>
+                <g id="Graphic_374">
+                  <path d="M 1176.0813 442.8203 L 1156.0813 442.8203 L 1156.0813 422.8203 L 1176.0813 422.8203" fill="#ffe0b9"/>
+                </g>
+                <g id="Graphic_373">
+                  <line x1="1156.0813" y1="442.8203" x2="1176.0813" y2="442.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_372">
+                  <line x1="1156.0813" y1="422.8203" x2="1176.0813" y2="422.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Graphic_370">
+                <title>Text</title>
+                <text transform="translate(1008.689 424.19336)" fill="black">
+                  <tspan font-family="Helvetica" font-size="14.666667" font-weight="400" fill="black" x="0" y="14">Random vectors</tspan>
+                </text>
+              </g>
+            </g>
+          </g>
+          <g id="Group_292">
+            <title>wavelane_6_0</title>
+            <g id="Graphic_367">
+              <title>Text</title>
+              <text transform="translate(594.7655 454.19336)" fill="#0041c4">
+                <tspan font-family="Helvetica" font-size="14.666667" font-weight="400" fill="#0041c4" x="0" y="14">FPGA outputs</tspan>
+              </text>
+            </g>
+            <g id="Group_293">
+              <title>wavelane_draw_6_0</title>
+              <g id="Group_365">
+                <title>000</title>
+                <g id="Graphic_366">
+                  <line x1="696.0813" y1="472.8203" x2="716.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_363">
+                <title>000</title>
+                <g id="Graphic_364">
+                  <line x1="716.0813" y1="472.8203" x2="736.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_361">
+                <title>000</title>
+                <g id="Graphic_362">
+                  <line x1="736.0813" y1="472.8203" x2="756.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_359">
+                <title>000</title>
+                <g id="Graphic_360">
+                  <line x1="756.0813" y1="472.8203" x2="776.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_357">
+                <title>000</title>
+                <g id="Graphic_358">
+                  <line x1="776.0813" y1="472.8203" x2="796.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_355">
+                <title>000</title>
+                <g id="Graphic_356">
+                  <line x1="796.0813" y1="472.8203" x2="816.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_353">
+                <title>000</title>
+                <g id="Graphic_354">
+                  <line x1="816.0813" y1="472.8203" x2="836.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_351">
+                <title>000</title>
+                <g id="Graphic_352">
+                  <line x1="836.0813" y1="472.8203" x2="856.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_349">
+                <title>000</title>
+                <g id="Graphic_350">
+                  <line x1="856.0813" y1="472.8203" x2="876.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_347">
+                <title>000</title>
+                <g id="Graphic_348">
+                  <line x1="876.0813" y1="472.8203" x2="896.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_345">
+                <title>000</title>
+                <g id="Graphic_346">
+                  <line x1="896.0813" y1="472.8203" x2="916.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_343">
+                <title>000</title>
+                <g id="Graphic_344">
+                  <line x1="916.0813" y1="472.8203" x2="936.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_339">
+                <title>0mv-5</title>
+                <g id="Graphic_342">
+                  <path d="M 945.0813 452.8203 L 956.0813 452.8203 L 956.0813 472.8203 L 939.0813 472.8203 Z" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_341">
+                  <path d="M 939.0813 472.8203 L 945.0813 452.8203 L 956.0813 452.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_340">
+                  <line x1="936.0813" y1="472.8203" x2="956.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_335">
+                <title>vvv-5</title>
+                <g id="Graphic_338">
+                  <path d="M 976.0813 472.8203 L 956.0813 472.8203 L 956.0813 452.8203 L 976.0813 452.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_337">
+                  <line x1="956.0813" y1="472.8203" x2="976.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_336">
+                  <line x1="956.0813" y1="452.8203" x2="976.0813" y2="452.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_331">
+                <title>vvv-5</title>
+                <g id="Graphic_334">
+                  <path d="M 996.0813 472.8203 L 976.0813 472.8203 L 976.0813 452.8203 L 996.0813 452.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_333">
+                  <line x1="976.0813" y1="472.8203" x2="996.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_332">
+                  <line x1="976.0813" y1="452.8203" x2="996.0813" y2="452.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_327">
+                <title>vvv-5</title>
+                <g id="Graphic_330">
+                  <path d="M 1016.0813 472.8203 L 996.0813 472.8203 L 996.0813 452.8203 L 1016.0813 452.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_329">
+                  <line x1="996.0813" y1="472.8203" x2="1016.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_328">
+                  <line x1="996.0813" y1="452.8203" x2="1016.0813" y2="452.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_323">
+                <title>vvv-5</title>
+                <g id="Graphic_326">
+                  <path d="M 1036.0813 472.8203 L 1016.0813 472.8203 L 1016.0813 452.8203 L 1036.0813 452.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_325">
+                  <line x1="1016.0813" y1="472.8203" x2="1036.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_324">
+                  <line x1="1016.0813" y1="452.8203" x2="1036.0813" y2="452.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_319">
+                <title>vvv-5</title>
+                <g id="Graphic_322">
+                  <path d="M 1056.0813 472.8203 L 1036.0813 472.8203 L 1036.0813 452.8203 L 1056.0813 452.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_321">
+                  <line x1="1036.0813" y1="472.8203" x2="1056.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_320">
+                  <line x1="1036.0813" y1="452.8203" x2="1056.0813" y2="452.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_315">
+                <title>vvv-5</title>
+                <g id="Graphic_318">
+                  <path d="M 1076.0813 472.8203 L 1056.0813 472.8203 L 1056.0813 452.8203 L 1076.0813 452.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_317">
+                  <line x1="1056.0813" y1="472.8203" x2="1076.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_316">
+                  <line x1="1056.0813" y1="452.8203" x2="1076.0813" y2="452.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_311">
+                <title>vvv-5</title>
+                <g id="Graphic_314">
+                  <path d="M 1096.0813 472.8203 L 1076.0813 472.8203 L 1076.0813 452.8203 L 1096.0813 452.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_313">
+                  <line x1="1076.0813" y1="472.8203" x2="1096.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_312">
+                  <line x1="1076.0813" y1="452.8203" x2="1096.0813" y2="452.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_307">
+                <title>vvv-5</title>
+                <g id="Graphic_310">
+                  <path d="M 1116.0813 472.8203 L 1096.0813 472.8203 L 1096.0813 452.8203 L 1116.0813 452.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_309">
+                  <line x1="1096.0813" y1="472.8203" x2="1116.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_308">
+                  <line x1="1096.0813" y1="452.8203" x2="1116.0813" y2="452.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_303">
+                <title>vvv-5</title>
+                <g id="Graphic_306">
+                  <path d="M 1136.0813 472.8203 L 1116.0813 472.8203 L 1116.0813 452.8203 L 1136.0813 452.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_305">
+                  <line x1="1116.0813" y1="472.8203" x2="1136.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_304">
+                  <line x1="1116.0813" y1="452.8203" x2="1136.0813" y2="452.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_299">
+                <title>vvv-5</title>
+                <g id="Graphic_302">
+                  <path d="M 1156.0813 472.8203 L 1136.0813 472.8203 L 1136.0813 452.8203 L 1156.0813 452.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_301">
+                  <line x1="1136.0813" y1="472.8203" x2="1156.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_300">
+                  <line x1="1136.0813" y1="452.8203" x2="1156.0813" y2="452.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_295">
+                <title>vvv-5</title>
+                <g id="Graphic_298">
+                  <path d="M 1176.0813 472.8203 L 1156.0813 472.8203 L 1156.0813 452.8203 L 1176.0813 452.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_297">
+                  <line x1="1156.0813" y1="472.8203" x2="1176.0813" y2="472.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_296">
+                  <line x1="1156.0813" y1="452.8203" x2="1176.0813" y2="452.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Graphic_294">
+                <title>Text</title>
+                <text transform="translate(983.828 454.19336)" fill="black">
+                  <tspan font-family="Helvetica" font-size="14.666667" font-weight="400" fill="black" x="0" y="14">FPGA stimulis response</tspan>
+                </text>
+              </g>
+            </g>
+          </g>
+          <g id="Group_216">
+            <title>wavelane_7_0</title>
+            <g id="Graphic_291">
+              <title>Text</title>
+              <text transform="translate(572.744 484.19336)" fill="#0041c4">
+                <tspan font-family="Helvetica" font-size="14.666667" font-weight="400" fill="#0041c4" x="0" y="14">Expected outputs</tspan>
+              </text>
+            </g>
+            <g id="Group_217">
+              <title>wavelane_draw_7_0</title>
+              <g id="Group_289">
+                <title>000</title>
+                <g id="Graphic_290">
+                  <line x1="696.0813" y1="502.8203" x2="716.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_287">
+                <title>000</title>
+                <g id="Graphic_288">
+                  <line x1="716.0813" y1="502.8203" x2="736.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_285">
+                <title>000</title>
+                <g id="Graphic_286">
+                  <line x1="736.0813" y1="502.8203" x2="756.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_283">
+                <title>000</title>
+                <g id="Graphic_284">
+                  <line x1="756.0813" y1="502.8203" x2="776.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_281">
+                <title>000</title>
+                <g id="Graphic_282">
+                  <line x1="776.0813" y1="502.8203" x2="796.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_279">
+                <title>000</title>
+                <g id="Graphic_280">
+                  <line x1="796.0813" y1="502.8203" x2="816.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_277">
+                <title>000</title>
+                <g id="Graphic_278">
+                  <line x1="816.0813" y1="502.8203" x2="836.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_275">
+                <title>000</title>
+                <g id="Graphic_276">
+                  <line x1="836.0813" y1="502.8203" x2="856.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_273">
+                <title>000</title>
+                <g id="Graphic_274">
+                  <line x1="856.0813" y1="502.8203" x2="876.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_271">
+                <title>000</title>
+                <g id="Graphic_272">
+                  <line x1="876.0813" y1="502.8203" x2="896.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_269">
+                <title>000</title>
+                <g id="Graphic_270">
+                  <line x1="896.0813" y1="502.8203" x2="916.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_267">
+                <title>000</title>
+                <g id="Graphic_268">
+                  <line x1="916.0813" y1="502.8203" x2="936.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_263">
+                <title>0mv-5</title>
+                <g id="Graphic_266">
+                  <path d="M 945.0813 482.8203 L 956.0813 482.8203 L 956.0813 502.8203 L 939.0813 502.8203 Z" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_265">
+                  <path d="M 939.0813 502.8203 L 945.0813 482.8203 L 956.0813 482.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_264">
+                  <line x1="936.0813" y1="502.8203" x2="956.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_259">
+                <title>vvv-5</title>
+                <g id="Graphic_262">
+                  <path d="M 976.0813 502.8203 L 956.0813 502.8203 L 956.0813 482.8203 L 976.0813 482.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_261">
+                  <line x1="956.0813" y1="502.8203" x2="976.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_260">
+                  <line x1="956.0813" y1="482.8203" x2="976.0813" y2="482.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_255">
+                <title>vvv-5</title>
+                <g id="Graphic_258">
+                  <path d="M 996.0813 502.8203 L 976.0813 502.8203 L 976.0813 482.8203 L 996.0813 482.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_257">
+                  <line x1="976.0813" y1="502.8203" x2="996.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_256">
+                  <line x1="976.0813" y1="482.8203" x2="996.0813" y2="482.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_251">
+                <title>vvv-5</title>
+                <g id="Graphic_254">
+                  <path d="M 1016.0813 502.8203 L 996.0813 502.8203 L 996.0813 482.8203 L 1016.0813 482.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_253">
+                  <line x1="996.0813" y1="502.8203" x2="1016.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_252">
+                  <line x1="996.0813" y1="482.8203" x2="1016.0813" y2="482.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_247">
+                <title>vvv-5</title>
+                <g id="Graphic_250">
+                  <path d="M 1036.0813 502.8203 L 1016.0813 502.8203 L 1016.0813 482.8203 L 1036.0813 482.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_249">
+                  <line x1="1016.0813" y1="502.8203" x2="1036.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_248">
+                  <line x1="1016.0813" y1="482.8203" x2="1036.0813" y2="482.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_243">
+                <title>vvv-5</title>
+                <g id="Graphic_246">
+                  <path d="M 1056.0813 502.8203 L 1036.0813 502.8203 L 1036.0813 482.8203 L 1056.0813 482.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_245">
+                  <line x1="1036.0813" y1="502.8203" x2="1056.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_244">
+                  <line x1="1036.0813" y1="482.8203" x2="1056.0813" y2="482.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_239">
+                <title>vvv-5</title>
+                <g id="Graphic_242">
+                  <path d="M 1076.0813 502.8203 L 1056.0813 502.8203 L 1056.0813 482.8203 L 1076.0813 482.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_241">
+                  <line x1="1056.0813" y1="502.8203" x2="1076.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_240">
+                  <line x1="1056.0813" y1="482.8203" x2="1076.0813" y2="482.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_235">
+                <title>vvv-5</title>
+                <g id="Graphic_238">
+                  <path d="M 1096.0813 502.8203 L 1076.0813 502.8203 L 1076.0813 482.8203 L 1096.0813 482.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_237">
+                  <line x1="1076.0813" y1="502.8203" x2="1096.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_236">
+                  <line x1="1076.0813" y1="482.8203" x2="1096.0813" y2="482.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_231">
+                <title>vvv-5</title>
+                <g id="Graphic_234">
+                  <path d="M 1116.0813 502.8203 L 1096.0813 502.8203 L 1096.0813 482.8203 L 1116.0813 482.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_233">
+                  <line x1="1096.0813" y1="502.8203" x2="1116.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_232">
+                  <line x1="1096.0813" y1="482.8203" x2="1116.0813" y2="482.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_227">
+                <title>vvv-5</title>
+                <g id="Graphic_230">
+                  <path d="M 1136.0813 502.8203 L 1116.0813 502.8203 L 1116.0813 482.8203 L 1136.0813 482.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_229">
+                  <line x1="1116.0813" y1="502.8203" x2="1136.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_228">
+                  <line x1="1116.0813" y1="482.8203" x2="1136.0813" y2="482.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_223">
+                <title>vvv-5</title>
+                <g id="Graphic_226">
+                  <path d="M 1156.0813 502.8203 L 1136.0813 502.8203 L 1136.0813 482.8203 L 1156.0813 482.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_225">
+                  <line x1="1136.0813" y1="502.8203" x2="1156.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_224">
+                  <line x1="1136.0813" y1="482.8203" x2="1156.0813" y2="482.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_219">
+                <title>vvv-5</title>
+                <g id="Graphic_222">
+                  <path d="M 1176.0813 502.8203 L 1156.0813 502.8203 L 1156.0813 482.8203 L 1176.0813 482.8203" fill="#b9e0ff"/>
+                </g>
+                <g id="Graphic_221">
+                  <line x1="1156.0813" y1="502.8203" x2="1176.0813" y2="502.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_220">
+                  <line x1="1156.0813" y1="482.8203" x2="1176.0813" y2="482.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Graphic_218">
+                <title>Text</title>
+                <text transform="translate(966.3039 484.19336)" fill="black">
+                  <tspan font-family="Helvetica" font-size="14.666667" font-weight="400" fill="black" x="0" y="14">Benchmark stimulis response</tspan>
+                </text>
+              </g>
+            </g>
+          </g>
+          <g id="Group_140">
+            <title>wavelane_8_0</title>
+            <g id="Graphic_215">
+              <title>Text</title>
+              <text transform="translate(646.1561 514.19336)" fill="#0041c4">
+                <tspan font-family="Helvetica" font-size="14.666667" font-weight="400" fill="#0041c4" x="0" y="14">Errors</tspan>
+              </text>
+            </g>
+            <g id="Group_141">
+              <title>wavelane_draw_8_0</title>
+              <g id="Group_213">
+                <title>000</title>
+                <g id="Graphic_214">
+                  <line x1="696.0813" y1="532.8203" x2="716.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_211">
+                <title>000</title>
+                <g id="Graphic_212">
+                  <line x1="716.0813" y1="532.8203" x2="736.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_209">
+                <title>000</title>
+                <g id="Graphic_210">
+                  <line x1="736.0813" y1="532.8203" x2="756.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_207">
+                <title>000</title>
+                <g id="Graphic_208">
+                  <line x1="756.0813" y1="532.8203" x2="776.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_205">
+                <title>000</title>
+                <g id="Graphic_206">
+                  <line x1="776.0813" y1="532.8203" x2="796.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_203">
+                <title>000</title>
+                <g id="Graphic_204">
+                  <line x1="796.0813" y1="532.8203" x2="816.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_201">
+                <title>000</title>
+                <g id="Graphic_202">
+                  <line x1="816.0813" y1="532.8203" x2="836.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_199">
+                <title>000</title>
+                <g id="Graphic_200">
+                  <line x1="836.0813" y1="532.8203" x2="856.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_197">
+                <title>000</title>
+                <g id="Graphic_198">
+                  <line x1="856.0813" y1="532.8203" x2="876.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_195">
+                <title>000</title>
+                <g id="Graphic_196">
+                  <line x1="876.0813" y1="532.8203" x2="896.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_193">
+                <title>000</title>
+                <g id="Graphic_194">
+                  <line x1="896.0813" y1="532.8203" x2="916.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_191">
+                <title>000</title>
+                <g id="Graphic_192">
+                  <line x1="916.0813" y1="532.8203" x2="936.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_187">
+                <title>0mv-6</title>
+                <g id="Graphic_190">
+                  <path d="M 945.0813 512.8203 L 956.0813 512.8203 L 956.0813 532.8203 L 939.0813 532.8203 Z" fill="#ccfdfe"/>
+                </g>
+                <g id="Graphic_189">
+                  <path d="M 939.0813 532.8203 L 945.0813 512.8203 L 956.0813 512.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_188">
+                  <line x1="936.0813" y1="532.8203" x2="956.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_183">
+                <title>vvv-6</title>
+                <g id="Graphic_186">
+                  <path d="M 976.0813 532.8203 L 956.0813 532.8203 L 956.0813 512.8203 L 976.0813 512.8203" fill="#ccfdfe"/>
+                </g>
+                <g id="Graphic_185">
+                  <line x1="956.0813" y1="532.8203" x2="976.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_184">
+                  <line x1="956.0813" y1="512.8203" x2="976.0813" y2="512.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_179">
+                <title>vvv-6</title>
+                <g id="Graphic_182">
+                  <path d="M 996.0813 532.8203 L 976.0813 532.8203 L 976.0813 512.8203 L 996.0813 512.8203" fill="#ccfdfe"/>
+                </g>
+                <g id="Graphic_181">
+                  <line x1="976.0813" y1="532.8203" x2="996.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_180">
+                  <line x1="976.0813" y1="512.8203" x2="996.0813" y2="512.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_175">
+                <title>vvv-6</title>
+                <g id="Graphic_178">
+                  <path d="M 1016.0813 532.8203 L 996.0813 532.8203 L 996.0813 512.8203 L 1016.0813 512.8203" fill="#ccfdfe"/>
+                </g>
+                <g id="Graphic_177">
+                  <line x1="996.0813" y1="532.8203" x2="1016.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_176">
+                  <line x1="996.0813" y1="512.8203" x2="1016.0813" y2="512.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_171">
+                <title>vvv-6</title>
+                <g id="Graphic_174">
+                  <path d="M 1036.0813 532.8203 L 1016.0813 532.8203 L 1016.0813 512.8203 L 1036.0813 512.8203" fill="#ccfdfe"/>
+                </g>
+                <g id="Graphic_173">
+                  <line x1="1016.0813" y1="532.8203" x2="1036.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_172">
+                  <line x1="1016.0813" y1="512.8203" x2="1036.0813" y2="512.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_167">
+                <title>vvv-6</title>
+                <g id="Graphic_170">
+                  <path d="M 1056.0813 532.8203 L 1036.0813 532.8203 L 1036.0813 512.8203 L 1056.0813 512.8203" fill="#ccfdfe"/>
+                </g>
+                <g id="Graphic_169">
+                  <line x1="1036.0813" y1="532.8203" x2="1056.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_168">
+                  <line x1="1036.0813" y1="512.8203" x2="1056.0813" y2="512.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_163">
+                <title>vvv-6</title>
+                <g id="Graphic_166">
+                  <path d="M 1076.0813 532.8203 L 1056.0813 532.8203 L 1056.0813 512.8203 L 1076.0813 512.8203" fill="#ccfdfe"/>
+                </g>
+                <g id="Graphic_165">
+                  <line x1="1056.0813" y1="532.8203" x2="1076.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_164">
+                  <line x1="1056.0813" y1="512.8203" x2="1076.0813" y2="512.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_159">
+                <title>vvv-6</title>
+                <g id="Graphic_162">
+                  <path d="M 1096.0813 532.8203 L 1076.0813 532.8203 L 1076.0813 512.8203 L 1096.0813 512.8203" fill="#ccfdfe"/>
+                </g>
+                <g id="Graphic_161">
+                  <line x1="1076.0813" y1="532.8203" x2="1096.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_160">
+                  <line x1="1076.0813" y1="512.8203" x2="1096.0813" y2="512.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_155">
+                <title>vvv-6</title>
+                <g id="Graphic_158">
+                  <path d="M 1116.0813 532.8203 L 1096.0813 532.8203 L 1096.0813 512.8203 L 1116.0813 512.8203" fill="#ccfdfe"/>
+                </g>
+                <g id="Graphic_157">
+                  <line x1="1096.0813" y1="532.8203" x2="1116.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_156">
+                  <line x1="1096.0813" y1="512.8203" x2="1116.0813" y2="512.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_151">
+                <title>vvv-6</title>
+                <g id="Graphic_154">
+                  <path d="M 1136.0813 532.8203 L 1116.0813 532.8203 L 1116.0813 512.8203 L 1136.0813 512.8203" fill="#ccfdfe"/>
+                </g>
+                <g id="Graphic_153">
+                  <line x1="1116.0813" y1="532.8203" x2="1136.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_152">
+                  <line x1="1116.0813" y1="512.8203" x2="1136.0813" y2="512.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_147">
+                <title>vvv-6</title>
+                <g id="Graphic_150">
+                  <path d="M 1156.0813 532.8203 L 1136.0813 532.8203 L 1136.0813 512.8203 L 1156.0813 512.8203" fill="#ccfdfe"/>
+                </g>
+                <g id="Graphic_149">
+                  <line x1="1136.0813" y1="532.8203" x2="1156.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_148">
+                  <line x1="1136.0813" y1="512.8203" x2="1156.0813" y2="512.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Group_143">
+                <title>vvv-6</title>
+                <g id="Graphic_146">
+                  <path d="M 1176.0813 532.8203 L 1156.0813 532.8203 L 1156.0813 512.8203 L 1176.0813 512.8203" fill="#ccfdfe"/>
+                </g>
+                <g id="Graphic_145">
+                  <line x1="1156.0813" y1="532.8203" x2="1176.0813" y2="532.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_144">
+                  <line x1="1156.0813" y1="512.8203" x2="1176.0813" y2="512.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+              <g id="Graphic_142">
+                <title>Text</title>
+                <text transform="translate(1006.6587 514.19336)" fill="black">
+                  <tspan font-family="Helvetica" font-size="14.666667" font-weight="400" fill="black" x="0" y="14">Number of errors</tspan>
+                </text>
+              </g>
+            </g>
+          </g>
+          <g id="Group_94">
+            <title>wavegaps_0</title>
+            <g id="Group_135">
+              <title>wavegap_0_0</title>
+              <g id="Group_136">
+                <title>gap</title>
+                <g id="Graphic_139">
+                  <path d="M 883.0813 270.8203 L 879.0813 270.8203 C 874.0813 270.8203 874.0813 294.8203 869.0813 294.8203 L 873.0813 294.8203 C 878.0813 294.8203 878.0813 270.8203 883.0813 270.8203 Z" fill="white"/>
+                </g>
+                <g id="Graphic_138">
+                  <path d="M 869.0813 294.8203 C 874.0813 294.8203 874.0813 270.8203 879.0813 270.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_137">
+                  <path d="M 873.0813 294.8203 C 878.0813 294.8203 878.0813 270.8203 883.0813 270.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+            </g>
+            <g id="Group_130">
+              <title>wavegap_1_0</title>
+              <g id="Group_131">
+                <title>gap</title>
+                <g id="Graphic_134">
+                  <path d="M 843.0813 300.8203 L 839.0813 300.8203 C 834.0813 300.8203 834.0813 324.8203 829.0813 324.8203 L 833.0813 324.8203 C 838.0813 324.8203 838.0813 300.8203 843.0813 300.8203 Z" fill="white"/>
+                </g>
+                <g id="Graphic_133">
+                  <path d="M 829.0813 324.8203 C 834.0813 324.8203 834.0813 300.8203 839.0813 300.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_132">
+                  <path d="M 833.0813 324.8203 C 838.0813 324.8203 838.0813 300.8203 843.0813 300.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+            </g>
+            <g id="Group_125">
+              <title>wavegap_2_0</title>
+              <g id="Group_126">
+                <title>gap</title>
+                <g id="Graphic_129">
+                  <path d="M 843.0813 330.8203 L 839.0813 330.8203 C 834.0813 330.8203 834.0813 354.8203 829.0813 354.8203 L 833.0813 354.8203 C 838.0813 354.8203 838.0813 330.8203 843.0813 330.8203 Z" fill="white"/>
+                </g>
+                <g id="Graphic_128">
+                  <path d="M 829.0813 354.8203 C 834.0813 354.8203 834.0813 330.8203 839.0813 330.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_127">
+                  <path d="M 833.0813 354.8203 C 838.0813 354.8203 838.0813 330.8203 843.0813 330.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+            </g>
+            <g id="Group_120">
+              <title>wavegap_3_0</title>
+              <g id="Group_121">
+                <title>gap</title>
+                <g id="Graphic_124">
+                  <path d="M 843.0813 360.8203 L 839.0813 360.8203 C 834.0813 360.8203 834.0813 384.8203 829.0813 384.8203 L 833.0813 384.8203 C 838.0813 384.8203 838.0813 360.8203 843.0813 360.8203 Z" fill="white"/>
+                </g>
+                <g id="Graphic_123">
+                  <path d="M 829.0813 384.8203 C 834.0813 384.8203 834.0813 360.8203 839.0813 360.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_122">
+                  <path d="M 833.0813 384.8203 C 838.0813 384.8203 838.0813 360.8203 843.0813 360.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+            </g>
+            <g id="Group_115">
+              <title>wavegap_4_0</title>
+              <g id="Group_116">
+                <title>gap</title>
+                <g id="Graphic_119">
+                  <path d="M 843.0813 390.8203 L 839.0813 390.8203 C 834.0813 390.8203 834.0813 414.8203 829.0813 414.8203 L 833.0813 414.8203 C 838.0813 414.8203 838.0813 390.8203 843.0813 390.8203 Z" fill="white"/>
+                </g>
+                <g id="Graphic_118">
+                  <path d="M 829.0813 414.8203 C 834.0813 414.8203 834.0813 390.8203 839.0813 390.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_117">
+                  <path d="M 833.0813 414.8203 C 838.0813 414.8203 838.0813 390.8203 843.0813 390.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+            </g>
+            <g id="Group_110">
+              <title>wavegap_5_0</title>
+              <g id="Group_111">
+                <title>gap</title>
+                <g id="Graphic_114">
+                  <path d="M 843.0813 420.8203 L 839.0813 420.8203 C 834.0813 420.8203 834.0813 444.8203 829.0813 444.8203 L 833.0813 444.8203 C 838.0813 444.8203 838.0813 420.8203 843.0813 420.8203 Z" fill="white"/>
+                </g>
+                <g id="Graphic_113">
+                  <path d="M 829.0813 444.8203 C 834.0813 444.8203 834.0813 420.8203 839.0813 420.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_112">
+                  <path d="M 833.0813 444.8203 C 838.0813 444.8203 838.0813 420.8203 843.0813 420.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+            </g>
+            <g id="Group_105">
+              <title>wavegap_6_0</title>
+              <g id="Group_106">
+                <title>gap</title>
+                <g id="Graphic_109">
+                  <path d="M 843.0813 450.8203 L 839.0813 450.8203 C 834.0813 450.8203 834.0813 474.8203 829.0813 474.8203 L 833.0813 474.8203 C 838.0813 474.8203 838.0813 450.8203 843.0813 450.8203 Z" fill="white"/>
+                </g>
+                <g id="Graphic_108">
+                  <path d="M 829.0813 474.8203 C 834.0813 474.8203 834.0813 450.8203 839.0813 450.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_107">
+                  <path d="M 833.0813 474.8203 C 838.0813 474.8203 838.0813 450.8203 843.0813 450.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+            </g>
+            <g id="Group_100">
+              <title>wavegap_7_0</title>
+              <g id="Group_101">
+                <title>gap</title>
+                <g id="Graphic_104">
+                  <path d="M 843.0813 480.8203 L 839.0813 480.8203 C 834.0813 480.8203 834.0813 504.8203 829.0813 504.8203 L 833.0813 504.8203 C 838.0813 504.8203 838.0813 480.8203 843.0813 480.8203 Z" fill="white"/>
+                </g>
+                <g id="Graphic_103">
+                  <path d="M 829.0813 504.8203 C 834.0813 504.8203 834.0813 480.8203 839.0813 480.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_102">
+                  <path d="M 833.0813 504.8203 C 838.0813 504.8203 838.0813 480.8203 843.0813 480.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+            </g>
+            <g id="Group_95">
+              <title>wavegap_8_0</title>
+              <g id="Group_96">
+                <title>gap</title>
+                <g id="Graphic_99">
+                  <path d="M 843.0813 510.8203 L 839.0813 510.8203 C 834.0813 510.8203 834.0813 534.8203 829.0813 534.8203 L 833.0813 534.8203 C 838.0813 534.8203 838.0813 510.8203 843.0813 510.8203 Z" fill="white"/>
+                </g>
+                <g id="Graphic_98">
+                  <path d="M 829.0813 534.8203 C 834.0813 534.8203 834.0813 510.8203 839.0813 510.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+                <g id="Graphic_97">
+                  <path d="M 833.0813 534.8203 C 838.0813 534.8203 838.0813 510.8203 843.0813 510.8203" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                </g>
+              </g>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
