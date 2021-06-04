@@ -72,8 +72,6 @@ int main()
     cout << endl << endl;
 
 
-// create a test input data (plaintext) 
-
 streampos size;
 char *data;
 unsigned int plaintext[16];
@@ -81,6 +79,8 @@ int j=0;
 int k;
 int newsize;
 int y;
+    
+//Read input bitstream    
 ifstream file ("fabric_bitstream.txt",ios::in|ios::ate);
 if (file.is_open())
 {
@@ -101,6 +101,7 @@ int count=0,i=0;
 newsize=(size/8) +1;
 int z[newsize];
 int w[newsize];
+//Convert to decimal
 while(i<size)
 {
         while(count<4)
