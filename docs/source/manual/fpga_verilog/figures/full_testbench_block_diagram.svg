@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" viewBox="501 16 702 175" width="702" height="175">
+  <defs>
+    <font-face font-family="Helvetica Neue" font-size="20" panose-1="2 0 5 3 0 0 0 2 0 4" units-per-em="1000" underline-position="-100" underline-thickness="50" slope="0" x-height="517" cap-height="714" ascent="951.9958" descent="-212.99744" font-weight="400">
+      <font-face-src>
+        <font-face-name name="HelveticaNeue"/>
+      </font-face-src>
+    </font-face>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -3 7 6" markerWidth="7" markerHeight="6" color="black">
+      <g>
+        <path d="M 4.8 0 L 0 -1.8 L 0 1.8 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <font-face font-family="Helvetica Neue" font-size="18" panose-1="2 0 5 3 0 0 0 2 0 4" units-per-em="1000" underline-position="-100" underline-thickness="50" slope="0" x-height="517" cap-height="714" ascent="951.9958" descent="-212.99744" font-weight="400">
+      <font-face-src>
+        <font-face-name name="HelveticaNeue"/>
+      </font-face-src>
+    </font-face>
+  </defs>
+  <metadata> Produced by OmniGraffle 7.18.5\n2021-06-03 22:42:19 +0000</metadata>
+  <g id="block_diagram" fill-opacity="1" stroke="none" stroke-opacity="1" stroke-dasharray="none" fill="none">
+    <title>block_diagram</title>
+    <rect fill="white" x="501" y="16" width="702" height="175"/>
+    <g id="block_diagram_Layer_1">
+      <title>Layer 1</title>
+      <g id="Graphic_91">
+        <rect x="502.5" y="25.252" width="128.5" height="49" fill="#666"/>
+        <rect x="502.5" y="25.252" width="128.5" height="49" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(507.5 37.972)" fill="white">
+          <tspan font-family="Helvetica Neue" font-size="20" font-weight="400" fill="white" x=".91" y="19">Bitstream file</tspan>
+        </text>
+      </g>
+      <g id="Line_92">
+        <line x1="632" y1="49.752" x2="726.244" y2="49.752" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+    </g>
+    <g id="block_diagram_block_diagram">
+      <title>block_diagram</title>
+      <g id="Graphic_89">
+        <rect x="740.144" y="34" width="92.332" height="68" fill="#4040ff"/>
+        <rect x="740.144" y="34" width="92.332" height="68" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(745.144 44.44)" fill="white">
+          <tspan font-family="Helvetica Neue" font-size="20" font-weight="400" fill="white" x="14.876" y="19">FPGA </tspan>
+          <tspan font-family="Helvetica Neue" font-size="20" font-weight="400" fill="white" x="13.206" y="42.56">Fabric</tspan>
+        </text>
+      </g>
+      <g id="Graphic_88">
+        <rect x="740.144" y="122" width="92.332" height="68" fill="#4040ff"/>
+        <rect x="740.144" y="122" width="92.332" height="68" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(745.144 132.44)" fill="white">
+          <tspan font-family="Helvetica Neue" font-size="20" font-weight="400" fill="white" x="13.206" y="19">User’s </tspan>
+          <tspan font-family="Helvetica Neue" font-size="20" font-weight="400" fill="white" x="10.236" y="42.56">Design</tspan>
+        </text>
+      </g>
+      <g id="Graphic_87">
+        <rect x="969.072" y="61" width="92.332" height="98.5" fill="#ff4040"/>
+        <rect x="969.072" y="61" width="92.332" height="98.5" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(974.072 86.69)" fill="white">
+          <tspan font-family="Helvetica Neue" font-size="20" font-weight="400" fill="white" x="10.216" y="19">Output </tspan>
+          <tspan font-family="Helvetica Neue" font-size="20" font-weight="400" fill="white" x="3.7560004" y="42.56">Checker</tspan>
+        </text>
+      </g>
+      <g id="Graphic_86">
+        <text transform="translate(598.566 99.248)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="18" font-weight="400" fill="black" x="45474735e-20" y="17">Input stimulus</tspan>
+        </text>
+      </g>
+      <g id="Line_85">
+        <line x1="833.476" y1="68" x2="955.172" y2="68" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_84">
+        <line x1="833.476" y1="156" x2="955.172" y2="156" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_83">
+        <line x1="1062.404" y1="110.84803" x2="1091.601" y2="111.21822" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_82">
+        <text transform="translate(1109.5 90.496)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="18" font-weight="400" fill="black" x="1.0814986" y="17">Number of </tspan>
+          <tspan font-family="Helvetica Neue" font-size="18" font-weight="400" fill="black" x="20.431499" y="38.504">errors</tspan>
+        </text>
+      </g>
+      <g id="Graphic_81">
+        <text transform="translate(842 39)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="18" font-weight="400" fill="black" x="22737368e-20" y="17">FPGA output vectors</tspan>
+        </text>
+      </g>
+      <g id="Graphic_80">
+        <text transform="translate(842 163.496)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="18" font-weight="400" fill="black" x="42632564e-21" y="17">Expected output vectors</tspan>
+        </text>
+      </g>
+      <g id="Line_79">
+        <path d="M 655.095 94.248 L 655.095 68 L 726.244 68" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_78">
+        <path d="M 655.095 125.752 L 655.095 156 L 726.244 156" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+    </g>
+  </g>
+</svg>

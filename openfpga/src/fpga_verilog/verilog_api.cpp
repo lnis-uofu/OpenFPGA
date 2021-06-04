@@ -32,8 +32,7 @@
 #include "verilog_api.h"
 
 /* begin namespace openfpga */
-namespace openfpga
-{
+namespace openfpga {
 
 /********************************************************************
  * A top-level function of FPGA-Verilog which focuses on fabric Verilog generation
@@ -243,6 +242,67 @@ int fpga_verilog_testbench(const ModuleManager &module_manager,
                                   simulation_setting.programming_clock_frequency(),
                                   simulation_setting.default_operating_clock_frequency());
   }
+
+  /* Generate a Verilog file including all the netlists that have been generated */
+  print_verilog_testbench_include_netlists(src_dir_path,
+                                           netlist_name,
+                                           options.fabric_netlist_file_path(),
+                                           options.reference_benchmark_file_path());
+
+  return status;
+}
+
+/********************************************************************
+ * A top-level function of FPGA-Verilog which focuses on full testbench generation
+ * This function will generate
+ *  - Verilog netlist including preprocessing flags and all the Verilog netlists that have been generated
+ ********************************************************************/
+int fpga_verilog_full_testbench(const ModuleManager &module_manager,
+                                const BitstreamManager &bitstream_manager,
+                                const FabricBitstream &fabric_bitstream,
+                                const AtomContext &atom_ctx,
+                                const PlacementContext &place_ctx,
+                                const PinConstraints& pin_constraints,
+                                const std::string& bitstream_file,
+                                const IoLocationMap &io_location_map,
+                                const FabricGlobalPortInfo &fabric_global_port_info,
+                                const VprNetlistAnnotation &netlist_annotation,
+                                const CircuitLibrary &circuit_lib,
+                                const SimulationSetting &simulation_setting,
+                                const ConfigProtocol &config_protocol,
+                                const VerilogTestbenchOption &options) {
+
+  vtr::ScopedStartFinishTimer timer("Write Verilog full testbenches for FPGA fabric\n");
+
+  std::string src_dir_path = format_dir_path(options.output_directory());
+
+  std::string netlist_name = atom_ctx.nlist.netlist_name();
+
+  int status = CMD_EXEC_SUCCESS;
+
+  /* Create directories */
+  create_directory(src_dir_path);
+
+  /* Output preprocessing flags for HDL simulations */
+  print_verilog_simulation_preprocessing_flags(std::string(src_dir_path),
+                                               options);
+
+  /* Generate full testbench for verification, including configuration phase and operating phase */
+  std::string top_testbench_file_path = src_dir_path + netlist_name + std::string(AUTOCHECK_TOP_TESTBENCH_VERILOG_FILE_POSTFIX);
+  print_verilog_full_testbench(module_manager,
+                              bitstream_manager, fabric_bitstream,
+                              circuit_lib,
+                              config_protocol,
+                              fabric_global_port_info,
+                              atom_ctx, place_ctx,
+                              pin_constraints,
+                              bitstream_file,
+                              io_location_map,
+                              netlist_annotation,
+                              netlist_name,
+                              top_testbench_file_path,
+                              simulation_setting,
+                              options);
 
   /* Generate a Verilog file including all the netlists that have been generated */
   print_verilog_testbench_include_netlists(src_dir_path,

@@ -5,7 +5,7 @@ Fabric-dependent Bitstream
 
 .. _file_formats_fabric_bitstream_plain_text:
 
-Plain text (.txt)
+Plain text (.bit)
 ~~~~~~~~~~~~~~~~~
 
 This file format is designed to be directly loaded to an FPGA fabric.
