@@ -16,6 +16,7 @@
 
 #include "openfpga_naming.h"
 
+#include "fast_configuration.h"
 #include "bitstream_manager_utils.h"
 #include "fabric_bitstream_utils.h"
 #include "write_text_fabric_bitstream.h"
@@ -118,6 +119,8 @@ int write_flatten_fabric_bitstream_to_text_file(std::fstream& fp,
  *******************************************************************/
 static 
 int write_config_chain_fabric_bitstream_to_text_file(std::fstream& fp,
+                                                     const bool& fast_configuration,
+                                                     const bool& bit_value_to_skip,
                                                      const BitstreamManager& bitstream_manager,
                                                      const FabricBitstream& fabric_bitstream) {
   int status = 0;
@@ -125,7 +128,18 @@ int write_config_chain_fabric_bitstream_to_text_file(std::fstream& fp,
   size_t regional_bitstream_max_size = find_fabric_regional_bitstream_max_size(fabric_bitstream);
   ConfigChainFabricBitstream regional_bitstreams = build_config_chain_fabric_bitstream_by_region(bitstream_manager, fabric_bitstream);
 
-  for (size_t ibit = 0; ibit < regional_bitstream_max_size; ++ibit) { 
+  /* For fast configuration, the bitstream size counts from the first bit '1' */
+  size_t num_bits_to_skip = 0;
+  if (true == fast_configuration) {
+    num_bits_to_skip = find_configuration_chain_fabric_bitstream_size_to_be_skipped(fabric_bitstream, bitstream_manager, bit_value_to_skip);
+  }
+  VTR_ASSERT(num_bits_to_skip < regional_bitstream_max_size);
+
+  VTR_LOG("Fast configuration will skip %g% (%lu/%lu) of configuration bitstream.\n",
+          100. * (float) num_bits_to_skip / (float) regional_bitstream_max_size,
+          num_bits_to_skip, regional_bitstream_max_size);
+
+  for (size_t ibit = num_bits_to_skip; ibit < regional_bitstream_max_size; ++ibit) { 
     for (const auto& region_bitstream : regional_bitstreams) {
       fp << region_bitstream[ibit];
     }
@@ -214,7 +228,9 @@ int write_frame_based_fabric_bitstream_to_text_file(std::fstream& fp,
 int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manager,
                                         const FabricBitstream& fabric_bitstream,
                                         const ConfigProtocol& config_protocol,
+                                        const FabricGlobalPortInfo& global_ports,
                                         const std::string& fname,
+                                        const bool& fast_configuration,
                                         const bool& verbose) {
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
@@ -230,6 +246,19 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
 
   check_file_stream(fname.c_str(), fp);
 
+  bool apply_fast_configuration = is_fast_configuration_applicable(global_ports);
+  if (fast_configuration && apply_fast_configuration != fast_configuration) {
+    VTR_LOG_WARN("Disable fast configuration even it is enabled by user\n");
+  }
+
+  bool bit_value_to_skip = false;
+  if (apply_fast_configuration) {
+    bit_value_to_skip = find_bit_value_to_skip_for_fast_configuration(config_protocol.type(),  
+                                                                      global_ports,
+                                                                      bitstream_manager,
+                                                                      fabric_bitstream);
+  }
+
   /* Output fabric bitstream to the file */
   int status = 0;
   switch (config_protocol.type()) {
@@ -241,6 +270,8 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
     break;
   case CONFIG_MEM_SCAN_CHAIN:
     status = write_config_chain_fabric_bitstream_to_text_file(fp,
+                                                              apply_fast_configuration,
+                                                              bit_value_to_skip,
                                                               bitstream_manager,
                                                               fabric_bitstream);
     break;

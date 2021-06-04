@@ -151,6 +151,9 @@ ShellCommandId add_openfpga_write_fabric_bitstream_command(openfpga::Shell<Openf
   CommandOptionId opt_file_format = shell_cmd.add_option("format", false, "file format of fabric bitstream [plain_text|xml]. Default: plain_text");
   shell_cmd.set_option_require_value(opt_file_format, openfpga::OPT_STRING);
 
+  /* Add an option '--fast_configuration' */
+  shell_cmd.add_option("fast_configuration", false, "Reduce the size of bitstream to be downloaded");
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
 

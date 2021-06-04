@@ -91,6 +91,7 @@ int write_fabric_bitstream(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_verbose = cmd.option("verbose");
   CommandOptionId opt_file = cmd.option("file");
   CommandOptionId opt_file_format = cmd.option("format");
+  CommandOptionId opt_fast_config = cmd.option("fast_configuration");
 
   /* Write fabric bitstream if required */
   int status = CMD_EXEC_SUCCESS;
@@ -119,7 +120,9 @@ int write_fabric_bitstream(const OpenfpgaContext& openfpga_ctx,
     status = write_fabric_bitstream_to_text_file(openfpga_ctx.bitstream_manager(),
                                                  openfpga_ctx.fabric_bitstream(),
                                                  openfpga_ctx.arch().config_protocol,
+                                                 openfpga_ctx.fabric_global_port_info(),
                                                  cmd_context.option_value(cmd, opt_file),
+                                                 cmd_context.option_enable(cmd, opt_fast_config),
                                                  cmd_context.option_enable(cmd, opt_verbose));
   }
   
