@@ -1953,7 +1953,6 @@ void print_verilog_full_testbench_configuration_chain_bitstream(std::fstream& fp
                                                                 const bool& bit_value_to_skip,
                                                                 const ModuleManager& module_manager,
                                                                 const ModuleId& top_module,
-                                                                const BitstreamManager& bitstream_manager,
                                                                 const FabricBitstream& fabric_bitstream) {
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -2078,7 +2077,7 @@ void print_verilog_full_testbench_bitstream(std::fstream& fp,
                                                                fast_configuration, 
                                                                bit_value_to_skip,
                                                                module_manager, top_module,
-                                                               bitstream_manager, fabric_bitstream);
+                                                               fabric_bitstream);
     break;
   case CONFIG_MEM_MEMORY_BANK:
     break;
