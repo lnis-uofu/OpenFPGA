@@ -2496,7 +2496,6 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
    * Always ceil the simulation time so that we test a sufficient length of period!!!
    */
   print_verilog_timeout_and_vcd(fp,
-                                std::string(ICARUS_SIMULATOR_FLAG),
                                 std::string(circuit_name + std::string(AUTOCHECK_TOP_TESTBENCH_VERILOG_MODULE_POSTFIX)),
                                 std::string(circuit_name + std::string("_formal.vcd")),
                                 std::string(TOP_TESTBENCH_SIM_START_PORT_NAME),
@@ -2758,7 +2757,6 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
    * Always ceil the simulation time so that we test a sufficient length of period!!!
    */
   print_verilog_timeout_and_vcd(fp,
-                                std::string(ICARUS_SIMULATOR_FLAG),
                                 std::string(circuit_name + std::string(AUTOCHECK_TOP_TESTBENCH_VERILOG_MODULE_POSTFIX)),
                                 std::string(circuit_name + std::string("_formal.vcd")),
                                 std::string(TOP_TESTBENCH_SIM_START_PORT_NAME),

@@ -359,7 +359,6 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
 
   /* Add Icarus requirement */
   print_verilog_timeout_and_vcd(fp, 
-                                std::string(ICARUS_SIMULATOR_FLAG),
                                 std::string(circuit_name + std::string(FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX)),
                                 std::string(circuit_name + std::string("_formal.vcd")), 
                                 std::string(FORMAL_TB_SIM_START_PORT_NAME),
