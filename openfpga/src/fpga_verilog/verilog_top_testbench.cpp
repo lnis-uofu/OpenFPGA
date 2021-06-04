@@ -63,6 +63,8 @@ constexpr char* TOP_TB_BITSTREAM_LENGTH_VARIABLE = "BITSTREAM_LENGTH";
 constexpr char* TOP_TB_BITSTREAM_WIDTH_VARIABLE = "BITSTREAM_WIDTH";
 constexpr char* TOP_TB_BITSTREAM_MEM_REG_NAME = "bit_mem";
 constexpr char* TOP_TB_BITSTREAM_INDEX_REG_NAME = "bit_index";
+constexpr char* TOP_TB_BITSTREAM_ITERATOR_REG_NAME = "ibit";
+constexpr char* TOP_TB_BITSTREAM_SKIP_FLAG_REG_NAME = "skip_bits";
 
 constexpr char* AUTOCHECK_TOP_TESTBENCH_VERILOG_MODULE_POSTFIX = "_autocheck_top_tb";
 
@@ -1983,7 +1985,12 @@ void print_verilog_full_testbench_configuration_chain_bitstream(std::fstream& fp
   fp << std::endl;
 
   fp << "reg [$clog2(`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << ") - 1:0] " << TOP_TB_BITSTREAM_INDEX_REG_NAME << ";" << std::endl;
-  
+
+  BasicPort bit_skip_reg(TOP_TB_BITSTREAM_SKIP_FLAG_REG_NAME, 1);
+  print_verilog_comment(fp, "----- Registers used for fast configuration logic -----");
+  fp << "reg [$clog2(`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << ") - 1:0] " << TOP_TB_BITSTREAM_ITERATOR_REG_NAME << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_REG, bit_skip_reg) << ";" << std::endl;
+
   print_verilog_comment(fp, "----- Preload bitstream file to a virtual memory -----");
   fp << "initial begin" << std::endl;
   fp << "\t";
@@ -1999,6 +2006,62 @@ void print_verilog_full_testbench_configuration_chain_bitstream(std::fstream& fp
   fp << "\t";
   fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << " <= 0";
   fp << ";";
+  fp << std::endl;
+
+  std::vector<size_t> bit_skip_values(bit_skip_reg.get_width(), fast_configuration ? 1 : 0);
+  fp << "\t";
+  fp << generate_verilog_port_constant_values(bit_skip_reg, bit_skip_values, true);
+  fp << ";";
+  fp << std::endl;
+
+  fp << "\t";
+  fp << "for (" << TOP_TB_BITSTREAM_ITERATOR_REG_NAME << " = 0; ";
+  fp << TOP_TB_BITSTREAM_ITERATOR_REG_NAME << " < `" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << " + 1; "; 
+  fp << TOP_TB_BITSTREAM_ITERATOR_REG_NAME << " = " << TOP_TB_BITSTREAM_ITERATOR_REG_NAME << " + 1)";
+  fp << " begin"; 
+  fp << std::endl;
+
+  fp << "\t\t";
+  fp << "if (";
+  fp << generate_verilog_constant_values(std::vector<size_t>(fabric_bitstream.num_regions(), bit_value_to_skip));
+  fp << " == ";
+  fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[" << TOP_TB_BITSTREAM_ITERATOR_REG_NAME << "]";
+  fp << ")";
+  fp << " begin";
+  fp << std::endl;
+
+  fp << "\t\t\t";
+  fp << "if (";
+  fp << generate_verilog_constant_values(std::vector<size_t>(bit_skip_reg.get_width(), 1));
+  fp << " == ";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, bit_skip_reg) << ")"; 
+  fp << " begin";
+  fp << std::endl;
+
+  fp << "\t\t\t\t";
+  fp << TOP_TB_BITSTREAM_INDEX_REG_NAME;
+  fp << " <= ";
+  fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << " + 1";
+  fp << ";" << std::endl;
+
+  fp << "\t\t\t";
+  fp << "end";
+  fp << std::endl;
+
+  fp << "\t\t";
+  fp << "end else begin";
+  fp << std::endl;
+
+  fp << "\t\t\t";
+  fp << generate_verilog_port_constant_values(bit_skip_reg, std::vector<size_t>(bit_skip_reg.get_width(), 0), true);
+  fp << ";" << std::endl;
+
+  fp << "\t\t";
+  fp << "end";
+  fp << std::endl;
+
+  fp << "\t";
+  fp << "end";
   fp << std::endl;
 
   fp << "end";
