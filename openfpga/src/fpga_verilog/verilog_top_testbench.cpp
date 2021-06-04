@@ -22,6 +22,7 @@
 #include "simulation_utils.h"
 #include "openfpga_atom_netlist_utils.h"
 
+#include "fast_configuration.h"
 #include "fabric_bitstream_utils.h"
 #include "fabric_global_port_info_utils.h"
 
@@ -1955,6 +1956,7 @@ void print_verilog_full_testbench_configuration_chain_bitstream(std::fstream& fp
                                                                 const bool& bit_value_to_skip,
                                                                 const ModuleManager& module_manager,
                                                                 const ModuleId& top_module,
+                                                                const BitstreamManager& bitstream_manager,
                                                                 const FabricBitstream& fabric_bitstream) {
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -1964,8 +1966,15 @@ void print_verilog_full_testbench_configuration_chain_bitstream(std::fstream& fp
   /* Find the longest bitstream */
   size_t regional_bitstream_max_size = find_fabric_regional_bitstream_max_size(fabric_bitstream);
 
+  /* For fast configuration, the bitstream size counts from the first bit '1' */
+  size_t num_bits_to_skip = 0;
+  if (true == fast_configuration) {
+    num_bits_to_skip = find_configuration_chain_fabric_bitstream_size_to_be_skipped(fabric_bitstream, bitstream_manager, bit_value_to_skip);
+  }
+  VTR_ASSERT(num_bits_to_skip < regional_bitstream_max_size);
+
   /* Define a constant for the bitstream length */
-  print_verilog_define_flag(fp, std::string(TOP_TB_BITSTREAM_LENGTH_VARIABLE), regional_bitstream_max_size); 
+  print_verilog_define_flag(fp, std::string(TOP_TB_BITSTREAM_LENGTH_VARIABLE), regional_bitstream_max_size - num_bits_to_skip); 
   print_verilog_define_flag(fp, std::string(TOP_TB_BITSTREAM_WIDTH_VARIABLE), fabric_bitstream.num_regions()); 
 
   /* Initial value should be the first configuration bits
@@ -2140,6 +2149,7 @@ void print_verilog_full_testbench_bitstream(std::fstream& fp,
                                                                fast_configuration, 
                                                                bit_value_to_skip,
                                                                module_manager, top_module,
+                                                               bitstream_manager,
                                                                fabric_bitstream);
     break;
   case CONFIG_MEM_MEMORY_BANK:
