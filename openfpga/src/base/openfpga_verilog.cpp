@@ -130,6 +130,7 @@ int write_full_testbench(OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
+  CommandOptionId opt_fast_configuration = cmd.option("fast_configuration");
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
   CommandOptionId opt_include_signal_init = cmd.option("include_signal_init");
   CommandOptionId opt_verbose = cmd.option("verbose");
@@ -141,6 +142,7 @@ int write_full_testbench(OpenfpgaContext& openfpga_ctx,
   options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
   options.set_fabric_netlist_file_path(cmd_context.option_value(cmd, opt_fabric_netlist));
   options.set_reference_benchmark_file_path(cmd_context.option_value(cmd, opt_reference_benchmark));
+  options.set_fast_configuration(cmd_context.option_enable(cmd, opt_fast_configuration));
   options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_print_top_testbench(true);
