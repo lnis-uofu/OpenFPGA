@@ -132,12 +132,11 @@ int write_config_chain_fabric_bitstream_to_text_file(std::fstream& fp,
   size_t num_bits_to_skip = 0;
   if (true == fast_configuration) {
     num_bits_to_skip = find_configuration_chain_fabric_bitstream_size_to_be_skipped(fabric_bitstream, bitstream_manager, bit_value_to_skip);
+    VTR_ASSERT(num_bits_to_skip < regional_bitstream_max_size);
+    VTR_LOG("Fast configuration will skip %g% (%lu/%lu) of configuration bitstream.\n",
+            100. * (float) num_bits_to_skip / (float) regional_bitstream_max_size,
+            num_bits_to_skip, regional_bitstream_max_size);
   }
-  VTR_ASSERT(num_bits_to_skip < regional_bitstream_max_size);
-
-  VTR_LOG("Fast configuration will skip %g% (%lu/%lu) of configuration bitstream.\n",
-          100. * (float) num_bits_to_skip / (float) regional_bitstream_max_size,
-          num_bits_to_skip, regional_bitstream_max_size);
 
   for (size_t ibit = num_bits_to_skip; ibit < regional_bitstream_max_size; ++ibit) { 
     for (const auto& region_bitstream : regional_bitstreams) {
@@ -246,7 +245,7 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
 
   check_file_stream(fname.c_str(), fp);
 
-  bool apply_fast_configuration = is_fast_configuration_applicable(global_ports);
+  bool apply_fast_configuration = is_fast_configuration_applicable(global_ports) && fast_configuration;
   if (fast_configuration && apply_fast_configuration != fast_configuration) {
     VTR_LOG_WARN("Disable fast configuration even it is enabled by user\n");
   }
