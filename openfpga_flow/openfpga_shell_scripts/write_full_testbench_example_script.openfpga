@@ -43,7 +43,7 @@ build_architecture_bitstream --verbose --write_file fabric_independent_bitstream
 build_fabric_bitstream --verbose
 
 # Write fabric-dependent bitstream
-write_fabric_bitstream --file fabric_bitstream.bit --format plain_text
+write_fabric_bitstream --file fabric_bitstream.bit --format plain_text ${OPENFPGA_FAST_CONFIGURATION}
 
 # Write the Verilog netlist for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
