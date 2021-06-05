@@ -114,6 +114,12 @@ write_full_testbench
     Specify the *Pin Constraints File* (PCF) if you want to custom stimulus in testbenches. For example, ``-pin_constraints_file pin_constraints.xml``
     Strongly recommend for multi-clock simulations. See detailed file format about :ref:`file_format_pin_constraints_file`.
 
+  .. option:: --fast_configuration
+
+    Enable fast configuration phase for the top-level testbench in order to reduce runtime of simulations. It is applicable to configuration chain, memory bank and frame-based configuration protocols. For configuration chain, when enabled, the zeros at the head of the bitstream will be skipped. For memory bank and frame-based, when enabled, all the zero configuration bits will be skipped. So ensure that your memory cells can be correctly reset to zero with a reset signal. 
+
+    .. note:: If both reset and set ports are defined in the circuit modeling for programming, OpenFPGA will pick the one that will bring largest benefit in speeding up configuration.
+
   .. option:: --explicit_port_mapping
 
     Use explicit port mapping when writing the Verilog netlists

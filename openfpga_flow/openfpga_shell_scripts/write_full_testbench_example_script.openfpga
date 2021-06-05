@@ -43,7 +43,7 @@ build_architecture_bitstream --verbose --write_file fabric_independent_bitstream
 build_fabric_bitstream --verbose
 
 # Write fabric-dependent bitstream
-write_fabric_bitstream --file fabric_bitstream.bit --format plain_text
+write_fabric_bitstream --file fabric_bitstream.bit --format plain_text ${OPENFPGA_FAST_CONFIGURATION}
 
 # Write the Verilog netlist for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
@@ -55,7 +55,7 @@ write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --pri
 #  - Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
 #  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
-write_full_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --include_signal_init --explicit_port_mapping --bitstream fabric_bitstream.bit
+write_full_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --include_signal_init --explicit_port_mapping --bitstream fabric_bitstream.bit ${OPENFPGA_FAST_CONFIGURATION}
 
 # Write the SDC files for PnR backend
 #  - Turn on every options here

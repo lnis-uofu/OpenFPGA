@@ -22,6 +22,7 @@
 #include "simulation_utils.h"
 #include "openfpga_atom_netlist_utils.h"
 
+#include "fast_configuration.h"
 #include "fabric_bitstream_utils.h"
 #include "fabric_global_port_info_utils.h"
 
@@ -63,6 +64,8 @@ constexpr char* TOP_TB_BITSTREAM_LENGTH_VARIABLE = "BITSTREAM_LENGTH";
 constexpr char* TOP_TB_BITSTREAM_WIDTH_VARIABLE = "BITSTREAM_WIDTH";
 constexpr char* TOP_TB_BITSTREAM_MEM_REG_NAME = "bit_mem";
 constexpr char* TOP_TB_BITSTREAM_INDEX_REG_NAME = "bit_index";
+constexpr char* TOP_TB_BITSTREAM_ITERATOR_REG_NAME = "ibit";
+constexpr char* TOP_TB_BITSTREAM_SKIP_FLAG_REG_NAME = "skip_bits";
 
 constexpr char* AUTOCHECK_TOP_TESTBENCH_VERILOG_MODULE_POSTFIX = "_autocheck_top_tb";
 
@@ -1963,8 +1966,15 @@ void print_verilog_full_testbench_configuration_chain_bitstream(std::fstream& fp
   /* Find the longest bitstream */
   size_t regional_bitstream_max_size = find_fabric_regional_bitstream_max_size(fabric_bitstream);
 
+  /* For fast configuration, the bitstream size counts from the first bit '1' */
+  size_t num_bits_to_skip = 0;
+  if (true == fast_configuration) {
+    num_bits_to_skip = find_configuration_chain_fabric_bitstream_size_to_be_skipped(fabric_bitstream, bitstream_manager, bit_value_to_skip);
+  }
+  VTR_ASSERT(num_bits_to_skip < regional_bitstream_max_size);
+
   /* Define a constant for the bitstream length */
-  print_verilog_define_flag(fp, std::string(TOP_TB_BITSTREAM_LENGTH_VARIABLE), regional_bitstream_max_size); 
+  print_verilog_define_flag(fp, std::string(TOP_TB_BITSTREAM_LENGTH_VARIABLE), regional_bitstream_max_size - num_bits_to_skip); 
   print_verilog_define_flag(fp, std::string(TOP_TB_BITSTREAM_WIDTH_VARIABLE), fabric_bitstream.num_regions()); 
 
   /* Initial value should be the first configuration bits
@@ -1984,7 +1994,12 @@ void print_verilog_full_testbench_configuration_chain_bitstream(std::fstream& fp
   fp << std::endl;
 
   fp << "reg [$clog2(`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << ") - 1:0] " << TOP_TB_BITSTREAM_INDEX_REG_NAME << ";" << std::endl;
-  
+
+  BasicPort bit_skip_reg(TOP_TB_BITSTREAM_SKIP_FLAG_REG_NAME, 1);
+  print_verilog_comment(fp, "----- Registers used for fast configuration logic -----");
+  fp << "reg [$clog2(`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << ") - 1:0] " << TOP_TB_BITSTREAM_ITERATOR_REG_NAME << ";" << std::endl;
+  fp << generate_verilog_port(VERILOG_PORT_REG, bit_skip_reg) << ";" << std::endl;
+
   print_verilog_comment(fp, "----- Preload bitstream file to a virtual memory -----");
   fp << "initial begin" << std::endl;
   fp << "\t";
@@ -2000,6 +2015,62 @@ void print_verilog_full_testbench_configuration_chain_bitstream(std::fstream& fp
   fp << "\t";
   fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << " <= 0";
   fp << ";";
+  fp << std::endl;
+
+  std::vector<size_t> bit_skip_values(bit_skip_reg.get_width(), fast_configuration ? 1 : 0);
+  fp << "\t";
+  fp << generate_verilog_port_constant_values(bit_skip_reg, bit_skip_values, true);
+  fp << ";";
+  fp << std::endl;
+
+  fp << "\t";
+  fp << "for (" << TOP_TB_BITSTREAM_ITERATOR_REG_NAME << " = 0; ";
+  fp << TOP_TB_BITSTREAM_ITERATOR_REG_NAME << " < `" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << " + 1; "; 
+  fp << TOP_TB_BITSTREAM_ITERATOR_REG_NAME << " = " << TOP_TB_BITSTREAM_ITERATOR_REG_NAME << " + 1)";
+  fp << " begin"; 
+  fp << std::endl;
+
+  fp << "\t\t";
+  fp << "if (";
+  fp << generate_verilog_constant_values(std::vector<size_t>(fabric_bitstream.num_regions(), bit_value_to_skip));
+  fp << " == ";
+  fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[" << TOP_TB_BITSTREAM_ITERATOR_REG_NAME << "]";
+  fp << ")";
+  fp << " begin";
+  fp << std::endl;
+
+  fp << "\t\t\t";
+  fp << "if (";
+  fp << generate_verilog_constant_values(std::vector<size_t>(bit_skip_reg.get_width(), 1));
+  fp << " == ";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, bit_skip_reg) << ")"; 
+  fp << " begin";
+  fp << std::endl;
+
+  fp << "\t\t\t\t";
+  fp << TOP_TB_BITSTREAM_INDEX_REG_NAME;
+  fp << " <= ";
+  fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << " + 1";
+  fp << ";" << std::endl;
+
+  fp << "\t\t\t";
+  fp << "end";
+  fp << std::endl;
+
+  fp << "\t\t";
+  fp << "end else begin";
+  fp << std::endl;
+
+  fp << "\t\t\t";
+  fp << generate_verilog_port_constant_values(bit_skip_reg, std::vector<size_t>(bit_skip_reg.get_width(), 0), true);
+  fp << ";" << std::endl;
+
+  fp << "\t\t";
+  fp << "end";
+  fp << std::endl;
+
+  fp << "\t";
+  fp << "end";
   fp << std::endl;
 
   fp << "end";
@@ -2078,7 +2149,8 @@ void print_verilog_full_testbench_bitstream(std::fstream& fp,
                                                                fast_configuration, 
                                                                bit_value_to_skip,
                                                                module_manager, top_module,
-                                                               bitstream_manager, fabric_bitstream);
+                                                               bitstream_manager,
+                                                               fabric_bitstream);
     break;
   case CONFIG_MEM_MEMORY_BANK:
     break;
@@ -2424,7 +2496,6 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
    * Always ceil the simulation time so that we test a sufficient length of period!!!
    */
   print_verilog_timeout_and_vcd(fp,
-                                std::string(ICARUS_SIMULATOR_FLAG),
                                 std::string(circuit_name + std::string(AUTOCHECK_TOP_TESTBENCH_VERILOG_MODULE_POSTFIX)),
                                 std::string(circuit_name + std::string("_formal.vcd")),
                                 std::string(TOP_TESTBENCH_SIM_START_PORT_NAME),
@@ -2686,7 +2757,6 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
    * Always ceil the simulation time so that we test a sufficient length of period!!!
    */
   print_verilog_timeout_and_vcd(fp,
-                                std::string(ICARUS_SIMULATOR_FLAG),
                                 std::string(circuit_name + std::string(AUTOCHECK_TOP_TESTBENCH_VERILOG_MODULE_POSTFIX)),
                                 std::string(circuit_name + std::string("_formal.vcd")),
                                 std::string(TOP_TESTBENCH_SIM_START_PORT_NAME),

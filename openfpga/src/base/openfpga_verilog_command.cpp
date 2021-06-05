@@ -155,6 +155,9 @@ ShellCommandId add_openfpga_write_full_testbench_command(openfpga::Shell<Openfpg
   CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", true, "Specify the file path to the reference Verilog netlist");
   shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);
 
+  /* Add an option '--fast_configuration' */
+  shell_cmd.add_option("fast_configuration", false, "Reduce the period of configuration by skip certain data points");
+
   /* Add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false, "Use explicit port mapping in Verilog netlists");
 
