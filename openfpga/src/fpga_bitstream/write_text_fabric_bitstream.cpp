@@ -13,6 +13,7 @@
 
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
+#include "openfpga_version.h"
 
 #include "openfpga_naming.h"
 
@@ -23,6 +24,21 @@
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+/********************************************************************
+ * This function write header information to a bitstream file
+ *******************************************************************/
+static 
+void write_fabric_bitstream_text_file_head(std::fstream& fp) {
+  valid_file_stream(fp);
+ 
+  auto end = std::chrono::system_clock::now(); 
+  std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+
+  fp << "// Fabric bitstream" << std::endl;
+  fp << "// Version: " << openfpga::VERSION << std::endl;
+  fp << "// Date: " << std::ctime(&end_time) << std::endl;
+}
 
 /********************************************************************
  * Write a configuration bit into a plain text file
@@ -138,6 +154,11 @@ int write_config_chain_fabric_bitstream_to_text_file(std::fstream& fp,
             num_bits_to_skip, regional_bitstream_max_size);
   }
 
+  /* Output bitstream size information */
+  fp << "// Bitstream length: " << regional_bitstream_max_size - num_bits_to_skip << std::endl;
+  fp << "// Bitstream width (LSB -> MSB): " << fabric_bitstream.num_regions() << std::endl;
+
+  /* Output bitstream data */
   for (size_t ibit = num_bits_to_skip; ibit < regional_bitstream_max_size; ++ibit) { 
     for (const auto& region_bitstream : regional_bitstreams) {
       fp << region_bitstream[ibit];
@@ -257,6 +278,9 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
                                                                       bitstream_manager,
                                                                       fabric_bitstream);
   }
+
+  /* Write file head */
+  write_fabric_bitstream_text_file_head(fp);
 
   /* Output fabric bitstream to the file */
   int status = 0;
