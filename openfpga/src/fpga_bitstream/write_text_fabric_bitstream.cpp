@@ -37,7 +37,7 @@ void write_fabric_bitstream_text_file_head(std::fstream& fp) {
 
   fp << "// Fabric bitstream" << std::endl;
   fp << "// Version: " << openfpga::VERSION << std::endl;
-  fp << "// Date: " << std::ctime(&end_time) << std::endl;
+  fp << "// Date: " << std::ctime(&end_time);
 }
 
 /********************************************************************
@@ -163,7 +163,9 @@ int write_config_chain_fabric_bitstream_to_text_file(std::fstream& fp,
     for (const auto& region_bitstream : regional_bitstreams) {
       fp << region_bitstream[ibit];
     }
-    fp << std::endl;
+    if (ibit < regional_bitstream_max_size - 1) {
+      fp << std::endl;
+    }
   }
 
   return status;
