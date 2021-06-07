@@ -181,20 +181,54 @@ int write_config_chain_fabric_bitstream_to_text_file(std::fstream& fp,
  *******************************************************************/
 static 
 int write_memory_bank_fabric_bitstream_to_text_file(std::fstream& fp,
-                                                     const FabricBitstream& fabric_bitstream) {
+                                                    const bool& fast_configuration,
+                                                    const bool& bit_value_to_skip,
+                                                    const FabricBitstream& fabric_bitstream) {
   int status = 0;
 
   MemoryBankFabricBitstream fabric_bits_by_addr = build_memory_bank_fabric_bitstream_by_address(fabric_bitstream);
 
+  /* The address sizes and data input sizes are the same across any element, 
+   * just get it from the 1st element to save runtime
+   */
+  size_t bl_addr_size = fabric_bits_by_addr.begin()->first.first.size(); 
+  size_t wl_addr_size = fabric_bits_by_addr.begin()->first.second.size(); 
+  size_t din_size = fabric_bits_by_addr.begin()->second.size(); 
+
+  /* Identify and output bitstream size information */
+  size_t num_bits_to_skip = 0;
+  if (true == fast_configuration) {
+    num_bits_to_skip = fabric_bits_by_addr.size() - find_memory_bank_fast_configuration_fabric_bitstream_size(fabric_bitstream, bit_value_to_skip);
+    VTR_ASSERT(num_bits_to_skip < fabric_bits_by_addr.size());
+    VTR_LOG("Fast configuration will skip %g% (%lu/%lu) of configuration bitstream.\n",
+            100. * (float) num_bits_to_skip / (float) fabric_bits_by_addr.size(),
+            num_bits_to_skip, fabric_bits_by_addr.size());
+  }
+
+  /* Output information about how to intepret the bitstream */
+  fp << "// Bitstream length: " << fabric_bits_by_addr.size() - num_bits_to_skip << std::endl;
+  fp << "// Bitstream width (LSB -> MSB): ";
+  fp << "<bl_address " << bl_addr_size << " bits>";
+  fp << "<wl_address " << wl_addr_size << " bits>";
+  fp << "<data input " << din_size << " bits>";
+  fp << std::endl;
+
   for (const auto& addr_din_pair : fabric_bits_by_addr) {
+    /* When fast configuration is enabled,
+     * the rule to skip any configuration bit should consider the whole data input values.
+     * Only all the bits in the din port match the value to be skipped,
+     * the programming cycle can be skipped!
+     */
+    if (true == fast_configuration) {
+      if (addr_din_pair.second == std::vector<bool>(addr_din_pair.second.size(), bit_value_to_skip)) {
+        continue;
+      }
+    }
+
     /* Write BL address code */
     fp << addr_din_pair.first.first;
-    fp << " ";
-
     /* Write WL address code */
     fp << addr_din_pair.first.second;
-    fp << " ";
-
     /* Write data input */
     for (const bool& din_value : addr_din_pair.second) {
       fp << din_value;
@@ -334,6 +368,8 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
     break;
   case CONFIG_MEM_MEMORY_BANK: 
     status = write_memory_bank_fabric_bitstream_to_text_file(fp,
+                                                             apply_fast_configuration,
+                                                             bit_value_to_skip,
                                                              fabric_bitstream);
     break;
   case CONFIG_MEM_FRAME_BASED:
