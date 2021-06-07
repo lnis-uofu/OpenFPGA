@@ -13,8 +13,10 @@
 #include "vtr_strong_id.h"
 
 struct bitstream_pb_type_setting_id_tag;
+struct bitstream_interconnect_setting_id_tag;
 
 typedef vtr::StrongId<bitstream_pb_type_setting_id_tag> BitstreamPbTypeSettingId;
+typedef vtr::StrongId<bitstream_interconnect_setting_id_tag> BitstreamInterconnectSettingId;
 
 /* Short declaration of class */
 class BitstreamSetting;

@@ -16,6 +16,10 @@ BitstreamSetting::bitstream_pb_type_setting_range BitstreamSetting::pb_type_sett
   return vtr::make_range(pb_type_setting_ids_.begin(), pb_type_setting_ids_.end());
 }
 
+BitstreamSetting::bitstream_interconnect_setting_range BitstreamSetting::interconnect_settings() const {
+  return vtr::make_range(interconnect_setting_ids_.begin(), interconnect_setting_ids_.end());
+}
+
 /************************************************************************
  * Constructors
  ***********************************************************************/
@@ -61,6 +65,25 @@ size_t BitstreamSetting::bitstream_offset(const BitstreamPbTypeSettingId& pb_typ
   return bitstream_offsets_[pb_type_setting_id];
 }
 
+std::string BitstreamSetting::interconnect_name(const BitstreamInterconnectSettingId& interconnect_setting_id) const {
+  VTR_ASSERT(true == valid_bitstream_interconnect_setting_id(interconnect_setting_id));
+  return interconnect_names_[interconnect_setting_id];
+}
+
+std::vector<std::string> BitstreamSetting::parent_pb_type_names(const BitstreamInterconnectSettingId& interconnect_setting_id) const {
+  VTR_ASSERT(true == valid_bitstream_interconnect_setting_id(interconnect_setting_id));
+  return interconnect_parent_pb_type_names_[interconnect_setting_id];
+}
+
+std::vector<std::string> BitstreamSetting::parent_mode_names(const BitstreamInterconnectSettingId& interconnect_setting_id) const {
+  VTR_ASSERT(true == valid_bitstream_interconnect_setting_id(interconnect_setting_id));
+  return interconnect_parent_mode_names_[interconnect_setting_id];
+}
+
+std::string BitstreamSetting::default_path(const BitstreamInterconnectSettingId& interconnect_setting_id) const {
+  VTR_ASSERT(true == valid_bitstream_interconnect_setting_id(interconnect_setting_id));
+  return interconnect_default_paths_[interconnect_setting_id];
+}
 
 /************************************************************************
  * Public Mutators
@@ -95,11 +118,29 @@ void BitstreamSetting::set_bitstream_offset(const BitstreamPbTypeSettingId& pb_t
   bitstream_offsets_[pb_type_setting_id] = offset;
 }
 
+BitstreamInterconnectSettingId BitstreamSetting::add_bitstream_interconnect_setting(const std::string& interconnect_name,
+                                                                                    const std::vector<std::string>& parent_pb_type_names,
+                                                                                    const std::vector<std::string>& parent_mode_names,
+                                                                                    const std::string& default_path) {
+  BitstreamInterconnectSettingId interc_setting_id = BitstreamInterconnectSettingId(interconnect_setting_ids_.size());
+  interconnect_setting_ids_.push_back(interc_setting_id);
+  interconnect_names_.push_back(interconnect_name);
+  interconnect_parent_pb_type_names_.push_back(parent_pb_type_names);
+  interconnect_parent_mode_names_.push_back(parent_mode_names);
+  interconnect_default_paths_.push_back(default_path);
+
+  return interc_setting_id;
+}
+
 /************************************************************************
  * Public Validators
  ***********************************************************************/
 bool BitstreamSetting::valid_bitstream_pb_type_setting_id(const BitstreamPbTypeSettingId& pb_type_setting_id) const {
   return ( size_t(pb_type_setting_id) < pb_type_setting_ids_.size() ) && ( pb_type_setting_id == pb_type_setting_ids_[pb_type_setting_id] ); 
+}
+
+bool BitstreamSetting::valid_bitstream_interconnect_setting_id(const BitstreamInterconnectSettingId& interconnect_setting_id) const {
+  return ( size_t(interconnect_setting_id) < interconnect_setting_ids_.size() ) && ( interconnect_setting_id == interconnect_setting_ids_[interconnect_setting_id] ); 
 }
 
 } /* namespace openfpga ends */

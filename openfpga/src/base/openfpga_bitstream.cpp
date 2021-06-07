@@ -14,11 +14,16 @@
 /* Headers from fpgabitstream library */
 #include "read_xml_arch_bitstream.h"
 #include "write_xml_arch_bitstream.h"
+#include "report_arch_bitstream_distribution.h"
+
+#include "openfpga_naming.h"
 
 #include "build_device_bitstream.h"
 #include "write_text_fabric_bitstream.h"
 #include "write_xml_fabric_bitstream.h"
 #include "build_fabric_bitstream.h"
+#include "build_io_mapping_info.h"
+#include "write_xml_io_mapping.h"
 #include "openfpga_bitstream.h"
 
 /* Include global variables of VPR */
@@ -86,6 +91,7 @@ int write_fabric_bitstream(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_verbose = cmd.option("verbose");
   CommandOptionId opt_file = cmd.option("file");
   CommandOptionId opt_file_format = cmd.option("format");
+  CommandOptionId opt_fast_config = cmd.option("fast_configuration");
 
   /* Write fabric bitstream if required */
   int status = CMD_EXEC_SUCCESS;
@@ -114,11 +120,90 @@ int write_fabric_bitstream(const OpenfpgaContext& openfpga_ctx,
     status = write_fabric_bitstream_to_text_file(openfpga_ctx.bitstream_manager(),
                                                  openfpga_ctx.fabric_bitstream(),
                                                  openfpga_ctx.arch().config_protocol,
+                                                 openfpga_ctx.fabric_global_port_info(),
                                                  cmd_context.option_value(cmd, opt_file),
+                                                 cmd_context.option_enable(cmd, opt_fast_config),
                                                  cmd_context.option_enable(cmd, opt_verbose));
   }
   
   return status;
 } 
+
+/********************************************************************
+ * A wrapper function to call the write_io_mapping() in FPGA bitstream
+ *******************************************************************/
+int write_io_mapping(const OpenfpgaContext& openfpga_ctx,
+                     const Command& cmd, const CommandContext& cmd_context) {
+
+  CommandOptionId opt_verbose = cmd.option("verbose");
+  CommandOptionId opt_file = cmd.option("file");
+
+  /* Write fabric bitstream if required */
+  int status = CMD_EXEC_SUCCESS;
+  
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+
+  std::string src_dir_path = find_path_dir_name(cmd_context.option_value(cmd, opt_file));
+
+  /* Create directories */
+  create_directory(src_dir_path);
+
+  /* Create a module as the top-level fabric, and add it to the module manager */
+  std::string top_module_name = generate_fpga_top_module_name();
+  ModuleId top_module = openfpga_ctx.module_graph().find_module(top_module_name);
+  VTR_ASSERT(true == openfpga_ctx.module_graph().valid_module_id(top_module));
+
+  IoMap io_map = build_fpga_io_mapping_info(openfpga_ctx.module_graph(),
+                                            top_module,
+                                            g_vpr_ctx.atom(),
+                                            g_vpr_ctx.placement(),
+                                            openfpga_ctx.io_location_map(),
+                                            openfpga_ctx.vpr_netlist_annotation(),
+                                            std::string(),
+                                            std::string());
+
+  status = write_io_mapping_to_xml_file(io_map,
+                                        cmd_context.option_value(cmd, opt_file),
+                                        cmd_context.option_enable(cmd, opt_verbose));
+  
+  return status;
+} 
+
+/********************************************************************
+ * A wrapper function to call the report_arch_bitstream_distribution() in FPGA bitstream
+ *******************************************************************/
+int report_bitstream_distribution(const OpenfpgaContext& openfpga_ctx,
+                                  const Command& cmd, const CommandContext& cmd_context) {
+
+  CommandOptionId opt_file = cmd.option("file");
+
+  int status = CMD_EXEC_SUCCESS;
+  
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+
+  std::string src_dir_path = find_path_dir_name(cmd_context.option_value(cmd, opt_file));
+
+  /* Create directories */
+  create_directory(src_dir_path);
+
+  /* Default depth requirement, this is to limit the report size by default */
+  int depth = 1;
+  CommandOptionId opt_depth = cmd.option("depth");
+  if (true == cmd_context.option_enable(cmd, opt_depth)) {
+    depth = std::atoi(cmd_context.option_value(cmd, opt_depth).c_str());
+    /* Error out if we have negative depth */
+    if (0 > depth) {
+      VTR_LOG_ERROR("Invalid depth '%d' which should be 0 or a positive number!\n",
+                    depth);
+      return CMD_EXEC_FATAL_ERROR; 
+    }
+  }
+
+  status = report_architecture_bitstream_distribution(openfpga_ctx.bitstream_manager(),
+                                                      cmd_context.option_value(cmd, opt_file),
+                                                      depth);
+  
+  return status;
+}
 
 } /* end namespace openfpga */

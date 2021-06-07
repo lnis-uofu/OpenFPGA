@@ -14,6 +14,7 @@
 #include "vpr_device_annotation.h"
 #include "vpr_clustering_annotation.h"
 #include "vpr_placement_annotation.h"
+#include "vpr_bitstream_annotation.h"
 
 /********************************************************************
  * Function declaration
@@ -32,6 +33,7 @@ void build_grid_bitstream(BitstreamManager& bitstream_manager,
                           const VprDeviceAnnotation& device_annotation,
                           const VprClusteringAnnotation& cluster_annotation,
                           const VprPlacementAnnotation& place_annotation,
+                          const VprBitstreamAnnotation& bitstream_annotation,
                           const bool& verbose);
 
 } /* end namespace openfpga */

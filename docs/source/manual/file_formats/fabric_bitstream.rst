@@ -5,7 +5,7 @@ Fabric-dependent Bitstream
 
 .. _file_formats_fabric_bitstream_plain_text:
 
-Plain text (.txt)
+Plain text (.bit)
 ~~~~~~~~~~~~~~~~~
 
 This file format is designed to be directly loaded to an FPGA fabric.
@@ -63,7 +63,14 @@ The information depends on the type of configuration procotol.
 
 .. option:: frame_based 
 
-  Multiple lines will be included, each of which is organized as <address><space><bits>.
+  Multiple lines will be included, each of which is organized as ``<address><data_input_bits>``.
+  The size of address line and data input bits are shown as a comment in the bitstream file, which eases the development of bitstream downloader.
+  For example 
+  
+  .. code-block:: verilog
+
+    // Bitstream width (LSB -> MSB): <address 14 bits><data input 1 bits>
+
   Note that the address may include don't care bit which is denoted as ``x``.
 
   .. note:: OpenFPGA automatically convert don't care bit to logic ``0`` when generating testbenches.
@@ -72,10 +79,10 @@ The information depends on the type of configuration procotol.
    
   .. code-block:: xml 
      
-     <frame_address> <bit_value> 
-     <frame_address> <bit_value> 
+     <frame_address><bit_value> 
+     <frame_address><bit_value> 
      ...
-     <frame_address> <bit_value> 
+     <frame_address><bit_value> 
 
   .. note:: When there are multiple configuration regions, each ``<bit_value>`` may consist of multiple bits. For example, ``0110`` represents the bits for 4 configuration regions, where the 4 digits correspond to the bits from region ``0, 1, 2, 3`` respectively.
 

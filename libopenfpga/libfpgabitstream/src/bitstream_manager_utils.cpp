@@ -71,5 +71,27 @@ size_t find_bitstream_manager_config_bit_index_in_parent_block(const BitstreamMa
   return curr_index;
 }
 
+/********************************************************************
+ * Find the total number of configuration bits under a block
+ * As configuration bits are stored only under the leaf blocks,
+ * this function will recursively visit all the child blocks
+ * until reaching a leaf block, where we collect the number of bits
+ *******************************************************************/
+size_t rec_find_bitstream_manager_block_sum_of_bits(const BitstreamManager& bitstream_manager,
+                                                    const ConfigBlockId& block) {
+  /* For leaf block, return directly with the number of bits, because it has not child block */
+  if (0 < bitstream_manager.block_bits(block).size()) {
+    VTR_ASSERT_SAFE(bitstream_manager.block_children(block).empty());
+    return bitstream_manager.block_bits(block).size();
+  }
+
+  size_t sum_of_bits = 0;
+  /* Dive to child blocks if this block has any */
+  for (const ConfigBlockId& child_block : bitstream_manager.block_children(block)) {
+    sum_of_bits += rec_find_bitstream_manager_block_sum_of_bits(bitstream_manager, child_block);
+  }
+
+  return sum_of_bits;
+}
 
 } /* end namespace openfpga */

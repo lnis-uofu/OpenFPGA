@@ -42,19 +42,21 @@ Supported Circuit Designs
 +-----------------+--------------+-----------+-----------------------------------------------------+
 | | Configurable  |     No       | Yes       | - :ref:`circuit_model_config_latch_example`         | 
 | | Memory        |              |           | - :ref:`circuit_model_sram_blwl_example`            |
-|                 |              |           | - :ref:`circuit_model_dff_example`                  | 
 |                 |              |           | - :ref:`circuit_model_ccff_example`                 | 
 |                 |              |           | - :ref:`circuit_model_ccff_enable_example`          | 
 |                 |              |           | - :ref:`circuit_model_ccff_scanable_example`        | 
 +-----------------+--------------+-----------+-----------------------------------------------------+
-| Block RAM       | No           | Yes       | - **Any size**                                      |
-|                 |              |           | - Single-port                                       |
-|                 |              |           | - Dual-port                                         |
-|                 |              |           | - Fracturable                                       |
+| Data Memory     | No           | Yes       | - **Any size**                                      |
+|                 |              |           | - :ref:`circuit_model_dff_example`                  | 
+|                 |              |           | - :ref:`circuit_model_multi_mode_ff_example`        | 
+|                 |              |           | - Single-port Block RAM                             |
+|                 |              |           | - :ref:`circuit_model_single_mode_dpram_example`    |
+|                 |              |           | - :ref:`circuit_model_multi_mode_dpram_example`     |
 +-----------------+--------------+-----------+-----------------------------------------------------+
 | | Arithmetic    | No           | Yes       | - **Any size**                                      |
-| | Units         |              |           | - Multiplier                                        |
-|                 |              |           | - :ref:`circuit_model_full_adder_example`           |
+| | Units         |              |           | - :ref:`circuit_model_full_adder_example`           |
+|                 |              |           | - :ref:`circuit_model_single_mode_mult8x8_example`  |
+|                 |              |           | - :ref:`circuit_model_multi_mode_mult8x8_example`   |
 +-----------------+--------------+-----------+-----------------------------------------------------+
 | I/O             | No           | Yes       | - :ref:`circuit_model_gpio_example`                 |
 |                 |              |           | - Bi-directional buffer                             |

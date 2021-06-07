@@ -724,14 +724,20 @@ std::string generate_verilog_constant_values(const std::vector<size_t>& const_va
  * Generate a verilog port with a deposite of constant values
  ********************************************************************/
 std::string generate_verilog_port_constant_values(const BasicPort& output_port,
-                                                  const std::vector<size_t>& const_values) {
+                                                  const std::vector<size_t>& const_values,
+                                                  const bool& is_register) {
   std::string port_str;
 
   /* Must check: the port width matches */
   VTR_ASSERT( const_values.size() == output_port.get_width() );
 
   port_str = generate_verilog_port(VERILOG_PORT_CONKT, output_port);
-  port_str += " = ";
+  if (is_register) {
+    port_str += " <= ";
+  } else {
+    VTR_ASSERT_SAFE(!is_register);
+    port_str += " = ";
+  }
   port_str += generate_verilog_constant_values(const_values);
   return port_str;
 }
