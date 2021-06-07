@@ -2143,7 +2143,7 @@ void print_verilog_full_testbench_frame_decoder_bitstream(std::fstream& fp,
   /* For fast configuration, identify the final bitstream size to be used */
   size_t num_bits_to_skip = 0;
   if (true == fast_configuration) {
-    num_bits_to_skip = find_frame_based_fast_configuration_fabric_bitstream_size(fabric_bitstream, bit_value_to_skip);
+    num_bits_to_skip = fabric_bits_by_addr.size() - find_frame_based_fast_configuration_fabric_bitstream_size(fabric_bitstream, bit_value_to_skip);
   }
   VTR_ASSERT(num_bits_to_skip < fabric_bits_by_addr.size());
 

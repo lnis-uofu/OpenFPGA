@@ -231,7 +231,7 @@ int write_frame_based_fabric_bitstream_to_text_file(std::fstream& fp,
   /* Identify and output bitstream size information */
   size_t num_bits_to_skip = 0;
   if (true == fast_configuration) {
-    num_bits_to_skip = find_frame_based_fast_configuration_fabric_bitstream_size(fabric_bitstream, bit_value_to_skip);
+    num_bits_to_skip = fabric_bits_by_addr.size() - find_frame_based_fast_configuration_fabric_bitstream_size(fabric_bitstream, bit_value_to_skip);
     VTR_ASSERT(num_bits_to_skip < fabric_bits_by_addr.size());
     VTR_LOG("Fast configuration will skip %g% (%lu/%lu) of configuration bitstream.\n",
             100. * (float) num_bits_to_skip / (float) fabric_bits_by_addr.size(),
