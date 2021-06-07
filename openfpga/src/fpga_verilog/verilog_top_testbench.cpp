@@ -2191,6 +2191,11 @@ void print_verilog_full_testbench_frame_decoder_bitstream(std::fstream& fp,
   fp << ";";
   fp << std::endl;
 
+  fp << "\t";
+  fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << " <= 0";
+  fp << ";";
+  fp << std::endl;
+
   fp << "end";
   fp << std::endl;
 

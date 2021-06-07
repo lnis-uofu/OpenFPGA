@@ -240,8 +240,7 @@ int write_frame_based_fabric_bitstream_to_text_file(std::fstream& fp,
 
   /* Output information about how to intepret the bitstream */
   fp << "// Bitstream length: " << fabric_bits_by_addr.size() - num_bits_to_skip << std::endl;
-  fp << "// Bitstream address size (LSB -> MSB): " << addr_size << std::endl;
-  fp << "// Bitstream data input size (LSB -> MSB): " << din_size << std::endl;
+  fp << "// Bitstream width (LSB -> MSB): <address " << addr_size << " bits><data input " << din_size << " bits>" << std::endl;
 
   for (const auto& addr_din_pair : fabric_bits_by_addr) {
     /* When fast configuration is enabled,
