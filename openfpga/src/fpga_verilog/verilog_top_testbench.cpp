@@ -3063,11 +3063,6 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                                  netlist_annotation,
                                                  explicit_port_mapping);
 
-  /* Print tasks used for loading bitstreams */
-  print_verilog_top_testbench_load_bitstream_task(fp,
-                                                  config_protocol.type(),
-                                                  module_manager, top_module);
-
   /* load bitstream to FPGA fabric in a configuration phase */
   print_verilog_full_testbench_bitstream(fp,
                                          bitstream_file,
