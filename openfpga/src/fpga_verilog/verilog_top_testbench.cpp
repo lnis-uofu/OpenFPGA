@@ -1993,11 +1993,11 @@ void print_verilog_full_testbench_configuration_chain_bitstream(std::fstream& fp
   fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[0:`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << " - 1];";
   fp << std::endl;
 
-  fp << "reg [$clog2(`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << ") - 1:0] " << TOP_TB_BITSTREAM_INDEX_REG_NAME << ";" << std::endl;
+  fp << "reg [$clog2(`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << "):0] " << TOP_TB_BITSTREAM_INDEX_REG_NAME << ";" << std::endl;
 
   BasicPort bit_skip_reg(TOP_TB_BITSTREAM_SKIP_FLAG_REG_NAME, 1);
   print_verilog_comment(fp, "----- Registers used for fast configuration logic -----");
-  fp << "reg [$clog2(`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << ") - 1:0] " << TOP_TB_BITSTREAM_ITERATOR_REG_NAME << ";" << std::endl;
+  fp << "reg [$clog2(`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << "):0] " << TOP_TB_BITSTREAM_ITERATOR_REG_NAME << ";" << std::endl;
   fp << generate_verilog_port(VERILOG_PORT_REG, bit_skip_reg) << ";" << std::endl;
 
   print_verilog_comment(fp, "----- Preload bitstream file to a virtual memory -----");
@@ -2176,7 +2176,7 @@ void print_verilog_full_testbench_memory_bank_bitstream(std::fstream& fp,
   fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[0:`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << " - 1];";
   fp << std::endl;
 
-  fp << "reg [$clog2(`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << ") - 1:0] " << TOP_TB_BITSTREAM_INDEX_REG_NAME << ";" << std::endl;
+  fp << "reg [$clog2(`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << "):0] " << TOP_TB_BITSTREAM_INDEX_REG_NAME << ";" << std::endl;
 
   print_verilog_comment(fp, "----- Preload bitstream file to a virtual memory -----");
   fp << "initial begin" << std::endl;
@@ -2312,7 +2312,7 @@ void print_verilog_full_testbench_frame_decoder_bitstream(std::fstream& fp,
   fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[0:`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << " - 1];";
   fp << std::endl;
 
-  fp << "reg [$clog2(`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << ") - 1:0] " << TOP_TB_BITSTREAM_INDEX_REG_NAME << ";" << std::endl;
+  fp << "reg [$clog2(`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << "):0] " << TOP_TB_BITSTREAM_INDEX_REG_NAME << ";" << std::endl;
 
   print_verilog_comment(fp, "----- Preload bitstream file to a virtual memory -----");
   fp << "initial begin" << std::endl;
