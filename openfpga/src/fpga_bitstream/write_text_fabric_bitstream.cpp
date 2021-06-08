@@ -41,65 +41,6 @@ void write_fabric_bitstream_text_file_head(std::fstream& fp) {
 }
 
 /********************************************************************
- * Write a configuration bit into a plain text file
- * The format depends on the type of configuration protocol
- * - Vanilla (standalone): just put down pure 0|1 bitstream
- * - Configuration chain: just put down pure 0|1 bitstream
- * - Memory bank :  <BL address> <WL address> <bit>
- * - Frame-based configuration protocol :  <address> <bit>
- *
- * Return:
- *  - 0 if succeed
- *  - 1 if critical errors occured
- *******************************************************************/
-static 
-int write_fabric_config_bit_to_text_file(std::fstream& fp,
-                                         const BitstreamManager& bitstream_manager,
-                                         const FabricBitstream& fabric_bitstream,
-                                         const FabricBitId& fabric_bit,
-                                         const e_config_protocol_type& config_type) {
-  if (false == valid_file_stream(fp)) {
-    return 1;
-  }
-
-  switch (config_type) {
-  case CONFIG_MEM_STANDALONE: 
-  case CONFIG_MEM_SCAN_CHAIN:
-    fp << bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit));
-    break;
-  case CONFIG_MEM_MEMORY_BANK: { 
-    for (const char& addr_bit : fabric_bitstream.bit_bl_address(fabric_bit)) {
-      fp << addr_bit;
-    }
-    write_space_to_file(fp, 1);
-    for (const char& addr_bit : fabric_bitstream.bit_wl_address(fabric_bit)) {
-      fp << addr_bit;
-    }
-    write_space_to_file(fp, 1);
-    fp << bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit));
-    fp << "\n";
-    break;
-  }
-  case CONFIG_MEM_FRAME_BASED: {
-    for (const char& addr_bit : fabric_bitstream.bit_address(fabric_bit)) {
-      fp << addr_bit;
-    }
-    write_space_to_file(fp, 1);
-    fp << bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit));
-    fp << "\n";
-    break;
-  }
-  default:
-    VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "Invalid configuration protocol type!\n");
-    return 1;
-  }
-
-  return 0;
-}
-
-
-/********************************************************************
  * Write the flatten fabric bitstream to a plain text file 
  *
  * Return:
@@ -109,20 +50,20 @@ int write_fabric_config_bit_to_text_file(std::fstream& fp,
 static 
 int write_flatten_fabric_bitstream_to_text_file(std::fstream& fp,
                                                 const BitstreamManager& bitstream_manager,
-                                                const FabricBitstream& fabric_bitstream,
-                                                const ConfigProtocol& config_protocol) {
-  int status = 0;
-  for (const FabricBitId& fabric_bit : fabric_bitstream.bits()) {
-    status = write_fabric_config_bit_to_text_file(fp, bitstream_manager,
-                                                  fabric_bitstream,
-                                                  fabric_bit,
-                                                  config_protocol.type());
-    if (1 == status) {
-      return status;
-    }
+                                                const FabricBitstream& fabric_bitstream) {
+  if (false == valid_file_stream(fp)) {
+    return 1;
   }
 
-  return status;
+  /* Output bitstream size information */
+  fp << "// Bitstream length: " << fabric_bitstream.num_bits() << std::endl;
+
+  /* Output bitstream data */
+  for (const FabricBitId& fabric_bit : fabric_bitstream.bits()) {
+    fp << bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit));
+  }
+
+  return 0;
 }
 
 /********************************************************************
@@ -356,8 +297,7 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
   case CONFIG_MEM_STANDALONE: 
     status = write_flatten_fabric_bitstream_to_text_file(fp,
                                                          bitstream_manager,
-                                                         fabric_bitstream,
-                                                         config_protocol);
+                                                         fabric_bitstream);
     break;
   case CONFIG_MEM_SCAN_CHAIN:
     status = write_config_chain_fabric_bitstream_to_text_file(fp,

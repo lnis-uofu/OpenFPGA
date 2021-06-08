@@ -1938,6 +1938,101 @@ void print_verilog_top_testbench_bitstream(std::fstream& fp,
 }
 
 /********************************************************************
+ * Print stimulus for a FPGA fabric with a flatten memory (standalone) configuration protocol
+ * We will load the bitstream in the second clock cycle, right after the first reset cycle
+ *******************************************************************/
+static
+void print_verilog_full_testbench_vanilla_bitstream(std::fstream& fp,
+                                                    const std::string& bitstream_file,
+                                                    const ModuleManager& module_manager,
+                                                    const ModuleId& top_module,
+                                                    const FabricBitstream& fabric_bitstream) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  /* Find Bit-Line and Word-Line port */
+  BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
+
+  /* Find Bit-Line and Word-Line port */
+  ModulePortId bl_port_id = module_manager.find_module_port(top_module, std::string(MEMORY_BL_PORT_NAME));
+  BasicPort bl_port = module_manager.module_port(top_module, bl_port_id);
+
+  ModulePortId wl_port_id = module_manager.find_module_port(top_module, std::string(MEMORY_WL_PORT_NAME));
+  BasicPort wl_port = module_manager.module_port(top_module, wl_port_id);
+
+  /* Define a constant for the bitstream length */
+  print_verilog_define_flag(fp, std::string(TOP_TB_BITSTREAM_LENGTH_VARIABLE), fabric_bitstream.num_bits()); 
+
+  /* Declare local variables for bitstream loading in Verilog */
+  print_verilog_comment(fp, "----- Virtual memory to store the bitstream from external file -----");
+  fp << "reg [0:`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE << " - 1] ";
+  fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[0:0];";
+  fp << std::endl;
+
+  /* Initial value should be the first configuration bits
+   * In the rest of programming cycles,
+   * configuration bits are fed at the falling edge of programming clock.
+   * We do not care the value of scan_chain head during the first programming cycle
+   * It is reset anyway
+   */
+  std::vector<size_t> initial_bl_values(bl_port.get_width(), 0);
+  std::vector<size_t> initial_wl_values(wl_port.get_width(), 0);
+
+  print_verilog_comment(fp, "----- Begin bitstream loading during configuration phase -----");
+  fp << "initial" << std::endl;
+  fp << "\tbegin" << std::endl;
+  print_verilog_comment(fp, "----- Configuration chain default input -----");
+  fp << "\t\t";
+  fp << generate_verilog_port_constant_values(bl_port, initial_bl_values);
+  fp << ";" << std::endl;
+  fp << "\t\t";
+  fp << generate_verilog_port_constant_values(wl_port, initial_wl_values);
+  fp << ";" << std::endl;
+
+  print_verilog_comment(fp, "----- Preload bitstream file to a virtual memory -----");
+  fp << "\t";
+  fp << "$readmemb(\"" << bitstream_file << "\", " << TOP_TB_BITSTREAM_MEM_REG_NAME << ");";
+  fp << std::endl;
+
+  fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ") begin" << std::endl;
+
+  /* Enable all the WLs */
+  std::vector<size_t> enabled_wl_values(wl_port.get_width(), 1);
+  fp << "\t\t\t";
+  fp << generate_verilog_port_constant_values(wl_port, enabled_wl_values);
+  fp << ";" << std::endl;
+
+  fp << "\t\t\t";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, bl_port);
+  fp << " <= ";
+  fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "[0]";
+  fp << ";" << std::endl;
+
+  fp << "\t\tend" << std::endl;
+
+  /* Disable all the WLs */
+  fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
+
+  fp << "\t\t\t";
+  fp << generate_verilog_port_constant_values(wl_port, initial_wl_values);
+  fp << ";" << std::endl;
+
+  /* Raise the flag of configuration done when bitstream loading is complete */
+  fp << "\t\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ");" << std::endl;
+
+  BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
+  fp << "\t\t\t";
+  fp << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port);
+  fp << " <= ";
+  std::vector<size_t> config_done_enable_values(config_done_port.get_width(), 1);
+  fp << generate_verilog_constant_values(config_done_enable_values);
+  fp << ";" << std::endl;
+
+  fp << "\tend" << std::endl;
+  print_verilog_comment(fp, "----- End bitstream loading during configuration phase -----");
+}
+
+/********************************************************************
  * Print stimulus for a FPGA fabric with a configuration chain protocol
  * where configuration bits are programming in serial (one by one)
  * Task list:
@@ -2411,6 +2506,12 @@ void print_verilog_full_testbench_bitstream(std::fstream& fp,
   /* Branch on the type of configuration protocol */
   switch (config_protocol_type) {
   case CONFIG_MEM_STANDALONE:
+    print_verilog_full_testbench_vanilla_bitstream(fp,
+                                                   bitstream_file,
+                                                   module_manager,
+                                                   top_module,
+                                                   fabric_bitstream);
+
     break;
   case CONFIG_MEM_SCAN_CHAIN:
     print_verilog_full_testbench_configuration_chain_bitstream(fp, bitstream_file,
@@ -2961,11 +3062,6 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                                  atom_ctx,
                                                  netlist_annotation,
                                                  explicit_port_mapping);
-
-  /* Print tasks used for loading bitstreams */
-  print_verilog_top_testbench_load_bitstream_task(fp,
-                                                  config_protocol.type(),
-                                                  module_manager, top_module);
 
   /* load bitstream to FPGA fabric in a configuration phase */
   print_verilog_full_testbench_bitstream(fp,
