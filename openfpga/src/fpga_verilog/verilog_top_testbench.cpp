@@ -1462,102 +1462,6 @@ void print_verilog_top_testbench_vanilla_bitstream(std::fstream& fp,
 }
 
 /********************************************************************
- * Decide if we should use reset or set signal to acheive fast configuration
- * - If only one type signal is specified, we use that type
- *   For example, only reset signal is defined, we will use reset  
- * - If both are defined, pick the one that will bring bigger reduction
- *   i.e., larger number of configuration bits can be skipped
- *******************************************************************/
-static 
-bool find_bit_value_to_skip_for_fast_configuration(const e_config_protocol_type& config_protocol_type,  
-                                                   const bool& fast_configuration,
-                                                   const std::vector<FabricGlobalPortId>& global_prog_reset_ports,
-                                                   const std::vector<FabricGlobalPortId>& global_prog_set_ports,
-                                                   const BitstreamManager& bitstream_manager,
-                                                   const FabricBitstream& fabric_bitstream) {
-
-  /* Early exit conditions */
-  if (!global_prog_reset_ports.empty() && global_prog_set_ports.empty()) {
-    return false; 
-  } else if (!global_prog_set_ports.empty() && global_prog_reset_ports.empty()) {
-    return true; 
-  } else if (global_prog_set_ports.empty() && global_prog_reset_ports.empty()) {
-    /* If both types of ports are not defined, the fast configuration should be turned off */
-    VTR_ASSERT(false == fast_configuration); 
-    return false;
-  }
-
-  VTR_ASSERT(!global_prog_set_ports.empty() && !global_prog_reset_ports.empty());
-  bool bit_value_to_skip = false;
-
-  VTR_LOG("Both reset and set ports are defined for programming controls, selecting the best-fit one...\n");
-
-  size_t num_ones_to_skip = 0;
-  size_t num_zeros_to_skip = 0;
-
-  /* Branch on the type of configuration protocol */
-  switch (config_protocol_type) {
-  case CONFIG_MEM_STANDALONE:
-    break;
-  case CONFIG_MEM_SCAN_CHAIN: {
-    /* We can only skip the ones/zeros at the beginning of the bitstream */
-    /* Count how many logic '1' bits we can skip */
-    for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
-      if (false == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id))) {
-        break;
-      }
-      VTR_ASSERT(true == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)));
-      num_ones_to_skip++;
-    }
-    /* Count how many logic '0' bits we can skip */
-    for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
-      if (true == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id))) {
-        break;
-      }
-      VTR_ASSERT(false == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)));
-      num_zeros_to_skip++;
-    }
-    break;
-  }
-  case CONFIG_MEM_MEMORY_BANK:
-  case CONFIG_MEM_FRAME_BASED: {
-    /* Count how many logic '1' and logic '0' bits we can skip */
-    for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
-      if (false == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id))) {
-        num_zeros_to_skip++;
-      } else {
-        VTR_ASSERT(true == bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)));
-        num_ones_to_skip++;
-      }
-    }
-    break;
-  }
-  default:
-    VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "Invalid SRAM organization type!\n");
-    exit(1);
-  }
-
-  VTR_LOG("Using reset will skip %g% (%lu/%lu) of configuration bitstream.\n",
-          100. * (float) num_zeros_to_skip / (float) fabric_bitstream.num_bits(),
-          num_zeros_to_skip, fabric_bitstream.num_bits());
-
-  VTR_LOG("Using set will skip %g% (%lu/%lu) of configuration bitstream.\n",
-          100. * (float) num_ones_to_skip / (float) fabric_bitstream.num_bits(),
-          num_ones_to_skip, fabric_bitstream.num_bits());
-
-  /* By default, we prefer to skip zeros (when the numbers are the same */
-  if (num_ones_to_skip > num_zeros_to_skip) {
-    VTR_LOG("Will use set signal in fast configuration\n");
-    bit_value_to_skip = true;
-  } else {
-    VTR_LOG("Will use reset signal in fast configuration\n");
-  }
-
-  return bit_value_to_skip;
-}
-
-/********************************************************************
  * Print stimulus for a FPGA fabric with a configuration chain protocol
  * where configuration bits are programming in serial (one by one)
  * Task list:
@@ -2699,17 +2603,11 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
   std::vector<FabricGlobalPortId> global_prog_set_ports = find_fabric_global_programming_set_ports(global_ports);
 
   /* Identify if we can apply fast configuration */
-  bool apply_fast_configuration = fast_configuration;
-  if ( (global_prog_set_ports.empty() && global_prog_reset_ports.empty())
-     && (true == fast_configuration)) {
-    VTR_LOG_WARN("None of global reset and set ports are defined for programming purpose. Fast configuration is turned off\n");
-    apply_fast_configuration = false;
-  }
+  bool apply_fast_configuration = fast_configuration && is_fast_configuration_applicable(global_ports);
   bool bit_value_to_skip = find_bit_value_to_skip_for_fast_configuration(config_protocol.type(),
-                                                                         apply_fast_configuration,
-                                                                         global_prog_reset_ports, 
-                                                                         global_prog_set_ports, 
-                                                                         bitstream_manager, fabric_bitstream);
+                                                                         global_ports, 
+                                                                         bitstream_manager,
+                                                                         fabric_bitstream);
 
   /* Start of testbench */
   print_verilog_top_testbench_ports(fp, module_manager, top_module,
@@ -2958,17 +2856,11 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
   std::vector<FabricGlobalPortId> global_prog_set_ports = find_fabric_global_programming_set_ports(global_ports);
 
   /* Identify if we can apply fast configuration */
-  bool apply_fast_configuration = fast_configuration;
-  if ( (global_prog_set_ports.empty() && global_prog_reset_ports.empty())
-     && (true == fast_configuration)) {
-    VTR_LOG_WARN("None of global reset and set ports are defined for programming purpose. Fast configuration is turned off\n");
-    apply_fast_configuration = false;
-  }
+  bool apply_fast_configuration = fast_configuration && is_fast_configuration_applicable(global_ports);
   bool bit_value_to_skip = find_bit_value_to_skip_for_fast_configuration(config_protocol.type(),
-                                                                         apply_fast_configuration,
-                                                                         global_prog_reset_ports, 
-                                                                         global_prog_set_ports, 
-                                                                         bitstream_manager, fabric_bitstream);
+                                                                         global_ports, 
+                                                                         bitstream_manager,
+                                                                         fabric_bitstream);
 
   /* Start of testbench */
   print_verilog_top_testbench_ports(fp, module_manager, top_module,
