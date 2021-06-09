@@ -252,6 +252,9 @@ ShellCommandId add_openfpga_write_preconfigured_testbench_command(openfpga::Shel
   CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", true, "Specify the file path to the reference Verilog netlist");
   shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);
 
+  /* Add an option '--support_icarus_simulator' */
+  shell_cmd.add_option("support_icarus_simulator", false, "Fine-tune Verilog testbenches to support icarus simulator");
+
   /* Add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false, "Use explicit port mapping in Verilog netlists");
 

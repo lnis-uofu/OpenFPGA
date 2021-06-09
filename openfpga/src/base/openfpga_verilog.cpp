@@ -223,6 +223,7 @@ int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
+  CommandOptionId opt_support_icarus_simulator = cmd.option("support_icarus_simulator");
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
@@ -233,6 +234,7 @@ int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
   options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
   options.set_fabric_netlist_file_path(cmd_context.option_value(cmd, opt_fabric_netlist));
   options.set_reference_benchmark_file_path(cmd_context.option_value(cmd, opt_reference_benchmark));
+  options.set_support_icarus_simulator(cmd_context.option_enable(cmd, opt_support_icarus_simulator));
   options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_print_preconfig_top_testbench(true);
