@@ -357,5 +357,55 @@ int fpga_verilog_preconfigured_fabric_wrapper(const ModuleManager &module_manage
   return status;
 }
 
+/********************************************************************
+ * A top-level function of FPGA-Verilog which focuses on fabric Verilog generation
+ * This function will generate
+ *  - Pre-configured testbench, which can skip the configuration phase and pre-configure the FPGA module.
+ *    This testbench is created for quick verification and formal verification purpose.
+ ********************************************************************/
+int fpga_verilog_preconfigured_testbench(const ModuleManager &module_manager,
+                                         const AtomContext &atom_ctx,
+                                         const PinConstraints& pin_constraints,
+                                         const FabricGlobalPortInfo &fabric_global_port_info,
+                                         const VprNetlistAnnotation &netlist_annotation,
+                                         const SimulationSetting &simulation_setting,
+                                         const VerilogTestbenchOption &options) {
+
+  vtr::ScopedStartFinishTimer timer("Write Verilog testbenches for a preconfigured FPGA fabric\n");
+
+  std::string src_dir_path = format_dir_path(options.output_directory());
+
+  std::string netlist_name = atom_ctx.nlist.netlist_name();
+
+  int status = CMD_EXEC_SUCCESS;
+
+  /* Create directories */
+  create_directory(src_dir_path);
+
+  /* Output preprocessing flags for HDL simulations */
+  print_verilog_simulation_preprocessing_flags(std::string(src_dir_path),
+                                               options);
+
+  /* Generate top-level testbench using random vectors */
+  std::string random_top_testbench_file_path = src_dir_path + netlist_name + std::string(RANDOM_TOP_TESTBENCH_VERILOG_FILE_POSTFIX);
+  print_verilog_random_top_testbench(netlist_name,
+                                     random_top_testbench_file_path,
+                                     atom_ctx,
+                                     netlist_annotation,
+                                     module_manager,
+                                     fabric_global_port_info,
+                                     pin_constraints,
+                                     simulation_setting,
+                                     options.explicit_port_mapping());
+
+  /* Generate a Verilog file including all the netlists that have been generated */
+  print_verilog_testbench_include_netlists(src_dir_path,
+                                           netlist_name,
+                                           options.fabric_netlist_file_path(),
+                                           options.reference_benchmark_file_path());
+
+  return status;
+}
+
 
 } /* end namespace openfpga */

@@ -84,6 +84,13 @@ int fpga_verilog_preconfigured_fabric_wrapper(const ModuleManager &module_manage
                                               const ConfigProtocol &config_protocol,
                                               const VerilogTestbenchOption &options);
 
+int fpga_verilog_preconfigured_testbench(const ModuleManager &module_manager,
+                                         const AtomContext &atom_ctx,
+                                         const PinConstraints& pin_constraints,
+                                         const FabricGlobalPortInfo &fabric_global_port_info,
+                                         const VprNetlistAnnotation &netlist_annotation,
+                                         const SimulationSetting &simulation_setting,
+                                         const VerilogTestbenchOption &options);
 
 } /* end namespace openfpga */
 
