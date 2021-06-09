@@ -53,7 +53,7 @@ write_fabric_bitstream --file fabric_bitstream.bit --format plain_text
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
 write_full_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --explicit_port_mapping --include_signal_init --fabric_netlist_file_path ${OPENFPGA_FABRIC_VERILOG_NETLIST} --bitstream fabric_bitstream.bit
 write_preconfigured_fabric_wrapper --file ./SRC --support_icarus_simulator --explicit_port_mapping
-write_preconfigured_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --explicit_port_mapping --fabric_netlist_file_path ${OPENFPGA_FABRIC_VERILOG_NETLIST}
+write_preconfigured_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --explicit_port_mapping --fabric_netlist_file_path ${OPENFPGA_FABRIC_VERILOG_NETLIST} --support_icarus_simulator
 
 # Write the SDC to run timing analysis for a mapped FPGA fabric
 write_analysis_sdc --file ./SDC_analysis
