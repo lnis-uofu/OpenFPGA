@@ -256,7 +256,8 @@ int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
 int write_simulation_task_info(const OpenfpgaContext& openfpga_ctx,
                                const Command& cmd, const CommandContext& cmd_context) {
 
-  CommandOptionId opt_output_dir = cmd.option("file");
+  CommandOptionId opt_file = cmd.option("file");
+  CommandOptionId opt_hdl_dir = cmd.option("hdl_dir");
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
@@ -264,9 +265,10 @@ int write_simulation_task_info(const OpenfpgaContext& openfpga_ctx,
    * Keep it independent from any other outside data structures
    */
   VerilogTestbenchOption options;
+  options.set_output_directory(cmd_context.option_value(cmd, opt_hdl_dir));
   options.set_reference_benchmark_file_path(cmd_context.option_value(cmd, opt_reference_benchmark));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
-  options.set_print_simulation_ini(cmd_context.option_value(cmd, opt_output_dir));
+  options.set_print_simulation_ini(cmd_context.option_value(cmd, opt_file));
 
   return fpga_verilog_simulation_task_info(openfpga_ctx.module_graph(),
                                            openfpga_ctx.bitstream_manager(),

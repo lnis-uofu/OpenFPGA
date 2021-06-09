@@ -281,6 +281,10 @@ ShellCommandId add_openfpga_write_simulation_task_info_command(openfpga::Shell<O
   shell_cmd.set_option_short_name(output_opt, "f");
   shell_cmd.set_option_require_value(output_opt, openfpga::OPT_STRING);
 
+  /* Add an option '--hdl_dir'*/
+  CommandOptionId hdl_dir_opt = shell_cmd.add_option("hdl_dir", true, "Specify the directory path where HDL netlists are created");
+  shell_cmd.set_option_require_value(hdl_dir_opt, openfpga::OPT_STRING);
+
   /* Add an option '--reference_benchmark_file_path'*/
   CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", true, "Specify the file path to the reference Verilog netlist");
   shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);
