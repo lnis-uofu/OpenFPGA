@@ -123,9 +123,9 @@ ShellCommandId add_openfpga_write_verilog_testbench_command(openfpga::Shell<Open
 }
 
 /********************************************************************
- * - Add a command to Shell environment: write full testbench
- * - Add associated options 
- * - Add command dependency
+ * - add a command to shell environment: write full testbench
+ * - add associated options 
+ * - add command dependency
  *******************************************************************/
 static 
 ShellCommandId add_openfpga_write_full_testbench_command(openfpga::Shell<OpenfpgaContext>& shell,
@@ -133,46 +133,88 @@ ShellCommandId add_openfpga_write_full_testbench_command(openfpga::Shell<Openfpg
                                                          const std::vector<ShellCommandId>& dependent_cmds) {
   Command shell_cmd("write_full_testbench");
 
-  /* Add an option '--file' in short '-f'*/
-  CommandOptionId output_opt = shell_cmd.add_option("file", true, "Specify the output directory for HDL netlists");
+  /* add an option '--file' in short '-f'*/
+  CommandOptionId output_opt = shell_cmd.add_option("file", true, "specify the output directory for hdl netlists");
   shell_cmd.set_option_short_name(output_opt, "f");
   shell_cmd.set_option_require_value(output_opt, openfpga::OPT_STRING);
 
-  /* Add an option '--bitstream'*/
-  CommandOptionId bitstream_opt = shell_cmd.add_option("bitstream", true, "Specify the bitstream to be loaded in the testbench");
+  /* add an option '--bitstream'*/
+  CommandOptionId bitstream_opt = shell_cmd.add_option("bitstream", true, "specify the bitstream to be loaded in the testbench");
   shell_cmd.set_option_require_value(bitstream_opt, openfpga::OPT_STRING);
 
-  /* Add an option '--fabric_netlist_file_path'*/
-  CommandOptionId fabric_netlist_opt = shell_cmd.add_option("fabric_netlist_file_path", false, "Specify the file path to the fabric HDL netlist");
+  /* add an option '--fabric_netlist_file_path'*/
+  CommandOptionId fabric_netlist_opt = shell_cmd.add_option("fabric_netlist_file_path", false, "specify the file path to the fabric hdl netlist");
   shell_cmd.set_option_require_value(fabric_netlist_opt, openfpga::OPT_STRING);
 
-  /* Add an option '--pin_constraints_file in short '-pcf' */
-  CommandOptionId pcf_opt = shell_cmd.add_option("pin_constraints_file", false, "Specify the file path to the pin constraints");
+  /* add an option '--pin_constraints_file in short '-pcf' */
+  CommandOptionId pcf_opt = shell_cmd.add_option("pin_constraints_file", false, "specify the file path to the pin constraints");
   shell_cmd.set_option_short_name(pcf_opt, "pcf");
   shell_cmd.set_option_require_value(pcf_opt, openfpga::OPT_STRING);
 
-  /* Add an option '--reference_benchmark_file_path'*/
-  CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", true, "Specify the file path to the reference Verilog netlist");
+  /* add an option '--reference_benchmark_file_path'*/
+  CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", true, "specify the file path to the reference verilog netlist");
   shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);
 
-  /* Add an option '--fast_configuration' */
-  shell_cmd.add_option("fast_configuration", false, "Reduce the period of configuration by skip certain data points");
+  /* add an option '--fast_configuration' */
+  shell_cmd.add_option("fast_configuration", false, "reduce the period of configuration by skip certain data points");
 
-  /* Add an option '--explicit_port_mapping' */
-  shell_cmd.add_option("explicit_port_mapping", false, "Use explicit port mapping in Verilog netlists");
+  /* add an option '--explicit_port_mapping' */
+  shell_cmd.add_option("explicit_port_mapping", false, "use explicit port mapping in verilog netlists");
 
-  /* Add an option '--include_signal_init' */
-  shell_cmd.add_option("include_signal_init", false, "Initialize all the signals in Verilog testbenches");
+  /* add an option '--include_signal_init' */
+  shell_cmd.add_option("include_signal_init", false, "initialize all the signals in verilog testbenches");
 
-  /* Add an option '--verbose' */
-  shell_cmd.add_option("verbose", false, "Enable verbose output");
+  /* add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "enable verbose output");
   
-  /* Add command to the Shell */
-  ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "generate full testbenches for an FPGA fabric");
+  /* add command to the shell */
+  ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "generate full testbenches for an fpga fabric");
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id, write_full_testbench);
 
-  /* Add command dependency to the Shell */
+  /* add command dependency to the shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
+ * - add a command to shell environment: write preconfigured fabric wrapper
+ * - add associated options 
+ * - add command dependency
+ *******************************************************************/
+static 
+ShellCommandId add_openfpga_write_preconfigured_fabric_wrapper_command(openfpga::Shell<OpenfpgaContext>& shell,
+                                                                       const ShellCommandClassId& cmd_class_id,
+                                                                       const std::vector<ShellCommandId>& dependent_cmds) {
+  Command shell_cmd("write_preconfigured_fabric_wrapper");
+
+  /* add an option '--file' in short '-f'*/
+  CommandOptionId output_opt = shell_cmd.add_option("file", true, "specify the output directory for hdl netlists");
+  shell_cmd.set_option_short_name(output_opt, "f");
+  shell_cmd.set_option_require_value(output_opt, openfpga::OPT_STRING);
+
+  /* add an option '--fabric_netlist_file_path'*/
+  CommandOptionId fabric_netlist_opt = shell_cmd.add_option("fabric_netlist_file_path", false, "specify the file path to the fabric hdl netlist");
+  shell_cmd.set_option_require_value(fabric_netlist_opt, openfpga::OPT_STRING);
+
+  /* add an option '--pin_constraints_file in short '-pcf' */
+  CommandOptionId pcf_opt = shell_cmd.add_option("pin_constraints_file", false, "specify the file path to the pin constraints");
+  shell_cmd.set_option_short_name(pcf_opt, "pcf");
+  shell_cmd.set_option_require_value(pcf_opt, openfpga::OPT_STRING);
+
+  /* add an option '--explicit_port_mapping' */
+  shell_cmd.add_option("explicit_port_mapping", false, "use explicit port mapping in verilog netlists");
+
+  /* add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "enable verbose output");
+  
+  /* add command to the shell */
+  ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "generate a wrapper for a pre-configured fpga fabric");
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id, write_preconfigured_fabric_wrapper);
+
+  /* add command dependency to the shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
 
   return shell_cmd_id;
@@ -214,6 +256,17 @@ void add_openfpga_verilog_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   add_openfpga_write_full_testbench_command(shell,
                                             openfpga_verilog_cmd_class,
                                             full_testbench_dependent_cmds);
+
+  /******************************** 
+   * Command 'write_preconfigured_fabric_wrapper' 
+   */
+  /* The command 'write_preconfigured_fabric_wrapper' should NOT be executed before 'build_fabric' */
+  std::vector<ShellCommandId> preconfig_wrapper_dependent_cmds;
+  preconfig_wrapper_dependent_cmds.push_back(build_fabric_cmd_id);
+  add_openfpga_write_preconfigured_fabric_wrapper_command(shell,
+                                                          openfpga_verilog_cmd_class,
+                                                          preconfig_wrapper_dependent_cmds);
+
 } 
 
 } /* end namespace openfpga */
