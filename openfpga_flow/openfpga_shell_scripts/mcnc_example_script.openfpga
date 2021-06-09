@@ -56,7 +56,8 @@ write_fabric_verilog --file ./SRC \
 #  - Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
 #  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
-write_verilog_testbench --file ./SRC --reference_benchmark_file_path ./${REFERENCE_VERILOG_TESTBENCH} --print_top_testbench --print_preconfig_top_testbench --print_simulation_ini ./simulation_deck_info.ini
+write_preconfigured_fabric_wrapper --file ./SRC --support_icarus_simulator
+write_preconfigured_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH}
 
 # Write the SDC files for PnR backend
 #  - Turn on every options here
