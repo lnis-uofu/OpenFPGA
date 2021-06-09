@@ -265,6 +265,40 @@ ShellCommandId add_openfpga_write_preconfigured_testbench_command(openfpga::Shel
   return shell_cmd_id;
 }
 
+/********************************************************************
+ * - Add a command to Shell environment: write simulation task info
+ * - Add associated options 
+ * - Add command dependency
+ *******************************************************************/
+static 
+ShellCommandId add_openfpga_write_simulation_task_info_command(openfpga::Shell<OpenfpgaContext>& shell,
+                                                               const ShellCommandClassId& cmd_class_id,
+                                                               const std::vector<ShellCommandId>& dependent_cmds) {
+  Command shell_cmd("write_simulation_task_info");
+
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId output_opt = shell_cmd.add_option("file", true, "Specify the file path to output simulation-related information");
+  shell_cmd.set_option_short_name(output_opt, "f");
+  shell_cmd.set_option_require_value(output_opt, openfpga::OPT_STRING);
+
+  /* Add an option '--reference_benchmark_file_path'*/
+  CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", true, "Specify the file path to the reference Verilog netlist");
+  shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Enable verbose output");
+  
+  /* Add command to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "generate an interchangable simulation task configuration file");
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id, write_simulation_task_info);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
 void add_openfpga_verilog_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /* Get the unique id of 'build_fabric' command which is to be used in creating the dependency graph */
   const ShellCommandId& build_fabric_cmd_id = shell.command(std::string("build_fabric"));
@@ -322,6 +356,15 @@ void add_openfpga_verilog_commands(openfpga::Shell<OpenfpgaContext>& shell) {
                                                      openfpga_verilog_cmd_class,
                                                      preconfig_testbench_dependent_cmds);
 
+  /******************************** 
+   * Command 'write_simulation_task_info' 
+   */
+  /* The command 'write_simulation_task_info' should NOT be executed before 'build_fabric' */
+  std::vector<ShellCommandId> sim_task_info_dependent_cmds;
+  sim_task_info_dependent_cmds.push_back(build_fabric_cmd_id);
+  add_openfpga_write_simulation_task_info_command(shell,
+                                                  openfpga_verilog_cmd_class,
+                                                  sim_task_info_dependent_cmds);
 } 
 
 } /* end namespace openfpga */

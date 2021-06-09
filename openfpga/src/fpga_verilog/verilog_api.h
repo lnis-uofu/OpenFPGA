@@ -92,6 +92,15 @@ int fpga_verilog_preconfigured_testbench(const ModuleManager &module_manager,
                                          const SimulationSetting &simulation_setting,
                                          const VerilogTestbenchOption &options);
 
+int fpga_verilog_simulation_task_info(const ModuleManager &module_manager,
+                                      const BitstreamManager &bitstream_manager,
+                                      const AtomContext &atom_ctx,
+                                      const PlacementContext &place_ctx,
+                                      const IoLocationMap &io_location_map,
+                                      const SimulationSetting &simulation_setting,
+                                      const ConfigProtocol &config_protocol,
+                                      const VerilogTestbenchOption &options);
+
 } /* end namespace openfpga */
 
 #endif

@@ -30,6 +30,9 @@ int write_preconfigured_fabric_wrapper(const OpenfpgaContext& openfpga_ctx,
 int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
                                   const Command& cmd, const CommandContext& cmd_context);
 
+int write_simulation_task_info(const OpenfpgaContext& openfpga_ctx,
+                               const Command& cmd, const CommandContext& cmd_context);
+
 } /* end namespace openfpga */
 
 #endif

@@ -250,5 +250,32 @@ int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
                                               options);
 } 
 
+/********************************************************************
+ * A wrapper function to call the simulation task information generator of FPGA-Verilog 
+ *******************************************************************/
+int write_simulation_task_info(const OpenfpgaContext& openfpga_ctx,
+                               const Command& cmd, const CommandContext& cmd_context) {
+
+  CommandOptionId opt_output_dir = cmd.option("file");
+  CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
+   * Keep it independent from any other outside data structures
+   */
+  VerilogTestbenchOption options;
+  options.set_reference_benchmark_file_path(cmd_context.option_value(cmd, opt_reference_benchmark));
+  options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
+  options.set_print_simulation_ini(cmd_context.option_value(cmd, opt_output_dir));
+
+  return fpga_verilog_simulation_task_info(openfpga_ctx.module_graph(),
+                                           openfpga_ctx.bitstream_manager(),
+                                           g_vpr_ctx.atom(),
+                                           g_vpr_ctx.placement(),
+                                           openfpga_ctx.io_location_map(),
+                                           openfpga_ctx.simulation_setting(),
+                                           openfpga_ctx.arch().config_protocol,
+                                           options);
+} 
 
 } /* end namespace openfpga */

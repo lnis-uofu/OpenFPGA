@@ -407,5 +407,47 @@ int fpga_verilog_preconfigured_testbench(const ModuleManager &module_manager,
   return status;
 }
 
+/********************************************************************
+ * A top-level function of FPGA-Verilog which focuses on fabric Verilog generation
+ * This function will generate
+ *  - An interchangable file containing simulation task configuration
+ ********************************************************************/
+int fpga_verilog_simulation_task_info(const ModuleManager &module_manager,
+                                      const BitstreamManager &bitstream_manager,
+                                      const AtomContext &atom_ctx,
+                                      const PlacementContext &place_ctx,
+                                      const IoLocationMap &io_location_map,
+                                      const SimulationSetting &simulation_setting,
+                                      const ConfigProtocol &config_protocol,
+                                      const VerilogTestbenchOption &options) {
+
+  vtr::ScopedStartFinishTimer timer("Write interchangeable simulation task configuration\n");
+
+  std::string src_dir_path = format_dir_path(options.output_directory());
+
+  std::string netlist_name = atom_ctx.nlist.netlist_name();
+
+  int status = CMD_EXEC_SUCCESS;
+
+  /* Create directories */
+  create_directory(src_dir_path);
+
+  /* Generate exchangeable files which contains simulation settings */
+  std::string simulation_ini_file_name = options.simulation_ini_path();
+  VTR_ASSERT(true != options.simulation_ini_path().empty());
+  print_verilog_simulation_info(simulation_ini_file_name,
+                                netlist_name,
+                                src_dir_path,
+                                atom_ctx, place_ctx, io_location_map,
+                                module_manager,
+                                config_protocol.type(),
+                                bitstream_manager.num_bits(),
+                                simulation_setting.num_clock_cycles(),
+                                simulation_setting.programming_clock_frequency(),
+                                simulation_setting.default_operating_clock_frequency());
+
+  return status;
+}
+
 
 } /* end namespace openfpga */
