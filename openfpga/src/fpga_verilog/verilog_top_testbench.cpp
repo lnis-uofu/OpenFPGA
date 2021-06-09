@@ -2604,10 +2604,13 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
 
   /* Identify if we can apply fast configuration */
   bool apply_fast_configuration = fast_configuration && is_fast_configuration_applicable(global_ports);
-  bool bit_value_to_skip = find_bit_value_to_skip_for_fast_configuration(config_protocol.type(),
-                                                                         global_ports, 
-                                                                         bitstream_manager,
-                                                                         fabric_bitstream);
+  bool bit_value_to_skip = false;
+  if (true == apply_fast_configuration) {
+    bit_value_to_skip = find_bit_value_to_skip_for_fast_configuration(config_protocol.type(),
+                                                                      global_ports, 
+                                                                      bitstream_manager,
+                                                                      fabric_bitstream);
+  }
 
   /* Start of testbench */
   print_verilog_top_testbench_ports(fp, module_manager, top_module,
@@ -2857,10 +2860,13 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
 
   /* Identify if we can apply fast configuration */
   bool apply_fast_configuration = fast_configuration && is_fast_configuration_applicable(global_ports);
-  bool bit_value_to_skip = find_bit_value_to_skip_for_fast_configuration(config_protocol.type(),
-                                                                         global_ports, 
-                                                                         bitstream_manager,
-                                                                         fabric_bitstream);
+  bool bit_value_to_skip = false;
+  if (true == apply_fast_configuration) {
+    bit_value_to_skip = find_bit_value_to_skip_for_fast_configuration(config_protocol.type(),
+                                                                      global_ports, 
+                                                                      bitstream_manager,
+                                                                      fabric_bitstream);
+  }
 
   /* Start of testbench */
   print_verilog_top_testbench_ports(fp, module_manager, top_module,
