@@ -43,20 +43,6 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
                          const DeviceRRGSB& device_rr_gsb,
                          const FabricVerilogOption& options);
 
-int fpga_verilog_testbench(const ModuleManager& module_manager,
-                           const BitstreamManager& bitstream_manager, 
-                           const FabricBitstream& fabric_bitstream, 
-                           const AtomContext& atom_ctx, 
-                           const PlacementContext& place_ctx, 
-                           const PinConstraints& pin_constraints,
-                           const IoLocationMap& io_location_map,
-                           const FabricGlobalPortInfo &fabric_global_port_info,
-                           const VprNetlistAnnotation& netlist_annotation, 
-                           const CircuitLibrary& circuit_lib,
-                           const SimulationSetting& simulation_parameters,
-                           const ConfigProtocol& config_protocol,
-                           const VerilogTestbenchOption& options);
-
 int fpga_verilog_full_testbench(const ModuleManager& module_manager,
                                 const BitstreamManager& bitstream_manager, 
                                 const FabricBitstream& fabric_bitstream, 
