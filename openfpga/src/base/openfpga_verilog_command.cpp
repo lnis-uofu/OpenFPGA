@@ -239,6 +239,10 @@ ShellCommandId add_openfpga_write_preconfigured_testbench_command(openfpga::Shel
   shell_cmd.set_option_short_name(output_opt, "f");
   shell_cmd.set_option_require_value(output_opt, openfpga::OPT_STRING);
 
+  /* add an option '--fabric_netlist_file_path'*/
+  CommandOptionId fabric_netlist_opt = shell_cmd.add_option("fabric_netlist_file_path", false, "specify the file path to the fabric hdl netlist");
+  shell_cmd.set_option_require_value(fabric_netlist_opt, openfpga::OPT_STRING);
+
   /* Add an option '--pin_constraints_file in short '-pcf' */
   CommandOptionId pcf_opt = shell_cmd.add_option("pin_constraints_file", false, "Specify the file path to the pin constraints");
   shell_cmd.set_option_short_name(pcf_opt, "pcf");
