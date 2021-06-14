@@ -93,6 +93,10 @@ ShellCommandId add_openfpga_write_full_testbench_command(openfpga::Shell<Openfpg
   /* add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false, "use explicit port mapping in verilog netlists");
 
+  /* Add an option '--default_net_type' */
+  CommandOptionId default_net_type_opt = shell_cmd.add_option("default_net_type", false, "Set the default net type for Verilog netlists. Default value is 'none'");
+  shell_cmd.set_option_require_value(default_net_type_opt, openfpga::OPT_STRING);
+
   /* add an option '--include_signal_init' */
   shell_cmd.add_option("include_signal_init", false, "initialize all the signals in verilog testbenches");
 
@@ -137,6 +141,10 @@ ShellCommandId add_openfpga_write_preconfigured_fabric_wrapper_command(openfpga:
 
   /* add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false, "use explicit port mapping in verilog netlists");
+
+  /* Add an option '--default_net_type' */
+  CommandOptionId default_net_type_opt = shell_cmd.add_option("default_net_type", false, "Set the default net type for Verilog netlists. Default value is 'none'");
+  shell_cmd.set_option_require_value(default_net_type_opt, openfpga::OPT_STRING);
 
   /* Add an option '--support_icarus_simulator' */
   shell_cmd.add_option("support_icarus_simulator", false, "Fine-tune Verilog testbenches to support icarus simulator");
@@ -189,6 +197,10 @@ ShellCommandId add_openfpga_write_preconfigured_testbench_command(openfpga::Shel
 
   /* Add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false, "Use explicit port mapping in Verilog netlists");
+
+  /* Add an option '--default_net_type' */
+  CommandOptionId default_net_type_opt = shell_cmd.add_option("default_net_type", false, "Set the default net type for Verilog netlists. Default value is 'none'");
+  shell_cmd.set_option_require_value(default_net_type_opt, openfpga::OPT_STRING);
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");

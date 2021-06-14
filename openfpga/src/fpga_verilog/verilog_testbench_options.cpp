@@ -23,6 +23,7 @@ VerilogTestbenchOption::VerilogTestbenchOption() {
   explicit_port_mapping_ = false;
   support_icarus_simulator_ = false;
   include_signal_init_ = false;
+  default_net_type_ = VERILOG_DEFAULT_NET_TYPE_NONE;
   verbose_output_ = false;
 }
 
@@ -75,6 +76,10 @@ bool VerilogTestbenchOption::include_signal_init() const {
 
 bool VerilogTestbenchOption::support_icarus_simulator() const {
   return support_icarus_simulator_;
+}
+
+e_verilog_default_net_type VerilogTestbenchOption::default_net_type() const {
+  return default_net_type_;
 }
 
 bool VerilogTestbenchOption::verbose_output() const {
@@ -139,6 +144,20 @@ void VerilogTestbenchOption::set_include_signal_init(const bool& enabled) {
 
 void VerilogTestbenchOption::set_support_icarus_simulator(const bool& enabled) {
   support_icarus_simulator_ = enabled;
+}
+
+void VerilogTestbenchOption::set_default_net_type(const std::string& default_net_type) {
+  /* Decode from net type string */;
+  if (default_net_type == std::string(VERILOG_DEFAULT_NET_TYPE_STRING[VERILOG_DEFAULT_NET_TYPE_NONE])) {
+    default_net_type_ = VERILOG_DEFAULT_NET_TYPE_NONE;
+  } else if (default_net_type == std::string(VERILOG_DEFAULT_NET_TYPE_STRING[VERILOG_DEFAULT_NET_TYPE_WIRE])) {
+    default_net_type_ = VERILOG_DEFAULT_NET_TYPE_WIRE;
+  } else {
+    VTR_LOG_WARN("Invalid default net type: '%s'! Expect ['%s'|'%s']\n",
+                 default_net_type.c_str(),
+                 VERILOG_DEFAULT_NET_TYPE_STRING[VERILOG_DEFAULT_NET_TYPE_NONE],
+                 VERILOG_DEFAULT_NET_TYPE_STRING[VERILOG_DEFAULT_NET_TYPE_WIRE]);
+  }
 }
 
 void VerilogTestbenchOption::set_verbose_output(const bool& enabled) {

@@ -74,6 +74,7 @@ int write_full_testbench(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
   CommandOptionId opt_fast_configuration = cmd.option("fast_configuration");
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
+  CommandOptionId opt_default_net_type = cmd.option("default_net_type");
   CommandOptionId opt_include_signal_init = cmd.option("include_signal_init");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
@@ -89,6 +90,9 @@ int write_full_testbench(const OpenfpgaContext& openfpga_ctx,
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_print_top_testbench(true);
   options.set_include_signal_init(cmd_context.option_enable(cmd, opt_include_signal_init));
+  if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
+    options.set_default_net_type(cmd_context.option_value(cmd, opt_default_net_type));
+  }
 
   /* If pin constraints are enabled by command options, read the file */
   PinConstraints pin_constraints;
@@ -122,6 +126,7 @@ int write_preconfigured_fabric_wrapper(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
+  CommandOptionId opt_default_net_type = cmd.option("default_net_type");
   CommandOptionId opt_support_icarus_simulator = cmd.option("support_icarus_simulator");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
@@ -135,6 +140,9 @@ int write_preconfigured_fabric_wrapper(const OpenfpgaContext& openfpga_ctx,
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_support_icarus_simulator(cmd_context.option_enable(cmd, opt_support_icarus_simulator));
   options.set_print_formal_verification_top_netlist(true);
+  if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
+    options.set_default_net_type(cmd_context.option_value(cmd, opt_default_net_type));
+  }
 
   /* If pin constraints are enabled by command options, read the file */
   PinConstraints pin_constraints;
@@ -167,6 +175,7 @@ int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
   CommandOptionId opt_support_icarus_simulator = cmd.option("support_icarus_simulator");
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
+  CommandOptionId opt_default_net_type = cmd.option("default_net_type");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
@@ -180,6 +189,9 @@ int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
   options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_print_preconfig_top_testbench(true);
+  if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
+    options.set_default_net_type(cmd_context.option_value(cmd, opt_default_net_type));
+  }
 
   /* If pin constraints are enabled by command options, read the file */
   PinConstraints pin_constraints;

@@ -239,7 +239,7 @@ int fpga_verilog_preconfigured_fabric_wrapper(const ModuleManager &module_manage
                                               netlist_annotation,
                                               netlist_name,
                                               formal_verification_top_netlist_file_path,
-                                              options.explicit_port_mapping());
+                                              options);
 
   return status;
 }
@@ -283,7 +283,7 @@ int fpga_verilog_preconfigured_testbench(const ModuleManager &module_manager,
                                      fabric_global_port_info,
                                      pin_constraints,
                                      simulation_setting,
-                                     options.explicit_port_mapping());
+                                     options);
 
   /* Generate a Verilog file including all the netlists that have been generated */
   print_verilog_testbench_include_netlists(src_dir_path,
