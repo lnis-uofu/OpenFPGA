@@ -701,12 +701,13 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
                                        const PinConstraints& pin_constraints,
                                        const SimulationSetting& simulation_parameters,
                                        const ConfigProtocol& config_protocol,
-                                       const std::string& circuit_name){
+                                       const std::string& circuit_name,
+                                       const e_verilog_default_net_type& default_net_type) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
   print_verilog_default_net_type_declaration(fp,
-                                             VERILOG_DEFAULT_NET_TYPE_NONE);
+                                             default_net_type);
 
   /* Print module definition */
   fp << "module " << circuit_name << std::string(AUTOCHECK_TOP_TESTBENCH_VERILOG_MODULE_POSTFIX);
@@ -1923,7 +1924,8 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                     clock_port_names,
                                     pin_constraints,
                                     simulation_parameters, config_protocol,
-                                    circuit_name);
+                                    circuit_name,
+                                    options.default_net_type());
 
   /* Find the clock period */
   float prog_clock_period = (1./simulation_parameters.programming_clock_frequency());
