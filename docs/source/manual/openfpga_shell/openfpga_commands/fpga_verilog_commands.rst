@@ -76,6 +76,10 @@ write_full_testbench
 
     Use explicit port mapping when writing the Verilog netlists
 
+  .. option:: --default_net_type <string>
+
+    Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
+
   .. option:: --include_signal_init
 
     Output signal initialization to Verilog testbench to smooth convergence in HDL simulation
@@ -105,6 +109,10 @@ write_preconfigured_fabric_wrapper
   .. option:: --explicit_port_mapping
 
     Use explicit port mapping when writing the Verilog netlists
+
+  .. option:: --default_net_type <string>
+
+    Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
 
   .. option:: --support_icarus_simulator
      
@@ -139,6 +147,11 @@ write_preconfigured_testbench
   .. option:: --explicit_port_mapping
 
     Use explicit port mapping when writing the Verilog netlists
+
+  .. option:: --default_net_type <string>
+
+    Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
+
 
   .. option:: --support_icarus_simulator
      
