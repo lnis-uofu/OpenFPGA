@@ -55,9 +55,9 @@ write_fabric_verilog --file ./SRC --include_timing --print_user_defined_template
 #  - Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
 #  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
-write_full_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --include_signal_init --bitstream fabric_bitstream.bit
-write_preconfigured_fabric_wrapper --file ./SRC --support_icarus_simulator
-write_preconfigured_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --support_icarus_simulator
+write_full_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --include_signal_init --bitstream fabric_bitstream.bit --default_net_type ${OPENFPGA_DEFAULT_NET_TYPE}
+write_preconfigured_fabric_wrapper --file ./SRC --support_icarus_simulator --default_net_type ${OPENFPGA_DEFAULT_NET_TYPE}
+write_preconfigured_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --support_icarus_simulator --default_net_type ${OPENFPGA_DEFAULT_NET_TYPE}
 
 # Write the SDC files for PnR backend
 #  - Turn on every options here
