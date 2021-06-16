@@ -91,7 +91,6 @@ else ()
       "-D__USE_FIXED_PROTOTYPES__"
       "-ansi"
       "-Wshadow"
-      "-Wcast-allign"
       "-Wno-write-strings"
       "-D_POSIX_SOURCE"
       "-Wall"                         #Most warnings, typically good

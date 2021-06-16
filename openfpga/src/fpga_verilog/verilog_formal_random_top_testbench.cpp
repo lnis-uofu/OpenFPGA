@@ -56,12 +56,13 @@ void print_verilog_top_random_testbench_ports(std::fstream& fp,
                                               const std::string& circuit_name,
                                               const std::vector<std::string>& clock_port_names,
                                               const AtomContext& atom_ctx,
-                                              const VprNetlistAnnotation& netlist_annotation) {
+                                              const VprNetlistAnnotation& netlist_annotation,
+                                              const e_verilog_default_net_type& default_net_type) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
   print_verilog_default_net_type_declaration(fp,
-                                             VERILOG_DEFAULT_NET_TYPE_NONE);
+                                             default_net_type);
  
   /* Print the declaration for the module */
   fp << "module " << circuit_name << FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX << ";" << std::endl;
@@ -278,7 +279,7 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
                                         const FabricGlobalPortInfo& global_ports,
                                         const PinConstraints& pin_constraints,
                                         const SimulationSetting& simulation_parameters,
-                                        const bool& explicit_port_mapping) {
+                                        const VerilogTestbenchOption &options) {
   std::string timer_message = std::string("Write configuration-skip testbench for FPGA top-level Verilog netlist implemented by '") + circuit_name.c_str() + std::string("'");
 
   /* Start time count */
@@ -299,17 +300,17 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
   std::vector<std::string> clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
 
   /* Start of testbench */
-  print_verilog_top_random_testbench_ports(fp, circuit_name, clock_port_names, atom_ctx, netlist_annotation);
+  print_verilog_top_random_testbench_ports(fp, circuit_name, clock_port_names, atom_ctx, netlist_annotation, options.default_net_type());
 
   /* Call defined top-level module */
   print_verilog_random_testbench_fpga_instance(fp, circuit_name,
                                                atom_ctx, netlist_annotation,
-                                               explicit_port_mapping);
+                                               options.explicit_port_mapping());
 
   /* Call defined benchmark */
   print_verilog_top_random_testbench_benchmark_instance(fp, circuit_name,
                                                         atom_ctx, netlist_annotation,
-                                                        explicit_port_mapping);
+                                                        options.explicit_port_mapping());
 
   /* Find clock port to be used */
   std::vector<BasicPort> clock_ports = generate_verilog_testbench_clock_port(clock_port_names, std::string(DEFAULT_CLOCK_NAME));
@@ -359,7 +360,6 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
 
   /* Add Icarus requirement */
   print_verilog_timeout_and_vcd(fp, 
-                                std::string(ICARUS_SIMULATOR_FLAG),
                                 std::string(circuit_name + std::string(FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX)),
                                 std::string(circuit_name + std::string("_formal.vcd")), 
                                 std::string(FORMAL_TB_SIM_START_PORT_NAME),

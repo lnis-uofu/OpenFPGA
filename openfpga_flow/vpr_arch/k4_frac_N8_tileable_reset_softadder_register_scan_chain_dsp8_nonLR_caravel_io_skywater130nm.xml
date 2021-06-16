@@ -210,7 +210,8 @@
       <pinlocations pattern="custom">
         <loc side="left"></loc>
         <loc side="top"></loc>
-        <loc side="right">mult_8.a[0:5] mult_8.b[0:5] mult_8.out[0:10]</loc>
+        <loc side="right" yoffset="0">mult_8.a[0:2] mult_8.b[0:2] mult_8.out[0:5]</loc>
+        <loc side="right" yoffset="1">mult_8.a[3:5] mult_8.b[3:5] mult_8.out[6:10]</loc>
         <loc side="bottom">mult_8.a[6:7] mult_8.b[6:7] mult_8.out[11:15]</loc>
       </pinlocations>
     </tile>

@@ -189,6 +189,7 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
                        openfpga_ctx.vpr_device_annotation(),
                        openfpga_ctx.vpr_clustering_annotation(),
                        openfpga_ctx.vpr_placement_annotation(),
+                       openfpga_ctx.vpr_bitstream_annotation(),
                        verbose);
   VTR_LOGV(verbose, "Done\n");
 

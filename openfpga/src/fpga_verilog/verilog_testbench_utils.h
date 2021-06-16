@@ -55,7 +55,6 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
                                               const size_t& unused_io_value);
 
 void print_verilog_timeout_and_vcd(std::fstream& fp,
-                                   const std::string& icarus_preprocessing_flag,
                                    const std::string& module_name,
                                    const std::string& vcd_fname,
                                    const std::string& simulation_start_counter_name,
