@@ -1,7 +1,7 @@
 Technical Highlights
 --------------------
 
-The follow lists of technical features are created to help users spot their needs in customizing FPGA fabrics.(**as of February 2021**)
+The following lists of technical features were created to help users find their needs for customizing FPGA fabrics.(**as of February 2021**)
 
 Supported Circuit Designs
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,13 +64,13 @@ Supported Circuit Designs
 +-----------------+--------------+-----------+-----------------------------------------------------+
 
 
-* The user defined netlist could come from a standard cell
+* The user defined netlist could come from a standard cell. See :ref:`tutorial_standard_cell` for details.
 
 Supported FPGA Architectures
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We support most FPGA architectures that VPR can support!
-The following are most commonly seen architectural features:
+The following are the most commonly seen architectural features:
 
 +------------------------+----------------------------------------------+
 | Block Type             | Architecture features                        |

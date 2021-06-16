@@ -1,3 +1,5 @@
+.. _tutorial_standard_cell:
+
 Build an FPGA fabric using Standard Cell Libraries
 ==================================================
 
