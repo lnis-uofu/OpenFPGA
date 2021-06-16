@@ -62,7 +62,7 @@ Supported Circuit Designs
 +-----------------+--------------+-----------+-----------------------------------------------------+
 
 
-* The user defined netlist could come from a standard cell. See :ref:`standard_cell_tutorial` for details.
+* The user defined netlist could come from a standard cell. See :ref:`tutorial_standard_cell` for details.
 
 Supported FPGA Architectures
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
