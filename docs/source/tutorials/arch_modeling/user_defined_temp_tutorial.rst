@@ -1,4 +1,4 @@
-.. tutorial_user_def_temp:
+.. _tutorial_user_def_temp:
 
 Integrating Custom Verilog Modules with user_defined_template.v
 ================================================================
