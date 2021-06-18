@@ -23,9 +23,6 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-constexpr char* VPR_BENCHMARK_OUT_PORT_PREFIX = "out:";
-constexpr char* OPENFPGA_BENCHMARK_OUT_PORT_PREFIX = "out_";
-
 void print_verilog_testbench_fpga_instance(std::fstream& fp,
                                            const ModuleManager& module_manager,
                                            const ModuleId& top_module,
