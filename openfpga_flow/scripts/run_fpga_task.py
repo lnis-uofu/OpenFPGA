@@ -174,7 +174,7 @@ def generate_each_task_actions(taskname):
     elif os.path.isdir(repo_tasks):
         curr_task_dir = repo_tasks
     else:
-        clean_up_and_exit("Task directory [%s] not found" % curr_task_dir)
+        clean_up_and_exit("Task directory [%s] not found" % taskname + " locally at [%s]" % local_tasks + " or in OpenFPGA task directory [%s]" % repo_tasks)
 
     os.chdir(curr_task_dir)
 
