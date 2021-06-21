@@ -309,7 +309,7 @@ def generate_each_task_actions(taskname):
     for indx, arch in enumerate(archfile_list):
         for bench in benchmark_list:
             for lbl, param in bench["script_params"].items():
-                flow_run_dir = get_flow_rundir(arch, bench["top_module"], lbl)
+                flow_run_dir = get_flow_rundir(arch, benchmark_list.index(bench), bench["top_module"], lbl)
                 command = create_run_command(
                     curr_job_dir=flow_run_dir,
                     archfile=arch,
@@ -330,11 +330,12 @@ def generate_each_task_actions(taskname):
     logger.info('Created total %d jobs' % len(flow_run_cmd_list))
     return flow_run_cmd_list
 
-
-def get_flow_rundir(arch, top_module, flow_params=None):
+# Make the directory name unique by including the benchmark index in the list.
+# This is because benchmarks may share the same top module names
+def get_flow_rundir(arch, bench_index, top_module, flow_params=None):
     path = [
         os.path.basename(arch).replace(".xml", ""),
-        top_module,
+        "bench" + str(bench_index) + "_" + top_module,
         flow_params if flow_params else "common"
     ]
     return os.path.abspath(os.path.join(*path))
