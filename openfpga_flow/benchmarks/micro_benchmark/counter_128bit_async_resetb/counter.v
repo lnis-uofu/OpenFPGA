@@ -10,7 +10,7 @@ module counter (
 );
 
 	input clk;
-	input reset;
+	input resetb;
 	output [127:0] result;
 
 	reg [127:0] result;
