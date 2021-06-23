@@ -59,6 +59,9 @@ constexpr char* DEFAULT_LB_DIR_NAME = "lb/";
 constexpr char* DEFAULT_RR_DIR_NAME = "routing/";
 constexpr char* DEFAULT_SUBMODULE_DIR_NAME = "sub_module/";
 
+constexpr char* VPR_BENCHMARK_OUT_PORT_PREFIX = "out:";
+constexpr char* OPENFPGA_BENCHMARK_OUT_PORT_PREFIX = "out_";
+
 } /* end namespace openfpga */
 
 #endif

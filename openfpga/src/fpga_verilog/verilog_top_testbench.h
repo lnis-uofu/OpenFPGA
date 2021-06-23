@@ -26,7 +26,7 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_verilog_top_testbench(const ModuleManager& module_manager,
+int print_verilog_full_testbench(const ModuleManager& module_manager,
                                  const BitstreamManager& bitstream_manager,
                                  const FabricBitstream& fabric_bitstream,
                                  const CircuitLibrary& circuit_lib,
@@ -35,6 +35,7 @@ void print_verilog_top_testbench(const ModuleManager& module_manager,
                                  const AtomContext& atom_ctx,
                                  const PlacementContext& place_ctx,
                                  const PinConstraints& pin_constraints,
+                                 const std::string& bitstream_file,
                                  const IoLocationMap& io_location_map,
                                  const VprNetlistAnnotation& netlist_annotation,
                                  const std::string& circuit_name,

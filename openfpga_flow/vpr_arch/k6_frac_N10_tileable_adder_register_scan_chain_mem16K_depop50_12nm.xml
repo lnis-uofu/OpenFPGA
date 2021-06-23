@@ -193,7 +193,16 @@
       <!--Column of 'memory' with 'EMPTY' blocks wherever a 'memory' does not fit. Vertical offset by 1 for perimeter.-->
       <col type="memory" startx="16" starty="1" repeatx="16" priority="20"/>
       <col type="EMPTY" startx="16" repeatx="16" starty="1" priority="19"/>
-    </auto_layout-->
+    </auto_layout>
+    <fixed_layout name="6x6" width="8" height="8">
+      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
+      <perimeter type="io" priority="100"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+      <!--Column of 'memory' with 'EMPTY' blocks wherever a 'memory' does not fit. Vertical offset by 1 for perimeter.-->
+      <col type="EMPTY" startx="16" repeatx="16" starty="1" priority="19"/>
+    </fixed_layout>
     <!-- Apply a fixed layout of 2x2 core array.
          VPR8 considers the I/O ring in the array size
          Therefore the height and width are both 4

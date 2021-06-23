@@ -96,20 +96,49 @@ void update_cluster_pin_with_post_routing_results(const DeviceContext& device_ct
     /* Find the net mapped to this pin in clustering results*/
     ClusterNetId cluster_net_id = clustering_ctx.clb_nlist.block_net(blk_id, j);
 
-    /* Ignore those net have never been routed */
+    /* Ignore those net have never been routed: this check is valid only 
+     * when both packer has mapped a net to the pin and the router leaves the pin to be unmapped
+     * This is important because we cannot bypass when router forces a valid net to be mapped
+     * and the net remapping has to be considered
+     */
     if ( (ClusterNetId::INVALID() != cluster_net_id)
+      && (ClusterNetId::INVALID() == routing_net_id)
       && (true == clustering_ctx.clb_nlist.net_is_ignored(cluster_net_id))) {
+      VTR_LOGV(verbose,
+               "Bypass net at clustered block '%s' pin 'grid[%ld][%ld].%s.%s[%d]' as it is not routed\n",
+               clustering_ctx.clb_nlist.block_pb(blk_id)->name,
+               grid_coord.x(), grid_coord.y(),
+               clustering_ctx.clb_nlist.block_pb(blk_id)->pb_graph_node->pb_type->name,
+               get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)->port->name,
+               get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)->pin_number
+               );
       continue;
     }
 
     /* Ignore used in local cluster only, reserved one CLB pin */
     if ( (ClusterNetId::INVALID() != cluster_net_id)
       && (0 == clustering_ctx.clb_nlist.net_sinks(cluster_net_id).size())) {
+      VTR_LOGV(verbose,
+               "Bypass net at clustered block '%s' pin 'grid[%ld][%ld].%s.%s[%d]' as it is a local net inside the cluster\n",
+               clustering_ctx.clb_nlist.block_pb(blk_id)->name,
+               grid_coord.x(), grid_coord.y(),
+               clustering_ctx.clb_nlist.block_pb(blk_id)->pb_graph_node->pb_type->name,
+               get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)->port->name,
+               get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)->pin_number
+               );
       continue;
     }
 
     /* If matched, we finish here */
     if (routing_net_id == cluster_net_id) {
+     VTR_LOGV(verbose,
+               "Bypass net at clustered block '%s' pin 'grid[%ld][%ld].%s.%s[%d]' as it matches cluster routing\n",
+               clustering_ctx.clb_nlist.block_pb(blk_id)->name,
+               grid_coord.x(), grid_coord.y(),
+               clustering_ctx.clb_nlist.block_pb(blk_id)->pb_graph_node->pb_type->name,
+               get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)->port->name,
+               get_pb_graph_node_pin_from_block_pin(blk_id, physical_pin)->pin_number
+               );
       continue;
     }
 

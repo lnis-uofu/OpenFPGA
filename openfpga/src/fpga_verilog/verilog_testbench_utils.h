@@ -12,6 +12,7 @@
 #include "vpr_context.h"
 #include "io_location_map.h"
 #include "vpr_netlist_annotation.h"
+#include "fabric_global_port_info.h"
 #include "pin_constraints.h"
 #include "simulation_setting.h"
 
@@ -21,9 +22,6 @@
 
 /* begin namespace openfpga */
 namespace openfpga {
-
-constexpr char* VPR_BENCHMARK_OUT_PORT_PREFIX = "out:";
-constexpr char* OPENFPGA_BENCHMARK_OUT_PORT_PREFIX = "out_";
 
 void print_verilog_testbench_fpga_instance(std::fstream& fp,
                                            const ModuleManager& module_manager,
@@ -54,7 +52,6 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
                                               const size_t& unused_io_value);
 
 void print_verilog_timeout_and_vcd(std::fstream& fp,
-                                   const std::string& icarus_preprocessing_flag,
                                    const std::string& module_name,
                                    const std::string& vcd_fname,
                                    const std::string& simulation_start_counter_name,
@@ -84,6 +81,9 @@ void print_verilog_testbench_clock_stimuli(std::fstream& fp,
 void print_verilog_testbench_random_stimuli(std::fstream& fp,
                                             const AtomContext& atom_ctx,
                                             const VprNetlistAnnotation& netlist_annotation,
+                                            const ModuleManager& module_manager,
+                                            const FabricGlobalPortInfo& global_ports,
+                                            const PinConstraints& pin_constraints,
                                             const std::vector<std::string>& clock_port_names,
                                             const std::string& check_flag_port_postfix,
                                             const std::vector<BasicPort>& clock_ports);

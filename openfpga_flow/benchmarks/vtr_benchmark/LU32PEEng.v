@@ -2763,7 +2763,7 @@ module top_ram (
 	assign q = sub_wire0 | dummy;
 	wire[32-1:0] dummy;
 	assign dummy = junk_output & 32'b0;
- dual_port_ram inst2(
+ dual_port_ram_4096x32 inst2(
  .clk (clk),
  .we1(wren),
  .we2(1'b0),
@@ -3290,7 +3290,7 @@ begin // : STATUS_COUNTER
 	else if ((wrreq) && (!rdreq) && (status_cnt != 64 ))
 		status_cnt <= status_cnt + 1'b1;
 end 
-  dual_port_ram ram_addr(
+  dual_port_ram_rfifo ram_addr(
 .we1      (wrreq)      , // write enable
  .we2      (rdreq)       , // Read enable
 .addr1 (wr_pointer) , // address_0 input 
@@ -3399,7 +3399,7 @@ begin // : STATUS_COUNTER
 		status_cnt <= status_cnt + 1'b1;
 end 
 assign usedw = status_cnt[`wFIFOSIZEWIDTH-1:0];
-  dual_port_ram ram_addr(
+  dual_port_ram_wfifo ram_addr(
 .we1      (wrreq)      , // write enable
  .we2      (rdreq)       , // Read enable
 .addr1 (wr_pointer) , // address_0 input 
@@ -3473,7 +3473,7 @@ begin // : STATUS_COUNTER
 	else if ((wrreq) && (!rdreq) && (status_cnt != 5'b10000))
 		status_cnt <= status_cnt + 1;
 end
-  dual_port_ram ram_addr(
+  dual_port_ram_afifo ram_addr(
 .we1      (wrreq)      , // write enable
  .we2      (rdreq)       , // Read enable
 .addr1 (wr_pointer) , // address_0 input 
@@ -3543,7 +3543,7 @@ begin // : STATUS_COUNTER
 	else if ((wrreq) && (!rdreq) && (status_cnt != 16 ))
 		status_cnt <= status_cnt + 1'b1;
 end
-	dual_port_ram ram_addr(
+	dual_port_ram_mfifo ram_addr(
 	.we1      (wrreq)      , // write enable
 	.we2      (rdreq)       , // Read enable
 	.addr1 (wr_pointer) , // address_0 input
@@ -5431,3 +5431,279 @@ module assemble(roundprod, special, y, sign, specialsign,
 				rounded[`WIDTH-2:0]); 
  
 endmodule 
+
+//---------------------------------------
+// A dual-port RAM
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module dual_port_ram (
+	input clk,
+	input we1,
+	input we2,
+	input [`rRAMSIZEWIDTH - 1 : 0] addr1,
+	input [`RAMWIDTH - 1 : 0] data1,
+	output [`RAMWIDTH - 1 : 0] out1,
+	input [`rRAMSIZEWIDTH - 1 : 0] addr2,
+	input [`RAMWIDTH - 1 : 0] data2,
+	output [`RAMWIDTH - 1 : 0] out2
+);
+	reg [`RAMWIDTH - 1 : 0] ram[2**`rRAMSIZEWIDTH - 1 : 0];
+	reg [`RAMWIDTH - 1 : 0] data_out1;
+	reg [`RAMWIDTH - 1 : 0] data_out2;
+
+	assign out1 = data_out1;
+	assign out2 = data_out2;
+
+    // If writen enable 1 is activated,
+    // data1 will be loaded through addr1
+    // Otherwise, data will be read out through addr1
+	always @(posedge clk) begin
+		if (we1) begin
+			ram[addr1] <= data1;
+        end else begin
+			data_out1 <= ram[addr1];
+		end
+	end
+
+    // If writen enable 2 is activated,
+    // data1 will be loaded through addr2
+    // Otherwise, data will be read out through addr2
+	always @(posedge clk) begin
+		if (we2) begin
+			ram[addr2] <= data2;
+		end else begin
+			data_out2 <= ram[addr2];
+		end
+	end
+
+endmodule
+
+//---------------------------------------
+// A dual-port RAM 4096x32
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module dual_port_ram_4096x32 (
+	input clk,
+	input we1,
+	input we2,
+	input [12 - 1 : 0] addr1,
+	input [32 - 1 : 0] data1,
+	output [32 - 1 : 0] out1,
+	input [12 - 1 : 0] addr2,
+	input [32 - 1 : 0] data2,
+	output [32 - 1 : 0] out2
+);
+	reg [32 - 1 : 0] ram[2**12 - 1 : 0];
+	reg [32 - 1 : 0] data_out1;
+	reg [32 - 1 : 0] data_out2;
+
+	assign out1 = data_out1;
+	assign out2 = data_out2;
+
+    // If writen enable 1 is activated,
+    // data1 will be loaded through addr1
+    // Otherwise, data will be read out through addr1
+	always @(posedge clk) begin
+		if (we1) begin
+			ram[addr1] <= data1;
+        end else begin
+			data_out1 <= ram[addr1];
+		end
+	end
+
+    // If writen enable 2 is activated,
+    // data1 will be loaded through addr2
+    // Otherwise, data will be read out through addr2
+	always @(posedge clk) begin
+		if (we2) begin
+			ram[addr2] <= data2;
+		end else begin
+			data_out2 <= ram[addr2];
+		end
+	end
+
+endmodule
+
+//---------------------------------------
+// A dual-port RAM rFIFO
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module dual_port_ram_rfifo (
+	input clk,
+	input we1,
+	input we2,
+	input [`rFIFOSIZEWIDTH - 1 : 0] addr1,
+	input [`rFIFOINPUTWIDTH - 1 : 0] data1,
+	output [`rFIFOINPUTWIDTH - 1 : 0] out1,
+	input [`rFIFOSIZEWIDTH - 1 : 0] addr2,
+	input [`rFIFOINPUTWIDTH - 1 : 0] data2,
+	output [`rFIFOINPUTWIDTH - 1 : 0] out2
+);
+	reg [`rFIFOINPUTWIDTH - 1 : 0] ram[2**`rFIFOSIZEWIDTH - 1 : 0];
+	reg [`rFIFOINPUTWIDTH - 1 : 0] data_out1;
+	reg [`rFIFOINPUTWIDTH - 1 : 0] data_out2;
+
+	assign out1 = data_out1;
+	assign out2 = data_out2;
+
+    // If writen enable 1 is activated,
+    // data1 will be loaded through addr1
+    // Otherwise, data will be read out through addr1
+	always @(posedge clk) begin
+		if (we1) begin
+			ram[addr1] <= data1;
+        end else begin
+			data_out1 <= ram[addr1];
+		end
+	end
+
+    // If writen enable 2 is activated,
+    // data1 will be loaded through addr2
+    // Otherwise, data will be read out through addr2
+	always @(posedge clk) begin
+		if (we2) begin
+			ram[addr2] <= data2;
+		end else begin
+			data_out2 <= ram[addr2];
+		end
+	end
+
+endmodule
+
+//---------------------------------------
+// A dual-port RAM wFIFO
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module dual_port_ram_wfifo (
+	input clk,
+	input we1,
+	input we2,
+	input [`wFIFOSIZEWIDTH - 1 : 0] addr1,
+	input [`wFIFOINPUTWIDTH - 1 : 0] data1,
+	output [`wFIFOINPUTWIDTH - 1 : 0] out1,
+	input [`wFIFOSIZEWIDTH - 1 : 0] addr2,
+	input [`wFIFOINPUTWIDTH - 1 : 0] data2,
+	output [`wFIFOINPUTWIDTH - 1 : 0] out2
+);
+	reg [`wFIFOINPUTWIDTH - 1 : 0] ram[2**`wFIFOSIZEWIDTH - 1 : 0];
+	reg [`wFIFOINPUTWIDTH - 1 : 0] data_out1;
+	reg [`wFIFOINPUTWIDTH - 1 : 0] data_out2;
+
+	assign out1 = data_out1;
+	assign out2 = data_out2;
+
+    // If writen enable 1 is activated,
+    // data1 will be loaded through addr1
+    // Otherwise, data will be read out through addr1
+	always @(posedge clk) begin
+		if (we1) begin
+			ram[addr1] <= data1;
+        end else begin
+			data_out1 <= ram[addr1];
+		end
+	end
+
+    // If writen enable 2 is activated,
+    // data1 will be loaded through addr2
+    // Otherwise, data will be read out through addr2
+	always @(posedge clk) begin
+		if (we2) begin
+			ram[addr2] <= data2;
+		end else begin
+			data_out2 <= ram[addr2];
+		end
+	end
+
+endmodule
+
+//---------------------------------------
+// A dual-port RAM wFIFO
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module dual_port_ram_afifo (
+	input clk,
+	input we1,
+	input we2,
+	input [`aFIFOSIZEWIDTH - 1 : 0] addr1,
+	input [`aFIFOWIDTH - 1 : 0] data1,
+	output [`aFIFOWIDTH - 1 : 0] out1,
+	input [`aFIFOSIZEWIDTH - 1 : 0] addr2,
+	input [`aFIFOWIDTH - 1 : 0] data2,
+	output [`aFIFOWIDTH - 1 : 0] out2
+);
+	reg [`aFIFOWIDTH - 1 : 0] ram[2**`aFIFOSIZEWIDTH - 1 : 0];
+	reg [`aFIFOWIDTH - 1 : 0] data_out1;
+	reg [`aFIFOWIDTH - 1 : 0] data_out2;
+
+	assign out1 = data_out1;
+	assign out2 = data_out2;
+
+    // If writen enable 1 is activated,
+    // data1 will be loaded through addr1
+    // Otherwise, data will be read out through addr1
+	always @(posedge clk) begin
+		if (we1) begin
+			ram[addr1] <= data1;
+        end else begin
+			data_out1 <= ram[addr1];
+		end
+	end
+
+    // If writen enable 2 is activated,
+    // data1 will be loaded through addr2
+    // Otherwise, data will be read out through addr2
+	always @(posedge clk) begin
+		if (we2) begin
+			ram[addr2] <= data2;
+		end else begin
+			data_out2 <= ram[addr2];
+		end
+	end
+
+endmodule
+
+//---------------------------------------
+// A dual-port RAM mFIFO
+// This module is tuned for VTR's benchmarks
+//---------------------------------------
+module dual_port_ram_mfifo (
+	input clk,
+	input we1,
+	input we2,
+	input [`mFIFOSIZEWIDTH - 1 : 0] addr1,
+	input [`mFIFOWIDTH - 1 : 0] data1,
+	output [`mFIFOWIDTH - 1 : 0] out1,
+	input [`mFIFOSIZEWIDTH - 1 : 0] addr2,
+	input [`mFIFOWIDTH - 1 : 0] data2,
+	output [`mFIFOWIDTH - 1 : 0] out2
+);
+	reg [`mFIFOWIDTH - 1 : 0] ram[2**`mFIFOSIZEWIDTH - 1 : 0];
+	reg [`mFIFOWIDTH - 1 : 0] data_out1;
+	reg [`mFIFOWIDTH - 1 : 0] data_out2;
+
+	assign out1 = data_out1;
+	assign out2 = data_out2;
+
+    // If writen enable 1 is activated,
+    // data1 will be loaded through addr1
+    // Otherwise, data will be read out through addr1
+	always @(posedge clk) begin
+		if (we1) begin
+			ram[addr1] <= data1;
+        end else begin
+			data_out1 <= ram[addr1];
+		end
+	end
+
+    // If writen enable 2 is activated,
+    // data1 will be loaded through addr2
+    // Otherwise, data will be read out through addr2
+	always @(posedge clk) begin
+		if (we2) begin
+			ram[addr2] <= data2;
+		end else begin
+			data_out2 <= ram[addr2];
+		end
+	end
+
+endmodule

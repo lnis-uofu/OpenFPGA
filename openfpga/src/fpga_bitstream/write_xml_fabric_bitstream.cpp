@@ -71,12 +71,13 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
                                         const BitstreamManager& bitstream_manager,
                                         const FabricBitstream& fabric_bitstream,
                                         const FabricBitId& fabric_bit,
-                                        const e_config_protocol_type& config_type) {
+                                        const e_config_protocol_type& config_type,
+                                        const int& xml_hierarchy_depth) {
   if (false == valid_file_stream(fp)) {
     return 1;
   }
 
-  write_tab_to_file(fp, 1);
+  write_tab_to_file(fp, xml_hierarchy_depth);
   fp << "<bit id=\"" << size_t(fabric_bit) << "\"";
   fp << " value=\"";
   fp << bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit));
@@ -104,14 +105,14 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
     break;
   case CONFIG_MEM_MEMORY_BANK: { 
     /* Bit line address */
-    write_tab_to_file(fp, 2);
+    write_tab_to_file(fp, xml_hierarchy_depth + 1);
     fp << "<bl address=\"";
     for (const char& addr_bit : fabric_bitstream.bit_bl_address(fabric_bit)) {
       fp << addr_bit;
     }
     fp << "\"/>\n";   
  
-    write_tab_to_file(fp, 2);
+    write_tab_to_file(fp, xml_hierarchy_depth + 1);
     fp << "<wl address=\"";
     for (const char& addr_bit : fabric_bitstream.bit_wl_address(fabric_bit)) {
       fp << addr_bit;
@@ -120,7 +121,7 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
     break;
   }
   case CONFIG_MEM_FRAME_BASED: {
-    write_tab_to_file(fp, 2);
+    write_tab_to_file(fp, xml_hierarchy_depth + 1);
     fp << "<frame address=\"";
     for (const char& addr_bit : fabric_bitstream.bit_address(fabric_bit)) {
       fp << addr_bit;
@@ -134,10 +135,54 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
     return 1;
   }
 
-  write_tab_to_file(fp, 1);
+  write_tab_to_file(fp, xml_hierarchy_depth);
   fp << "</bit>\n";
 
   return 0;
+}
+
+/********************************************************************
+ * Write the fabric bitstream in a specific configuration region to an XML file 
+ *
+ * Return:
+ *  - 0 if succeed
+ *  - 1 if critical errors occured
+ *******************************************************************/
+static 
+int write_fabric_regional_config_bit_to_xml_file(std::fstream& fp,
+                                                 const BitstreamManager& bitstream_manager,
+                                                 const FabricBitstream& fabric_bitstream,
+                                                 const FabricBitRegionId& fabric_region,
+                                                 const e_config_protocol_type& config_type,
+                                                 const int& xml_hierarchy_depth) {
+  if (false == valid_file_stream(fp)) {
+    return 1;
+  }
+
+  int status = 0;
+
+  write_tab_to_file(fp, xml_hierarchy_depth);
+  fp << "<region ";
+  fp << "id=\"";
+  fp << size_t(fabric_region);
+  fp << "\"";
+  fp << ">\n";
+
+  for (const FabricBitId& fabric_bit : fabric_bitstream.region_bits(fabric_region)) {
+    status = write_fabric_config_bit_to_xml_file(fp, bitstream_manager,
+                                                 fabric_bitstream,
+                                                 fabric_bit,
+                                                 config_type,
+                                                 xml_hierarchy_depth + 1);
+    if (1 == status) {
+      return status;
+    }
+  }
+
+  write_tab_to_file(fp, xml_hierarchy_depth);
+  fp << "</region>\n";
+
+  return status;
 }
 
 /********************************************************************
@@ -173,15 +218,17 @@ int write_fabric_bitstream_to_xml_file(const BitstreamManager& bitstream_manager
   /* Write XML head */
   write_fabric_bitstream_xml_file_head(fp);
 
+  int xml_hierarchy_depth = 0;
   fp << "<fabric_bitstream>\n";
 
   /* Output fabric bitstream to the file */
   int status = 0;
-  for (const FabricBitId& fabric_bit : fabric_bitstream.bits()) {
-    status = write_fabric_config_bit_to_xml_file(fp, bitstream_manager,
-                                                 fabric_bitstream,
-                                                 fabric_bit,
-                                                 config_protocol.type());
+  for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
+    status = write_fabric_regional_config_bit_to_xml_file(fp, bitstream_manager,
+                                                          fabric_bitstream,
+                                                          region,
+                                                          config_protocol.type(),
+                                                          xml_hierarchy_depth + 1);
     if (1 == status) {
       break;
     }

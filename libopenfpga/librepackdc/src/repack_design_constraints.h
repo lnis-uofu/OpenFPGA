@@ -61,6 +61,10 @@ class RepackDesignConstraints {
     /* Get the net to be constrained */
     std::string net(const RepackDesignConstraintId& repack_design_constraint_id) const;
 
+    /* Find a constrained net */
+    std::string find_constrained_pin_net(const std::string& pb_type,
+                                         const openfpga::BasicPort& pin) const;
+
     /* Check if there are any design constraints */
     bool empty() const;
 
@@ -86,6 +90,20 @@ class RepackDesignConstraints {
 
   public: /* Public invalidators/validators */
     bool valid_design_constraint_id(const RepackDesignConstraintId& repack_design_constraint_id) const;
+    /* Show if the net has no constraints (free to map to any pin) 
+     * This function is used to identify the net name returned by APIs:
+     * - find_constrained_pin_net()
+     * - net()
+     */
+    bool unconstrained_net(const std::string& net) const;
+
+    /* Show if the net is defined specifically not to map to any pin 
+     * This function is used to identify the net name returned by APIs:
+     * - find_constrained_pin_net()
+     * - net()
+     */
+    bool unmapped_net(const std::string& net) const;
+
   private: /* Internal data */
     /* Unique ids for each design constraint */
     vtr::vector<RepackDesignConstraintId, RepackDesignConstraintId> repack_design_constraint_ids_;

@@ -16,24 +16,32 @@ In this part, we will introduce the hierarchy, dependency and functionality of e
 +-----------------+---------+----------------+---------------+
 
 OpenFPGA can auto-generate two types of Verilog testbenches to validate the correctness of the fabric: full and formal-oriented.
-Both testbenches share the same organization, as depicted in :numref:`fig_verilog_testbench_organization` (a).
+Both testbenches share the same organization, as depicted in :numref:`fig_verilog_testbench_organization`.
 To enable self-testing, the FPGA and user's RTL design (simulate using an HDL simulator) are driven by the same input stimuli, and any mismatch on their outputs will raise an error flag.
 
 .. _fig_verilog_testbench_organization:
 
-.. figure:: figures/verilog_testbench_organization.png
+.. figure:: figures/full_testbench_block_diagram.svg
    :scale: 50%
-   :alt: Functional Verification using ModelSim
+   :alt: Verilog testbench principles
 
-   Principles of Verilog testbenches organization: (a) block diagram and (b) waveforms. 
+   Principles of Verilog testbenches: (1) using common input stimuli; (2) applying bitstream; (3) checking output vectors.
+
+.. _fig_verilog_full_testbench_waveform:
+
+.. figure:: figures/full_testbench_waveform.svg
+   :scale: 50%
+   :alt: Full testbench waveform
+
+   Illustration on the waveforms in full testbench
 
 Full Testbench
 ~~~~~~~~~~~~~~
 Full testbench aims at simulating an entire FPGA operating period, consisting of two phases: 
 
-  - the **Configuration Phase**, where the synthesized design bitstream is loaded to the programmable fabric, as highlighted by the green rectangle of :numref:`fig_verilog_testbench_organization` (b);
+  - the **Configuration Phase**, where the synthesized design bitstream is loaded to the programmable fabric, as highlighted by the green rectangle of :numref:`fig_verilog_full_testbench_waveform`;
 
-  - the **Operating Phase**, where random input vectors are auto-generated to drive both Devices Under Test (DUTs), as highlighted by the red rectangle of :numref:`fig_verilog_testbench_organization` (b). Using the full testbench, users can validate both the configuration circuits and programming fabric of an FPGA.
+  - the **Operating Phase**, where random input vectors are auto-generated to drive both Devices Under Test (DUTs), as highlighted by the red rectangle of :numref:`fig_verilog_full_testbench_waveform`. Using the full testbench, users can validate both the configuration circuits and programming fabric of an FPGA.
 
 Formal-oriented Testbench
 ~~~~~~~~~~~~~~~~~~~~~~~~~
