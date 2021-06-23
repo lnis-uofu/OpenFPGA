@@ -37,7 +37,8 @@ IoMap build_fpga_io_mapping_info(const ModuleManager& module_manager,
                                  const IoLocationMap& io_location_map,
                                  const VprNetlistAnnotation& netlist_annotation,
                                  const std::string& io_input_port_name_postfix,
-                                 const std::string& io_output_port_name_postfix) {
+                                 const std::string& io_output_port_name_postfix,
+                                 const std::vector<std::string>& output_port_prefix_to_remove) {
   IoMap io_map;
 
   /* Only mappable i/o ports can be considered */
@@ -129,7 +130,18 @@ IoMap build_fpga_io_mapping_info(const ModuleManager& module_manager,
       benchmark_io_port.set_width(1);
     } else {
       VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
-      benchmark_io_port.set_name(std::string(block_name + io_output_port_name_postfix)); 
+      /* VPR may have added a prefix to the output ports, remove them here */
+      std::string output_block_name = block_name;
+      for (const std::string& prefix_to_remove : output_port_prefix_to_remove) {
+        if (!prefix_to_remove.empty()) {
+          if (0 == output_block_name.find(prefix_to_remove)) {
+            output_block_name.erase(0, prefix_to_remove.length());
+            break;
+          }
+        }
+      }
+
+      benchmark_io_port.set_name(std::string(output_block_name + io_output_port_name_postfix)); 
       benchmark_io_port.set_width(1);
     }
 
