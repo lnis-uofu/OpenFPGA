@@ -16,6 +16,7 @@
 /* Headers from openfpgautil library */
 #include "openfpga_port.h"
 #include "openfpga_digest.h"
+#include "openfpga_reserved_words.h"
 
 #include "openfpga_atom_netlist_utils.h"
 #include "simulation_utils.h"
