@@ -27,9 +27,6 @@ opt_clean
 deminout
 opt
 
-#########################
-# Run coarse synthesis
-#########################
 opt_expr
 opt_clean
 check
@@ -38,8 +35,13 @@ wreduce -keepdc
 peepopt
 pmuxtree
 opt_clean
+
+#########################
+# Run coarse synthesis
+#########################
 # Extract arithmetic functions
 alumacc
+share
 opt
 fsm
 # Run a quick follow-up optimization to sweep out unused nets/signals

@@ -50,6 +50,20 @@ std::string RepackDesignConstraints::net(const RepackDesignConstraintId& repack_
   return repack_design_constraint_nets_[repack_design_constraint_id]; 
 }
 
+std::string RepackDesignConstraints::find_constrained_pin_net(const std::string& pb_type,
+                                                              const openfpga::BasicPort& pin) const {
+  std::string constrained_net_name;
+  for (const RepackDesignConstraintId& design_constraint : design_constraints()) {
+    /* If found a constraint, record the net name */
+    if ( (pb_type == repack_design_constraint_pb_types_[design_constraint]) 
+       && (pin == repack_design_constraint_pins_[design_constraint])) {
+      constrained_net_name = repack_design_constraint_nets_[design_constraint];
+      break;
+    }
+  }
+  return constrained_net_name;
+}
+
 bool RepackDesignConstraints::empty() const {
   return 0 == repack_design_constraint_ids_.size();
 }
@@ -105,4 +119,12 @@ void RepackDesignConstraints::set_net(const RepackDesignConstraintId& repack_des
 /* Validators */
 bool RepackDesignConstraints::valid_design_constraint_id(const RepackDesignConstraintId& design_constraint_id) const {
   return ( size_t(design_constraint_id) < repack_design_constraint_ids_.size() ) && ( design_constraint_id == repack_design_constraint_ids_[design_constraint_id] ); 
+}
+
+bool RepackDesignConstraints::unconstrained_net(const std::string& net) const {
+  return net.empty();
+}
+
+bool RepackDesignConstraints::unmapped_net(const std::string& net) const {
+  return std::string(REPACK_DESIGN_CONSTRAINT_OPEN_NET) == net;
 }

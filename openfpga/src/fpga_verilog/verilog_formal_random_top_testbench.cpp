@@ -16,9 +16,11 @@
 /* Headers from openfpgautil library */
 #include "openfpga_port.h"
 #include "openfpga_digest.h"
+#include "openfpga_reserved_words.h"
 
 #include "openfpga_atom_netlist_utils.h"
 #include "simulation_utils.h"
+#include "fabric_global_port_info_utils.h"
 
 #include "verilog_constants.h"
 #include "verilog_writer_utils.h"
@@ -55,12 +57,13 @@ void print_verilog_top_random_testbench_ports(std::fstream& fp,
                                               const std::string& circuit_name,
                                               const std::vector<std::string>& clock_port_names,
                                               const AtomContext& atom_ctx,
-                                              const VprNetlistAnnotation& netlist_annotation) {
+                                              const VprNetlistAnnotation& netlist_annotation,
+                                              const e_verilog_default_net_type& default_net_type) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
   print_verilog_default_net_type_declaration(fp,
-                                             VERILOG_DEFAULT_NET_TYPE_NONE);
+                                             default_net_type);
  
   /* Print the declaration for the module */
   fp << "module " << circuit_name << FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX << ";" << std::endl;
@@ -168,6 +171,82 @@ void print_verilog_random_testbench_fpga_instance(std::fstream& fp,
   fp << std::endl;
 }
 
+/********************************************************************
+ * Generate random stimulus for the reset port
+ * This function is designed to drive the reset port of a benchmark module
+ * The reset signal will be 
+ * - enabled in the 1st clock cycle
+ * - disabled in the rest of clock cycles
+ *******************************************************************/
+static 
+void print_verilog_random_testbench_reset_stimuli(std::fstream& fp,
+                                                  const AtomContext& atom_ctx,
+                                                  const VprNetlistAnnotation& netlist_annotation,
+                                                  const ModuleManager& module_manager,
+                                                  const FabricGlobalPortInfo& global_ports,
+                                                  const PinConstraints& pin_constraints,
+                                                  const std::vector<std::string>& clock_port_names,
+                                                  const BasicPort& clock_port) {
+  valid_file_stream(fp);
+
+  print_verilog_comment(fp, "----- Begin reset signal generation -----");
+
+  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+    /* Bypass non-input atom blocks ! */
+    if (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk)) {
+      continue;
+    }
+
+    /* The block may be renamed as it contains special characters which violate Verilog syntax */
+    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+      block_name = netlist_annotation.block_name(atom_blk);
+    } 
+
+    /* Bypass clock ports because their stimulus cannot be random */
+    if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
+      continue;
+    }
+
+    /* Bypass any constained net that are mapped to a global port of the FPGA fabric
+     * because their stimulus cannot be random
+     */
+    if (false == port_is_fabric_global_reset_port(global_ports, module_manager, pin_constraints.net_pin(block_name))) { 
+      continue;
+    }
+
+    /* Generete stimuli for this net which is how reset signal works */
+    BasicPort reset_port(block_name, 1);
+    size_t initial_value = 1;
+    if (1 == global_ports.global_port_default_value(find_fabric_global_port(global_ports, module_manager,  pin_constraints.net_pin(block_name)))) {
+      initial_value = 0;
+    }
+
+    fp << "initial" << std::endl;
+    fp << "\tbegin" << std::endl;
+    fp << "\t";
+    std::vector<size_t> initial_values(reset_port.get_width(), initial_value);
+    fp << "\t";
+    fp << generate_verilog_port_constant_values(reset_port, initial_values);
+    fp << ";" << std::endl;
+
+    /* Flip the reset at the second negative edge of the clock port
+     * So the generic reset stimuli is applicable to both synchronous reset and asynchronous reset
+     * This is because the reset is activated in a complete clock cycle 
+     * This gaurantees that even for synchronous reset, the reset can be sensed in the 1st rising/falling 
+     * edge of the clock signal
+     */
+    fp << "\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << ");" << std::endl;
+    fp << "\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << ");" << std::endl;
+    print_verilog_wire_connection(fp, reset_port, reset_port, true);
+    fp << "\tend" << std::endl;
+  }
+
+  print_verilog_comment(fp, "----- End reset signal generation -----");
+
+  fp << std::endl;
+}
+
 /*********************************************************************
  * Top-level function in this file:
  * Create a Verilog testbench using random input vectors 
@@ -197,9 +276,11 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
                                         const std::string& verilog_fname,
                                         const AtomContext& atom_ctx,
                                         const VprNetlistAnnotation& netlist_annotation,
+                                        const ModuleManager& module_manager,
+                                        const FabricGlobalPortInfo& global_ports,
                                         const PinConstraints& pin_constraints,
                                         const SimulationSetting& simulation_parameters,
-                                        const bool& explicit_port_mapping) {
+                                        const VerilogTestbenchOption &options) {
   std::string timer_message = std::string("Write configuration-skip testbench for FPGA top-level Verilog netlist implemented by '") + circuit_name.c_str() + std::string("'");
 
   /* Start time count */
@@ -220,17 +301,17 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
   std::vector<std::string> clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
 
   /* Start of testbench */
-  print_verilog_top_random_testbench_ports(fp, circuit_name, clock_port_names, atom_ctx, netlist_annotation);
+  print_verilog_top_random_testbench_ports(fp, circuit_name, clock_port_names, atom_ctx, netlist_annotation, options.default_net_type());
 
   /* Call defined top-level module */
   print_verilog_random_testbench_fpga_instance(fp, circuit_name,
                                                atom_ctx, netlist_annotation,
-                                               explicit_port_mapping);
+                                               options.explicit_port_mapping());
 
   /* Call defined benchmark */
   print_verilog_top_random_testbench_benchmark_instance(fp, circuit_name,
                                                         atom_ctx, netlist_annotation,
-                                                        explicit_port_mapping);
+                                                        options.explicit_port_mapping());
 
   /* Find clock port to be used */
   std::vector<BasicPort> clock_ports = generate_verilog_testbench_clock_port(clock_port_names, std::string(DEFAULT_CLOCK_NAME));
@@ -240,8 +321,23 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
                                         pin_constraints, 
                                         simulation_parameters, 
                                         clock_ports);
+  /* TODO: use the first clock now because we do not have information how the reset is 
+   * correlated to clock ports. Once we have such information, the limitation should be removed!
+   */
+  print_verilog_random_testbench_reset_stimuli(fp, 
+                                               atom_ctx,
+                                               netlist_annotation, 
+                                               module_manager,
+                                               global_ports, 
+                                               pin_constraints, 
+                                               clock_port_names, 
+                                               clock_ports[0]);
+
   print_verilog_testbench_random_stimuli(fp, atom_ctx,
                                          netlist_annotation, 
+                                         module_manager,
+                                         global_ports, 
+                                         pin_constraints, 
                                          clock_port_names, 
                                          std::string(CHECKFLAG_PORT_POSTFIX),
                                          clock_ports);
@@ -265,7 +361,6 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
 
   /* Add Icarus requirement */
   print_verilog_timeout_and_vcd(fp, 
-                                std::string(ICARUS_SIMULATOR_FLAG),
                                 std::string(circuit_name + std::string(FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX)),
                                 std::string(circuit_name + std::string("_formal.vcd")), 
                                 std::string(FORMAL_TB_SIM_START_PORT_NAME),

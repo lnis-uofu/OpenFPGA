@@ -6,6 +6,7 @@ Note that an OpenFPGA architecture can be applied to multiple VPR architecture f
   * The keyword 'frac' is to specify if fracturable LUT is used or not.
   * The keyword 'Native' is to specify if fracturable LUT design is a native one (without mode switch) or a standard one (with mode switch).
 - N<le\_size>: Number of logic elements for a CLB. If you have multiple CLB architectures, this should be largest number.
+- fracdff: Use multi-mode DFF model, where reset/set/clock polarity is configurable
 - adder\_chain: If hard adder/carry chain is used inside CLBs
 - register\_chain: If shift register chain is used inside CLBs
 - scan\_chain: If scan chain testing infrastructure is used inside CLBs

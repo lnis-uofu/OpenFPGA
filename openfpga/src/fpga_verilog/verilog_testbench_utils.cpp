@@ -21,6 +21,7 @@
 #include "verilog_port_types.h"
 
 #include "module_manager_utils.h"
+#include "fabric_global_port_info_utils.h"
 
 #include "verilog_constants.h"
 #include "verilog_writer_utils.h"
@@ -299,7 +300,6 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
  * Note that: these codes are tuned for Icarus simulator!!!
  *******************************************************************/
 void print_verilog_timeout_and_vcd(std::fstream& fp,
-                                   const std::string& icarus_preprocessing_flag,
                                    const std::string& module_name,
                                    const std::string& vcd_fname,
                                    const std::string& simulation_start_counter_name,
@@ -308,20 +308,14 @@ void print_verilog_timeout_and_vcd(std::fstream& fp,
   /* Validate the file stream */
   valid_file_stream(fp);
 
-  /* The following verilog codes are tuned for Icarus */
-  print_verilog_preprocessing_flag(fp, icarus_preprocessing_flag); 
-
-  print_verilog_comment(fp, std::string("----- Begin Icarus requirement -------"));
+  print_verilog_comment(fp, std::string("----- Begin output waveform to VCD file-------"));
 
   fp << "\tinitial begin" << std::endl;
   fp << "\t\t$dumpfile(\"" << vcd_fname << "\");" << std::endl;
   fp << "\t\t$dumpvars(1, " << module_name << ");" << std::endl;
   fp << "\tend" << std::endl;
 
-  /* Condition ends for the Icarus requirement */
-  print_verilog_endif(fp);
-
-  print_verilog_comment(fp, std::string("----- END Icarus requirement -------"));
+  print_verilog_comment(fp, std::string("----- END output waveform to VCD file -------"));
 
   /* Add an empty line as splitter */
   fp << std::endl;
@@ -537,6 +531,9 @@ void print_verilog_testbench_clock_stimuli(std::fstream& fp,
 void print_verilog_testbench_random_stimuli(std::fstream& fp,
                                             const AtomContext& atom_ctx,
                                             const VprNetlistAnnotation& netlist_annotation,
+                                            const ModuleManager& module_manager,
+                                            const FabricGlobalPortInfo& global_ports,
+                                            const PinConstraints& pin_constraints,
                                             const std::vector<std::string>& clock_port_names,
                                             const std::string& check_flag_port_postfix,
                                             const std::vector<BasicPort>& clock_ports) {
@@ -560,8 +557,15 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
       block_name = netlist_annotation.block_name(atom_blk);
     } 
 
-    /* Bypass clock ports */
+    /* Bypass clock ports because their stimulus cannot be random */
     if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
+      continue;
+    }
+
+    /* Bypass any constained net that are mapped to a global port of the FPGA fabric
+     * because their stimulus cannot be random
+     */
+    if (true == port_is_fabric_global_reset_port(global_ports, module_manager, pin_constraints.net_pin(block_name))) { 
       continue;
     }
 
@@ -620,8 +624,15 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
       block_name = netlist_annotation.block_name(atom_blk);
     } 
 
-    /* Bypass clock ports */
+    /* Bypass clock ports because their stimulus cannot be random */
     if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
+      continue;
+    }
+
+    /* Bypass any constained net that are mapped to a global port of the FPGA fabric
+     * because their stimulus cannot be random
+     */
+    if (true == port_is_fabric_global_reset_port(global_ports, module_manager, pin_constraints.net_pin(block_name))) { 
       continue;
     }
 

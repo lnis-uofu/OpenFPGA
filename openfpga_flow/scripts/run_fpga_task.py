@@ -174,7 +174,7 @@ def generate_each_task_actions(taskname):
     elif os.path.isdir(repo_tasks):
         curr_task_dir = repo_tasks
     else:
-        clean_up_and_exit("Task directory [%s] not found" % curr_task_dir)
+        clean_up_and_exit("Task directory [%s] not found" % taskname + " locally at [%s]" % local_tasks + " or in OpenFPGA task directory [%s]" % repo_tasks)
 
     os.chdir(curr_task_dir)
 
@@ -302,6 +302,13 @@ def generate_each_task_actions(taskname):
 
         benchmark_list.append(CurrBenchPara)
 
+    # Count the number of duplicated top module name among benchmark
+    # This is required as flow run directory names for these benchmarks are different than others
+    # which are uniquified
+    benchmark_top_module_count = []
+    for bench in benchmark_list:
+      benchmark_top_module_count.append(bench["top_module"])
+
     # Create OpenFPGA flow run commnad for each combination of
     # architecture, benchmark and parameters
     # Create run_job object [arch, bench, run_dir, commnad]
@@ -309,7 +316,11 @@ def generate_each_task_actions(taskname):
     for indx, arch in enumerate(archfile_list):
         for bench in benchmark_list:
             for lbl, param in bench["script_params"].items():
-                flow_run_dir = get_flow_rundir(arch, bench["top_module"], lbl)
+                if (benchmark_top_module_count.count(bench["top_module"]) > 1):
+                  flow_run_dir = get_flow_rundir(arch, "bench" + str(benchmark_list.index(bench)) + "_" + bench["top_module"], lbl)
+                else:
+                  flow_run_dir = get_flow_rundir(arch, bench["top_module"], lbl)
+                  
                 command = create_run_command(
                     curr_job_dir=flow_run_dir,
                     archfile=arch,
@@ -330,7 +341,8 @@ def generate_each_task_actions(taskname):
     logger.info('Created total %d jobs' % len(flow_run_cmd_list))
     return flow_run_cmd_list
 
-
+# Make the directory name unique by including the benchmark index in the list.
+# This is because benchmarks may share the same top module names
 def get_flow_rundir(arch, top_module, flow_params=None):
     path = [
         os.path.basename(arch).replace(".xml", ""),

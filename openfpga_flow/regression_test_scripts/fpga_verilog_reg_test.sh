@@ -38,14 +38,20 @@ run-task fpga_verilog/adder/hard_adder --debug --show_thread_logs
 echo -e "Testing Verilog generation with soft adder chain in CLBs ";
 run-task fpga_verilog/adder/soft_adder --debug --show_thread_logs
 
-echo -e "Testing Verilog generation with 16k block RAMs ";
-run-task fpga_verilog/bram/dpram16k --debug --show_thread_logs
+echo -e "Testing Verilog generation with 1k block RAMs ";
+run-task fpga_verilog/bram/dpram1k --debug --show_thread_logs
 
-echo -e "Testing Verilog generation with 16k block RAMs spanning two columns ";
-run-task fpga_verilog/bram/wide_dpram16k --debug --show_thread_logs
+echo -e "Testing Verilog generation with 1k block RAMs spanning two columns ";
+run-task fpga_verilog/bram/wide_dpram1k --debug --show_thread_logs
 
 echo -e "Testing Verilog generation with heterogeneous fabric using 8-bit single-mode multipliers ";
 run-task fpga_verilog/dsp/single_mode_mult_8x8 --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with heterogeneous fabric using 16-bit multi-mode multipliers ";
+run-task fpga_verilog/dsp/multi_mode_mult_16x16 --debug --show_thread_logs
+
+echo -e "Testing Verilog generation with heterogeneous fabric using multi-width 16-bit multi-mode multipliers ";
+run-task fpga_verilog/dsp/wide_multi_mode_mult_16x16 --debug --show_thread_logs
 
 echo -e "Testing Verilog generation with different I/O capacities on each side of an FPGA ";
 run-task fpga_verilog/io/multi_io_capacity --debug --show_thread_logs
@@ -130,9 +136,3 @@ run-task fpga_verilog/fully_connected_output_crossbar --debug --show_thread_logs
 echo -e "Testing through channels in tileable routing";
 run-task fpga_verilog/thru_channel/thru_narrow_tile --debug --show_thread_logs
 run-task fpga_verilog/thru_channel/thru_wide_tile --debug --show_thread_logs
-
-# Verify MCNC big20 benchmark suite with ModelSim
-# Please make sure you have ModelSim installed in the environment
-# Otherwise, it will fail
-#run-task fpga_verilog/mcnc_big20 --debug --show_thread_logs --maxthreads 20
-#python3 openfpga_flow/scripts/run_modelsim.py mcnc_big20 --run_sim

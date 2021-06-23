@@ -1,7 +1,7 @@
 Technical Highlights
 --------------------
 
-The follow lists of technical features are created to help users spot their needs in customizing FPGA fabrics.(**as of February 2021**)
+The following lists of technical features were created to help users find their needs for customizing FPGA fabrics.(**as of February 2021**)
 
 Supported Circuit Designs
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -42,19 +42,21 @@ Supported Circuit Designs
 +-----------------+--------------+-----------+-----------------------------------------------------+
 | | Configurable  |     No       | Yes       | - :ref:`circuit_model_config_latch_example`         | 
 | | Memory        |              |           | - :ref:`circuit_model_sram_blwl_example`            |
-|                 |              |           | - :ref:`circuit_model_dff_example`                  | 
 |                 |              |           | - :ref:`circuit_model_ccff_example`                 | 
 |                 |              |           | - :ref:`circuit_model_ccff_enable_example`          | 
 |                 |              |           | - :ref:`circuit_model_ccff_scanable_example`        | 
 +-----------------+--------------+-----------+-----------------------------------------------------+
-| Block RAM       | No           | Yes       | - **Any size**                                      |
-|                 |              |           | - Single-port                                       |
-|                 |              |           | - Dual-port                                         |
-|                 |              |           | - Fracturable                                       |
+| Data Memory     | No           | Yes       | - **Any size**                                      |
+|                 |              |           | - :ref:`circuit_model_dff_example`                  | 
+|                 |              |           | - :ref:`circuit_model_multi_mode_ff_example`        | 
+|                 |              |           | - Single-port Block RAM                             |
+|                 |              |           | - :ref:`circuit_model_single_mode_dpram_example`    |
+|                 |              |           | - :ref:`circuit_model_multi_mode_dpram_example`     |
 +-----------------+--------------+-----------+-----------------------------------------------------+
 | | Arithmetic    | No           | Yes       | - **Any size**                                      |
-| | Units         |              |           | - Multiplier                                        |
-|                 |              |           | - :ref:`circuit_model_full_adder_example`           |
+| | Units         |              |           | - :ref:`circuit_model_full_adder_example`           |
+|                 |              |           | - :ref:`circuit_model_single_mode_mult8x8_example`  |
+|                 |              |           | - :ref:`circuit_model_multi_mode_mult8x8_example`   |
 +-----------------+--------------+-----------+-----------------------------------------------------+
 | I/O             | No           | Yes       | - :ref:`circuit_model_gpio_example`                 |
 |                 |              |           | - Bi-directional buffer                             |
@@ -62,13 +64,13 @@ Supported Circuit Designs
 +-----------------+--------------+-----------+-----------------------------------------------------+
 
 
-* The user defined netlist could come from a standard cell
+* The user defined netlist could come from a standard cell. See :ref:`tutorial_standard_cell` for details.
 
 Supported FPGA Architectures
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We support most FPGA architectures that VPR can support!
-The following are most commonly seen architectural features:
+The following are the most commonly seen architectural features:
 
 +------------------------+----------------------------------------------+
 | Block Type             | Architecture features                        |
