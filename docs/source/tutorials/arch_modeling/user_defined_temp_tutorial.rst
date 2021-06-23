@@ -1,5 +1,12 @@
+.. _tutorial_user_def_temp:
+
 Integrating Custom Verilog Modules with user_defined_template.v
 ================================================================
+
+.. only:: html
+
+  .. youtube:: YTggSZHsTjg
+  
 Introduction and Setup
 ~~~~~~~~~~~~~~~~~~~~~~
 **In this tutorial, we will**

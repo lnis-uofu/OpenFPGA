@@ -5,6 +5,7 @@
  * Include header files required by the data structure definition
  *******************************************************************/
 #include <string>
+#include "verilog_port_types.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -34,6 +35,7 @@ class VerilogTestbenchOption {
     bool explicit_port_mapping() const;
     bool include_signal_init() const;
     bool support_icarus_simulator() const;
+    e_verilog_default_net_type default_net_type() const;
     bool verbose_output() const;
   public: /* Public validator */
     bool validate() const;
@@ -58,6 +60,7 @@ class VerilogTestbenchOption {
     void set_explicit_port_mapping(const bool& enabled);
     void set_include_signal_init(const bool& enabled);
     void set_support_icarus_simulator(const bool& enabled);
+    void set_default_net_type(const std::string& default_net_type);
     void set_verbose_output(const bool& enabled);
   private: /* Internal Data */
     std::string output_directory_;
@@ -72,6 +75,7 @@ class VerilogTestbenchOption {
     bool explicit_port_mapping_;
     bool support_icarus_simulator_;
     bool include_signal_init_;
+    e_verilog_default_net_type default_net_type_;
     bool verbose_output_;
 };
 

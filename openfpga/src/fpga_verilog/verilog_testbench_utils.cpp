@@ -300,7 +300,6 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
  * Note that: these codes are tuned for Icarus simulator!!!
  *******************************************************************/
 void print_verilog_timeout_and_vcd(std::fstream& fp,
-                                   const std::string& icarus_preprocessing_flag,
                                    const std::string& module_name,
                                    const std::string& vcd_fname,
                                    const std::string& simulation_start_counter_name,
@@ -309,20 +308,14 @@ void print_verilog_timeout_and_vcd(std::fstream& fp,
   /* Validate the file stream */
   valid_file_stream(fp);
 
-  /* The following verilog codes are tuned for Icarus */
-  print_verilog_preprocessing_flag(fp, icarus_preprocessing_flag); 
-
-  print_verilog_comment(fp, std::string("----- Begin Icarus requirement -------"));
+  print_verilog_comment(fp, std::string("----- Begin output waveform to VCD file-------"));
 
   fp << "\tinitial begin" << std::endl;
   fp << "\t\t$dumpfile(\"" << vcd_fname << "\");" << std::endl;
   fp << "\t\t$dumpvars(1, " << module_name << ");" << std::endl;
   fp << "\tend" << std::endl;
 
-  /* Condition ends for the Icarus requirement */
-  print_verilog_endif(fp);
-
-  print_verilog_comment(fp, std::string("----- END Icarus requirement -------"));
+  print_verilog_comment(fp, std::string("----- END output waveform to VCD file -------"));
 
   /* Add an empty line as splitter */
   fp << std::endl;

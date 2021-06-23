@@ -442,7 +442,7 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
                                        const VprNetlistAnnotation &netlist_annotation,
                                        const std::string &circuit_name,
                                        const std::string &verilog_fname,
-                                       const bool &explicit_port_mapping) {
+                                       const VerilogTestbenchOption& options) {
   std::string timer_message = std::string("Write pre-configured FPGA top-level Verilog netlist for design '") + circuit_name + std::string("'");
 
   int status = CMD_EXEC_SUCCESS;
@@ -462,7 +462,7 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
   print_verilog_file_header(fp, title);
 
   print_verilog_default_net_type_declaration(fp,
-                                             VERILOG_DEFAULT_NET_TYPE_NONE);
+                                             options.default_net_type());
 
   /* Print module declaration and ports */
   print_verilog_preconfig_top_module_ports(fp, circuit_name, atom_ctx, netlist_annotation);
@@ -477,7 +477,7 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
   /* Instanciate FPGA top-level module */
   print_verilog_testbench_fpga_instance(fp, module_manager, top_module,
                                         std::string(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME),
-                                        explicit_port_mapping);
+                                        options.explicit_port_mapping());
 
   /* Find clock ports in benchmark */
   std::vector<std::string> benchmark_clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);

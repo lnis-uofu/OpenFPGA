@@ -24,13 +24,13 @@ In general, please follow the steps to compile
 
 .. note:: cmake3.12+ is recommended to compile OpenFPGA with GUI
 
-.. note:: Recommand to use ``make -j`` to accelerate the compilation
+.. note:: Recommend using ``make -j<int>`` to accelerate the compilation, where ``<int>`` denotes the number of cores to be used in compilation.
 
 .. note:: VPR's GUI requires gtk-3, and can be enabled with ``cmake .. -DVPR_USE_EZGL=on``
 
 **Quick Compilation Verification**
 
-To quickly verify the tool is well compiled, user can run the following command from OpenFPGA root repository
+To quickly verify the tool is well compiled, users can run the following command from OpenFPGA root repository
 
 .. code-block:: shell
 
@@ -38,7 +38,7 @@ To quickly verify the tool is well compiled, user can run the following command 
 
 Dependencies
 ~~~~~~~~~~~~
-Full list of dependencies can be found at install_dependencies_build_
+Full list of dependencies can be found at install_dependencies_build_.
 In particular, OpenFPGA requires specific versions for the following dependencies:
 
 :cmake:
@@ -53,8 +53,8 @@ In particular, OpenFPGA requires specific versions for the following dependencie
 Running with the docker image
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Users can skip the traditional installation process by using Dockerized version
-of the OpenFPGA tool. OpenFPGA project maintains the docker image/Github package of
+Users can skip the traditional installation process by using the Dockerized version
+of the OpenFPGA tool. The OpenFPGA project maintains the docker image/Github package of
 the latest stable version of OpenFPGA in the following repository
 `openfpga-master <https://github.com/orgs/lnis-uofu/packages/container/package/openfpga-master>`_.
 This image contains precompiled OpenFPGA binaries with all prerequisites installed.

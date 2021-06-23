@@ -69,6 +69,15 @@ write_fabric_bitstream
     Specify the file format [``plain_text`` | ``xml``]. By default is ``plain_text``.
     See file formats in :ref:`file_formats_fabric_bitstream_xml` and :ref:`file_formats_fabric_bitstream_plain_text`.
 
+  .. option:: --fast_configuration
+
+    Reduce the bitstream size when outputing by skipping dummy configuration bits. It is applicable to configuration chain, memory bank and frame-based configuration protocols. For configuration chain, when enabled, the zeros at the head of the bitstream will be skipped. For memory bank and frame-based, when enabled, all the zero configuration bits will be skipped. So ensure that your memory cells can be correctly reset to zero with a reset signal. 
+   
+    .. warning:: Fast configuration is only applicable to plain text file format!
+
+    .. note:: If both reset and set ports are defined in the circuit modeling for programming, OpenFPGA will pick the one that will bring largest benefit in speeding up configuration.
+
+
   .. option:: --verbose
 
     Show verbose log
@@ -82,6 +91,24 @@ write_io_mapping
 
     Specify the file name where the I/O mapping will be outputted to.
     See file formats in :ref:`file_format_io_mapping_file`.
+
+  .. option:: --verbose
+
+    Show verbose log
+
+report_bitstream_distribution
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Output the bitstream distribution to a file
+
+  .. option:: --file <string> or -f <string>
+
+    Specify the file name where the bitstream distribution will be outputted to.
+    See file formats in :ref:`file_format_bitstream_distribution_file`.
+
+  .. option:: --depth <int> or -d <int>
+
+    Specify the maximum depth of the block which should appear in the block
 
   .. option:: --verbose
 

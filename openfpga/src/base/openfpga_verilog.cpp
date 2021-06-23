@@ -62,23 +62,20 @@ int write_fabric_verilog(OpenfpgaContext& openfpga_ctx,
 } 
 
 /********************************************************************
- * A wrapper function to call the Verilog testbench generator of FPGA-Verilog 
+ * A wrapper function to call the full testbench generator of FPGA-Verilog 
  *******************************************************************/
-int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
-                            const Command& cmd, const CommandContext& cmd_context) {
+int write_full_testbench(const OpenfpgaContext& openfpga_ctx,
+                         const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_output_dir = cmd.option("file");
+  CommandOptionId opt_bitstream = cmd.option("bitstream");
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
-  CommandOptionId opt_print_top_testbench = cmd.option("print_top_testbench");
   CommandOptionId opt_fast_configuration = cmd.option("fast_configuration");
-  CommandOptionId opt_print_formal_verification_top_netlist = cmd.option("print_formal_verification_top_netlist");
-  CommandOptionId opt_print_preconfig_top_testbench = cmd.option("print_preconfig_top_testbench");
-  CommandOptionId opt_print_simulation_ini = cmd.option("print_simulation_ini");
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
+  CommandOptionId opt_default_net_type = cmd.option("default_net_type");
   CommandOptionId opt_include_signal_init = cmd.option("include_signal_init");
-  CommandOptionId opt_support_icarus_simulator = cmd.option("support_icarus_simulator");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
@@ -88,15 +85,14 @@ int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
   options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
   options.set_fabric_netlist_file_path(cmd_context.option_value(cmd, opt_fabric_netlist));
   options.set_reference_benchmark_file_path(cmd_context.option_value(cmd, opt_reference_benchmark));
-  options.set_print_formal_verification_top_netlist(cmd_context.option_enable(cmd, opt_print_formal_verification_top_netlist));
-  options.set_print_preconfig_top_testbench(cmd_context.option_enable(cmd, opt_print_preconfig_top_testbench));
   options.set_fast_configuration(cmd_context.option_enable(cmd, opt_fast_configuration));
-  options.set_print_top_testbench(cmd_context.option_enable(cmd, opt_print_top_testbench));
-  options.set_print_simulation_ini(cmd_context.option_value(cmd, opt_print_simulation_ini));
   options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
-  options.set_include_signal_init(cmd_context.option_enable(cmd, opt_include_signal_init));
-  options.set_support_icarus_simulator(cmd_context.option_enable(cmd, opt_support_icarus_simulator));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
+  options.set_print_top_testbench(true);
+  options.set_include_signal_init(cmd_context.option_enable(cmd, opt_include_signal_init));
+  if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
+    options.set_default_net_type(cmd_context.option_value(cmd, opt_default_net_type));
+  }
 
   /* If pin constraints are enabled by command options, read the file */
   PinConstraints pin_constraints;
@@ -104,19 +100,142 @@ int write_verilog_testbench(OpenfpgaContext& openfpga_ctx,
     pin_constraints = read_xml_pin_constraints(cmd_context.option_value(cmd, opt_pcf).c_str());
   }
   
-  return fpga_verilog_testbench(openfpga_ctx.module_graph(),
-                                openfpga_ctx.bitstream_manager(),
-                                openfpga_ctx.fabric_bitstream(),
-                                g_vpr_ctx.atom(),
-                                g_vpr_ctx.placement(),
-                                pin_constraints,
-                                openfpga_ctx.io_location_map(),
-                                openfpga_ctx.fabric_global_port_info(),
-                                openfpga_ctx.vpr_netlist_annotation(),
-                                openfpga_ctx.arch().circuit_lib,
-                                openfpga_ctx.simulation_setting(),
-                                openfpga_ctx.arch().config_protocol,
-                                options);
+  return fpga_verilog_full_testbench(openfpga_ctx.module_graph(),
+                                     openfpga_ctx.bitstream_manager(),
+                                     openfpga_ctx.fabric_bitstream(),
+                                     g_vpr_ctx.atom(),
+                                     g_vpr_ctx.placement(),
+                                     pin_constraints,
+                                     cmd_context.option_value(cmd, opt_bitstream),
+                                     openfpga_ctx.io_location_map(),
+                                     openfpga_ctx.fabric_global_port_info(),
+                                     openfpga_ctx.vpr_netlist_annotation(),
+                                     openfpga_ctx.arch().circuit_lib,
+                                     openfpga_ctx.simulation_setting(),
+                                     openfpga_ctx.arch().config_protocol,
+                                     options);
+} 
+
+/********************************************************************
+ * A wrapper function to call the preconfigured wrapper generator of FPGA-Verilog 
+ *******************************************************************/
+int write_preconfigured_fabric_wrapper(const OpenfpgaContext& openfpga_ctx,
+                                       const Command& cmd, const CommandContext& cmd_context) {
+
+  CommandOptionId opt_output_dir = cmd.option("file");
+  CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
+  CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
+  CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
+  CommandOptionId opt_default_net_type = cmd.option("default_net_type");
+  CommandOptionId opt_support_icarus_simulator = cmd.option("support_icarus_simulator");
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
+   * Keep it independent from any other outside data structures
+   */
+  VerilogTestbenchOption options;
+  options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
+  options.set_fabric_netlist_file_path(cmd_context.option_value(cmd, opt_fabric_netlist));
+  options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
+  options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
+  options.set_support_icarus_simulator(cmd_context.option_enable(cmd, opt_support_icarus_simulator));
+  options.set_print_formal_verification_top_netlist(true);
+  if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
+    options.set_default_net_type(cmd_context.option_value(cmd, opt_default_net_type));
+  }
+
+  /* If pin constraints are enabled by command options, read the file */
+  PinConstraints pin_constraints;
+  if (true == cmd_context.option_enable(cmd, opt_pcf)) {
+    pin_constraints = read_xml_pin_constraints(cmd_context.option_value(cmd, opt_pcf).c_str());
+  }
+  
+  return fpga_verilog_preconfigured_fabric_wrapper(openfpga_ctx.module_graph(),
+                                                   openfpga_ctx.bitstream_manager(),
+                                                   g_vpr_ctx.atom(),
+                                                   g_vpr_ctx.placement(),
+                                                   pin_constraints,
+                                                   openfpga_ctx.io_location_map(),
+                                                   openfpga_ctx.fabric_global_port_info(),
+                                                   openfpga_ctx.vpr_netlist_annotation(),
+                                                   openfpga_ctx.arch().circuit_lib,
+                                                   openfpga_ctx.arch().config_protocol,
+                                                   options);
+} 
+
+/********************************************************************
+ * A wrapper function to call the preconfigured testbench generator of FPGA-Verilog 
+ *******************************************************************/
+int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
+                                  const Command& cmd, const CommandContext& cmd_context) {
+
+  CommandOptionId opt_output_dir = cmd.option("file");
+  CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
+  CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
+  CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
+  CommandOptionId opt_support_icarus_simulator = cmd.option("support_icarus_simulator");
+  CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
+  CommandOptionId opt_default_net_type = cmd.option("default_net_type");
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
+   * Keep it independent from any other outside data structures
+   */
+  VerilogTestbenchOption options;
+  options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
+  options.set_fabric_netlist_file_path(cmd_context.option_value(cmd, opt_fabric_netlist));
+  options.set_reference_benchmark_file_path(cmd_context.option_value(cmd, opt_reference_benchmark));
+  options.set_support_icarus_simulator(cmd_context.option_enable(cmd, opt_support_icarus_simulator));
+  options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
+  options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
+  options.set_print_preconfig_top_testbench(true);
+  if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
+    options.set_default_net_type(cmd_context.option_value(cmd, opt_default_net_type));
+  }
+
+  /* If pin constraints are enabled by command options, read the file */
+  PinConstraints pin_constraints;
+  if (true == cmd_context.option_enable(cmd, opt_pcf)) {
+    pin_constraints = read_xml_pin_constraints(cmd_context.option_value(cmd, opt_pcf).c_str());
+  }
+  
+  return fpga_verilog_preconfigured_testbench(openfpga_ctx.module_graph(),
+                                              g_vpr_ctx.atom(),
+                                              pin_constraints,
+                                              openfpga_ctx.fabric_global_port_info(),
+                                              openfpga_ctx.vpr_netlist_annotation(),
+                                              openfpga_ctx.simulation_setting(),
+                                              options);
+} 
+
+/********************************************************************
+ * A wrapper function to call the simulation task information generator of FPGA-Verilog 
+ *******************************************************************/
+int write_simulation_task_info(const OpenfpgaContext& openfpga_ctx,
+                               const Command& cmd, const CommandContext& cmd_context) {
+
+  CommandOptionId opt_file = cmd.option("file");
+  CommandOptionId opt_hdl_dir = cmd.option("hdl_dir");
+  CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
+   * Keep it independent from any other outside data structures
+   */
+  VerilogTestbenchOption options;
+  options.set_output_directory(cmd_context.option_value(cmd, opt_hdl_dir));
+  options.set_reference_benchmark_file_path(cmd_context.option_value(cmd, opt_reference_benchmark));
+  options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
+  options.set_print_simulation_ini(cmd_context.option_value(cmd, opt_file));
+
+  return fpga_verilog_simulation_task_info(openfpga_ctx.module_graph(),
+                                           openfpga_ctx.bitstream_manager(),
+                                           g_vpr_ctx.atom(),
+                                           g_vpr_ctx.placement(),
+                                           openfpga_ctx.io_location_map(),
+                                           openfpga_ctx.simulation_setting(),
+                                           openfpga_ctx.arch().config_protocol,
+                                           options);
 } 
 
 } /* end namespace openfpga */

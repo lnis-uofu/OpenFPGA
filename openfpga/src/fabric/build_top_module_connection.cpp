@@ -747,6 +747,7 @@ int build_top_module_global_net_for_given_grid_module(ModuleManager& module_mana
   /* Find the port of the grid module according to the tile annotation */
   int grid_pin_start_index = physical_tile->num_pins;
   t_physical_tile_port physical_tile_port;
+  physical_tile_port.num_pins = 0;
   for (const t_physical_tile_port& tile_port : physical_tile->ports) { 
     if (std::string(tile_port.name) == tile_port_to_connect.get_name()) {
       BasicPort ref_tile_port(tile_port.name, tile_port.num_pins);

@@ -26,7 +26,8 @@ IoMap build_fpga_io_mapping_info(const ModuleManager& module_manager,
                                  const IoLocationMap& io_location_map,
                                  const VprNetlistAnnotation& netlist_annotation,
                                  const std::string& io_input_port_name_postfix,
-                                 const std::string& io_output_port_name_postfix);
+                                 const std::string& io_output_port_name_postfix,
+                                 const std::vector<std::string>& output_port_prefix_to_remove);
 
 } /* end namespace openfpga */
 
