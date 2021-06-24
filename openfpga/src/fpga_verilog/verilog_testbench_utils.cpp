@@ -911,7 +911,6 @@ void print_verilog_testbench_signal_initialization(std::fstream& fp,
 
   /* Add signal initialization Verilog codes */
   fp << std::endl;
-  fp << "`ifdef " << VERILOG_SIGNAL_INIT_PREPROC_FLAG << std::endl;
   for (const CircuitModelId& signal_init_circuit_model : signal_init_circuit_models) {
     /* Find the module id corresponding to the circuit model from module graph */
     ModuleId primitive_module = module_manager.find_module(circuit_lib.model_name(signal_init_circuit_model));
@@ -924,8 +923,6 @@ void print_verilog_testbench_signal_initialization(std::fstream& fp,
                                                                        module_manager, top_module,
                                                                        primitive_module);
   }
-
-  fp << "`endif" << std::endl;
 }
 
 } /* end namespace openfpga */

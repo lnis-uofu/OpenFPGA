@@ -7,7 +7,6 @@ constexpr char* VERILOG_NETLIST_FILE_POSTFIX = ".v";
 constexpr float VERILOG_SIM_TIMESCALE = 1e-9; // Verilog Simulation time scale (minimum time unit) : 1ns
 
 constexpr char* VERILOG_TIMING_PREPROC_FLAG = "ENABLE_TIMING"; // the flag to enable timing definition during compilation
-constexpr char* VERILOG_SIGNAL_INIT_PREPROC_FLAG = "ENABLE_SIGNAL_INITIALIZATION"; // the flag to enable signal initialization during compilation
 constexpr char* VERILOG_FORMAL_VERIFICATION_PREPROC_FLAG = "ENABLE_FORMAL_VERIFICATION"; // the flag to enable formal verification during compilation
 constexpr char* INITIAL_SIMULATION_FLAG = "INITIAL_SIMULATION"; // the flag to enable initial functional verification
 constexpr char* AUTOCHECKED_SIMULATION_FLAG = "AUTOCHECKED_SIMULATION"; // the flag to enable autochecked functional verification
