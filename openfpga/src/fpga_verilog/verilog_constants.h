@@ -13,10 +13,6 @@ constexpr char* FORMAL_SIMULATION_FLAG = "FORMAL_SIMULATION"; // the flag to ena
 
 constexpr char* MODELSIM_SIMULATION_TIME_UNIT = "ms";
 
-// Icarus variables and flag
-constexpr char* ICARUS_SIMULATOR_FLAG = "ICARUS_SIMULATOR"; // the flag to enable specific Verilog code in testbenches
-// End of Icarus variables and flag
-
 constexpr char* FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME = "fabric_netlists.v";
 constexpr char* TOP_VERILOG_TESTBENCH_INCLUDE_NETLIST_FILE_NAME_POSTFIX = "_include_netlists.v";
 constexpr char* VERILOG_TOP_POSTFIX = "_top.v";

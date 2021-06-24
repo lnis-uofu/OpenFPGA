@@ -206,12 +206,6 @@ void print_verilog_simulation_preprocessing_flags(const std::string& src_dir,
   /* Print the title */
   print_verilog_file_header(fp, std::string("Preprocessing flags to enable/disable simulation features")); 
 
-  /* To enable functional verfication with Icarus */
-  if (true == verilog_testbench_opts.support_icarus_simulator()) {
-    print_verilog_define_flag(fp, std::string(ICARUS_SIMULATOR_FLAG), 1);
-    fp << std::endl;
-  } 
-
   /* To enable auto-checked simulation */
   if ( (true == verilog_testbench_opts.print_preconfig_top_testbench())
     || (true == verilog_testbench_opts.print_top_testbench()) ) {
