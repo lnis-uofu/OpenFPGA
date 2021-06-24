@@ -149,6 +149,9 @@ ShellCommandId add_openfpga_write_preconfigured_fabric_wrapper_command(openfpga:
   /* Add an option '--support_icarus_simulator' */
   shell_cmd.add_option("support_icarus_simulator", false, "Fine-tune Verilog testbenches to support icarus simulator");
 
+  /* add an option '--include_signal_init' */
+  shell_cmd.add_option("include_signal_init", false, "initialize all the signals in verilog testbenches");
+
   /* add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "enable verbose output");
   
