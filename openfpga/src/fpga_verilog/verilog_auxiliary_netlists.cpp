@@ -212,12 +212,6 @@ void print_verilog_simulation_preprocessing_flags(const std::string& src_dir,
     fp << std::endl;
   } 
 
-  /* To enable manualy checked simulation */
-  if (true == verilog_testbench_opts.print_top_testbench()) {
-    print_verilog_define_flag(fp, std::string(INITIAL_SIMULATION_FLAG), 1);
-    fp << std::endl;
-  } 
-
   /* To enable auto-checked simulation */
   if ( (true == verilog_testbench_opts.print_preconfig_top_testbench())
     || (true == verilog_testbench_opts.print_top_testbench()) ) {
