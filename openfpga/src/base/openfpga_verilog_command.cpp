@@ -146,8 +146,9 @@ ShellCommandId add_openfpga_write_preconfigured_fabric_wrapper_command(openfpga:
   CommandOptionId default_net_type_opt = shell_cmd.add_option("default_net_type", false, "Set the default net type for Verilog netlists. Default value is 'none'");
   shell_cmd.set_option_require_value(default_net_type_opt, openfpga::OPT_STRING);
 
-  /* Add an option '--support_icarus_simulator' */
-  shell_cmd.add_option("support_icarus_simulator", false, "Fine-tune Verilog testbenches to support icarus simulator");
+  /* Add an option '--embed_bitstream' */
+  CommandOptionId embed_bitstream_opt = shell_cmd.add_option("embed_bitstream", false, "Embed bitstream to the Verilog wrapper netlist; This may cause a large netlist file size");
+  shell_cmd.set_option_require_value(embed_bitstream_opt, openfpga::OPT_STRING);
 
   /* add an option '--include_signal_init' */
   shell_cmd.add_option("include_signal_init", false, "initialize all the signals in verilog testbenches");
@@ -194,9 +195,6 @@ ShellCommandId add_openfpga_write_preconfigured_testbench_command(openfpga::Shel
   /* Add an option '--reference_benchmark_file_path'*/
   CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", true, "Specify the file path to the reference Verilog netlist");
   shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);
-
-  /* Add an option '--support_icarus_simulator' */
-  shell_cmd.add_option("support_icarus_simulator", false, "Fine-tune Verilog testbenches to support icarus simulator");
 
   /* Add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false, "Use explicit port mapping in Verilog netlists");
