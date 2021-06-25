@@ -76,6 +76,11 @@ write_full_testbench
 
     Output signal initialization to Verilog testbench to smooth convergence in HDL simulation
 
+    .. note:: We strongly recommend users to turn on this flag as it can help simulators to converge quickly.
+
+   .. warning:: Signal initialization is only applied to the datapath inputs of routing multiplexers (considering the fact that they are indispensible cells of FPGAs)! If your FPGA does not contain any multiplexer cells, signal initialization is not applicable.
+
+
   .. option:: --verbose
 
     Show verbose log
@@ -112,9 +117,19 @@ write_preconfigured_fabric_wrapper
 
     .. warning:: If the option ``none`` is selected, bitstream will not be embedded. Users should force the bitstream through HDL simulator commands. Otherwise, functionality of the wrapper netlist is wrong!
 
+   .. warning:: Please specify ``iverilog`` if you are using icarus iVerilog simulator.
+
+__ iverilog_website_
+
+.. _iverilog_website: http://iverilog.icarus.com/
+
   .. option:: --include_signal_init
 
     Output signal initialization to Verilog testbench to smooth convergence in HDL simulation
+
+    .. note:: We strongly recommend users to turn on this flag as it can help simulators to converge quickly.
+
+   .. warning:: Signal initialization is only applied to the datapath inputs of routing multiplexers (considering the fact that they are indispensible cells of FPGAs)! If your FPGA does not contain any multiplexer cells, signal initialization is not applicable.
 
   .. option:: --verbose
 
