@@ -31,6 +31,7 @@ namespace openfpga {
  * information, in order to interface different Verilog simulators
  ********************************************************************/
 void print_verilog_simulation_info(const std::string& ini_fname,
+                                   const VerilogTestbenchOption& options,
                                    const std::string& circuit_name,
                                    const std::string& src_dir,
                                    const AtomContext& atom_ctx,
@@ -61,22 +62,43 @@ void print_verilog_simulation_info(const std::string& ini_fname,
   // units_map['s']=1;  // units_map['ms']=1E-3;  // units_map['us']=1E-6;
   // units_map['ns']=1E-9;  // units_map['ps']=1E-12;  // units_map['fs']=1E-15;
 
-  /* Compute simulation time period */
-  float simulation_time_period = find_simulation_time_period(1E-3,
-                                                             num_program_clock_cycles,
-                                                             1. / prog_clock_freq,
-                                                             num_operating_clock_cycles,
-                                                             1. / op_clock_freq);
+  /* Compute simulation time period: full testbench and pre-configured testbench has different length 
+   * Currently, we only support the two types. And one of them must be enabled when outputting this file
+   */
+  float simulation_time_period = 0.;
+  if (options.print_top_testbench()) {
+    simulation_time_period = find_simulation_time_period(1E-3,
+                                                         num_program_clock_cycles,
+                                                         1. / prog_clock_freq,
+                                                         num_operating_clock_cycles,
+                                                         1. / op_clock_freq);
+  } else {
+    VTR_ASSERT(options.print_preconfig_top_testbench());
+    /* Added 2 additional clock cycles due to reset/set cycles */
+    simulation_time_period = find_operating_phase_simulation_time(1.,
+                                                                  num_operating_clock_cycles + 2,
+                                                                  1. / op_clock_freq,
+                                                                  1E-3);
 
+  }
+
+  /* Identify the testbench file name depending on the type */
+  std::string top_tb_name;
+  if (options.print_top_testbench()) {
+    top_tb_name = circuit_name + std::string(AUTOCHECK_TOP_TESTBENCH_VERILOG_FILE_POSTFIX);
+  } else {
+    VTR_ASSERT(options.print_preconfig_top_testbench());
+    top_tb_name = circuit_name + std::string(FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX);
+  }
 
   /* Basic information */
   ini["SIMULATION_DECK"]["PROJECTNAME "] = "ModelSimProject";
   ini["SIMULATION_DECK"]["BENCHMARK "] = circuit_name;
-  ini["SIMULATION_DECK"]["TOP_TB"] = circuit_name + std::string(FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX);
+  ini["SIMULATION_DECK"]["TOP_TB"] = top_tb_name;
   ini["SIMULATION_DECK"]["SIMTIME "] = std::to_string(simulation_time_period);
   ini["SIMULATION_DECK"]["UNIT "] = "ms";
   ini["SIMULATION_DECK"]["VERILOG_PATH "] = std::string(src_dir);
-  ini["SIMULATION_DECK"]["VERILOG_FILE1"] = std::string(DEFINES_VERILOG_FILE_NAME);
+  ini["SIMULATION_DECK"]["VERILOG_FILE1"] = std::string(DEFINES_VERILOG_SIMULATION_FILE_NAME);
   ini["SIMULATION_DECK"]["VERILOG_FILE2"] = std::string(circuit_name + std::string(TOP_VERILOG_TESTBENCH_INCLUDE_NETLIST_FILE_NAME_POSTFIX));
   ini["SIMULATION_DECK"]["CONFIG_PROTOCOL"] = std::string(CONFIG_PROTOCOL_TYPE_STRING[config_protocol_type]);
 

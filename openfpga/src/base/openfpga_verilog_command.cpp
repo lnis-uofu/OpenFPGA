@@ -243,6 +243,10 @@ ShellCommandId add_openfpga_write_simulation_task_info_command(openfpga::Shell<O
   CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", true, "Specify the file path to the reference Verilog netlist");
   shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);
 
+  /* Add an option '--testbench_type'*/
+  CommandOptionId tb_type_opt = shell_cmd.add_option("testbench_type", false, "Specify the type of testbenches to be considered. Different testbenches have different simulation parameters.");
+  shell_cmd.set_option_require_value(tb_type_opt, openfpga::OPT_STRING);
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
   

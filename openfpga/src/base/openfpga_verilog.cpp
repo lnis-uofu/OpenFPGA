@@ -219,6 +219,7 @@ int write_simulation_task_info(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_file = cmd.option("file");
   CommandOptionId opt_hdl_dir = cmd.option("hdl_dir");
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
+  CommandOptionId opt_tb_type = cmd.option("testbench_type");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
@@ -229,6 +230,28 @@ int write_simulation_task_info(const OpenfpgaContext& openfpga_ctx,
   options.set_reference_benchmark_file_path(cmd_context.option_value(cmd, opt_reference_benchmark));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_print_simulation_ini(cmd_context.option_value(cmd, opt_file));
+
+  /* Identify testbench type */
+  std::string full_tb_tag("full_testbench");
+  std::string preconfig_tb_tag("preconfigured_testbench");
+  if (true == cmd_context.option_enable(cmd, opt_tb_type)) {
+    if (std::string("preconfigured_testbench") == cmd_context.option_value(cmd, opt_tb_type)) {
+      options.set_print_preconfig_top_testbench(true);
+    } else if (std::string("full_testbench") == cmd_context.option_value(cmd, opt_tb_type)) {
+      options.set_print_preconfig_top_testbench(false);
+      options.set_print_top_testbench(true);
+    } else {
+      /* Invalid option, error out */
+      VTR_LOG_ERROR("Invalid option value for testbench type: '%s'! Should be either '%s' or '%s'\n",
+                    cmd_context.option_value(cmd, opt_tb_type).c_str(),
+                    full_tb_tag.c_str(),
+                    preconfig_tb_tag.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  } else {
+    /* Deposit default type which is the preconfigured testbench */
+    options.set_print_preconfig_top_testbench(true);
+  }
 
   return fpga_verilog_simulation_task_info(openfpga_ctx.module_graph(),
                                            openfpga_ctx.bitstream_manager(),
