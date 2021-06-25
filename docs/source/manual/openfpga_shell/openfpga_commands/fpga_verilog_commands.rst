@@ -173,6 +173,10 @@ write_simulation_task_info
 
     Must specify the reference benchmark Verilog file if you want to output any testbenches. For example, ``--reference_benchmark_file_path /temp/benchmark/counter_post_synthesis.v``
 
+  .. option:: --testbench_type <string>
+
+    Specify the type of testbenches [``preconfigured_testbench``|``full_testbench``]. By default, it is the ``preconfigured_testbench``.
+
   .. option:: --verbose
 
     Show verbose log
