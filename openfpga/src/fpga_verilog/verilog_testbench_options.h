@@ -36,6 +36,7 @@ class VerilogTestbenchOption {
     bool include_signal_init() const;
     bool support_icarus_simulator() const;
     e_verilog_default_net_type default_net_type() const;
+    float time_unit() const;
     bool verbose_output() const;
   public: /* Public validator */
     bool validate() const;
@@ -61,6 +62,7 @@ class VerilogTestbenchOption {
     void set_include_signal_init(const bool& enabled);
     void set_support_icarus_simulator(const bool& enabled);
     void set_default_net_type(const std::string& default_net_type);
+    void set_time_unit(const float& time_unit);
     void set_verbose_output(const bool& enabled);
   private: /* Internal Data */
     std::string output_directory_;
@@ -76,6 +78,7 @@ class VerilogTestbenchOption {
     bool support_icarus_simulator_;
     bool include_signal_init_;
     e_verilog_default_net_type default_net_type_;
+    float time_unit_;
     bool verbose_output_;
 };
 

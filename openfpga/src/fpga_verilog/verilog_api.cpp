@@ -323,6 +323,7 @@ int fpga_verilog_simulation_task_info(const ModuleManager &module_manager,
   std::string simulation_ini_file_name = options.simulation_ini_path();
   VTR_ASSERT(true != options.simulation_ini_path().empty());
   print_verilog_simulation_info(simulation_ini_file_name,
+                                options,
                                 netlist_name,
                                 src_dir_path,
                                 atom_ctx, place_ctx, io_location_map,

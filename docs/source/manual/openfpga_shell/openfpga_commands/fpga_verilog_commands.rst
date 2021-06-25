@@ -173,6 +173,14 @@ write_simulation_task_info
 
     Must specify the reference benchmark Verilog file if you want to output any testbenches. For example, ``--reference_benchmark_file_path /temp/benchmark/counter_post_synthesis.v``
 
+  .. option:: --testbench_type <string>
+
+    Specify the type of testbenches [``preconfigured_testbench``|``full_testbench``]. By default, it is the ``preconfigured_testbench``.
+
+  .. option:: --time_unit <string>
+      
+    Specify a time unit to be used in SDC files. Acceptable values are string: ``as`` | ``fs`` | ``ps`` | ``ns`` | ``us`` | ``ms`` | ``ks`` | ``Ms``. By default, we will consider second (``ms``).
+
   .. option:: --verbose
 
     Show verbose log
