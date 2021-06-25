@@ -24,14 +24,6 @@ write_fabric_verilog
 
     Output timing information to Verilog netlists for primitive modules
  
-  .. option:: --include_signal_init
-
-    Output signal initialization to Verilog netlists for primitive modules
-
-  .. option:: --support_icarus_simulator
-     
-    Output Verilog netlists with syntax that iVerilog simulatorcan accept
-
   .. option:: --print_user_defined_template
 
     Output a template Verilog netlist for all the user-defined ``circuit models`` in :ref:`circuit_library`. This aims to help engineers to check what is the port sequence required by top-level Verilog netlists
@@ -118,6 +110,10 @@ write_preconfigured_fabric_wrapper
      
     Output Verilog netlists with syntax that iVerilog simulator can accept
 
+  .. option:: --include_signal_init
+
+    Output signal initialization to Verilog testbench to smooth convergence in HDL simulation
+
   .. option:: --verbose
 
     Show verbose log
@@ -151,7 +147,6 @@ write_preconfigured_testbench
   .. option:: --default_net_type <string>
 
     Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
-
 
   .. option:: --support_icarus_simulator
      

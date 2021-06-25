@@ -7,17 +7,11 @@ constexpr char* VERILOG_NETLIST_FILE_POSTFIX = ".v";
 constexpr float VERILOG_SIM_TIMESCALE = 1e-9; // Verilog Simulation time scale (minimum time unit) : 1ns
 
 constexpr char* VERILOG_TIMING_PREPROC_FLAG = "ENABLE_TIMING"; // the flag to enable timing definition during compilation
-constexpr char* VERILOG_SIGNAL_INIT_PREPROC_FLAG = "ENABLE_SIGNAL_INITIALIZATION"; // the flag to enable signal initialization during compilation
 constexpr char* VERILOG_FORMAL_VERIFICATION_PREPROC_FLAG = "ENABLE_FORMAL_VERIFICATION"; // the flag to enable formal verification during compilation
-constexpr char* INITIAL_SIMULATION_FLAG = "INITIAL_SIMULATION"; // the flag to enable initial functional verification
 constexpr char* AUTOCHECKED_SIMULATION_FLAG = "AUTOCHECKED_SIMULATION"; // the flag to enable autochecked functional verification
 constexpr char* FORMAL_SIMULATION_FLAG = "FORMAL_SIMULATION"; // the flag to enable formal functional verification
 
 constexpr char* MODELSIM_SIMULATION_TIME_UNIT = "ms";
-
-// Icarus variables and flag
-constexpr char* ICARUS_SIMULATOR_FLAG = "ICARUS_SIMULATOR"; // the flag to enable specific Verilog code in testbenches
-// End of Icarus variables and flag
 
 constexpr char* FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME = "fabric_netlists.v";
 constexpr char* TOP_VERILOG_TESTBENCH_INCLUDE_NETLIST_FILE_NAME_POSTFIX = "_include_netlists.v";
