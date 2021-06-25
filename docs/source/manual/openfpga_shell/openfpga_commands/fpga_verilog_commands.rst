@@ -106,9 +106,11 @@ write_preconfigured_fabric_wrapper
 
     Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
 
-  .. option:: --support_icarus_simulator
+  .. option:: --embed_bitstream <string>
      
-    Output Verilog netlists with syntax that iVerilog simulator can accept
+    Specify if the bitstream should be embedded to the Verilog netlists in HDL codes. Available options are ``none``, ``iverilog`` and ``modelsim``. Default value: ``modelsim``.
+
+    .. warning:: If the option ``none`` is selected, bitstream will not be embedded. Users should force the bitstream through HDL simulator commands. Otherwise, functionality of the wrapper netlist is wrong!
 
   .. option:: --include_signal_init
 
@@ -147,10 +149,6 @@ write_preconfigured_testbench
   .. option:: --default_net_type <string>
 
     Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
-
-  .. option:: --support_icarus_simulator
-     
-    Output Verilog netlists with syntax that iVerilog simulator can accept
 
   .. option:: --verbose
 
