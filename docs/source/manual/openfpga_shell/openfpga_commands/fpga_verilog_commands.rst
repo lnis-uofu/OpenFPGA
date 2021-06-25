@@ -177,6 +177,10 @@ write_simulation_task_info
 
     Specify the type of testbenches [``preconfigured_testbench``|``full_testbench``]. By default, it is the ``preconfigured_testbench``.
 
+  .. option:: --time_unit <string>
+      
+    Specify a time unit to be used in SDC files. Acceptable values are string: ``as`` | ``fs`` | ``ps`` | ``ns`` | ``us`` | ``ms`` | ``ks`` | ``Ms``. By default, we will consider second (``ms``).
+
   .. option:: --verbose
 
     Show verbose log
