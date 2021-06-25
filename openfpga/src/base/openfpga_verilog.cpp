@@ -8,6 +8,9 @@
 /* Headers from openfpgashell library */
 #include "command_exit_codes.h"
 
+/* Headers from openfpgautil library */
+#include "openfpga_scale.h"
+
 #include "verilog_api.h"
 #include "openfpga_verilog.h"
 
@@ -220,6 +223,7 @@ int write_simulation_task_info(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_hdl_dir = cmd.option("hdl_dir");
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
   CommandOptionId opt_tb_type = cmd.option("testbench_type");
+  CommandOptionId opt_time_unit = cmd.option("time_unit");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
@@ -230,6 +234,10 @@ int write_simulation_task_info(const OpenfpgaContext& openfpga_ctx,
   options.set_reference_benchmark_file_path(cmd_context.option_value(cmd, opt_reference_benchmark));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_print_simulation_ini(cmd_context.option_value(cmd, opt_file));
+
+  if (true == cmd_context.option_enable(cmd, opt_time_unit)) {
+    options.set_time_unit(string_to_time_unit(cmd_context.option_value(cmd, opt_time_unit)));
+  }
 
   /* Identify testbench type */
   std::string full_tb_tag("full_testbench");

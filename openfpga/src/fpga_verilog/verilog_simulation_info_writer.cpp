@@ -13,6 +13,7 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
+#include "openfpga_scale.h"
 #include "openfpga_digest.h"
 #include "openfpga_reserved_words.h"
 
@@ -58,28 +59,23 @@ void print_verilog_simulation_info(const std::string& ini_fname,
   VTR_ASSERT(true != ini_fname.empty());
 
   mINI::INIStructure ini;
-  // std::map<char, int> units_map;
-  // units_map['s']=1;  // units_map['ms']=1E-3;  // units_map['us']=1E-6;
-  // units_map['ns']=1E-9;  // units_map['ps']=1E-12;  // units_map['fs']=1E-15;
 
   /* Compute simulation time period: full testbench and pre-configured testbench has different length 
    * Currently, we only support the two types. And one of them must be enabled when outputting this file
    */
   float simulation_time_period = 0.;
   if (options.print_top_testbench()) {
-    simulation_time_period = find_simulation_time_period(1E-3,
+    simulation_time_period = find_simulation_time_period(options.time_unit(),
                                                          num_program_clock_cycles,
                                                          1. / prog_clock_freq,
                                                          num_operating_clock_cycles,
                                                          1. / op_clock_freq);
   } else {
     VTR_ASSERT(options.print_preconfig_top_testbench());
-    /* Added 2 additional clock cycles due to reset/set cycles */
     simulation_time_period = find_operating_phase_simulation_time(1.,
-                                                                  num_operating_clock_cycles + 2,
+                                                                  num_operating_clock_cycles,
                                                                   1. / op_clock_freq,
-                                                                  1E-3);
-
+                                                                  options.time_unit());
   }
 
   /* Identify the testbench file name depending on the type */
@@ -96,7 +92,7 @@ void print_verilog_simulation_info(const std::string& ini_fname,
   ini["SIMULATION_DECK"]["BENCHMARK "] = circuit_name;
   ini["SIMULATION_DECK"]["TOP_TB"] = top_tb_name;
   ini["SIMULATION_DECK"]["SIMTIME "] = std::to_string(simulation_time_period);
-  ini["SIMULATION_DECK"]["UNIT "] = "ms";
+  ini["SIMULATION_DECK"]["UNIT "] = unit_to_string(options.time_unit());
   ini["SIMULATION_DECK"]["VERILOG_PATH "] = std::string(src_dir);
   ini["SIMULATION_DECK"]["VERILOG_FILE1"] = std::string(DEFINES_VERILOG_SIMULATION_FILE_NAME);
   ini["SIMULATION_DECK"]["VERILOG_FILE2"] = std::string(circuit_name + std::string(TOP_VERILOG_TESTBENCH_INCLUDE_NETLIST_FILE_NAME_POSTFIX));

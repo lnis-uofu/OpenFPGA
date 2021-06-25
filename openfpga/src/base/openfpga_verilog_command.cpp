@@ -247,6 +247,10 @@ ShellCommandId add_openfpga_write_simulation_task_info_command(openfpga::Shell<O
   CommandOptionId tb_type_opt = shell_cmd.add_option("testbench_type", false, "Specify the type of testbenches to be considered. Different testbenches have different simulation parameters.");
   shell_cmd.set_option_require_value(tb_type_opt, openfpga::OPT_STRING);
 
+  /* Add an option '--time_unit' */
+  CommandOptionId time_unit_opt = shell_cmd.add_option("time_unit", false, "Specify the time unit to be used in HDL simulation. Acceptable is [a|f|p|n|u|m|k|M]s");
+  shell_cmd.set_option_require_value(time_unit_opt, openfpga::OPT_STRING);
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
   

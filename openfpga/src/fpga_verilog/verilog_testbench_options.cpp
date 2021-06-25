@@ -24,6 +24,7 @@ VerilogTestbenchOption::VerilogTestbenchOption() {
   support_icarus_simulator_ = false;
   include_signal_init_ = false;
   default_net_type_ = VERILOG_DEFAULT_NET_TYPE_NONE;
+  time_unit_ = 1E-3;
   verbose_output_ = false;
 }
 
@@ -80,6 +81,10 @@ bool VerilogTestbenchOption::support_icarus_simulator() const {
 
 e_verilog_default_net_type VerilogTestbenchOption::default_net_type() const {
   return default_net_type_;
+}
+
+float VerilogTestbenchOption::time_unit() const {
+  return time_unit_;
 }
 
 bool VerilogTestbenchOption::verbose_output() const {
@@ -158,6 +163,10 @@ void VerilogTestbenchOption::set_default_net_type(const std::string& default_net
                  VERILOG_DEFAULT_NET_TYPE_STRING[VERILOG_DEFAULT_NET_TYPE_NONE],
                  VERILOG_DEFAULT_NET_TYPE_STRING[VERILOG_DEFAULT_NET_TYPE_WIRE]);
   }
+}
+
+void VerilogTestbenchOption::set_time_unit(const float& time_unit) {
+  time_unit_ = time_unit;
 }
 
 void VerilogTestbenchOption::set_verbose_output(const bool& enabled) {
