@@ -385,9 +385,8 @@ void print_verilog_preconfig_top_module_load_bitstream(std::fstream &fp,
     print_verilog_preconfig_top_module_assign_bitstream(fp, module_manager, top_module,
                                                         bitstream_manager,
                                                         output_datab_bits);
-  } else {
-    /* Use deposit syntax for other simulators */
-    VTR_ASSERT(EMBEDDED_BITSTREAM_HDL_MODELSIM == embedded_bitstream_hdl_type);
+  /* Use deposit syntax for other simulators */
+  } else if (EMBEDDED_BITSTREAM_HDL_MODELSIM == embedded_bitstream_hdl_type) {
     print_verilog_preconfig_top_module_deposit_bitstream(fp, module_manager, top_module,
                                                          bitstream_manager,
                                                          output_datab_bits);
