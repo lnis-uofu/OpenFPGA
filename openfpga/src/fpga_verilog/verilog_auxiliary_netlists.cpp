@@ -123,9 +123,7 @@ void print_verilog_full_testbench_include_netlists(const std::string& src_dir,
 
   /* Include reference benchmark netlist only when auto-check flag is enabled */
   if (!no_self_checking) {
-    fp << "\t";
     print_verilog_include_netlist(fp, std::string(reference_benchmark_file));
-    print_verilog_endif(fp);
     fp << std::endl;
   }
 
@@ -171,9 +169,7 @@ void print_verilog_preconfigured_testbench_include_netlists(const std::string& s
 
   /* Include reference benchmark netlist only when auto-check flag is enabled */
   if (!no_self_checking) {
-    fp << "\t";
     print_verilog_include_netlist(fp, std::string(reference_benchmark_file));
-    print_verilog_endif(fp);
     fp << std::endl;
   }
 
