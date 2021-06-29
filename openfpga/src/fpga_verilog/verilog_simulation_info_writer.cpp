@@ -72,8 +72,7 @@ void print_verilog_simulation_info(const std::string& ini_fname,
                                                          1. / op_clock_freq);
   } else {
     VTR_ASSERT(options.print_preconfig_top_testbench());
-    simulation_time_period = find_operating_phase_simulation_time(1.,
-                                                                  num_operating_clock_cycles,
+    simulation_time_period = find_operating_phase_simulation_time(num_operating_clock_cycles,
                                                                   1. / op_clock_freq,
                                                                   options.time_unit());
   }
