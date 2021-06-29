@@ -78,7 +78,6 @@ int write_full_testbench(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_fast_configuration = cmd.option("fast_configuration");
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
-  CommandOptionId opt_no_self_checking = cmd.option("no_self_checking");
   CommandOptionId opt_include_signal_init = cmd.option("include_signal_init");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
@@ -94,7 +93,6 @@ int write_full_testbench(const OpenfpgaContext& openfpga_ctx,
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_print_top_testbench(true);
   options.set_include_signal_init(cmd_context.option_enable(cmd, opt_include_signal_init));
-  options.set_no_self_checking(cmd_context.option_enable(cmd, opt_no_self_checking));
   if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
     options.set_default_net_type(cmd_context.option_value(cmd, opt_default_net_type));
   }
@@ -186,7 +184,6 @@ int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
-  CommandOptionId opt_no_self_checking = cmd.option("no_self_checking");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
@@ -199,7 +196,6 @@ int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
   options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_print_preconfig_top_testbench(true);
-  options.set_no_self_checking(cmd_context.option_enable(cmd, opt_no_self_checking));
   if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
     options.set_default_net_type(cmd_context.option_value(cmd, opt_default_net_type));
   }

@@ -196,7 +196,7 @@ ShellCommandId add_openfpga_write_preconfigured_testbench_command(openfpga::Shel
   shell_cmd.set_option_require_value(pcf_opt, openfpga::OPT_STRING);
 
   /* Add an option '--reference_benchmark_file_path'*/
-  CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", true, "Specify the file path to the reference Verilog netlist");
+  CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", false, "Specify the file path to the reference Verilog netlist. If specified, the testbench will include self-checking codes");
   shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);
 
   /* Add an option '--explicit_port_mapping' */
@@ -205,9 +205,6 @@ ShellCommandId add_openfpga_write_preconfigured_testbench_command(openfpga::Shel
   /* Add an option '--default_net_type' */
   CommandOptionId default_net_type_opt = shell_cmd.add_option("default_net_type", false, "Set the default net type for Verilog netlists. Default value is 'none'");
   shell_cmd.set_option_require_value(default_net_type_opt, openfpga::OPT_STRING);
-
-  /* Add an option '--no_self_checking' */
-  shell_cmd.add_option("no_self_checking", false, "Do not generate self-checking codes for Verilog testbenches.");
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
@@ -244,7 +241,7 @@ ShellCommandId add_openfpga_write_simulation_task_info_command(openfpga::Shell<O
   shell_cmd.set_option_require_value(hdl_dir_opt, openfpga::OPT_STRING);
 
   /* Add an option '--reference_benchmark_file_path'*/
-  CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", true, "Specify the file path to the reference Verilog netlist");
+  CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", false, "Specify the file path to the reference Verilog netlist. If specified, the testbench will include self-checking codes");
   shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);
 
   /* Add an option '--testbench_type'*/

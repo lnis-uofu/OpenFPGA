@@ -76,7 +76,7 @@ bool VerilogTestbenchOption::include_signal_init() const {
 }
 
 bool VerilogTestbenchOption::no_self_checking() const {
-  return no_self_checking_;
+  return reference_benchmark_file_path_.empty();
 }
 
 e_verilog_default_net_type VerilogTestbenchOption::default_net_type() const {
@@ -149,10 +149,6 @@ void VerilogTestbenchOption::set_explicit_port_mapping(const bool& enabled) {
 
 void VerilogTestbenchOption::set_include_signal_init(const bool& enabled) {
   include_signal_init_ = enabled;
-}
-
-void VerilogTestbenchOption::set_no_self_checking(const bool& enabled) {
-  no_self_checking_ = enabled;
 }
 
 void VerilogTestbenchOption::set_default_net_type(const std::string& default_net_type) {

@@ -70,7 +70,6 @@ class VerilogTestbenchOption {
     void set_print_simulation_ini(const std::string& simulation_ini_path);
     void set_explicit_port_mapping(const bool& enabled);
     void set_include_signal_init(const bool& enabled);
-    void set_no_self_checking(const bool& enabled);
     void set_default_net_type(const std::string& default_net_type);
     void set_time_unit(const float& time_unit);
     void set_embedded_bitstream_hdl_type(const std::string& embedded_bitstream_hdl_type);
@@ -87,7 +86,6 @@ class VerilogTestbenchOption {
     std::string simulation_ini_path_;
     bool explicit_port_mapping_;
     bool include_signal_init_;
-    bool no_self_checking_;
     e_verilog_default_net_type default_net_type_;
     e_embedded_bitstream_hdl_type embedded_bitstream_hdl_type_;
     float time_unit_;
