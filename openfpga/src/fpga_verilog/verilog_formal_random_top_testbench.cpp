@@ -41,7 +41,6 @@ constexpr char* BENCHMARK_INSTANCE_NAME = "REF_DUT";
 constexpr char* FPGA_INSTANCE_NAME = "FPGA_DUT";
 constexpr char* ERROR_COUNTER = "nb_error";
 constexpr char* FORMAL_TB_SIM_START_PORT_NAME = "sim_start";
-constexpr int MAGIC_NUMBER_FOR_SIMULATION_TIME = 200;
 
 /********************************************************************
  * Print the module ports for the Verilog testbench 
@@ -354,8 +353,7 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
                                 clock_port_names,
                                 std::string(DEFAULT_CLOCK_NAME));
 
-  float simulation_time = find_operating_phase_simulation_time(MAGIC_NUMBER_FOR_SIMULATION_TIME,
-                                                               simulation_parameters.num_clock_cycles(),
+  float simulation_time = find_operating_phase_simulation_time(simulation_parameters.num_clock_cycles(),
                                                                1./simulation_parameters.default_operating_clock_frequency(),
                                                                VERILOG_SIM_TIMESCALE);
 
