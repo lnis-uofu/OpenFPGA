@@ -90,14 +90,14 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
 
 /********************************************************************
  * Print a file that includes all the netlists 
- * including the fabric netlists and testbenches
+ * including the fabric netlists and full testbenches
  * that have been generated and user-defined.
  * Some netlists are open to compile under specific preprocessing flags
  *******************************************************************/
-void print_verilog_testbench_include_netlists(const std::string& src_dir,
-                                              const std::string& circuit_name,
-                                              const std::string& fabric_netlist_file,
-                                              const std::string& reference_benchmark_file) {
+void print_verilog_full_testbench_include_netlists(const std::string& src_dir,
+                                                   const std::string& circuit_name,
+                                                   const std::string& fabric_netlist_file,
+                                                   const std::string& reference_benchmark_file) {
   std::string verilog_fname = src_dir + circuit_name + std::string(TOP_VERILOG_TESTBENCH_INCLUDE_NETLIST_FILE_NAME_POSTFIX);
 
   /* Create the file stream */
@@ -132,28 +132,62 @@ void print_verilog_testbench_include_netlists(const std::string& src_dir,
   print_verilog_endif(fp);
   fp << std::endl;
 
-  /* Include formal verification netlists only when formal verification flag is enable */
-  print_verilog_preprocessing_flag(fp, std::string(VERILOG_FORMAL_VERIFICATION_PREPROC_FLAG));
+  /* Include top-level testbench only when auto-check flag is enabled */
+  print_verilog_include_netlist(fp, src_dir + circuit_name + std::string(AUTOCHECK_TOP_TESTBENCH_VERILOG_FILE_POSTFIX));
+
+  /* Close the file stream */
+  fp.close();
+}
+
+/********************************************************************
+ * Print a file that includes all the netlists 
+ * including the fabric netlists and preconfigured testbenches
+ * that have been generated and user-defined.
+ * Some netlists are open to compile under specific preprocessing flags
+ *******************************************************************/
+void print_verilog_preconfigured_testbench_include_netlists(const std::string& src_dir,
+                                                            const std::string& circuit_name,
+                                                            const std::string& fabric_netlist_file,
+                                                            const std::string& reference_benchmark_file) {
+  std::string verilog_fname = src_dir + circuit_name + std::string(TOP_VERILOG_TESTBENCH_INCLUDE_NETLIST_FILE_NAME_POSTFIX);
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+
+  /* Validate the file stream */
+  check_file_stream(verilog_fname.c_str(), fp);
+
+  /* Print the title */
+  print_verilog_file_header(fp, std::string("Netlist Summary")); 
+
+  /* Print preprocessing flags */
+  print_verilog_comment(fp, std::string("------ Include simulation defines -----"));
+  print_verilog_include_netlist(fp, src_dir + std::string(DEFINES_VERILOG_SIMULATION_FILE_NAME));
+  fp << std::endl;
+
+  /* Include FPGA top module */
+  print_verilog_comment(fp, std::string("------ Include fabric top-level netlists -----"));
+  if (true == fabric_netlist_file.empty()) {
+    print_verilog_include_netlist(fp, src_dir + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME));
+  } else {
+    VTR_ASSERT_SAFE(false == fabric_netlist_file.empty());
+    print_verilog_include_netlist(fp, fabric_netlist_file);
+  }
+  fp << std::endl;
+
+  /* Include reference benchmark netlist only when auto-check flag is enabled */
+  print_verilog_preprocessing_flag(fp, std::string(AUTOCHECKED_SIMULATION_FLAG));
   fp << "\t";
-  print_verilog_include_netlist(fp, src_dir + circuit_name + std::string(FORMAL_VERIFICATION_VERILOG_FILE_POSTFIX));
-  
-  /* Include formal verification testbench only when formal simulation flag is enabled */
-  fp << "\t";
-  print_verilog_preprocessing_flag(fp, std::string(FORMAL_SIMULATION_FLAG));
-  fp << "\t\t";
-  print_verilog_include_netlist(fp, src_dir + circuit_name + std::string(RANDOM_TOP_TESTBENCH_VERILOG_FILE_POSTFIX));
-  fp << "\t";
-  print_verilog_endif(fp);
-  
+  print_verilog_include_netlist(fp, std::string(reference_benchmark_file));
   print_verilog_endif(fp);
   fp << std::endl;
 
-  /* Include top-level testbench only when auto-check flag is enabled */
-  print_verilog_preprocessing_flag(fp, std::string(AUTOCHECKED_SIMULATION_FLAG));
-  fp << "\t";
-  print_verilog_include_netlist(fp, src_dir + circuit_name + std::string(AUTOCHECK_TOP_TESTBENCH_VERILOG_FILE_POSTFIX));
-  print_verilog_endif(fp);
-  fp << std::endl;
+  /* Include formal verification netlists */
+  print_verilog_include_netlist(fp, src_dir + circuit_name + std::string(FORMAL_VERIFICATION_VERILOG_FILE_POSTFIX));
+  
+  /* Include formal verification testbench */
+  print_verilog_include_netlist(fp, src_dir + circuit_name + std::string(RANDOM_TOP_TESTBENCH_VERILOG_FILE_POSTFIX));
 
   /* Close the file stream */
   fp.close();
@@ -210,18 +244,6 @@ void print_verilog_simulation_preprocessing_flags(const std::string& src_dir,
   if ( (true == verilog_testbench_opts.print_preconfig_top_testbench())
     || (true == verilog_testbench_opts.print_top_testbench()) ) {
     print_verilog_define_flag(fp, std::string(AUTOCHECKED_SIMULATION_FLAG), 1);
-    fp << std::endl;
-  } 
-
-  /* To enable pre-configured FPGA simulation */
-  if (true == verilog_testbench_opts.print_formal_verification_top_netlist()) {
-    print_verilog_define_flag(fp, std::string(VERILOG_FORMAL_VERIFICATION_PREPROC_FLAG), 1);
-    fp << std::endl;
-  } 
-
-  /* To enable pre-configured FPGA simulation */
-  if (true == verilog_testbench_opts.print_preconfig_top_testbench()) {
-    print_verilog_define_flag(fp, std::string(FORMAL_SIMULATION_FLAG), 1);
     fp << std::endl;
   } 
 

@@ -192,10 +192,10 @@ int fpga_verilog_full_testbench(const ModuleManager &module_manager,
                               options);
 
   /* Generate a Verilog file including all the netlists that have been generated */
-  print_verilog_testbench_include_netlists(src_dir_path,
-                                           netlist_name,
-                                           options.fabric_netlist_file_path(),
-                                           options.reference_benchmark_file_path());
+  print_verilog_full_testbench_include_netlists(src_dir_path,
+                                                netlist_name,
+                                                options.fabric_netlist_file_path(),
+                                                options.reference_benchmark_file_path());
 
   return status;
 }
@@ -286,10 +286,10 @@ int fpga_verilog_preconfigured_testbench(const ModuleManager &module_manager,
                                      options);
 
   /* Generate a Verilog file including all the netlists that have been generated */
-  print_verilog_testbench_include_netlists(src_dir_path,
-                                           netlist_name,
-                                           options.fabric_netlist_file_path(),
-                                           options.reference_benchmark_file_path());
+  print_verilog_preconfigured_testbench_include_netlists(src_dir_path,
+                                                         netlist_name,
+                                                         options.fabric_netlist_file_path(),
+                                                         options.reference_benchmark_file_path());
 
   return status;
 }

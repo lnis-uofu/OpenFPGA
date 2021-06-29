@@ -2029,7 +2029,8 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                                   std::string(TOP_TESTBENCH_FPGA_INSTANCE_NAME),
                                                   circuit_lib,
                                                   module_manager,
-                                                  top_module);
+                                                  top_module,
+                                                  true);
   }
 
 

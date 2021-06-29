@@ -101,7 +101,8 @@ void print_verilog_testbench_signal_initialization(std::fstream& fp,
                                                    const std::string& top_instance_name,
                                                    const CircuitLibrary& circuit_lib,
                                                    const ModuleManager& module_manager,
-                                                   const ModuleId& top_module);
+                                                   const ModuleId& top_module,
+                                                   const bool& deposit_random_values);
 
 } /* end namespace openfpga */
 

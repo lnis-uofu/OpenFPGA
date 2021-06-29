@@ -791,7 +791,8 @@ void rec_print_verilog_testbench_primitive_module_signal_initialization(std::fst
                                                                         const std::vector<CircuitPortId>& circuit_input_ports,
                                                                         const ModuleManager& module_manager,
                                                                         const ModuleId& parent_module,
-                                                                        const ModuleId& primitive_module) {
+                                                                        const ModuleId& primitive_module,
+                                                                        const bool& deposit_random_values) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -819,7 +820,8 @@ void rec_print_verilog_testbench_primitive_module_signal_initialization(std::fst
                                                                            child_hie_path,
                                                                            circuit_lib, circuit_model, circuit_input_ports,
                                                                            module_manager, child_module,
-                                                                           primitive_module);
+                                                                           primitive_module,
+                                                                           deposit_random_values);
       } else {
         /* If the child module is the primitive module, 
          * we output the signal initialization codes for the input ports
@@ -828,7 +830,6 @@ void rec_print_verilog_testbench_primitive_module_signal_initialization(std::fst
 
         print_verilog_comment(fp, std::string("------ BEGIN driver initialization -----"));
         fp << "\tinitial begin" << std::endl;
-        fp << "\t`ifdef " << VERILOG_FORMAL_VERIFICATION_PREPROC_FLAG << std::endl;
 
         for (const auto& input_port : circuit_input_ports) {
           /* Only for formal verification: deposite a zero signal values */
@@ -838,22 +839,17 @@ void rec_print_verilog_testbench_primitive_module_signal_initialization(std::fst
           fp << "\t\t$deposit(";
           fp << child_hie_path << ".";
           fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info, false);
-          fp << ", " <<  circuit_lib.port_size(input_port) << "'b" << std::string(circuit_lib.port_size(input_port), '0');
-          fp << ");" << std::endl;
-        }
-        fp << "\t`else" << std::endl;
+       
+          if (!deposit_random_values) {
 
-        /* Regular case: deposite initial signal values: a random value */
-        for (const auto& input_port : circuit_input_ports) {
-          BasicPort input_port_info(circuit_lib.port_lib_name(input_port), circuit_lib.port_size(input_port));
-          input_port_info.set_origin_port_width(input_port_info.get_width());
-          fp << "\t\t$deposit(";
-          fp << child_hie_path << ".";
-          fp << generate_verilog_port(VERILOG_PORT_CONKT, input_port_info, false);
-          fp << ", $random % 2 ? 1'b1 : 1'b0);" << std::endl;
+            fp << ", " <<  circuit_lib.port_size(input_port) << "'b" << std::string(circuit_lib.port_size(input_port), '0');
+            fp << ");" << std::endl;
+          } else {
+            VTR_ASSERT_SAFE(deposit_random_values);
+            fp << ", $random % 2 ? 1'b1 : 1'b0);" << std::endl;
+          }
         }
 
-        fp << "\t`endif\n" << std::endl;
         fp << "\tend" << std::endl;
         print_verilog_comment(fp, std::string("------ END driver initialization -----"));
       }
@@ -871,7 +867,8 @@ void print_verilog_testbench_signal_initialization(std::fstream& fp,
                                                    const std::string& top_instance_name,
                                                    const CircuitLibrary& circuit_lib,
                                                    const ModuleManager& module_manager,
-                                                   const ModuleId& top_module) {
+                                                   const ModuleId& top_module,
+                                                   const bool& deposit_random_values) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -921,7 +918,8 @@ void print_verilog_testbench_signal_initialization(std::fstream& fp,
                                                                        top_instance_name,
                                                                        circuit_lib, signal_init_circuit_model, signal_init_circuit_ports.at(signal_init_circuit_model),
                                                                        module_manager, top_module,
-                                                                       primitive_module);
+                                                                       primitive_module,
+                                                                       deposit_random_values);
   }
 }
 
