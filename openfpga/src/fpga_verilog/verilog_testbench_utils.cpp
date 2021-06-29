@@ -304,7 +304,8 @@ void print_verilog_timeout_and_vcd(std::fstream& fp,
                                    const std::string& vcd_fname,
                                    const std::string& simulation_start_counter_name,
                                    const std::string& error_counter_name,
-                                   const float& simulation_time) {
+                                   const float& simulation_time,
+                                   const bool& no_self_checking) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -323,16 +324,27 @@ void print_verilog_timeout_and_vcd(std::fstream& fp,
   BasicPort sim_start_port(simulation_start_counter_name, 1);
 
   fp << "initial begin" << std::endl;
-  fp << "\t" << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port) << " <= 1'b1;" << std::endl;
+
+  if (!no_self_checking) {
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port) << " <= 1'b1;" << std::endl;
+  }
+
   fp << "\t$timeformat(-9, 2, \"ns\", 20);" << std::endl;
   fp << "\t$display(\"Simulation start\");" << std::endl;
   print_verilog_comment(fp, std::string("----- Can be changed by the user for his/her need -------"));
   fp << "\t#" << std::setprecision(10) << simulation_time << std::endl;
-  fp << "\tif(" << error_counter_name << " == 0) begin" << std::endl;
-  fp << "\t\t$display(\"Simulation Succeed\");" << std::endl;
-  fp << "\tend else begin" << std::endl;
-  fp << "\t\t$display(\"Simulation Failed with " << std::string("%d") << " error(s)\", " << error_counter_name << ");" << std::endl;
-  fp << "\tend" << std::endl;
+
+  if (!no_self_checking) {
+    fp << "\tif(" << error_counter_name << " == 0) begin" << std::endl;
+    fp << "\t\t$display(\"Simulation Succeed\");" << std::endl;
+    fp << "\tend else begin" << std::endl;
+    fp << "\t\t$display(\"Simulation Failed with " << std::string("%d") << " error(s)\", " << error_counter_name << ");" << std::endl;
+    fp << "\tend" << std::endl;
+  } else {
+    VTR_ASSERT_SAFE(no_self_checking);
+    fp << "\t$display(\"Simulation Succeed\");" << std::endl;
+  }
+
   fp << "\t$finish;" << std::endl;
   fp << "end" << std::endl;
 
@@ -530,7 +542,8 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
                                             const PinConstraints& pin_constraints,
                                             const std::vector<std::string>& clock_port_names,
                                             const std::string& check_flag_port_postfix,
-                                            const std::vector<BasicPort>& clock_ports) {
+                                            const std::vector<BasicPort>& clock_ports,
+                                            const bool& no_self_checking) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -569,25 +582,27 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
     }
   }
 
-  /* Add an empty line as splitter */
-  fp << std::endl;
-  
   /* Set 0 to registers for checking flags */
-  for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
-    /* Bypass non-I/O atom blocks ! */
-    if (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) {
-      continue;
+  if (!no_self_checking) {
+    /* Add an empty line as splitter */
+    fp << std::endl;
+  
+    for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
+      /* Bypass non-I/O atom blocks ! */
+      if (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) {
+        continue;
+      }
+
+      /* The block may be renamed as it contains special characters which violate Verilog syntax */
+      std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+      if (true == netlist_annotation.is_block_renamed(atom_blk)) {
+        block_name = netlist_annotation.block_name(atom_blk);
+      } 
+
+      /* Each logical block assumes a single-width port */
+      BasicPort output_port(std::string(block_name + check_flag_port_postfix), 1); 
+      fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, output_port) << " <= 1'b0;" << std::endl;
     }
-
-    /* The block may be renamed as it contains special characters which violate Verilog syntax */
-    std::string block_name = atom_ctx.nlist.block_name(atom_blk);
-    if (true == netlist_annotation.is_block_renamed(atom_blk)) {
-      block_name = netlist_annotation.block_name(atom_blk);
-    } 
-
-    /* Each logical block assumes a single-width port */
-    BasicPort output_port(std::string(block_name + check_flag_port_postfix), 1); 
-    fp << "\t\t" << generate_verilog_port(VERILOG_PORT_CONKT, output_port) << " <= 1'b0;" << std::endl;
   }
 
   fp << "\tend" << std::endl;

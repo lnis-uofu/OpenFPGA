@@ -2038,7 +2038,8 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                          pin_constraints,
                                          clock_port_names,
                                          std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
-                                         std::vector<BasicPort>(1, BasicPort(std::string(TOP_TB_OP_CLOCK_PORT_NAME), 1)));
+                                         std::vector<BasicPort>(1, BasicPort(std::string(TOP_TB_OP_CLOCK_PORT_NAME), 1)),
+                                         options.no_self_checking());
 
   if (!options.no_self_checking()) {
     /* Add output autocheck */
@@ -2075,7 +2076,8 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                 std::string(circuit_name + std::string("_formal.vcd")),
                                 std::string(TOP_TESTBENCH_SIM_START_PORT_NAME),
                                 std::string(TOP_TESTBENCH_ERROR_COUNTER),
-                                std::ceil(simulation_time));
+                                std::ceil(simulation_time),
+                                options.no_self_checking());
 
 
   /* Testbench ends*/

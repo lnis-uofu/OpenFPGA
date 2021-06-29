@@ -334,7 +334,8 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
                                          pin_constraints, 
                                          clock_port_names, 
                                          std::string(CHECKFLAG_PORT_POSTFIX),
-                                         clock_ports);
+                                         clock_ports,
+                                         options.no_self_checking());
 
   if (!options.no_self_checking()) {
     print_verilog_testbench_check(fp, 
@@ -359,7 +360,8 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
                                 std::string(circuit_name + std::string("_formal.vcd")), 
                                 std::string(FORMAL_TB_SIM_START_PORT_NAME),
                                 std::string(ERROR_COUNTER),
-                                simulation_time);
+                                simulation_time,
+                                options.no_self_checking());
 
   /* Testbench ends*/
   print_verilog_module_end(fp, std::string(circuit_name) + std::string(FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX));

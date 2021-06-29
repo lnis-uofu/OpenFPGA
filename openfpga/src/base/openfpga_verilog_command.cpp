@@ -84,7 +84,7 @@ ShellCommandId add_openfpga_write_full_testbench_command(openfpga::Shell<Openfpg
   shell_cmd.set_option_require_value(pcf_opt, openfpga::OPT_STRING);
 
   /* add an option '--reference_benchmark_file_path'*/
-  CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", true, "specify the file path to the reference verilog netlist");
+  CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", false, "specify the file path to the reference verilog netlist. If specified, the testbench will include self-checking codes");
   shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);
 
   /* add an option '--fast_configuration' */
