@@ -57,12 +57,12 @@ void print_verilog_top_random_testbench_ports(std::fstream& fp,
                                               const std::vector<std::string>& clock_port_names,
                                               const AtomContext& atom_ctx,
                                               const VprNetlistAnnotation& netlist_annotation,
-                                              const e_verilog_default_net_type& default_net_type) {
+                                              const VerilogTestbenchOption& options) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
   print_verilog_default_net_type_declaration(fp,
-                                             default_net_type);
+                                             options.default_net_type());
  
   /* Print the declaration for the module */
   fp << "module " << circuit_name << FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX << ";" << std::endl;
@@ -84,16 +84,17 @@ void print_verilog_top_random_testbench_ports(std::fstream& fp,
                                        std::string(BENCHMARK_PORT_POSTFIX),
                                        std::string(FPGA_PORT_POSTFIX),
                                        std::string(CHECKFLAG_PORT_POSTFIX),
-                                       std::string(AUTOCHECKED_SIMULATION_FLAG));
+                                       options.no_self_checking());
 
   /* Instantiate an integer to count the number of error 
    * and determine if the simulation succeed or failed 
    */
-  print_verilog_comment(fp, std::string("----- Error counter -------"));
-  fp << "\tinteger " << ERROR_COUNTER << "= 0;" << std::endl;
-
-  /* Add an empty line as splitter */
-  fp << std::endl;
+  if (!options.no_self_checking()) {
+    print_verilog_comment(fp, std::string("----- Error counter -------"));
+    fp << "\tinteger " << ERROR_COUNTER << "= 0;" << std::endl;
+    /* Add an empty line as splitter */
+    fp << std::endl;
+  }
 }
 
 /********************************************************************
@@ -108,9 +109,7 @@ void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp,
   /* Validate the file stream */
   valid_file_stream(fp);
 
-  /* Benchmark is instanciated conditionally: only when a preprocessing flag is enable */
-  print_verilog_preprocessing_flag(fp, std::string(AUTOCHECKED_SIMULATION_FLAG)); 
-
+  /* Instanciate benchmark */
   print_verilog_comment(fp, std::string("----- Reference Benchmark Instanication -------"));
 
   /* Do NOT use explicit port mapping here: 
@@ -129,12 +128,6 @@ void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp,
                                              explicit_port_mapping);
 
   print_verilog_comment(fp, std::string("----- End reference Benchmark Instanication -------"));
-
-  /* Add an empty line as splitter */
-  fp << std::endl;
-
-  /* Condition ends for the benchmark instanciation */
-  print_verilog_endif(fp);
 
   /* Add an empty line as splitter */
   fp << std::endl;
@@ -300,7 +293,7 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
   std::vector<std::string> clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
 
   /* Start of testbench */
-  print_verilog_top_random_testbench_ports(fp, circuit_name, clock_port_names, atom_ctx, netlist_annotation, options.default_net_type());
+  print_verilog_top_random_testbench_ports(fp, circuit_name, clock_port_names, atom_ctx, netlist_annotation, options);
 
   /* Call defined top-level module */
   print_verilog_random_testbench_fpga_instance(fp, circuit_name,
@@ -308,9 +301,11 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
                                                options.explicit_port_mapping());
 
   /* Call defined benchmark */
-  print_verilog_top_random_testbench_benchmark_instance(fp, circuit_name,
-                                                        atom_ctx, netlist_annotation,
-                                                        options.explicit_port_mapping());
+  if (!options.no_self_checking()) {
+    print_verilog_top_random_testbench_benchmark_instance(fp, circuit_name,
+                                                          atom_ctx, netlist_annotation,
+                                                          options.explicit_port_mapping());
+  }
 
   /* Find clock port to be used */
   std::vector<BasicPort> clock_ports = generate_verilog_testbench_clock_port(clock_port_names, std::string(DEFAULT_CLOCK_NAME));
@@ -341,17 +336,18 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
                                          std::string(CHECKFLAG_PORT_POSTFIX),
                                          clock_ports);
 
-  print_verilog_testbench_check(fp, 
-                                std::string(AUTOCHECKED_SIMULATION_FLAG),
-                                std::string(FORMAL_TB_SIM_START_PORT_NAME),
-                                std::string(BENCHMARK_PORT_POSTFIX),
-                                std::string(FPGA_PORT_POSTFIX),
-                                std::string(CHECKFLAG_PORT_POSTFIX),
-                                std::string(ERROR_COUNTER),
-                                atom_ctx,
-                                netlist_annotation, 
-                                clock_port_names,
-                                std::string(DEFAULT_CLOCK_NAME));
+  if (!options.no_self_checking()) {
+    print_verilog_testbench_check(fp, 
+                                  std::string(FORMAL_TB_SIM_START_PORT_NAME),
+                                  std::string(BENCHMARK_PORT_POSTFIX),
+                                  std::string(FPGA_PORT_POSTFIX),
+                                  std::string(CHECKFLAG_PORT_POSTFIX),
+                                  std::string(ERROR_COUNTER),
+                                  atom_ctx,
+                                  netlist_annotation, 
+                                  clock_port_names,
+                                  std::string(DEFAULT_CLOCK_NAME));
+  }
 
   float simulation_time = find_operating_phase_simulation_time(simulation_parameters.num_clock_cycles(),
                                                                1./simulation_parameters.default_operating_clock_frequency(),

@@ -62,7 +62,6 @@ std::vector<BasicPort> generate_verilog_testbench_clock_port(const std::vector<s
                                                              const std::string& default_clock_name);
 
 void print_verilog_testbench_check(std::fstream& fp,
-                                   const std::string& autochecked_preprocessing_flag,
                                    const std::string& simulation_start_counter_name,
                                    const std::string& benchmark_port_postfix,
                                    const std::string& fpga_port_postfix,
@@ -95,7 +94,7 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
                                           const std::string& benchmark_output_port_postfix,
                                           const std::string& fpga_output_port_postfix,
                                           const std::string& check_flag_port_postfix,
-                                          const std::string& autocheck_preprocessing_flag);
+                                          const bool& no_self_checking);
 
 void print_verilog_testbench_signal_initialization(std::fstream& fp,
                                                    const std::string& top_instance_name,

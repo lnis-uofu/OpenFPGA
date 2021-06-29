@@ -170,10 +170,6 @@ int fpga_verilog_full_testbench(const ModuleManager &module_manager,
   /* Create directories */
   create_directory(src_dir_path);
 
-  /* Output preprocessing flags for HDL simulations */
-  print_verilog_simulation_preprocessing_flags(std::string(src_dir_path),
-                                               options);
-
   /* Generate full testbench for verification, including configuration phase and operating phase */
   std::string top_testbench_file_path = src_dir_path + netlist_name + std::string(AUTOCHECK_TOP_TESTBENCH_VERILOG_FILE_POSTFIX);
   print_verilog_full_testbench(module_manager,
@@ -195,7 +191,8 @@ int fpga_verilog_full_testbench(const ModuleManager &module_manager,
   print_verilog_full_testbench_include_netlists(src_dir_path,
                                                 netlist_name,
                                                 options.fabric_netlist_file_path(),
-                                                options.reference_benchmark_file_path());
+                                                options.reference_benchmark_file_path(),
+                                                options.no_self_checking());
 
   return status;
 }
@@ -269,10 +266,6 @@ int fpga_verilog_preconfigured_testbench(const ModuleManager &module_manager,
   /* Create directories */
   create_directory(src_dir_path);
 
-  /* Output preprocessing flags for HDL simulations */
-  print_verilog_simulation_preprocessing_flags(std::string(src_dir_path),
-                                               options);
-
   /* Generate top-level testbench using random vectors */
   std::string random_top_testbench_file_path = src_dir_path + netlist_name + std::string(RANDOM_TOP_TESTBENCH_VERILOG_FILE_POSTFIX);
   print_verilog_random_top_testbench(netlist_name,
@@ -289,7 +282,8 @@ int fpga_verilog_preconfigured_testbench(const ModuleManager &module_manager,
   print_verilog_preconfigured_testbench_include_netlists(src_dir_path,
                                                          netlist_name,
                                                          options.fabric_netlist_file_path(),
-                                                         options.reference_benchmark_file_path());
+                                                         options.reference_benchmark_file_path(),
+                                                         options.no_self_checking());
 
   return status;
 }

@@ -97,6 +97,9 @@ ShellCommandId add_openfpga_write_full_testbench_command(openfpga::Shell<Openfpg
   CommandOptionId default_net_type_opt = shell_cmd.add_option("default_net_type", false, "Set the default net type for Verilog netlists. Default value is 'none'");
   shell_cmd.set_option_require_value(default_net_type_opt, openfpga::OPT_STRING);
 
+  /* Add an option '--no_self_checking' */
+  shell_cmd.add_option("no_self_checking", false, "Do not generate self-checking codes for Verilog testbenches.");
+
   /* add an option '--include_signal_init' */
   shell_cmd.add_option("include_signal_init", false, "initialize all the signals in verilog testbenches");
 
@@ -202,6 +205,9 @@ ShellCommandId add_openfpga_write_preconfigured_testbench_command(openfpga::Shel
   /* Add an option '--default_net_type' */
   CommandOptionId default_net_type_opt = shell_cmd.add_option("default_net_type", false, "Set the default net type for Verilog netlists. Default value is 'none'");
   shell_cmd.set_option_require_value(default_net_type_opt, openfpga::OPT_STRING);
+
+  /* Add an option '--no_self_checking' */
+  shell_cmd.add_option("no_self_checking", false, "Do not generate self-checking codes for Verilog testbenches.");
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");

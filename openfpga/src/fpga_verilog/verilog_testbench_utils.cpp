@@ -366,7 +366,6 @@ std::vector<BasicPort> generate_verilog_testbench_clock_port(const std::vector<s
  * Restriction: this function only supports single clock benchmarks!
  *******************************************************************/
 void print_verilog_testbench_check(std::fstream& fp,
-                                   const std::string& autochecked_preprocessing_flag,
                                    const std::string& simulation_start_counter_name,
                                    const std::string& benchmark_port_postfix,
                                    const std::string& fpga_port_postfix,
@@ -380,9 +379,7 @@ void print_verilog_testbench_check(std::fstream& fp,
   /* Validate the file stream */
   valid_file_stream(fp);
 
-  /* Add output autocheck conditionally: only when a preprocessing flag is enable */
-  print_verilog_preprocessing_flag(fp, autochecked_preprocessing_flag); 
-
+  /* Add output autocheck */
   print_verilog_comment(fp, std::string("----- Begin checking output vectors -------"));
 
   std::vector<BasicPort> clock_ports = generate_verilog_testbench_clock_port(clock_port_names, default_clock_name);
@@ -459,9 +456,6 @@ void print_verilog_testbench_check(std::fstream& fp,
     /* Add an empty line as splitter */
     fp << std::endl;
   }
-
-  /* Condition ends */
-  print_verilog_endif(fp);
 
   /* Add an empty line as splitter */
   fp << std::endl;
@@ -664,7 +658,7 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
                                           const std::string& benchmark_output_port_postfix,
                                           const std::string& fpga_output_port_postfix,
                                           const std::string& check_flag_port_postfix,
-                                          const std::string& autocheck_preprocessing_flag) {
+                                          const bool& no_self_checking) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -718,11 +712,9 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
   /* Add an empty line as splitter */
   fp << std::endl;
 
-  /* Benchmark is instanciated conditionally: only when a preprocessing flag is enable */
-  print_verilog_preprocessing_flag(fp, std::string(autocheck_preprocessing_flag)); 
-
-  /* Add an empty line as splitter */
-  fp << std::endl;
+  if (no_self_checking) {
+    return;
+  }
 
   /* Instantiate wire for benchmark output */
   print_verilog_comment(fp, std::string("----- Benchmark outputs -------"));
@@ -764,12 +756,6 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
     BasicPort output_port(std::string(block_name + check_flag_port_postfix), 1); 
     fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, output_port) << ";" << std::endl;
   }
-
-  /* Add an empty line as splitter */
-  fp << std::endl;
-
-  /* Condition ends for the benchmark instanciation */
-  print_verilog_endif(fp);
 
   /* Add an empty line as splitter */
   fp << std::endl;
