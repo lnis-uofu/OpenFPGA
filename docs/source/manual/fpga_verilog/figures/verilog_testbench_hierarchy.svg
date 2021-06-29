@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xl="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="431.5 490.76 825.4 232.21968" width="825.4" height="232.21968">
+  <defs>
+    <font-face font-family="Times New Roman" font-size="16" panose-1="2 2 8 3 7 5 5 2 3 4" units-per-em="1000" underline-position="-108.88672" underline-thickness="95.21484" slope="0" x-height="456.54297" cap-height="662.1094" ascent="891.1133" descent="-216.3086" font-weight="700">
+      <font-face-src>
+        <font-face-name name="TimesNewRomanPS-BoldMT"/>
+      </font-face-src>
+    </font-face>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -3 7 6" markerWidth="7" markerHeight="6" color="black">
+      <g>
+        <path d="M 4.8 0 L 0 -1.8 L 0 1.8 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
+  <metadata> Produced by OmniGraffle 7.18.5\n2021-06-29 21:32:37 +0000</metadata>
+  <g id="Canvas_1" fill="none" fill-opacity="1" stroke="none" stroke-opacity="1" stroke-dasharray="none">
+    <title>Canvas 1</title>
+    <g id="Canvas_1_Layer_1">
+      <title>Layer 1</title>
+      <g id="Graphic_1010">
+        <rect x="803.52" y="560.16" width="452.88" height="162.31968" fill="#c0ffff"/>
+        <rect x="803.52" y="560.16" width="452.88" height="162.31968" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_1009">
+        <rect x="432" y="560.16" width="371.52" height="162.31968" fill="#c0ffc0"/>
+        <rect x="432" y="560.16" width="371.52" height="162.31968" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_1003">
+        <path d="M 952.6 504.96896 C 952.6 500.7402 949.271 500.21704 924.9542 496.03204 L 924.6973 495.98874 C 900.252 491.76 899.9977 491.76 874.9102 491.76 C 841.5057 491.76 690.48 491.76 690.48 491.76 L 690.48 536.4 L 952.6 536.4 L 952.6 504.96896 Z" fill="white"/>
+        <path d="M 952.6 504.96896 C 952.6 500.7402 949.271 500.21704 924.9542 496.03204 L 924.6973 495.98874 C 900.252 491.76 899.9977 491.76 874.9102 491.76 C 841.5057 491.76 690.48 491.76 690.48 491.76 L 690.48 536.4 L 952.6 536.4 L 952.6 504.96896 Z M 952.6 504.7511 C 952.6 500.7402 952.3431 500.7402 899.9977 500.7402 L 899.9977 500.7402 C 899.9977 491.80374 899.9977 491.76 876.4463 491.76" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(695.48 505.24014)" fill="black">
+          <tspan font-family="Times New Roman" font-size="16" font-weight="700" fill="black" x="14.048279" y="14">&lt;bench_name&gt;_include_netlist.v</tspan>
+        </text>
+      </g>
+      <g id="Graphic_1005">
+        <path d="M 708.52 593.9512 C 708.52 588.6653 705.1911 588.0113 680.8742 582.78005 L 680.6173 582.7259 C 656.172 577.44 655.91774 577.44 630.83024 577.44 C 597.4257 577.44 446.4 577.44 446.4 577.44 L 446.4 633.24 L 708.52 633.24 L 708.52 593.9512 Z" fill="white"/>
+        <path d="M 708.52 593.9512 C 708.52 588.6653 705.1911 588.0113 680.8742 582.78005 L 680.6173 582.7259 C 656.172 577.44 655.91774 577.44 630.83024 577.44 C 597.4257 577.44 446.4 577.44 446.4 577.44 L 446.4 633.24 L 708.52 633.24 L 708.52 593.9512 Z M 708.52 593.6789 C 708.52 588.6653 708.2631 588.6653 655.91774 588.6653 L 655.91774 588.6653 C 655.91774 577.4947 655.91774 577.44 632.36626 577.44" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(451.4 596.50014)" fill="black">
+          <tspan font-family="Times New Roman" font-size="16" font-weight="700" fill="black" x="2.9389038" y="14">&lt;bench_name&gt;_autocheck_top_tb.v</tspan>
+        </text>
+      </g>
+      <g id="Graphic_1006">
+        <path d="M 1243.82 590.64896 C 1243.82 586.4202 1239.8924 585.897 1211.2023 581.71203 L 1210.8992 581.6687 C 1182.0577 577.44 1181.7577 577.44 1152.1584 577.44 C 1112.7463 577.44 934.56 577.44 934.56 577.44 L 934.56 622.08 L 1243.82 622.08 L 1243.82 590.64896 Z" fill="white"/>
+        <path d="M 1243.82 590.64896 C 1243.82 586.4202 1239.8924 585.897 1211.2023 581.71203 L 1210.8992 581.6687 C 1182.0577 577.44 1181.7577 577.44 1152.1584 577.44 C 1112.7463 577.44 934.56 577.44 934.56 577.44 L 934.56 622.08 L 1243.82 622.08 L 1243.82 590.64896 Z M 1243.82 590.4311 C 1243.82 586.4202 1243.5169 586.4202 1181.7577 586.4202 L 1181.7577 586.4202 C 1181.7577 577.4837 1181.7577 577.44 1153.9707 577.44" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(939.56 590.92014)" fill="black">
+          <tspan font-family="Times New Roman" font-size="16" font-weight="700" fill="black" x="6.958115" y="14">&lt;bench_name&gt;_formal_random_top_tb.v</tspan>
+        </text>
+      </g>
+      <g id="Graphic_1007">
+        <path d="M 1243.82 663.369 C 1243.82 659.1402 1239.8924 658.617 1211.2023 654.432 L 1210.8992 654.3887 C 1182.0577 650.16 1181.7577 650.16 1152.1584 650.16 C 1112.7463 650.16 934.56 650.16 934.56 650.16 L 934.56 694.8 L 1243.82 694.8 L 1243.82 663.369 Z" fill="white"/>
+        <path d="M 1243.82 663.369 C 1243.82 659.1402 1239.8924 658.617 1211.2023 654.432 L 1210.8992 654.3887 C 1182.0577 650.16 1181.7577 650.16 1152.1584 650.16 C 1112.7463 650.16 934.56 650.16 934.56 650.16 L 934.56 694.8 L 1243.82 694.8 L 1243.82 663.369 Z M 1243.82 663.1511 C 1243.82 659.1402 1243.5169 659.1402 1181.7577 659.1402 L 1181.7577 659.1402 C 1181.7577 650.2037 1181.7577 650.16 1153.9707 650.16" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(939.56 663.64014)" fill="black">
+          <tspan font-family="Times New Roman" font-size="16" font-weight="700" fill="black" x="6.087021" y="14">&lt;bench_name&gt;_top_formal_verification.v</tspan>
+        </text>
+      </g>
+      <g id="Line_1014">
+        <line x1="1089.19" y1="623.08" x2="1089.19" y2="636.26" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_1015">
+        <path d="M 821.54 537.4 L 821.54 547.4 L 821.9559 551.732 L 577.46 551.732 L 577.46 563.54" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_1016">
+        <path d="M 821.54 537.4 L 821.54 547.4 L 821.9559 551.732 L 1089.19 551.732 L 1089.19 563.54" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_1017">
+        <text transform="translate(437 699.8)" fill="black">
+          <tspan font-family="Times New Roman" font-size="16" font-weight="700" fill="black" x="15.537342" y="14">Full testbench</tspan>
+        </text>
+      </g>
+      <g id="Graphic_1018">
+        <text transform="translate(808.52 682.1203)" fill="black">
+          <tspan font-family="Times New Roman" font-size="16" font-weight="700" fill="black" x="7.334217" y="14">Formal-oriented </tspan>
+          <tspan font-family="Times New Roman" font-size="16" font-weight="700" fill="black" x="31.318592" y="31.679688">testbench</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>

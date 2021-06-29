@@ -58,8 +58,8 @@ Inside the directory, the Verilog testbenches are organized as illustrated in :n
 
 .. _fig_verilog_testbench_hierarchy:
 
-.. figure:: ./figures/verilog_testbench_hierarchy.png
-   :scale: 90%
+.. figure:: ./figures/verilog_testbench_hierarchy.svg
+   :scale: 100%
 
    Hierarchy of Verilog testbenches for a FPGA fabric implemented with an application
 
@@ -73,21 +73,6 @@ Inside the directory, the Verilog testbenches are organized as illustrated in :n
 
    .. note:: Fabric Verilog netlists are included in this file.
 
-.. option:: define_simulation.v
-
-   This file includes pre-processing flags required by the testbenches, to smooth HDL simulation.
-   It will include the folliwng pre-procesing flags:
-  
-   - ```define AUTOCHECK_SIMULATION`` When enabled, testbench will include self-testing features. The FPGA and user's RTL design (simulate using an HDL simulator) are driven by the same input stimuli, and any mismatch on their outputs will raise an error flag.
-
-   .. note:: OpenFPGA always enable the self-testing feature. Users can disable it by commenting out the associated line in the ``define_simulation.v``.
-
-   - ```define ENABLE_FORMAL_VERFICATION`` When enabled, the ``<bench_name>_include_netlist.v`` will include the pre-configured FPGA netlist for formal verification usage. This flag is added when ``--print_formal_verification_top_netlist`` option is enabled when calling the ``write_verilog_testbench`` command. 
-
-   - ```define ENABLE_FORMAL_SIMULATION`` When enabled, the ``<bench_name>_include_netlist.v`` will include the testbench netlist for formal-oriented simulation. This flag is added when ``--print_preconfig_top_testbench`` option is enabled when calling the ``write_verilog_testbench`` command. 
-
-   .. note:: To run full testbenches, both flags ``ENABLE_FORMAL_VERIFICATION`` and ``ENABLE_FORMAL_SIMULATION`` must be disabled!
-   
 .. option:: <bench_name>_autocheck_top_tb.v
 
   This is the netlist for full testbench.

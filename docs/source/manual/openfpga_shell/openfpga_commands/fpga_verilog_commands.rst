@@ -51,7 +51,9 @@ write_full_testbench
 
   .. option:: --reference_benchmark_file_path <string>
 
-    Must specify the reference benchmark Verilog file if you want to output any testbenches. For example, ``--reference_benchmark_file_path /temp/benchmark/counter_post_synthesis.v``
+    Specify the reference benchmark Verilog file if you want to output any self-checking testbench. For example, ``--reference_benchmark_file_path /temp/benchmark/counter_post_synthesis.v``
+   
+    .. note:: If not specified, the testbench will not include any self-checking feature!
 
   .. option:: --pin_constraints_file <string> or -pcf <string>
 
@@ -150,7 +152,9 @@ write_preconfigured_testbench
 
   .. option:: --reference_benchmark_file_path <string>
 
-    Must specify the reference benchmark Verilog file if you want to output any testbenches. For example, ``--reference_benchmark_file_path /temp/benchmark/counter_post_synthesis.v``
+    Specify the reference benchmark Verilog file if you want to output any self-checking testbench. For example, ``--reference_benchmark_file_path /temp/benchmark/counter_post_synthesis.v``
+
+    .. note:: If not specified, the testbench will not include any self-checking feature!
 
   .. option:: --pin_constraints_file <string> or -pcf <string>
 
