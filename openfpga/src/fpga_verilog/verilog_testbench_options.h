@@ -43,6 +43,7 @@ class VerilogTestbenchOption {
     std::string simulation_ini_path() const;
     bool explicit_port_mapping() const;
     bool include_signal_init() const;
+    bool no_self_checking() const;
     e_verilog_default_net_type default_net_type() const;
     e_embedded_bitstream_hdl_type embedded_bitstream_hdl_type() const;
     float time_unit() const;

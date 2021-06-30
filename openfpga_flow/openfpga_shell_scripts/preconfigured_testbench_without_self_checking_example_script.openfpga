@@ -1,6 +1,6 @@
 # Run VPR for the 'and' design
 #--write_rr_graph example_rr_graph.xml
-vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --clock_modeling route --device ${OPENFPGA_VPR_DEVICE_LAYOUT}
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --clock_modeling route
 
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
@@ -24,10 +24,7 @@ lut_truth_table_fixup
 # Build the module graph
 #  - Enabled compression on routing architecture modules
 #  - Enable pin duplication on grid modules
-build_fabric --compress_routing \
-  --load_fabric_key ${EXTERNAL_FABRIC_KEY_FILE} \ 
-  --write_fabric_key ./fabric_key.xml
-  #--verbose
+build_fabric --compress_routing #--verbose
 
 # Write the fabric hierarchy of module graph to a file
 # This is used by hierarchical PnR flows
@@ -58,7 +55,8 @@ write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --pri
 #  - Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
 #  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
-write_full_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --explicit_port_mapping --include_signal_init --bitstream fabric_bitstream.bit
+write_preconfigured_fabric_wrapper --embed_bitstream iverilog --file ./SRC  --explicit_port_mapping
+write_preconfigured_testbench --file ./SRC --explicit_port_mapping 
 
 # Write the SDC files for PnR backend
 #  - Turn on every options here

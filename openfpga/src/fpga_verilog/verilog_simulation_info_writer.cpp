@@ -93,7 +93,7 @@ void print_verilog_simulation_info(const std::string& ini_fname,
   ini["SIMULATION_DECK"]["SIMTIME "] = std::to_string(simulation_time_period);
   ini["SIMULATION_DECK"]["UNIT "] = unit_to_string(options.time_unit());
   ini["SIMULATION_DECK"]["VERILOG_PATH "] = std::string(src_dir);
-  ini["SIMULATION_DECK"]["VERILOG_FILE1"] = std::string(DEFINES_VERILOG_SIMULATION_FILE_NAME);
+  ini["SIMULATION_DECK"]["VERILOG_FILE1"] = std::string(DEFINES_VERILOG_FILE_NAME);
   ini["SIMULATION_DECK"]["VERILOG_FILE2"] = std::string(circuit_name + std::string(TOP_VERILOG_TESTBENCH_INCLUDE_NETLIST_FILE_NAME_POSTFIX));
   ini["SIMULATION_DECK"]["CONFIG_PROTOCOL"] = std::string(CONFIG_PROTOCOL_TYPE_STRING[config_protocol_type]);
 

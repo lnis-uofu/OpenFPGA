@@ -741,11 +741,6 @@ def run_netlists_verification(exit_if_fail=True):
 
     command = [cad_tools["iverilog_path"]]
     command += ["-o", compiled_file]
-    fpga_define_file = "./SRC/define_simulation.v"
-    fpga_define_file_bk = "./SRC/define_simulation.v.bak"
-    shutil.copy(fpga_define_file, fpga_define_file_bk)
-    with open(fpga_define_file, "r") as fp:
-        fpga_defines = fp.readlines()
 
     command += ["./SRC/%s_include_netlists.v" % args.top_module]
     command += ["-s"]
@@ -753,11 +748,6 @@ def run_netlists_verification(exit_if_fail=True):
         command += [tb_top_formal]
     else:
         command += [tb_top_autochecked]
-        with open(fpga_define_file, "w") as fp:
-            for eachLine in fpga_defines:
-                if not (("ENABLE_FORMAL_VERIFICATION" in eachLine) or
-                        "FORMAL_SIMULATION" in eachLine):
-                    fp.write(eachLine)
     run_command("iverilog_verification", "iverilog_output.txt", command)
 
     vvp_command = ["vvp", compiled_file]

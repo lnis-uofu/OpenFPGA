@@ -493,7 +493,8 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
                                                   std::string(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME),
                                                   circuit_lib,
                                                   module_manager,
-                                                  top_module);
+                                                  top_module,
+                                                  false);
   }
 
   /* Testbench ends*/

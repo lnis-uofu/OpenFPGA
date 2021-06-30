@@ -75,6 +75,10 @@ bool VerilogTestbenchOption::include_signal_init() const {
   return include_signal_init_;
 }
 
+bool VerilogTestbenchOption::no_self_checking() const {
+  return reference_benchmark_file_path_.empty();
+}
+
 e_verilog_default_net_type VerilogTestbenchOption::default_net_type() const {
   return default_net_type_;
 }

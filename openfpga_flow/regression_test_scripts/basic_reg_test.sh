@@ -53,6 +53,10 @@ run-task basic_tests/full_testbench/smart_fast_memory_bank --debug --show_thread
 run-task basic_tests/full_testbench/smart_fast_multi_region_memory_bank --debug --show_thread_logs
 run-task basic_tests/preconfig_testbench/memory_bank --debug --show_thread_logs
 
+echo -e "Testing testbenches without self checking features";
+run-task basic_tests/full_testbench/full_testbench_without_self_checking --debug --show_thread_logs
+run-task basic_tests/preconfig_testbench/preconfigured_testbench_without_self_checking --debug --show_thread_logs
+
 echo -e "Testing standalone (flatten memory) configuration protocol of a K4N4 FPGA";
 run-task basic_tests/full_testbench/flatten_memory --debug --show_thread_logs
 run-task basic_tests/preconfig_testbench/flatten_memory --debug --show_thread_logs

@@ -1,6 +1,8 @@
 # Run VPR for the 'and' design
+# When the global clock is defined as a port of a tile, clock routing in VPR should be skipped
+# This is due to the Fc_in of clock port is set to 0 for global wiring
 #--write_rr_graph example_rr_graph.xml
-vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --clock_modeling route --device ${OPENFPGA_VPR_DEVICE_LAYOUT}
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --device ${OPENFPGA_VPR_DEVICE_LAYOUT}
 
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
@@ -24,10 +26,7 @@ lut_truth_table_fixup
 # Build the module graph
 #  - Enabled compression on routing architecture modules
 #  - Enable pin duplication on grid modules
-build_fabric --compress_routing \
-  --load_fabric_key ${EXTERNAL_FABRIC_KEY_FILE} \ 
-  --write_fabric_key ./fabric_key.xml
-  #--verbose
+build_fabric --compress_routing #--verbose
 
 # Write the fabric hierarchy of module graph to a file
 # This is used by hierarchical PnR flows
