@@ -58,8 +58,6 @@ write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --pri
 #  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
 write_full_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --include_signal_init --bitstream fabric_bitstream.bit
-write_preconfigured_fabric_wrapper --embed_bitstream iverilog --file ./SRC 
-write_preconfigured_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} 
 
 # Write the SDC files for PnR backend
 #  - Turn on every options here
