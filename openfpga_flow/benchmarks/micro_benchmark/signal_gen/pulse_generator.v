@@ -19,6 +19,10 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
+// Uncomment if using Vivado to synthesize the design. This will enable the initial block
+// If using Yosys, initial blocks are not supported, and cannot be included.
+// `define VIVADO_SYNTHESIS
+
 module pulse_generator(
   input clk_in,
   input repeated, // Specify if the pulse should be generated repeatedly
@@ -35,14 +39,16 @@ module pulse_generator(
   reg [PULSE_COUNTER_SIZE - 1 : 0] pulse_width_counter;
   reg pulse_start;
   reg pulse_end;
-  
-  // initial begin
-  //   pulse <= INITIAL_VALUE;
-  //   pulse_start <= 1'b0;
-  //   pulse_end <= 1'b0;
-  //   wait_cycle_counter <= 0;
-  //   pulse_width_counter <= 0;
-  // end
+
+`ifdef VIVADO_SYNTHESIS
+  initial begin
+    pulse <= INITIAL_VALUE;
+    pulse_start <= 1'b0;
+    pulse_end <= 1'b0;
+    wait_cycle_counter <= 0;
+    pulse_width_counter <= 0;
+  end
+`endif
   
   // Wait a number of clock cycles, hold the initial value
   always @(posedge clk_in) begin

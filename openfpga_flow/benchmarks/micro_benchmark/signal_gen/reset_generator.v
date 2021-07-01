@@ -19,6 +19,9 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
+// Uncomment if using Vivado to synthesize the design. This will enable the initial block
+// If using Yosys, initial blocks are not supported, and cannot be included.
+// `define VIVADO_SYNTHESIS
 
 module reset_generator(
   input clk,
@@ -30,10 +33,12 @@ module reset_generator(
 
   reg [ACTIVE_CYCLES<=2 ? 2 : $clog2(ACTIVE_CYCLES) - 1 : 0] active_cycle_counter;
 
+`ifdef VIVADO_SYNTHESIS
   initial begin
     pulse <= INITIAL_VALUE;
     active_cycle_counter <= 0;
   end
+`endif
   
   // Wait a number of clock cycles, hold the initial value
   always @(posedge clk) begin

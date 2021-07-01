@@ -19,6 +19,9 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
+// Uncomment if using Vivado to synthesize the design. This will enable the initial block
+// If using Yosys, initial blocks are not supported, and cannot be included.
+// `define VIVADO_SYNTHESIS
 
 module clock_divider (
     input clk_in,
@@ -29,10 +32,12 @@ module clock_divider (
     
     reg [CLK_DIVIDER_SIZE - 1:0] clkdiv_counter;
     
-    // initial begin
-    //   clkdiv_counter <= 0;
-    //   clk_out <= 0;
-    // end
+`ifdef VIVADO_SYNTHESIS
+    initial begin
+      clkdiv_counter <= 0;
+      clk_out <= 0;
+    end
+`endif
     
     // Divide pl_clk (50MHz) to 1MHz
     always @(posedge clk_in) begin
