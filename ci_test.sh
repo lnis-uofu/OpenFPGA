@@ -15,7 +15,7 @@ for dir in RTL_Benchmark/*; do
 	  export design_path=${OPENFPGA_PATH}/$FILE
 	  export design_top=$top_file
 	  echo "design = $design_path"
-	  python3 openfpga_flow/scripts/run_ci_tests.py ci_tests
+	  python3 $OPENFPGA_PATH/openfpga_flow/scripts/run_ci_tests.py ci_tests
 	else  
 	  echo -e "${RED}Top file not found. Make sure design exists${ENDCOLOR}"
 	  exit 1
