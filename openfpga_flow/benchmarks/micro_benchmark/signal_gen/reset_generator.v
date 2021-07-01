@@ -24,21 +24,21 @@
 // `define VIVADO_SYNTHESIS
 
 module reset_generator(
-    input clk,
-    output reg pulse
-    );
-    
+	input clk,
+	output reg pulse
+	);
+
 	parameter INITIAL_VALUE=0; // Define the initial value for the pulse, either 0 or 1; The pulse logic level will be a flip over the initial value
 	parameter ACTIVE_CYCLES=0; // Define the number of clock cycles to wait before the pulse is applied
 
 	reg [ACTIVE_CYCLES<=2 ? 2 : $clog2(ACTIVE_CYCLES) - 1 : 0] active_cycle_counter;
-    
+
 `ifdef VIVADO_SYNTHESIS
-    initial begin
-      clkdiv_counter <= 0;
-	  active_cycle_counter <= 0;
-      pulse <= INITIAL_VALUE;
-    end
+	initial begin
+		clkdiv_counter <= 0;
+		active_cycle_counter <= 0;
+		pulse <= INITIAL_VALUE;
+	end
 `endif
 
 	// Wait a number of clock cycles, hold the initial value
@@ -49,5 +49,5 @@ module reset_generator(
 			active_cycle_counter <= active_cycle_counter + 1;
 		end
 	end
-    
+
 endmodule
