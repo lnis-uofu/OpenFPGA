@@ -36,13 +36,13 @@ module pulse_generator(
   reg pulse_start;
   reg pulse_end;
   
-  initial begin
-    pulse <= INITIAL_VALUE;
-    pulse_start <= 1'b0;
-    pulse_end <= 1'b0;
-    wait_cycle_counter <= 0;
-    pulse_width_counter <= 0;
-  end
+  // initial begin
+  //   pulse <= INITIAL_VALUE;
+  //   pulse_start <= 1'b0;
+  //   pulse_end <= 1'b0;
+  //   wait_cycle_counter <= 0;
+  //   pulse_width_counter <= 0;
+  // end
   
   // Wait a number of clock cycles, hold the initial value
   always @(posedge clk_in) begin

@@ -29,10 +29,10 @@ module clock_divider (
     
     reg [CLK_DIVIDER_SIZE - 1:0] clkdiv_counter;
     
-    initial begin
-      clkdiv_counter <= 0;
-      clk_out <= 0;
-    end
+    // initial begin
+    //   clkdiv_counter <= 0;
+    //   clk_out <= 0;
+    // end
     
     // Divide pl_clk (50MHz) to 1MHz
     always @(posedge clk_in) begin
