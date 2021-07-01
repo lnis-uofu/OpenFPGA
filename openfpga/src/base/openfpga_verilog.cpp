@@ -8,6 +8,9 @@
 /* Headers from openfpgashell library */
 #include "command_exit_codes.h"
 
+/* Headers from openfpgautil library */
+#include "openfpga_scale.h"
+
 #include "verilog_api.h"
 #include "openfpga_verilog.h"
 
@@ -127,7 +130,8 @@ int write_preconfigured_fabric_wrapper(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
-  CommandOptionId opt_support_icarus_simulator = cmd.option("support_icarus_simulator");
+  CommandOptionId opt_include_signal_init = cmd.option("include_signal_init");
+  CommandOptionId opt_embed_bitstream = cmd.option("embed_bitstream");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
@@ -138,10 +142,15 @@ int write_preconfigured_fabric_wrapper(const OpenfpgaContext& openfpga_ctx,
   options.set_fabric_netlist_file_path(cmd_context.option_value(cmd, opt_fabric_netlist));
   options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
-  options.set_support_icarus_simulator(cmd_context.option_enable(cmd, opt_support_icarus_simulator));
+  options.set_include_signal_init(cmd_context.option_enable(cmd, opt_include_signal_init));
   options.set_print_formal_verification_top_netlist(true);
+
   if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
     options.set_default_net_type(cmd_context.option_value(cmd, opt_default_net_type));
+  }
+
+  if (true == cmd_context.option_enable(cmd, opt_embed_bitstream)) {
+    options.set_embedded_bitstream_hdl_type(cmd_context.option_value(cmd, opt_embed_bitstream));
   }
 
   /* If pin constraints are enabled by command options, read the file */
@@ -173,7 +182,6 @@ int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
-  CommandOptionId opt_support_icarus_simulator = cmd.option("support_icarus_simulator");
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
   CommandOptionId opt_verbose = cmd.option("verbose");
@@ -185,7 +193,6 @@ int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
   options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
   options.set_fabric_netlist_file_path(cmd_context.option_value(cmd, opt_fabric_netlist));
   options.set_reference_benchmark_file_path(cmd_context.option_value(cmd, opt_reference_benchmark));
-  options.set_support_icarus_simulator(cmd_context.option_enable(cmd, opt_support_icarus_simulator));
   options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_print_preconfig_top_testbench(true);
@@ -217,6 +224,8 @@ int write_simulation_task_info(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_file = cmd.option("file");
   CommandOptionId opt_hdl_dir = cmd.option("hdl_dir");
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
+  CommandOptionId opt_tb_type = cmd.option("testbench_type");
+  CommandOptionId opt_time_unit = cmd.option("time_unit");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
@@ -227,6 +236,32 @@ int write_simulation_task_info(const OpenfpgaContext& openfpga_ctx,
   options.set_reference_benchmark_file_path(cmd_context.option_value(cmd, opt_reference_benchmark));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_print_simulation_ini(cmd_context.option_value(cmd, opt_file));
+
+  if (true == cmd_context.option_enable(cmd, opt_time_unit)) {
+    options.set_time_unit(string_to_time_unit(cmd_context.option_value(cmd, opt_time_unit)));
+  }
+
+  /* Identify testbench type */
+  std::string full_tb_tag("full_testbench");
+  std::string preconfig_tb_tag("preconfigured_testbench");
+  if (true == cmd_context.option_enable(cmd, opt_tb_type)) {
+    if (std::string("preconfigured_testbench") == cmd_context.option_value(cmd, opt_tb_type)) {
+      options.set_print_preconfig_top_testbench(true);
+    } else if (std::string("full_testbench") == cmd_context.option_value(cmd, opt_tb_type)) {
+      options.set_print_preconfig_top_testbench(false);
+      options.set_print_top_testbench(true);
+    } else {
+      /* Invalid option, error out */
+      VTR_LOG_ERROR("Invalid option value for testbench type: '%s'! Should be either '%s' or '%s'\n",
+                    cmd_context.option_value(cmd, opt_tb_type).c_str(),
+                    full_tb_tag.c_str(),
+                    preconfig_tb_tag.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  } else {
+    /* Deposit default type which is the preconfigured testbench */
+    options.set_print_preconfig_top_testbench(true);
+  }
 
   return fpga_verilog_simulation_task_info(openfpga_ctx.module_graph(),
                                            openfpga_ctx.bitstream_manager(),

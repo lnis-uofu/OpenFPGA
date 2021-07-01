@@ -12,8 +12,7 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-float find_operating_phase_simulation_time(const int& factor,
-                                           const int& num_op_clock_cycles,
+float find_operating_phase_simulation_time(const int& num_op_clock_cycles,
                                            const float& op_clock_period,
                                            const float& timescale);
 
