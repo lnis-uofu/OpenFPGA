@@ -24,14 +24,6 @@ write_fabric_verilog
 
     Output timing information to Verilog netlists for primitive modules
  
-  .. option:: --include_signal_init
-
-    Output signal initialization to Verilog netlists for primitive modules
-
-  .. option:: --support_icarus_simulator
-     
-    Output Verilog netlists with syntax that iVerilog simulatorcan accept
-
   .. option:: --print_user_defined_template
 
     Output a template Verilog netlist for all the user-defined ``circuit models`` in :ref:`circuit_library`. This aims to help engineers to check what is the port sequence required by top-level Verilog netlists
@@ -59,7 +51,9 @@ write_full_testbench
 
   .. option:: --reference_benchmark_file_path <string>
 
-    Must specify the reference benchmark Verilog file if you want to output any testbenches. For example, ``--reference_benchmark_file_path /temp/benchmark/counter_post_synthesis.v``
+    Specify the reference benchmark Verilog file if you want to output any self-checking testbench. For example, ``--reference_benchmark_file_path /temp/benchmark/counter_post_synthesis.v``
+   
+    .. note:: If not specified, the testbench will not include any self-checking feature!
 
   .. option:: --pin_constraints_file <string> or -pcf <string>
 
@@ -83,6 +77,11 @@ write_full_testbench
   .. option:: --include_signal_init
 
     Output signal initialization to Verilog testbench to smooth convergence in HDL simulation
+
+    .. note:: We strongly recommend users to turn on this flag as it can help simulators to converge quickly.
+
+   .. warning:: Signal initialization is only applied to the datapath inputs of routing multiplexers (considering the fact that they are indispensible cells of FPGAs)! If your FPGA does not contain any multiplexer cells, signal initialization is not applicable.
+
 
   .. option:: --verbose
 
@@ -114,9 +113,25 @@ write_preconfigured_fabric_wrapper
 
     Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
 
-  .. option:: --support_icarus_simulator
+  .. option:: --embed_bitstream <string>
      
-    Output Verilog netlists with syntax that iVerilog simulator can accept
+    Specify if the bitstream should be embedded to the Verilog netlists in HDL codes. Available options are ``none``, ``iverilog`` and ``modelsim``. Default value: ``modelsim``.
+
+    .. warning:: If the option ``none`` is selected, bitstream will not be embedded. Users should force the bitstream through HDL simulator commands. Otherwise, functionality of the wrapper netlist is wrong!
+
+   .. warning:: Please specify ``iverilog`` if you are using icarus iVerilog simulator.
+
+__ iverilog_website_
+
+.. _iverilog_website: http://iverilog.icarus.com/
+
+  .. option:: --include_signal_init
+
+    Output signal initialization to Verilog testbench to smooth convergence in HDL simulation
+
+    .. note:: We strongly recommend users to turn on this flag as it can help simulators to converge quickly.
+
+   .. warning:: Signal initialization is only applied to the datapath inputs of routing multiplexers (considering the fact that they are indispensible cells of FPGAs)! If your FPGA does not contain any multiplexer cells, signal initialization is not applicable.
 
   .. option:: --verbose
 
@@ -137,7 +152,9 @@ write_preconfigured_testbench
 
   .. option:: --reference_benchmark_file_path <string>
 
-    Must specify the reference benchmark Verilog file if you want to output any testbenches. For example, ``--reference_benchmark_file_path /temp/benchmark/counter_post_synthesis.v``
+    Specify the reference benchmark Verilog file if you want to output any self-checking testbench. For example, ``--reference_benchmark_file_path /temp/benchmark/counter_post_synthesis.v``
+
+    .. note:: If not specified, the testbench will not include any self-checking feature!
 
   .. option:: --pin_constraints_file <string> or -pcf <string>
 
@@ -151,11 +168,6 @@ write_preconfigured_testbench
   .. option:: --default_net_type <string>
 
     Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
-
-
-  .. option:: --support_icarus_simulator
-     
-    Output Verilog netlists with syntax that iVerilog simulator can accept
 
   .. option:: --verbose
 
@@ -177,6 +189,14 @@ write_simulation_task_info
   .. option:: --reference_benchmark_file_path <string>
 
     Must specify the reference benchmark Verilog file if you want to output any testbenches. For example, ``--reference_benchmark_file_path /temp/benchmark/counter_post_synthesis.v``
+
+  .. option:: --testbench_type <string>
+
+    Specify the type of testbenches [``preconfigured_testbench``|``full_testbench``]. By default, it is the ``preconfigured_testbench``.
+
+  .. option:: --time_unit <string>
+      
+    Specify a time unit to be used in SDC files. Acceptable values are string: ``as`` | ``fs`` | ``ps`` | ``ns`` | ``us`` | ``ms`` | ``ks`` | ``Ms``. By default, we will consider second (``ms``).
 
   .. option:: --verbose
 

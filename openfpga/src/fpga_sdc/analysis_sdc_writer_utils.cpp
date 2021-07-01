@@ -103,7 +103,7 @@ void disable_analysis_module_input_pin_net_sinks(std::fstream& fp,
     VTR_ASSERT(!sink_instance_name.empty());
     /* Get the input id that is used! Disable the unused inputs! */
     fp << "set_disable_timing ";
-    fp << parent_instance_name;
+    fp << parent_instance_name << "/";
     fp << sink_instance_name << "/";
     fp << generate_sdc_port(sink_port);
     fp << std::endl;
@@ -228,7 +228,7 @@ void disable_analysis_module_output_pin_net_sinks(std::fstream& fp,
     VTR_ASSERT(!sink_instance_name.empty());
     /* Get the input id that is used! Disable the unused inputs! */
     fp << "set_disable_timing ";
-    fp << parent_instance_name;
+    fp << parent_instance_name << "/";
     fp << sink_instance_name << "/";
     fp << generate_sdc_port(sink_port);
     fp << std::endl;
