@@ -275,7 +275,7 @@ def generate_each_task_actions(taskname):
         for eachKey, eachValue in SynthSection.items():
             if bech_name in eachKey:
                 eachKey = eachKey.replace(bech_name+"_", "").upper()
-                CurrBenchPara["benchVariable"] += [eachKey,eachValue]
+                CurrBenchPara["benchVariable"] += [f"--{eachKey}", eachValue]
 
         if GeneralSection.get("fpga_flow") == "vpr_blif":
             # Check if activity file exist
