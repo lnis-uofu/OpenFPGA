@@ -213,6 +213,10 @@ void print_verilog_random_testbench_reset_stimuli(std::fstream& fp,
     if (1 == global_ports.global_port_default_value(find_fabric_global_port(global_ports, module_manager,  pin_constraints.net_pin(block_name)))) {
       initial_value = 0;
     }
+    /* Pin constraints has the final decision on the default value */
+    if (pin_constraints.valid_net_default_value(block_name)) {
+      initial_value = pin_constraints.net_default_value_to_int(block_name);
+    }
 
     fp << "initial" << std::endl;
     fp << "\tbegin" << std::endl;

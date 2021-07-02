@@ -1789,11 +1789,17 @@ void print_verilog_top_testbench_reset_stimuli(std::fstream& fp,
       continue;
     }
 
+    /* Pin constraints has the final decision on the default value */
+    size_t initial_value = global_ports.global_port_default_value(find_fabric_global_port(global_ports, module_manager, pin_constraints.net_pin(block_name)));
+    if (pin_constraints.valid_net_default_value(block_name)) {
+      initial_value = pin_constraints.net_default_value_to_int(block_name);
+    }
+
     /* Connect stimuli to greset with an optional inversion, depending on the default value */
     BasicPort reset_port(block_name, 1);
     print_verilog_wire_connection(fp, reset_port,
                                   BasicPort(TOP_TB_RESET_PORT_NAME, 1),
-                                  1 == global_ports.global_port_default_value(find_fabric_global_port(global_ports, module_manager, pin_constraints.net_pin(block_name))));
+                                  1 == initial_value);
   }
 }
 
