@@ -271,6 +271,9 @@ def generate_each_task_actions(taskname):
                                                       fallback=ys_rewrite_for_task_common)
         CurrBenchPara["chan_width"] = SynthSection.get(bech_name+"_chan_width",
                                                        fallback=chan_width_common)
+        for eachKey, eachValue in SynthSection.items():
+            eachKey = eachKey.replace(bech_name+"_","").upper()
+            CurrBenchPara[eachKey] = eachValue
 
         if GeneralSection.get("fpga_flow") == "vpr_blif":
             # Check if activity file exist
@@ -320,7 +323,7 @@ def generate_each_task_actions(taskname):
                   flow_run_dir = get_flow_rundir(arch, "bench" + str(benchmark_list.index(bench)) + "_" + bench["top_module"], lbl)
                 else:
                   flow_run_dir = get_flow_rundir(arch, bench["top_module"], lbl)
-                  
+
                 command = create_run_command(
                     curr_job_dir=flow_run_dir,
                     archfile=arch,
