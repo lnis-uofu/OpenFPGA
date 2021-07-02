@@ -40,6 +40,16 @@
       </output_ports>
     </model>
     <!-- A virtual model for scan-chain flip-flop to be used in the physical mode of FF -->
+    <model name="dff">
+      <input_ports>
+        <port name="D" clock="C"/>
+        <port name="C" is_clock="1"/>
+      </input_ports>
+      <output_ports>
+        <port name="Q" clock="C"/>
+      </output_ports>
+    </model>
+    <!-- A virtual model for scan-chain flip-flop to be used in the physical mode of FF -->
     <model name="dffr">
       <input_ports>
         <port name="D" clock="C"/>
