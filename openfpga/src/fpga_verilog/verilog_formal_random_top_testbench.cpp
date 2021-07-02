@@ -230,7 +230,7 @@ void print_verilog_random_testbench_reset_stimuli(std::fstream& fp,
      */
     fp << "\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << ");" << std::endl;
     fp << "\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << ");" << std::endl;
-    print_verilog_wire_connection(fp, reset_port, reset_port, true);
+    print_verilog_register_connection(fp, reset_port, reset_port, true);
     fp << "\tend" << std::endl;
   }
 
