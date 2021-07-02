@@ -105,6 +105,7 @@ void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp,
                                                            const std::string& reference_verilog_top_name,
                                                            const AtomContext& atom_ctx,
                                                            const VprNetlistAnnotation& netlist_annotation,
+                                                           const PinConstraints& pin_constraints,
                                                            const bool& explicit_port_mapping) {
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -125,6 +126,7 @@ void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp,
                                              prefix_to_remove,
                                              std::string(BENCHMARK_PORT_POSTFIX),
                                              atom_ctx, netlist_annotation,
+                                             pin_constraints,
                                              explicit_port_mapping);
 
   print_verilog_comment(fp, std::string("----- End reference Benchmark Instanication -------"));
@@ -212,10 +214,6 @@ void print_verilog_random_testbench_reset_stimuli(std::fstream& fp,
     size_t initial_value = 1;
     if (1 == global_ports.global_port_default_value(find_fabric_global_port(global_ports, module_manager,  pin_constraints.net_pin(block_name)))) {
       initial_value = 0;
-    }
-    /* Pin constraints has the final decision on the default value */
-    if (pin_constraints.valid_net_default_value(block_name)) {
-      initial_value = pin_constraints.net_default_value_to_int(block_name);
     }
 
     fp << "initial" << std::endl;
@@ -308,6 +306,7 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
   if (!options.no_self_checking()) {
     print_verilog_top_random_testbench_benchmark_instance(fp, circuit_name,
                                                           atom_ctx, netlist_annotation,
+                                                          pin_constraints,
                                                           options.explicit_port_mapping());
   }
 

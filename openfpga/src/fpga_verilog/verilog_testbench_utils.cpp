@@ -69,6 +69,7 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
                                                 const std::string& output_port_postfix,
                                                 const AtomContext& atom_ctx,
                                                 const VprNetlistAnnotation& netlist_annotation,
+                                                const PinConstraints& pin_constraints,
                                                 const bool& use_explicit_port_map) {
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -98,6 +99,15 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
       fp << "\t\t";
       if (true == use_explicit_port_map) {
         fp << "." << block_name << module_input_port_postfix << "(";
+      }
+
+      /* Polarity of some input may have to be inverted, as defined in pin constraints
+       * For example, the reset signal of the benchmark is active low 
+       * while the reset signal of the FPGA fabric is active high (inside FPGA, the reset signal will be inverted)
+       * However, to ensure correct stimuli to the benchmark, we have to invert the signal
+       */
+      if (LOGIC_HIGH == pin_constraints.net_default_value(block_name)) {
+        fp << "~";
       }
       fp << block_name;
       if (true == use_explicit_port_map) {
