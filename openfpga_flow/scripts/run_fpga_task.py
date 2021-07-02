@@ -271,11 +271,11 @@ def generate_each_task_actions(taskname):
                                                       fallback=ys_rewrite_for_task_common)
         CurrBenchPara["chan_width"] = SynthSection.get(bech_name+"_chan_width",
                                                        fallback=chan_width_common)
-        benchVariable = []
+        CurrBenchPara["benchVariable"] = []
         for eachKey, eachValue in SynthSection.items():
             if bech_name in eachKey:
                 eachKey = eachKey.replace(bech_name+"_", "").upper()
-                benchVariable = benchVariable+[f"--{eachKey}"] + [eachValue]
+                CurrBenchPara["benchVariable"] += [eachKey,eachValue]
 
         if GeneralSection.get("fpga_flow") == "vpr_blif":
             # Check if activity file exist
@@ -337,7 +337,7 @@ def generate_each_task_actions(taskname):
                     "bench": bench,
                     "name": "%02d_%s_%s" % (indx, bench["top_module"], lbl),
                     "run_dir": flow_run_dir,
-                    "commands": command + benchVariable,
+                    "commands": command + bench["benchVariable"],
                     "finished": False,
                     "status": False})
 
