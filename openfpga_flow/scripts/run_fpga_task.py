@@ -272,7 +272,7 @@ def generate_each_task_actions(taskname):
         CurrBenchPara["chan_width"] = SynthSection.get(bech_name+"_chan_width",
                                                        fallback=chan_width_common)
         for eachKey, eachValue in SynthSection.items():
-            eachKey = eachKey.replace(bech_name+"_","")
+            eachKey = eachKey.replace(bech_name+"_","").upper()
             CurrBenchPara[eachKey] = eachValue
 
         if GeneralSection.get("fpga_flow") == "vpr_blif":
