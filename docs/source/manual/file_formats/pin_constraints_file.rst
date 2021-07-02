@@ -29,3 +29,5 @@ An example of design constraints is shown as follows.
   The default value of a net to be constrained. This is mainly used when generating testbenches. Valid value is ``0`` or ``1``. If defined as ``1``, the net is be driven by the inversion of its stimuli.
 
   .. note:: This feature is mainly used to generate the correct stimuli for some pin whose polarity can be configurable. For example, the ``Reset`` pin of an FPGA fabric may be active-low or active-high depending on its configuration.
+
+  .. note:: The default value in pin constraint file has a higher priority than the ``default_value`` syntax in the :ref:`circuit_library`.
