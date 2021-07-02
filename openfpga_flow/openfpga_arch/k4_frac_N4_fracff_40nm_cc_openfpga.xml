@@ -139,15 +139,15 @@
       <port type="sram" prefix="sram" size="1"/>
     </circuit_model>
     <!--DFF subckt ports should be defined as <D> <Q> <CLK> <RESET> <SET>  -->
-    <circuit_model type="ff" name="DFFSRQ" prefix="DFFSRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
+    <circuit_model type="ff" name="MULTI_MODE_DFFRQ" prefix="MULTI_MODE_DFFRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
        <port type="input" prefix="D" size="1"/>
-       <port type="input" prefix="set" lib_name="SET" size="1" is_global="true" default_val="0" is_set="true"/>
        <port type="input" prefix="R" lib_name="RST" size="1" default_val="0"/>
        <port type="output" prefix="Q" size="1"/>
        <port type="clock" prefix="C" lib_name="CK" size="1" default_val="0"/>
+       <port type="sram" prefix="mode" size="1" mode_select="true" circuit_model_name="DFFR" default_val="0"/>
     </circuit_model>
     <circuit_model type="lut" name="frac_lut4" prefix="frac_lut4" dump_structural_verilog="true">
       <design_technology type="cmos" fracturable_lut="true"/>
@@ -220,20 +220,34 @@
     </pb_type>
     <pb_type name="clb.fle" physical_mode_name="physical"/>
     <pb_type name="clb.fle[physical].fabric.frac_logic.frac_lut4" circuit_model_name="frac_lut4" mode_bits="0"/>
-    <pb_type name="clb.fle[physical].fabric.ff" circuit_model_name="DFFSRQ"/>
+    <pb_type name="clb.fle[physical].fabric.ff" circuit_model_name="MULTI_MODE_DFFRQ"/>
     <!-- Binding operating pb_type to physical pb_type -->
     <pb_type name="clb.fle[n2_lut3].lut3inter.ble3.lut3" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut4" mode_bits="1" physical_pb_type_index_factor="0.5">
       <!-- Binding the lut3 to the first 3 inputs of fracturable lut4 -->
       <port name="in" physical_mode_port="in[0:2]"/>
       <port name="out" physical_mode_port="lut3_out[0:0]" physical_mode_pin_rotate_offset="1"/>
     </pb_type>
-    <pb_type name="clb.fle[n2_lut3].lut3inter.ble3.ff" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
+    <pb_type name="clb.fle[n2_lut3].lut3inter.ble3.ff[latch].latch" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="0">
+      <port name="clk" physical_mode_port="C"/>
+    </pb_type>
+    <pb_type name="clb.fle[n2_lut3].lut3inter.ble3.ff[dff].dff" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="0"/>
+    <pb_type name="clb.fle[n2_lut3].lut3inter.ble3.ff[dffr].dffr" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="0"/>
+    <pb_type name="clb.fle[n2_lut3].lut3inter.ble3.ff[dffrn].dffrn" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="1">
+      <port name="RN" physical_mode_port="R"/>
+    </pb_type>
     <pb_type name="clb.fle[n1_lut4].ble4.lut4" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut4" mode_bits="0">
       <!-- Binding the lut4 to the first 4 inputs of fracturable lut4 -->
       <port name="in" physical_mode_port="in[0:3]"/>
       <port name="out" physical_mode_port="lut4_out"/>
     </pb_type>
-    <pb_type name="clb.fle[n1_lut4].ble4.ff" physical_pb_type_name="clb.fle[physical].fabric.ff" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
+    <pb_type name="clb.fle[n1_lut4].ble4.ff[latch].latch" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="0" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0">
+      <port name="clk" physical_mode_port="C"/>
+    </pb_type>
+    <pb_type name="clb.fle[n1_lut4].ble4.ff[dff].dff" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="0" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
+    <pb_type name="clb.fle[n1_lut4].ble4.ff[dffr].dffr" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="0" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
+    <pb_type name="clb.fle[n1_lut4].ble4.ff[dffrn].dffrn" physical_pb_type_name="clb.fle[physical].fabric.ff" mode_bits="1" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0">
+      <port name="RN" physical_mode_port="R"/>
+    </pb_type>
     <!-- End physical pb_type binding in complex block IO -->
   </pb_type_annotations>
 </openfpga_architecture>
