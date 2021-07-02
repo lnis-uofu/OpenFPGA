@@ -157,6 +157,7 @@ void print_verilog_random_testbench_fpga_instance(std::fstream& fp,
                                              std::vector<std::string>(),
                                              std::string(FPGA_PORT_POSTFIX),
                                              atom_ctx, netlist_annotation,
+                                             PinConstraints(),
                                              explicit_port_mapping);
 
   print_verilog_comment(fp, std::string("----- End FPGA Fabric Instanication -------"));

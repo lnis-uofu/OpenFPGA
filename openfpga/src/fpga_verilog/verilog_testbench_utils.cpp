@@ -106,7 +106,7 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
        * while the reset signal of the FPGA fabric is active high (inside FPGA, the reset signal will be inverted)
        * However, to ensure correct stimuli to the benchmark, we have to invert the signal
        */
-      if (LOGIC_HIGH == pin_constraints.net_default_value(block_name)) {
+      if (PinConstraints::LOGIC_HIGH == pin_constraints.net_default_value(block_name)) {
         fp << "~";
       }
       fp << block_name;
