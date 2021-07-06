@@ -78,7 +78,7 @@ opt -undriven -fine
 #########################
 # Map muxes to pmuxes
 #########################
-techmap -map pmux2mux.v
+techmap -map +/pmux2mux.v
 
 #########################
 # Map flip-flops
