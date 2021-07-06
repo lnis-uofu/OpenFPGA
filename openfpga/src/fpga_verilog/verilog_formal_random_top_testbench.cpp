@@ -105,6 +105,7 @@ void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp,
                                                            const std::string& reference_verilog_top_name,
                                                            const AtomContext& atom_ctx,
                                                            const VprNetlistAnnotation& netlist_annotation,
+                                                           const PinConstraints& pin_constraints,
                                                            const bool& explicit_port_mapping) {
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -125,6 +126,7 @@ void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp,
                                              prefix_to_remove,
                                              std::string(BENCHMARK_PORT_POSTFIX),
                                              atom_ctx, netlist_annotation,
+                                             pin_constraints,
                                              explicit_port_mapping);
 
   print_verilog_comment(fp, std::string("----- End reference Benchmark Instanication -------"));
@@ -155,6 +157,7 @@ void print_verilog_random_testbench_fpga_instance(std::fstream& fp,
                                              std::vector<std::string>(),
                                              std::string(FPGA_PORT_POSTFIX),
                                              atom_ctx, netlist_annotation,
+                                             PinConstraints(),
                                              explicit_port_mapping);
 
   print_verilog_comment(fp, std::string("----- End FPGA Fabric Instanication -------"));
@@ -230,7 +233,7 @@ void print_verilog_random_testbench_reset_stimuli(std::fstream& fp,
      */
     fp << "\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << ");" << std::endl;
     fp << "\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << ");" << std::endl;
-    print_verilog_wire_connection(fp, reset_port, reset_port, true);
+    print_verilog_register_connection(fp, reset_port, reset_port, true);
     fp << "\tend" << std::endl;
   }
 
@@ -304,6 +307,7 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
   if (!options.no_self_checking()) {
     print_verilog_top_random_testbench_benchmark_instance(fp, circuit_name,
                                                           atom_ctx, netlist_annotation,
+                                                          pin_constraints,
                                                           options.explicit_port_mapping());
   }
 

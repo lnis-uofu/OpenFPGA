@@ -271,6 +271,11 @@ def generate_each_task_actions(taskname):
                                                       fallback=ys_rewrite_for_task_common)
         CurrBenchPara["chan_width"] = SynthSection.get(bech_name+"_chan_width",
                                                        fallback=chan_width_common)
+        CurrBenchPara["benchVariable"] = []
+        for eachKey, eachValue in SynthSection.items():
+            if bech_name in eachKey:
+                eachKey = eachKey.replace(bech_name+"_", "").upper()
+                CurrBenchPara["benchVariable"] += [f"--{eachKey}", eachValue]
 
         if GeneralSection.get("fpga_flow") == "vpr_blif":
             # Check if activity file exist
@@ -320,7 +325,7 @@ def generate_each_task_actions(taskname):
                   flow_run_dir = get_flow_rundir(arch, "bench" + str(benchmark_list.index(bench)) + "_" + bench["top_module"], lbl)
                 else:
                   flow_run_dir = get_flow_rundir(arch, bench["top_module"], lbl)
-                  
+
                 command = create_run_command(
                     curr_job_dir=flow_run_dir,
                     archfile=arch,
@@ -332,7 +337,7 @@ def generate_each_task_actions(taskname):
                     "bench": bench,
                     "name": "%02d_%s_%s" % (indx, bench["top_module"], lbl),
                     "run_dir": flow_run_dir,
-                    "commands": command,
+                    "commands": command + bench["benchVariable"],
                     "finished": False,
                     "status": False})
 
@@ -343,6 +348,8 @@ def generate_each_task_actions(taskname):
 
 # Make the directory name unique by including the benchmark index in the list.
 # This is because benchmarks may share the same top module names
+
+
 def get_flow_rundir(arch, top_module, flow_params=None):
     path = [
         os.path.basename(arch).replace(".xml", ""),

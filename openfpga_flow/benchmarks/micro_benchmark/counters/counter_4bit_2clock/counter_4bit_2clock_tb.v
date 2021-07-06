@@ -1,4 +1,4 @@
-module counter4bit_2clock_tb;
+module counter_4bit_2clock_tb;
 
 	reg clk0, rst0;
 	wire [3:0] q0;
@@ -6,12 +6,12 @@ module counter4bit_2clock_tb;
 	reg clk1, rst1;
 	wire [3:0] q1;
 
-	counter_2clock C_1(
+	counter_4bit_2clock C_1(
 		clk0, 
 		q0, 
 		rst0);
 
-	counter_2clock C_1(
+	counter_4bit_2clock C_1(
 		clk1, 
 		q1, 
 		rst1);
