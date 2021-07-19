@@ -60,15 +60,15 @@ endmodule
 //-----------------------------
 // 18-bit multiplier
 //-----------------------------
-// module mult_18(
-//   input [0:17] A,
-//   input [0:17] B,
-//   output [0:35] Y
-// );
+module mult_18(
+  input [0:17] A,
+  input [0:17] B,
+  output [0:35] Y
+);
 
-// assign Y = A * B;
+assign Y = A * B;
 
-// endmodule
+endmodule
 
 //-----------------------------
 // Native D-type flip-flop
