@@ -66,6 +66,12 @@ opt -fast
 memory -nomap
 opt_clean
 
+
+#########################
+# Map muxes to pmuxes
+#########################
+techmap -map +/pmux2mux.v
+
 #########################
 # Map flip-flops
 #########################
