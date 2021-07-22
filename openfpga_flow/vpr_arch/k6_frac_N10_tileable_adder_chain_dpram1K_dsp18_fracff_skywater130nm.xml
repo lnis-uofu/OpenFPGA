@@ -519,12 +519,12 @@
               <input name="cin" num_pins="1"/>
               <output name="cout" num_pins="1"/>
               <output name="sumout" num_pins="1"/>
-              <delay_constant max="${ADDER_LUT4_IN2OUT_DELAY}" in_port="adder.a" out_port="adder.sumout"/>
-              <delay_constant max="${ADDER_LUT4_IN2OUT_DELAY}" in_port="adder.b" out_port="adder.sumout"/>
-              <delay_constant max="${ADDER_LUT4_CIN2OUT_DELAY}" in_port="adder.cin" out_port="adder.sumout"/>
-              <delay_constant max="${ADDER_LUT4_IN2COUT_DELAY}" in_port="adder.a" out_port="adder.cout"/>
-              <delay_constant max="${ADDER_LUT4_IN2COUT_DELAY}" in_port="adder.b" out_port="adder.cout"/>
-              <delay_constant max="${ADDER_LUT4_CIN2COUT_DELAY}" in_port="adder.cin" out_port="adder.cout"/>
+              <delay_constant max="${ADDER_IN2OUT_DELAY}" in_port="adder.a" out_port="adder.sumout"/>
+              <delay_constant max="${ADDER_IN2OUT_DELAY}" in_port="adder.b" out_port="adder.sumout"/>
+              <delay_constant max="${ADDER_CIN2OUT_DELAY}" in_port="adder.cin" out_port="adder.sumout"/>
+              <delay_constant max="${ADDER_IN2COUT_DELAY}" in_port="adder.a" out_port="adder.cout"/>
+              <delay_constant max="${ADDER_IN2COUT_DELAY}" in_port="adder.b" out_port="adder.cout"/>
+              <delay_constant max="${ADDER_CIN2COUT_DELAY}" in_port="adder.cin" out_port="adder.cout"/>
             </pb_type>
             <interconnect>
               <direct name="direct1" input="fabric.in" output="frac_logic.in"/>
@@ -754,12 +754,12 @@
               <input name="cin" num_pins="1"/>
               <output name="cout" num_pins="1"/>
               <output name="sumout" num_pins="1"/>
-              <delay_constant max="${ADDER_LUT4_IN2OUT_DELAY}" in_port="adder.a" out_port="adder.sumout"/>
-              <delay_constant max="${ADDER_LUT4_IN2OUT_DELAY}" in_port="adder.b" out_port="adder.sumout"/>
-              <delay_constant max="${ADDER_LUT4_CIN2OUT_DELAY}" in_port="adder.cin" out_port="adder.sumout"/>
-              <delay_constant max="${ADDER_LUT4_IN2COUT_DELAY}" in_port="adder.a" out_port="adder.cout"/>
-              <delay_constant max="${ADDER_LUT4_IN2COUT_DELAY}" in_port="adder.b" out_port="adder.cout"/>
-              <delay_constant max="${ADDER_LUT4_CIN2COUT_DELAY}" in_port="adder.cin" out_port="adder.cout"/>
+              <delay_constant max="${ADDER_IN2OUT_DELAY}" in_port="adder.a" out_port="adder.sumout"/>
+              <delay_constant max="${ADDER_IN2OUT_DELAY}" in_port="adder.b" out_port="adder.sumout"/>
+              <delay_constant max="${ADDER_CIN2OUT_DELAY}" in_port="adder.cin" out_port="adder.sumout"/>
+              <delay_constant max="${ADDER_IN2COUT_DELAY}" in_port="adder.a" out_port="adder.cout"/>
+              <delay_constant max="${ADDER_IN2COUT_DELAY}" in_port="adder.b" out_port="adder.cout"/>
+              <delay_constant max="${ADDER_CIN2COUT_DELAY}" in_port="adder.cin" out_port="adder.cout"/>
             </pb_type>
             <!-- Define multi-mode flip-flop -->
             <pb_type name="ff" num_pb="1">
