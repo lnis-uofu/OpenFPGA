@@ -25,3 +25,4 @@ Bottom-right (Br): the pins of a tile are placed on the bottom side and right si
 GlobalTileClk: How many clocks are defined through global ports from physical tiles. is the number of clocks
 Other features are used in naming should be listed here.
 
+tt/ff/ss: timing coners specified at the end of the file name. Each file under the specific architecture is tied to a certain corner, as the timing values will change with the corner.

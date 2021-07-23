@@ -72,4 +72,3 @@ exit
 
 # Note :
 # To run verification at the end of the flow maintain source in ./SRC directory
-{"mode":"full","isActive":false}
