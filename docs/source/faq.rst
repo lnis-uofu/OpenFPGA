@@ -11,17 +11,17 @@ questions have already been answered by searching the open or closed issues, and
 Asking questions on the github issues page allows us to answer the question for everyone who may be experiencing similar problems as 
 well.
 
-What should I do if verification fails when first installing OpenFPGA?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+What should I do if check-in tests failed when first installing OpenFPGA?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-First, check to make sure all dependencies for OpenFPGA have been installed and are up-to-date on the desired device. To see the full
+First, check to make sure all dependencies for OpenFPGA and Python have been installed and are up-to-date on the desired device. To see the full
 list of depenencies, please visit 
 `our github dependencies page <https://github.com/lnis-uofu/OpenFPGA/blob/master/.github/workflows/install_dependencies_build.sh>`_. 
 This issue has been discussed `in issue 280 <https://github.com/lnis-uofu/OpenFPGA/issues/280>`_.
 
 
-Can I test multiple script parameters for a single variable?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+How to sweep design parameters in a task run of OpenFPGA design flow?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Testing multiple script parameters for a variable is possible by modifying the task.conf file. Doing so will create a job for 
 each combination of the variables. A solution is discussed `in issue 228 <https://github.com/lnis-uofu/OpenFPGA/issues/228>`_.
@@ -35,10 +35,13 @@ running tasks needs ``OPENFPGA_ROOT`` to be the path to the OpenFPGA root direct
 current working directory. A solution is discussed `in issue 209 <https://github.com/lnis-uofu/OpenFPGA/issues/209>`_.
 
 
-Which branch should I work on to contribute to OpenFPGA?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+How do I contribute to OpenFPGA?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Users of OpenFPGA that are interested in contributing can select any `github branch <https://github.com/lnis-uofu/OpenFPGA/branches>`_ 
-that relates to the changes the user is interested in making. They can then submit a pull request to have their 
-changes implemented into OpenFPGA after passing the CI/CD tests.
+Users of OpenFPGA that are interested in contributing must complete the following: 
+
+    - Create a branch. For external collaborators, please fork the repository first and create a branch in the fork.
+    - Creatre a pull request and fill out our pull request template. It is easy for us to acknowledge and review your pull request.	
+    - Wait or keep debugging until all the CI tests pass.	
+    - Request for a review. You may expect several rounds of review and discussion before the pull request is approved.
 
