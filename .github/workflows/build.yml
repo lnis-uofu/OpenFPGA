@@ -210,6 +210,7 @@ jobs:
           - name: fpga_bitstream_reg_test
           - name: fpga_sdc_reg_test
           - name: fpga_spice_reg_test
+          - name: micro_benchmark_reg_test
           - name: quicklogic_reg_test
           - name: vtr_benchmark_reg_test
           - name: iwls_benchmark_reg_test
@@ -257,6 +258,7 @@ jobs:
           - name: fpga_bitstream_reg_test
           - name: fpga_sdc_reg_test
           - name: fpga_spice_reg_test
+          - name: micro_benchmark_reg_test
           - name: quicklogic_reg_test
           - name: vtr_benchmark_reg_test
           - name: iwls_benchmark_reg_test

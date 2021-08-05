@@ -702,12 +702,12 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
                                        const SimulationSetting& simulation_parameters,
                                        const ConfigProtocol& config_protocol,
                                        const std::string& circuit_name,
-                                       const e_verilog_default_net_type& default_net_type) {
+                                       const VerilogTestbenchOption& options) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
   print_verilog_default_net_type_declaration(fp,
-                                             default_net_type);
+                                             options.default_net_type());
 
   /* Print module definition */
   fp << "module " << circuit_name << std::string(AUTOCHECK_TOP_TESTBENCH_VERILOG_MODULE_POSTFIX);
@@ -808,13 +808,15 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
                                        std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
                                        std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
                                        std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
-                                       std::string(AUTOCHECKED_SIMULATION_FLAG));
+                                       options.no_self_checking());
 
   /* Instantiate an integer to count the number of error and
    * determine if the simulation succeed or failed
    */
-  print_verilog_comment(fp, std::string("----- Error counter: Deposit an error for config_done signal is not raised at the beginning -----"));
-  fp << "\tinteger " << TOP_TESTBENCH_ERROR_COUNTER << "= 1;" << std::endl;
+  if (!options.no_self_checking()) {
+    print_verilog_comment(fp, std::string("----- Error counter: Deposit an error for config_done signal is not raised at the beginning -----"));
+    fp << "\tinteger " << TOP_TESTBENCH_ERROR_COUNTER << "= 1;" << std::endl;
+  }
 }
 
 /********************************************************************
@@ -910,13 +912,12 @@ void print_verilog_top_testbench_benchmark_instance(std::fstream& fp,
                                                     const std::string& reference_verilog_top_name,
                                                     const AtomContext& atom_ctx,
                                                     const VprNetlistAnnotation& netlist_annotation,
+                                                    const PinConstraints& pin_constraints,
                                                     const bool& explicit_port_mapping) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
-  /* Benchmark is instanciated conditionally: only when a preprocessing flag is enable */
-  print_verilog_preprocessing_flag(fp, std::string(AUTOCHECKED_SIMULATION_FLAG));
-
+  /* Instanciate benchmark */
   print_verilog_comment(fp, std::string("----- Reference Benchmark Instanication -------"));
 
   /* Do NOT use explicit port mapping here:
@@ -932,15 +933,10 @@ void print_verilog_top_testbench_benchmark_instance(std::fstream& fp,
                                              prefix_to_remove,
                                              std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
                                              atom_ctx, netlist_annotation,
+                                             pin_constraints,
                                              explicit_port_mapping);
 
   print_verilog_comment(fp, std::string("----- End reference Benchmark Instanication -------"));
-
-  /* Add an empty line as splitter */
-  fp << std::endl;
-
-  /* Condition ends for the benchmark instanciation */
-  print_verilog_endif(fp);
 
   /* Add an empty line as splitter */
   fp << std::endl;
@@ -1795,11 +1791,13 @@ void print_verilog_top_testbench_reset_stimuli(std::fstream& fp,
       continue;
     }
 
+    size_t initial_value = global_ports.global_port_default_value(find_fabric_global_port(global_ports, module_manager, pin_constraints.net_pin(block_name)));
+
     /* Connect stimuli to greset with an optional inversion, depending on the default value */
     BasicPort reset_port(block_name, 1);
     print_verilog_wire_connection(fp, reset_port,
                                   BasicPort(TOP_TB_RESET_PORT_NAME, 1),
-                                  1 == global_ports.global_port_default_value(find_fabric_global_port(global_ports, module_manager, pin_constraints.net_pin(block_name))));
+                                  1 == initial_value);
   }
 }
 
@@ -1811,15 +1809,11 @@ void print_verilog_top_testbench_reset_stimuli(std::fstream& fp,
  *******************************************************************/
 static
 void print_verilog_top_testbench_check(std::fstream& fp, 
-                                       const std::string& autochecked_preprocessing_flag,
                                        const std::string& config_done_port_name,
                                        const std::string& error_counter_name) {
 
   /* Validate the file stream */
   valid_file_stream(fp);
-
-  /* Add output autocheck conditionally: only when a preprocessing flag is enable */
-  print_verilog_preprocessing_flag(fp, autochecked_preprocessing_flag); 
 
   print_verilog_comment(fp, std::string("----- Configuration done must be raised in the end -------"));
 
@@ -1833,9 +1827,6 @@ void print_verilog_top_testbench_check(std::fstream& fp,
 
   write_tab_to_file(fp, 1);
   fp << "end" << std::endl;
-
-  /* Condition ends */
-  print_verilog_endif(fp);
 
   /* Add an empty line as splitter */
   fp << std::endl;
@@ -1925,7 +1916,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                     pin_constraints,
                                     simulation_parameters, config_protocol,
                                     circuit_name,
-                                    options.default_net_type());
+                                    options);
 
   /* Find the clock period */
   float prog_clock_period = (1./simulation_parameters.programming_clock_frequency());
@@ -2006,11 +1997,14 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                            (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
   /* Instanciate input benchmark */
-  print_verilog_top_testbench_benchmark_instance(fp,
-                                                 circuit_name,
-                                                 atom_ctx,
-                                                 netlist_annotation,
-                                                 explicit_port_mapping);
+  if (!options.no_self_checking()) {
+    print_verilog_top_testbench_benchmark_instance(fp,
+                                                   circuit_name,
+                                                   atom_ctx,
+                                                   netlist_annotation,
+                                                   pin_constraints,
+                                                   explicit_port_mapping);
+  }
 
   /* load bitstream to FPGA fabric in a configuration phase */
   print_verilog_full_testbench_bitstream(fp,
@@ -2029,7 +2023,8 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                                   std::string(TOP_TESTBENCH_FPGA_INSTANCE_NAME),
                                                   circuit_lib,
                                                   module_manager,
-                                                  top_module);
+                                                  top_module,
+                                                  true);
   }
 
 
@@ -2048,26 +2043,27 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                          pin_constraints,
                                          clock_port_names,
                                          std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
-                                         std::vector<BasicPort>(1, BasicPort(std::string(TOP_TB_OP_CLOCK_PORT_NAME), 1)));
+                                         std::vector<BasicPort>(1, BasicPort(std::string(TOP_TB_OP_CLOCK_PORT_NAME), 1)),
+                                         options.no_self_checking());
 
-  /* Add output autocheck */
-  print_verilog_testbench_check(fp,
-                                std::string(AUTOCHECKED_SIMULATION_FLAG),
-                                std::string(TOP_TESTBENCH_SIM_START_PORT_NAME),
-                                std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
-                                std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
-                                std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
-                                std::string(TOP_TESTBENCH_ERROR_COUNTER),
-                                atom_ctx,
-                                netlist_annotation,
-                                clock_port_names,
-                                std::string(TOP_TB_OP_CLOCK_PORT_NAME));
+  if (!options.no_self_checking()) {
+    /* Add output autocheck */
+    print_verilog_testbench_check(fp,
+                                  std::string(TOP_TESTBENCH_SIM_START_PORT_NAME),
+                                  std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
+                                  std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
+                                  std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
+                                  std::string(TOP_TESTBENCH_ERROR_COUNTER),
+                                  atom_ctx,
+                                  netlist_annotation,
+                                  clock_port_names,
+                                  std::string(TOP_TB_OP_CLOCK_PORT_NAME));
 
-  /* Add autocheck for configuration phase */
-  print_verilog_top_testbench_check(fp, 
-                                    std::string(AUTOCHECKED_SIMULATION_FLAG),
-                                    std::string(TOP_TB_CONFIG_DONE_PORT_NAME),
-                                    std::string(TOP_TESTBENCH_ERROR_COUNTER));
+    /* Add autocheck for configuration phase */
+    print_verilog_top_testbench_check(fp, 
+                                      std::string(TOP_TB_CONFIG_DONE_PORT_NAME),
+                                      std::string(TOP_TESTBENCH_ERROR_COUNTER));
+  }
 
   /* Find simulation time */
   float simulation_time = find_simulation_time_period(VERILOG_SIM_TIMESCALE,
@@ -2085,7 +2081,8 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                 std::string(circuit_name + std::string("_formal.vcd")),
                                 std::string(TOP_TESTBENCH_SIM_START_PORT_NAME),
                                 std::string(TOP_TESTBENCH_ERROR_COUNTER),
-                                std::ceil(simulation_time));
+                                std::ceil(simulation_time),
+                                options.no_self_checking());
 
 
   /* Testbench ends*/

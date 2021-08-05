@@ -41,6 +41,14 @@ void read_xml_pin_constraint(pugi::xml_node& xml_pin_constraint,
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_pin_constraint),
                    "Fail to create pin constraint!\n");
   }
+  
+  /* Set default value if defined */
+  std::string default_value = get_attribute(xml_pin_constraint, "default_value", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string();
+  pin_constraints.set_net_default_value(pin_constraint_id, default_value);
+  if (!default_value.empty() && !pin_constraints.valid_net_default_value(pin_constraint_id)) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_pin_constraint),
+                   "Invalid default value for pin constraints. Expect [0|1]!\n");
+  }
 }
 
 /********************************************************************

@@ -83,7 +83,7 @@ void print_pnr_sdc_constrain_pb_pin_interc_timing(std::fstream& fp,
     t_pb_graph_node* des_pb_graph_node  = des_pb_graph_pin->parent_node;
 
     /* Find the src module in module manager */
-    std::string src_module_name = generate_physical_block_module_name(src_pb_graph_pin->parent_node->pb_type);
+    std::string src_module_name = generate_physical_block_module_name(src_pb_graph_node->pb_type);
     ModuleId src_module = module_manager.find_module(src_module_name);
     VTR_ASSERT(true == module_manager.valid_module_id(src_module));
 
@@ -104,6 +104,7 @@ void print_pnr_sdc_constrain_pb_pin_interc_timing(std::fstream& fp,
         src_instance_name += std::to_string(instance_id);
         src_instance_name += "_";
       } else {
+        VTR_ASSERT_SAFE(true == module_manager.instance_name(parent_module, src_module, instance_id).empty()); 
         src_instance_name += module_manager.instance_name(parent_module, src_module, instance_id);  
       }
     }
@@ -113,7 +114,7 @@ void print_pnr_sdc_constrain_pb_pin_interc_timing(std::fstream& fp,
     src_port.set_width(src_pb_graph_pin->pin_number, src_pb_graph_pin->pin_number);
 
     /* Find the des module in module manager */
-    std::string des_module_name = generate_physical_block_module_name(des_pb_graph_pin->parent_node->pb_type);
+    std::string des_module_name = generate_physical_block_module_name(des_pb_graph_node->pb_type);
     ModuleId des_module = module_manager.find_module(des_module_name);
     VTR_ASSERT(true == module_manager.valid_module_id(des_module));
     ModulePortId des_module_port_id = module_manager.find_module_port(des_module, generate_pb_type_port_name(des_pb_graph_pin->port));
@@ -133,6 +134,7 @@ void print_pnr_sdc_constrain_pb_pin_interc_timing(std::fstream& fp,
         des_instance_name += std::to_string(instance_id);
         des_instance_name += "_";
       } else {
+        VTR_ASSERT_SAFE(true != module_manager.instance_name(parent_module, des_module, instance_id).empty());
         des_instance_name += module_manager.instance_name(parent_module, des_module, instance_id);  
       }
     }
@@ -150,17 +152,11 @@ void print_pnr_sdc_constrain_pb_pin_interc_timing(std::fstream& fp,
     /* Give full path if hierarchical is not enabled */
     std::string src_module_path = src_instance_name;
     if (false == hierarchical) {
-      if (true == src_instance_name.empty()) {
-        src_instance_name = generate_instance_name(src_module_name, 0);
-      }
       src_module_path = module_path + src_instance_name;
     }
 
     std::string des_module_path = des_instance_name;
     if (false == hierarchical) {
-      if (true == des_instance_name.empty()) {
-        des_instance_name = generate_instance_name(des_module_name, 0);
-      }
       des_module_path = module_path + des_instance_name;
     }
 
@@ -521,7 +517,7 @@ void rec_print_pnr_sdc_constrain_pb_graph_timing(const std::string& sdc_dir,
     rec_print_pnr_sdc_constrain_pb_graph_timing(sdc_dir,
                                                 time_unit, 
                                                 hierarchical,
-                                                format_dir_path(module_path + std::string(physical_mode->pb_type_children[ipb].name)),
+                                                format_dir_path(module_path + generate_physical_block_instance_name(&(physical_mode->pb_type_children[ipb]), ipb)),
                                                 module_manager, 
                                                 device_annotation,
                                                 &(parent_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ipb][0]),
@@ -582,6 +578,7 @@ void print_pnr_sdc_constrain_grid_timing(const std::string& sdc_dir,
         VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
 
         std::string module_path = format_dir_path(root_path + grid_module_name);
+        module_path = format_dir_path(module_path + generate_physical_block_instance_name(pb_graph_head->pb_type, pb_graph_head->placement_index));
 
         rec_print_pnr_sdc_constrain_pb_graph_timing(sdc_dir,
                                                     time_unit,
@@ -603,6 +600,7 @@ void print_pnr_sdc_constrain_grid_timing(const std::string& sdc_dir,
       VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
 
       std::string module_path = format_dir_path(root_path + grid_module_name);
+      module_path = format_dir_path(module_path + generate_physical_block_instance_name(pb_graph_head->pb_type, pb_graph_head->placement_index));
 
       rec_print_pnr_sdc_constrain_pb_graph_timing(sdc_dir,
                                                   time_unit,

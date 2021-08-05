@@ -137,8 +137,6 @@ echo -e "Testing through channels in tileable routing";
 run-task fpga_verilog/thru_channel/thru_narrow_tile --debug --show_thread_logs
 run-task fpga_verilog/thru_channel/thru_wide_tile --debug --show_thread_logs
 
-# Verify MCNC big20 benchmark suite with ModelSim
-# Please make sure you have ModelSim installed in the environment
-# Otherwise, it will fail
-#run-task fpga_verilog/mcnc_big20 --debug --show_thread_logs --maxthreads 20
-#python3 openfpga_flow/scripts/run_modelsim.py mcnc_big20 --run_sim
+echo -e "Testing the generation of preconfigured fabric wrapper for different HDL simulators";
+run-task fpga_verilog/verilog_netlist_formats/embed_bitstream_none --debug --show_thread_logs
+run-task fpga_verilog/verilog_netlist_formats/embed_bitstream_modelsim --debug --show_thread_logs

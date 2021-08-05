@@ -10,6 +10,7 @@
 
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
+#include "openfpga_reserved_words.h"
 
 /* Headers from fpgabitstream library */
 #include "read_xml_arch_bitstream.h"
@@ -153,6 +154,11 @@ int write_io_mapping(const OpenfpgaContext& openfpga_ctx,
   ModuleId top_module = openfpga_ctx.module_graph().find_module(top_module_name);
   VTR_ASSERT(true == openfpga_ctx.module_graph().valid_module_id(top_module));
 
+  /* VPR added a prefix to the output ports, remove them here */
+  std::vector<std::string> prefix_to_remove;
+  prefix_to_remove.push_back(std::string(VPR_BENCHMARK_OUT_PORT_PREFIX));
+  prefix_to_remove.push_back(std::string(OPENFPGA_BENCHMARK_OUT_PORT_PREFIX));
+
   IoMap io_map = build_fpga_io_mapping_info(openfpga_ctx.module_graph(),
                                             top_module,
                                             g_vpr_ctx.atom(),
@@ -160,7 +166,8 @@ int write_io_mapping(const OpenfpgaContext& openfpga_ctx,
                                             openfpga_ctx.io_location_map(),
                                             openfpga_ctx.vpr_netlist_annotation(),
                                             std::string(),
-                                            std::string());
+                                            std::string(),
+                                            prefix_to_remove);
 
   status = write_io_mapping_to_xml_file(io_map,
                                         cmd_context.option_value(cmd, opt_file),
