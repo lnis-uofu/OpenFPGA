@@ -168,19 +168,13 @@ def generate_each_task_actions(taskname):
     # Check if task directory exists and consistent
     local_tasks = os.path.join(*(taskname))
     repo_tasks = os.path.join(gc["task_dir"], *(taskname))
-    abs_tasks = os.path.abspath('/' + local_tasks)
     if os.path.isdir(local_tasks):
         os.chdir(local_tasks)
         curr_task_dir = os.path.abspath(os.getcwd())
-    elif os.path.isdir(abs_tasks):
-        curr_task_dir = abs_tasks
     elif os.path.isdir(repo_tasks):
         curr_task_dir = repo_tasks
     else:
-        clean_up_and_exit("Task directory [%s] not found" % taskname +
-                          " locally at [%s]" % local_tasks +
-                          ", absolutely at [%s]" % abs_tasks +
-                          ", or in OpenFPGA task directory [%s]" % repo_tasks)
+        clean_up_and_exit("Task directory [%s] not found" % taskname + " locally at [%s]" % local_tasks + " or in OpenFPGA task directory [%s]" % repo_tasks)
 
     os.chdir(curr_task_dir)
 
