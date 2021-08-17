@@ -47,10 +47,10 @@ In particular, OpenFPGA requires specific versions for the following dependencie
 :iverilog:
   version 10.1+ is required to run Verilog-to-Verification flow
   
-:envyaml:
-  python package envyaml is required:
+:python dependencies:
+  python packages are also required:
   
-  python3 -m pip install envyaml
+  python3 -m pip install -r requirements.txt
 
 .. _install_dependencies_build: https://github.com/lnis-uofu/OpenFPGA/blob/master/.github/workflows/install_dependencies_build.sh
 
