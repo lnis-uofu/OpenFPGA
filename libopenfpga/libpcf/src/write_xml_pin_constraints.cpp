@@ -44,6 +44,7 @@ int write_xml_pin_constraint(std::fstream& fp,
 
   write_xml_attribute(fp, "pin", generate_xml_port_name(pin_constraints.pin(pin_constraint)).c_str());
   write_xml_attribute(fp, "net", pin_constraints.net(pin_constraint).c_str());
+  write_xml_attribute(fp, "default_value", pin_constraints.net_default_value_to_string(pin_constraint).c_str());
 
   fp << "/>" << "\n";
 

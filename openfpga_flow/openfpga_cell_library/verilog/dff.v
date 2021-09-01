@@ -246,9 +246,9 @@ endmodule //End Of Module
 //-----------------------------------------------------
 // Function : A multi-functional D-type flip-flop with 
 //           - asynchronous reset 
-//             which can be switched between active-low and active hight
-//           - asynchronous set which can be switched 
-//             which can be switched between active-low and active hight
+//             which can be switched between active-low and active high
+//           - asynchronous set 
+//             which can be switched between active-low and active high
 //-----------------------------------------------------
 module MULTI_MODE_DFFSRQ (
   input SET, // Set input
@@ -259,14 +259,37 @@ module MULTI_MODE_DFFSRQ (
   input [0:1] mode // mode-selection bits: bit0 for reset polarity; bit1 for set polarity
 );
 
-wire post_set = mode ? ~SET : SET;
-wire post_reset = mode ? ~RST : RST;
+wire post_set = mode[1] ? ~SET : SET;
+wire post_reset = mode[0] ? ~RST : RST;
 
 DFFSRQ FF_CORE (.SET(post_set),
                 .RST(post_rst),
                 .CK(CK),
                 .D(D),
                 .Q(Q)
+               );
+
+endmodule //End Of Module
+
+//-----------------------------------------------------
+// Function : A multi-functional D-type flip-flop with 
+//           - asynchronous reset 
+//             which can be switched between active-low and active high
+//-----------------------------------------------------
+module MULTI_MODE_DFFRQ (
+  input RST, // Reset input
+  input CK, // Clock Input
+  input D, // Data Input
+  output Q, // Q output
+  input mode // mode-selection bits: bit0 for reset polarity; bit1 for set polarity
+);
+
+wire post_reset = mode ? ~RST : RST;
+
+DFFRQ FF_CORE (.RST(post_rst),
+               .CK(CK),
+               .D(D),
+               .Q(Q)
                );
 
 endmodule //End Of Module
