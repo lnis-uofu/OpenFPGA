@@ -3,11 +3,10 @@ name: linux_build
 # Run CI on push, PR, and weekly.
 
 on:
-   workflow_dispatch:
-#  push:
-#  pull_request:
-#  schedule:
-#    - cron: "0 0 * * 0 " # weekly
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 0 * * 0 " # weekly
 
 # Environment variables
 env:
