@@ -2,6 +2,3 @@
 	path = yosys
 	url = https://github.com/QuickLogic-Corp/yosys.git
 	branch = quicklogic-rebased
-[submodule "RTL_Benchmark"]
-	path = RTL_Benchmark
-	url = git@github.com:RapidSilicon/RTL_Benchmark.git

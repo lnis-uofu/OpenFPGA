@@ -15,3 +15,5 @@ run-task benchmark_sweep/mac_units --debug --show_thread_logs
 # Otherwise, it will fail
 run-task benchmark_sweep/mcnc_big20 --debug --show_thread_logs
 #python3 openfpga_flow/scripts/run_modelsim.py mcnc_big20 --run_sim
+
+run-task benchmark_sweep/signal_gen --debug --show_thread_logs

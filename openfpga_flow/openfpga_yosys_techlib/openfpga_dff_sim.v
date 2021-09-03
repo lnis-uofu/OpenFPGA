@@ -76,6 +76,37 @@ module dffre(
         endcase
 endmodule
 
+//-----------------------------
+// D-type flip-flop with active-low asynchronous reset
+//-----------------------------
+(* abc9_flop, lib_whitebox *)
+module dffrn(
+    output reg Q,
+    input D,
+    input RN,
+    (* clkbuf_sink *)
+    (* invertible_pin = "IS_C_INVERTED" *)
+    input C
+);
+    parameter [0:0] INIT = 1'b0;
+    parameter [0:0] IS_C_INVERTED = 1'b0;
+    initial Q = INIT;
+    case(|IS_C_INVERTED)
+          1'b0:
+            always @(posedge C or negedge RN)
+                if (RN == 1'b0)
+                        Q <= 1'b0;
+                else
+                        Q <= D;
+          1'b1:
+            always @(negedge C or negedge RN)
+                if (RN == 1'b0)
+                        Q <= 1'b0;
+                else
+                        Q <= D;
+    endcase
+endmodule
+
 (* abc9_flop, lib_whitebox *)
 module latchre (
     output reg Q,
