@@ -18,6 +18,7 @@
 #include "device_rr_gsb.h"
 #include "fabric_key.h"
 #include "config_protocol.h"
+#include "build_top_module_memory_utils.h"
 
 /********************************************************************
  * Function declaration
@@ -25,8 +26,6 @@
 
 /* begin namespace openfpga */
 namespace openfpga {
-
-typedef vtr::vector<ConfigRegionId, std::pair<size_t, size_t>> TopModuleNumConfigBits;
 
 void organize_top_module_memory_modules(ModuleManager& module_manager, 
                                         const ModuleId& top_module,
@@ -66,6 +65,8 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
 void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            DecoderLibrary& decoder_lib,
                                            const ModuleId& parent_module,
+                                           const CircuitLibrary& circuit_lib,
+                                           const CircuitModelId& sram_model,
                                            const ConfigProtocol& config_protocol, 
                                            const e_circuit_model_design_tech& mem_tech,
                                            const TopModuleNumConfigBits& num_config_bits);

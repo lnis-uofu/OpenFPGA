@@ -23,6 +23,7 @@
 #include "decoder_library_utils.h"
 #include "module_manager_utils.h"
 #include "build_decoder_modules.h"
+#include "build_top_module_memory_bank.h"
 #include "build_top_module_memory.h"
 
 /* begin namespace openfpga */
@@ -689,8 +690,8 @@ TopModuleNumConfigBits find_top_module_regional_num_config_bit(const ModuleManag
       for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
         ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
         vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
-        num_bls[coord.x()] = std::max(num_bls[coord.x()], find_memory_decoder_addr_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, config_protocol_type)));
-        num_wls[coord.y()] = std::max(num_wls[coord.y()], find_memory_decoder_addr_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, config_protocol_type)));
+        num_bls[coord.x()] = std::max(num_bls[coord.x()], find_memory_decoder_data_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, config_protocol_type)));
+        num_wls[coord.y()] = std::max(num_wls[coord.y()], find_memory_decoder_data_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, config_protocol_type)));
         for (const auto& kv : num_bls) {
           num_config_bits[config_region].first += kv.first;
         }
@@ -850,7 +851,7 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
     /* BL address size is the largest among all the regions */
     size_t bl_addr_size = 0;
     for (const ConfigRegionId& config_region : module_manager.regions(module_id)) {
-       bl_addr_size = std::max(bl_addr_size, num_config_bits[config_region].first);
+       bl_addr_size = std::max(bl_addr_size, find_memory_decoder_addr_size(num_config_bits[config_region].first));
     }
     BasicPort bl_addr_port(std::string(DECODER_BL_ADDRESS_PORT_NAME), bl_addr_size);
     module_manager.add_port(module_id, bl_addr_port, ModuleManager::MODULE_INPUT_PORT);
@@ -858,7 +859,7 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
     /* WL address size is the largest among all the regions */
     size_t wl_addr_size = 0;
     for (const ConfigRegionId& config_region : module_manager.regions(module_id)) {
-       wl_addr_size = std::max(wl_addr_size, num_config_bits[config_region].second);
+       wl_addr_size = std::max(wl_addr_size, find_memory_decoder_addr_size(num_config_bits[config_region].second));
     }
     BasicPort wl_addr_port(std::string(DECODER_WL_ADDRESS_PORT_NAME), wl_addr_size);
     module_manager.add_port(module_id, wl_addr_port, ModuleManager::MODULE_INPUT_PORT);
@@ -1750,6 +1751,8 @@ static
 void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
                                                 DecoderLibrary& decoder_lib,
                                                 const ModuleId& parent_module,
+                                                const CircuitLibrary& circuit_lib,
+                                                const CircuitModelId& sram_model,
                                                 const ConfigProtocol& config_protocol, 
                                                 const TopModuleNumConfigBits& num_config_bits) {
   switch (config_protocol.type()) {
@@ -1765,6 +1768,9 @@ void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
   }
   case CONFIG_MEM_MEMORY_BANK:
     add_top_module_nets_cmos_memory_bank_config_bus(module_manager, decoder_lib, parent_module, num_config_bits);
+    break;
+  case CONFIG_MEM_QL_MEMORY_BANK:
+    add_top_module_nets_cmos_ql_memory_bank_config_bus(module_manager, decoder_lib, parent_module, circuit_lib, sram_model, num_config_bits);
     break;
   case CONFIG_MEM_FRAME_BASED:
     add_top_module_nets_cmos_memory_frame_config_bus(module_manager, decoder_lib, parent_module, num_config_bits);
@@ -1811,6 +1817,8 @@ void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
 void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            DecoderLibrary& decoder_lib,
                                            const ModuleId& parent_module,
+                                           const CircuitLibrary& circuit_lib,
+                                           const CircuitModelId& sram_model,
                                            const ConfigProtocol& config_protocol, 
                                            const e_circuit_model_design_tech& mem_tech,
                                            const TopModuleNumConfigBits& num_config_bits) {
@@ -1820,7 +1828,9 @@ void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
   switch (mem_tech) {
   case CIRCUIT_MODEL_DESIGN_CMOS:
     add_top_module_nets_cmos_memory_config_bus(module_manager, decoder_lib,
-                                               parent_module, 
+                                               parent_module,
+                                               circuit_lib,
+                                               sram_model, 
                                                config_protocol,
                                                num_config_bits);
     break;
