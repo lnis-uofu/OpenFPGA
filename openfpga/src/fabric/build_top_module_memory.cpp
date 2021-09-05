@@ -649,13 +649,13 @@ int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager
  *   - This function should be called after the configurable children
  *     is loaded to the top-level module!
  ********************************************************************/
-vtr::vector<ConfigRegionId, TopModuleNumConfigBits> find_top_module_regional_num_config_bit(const ModuleManager& module_manager,
-                                                                                            const ModuleId& top_module,
-                                                                                            const CircuitLibrary& circuit_lib,
-                                                                                            const CircuitModelId& sram_model,
-                                                                                            const e_config_protocol_type& config_protocol_type) {
+TopModuleNumConfigBits find_top_module_regional_num_config_bit(const ModuleManager& module_manager,
+                                                               const ModuleId& top_module,
+                                                               const CircuitLibrary& circuit_lib,
+                                                               const CircuitModelId& sram_model,
+                                                               const e_config_protocol_type& config_protocol_type) {
   /* Initialize the number of configuration bits for each region */
-  vtr::vector<ConfigRegionId, TopModuleNumConfigBits> num_config_bits(module_manager.regions(top_module).size(), TopModuleNumConfigBits(0, 0));
+  TopModuleNumConfigBits num_config_bits(module_manager.regions(top_module).size(), std::pair<size_t, size_t>(0, 0));
 
   switch (config_protocol_type) {
   case CONFIG_MEM_STANDALONE: 
@@ -799,7 +799,7 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
                                const CircuitLibrary& circuit_lib,
                                const CircuitModelId& sram_model,
                                const ConfigProtocol& config_protocol,
-                               const vtr::vector<ConfigRegionId, TopModuleNumConfigBits>& num_config_bits) {
+                               const TopModuleNumConfigBits& num_config_bits) {
   std::vector<std::string> sram_port_names = generate_sram_port_names(circuit_lib, sram_model, config_protocol.type());
   size_t total_num_config_bits = 0;
   for (const auto& curr_num_config_bits : num_config_bits) {
@@ -1006,7 +1006,7 @@ static
 void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manager,
                                                      DecoderLibrary& decoder_lib,
                                                      const ModuleId& top_module,
-                                                     const vtr::vector<ConfigRegionId, TopModuleNumConfigBits>& num_config_bits) {
+                                                     const TopModuleNumConfigBits& num_config_bits) {
   /* Find Enable port from the top-level module */ 
   ModulePortId en_port = module_manager.find_module_port(top_module, std::string(DECODER_ENABLE_PORT_NAME));
   BasicPort en_port_info = module_manager.module_port(top_module, en_port);
@@ -1678,7 +1678,7 @@ static
 void add_top_module_nets_cmos_memory_frame_config_bus(ModuleManager& module_manager,
                                                       DecoderLibrary& decoder_lib,
                                                       const ModuleId& top_module,
-                                                      const vtr::vector<ConfigRegionId, TopModuleNumConfigBits>& num_config_bits) {
+                                                      const TopModuleNumConfigBits& num_config_bits) {
   /* Find the number of address bits for the top-level module */
   ModulePortId top_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_ADDRESS_PORT_NAME));
   BasicPort top_addr_port_info = module_manager.module_port(top_module, top_addr_port);
@@ -1751,7 +1751,7 @@ void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
                                                 DecoderLibrary& decoder_lib,
                                                 const ModuleId& parent_module,
                                                 const ConfigProtocol& config_protocol, 
-                                                const vtr::vector<ConfigRegionId, TopModuleNumConfigBits>& num_config_bits) {
+                                                const TopModuleNumConfigBits& num_config_bits) {
   switch (config_protocol.type()) {
   case CONFIG_MEM_STANDALONE:
     add_module_nets_cmos_flatten_memory_config_bus(module_manager, parent_module,
@@ -1813,7 +1813,7 @@ void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            const ModuleId& parent_module,
                                            const ConfigProtocol& config_protocol, 
                                            const e_circuit_model_design_tech& mem_tech,
-                                           const vtr::vector<ConfigRegionId, TopModuleNumConfigBits>& num_config_bits) {
+                                           const TopModuleNumConfigBits& num_config_bits) {
 
   vtr::ScopedStartFinishTimer timer("Add module nets for configuration buses");
 
