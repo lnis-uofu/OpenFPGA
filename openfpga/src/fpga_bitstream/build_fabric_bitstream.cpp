@@ -19,6 +19,7 @@
 #include "decoder_library_utils.h"
 #include "bitstream_manager_utils.h"
 #include "build_fabric_bitstream.h"
+#include "build_fabric_bitstream_memory_bank.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -573,6 +574,13 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
                                                               fabric_bitstream,
                                                               fabric_bitstream_region);
     }
+    break;
+  }
+  case CONFIG_MEM_QL_MEMORY_BANK: { 
+    build_module_fabric_dependent_bitstream_ql_memory_bank(config_protocol,
+                                                           bitstream_manager, top_block,
+                                                           module_manager, top_module, 
+                                                           fabric_bitstream);
     break;
   }
   case CONFIG_MEM_FRAME_BASED: {
