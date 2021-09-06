@@ -3,6 +3,7 @@
  * in the top module of FPGA fabric
  *******************************************************************/
 #include <cmath>
+#include <limits>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
@@ -277,20 +278,75 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
                         wl_decoder_module, curr_wl_decoder_instance_id, wl_decoder_addr_port);
 
     /************************************************************** 
-     * Add nets from BL data out to each configurable child
+     * Precompute the BLs and WLs distribution across the FPGA fabric
+     * The distribution is a matrix which contains the starting index of BL/WL for each column or row
      */
-    size_t cur_bl_index = 0;
+    std::pair<int, int> child_x_range(std::numeric_limits<int>::max(), std::numeric_limits<int>::min()); // Deposit an invalid range first: LSB->max(); MSB->min()
+    std::pair<int, int> child_y_range(std::numeric_limits<int>::max(), std::numeric_limits<int>::min()); // Deposit an invalid range first: LSB->max(); MSB->min()
+    for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
+      vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
+      child_x_range.first = std::min(coord.x(), child_x_range.first); 
+      child_x_range.second = std::max(coord.x(), child_x_range.second); 
+      child_y_range.first = std::min(coord.y(), child_y_range.first); 
+      child_y_range.second = std::max(coord.y(), child_y_range.second); 
+    }
 
-    ModulePortId bl_decoder_dout_port = module_manager.find_module_port(bl_decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
-    BasicPort bl_decoder_dout_port_info = module_manager.module_port(bl_decoder_module, bl_decoder_dout_port);
-
-    std::map<int, size_t> num_bls_per_tile; 
-    std::map<int, size_t> num_wls_per_tile; 
+    std::map<int, size_t> num_bls_per_tile;
+    std::map<int, size_t> num_wls_per_tile;
     for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
       ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
       vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
       num_bls_per_tile[coord.x()] = std::max(num_bls_per_tile[coord.x()], find_memory_decoder_data_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, CONFIG_MEM_QL_MEMORY_BANK)));
       num_wls_per_tile[coord.y()] = std::max(num_wls_per_tile[coord.y()], find_memory_decoder_data_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, CONFIG_MEM_QL_MEMORY_BANK)));
+    }
+
+    std::map<int, size_t> bl_starting_index_per_tile;
+    for (int ibl = child_x_range.first; ibl <= child_x_range.second; ++ibl) {
+      if (ibl == child_x_range.first) {
+        bl_starting_index_per_tile[ibl] = 0;
+      } else {
+        bl_starting_index_per_tile[ibl] = num_bls_per_tile[ibl - 1] + bl_starting_index_per_tile[ibl - 1]; 
+      }
+    }  
+
+    std::map<int, size_t> wl_starting_index_per_tile;
+    for (int iwl = child_y_range.first; iwl <= child_y_range.second; ++iwl) {
+      if (iwl == child_y_range.first) {
+        wl_starting_index_per_tile[iwl] = 0;
+      } else {
+        wl_starting_index_per_tile[iwl] = num_wls_per_tile[iwl - 1] + wl_starting_index_per_tile[iwl - 1]; 
+      }
+    }  
+
+    /************************************************************** 
+     * Add nets from BL data out to each configurable child
+     * BL data output pins are connected to the BL input pins of each PB/CB/SB
+     * For all the PB/CB/SB in the same column, they share the same set of BLs
+     * A quick example
+     *
+     *   BL[i .. i + sqrt(N)]     
+     *     |
+     *     |    CLB[1][H]
+     *     |   +---------+     
+     *     |   |  SRAM   |     
+     *     +-->|  [0..N] |     
+     *     |   +---------+
+     *     |
+     *    ...
+     *     |    CLB[1][1]
+     *     |   +---------+     
+     *     |   |  SRAM   |     
+     *     +-->|  [0..N] |     
+     *     |   +---------+
+     *     |
+     */
+    ModulePortId bl_decoder_dout_port = module_manager.find_module_port(bl_decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
+    BasicPort bl_decoder_dout_port_info = module_manager.module_port(bl_decoder_module, bl_decoder_dout_port);
+
+    for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
+      ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
+      vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
+      int child_num_unique_blwls = find_memory_decoder_data_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, CONFIG_MEM_QL_MEMORY_BANK));
 
       size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
 
@@ -298,11 +354,13 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
       ModulePortId child_bl_port = module_manager.find_module_port(child_module, std::string(MEMORY_BL_PORT_NAME));
       BasicPort child_bl_port_info = module_manager.module_port(child_module, child_bl_port);
 
+      size_t cur_bl_index = 0;
+
       for (const size_t& sink_bl_pin : child_bl_port_info.pins()) {
         /* Find the BL decoder data index: 
-         * It should be the residual when divided by the number of BLs
+         * It should be the starting index plus an offset which is the residual when divided by the number of BLs in this tile
          */
-        size_t bl_pin_id = std::floor(cur_bl_index / num_bls);
+        size_t bl_pin_id = bl_starting_index_per_tile[coord.x()] + std::floor(cur_bl_index / child_num_unique_blwls);
         if (!(bl_pin_id < bl_decoder_dout_port_info.pins().size()))
           VTR_ASSERT(bl_pin_id < bl_decoder_dout_port_info.pins().size());
 
@@ -325,24 +383,27 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
     /************************************************************** 
      * Add nets from WL data out to each configurable child
      */
-    size_t cur_wl_index = 0;
-
     ModulePortId wl_decoder_dout_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
     BasicPort wl_decoder_dout_port_info = module_manager.module_port(wl_decoder_module, wl_decoder_dout_port);
 
     for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
       ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
+      vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
+      int child_num_unique_blwls = find_memory_decoder_data_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, CONFIG_MEM_QL_MEMORY_BANK));
+
       size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
 
       /* Find the WL port */
       ModulePortId child_wl_port = module_manager.find_module_port(child_module, std::string(MEMORY_WL_PORT_NAME));
       BasicPort child_wl_port_info = module_manager.module_port(child_module, child_wl_port);
 
+      size_t cur_wl_index = 0;
+
       for (const size_t& sink_wl_pin : child_wl_port_info.pins()) {
-        /* Find the BL decoder data index: 
-         * It should be the residual when divided by the number of BLs
+        /* Find the WL decoder data index: 
+         * It should be the starting index plus an offset which is the residual when divided by the number of WLs in this tile
          */
-        size_t wl_pin_id = cur_wl_index % num_wls;
+        size_t wl_pin_id = wl_starting_index_per_tile[coord.x()] + cur_wl_index % child_num_unique_blwls;
 
         /* Create net */
         ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
