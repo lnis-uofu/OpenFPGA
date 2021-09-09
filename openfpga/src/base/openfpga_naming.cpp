@@ -703,6 +703,7 @@ std::string generate_sram_port_name(const e_config_protocol_type& sram_orgz_type
     }
     break;
   case CONFIG_MEM_STANDALONE:
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     /* Two types of ports are available:  
      * (1) Bit Lines (BLs) of a SRAM cell, enabled by port type of BL

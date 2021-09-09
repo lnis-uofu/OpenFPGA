@@ -786,6 +786,7 @@ void build_memory_module(ModuleManager& module_manager,
                          const size_t& num_mems) {
   switch (sram_orgz_type) {
   case CONFIG_MEM_STANDALONE:
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     build_memory_flatten_module(module_manager, circuit_lib, 
                                 module_name, sram_model, num_mems);

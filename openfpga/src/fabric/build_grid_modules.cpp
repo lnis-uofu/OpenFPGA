@@ -279,7 +279,7 @@ void build_primitive_block_module(ModuleManager& module_manager,
   size_t num_shared_config_bits = find_circuit_num_shared_config_bits(circuit_lib, primitive_model, sram_orgz_type);
   if (0 < num_shared_config_bits) {
     /* Check: this SRAM organization type must be memory-bank ! */
-    VTR_ASSERT( CONFIG_MEM_MEMORY_BANK == sram_orgz_type );
+    VTR_ASSERT( CONFIG_MEM_MEMORY_BANK == sram_orgz_type || CONFIG_MEM_QL_MEMORY_BANK == sram_orgz_type );
     /* Generate a list of ports */
     add_reserved_sram_ports_to_module_manager(module_manager, primitive_module, 
                                               num_shared_config_bits); 

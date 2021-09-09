@@ -217,6 +217,7 @@ void print_verilog_top_testbench_config_protocol_port(std::fstream& fp,
   case CONFIG_MEM_SCAN_CHAIN:
     print_verilog_top_testbench_config_chain_port(fp, module_manager, top_module);
     break;
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     print_verilog_top_testbench_memory_bank_port(fp, module_manager, top_module);
     break;
@@ -835,6 +836,7 @@ size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz
               100. * ((float)num_config_clock_cycles / (float)(1 + regional_bitstream_max_size) - 1.));
     }
     break;
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK: {
     /* For fast configuration, we will skip all the zero data points */
     num_config_clock_cycles = 1 + build_memory_bank_fabric_bitstream_by_address(fabric_bitstream).size();
@@ -1093,6 +1095,7 @@ void print_verilog_top_testbench_configuration_protocol_stimulus(std::fstream& f
     break;
   case CONFIG_MEM_SCAN_CHAIN:
     break;
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
   case CONFIG_MEM_FRAME_BASED: {
     ModulePortId en_port_id = module_manager.find_module_port(top_module,

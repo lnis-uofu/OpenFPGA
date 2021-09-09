@@ -313,6 +313,7 @@ void add_sram_ports_to_module_manager(ModuleManager& module_manager,
   /* Add ports to the module manager */
   switch (sram_orgz_type) {
   case CONFIG_MEM_STANDALONE: 
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK: {
     for (const std::string& sram_port_name : sram_port_names) {
       /* Add generated ports to the ModuleManager */
@@ -1288,6 +1289,7 @@ void add_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
     break;
   }
   case CONFIG_MEM_STANDALONE:
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     add_module_nets_cmos_flatten_memory_config_bus(module_manager, parent_module,
                                                    sram_orgz_type, CIRCUIT_MODEL_PORT_BL);
@@ -1742,6 +1744,7 @@ size_t find_module_num_config_bits_from_child_modules(ModuleManager& module_mana
   switch (sram_orgz_type) {
   case CONFIG_MEM_STANDALONE: 
   case CONFIG_MEM_SCAN_CHAIN: 
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK: {
     /* For scan-chain, standalone and memory bank configuration protocol
      * The number of configuration bits is the sum of configuration bits 

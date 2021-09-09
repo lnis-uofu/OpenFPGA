@@ -265,7 +265,8 @@ void build_top_module_configurable_regions(ModuleManager& module_manager,
 
   /* Exclude decoders from the list */
   size_t num_configurable_children = module_manager.configurable_children(top_module).size();
-  if (CONFIG_MEM_MEMORY_BANK == config_protocol.type()) {
+  if (CONFIG_MEM_MEMORY_BANK == config_protocol.type()
+     || CONFIG_MEM_QL_MEMORY_BANK == config_protocol.type()) {
     num_configurable_children -= 2;
   } else if (CONFIG_MEM_FRAME_BASED == config_protocol.type()) {
     num_configurable_children -= 1;
@@ -752,6 +753,7 @@ size_t generate_top_module_sram_port_size(const ConfigProtocol& config_protocol,
   case CONFIG_MEM_STANDALONE: 
     break;
   case CONFIG_MEM_SCAN_CHAIN: 
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
   case CONFIG_MEM_FRAME_BASED:
     /* CCFF head/tail, data input could be multi-bit ports */

@@ -74,6 +74,7 @@ std::map<std::string, BasicPort> generate_cmos_mem_module_port2port_map(const Ba
     port2port_name_map[generate_configurable_memory_inverted_data_out_name()] = mem_output_bus_ports[1];
     break;
   }
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     /* TODO: */
     break;
@@ -131,6 +132,7 @@ std::map<std::string, BasicPort> generate_rram_mem_module_port2port_map(const Ba
     port2port_name_map[generate_configurable_memory_inverted_data_out_name()] = mem_output_bus_ports[1];
     break;
   }
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     /* TODO: link BL/WL/Reserved Ports to the inputs of a memory module */
     break;
@@ -189,6 +191,7 @@ void update_cmos_mem_module_config_bus(const e_config_protocol_type& sram_orgz_t
      */
     VTR_ASSERT(true == config_bus.rotate(1));
     break;
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     /* In this case, a memory module has a number of BL/WL and BLB/WLB (possibly).
      * LSB and MSB of configuration bus will be shifted by the number of BL/WL/BLB/WLB. 
@@ -219,6 +222,7 @@ void update_rram_mem_module_config_bus(const e_config_protocol_type& sram_orgz_t
      */
     VTR_ASSERT(true == config_bus.rotate(1));
     break;
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     /* In this case, a memory module contains unique BL/WL or BLB/WLB,
      * which are not shared with other modules   
@@ -275,6 +279,7 @@ bool check_mem_config_bus(const e_config_protocol_type& sram_orgz_type,
      */
     return (local_expected_msb == config_bus.get_msb());
     break;
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     /* TODO: comment on why
      */
@@ -319,6 +324,7 @@ std::vector<std::string> generate_sram_port_names(const CircuitLibrary& circuit_
     model_port_types.push_back(CIRCUIT_MODEL_PORT_OUTPUT);
     break;
   case CONFIG_MEM_STANDALONE: 
+  case CONFIG_MEM_QL_MEMORY_BANK: 
   case CONFIG_MEM_MEMORY_BANK: {
     std::vector<e_circuit_model_port_type> ports_to_search;
     ports_to_search.push_back(CIRCUIT_MODEL_PORT_BL);
@@ -373,6 +379,7 @@ size_t generate_sram_port_size(const e_config_protocol_type sram_orgz_type,
     /* CCFF head/tail are single-bit ports */
     sram_port_size = 1;
     break;
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     break;
   case CONFIG_MEM_FRAME_BASED:
