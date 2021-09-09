@@ -693,12 +693,12 @@ TopModuleNumConfigBits find_top_module_regional_num_config_bit(const ModuleManag
         vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
         num_bls[coord.x()] = std::max(num_bls[coord.x()], find_memory_decoder_data_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, config_protocol_type)));
         num_wls[coord.y()] = std::max(num_wls[coord.y()], find_memory_decoder_data_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, config_protocol_type)));
-        for (const auto& kv : num_bls) {
-          num_config_bits[config_region].first += kv.first;
-        }
-        for (const auto& kv : num_wls) {
-          num_config_bits[config_region].second += kv.second;
-        }
+      }
+      for (const auto& kv : num_bls) {
+        num_config_bits[config_region].first += kv.second;
+      }
+      for (const auto& kv : num_wls) {
+        num_config_bits[config_region].second += kv.second;
       }
     } 
     break;
@@ -853,7 +853,7 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
     /* BL address size is the largest among all the regions */
     size_t bl_addr_size = 0;
     for (const ConfigRegionId& config_region : module_manager.regions(module_id)) {
-       bl_addr_size = std::max(bl_addr_size, find_memory_decoder_addr_size(num_config_bits[config_region].first));
+       bl_addr_size = std::max(bl_addr_size, find_mux_local_decoder_addr_size(num_config_bits[config_region].first));
     }
     BasicPort bl_addr_port(std::string(DECODER_BL_ADDRESS_PORT_NAME), bl_addr_size);
     module_manager.add_port(module_id, bl_addr_port, ModuleManager::MODULE_INPUT_PORT);
@@ -861,7 +861,7 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
     /* WL address size is the largest among all the regions */
     size_t wl_addr_size = 0;
     for (const ConfigRegionId& config_region : module_manager.regions(module_id)) {
-       wl_addr_size = std::max(wl_addr_size, find_memory_decoder_addr_size(num_config_bits[config_region].second));
+       wl_addr_size = std::max(wl_addr_size, find_mux_local_decoder_addr_size(num_config_bits[config_region].second));
     }
     BasicPort wl_addr_port(std::string(DECODER_WL_ADDRESS_PORT_NAME), wl_addr_size);
     module_manager.add_port(module_id, wl_addr_port, ModuleManager::MODULE_INPUT_PORT);
