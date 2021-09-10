@@ -323,7 +323,7 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
     for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
       ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
       vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
-      int child_num_unique_blwls = find_memory_decoder_data_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, CONFIG_MEM_QL_MEMORY_BANK));
+      int child_num_unique_blwls = num_bls_per_tile.at(coord.x());
 
       size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
 
@@ -334,12 +334,11 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
       size_t cur_bl_index = 0;
 
       for (const size_t& sink_bl_pin : child_bl_port_info.pins()) {
+        size_t bl_pin_id = bl_start_index_per_tile[coord.x()] + cur_bl_index % child_num_unique_blwls;
         /* Find the BL decoder data index: 
          * It should be the starting index plus an offset which is the residual when divided by the number of BLs in this tile
          */
-        size_t bl_pin_id = bl_start_index_per_tile[coord.x()] + std::floor(cur_bl_index / child_num_unique_blwls);
-        if (!(bl_pin_id < bl_decoder_dout_port_info.pins().size()))
-          VTR_ASSERT(bl_pin_id < bl_decoder_dout_port_info.pins().size());
+        VTR_ASSERT(bl_pin_id < bl_decoder_dout_port_info.pins().size());
 
         /* Create net */
         ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
@@ -352,7 +351,6 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
         module_manager.add_module_net_sink(top_module, net,
                                            child_module, child_instance, child_bl_port, sink_bl_pin);
 
-        /* Increment the BL index */
         cur_bl_index++;
       }
     }
@@ -366,7 +364,7 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
     for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
       ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
       vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
-      int child_num_unique_blwls = find_memory_decoder_data_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, CONFIG_MEM_QL_MEMORY_BANK));
+      int child_num_unique_blwls = num_bls_per_tile.at(coord.x());
 
       size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
 
@@ -377,10 +375,8 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
       size_t cur_wl_index = 0;
 
       for (const size_t& sink_wl_pin : child_wl_port_info.pins()) {
-        /* Find the WL decoder data index: 
-         * It should be the starting index plus an offset which is the residual when divided by the number of WLs in this tile
-         */
-        size_t wl_pin_id = wl_start_index_per_tile[coord.x()] + cur_wl_index % child_num_unique_blwls;
+        size_t wl_pin_id = wl_start_index_per_tile[coord.y()] + std::floor(cur_wl_index / child_num_unique_blwls);
+        VTR_ASSERT(wl_pin_id < wl_decoder_dout_port_info.pins().size());
 
         /* Create net */
         ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
@@ -392,8 +388,7 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
         /* Add net sink */
         module_manager.add_module_net_sink(top_module, net,
                                            child_module, child_instance, child_wl_port, sink_wl_pin);
-
-        /* Increment the WL index */
+      
         cur_wl_index++;
       }
     }

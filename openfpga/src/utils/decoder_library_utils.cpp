@@ -87,6 +87,24 @@ size_t find_memory_decoder_data_size(const size_t& num_mems) {
 }
 
 /***************************************************************************************
+ * Find the size of WL data lines for a memory decoder to access a memory array
+ * This function is applicable to a memory bank organization where BL data lines 
+ * is the dominant factor. It means that the BL data lines is strictly an integeter close 
+ * to the square root of the number of memory cells. 
+ * For example, 203 memory cells leads to 15 BLs to control
+ * The WL data lines may not be exactly the same as the number of BLs.
+ * Considering the example of 203 memory cells again, when 15 BLs are used, we just need
+ * 203 / 15 = 13.5555 -> 14 WLs
+ ***************************************************************************************/
+size_t find_memory_wl_decoder_data_size(const size_t& num_mems) {
+  /* Handle exception: zero memory should have zero WLs */
+  if (0 == num_mems) {
+    return 0;
+  }
+  return std::ceil(num_mems / (size_t)std::ceil(std::sqrt((float)num_mems)));
+}
+
+/***************************************************************************************
  * Try to find if the decoder already exists in the library, 
  * If there is no such decoder, add it to the library 
  ***************************************************************************************/

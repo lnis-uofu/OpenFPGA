@@ -75,7 +75,12 @@ void organize_top_module_tile_cb_modules(ModuleManager& module_manager,
   if (0 < find_module_num_config_bits(module_manager, cb_module,
                                       circuit_lib, sram_model, 
                                       sram_orgz_type)) {
-    vtr::Point<int> config_coord(rr_gsb.get_cb_x(cb_type) * 2, rr_gsb.get_cb_y(cb_type) * 2);
+    /* CBX coordinate conversion calculation: (1,0) -> (2,1) */
+    vtr::Point<int> config_coord(rr_gsb.get_cb_x(cb_type) * 2, rr_gsb.get_cb_y(cb_type) * 2 + 1);
+    if (cb_type == CHANY) {
+      /* CBY has a different coordinate conversion calculation: (0,1) -> (1,2) */
+      config_coord.set(rr_gsb.get_cb_x(cb_type) * 2 + 1, rr_gsb.get_cb_y(cb_type) * 2);
+    }
     /* Note that use the original CB coodinate for instance id searching ! */
     module_manager.add_configurable_child(top_module, cb_module, cb_instance_ids[rr_gsb.get_cb_x(cb_type)][rr_gsb.get_cb_y(cb_type)], config_coord);
   }
@@ -692,7 +697,7 @@ TopModuleNumConfigBits find_top_module_regional_num_config_bit(const ModuleManag
         ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
         vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
         num_bls[coord.x()] = std::max(num_bls[coord.x()], find_memory_decoder_data_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, config_protocol_type)));
-        num_wls[coord.y()] = std::max(num_wls[coord.y()], find_memory_decoder_data_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, config_protocol_type)));
+        num_wls[coord.y()] = std::max(num_wls[coord.y()], find_memory_wl_decoder_data_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, config_protocol_type)));
       }
       for (const auto& kv : num_bls) {
         num_config_bits[config_region].first += kv.second;

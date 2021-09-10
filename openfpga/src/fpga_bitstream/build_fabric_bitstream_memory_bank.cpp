@@ -54,7 +54,7 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
                                                                          const std::map<int, size_t>& num_wls_per_tile,
                                                                          const std::map<int, size_t>& wl_start_index_per_tile,
                                                                          vtr::Point<int>& tile_coord,
-                                                                         size_t& cur_mem_index,
+                                                                         std::map<vtr::Point<int>, size_t>& cur_mem_index,
                                                                          FabricBitstream& fabric_bitstream,
                                                                          const FabricBitRegionId& fabric_bitstream_region) {
 
@@ -83,9 +83,7 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
         ModuleId child_module = configurable_children[child_id]; 
         size_t child_instance = module_manager.region_configurable_child_instances(parent_module, config_region)[child_id]; 
 
-        if (parent_module == top_module) {
-          tile_coord = module_manager.region_configurable_child_coordinates(parent_module, config_region)[child_id]; 
-        }
+        tile_coord = module_manager.region_configurable_child_coordinates(parent_module, config_region)[child_id]; 
 
         /* Get the instance name and ensure it is not empty */
         std::string instance_name = module_manager.instance_name(parent_module, child_module, child_instance);
@@ -94,11 +92,6 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
         ConfigBlockId child_block = bitstream_manager.find_child_block(parent_block, instance_name); 
         /* We must have one valid block id! */
         VTR_ASSERT(true == bitstream_manager.valid_block_id(child_block));
-
-        /* Reset the memory index for each children under the top-level module */
-        if (parent_module == top_module) {
-          cur_mem_index = 0;
-        }
 
         /* Go recursively */
         rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(bitstream_manager, child_block,
@@ -168,11 +161,11 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
     FabricBitId fabric_bit = fabric_bitstream.add_bit(config_bit);
   
     /* Find BL address */
-    size_t cur_bl_index = bl_start_index_per_tile.at(tile_coord.x()) + std::floor(cur_mem_index / num_bls_per_tile.at(tile_coord.x()));
+    size_t cur_bl_index = bl_start_index_per_tile.at(tile_coord.x()) + cur_mem_index[tile_coord] % num_bls_per_tile.at(tile_coord.x());
     std::vector<char> bl_addr_bits_vec = itobin_charvec(cur_bl_index, bl_addr_size);
 
     /* Find WL address */
-    size_t cur_wl_index = wl_start_index_per_tile.at(tile_coord.y()) + cur_mem_index % num_wls_per_tile.at(tile_coord.y());
+    size_t cur_wl_index = wl_start_index_per_tile.at(tile_coord.y()) + std::floor(cur_mem_index[tile_coord] / num_bls_per_tile.at(tile_coord.x()));
     std::vector<char> wl_addr_bits_vec = itobin_charvec(cur_wl_index, wl_addr_size);
 
     /* Set BL address */
@@ -188,7 +181,7 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
     fabric_bitstream.add_bit_to_region(fabric_bitstream_region, fabric_bit);
 
     /* Increase the memory index */
-    cur_mem_index++;
+    cur_mem_index[tile_coord]++;
   }
 }
 
@@ -223,8 +216,6 @@ void build_module_fabric_dependent_bitstream_ql_memory_bank(const ConfigProtocol
 
   /* Build bitstreams by region */
   for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
-    size_t cur_mem_index = 0;
-
     /* Find port information for local BL and WL decoder in this region */
     std::vector<ModuleId> configurable_children = module_manager.region_configurable_children(top_module, config_region);
     VTR_ASSERT(2 <= configurable_children.size()); 
@@ -258,6 +249,8 @@ void build_module_fabric_dependent_bitstream_ql_memory_bank(const ConfigProtocol
     std::map<int, size_t> wl_start_index_per_tile = compute_memory_bank_regional_blwl_start_index_per_tile(child_y_range, num_wls_per_tile);
 
     vtr::Point<int> temp_coord;
+    std::map<vtr::Point<int>, size_t> cur_mem_index;
+
     rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(bitstream_manager, top_block,
                                                                         module_manager, top_module, top_module, 
                                                                         config_region,
