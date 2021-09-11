@@ -306,6 +306,7 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
                                                               bitstream_manager,
                                                               fabric_bitstream);
     break;
+  case CONFIG_MEM_QL_MEMORY_BANK: 
   case CONFIG_MEM_MEMORY_BANK: 
     status = write_memory_bank_fabric_bitstream_to_text_file(fp,
                                                              apply_fast_configuration,

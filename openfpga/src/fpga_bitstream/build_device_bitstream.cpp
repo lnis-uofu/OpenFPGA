@@ -96,7 +96,8 @@ size_t rec_estimate_device_bitstream_num_bits(const ModuleManager& module_manage
       /* Memory configuration protocol will have 2 decoders
        * at the top-level
        */
-      if (CONFIG_MEM_MEMORY_BANK == config_protocol_type) {
+      if (CONFIG_MEM_MEMORY_BANK == config_protocol_type
+          || CONFIG_MEM_QL_MEMORY_BANK == config_protocol_type) {
         VTR_ASSERT(2 <= curr_region_num_config_child);
         curr_region_num_config_child -= 2;
       }

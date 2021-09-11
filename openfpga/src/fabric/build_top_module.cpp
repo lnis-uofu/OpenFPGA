@@ -407,7 +407,7 @@ int build_top_module(ModuleManager& module_manager,
    * This is a much easier job after adding sub modules (instances), 
    * we just need to find all the I/O ports from the child modules and build a list of it
    */
-  vtr::vector<ConfigRegionId, size_t> top_module_num_config_bits = find_top_module_regional_num_config_bit(module_manager, top_module, circuit_lib, sram_model, config_protocol.type());
+  TopModuleNumConfigBits top_module_num_config_bits = find_top_module_regional_num_config_bit(module_manager, top_module, circuit_lib, sram_model, config_protocol.type());
 
   if (!top_module_num_config_bits.empty()) {
     add_top_module_sram_ports(module_manager, top_module,
@@ -422,6 +422,7 @@ int build_top_module(ModuleManager& module_manager,
   if (0 < module_manager.configurable_children(top_module).size()) {
     add_top_module_nets_memory_config_bus(module_manager, decoder_lib,
                                           top_module, 
+                                          circuit_lib, sram_model,
                                           config_protocol, circuit_lib.design_tech_type(sram_model),
                                           top_module_num_config_bits);
   }

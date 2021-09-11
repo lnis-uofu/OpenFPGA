@@ -76,6 +76,7 @@ int build_fabric_bitstream(OpenfpgaContext& openfpga_ctx,
   /* Build fabric bitstream here */
   openfpga_ctx.mutable_fabric_bitstream() = build_fabric_dependent_bitstream(openfpga_ctx.bitstream_manager(),
                                                                              openfpga_ctx.module_graph(),
+                                                                             openfpga_ctx.arch().circuit_lib,
                                                                              openfpga_ctx.arch().config_protocol,
                                                                              cmd_context.option_enable(cmd, opt_verbose));
 

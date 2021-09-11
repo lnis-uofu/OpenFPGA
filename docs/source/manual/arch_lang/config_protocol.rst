@@ -16,7 +16,7 @@ Template
     <organization type="<string>" circuit_model_name="<string>" num_regions="<int>"/>
   </configuration_protocol>
 
-.. option:: type="scan_chain|memory_bank|standalone"
+.. option:: type="scan_chain|memory_bank|standalone|frame_based|ql_memory_bank"
 
   Specify the type of configuration circuits.
 
@@ -24,6 +24,7 @@ Template
     - ``scan_chain``: configurable memories are connected in a chain. Bitstream is loaded serially to program a FPGA
     - ``frame_based``: configurable memories are organized by frames. Each module of a FPGA fabric, e.g., Configurable Logic Block (CLB), Switch Block (SB) and Connection Block (CB), is considered as a frame of configurable memories. Inside each frame, all the memory banks are accessed through an address decoder. Users can write each memory cell with a specific address. Note that the frame-based memory organization is applid hierarchically. Each frame may consists of a number of sub frames, each of which follows the similar organization.
     - ``memory_bank``: configurable memories are organized in an array, where each element can be accessed by an unique address to the BL/WL decoders
+    - ``ql_memory_bank``: configurable memories are organized in an array, where each element can be accessed by an unique address to the BL/WL decoders. This is a physical design friendly memory bank organization, where BL/WLs are efficiently shared by programmable blocks per column and row
     - ``standalone``: configurable memories are directly accessed through ports of FPGA fabrics. In other words, there are no protocol to control the memories. This allows full customization on the configuration protocol for hardware engineers.
 
   .. note:: Avoid to use ``standalone`` when designing an FPGA chip. It will causes a huge number of I/Os required, far beyond any package size. It is well applicable to eFPGAs, where designers do need customized protocols between FPGA and processors. 
@@ -138,6 +139,26 @@ Users can customized the number of memory banks to be used across the fabrics. B
    :alt: map to buried treasure
  
    Example of (a) a memory organization using memory decoders; (b) single memory bank across the fabric; and (c) multiple memory banks across the fabric.
+
+.. note:: Memory-bank decoders does require a memory cell to have 
+
+  -  two outputs (one regular and another inverted)
+  -  a Bit-Line input to load the data
+  -  a Word-Line input to enable data write 
+
+.. warning:: Please do NOT add inverted Bit-Line and Word-Line inputs. It is not supported yet!
+
+
+QuickLogic Memory bank Example
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The following XML code describes a physical design friendly memory-bank circuitry to configure the core logic of FPGA, as illustrated in :numref:`fig_memory_bank`.
+It will use the circuit model defined in :numref:`fig_sram_blwl`.
+
+.. code-block:: xml
+
+  <configuration_protocol>
+    <organization type="ql_memory_bank" circuit_model_name="sram_blwl"/>
+  </configuration_protocol>
 
 .. note:: Memory-bank decoders does require a memory cell to have 
 

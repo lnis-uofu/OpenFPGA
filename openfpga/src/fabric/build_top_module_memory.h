@@ -18,6 +18,7 @@
 #include "device_rr_gsb.h"
 #include "fabric_key.h"
 #include "config_protocol.h"
+#include "build_top_module_memory_utils.h"
 
 /********************************************************************
  * Function declaration
@@ -48,25 +49,27 @@ int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager
                                                    const ConfigProtocol& config_protocol,
                                                    const FabricKey& fabric_key); 
 
-vtr::vector<ConfigRegionId, size_t> find_top_module_regional_num_config_bit(const ModuleManager& module_manager,
-                                                                            const ModuleId& top_module,
-                                                                            const CircuitLibrary& circuit_lib,
-                                                                            const CircuitModelId& sram_model,
-                                                                            const e_config_protocol_type& config_protocol_type);
+TopModuleNumConfigBits find_top_module_regional_num_config_bit(const ModuleManager& module_manager,
+                                                               const ModuleId& top_module,
+                                                               const CircuitLibrary& circuit_lib,
+                                                               const CircuitModelId& sram_model,
+                                                               const e_config_protocol_type& config_protocol_type);
 
 void add_top_module_sram_ports(ModuleManager& module_manager, 
                                const ModuleId& module_id,
                                const CircuitLibrary& circuit_lib,
                                const CircuitModelId& sram_model,
                                const ConfigProtocol& config_protocol,
-                               const vtr::vector<ConfigRegionId, size_t>& num_config_bits);
+                               const TopModuleNumConfigBits& num_config_bits);
 
 void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            DecoderLibrary& decoder_lib,
                                            const ModuleId& parent_module,
+                                           const CircuitLibrary& circuit_lib,
+                                           const CircuitModelId& sram_model,
                                            const ConfigProtocol& config_protocol, 
                                            const e_circuit_model_design_tech& mem_tech,
-                                           const vtr::vector<ConfigRegionId, size_t>& num_config_bits);
+                                           const TopModuleNumConfigBits& num_config_bits);
 
 } /* end namespace openfpga */
 

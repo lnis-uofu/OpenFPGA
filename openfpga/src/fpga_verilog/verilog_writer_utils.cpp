@@ -1010,6 +1010,7 @@ void print_verilog_local_sram_wires(std::fstream& fp,
     print_verilog_wire_connection(fp, ccff_tail_local_port, ccff_tail_port, false); 
     break;
   }
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK: {
     /* Generate the name of local wire for the SRAM output and inverted output */
     std::vector<BasicPort> sram_ports;
@@ -1100,6 +1101,7 @@ void print_verilog_local_config_bus(std::fstream& fp,
      */
     break;
   case CONFIG_MEM_SCAN_CHAIN: 
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK: {
     /* Two configuration buses should be outputted
      * One for the regular SRAM ports of a routing multiplexer
@@ -1173,6 +1175,7 @@ void print_verilog_rram_mux_config_bus(std::fstream& fp,
      */
     break;
   }
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK: {
     /* This is currently most used in ReRAM FPGAs */
     /* Print configuration bus to group reserved BL/WLs */

@@ -94,6 +94,7 @@ size_t find_rram_circuit_num_shared_config_bits(const CircuitLibrary& circuit_li
   case CONFIG_MEM_STANDALONE:
   case CONFIG_MEM_SCAN_CHAIN:
     break;
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK: {
     /* Find BL/WL ports */
     std::vector<CircuitPortId> blb_ports = circuit_lib.model_ports_by_type(rram_model, CIRCUIT_MODEL_PORT_BLB);
@@ -175,6 +176,7 @@ size_t find_circuit_num_config_bits(const e_config_protocol_type& config_protoco
   switch (config_protocol_type) {
   case CONFIG_MEM_STANDALONE: 
   case CONFIG_MEM_SCAN_CHAIN: 
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK: {
     break;
   }
@@ -293,6 +295,7 @@ bool check_configurable_memory_circuit_model(const e_config_protocol_type& confi
     break;
   case CONFIG_MEM_STANDALONE: 
   case CONFIG_MEM_MEMORY_BANK:  
+  case CONFIG_MEM_QL_MEMORY_BANK:  
   case CONFIG_MEM_FRAME_BASED:  
     num_err = check_sram_circuit_model_ports(circuit_lib,
                                              config_mem_circuit_model,

@@ -125,10 +125,11 @@ enum e_config_protocol_type {
   CONFIG_MEM_STANDALONE,   
   CONFIG_MEM_SCAN_CHAIN,   
   CONFIG_MEM_MEMORY_BANK,  
+  CONFIG_MEM_QL_MEMORY_BANK,  
   CONFIG_MEM_FRAME_BASED,  
   NUM_CONFIG_PROTOCOL_TYPES
 };
 
-constexpr std::array<const char*, NUM_CONFIG_PROTOCOL_TYPES> CONFIG_PROTOCOL_TYPE_STRING = {{"standalone", "scan_chain", "memory_bank", "frame_based"}};
+constexpr std::array<const char*, NUM_CONFIG_PROTOCOL_TYPES> CONFIG_PROTOCOL_TYPE_STRING = {{"standalone", "scan_chain", "memory_bank", "ql_memory_bank", "frame_based"}};
 
 #endif
