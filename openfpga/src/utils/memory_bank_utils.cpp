@@ -76,13 +76,14 @@ std::map<int, size_t> compute_memory_bank_regional_wordline_numbers_per_tile(con
                                                                              const ModuleId& top_module,
                                                                              const ConfigRegionId& config_region,
                                                                              const CircuitLibrary& circuit_lib,
-                                                                             const CircuitModelId& sram_model) {
+                                                                             const CircuitModelId& sram_model,
+                                                                             const std::map<int, size_t>& num_bls_per_tile) {
   std::map<int, size_t> num_wls_per_tile;
 
   for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
     ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
     vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
-    num_wls_per_tile[coord.y()] = std::max(num_wls_per_tile[coord.y()], find_memory_wl_decoder_data_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, CONFIG_MEM_QL_MEMORY_BANK)));
+    num_wls_per_tile[coord.y()] = std::max(num_wls_per_tile[coord.y()], find_memory_wl_decoder_data_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, CONFIG_MEM_QL_MEMORY_BANK), num_bls_per_tile.at(coord.x())));
   }
 
   return num_wls_per_tile;

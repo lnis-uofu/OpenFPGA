@@ -53,14 +53,21 @@ std::map<int, size_t> compute_memory_bank_regional_bitline_numbers_per_tile(cons
 /**
  * @brief Precompute the number of word lines required by each tile under a specific configuration region
  * @note 
- *   Not every index in the range computed by the compute_memory_bank_regional_configurable_child_x_range() function has a postive number of word lines
+ *   Not every index in the range computed by the compute_memory_bank_regional_configurable_child_y_range() function has a postive number of word lines
  *   If an empty entry is found (e.g., std::map::find(y) is empty), it means there are not word lines required in that tile
+ * @note
+ *   This function requires an input argument which describes number of bitlines per tile. Base on the information, the number of word lines are inferred
+ *   by total number of memores / number of bit lines at a given tile location 
+ *   This strategy is chosen because in each column, the number of bit lines are bounded by the tile which consumes most configuation bits. It may reduces
+ *   the use of word lines. For example, a tile[0][0] has only 8 bits, from which we may infer 3 BLs and 3 WLs. However, when tile[0][1] contains 100 bits, 
+ *   which will force the number of BLs to be 10. In such case, tile[0][0] only requires 1 WL
  */
 std::map<int, size_t> compute_memory_bank_regional_wordline_numbers_per_tile(const ModuleManager& module_manager,
                                                                              const ModuleId& top_module,
                                                                              const ConfigRegionId& config_region,
                                                                              const CircuitLibrary& circuit_lib,
-                                                                             const CircuitModelId& sram_model);
+                                                                             const CircuitModelId& sram_model,
+                                                                             const std::map<int, size_t>& num_bls_per_tile);
 
 /**
  * @brief Precompute the BLs and WLs distribution across the FPGA fabric

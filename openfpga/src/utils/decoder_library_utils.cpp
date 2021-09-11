@@ -96,12 +96,12 @@ size_t find_memory_decoder_data_size(const size_t& num_mems) {
  * Considering the example of 203 memory cells again, when 15 BLs are used, we just need
  * 203 / 15 = 13.5555 -> 14 WLs
  ***************************************************************************************/
-size_t find_memory_wl_decoder_data_size(const size_t& num_mems) {
-  /* Handle exception: zero memory should have zero WLs */
-  if (0 == num_mems) {
+size_t find_memory_wl_decoder_data_size(const size_t& num_mems, const size_t& num_bls) {
+  /* Handle exception: zero BLs should have zero WLs */
+  if (0 == num_bls) {
     return 0;
   }
-  return std::ceil(num_mems / (size_t)std::ceil(std::sqrt((float)num_mems)));
+  return std::ceil((float)num_mems / (float)num_bls);
 }
 
 /***************************************************************************************

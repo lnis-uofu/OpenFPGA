@@ -290,7 +290,8 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
                                                                                                    circuit_lib, sram_model);
     std::map<int, size_t> num_wls_per_tile = compute_memory_bank_regional_wordline_numbers_per_tile(module_manager, top_module,
                                                                                                     config_region,
-                                                                                                    circuit_lib, sram_model);
+                                                                                                    circuit_lib, sram_model,
+                                                                                                    num_bls_per_tile);
 
     std::map<int, size_t> bl_start_index_per_tile = compute_memory_bank_regional_blwl_start_index_per_tile(child_x_range, num_bls_per_tile);
     std::map<int, size_t> wl_start_index_per_tile = compute_memory_bank_regional_blwl_start_index_per_tile(child_y_range, num_wls_per_tile);
