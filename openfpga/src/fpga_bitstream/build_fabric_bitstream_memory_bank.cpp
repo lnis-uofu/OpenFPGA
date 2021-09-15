@@ -47,11 +47,13 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
                                                                          const ModuleId& top_module,
                                                                          const ModuleId& parent_module,
                                                                          const ConfigRegionId& config_region,
+                                                                         const CircuitLibrary& circuit_lib,
+                                                                         const CircuitModelId& sram_model,
                                                                          const size_t& bl_addr_size,
                                                                          const size_t& wl_addr_size,
-                                                                         const std::map<int, size_t>& num_bls_per_tile,
+                                                                         size_t& num_bls_cur_tile,
                                                                          const std::map<int, size_t>& bl_start_index_per_tile,
-                                                                         const std::map<int, size_t>& num_wls_per_tile,
+                                                                         size_t& num_wls_cur_tile,
                                                                          const std::map<int, size_t>& wl_start_index_per_tile,
                                                                          vtr::Point<int>& tile_coord,
                                                                          std::map<vtr::Point<int>, size_t>& cur_mem_index,
@@ -84,6 +86,8 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
         size_t child_instance = module_manager.region_configurable_child_instances(parent_module, config_region)[child_id]; 
 
         tile_coord = module_manager.region_configurable_child_coordinates(parent_module, config_region)[child_id]; 
+        num_bls_cur_tile = find_module_ql_memory_bank_num_blwls(module_manager, child_module, circuit_lib, sram_model, CONFIG_MEM_QL_MEMORY_BANK, CIRCUIT_MODEL_PORT_BL);
+        num_wls_cur_tile = find_module_ql_memory_bank_num_blwls(module_manager, child_module, circuit_lib, sram_model, CONFIG_MEM_QL_MEMORY_BANK, CIRCUIT_MODEL_PORT_WL);
 
         /* Get the instance name and ensure it is not empty */
         std::string instance_name = module_manager.instance_name(parent_module, child_module, child_instance);
@@ -97,9 +101,10 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
         rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(bitstream_manager, child_block,
                                                                             module_manager, top_module, child_module,
                                                                             config_region,
+                                                                            circuit_lib, sram_model,
                                                                             bl_addr_size, wl_addr_size,
-                                                                            num_bls_per_tile, bl_start_index_per_tile,
-                                                                            num_wls_per_tile, wl_start_index_per_tile,
+                                                                            num_bls_cur_tile, bl_start_index_per_tile,
+                                                                            num_wls_cur_tile, wl_start_index_per_tile,
                                                                             tile_coord,
                                                                             cur_mem_index,
                                                                             fabric_bitstream,
@@ -138,9 +143,10 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
         rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(bitstream_manager, child_block,
                                                                             module_manager, top_module, child_module,
                                                                             config_region,
+                                                                            circuit_lib, sram_model,
                                                                             bl_addr_size, wl_addr_size,
-                                                                            num_bls_per_tile, bl_start_index_per_tile,
-                                                                            num_wls_per_tile, wl_start_index_per_tile,
+                                                                            num_bls_cur_tile, bl_start_index_per_tile,
+                                                                            num_wls_cur_tile, wl_start_index_per_tile,
                                                                             tile_coord,
                                                                             cur_mem_index,
                                                                             fabric_bitstream,
@@ -161,11 +167,11 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
     FabricBitId fabric_bit = fabric_bitstream.add_bit(config_bit);
   
     /* Find BL address */
-    size_t cur_bl_index = bl_start_index_per_tile.at(tile_coord.x()) + cur_mem_index[tile_coord] % num_bls_per_tile.at(tile_coord.x());
+    size_t cur_bl_index = bl_start_index_per_tile.at(tile_coord.x()) + cur_mem_index[tile_coord] % num_bls_cur_tile;
     std::vector<char> bl_addr_bits_vec = itobin_charvec(cur_bl_index, bl_addr_size);
 
     /* Find WL address */
-    size_t cur_wl_index = wl_start_index_per_tile.at(tile_coord.y()) + std::floor(cur_mem_index[tile_coord] / num_bls_per_tile.at(tile_coord.x()));
+    size_t cur_wl_index = wl_start_index_per_tile.at(tile_coord.y()) + std::floor(cur_mem_index[tile_coord] / num_bls_cur_tile);
     std::vector<char> wl_addr_bits_vec = itobin_charvec(cur_wl_index, wl_addr_size);
 
     /* Set BL address */
@@ -250,14 +256,17 @@ void build_module_fabric_dependent_bitstream_ql_memory_bank(const ConfigProtocol
 
     vtr::Point<int> temp_coord;
     std::map<vtr::Point<int>, size_t> cur_mem_index;
+    size_t temp_num_bls_cur_tile = 0;
+    size_t temp_num_wls_cur_tile = 0;
 
     rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(bitstream_manager, top_block,
                                                                         module_manager, top_module, top_module, 
                                                                         config_region,
+                                                                        circuit_lib, config_protocol.memory_model(),
                                                                         bl_addr_port_info.get_width(),
                                                                         wl_addr_port_info.get_width(),
-                                                                        num_bls_per_tile, bl_start_index_per_tile,
-                                                                        num_wls_per_tile, wl_start_index_per_tile,
+                                                                        temp_num_bls_cur_tile, bl_start_index_per_tile,
+                                                                        temp_num_wls_cur_tile, wl_start_index_per_tile,
                                                                         temp_coord,
                                                                         cur_mem_index,
                                                                         fabric_bitstream,

@@ -56,16 +56,12 @@ std::pair<int, int> compute_memory_bank_regional_configurable_child_y_range(cons
   return child_y_range;
 }
 
-/********************************************************************
- * Find the size of BL ports for module 
- *******************************************************************/
-static 
 size_t find_module_ql_memory_bank_num_blwls(const ModuleManager& module_manager,
-                                          const ModuleId& module_id,
-                                          const CircuitLibrary& circuit_lib,
-                                          const CircuitModelId& sram_model,
-                                          const e_config_protocol_type& sram_orgz_type,
-										  const e_circuit_model_port_type& circuit_port_type) {
+                                            const ModuleId& module_id,
+                                            const CircuitLibrary& circuit_lib,
+                                            const CircuitModelId& sram_model,
+                                            const e_config_protocol_type& sram_orgz_type,
+										    const e_circuit_model_port_type& circuit_port_type) {
   std::vector<std::string> config_port_names = generate_sram_port_names(circuit_lib, sram_model, sram_orgz_type);
   size_t num_blwls = 0; /* By default it has zero configuration bits*/
 

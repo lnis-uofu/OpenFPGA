@@ -40,6 +40,16 @@ std::pair<int, int> compute_memory_bank_regional_configurable_child_y_range(cons
                                                                             const ConfigRegionId& config_region);
 
 /**
+ * @brief Find the size of BL or WL ports for a given module
+ */
+size_t find_module_ql_memory_bank_num_blwls(const ModuleManager& module_manager,
+                                            const ModuleId& module_id,
+                                            const CircuitLibrary& circuit_lib,
+                                            const CircuitModelId& sram_model,
+                                            const e_config_protocol_type& sram_orgz_type,
+										    const e_circuit_model_port_type& circuit_port_type);
+
+/**
  * @brief Precompute the number of bit lines required by each tile under a specific configuration region
  * @note 
  *   Not every index in the range computed by the compute_memory_bank_regional_configurable_child_x_range() function has a postive number of bit lines

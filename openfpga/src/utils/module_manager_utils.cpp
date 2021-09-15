@@ -985,15 +985,11 @@ void add_module_nets_cmos_memory_bank_bl_config_bus(ModuleManager& module_manage
   BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
 
   for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size(); ++mem_index) {
-    ModuleId net_sink_module_id;
-    size_t net_sink_instance_id;
-    ModulePortId net_sink_port_id;
-
     /* Find the port name of next memory module */
     std::string sink_port_name = generate_sram_port_name(sram_orgz_type, config_port_type);
-    net_sink_module_id = module_manager.configurable_children(parent_module)[mem_index]; 
-    net_sink_instance_id = module_manager.configurable_child_instances(parent_module)[mem_index];
-    net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+    ModuleId net_sink_module_id = module_manager.configurable_children(parent_module)[mem_index]; 
+    size_t net_sink_instance_id = module_manager.configurable_child_instances(parent_module)[mem_index];
+    ModulePortId net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
 
     /* Get the pin id for sink port */
     BasicPort net_sink_port = module_manager.module_port(net_sink_module_id, net_sink_port_id); 
@@ -1064,15 +1060,11 @@ void add_module_nets_cmos_memory_bank_wl_config_bus(ModuleManager& module_manage
   BasicPort net_bl_port = module_manager.module_port(net_src_module_id, net_bl_port_id); 
 
   for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size(); ++mem_index) {
-    ModuleId net_sink_module_id;
-    size_t net_sink_instance_id;
-    ModulePortId net_sink_port_id;
-
     /* Find the port name of next memory module */
     std::string sink_port_name = generate_sram_port_name(sram_orgz_type, config_port_type);
-    net_sink_module_id = module_manager.configurable_children(parent_module)[mem_index]; 
-    net_sink_instance_id = module_manager.configurable_child_instances(parent_module)[mem_index];
-    net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+    ModuleId net_sink_module_id = module_manager.configurable_children(parent_module)[mem_index]; 
+    size_t net_sink_instance_id = module_manager.configurable_child_instances(parent_module)[mem_index];
+    ModulePortId net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
 
     /* Get the pin id for sink port */
     BasicPort net_sink_port = module_manager.module_port(net_sink_module_id, net_sink_port_id); 
