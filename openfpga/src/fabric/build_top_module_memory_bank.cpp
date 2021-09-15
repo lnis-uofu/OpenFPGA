@@ -290,8 +290,7 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
                                                                                                    circuit_lib, sram_model);
     std::map<int, size_t> num_wls_per_tile = compute_memory_bank_regional_wordline_numbers_per_tile(module_manager, top_module,
                                                                                                     config_region,
-                                                                                                    circuit_lib, sram_model,
-                                                                                                    num_bls_per_tile);
+                                                                                                    circuit_lib, sram_model);
 
     std::map<int, size_t> bl_start_index_per_tile = compute_memory_bank_regional_blwl_start_index_per_tile(child_x_range, num_bls_per_tile);
     std::map<int, size_t> wl_start_index_per_tile = compute_memory_bank_regional_blwl_start_index_per_tile(child_y_range, num_wls_per_tile);
@@ -324,7 +323,6 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
     for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
       ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
       vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
-      int child_num_unique_blwls = num_bls_per_tile.at(coord.x());
 
       size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
 
@@ -335,7 +333,7 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
       size_t cur_bl_index = 0;
 
       for (const size_t& sink_bl_pin : child_bl_port_info.pins()) {
-        size_t bl_pin_id = bl_start_index_per_tile[coord.x()] + cur_bl_index % child_num_unique_blwls;
+        size_t bl_pin_id = bl_start_index_per_tile[coord.x()] + cur_bl_index;
         /* Find the BL decoder data index: 
          * It should be the starting index plus an offset which is the residual when divided by the number of BLs in this tile
          */
@@ -365,7 +363,6 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
     for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
       ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
       vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
-      int child_num_unique_blwls = num_bls_per_tile.at(coord.x());
 
       size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
 
@@ -376,7 +373,7 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
       size_t cur_wl_index = 0;
 
       for (const size_t& sink_wl_pin : child_wl_port_info.pins()) {
-        size_t wl_pin_id = wl_start_index_per_tile[coord.y()] + std::floor(cur_wl_index / child_num_unique_blwls);
+        size_t wl_pin_id = wl_start_index_per_tile[coord.y()] + cur_wl_index;
         VTR_ASSERT(wl_pin_id < wl_decoder_dout_port_info.pins().size());
 
         /* Create net */

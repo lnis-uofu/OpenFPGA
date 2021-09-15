@@ -56,6 +56,38 @@ std::pair<int, int> compute_memory_bank_regional_configurable_child_y_range(cons
   return child_y_range;
 }
 
+/********************************************************************
+ * Find the size of BL ports for module 
+ *******************************************************************/
+static 
+size_t find_module_ql_memory_bank_num_blwls(const ModuleManager& module_manager,
+                                          const ModuleId& module_id,
+                                          const CircuitLibrary& circuit_lib,
+                                          const CircuitModelId& sram_model,
+                                          const e_config_protocol_type& sram_orgz_type,
+										  const e_circuit_model_port_type& circuit_port_type) {
+  std::vector<std::string> config_port_names = generate_sram_port_names(circuit_lib, sram_model, sram_orgz_type);
+  size_t num_blwls = 0; /* By default it has zero configuration bits*/
+
+  /* Try to find these ports in the module manager */
+  for (const std::string& config_port_name : config_port_names) {
+    ModulePortId module_port_id = module_manager.find_module_port(module_id, config_port_name);
+    /* If the port does not exist, go to the next */
+    if (false == module_manager.valid_module_port_id(module_id, module_port_id)) {
+      continue;
+    }
+    /* We only care about a give type of ports */
+    if (circuit_port_type != circuit_lib.port_type(circuit_lib.model_port(sram_model, config_port_name))) {
+      continue;
+    }
+    /* The port exist, find the port size and update the num_config_bits if the size is larger */
+    BasicPort module_port = module_manager.module_port(module_id, module_port_id);
+    num_blwls = std::max((int)num_blwls, (int)module_port.get_width());
+  }
+
+  return num_blwls;
+}
+
 std::map<int, size_t> compute_memory_bank_regional_bitline_numbers_per_tile(const ModuleManager& module_manager,
                                                                             const ModuleId& top_module,
                                                                             const ConfigRegionId& config_region,
@@ -66,7 +98,7 @@ std::map<int, size_t> compute_memory_bank_regional_bitline_numbers_per_tile(cons
   for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
     ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
     vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
-    num_bls_per_tile[coord.x()] = std::max(num_bls_per_tile[coord.x()], find_memory_decoder_data_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, CONFIG_MEM_QL_MEMORY_BANK)));
+    num_bls_per_tile[coord.x()] = std::max(num_bls_per_tile[coord.x()], find_module_ql_memory_bank_num_blwls(module_manager, child_module, circuit_lib, sram_model, CONFIG_MEM_QL_MEMORY_BANK, CIRCUIT_MODEL_PORT_BL));
   }
 
   return num_bls_per_tile;
@@ -76,14 +108,13 @@ std::map<int, size_t> compute_memory_bank_regional_wordline_numbers_per_tile(con
                                                                              const ModuleId& top_module,
                                                                              const ConfigRegionId& config_region,
                                                                              const CircuitLibrary& circuit_lib,
-                                                                             const CircuitModelId& sram_model,
-                                                                             const std::map<int, size_t>& num_bls_per_tile) {
+                                                                             const CircuitModelId& sram_model) {
   std::map<int, size_t> num_wls_per_tile;
 
   for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
     ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
     vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
-    num_wls_per_tile[coord.y()] = std::max(num_wls_per_tile[coord.y()], find_memory_wl_decoder_data_size(find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, CONFIG_MEM_QL_MEMORY_BANK), num_bls_per_tile.at(coord.x())));
+    num_wls_per_tile[coord.y()] = std::max(num_wls_per_tile[coord.y()], find_module_ql_memory_bank_num_blwls(module_manager, child_module, circuit_lib, sram_model, CONFIG_MEM_QL_MEMORY_BANK, CIRCUIT_MODEL_PORT_WL));
   }
 
   return num_wls_per_tile;

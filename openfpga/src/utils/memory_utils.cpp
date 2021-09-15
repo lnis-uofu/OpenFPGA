@@ -7,6 +7,7 @@
 #include "vtr_log.h"
 
 #include "openfpga_naming.h"
+#include "decoder_library_utils.h"
 #include "memory_utils.h"
 
 /* begin namespace openfpga */
@@ -392,5 +393,40 @@ size_t generate_sram_port_size(const e_config_protocol_type sram_orgz_type,
 
   return sram_port_size;
 }
+
+/********************************************************************
+ * @brief Generate a list of ports that are used for SRAM configuration to a module
+ * - Standalone SRAMs: use the suggested port_size 
+ * - Scan-chain Flip-flops: the port size will be forced to 1 in this case 
+ * - Memory decoders: use the suggested port_size 
+ * - QL Memory decoders: Apply square root as BL/WLs will be grouped
+ ********************************************************************/
+size_t generate_pb_sram_port_size(const e_config_protocol_type sram_orgz_type,
+                                  const size_t& num_config_bits) {
+  size_t sram_port_size = num_config_bits;
+
+  switch (sram_orgz_type) {
+  case CONFIG_MEM_STANDALONE: 
+    break;
+  case CONFIG_MEM_SCAN_CHAIN: 
+    /* CCFF head/tail are single-bit ports */
+    sram_port_size = 1;
+    break;
+  case CONFIG_MEM_QL_MEMORY_BANK:
+    sram_port_size = find_memory_decoder_data_size(num_config_bits);
+    break;
+  case CONFIG_MEM_MEMORY_BANK:
+    break;
+  case CONFIG_MEM_FRAME_BASED:
+    break;
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization!\n");
+    exit(1);
+  }
+
+  return sram_port_size;
+}
+
 
 } /* end namespace openfpga */

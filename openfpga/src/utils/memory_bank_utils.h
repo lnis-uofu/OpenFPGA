@@ -66,8 +66,7 @@ std::map<int, size_t> compute_memory_bank_regional_wordline_numbers_per_tile(con
                                                                              const ModuleId& top_module,
                                                                              const ConfigRegionId& config_region,
                                                                              const CircuitLibrary& circuit_lib,
-                                                                             const CircuitModelId& sram_model,
-                                                                             const std::map<int, size_t>& num_bls_per_tile);
+                                                                             const CircuitModelId& sram_model);
 
 /**
  * @brief Precompute the BLs and WLs distribution across the FPGA fabric
