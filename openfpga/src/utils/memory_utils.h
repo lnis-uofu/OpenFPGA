@@ -37,6 +37,9 @@ std::vector<std::string> generate_sram_port_names(const CircuitLibrary& circuit_
 size_t generate_sram_port_size(const e_config_protocol_type sram_orgz_type,
                                const size_t& num_config_bits);
 
+size_t generate_pb_sram_port_size(const e_config_protocol_type sram_orgz_type,
+                                  const size_t& num_config_bits);
+
 } /* end namespace openfpga */
 
 #endif

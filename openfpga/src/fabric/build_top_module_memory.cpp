@@ -697,8 +697,7 @@ TopModuleNumConfigBits find_top_module_regional_num_config_bit(const ModuleManag
                                                                                                      circuit_lib, sram_model);
       std::map<int, size_t> num_wls_per_tile = compute_memory_bank_regional_wordline_numbers_per_tile(module_manager, top_module,
                                                                                                       config_region,
-                                                                                                      circuit_lib, sram_model,
-                                                                                                      num_bls_per_tile);
+                                                                                                      circuit_lib, sram_model);
       for (const auto& kv : num_bls_per_tile) {
         num_config_bits[config_region].first += kv.second;
       }

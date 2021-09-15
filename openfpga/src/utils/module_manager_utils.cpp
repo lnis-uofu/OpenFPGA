@@ -4,6 +4,7 @@
  ******************************************************************************/
 
 #include <map>
+#include <cmath>
 #include <algorithm>
 
 /* Headers from vtrutil library */
@@ -276,7 +277,6 @@ void add_formal_verification_sram_ports_to_module_manager(ModuleManager& module_
   module_manager.set_port_preproc_flag(module_id, port_id, preproc_flag);
 }
 
-
 /********************************************************************
  * Add a list of ports that are used for SRAM configuration to a module
  * in the module manager
@@ -314,6 +314,90 @@ void add_sram_ports_to_module_manager(ModuleManager& module_manager,
   switch (sram_orgz_type) {
   case CONFIG_MEM_STANDALONE: 
   case CONFIG_MEM_QL_MEMORY_BANK:
+  case CONFIG_MEM_MEMORY_BANK: {
+    for (const std::string& sram_port_name : sram_port_names) {
+      /* Add generated ports to the ModuleManager */
+      BasicPort sram_port(sram_port_name, sram_port_size);
+      module_manager.add_port(module_id, sram_port, ModuleManager::MODULE_INPUT_PORT);
+    }
+    break;
+  }
+  case CONFIG_MEM_SCAN_CHAIN: { 
+    /* Note that configuration chain tail is an output while head is an input 
+     * IMPORTANT: this is co-designed with function generate_sram_port_names()
+     * If the return vector is changed, the following codes MUST be adapted!
+     */
+    VTR_ASSERT(2 == sram_port_names.size());
+    size_t port_counter = 0;
+    for (const std::string& sram_port_name : sram_port_names) {
+      /* Add generated ports to the ModuleManager */
+      BasicPort sram_port(sram_port_name, sram_port_size);
+      if (0 == port_counter) { 
+        module_manager.add_port(module_id, sram_port, ModuleManager::MODULE_INPUT_PORT);
+      } else {
+        VTR_ASSERT(1 == port_counter);
+        module_manager.add_port(module_id, sram_port, ModuleManager::MODULE_OUTPUT_PORT);
+      }
+      port_counter++;
+    }
+    break;
+  }
+  case CONFIG_MEM_FRAME_BASED: { 
+    BasicPort en_port(std::string(DECODER_ENABLE_PORT_NAME), 1);
+    module_manager.add_port(module_id, en_port, ModuleManager::MODULE_INPUT_PORT);
+
+    BasicPort addr_port(std::string(DECODER_ADDRESS_PORT_NAME), num_config_bits);
+    module_manager.add_port(module_id, addr_port, ModuleManager::MODULE_INPUT_PORT);
+
+    BasicPort din_port(std::string(DECODER_DATA_IN_PORT_NAME), 1);
+    module_manager.add_port(module_id, din_port, ModuleManager::MODULE_INPUT_PORT);
+
+    break;
+  }
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization !\n");
+    exit(1);
+  }
+}
+
+/********************************************************************
+ * @brief Add a list of ports that are used for SRAM configuration to module 
+ * in the module manager
+ * @note
+ *   This function is only applicable to programmable blocks, which are 
+ *   - Grid
+ *   - CBX/CBY
+ *   - SB
+ * @note 
+ *   The major difference between this function and the add_sram_ports_to_module_manager()
+ *   is the size of sram ports to be added when QL memory bank is selected
+ *   This function will merge/group BL/WLs by considering a memory bank organization
+ *   at block-level
+ ********************************************************************/
+void add_pb_sram_ports_to_module_manager(ModuleManager& module_manager, 
+                                         const ModuleId& module_id,
+                                         const CircuitLibrary& circuit_lib,
+                                         const CircuitModelId& sram_model,
+                                         const e_config_protocol_type sram_orgz_type,
+                                         const size_t& num_config_bits) {
+  std::vector<std::string> sram_port_names = generate_sram_port_names(circuit_lib, sram_model, sram_orgz_type);
+  size_t sram_port_size = generate_pb_sram_port_size(sram_orgz_type, num_config_bits); 
+
+  /* Add ports to the module manager */
+  switch (sram_orgz_type) {
+  case CONFIG_MEM_QL_MEMORY_BANK:
+    for (const std::string& sram_port_name : sram_port_names) {
+      /* Add generated ports to the ModuleManager */
+      BasicPort sram_port(sram_port_name, sram_port_size);
+      /* For WL ports, we need to fine-tune it */
+      if (CIRCUIT_MODEL_PORT_WL == circuit_lib.port_type(circuit_lib.model_port(sram_model, sram_port_name))) {
+        sram_port.set_width(find_memory_wl_decoder_data_size(num_config_bits, sram_port_size));
+      }
+      module_manager.add_port(module_id, sram_port, ModuleManager::MODULE_INPUT_PORT);
+    }
+    break;
+  case CONFIG_MEM_STANDALONE: 
   case CONFIG_MEM_MEMORY_BANK: {
     for (const std::string& sram_port_name : sram_port_names) {
       /* Add generated ports to the ModuleManager */
@@ -864,6 +948,146 @@ void add_module_nets_cmos_flatten_memory_config_bus(ModuleManager& module_manage
 }
 
 /********************************************************************
+ * @brief Connect all the Bit Lines (BL) of child memory modules under the 
+ * parent module in a memory bank organization
+ *
+ *   BL<0>          BL<1>                  BL<i>
+ *   |               |                      |
+ *   v               v                      v
+ *  +--------+    +--------+            +--------+
+ *  | Memory |    | Memory |    ...     | Memory |               
+ *  | Module |    | Module |            | Module |
+ *  | [0,0]  |    | [1,0]  |            | [i,0]  |             
+ *  +--------+    +--------+            +--------+
+ *   |               |                      |
+ *   v               v                      v
+ *  +--------+    +--------+            +--------+
+ *  | Memory |    | Memory |    ...     | Memory |               
+ *  | Module |    | Module |            | Module |
+ *  | [0,1]  |    | [1,1]  |            | [i,1]  |             
+ *  +--------+    +--------+            +--------+
+ *
+ *********************************************************************/
+void add_module_nets_cmos_memory_bank_bl_config_bus(ModuleManager& module_manager,
+                                                    const ModuleId& parent_module,
+                                                    const e_config_protocol_type& sram_orgz_type,
+                                                    const e_circuit_model_port_type& config_port_type) {
+  /* A counter for the current pin id for the source port of parent module */
+  size_t cur_src_pin_id = 0;
+
+  /* Find the port name of parent module */
+  std::string src_port_name = generate_sram_port_name(sram_orgz_type, config_port_type);
+  ModuleId net_src_module_id = parent_module; 
+  size_t net_src_instance_id = 0;
+  ModulePortId net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+
+  /* Get the pin id for source port */
+  BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
+
+  for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size(); ++mem_index) {
+    /* Find the port name of next memory module */
+    std::string sink_port_name = generate_sram_port_name(sram_orgz_type, config_port_type);
+    ModuleId net_sink_module_id = module_manager.configurable_children(parent_module)[mem_index]; 
+    size_t net_sink_instance_id = module_manager.configurable_child_instances(parent_module)[mem_index];
+    ModulePortId net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+
+    /* Get the pin id for sink port */
+    BasicPort net_sink_port = module_manager.module_port(net_sink_module_id, net_sink_port_id); 
+    
+    /* Create a net for each pin */
+    for (size_t pin_id = 0; pin_id < net_sink_port.pins().size(); ++pin_id) {
+      size_t cur_bl_src_pin_id = cur_src_pin_id % net_src_port.pins().size();  
+      /* Create a net and add source and sink to it */
+      ModuleNetId net = create_module_source_pin_net(module_manager, parent_module, 
+                                                     net_src_module_id, net_src_instance_id, 
+                                                     net_src_port_id, net_src_port.pins()[cur_bl_src_pin_id]);
+      VTR_ASSERT(ModuleNetId::INVALID() != net);
+
+      /* Add net sink */
+      module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[pin_id]);
+
+      /* Move to the next src pin */
+      cur_src_pin_id++;
+    }
+  }
+}
+
+/********************************************************************
+ * @brief Connect all the Word Lines (WL) of child memory modules under the 
+ * parent module in a memory bank organization
+ *
+ *  +--------+    +--------+            +--------+
+ *  | Memory |    | Memory |    ...     | Memory |               
+ *  | Module |    | Module |            | Module |
+ *  | [0,0]  |    | [1,0]  |            | [i,0]  |             
+ *  +--------+    +--------+            +--------+
+ *      ^            ^                      ^
+ *      |            |                      |
+ *      +------------+----------------------+
+ *      |
+ *     WL<0>
+ *
+ *  +--------+    +--------+            +--------+
+ *  | Memory |    | Memory |    ...     | Memory |               
+ *  | Module |    | Module |            | Module |
+ *  | [0,1]  |    | [1,1]  |            | [i,1]  |             
+ *  +--------+    +--------+            +--------+
+ *      ^            ^                      ^
+ *      |            |                      |
+ *      +------------+----------------------+
+ *      |
+ *     WL<1>
+ *
+ *********************************************************************/
+void add_module_nets_cmos_memory_bank_wl_config_bus(ModuleManager& module_manager,
+                                                    const ModuleId& parent_module,
+                                                    const e_config_protocol_type& sram_orgz_type,
+                                                    const e_circuit_model_port_type& config_port_type) {
+  /* A counter for the current pin id for the source port of parent module */
+  size_t cur_src_pin_id = 0;
+
+  /* Find the port name of parent module */
+  std::string src_port_name = generate_sram_port_name(sram_orgz_type, config_port_type);
+  std::string bl_port_name = generate_sram_port_name(sram_orgz_type, CIRCUIT_MODEL_PORT_BL);
+
+  ModuleId net_src_module_id = parent_module; 
+  size_t net_src_instance_id = 0;
+  ModulePortId net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+  ModulePortId net_bl_port_id = module_manager.find_module_port(net_src_module_id, bl_port_name); 
+
+  /* Get the pin id for source port */
+  BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
+  BasicPort net_bl_port = module_manager.module_port(net_src_module_id, net_bl_port_id); 
+
+  for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size(); ++mem_index) {
+    /* Find the port name of next memory module */
+    std::string sink_port_name = generate_sram_port_name(sram_orgz_type, config_port_type);
+    ModuleId net_sink_module_id = module_manager.configurable_children(parent_module)[mem_index]; 
+    size_t net_sink_instance_id = module_manager.configurable_child_instances(parent_module)[mem_index];
+    ModulePortId net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+
+    /* Get the pin id for sink port */
+    BasicPort net_sink_port = module_manager.module_port(net_sink_module_id, net_sink_port_id); 
+    
+    /* Create a net for each pin */
+    for (size_t pin_id = 0; pin_id < net_sink_port.pins().size(); ++pin_id) {
+      size_t cur_wl_src_pin_id = std::floor(cur_src_pin_id / net_bl_port.pins().size());  
+      /* Create a net and add source and sink to it */
+      ModuleNetId net = create_module_source_pin_net(module_manager, parent_module, 
+                                                     net_src_module_id, net_src_instance_id, 
+                                                     net_src_port_id, net_src_port.pins()[cur_wl_src_pin_id]);
+      VTR_ASSERT(ModuleNetId::INVALID() != net);
+
+      /* Add net sink */
+      module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[pin_id]);
+
+      /* Move to the next src pin */
+      cur_src_pin_id++;
+    }
+  }
+}
+
+/********************************************************************
  * Connect all the memory modules under the parent module in a chain
  * 
  *                +--------+    +--------+            +--------+
@@ -1307,6 +1531,73 @@ void add_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
 }
 
 /*********************************************************************
+ * @brief Add the port-to-port connection between all the memory modules 
+ * and their parent module. This function creates nets to wire the control 
+ * signals of memory module to the configuration ports of primitive module
+ *
+ * @note This function is only applicable to programmable blocks, which are
+ * grid, CBX/CBY, SB. Different from the add_pb_module_nets_cmos_memory_config_bus(),
+ * this function will merge BL/WLs of child module when connect them to the parent module
+ *
+ * QL Memory bank 
+ * --------------
+ *
+ *        config_bus (BL)   config_bus (WL) 
+ *            |                   |
+ *  parent    |                   |
+ *   +---------------------------------------------+
+ *   |        |                   |                |
+ *   |        +---------------+   |                |
+ *   |        |               |   |                |
+ *   |        |   +-----------|---+                |
+ *   |        |   |           |   |                |
+ *   |        v   v           v   v                |
+ *   |  +-------------------------------------+    |
+ *   |  | Child Mem 0 | ... | Child Mem N-1   |    |
+ *   |  +-------------------------------------+    |
+ *   |        |                   |                |
+ *   |        v                   v                |
+ *   |     sram_out             sram_outb          |
+ *   |                                             |
+ *   +---------------------------------------------+
+
+ *
+ **********************************************************************/
+static 
+void add_pb_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
+                                               DecoderLibrary& decoder_lib,
+                                               const ModuleId& parent_module,
+                                               const e_config_protocol_type& sram_orgz_type) {
+  switch (sram_orgz_type) {
+  case CONFIG_MEM_SCAN_CHAIN: {
+    add_module_nets_cmos_memory_chain_config_bus(module_manager, parent_module,
+                                                 sram_orgz_type);
+    break;
+  }
+  case CONFIG_MEM_STANDALONE:
+  case CONFIG_MEM_QL_MEMORY_BANK:
+    add_module_nets_cmos_memory_bank_bl_config_bus(module_manager, parent_module,
+                                                   sram_orgz_type, CIRCUIT_MODEL_PORT_BL);
+    add_module_nets_cmos_memory_bank_wl_config_bus(module_manager, parent_module,
+                                                   sram_orgz_type, CIRCUIT_MODEL_PORT_WL);
+    break;
+  case CONFIG_MEM_MEMORY_BANK:
+    add_module_nets_cmos_flatten_memory_config_bus(module_manager, parent_module,
+                                                   sram_orgz_type, CIRCUIT_MODEL_PORT_BL);
+    add_module_nets_cmos_flatten_memory_config_bus(module_manager, parent_module,
+                                                   sram_orgz_type, CIRCUIT_MODEL_PORT_WL);
+    break;
+  case CONFIG_MEM_FRAME_BASED:
+    add_module_nets_cmos_memory_frame_config_bus(module_manager, decoder_lib, parent_module);
+    break;
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization!\n");
+    exit(1);
+  }
+}
+
+/*********************************************************************
  * TODO:
  * Add the port-to-port connection between a logic module 
  * and a memory module inside a primitive module
@@ -1331,7 +1622,6 @@ void add_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
  **********************************************************************/
 
 /********************************************************************
- * TODO:
  * Add the port-to-port connection between a memory module 
  * and the configuration bus of a primitive module
  *
@@ -1371,6 +1661,40 @@ void add_module_nets_memory_config_bus(ModuleManager& module_manager,
     add_module_nets_cmos_memory_config_bus(module_manager, decoder_lib,
                                            parent_module, 
                                            sram_orgz_type);
+    break;
+  case CIRCUIT_MODEL_DESIGN_RRAM:
+    /* TODO: */
+    break;
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of memory design technology!\n");
+    exit(1);
+  }
+}
+
+
+/********************************************************************
+ * Add the port-to-port connection between the configuration lines of
+ * a programmable block module (grid, CBX/CBY, SB) and its child module
+ *
+ * The configuration bus connection will depend not only 
+ * the design technology of the memory cells but also the 
+ * configuration styles of FPGA fabric.
+ * Here we will branch on the design technology
+ *
+ * Note: this function SHOULD be called after the pb_type_module is created
+ * and its child module (logic_module and memory_module) is created! 
+ *******************************************************************/
+void add_pb_module_nets_memory_config_bus(ModuleManager& module_manager,
+                                          DecoderLibrary& decoder_lib,
+                                          const ModuleId& parent_module,
+                                          const e_config_protocol_type& sram_orgz_type, 
+                                          const e_circuit_model_design_tech& mem_tech) {
+  switch (mem_tech) {
+  case CIRCUIT_MODEL_DESIGN_CMOS:
+    add_pb_module_nets_cmos_memory_config_bus(module_manager, decoder_lib,
+                                              parent_module, 
+                                              sram_orgz_type);
     break;
   case CIRCUIT_MODEL_DESIGN_RRAM:
     /* TODO: */
