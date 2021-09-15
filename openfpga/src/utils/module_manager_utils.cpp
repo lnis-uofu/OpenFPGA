@@ -386,7 +386,6 @@ void add_pb_sram_ports_to_module_manager(ModuleManager& module_manager,
 
   /* Add ports to the module manager */
   switch (sram_orgz_type) {
-  case CONFIG_MEM_STANDALONE: 
   case CONFIG_MEM_QL_MEMORY_BANK:
     for (const std::string& sram_port_name : sram_port_names) {
       /* Add generated ports to the ModuleManager */
@@ -398,6 +397,7 @@ void add_pb_sram_ports_to_module_manager(ModuleManager& module_manager,
       module_manager.add_port(module_id, sram_port, ModuleManager::MODULE_INPUT_PORT);
     }
     break;
+  case CONFIG_MEM_STANDALONE: 
   case CONFIG_MEM_MEMORY_BANK: {
     for (const std::string& sram_port_name : sram_port_names) {
       /* Add generated ports to the ModuleManager */
