@@ -975,15 +975,11 @@ void add_module_nets_cmos_memory_bank_bl_config_bus(ModuleManager& module_manage
   /* A counter for the current pin id for the source port of parent module */
   size_t cur_src_pin_id = 0;
 
-  ModuleId net_src_module_id;
-  size_t net_src_instance_id;
-  ModulePortId net_src_port_id;
-
   /* Find the port name of parent module */
   std::string src_port_name = generate_sram_port_name(sram_orgz_type, config_port_type);
-  net_src_module_id = parent_module; 
-  net_src_instance_id = 0;
-  net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+  ModuleId net_src_module_id = parent_module; 
+  size_t net_src_instance_id = 0;
+  ModulePortId net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
 
   /* Get the pin id for source port */
   BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
@@ -1054,18 +1050,18 @@ void add_module_nets_cmos_memory_bank_wl_config_bus(ModuleManager& module_manage
   /* A counter for the current pin id for the source port of parent module */
   size_t cur_src_pin_id = 0;
 
-  ModuleId net_src_module_id;
-  size_t net_src_instance_id;
-  ModulePortId net_src_port_id;
-
   /* Find the port name of parent module */
   std::string src_port_name = generate_sram_port_name(sram_orgz_type, config_port_type);
-  net_src_module_id = parent_module; 
-  net_src_instance_id = 0;
-  net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+  std::string bl_port_name = generate_sram_port_name(sram_orgz_type, CIRCUIT_MODEL_PORT_BL);
+
+  ModuleId net_src_module_id = parent_module; 
+  size_t net_src_instance_id = 0;
+  ModulePortId net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+  ModulePortId net_bl_port_id = module_manager.find_module_port(net_src_module_id, bl_port_name); 
 
   /* Get the pin id for source port */
   BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
+  BasicPort net_bl_port = module_manager.module_port(net_src_module_id, net_bl_port_id); 
 
   for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size(); ++mem_index) {
     ModuleId net_sink_module_id;
@@ -1083,7 +1079,7 @@ void add_module_nets_cmos_memory_bank_wl_config_bus(ModuleManager& module_manage
     
     /* Create a net for each pin */
     for (size_t pin_id = 0; pin_id < net_sink_port.pins().size(); ++pin_id) {
-      size_t cur_wl_src_pin_id = std::floor(cur_src_pin_id / net_src_port.pins().size());  
+      size_t cur_wl_src_pin_id = std::floor(cur_src_pin_id / net_bl_port.pins().size());  
       /* Create a net and add source and sink to it */
       ModuleNetId net = create_module_source_pin_net(module_manager, parent_module, 
                                                      net_src_module_id, net_src_instance_id, 
