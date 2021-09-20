@@ -243,9 +243,10 @@ add_custom_target(
 
 add_custom_target(
     yosys-plugins ALL
-    COMMAND $(MAKE)
-    COMMAND $(MAKE) install
+    COMMAND $(MAKE) clean YOSYS_PATH=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
+    COMMAND $(MAKE) install YOSYS_PATH=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-plugins
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install/bin/yosys
     COMMENT "Compile Yosys-plugins with given Makefile"
 )
 
