@@ -101,10 +101,11 @@ enum e_circuit_model_port_type {
   CIRCUIT_MODEL_PORT_BLB,
   CIRCUIT_MODEL_PORT_WL,
   CIRCUIT_MODEL_PORT_WLB,
+  CIRCUIT_MODEL_PORT_WLR,
   NUM_CIRCUIT_MODEL_PORT_TYPES
 };
 /* Strings correspond to each port type */
-constexpr std::array<const char*, NUM_CIRCUIT_MODEL_PORT_TYPES> CIRCUIT_MODEL_PORT_TYPE_STRING = {{"input", "output", "inout", "clock", "sram", "bl", "blb", "wl", "wlb"}};
+constexpr std::array<const char*, NUM_CIRCUIT_MODEL_PORT_TYPES> CIRCUIT_MODEL_PORT_TYPE_STRING = {{"input", "output", "inout", "clock", "sram", "bl", "blb", "wl", "wlb", "wlr"}};
 
 enum e_circuit_model_delay_type {
   CIRCUIT_MODEL_DELAY_RISE, 

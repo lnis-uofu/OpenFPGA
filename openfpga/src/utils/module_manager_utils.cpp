@@ -195,6 +195,7 @@ ModuleId add_circuit_model_to_module_manager(ModuleManager& module_manager,
   port_type2type_map[CIRCUIT_MODEL_PORT_BLB] = ModuleManager::MODULE_INPUT_PORT;
   port_type2type_map[CIRCUIT_MODEL_PORT_WL] = ModuleManager::MODULE_INPUT_PORT;
   port_type2type_map[CIRCUIT_MODEL_PORT_WLB] = ModuleManager::MODULE_INPUT_PORT;
+  port_type2type_map[CIRCUIT_MODEL_PORT_WLR] = ModuleManager::MODULE_INPUT_PORT;
   port_type2type_map[CIRCUIT_MODEL_PORT_OUTPUT] = ModuleManager::MODULE_OUTPUT_PORT;
 
   /* Input ports (ignore all the global ports when searching the circuit_lib */
@@ -390,8 +391,9 @@ void add_pb_sram_ports_to_module_manager(ModuleManager& module_manager,
     for (const std::string& sram_port_name : sram_port_names) {
       /* Add generated ports to the ModuleManager */
       BasicPort sram_port(sram_port_name, sram_port_size);
-      /* For WL ports, we need to fine-tune it */
-      if (CIRCUIT_MODEL_PORT_WL == circuit_lib.port_type(circuit_lib.model_port(sram_model, sram_port_name))) {
+      /* For WL and WLR ports, we need to fine-tune it */
+      if ( (CIRCUIT_MODEL_PORT_WL == circuit_lib.port_type(circuit_lib.model_port(sram_model, sram_port_name)))
+        || (CIRCUIT_MODEL_PORT_WLR == circuit_lib.port_type(circuit_lib.model_port(sram_model, sram_port_name))) ) {
         sram_port.set_width(find_memory_wl_decoder_data_size(num_config_bits, sram_port_size));
       }
       module_manager.add_port(module_id, sram_port, ModuleManager::MODULE_INPUT_PORT);
@@ -885,7 +887,7 @@ void add_module_nets_between_logic_and_memory_sram_bus(ModuleManager& module_man
  *      |            |                      |
  *      +------------+----------------------+
  *      |
- *     WL
+ *     WL/WLR
  * 
  * Note: 
  *   - This function will do the connection for only one type of the port,
@@ -900,15 +902,16 @@ void add_module_nets_cmos_flatten_memory_config_bus(ModuleManager& module_manage
   /* A counter for the current pin id for the source port of parent module */
   size_t cur_src_pin_id = 0;
 
-  ModuleId net_src_module_id;
-  size_t net_src_instance_id;
-  ModulePortId net_src_port_id;
-
   /* Find the port name of parent module */
   std::string src_port_name = generate_sram_port_name(sram_orgz_type, config_port_type);
-  net_src_module_id = parent_module; 
-  net_src_instance_id = 0;
-  net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+  ModuleId net_src_module_id = parent_module; 
+  size_t net_src_instance_id = 0;
+  ModulePortId net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+
+  /* We may not be able to find WLR port, return now */
+  if (!net_src_port_id) {
+    return;
+  }
 
   /* Get the pin id for source port */
   BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
@@ -1025,7 +1028,7 @@ void add_module_nets_cmos_memory_bank_bl_config_bus(ModuleManager& module_manage
  *      |            |                      |
  *      +------------+----------------------+
  *      |
- *     WL<0>
+ *     WL<0>/WLR<0>
  *
  *  +--------+    +--------+            +--------+
  *  | Memory |    | Memory |    ...     | Memory |               
@@ -1036,7 +1039,7 @@ void add_module_nets_cmos_memory_bank_bl_config_bus(ModuleManager& module_manage
  *      |            |                      |
  *      +------------+----------------------+
  *      |
- *     WL<1>
+ *     WL<1>/WLR<1>
  *
  *********************************************************************/
 void add_module_nets_cmos_memory_bank_wl_config_bus(ModuleManager& module_manager,
@@ -1054,6 +1057,11 @@ void add_module_nets_cmos_memory_bank_wl_config_bus(ModuleManager& module_manage
   size_t net_src_instance_id = 0;
   ModulePortId net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
   ModulePortId net_bl_port_id = module_manager.find_module_port(net_src_module_id, bl_port_name); 
+
+  /* We may not be able to find WLR port, return now */
+  if (!net_src_port_id) {
+    return;
+  }
 
   /* Get the pin id for source port */
   BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
@@ -1300,9 +1308,9 @@ void add_module_nets_cmos_memory_frame_decoder_config_bus(ModuleManager& module_
   /* Search the decoder library and try to find one 
    * If not found, create a new module and add it to the module manager 
    */
-  DecoderId decoder_id = decoder_lib.find_decoder(addr_size, data_size, true, false, false);
+  DecoderId decoder_id = decoder_lib.find_decoder(addr_size, data_size, true, false, false, false);
   if (DecoderId::INVALID() == decoder_id) {
-    decoder_id = decoder_lib.add_decoder(addr_size, data_size, true, false, false);
+    decoder_id = decoder_lib.add_decoder(addr_size, data_size, true, false, false, false);
   }
   VTR_ASSERT(DecoderId::INVALID() != decoder_id);
 
@@ -1519,6 +1527,8 @@ void add_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
                                                    sram_orgz_type, CIRCUIT_MODEL_PORT_BL);
     add_module_nets_cmos_flatten_memory_config_bus(module_manager, parent_module,
                                                    sram_orgz_type, CIRCUIT_MODEL_PORT_WL);
+    add_module_nets_cmos_flatten_memory_config_bus(module_manager, parent_module,
+                                                   sram_orgz_type, CIRCUIT_MODEL_PORT_WLR);
     break;
   case CONFIG_MEM_FRAME_BASED:
     add_module_nets_cmos_memory_frame_config_bus(module_manager, decoder_lib, parent_module);
@@ -1580,6 +1590,8 @@ void add_pb_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
                                                    sram_orgz_type, CIRCUIT_MODEL_PORT_BL);
     add_module_nets_cmos_memory_bank_wl_config_bus(module_manager, parent_module,
                                                    sram_orgz_type, CIRCUIT_MODEL_PORT_WL);
+    add_module_nets_cmos_memory_bank_wl_config_bus(module_manager, parent_module,
+                                                   sram_orgz_type, CIRCUIT_MODEL_PORT_WLR);
     break;
   case CONFIG_MEM_MEMORY_BANK:
     add_module_nets_cmos_flatten_memory_config_bus(module_manager, parent_module,
