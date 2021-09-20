@@ -242,7 +242,7 @@ add_custom_target(
 # yosys-plugins compilation starts
 
 add_custom_target(
-    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install/share/yosys/plugins/ql-qlf.so
+    yosys-plugins ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install/share/yosys/plugins/ql-qlf.so
     COMMAND $(MAKE) clean YOSYS_PATH=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
     COMMAND $(MAKE) install YOSYS_PATH=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-plugins
@@ -250,7 +250,7 @@ add_custom_target(
     COMMENT "Compile Yosys-plugins with given Makefile"
 )
 
-add_dependencies(yosys-plugins DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install/share/yosys/plugins/ql-qlf.so)
+#add_dependencies(yosys-plugins DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install/share/yosys/plugins/ql-qlf.so)
 
 # yosys-plugins compilation ends
 
