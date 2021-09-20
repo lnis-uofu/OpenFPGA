@@ -229,10 +229,10 @@ include(CheckCXXCompilerFlag)
 
 # run makefile provided, we pass-on the options to the local make file 
 add_custom_target(
-    yosys ALL 
-    COMMAND rm -rf ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install/bin/yosys
     COMMAND $(MAKE) config-gcc
-    COMMAND $(MAKE) install PREFIX=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
+    COMMAND make clean
+    COMMAND $(MAKE) install -j10 PREFIX=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys
     COMMENT "Compile Yosys with given Makefile"
 )
@@ -242,7 +242,7 @@ add_custom_target(
 # yosys-plugins compilation starts
 
 add_custom_target(
-    yosys-plugins ALL
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install/share/yosys/plugins/ql-qlf.so
     COMMAND $(MAKE) clean YOSYS_PATH=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
     COMMAND $(MAKE) install YOSYS_PATH=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-plugins
@@ -250,16 +250,9 @@ add_custom_target(
     COMMENT "Compile Yosys-plugins with given Makefile"
 )
 
-add_dependencies(yosys-plugins yosys)
+add_dependencies(yosys-plugins DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install/share/yosys/plugins/ql-qlf.so)
 
 # yosys-plugins compilation ends
-
-# run make to extract compiler options, linker options and list of source files
-#add_custom_target(
-#  yosys
-#  COMMAND make run
-#  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys
-#)
 
 # Add extra compilation flags to suppress warnings from some libraries/tools
 # Note that target_compile_options() *appends* to the current compilation options of
