@@ -33,6 +33,7 @@ constexpr char* CONNECTION_BLOCK_MEM_INSTANCE_PREFIX = "mem_";
 constexpr char* MEMORY_MODULE_POSTFIX = "_mem";
 constexpr char* MEMORY_BL_PORT_NAME = "bl";
 constexpr char* MEMORY_WL_PORT_NAME = "wl";
+constexpr char* MEMORY_WLR_PORT_NAME = "wlr";
 
 /* Multiplexer naming constant strings */
 constexpr char* MUX_BASIS_MODULE_POSTFIX = "_basis";
@@ -48,6 +49,8 @@ constexpr char* DECODER_DATA_OUT_PORT_NAME = "data_out";
 constexpr char* DECODER_DATA_OUT_INV_PORT_NAME = "data_out_inv";
 constexpr char* DECODER_BL_ADDRESS_PORT_NAME = "bl_address";
 constexpr char* DECODER_WL_ADDRESS_PORT_NAME = "wl_address";
+constexpr char* DECODER_READBACK_PORT_NAME = "readback";
+constexpr char* DECODER_DATA_READ_ENABLE_PORT_NAME = "data_out_ren";
 
 /* Inverted port naming */
 constexpr char* INV_PORT_POSTFIX = "_inv";

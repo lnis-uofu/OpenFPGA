@@ -257,6 +257,41 @@ module SRAMSR(
 endmodule
 
 //-----------------------------------------------------
+// Function    : A SRAM cell with WL read signal
+//-----------------------------------------------------
+module SRAM_RE(
+  input WE, // Word line control signal as write enable
+  input RE, // Word line read signal as read enable
+  inout D, // Bit line control signal
+  output Q, // Data output
+  output QN // Data output
+);
+
+  //----- local variable need to be registered
+  reg data;
+  reg data_readback;
+
+  //----- when wl is enabled, we can read in data from bl
+  always @(WE or RE or D) 
+  begin
+    if ((1'b1 == D)&&(1'b1 == WE)) begin
+    //----- Cases to program internal memory bit 
+    //----- case 1: bl = 1, wl = 1, a -> 0
+      data <= 1'b1;
+    end else if ((1'b0 == D)&&(1'b1 == WE)) begin
+    //----- case 2: bl = 0, wl = 1, a -> 0
+     data <= 1'b0;
+    end 
+  end
+
+  // Wire q_reg to Q
+  assign Q = data;
+  assign QN = ~data;
+
+endmodule
+
+
+//-----------------------------------------------------
 // Function    : A SRAM cell with 
 //               - an active-low reset
 //               - an active-low set

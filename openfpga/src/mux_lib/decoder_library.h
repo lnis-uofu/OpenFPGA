@@ -50,6 +50,8 @@ class DecoderLibrary {
     bool use_data_in(const DecoderId& decoder) const;
     /* Get the flag if a decoder includes a data_inv port which is an inversion of the regular data output port */
     bool use_data_inv_port(const DecoderId& decoder) const;
+    /* Get the flag if a decoder includes a readback port which enables readback from configurable memories */
+    bool use_readback(const DecoderId& decoder) const;
     /* Find a decoder to the library, with the specification.
      * If found, return the id of decoder.
      * If not found, return an invalid id of decoder
@@ -64,7 +66,8 @@ class DecoderLibrary {
                            const size_t& data_size, 
                            const bool& use_enable, 
                            const bool& use_data_in, 
-                           const bool& use_data_inv_port) const;
+                           const bool& use_data_inv_port,
+                           const bool& use_readback) const;
 
   public: /* Public validators */
     /* valid ids */
@@ -76,7 +79,8 @@ class DecoderLibrary {
                           const size_t& data_size, 
                           const bool& use_enable, 
                           const bool& use_data_in, 
-                          const bool& use_data_inv_port);
+                          const bool& use_data_inv_port,
+                          const bool& use_readback);
     
   private: /* Internal Data */
     vtr::vector<DecoderId, DecoderId> decoder_ids_;
@@ -85,6 +89,7 @@ class DecoderLibrary {
     vtr::vector<DecoderId, bool> use_enable_;
     vtr::vector<DecoderId, bool> use_data_in_;
     vtr::vector<DecoderId, bool> use_data_inv_port_;
+    vtr::vector<DecoderId, bool> use_readback_;
 };
 
 } /* End namespace openfpga*/

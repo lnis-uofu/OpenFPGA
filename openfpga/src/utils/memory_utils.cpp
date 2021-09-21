@@ -330,7 +330,8 @@ std::vector<std::string> generate_sram_port_names(const CircuitLibrary& circuit_
     std::vector<e_circuit_model_port_type> ports_to_search;
     ports_to_search.push_back(CIRCUIT_MODEL_PORT_BL);
     ports_to_search.push_back(CIRCUIT_MODEL_PORT_WL);
-    /* Try to find a BL/WL/BLB/WLB port and update the port types/module port types to be added */
+    ports_to_search.push_back(CIRCUIT_MODEL_PORT_WLR);
+    /* Try to find a BL/WL/WLR port and update the port types/module port types to be added */
     for (const auto& port_to_search : ports_to_search) {
       std::vector<CircuitPortId> found_port = circuit_lib.model_ports_by_type(sram_model, port_to_search);
       if (0 == found_port.size()) {

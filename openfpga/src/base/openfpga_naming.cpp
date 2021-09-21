@@ -719,9 +719,11 @@ std::string generate_sram_port_name(const e_config_protocol_type& sram_orgz_type
      */
     if (CIRCUIT_MODEL_PORT_BL == port_type) {
       port_name = std::string(MEMORY_BL_PORT_NAME); 
-    } else {
-      VTR_ASSERT( CIRCUIT_MODEL_PORT_WL == port_type );
+    } else if (CIRCUIT_MODEL_PORT_WL == port_type) {
       port_name = std::string(MEMORY_WL_PORT_NAME); 
+    } else {
+      VTR_ASSERT( CIRCUIT_MODEL_PORT_WLR == port_type );
+      port_name = std::string(MEMORY_WLR_PORT_NAME); 
     }
     break;
   case CONFIG_MEM_FRAME_BASED:

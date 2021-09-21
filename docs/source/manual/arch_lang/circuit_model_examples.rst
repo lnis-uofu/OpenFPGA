@@ -333,6 +333,36 @@ The following XML codes describes the SRAM cell shown in :numref:`fig_sram_blwl`
 
 .. note:: When the ``memory_bank`` type of configuration procotol is specified, SRAM modules should have a BL and a WL.
 
+.. _circuit_model_sram_blwlr_example:
+
+SRAM with BL/WL/WLR
+```````````````````
+.. _fig_sram_blwlr:
+
+.. figure:: ./figures/sram_blwlr.svg
+   :scale: 100%
+
+   An example of a SRAM with Bit-Line (BL), Word-Line (WL) and WL read control signals
+
+The following XML codes describes the SRAM cell shown in :numref:`fig_sram_blwlr`.
+
+.. code-block:: xml
+
+  <circuit_model type="sram" name="sram_blwlr" prefix="sram_blwlr" verilog_netlist="sram.v" spice_netlist="sram.sp"/>
+    <design_technology type="cmos"/>
+    <input_buffer exist="false"/>
+    <output_buffer exist="false"/>
+    <port type="bl" prefix="bl" size="1"/>
+    <port type="wl" prefix="wl" size="1"/>
+    <port type="wlr" prefix="wlr" size="1"/>
+    <port type="output" prefix="out" size="1"/>
+    <port type="output" prefix="outb" size="1"/>
+  </circuit_model>
+
+.. note:: OpenFPGA always assume that a ``WL`` port should be the write enable signal, a ``WLR`` port should be the read enable signal, while a ``BL`` port is the data input.
+
+.. note:: When the ``memory_bank`` type of configuration procotol is specified, SRAM modules should have a BL and a WL. WLR is optional
+
 .. _circuit_model_config_latch_example:
 
 Configurable Latch

@@ -47,6 +47,11 @@ bool DecoderLibrary::use_data_inv_port(const DecoderId& decoder) const {
   return use_data_inv_port_[decoder];
 }
 
+bool DecoderLibrary::use_readback(const DecoderId& decoder) const {
+  VTR_ASSERT_SAFE(valid_decoder_id(decoder));
+  return use_readback_[decoder];
+}
+
 /* Find a decoder to the library, with the specification.
  * If found, return the id of decoder.
  * If not found, return an invalid id of decoder
@@ -61,13 +66,15 @@ DecoderId DecoderLibrary::find_decoder(const size_t& addr_size,
                                        const size_t& data_size, 
                                        const bool& use_enable, 
                                        const bool& use_data_in, 
-                                       const bool& use_data_inv_port) const {
+                                       const bool& use_data_inv_port,
+                                       const bool& use_readback) const {
   for (auto decoder : decoders()) {
     if (  (addr_size == addr_sizes_[decoder])
        && (data_size == data_sizes_[decoder])
        && (use_enable == use_enable_[decoder])
        && (use_data_in == use_data_in_[decoder])
-       && (use_data_inv_port == use_data_inv_port_[decoder]) ) {
+       && (use_data_inv_port == use_data_inv_port_[decoder])
+       && (use_readback == use_readback_[decoder]) ) {
       return decoder;
     }
   }
@@ -92,7 +99,8 @@ DecoderId DecoderLibrary::add_decoder(const size_t& addr_size,
                                       const size_t& data_size, 
                                       const bool& use_enable, 
                                       const bool& use_data_in, 
-                                      const bool& use_data_inv_port) {
+                                      const bool& use_data_inv_port,
+                                      const bool& use_readback) {
   DecoderId decoder = DecoderId(decoder_ids_.size());
   /* Push to the decoder list */
   decoder_ids_.push_back(decoder);
@@ -102,6 +110,7 @@ DecoderId DecoderLibrary::add_decoder(const size_t& addr_size,
   use_enable_.push_back(use_enable);
   use_data_in_.push_back(use_data_in);
   use_data_inv_port_.push_back(use_data_inv_port);
+  use_readback_.push_back(use_readback);
 
   return decoder;
 }

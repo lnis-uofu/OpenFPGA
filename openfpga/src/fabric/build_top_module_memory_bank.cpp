@@ -137,6 +137,16 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
   /* Data in port should match the number of configuration regions */
   VTR_ASSERT(din_port_info.get_width() == module_manager.regions(top_module).size());
 
+  /* Find readback port from the top-level module */ 
+  ModulePortId readback_port = module_manager.find_module_port(top_module, std::string(DECODER_READBACK_PORT_NAME));
+  BasicPort readback_port_info;
+
+  /* Readback port if available, should be a 1-bit port */
+  if (readback_port) {
+    readback_port_info = module_manager.module_port(top_module, readback_port);
+    VTR_ASSERT(readback_port_info.get_width() == 1);
+  }
+
   /* Find BL and WL address port from the top-level module */ 
   ModulePortId bl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_BL_ADDRESS_PORT_NAME));
   BasicPort bl_addr_port_info = module_manager.module_port(top_module, bl_addr_port);
@@ -168,9 +178,9 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
      * Otherwise, we create one and add it to the decoder library
      */
     DecoderId bl_decoder_id = decoder_lib.find_decoder(bl_addr_size, num_bls,
-                                                       true, true, false);
+                                                       true, true, false, false);
     if (DecoderId::INVALID() == bl_decoder_id) {
-      bl_decoder_id = decoder_lib.add_decoder(bl_addr_size, num_bls, true, true, false);
+      bl_decoder_id = decoder_lib.add_decoder(bl_addr_size, num_bls, true, true, false, false);
     }
     VTR_ASSERT(DecoderId::INVALID() != bl_decoder_id);
 
@@ -196,9 +206,9 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
      * Otherwise, we create one and add it to the decoder library
      */
     DecoderId wl_decoder_id = decoder_lib.find_decoder(wl_addr_size, num_wls,
-                                                       true, false, false);
+                                                       true, false, false, readback_port != ModulePortId::INVALID());
     if (DecoderId::INVALID() == wl_decoder_id) {
-      wl_decoder_id = decoder_lib.add_decoder(wl_addr_size, num_wls, true, false, false);
+      wl_decoder_id = decoder_lib.add_decoder(wl_addr_size, num_wls, true, false, false, readback_port != ModulePortId::INVALID());
     }
     VTR_ASSERT(DecoderId::INVALID() != wl_decoder_id);
 
@@ -264,7 +274,13 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
     BasicPort wl_decoder_en_port_info = module_manager.module_port(wl_decoder_module, wl_decoder_en_port);
 
     ModulePortId wl_decoder_addr_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_ADDRESS_PORT_NAME));
-    BasicPort wl_decoder_addr_port_info = module_manager.module_port(wl_decoder_module, bl_decoder_addr_port);
+    BasicPort wl_decoder_addr_port_info = module_manager.module_port(wl_decoder_module, wl_decoder_addr_port);
+
+    ModulePortId wl_decoder_readback_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_READBACK_PORT_NAME));
+    BasicPort wl_decoder_readback_port_info;
+    if (wl_decoder_readback_port) { 
+      wl_decoder_readback_port_info = module_manager.module_port(wl_decoder_module, wl_decoder_readback_port);
+    }
 
     /* Top module Enable port -> WL Decoder Enable port */
     add_module_bus_nets(module_manager,
@@ -277,6 +293,14 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
                         top_module,
                         top_module, 0, wl_addr_port,
                         wl_decoder_module, curr_wl_decoder_instance_id, wl_decoder_addr_port);
+
+    /* Top module readback port -> WL Decoder readback port */
+    if (wl_decoder_readback_port) { 
+      add_module_bus_nets(module_manager,
+                          top_module,
+                          top_module, 0, readback_port,
+                          wl_decoder_module, curr_wl_decoder_instance_id, wl_decoder_readback_port);
+    }
 
     /************************************************************** 
      * Precompute the BLs and WLs distribution across the FPGA fabric
@@ -388,6 +412,45 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
                                            child_module, child_instance, child_wl_port, sink_wl_pin);
       
         cur_wl_index++;
+      }
+    }
+
+    /************************************************************** 
+     * Optional: Add nets from WLR data out to each configurable child
+     */
+    ModulePortId wl_decoder_data_ren_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_DATA_READ_ENABLE_PORT_NAME));
+    BasicPort wl_decoder_data_ren_port_info;
+    if (wl_decoder_data_ren_port) { 
+      wl_decoder_data_ren_port_info = module_manager.module_port(wl_decoder_module, wl_decoder_data_ren_port);
+      for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
+        ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
+        vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
+  
+        size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
+  
+        /* Find the WL port */
+        ModulePortId child_wlr_port = module_manager.find_module_port(child_module, std::string(MEMORY_WLR_PORT_NAME));
+        BasicPort child_wlr_port_info = module_manager.module_port(child_module, child_wlr_port);
+  
+        size_t cur_wlr_index = 0;
+  
+        for (const size_t& sink_wlr_pin : child_wlr_port_info.pins()) {
+          size_t wlr_pin_id = wl_start_index_per_tile[coord.y()] + cur_wlr_index;
+          VTR_ASSERT(wlr_pin_id < wl_decoder_data_ren_port_info.pins().size());
+  
+          /* Create net */
+          ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
+                                                         wl_decoder_module, curr_wl_decoder_instance_id,
+                                                         wl_decoder_data_ren_port,
+                                                         wl_decoder_data_ren_port_info.pins()[wlr_pin_id]);
+          VTR_ASSERT(ModuleNetId::INVALID() != net);
+  
+          /* Add net sink */
+          module_manager.add_module_net_sink(top_module, net,
+                                             child_module, child_instance, child_wlr_port, sink_wlr_pin);
+        
+          cur_wlr_index++;
+        }
       }
     }
 

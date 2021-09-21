@@ -112,11 +112,11 @@ DecoderId add_mux_local_decoder_to_library(DecoderLibrary& decoder_lib,
                                            const size_t data_size) {
   size_t addr_size = find_mux_local_decoder_addr_size(data_size);
 
-  DecoderId decoder_id = decoder_lib.find_decoder(addr_size, data_size, false, false, true);
+  DecoderId decoder_id = decoder_lib.find_decoder(addr_size, data_size, false, false, true, false);
 
   if (DecoderId::INVALID() == decoder_id) { 
     /* Add the decoder */
-    return decoder_lib.add_decoder(addr_size, data_size, false, false, true);
+    return decoder_lib.add_decoder(addr_size, data_size, false, false, true, false);
   }
 
   /* There is already a decoder in the library, return the decoder id */

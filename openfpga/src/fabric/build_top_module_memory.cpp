@@ -870,6 +870,12 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
     BasicPort wl_addr_port(std::string(DECODER_WL_ADDRESS_PORT_NAME), wl_addr_size);
     module_manager.add_port(module_id, wl_addr_port, ModuleManager::MODULE_INPUT_PORT);
 
+    /* Optional: If we have WLR port, we should add a read-back port */
+    if (!circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_WLR).empty()) {
+      BasicPort readback_port(std::string(DECODER_READBACK_PORT_NAME), config_protocol.num_regions());
+      module_manager.add_port(module_id, readback_port, ModuleManager::MODULE_INPUT_PORT);
+    }
+
     /* Data input should be dependent on the number of configuration regions*/
     BasicPort din_port(std::string(DECODER_DATA_IN_PORT_NAME), config_protocol.num_regions());
     module_manager.add_port(module_id, din_port, ModuleManager::MODULE_INPUT_PORT);
@@ -1056,9 +1062,9 @@ void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manag
      * Otherwise, we create one and add it to the decoder library
      */
     DecoderId bl_decoder_id = decoder_lib.find_decoder(bl_addr_size, num_bls,
-                                                       true, true, false);
+                                                       true, true, false, false);
     if (DecoderId::INVALID() == bl_decoder_id) {
-      bl_decoder_id = decoder_lib.add_decoder(bl_addr_size, num_bls, true, true, false);
+      bl_decoder_id = decoder_lib.add_decoder(bl_addr_size, num_bls, true, true, false, false);
     }
     VTR_ASSERT(DecoderId::INVALID() != bl_decoder_id);
 
@@ -1084,9 +1090,9 @@ void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manag
      * Otherwise, we create one and add it to the decoder library
      */
     DecoderId wl_decoder_id = decoder_lib.find_decoder(wl_addr_size, num_wls,
-                                                       true, false, false);
+                                                       true, false, false, false);
     if (DecoderId::INVALID() == wl_decoder_id) {
-      wl_decoder_id = decoder_lib.add_decoder(wl_addr_size, num_wls, true, false, false);
+      wl_decoder_id = decoder_lib.add_decoder(wl_addr_size, num_wls, true, false, false, false);
     }
     VTR_ASSERT(DecoderId::INVALID() != wl_decoder_id);
 
@@ -1533,9 +1539,9 @@ void add_top_module_nets_cmos_memory_frame_decoder_config_bus(ModuleManager& mod
   /* Search the decoder library and try to find one 
    * If not found, create a new module and add it to the module manager 
    */
-  DecoderId decoder_id = decoder_lib.find_decoder(addr_size, data_size, true, false, false);
+  DecoderId decoder_id = decoder_lib.find_decoder(addr_size, data_size, true, false, false, false);
   if (DecoderId::INVALID() == decoder_id) {
-    decoder_id = decoder_lib.add_decoder(addr_size, data_size, true, false, false);
+    decoder_id = decoder_lib.add_decoder(addr_size, data_size, true, false, false, false);
   }
   VTR_ASSERT(DecoderId::INVALID() != decoder_id);
 
