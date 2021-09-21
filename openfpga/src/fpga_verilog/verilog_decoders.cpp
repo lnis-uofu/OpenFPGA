@@ -289,6 +289,20 @@ void print_verilog_arch_decoder_module(std::fstream& fp,
     data_inv_port = module_manager.module_port(module_id, data_inv_port_id);
   }
 
+  /* Find readback port */
+  ModulePortId readback_port_id = module_manager.find_module_port(module_id, std::string(DECODER_READBACK_PORT_NAME));
+  BasicPort readback_port;
+  if (readback_port_id) {
+    readback_port = module_manager.module_port(module_id, readback_port_id);
+  }
+
+  /* Find data read-enable port */
+  ModulePortId data_ren_port_id = module_manager.find_module_port(module_id, std::string(DECODER_DATA_READ_ENABLE_PORT_NAME));
+  BasicPort data_ren_port;
+  if (data_ren_port_id) {
+    data_ren_port = module_manager.module_port(module_id, data_ren_port_id);
+  }
+
   /* dump module definition + ports */
   print_verilog_module_declaration(fp, module_manager, module_id, default_net_type);
   /* Finish dumping ports */
@@ -303,10 +317,18 @@ void print_verilog_arch_decoder_module(std::fstream& fp,
    * else data_out is driven by '0'
    */
   if (1 == data_size) {
+    /* Output logics for data output */
     fp << "always@(" << generate_verilog_port(VERILOG_PORT_CONKT, addr_port);
     fp << " or " << generate_verilog_port(VERILOG_PORT_CONKT, enable_port);
+    /* If there is a readback port, the data output is only enabled when readback is disabled */
+    if (readback_port_id) {
+      fp << " or " << "~" << generate_verilog_port(VERILOG_PORT_CONKT, readback_port);
+    }
     fp << ") begin" << std::endl;
     fp << "\tif ((" << generate_verilog_port(VERILOG_PORT_CONKT, enable_port) << " == 1'b1) && ("; 
+    if (readback_port_id) {
+      fp << generate_verilog_port(VERILOG_PORT_CONKT, readback_port) << " == 1'b0) && ("; 
+    }
     fp << generate_verilog_port(VERILOG_PORT_CONKT, addr_port) << " == 1'b0))"; 
     fp << " begin" << std::endl;
     fp << "\t\t" << generate_verilog_port_constant_values(data_port, std::vector<size_t>(1, 1)) << ";" << std::endl; 
@@ -314,6 +336,26 @@ void print_verilog_arch_decoder_module(std::fstream& fp,
     fp << "\t\t" << generate_verilog_port_constant_values(data_port, std::vector<size_t>(1, 0)) << ";" << std::endl; 
     fp << "\t" << "end" << std::endl;
     fp << "end" << std::endl;
+
+    /* Output logics for data readback output */
+    if (data_ren_port_id) {
+      fp << "always@(" << generate_verilog_port(VERILOG_PORT_CONKT, addr_port);
+      fp << " or " << generate_verilog_port(VERILOG_PORT_CONKT, enable_port);
+      /* If there is a readback port, the data output is only enabled when readback is disabled */
+      if (readback_port_id) {
+        fp << " or " << generate_verilog_port(VERILOG_PORT_CONKT, readback_port);
+      }
+      fp << ") begin" << std::endl;
+      fp << "\tif ((" << generate_verilog_port(VERILOG_PORT_CONKT, enable_port) << " == 1'b1) && ("; 
+      fp << generate_verilog_port(VERILOG_PORT_CONKT, readback_port) << " == 1'b1) && ("; 
+      fp << generate_verilog_port(VERILOG_PORT_CONKT, addr_port) << " == 1'b0))"; 
+      fp << " begin" << std::endl;
+      fp << "\t\t" << generate_verilog_port_constant_values(data_ren_port, std::vector<size_t>(1, 1)) << ";" << std::endl; 
+      fp << "\t" << "end else begin" << std::endl;
+      fp << "\t\t" << generate_verilog_port_constant_values(data_ren_port, std::vector<size_t>(1, 0)) << ";" << std::endl; 
+      fp << "\t" << "end" << std::endl;
+      fp << "end" << std::endl;
+    }
 
     /* Depend on if the inverted data output port is needed or not */
     if (true == decoder_lib.use_data_inv_port(decoder)) {
@@ -344,10 +386,23 @@ void print_verilog_arch_decoder_module(std::fstream& fp,
    * The rest of addr codes 3'b110, 3'b111 will be decoded to data=8'b0_0000;
    */
 
+  /* Output logics for data output */
   fp << "always@(" << generate_verilog_port(VERILOG_PORT_CONKT, addr_port);
+  /* If there is a readback port, the data output is only enabled when readback is disabled */
+  if (readback_port_id) {
+    fp << " or " << "~" << generate_verilog_port(VERILOG_PORT_CONKT, readback_port);
+  }
   fp << " or " << generate_verilog_port(VERILOG_PORT_CONKT, enable_port);
   fp << ") begin" << std::endl;
-  fp << "\tif (" << generate_verilog_port(VERILOG_PORT_CONKT, enable_port) << " == 1'b1) begin" << std::endl;
+  if (readback_port_id) {
+    fp << "\tif (";
+    fp << "(" << generate_verilog_port(VERILOG_PORT_CONKT, enable_port) << " == 1'b1) ";
+    fp << "&&";
+    fp << "(" << generate_verilog_port(VERILOG_PORT_CONKT, readback_port) << " == 1'b0) ";
+    fp << ") begin" << std::endl;
+  } else {
+    fp << "\tif (" << generate_verilog_port(VERILOG_PORT_CONKT, enable_port) << " == 1'b1) begin" << std::endl;
+  }
   fp << "\t\t" << "case (" << generate_verilog_port(VERILOG_PORT_CONKT, addr_port) << ")" << std::endl;
   /* Create a string for addr and data */
   for (size_t i = 0; i < data_size; ++i) {
@@ -372,6 +427,46 @@ void print_verilog_arch_decoder_module(std::fstream& fp,
   fp << "\t" << "end" << std::endl;
   
   fp << "end" << std::endl;
+
+  /* Output logics for data readback output */
+  if (data_ren_port_id) {
+    fp << "always@(" << generate_verilog_port(VERILOG_PORT_CONKT, addr_port);
+    /* If there is a readback port, the data output is only enabled when readback is disabled */
+    if (readback_port_id) {
+      fp << " or " << generate_verilog_port(VERILOG_PORT_CONKT, readback_port);
+    }
+    fp << " or " << generate_verilog_port(VERILOG_PORT_CONKT, enable_port);
+    fp << ") begin" << std::endl;
+    fp << "\tif (";
+    fp << "(" << generate_verilog_port(VERILOG_PORT_CONKT, enable_port) << " == 1'b1) ";
+    fp << "&&";
+    fp << "(" << generate_verilog_port(VERILOG_PORT_CONKT, readback_port) << " == 1'b1) ";
+    fp << ") begin" << std::endl;
+    fp << "\t\t" << "case (" << generate_verilog_port(VERILOG_PORT_CONKT, addr_port) << ")" << std::endl;
+    /* Create a string for addr and data */
+    for (size_t i = 0; i < data_size; ++i) {
+      fp << "\t\t\t" << generate_verilog_constant_values(itobin_vec(i, addr_size)); 
+      fp << " : ";
+      fp << generate_verilog_port_constant_values(data_ren_port, ito1hot_vec(i, data_size)); 
+      fp << ";" << std::endl;
+    }
+    /* Different from MUX decoder, we assign default values which is all zero */
+    fp << "\t\t\t" << "default"; 
+    fp << " : ";
+    fp << generate_verilog_port_constant_values(data_ren_port, ito1hot_vec(data_size, data_size)); 
+    fp << ";" << std::endl;
+
+    fp << "\t\t" << "endcase" << std::endl;
+    fp << "\t" << "end" << std::endl;
+
+    /* If enable is not active, we should give all zero */
+    fp << "\t" << "else begin" << std::endl;
+    fp << "\t\t" << generate_verilog_port_constant_values(data_ren_port, ito1hot_vec(data_size, data_size)); 
+    fp << ";" << std::endl;
+    fp << "\t" << "end" << std::endl;
+    
+    fp << "end" << std::endl;
+  }
 
   if (true == decoder_lib.use_data_inv_port(decoder)) {
     print_verilog_wire_connection(fp, data_inv_port, data_port, true);

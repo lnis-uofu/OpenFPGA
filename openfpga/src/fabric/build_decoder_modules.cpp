@@ -194,6 +194,7 @@ ModuleId build_wl_memory_decoder_module(ModuleManager& module_manager,
   if (true == decoder_lib.use_readback(decoder)) {
     BasicPort data_ren_port(std::string(DECODER_DATA_READ_ENABLE_PORT_NAME), data_size);
     module_manager.add_port(module_id, data_ren_port, ModuleManager::MODULE_OUTPUT_PORT);
+    module_manager.set_port_is_register(module_id, data_ren_port.get_name(), true);
   }
 
   return module_id;

@@ -128,6 +128,17 @@ void print_verilog_top_testbench_memory_bank_port(std::fstream& fp,
   BasicPort din_port = module_manager.module_port(top_module, din_port_id);
   fp << generate_verilog_port(VERILOG_PORT_REG, din_port) << ";" << std::endl;
 
+  /* Print the optional readback port for the decoder here */
+  print_verilog_comment(fp, std::string("---- Readback port for memory decoders -----"));
+  ModulePortId readback_port_id = module_manager.find_module_port(top_module,
+                                                                  std::string(DECODER_READBACK_PORT_NAME));
+  if (readback_port_id) {
+    BasicPort readback_port = module_manager.module_port(top_module, readback_port_id);
+    fp << generate_verilog_port(VERILOG_PORT_WIRE, readback_port) << ";" << std::endl;
+    /* Disable readback in full testbenches */
+    print_verilog_wire_constant_values(fp, readback_port, std::vector<size_t>(readback_port.get_width(), 0)); 
+  }
+
   /* Generate enable signal waveform here:
    * which is a 90 degree phase shift than the programming clock   
    */
