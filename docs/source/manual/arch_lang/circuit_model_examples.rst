@@ -339,10 +339,10 @@ SRAM with BL/WL/WLR
 ```````````````````
 .. _fig_sram_blwlr:
 
-.. figure:: ./figures/sram_blwlr.png
+.. figure:: ./figures/sram_blwlr.svg
    :scale: 100%
 
-   An example of a SRAM with Bit-Line (BL) and Word-Line (WL) control signals
+   An example of a SRAM with Bit-Line (BL), Word-Line (WL) and WL read control signals
 
 The following XML codes describes the SRAM cell shown in :numref:`fig_sram_blwlr`.
 
