@@ -234,6 +234,7 @@ add_custom_target(
     COMMAND make clean
     COMMAND $(MAKE) install -j10 PREFIX=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys
+    message(STATUS "YOSYS binaries: source dir ${CMAKE_CURRENT_SOURCE_DIR} : binary dir: ${CMAKE_BINARY_DIR} : prefix dir: ${CMAKE_INSTALL_PREFIX}")
     COMMENT "Compile Yosys with given Makefile"
 )
 
