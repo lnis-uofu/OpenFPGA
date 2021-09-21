@@ -65,12 +65,7 @@ void read_xml_region_key(pugi::xml_node& xml_component_key,
   vtr::Point<int> coord;
   coord.set_x(get_attribute(xml_component_key, "column", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(-1));
   coord.set_y(get_attribute(xml_component_key, "row", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(-1));
-  /* Require positive coordinate all the time */
-  if (!fabric_key.valid_key_coordinate(coord)) {
-    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_component_key),
-                   "Invalid coordinate '(%d, %d)' which contain negative numbers\n",
-                   coord.x(), coord.y());
-  } else {
+  if (fabric_key.valid_key_coordinate(coord)) {
     fabric_key.set_key_coordinate(FabricKeyId(id), coord);
   }
 }
