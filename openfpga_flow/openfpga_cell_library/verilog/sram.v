@@ -274,9 +274,7 @@ module SRAM_RE(
   //----- when wl is enabled, we can read in data from bl
   always @(WE or RE or D) 
   begin
-    if (1'b1 == RE) begin
-      data_readback <= Q;  
-    end else if ((1'b1 == D)&&(1'b1 == WE)) begin
+    if ((1'b1 == D)&&(1'b1 == WE)) begin
     //----- Cases to program internal memory bit 
     //----- case 1: bl = 1, wl = 1, a -> 0
       data <= 1'b1;
@@ -289,7 +287,6 @@ module SRAM_RE(
   // Wire q_reg to Q
   assign Q = data;
   assign QN = ~data;
-  assign D = RE ? data_readback : 1'b0;
 
 endmodule
 
