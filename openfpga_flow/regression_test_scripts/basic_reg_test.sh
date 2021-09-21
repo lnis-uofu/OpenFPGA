@@ -84,6 +84,7 @@ echo -e "Testing Secured FPGA fabrics";
 run-task basic_tests/fabric_key/generate_vanilla_key --debug --show_thread_logs
 run-task basic_tests/fabric_key/generate_multi_region_vanilla_key --debug --show_thread_logs
 run-task basic_tests/fabric_key/generate_random_key --debug --show_thread_logs
+run-task basic_tests/fabric_key/generate_random_key_ql_memory_bank --debug --show_thread_logs
 run-task basic_tests/fabric_key/load_external_key --debug --show_thread_logs
 run-task basic_tests/fabric_key/load_external_key_cc_fpga --debug --show_thread_logs
 run-task basic_tests/fabric_key/load_external_key_multi_region_cc_fpga --debug --show_thread_logs
