@@ -70,6 +70,7 @@ int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
     for (size_t ichild = 0; ichild < module_manager.region_configurable_children(top_module, config_region).size(); ++ichild) {
       ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[ichild];
       size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[ichild];
+      vtr::Point<int> child_coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[ichild];
 
       FabricKeyId key = fabric_key.create_key();
       fabric_key.set_key_name(key, module_manager.module_name(child_module));
@@ -79,6 +80,9 @@ int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
         fabric_key.set_key_alias(key, module_manager.instance_name(top_module, child_module, child_instance));
       }
 
+      /* Add key coordinate */
+      fabric_key.set_key_coordinate(key, child_coord);
+ 
       /* Add keys to the region */
       fabric_key.add_key_to_region(fabric_region, key);
     }
