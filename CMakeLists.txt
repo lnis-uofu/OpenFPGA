@@ -226,32 +226,30 @@ endif()
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 #
-
 # run makefile provided, we pass-on the options to the local make file 
+# Build Yosys
 add_custom_target(
-    yosys ALL
+    yosys-main ALL
     COMMAND $(MAKE) config-gcc
     COMMAND make clean
     COMMAND $(MAKE) install -j10 PREFIX=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys
-    message(STATUS "YOSYS binaries: source dir ${CMAKE_CURRENT_SOURCE_DIR} : binary dir: ${CMAKE_BINARY_DIR} : prefix dir: ${CMAKE_INSTALL_PREFIX}")
     COMMENT "Compile Yosys with given Makefile"
 )
-
 # yosys compilation ends
 
 # yosys-plugins compilation starts
-
 add_custom_target(
     yosys-plugins ALL
     COMMAND $(MAKE) clean YOSYS_PATH=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
     COMMAND $(MAKE) install YOSYS_PATH=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-plugins
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install/bin/yosys
+    #DEPENDS yosys
     COMMENT "Compile Yosys-plugins with given Makefile"
 )
 
-add_dependencies(yosys-plugins yosys)
+add_dependencies(yosys-plugins yosys-main)
 
 # yosys-plugins compilation ends
 
