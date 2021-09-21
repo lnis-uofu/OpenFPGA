@@ -52,6 +52,12 @@ int write_xml_fabric_component_key(std::fstream& fp,
     write_xml_attribute(fp, "alias", fabric_key.key_alias(component_key).c_str());
   }
 
+  vtr::Point<int> coord = fabric_key.key_coordinate(component_key);
+  if (fabric_key.valid_key_coordinate(coord)) {
+    write_xml_attribute(fp, "column", coord.x());
+    write_xml_attribute(fp, "row", coord.y());
+  }
+
   fp << "/>" << "\n";
 
   return 0;

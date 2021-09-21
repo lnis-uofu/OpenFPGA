@@ -636,7 +636,8 @@ int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager
       /* Now we can add the child to configurable children of the top module */
       module_manager.add_configurable_child(top_module,
                                             instance_info.first,
-                                            instance_info.second);
+                                            instance_info.second,
+                                            fabric_key.key_coordinate(key));
       module_manager.add_configurable_child_to_region(top_module,
                                                       top_module_config_region,
                                                       instance_info.first, 
