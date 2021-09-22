@@ -178,8 +178,8 @@
   </circuit_library>
   <configuration_protocol>
     <organization type="ql_memory_bank" circuit_model_name="SRAM">
-      <bl protocol="shift_register" circuit_model_name="CCFF"/>
-      <wl protocol="shift_register" circuit_model_name="CCFF"/>
+      <bl protocol="shift_register" circuit_model_name="DFFR"/>
+      <wl protocol="shift_register" circuit_model_name="DFFR"/>
     </organization>
   </configuration_protocol>
   <connection_block>
