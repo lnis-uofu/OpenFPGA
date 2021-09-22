@@ -56,6 +56,7 @@ run-task basic_tests/preconfig_testbench/memory_bank --debug --show_thread_logs
 echo -e "Testing physical design friendly memory bank configuration protocol of a K4N4 FPGA";
 run-task basic_tests/full_testbench/ql_memory_bank --debug --show_thread_logs
 run-task basic_tests/full_testbench/ql_memory_bank_use_wlr --debug --show_thread_logs
+run-task basic_tests/full_testbench/multi_region_ql_memory_bank --debug --show_thread_logs
 
 echo -e "Testing testbenches without self checking features";
 run-task basic_tests/full_testbench/full_testbench_without_self_checking --debug --show_thread_logs
@@ -89,6 +90,7 @@ run-task basic_tests/fabric_key/load_external_key --debug --show_thread_logs
 run-task basic_tests/fabric_key/load_external_key_cc_fpga --debug --show_thread_logs
 run-task basic_tests/fabric_key/load_external_key_multi_region_cc_fpga --debug --show_thread_logs
 run-task basic_tests/fabric_key/load_external_key_qlbank_fpga --debug --show_thread_logs
+run-task basic_tests/fabric_key/load_external_key_multi_region_qlbank_fpga --debug --show_thread_logs
 
 echo -e "Testing K4 series FPGA";
 echo -e "Testing K4N4 with facturable LUTs";

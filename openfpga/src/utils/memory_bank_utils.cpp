@@ -123,7 +123,12 @@ std::map<int, size_t> compute_memory_bank_regional_blwl_start_index_per_tile(con
     if (iblwl == child_xy_range.first) {
       blwl_start_index_per_tile[iblwl] = 0;
     } else {
-      blwl_start_index_per_tile[iblwl] = num_blwls_per_tile.at(iblwl - 1) + blwl_start_index_per_tile[iblwl - 1]; 
+      auto result = num_blwls_per_tile.find(iblwl - 1);
+      if (result == num_blwls_per_tile.end()) {
+        blwl_start_index_per_tile[iblwl] = blwl_start_index_per_tile[iblwl - 1]; 
+      } else {
+        blwl_start_index_per_tile[iblwl] = result->second + blwl_start_index_per_tile[iblwl - 1]; 
+      }
     }
   }  
   return blwl_start_index_per_tile;

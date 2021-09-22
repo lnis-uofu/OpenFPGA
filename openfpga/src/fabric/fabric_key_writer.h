@@ -16,6 +16,7 @@ namespace openfpga {
 
 int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
                                  const std::string& fname,
+                                 const e_config_protocol_type& config_protocol_type,
                                  const bool& verbose);
 
 } /* end namespace openfpga */

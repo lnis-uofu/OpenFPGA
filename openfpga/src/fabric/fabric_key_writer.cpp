@@ -14,6 +14,8 @@
 
 #include "openfpga_naming.h"
 
+#include "memory_utils.h"
+
 #include "fabric_key_writer.h"
 
 /* begin namespace openfpga */
@@ -29,6 +31,7 @@ namespace openfpga {
  ***************************************************************************************/
 int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
                                  const std::string& fname,
+                                 const e_config_protocol_type& config_protocol_type,
                                  const bool& verbose) {
   std::string timer_message = std::string("Write fabric key to XML file '") + fname + std::string("'");
 
@@ -65,9 +68,15 @@ int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
   /* Create regions for the keys and load keys by region */
   for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
     FabricRegionId fabric_region = fabric_key.create_region();
-    fabric_key.reserve_region_keys(fabric_region, module_manager.region_configurable_children(top_module, config_region).size());
+ 
+    /* Each configuration protocol has some child which should not be in the list. They are typically decoders */
+    size_t curr_region_num_config_child = module_manager.region_configurable_children(top_module, config_region).size();
+    size_t num_child_to_skip = estimate_num_configurable_children_to_skip_by_config_protocol(config_protocol_type, curr_region_num_config_child);
+    curr_region_num_config_child -= num_child_to_skip;
 
-    for (size_t ichild = 0; ichild < module_manager.region_configurable_children(top_module, config_region).size(); ++ichild) {
+    fabric_key.reserve_region_keys(fabric_region, curr_region_num_config_child);
+
+    for (size_t ichild = 0; ichild < curr_region_num_config_child; ++ichild) {
       ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[ichild];
       size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[ichild];
       vtr::Point<int> child_coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[ichild];
