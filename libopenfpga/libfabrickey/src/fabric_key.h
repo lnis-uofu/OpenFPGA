@@ -10,6 +10,7 @@
 
 /* Headers from vtrutil library */
 #include "vtr_vector.h"
+#include "vtr_geometry.h"
 
 #include "fabric_key_fwd.h"
 
@@ -58,6 +59,9 @@ class FabricKey {
     /* Access the alias of a key */
     std::string key_alias(const FabricKeyId& key_id) const;
 
+    /* Access the coordinate of a key */
+    vtr::Point<int> key_coordinate(const FabricKeyId& key_id) const;
+
     /* Check if there are any keys */
     bool empty() const;
 
@@ -93,9 +97,14 @@ class FabricKey {
     void set_key_alias(const FabricKeyId& key_id,
                        const std::string& alias);
 
+    void set_key_coordinate(const FabricKeyId& key_id,
+                            const vtr::Point<int>& coord);
+
   public: /* Public invalidators/validators */
     bool valid_region_id(const FabricRegionId& region_id) const;
     bool valid_key_id(const FabricKeyId& key_id) const;
+    /* Identify if key coordinate is acceptable to fabric key convention */
+    bool valid_key_coordinate(const vtr::Point<int>& coord) const;
   private: /* Internal data */
     /* Unique ids for each region */
     vtr::vector<FabricRegionId, FabricRegionId> region_ids_;
@@ -111,6 +120,9 @@ class FabricKey {
 
     /* Values for each key */
     vtr::vector<FabricKeyId, size_t> key_values_;
+
+    /* Values for each key */
+    vtr::vector<FabricKeyId, vtr::Point<int>> key_coordinates_;
 
     /* Region for each key */
     vtr::vector<FabricKeyId, FabricRegionId> key_regions_;

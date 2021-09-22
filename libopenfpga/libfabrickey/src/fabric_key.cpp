@@ -54,6 +54,12 @@ std::string FabricKey::key_alias(const FabricKeyId& key_id) const {
   return key_alias_[key_id]; 
 }
 
+vtr::Point<int> FabricKey::key_coordinate(const FabricKeyId& key_id) const {
+  /* validate the key_id */
+  VTR_ASSERT(valid_key_id(key_id));
+  return key_coordinates_[key_id]; 
+}
+
 bool FabricKey::empty() const {
   return 0 == key_ids_.size();
 }
@@ -124,6 +130,7 @@ void FabricKey::reserve_keys(const size_t& num_keys) {
   key_values_.reserve(num_keys);
   key_regions_.reserve(num_keys);
   key_alias_.reserve(num_keys);
+  key_coordinates_.reserve(num_keys);
 }
 
 FabricKeyId FabricKey::create_key() {
@@ -134,6 +141,7 @@ FabricKeyId FabricKey::create_key() {
   key_values_.emplace_back();
   key_regions_.emplace_back(FabricRegionId::INVALID());
   key_alias_.emplace_back();
+  key_coordinates_.emplace_back(vtr::Point<int>(-1, -1));
   
   return key;
 }
@@ -162,6 +170,14 @@ void FabricKey::set_key_alias(const FabricKeyId& key_id,
   key_alias_[key_id] = alias;
 }
 
+void FabricKey::set_key_coordinate(const FabricKeyId& key_id,
+                                   const vtr::Point<int>& coord) {
+  /* validate the key_id */
+  VTR_ASSERT(valid_key_id(key_id));
+
+  key_coordinates_[key_id] = coord;
+}
+
 /************************************************************************
  * Internal invalidators/validators 
  ***********************************************************************/
@@ -172,4 +188,8 @@ bool FabricKey::valid_region_id(const FabricRegionId& region_id) const {
 
 bool FabricKey::valid_key_id(const FabricKeyId& key_id) const {
   return ( size_t(key_id) < key_ids_.size() ) && ( key_id == key_ids_[key_id] ); 
+}
+
+bool FabricKey::valid_key_coordinate(const vtr::Point<int>& coord) const {
+  return coord.x() > -1 && coord.y() > -1;
 }
