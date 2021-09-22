@@ -40,6 +40,15 @@ size_t generate_sram_port_size(const e_config_protocol_type sram_orgz_type,
 size_t generate_pb_sram_port_size(const e_config_protocol_type sram_orgz_type,
                                   const size_t& num_config_bits);
 
+/**
+ * @brief Compute the number of configurable children to be skipped for a given configuration protocol
+ * For some configuration protocol, the decoders are not counted as configurable children 
+ * (they are included in the list for bitstream generator usage)
+ * The number of decoders depends on the type of configuration protocol.
+ */
+size_t estimate_num_configurable_children_to_skip_by_config_protocol(e_config_protocol_type config_protocol_type,
+                                                                     size_t curr_region_num_config_child);
+
 } /* end namespace openfpga */
 
 #endif

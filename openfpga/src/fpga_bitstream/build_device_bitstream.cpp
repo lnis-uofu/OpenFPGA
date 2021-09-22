@@ -13,6 +13,7 @@
 
 #include "openfpga_naming.h"
 
+#include "memory_utils.h"
 #include "module_manager_utils.h"
 
 #include "build_grid_bitstream.h"
@@ -84,23 +85,8 @@ size_t rec_estimate_device_bitstream_num_bits(const ModuleManager& module_manage
   if (parent_module == top_module) {
     for (const ConfigRegionId& config_region : module_manager.regions(parent_module)) {
       size_t curr_region_num_config_child = module_manager.region_configurable_children(parent_module, config_region).size();
-
-      /* Frame-based configuration protocol will have 1 decoder
-       * if there are more than 1 configurable children
-       */
-      if ( (CONFIG_MEM_FRAME_BASED == config_protocol_type)
-        && (2 <= curr_region_num_config_child)) {
-        curr_region_num_config_child--;
-      }
-
-      /* Memory configuration protocol will have 2 decoders
-       * at the top-level
-       */
-      if (CONFIG_MEM_MEMORY_BANK == config_protocol_type
-          || CONFIG_MEM_QL_MEMORY_BANK == config_protocol_type) {
-        VTR_ASSERT(2 <= curr_region_num_config_child);
-        curr_region_num_config_child -= 2;
-      }
+      size_t num_child_to_skip = estimate_num_configurable_children_to_skip_by_config_protocol(config_protocol_type, curr_region_num_config_child);
+      curr_region_num_config_child -= num_child_to_skip;
 
       /* Visit all the children in a recursively way */
       for (size_t ichild = 0; ichild < curr_region_num_config_child; ++ichild) {

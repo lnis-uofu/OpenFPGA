@@ -132,6 +132,7 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
     VTR_ASSERT(false == fkey_fname.empty());
     curr_status = write_fabric_key_to_xml_file(openfpga_ctx.module_graph(),
                                                fkey_fname,
+                                               openfpga_ctx.arch().config_protocol.type(),
                                                cmd_context.option_enable(cmd, opt_verbose));
     /* If there is any error, final status cannot be overwritten by a success flag */
     if (CMD_EXEC_SUCCESS != curr_status) {

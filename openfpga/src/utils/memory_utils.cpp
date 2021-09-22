@@ -429,5 +429,27 @@ size_t generate_pb_sram_port_size(const e_config_protocol_type sram_orgz_type,
   return sram_port_size;
 }
 
+size_t estimate_num_configurable_children_to_skip_by_config_protocol(e_config_protocol_type config_protocol_type,
+                                                                     size_t curr_region_num_config_child) {
+  size_t num_child_to_skip = 0;
+  /* Frame-based configuration protocol will have 1 decoder
+   * if there are more than 1 configurable children
+   */
+  if ( (CONFIG_MEM_FRAME_BASED == config_protocol_type)
+    && (2 <= curr_region_num_config_child)) {
+    num_child_to_skip = 1;
+  }
+ 
+  /* Memory configuration protocol will have 2 decoders
+   * at the top-level
+   */
+  if (CONFIG_MEM_MEMORY_BANK == config_protocol_type
+      || CONFIG_MEM_QL_MEMORY_BANK == config_protocol_type) {
+    VTR_ASSERT(2 <= curr_region_num_config_child);
+    num_child_to_skip = 2;
+  }
+
+  return num_child_to_skip;
+}
 
 } /* end namespace openfpga */
