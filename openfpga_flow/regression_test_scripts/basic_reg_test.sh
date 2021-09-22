@@ -90,6 +90,7 @@ run-task basic_tests/fabric_key/load_external_key --debug --show_thread_logs
 run-task basic_tests/fabric_key/load_external_key_cc_fpga --debug --show_thread_logs
 run-task basic_tests/fabric_key/load_external_key_multi_region_cc_fpga --debug --show_thread_logs
 run-task basic_tests/fabric_key/load_external_key_qlbank_fpga --debug --show_thread_logs
+run-task basic_tests/fabric_key/load_external_key_multi_region_qlbank_fpga --debug --show_thread_logs
 
 echo -e "Testing K4 series FPGA";
 echo -e "Testing K4N4 with facturable LUTs";
