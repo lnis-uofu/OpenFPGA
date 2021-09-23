@@ -474,4 +474,117 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
   }
 }
 
+/********************************************************************
+ * Add a list of ports that are used for SRAM configuration to the FPGA 
+ * top-level module
+ * - Add ports for BL control circuitry:
+ *   - Decoder
+ *     - an enable signals
+ *     - an BL address port
+ *     - a data-in port
+ *   - Flatten
+ *     - BL ports
+ *   - TODO: Shift registers
+ *     - Head of shift register chain for BLs
+ *     - Tail of shift register chain for BLs
+ *
+ * - Add ports for WL control circuitry:
+ *   - Decoder
+ *     - an WL address port
+ *     - a Readback port (Optional, only needed when WLR is required)
+ *   - Flatten
+ *     - WL ports
+ *     - WLR ports (Optional)
+ *   - TODO: Shift registers
+ *     - Head of shift register chain for WLs
+ *     - Tail of shift register chain for WLs
+ *     - a Readback port (Optional, only needed when WLR is required)
+ *
+ * @note In this memory decoders, the address size will be computed in a different way than the regular one
+ ********************************************************************/
+void add_top_module_ql_memory_bank_sram_ports(ModuleManager& module_manager, 
+                                              const ModuleId& module_id,
+                                              const CircuitLibrary& circuit_lib,
+                                              const ConfigProtocol& config_protocol,
+                                              const TopModuleNumConfigBits& num_config_bits) {
+  VTR_ASSERT_SAFE(CONFIG_MEM_QL_MEMORY_BANK == config_protocol.type());
+  CircuitModelId sram_model = config_protocol.memory_model();
+
+  switch (config_protocol.bl_protocol_type()) {
+    case BLWL_PROTOCOL_DECODER: {
+      /* Add enable signals */
+      BasicPort en_port(std::string(DECODER_ENABLE_PORT_NAME), 1);
+      module_manager.add_port(module_id, en_port, ModuleManager::MODULE_INPUT_PORT);
+
+      /* BL address size is the largest among all the regions */
+      size_t bl_addr_size = 0;
+      for (const ConfigRegionId& config_region : module_manager.regions(module_id)) {
+         bl_addr_size = std::max(bl_addr_size, find_mux_local_decoder_addr_size(num_config_bits[config_region].first));
+      }
+      BasicPort bl_addr_port(std::string(DECODER_BL_ADDRESS_PORT_NAME), bl_addr_size);
+      module_manager.add_port(module_id, bl_addr_port, ModuleManager::MODULE_INPUT_PORT);
+
+      /* Data input should be dependent on the number of configuration regions*/
+      BasicPort din_port(std::string(DECODER_DATA_IN_PORT_NAME), config_protocol.num_regions());
+      module_manager.add_port(module_id, din_port, ModuleManager::MODULE_INPUT_PORT);
+      break;
+    }
+    case BLWL_PROTOCOL_FLATTEN: {
+      /* BL size is the largest among all the regions */
+      size_t bl_size = 0;
+      for (const ConfigRegionId& config_region : module_manager.regions(module_id)) {
+         bl_size = std::max(bl_size, num_config_bits[config_region].first);
+      }
+      BasicPort bl_port(std::string(MEMORY_BL_PORT_NAME), bl_size);
+      module_manager.add_port(module_id, bl_port, ModuleManager::MODULE_INPUT_PORT);
+      break;
+    }
+    case BLWL_PROTOCOL_SHIFT_REGISTER: {
+      /* TODO */
+      break;
+    }
+    default: {
+      VTR_LOG_ERROR("Invalid BL protocol");
+      exit(1);
+    }
+  }
+
+  switch (config_protocol.wl_protocol_type()) {
+    case BLWL_PROTOCOL_DECODER: {
+      /* WL address size is the largest among all the regions */
+      size_t wl_addr_size = 0;
+      for (const ConfigRegionId& config_region : module_manager.regions(module_id)) {
+         wl_addr_size = std::max(wl_addr_size, find_mux_local_decoder_addr_size(num_config_bits[config_region].second));
+      }
+      BasicPort wl_addr_port(std::string(DECODER_WL_ADDRESS_PORT_NAME), wl_addr_size);
+      module_manager.add_port(module_id, wl_addr_port, ModuleManager::MODULE_INPUT_PORT);
+
+      /* Optional: If we have WLR port, we should add a read-back port */
+      if (!circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_WLR).empty()) {
+        BasicPort readback_port(std::string(DECODER_READBACK_PORT_NAME), config_protocol.num_regions());
+        module_manager.add_port(module_id, readback_port, ModuleManager::MODULE_INPUT_PORT);
+      }
+      break;
+    }
+    case BLWL_PROTOCOL_FLATTEN: {
+      /* WL size is the largest among all the regions */
+      size_t wl_size = 0;
+      for (const ConfigRegionId& config_region : module_manager.regions(module_id)) {
+         wl_size = std::max(wl_size, num_config_bits[config_region].first);
+      }
+      BasicPort wl_port(std::string(MEMORY_WL_PORT_NAME), wl_size);
+      module_manager.add_port(module_id, wl_port, ModuleManager::MODULE_INPUT_PORT);
+      break;
+    }
+    case BLWL_PROTOCOL_SHIFT_REGISTER: {
+      /* TODO */
+      break;
+    }
+    default: {
+      VTR_LOG_ERROR("Invalid WL protocol");
+      exit(1);
+    }
+  }
+}
+
 } /* end namespace openfpga */
