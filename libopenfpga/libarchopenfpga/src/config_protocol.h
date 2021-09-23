@@ -5,6 +5,15 @@
 #include "circuit_types.h"
 #include "circuit_library_fwd.h"
 
+/* Data type to define the protocol through which BL/WL can be manipulated */
+enum e_blwl_protocol_type {
+  BLWL_PROTOCOL_FLATTEN,
+  BLWL_PROTOCOL_DECODER,
+  BLWL_PROTOCOL_SHIFT_REGISTER,
+  NUM_BLWL_PROTOCOLS_TYPES
+};
+constexpr std::array<const char*, NUM_BLWL_PROTOCOL_TYPES> BLWL_PROTOCOL_TYPE_STRING = {{"flatten", "decoder", "shift_register"}};
+
 /********************************************************************
  * A data structure to store configuration protocol information
  *******************************************************************/
