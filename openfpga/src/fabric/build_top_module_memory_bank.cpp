@@ -315,7 +315,7 @@ void add_top_module_nets_cmos_ql_memory_bank_bl_decoder_config_bus(ModuleManager
  *
  * @note this function only adds the WL configuration bus for decoders
  *
- * @note see detailed explanation on the bus connection in function add_top_module_nets_cmos_ql_memory_bank_config_bus()
+ * @note see detailed explanation on the bus connection in function add_top_module_nets_cmos_ql_memory_bank_bl_decoder_config_bus()
  **********************************************************************/
 static 
 void add_top_module_nets_cmos_ql_memory_bank_wl_decoder_config_bus(ModuleManager& module_manager,
@@ -433,14 +433,17 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_decoder_config_bus(ModuleManager
     BasicPort wl_decoder_dout_port_info = module_manager.module_port(wl_decoder_module, wl_decoder_dout_port);
 
     /* Note we skip the last child which is the bl decoder added */
-    for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size() - 1; ++child_id) {
+    for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
       ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
       vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
 
       size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
 
-      /* Find the WL port */
+      /* Find the WL port. If the child does not have WL port, bypass it. It is usually a decoder module */
       ModulePortId child_wl_port = module_manager.find_module_port(child_module, std::string(MEMORY_WL_PORT_NAME));
+      if (!child_wl_port) {
+        continue;
+      }
       BasicPort child_wl_port_info = module_manager.module_port(child_module, child_wl_port);
 
       size_t cur_wl_index = 0;
@@ -477,8 +480,11 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_decoder_config_bus(ModuleManager
   
         size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
   
-        /* Find the WL port */
+        /* Find the WLR port. If the child does not have WLR port, bypass it. It is usually a decoder module */
         ModulePortId child_wlr_port = module_manager.find_module_port(child_module, std::string(MEMORY_WLR_PORT_NAME));
+        if (!child_wlr_port) {
+          continue;
+        }
         BasicPort child_wlr_port_info = module_manager.module_port(child_module, child_wlr_port);
   
         size_t cur_wlr_index = 0;
@@ -517,6 +523,229 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_decoder_config_bus(ModuleManager
 }
 
 /*********************************************************************
+ * This function to add nets for quicklogic memory banks using flatten BLs and WLs
+ * Each configuration region has independent BL/WLs
+ * - Find the number of BLs and WLs required for each region
+ * - Create nets to connect from top-level module inputs to BL/WL of configurable children
+ *
+ * @note this function only adds the BL configuration bus
+ *
+ * Detailed schematic of each memory bank:
+ * @note The numbers are just made to show a simplified example, practical cases are more complicated!
+ *
+ *                 BL[0:9]        BL[10:17]          BL[18:22]
+ *                   |              |                    | 
+ *                   |              |                    |
+ *     WL[0:3]-->-----------+---------------+----  ...   |------+-->        
+ *                   |      |       |       |            |      |
+ *                   |      v       |       v            |      v
+ *                   |   +-------+  |   +-------+        |  +------+
+ *                   +-->| SRAM  |  +-->| SRAM  |        +->| SRAM |
+ *                   |   | [0:8] |  |   | [0:5] |   ...  |  | [0:7]|
+ *                   |   +-------+  |   +-------+        |  +------+
+ *                   |              |                    |
+ *     WL[4:14]  -----------+--------------+---------    | -----+-->        
+ *                   |      |       |       |            |      |
+ *                   |      v       |       v            |      v
+ *                   |   +-------+  |   +-------+        |  +-------+
+ *                   +-->| SRAM  |  |   | SRAM  |        +->| SRAM  |
+ *                   |   | [0:80]|  |   | [0:63]|   ...  |  | [0:31]|
+ *                   |   +-------+  |   +-------+        |  +-------+
+ *                   |                                   |
+ *                   |     ...     ...    ...            |    ...
+ *                   |              |                    |
+ *     WL[15:18] -----------+---------------+----  ---   | -----+-->        
+ *                   |      |       |       |            |      |
+ *                   |      v       |       v            |      v
+ *                   |   +-------+  |   +-------+        |  +-------+
+ *                   +-->| SRAM  |  +-->| SRAM  |        +->| SRAM  |
+ *                   |   |[0:5]  |  |   | [0:8] |   ...  |  | [0:2] |
+ *                   |   +-------+  |   +-------+        |  +-------+
+ *                   v              v                    v
+ *                 WL[0:9]          WL[0:7]                WL[0:4]
+ *               
+ **********************************************************************/
+static 
+void add_top_module_nets_cmos_ql_memory_bank_bl_flatten_config_bus(ModuleManager& module_manager,
+                                                                   const ModuleId& top_module,
+                                                                   const CircuitLibrary& circuit_lib,
+                                                                   const CircuitModelId& sram_model) {
+  /* Create connections between BLs of top-level module and BLs of child modules for each region */
+  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+    /************************************************************** 
+     * Precompute the BLs and WLs distribution across the FPGA fabric
+     * The distribution is a matrix which contains the starting index of BL/WL for each column or row
+     */
+    std::pair<int, int> child_x_range = compute_memory_bank_regional_configurable_child_x_range(module_manager, top_module, config_region);
+    std::map<int, size_t> num_bls_per_tile = compute_memory_bank_regional_bitline_numbers_per_tile(module_manager, top_module,
+                                                                                                   config_region,
+                                                                                                   circuit_lib, sram_model);
+    std::map<int, size_t> bl_start_index_per_tile = compute_memory_bank_regional_blwl_start_index_per_tile(child_x_range, num_bls_per_tile);
+
+    /************************************************************** 
+     * Add BL nets from top module to each configurable child
+     * BL pins of top module are connected to the BL input pins of each PB/CB/SB
+     * For all the PB/CB/SB in the same column, they share the same set of BLs
+     * A quick example
+     *
+     *   BL[i .. i + sqrt(N)]     
+     *     |
+     *     |    CLB[1][H]
+     *     |   +---------+     
+     *     |   |  SRAM   |     
+     *     +-->|  [0..N] |     
+     *     |   +---------+
+     *     |
+     *    ...
+     *     |    CLB[1][1]
+     *     |   +---------+     
+     *     |   |  SRAM   |     
+     *     +-->|  [0..N] |     
+     *     |   +---------+
+     *     |
+     */
+    ModulePortId top_module_bl_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(MEMORY_BL_PORT_NAME), config_region));
+    BasicPort top_module_bl_port_info = module_manager.module_port(top_module, top_module_bl_port);
+
+    for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
+      ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
+      vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
+
+      size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
+
+      /* Find the BL port */
+      ModulePortId child_bl_port = module_manager.find_module_port(child_module, std::string(MEMORY_BL_PORT_NAME));
+      BasicPort child_bl_port_info = module_manager.module_port(child_module, child_bl_port);
+
+      size_t cur_bl_index = 0;
+
+      for (const size_t& sink_bl_pin : child_bl_port_info.pins()) {
+        size_t bl_pin_id = bl_start_index_per_tile[coord.x()] + cur_bl_index;
+        VTR_ASSERT(bl_pin_id < top_module_bl_port_info.pins().size());
+
+        /* Create net */
+        ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
+                                                       top_module, 0,
+                                                       top_module_bl_port,
+                                                       top_module_bl_port_info.pins()[bl_pin_id]);
+        VTR_ASSERT(ModuleNetId::INVALID() != net);
+
+        /* Add net sink */
+        module_manager.add_module_net_sink(top_module, net,
+                                           child_module, child_instance, child_bl_port, sink_bl_pin);
+
+        cur_bl_index++;
+      }
+    }
+  }
+}
+
+/*********************************************************************
+ * Top-level function to add nets for quicklogic memory banks using flatten BL/WLs
+ * Each configuration region has independent BL/WLs
+ * - Find the number of BLs and WLs required for each region
+ * - Create nets to connect from top-level module inputs to BL/WL of configurable children
+ *
+ * @note this function only adds the WL configuration bus
+ *
+ * @note see detailed explanation on the bus connection in function add_top_module_nets_cmos_ql_memory_bank_bl_flatten_config_bus()
+ **********************************************************************/
+static 
+void add_top_module_nets_cmos_ql_memory_bank_wl_flatten_config_bus(ModuleManager& module_manager,
+                                                                   const ModuleId& top_module,
+                                                                   const CircuitLibrary& circuit_lib,
+                                                                   const CircuitModelId& sram_model) {
+  /* Create connections between WLs of top-level module and WLs of child modules for each region */
+  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+    /************************************************************** 
+     * Precompute the BLs and WLs distribution across the FPGA fabric
+     * The distribution is a matrix which contains the starting index of BL/WL for each column or row
+     */
+    std::pair<int, int> child_y_range = compute_memory_bank_regional_configurable_child_y_range(module_manager, top_module, config_region);
+    std::map<int, size_t> num_wls_per_tile = compute_memory_bank_regional_wordline_numbers_per_tile(module_manager, top_module,
+                                                                                                    config_region,
+                                                                                                    circuit_lib, sram_model);
+    std::map<int, size_t> wl_start_index_per_tile = compute_memory_bank_regional_blwl_start_index_per_tile(child_y_range, num_wls_per_tile);
+
+    /************************************************************** 
+     * Add WL nets from top module to each configurable child
+     */
+    ModulePortId top_module_wl_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(MEMORY_WL_PORT_NAME), config_region));
+    BasicPort top_module_wl_port_info = module_manager.module_port(top_module, top_module_wl_port);
+
+    for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
+      ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
+      vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
+
+      size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
+
+      /* Find the WL port */
+      ModulePortId child_wl_port = module_manager.find_module_port(child_module, std::string(MEMORY_WL_PORT_NAME));
+      BasicPort child_wl_port_info = module_manager.module_port(child_module, child_wl_port);
+
+      size_t cur_wl_index = 0;
+
+      for (const size_t& sink_wl_pin : child_wl_port_info.pins()) {
+        size_t wl_pin_id = wl_start_index_per_tile[coord.y()] + cur_wl_index;
+        VTR_ASSERT(wl_pin_id < top_module_wl_port_info.pins().size());
+
+        /* Create net */
+        ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
+                                                       top_module, 0,
+                                                       top_module_wl_port,
+                                                       top_module_wl_port_info.pins()[wl_pin_id]);
+        VTR_ASSERT(ModuleNetId::INVALID() != net);
+
+        /* Add net sink */
+        module_manager.add_module_net_sink(top_module, net,
+                                           child_module, child_instance, child_wl_port, sink_wl_pin);
+      
+        cur_wl_index++;
+      }
+    }
+
+    /************************************************************** 
+     * Optional: Add WLR nets from top module to each configurable child
+     */
+    ModulePortId top_module_wlr_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(MEMORY_WLR_PORT_NAME), config_region));
+    BasicPort top_module_wlr_port_info;
+    if (top_module_wlr_port) { 
+      top_module_wlr_port_info = module_manager.module_port(top_module, top_module_wlr_port);
+      for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
+        ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
+        vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
+  
+        size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
+  
+        /* Find the WL port */
+        ModulePortId child_wlr_port = module_manager.find_module_port(child_module, std::string(MEMORY_WLR_PORT_NAME));
+        BasicPort child_wlr_port_info = module_manager.module_port(child_module, child_wlr_port);
+  
+        size_t cur_wlr_index = 0;
+  
+        for (const size_t& sink_wlr_pin : child_wlr_port_info.pins()) {
+          size_t wlr_pin_id = wl_start_index_per_tile[coord.y()] + cur_wlr_index;
+          VTR_ASSERT(wlr_pin_id < top_module_wlr_port_info.pins().size());
+  
+          /* Create net */
+          ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
+                                                         top_module, 0,
+                                                         top_module_wlr_port,
+                                                         top_module_wlr_port_info.pins()[wlr_pin_id]);
+          VTR_ASSERT(ModuleNetId::INVALID() != net);
+  
+          /* Add net sink */
+          module_manager.add_module_net_sink(top_module, net,
+                                             child_module, child_instance, child_wlr_port, sink_wlr_pin);
+        
+          cur_wlr_index++;
+        }
+      }
+    }
+  }
+}
+
+/*********************************************************************
  * Top-level function to add nets for quicklogic memory banks
  * - Each configuration region has independent memory bank circuitry
  * - BL and WL may have different circuitry and wire connection, e.g., decoder, flatten or shift-registers
@@ -545,7 +774,7 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
       break;
     }
     case BLWL_PROTOCOL_FLATTEN: {
-      //add_top_module_nets_cmos_ql_memory_bank_bl_flatten_config_bus(module_manager, decoder_lib, top_module, circuit_lib, num_config_bits);
+      add_top_module_nets_cmos_ql_memory_bank_bl_flatten_config_bus(module_manager, top_module, circuit_lib, sram_model);
       break;
     }
     case BLWL_PROTOCOL_SHIFT_REGISTER: {
@@ -564,7 +793,7 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
       break;
     }
     case BLWL_PROTOCOL_FLATTEN: {
-      //add_top_module_nets_cmos_ql_memory_bank_wl_flatten_config_bus(module_manager, decoder_lib, top_module, circuit_lib, num_config_bits);
+      add_top_module_nets_cmos_ql_memory_bank_wl_flatten_config_bus(module_manager, top_module, circuit_lib, sram_model);
       break;
     }
     case BLWL_PROTOCOL_SHIFT_REGISTER: {
@@ -675,6 +904,12 @@ void add_top_module_ql_memory_bank_sram_ports(ModuleManager& module_manager,
         size_t wl_size = num_config_bits[config_region].first;
         BasicPort wl_port(generate_regional_blwl_port_name(std::string(MEMORY_WL_PORT_NAME), config_region), wl_size);
         module_manager.add_port(module_id, wl_port, ModuleManager::MODULE_INPUT_PORT);
+
+        /* Optional: If we have WLR port, we should add a read-back port */
+        if (!circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_WLR).empty()) {
+          BasicPort readback_port(std::string(MEMORY_WLR_PORT_NAME), config_protocol.num_regions());
+          module_manager.add_port(module_id, readback_port, ModuleManager::MODULE_INPUT_PORT);
+        }
       }
       break;
     }
