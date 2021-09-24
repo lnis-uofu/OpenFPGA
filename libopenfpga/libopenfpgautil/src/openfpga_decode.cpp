@@ -47,6 +47,40 @@ std::vector<size_t> ito1hot_vec(const size_t& in_int,
 }
 
 /******************************************************************** 
+ * Convert an integer to an one-hot encoding character array
+ * For example: 
+ *   Input integer: 3
+ *   Binary length : 4
+ *   Output:
+ *     index | 0 | 1 | 2 | 3
+ *     ret   | 0 | 0 | 0 | 1
+ *
+ * If you need all zero code, set the input integer same as the binary length
+ * For example: 
+ *   Input integer: 4
+ *   Binary length : 4
+ *   Output:
+ *     index | 0 | 1 | 2 | 3
+ *     ret   | 0 | 0 | 0 | 0
+ *           
+ ********************************************************************/
+std::vector<char> ito1hot_charvec(const size_t& in_int,
+                                  const size_t& bin_len) {
+  /* Make sure we do not have any overflow! */
+  VTR_ASSERT ( (in_int <= bin_len) );
+
+  /* Initialize */
+  std::vector<char> ret(bin_len, '0');
+
+  if (bin_len == in_int) {
+    return ret; /* all zero case */
+  }
+  ret[in_int] = '1'; /* Keep a good sequence of bits */
+ 
+  return ret;
+}
+
+/******************************************************************** 
  * Converter an integer to a binary vector 
  * For example: 
  *   Input integer: 4

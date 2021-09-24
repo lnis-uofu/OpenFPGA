@@ -22,6 +22,9 @@ constexpr char DONT_CARE_CHAR = 'x';
 std::vector<size_t> ito1hot_vec(const size_t& in_int,
                                 const size_t& bin_len);
 
+std::vector<char> ito1hot_charvec(const size_t& in_int,
+                                  const size_t& bin_len);
+
 std::vector<size_t> itobin_vec(const size_t& in_int,
                                const size_t& bin_len);
 
