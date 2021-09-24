@@ -31,7 +31,7 @@ namespace openfpga {
  ***************************************************************************************/
 int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
                                  const std::string& fname,
-                                 const e_config_protocol_type& config_protocol_type,
+                                 const ConfigProtocol& config_protocol,
                                  const bool& verbose) {
   std::string timer_message = std::string("Write fabric key to XML file '") + fname + std::string("'");
 
@@ -71,7 +71,7 @@ int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
  
     /* Each configuration protocol has some child which should not be in the list. They are typically decoders */
     size_t curr_region_num_config_child = module_manager.region_configurable_children(top_module, config_region).size();
-    size_t num_child_to_skip = estimate_num_configurable_children_to_skip_by_config_protocol(config_protocol_type, curr_region_num_config_child);
+    size_t num_child_to_skip = estimate_num_configurable_children_to_skip_by_config_protocol(config_protocol, curr_region_num_config_child);
     curr_region_num_config_child -= num_child_to_skip;
 
     fabric_key.reserve_region_keys(fabric_region, curr_region_num_config_child);
