@@ -18,7 +18,6 @@ class BasicPort {
     BasicPort(const char* name, const size_t& width);
     BasicPort(const std::string& name, const size_t& lsb, const size_t& msb);
     BasicPort(const std::string& name, const size_t& width);
-    BasicPort(const BasicPort& basic_port); /* Copy constructor */
   public: /* Overloaded operators */
     bool operator== (const BasicPort& portA) const;
     bool operator< (const BasicPort& portA) const;
