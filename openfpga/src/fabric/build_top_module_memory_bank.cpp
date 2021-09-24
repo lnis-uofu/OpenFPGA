@@ -530,13 +530,12 @@ void add_top_module_ql_memory_bank_sram_ports(ModuleManager& module_manager,
       break;
     }
     case BLWL_PROTOCOL_FLATTEN: {
-      /* BL size is the largest among all the regions */
-      size_t bl_size = 0;
+      /* Each region will have independent BLs */
       for (const ConfigRegionId& config_region : module_manager.regions(module_id)) {
-         bl_size = std::max(bl_size, num_config_bits[config_region].first);
+        size_t bl_size = num_config_bits[config_region].first;
+        BasicPort bl_port(generate_regional_blwl_port_name(std::string(MEMORY_BL_PORT_NAME), config_region), bl_size);
+        module_manager.add_port(module_id, bl_port, ModuleManager::MODULE_INPUT_PORT);
       }
-      BasicPort bl_port(std::string(MEMORY_BL_PORT_NAME), bl_size);
-      module_manager.add_port(module_id, bl_port, ModuleManager::MODULE_INPUT_PORT);
       break;
     }
     case BLWL_PROTOCOL_SHIFT_REGISTER: {
@@ -567,13 +566,12 @@ void add_top_module_ql_memory_bank_sram_ports(ModuleManager& module_manager,
       break;
     }
     case BLWL_PROTOCOL_FLATTEN: {
-      /* WL size is the largest among all the regions */
-      size_t wl_size = 0;
+      /* Each region will have independent WLs */
       for (const ConfigRegionId& config_region : module_manager.regions(module_id)) {
-         wl_size = std::max(wl_size, num_config_bits[config_region].first);
+        size_t wl_size = num_config_bits[config_region].first;
+        BasicPort wl_port(generate_regional_blwl_port_name(std::string(MEMORY_WL_PORT_NAME), config_region), wl_size);
+        module_manager.add_port(module_id, wl_port, ModuleManager::MODULE_INPUT_PORT);
       }
-      BasicPort wl_port(std::string(MEMORY_WL_PORT_NAME), wl_size);
-      module_manager.add_port(module_id, wl_port, ModuleManager::MODULE_INPUT_PORT);
       break;
     }
     case BLWL_PROTOCOL_SHIFT_REGISTER: {

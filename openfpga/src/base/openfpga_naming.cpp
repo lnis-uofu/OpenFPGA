@@ -814,6 +814,15 @@ std::string generate_sram_local_port_name(const CircuitLibrary& circuit_lib,
 }
 
 /*********************************************************************
+ * Generate the BL/WL port names for the top-level module of an FPGA fabric
+ * Each BL/WL bus drive a specific configuration region has an unique name
+ *********************************************************************/
+std::string generate_regional_blwl_port_name(const std::string& blwl_port_prefix,
+                                             const ConfigRegionId& region_id) {
+  return blwl_port_prefix + std::string("_config_region_") + std::to_string(size_t(region_id)); 
+}
+
+/*********************************************************************
  * Generate the port name for the input bus of a routing multiplexer
  * This is very useful in Verilog code generation where the inputs of 
  * a routing multiplexer may come from different ports. 
