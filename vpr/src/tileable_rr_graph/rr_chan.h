@@ -43,7 +43,6 @@ namespace openfpga {
  *******************************************************************/
 class RRChan {
   public: /* Constructors */
-    RRChan(const RRChan&); /* Copy Constructor */
     RRChan();
   public: /* Accessors */
     t_rr_type get_type() const;
