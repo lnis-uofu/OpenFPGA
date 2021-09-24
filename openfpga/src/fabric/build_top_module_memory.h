@@ -66,7 +66,6 @@ void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            DecoderLibrary& decoder_lib,
                                            const ModuleId& parent_module,
                                            const CircuitLibrary& circuit_lib,
-                                           const CircuitModelId& sram_model,
                                            const ConfigProtocol& config_protocol, 
                                            const e_circuit_model_design_tech& mem_tech,
                                            const TopModuleNumConfigBits& num_config_bits);

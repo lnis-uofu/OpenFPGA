@@ -26,7 +26,7 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
                                                         DecoderLibrary& decoder_lib,
                                                         const ModuleId& top_module,
                                                         const CircuitLibrary& circuit_lib,
-                                                        const CircuitModelId& sram_model,
+                                                        const ConfigProtocol& config_protocol,
                                                         const TopModuleNumConfigBits& num_config_bits);
 
 void add_top_module_ql_memory_bank_sram_ports(ModuleManager& module_manager, 

@@ -135,11 +135,15 @@ void read_xml_config_organization(pugi::xml_node& xml_config_orgz,
 
   /* Parse BL & WL protocols */
   if (config_protocol.type() == CONFIG_MEM_QL_MEMORY_BANK) {
-    pugi::xml_node xml_bl_protocol = get_single_child(xml_config_orgz, "bl", loc_data);
-    read_xml_bl_protocol(xml_bl_protocol, loc_data, config_protocol);
+    pugi::xml_node xml_bl_protocol = get_single_child(xml_config_orgz, "bl", loc_data, pugiutil::ReqOpt::OPTIONAL);
+    if (xml_bl_protocol) {
+      read_xml_bl_protocol(xml_bl_protocol, loc_data, config_protocol);
+    }
 
-    pugi::xml_node xml_wl_protocol = get_single_child(xml_config_orgz, "wl", loc_data);
-    read_xml_wl_protocol(xml_wl_protocol, loc_data, config_protocol);
+    pugi::xml_node xml_wl_protocol = get_single_child(xml_config_orgz, "wl", loc_data, pugiutil::ReqOpt::OPTIONAL);
+    if (xml_wl_protocol) {
+      read_xml_wl_protocol(xml_wl_protocol, loc_data, config_protocol);
+    }
   }
 }
 

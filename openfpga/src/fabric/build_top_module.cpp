@@ -422,7 +422,7 @@ int build_top_module(ModuleManager& module_manager,
   if (0 < module_manager.configurable_children(top_module).size()) {
     add_top_module_nets_memory_config_bus(module_manager, decoder_lib,
                                           top_module, 
-                                          circuit_lib, sram_model,
+                                          circuit_lib,
                                           config_protocol, circuit_lib.design_tech_type(sram_model),
                                           top_module_num_config_bits);
   }

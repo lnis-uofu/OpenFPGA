@@ -31,12 +31,14 @@
 namespace openfpga {
 
 /*********************************************************************
- * Top-level function to add nets for quicklogic memory banks
+ * This function to add nets for quicklogic memory banks
  * Each configuration region has independent memory bank circuitry
  * - Find the number of BLs and WLs required for each region
  * - Create BL and WL decoders, and add them to decoder library
  * - Create nets to connect from top-level module inputs to inputs of decoders
  * - Create nets to connect from outputs of decoders to BL/WL of configurable children
+ *
+ * @note this function only adds the BL configuration bus for decoders
  *
  * Detailed schematic of how memory banks are connected in the top-level:
  * Consider a random Region X, local BL address lines are aligned to the LSB of the
@@ -120,12 +122,13 @@ namespace openfpga {
  *               +---------+
  *
  **********************************************************************/
-void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_manager,
-                                                        DecoderLibrary& decoder_lib,
-                                                        const ModuleId& top_module,
-                                                        const CircuitLibrary& circuit_lib,
-                                                        const CircuitModelId& sram_model,
-                                                        const TopModuleNumConfigBits& num_config_bits) {
+static 
+void add_top_module_nets_cmos_ql_memory_bank_bl_decoder_config_bus(ModuleManager& module_manager,
+                                                                   DecoderLibrary& decoder_lib,
+                                                                   const ModuleId& top_module,
+                                                                   const CircuitLibrary& circuit_lib,
+                                                                   const CircuitModelId& sram_model,
+                                                                   const TopModuleNumConfigBits& num_config_bits) {
   /* Find Enable port from the top-level module */ 
   ModulePortId en_port = module_manager.find_module_port(top_module, std::string(DECODER_ENABLE_PORT_NAME));
   BasicPort en_port_info = module_manager.module_port(top_module, en_port);
@@ -137,36 +140,17 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
   /* Data in port should match the number of configuration regions */
   VTR_ASSERT(din_port_info.get_width() == module_manager.regions(top_module).size());
 
-  /* Find readback port from the top-level module */ 
-  ModulePortId readback_port = module_manager.find_module_port(top_module, std::string(DECODER_READBACK_PORT_NAME));
-  BasicPort readback_port_info;
-
-  /* Readback port if available, should be a 1-bit port */
-  if (readback_port) {
-    readback_port_info = module_manager.module_port(top_module, readback_port);
-    VTR_ASSERT(readback_port_info.get_width() == 1);
-  }
-
   /* Find BL and WL address port from the top-level module */ 
   ModulePortId bl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_BL_ADDRESS_PORT_NAME));
   BasicPort bl_addr_port_info = module_manager.module_port(top_module, bl_addr_port);
 
-  ModulePortId wl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_WL_ADDRESS_PORT_NAME));
-  BasicPort wl_addr_port_info = module_manager.module_port(top_module, wl_addr_port);
-
   /* Find the top-level number of BLs and WLs required to access each memory bit */
   size_t bl_addr_size = bl_addr_port_info.get_width();
-  size_t wl_addr_size = wl_addr_port_info.get_width();
 
   /* Each memory bank has a unified number of BL/WLs */
   size_t num_bls = 0;
   for (const auto& curr_config_bits : num_config_bits) {
      num_bls = std::max(num_bls, curr_config_bits.first);
-  }
-
-  size_t num_wls = 0;
-  for (const auto& curr_config_bits : num_config_bits) {
-     num_wls = std::max(num_wls, curr_config_bits.second);
   }
 
   /* Create separated memory bank circuitry, i.e., BL/WL decoders for each region */
@@ -198,34 +182,6 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
     VTR_ASSERT(ModuleId::INVALID() != bl_decoder_module);
     size_t curr_bl_decoder_instance_id = module_manager.num_instance(top_module, bl_decoder_module);
     module_manager.add_child_module(top_module, bl_decoder_module);
-
-    /************************************************************** 
-     * Add the WL decoder module 
-     * Search the decoder library
-     * If we find one, we use the module.
-     * Otherwise, we create one and add it to the decoder library
-     */
-    DecoderId wl_decoder_id = decoder_lib.find_decoder(wl_addr_size, num_wls,
-                                                       true, false, false, readback_port != ModulePortId::INVALID());
-    if (DecoderId::INVALID() == wl_decoder_id) {
-      wl_decoder_id = decoder_lib.add_decoder(wl_addr_size, num_wls, true, false, false, readback_port != ModulePortId::INVALID());
-    }
-    VTR_ASSERT(DecoderId::INVALID() != wl_decoder_id);
-
-    /* Create a module if not existed yet */
-    std::string wl_decoder_module_name = generate_memory_decoder_subckt_name(wl_addr_size, num_wls);
-    ModuleId wl_decoder_module = module_manager.find_module(wl_decoder_module_name);
-    if (ModuleId::INVALID() == wl_decoder_module) {
-      /* BL decoder has the same ports as the frame-based decoders
-       * We reuse it here
-       */
-      wl_decoder_module = build_wl_memory_decoder_module(module_manager,
-                                                         decoder_lib,
-                                                         wl_decoder_id);
-    }
-    VTR_ASSERT(ModuleId::INVALID() != wl_decoder_module);
-    size_t curr_wl_decoder_instance_id = module_manager.num_instance(top_module, wl_decoder_module);
-    module_manager.add_child_module(top_module, wl_decoder_module);
 
     /************************************************************** 
      * Add module nets from the top module to BL decoder's inputs
@@ -268,56 +224,14 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
     module_manager.add_module_net_sink(top_module, din_net, bl_decoder_module, curr_bl_decoder_instance_id, bl_decoder_din_port, bl_decoder_din_port_info.pins()[0]);
 
     /************************************************************** 
-     * Add module nets from the top module to WL decoder's inputs 
-     */
-    ModulePortId wl_decoder_en_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_ENABLE_PORT_NAME));
-    BasicPort wl_decoder_en_port_info = module_manager.module_port(wl_decoder_module, wl_decoder_en_port);
-
-    ModulePortId wl_decoder_addr_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_ADDRESS_PORT_NAME));
-    BasicPort wl_decoder_addr_port_info = module_manager.module_port(wl_decoder_module, wl_decoder_addr_port);
-
-    ModulePortId wl_decoder_readback_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_READBACK_PORT_NAME));
-    BasicPort wl_decoder_readback_port_info;
-    if (wl_decoder_readback_port) { 
-      wl_decoder_readback_port_info = module_manager.module_port(wl_decoder_module, wl_decoder_readback_port);
-    }
-
-    /* Top module Enable port -> WL Decoder Enable port */
-    add_module_bus_nets(module_manager,
-                        top_module,
-                        top_module, 0, en_port,
-                        wl_decoder_module, curr_wl_decoder_instance_id, wl_decoder_en_port);
-
-    /* Top module Address port -> WL Decoder Address port */
-    add_module_bus_nets(module_manager,
-                        top_module,
-                        top_module, 0, wl_addr_port,
-                        wl_decoder_module, curr_wl_decoder_instance_id, wl_decoder_addr_port);
-
-    /* Top module readback port -> WL Decoder readback port */
-    if (wl_decoder_readback_port) { 
-      add_module_bus_nets(module_manager,
-                          top_module,
-                          top_module, 0, readback_port,
-                          wl_decoder_module, curr_wl_decoder_instance_id, wl_decoder_readback_port);
-    }
-
-    /************************************************************** 
      * Precompute the BLs and WLs distribution across the FPGA fabric
      * The distribution is a matrix which contains the starting index of BL/WL for each column or row
      */
     std::pair<int, int> child_x_range = compute_memory_bank_regional_configurable_child_x_range(module_manager, top_module, config_region);
-    std::pair<int, int> child_y_range = compute_memory_bank_regional_configurable_child_y_range(module_manager, top_module, config_region);
-
     std::map<int, size_t> num_bls_per_tile = compute_memory_bank_regional_bitline_numbers_per_tile(module_manager, top_module,
                                                                                                    config_region,
                                                                                                    circuit_lib, sram_model);
-    std::map<int, size_t> num_wls_per_tile = compute_memory_bank_regional_wordline_numbers_per_tile(module_manager, top_module,
-                                                                                                    config_region,
-                                                                                                    circuit_lib, sram_model);
-
     std::map<int, size_t> bl_start_index_per_tile = compute_memory_bank_regional_blwl_start_index_per_tile(child_x_range, num_bls_per_tile);
-    std::map<int, size_t> wl_start_index_per_tile = compute_memory_bank_regional_blwl_start_index_per_tile(child_y_range, num_wls_per_tile);
 
     /************************************************************** 
      * Add nets from BL data out to each configurable child
@@ -379,12 +293,147 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
     }
 
     /************************************************************** 
+     * Add the BL and WL decoders to the end of configurable children list
+     * Note: this MUST be done after adding all the module nets to other regular configurable children
+     */
+    module_manager.add_configurable_child(top_module, bl_decoder_module, curr_bl_decoder_instance_id);
+    module_manager.add_configurable_child_to_region(top_module,
+                                                    config_region,
+                                                    bl_decoder_module, 
+                                                    curr_bl_decoder_instance_id,
+                                                    module_manager.configurable_children(top_module).size() - 1);
+  }
+}
+
+/*********************************************************************
+ * Top-level function to add nets for quicklogic memory banks
+ * Each configuration region has independent memory bank circuitry
+ * - Find the number of BLs and WLs required for each region
+ * - Create BL and WL decoders, and add them to decoder library
+ * - Create nets to connect from top-level module inputs to inputs of decoders
+ * - Create nets to connect from outputs of decoders to BL/WL of configurable children
+ *
+ * @note this function only adds the WL configuration bus for decoders
+ *
+ * @note see detailed explanation on the bus connection in function add_top_module_nets_cmos_ql_memory_bank_config_bus()
+ **********************************************************************/
+static 
+void add_top_module_nets_cmos_ql_memory_bank_wl_decoder_config_bus(ModuleManager& module_manager,
+                                                                   DecoderLibrary& decoder_lib,
+                                                                   const ModuleId& top_module,
+                                                                   const CircuitLibrary& circuit_lib,
+                                                                   const CircuitModelId& sram_model,
+                                                                   const TopModuleNumConfigBits& num_config_bits) {
+  /* Find Enable port from the top-level module */ 
+  ModulePortId en_port = module_manager.find_module_port(top_module, std::string(DECODER_ENABLE_PORT_NAME));
+  BasicPort en_port_info = module_manager.module_port(top_module, en_port);
+  
+  /* Find readback port from the top-level module */ 
+  ModulePortId readback_port = module_manager.find_module_port(top_module, std::string(DECODER_READBACK_PORT_NAME));
+  BasicPort readback_port_info;
+
+  /* Readback port if available, should be a 1-bit port */
+  if (readback_port) {
+    readback_port_info = module_manager.module_port(top_module, readback_port);
+    VTR_ASSERT(readback_port_info.get_width() == 1);
+  }
+
+  /* Find BL and WL address port from the top-level module */ 
+  ModulePortId wl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_WL_ADDRESS_PORT_NAME));
+  BasicPort wl_addr_port_info = module_manager.module_port(top_module, wl_addr_port);
+
+  /* Find the top-level number of BLs and WLs required to access each memory bit */
+  size_t wl_addr_size = wl_addr_port_info.get_width();
+
+  /* Each memory bank has a unified number of BL/WLs */
+  size_t num_wls = 0;
+  for (const auto& curr_config_bits : num_config_bits) {
+     num_wls = std::max(num_wls, curr_config_bits.second);
+  }
+
+  /* Create separated memory bank circuitry, i.e., BL/WL decoders for each region */
+  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+    /************************************************************** 
+     * Add the WL decoder module 
+     * Search the decoder library
+     * If we find one, we use the module.
+     * Otherwise, we create one and add it to the decoder library
+     */
+    DecoderId wl_decoder_id = decoder_lib.find_decoder(wl_addr_size, num_wls,
+                                                       true, false, false, readback_port != ModulePortId::INVALID());
+    if (DecoderId::INVALID() == wl_decoder_id) {
+      wl_decoder_id = decoder_lib.add_decoder(wl_addr_size, num_wls, true, false, false, readback_port != ModulePortId::INVALID());
+    }
+    VTR_ASSERT(DecoderId::INVALID() != wl_decoder_id);
+
+    /* Create a module if not existed yet */
+    std::string wl_decoder_module_name = generate_memory_decoder_subckt_name(wl_addr_size, num_wls);
+    ModuleId wl_decoder_module = module_manager.find_module(wl_decoder_module_name);
+    if (ModuleId::INVALID() == wl_decoder_module) {
+      /* BL decoder has the same ports as the frame-based decoders
+       * We reuse it here
+       */
+      wl_decoder_module = build_wl_memory_decoder_module(module_manager,
+                                                         decoder_lib,
+                                                         wl_decoder_id);
+    }
+    VTR_ASSERT(ModuleId::INVALID() != wl_decoder_module);
+    size_t curr_wl_decoder_instance_id = module_manager.num_instance(top_module, wl_decoder_module);
+    module_manager.add_child_module(top_module, wl_decoder_module);
+
+    /************************************************************** 
+     * Add module nets from the top module to WL decoder's inputs 
+     */
+    ModulePortId wl_decoder_en_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_ENABLE_PORT_NAME));
+    BasicPort wl_decoder_en_port_info = module_manager.module_port(wl_decoder_module, wl_decoder_en_port);
+
+    ModulePortId wl_decoder_addr_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_ADDRESS_PORT_NAME));
+    BasicPort wl_decoder_addr_port_info = module_manager.module_port(wl_decoder_module, wl_decoder_addr_port);
+
+    ModulePortId wl_decoder_readback_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_READBACK_PORT_NAME));
+    BasicPort wl_decoder_readback_port_info;
+    if (wl_decoder_readback_port) { 
+      wl_decoder_readback_port_info = module_manager.module_port(wl_decoder_module, wl_decoder_readback_port);
+    }
+
+    /* Top module Enable port -> WL Decoder Enable port */
+    add_module_bus_nets(module_manager,
+                        top_module,
+                        top_module, 0, en_port,
+                        wl_decoder_module, curr_wl_decoder_instance_id, wl_decoder_en_port);
+
+    /* Top module Address port -> WL Decoder Address port */
+    add_module_bus_nets(module_manager,
+                        top_module,
+                        top_module, 0, wl_addr_port,
+                        wl_decoder_module, curr_wl_decoder_instance_id, wl_decoder_addr_port);
+
+    /* Top module readback port -> WL Decoder readback port */
+    if (wl_decoder_readback_port) { 
+      add_module_bus_nets(module_manager,
+                          top_module,
+                          top_module, 0, readback_port,
+                          wl_decoder_module, curr_wl_decoder_instance_id, wl_decoder_readback_port);
+    }
+
+    /************************************************************** 
+     * Precompute the BLs and WLs distribution across the FPGA fabric
+     * The distribution is a matrix which contains the starting index of BL/WL for each column or row
+     */
+    std::pair<int, int> child_y_range = compute_memory_bank_regional_configurable_child_y_range(module_manager, top_module, config_region);
+    std::map<int, size_t> num_wls_per_tile = compute_memory_bank_regional_wordline_numbers_per_tile(module_manager, top_module,
+                                                                                                    config_region,
+                                                                                                    circuit_lib, sram_model);
+    std::map<int, size_t> wl_start_index_per_tile = compute_memory_bank_regional_blwl_start_index_per_tile(child_y_range, num_wls_per_tile);
+
+    /************************************************************** 
      * Add nets from WL data out to each configurable child
      */
     ModulePortId wl_decoder_dout_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
     BasicPort wl_decoder_dout_port_info = module_manager.module_port(wl_decoder_module, wl_decoder_dout_port);
 
-    for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
+    /* Note we skip the last child which is the bl decoder added */
+    for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size() - 1; ++child_id) {
       ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
       vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
 
@@ -458,19 +507,74 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
      * Add the BL and WL decoders to the end of configurable children list
      * Note: this MUST be done after adding all the module nets to other regular configurable children
      */
-    module_manager.add_configurable_child(top_module, bl_decoder_module, curr_bl_decoder_instance_id);
-    module_manager.add_configurable_child_to_region(top_module,
-                                                    config_region,
-                                                    bl_decoder_module, 
-                                                    curr_bl_decoder_instance_id,
-                                                    module_manager.configurable_children(top_module).size() - 1);
-
     module_manager.add_configurable_child(top_module, wl_decoder_module, curr_wl_decoder_instance_id);
     module_manager.add_configurable_child_to_region(top_module,
                                                     config_region,
                                                     wl_decoder_module, 
                                                     curr_wl_decoder_instance_id,
                                                     module_manager.configurable_children(top_module).size() - 1);
+  }
+}
+
+/*********************************************************************
+ * Top-level function to add nets for quicklogic memory banks
+ * - Each configuration region has independent memory bank circuitry
+ * - BL and WL may have different circuitry and wire connection, e.g., decoder, flatten or shift-registers
+ * - BL control circuitry
+ *   - Decoder: Add a BL decoder; Connect enable, address and data-in (din) between top-level and decoders; Connect data ports between between the decoder and configurable child modules
+ *   - Flatten: Connect BLs between the top-level port and configurable child modules
+ *   - TODO: Shift registers: add blocks of shift register chain (could be multi-head); Connect shift register outputs to configurable child modules
+ *
+ * - WL control circuitry
+ *   - Decoder: Add a WL decoder; Connect address ports between top-level and decoders; Connect data ports between the decoder and configurable child modules
+ *   - Flatten: Connect BLs between the top-level port and configurable child modules
+ *   - TODO: Shift registers: add blocks of shift register chain (could be multi-head); Connect shift register outputs to configurable child modules
+ ********************************************************************/
+void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_manager,
+                                                        DecoderLibrary& decoder_lib,
+                                                        const ModuleId& top_module,
+                                                        const CircuitLibrary& circuit_lib,
+                                                        const ConfigProtocol& config_protocol,
+                                                        const TopModuleNumConfigBits& num_config_bits) {
+  VTR_ASSERT_SAFE(CONFIG_MEM_QL_MEMORY_BANK == config_protocol.type());
+  CircuitModelId sram_model = config_protocol.memory_model();
+
+  switch (config_protocol.bl_protocol_type()) {
+    case BLWL_PROTOCOL_DECODER: {
+      add_top_module_nets_cmos_ql_memory_bank_bl_decoder_config_bus(module_manager, decoder_lib, top_module, circuit_lib, sram_model, num_config_bits);
+      break;
+    }
+    case BLWL_PROTOCOL_FLATTEN: {
+      //add_top_module_nets_cmos_ql_memory_bank_bl_flatten_config_bus(module_manager, decoder_lib, top_module, circuit_lib, num_config_bits);
+      break;
+    }
+    case BLWL_PROTOCOL_SHIFT_REGISTER: {
+      /* TODO */
+      break;
+    }
+    default: {
+      VTR_LOG_ERROR("Invalid BL protocol");
+      exit(1);
+    }
+  }
+
+  switch (config_protocol.wl_protocol_type()) {
+    case BLWL_PROTOCOL_DECODER: {
+      add_top_module_nets_cmos_ql_memory_bank_wl_decoder_config_bus(module_manager, decoder_lib, top_module, circuit_lib, sram_model, num_config_bits);
+      break;
+    }
+    case BLWL_PROTOCOL_FLATTEN: {
+      //add_top_module_nets_cmos_ql_memory_bank_wl_flatten_config_bus(module_manager, decoder_lib, top_module, circuit_lib, num_config_bits);
+      break;
+    }
+    case BLWL_PROTOCOL_SHIFT_REGISTER: {
+      /* TODO */
+      break;
+    }
+    default: {
+      VTR_LOG_ERROR("Invalid WL protocol");
+      exit(1);
+    }
   }
 }
 
