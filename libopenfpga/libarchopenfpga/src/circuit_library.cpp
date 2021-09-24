@@ -1170,7 +1170,7 @@ CircuitModelId CircuitLibrary::add_model(const enum e_circuit_model_type& type) 
 
   /* Pass-gate-related parameters */
   pass_gate_logic_model_names_.emplace_back();
-  pass_gate_logic_model_ids_.emplace_back();
+  pass_gate_logic_model_ids_.emplace_back(CircuitModelId::INVALID());
 
   /* Delay information */
   delay_types_.emplace_back();
