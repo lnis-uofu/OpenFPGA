@@ -190,29 +190,40 @@ int write_memory_bank_fabric_bitstream_to_text_file(std::fstream& fp,
  *******************************************************************/
 static 
 int write_memory_bank_flatten_fabric_bitstream_to_text_file(std::fstream& fp,
+                                                            const bool& bit_value_to_skip,
                                                             const FabricBitstream& fabric_bitstream) {
   int status = 0;
 
-  MemoryBankFabricBitstream fabric_bits_by_addr = build_memory_bank_fabric_bitstream_by_address(fabric_bitstream);
+  MemoryBankFlattenFabricBitstream fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, bit_value_to_skip);
 
   /* The address sizes and data input sizes are the same across any element, 
    * just get it from the 1st element to save runtime
    */
-  size_t bl_addr_size = fabric_bits_by_addr.begin()->first.first.size(); 
-  size_t wl_addr_size = fabric_bits_by_addr.begin()->first.second.size(); 
+  size_t bl_addr_size = 0;
+  for (const auto& bl_vec : fabric_bits.begin()->first) {
+    bl_addr_size += bl_vec.size();
+  } 
+  size_t wl_addr_size = 0;
+  for (const auto& wl_vec : fabric_bits.begin()->second) {
+    wl_addr_size += wl_vec.size();
+  } 
 
   /* Output information about how to intepret the bitstream */
-  fp << "// Bitstream length: " << fabric_bits_by_addr.size() << std::endl;
+  fp << "// Bitstream length: " << fabric_bits.size() << std::endl;
   fp << "// Bitstream width (LSB -> MSB): ";
   fp << "<bl_address " << bl_addr_size << " bits>";
   fp << "<wl_address " << wl_addr_size << " bits>";
   fp << std::endl;
 
-  for (const auto& addr_din_pair : fabric_bits_by_addr) {
+  for (const auto& addr_pair : fabric_bits) {
     /* Write BL address code */
-    fp << addr_din_pair.first.first;
+    for (const auto& bl_vec : addr_pair.first) {
+      fp << bl_vec;
+    }
     /* Write WL address code */
-    fp << addr_din_pair.first.second;
+    for (const auto& wl_vec : addr_pair.second) {
+      fp << wl_vec;
+    }
     fp << std::endl;
   }
 
@@ -362,6 +373,7 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
       VTR_ASSERT(BLWL_PROTOCOL_DECODER == config_protocol.bl_protocol_type()
               || BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type());
       status = write_memory_bank_flatten_fabric_bitstream_to_text_file(fp,
+                                                                       bit_value_to_skip,
                                                                        fabric_bitstream);
     }
     break;

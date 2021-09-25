@@ -58,7 +58,8 @@ size_t find_frame_based_fast_configuration_fabric_bitstream_size(const FabricBit
  * @note the std::map may cause large memory footprint for large bitstream databases!
  *******************************************************************/
 typedef std::map<std::vector<std::string>, std::vector<std::string>> MemoryBankFlattenFabricBitstream;
-MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(const FabricBitstream& fabric_bitstream);
+MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(const FabricBitstream& fabric_bitstream,
+                                                                            const bool& bit_value_to_skip);
 
 /* Alias to a specific organization of bitstreams for memory bank configuration protocol */
 typedef std::map<std::pair<std::string, std::string>, std::vector<bool>> MemoryBankFabricBitstream;

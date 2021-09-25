@@ -144,7 +144,7 @@ void FabricBitstream::set_bit_address(const FabricBitId& bit_id,
   VTR_ASSERT(true == valid_bit_id(bit_id));
   VTR_ASSERT(true == use_address_);
   if (tolerant_short_address) {
-    VTR_ASSERT(address_length_ => address.size());
+    VTR_ASSERT(address_length_ >= address.size());
   } else {
     VTR_ASSERT(address_length_ == address.size());
   }
@@ -164,7 +164,7 @@ void FabricBitstream::set_bit_wl_address(const FabricBitId& bit_id,
   VTR_ASSERT(true == use_address_);
   VTR_ASSERT(true == use_wl_address_);
   if (tolerant_short_address) {
-    VTR_ASSERT(wl_address_length_ => address.size());
+    VTR_ASSERT(wl_address_length_ >= address.size());
   } else {
     VTR_ASSERT(wl_address_length_ == address.size());
   }

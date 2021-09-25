@@ -302,6 +302,7 @@ void build_module_fabric_dependent_bitstream_ql_memory_bank(const ConfigProtocol
       /* TODO */
       VTR_ASSERT(BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type());
     }
+    BasicPort cur_bl_addr_port_info = module_manager.module_port(top_module, cur_bl_addr_port);
 
     ModulePortId cur_wl_addr_port;
     if (BLWL_PROTOCOL_DECODER == config_protocol.wl_protocol_type()) {
