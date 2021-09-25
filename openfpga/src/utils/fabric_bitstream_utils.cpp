@@ -188,7 +188,7 @@ size_t find_frame_based_fast_configuration_fabric_bitstream_size(const FabricBit
 }
 
 /********************************************************************
- * Reorganize the fabric bitstream for memory banks
+ * Reorganize the fabric bitstream for memory banks which use BL and WL decoders
  * by the same address across regions:
  * This is due to that the length of fabric bitstream could be different in each region.
  * Template:
@@ -231,6 +231,45 @@ MemoryBankFabricBitstream build_memory_bank_fabric_bitstream_by_address(const Fa
 
   return fabric_bits_by_addr;
 }
+
+MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(const FabricBitstream& fabric_bitstream) {
+  /* Build the bitstream by each region, here we use (WL, BL) pairs when storing bitstreams */
+  vtr::vector<FabricBitRegionId, std::map<std::string, std::string>> fabric_bits_per_region;
+  fabric_bits_per_region.resize(fabric_bitstream.num_regions());
+  for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
+    for (const FabricBitId& bit_id : fabric_bitstream.region_bits(region)) {
+      /* Create string for BL address */
+      std::string bl_addr_str;
+      for (const char& addr_bit : fabric_bitstream.bit_bl_address(bit_id)) {
+        bl_addr_str.push_back(addr_bit);
+      }
+
+      /* Create string for WL address */
+      std::string wl_addr_str;
+      for (const char& addr_bit : fabric_bitstream.bit_wl_address(bit_id)) {
+        wl_addr_str.push_back(addr_bit);
+      }
+
+      /* Place the config bit */
+      auto result = fabric_bits_per_region[region].find(wl_addr_str);
+      if (result == fabric_bits_per_region[region].end()) {
+        /* This is a new bit, resize the vector to the number of regions
+         * and deposit '0' to all the bits
+         */
+        fabric_bits_per_region[region][wl_addr_str] = bl_addr_str;
+      } else {
+        VTR_ASSERT_SAFE(result != fabric_bits_per_region[region].end());
+        result->second = combine_two_1hot_str(bl_addr_str, result->second);
+      }
+    }
+  }
+
+  /* TODO: Combine the bitstream from different region into a unique one. Now we follow the convention: use (BL, WL) pairs */
+  MemoryBankFlattenFabricBitstream fabric_bits;
+
+  return fabric_bits;
+}
+
 
 /********************************************************************
  * For fast configuration, the number of bits to be skipped

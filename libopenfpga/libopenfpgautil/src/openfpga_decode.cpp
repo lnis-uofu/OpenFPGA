@@ -80,6 +80,19 @@ std::vector<char> ito1hot_charvec(const size_t& in_int,
   return ret;
 }
 
+std::string combine_two_1hot_str(const std::string& code1,
+                                 const std::string& code2) {
+  VTR_ASSERT(code1.length() == code2.length());
+  std::string ret = code1;
+  for (size_t ichar = 0; ichar < code2.length(); ichar++) {
+    VTR_ASSERT('0' == code2[ichar] || '1' == code2[ichar]);
+    if ('1' == code2[ichar]) {
+      ret[ichar] = code2[ichar];
+    }
+  }
+  return ret;
+}
+
 /******************************************************************** 
  * Converter an integer to a binary vector 
  * For example: 
