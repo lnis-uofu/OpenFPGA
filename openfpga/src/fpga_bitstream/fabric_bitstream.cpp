@@ -139,24 +139,35 @@ FabricBitId FabricBitstream::add_bit(const ConfigBitId& config_bit_id) {
 }
 
 void FabricBitstream::set_bit_address(const FabricBitId& bit_id,
-                                      const std::vector<char>& address) {
+                                      const std::vector<char>& address,
+                                      const bool& tolerant_short_address) {
   VTR_ASSERT(true == valid_bit_id(bit_id));
   VTR_ASSERT(true == use_address_);
-  VTR_ASSERT(address_length_ == address.size());
+  if (tolerant_short_address) {
+    VTR_ASSERT(address_length_ => address.size());
+  } else {
+    VTR_ASSERT(address_length_ == address.size());
+  }
   bit_addresses_[bit_id] = address;
 }
 
 void FabricBitstream::set_bit_bl_address(const FabricBitId& bit_id,
-                                         const std::vector<char>& address) {
-  set_bit_address(bit_id, address);
+                                         const std::vector<char>& address,
+                                         const bool& tolerant_short_address) {
+  set_bit_address(bit_id, address, tolerant_short_address);
 }
 
 void FabricBitstream::set_bit_wl_address(const FabricBitId& bit_id,
-                                         const std::vector<char>& address) {
+                                         const std::vector<char>& address,
+                                         const bool& tolerant_short_address) {
   VTR_ASSERT(true == valid_bit_id(bit_id));
   VTR_ASSERT(true == use_address_);
   VTR_ASSERT(true == use_wl_address_);
-  VTR_ASSERT(wl_address_length_ == address.size());
+  if (tolerant_short_address) {
+    VTR_ASSERT(wl_address_length_ => address.size());
+  } else {
+    VTR_ASSERT(wl_address_length_ == address.size());
+  }
   bit_wl_addresses_[bit_id] = address;
 }
 
