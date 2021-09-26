@@ -810,7 +810,7 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
  * Note that this will not applicable to configuration chain!!!
  *******************************************************************/
 static
-size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz_type,
+size_t calculate_num_config_clock_cycles(const ConfigProtocol& config_protocol,
                                          const bool& fast_configuration,
                                          const bool& bit_value_to_skip,
                                          const BitstreamManager& bitstream_manager,
@@ -821,7 +821,7 @@ size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz
   size_t num_config_clock_cycles = 1 + regional_bitstream_max_size;
 
   /* Branch on the type of configuration protocol */
-  switch (sram_orgz_type) {
+  switch (config_protocol.type()) {
   case CONFIG_MEM_STANDALONE:
     /* We just need 1 clock cycle to load all the configuration bits
      * since all the ports are exposed at the top-level
@@ -849,7 +849,25 @@ size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz
               100. * ((float)num_config_clock_cycles / (float)(1 + regional_bitstream_max_size) - 1.));
     }
     break;
-  case CONFIG_MEM_QL_MEMORY_BANK:
+  case CONFIG_MEM_QL_MEMORY_BANK: {
+    if (BLWL_PROTOCOL_DECODER == config_protocol.bl_protocol_type()) {
+      /* For fast configuration, we will skip all the zero data points */
+      num_config_clock_cycles = 1 + build_memory_bank_fabric_bitstream_by_address(fabric_bitstream).size();
+      if (true == fast_configuration) {
+        size_t full_num_config_clock_cycles = num_config_clock_cycles;
+        num_config_clock_cycles = 1 + find_memory_bank_fast_configuration_fabric_bitstream_size(fabric_bitstream, bit_value_to_skip);
+        VTR_LOG("Fast configuration reduces number of configuration clock cycles from %lu to %lu (compression_rate = %f%)\n",
+                full_num_config_clock_cycles,
+                num_config_clock_cycles,
+                100. * ((float)num_config_clock_cycles / (float)full_num_config_clock_cycles - 1.));
+      }
+    } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()) {
+      num_config_clock_cycles = 1 + build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, bit_value_to_skip).size();
+    } else if (BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type()) {
+      /* TODO */
+    }
+    break;
+  }
   case CONFIG_MEM_MEMORY_BANK: {
     /* For fast configuration, we will skip all the zero data points */
     num_config_clock_cycles = 1 + build_memory_bank_fabric_bitstream_by_address(fabric_bitstream).size();
@@ -1922,7 +1940,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
   }
 
   /* Estimate the number of configuration clock cycles */
-  size_t num_config_clock_cycles = calculate_num_config_clock_cycles(config_protocol.type(),
+  size_t num_config_clock_cycles = calculate_num_config_clock_cycles(config_protocol,
                                                                      apply_fast_configuration,
                                                                      bit_value_to_skip,
                                                                      bitstream_manager,
