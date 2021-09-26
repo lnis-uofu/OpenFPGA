@@ -240,7 +240,7 @@ MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(cons
   for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
     for (const FabricBitId& bit_id : fabric_bitstream.region_bits(region)) {
       /* Skip din because they should be pre-configured through programming reset/set */
-      if ((fabric_bitstream.bit_din(bit_id) == '1') == bit_value_to_skip) {
+      if (fabric_bitstream.bit_din(bit_id) == bit_value_to_skip) {
         continue;
       }
       /* Create string for BL address */

@@ -19,6 +19,7 @@
 
 #include "decoder_library_utils.h"
 #include "bitstream_manager_utils.h"
+#include "memory_utils.h"
 #include "memory_bank_utils.h"
 #include "build_fabric_bitstream_memory_bank.h"
 
@@ -73,7 +74,9 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
       std::vector<ModuleId> configurable_children = module_manager.region_configurable_children(parent_module, config_region);
 
       VTR_ASSERT(2 <= configurable_children.size()); 
-      size_t num_configurable_children = configurable_children.size() - 2;
+      size_t num_config_child_to_skip = estimate_num_configurable_children_to_skip_by_config_protocol(config_protocol,
+                                                                                                      configurable_children.size());
+      size_t num_configurable_children = configurable_children.size() - num_config_child_to_skip;
 
       /* Early exit if there is no configurable children */
       if (0 == num_configurable_children) {
@@ -179,7 +182,7 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
     if (BLWL_PROTOCOL_DECODER == config_protocol.bl_protocol_type()) {
       bl_addr_bits_vec = itobin_charvec(cur_bl_index, bl_addr_size);
     } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()
-            || BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()) {
+            || BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type()) {
       bl_addr_bits_vec = ito1hot_charvec(cur_bl_index, bl_addr_size);
     }
 
@@ -189,15 +192,15 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
     if (BLWL_PROTOCOL_DECODER == config_protocol.wl_protocol_type()) {
       wl_addr_bits_vec = itobin_charvec(cur_wl_index, wl_addr_size);
     } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type()
-            || BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type()) {
+            || BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.wl_protocol_type()) {
       wl_addr_bits_vec = ito1hot_charvec(cur_wl_index, wl_addr_size);
     }
 
     /* Set BL address */
-    fabric_bitstream.set_bit_bl_address(fabric_bit, bl_addr_bits_vec, true);
+    fabric_bitstream.set_bit_bl_address(fabric_bit, bl_addr_bits_vec, BLWL_PROTOCOL_DECODER != config_protocol.bl_protocol_type());
 
     /* Set WL address */
-    fabric_bitstream.set_bit_wl_address(fabric_bit, wl_addr_bits_vec, true);
+    fabric_bitstream.set_bit_wl_address(fabric_bit, wl_addr_bits_vec, BLWL_PROTOCOL_DECODER != config_protocol.wl_protocol_type());
     
     /* Set data input */
     fabric_bitstream.set_bit_din(fabric_bit, bitstream_manager.bit_value(config_bit));

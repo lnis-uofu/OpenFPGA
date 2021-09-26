@@ -370,7 +370,7 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
                                                                bit_value_to_skip,
                                                                fabric_bitstream);
     } else {
-      VTR_ASSERT(BLWL_PROTOCOL_DECODER == config_protocol.bl_protocol_type()
+      VTR_ASSERT(BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()
               || BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type());
       status = write_memory_bank_flatten_fabric_bitstream_to_text_file(fp,
                                                                        bit_value_to_skip,
