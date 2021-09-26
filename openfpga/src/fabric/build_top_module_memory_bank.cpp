@@ -901,13 +901,13 @@ void add_top_module_ql_memory_bank_sram_ports(ModuleManager& module_manager,
     case BLWL_PROTOCOL_FLATTEN: {
       /* Each region will have independent WLs */
       for (const ConfigRegionId& config_region : module_manager.regions(module_id)) {
-        size_t wl_size = num_config_bits[config_region].first;
+        size_t wl_size = num_config_bits[config_region].second;
         BasicPort wl_port(generate_regional_blwl_port_name(std::string(MEMORY_WL_PORT_NAME), config_region), wl_size);
         module_manager.add_port(module_id, wl_port, ModuleManager::MODULE_INPUT_PORT);
 
         /* Optional: If we have WLR port, we should add a read-back port */
         if (!circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_WLR).empty()) {
-          BasicPort readback_port(std::string(MEMORY_WLR_PORT_NAME), config_protocol.num_regions());
+          BasicPort readback_port(std::string(MEMORY_WLR_PORT_NAME), wl_size);
           module_manager.add_port(module_id, readback_port, ModuleManager::MODULE_INPUT_PORT);
         }
       }
