@@ -229,6 +229,8 @@ void print_verilog_top_testbench_config_protocol_port(std::fstream& fp,
     print_verilog_top_testbench_config_chain_port(fp, module_manager, top_module);
     break;
   case CONFIG_MEM_QL_MEMORY_BANK:
+    print_verilog_top_testbench_ql_memory_bank_port(fp, module_manager, top_module, config_protocol);
+    break;
   case CONFIG_MEM_MEMORY_BANK:
     print_verilog_top_testbench_memory_bank_port(fp, module_manager, top_module);
     break;
@@ -1111,7 +1113,10 @@ void print_verilog_top_testbench_configuration_protocol_stimulus(std::fstream& f
   case CONFIG_MEM_FRAME_BASED: {
     ModulePortId en_port_id = module_manager.find_module_port(top_module,
                                                               std::string(DECODER_ENABLE_PORT_NAME));
-    BasicPort en_port = module_manager.module_port(top_module, en_port_id);
+    BasicPort en_port(std::string(DECODER_ENABLE_PORT_NAME), 1);
+    if (en_port_id) {
+      en_port = module_manager.module_port(top_module, en_port_id);
+    }
     BasicPort en_register_port(std::string(en_port.get_name() + std::string(TOP_TB_CLOCK_REG_POSTFIX)), 1);
     print_verilog_comment(fp, std::string("---- Generate enable signal waveform  -----"));
     print_verilog_shifted_clock_stimuli(fp, en_register_port,
@@ -1684,7 +1689,7 @@ void print_verilog_full_testbench_frame_decoder_bitstream(std::fstream& fp,
 static
 void print_verilog_full_testbench_bitstream(std::fstream& fp,
                                             const std::string& bitstream_file,
-                                            const e_config_protocol_type& config_protocol_type,
+                                            const ConfigProtocol& config_protocol,
                                             const bool& fast_configuration,
                                             const bool& bit_value_to_skip,
                                             const ModuleManager& module_manager,
@@ -1693,7 +1698,7 @@ void print_verilog_full_testbench_bitstream(std::fstream& fp,
                                             const FabricBitstream& fabric_bitstream) {
 
   /* Branch on the type of configuration protocol */
-  switch (config_protocol_type) {
+  switch (config_protocol.type()) {
   case CONFIG_MEM_STANDALONE:
     print_verilog_full_testbench_vanilla_bitstream(fp,
                                                    bitstream_file,
@@ -1719,6 +1724,7 @@ void print_verilog_full_testbench_bitstream(std::fstream& fp,
     break;
   case CONFIG_MEM_QL_MEMORY_BANK:
     print_verilog_full_testbench_ql_memory_bank_bitstream(fp, bitstream_file,
+                                                          config_protocol, 
                                                           fast_configuration, 
                                                           bit_value_to_skip,
                                                           module_manager, top_module,
@@ -1998,7 +2004,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
   /* load bitstream to FPGA fabric in a configuration phase */
   print_verilog_full_testbench_bitstream(fp,
                                          bitstream_file,
-                                         config_protocol.type(),
+                                         config_protocol,
                                          apply_fast_configuration,
                                          bit_value_to_skip,
                                          module_manager, top_module,
