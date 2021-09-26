@@ -258,9 +258,6 @@ MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(cons
       /* Place the config bit */
       auto result = fabric_bits_per_region[region].find(wl_addr_str);
       if (result == fabric_bits_per_region[region].end()) {
-        /* This is a new bit, resize the vector to the number of regions
-         * and deposit '0' to all the bits
-         */
         fabric_bits_per_region[region][wl_addr_str] = bl_addr_str;
       } else {
         VTR_ASSERT_SAFE(result != fabric_bits_per_region[region].end());
@@ -297,7 +294,7 @@ MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(cons
     max_blwl_sizes_per_region[region].second = std::max(max_blwl_sizes_per_region[region].second, fabric_bits_per_region[region].begin()->first.size());
   }
 
-  /* Combine the bitstream from different region into a unique one. Now we follow the convention: use (BL, WL) pairs */
+  /* Combine the bitstream from different region into a unique one. Now we follow the convention: use (WL, BL) pairs */
   MemoryBankFlattenFabricBitstream fabric_bits;
   for (size_t ikey = 0; ikey < max_key_size; ikey++) {
     /* Prepare the final BL/WL vectors to be added to the bitstream database */
@@ -316,7 +313,7 @@ MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(cons
       }
     }
     /* Add the pair to std map */
-    fabric_bits[cur_bl_vectors] = cur_wl_vectors;
+    fabric_bits[cur_wl_vectors] = cur_bl_vectors;
   }
 
   return fabric_bits;

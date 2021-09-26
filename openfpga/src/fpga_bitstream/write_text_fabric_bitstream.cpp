@@ -200,11 +200,11 @@ int write_memory_bank_flatten_fabric_bitstream_to_text_file(std::fstream& fp,
    * just get it from the 1st element to save runtime
    */
   size_t bl_addr_size = 0;
-  for (const auto& bl_vec : fabric_bits.begin()->first) {
+  for (const auto& bl_vec : fabric_bits.begin()->second) {
     bl_addr_size += bl_vec.size();
   } 
   size_t wl_addr_size = 0;
-  for (const auto& wl_vec : fabric_bits.begin()->second) {
+  for (const auto& wl_vec : fabric_bits.begin()->first) {
     wl_addr_size += wl_vec.size();
   } 
 
@@ -217,11 +217,11 @@ int write_memory_bank_flatten_fabric_bitstream_to_text_file(std::fstream& fp,
 
   for (const auto& addr_pair : fabric_bits) {
     /* Write BL address code */
-    for (const auto& bl_vec : addr_pair.first) {
+    for (const auto& bl_vec : addr_pair.second) {
       fp << bl_vec;
     }
     /* Write WL address code */
-    for (const auto& wl_vec : addr_pair.second) {
+    for (const auto& wl_vec : addr_pair.first) {
       fp << wl_vec;
     }
     fp << std::endl;

@@ -37,6 +37,10 @@ FrameFabricBitstream build_frame_based_fabric_bitstream_by_address(const FabricB
 size_t find_frame_based_fast_configuration_fabric_bitstream_size(const FabricBitstream& fabric_bitstream,
                                                                  const bool& bit_value_to_skip);
 
+/* Must use (WL, BL) as pairs in the map!!!
+ * This is because BL data may not be unique while WL must be unique
+ */
+typedef std::map<std::vector<std::string>, std::vector<std::string>> MemoryBankFlattenFabricBitstream; 
 /********************************************************************
  * @ brief Reorganize the fabric bitstream for memory banks which use flatten or shift register to manipulate BL and WLs
  * For each configuration region, we will merge BL address (which are 1-hot codes) under the same WL address
@@ -57,7 +61,6 @@ size_t find_frame_based_fast_configuration_fabric_bitstream_size(const FabricBit
  *
  * @note the std::map may cause large memory footprint for large bitstream databases!
  *******************************************************************/
-typedef std::map<std::vector<std::string>, std::vector<std::string>> MemoryBankFlattenFabricBitstream;
 MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(const FabricBitstream& fabric_bitstream,
                                                                             const bool& bit_value_to_skip);
 
