@@ -19,6 +19,7 @@
 
 #include "decoder_library_utils.h"
 #include "bitstream_manager_utils.h"
+#include "memory_utils.h"
 #include "memory_bank_utils.h"
 #include "build_fabric_bitstream_memory_bank.h"
 
@@ -47,6 +48,7 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
                                                                          const ModuleId& top_module,
                                                                          const ModuleId& parent_module,
                                                                          const ConfigRegionId& config_region,
+                                                                         const ConfigProtocol& config_protocol,
                                                                          const CircuitLibrary& circuit_lib,
                                                                          const CircuitModelId& sram_model,
                                                                          const size_t& bl_addr_size,
@@ -72,7 +74,9 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
       std::vector<ModuleId> configurable_children = module_manager.region_configurable_children(parent_module, config_region);
 
       VTR_ASSERT(2 <= configurable_children.size()); 
-      size_t num_configurable_children = configurable_children.size() - 2;
+      size_t num_config_child_to_skip = estimate_num_configurable_children_to_skip_by_config_protocol(config_protocol,
+                                                                                                      configurable_children.size());
+      size_t num_configurable_children = configurable_children.size() - num_config_child_to_skip;
 
       /* Early exit if there is no configurable children */
       if (0 == num_configurable_children) {
@@ -101,6 +105,7 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
         rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(bitstream_manager, child_block,
                                                                             module_manager, top_module, child_module,
                                                                             config_region,
+                                                                            config_protocol,
                                                                             circuit_lib, sram_model,
                                                                             bl_addr_size, wl_addr_size,
                                                                             num_bls_cur_tile, bl_start_index_per_tile,
@@ -143,6 +148,7 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
         rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(bitstream_manager, child_block,
                                                                             module_manager, top_module, child_module,
                                                                             config_region,
+                                                                            config_protocol,
                                                                             circuit_lib, sram_model,
                                                                             bl_addr_size, wl_addr_size,
                                                                             num_bls_cur_tile, bl_start_index_per_tile,
@@ -166,19 +172,35 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
   for (const ConfigBitId& config_bit : bitstream_manager.block_bits(parent_block)) {
     FabricBitId fabric_bit = fabric_bitstream.add_bit(config_bit);
   
-    /* Find BL address */
+    /* The BL address to be decoded depends on the protocol
+     * - flatten BLs: use 1-hot decoding
+     * - BL decoders: fully encoded
+     * - Shift register: use 1-hot decoding
+     */
     size_t cur_bl_index = bl_start_index_per_tile.at(tile_coord.x()) + cur_mem_index[tile_coord] % num_bls_cur_tile;
-    std::vector<char> bl_addr_bits_vec = itobin_charvec(cur_bl_index, bl_addr_size);
+    std::vector<char> bl_addr_bits_vec;
+    if (BLWL_PROTOCOL_DECODER == config_protocol.bl_protocol_type()) {
+      bl_addr_bits_vec = itobin_charvec(cur_bl_index, bl_addr_size);
+    } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()
+            || BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type()) {
+      bl_addr_bits_vec = ito1hot_charvec(cur_bl_index, bl_addr_size);
+    }
 
     /* Find WL address */
     size_t cur_wl_index = wl_start_index_per_tile.at(tile_coord.y()) + std::floor(cur_mem_index[tile_coord] / num_bls_cur_tile);
-    std::vector<char> wl_addr_bits_vec = itobin_charvec(cur_wl_index, wl_addr_size);
+    std::vector<char> wl_addr_bits_vec;
+    if (BLWL_PROTOCOL_DECODER == config_protocol.wl_protocol_type()) {
+      wl_addr_bits_vec = itobin_charvec(cur_wl_index, wl_addr_size);
+    } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type()
+            || BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.wl_protocol_type()) {
+      wl_addr_bits_vec = ito1hot_charvec(cur_wl_index, wl_addr_size);
+    }
 
     /* Set BL address */
-    fabric_bitstream.set_bit_bl_address(fabric_bit, bl_addr_bits_vec);
+    fabric_bitstream.set_bit_bl_address(fabric_bit, bl_addr_bits_vec, BLWL_PROTOCOL_DECODER != config_protocol.bl_protocol_type());
 
     /* Set WL address */
-    fabric_bitstream.set_bit_wl_address(fabric_bit, wl_addr_bits_vec);
+    fabric_bitstream.set_bit_wl_address(fabric_bit, wl_addr_bits_vec, BLWL_PROTOCOL_DECODER != config_protocol.wl_protocol_type());
     
     /* Set data input */
     fabric_bitstream.set_bit_din(fabric_bit, bitstream_manager.bit_value(config_bit));
@@ -193,7 +215,7 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
 
 /********************************************************************
  * Main function to build a fabric-dependent bitstream
- * by considering the configuration protocol types 
+ * by considering the QuickLogic memory banks
  *******************************************************************/
 void build_module_fabric_dependent_bitstream_ql_memory_bank(const ConfigProtocol& config_protocol,
                                                             const CircuitLibrary& circuit_lib,
@@ -205,13 +227,57 @@ void build_module_fabric_dependent_bitstream_ql_memory_bank(const ConfigProtocol
   /* Ensure we are in the correct type of configuration protocol*/
   VTR_ASSERT(config_protocol.type() == CONFIG_MEM_QL_MEMORY_BANK);
 
-  /* Find global BL address port size */
-  ModulePortId bl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_BL_ADDRESS_PORT_NAME));
-  BasicPort bl_addr_port_info = module_manager.module_port(top_module, bl_addr_port);
+  /* For different BL control protocol, the address ports are different 
+   * - flatten BLs: the address port should be raw BL ports at top-level module. 
+   *                Due to each configuration region has separated BLs, the address port should be the one with largest size
+   * - BL decoders: the address port should be the BL address port at top-level module
+   * - Shift register: the address port size will be calculated by the total number of unique BLs per child module in each configuration region 
+   *                   Due to each configuration region has separated BLs, the address port should be the one with largest size
+   */
+  ModulePortId bl_addr_port;
+  BasicPort bl_addr_port_info;
+  if (BLWL_PROTOCOL_DECODER == config_protocol.bl_protocol_type()) {
+    bl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_BL_ADDRESS_PORT_NAME));
+    bl_addr_port_info = module_manager.module_port(top_module, bl_addr_port);
+  } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()) {
+    for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+      ModulePortId temp_bl_addr_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(MEMORY_BL_PORT_NAME), config_region));
+      BasicPort temp_bl_addr_port_info = module_manager.module_port(top_module, temp_bl_addr_port);
+      if (!bl_addr_port || (temp_bl_addr_port_info.get_width() > bl_addr_port_info.get_width())) {
+        bl_addr_port = temp_bl_addr_port;
+        bl_addr_port_info = temp_bl_addr_port_info;
+      }
+    }
+  } else {
+    /* TODO */
+    VTR_ASSERT(BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type());
+  }
 
-  /* Find global WL address port size */
-  ModulePortId wl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_WL_ADDRESS_PORT_NAME));
-  BasicPort wl_addr_port_info = module_manager.module_port(top_module, wl_addr_port);
+  /* For different WL control protocol, the address ports are different 
+   * - flatten WLs: the address port should be raw WL ports at top-level module. 
+   *                Due to each configuration region has separated WLs, the address port should be the one with largest size
+   * - WL decoders: the address port should be the WL address port at top-level module
+   * - Shift register: the address port size will be calculated by the total number of unique WLs per child module in each configuration region 
+   *                   Due to each configuration region has separated WLs, the address port should be the one with largest size
+   */
+  ModulePortId wl_addr_port;
+  BasicPort wl_addr_port_info;
+  if (BLWL_PROTOCOL_DECODER == config_protocol.wl_protocol_type()) {
+    wl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_WL_ADDRESS_PORT_NAME));
+    wl_addr_port_info = module_manager.module_port(top_module, wl_addr_port);
+  } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type()) {
+    for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+      ModulePortId temp_wl_addr_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(MEMORY_WL_PORT_NAME), config_region));
+      BasicPort temp_wl_addr_port_info = module_manager.module_port(top_module, temp_wl_addr_port);
+      if (!wl_addr_port || (temp_wl_addr_port_info.get_width() > wl_addr_port_info.get_width())) {
+        wl_addr_port = temp_wl_addr_port;
+        wl_addr_port_info = temp_wl_addr_port_info;
+      }
+    }
+  } else {
+    /* TODO */
+    VTR_ASSERT(BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.wl_protocol_type());
+  }
 
   /* Reserve bits before build-up */
   fabric_bitstream.set_use_address(true);
@@ -225,17 +291,32 @@ void build_module_fabric_dependent_bitstream_ql_memory_bank(const ConfigProtocol
     /* Find port information for local BL and WL decoder in this region */
     std::vector<ModuleId> configurable_children = module_manager.region_configurable_children(top_module, config_region);
     VTR_ASSERT(2 <= configurable_children.size()); 
-    ModuleId bl_decoder_module = configurable_children[configurable_children.size() - 2];
-    ModuleId wl_decoder_module = configurable_children[configurable_children.size() - 1];
-
-    ModulePortId bl_port = module_manager.find_module_port(bl_decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
-    BasicPort bl_port_info = module_manager.module_port(bl_decoder_module, bl_port);
-
-    ModulePortId wl_port = module_manager.find_module_port(wl_decoder_module, std::string(DECODER_DATA_OUT_PORT_NAME));
-    BasicPort wl_port_info = module_manager.module_port(wl_decoder_module, wl_port);
 
     /* Build the bitstream for all the blocks in this region */
     FabricBitRegionId fabric_bitstream_region = fabric_bitstream.add_region();
+    
+    /* Find the BL/WL port (different region may have different sizes of BL/WLs) */
+    ModulePortId cur_bl_addr_port;
+    if (BLWL_PROTOCOL_DECODER == config_protocol.bl_protocol_type()) {
+      cur_bl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_BL_ADDRESS_PORT_NAME));
+    } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()) {
+      cur_bl_addr_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(MEMORY_BL_PORT_NAME), config_region));
+    } else {
+      /* TODO */
+      VTR_ASSERT(BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type());
+    }
+    BasicPort cur_bl_addr_port_info = module_manager.module_port(top_module, cur_bl_addr_port);
+
+    ModulePortId cur_wl_addr_port;
+    if (BLWL_PROTOCOL_DECODER == config_protocol.wl_protocol_type()) {
+      cur_wl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_WL_ADDRESS_PORT_NAME));
+    } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type()) {
+      cur_wl_addr_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(MEMORY_WL_PORT_NAME), config_region));
+    } else {
+      /* TODO */
+      VTR_ASSERT(BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.wl_protocol_type());
+    }
+    BasicPort cur_wl_addr_port_info = module_manager.module_port(top_module, cur_wl_addr_port);
 
     /************************************************************** 
      * Precompute the BLs and WLs distribution across the FPGA fabric
@@ -262,9 +343,10 @@ void build_module_fabric_dependent_bitstream_ql_memory_bank(const ConfigProtocol
     rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(bitstream_manager, top_block,
                                                                         module_manager, top_module, top_module, 
                                                                         config_region,
+                                                                        config_protocol,
                                                                         circuit_lib, config_protocol.memory_model(),
-                                                                        bl_addr_port_info.get_width(),
-                                                                        wl_addr_port_info.get_width(),
+                                                                        cur_bl_addr_port_info.get_width(),
+                                                                        cur_wl_addr_port_info.get_width(),
                                                                         temp_num_bls_cur_tile, bl_start_index_per_tile,
                                                                         temp_num_wls_cur_tile, wl_start_index_per_tile,
                                                                         temp_coord,

@@ -229,6 +229,8 @@ void print_verilog_top_testbench_config_protocol_port(std::fstream& fp,
     print_verilog_top_testbench_config_chain_port(fp, module_manager, top_module);
     break;
   case CONFIG_MEM_QL_MEMORY_BANK:
+    print_verilog_top_testbench_ql_memory_bank_port(fp, module_manager, top_module, config_protocol);
+    break;
   case CONFIG_MEM_MEMORY_BANK:
     print_verilog_top_testbench_memory_bank_port(fp, module_manager, top_module);
     break;
@@ -808,7 +810,7 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
  * Note that this will not applicable to configuration chain!!!
  *******************************************************************/
 static
-size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz_type,
+size_t calculate_num_config_clock_cycles(const ConfigProtocol& config_protocol,
                                          const bool& fast_configuration,
                                          const bool& bit_value_to_skip,
                                          const BitstreamManager& bitstream_manager,
@@ -819,7 +821,7 @@ size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz
   size_t num_config_clock_cycles = 1 + regional_bitstream_max_size;
 
   /* Branch on the type of configuration protocol */
-  switch (sram_orgz_type) {
+  switch (config_protocol.type()) {
   case CONFIG_MEM_STANDALONE:
     /* We just need 1 clock cycle to load all the configuration bits
      * since all the ports are exposed at the top-level
@@ -847,7 +849,25 @@ size_t calculate_num_config_clock_cycles(const e_config_protocol_type& sram_orgz
               100. * ((float)num_config_clock_cycles / (float)(1 + regional_bitstream_max_size) - 1.));
     }
     break;
-  case CONFIG_MEM_QL_MEMORY_BANK:
+  case CONFIG_MEM_QL_MEMORY_BANK: {
+    if (BLWL_PROTOCOL_DECODER == config_protocol.bl_protocol_type()) {
+      /* For fast configuration, we will skip all the zero data points */
+      num_config_clock_cycles = 1 + build_memory_bank_fabric_bitstream_by_address(fabric_bitstream).size();
+      if (true == fast_configuration) {
+        size_t full_num_config_clock_cycles = num_config_clock_cycles;
+        num_config_clock_cycles = 1 + find_memory_bank_fast_configuration_fabric_bitstream_size(fabric_bitstream, bit_value_to_skip);
+        VTR_LOG("Fast configuration reduces number of configuration clock cycles from %lu to %lu (compression_rate = %f%)\n",
+                full_num_config_clock_cycles,
+                num_config_clock_cycles,
+                100. * ((float)num_config_clock_cycles / (float)full_num_config_clock_cycles - 1.));
+      }
+    } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()) {
+      num_config_clock_cycles = 1 + build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, bit_value_to_skip).size();
+    } else if (BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type()) {
+      /* TODO */
+    }
+    break;
+  }
   case CONFIG_MEM_MEMORY_BANK: {
     /* For fast configuration, we will skip all the zero data points */
     num_config_clock_cycles = 1 + build_memory_bank_fabric_bitstream_by_address(fabric_bitstream).size();
@@ -1111,7 +1131,10 @@ void print_verilog_top_testbench_configuration_protocol_stimulus(std::fstream& f
   case CONFIG_MEM_FRAME_BASED: {
     ModulePortId en_port_id = module_manager.find_module_port(top_module,
                                                               std::string(DECODER_ENABLE_PORT_NAME));
-    BasicPort en_port = module_manager.module_port(top_module, en_port_id);
+    BasicPort en_port(std::string(DECODER_ENABLE_PORT_NAME), 1);
+    if (en_port_id) {
+      en_port = module_manager.module_port(top_module, en_port_id);
+    }
     BasicPort en_register_port(std::string(en_port.get_name() + std::string(TOP_TB_CLOCK_REG_POSTFIX)), 1);
     print_verilog_comment(fp, std::string("---- Generate enable signal waveform  -----"));
     print_verilog_shifted_clock_stimuli(fp, en_register_port,
@@ -1684,7 +1707,7 @@ void print_verilog_full_testbench_frame_decoder_bitstream(std::fstream& fp,
 static
 void print_verilog_full_testbench_bitstream(std::fstream& fp,
                                             const std::string& bitstream_file,
-                                            const e_config_protocol_type& config_protocol_type,
+                                            const ConfigProtocol& config_protocol,
                                             const bool& fast_configuration,
                                             const bool& bit_value_to_skip,
                                             const ModuleManager& module_manager,
@@ -1693,7 +1716,7 @@ void print_verilog_full_testbench_bitstream(std::fstream& fp,
                                             const FabricBitstream& fabric_bitstream) {
 
   /* Branch on the type of configuration protocol */
-  switch (config_protocol_type) {
+  switch (config_protocol.type()) {
   case CONFIG_MEM_STANDALONE:
     print_verilog_full_testbench_vanilla_bitstream(fp,
                                                    bitstream_file,
@@ -1719,6 +1742,7 @@ void print_verilog_full_testbench_bitstream(std::fstream& fp,
     break;
   case CONFIG_MEM_QL_MEMORY_BANK:
     print_verilog_full_testbench_ql_memory_bank_bitstream(fp, bitstream_file,
+                                                          config_protocol, 
                                                           fast_configuration, 
                                                           bit_value_to_skip,
                                                           module_manager, top_module,
@@ -1916,7 +1940,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
   }
 
   /* Estimate the number of configuration clock cycles */
-  size_t num_config_clock_cycles = calculate_num_config_clock_cycles(config_protocol.type(),
+  size_t num_config_clock_cycles = calculate_num_config_clock_cycles(config_protocol,
                                                                      apply_fast_configuration,
                                                                      bit_value_to_skip,
                                                                      bitstream_manager,
@@ -1998,7 +2022,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
   /* load bitstream to FPGA fabric in a configuration phase */
   print_verilog_full_testbench_bitstream(fp,
                                          bitstream_file,
-                                         config_protocol.type(),
+                                         config_protocol,
                                          apply_fast_configuration,
                                          bit_value_to_skip,
                                          module_manager, top_module,

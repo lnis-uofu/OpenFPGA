@@ -4,8 +4,9 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "vpr_context.h"
-#include "openfpga_context.h"
+#include <string.h>
+#include "module_manager.h"
+#include "config_protocol.h"
 
 /********************************************************************
  * Function declaration
@@ -16,7 +17,7 @@ namespace openfpga {
 
 int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
                                  const std::string& fname,
-                                 const e_config_protocol_type& config_protocol_type,
+                                 const ConfigProtocol& config_protocol,
                                  const bool& verbose);
 
 } /* end namespace openfpga */

@@ -188,7 +188,7 @@ size_t find_frame_based_fast_configuration_fabric_bitstream_size(const FabricBit
 }
 
 /********************************************************************
- * Reorganize the fabric bitstream for memory banks
+ * Reorganize the fabric bitstream for memory banks which use BL and WL decoders
  * by the same address across regions:
  * This is due to that the length of fabric bitstream could be different in each region.
  * Template:
@@ -231,6 +231,94 @@ MemoryBankFabricBitstream build_memory_bank_fabric_bitstream_by_address(const Fa
 
   return fabric_bits_by_addr;
 }
+
+MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(const FabricBitstream& fabric_bitstream,
+                                                                            const bool& bit_value_to_skip) {
+  /* Build the bitstream by each region, here we use (WL, BL) pairs when storing bitstreams */
+  vtr::vector<FabricBitRegionId, std::map<std::string, std::string>> fabric_bits_per_region;
+  fabric_bits_per_region.resize(fabric_bitstream.num_regions());
+  for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
+    for (const FabricBitId& bit_id : fabric_bitstream.region_bits(region)) {
+      /* Skip din because they should be pre-configured through programming reset/set */
+      if (fabric_bitstream.bit_din(bit_id) == bit_value_to_skip) {
+        continue;
+      }
+      /* Create string for BL address */
+      std::string bl_addr_str;
+      for (const char& addr_bit : fabric_bitstream.bit_bl_address(bit_id)) {
+        bl_addr_str.push_back(addr_bit);
+      }
+
+      /* Create string for WL address */
+      std::string wl_addr_str;
+      for (const char& addr_bit : fabric_bitstream.bit_wl_address(bit_id)) {
+        wl_addr_str.push_back(addr_bit);
+      }
+
+      /* Place the config bit */
+      auto result = fabric_bits_per_region[region].find(wl_addr_str);
+      if (result == fabric_bits_per_region[region].end()) {
+        fabric_bits_per_region[region][wl_addr_str] = bl_addr_str;
+      } else {
+        VTR_ASSERT_SAFE(result != fabric_bits_per_region[region].end());
+        result->second = combine_two_1hot_str(bl_addr_str, result->second);
+      }
+    }
+  }
+
+  /* Find all the keys for the hash tables containing bitstream of each region */
+  vtr::vector<FabricBitRegionId, std::vector<std::string>> fabric_bits_per_region_keys;
+  fabric_bits_per_region_keys.resize(fabric_bitstream.num_regions());
+  for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
+    /* Pre-allocate memory, because the key size may be large */
+    fabric_bits_per_region_keys[region].reserve(fabric_bits_per_region[region].size());
+    for (const auto& pair : fabric_bits_per_region[region]) {
+      fabric_bits_per_region_keys[region].push_back(pair.first);
+    } 
+  }
+
+  /* Find the maxium key size */
+  size_t max_key_size = 0;
+  for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
+    max_key_size = std::max(max_key_size, fabric_bits_per_region_keys[region].size());
+  } 
+
+  /* Find the BL/WL sizes per region; Pair convention is (BL, WL)
+   * The address sizes are the same across any element, 
+   * just get it from the 1st element to save runtime
+   */
+  vtr::vector<FabricBitRegionId, std::pair<size_t, size_t>> max_blwl_sizes_per_region;
+  max_blwl_sizes_per_region.resize(fabric_bitstream.num_regions());
+  for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
+    max_blwl_sizes_per_region[region].first = std::max(max_blwl_sizes_per_region[region].first, fabric_bits_per_region[region].begin()->second.size());
+    max_blwl_sizes_per_region[region].second = std::max(max_blwl_sizes_per_region[region].second, fabric_bits_per_region[region].begin()->first.size());
+  }
+
+  /* Combine the bitstream from different region into a unique one. Now we follow the convention: use (WL, BL) pairs */
+  MemoryBankFlattenFabricBitstream fabric_bits;
+  for (size_t ikey = 0; ikey < max_key_size; ikey++) {
+    /* Prepare the final BL/WL vectors to be added to the bitstream database */
+    std::vector<std::string> cur_bl_vectors;
+    std::vector<std::string> cur_wl_vectors;
+    for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
+      /* If the key id is in bound for the key list in this region, find the BL and WL and add to the final bitstream database
+       * If the key id is out of bound for the key list in this region, we append an all-zero string for both BL and WLs
+       */
+      if (ikey < fabric_bits_per_region_keys[region].size()) {
+        cur_wl_vectors.push_back(fabric_bits_per_region_keys[region][ikey]);
+        cur_bl_vectors.push_back(fabric_bits_per_region[region].at(fabric_bits_per_region_keys[region][ikey]));
+      } else {
+        cur_wl_vectors.push_back(std::string(max_blwl_sizes_per_region[region].second, '0'));
+        cur_bl_vectors.push_back(std::string(max_blwl_sizes_per_region[region].first, '0'));
+      }
+    }
+    /* Add the pair to std map */
+    fabric_bits[cur_wl_vectors] = cur_bl_vectors;
+  }
+
+  return fabric_bits;
+}
+
 
 /********************************************************************
  * For fast configuration, the number of bits to be skipped

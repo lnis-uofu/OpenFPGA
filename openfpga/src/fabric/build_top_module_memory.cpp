@@ -852,35 +852,7 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
     break;
   }
   case CONFIG_MEM_QL_MEMORY_BANK: {
-    BasicPort en_port(std::string(DECODER_ENABLE_PORT_NAME), 1);
-    module_manager.add_port(module_id, en_port, ModuleManager::MODULE_INPUT_PORT);
-
-    /* BL address size is the largest among all the regions */
-    size_t bl_addr_size = 0;
-    for (const ConfigRegionId& config_region : module_manager.regions(module_id)) {
-       bl_addr_size = std::max(bl_addr_size, find_mux_local_decoder_addr_size(num_config_bits[config_region].first));
-    }
-    BasicPort bl_addr_port(std::string(DECODER_BL_ADDRESS_PORT_NAME), bl_addr_size);
-    module_manager.add_port(module_id, bl_addr_port, ModuleManager::MODULE_INPUT_PORT);
-
-    /* WL address size is the largest among all the regions */
-    size_t wl_addr_size = 0;
-    for (const ConfigRegionId& config_region : module_manager.regions(module_id)) {
-       wl_addr_size = std::max(wl_addr_size, find_mux_local_decoder_addr_size(num_config_bits[config_region].second));
-    }
-    BasicPort wl_addr_port(std::string(DECODER_WL_ADDRESS_PORT_NAME), wl_addr_size);
-    module_manager.add_port(module_id, wl_addr_port, ModuleManager::MODULE_INPUT_PORT);
-
-    /* Optional: If we have WLR port, we should add a read-back port */
-    if (!circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_WLR).empty()) {
-      BasicPort readback_port(std::string(DECODER_READBACK_PORT_NAME), config_protocol.num_regions());
-      module_manager.add_port(module_id, readback_port, ModuleManager::MODULE_INPUT_PORT);
-    }
-
-    /* Data input should be dependent on the number of configuration regions*/
-    BasicPort din_port(std::string(DECODER_DATA_IN_PORT_NAME), config_protocol.num_regions());
-    module_manager.add_port(module_id, din_port, ModuleManager::MODULE_INPUT_PORT);
-
+    add_top_module_ql_memory_bank_sram_ports(module_manager, module_id, circuit_lib, config_protocol, num_config_bits);
     break;
   }
   case CONFIG_MEM_SCAN_CHAIN: { 
@@ -1765,7 +1737,6 @@ void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
                                                 DecoderLibrary& decoder_lib,
                                                 const ModuleId& parent_module,
                                                 const CircuitLibrary& circuit_lib,
-                                                const CircuitModelId& sram_model,
                                                 const ConfigProtocol& config_protocol, 
                                                 const TopModuleNumConfigBits& num_config_bits) {
   switch (config_protocol.type()) {
@@ -1783,7 +1754,7 @@ void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
     add_top_module_nets_cmos_memory_bank_config_bus(module_manager, decoder_lib, parent_module, num_config_bits);
     break;
   case CONFIG_MEM_QL_MEMORY_BANK:
-    add_top_module_nets_cmos_ql_memory_bank_config_bus(module_manager, decoder_lib, parent_module, circuit_lib, sram_model, num_config_bits);
+    add_top_module_nets_cmos_ql_memory_bank_config_bus(module_manager, decoder_lib, parent_module, circuit_lib, config_protocol, num_config_bits);
     break;
   case CONFIG_MEM_FRAME_BASED:
     add_top_module_nets_cmos_memory_frame_config_bus(module_manager, decoder_lib, parent_module, num_config_bits);
@@ -1831,7 +1802,6 @@ void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            DecoderLibrary& decoder_lib,
                                            const ModuleId& parent_module,
                                            const CircuitLibrary& circuit_lib,
-                                           const CircuitModelId& sram_model,
                                            const ConfigProtocol& config_protocol, 
                                            const e_circuit_model_design_tech& mem_tech,
                                            const TopModuleNumConfigBits& num_config_bits) {
@@ -1843,7 +1813,6 @@ void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
     add_top_module_nets_cmos_memory_config_bus(module_manager, decoder_lib,
                                                parent_module,
                                                circuit_lib,
-                                               sram_model, 
                                                config_protocol,
                                                num_config_bits);
     break;

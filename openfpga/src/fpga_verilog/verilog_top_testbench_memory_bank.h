@@ -27,11 +27,20 @@
 namespace openfpga {
 
 /**
+ * @brief Print local wires for memory bank configuration protocols
+ */
+void print_verilog_top_testbench_ql_memory_bank_port(std::fstream& fp,
+                                                     const ModuleManager& module_manager,
+                                                     const ModuleId& top_module,
+                                                     const ConfigProtocol& config_protocol);
+
+/**
  * @brief Print stimulus for a FPGA fabric with a memory bank configuration protocol
  *        where configuration bits are programming in serial (one by one)
  */
 void print_verilog_full_testbench_ql_memory_bank_bitstream(std::fstream& fp,
                                                            const std::string& bitstream_file,
+                                                           const ConfigProtocol& config_protocol,
                                                            const bool& fast_configuration,
                                                            const bool& bit_value_to_skip,
                                                            const ModuleManager& module_manager,

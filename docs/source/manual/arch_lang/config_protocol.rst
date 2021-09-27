@@ -40,6 +40,7 @@ Template
   - ``scan_chain`` requires a circuit model type of ``ccff``
   - ``frame_based`` requires a circuit model type of ``sram``
   - ``memory_bank`` requires a circuit model type of ``sram``
+  - ``ql_memory_bank`` requires a circuit model type of ``sram``
   - ``standalone`` requires a circuit model type of ``sram``
 
 .. option:: num_regions="<int>"
@@ -148,23 +149,35 @@ Users can customized the number of memory banks to be used across the fabrics. B
 
 .. warning:: Please do NOT add inverted Bit-Line and Word-Line inputs. It is not supported yet!
 
-
 QuickLogic Memory bank Example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The following XML code describes a physical design friendly memory-bank circuitry to configure the core logic of FPGA, as illustrated in :numref:`fig_memory_bank`.
 It will use the circuit model defined in :numref:`fig_sram_blwl`.
 
+The BL and WL protocols can be customized through the XML syntax ``bl`` and ``wl``.
+
+.. note:: If not specified, the BL/WL protocols will use decoders.
+
 .. code-block:: xml
 
   <configuration_protocol>
-    <organization type="ql_memory_bank" circuit_model_name="sram_blwl"/>
+    <organization type="ql_memory_bank" circuit_model_name="sram_blwl">
+      <bl protocol="<string>"/>
+      <wl protocol="<string>"/>
+    </organization>
   </configuration_protocol>
+
+.. option:: protocol="decoder|flatten"
+
+  - ``decoder``: BLs or WLs are controlled by decoders with address lines. For BLs, the decoder includes an enable signal as well as a data input signal. This is the default option if not specified.
+  - ``flatten``: BLs or WLs are directly available at the FPGA fabric. In this way, all the configurable memorys on the same WL can be written through the BL signals in one clock cycle
 
 .. note:: Memory-bank decoders does require a memory cell to have 
 
   -  two outputs (one regular and another inverted)
   -  a Bit-Line input to load the data
   -  a Word-Line input to enable data write 
+  -  (optional) a Word-Line read input to enabe data readback
 
 .. warning:: Please do NOT add inverted Bit-Line and Word-Line inputs. It is not supported yet!
 

@@ -181,6 +181,56 @@ int write_memory_bank_fabric_bitstream_to_text_file(std::fstream& fp,
 }
 
 /********************************************************************
+ * Write the fabric bitstream fitting a memory bank protocol 
+ * to a plain text file 
+ *
+ * Return:
+ *  - 0 if succeed
+ *  - 1 if critical errors occured
+ *******************************************************************/
+static 
+int write_memory_bank_flatten_fabric_bitstream_to_text_file(std::fstream& fp,
+                                                            const bool& bit_value_to_skip,
+                                                            const FabricBitstream& fabric_bitstream) {
+  int status = 0;
+
+  MemoryBankFlattenFabricBitstream fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, bit_value_to_skip);
+
+  /* The address sizes and data input sizes are the same across any element, 
+   * just get it from the 1st element to save runtime
+   */
+  size_t bl_addr_size = 0;
+  for (const auto& bl_vec : fabric_bits.begin()->second) {
+    bl_addr_size += bl_vec.size();
+  } 
+  size_t wl_addr_size = 0;
+  for (const auto& wl_vec : fabric_bits.begin()->first) {
+    wl_addr_size += wl_vec.size();
+  } 
+
+  /* Output information about how to intepret the bitstream */
+  fp << "// Bitstream length: " << fabric_bits.size() << std::endl;
+  fp << "// Bitstream width (LSB -> MSB): ";
+  fp << "<bl_address " << bl_addr_size << " bits>";
+  fp << "<wl_address " << wl_addr_size << " bits>";
+  fp << std::endl;
+
+  for (const auto& addr_pair : fabric_bits) {
+    /* Write BL address code */
+    for (const auto& bl_vec : addr_pair.second) {
+      fp << bl_vec;
+    }
+    /* Write WL address code */
+    for (const auto& wl_vec : addr_pair.first) {
+      fp << wl_vec;
+    }
+    fp << std::endl;
+  }
+
+  return status;
+}
+
+/********************************************************************
  * Write the fabric bitstream fitting a frame-based protocol 
  * to a plain text file 
  *
@@ -306,7 +356,28 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
                                                               bitstream_manager,
                                                               fabric_bitstream);
     break;
-  case CONFIG_MEM_QL_MEMORY_BANK: 
+  case CONFIG_MEM_QL_MEMORY_BANK: {
+    /* Bitstream organization depends on the BL/WL protocols
+     * - If BL uses decoders, we have to config each memory cell one by one.
+     * - If BL uses flatten, we can configure all the memory cells on the same row by enabling dedicated WL
+     *   In such case, we will merge the BL data under the same WL address
+     *   Fast configuration is NOT applicable in this case
+     * - if BL uses shift-register, TODO
+     */
+    if (BLWL_PROTOCOL_DECODER == config_protocol.bl_protocol_type()) {
+      status = write_memory_bank_fabric_bitstream_to_text_file(fp,
+                                                               apply_fast_configuration,
+                                                               bit_value_to_skip,
+                                                               fabric_bitstream);
+    } else {
+      VTR_ASSERT(BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()
+              || BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type());
+      status = write_memory_bank_flatten_fabric_bitstream_to_text_file(fp,
+                                                                       bit_value_to_skip,
+                                                                       fabric_bitstream);
+    }
+    break;
+  } 
   case CONFIG_MEM_MEMORY_BANK: 
     status = write_memory_bank_fabric_bitstream_to_text_file(fp,
                                                              apply_fast_configuration,

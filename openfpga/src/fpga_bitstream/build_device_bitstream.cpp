@@ -64,7 +64,7 @@ static
 size_t rec_estimate_device_bitstream_num_bits(const ModuleManager& module_manager,
                                               const ModuleId& top_module,
                                               const ModuleId& parent_module,
-                                              const e_config_protocol_type& config_protocol_type) {
+                                              const ConfigProtocol& config_protocol) {
   size_t num_bits = 0;
 
   /* If a child module has no configurable children, this is a leaf node 
@@ -85,13 +85,13 @@ size_t rec_estimate_device_bitstream_num_bits(const ModuleManager& module_manage
   if (parent_module == top_module) {
     for (const ConfigRegionId& config_region : module_manager.regions(parent_module)) {
       size_t curr_region_num_config_child = module_manager.region_configurable_children(parent_module, config_region).size();
-      size_t num_child_to_skip = estimate_num_configurable_children_to_skip_by_config_protocol(config_protocol_type, curr_region_num_config_child);
+      size_t num_child_to_skip = estimate_num_configurable_children_to_skip_by_config_protocol(config_protocol, curr_region_num_config_child);
       curr_region_num_config_child -= num_child_to_skip;
 
       /* Visit all the children in a recursively way */
       for (size_t ichild = 0; ichild < curr_region_num_config_child; ++ichild) {
         ModuleId child_module = module_manager.region_configurable_children(parent_module, config_region)[ichild];
-        num_bits += rec_estimate_device_bitstream_num_bits(module_manager, top_module, child_module, config_protocol_type);
+        num_bits += rec_estimate_device_bitstream_num_bits(module_manager, top_module, child_module, config_protocol);
       }
     }
   } else {
@@ -102,14 +102,14 @@ size_t rec_estimate_device_bitstream_num_bits(const ModuleManager& module_manage
     /* Frame-based configuration protocol will have 1 decoder
      * if there are more than 1 configurable children
      */
-    if ( (CONFIG_MEM_FRAME_BASED == config_protocol_type)
+    if ( (CONFIG_MEM_FRAME_BASED == config_protocol.type())
       && (2 <= num_configurable_children)) {
       num_configurable_children--;
     }
 
     for (size_t ichild = 0; ichild < num_configurable_children; ++ichild) {
       ModuleId child_module = module_manager.configurable_children(parent_module)[ichild];
-      num_bits += rec_estimate_device_bitstream_num_bits(module_manager, top_module, child_module, config_protocol_type);
+      num_bits += rec_estimate_device_bitstream_num_bits(module_manager, top_module, child_module, config_protocol);
     }
   }
 
@@ -157,7 +157,7 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
   size_t num_bits_to_reserve = rec_estimate_device_bitstream_num_bits(openfpga_ctx.module_graph(),
                                                                       top_module,
                                                                       top_module,
-                                                                      openfpga_ctx.arch().config_protocol.type());
+                                                                      openfpga_ctx.arch().config_protocol);
   bitstream_manager.reserve_bits(num_bits_to_reserve);
   VTR_LOGV(verbose, "Reserved %lu configuration bits\n", num_bits_to_reserve);
 
