@@ -177,6 +177,7 @@ The BL and WL protocols can be customized through the XML syntax ``bl`` and ``wl
   -  two outputs (one regular and another inverted)
   -  a Bit-Line input to load the data
   -  a Word-Line input to enable data write 
+  -  (optional) a Word-Line read input to enabe data readback
 
 .. warning:: Please do NOT add inverted Bit-Line and Word-Line inputs. It is not supported yet!
 
