@@ -437,3 +437,61 @@ assign Q = q_reg;
 assign QN = !Q;
 
 endmodule //End Of Module
+
+//-----------------------------------------------------
+// Function    : D-type flip-flop with 
+//               - asynchronous active high reset
+// @note This DFF is designed to drive BLs when shift registers are used
+//-----------------------------------------------------
+module BL_DFFRQ (
+  input RST, // Reset input
+  input CK, // Clock Input
+  input SIN, // Data Input
+  output SOUT, // Q output
+  output BL // BL output
+);
+//------------Internal Variables--------
+reg q_reg;
+
+//-------------Code Starts Here---------
+always @ ( posedge CK or posedge RST)
+if (RST) begin
+  q_reg <= 1'b0;
+end else begin
+  q_reg <= SIN;
+end
+
+assign SOUT = q_reg;
+assign BL = q_reg;
+
+endmodule //End Of Module
+
+//-----------------------------------------------------
+// Function    : D-type flip-flop with 
+//               - asynchronous active high reset
+// @note This DFF is designed to drive WLs when shift registers are used
+//-----------------------------------------------------
+module WL_DFFRQ (
+  input RST, // Reset input
+  input CK, // Clock Input
+  input SIN, // Data Input
+  output SOUT, // Q output
+  output WLW, // Drive WL write signals
+  output WLR // Drive WL read signals
+);
+//------------Internal Variables--------
+reg q_reg;
+
+//-------------Code Starts Here---------
+always @ ( posedge CK or posedge RST)
+if (RST) begin
+  q_reg <= 1'b0;
+end else begin
+  q_reg <= SIN;
+end
+
+assign SOUT = q_reg;
+assign WLW = q_reg;
+assign WLR = 1'b0; // Use a constant output just for simple testing
+
+endmodule //End Of Module
