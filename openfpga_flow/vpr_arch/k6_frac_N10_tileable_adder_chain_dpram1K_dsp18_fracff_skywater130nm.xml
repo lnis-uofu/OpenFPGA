@@ -246,8 +246,8 @@
       <!--pinlocations pattern="spread"/-->
       <pinlocations pattern="custom">
         <loc side="left">clb.clk clb.reset clb.set</loc>
-        <loc side="top">clb.cin</loc>
-        <loc side="right">clb.O[9:0] clb.I[19:0]</loc>
+        <loc side="top">clb.cin clb.O[9:0]</loc>
+        <loc side="right">clb.I[19:0]</loc>
         <loc side="bottom">clb.cout clb.O[19:10] clb.I[39:20]</loc>
       </pinlocations>
     </tile>
@@ -269,8 +269,8 @@
       <pinlocations pattern="custom">
         <loc side="left">memory.clk</loc>
         <loc side="top"></loc>
-        <loc side="right">memory.waddr[4:0] memory.raddr[4:0] memory.data_in[3:0] memory.wen memory.data_out[3:0]</loc>
-        <loc side="bottom">memory.waddr[9:5] memory.raddr[9:5] memory.data_in[7:4] memory.ren memory.data_out[7:4]</loc>
+        <loc side="right">memory.waddr[2:0] memory.raddr[3:0] memory.data_in[3:0] memory.wen memory.data_out[3:0]</loc>
+        <loc side="bottom">memory.waddr[6:3] memory.raddr[6:4] memory.data_in[7:4] memory.ren memory.data_out[7:4]</loc>
       </pinlocations>
     </tile>
     <tile name="mult_18" height="6" area="396000">
