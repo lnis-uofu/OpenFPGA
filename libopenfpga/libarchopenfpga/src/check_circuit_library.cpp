@@ -327,6 +327,102 @@ size_t check_ccff_circuit_model_ports(const CircuitLibrary& circuit_lib,
 }
 
 /************************************************************************
+ * A function to check the port map of CCFF circuit model used to control BLs
+ * - Require 1 clock port
+ * - Require 1 input port as data input (to be driven by other CCFF in a chain) 
+ * - Require 1 output port as data output (to drive other CCFF in a chain) 
+ * - Require 1 BL port as data output / inout (to drive/driven by BLs)
+ ***********************************************************************/
+size_t check_bl_ccff_circuit_model_ports(const CircuitLibrary& circuit_lib,
+                                         const CircuitModelId& circuit_model) {
+  size_t num_err = 0;
+
+  /* Check the type of circuit model */
+  VTR_ASSERT(CIRCUIT_MODEL_CCFF == circuit_lib.model_type(circuit_model));
+
+  /* Check if we have D, Set and Reset */
+  /* We can have either 1 input which is D or 2 inputs which are D and scan input */
+  size_t num_input_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_INPUT, true).size();
+  if (1 != num_input_ports) {
+    VTR_LOG_ERROR("Configuration flip-flop for BL shift register '%s' must have 1 %s port!\n",
+                  circuit_lib.model_name(circuit_model).c_str(),
+                  CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(CIRCUIT_MODEL_PORT_INPUT)]);
+    num_err++;
+  }
+
+  num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
+                                                                 CIRCUIT_MODEL_PORT_INPUT,
+                                                                 num_input_ports, 1, false);
+  /* Check if we have a clock */
+  num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
+                                                                 CIRCUIT_MODEL_PORT_CLOCK,
+                                                                 1, 1, true);
+
+
+  /* Check if we have 1 output*/
+  num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
+                                                                 CIRCUIT_MODEL_PORT_OUTPUT,
+                                                                 1, 1, false);
+
+  /* Check if we have 1 bl port */
+  num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
+                                                                 CIRCUIT_MODEL_PORT_BL,
+                                                                 1, 1, false);
+
+  return num_err;
+}
+
+/************************************************************************
+ * A function to check the port map of CCFF circuit model used to control WLs
+ * - Require 1 clock port
+ * - Require 1 input port as data input (to be driven by other CCFF in a chain) 
+ * - Require 1 output port as data output (to drive other CCFF in a chain) 
+ * - Require 1 WL port as data output (to drive WLs)
+ * - Optionally require 1 WLR port as data output (to drive WLRs)
+ ***********************************************************************/
+size_t check_wl_ccff_circuit_model_ports(const CircuitLibrary& circuit_lib,
+                                         const CircuitModelId& circuit_model) {
+  size_t num_err = 0;
+
+  /* Check the type of circuit model */
+  VTR_ASSERT(CIRCUIT_MODEL_CCFF == circuit_lib.model_type(circuit_model));
+
+  /* Check if we have D, Set and Reset */
+  /* We can have either 1 input which is D or 2 inputs which are D and scan input */
+  size_t num_input_ports = circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_INPUT, true).size();
+  if (1 != num_input_ports) {
+    VTR_LOG_ERROR("Configuration flip-flop for WL shift register '%s' must have 1 %s port!\n",
+                  circuit_lib.model_name(circuit_model).c_str(),
+                  CIRCUIT_MODEL_PORT_TYPE_STRING[size_t(CIRCUIT_MODEL_PORT_INPUT)]);
+    num_err++;
+  }
+
+  num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
+                                                                 CIRCUIT_MODEL_PORT_INPUT,
+                                                                 num_input_ports, 1, false);
+  /* Check if we have a clock */
+  num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
+                                                                 CIRCUIT_MODEL_PORT_CLOCK,
+                                                                 1, 1, true);
+
+
+  /* Check if we have 1 output*/
+  num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
+                                                                 CIRCUIT_MODEL_PORT_OUTPUT,
+                                                                 1, 1, false);
+
+  /* Check if we have 1 wl port */
+  if (0 < circuit_lib.model_ports_by_type(circuit_model, CIRCUIT_MODEL_PORT_WLR, true).size()) {
+    num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
+                                                                   CIRCUIT_MODEL_PORT_WLR,
+                                                                   1, 1, false);
+  }
+
+  return num_err;
+}
+
+
+/************************************************************************
  * A function to check the port map of SRAM circuit model
  ***********************************************************************/
 size_t check_sram_circuit_model_ports(const CircuitLibrary& circuit_lib,
