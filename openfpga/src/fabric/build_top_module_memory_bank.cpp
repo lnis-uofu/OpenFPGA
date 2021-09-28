@@ -907,8 +907,8 @@ void add_top_module_ql_memory_bank_sram_ports(ModuleManager& module_manager,
 
         /* Optional: If we have WLR port, we should add a read-back port */
         if (!circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_WLR).empty()) {
-          BasicPort readback_port(std::string(MEMORY_WLR_PORT_NAME), wl_size);
-          module_manager.add_port(module_id, readback_port, ModuleManager::MODULE_INPUT_PORT);
+          BasicPort wlr_port(generate_regional_blwl_port_name(std::string(MEMORY_WLR_PORT_NAME), config_region), wl_size);
+          module_manager.add_port(module_id, wlr_port, ModuleManager::MODULE_INPUT_PORT);
         }
       }
       break;
