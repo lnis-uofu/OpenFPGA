@@ -165,21 +165,32 @@
       <port type="output" prefix="inpad" lib_name="Y" size="1"/>
     </circuit_model>
     <!-- The following flip-flop is used to build the shift register chains for configuring memory banks -->
-    <circuit_model type="ccff" name="DFFR" prefix="DFFR" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
+    <circuit_model type="ccff" name="BL_DFFRQ" prefix="BL_DFFRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
        <port type="input" prefix="srReset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
-       <port type="input" prefix="D" size="1"/>
-       <port type="output" prefix="Q" size="1"/>
-       <port type="output" prefix="QN" size="1"/>
+       <port type="input" prefix="D" lib_name="SIN" size="1"/>
+       <port type="output" prefix="Q" lib_name="SOUT" size="1"/>
+       <port type="bl" prefix="BL" lib_name="BL" size="1"/>
+       <port type="clock" prefix="sr_clk" lib_name="CK" size="1" is_global="true" default_val="0" is_prog="true"/>
+    </circuit_model>
+    <!-- The following flip-flop is used to build the shift register chains for configuring memory banks -->
+    <circuit_model type="ccff" name="WL_DFFRQ" prefix="WL_DFFRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
+       <design_technology type="cmos"/>
+       <input_buffer exist="true" circuit_model_name="INVTX1"/>
+       <output_buffer exist="true" circuit_model_name="INVTX1"/>
+       <port type="input" prefix="srReset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
+       <port type="input" prefix="D" lib_name="SIN" size="1"/>
+       <port type="output" prefix="Q" lib_name="SOUT" size="1"/>
+       <port type="wl" prefix="wl" lib_name="WLW" size="1"/>
        <port type="clock" prefix="sr_clk" lib_name="CK" size="1" is_global="true" default_val="0" is_prog="true"/>
     </circuit_model>
   </circuit_library>
   <configuration_protocol>
     <organization type="ql_memory_bank" circuit_model_name="SRAM">
-      <bl protocol="shift_register" circuit_model_name="DFFR"/>
-      <wl protocol="shift_register" circuit_model_name="DFFR"/>
+      <bl protocol="shift_register" circuit_model_name="BL_DFFRQ"/>
+      <wl protocol="shift_register" circuit_model_name="WL_DFFRQ"/>
     </organization>
   </configuration_protocol>
   <connection_block>
