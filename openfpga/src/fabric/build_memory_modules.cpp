@@ -78,7 +78,6 @@ void add_module_input_nets_to_mem_modules(ModuleManager& module_manager,
  *     pin of output port of the memory module, where W is the size of port 
  * 3. It assumes fixed port name for output ports
  ********************************************************************/
-static 
 std::vector<ModuleNetId> add_module_output_nets_to_chain_mem_modules(ModuleManager& module_manager,
                                                                      const ModuleId& mem_module,
                                                                      const std::string& mem_module_output_name,
@@ -162,7 +161,6 @@ void add_module_output_nets_to_mem_modules(ModuleManager& module_manager,
  *    Do not use it to replace the 
  *      add_module_nets_cmos_memory_chain_config_bus() !!!
  *********************************************************************/
-static 
 void add_module_nets_to_cmos_memory_config_chain_module(ModuleManager& module_manager,
                                                         const ModuleId& parent_module,
                                                         const CircuitLibrary& circuit_lib,

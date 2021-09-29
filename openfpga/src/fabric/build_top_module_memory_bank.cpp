@@ -24,6 +24,7 @@
 #include "decoder_library_utils.h"
 #include "module_manager_utils.h"
 #include "memory_bank_utils.h"
+#include "build_memory_modules.h"
 #include "build_decoder_modules.h"
 #include "build_top_module_memory_bank.h"
 
@@ -44,11 +45,11 @@ namespace openfpga {
  *
  ********************************************************************/
 static 
-void build_bl_shift_register_chain_module(ModuleManager& module_manager,
-                                          const CircuitLibrary& circuit_lib,
-                                          const std::string& module_name,
-                                          const CircuitModelId& sram_model,
-                                          const size_t& num_mems) {
+ModuleId build_bl_shift_register_chain_module(ModuleManager& module_manager,
+                                              const CircuitLibrary& circuit_lib,
+                                              const std::string& module_name,
+                                              const CircuitModelId& sram_model,
+                                              const size_t& num_mems) {
 
   /* Get the input ports from the SRAM */
   std::vector<CircuitPortId> sram_input_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_INPUT, true);
@@ -102,13 +103,12 @@ void build_bl_shift_register_chain_module(ModuleManager& module_manager,
     module_manager.add_configurable_child(mem_module, sram_mem_module, sram_mem_instance);
 
     /* Build module nets to wire bl outputs of sram modules to BL outputs of memory module */
-    for (size_t iport = 0; iport < num_bl_ports; ++iport) {
-      CircuitPortId child_module_output_port = sram_bl_ports[iport];
+    for (const auto& child_module_output_port : sram_bl_ports) {
       std::string chain_output_port_name = std::string(BL_SHIFT_REGISTER_CHAIN_BL_OUT_NAME); 
-      std::vector<ModuleNetId> output_nets = add_module_output_nets_to_chain_mem_modules(module_manager, mem_module, 
-                                                                                         chan_output_port_name, circuit_lib, 
-                                                                                         child_module_output_port,
-                                                                                         sram_mem_module, i, sram_mem_instance);
+      add_module_output_nets_to_chain_mem_modules(module_manager, mem_module, 
+                                                  chain_output_port_name, circuit_lib, 
+                                                  child_module_output_port,
+                                                  sram_mem_module, i, sram_mem_instance);
     }
   }
 
@@ -116,21 +116,121 @@ void build_bl_shift_register_chain_module(ModuleManager& module_manager,
   add_module_nets_to_cmos_memory_config_chain_module(module_manager, mem_module,
                                                      circuit_lib, sram_input_ports[0], sram_output_ports[0]);
 
-  /* If there is a second input defined, 
-   * add nets to short wire the 2nd inputs to the first inputs 
+  /* Add global ports to the pb_module:
+   * This is a much easier job after adding sub modules (instances), 
+   * we just need to find all the global ports from the child modules and build a list of it
    */
-  if (2 == sram_input_ports.size()) {
-    add_module_nets_to_cmos_memory_scan_chain_module(module_manager, mem_module,
-                                                     circuit_lib, sram_input_ports[1], sram_output_ports[0]);
+  add_module_global_ports_from_child_modules(module_manager, mem_module);
+
+  return mem_module;
+}
+
+/*********************************************************************
+ * WL shift register chain module organization
+ *              
+ *                +-------+    +-------+            +-------+
+ *    chain   --->| CCFF  |--->| CCFF  |--->... --->| CCFF  |---->chain
+ *  input&clock   |  [0]  |    |  [1]  |            | [N-1] |     output
+ *                +-------+    +-------+            +-------+
+ *                    |            |      ...           | config-memory output
+ *                    v            v                    v
+ *                +-----------------------------------------+
+ *                |   WL/WLRs of configurable modules       |
+ *
+ ********************************************************************/
+static 
+ModuleId build_wl_shift_register_chain_module(ModuleManager& module_manager,
+                                              const CircuitLibrary& circuit_lib,
+                                              const std::string& module_name,
+                                              const CircuitModelId& sram_model,
+                                              const size_t& num_mems) {
+
+  /* Get the input ports from the SRAM */
+  std::vector<CircuitPortId> sram_input_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_INPUT, true);
+  VTR_ASSERT(1 == sram_input_ports.size());
+
+  /* Get the output ports from the SRAM */
+  std::vector<CircuitPortId> sram_output_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_OUTPUT, true);
+  VTR_ASSERT(1 == sram_output_ports.size());
+
+  /* Get the WL ports from the SRAM */
+  std::vector<CircuitPortId> sram_wl_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_WL, true);
+  VTR_ASSERT(1 == sram_wl_ports.size());
+
+  /* Get the optional WLR ports from the SRAM */
+  std::vector<CircuitPortId> sram_wlr_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_WLR, true);
+  VTR_ASSERT(0 == sram_wlr_ports.size() || 1 == sram_wlr_ports.size());
+
+  /* Create a module and add to the module manager */
+  ModuleId mem_module = module_manager.add_module(module_name); 
+  VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
+
+  /* Label module usage */
+  module_manager.set_module_usage(mem_module, ModuleManager::MODULE_CONFIG);
+  
+  /* Add an input port, which is the head of configuration chain in the module */
+  /* TODO: restriction!!!
+   * consider only the first input of the CCFF model as the D port,
+   * which will be connected to the head of the chain
+   */
+  BasicPort chain_head_port(WL_SHIFT_REGISTER_CHAIN_HEAD_NAME, 
+                            circuit_lib.port_size(sram_input_ports[0]));
+  module_manager.add_port(mem_module, chain_head_port, ModuleManager::MODULE_INPUT_PORT);
+
+  /* Add an output port, which is the tail of configuration chain in the module */
+  /* TODO: restriction!!!
+   * consider only the first output of the CCFF model as the Q port,
+   * which will be connected to the tail of the chain
+   */
+  BasicPort chain_tail_port(WL_SHIFT_REGISTER_CHAIN_TAIL_NAME, 
+                            circuit_lib.port_size(sram_output_ports[0]));
+  module_manager.add_port(mem_module, chain_tail_port, ModuleManager::MODULE_OUTPUT_PORT);
+
+  /* Add the output ports to output BL signals */
+  BasicPort chain_wl_port(WL_SHIFT_REGISTER_CHAIN_WL_OUT_NAME, 
+                          num_mems);
+  module_manager.add_port(mem_module, chain_wl_port, ModuleManager::MODULE_OUTPUT_PORT);
+
+  /* Find the sram module in the module manager */
+  ModuleId sram_mem_module = module_manager.find_module(circuit_lib.model_name(sram_model));
+
+  /* Instanciate each submodule */
+  for (size_t i = 0; i < num_mems; ++i) {
+    size_t sram_mem_instance = module_manager.num_instance(mem_module, sram_mem_module);
+    module_manager.add_child_module(mem_module, sram_mem_module);
+    module_manager.add_configurable_child(mem_module, sram_mem_module, sram_mem_instance);
+
+    /* Build module nets to wire wl outputs of sram modules to WL outputs of memory module */
+    for (const auto& child_module_output_port : sram_wl_ports) {
+      std::string chain_output_port_name = std::string(WL_SHIFT_REGISTER_CHAIN_WL_OUT_NAME); 
+      add_module_output_nets_to_chain_mem_modules(module_manager, mem_module, 
+                                                  chain_output_port_name, circuit_lib, 
+                                                  child_module_output_port,
+                                                  sram_mem_module, i, sram_mem_instance);
+    }
+
+    /* Build module nets to wire wlr outputs of sram modules to WLR outputs of memory module */
+    for (const auto& child_module_output_port : sram_wlr_ports) {
+      std::string chain_output_port_name = std::string(WL_SHIFT_REGISTER_CHAIN_WLR_OUT_NAME); 
+      add_module_output_nets_to_chain_mem_modules(module_manager, mem_module, 
+                                                  chain_output_port_name, circuit_lib, 
+                                                  child_module_output_port,
+                                                  sram_mem_module, i, sram_mem_instance);
+    }
   }
+
+  /* Build module nets to wire the configuration chain */
+  add_module_nets_to_cmos_memory_config_chain_module(module_manager, mem_module,
+                                                     circuit_lib, sram_input_ports[0], sram_output_ports[0]);
 
   /* Add global ports to the pb_module:
    * This is a much easier job after adding sub modules (instances), 
    * we just need to find all the global ports from the child modules and build a list of it
    */
   add_module_global_ports_from_child_modules(module_manager, mem_module);
-}
 
+  return mem_module;
+}
 
 /*********************************************************************
  * This function to add nets for quicklogic memory banks
@@ -813,14 +913,14 @@ void add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(Module
   }
 
   /* TODO: Build submodules for shift register chains */ 
-  //for (const size_t& sr_size : unique_sr_sizes) {
-  //  std::string sr_module_name = generate_bl_shift_register_module_name(bl_memory_model, sr_size); 
-  //  ModuleId sr_bank_module = build_bl_shift_register_chain_module(module_manager,
-  //                                                                 circuit_lib,
-  //                                                                 sr_module_name,
-  //                                                                 bl_memory_model,
-  //                                                                 sr_size);
-  //}
+  for (const size_t& sr_size : unique_sr_sizes) {
+    std::string sr_module_name = generate_bl_shift_register_module_name(circuit_lib.model_name(bl_memory_model), sr_size); 
+    ModuleId sr_bank_module = build_bl_shift_register_chain_module(module_manager,
+                                                                   circuit_lib,
+                                                                   sr_module_name,
+                                                                   bl_memory_model,
+                                                                   sr_size);
+  }
 
   /* TODO: Instanciate the shift register chains in the top-level module */ 
   //module_manager.add_child_module(top_module, sr_bank_module);
@@ -1003,6 +1103,136 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_flatten_config_bus(ModuleManager
 }
 
 /*********************************************************************
+ * Top-level function to add nets for quicklogic memory banks using shift registers to control BL/WLs
+ *
+ * @note this function only adds the WL configuration bus
+ *
+ * @note see detailed explanation on the bus connection in function add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus()
+ **********************************************************************/
+static 
+void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(ModuleManager& module_manager,
+                                                                          const ModuleId& top_module,
+                                                                          const CircuitLibrary& circuit_lib,
+                                                                          const ConfigProtocol& config_protocol) {
+  CircuitModelId sram_model = config_protocol.memory_model();
+  CircuitModelId wl_memory_model = config_protocol.wl_memory_model();
+  /* Find out the unique shift register chain sizes */
+  std::vector<size_t> unique_sr_sizes;
+  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+    /* TODO: Need to find how to cut the BLs when there are multiple banks for shift registers in a region */
+    size_t num_wls = compute_memory_bank_regional_num_wls(module_manager, top_module,
+                                                          config_region,
+                                                          circuit_lib, sram_model);
+    unique_sr_sizes.push_back(num_wls); 
+  }
+
+  /* TODO: Build submodules for shift register chains */ 
+  for (const size_t& sr_size : unique_sr_sizes) {
+    std::string sr_module_name = generate_wl_shift_register_module_name(circuit_lib.model_name(wl_memory_model), sr_size); 
+    ModuleId sr_bank_module = build_wl_shift_register_chain_module(module_manager,
+                                                                   circuit_lib,
+                                                                   sr_module_name,
+                                                                   wl_memory_model,
+                                                                   sr_size);
+  }
+
+  /* TODO: Instanciate the shift register chains in the top-level module */ 
+  //module_manager.add_child_module(top_module, sr_bank_module);
+
+  /* TODO: create connections between top-level module and the BL shift register banks */
+
+  /* Create connections between WLs of top-level module and WLs of child modules for each region */
+  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+    /************************************************************** 
+     * Precompute the BLs and WLs distribution across the FPGA fabric
+     * The distribution is a matrix which contains the starting index of BL/WL for each column or row
+     */
+    std::pair<int, int> child_y_range = compute_memory_bank_regional_configurable_child_y_range(module_manager, top_module, config_region);
+    std::map<int, size_t> num_wls_per_tile = compute_memory_bank_regional_wordline_numbers_per_tile(module_manager, top_module,
+                                                                                                    config_region,
+                                                                                                    circuit_lib, sram_model);
+    std::map<int, size_t> wl_start_index_per_tile = compute_memory_bank_regional_blwl_start_index_per_tile(child_y_range, num_wls_per_tile);
+
+    /************************************************************** 
+     * Add WL nets from top module to each configurable child
+     */
+    ModulePortId top_module_wl_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(MEMORY_WL_PORT_NAME), config_region));
+    BasicPort top_module_wl_port_info = module_manager.module_port(top_module, top_module_wl_port);
+
+    for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
+      ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
+      vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
+
+      size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
+
+      /* Find the WL port */
+      ModulePortId child_wl_port = module_manager.find_module_port(child_module, std::string(MEMORY_WL_PORT_NAME));
+      BasicPort child_wl_port_info = module_manager.module_port(child_module, child_wl_port);
+
+      size_t cur_wl_index = 0;
+
+      for (const size_t& sink_wl_pin : child_wl_port_info.pins()) {
+        size_t wl_pin_id = wl_start_index_per_tile[coord.y()] + cur_wl_index;
+        VTR_ASSERT(wl_pin_id < top_module_wl_port_info.pins().size());
+
+        /* Create net */
+        ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
+                                                       top_module, 0,
+                                                       top_module_wl_port,
+                                                       top_module_wl_port_info.pins()[wl_pin_id]);
+        VTR_ASSERT(ModuleNetId::INVALID() != net);
+
+        /* Add net sink */
+        module_manager.add_module_net_sink(top_module, net,
+                                           child_module, child_instance, child_wl_port, sink_wl_pin);
+      
+        cur_wl_index++;
+      }
+    }
+
+    /************************************************************** 
+     * Optional: Add WLR nets from top module to each configurable child
+     */
+    ModulePortId top_module_wlr_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(MEMORY_WLR_PORT_NAME), config_region));
+    BasicPort top_module_wlr_port_info;
+    if (top_module_wlr_port) { 
+      top_module_wlr_port_info = module_manager.module_port(top_module, top_module_wlr_port);
+      for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
+        ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
+        vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
+  
+        size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
+  
+        /* Find the WL port */
+        ModulePortId child_wlr_port = module_manager.find_module_port(child_module, std::string(MEMORY_WLR_PORT_NAME));
+        BasicPort child_wlr_port_info = module_manager.module_port(child_module, child_wlr_port);
+  
+        size_t cur_wlr_index = 0;
+  
+        for (const size_t& sink_wlr_pin : child_wlr_port_info.pins()) {
+          size_t wlr_pin_id = wl_start_index_per_tile[coord.y()] + cur_wlr_index;
+          VTR_ASSERT(wlr_pin_id < top_module_wlr_port_info.pins().size());
+  
+          /* Create net */
+          ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
+                                                         top_module, 0,
+                                                         top_module_wlr_port,
+                                                         top_module_wlr_port_info.pins()[wlr_pin_id]);
+          VTR_ASSERT(ModuleNetId::INVALID() != net);
+  
+          /* Add net sink */
+          module_manager.add_module_net_sink(top_module, net,
+                                             child_module, child_instance, child_wlr_port, sink_wlr_pin);
+        
+          cur_wlr_index++;
+        }
+      }
+    }
+  }
+}
+
+
+/*********************************************************************
  * Top-level function to add nets for quicklogic memory banks
  * - Each configuration region has independent memory bank circuitry
  * - BL and WL may have different circuitry and wire connection, e.g., decoder, flatten or shift-registers
@@ -1054,7 +1284,7 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
       break;
     }
     case BLWL_PROTOCOL_SHIFT_REGISTER: {
-      /* TODO */
+      add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(module_manager, top_module, circuit_lib, config_protocol);
       break;
     }
     default: {
