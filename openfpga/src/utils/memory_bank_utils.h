@@ -48,6 +48,14 @@ size_t find_module_ql_memory_bank_num_blwls(const ModuleManager& module_manager,
                                             const CircuitModelId& sram_model,
                                             const e_config_protocol_type& sram_orgz_type,
 										    const e_circuit_model_port_type& circuit_port_type);
+/**
+ * @brief Precompute the total number of bit lines required by a specific configuration region
+ */
+size_t compute_memory_bank_regional_num_bls(const ModuleManager& module_manager,
+                                            const ModuleId& top_module,
+                                            const ConfigRegionId& config_region,
+                                            const CircuitLibrary& circuit_lib,
+                                            const CircuitModelId& sram_model);
 
 /**
  * @brief Precompute the number of bit lines required by each tile under a specific configuration region
@@ -60,6 +68,15 @@ std::map<int, size_t> compute_memory_bank_regional_bitline_numbers_per_tile(cons
                                                                             const ConfigRegionId& config_region,
                                                                             const CircuitLibrary& circuit_lib,
                                                                             const CircuitModelId& sram_model);
+/**
+ * @brief Precompute the total number of word lines required by a specific configuration region
+ */
+size_t compute_memory_bank_regional_num_wls(const ModuleManager& module_manager,
+                                            const ModuleId& top_module,
+                                            const ConfigRegionId& config_region,
+                                            const CircuitLibrary& circuit_lib,
+                                            const CircuitModelId& sram_model);
+
 /**
  * @brief Precompute the number of word lines required by each tile under a specific configuration region
  * @note 

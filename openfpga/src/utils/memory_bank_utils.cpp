@@ -84,6 +84,22 @@ size_t find_module_ql_memory_bank_num_blwls(const ModuleManager& module_manager,
   return num_blwls;
 }
 
+size_t compute_memory_bank_regional_num_bls(const ModuleManager& module_manager,
+                                            const ModuleId& top_module,
+                                            const ConfigRegionId& config_region,
+                                            const CircuitLibrary& circuit_lib,
+                                            const CircuitModelId& sram_model) {
+  size_t num_bls = 0;
+
+  for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
+    ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
+    vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
+    num_bls += find_module_ql_memory_bank_num_blwls(module_manager, child_module, circuit_lib, sram_model, CONFIG_MEM_QL_MEMORY_BANK, CIRCUIT_MODEL_PORT_BL);
+  }
+
+  return num_bls;
+}
+
 std::map<int, size_t> compute_memory_bank_regional_bitline_numbers_per_tile(const ModuleManager& module_manager,
                                                                             const ModuleId& top_module,
                                                                             const ConfigRegionId& config_region,
@@ -98,6 +114,22 @@ std::map<int, size_t> compute_memory_bank_regional_bitline_numbers_per_tile(cons
   }
 
   return num_bls_per_tile;
+}
+
+size_t compute_memory_bank_regional_num_wls(const ModuleManager& module_manager,
+                                            const ModuleId& top_module,
+                                            const ConfigRegionId& config_region,
+                                            const CircuitLibrary& circuit_lib,
+                                            const CircuitModelId& sram_model) {
+  size_t num_wls = 0;
+
+  for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
+    ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
+    vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
+    num_wls += find_module_ql_memory_bank_num_blwls(module_manager, child_module, circuit_lib, sram_model, CONFIG_MEM_QL_MEMORY_BANK, CIRCUIT_MODEL_PORT_WL);
+  }
+
+  return num_wls;
 }
 
 std::map<int, size_t> compute_memory_bank_regional_wordline_numbers_per_tile(const ModuleManager& module_manager,
