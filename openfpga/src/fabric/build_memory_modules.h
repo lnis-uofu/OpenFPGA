@@ -25,13 +25,6 @@ std::vector<ModuleNetId> add_module_output_nets_to_chain_mem_modules(ModuleManag
                                                                      const size_t& child_index,
                                                                      const size_t& child_instance);
 
-void add_module_nets_to_cmos_memory_config_chain_module(ModuleManager& module_manager,
-                                                        const ModuleId& parent_module,
-                                                        const CircuitLibrary& circuit_lib,
-                                                        const CircuitPortId& model_input_port,
-                                                        const CircuitPortId& model_output_port);
-
-
 void build_memory_modules(ModuleManager& module_manager,
                           DecoderLibrary& arch_decoder_lib,
                           const MuxLibrary& mux_lib,

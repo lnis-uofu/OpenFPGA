@@ -32,6 +32,118 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+/********************************************************************
+ * Connect all the memory modules under the parent module in a chain
+ * 
+ *                +--------+    +--------+            +--------+
+ *  ccff_head --->| Memory |--->| Memory |--->... --->| Memory |----> ccff_tail
+ *                | Module |    | Module |            | Module |
+ *                |   [0]  |    |   [1]  |            |  [N-1] |             
+ *                +--------+    +--------+            +--------+
+ *  For the 1st memory module:
+ *    net source is the configuration chain head of the primitive module
+ *    net sink is the configuration chain head of the next memory module
+ *
+ *  For the rest of memory modules:
+ *    net source is the configuration chain tail of the previous memory module
+ *    net sink is the configuration chain head of the next memory module
+ *
+ *  Note that:
+ *    This function is designed for memory modules ONLY!
+ *    Do not use it to replace the 
+ *      add_module_nets_cmos_memory_chain_config_bus() !!!
+ *********************************************************************/
+static 
+void add_module_nets_to_ql_memory_bank_shift_register_module(ModuleManager& module_manager,
+                                                             const ModuleId& parent_module,
+                                                             const CircuitLibrary& circuit_lib,
+                                                             const CircuitPortId& model_input_port,
+                                                             const CircuitPortId& model_output_port,
+                                                             const std::string& chain_head_port_name,
+                                                             const std::string& chain_tail_port_name) {
+  for (size_t mem_index = 0; mem_index < module_manager.configurable_children(parent_module).size(); ++mem_index) {
+    ModuleId net_src_module_id;
+    size_t net_src_instance_id;
+    ModulePortId net_src_port_id;
+
+    ModuleId net_sink_module_id;
+    size_t net_sink_instance_id;
+    ModulePortId net_sink_port_id;
+
+    if (0 == mem_index) {
+      /* Find the port name of configuration chain head */
+      std::string src_port_name = chain_head_port_name;
+      net_src_module_id = parent_module; 
+      net_src_instance_id = 0;
+      net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+
+      /* Find the port name of next memory module */
+      std::string sink_port_name = circuit_lib.port_prefix(model_input_port);
+      net_sink_module_id = module_manager.configurable_children(parent_module)[mem_index]; 
+      net_sink_instance_id = module_manager.configurable_child_instances(parent_module)[mem_index];
+      net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+    } else {
+      /* Find the port name of previous memory module */
+      std::string src_port_name = circuit_lib.port_prefix(model_output_port);
+      net_src_module_id = module_manager.configurable_children(parent_module)[mem_index - 1]; 
+      net_src_instance_id = module_manager.configurable_child_instances(parent_module)[mem_index - 1];
+      net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+
+      /* Find the port name of next memory module */
+      std::string sink_port_name = circuit_lib.port_prefix(model_input_port);
+      net_sink_module_id = module_manager.configurable_children(parent_module)[mem_index]; 
+      net_sink_instance_id = module_manager.configurable_child_instances(parent_module)[mem_index];
+      net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+    }
+
+    /* Get the pin id for source port */
+    BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
+    /* Get the pin id for sink port */
+    BasicPort net_sink_port = module_manager.module_port(net_sink_module_id, net_sink_port_id); 
+    /* Port sizes of source and sink should match */
+    VTR_ASSERT(net_src_port.get_width() == net_sink_port.get_width());
+    
+    /* Create a net for each pin */
+    for (size_t pin_id = 0; pin_id < net_src_port.pins().size(); ++pin_id) {
+      /* Create a net and add source and sink to it */
+      ModuleNetId net = create_module_source_pin_net(module_manager, parent_module, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
+      /* Add net sink */
+      module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[pin_id]);
+    }
+  }
+
+  /* For the last memory module:
+   *    net source is the configuration chain tail of the previous memory module
+   *    net sink is the configuration chain tail of the primitive module
+   */
+  /* Find the port name of previous memory module */
+  std::string src_port_name = circuit_lib.port_prefix(model_output_port);
+  ModuleId net_src_module_id = module_manager.configurable_children(parent_module).back(); 
+  size_t net_src_instance_id = module_manager.configurable_child_instances(parent_module).back();
+  ModulePortId net_src_port_id = module_manager.find_module_port(net_src_module_id, src_port_name); 
+
+  /* Find the port name of next memory module */
+  std::string sink_port_name = chain_tail_port_name;
+  ModuleId net_sink_module_id = parent_module; 
+  size_t net_sink_instance_id = 0;
+  ModulePortId net_sink_port_id = module_manager.find_module_port(net_sink_module_id, sink_port_name); 
+
+  /* Get the pin id for source port */
+  BasicPort net_src_port = module_manager.module_port(net_src_module_id, net_src_port_id); 
+  /* Get the pin id for sink port */
+  BasicPort net_sink_port = module_manager.module_port(net_sink_module_id, net_sink_port_id); 
+  /* Port sizes of source and sink should match */
+  VTR_ASSERT(net_src_port.get_width() == net_sink_port.get_width());
+  
+  /* Create a net for each pin */
+  for (size_t pin_id = 0; pin_id < net_src_port.pins().size(); ++pin_id) {
+    /* Create a net and add source and sink to it */
+    ModuleNetId net = create_module_source_pin_net(module_manager, parent_module, net_src_module_id, net_src_instance_id, net_src_port_id, net_src_port.pins()[pin_id]);
+    /* Add net sink */
+    module_manager.add_module_net_sink(parent_module, net, net_sink_module_id, net_sink_instance_id, net_sink_port_id, net_sink_port.pins()[pin_id]);
+  }
+}
+
 /*********************************************************************
  * BL shift register chain module organization
  *              
@@ -114,8 +226,10 @@ ModuleId build_bl_shift_register_chain_module(ModuleManager& module_manager,
   }
 
   /* Build module nets to wire the configuration chain */
-  add_module_nets_to_cmos_memory_config_chain_module(module_manager, mem_module,
-                                                     circuit_lib, sram_input_ports[0], sram_output_ports[0]);
+  add_module_nets_to_ql_memory_bank_shift_register_module(module_manager, mem_module,
+                                                          circuit_lib, sram_input_ports[0], sram_output_ports[0],
+                                                          std::string(BL_SHIFT_REGISTER_CHAIN_HEAD_NAME),
+                                                          std::string(BL_SHIFT_REGISTER_CHAIN_TAIL_NAME));
 
   /* Add global ports to the pb_module:
    * This is a much easier job after adding sub modules (instances), 
@@ -221,8 +335,10 @@ ModuleId build_wl_shift_register_chain_module(ModuleManager& module_manager,
   }
 
   /* Build module nets to wire the configuration chain */
-  add_module_nets_to_cmos_memory_config_chain_module(module_manager, mem_module,
-                                                     circuit_lib, sram_input_ports[0], sram_output_ports[0]);
+  add_module_nets_to_ql_memory_bank_shift_register_module(module_manager, mem_module,
+                                                          circuit_lib, sram_input_ports[0], sram_output_ports[0],
+                                                          std::string(WL_SHIFT_REGISTER_CHAIN_HEAD_NAME),
+                                                          std::string(WL_SHIFT_REGISTER_CHAIN_TAIL_NAME));
 
   /* Add global ports to the pb_module:
    * This is a much easier job after adding sub modules (instances), 
@@ -1056,7 +1172,8 @@ static
 void add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(ModuleManager& module_manager,
                                                                        const ModuleId& top_module,
                                                                        const MemoryBankShiftRegisterBanks& sr_banks,
-                                                                       const std::string& blwl_port_name,
+                                                                       const std::string& sr_blwl_port_name,
+                                                                       const std::string& child_blwl_port_name,
                                                                        const bool& optional_blwl = false) {
   for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
     for (size_t iinst = 0; iinst < sr_banks.shift_register_bank_modules(config_region).size(); ++iinst) {
@@ -1064,12 +1181,11 @@ void add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(ModuleMan
       size_t sr_bank_instance = sr_banks.shift_register_bank_instances(config_region)[iinst];
       VTR_ASSERT(sr_bank_module);
 
-      ModulePortId sr_module_blwl_port = module_manager.find_module_port(sr_bank_module, blwl_port_name);
-      if (!sr_module_blwl_port && !optional_blwl) {
+      ModulePortId sr_module_blwl_port = module_manager.find_module_port(sr_bank_module, sr_blwl_port_name);
+      if (!sr_module_blwl_port && optional_blwl) {
         continue;
-      } else {
-        VTR_ASSERT(sr_module_blwl_port);
       }
+      VTR_ASSERT(sr_module_blwl_port);
       BasicPort sr_module_blwl_port_info = module_manager.module_port(sr_bank_module, sr_module_blwl_port);
 
       size_t cur_sr_module_blwl_pin_id = 0;
@@ -1080,7 +1196,7 @@ void add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(ModuleMan
         size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
 
         /* Find the BL port */
-        ModulePortId child_blwl_port = module_manager.find_module_port(child_module, blwl_port_name);
+        ModulePortId child_blwl_port = module_manager.find_module_port(child_module, child_blwl_port_name);
         BasicPort child_blwl_port_info = module_manager.module_port(child_module, child_blwl_port);
 
         /* Create net */
@@ -1230,7 +1346,9 @@ void add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(Module
                                                                     std::string(BL_SHIFT_REGISTER_CHAIN_TAIL_NAME));
 
   /* Create connections between BLs of top-level module and BLs of child modules for each region */
-  add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(module_manager, top_module, sr_banks, std::string(MEMORY_BL_PORT_NAME));
+  add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(module_manager, top_module, sr_banks,
+                                                                    std::string(BL_SHIFT_REGISTER_CHAIN_BL_OUT_NAME),
+                                                                    std::string(MEMORY_BL_PORT_NAME));
 }
 
 /*********************************************************************
@@ -1315,8 +1433,13 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(Module
                                                                     std::string(WL_SHIFT_REGISTER_CHAIN_TAIL_NAME));
 
   /* Create connections between BLs of top-level module and BLs of child modules for each region */
-  add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(module_manager, top_module, sr_banks, std::string(MEMORY_WL_PORT_NAME));
-  add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(module_manager, top_module, sr_banks, std::string(MEMORY_WLR_PORT_NAME), true);
+  add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(module_manager, top_module, sr_banks,
+                                                                    std::string(WL_SHIFT_REGISTER_CHAIN_WL_OUT_NAME),
+                                                                    std::string(MEMORY_WL_PORT_NAME));
+  add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(module_manager, top_module, sr_banks,
+                                                                    std::string(WL_SHIFT_REGISTER_CHAIN_WLR_OUT_NAME),
+                                                                    std::string(MEMORY_WLR_PORT_NAME),
+                                                                    true);
 }
 
 /*********************************************************************
