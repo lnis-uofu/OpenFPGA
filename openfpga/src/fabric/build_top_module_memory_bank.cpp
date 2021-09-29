@@ -26,6 +26,7 @@
 #include "memory_bank_utils.h"
 #include "build_memory_modules.h"
 #include "build_decoder_modules.h"
+#include "memory_bank_shift_register_banks.h"
 #include "build_top_module_memory_bank.h"
 
 /* begin namespace openfpga */
@@ -843,214 +844,6 @@ void add_top_module_nets_cmos_ql_memory_bank_bl_flatten_config_bus(ModuleManager
 }
 
 /*********************************************************************
- * This function to add nets for quicklogic memory banks using shift registers to manipulate BL/WLs
- * Each configuration region has independent BL/WL shift register banks
- * - Find the number of BLs and WLs required for each region
- * - Find the number of BL and WL shift register chains required for each region
- * - Create the module of shift register chain for each unique size 
- * - Create nets to connect from top-level module inputs to BL/WL shift register chains
- * - Create nets to connect from BL/WL shift register chains to BL/WL of configurable children
- *
- * @note this function only adds the BL protocol
- *
- * Detailed schematic of each memory bank:
- * @note The numbers are just made to show a simplified example, practical cases are more complicated!
- *
- *                                  sr_clk               sr_head     sr_tail
- *                                    |                   |             ^
- *                                    v                   v             |
- *                           +-------------------------------------------------+                  
- *                           |         Bit Line shift register chains          |
- *                           +-------------------------------------------------+                  
- *                               |              |                    | 
- *    +---------+              BL[0:9]        BL[10:17]          BL[18:22]
- *    |         |                |              |                    | 
- *    |         |                |              |                    |
- *    | Word    |--WL[0:3]-->-----------+---------------+----  ...   |------+-->        
- *    |         |                |      |       |       |            |      |
- *    | Line    |                |      v       |       v            |      v
- *    |         |                |   +-------+  |   +-------+        |  +------+
- *    | shift   |                +-->| SRAM  |  +-->| SRAM  |        +->| SRAM |
- *    |         |                |   | [0:8] |  |   | [0:5] |   ...  |  | [0:7]|
- *    | register|                |   +-------+  |   +-------+        |  +------+
- *    |         |                |              |                    |
- *    | chains  |--WL[4:14]  -----------+--------------+---------    | -----+-->        
- *    |         |                |      |       |       |            |      |
- *    |         |                |      v       |       v            |      v
- *    |         |                |   +-------+  |   +-------+        |  +-------+
- *    |         |                +-->| SRAM  |  |   | SRAM  |        +->| SRAM  |
- *    |         |                |   | [0:80]|  |   | [0:63]|   ...  |  | [0:31]|
- *    |         |                |   +-------+  |   +-------+        |  +-------+
- *    |         |                |                                   |
- *    |         |                |     ...     ...    ...            |    ...
- *    |         |                |              |                    |
- *    |         |--WL[15:18] -----------+---------------+----  ---   | -----+-->        
- *    |         |                |      |       |       |            |      |
- *    |         |                |      v       |       v            |      v
- *    +---------+                |   +-------+  |   +-------+        |  +-------+
- *                               +-->| SRAM  |  +-->| SRAM  |        +->| SRAM  |
- *                               |   |[0:5]  |  |   | [0:8] |   ...  |  | [0:2] |
- *                               |   +-------+  |   +-------+        |  +-------+
- *                               v              v                    v
- *                             WL[0:9]          WL[0:7]                WL[0:4]
- *               
- **********************************************************************/
-static 
-void add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(ModuleManager& module_manager,
-                                                                          const ModuleId& top_module,
-                                                                          const CircuitLibrary& circuit_lib,
-                                                                          const ConfigProtocol& config_protocol) {
-  CircuitModelId sram_model = config_protocol.memory_model();
-  CircuitModelId bl_memory_model = config_protocol.bl_memory_model();
-  /* Find out the unique shift register chain sizes */
-  std::vector<size_t> unique_sr_sizes;
-  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
-    /* TODO: Need to find how to cut the BLs when there are multiple banks for shift registers in a region */
-    size_t num_bls = compute_memory_bank_regional_num_bls(module_manager, top_module,
-                                                          config_region,
-                                                          circuit_lib, sram_model);
-    unique_sr_sizes.push_back(num_bls); 
-  }
-
-  /* Build submodules for shift register chains */ 
-  for (const size_t& sr_size : unique_sr_sizes) {
-    std::string sr_module_name = generate_bl_shift_register_module_name(circuit_lib.model_name(bl_memory_model), sr_size); 
-    ModuleId sr_bank_module = build_bl_shift_register_chain_module(module_manager,
-                                                                   circuit_lib,
-                                                                   sr_module_name,
-                                                                   bl_memory_model,
-                                                                   sr_size);
-    /* Instanciate the shift register chains in the top-level module */ 
-    module_manager.add_child_module(top_module, sr_bank_module);
-  }
-
-  /* TODO: create connections between top-level module and the BL shift register banks 
-   * - Connect the head port from top-level module to each shift register bank
-   * - Connect the tail port from each shift register bank to top-level module
-   */
-  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
-    ModulePortId blsr_head_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(BL_SHIFT_REGISTER_CHAIN_HEAD_NAME), config_region));
-    BasicPort blsr_head_port_info = module_manager.module_port(top_module, blsr_head_port);
-
-    for (const size_t& sr_size : unique_sr_sizes) {
-      std::string sr_module_name = generate_bl_shift_register_module_name(circuit_lib.model_name(bl_memory_model), sr_size); 
-      ModuleId child_sr_module = module_manager.find_module(sr_module_name);
-      ModulePortId child_blsr_head_port = module_manager.find_module_port(child_sr_module, std::string(BL_SHIFT_REGISTER_CHAIN_HEAD_NAME));
-      BasicPort child_blsr_head_port_info = module_manager.module_port(child_sr_module, child_blsr_head_port);
-      for (size_t child_instance = 0; child_instance < module_manager.num_instance(top_module, child_sr_module); ++child_instance) { 
-        for (const size_t& sink_pin : child_blsr_head_port_info.pins()) {
-          /* Create net */
-          ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
-                                                         top_module, 0,
-                                                         blsr_head_port,
-                                                         blsr_head_port_info.pins()[sink_pin]);
-          VTR_ASSERT(ModuleNetId::INVALID() != net);
-
-          /* Add net sink */
-          module_manager.add_module_net_sink(top_module, net,
-                                             child_sr_module, child_instance, child_blsr_head_port, sink_pin);
-        }
-      }
-    }
-  }
-
-  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
-    ModulePortId blsr_tail_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(BL_SHIFT_REGISTER_CHAIN_TAIL_NAME), config_region));
-    BasicPort blsr_tail_port_info = module_manager.module_port(top_module, blsr_tail_port);
-
-    for (const size_t& sr_size : unique_sr_sizes) {
-      std::string sr_module_name = generate_bl_shift_register_module_name(circuit_lib.model_name(bl_memory_model), sr_size); 
-      ModuleId child_sr_module = module_manager.find_module(sr_module_name);
-      ModulePortId child_blsr_tail_port = module_manager.find_module_port(child_sr_module, std::string(BL_SHIFT_REGISTER_CHAIN_TAIL_NAME));
-      BasicPort child_blsr_tail_port_info = module_manager.module_port(child_sr_module, child_blsr_tail_port);
-      for (size_t child_instance = 0; child_instance < module_manager.num_instance(top_module, child_sr_module); ++child_instance) { 
-        for (const size_t& sink_pin : child_blsr_tail_port_info.pins()) {
-          /* Create net */
-          ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
-                                                         child_sr_module, child_instance,
-                                                         child_blsr_tail_port, sink_pin);
-          VTR_ASSERT(ModuleNetId::INVALID() != net);
-
-          /* Add net sink */
-          module_manager.add_module_net_sink(top_module, net,
-                                             top_module, 0,
-                                             blsr_tail_port, blsr_tail_port_info.pins()[sink_pin]);
-        }
-      }
-    }
-  }
-
-  /* Create connections between BLs of top-level module and BLs of child modules for each region */
-  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
-    /************************************************************** 
-     * Precompute the BLs and WLs distribution across the FPGA fabric
-     * The distribution is a matrix which contains the starting index of BL/WL for each column or row
-     */
-    std::pair<int, int> child_x_range = compute_memory_bank_regional_configurable_child_x_range(module_manager, top_module, config_region);
-    std::map<int, size_t> num_bls_per_tile = compute_memory_bank_regional_bitline_numbers_per_tile(module_manager, top_module,
-                                                                                                   config_region,
-                                                                                                   circuit_lib, sram_model);
-    std::map<int, size_t> bl_start_index_per_tile = compute_memory_bank_regional_blwl_start_index_per_tile(child_x_range, num_bls_per_tile);
-
-    /************************************************************** 
-     * Add BL nets from top module to each configurable child
-     * BL pins of top module are connected to the BL input pins of each PB/CB/SB
-     * For all the PB/CB/SB in the same column, they share the same set of BLs
-     * A quick example
-     *
-     *   BL[i .. i + sqrt(N)]     
-     *     |
-     *     |    CLB[1][H]
-     *     |   +---------+     
-     *     |   |  SRAM   |     
-     *     +-->|  [0..N] |     
-     *     |   +---------+
-     *     |
-     *    ...
-     *     |    CLB[1][1]
-     *     |   +---------+     
-     *     |   |  SRAM   |     
-     *     +-->|  [0..N] |     
-     *     |   +---------+
-     *     |
-     */
-    ModulePortId top_module_bl_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(MEMORY_BL_PORT_NAME), config_region));
-    BasicPort top_module_bl_port_info = module_manager.module_port(top_module, top_module_bl_port);
-
-    for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
-      ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
-      vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
-
-      size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
-
-      /* Find the BL port */
-      ModulePortId child_bl_port = module_manager.find_module_port(child_module, std::string(MEMORY_BL_PORT_NAME));
-      BasicPort child_bl_port_info = module_manager.module_port(child_module, child_bl_port);
-
-      size_t cur_bl_index = 0;
-
-      for (const size_t& sink_bl_pin : child_bl_port_info.pins()) {
-        size_t bl_pin_id = bl_start_index_per_tile[coord.x()] + cur_bl_index;
-        VTR_ASSERT(bl_pin_id < top_module_bl_port_info.pins().size());
-
-        /* Create net */
-        ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
-                                                       top_module, 0,
-                                                       top_module_bl_port,
-                                                       top_module_bl_port_info.pins()[bl_pin_id]);
-        VTR_ASSERT(ModuleNetId::INVALID() != net);
-
-        /* Add net sink */
-        module_manager.add_module_net_sink(top_module, net,
-                                           child_module, child_instance, child_bl_port, sink_bl_pin);
-
-        cur_bl_index++;
-      }
-    }
-  }
-}
-
-/*********************************************************************
  * Top-level function to add nets for quicklogic memory banks using flatten BL/WLs
  * Each configuration region has independent BL/WLs
  * - Find the number of BLs and WLs required for each region
@@ -1156,6 +949,291 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_flatten_config_bus(ModuleManager
 }
 
 /*********************************************************************
+ * This function to add nets for QuickLogic memory bank
+ * We build the net connects between the head ports of shift register banks 
+ * and the head ports of top-level module
+ * @note This function is applicable to both BL and WL shift registers
+ **********************************************************************/
+static 
+void add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_heads(ModuleManager& module_manager,
+                                                                       const ModuleId& top_module,
+                                                                       const MemoryBankShiftRegisterBanks& sr_banks,
+                                                                       const std::string& head_port_name) {
+  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+    ModulePortId blsr_head_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(head_port_name, config_region));
+    BasicPort blsr_head_port_info = module_manager.module_port(top_module, blsr_head_port);
+
+    for (size_t iinst = 0; iinst < sr_banks.shift_register_bank_modules(config_region).size(); ++iinst) {
+      ModuleId sr_bank_module = sr_banks.shift_register_bank_modules(config_region)[iinst];
+      size_t sr_bank_instance = sr_banks.shift_register_bank_instances(config_region)[iinst];
+      VTR_ASSERT(sr_bank_module);
+
+      ModulePortId sr_module_head_port = module_manager.find_module_port(sr_bank_module, head_port_name);
+      BasicPort sr_module_head_port_info = module_manager.module_port(sr_bank_module, sr_module_head_port);
+      VTR_ASSERT(sr_module_head_port_info.get_width() == blsr_head_port_info.get_width());
+      for (size_t ipin = 0; ipin < sr_module_head_port_info.pins().size(); ++ipin) {
+        /* Create net */
+        ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
+                                                       top_module, 0,
+                                                       blsr_head_port,
+                                                       blsr_head_port_info.pins()[ipin]);
+        VTR_ASSERT(ModuleNetId::INVALID() != net);
+
+        /* Add net sink */
+        module_manager.add_module_net_sink(top_module, net,
+                                           sr_bank_module, sr_bank_instance, sr_module_head_port, sr_module_head_port_info.pins()[ipin]);
+      }
+    }
+  }
+}
+
+/*********************************************************************
+ * This function to add nets for QuickLogic memory bank
+ * We build the net connects between the head ports of shift register banks 
+ * and the head ports of top-level module
+ * @note This function is applicable to both BL and WL shift registers
+ **********************************************************************/
+static 
+void add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_tails(ModuleManager& module_manager,
+                                                                       const ModuleId& top_module,
+                                                                       const MemoryBankShiftRegisterBanks& sr_banks,
+                                                                       const std::string& tail_port_name) {
+  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+    ModulePortId blsr_tail_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(tail_port_name, config_region));
+    BasicPort blsr_tail_port_info = module_manager.module_port(top_module, blsr_tail_port);
+
+    for (size_t iinst = 0; iinst < sr_banks.shift_register_bank_modules(config_region).size(); ++iinst) {
+      ModuleId sr_bank_module = sr_banks.shift_register_bank_modules(config_region)[iinst];
+      size_t sr_bank_instance = sr_banks.shift_register_bank_instances(config_region)[iinst];
+      VTR_ASSERT(sr_bank_module);
+
+      ModulePortId sr_module_tail_port = module_manager.find_module_port(sr_bank_module, tail_port_name);
+      BasicPort sr_module_tail_port_info = module_manager.module_port(sr_bank_module, sr_module_tail_port);
+      VTR_ASSERT(sr_module_tail_port_info.get_width() == blsr_tail_port_info.get_width());
+      for (size_t ipin = 0; ipin < sr_module_tail_port_info.pins().size(); ++ipin) {
+        /* Create net */
+        ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
+                                                       sr_bank_module, sr_bank_instance,
+                                                       sr_module_tail_port, sr_module_tail_port_info.pins()[ipin]);
+        VTR_ASSERT(ModuleNetId::INVALID() != net);
+
+        /* Add net sink */
+        module_manager.add_module_net_sink(top_module, net,
+                                           top_module, 0,
+                                           blsr_tail_port, blsr_tail_port_info.pins()[ipin]);
+      }
+    }
+  }
+}
+
+/************************************************************** 
+ * Add BL/WL nets from shift register module to each configurable child
+ * BL pins of shift register module are connected to the BL input pins of each PB/CB/SB
+ * For all the PB/CB/SB in the same column, they share the same set of BLs
+ * A quick example
+ *
+ *  +-----------------------+
+ *  |  Shift register chain |
+ *  +-----------------------+
+ *    BL[i .. i + sqrt(N)]     
+ *     |
+ *     |    CLB[1][H]
+ *     |   +---------+     
+ *     |   |  SRAM   |     
+ *     +-->|  [0..N] |     
+ *     |   +---------+
+ *     |
+ *    ...
+ *     |    CLB[1][1]
+ *     |   +---------+     
+ *     |   |  SRAM   |     
+ *     +-->|  [0..N] |     
+ *     |   +---------+
+ *     |
+ * @note optional BL/WL is applicable to WLR, which may not always exist
+ */
+static 
+void add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(ModuleManager& module_manager,
+                                                                       const ModuleId& top_module,
+                                                                       const MemoryBankShiftRegisterBanks& sr_banks,
+                                                                       const std::string& blwl_port_name,
+                                                                       const bool& optional_blwl = false) {
+  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+    for (size_t iinst = 0; iinst < sr_banks.shift_register_bank_modules(config_region).size(); ++iinst) {
+      ModuleId sr_bank_module = sr_banks.shift_register_bank_modules(config_region)[iinst];
+      size_t sr_bank_instance = sr_banks.shift_register_bank_instances(config_region)[iinst];
+      VTR_ASSERT(sr_bank_module);
+
+      ModulePortId sr_module_blwl_port = module_manager.find_module_port(sr_bank_module, blwl_port_name);
+      if (!sr_module_blwl_port && !optional_blwl) {
+        continue;
+      } else {
+        VTR_ASSERT(sr_module_blwl_port);
+      }
+      BasicPort sr_module_blwl_port_info = module_manager.module_port(sr_bank_module, sr_module_blwl_port);
+
+      size_t cur_sr_module_blwl_pin_id = 0;
+
+      for (size_t sink_id = 0; sink_id < sr_banks.shift_register_bank_sink_child_ids(config_region, sr_bank_module, sr_bank_instance).size(); ++sink_id) {
+        size_t child_id = sr_banks.shift_register_bank_sink_child_ids(config_region, sr_bank_module, sr_bank_instance)[sink_id];
+        ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
+        size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
+
+        /* Find the BL port */
+        ModulePortId child_blwl_port = module_manager.find_module_port(child_module, blwl_port_name);
+        BasicPort child_blwl_port_info = module_manager.module_port(child_module, child_blwl_port);
+
+        /* Create net */
+        ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
+                                                       sr_bank_module, sr_bank_instance,
+                                                       sr_module_blwl_port,
+                                                       sr_module_blwl_port_info.pins()[cur_sr_module_blwl_pin_id]);
+        VTR_ASSERT(ModuleNetId::INVALID() != net);
+
+        /* Add net sink */
+        size_t sink_pin_id = sr_banks.shift_register_bank_sink_pin_ids(config_region, sr_bank_module, sr_bank_instance)[sink_id];
+        module_manager.add_module_net_sink(top_module, net,
+                                           child_module, child_instance, child_blwl_port, sink_pin_id);
+
+        cur_sr_module_blwl_pin_id++;
+      }
+    }
+  }
+}
+
+/*********************************************************************
+ * This function to add nets for quicklogic memory banks using shift registers to manipulate BL/WLs
+ * Each configuration region has independent BL/WL shift register banks
+ * - Find the number of BLs and WLs required for each region
+ * - Find the number of BL and WL shift register chains required for each region
+ * - Create the module of shift register chain for each unique size 
+ * - Create nets to connect from top-level module inputs to BL/WL shift register chains
+ * - Create nets to connect from BL/WL shift register chains to BL/WL of configurable children
+ *
+ * @note this function only adds the BL protocol
+ *
+ * Detailed schematic of each memory bank:
+ * @note The numbers are just made to show a simplified example, practical cases are more complicated!
+ *
+ *                                  sr_clk               sr_head     sr_tail
+ *                                    |                   |             ^
+ *                                    v                   v             |
+ *                           +-------------------------------------------------+                  
+ *                           |         Bit Line shift register chains          |
+ *                           +-------------------------------------------------+                  
+ *                               |              |                    | 
+ *    +---------+              BL[0:9]        BL[10:17]          BL[18:22]
+ *    |         |                |              |                    | 
+ *    |         |                |              |                    |
+ *    | Word    |--WL[0:3]-->-----------+---------------+----  ...   |------+-->        
+ *    |         |                |      |       |       |            |      |
+ *    | Line    |                |      v       |       v            |      v
+ *    |         |                |   +-------+  |   +-------+        |  +------+
+ *    | shift   |                +-->| SRAM  |  +-->| SRAM  |        +->| SRAM |
+ *    |         |                |   | [0:8] |  |   | [0:5] |   ...  |  | [0:7]|
+ *    | register|                |   +-------+  |   +-------+        |  +------+
+ *    |         |                |              |                    |
+ *    | chains  |--WL[4:14]  -----------+--------------+---------    | -----+-->        
+ *    |         |                |      |       |       |            |      |
+ *    |         |                |      v       |       v            |      v
+ *    |         |                |   +-------+  |   +-------+        |  +-------+
+ *    |         |                +-->| SRAM  |  |   | SRAM  |        +->| SRAM  |
+ *    |         |                |   | [0:80]|  |   | [0:63]|   ...  |  | [0:31]|
+ *    |         |                |   +-------+  |   +-------+        |  +-------+
+ *    |         |                |                                   |
+ *    |         |                |     ...     ...    ...            |    ...
+ *    |         |                |              |                    |
+ *    |         |--WL[15:18] -----------+---------------+----  ---   | -----+-->        
+ *    |         |                |      |       |       |            |      |
+ *    |         |                |      v       |       v            |      v
+ *    +---------+                |   +-------+  |   +-------+        |  +-------+
+ *                               +-->| SRAM  |  +-->| SRAM  |        +->| SRAM  |
+ *                               |   |[0:5]  |  |   | [0:8] |   ...  |  | [0:2] |
+ *                               |   +-------+  |   +-------+        |  +-------+
+ *                               v              v                    v
+ *                             WL[0:9]          WL[0:7]                WL[0:4]
+ *               
+ **********************************************************************/
+static 
+void add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(ModuleManager& module_manager,
+                                                                          const ModuleId& top_module,
+                                                                          const CircuitLibrary& circuit_lib,
+                                                                          const ConfigProtocol& config_protocol) {
+  CircuitModelId sram_model = config_protocol.memory_model();
+  CircuitModelId bl_memory_model = config_protocol.bl_memory_model();
+  /* Find out the unique shift register chain sizes */
+  vtr::vector<ConfigRegionId, size_t> unique_sr_sizes;
+  unique_sr_sizes.resize(module_manager.regions(top_module).size());
+  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+    /* TODO: Need to find how to cut the BLs when there are multiple banks for shift registers in a region */
+    size_t num_bls = compute_memory_bank_regional_num_bls(module_manager, top_module,
+                                                          config_region,
+                                                          circuit_lib, sram_model);
+    unique_sr_sizes[config_region] = num_bls; 
+  }
+
+  /* Build submodules for shift register chains */ 
+  for (const size_t& sr_size : unique_sr_sizes) {
+    std::string sr_module_name = generate_bl_shift_register_module_name(circuit_lib.model_name(bl_memory_model), sr_size); 
+    build_bl_shift_register_chain_module(module_manager,
+                                         circuit_lib,
+                                         sr_module_name,
+                                         bl_memory_model,
+                                         sr_size);
+  }
+
+  /* [config_region][(shift_register_module, shift_register_instance)][i] = (reconfigurable_child_id, blwl_port_pin_index)*/
+  MemoryBankShiftRegisterBanks sr_banks;
+  /* Instanciate the shift register chains in the top-level module */ 
+  sr_banks.resize_regions(module_manager.regions(top_module).size());
+  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+    std::string sr_module_name = generate_bl_shift_register_module_name(circuit_lib.model_name(bl_memory_model), unique_sr_sizes[config_region]); 
+    ModuleId sr_bank_module = module_manager.find_module(sr_module_name);
+    VTR_ASSERT(sr_bank_module);
+
+    size_t cur_inst = module_manager.num_instance(top_module, sr_bank_module);
+    module_manager.add_child_module(top_module, sr_bank_module);
+
+    sr_banks.add_shift_register_instance(config_region, sr_bank_module, cur_inst);
+
+    /************************************************************** 
+     * Precompute the BLs and WLs distribution across the FPGA fabric
+     * The distribution is a matrix which contains the starting index of BL/WL for each column or row
+     */
+    std::pair<int, int> child_x_range = compute_memory_bank_regional_configurable_child_x_range(module_manager, top_module, config_region);
+    std::map<int, size_t> num_bls_per_tile = compute_memory_bank_regional_bitline_numbers_per_tile(module_manager, top_module,
+                                                                                                   config_region,
+                                                                                                   circuit_lib, sram_model);
+    std::map<int, size_t> bl_start_index_per_tile = compute_memory_bank_regional_blwl_start_index_per_tile(child_x_range, num_bls_per_tile);
+
+    for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
+      ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
+
+      /* Find the BL port */
+      ModulePortId child_bl_port = module_manager.find_module_port(child_module, std::string(MEMORY_BL_PORT_NAME));
+      BasicPort child_bl_port_info = module_manager.module_port(child_module, child_bl_port);
+
+      for (const size_t& sink_bl_pin : child_bl_port_info.pins()) {
+        sr_banks.add_shift_register_sink_nodes(config_region, sr_bank_module, cur_inst, child_id, sink_bl_pin);
+      }
+    }
+  }
+
+  /* Create connections between top-level module and the BL shift register banks 
+   * - Connect the head port from top-level module to each shift register bank
+   * - Connect the tail port from each shift register bank to top-level module
+   */
+  add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_heads(module_manager, top_module, sr_banks, 
+                                                                    std::string(BL_SHIFT_REGISTER_CHAIN_HEAD_NAME));
+
+  add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_tails(module_manager, top_module, sr_banks, 
+                                                                    std::string(BL_SHIFT_REGISTER_CHAIN_TAIL_NAME));
+
+  /* Create connections between BLs of top-level module and BLs of child modules for each region */
+  add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(module_manager, top_module, sr_banks, std::string(MEMORY_BL_PORT_NAME));
+}
+
+/*********************************************************************
  * Top-level function to add nets for quicklogic memory banks using shift registers to control BL/WLs
  *
  * @note this function only adds the WL configuration bus
@@ -1170,7 +1248,7 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(Module
   CircuitModelId sram_model = config_protocol.memory_model();
   CircuitModelId wl_memory_model = config_protocol.wl_memory_model();
   /* Find out the unique shift register chain sizes */
-  std::vector<size_t> unique_sr_sizes;
+  vtr::vector<ConfigRegionId, size_t> unique_sr_sizes;
   for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
     /* TODO: Need to find how to cut the BLs when there are multiple banks for shift registers in a region */
     size_t num_wls = compute_memory_bank_regional_num_wls(module_manager, top_module,
@@ -1182,74 +1260,27 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(Module
   /* TODO: Build submodules for shift register chains */ 
   for (const size_t& sr_size : unique_sr_sizes) {
     std::string sr_module_name = generate_wl_shift_register_module_name(circuit_lib.model_name(wl_memory_model), sr_size); 
-    ModuleId sr_bank_module = build_wl_shift_register_chain_module(module_manager,
-                                                                   circuit_lib,
-                                                                   sr_module_name,
-                                                                   wl_memory_model,
-                                                                   sr_size);
-    /* Instanciate the shift register chains in the top-level module */ 
+    build_wl_shift_register_chain_module(module_manager,
+                                         circuit_lib,
+                                         sr_module_name,
+                                         wl_memory_model,
+                                         sr_size);
+  }
+
+  /* [config_region][(shift_register_module, shift_register_instance)][i] = (reconfigurable_child_id, blwl_port_pin_index)*/
+  MemoryBankShiftRegisterBanks sr_banks;
+  /* Instanciate the shift register chains in the top-level module */ 
+  sr_banks.resize_regions(module_manager.regions(top_module).size());
+  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+    std::string sr_module_name = generate_wl_shift_register_module_name(circuit_lib.model_name(wl_memory_model), unique_sr_sizes[config_region]); 
+    ModuleId sr_bank_module = module_manager.find_module(sr_module_name);
+    VTR_ASSERT(sr_bank_module);
+
+    size_t cur_inst = module_manager.num_instance(top_module, sr_bank_module);
     module_manager.add_child_module(top_module, sr_bank_module);
-  }
 
-  /* TODO: create connections between top-level module and the WL shift register banks 
-   * - Connect the head port from top-level module to each shift register bank
-   * - Connect the tail port from each shift register bank to top-level module
-   */
-  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
-    ModulePortId wlsr_head_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(WL_SHIFT_REGISTER_CHAIN_HEAD_NAME), config_region));
-    BasicPort wlsr_head_port_info = module_manager.module_port(top_module, wlsr_head_port);
+    sr_banks.add_shift_register_instance(config_region, sr_bank_module, cur_inst);
 
-    for (const size_t& sr_size : unique_sr_sizes) {
-      std::string sr_module_name = generate_bl_shift_register_module_name(circuit_lib.model_name(wl_memory_model), sr_size); 
-      ModuleId child_sr_module = module_manager.find_module(sr_module_name);
-      ModulePortId child_wlsr_head_port = module_manager.find_module_port(child_sr_module, std::string(WL_SHIFT_REGISTER_CHAIN_HEAD_NAME));
-      BasicPort child_wlsr_head_port_info = module_manager.module_port(child_sr_module, child_wlsr_head_port);
-      for (size_t child_instance = 0; child_instance < module_manager.num_instance(top_module, child_sr_module); ++child_instance) { 
-        for (const size_t& sink_pin : child_wlsr_head_port_info.pins()) {
-          /* Create net */
-          ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
-                                                         top_module, 0,
-                                                         wlsr_head_port,
-                                                         wlsr_head_port_info.pins()[sink_pin]);
-          VTR_ASSERT(ModuleNetId::INVALID() != net);
-
-          /* Add net sink */
-          module_manager.add_module_net_sink(top_module, net,
-                                             child_sr_module, child_instance, child_wlsr_head_port, sink_pin);
-        }
-      }
-    }
-  }
-
-  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
-    ModulePortId wlsr_tail_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(WL_SHIFT_REGISTER_CHAIN_TAIL_NAME), config_region));
-    BasicPort wlsr_tail_port_info = module_manager.module_port(top_module, wlsr_tail_port);
-
-    for (const size_t& sr_size : unique_sr_sizes) {
-      std::string sr_module_name = generate_wl_shift_register_module_name(circuit_lib.model_name(wl_memory_model), sr_size); 
-      ModuleId child_sr_module = module_manager.find_module(sr_module_name);
-      ModulePortId child_wlsr_tail_port = module_manager.find_module_port(child_sr_module, std::string(WL_SHIFT_REGISTER_CHAIN_TAIL_NAME));
-      BasicPort child_wlsr_tail_port_info = module_manager.module_port(child_sr_module, child_wlsr_tail_port);
-      for (size_t child_instance = 0; child_instance < module_manager.num_instance(top_module, child_sr_module); ++child_instance) { 
-        for (const size_t& sink_pin : child_wlsr_tail_port_info.pins()) {
-          /* Create net */
-          ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
-                                                         child_sr_module, child_instance,
-                                                         child_wlsr_tail_port, sink_pin);
-          VTR_ASSERT(ModuleNetId::INVALID() != net);
-
-          /* Add net sink */
-          module_manager.add_module_net_sink(top_module, net,
-                                             top_module, 0,
-                                             wlsr_tail_port, wlsr_tail_port_info.pins()[sink_pin]);
-        }
-      }
-    }
-  }
-
-
-  /* Create connections between WLs of top-level module and WLs of child modules for each region */
-  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
     /************************************************************** 
      * Precompute the BLs and WLs distribution across the FPGA fabric
      * The distribution is a matrix which contains the starting index of BL/WL for each column or row
@@ -1260,84 +1291,33 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(Module
                                                                                                     circuit_lib, sram_model);
     std::map<int, size_t> wl_start_index_per_tile = compute_memory_bank_regional_blwl_start_index_per_tile(child_y_range, num_wls_per_tile);
 
-    /************************************************************** 
-     * Add WL nets from top module to each configurable child
-     */
-    ModulePortId top_module_wl_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(MEMORY_WL_PORT_NAME), config_region));
-    BasicPort top_module_wl_port_info = module_manager.module_port(top_module, top_module_wl_port);
-
     for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
       ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
-      vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
 
-      size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
-
-      /* Find the WL port */
+      /* Find the BL port */
       ModulePortId child_wl_port = module_manager.find_module_port(child_module, std::string(MEMORY_WL_PORT_NAME));
       BasicPort child_wl_port_info = module_manager.module_port(child_module, child_wl_port);
 
-      size_t cur_wl_index = 0;
-
       for (const size_t& sink_wl_pin : child_wl_port_info.pins()) {
-        size_t wl_pin_id = wl_start_index_per_tile[coord.y()] + cur_wl_index;
-        VTR_ASSERT(wl_pin_id < top_module_wl_port_info.pins().size());
-
-        /* Create net */
-        ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
-                                                       top_module, 0,
-                                                       top_module_wl_port,
-                                                       top_module_wl_port_info.pins()[wl_pin_id]);
-        VTR_ASSERT(ModuleNetId::INVALID() != net);
-
-        /* Add net sink */
-        module_manager.add_module_net_sink(top_module, net,
-                                           child_module, child_instance, child_wl_port, sink_wl_pin);
-      
-        cur_wl_index++;
-      }
-    }
-
-    /************************************************************** 
-     * Optional: Add WLR nets from top module to each configurable child
-     */
-    ModulePortId top_module_wlr_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(MEMORY_WLR_PORT_NAME), config_region));
-    BasicPort top_module_wlr_port_info;
-    if (top_module_wlr_port) { 
-      top_module_wlr_port_info = module_manager.module_port(top_module, top_module_wlr_port);
-      for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
-        ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
-        vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
-  
-        size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
-  
-        /* Find the WL port */
-        ModulePortId child_wlr_port = module_manager.find_module_port(child_module, std::string(MEMORY_WLR_PORT_NAME));
-        BasicPort child_wlr_port_info = module_manager.module_port(child_module, child_wlr_port);
-  
-        size_t cur_wlr_index = 0;
-  
-        for (const size_t& sink_wlr_pin : child_wlr_port_info.pins()) {
-          size_t wlr_pin_id = wl_start_index_per_tile[coord.y()] + cur_wlr_index;
-          VTR_ASSERT(wlr_pin_id < top_module_wlr_port_info.pins().size());
-  
-          /* Create net */
-          ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
-                                                         top_module, 0,
-                                                         top_module_wlr_port,
-                                                         top_module_wlr_port_info.pins()[wlr_pin_id]);
-          VTR_ASSERT(ModuleNetId::INVALID() != net);
-  
-          /* Add net sink */
-          module_manager.add_module_net_sink(top_module, net,
-                                             child_module, child_instance, child_wlr_port, sink_wlr_pin);
-        
-          cur_wlr_index++;
-        }
+        sr_banks.add_shift_register_sink_nodes(config_region, sr_bank_module, cur_inst, child_id, sink_wl_pin);
       }
     }
   }
-}
 
+  /* Create connections between top-level module and the BL shift register banks 
+   * - Connect the head port from top-level module to each shift register bank
+   * - Connect the tail port from each shift register bank to top-level module
+   */
+  add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_heads(module_manager, top_module, sr_banks, 
+                                                                    std::string(WL_SHIFT_REGISTER_CHAIN_HEAD_NAME));
+
+  add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_tails(module_manager, top_module, sr_banks, 
+                                                                    std::string(WL_SHIFT_REGISTER_CHAIN_TAIL_NAME));
+
+  /* Create connections between BLs of top-level module and BLs of child modules for each region */
+  add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(module_manager, top_module, sr_banks, std::string(MEMORY_WL_PORT_NAME));
+  add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(module_manager, top_module, sr_banks, std::string(MEMORY_WLR_PORT_NAME), true);
+}
 
 /*********************************************************************
  * Top-level function to add nets for quicklogic memory banks
