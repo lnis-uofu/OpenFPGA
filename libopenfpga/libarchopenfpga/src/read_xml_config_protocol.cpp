@@ -74,7 +74,7 @@ void read_xml_bl_protocol(pugi::xml_node& xml_bl_protocol,
    */
   if (BLWL_PROTOCOL_SHIFT_REGISTER == blwl_protocol_type) {
     config_protocol.set_bl_memory_model_name(get_attribute(xml_bl_protocol, "circuit_model_name", loc_data).as_string());
-    config_protocol.set_bl_num_banks(get_attribute(xml_bl_protocol, "num_banks", loc_data).as_int(1));
+    config_protocol.set_bl_num_banks(get_attribute(xml_bl_protocol, "num_banks", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(1));
   }
 }
 
@@ -104,7 +104,7 @@ void read_xml_wl_protocol(pugi::xml_node& xml_wl_protocol,
    */
   if (BLWL_PROTOCOL_SHIFT_REGISTER == blwl_protocol_type) {
     config_protocol.set_wl_memory_model_name(get_attribute(xml_wl_protocol, "circuit_model_name", loc_data).as_string());
-    config_protocol.set_wl_num_banks(get_attribute(xml_wl_protocol, "num_banks", loc_data).as_int(1));
+    config_protocol.set_wl_num_banks(get_attribute(xml_wl_protocol, "num_banks", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(1));
   }
 }
 
