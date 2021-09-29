@@ -1,3 +1,4 @@
+#include "vtr_assert.h"
 #include "memory_bank_shift_register_banks.h" 
 
 /* begin namespace openfpga */
@@ -7,7 +8,7 @@ std::vector<ModuleId> MemoryBankShiftRegisterBanks::shift_register_bank_modules(
   std::vector<ModuleId> sr_bank_modules;
   VTR_ASSERT(valid_region_id(region));
   for (const auto& pair : sr_instance_info_[region]) {
-    sr_bank_modules.push_back(pair.first);
+    sr_bank_modules.push_back(pair.first.first);
   }
   return sr_bank_modules;
 } 
@@ -16,7 +17,7 @@ std::vector<size_t> MemoryBankShiftRegisterBanks::shift_register_bank_instances(
   std::vector<size_t> sr_bank_instances;
   VTR_ASSERT(valid_region_id(region));
   for (const auto& pair : sr_instance_info_[region]) {
-    sr_bank_instances.push_back(pair.second);
+    sr_bank_instances.push_back(pair.first.second);
   }
   return sr_bank_instances;
 } 
@@ -37,9 +38,9 @@ std::vector<size_t> MemoryBankShiftRegisterBanks::shift_register_bank_sink_child
   return sink_child_ids;
 } 
 
-std::vector<size_t> MemoryBankShiftRegisterBanks::shift_register_bank_sink_child_pin_ids(const ConfigRegionId& region,
-                                                                                         const ModuleId& sr_module,
-                                                                                         const size_t& sr_instance) const {
+std::vector<size_t> MemoryBankShiftRegisterBanks::shift_register_bank_sink_pin_ids(const ConfigRegionId& region,
+                                                                                   const ModuleId& sr_module,
+                                                                                   const size_t& sr_instance) const {
   VTR_ASSERT(valid_region_id(region));
   std::vector<size_t> sink_child_pin_ids;
 
