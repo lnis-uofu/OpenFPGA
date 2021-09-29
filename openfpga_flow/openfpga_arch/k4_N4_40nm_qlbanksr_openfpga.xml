@@ -165,7 +165,7 @@
       <port type="output" prefix="inpad" lib_name="Y" size="1"/>
     </circuit_model>
     <!-- The following flip-flop is used to build the shift register chains for configuring memory banks -->
-    <circuit_model type="ccff" name="BL_DFFRQ" prefix="BL_DFFRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
+    <circuit_model type="ccff" name="BL_DFFRQ" prefix="BL_DFFRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v" is_default="true">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
