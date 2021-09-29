@@ -912,7 +912,7 @@ void add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(Module
     unique_sr_sizes.push_back(num_bls); 
   }
 
-  /* TODO: Build submodules for shift register chains */ 
+  /* Build submodules for shift register chains */ 
   for (const size_t& sr_size : unique_sr_sizes) {
     std::string sr_module_name = generate_bl_shift_register_module_name(circuit_lib.model_name(bl_memory_model), sr_size); 
     ModuleId sr_bank_module = build_bl_shift_register_chain_module(module_manager,
@@ -920,12 +920,65 @@ void add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(Module
                                                                    sr_module_name,
                                                                    bl_memory_model,
                                                                    sr_size);
+    /* Instanciate the shift register chains in the top-level module */ 
+    module_manager.add_child_module(top_module, sr_bank_module);
   }
 
-  /* TODO: Instanciate the shift register chains in the top-level module */ 
-  //module_manager.add_child_module(top_module, sr_bank_module);
+  /* TODO: create connections between top-level module and the BL shift register banks 
+   * - Connect the head port from top-level module to each shift register bank
+   * - Connect the tail port from each shift register bank to top-level module
+   */
+  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+    ModulePortId blsr_head_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(BL_SHIFT_REGISTER_CHAIN_HEAD_NAME), config_region));
+    BasicPort blsr_head_port_info = module_manager.module_port(top_module, blsr_head_port);
 
-  /* TODO: create connections between top-level module and the BL shift register banks */
+    for (const size_t& sr_size : unique_sr_sizes) {
+      std::string sr_module_name = generate_bl_shift_register_module_name(circuit_lib.model_name(bl_memory_model), sr_size); 
+      ModuleId child_sr_module = module_manager.find_module(sr_module_name);
+      ModulePortId child_blsr_head_port = module_manager.find_module_port(child_sr_module, std::string(BL_SHIFT_REGISTER_CHAIN_HEAD_NAME));
+      BasicPort child_blsr_head_port_info = module_manager.module_port(child_sr_module, child_blsr_head_port);
+      for (size_t child_instance = 0; child_instance < module_manager.num_instance(top_module, child_sr_module); ++child_instance) { 
+        for (const size_t& sink_pin : child_blsr_head_port_info.pins()) {
+          /* Create net */
+          ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
+                                                         top_module, 0,
+                                                         blsr_head_port,
+                                                         blsr_head_port_info.pins()[sink_pin]);
+          VTR_ASSERT(ModuleNetId::INVALID() != net);
+
+          /* Add net sink */
+          module_manager.add_module_net_sink(top_module, net,
+                                             child_sr_module, child_instance, child_blsr_head_port, sink_pin);
+        }
+      }
+    }
+  }
+
+  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+    ModulePortId blsr_tail_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(BL_SHIFT_REGISTER_CHAIN_TAIL_NAME), config_region));
+    BasicPort blsr_tail_port_info = module_manager.module_port(top_module, blsr_tail_port);
+
+    for (const size_t& sr_size : unique_sr_sizes) {
+      std::string sr_module_name = generate_bl_shift_register_module_name(circuit_lib.model_name(bl_memory_model), sr_size); 
+      ModuleId child_sr_module = module_manager.find_module(sr_module_name);
+      ModulePortId child_blsr_tail_port = module_manager.find_module_port(child_sr_module, std::string(BL_SHIFT_REGISTER_CHAIN_TAIL_NAME));
+      BasicPort child_blsr_tail_port_info = module_manager.module_port(child_sr_module, child_blsr_tail_port);
+      for (size_t child_instance = 0; child_instance < module_manager.num_instance(top_module, child_sr_module); ++child_instance) { 
+        for (const size_t& sink_pin : child_blsr_tail_port_info.pins()) {
+          /* Create net */
+          ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
+                                                         child_sr_module, child_instance,
+                                                         child_blsr_tail_port, sink_pin);
+          VTR_ASSERT(ModuleNetId::INVALID() != net);
+
+          /* Add net sink */
+          module_manager.add_module_net_sink(top_module, net,
+                                             top_module, 0,
+                                             blsr_tail_port, blsr_tail_port_info.pins()[sink_pin]);
+        }
+      }
+    }
+  }
 
   /* Create connections between BLs of top-level module and BLs of child modules for each region */
   for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
@@ -1134,12 +1187,66 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(Module
                                                                    sr_module_name,
                                                                    wl_memory_model,
                                                                    sr_size);
+    /* Instanciate the shift register chains in the top-level module */ 
+    module_manager.add_child_module(top_module, sr_bank_module);
   }
 
-  /* TODO: Instanciate the shift register chains in the top-level module */ 
-  //module_manager.add_child_module(top_module, sr_bank_module);
+  /* TODO: create connections between top-level module and the WL shift register banks 
+   * - Connect the head port from top-level module to each shift register bank
+   * - Connect the tail port from each shift register bank to top-level module
+   */
+  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+    ModulePortId wlsr_head_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(WL_SHIFT_REGISTER_CHAIN_HEAD_NAME), config_region));
+    BasicPort wlsr_head_port_info = module_manager.module_port(top_module, wlsr_head_port);
 
-  /* TODO: create connections between top-level module and the BL shift register banks */
+    for (const size_t& sr_size : unique_sr_sizes) {
+      std::string sr_module_name = generate_bl_shift_register_module_name(circuit_lib.model_name(wl_memory_model), sr_size); 
+      ModuleId child_sr_module = module_manager.find_module(sr_module_name);
+      ModulePortId child_wlsr_head_port = module_manager.find_module_port(child_sr_module, std::string(WL_SHIFT_REGISTER_CHAIN_HEAD_NAME));
+      BasicPort child_wlsr_head_port_info = module_manager.module_port(child_sr_module, child_wlsr_head_port);
+      for (size_t child_instance = 0; child_instance < module_manager.num_instance(top_module, child_sr_module); ++child_instance) { 
+        for (const size_t& sink_pin : child_wlsr_head_port_info.pins()) {
+          /* Create net */
+          ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
+                                                         top_module, 0,
+                                                         wlsr_head_port,
+                                                         wlsr_head_port_info.pins()[sink_pin]);
+          VTR_ASSERT(ModuleNetId::INVALID() != net);
+
+          /* Add net sink */
+          module_manager.add_module_net_sink(top_module, net,
+                                             child_sr_module, child_instance, child_wlsr_head_port, sink_pin);
+        }
+      }
+    }
+  }
+
+  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+    ModulePortId wlsr_tail_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(WL_SHIFT_REGISTER_CHAIN_TAIL_NAME), config_region));
+    BasicPort wlsr_tail_port_info = module_manager.module_port(top_module, wlsr_tail_port);
+
+    for (const size_t& sr_size : unique_sr_sizes) {
+      std::string sr_module_name = generate_wl_shift_register_module_name(circuit_lib.model_name(wl_memory_model), sr_size); 
+      ModuleId child_sr_module = module_manager.find_module(sr_module_name);
+      ModulePortId child_wlsr_tail_port = module_manager.find_module_port(child_sr_module, std::string(WL_SHIFT_REGISTER_CHAIN_TAIL_NAME));
+      BasicPort child_wlsr_tail_port_info = module_manager.module_port(child_sr_module, child_wlsr_tail_port);
+      for (size_t child_instance = 0; child_instance < module_manager.num_instance(top_module, child_sr_module); ++child_instance) { 
+        for (const size_t& sink_pin : child_wlsr_tail_port_info.pins()) {
+          /* Create net */
+          ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
+                                                         child_sr_module, child_instance,
+                                                         child_wlsr_tail_port, sink_pin);
+          VTR_ASSERT(ModuleNetId::INVALID() != net);
+
+          /* Add net sink */
+          module_manager.add_module_net_sink(top_module, net,
+                                             top_module, 0,
+                                             wlsr_tail_port, wlsr_tail_port_info.pins()[sink_pin]);
+        }
+      }
+    }
+  }
+
 
   /* Create connections between WLs of top-level module and WLs of child modules for each region */
   for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
