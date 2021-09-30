@@ -1272,6 +1272,7 @@ void add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(ModuleMan
  **********************************************************************/
 static 
 void add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(ModuleManager& module_manager,
+                                                                          MemoryBankShiftRegisterBanks& sr_banks,
                                                                           const ModuleId& top_module,
                                                                           const CircuitLibrary& circuit_lib,
                                                                           const ConfigProtocol& config_protocol) {
@@ -1298,8 +1299,6 @@ void add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(Module
                                          sr_size);
   }
 
-  /* [config_region][(shift_register_module, shift_register_instance)][i] = (reconfigurable_child_id, blwl_port_pin_index)*/
-  MemoryBankShiftRegisterBanks sr_banks;
   /* Instanciate the shift register chains in the top-level module */ 
   sr_banks.resize_regions(module_manager.regions(top_module).size());
   for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
@@ -1360,6 +1359,7 @@ void add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(Module
  **********************************************************************/
 static 
 void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(ModuleManager& module_manager,
+                                                                          MemoryBankShiftRegisterBanks& sr_banks,
                                                                           const ModuleId& top_module,
                                                                           const CircuitLibrary& circuit_lib,
                                                                           const ConfigProtocol& config_protocol) {
@@ -1385,8 +1385,6 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(Module
                                          sr_size);
   }
 
-  /* [config_region][(shift_register_module, shift_register_instance)][i] = (reconfigurable_child_id, blwl_port_pin_index)*/
-  MemoryBankShiftRegisterBanks sr_banks;
   /* Instanciate the shift register chains in the top-level module */ 
   sr_banks.resize_regions(module_manager.regions(top_module).size());
   for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
@@ -1458,6 +1456,7 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(Module
  ********************************************************************/
 void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_manager,
                                                         DecoderLibrary& decoder_lib,
+                                                        std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
                                                         const ModuleId& top_module,
                                                         const CircuitLibrary& circuit_lib,
                                                         const ConfigProtocol& config_protocol,
@@ -1475,7 +1474,7 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
       break;
     }
     case BLWL_PROTOCOL_SHIFT_REGISTER: {
-      add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(module_manager, top_module, circuit_lib, config_protocol);
+      add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(module_manager, blwl_sr_banks[0], top_module, circuit_lib, config_protocol);
       break;
     }
     default: {
@@ -1494,7 +1493,7 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
       break;
     }
     case BLWL_PROTOCOL_SHIFT_REGISTER: {
-      add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(module_manager, top_module, circuit_lib, config_protocol);
+      add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(module_manager, blwl_sr_banks[1], top_module, circuit_lib, config_protocol);
       break;
     }
     default: {

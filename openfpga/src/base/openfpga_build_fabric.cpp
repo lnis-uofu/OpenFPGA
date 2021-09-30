@@ -103,6 +103,7 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
 
   curr_status = build_device_module_graph(openfpga_ctx.mutable_module_graph(),
                                           openfpga_ctx.mutable_decoder_lib(),
+                                          openfpga_ctx.mutable_blwl_shift_register_banks(),
                                           const_cast<const OpenfpgaContext&>(openfpga_ctx),
                                           g_vpr_ctx.device(),
                                           cmd_context.option_enable(cmd, opt_frame_view),

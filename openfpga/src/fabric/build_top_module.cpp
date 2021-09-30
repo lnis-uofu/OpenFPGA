@@ -283,6 +283,7 @@ vtr::Matrix<size_t> add_top_module_connection_block_instances(ModuleManager& mod
  *******************************************************************/
 int build_top_module(ModuleManager& module_manager,
                      DecoderLibrary& decoder_lib,
+                     std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
                      const CircuitLibrary& circuit_lib,
                      const VprDeviceAnnotation& vpr_device_annotation,
                      const DeviceGrid& grids,
@@ -414,7 +415,7 @@ int build_top_module(ModuleManager& module_manager,
    * This is a one-shot addition that covers all the memory modules in this pb module!
    */
   if (0 < module_manager.configurable_children(top_module).size()) {
-    add_top_module_nets_memory_config_bus(module_manager, decoder_lib,
+    add_top_module_nets_memory_config_bus(module_manager, decoder_lib, blwl_sr_banks,
                                           top_module, 
                                           circuit_lib,
                                           config_protocol, circuit_lib.design_tech_type(sram_model),

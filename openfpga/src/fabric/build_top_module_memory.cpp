@@ -1735,6 +1735,7 @@ void add_top_module_nets_cmos_memory_frame_config_bus(ModuleManager& module_mana
 static 
 void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
                                                 DecoderLibrary& decoder_lib,
+                                                std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
                                                 const ModuleId& parent_module,
                                                 const CircuitLibrary& circuit_lib,
                                                 const ConfigProtocol& config_protocol, 
@@ -1754,7 +1755,8 @@ void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
     add_top_module_nets_cmos_memory_bank_config_bus(module_manager, decoder_lib, parent_module, num_config_bits);
     break;
   case CONFIG_MEM_QL_MEMORY_BANK:
-    add_top_module_nets_cmos_ql_memory_bank_config_bus(module_manager, decoder_lib, parent_module, circuit_lib, config_protocol, num_config_bits);
+    add_top_module_nets_cmos_ql_memory_bank_config_bus(module_manager, decoder_lib, blwl_sr_banks,
+                                                       parent_module, circuit_lib, config_protocol, num_config_bits);
     break;
   case CONFIG_MEM_FRAME_BASED:
     add_top_module_nets_cmos_memory_frame_config_bus(module_manager, decoder_lib, parent_module, num_config_bits);
@@ -1800,6 +1802,7 @@ void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
  *******************************************************************/
 void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            DecoderLibrary& decoder_lib,
+                                           std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
                                            const ModuleId& parent_module,
                                            const CircuitLibrary& circuit_lib,
                                            const ConfigProtocol& config_protocol, 
@@ -1811,6 +1814,7 @@ void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
   switch (mem_tech) {
   case CIRCUIT_MODEL_DESIGN_CMOS:
     add_top_module_nets_cmos_memory_config_bus(module_manager, decoder_lib,
+                                               blwl_sr_banks,
                                                parent_module,
                                                circuit_lib,
                                                config_protocol,

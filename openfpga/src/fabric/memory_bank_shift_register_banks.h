@@ -59,6 +59,7 @@ class MemoryBankShiftRegisterBanks {
     bool valid_region_id(const ConfigRegionId& region) const;
 
   private: /* Internal data */
+    /* [config_region][(shift_register_module, shift_register_instance)][i] = (reconfigurable_child_id, blwl_port_pin_index)*/
     vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<std::pair<size_t, size_t>>>> sr_instance_info_;
 };
 
