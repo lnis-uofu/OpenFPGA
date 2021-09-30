@@ -22,6 +22,9 @@ namespace openfpga {
  ******************************************************************************/
 class MemoryBankShiftRegisterBanks {
   public: /* Accessors */
+    /* @brief Return a list of modules of unique shift register banks across all the regions */
+    std::vector<ModuleId> shift_register_bank_unique_modules() const; 
+
     /* @brief Return a list of modules of shift register banks under a specific configuration region of top-level module */
     std::vector<ModuleId> shift_register_bank_modules(const ConfigRegionId& region) const; 
 

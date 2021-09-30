@@ -1,8 +1,21 @@
+#include <algorithm>
 #include "vtr_assert.h"
 #include "memory_bank_shift_register_banks.h" 
 
 /* begin namespace openfpga */
 namespace openfpga {
+
+std::vector<ModuleId> MemoryBankShiftRegisterBanks::shift_register_bank_unique_modules() const {
+  std::vector<ModuleId> sr_bank_modules;
+  for (const auto& region : sr_instance_info_) {
+    for (const auto& pair : region) {
+      if (sr_bank_modules.end() == std::find(sr_bank_modules.begin(), sr_bank_modules.end(), pair.first.first)) {
+        sr_bank_modules.push_back(pair.first.first);
+      }
+    }
+  }
+  return sr_bank_modules;
+} 
 
 std::vector<ModuleId> MemoryBankShiftRegisterBanks::shift_register_bank_modules(const ConfigRegionId& region) const {
   std::vector<ModuleId> sr_bank_modules;
