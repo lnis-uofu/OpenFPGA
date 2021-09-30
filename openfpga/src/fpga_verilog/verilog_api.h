@@ -23,6 +23,7 @@
 #include "io_location_map.h"
 #include "fabric_global_port_info.h"
 #include "vpr_netlist_annotation.h"
+#include "memory_bank_shift_register_banks.h"
 #include "fabric_verilog_options.h"
 #include "verilog_testbench_options.h"
 
@@ -35,6 +36,7 @@ namespace openfpga {
 
 void fpga_fabric_verilog(ModuleManager& module_manager,
                          NetlistManager& netlist_manager,
+                         const std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
                          const CircuitLibrary& circuit_lib,
                          const MuxLibrary& mux_lib,
                          const DecoderLibrary& decoder_lib,

@@ -14,6 +14,7 @@
 #include "verilog_lut.h"
 #include "verilog_wire.h"
 #include "verilog_memory.h"
+#include "verilog_shift_register_banks.h"
 #include "verilog_writer_utils.h"
 
 #include "verilog_constants.h"
@@ -33,6 +34,7 @@ namespace openfpga {
  ********************************************************************/
 void print_verilog_submodule(ModuleManager& module_manager, 
                              NetlistManager& netlist_manager,
+                             const std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
                              const MuxLibrary& mux_lib,
                              const DecoderLibrary& decoder_lib,
                              const CircuitLibrary& circuit_lib, 
@@ -84,14 +86,22 @@ void print_verilog_submodule(ModuleManager& module_manager,
                                 submodule_dir,
                                 fpga_verilog_opts.default_net_type());
 
-  /* 4. Memories */
+  /* Memories */
   print_verilog_submodule_memories(const_cast<const ModuleManager&>(module_manager),
                                    netlist_manager,
                                    mux_lib, circuit_lib, 
                                    submodule_dir,
                                    fpga_verilog_opts);
 
-  /* 5. Dump template for all the modules */
+  /* Shift register banks */
+  print_verilog_submodule_shift_register_banks(const_cast<const ModuleManager&>(module_manager),
+                                               netlist_manager,
+                                               blwl_sr_banks, 
+                                               submodule_dir,
+                                               fpga_verilog_opts);
+
+
+  /* Dump template for all the modules */
   if (true == fpga_verilog_opts.print_user_defined_template()) { 
     print_verilog_submodule_templates(const_cast<const ModuleManager&>(module_manager),
                                       circuit_lib,

@@ -8,6 +8,7 @@
 #include "netlist_manager.h"
 #include "mux_library.h"
 #include "decoder_library.h"
+#include "memory_bank_shift_register_banks.h"
 #include "fabric_verilog_options.h"
 
 /********************************************************************
@@ -19,6 +20,7 @@ namespace openfpga {
 
 void print_verilog_submodule(ModuleManager& module_manager, 
                              NetlistManager& netlist_manager,
+                             const std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
                              const MuxLibrary& mux_lib,
                              const DecoderLibrary& decoder_lib,
                              const CircuitLibrary& circuit_lib, 
