@@ -447,11 +447,15 @@ size_t estimate_num_configurable_children_to_skip_by_config_protocol(const Confi
       || CONFIG_MEM_QL_MEMORY_BANK == config_protocol.type()) {
     VTR_ASSERT(2 <= curr_region_num_config_child);
     num_child_to_skip = 2;
-    /* If flatten bus is used, BL/WL may not need decoders */
-    if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()) {
+    /* - If flatten bus is used, BL/WL may not need decoders
+     * - If shift registers are used, BL/WLs do not need decoders. And shift registers are not counted as configurable children 
+     */
+    if ( BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()
+      || BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type() ) {
       num_child_to_skip--;
     }
-    if (BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type()) {
+    if ( BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type()
+      || BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.wl_protocol_type() ) {
       num_child_to_skip--;
     }
   }
