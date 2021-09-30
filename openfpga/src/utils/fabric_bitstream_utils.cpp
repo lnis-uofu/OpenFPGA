@@ -313,7 +313,7 @@ MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(cons
       }
     }
     /* Add the pair to std map */
-    fabric_bits[cur_wl_vectors] = cur_bl_vectors;
+    fabric_bits.add_blwl_vectors(cur_bl_vectors, cur_wl_vectors);
   }
 
   return fabric_bits;
