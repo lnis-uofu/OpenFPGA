@@ -61,7 +61,18 @@ void print_verilog_top_testbench_ql_memory_bank_port(std::fstream& fp,
     }
   } else {
     VTR_ASSERT(BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type());
-    /* TODO */
+    print_verilog_comment(fp, std::string("---- Bit-Line ports -----"));
+    for (const ConfigRegionId& region : module_manager.regions(top_module)) {
+      ModulePortId sr_head_port_id = module_manager.find_module_port(top_module,
+                                                                     generate_regional_blwl_port_name(std::string(BL_SHIFT_REGISTER_CHAIN_HEAD_NAME), region));
+      BasicPort sr_head_port = module_manager.module_port(top_module, sr_head_port_id);
+      fp << generate_verilog_port(VERILOG_PORT_REG, sr_head_port) << ";" << std::endl;
+
+      ModulePortId sr_tail_port_id = module_manager.find_module_port(top_module,
+                                                                     generate_regional_blwl_port_name(std::string(BL_SHIFT_REGISTER_CHAIN_TAIL_NAME), region));
+      BasicPort sr_tail_port = module_manager.module_port(top_module, sr_tail_port_id);
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, sr_tail_port) << ";" << std::endl;
+    }
   }
 
   /* Print the address port for the Word-Line decoder here */
@@ -82,7 +93,18 @@ void print_verilog_top_testbench_ql_memory_bank_port(std::fstream& fp,
     }
   } else {
     VTR_ASSERT(BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.wl_protocol_type());
-    /* TODO */
+    print_verilog_comment(fp, std::string("---- Word-Line ports -----"));
+    for (const ConfigRegionId& region : module_manager.regions(top_module)) {
+      ModulePortId sr_head_port_id = module_manager.find_module_port(top_module,
+                                                                     generate_regional_blwl_port_name(std::string(WL_SHIFT_REGISTER_CHAIN_HEAD_NAME), region));
+      BasicPort sr_head_port = module_manager.module_port(top_module, sr_head_port_id);
+      fp << generate_verilog_port(VERILOG_PORT_REG, sr_head_port) << ";" << std::endl;
+
+      ModulePortId sr_tail_port_id = module_manager.find_module_port(top_module,
+                                                                     generate_regional_blwl_port_name(std::string(WL_SHIFT_REGISTER_CHAIN_TAIL_NAME), region));
+      BasicPort sr_tail_port = module_manager.module_port(top_module, sr_tail_port_id);
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, sr_tail_port) << ";" << std::endl;
+    }
   }
 
   /* Print the data-input port: only available when BL has a decoder */
