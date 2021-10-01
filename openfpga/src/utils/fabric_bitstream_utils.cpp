@@ -319,6 +319,60 @@ MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(cons
   return fabric_bits;
 }
 
+/********************************************************************
+ * Reshape a list of vectors by aligning all of them to the last element
+ * For example:
+ * - Align vectors to the last element
+ *
+ *   index ---------------------->
+ *   vector 0: 000000001111101010
+ *   vector 1:     00000011010101
+ *   vector 2:   0010101111000110
+ * 
+ * - Fill void in each vector with desired bits (Here assume fill 'x'
+ *   index ---------------------->
+ *   vector 0: 000000001111101010
+ *   vector 1: xxxx00000011010101
+ *   vector 2: xx0010101111000110
+ * 
+ * - Rotate the array by 90 degree
+ *   index ----------------------->
+ *   vector 0: 0xx
+ *   vector 1: 0xx
+ *   ...
+ *   vector N: 010
+ * 
+ *******************************************************************/
+static 
+std::vector<std::string> reshape_bitstream_vectors_to_last_element(const std::vector<std::string>& bitstream_vectors,
+                                                                   const char& default_bit_to_fill) {
+  /* Find the max sizes of BL bits, this determines the size of shift register chain */
+  size_t max_vec_size = 0;
+  for (const auto& vec : bitstream_vectors) {
+    max_vec_size = std::max(max_vec_size, vec.size());
+  }
+  /* Reshape the BL vectors */
+  std::vector<std::string> reshaped_vectors(bitstream_vectors.size(), std::string());
+  size_t col_cnt = 0;
+  for (const auto& vec : bitstream_vectors) {
+    reshaped_vectors[col_cnt].resize(max_vec_size - vec.size(), default_bit_to_fill);
+    reshaped_vectors[col_cnt] += vec;
+    col_cnt++;
+  }
+
+  /* Add the BL word to final bitstream */
+  std::vector<std::string> rotated_vectors;
+  for (size_t irow = 0; irow < max_vec_size; ++irow) {
+    std::string cur_vec;
+    for (size_t icol = 0; icol < reshaped_vectors.size(); ++icol) {
+      cur_vec.push_back(reshaped_vectors[icol][irow]);
+    }
+    rotated_vectors.push_back(cur_vec); 
+  }
+ 
+  return rotated_vectors;
+}
+
 MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_bitstream(const FabricBitstream& fabric_bitstream,
                                                                                          //const std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
                                                                                          const bool& bit_value_to_skip) {
@@ -328,41 +382,19 @@ MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_b
   /* Iterate over each word */   
   for (const auto& wl_vec : raw_fabric_bits.wl_vectors()) {
     std::vector<std::string> bl_vec = raw_fabric_bits.bl_vector(wl_vec);
-    /* Find the max sizes of BL/WL bits, this determines the size of shift register chain */
-    size_t max_blwl_sizes = 0;
-    for (const auto& bl_bits : bl_vec) {
-      max_blwl_sizes = std::max(max_blwl_sizes, bl_bits.size());
-    }
-    for (const auto& wl_bits : wl_vec) {
-      max_blwl_sizes = std::max(max_blwl_sizes, wl_bits.size());
-    }
-    /* Reshape the BL and WL vectors */
-    std::vector<std::string> reshaped_blwls(bl_vec.size() + wl_vec.size(), std::string());
-    size_t blwl_col_cnt = 0;
-    for (const auto& bl_bits : bl_vec) {
-      reshaped_blwls[blwl_col_cnt].resize(max_blwl_sizes - bl_bits.size(), '0');
-      reshaped_blwls[blwl_col_cnt] += bl_bits;
-      blwl_col_cnt++;
-    }
-    for (const auto& wl_bits : wl_vec) {
-      reshaped_blwls[blwl_col_cnt].resize(max_blwl_sizes - wl_bits.size(), '0');
-      reshaped_blwls[blwl_col_cnt] += wl_bits;
-      blwl_col_cnt++;
-    }
-    /* Add the word to final bitstream */
-    MemoryBankShiftRegisterFabricBitstreamWordId word_id = fabric_bits.create_word();
-    for (size_t irow = 0; irow < max_blwl_sizes; ++irow) {
-      std::string cur_bl_vec;
-      for (size_t icol = 0; icol < bl_vec.size(); ++icol) {
-        cur_bl_vec.push_back(reshaped_blwls[icol][irow]);
-      }
-      fabric_bits.add_bl_vectors(word_id, cur_bl_vec); 
 
-      std::string cur_wl_vec;
-      for (size_t icol = bl_vec.size(); icol < bl_vec.size() + wl_vec.size(); ++icol) {
-        cur_wl_vec.push_back(reshaped_blwls[icol][irow]);
-      }
-      fabric_bits.add_wl_vectors(word_id, cur_wl_vec);
+    MemoryBankShiftRegisterFabricBitstreamWordId word_id = fabric_bits.create_word();
+
+    std::vector<std::string> reshaped_bl_vectors = reshape_bitstream_vectors_to_last_element(bl_vec, '0');
+    /* Add the BL word to final bitstream */
+    for (const auto& reshaped_bl_vec : reshaped_bl_vectors) {
+      fabric_bits.add_bl_vectors(word_id, reshaped_bl_vec); 
+    }
+
+    std::vector<std::string> reshaped_wl_vectors = reshape_bitstream_vectors_to_last_element(wl_vec, '0');
+    /* Add the BL word to final bitstream */
+    for (const auto& reshaped_wl_vec : reshaped_wl_vectors) {
+      fabric_bits.add_wl_vectors(word_id, reshaped_wl_vec); 
     }
   }
 

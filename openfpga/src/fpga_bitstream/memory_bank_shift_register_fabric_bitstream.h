@@ -28,8 +28,11 @@ class MemoryBankShiftRegisterFabricBitstream {
     /* @brief Return the length of bitstream */
     size_t num_words() const;
 
-    /* @brief Return the length of each word. All the word should have a uniform size */
-    size_t word_size() const;
+    /* @brief Return the length of BL part of each word. All the word should have a uniform size */
+    size_t bl_word_size() const;
+
+    /* @brief Return the length of WL part of each word. All the word should have a uniform size */
+    size_t wl_word_size() const;
 
     /* @brief Return the width of each BL word, which is the number of heads through which a BL word can be loaded in parallel */
     size_t bl_width() const;
@@ -42,9 +45,6 @@ class MemoryBankShiftRegisterFabricBitstream {
 
     /* @brief Return the WL vectors in a given word id */
     std::vector<std::string> wl_vectors(const MemoryBankShiftRegisterFabricBitstreamWordId& word_id) const;
-
-    /* @brief Return the pair of BL and WL vectors in a given word id */
-    std::vector<std::string> blwl_vectors(const MemoryBankShiftRegisterFabricBitstreamWordId& word_id) const;
 
   public: /* Mutators */
     /* @brief Create a new word */
