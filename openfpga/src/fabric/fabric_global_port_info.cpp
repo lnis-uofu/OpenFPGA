@@ -50,6 +50,11 @@ bool FabricGlobalPortInfo::global_port_is_prog(const FabricGlobalPortId& global_
   return global_port_is_prog_[global_port_id];
 }
 
+bool FabricGlobalPortInfo::global_port_is_shift_register(const FabricGlobalPortId& global_port_id) const {
+  VTR_ASSERT(valid_global_port_id(global_port_id));
+  return global_port_is_shift_register_[global_port_id];
+}
+
 bool FabricGlobalPortInfo::global_port_is_config_enable(const FabricGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_is_config_enable_[global_port_id];
@@ -77,6 +82,7 @@ FabricGlobalPortId FabricGlobalPortInfo::create_global_port(const ModulePortId& 
   global_port_is_set_.push_back(false);
   global_port_is_reset_.push_back(false);
   global_port_is_prog_.push_back(false);
+  global_port_is_shift_register_.push_back(false);
   global_port_is_io_.push_back(false);
   global_port_is_config_enable_.push_back(false);
   global_port_default_values_.push_back(0);
@@ -106,6 +112,12 @@ void FabricGlobalPortInfo::set_global_port_is_prog(const FabricGlobalPortId& glo
                                                    const bool& is_prog) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_is_prog_[global_port_id] = is_prog;
+}
+
+void FabricGlobalPortInfo::set_global_port_is_shift_register(const FabricGlobalPortId& global_port_id,
+                                                             const bool& is_shift_register) {
+  VTR_ASSERT(valid_global_port_id(global_port_id));
+  global_port_is_shift_register_[global_port_id] = is_shift_register;
 }
 
 void FabricGlobalPortInfo::set_global_port_is_config_enable(const FabricGlobalPortId& global_port_id,

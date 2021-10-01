@@ -290,7 +290,7 @@ void print_verilog_top_testbench_global_clock_ports_stimuli(std::fstream& fp,
       /* Should try to find a port defintion from simulation parameters
        * If found, it means that we need to use special clock name! 
        */
-      for (const SimulationClockId& sim_clock : simulation_parameters.clocks()) { 
+      for (const SimulationClockId& sim_clock : simulation_parameters.operating_clocks()) { 
         if (global_port_to_connect == simulation_parameters.clock_port(sim_clock)) {
           stimuli_clock_port.set_name(generate_top_testbench_clock_name(std::string(TOP_TB_OP_CLOCK_PORT_PREFIX), simulation_parameters.clock_name(sim_clock)));
         }
@@ -640,7 +640,7 @@ void print_verilog_top_testbench_benchmark_clock_ports(std::fstream& fp,
       /* Skip all the unrelated pin constraints */
       VTR_ASSERT(clock_port_name == pin_constraints.net(pin_constraint));
       /* Try to find which clock source is considered in simulation settings for this pin */
-      for (const SimulationClockId& sim_clock_id : simulation_parameters.clocks()) {
+      for (const SimulationClockId& sim_clock_id : simulation_parameters.operating_clocks()) {
         if (pin_constraints.pin(pin_constraint) == simulation_parameters.clock_port(sim_clock_id)) {
           std::string sim_clock_port_name = generate_top_testbench_clock_name(std::string(TOP_TB_OP_CLOCK_PORT_PREFIX), simulation_parameters.clock_name(sim_clock_id));
           clock_source_to_connect = BasicPort(sim_clock_port_name, 1);
@@ -742,7 +742,7 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
   fp << generate_verilog_port(VERILOG_PORT_REG, prog_clock_register_port) << ";" << std::endl;
 
   /* Multiple operating clocks based on the simulation settings */
-  for (const SimulationClockId& sim_clock : simulation_parameters.clocks()) {
+  for (const SimulationClockId& sim_clock : simulation_parameters.operating_clocks()) {
     std::string sim_clock_port_name = generate_top_testbench_clock_name(std::string(TOP_TB_OP_CLOCK_PORT_PREFIX), simulation_parameters.clock_name(sim_clock));
     BasicPort sim_clock_port(sim_clock_port_name, 1);
     fp << generate_verilog_port(VERILOG_PORT_WIRE, sim_clock_port) << ";" << std::endl;
@@ -1010,7 +1010,7 @@ void print_verilog_top_testbench_generic_stimulus(std::fstream& fp,
   fp << std::endl;
 
   /* Generate stimuli waveform for multiple user-defined operating clock signals */
-  for (const SimulationClockId& sim_clock : simulation_parameters.clocks()) {
+  for (const SimulationClockId& sim_clock : simulation_parameters.operating_clocks()) {
     print_verilog_comment(fp, "----- Begin raw operating clock signal '" + simulation_parameters.clock_name(sim_clock) + "' generation -----");
     std::string sim_clock_port_name = generate_top_testbench_clock_name(std::string(TOP_TB_OP_CLOCK_PORT_PREFIX), simulation_parameters.clock_name(sim_clock));
     BasicPort sim_clock_port(sim_clock_port_name, 1);
@@ -1935,7 +1935,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
   float prog_clock_period = (1./simulation_parameters.programming_clock_frequency());
   float default_op_clock_period = (1./simulation_parameters.default_operating_clock_frequency());
   float max_op_clock_period = 0.;
-  for (const SimulationClockId& clock_id : simulation_parameters.clocks()) {
+  for (const SimulationClockId& clock_id : simulation_parameters.operating_clocks()) {
     max_op_clock_period = std::max(max_op_clock_period, (float)(1./simulation_parameters.clock_frequency(clock_id)));
   }
 

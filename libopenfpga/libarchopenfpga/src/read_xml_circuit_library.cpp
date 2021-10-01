@@ -484,6 +484,9 @@ void read_xml_circuit_port(pugi::xml_node& xml_port,
   /* Identify if the port is in programming purpose, by default it is NOT */
   circuit_lib.set_port_is_prog(port, get_attribute(xml_port, "is_prog", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
 
+  /* Identify if the port is in shift register purpose, by default it is NOT */
+  circuit_lib.set_port_is_shift_register(port, get_attribute(xml_port, "is_shift_register", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
+
   /* Identify if the port is to enable programming for FPGAs, by default it is NOT */
   circuit_lib.set_port_is_config_enable(port, get_attribute(xml_port, "is_config_enable", loc_data, pugiutil::ReqOpt::OPTIONAL).as_bool(false));
 
