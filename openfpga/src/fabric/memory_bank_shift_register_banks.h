@@ -52,18 +52,26 @@ class MemoryBankShiftRegisterBanks {
                                      const ModuleId& sr_module,
                                      const size_t& sr_instance); 
 
-    /* @brief Add the module id and instance id of a shift register under a specific configuration region of top-level module */
+    /* @brief Add the child id and pin id of BL/WL to which a shift register is connected to under a specific configuration region of top-level module */
     void add_shift_register_sink_nodes(const ConfigRegionId& region,
                                        const ModuleId& sr_module,
                                        const size_t& sr_instance,
                                        const size_t& sink_child_id,
                                        const size_t& sink_child_pin_id); 
+
+    /* @brief Add the BL/WL id under a specific configuration region of top-level module to which a shift register is connected to */
+    void add_shift_register_sink_blwls(const ConfigRegionId& region,
+                                       const ModuleId& sr_module,
+                                       const size_t& sr_instance,
+                                       const size_t& sink_blwl_id); 
   public:  /* Validators */
     bool valid_region_id(const ConfigRegionId& region) const;
 
   private: /* Internal data */
     /* [config_region][(shift_register_module, shift_register_instance)][i] = (reconfigurable_child_id, blwl_port_pin_index)*/
-    vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<std::pair<size_t, size_t>>>> sr_instance_info_;
+    vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<size_t>>> sr_instance_sink_child_ids_;
+    vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<size_t>>> sr_instance_sink_child_pin_ids_;
+    vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<size_t>>> sr_instance_sink_blwl_ids_;
 };
 
 } /* end namespace openfpga */

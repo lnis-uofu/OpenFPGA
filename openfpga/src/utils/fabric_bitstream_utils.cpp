@@ -319,6 +319,61 @@ MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(cons
   return fabric_bits;
 }
 
+MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_bitstream(const FabricBitstream& fabric_bitstream,
+                                                                                         //const std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
+                                                                                         const bool& bit_value_to_skip) {
+  MemoryBankFlattenFabricBitstream raw_fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, bit_value_to_skip);
+  MemoryBankShiftRegisterFabricBitstream fabric_bits; 
+
+  /* Iterate over each word */   
+  for (const auto& wl_vec : raw_fabric_bits.wl_vectors()) {
+    std::vector<std::string> bl_vec = raw_fabric_bits.bl_vector(wl_vec);
+    /* Find the max sizes of BL/WL bits, this determines the size of shift register chain */
+    size_t max_blwl_sizes = 0;
+    for (const auto& bl_bits : bl_vec) {
+      max_blwl_sizes = std::max(max_blwl_sizes, bl_bits.size());
+    }
+    for (const auto& wl_bits : wl_vec) {
+      max_blwl_sizes = std::max(max_blwl_sizes, wl_bits.size());
+    }
+    /* Reshape the BL and WL vectors */
+    std::vector<std::string> reshaped_blwls(bl_vec.size() + wl_vec.size(), std::string(max_blwl_sizes, '0'));
+    size_t blwl_col_cnt = 0;
+    for (const auto& bl_bits : bl_vec) {
+      size_t offset = max_blwl_sizes - bl_vec.size();
+      for (const char& bl_bit : bl_bits) {
+        reshaped_blwls[blwl_col_cnt][offset] = bl_bit;
+        offset++;
+      }
+      blwl_col_cnt++;
+    }
+    for (const auto& wl_bits : wl_vec) {
+      size_t offset = max_blwl_sizes - wl_vec.size();
+      for (const char& wl_bit : wl_bits) {
+        reshaped_blwls[blwl_col_cnt][offset] = wl_bit;
+        offset++;
+      }
+      blwl_col_cnt++;
+    }
+    /* Add the word to final bitstream */
+    MemoryBankShiftRegisterFabricBitstreamWordId word_id = fabric_bits.create_word();
+    for (size_t irow = 0; irow < max_blwl_sizes; ++irow) {
+      std::string cur_bl_vec;
+      for (size_t icol = 0; icol < bl_vec.size(); ++icol) {
+        cur_bl_vec.push_back(reshaped_blwls[icol][irow]);
+      }
+      fabric_bits.add_bl_vectors(word_id, cur_bl_vec);
+
+      std::string cur_wl_vec;
+      for (size_t icol = bl_vec.size(); icol < bl_vec.size() + wl_vec.size(); ++icol) {
+        cur_wl_vec.push_back(reshaped_blwls[icol][irow]);
+      }
+      fabric_bits.add_wl_vectors(word_id, cur_wl_vec);
+    }
+  }
+
+  return fabric_bits;
+}
 
 /********************************************************************
  * For fast configuration, the number of bits to be skipped

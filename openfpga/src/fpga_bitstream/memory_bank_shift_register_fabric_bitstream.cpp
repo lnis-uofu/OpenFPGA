@@ -43,6 +43,16 @@ std::vector<std::string> MemoryBankShiftRegisterFabricBitstream::wl_vectors(cons
   return bitstream_word_wls_[word_id];
 }
 
+std::vector<std::string> MemoryBankShiftRegisterFabricBitstream::blwl_vectors(const MemoryBankShiftRegisterFabricBitstreamWordId& word_id) const {
+  VTR_ASSERT(valid_word_id(word_id));
+  std::vector<std::string> blwl_vec = bitstream_word_bls_[word_id];
+  VTR_ASSERT(blwl_vec.size() == bitstream_word_wls_[word_id].size());
+  for (size_t iwl = 0; iwl < bitstream_word_wls_[word_id].size(); ++iwl) {
+    blwl_vec[iwl] += bitstream_word_wls_[word_id][iwl]; 
+  }
+  return blwl_vec;
+}
+
 MemoryBankShiftRegisterFabricBitstreamWordId MemoryBankShiftRegisterFabricBitstream::create_word() {
   /* Create a new id*/
   MemoryBankShiftRegisterFabricBitstreamWordId word_id = MemoryBankShiftRegisterFabricBitstreamWordId(bitstream_word_ids_.size());
@@ -59,14 +69,12 @@ MemoryBankShiftRegisterFabricBitstreamWordId MemoryBankShiftRegisterFabricBitstr
 void MemoryBankShiftRegisterFabricBitstream::add_bl_vectors(const MemoryBankShiftRegisterFabricBitstreamWordId& word_id,
                                                             const std::string& bl_vec) {
   VTR_ASSERT(valid_word_id(word_id));
-  VTR_ASSERT(bl_vec.size() == bl_width());
   return bitstream_word_bls_[word_id].push_back(bl_vec);
 }
 
 void MemoryBankShiftRegisterFabricBitstream::add_wl_vectors(const MemoryBankShiftRegisterFabricBitstreamWordId& word_id,
                                                             const std::string& wl_vec) {
   VTR_ASSERT(valid_word_id(word_id));
-  VTR_ASSERT(wl_vec.size() == wl_width());
   return bitstream_word_wls_[word_id].push_back(wl_vec);
 }
 

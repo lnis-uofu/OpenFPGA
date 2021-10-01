@@ -9,8 +9,11 @@
  *******************************************************************/
 #include <vector>
 #include <map>
+#include <array>
 #include "bitstream_manager.h"
 #include "memory_bank_flatten_fabric_bitstream.h"
+#include "memory_bank_shift_register_banks.h"
+#include "memory_bank_shift_register_fabric_bitstream.h"
 #include "fabric_bitstream.h"
 
 /********************************************************************
@@ -39,7 +42,7 @@ size_t find_frame_based_fast_configuration_fabric_bitstream_size(const FabricBit
                                                                  const bool& bit_value_to_skip);
 
 /********************************************************************
- * @ brief Reorganize the fabric bitstream for memory banks which use flatten or shift register to manipulate BL and WLs
+ * @ brief Reorganize the fabric bitstream for memory banks which use flatten BL and WLs
  * For each configuration region, we will merge BL address (which are 1-hot codes) under the same WL address
  *
  * Quick Example
@@ -60,6 +63,38 @@ size_t find_frame_based_fast_configuration_fabric_bitstream_size(const FabricBit
  *******************************************************************/
 MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(const FabricBitstream& fabric_bitstream,
                                                                             const bool& bit_value_to_skip);
+
+/********************************************************************
+ * @ brief Reorganize the fabric bitstream for memory banks which use shift register to manipulate BL and WLs
+ * For each configuration region, we will merge BL address (which are 1-hot codes) under the same WL address
+ *
+ * Quick Example
+ *   <bl of region A>_<bl of region B> <wl of region A>_<wl of region B>
+ * An example:
+ *   010_111  000_101
+ *
+ * Note that all the BL/WLs across configuration regions are independent. We will combine them together
+ * Quick Example
+ *   <bl of region A>_<bl of region B> <wl of region A>_<wl of region B>
+ *   001_010 000_000
+ *   100_100 000_000
+ *   
+ *   the bitstream will be merged as
+ *   101_110 000_000
+ *
+ * Because that the BL/WL are loaded through shift registers (perhaps using multiple heads), the bitstream will be reorganized as
+ * Considering single head:  
+ *   
+ *   <bl of region A>_<bl of region B> <wl of region A>_<wl of region B>
+ *   1_1 0_0
+ *   0_1 0_0
+ *   1_0 0_0 
+ *
+ * @note the std::map may cause large memory footprint for large bitstream databases!
+ *******************************************************************/
+MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_bitstream(const FabricBitstream& fabric_bitstream,
+                                                                                         //const std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
+                                                                                         const bool& bit_value_to_skip);
 
 /* Alias to a specific organization of bitstreams for memory bank configuration protocol */
 typedef std::map<std::pair<std::string, std::string>, std::vector<bool>> MemoryBankFabricBitstream;

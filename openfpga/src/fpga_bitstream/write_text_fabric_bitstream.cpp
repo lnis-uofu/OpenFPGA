@@ -238,26 +238,23 @@ int write_memory_bank_shift_register_fabric_bitstream_to_text_file(std::fstream&
                                                                    const FabricBitstream& fabric_bitstream) {
   int status = 0;
 
-  MemoryBankFlattenFabricBitstream fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, bit_value_to_skip);
-
-  size_t bl_addr_size = fabric_bits.bl_vector_size();
-  size_t wl_addr_size = fabric_bits.wl_vector_size();
+  MemoryBankShiftRegisterFabricBitstream fabric_bits = build_memory_bank_shift_register_fabric_bitstream(fabric_bitstream, bit_value_to_skip);
 
   /* Output information about how to intepret the bitstream */
-  fp << "// Bitstream length: " << fabric_bits.size() << std::endl;
+  fp << "// Bitstream word count: " << fabric_bits.num_words() << std::endl;
+  fp << "// Bitstream word size: " << fabric_bits.word_size() << std::endl;
   fp << "// Bitstream width (LSB -> MSB): ";
-  fp << "<bl shift register heads" << bl_addr_size << " bits>";
-  fp << "<wl shift register heads " << wl_addr_size << " bits>";
+  fp << "<bl shift register heads" << fabric_bits.bl_width() << " bits>";
+  fp << "<wl shift register heads " << fabric_bits.wl_width() << " bits>";
   fp << std::endl;
 
-  for (const auto& wl_vec : fabric_bits.wl_vectors()) {
-    /* Write BL address code */
-    for (const auto& bl_unit : fabric_bits.bl_vector(wl_vec)) {
-      fp << bl_unit;
-    }
-    /* Write WL address code */
-    for (const auto& wl_unit : wl_vec) {
-      fp << wl_unit;
+  size_t word_cnt = 0;  
+
+  for (const auto& word : fabric_bits.words()) {
+    fp << "// Word " << word_cnt << std::endl;
+    /* Write BL/WL address code */
+    for (const auto& blwl_vec : fabric_bits.blwl_vectors(word)) {
+      fp << blwl_vec;
     }
     fp << std::endl;
   }

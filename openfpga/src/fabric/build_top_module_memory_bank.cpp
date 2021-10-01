@@ -1323,13 +1323,19 @@ void add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(Module
 
     for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
       ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
+      vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
 
       /* Find the BL port */
       ModulePortId child_bl_port = module_manager.find_module_port(child_module, std::string(MEMORY_BL_PORT_NAME));
       BasicPort child_bl_port_info = module_manager.module_port(child_module, child_bl_port);
 
+      size_t cur_bl_index = 0;
+
       for (const size_t& sink_bl_pin : child_bl_port_info.pins()) {
+        size_t bl_pin_id = bl_start_index_per_tile[coord.x()] + cur_bl_index;
+
         sr_banks.add_shift_register_sink_nodes(config_region, sr_bank_module, cur_inst, child_id, sink_bl_pin);
+        sr_banks.add_shift_register_sink_blwls(config_region, sr_bank_module, cur_inst, bl_pin_id);
       }
     }
   }
@@ -1409,13 +1415,18 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(Module
 
     for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
       ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
+      vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
 
-      /* Find the BL port */
+      size_t cur_wl_index = 0;
+
+      /* Find the WL port */
       ModulePortId child_wl_port = module_manager.find_module_port(child_module, std::string(MEMORY_WL_PORT_NAME));
       BasicPort child_wl_port_info = module_manager.module_port(child_module, child_wl_port);
 
       for (const size_t& sink_wl_pin : child_wl_port_info.pins()) {
+        size_t wl_pin_id = wl_start_index_per_tile[coord.y()] + cur_wl_index;
         sr_banks.add_shift_register_sink_nodes(config_region, sr_bank_module, cur_inst, child_id, sink_wl_pin);
+        sr_banks.add_shift_register_sink_blwls(config_region, sr_bank_module, cur_inst, wl_pin_id);
       }
     }
   }

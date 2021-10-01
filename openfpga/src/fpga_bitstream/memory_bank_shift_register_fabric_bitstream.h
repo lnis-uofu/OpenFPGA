@@ -43,6 +43,9 @@ class MemoryBankShiftRegisterFabricBitstream {
     /* @brief Return the WL vectors in a given word id */
     std::vector<std::string> wl_vectors(const MemoryBankShiftRegisterFabricBitstreamWordId& word_id) const;
 
+    /* @brief Return the pair of BL and WL vectors in a given word id */
+    std::vector<std::string> blwl_vectors(const MemoryBankShiftRegisterFabricBitstreamWordId& word_id) const;
+
   public: /* Mutators */
     /* @brief Create a new word */
     MemoryBankShiftRegisterFabricBitstreamWordId create_word();
