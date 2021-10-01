@@ -53,6 +53,7 @@ FabricGlobalPortInfo build_fabric_global_port_info(const ModuleManager& module_m
     fabric_global_port_info.set_global_port_is_reset(fabric_port, circuit_lib.port_is_reset(global_port));
     fabric_global_port_info.set_global_port_is_set(fabric_port, circuit_lib.port_is_set(global_port));
     fabric_global_port_info.set_global_port_is_prog(fabric_port, circuit_lib.port_is_prog(global_port));
+    fabric_global_port_info.set_global_port_is_shift_register(fabric_port, circuit_lib.port_is_shift_register(global_port));
     fabric_global_port_info.set_global_port_is_config_enable(fabric_port, circuit_lib.port_is_config_enable(global_port));
     fabric_global_port_info.set_global_port_default_value(fabric_port, circuit_lib.port_default_value(global_port));
   }
