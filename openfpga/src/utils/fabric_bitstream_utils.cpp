@@ -337,22 +337,16 @@ MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_b
       max_blwl_sizes = std::max(max_blwl_sizes, wl_bits.size());
     }
     /* Reshape the BL and WL vectors */
-    std::vector<std::string> reshaped_blwls(bl_vec.size() + wl_vec.size(), std::string(max_blwl_sizes, '0'));
+    std::vector<std::string> reshaped_blwls(bl_vec.size() + wl_vec.size(), std::string());
     size_t blwl_col_cnt = 0;
     for (const auto& bl_bits : bl_vec) {
-      size_t offset = max_blwl_sizes - bl_vec.size();
-      for (const char& bl_bit : bl_bits) {
-        reshaped_blwls[blwl_col_cnt][offset] = bl_bit;
-        offset++;
-      }
+      reshaped_blwls[blwl_col_cnt].resize(max_blwl_sizes - bl_bits.size(), '0');
+      reshaped_blwls[blwl_col_cnt] += bl_bits;
       blwl_col_cnt++;
     }
     for (const auto& wl_bits : wl_vec) {
-      size_t offset = max_blwl_sizes - wl_vec.size();
-      for (const char& wl_bit : wl_bits) {
-        reshaped_blwls[blwl_col_cnt][offset] = wl_bit;
-        offset++;
-      }
+      reshaped_blwls[blwl_col_cnt].resize(max_blwl_sizes - wl_bits.size(), '0');
+      reshaped_blwls[blwl_col_cnt] += wl_bits;
       blwl_col_cnt++;
     }
     /* Add the word to final bitstream */
@@ -362,7 +356,7 @@ MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_b
       for (size_t icol = 0; icol < bl_vec.size(); ++icol) {
         cur_bl_vec.push_back(reshaped_blwls[icol][irow]);
       }
-      fabric_bits.add_bl_vectors(word_id, cur_bl_vec);
+      fabric_bits.add_bl_vectors(word_id, cur_bl_vec); 
 
       std::string cur_wl_vec;
       for (size_t icol = bl_vec.size(); icol < bl_vec.size() + wl_vec.size(); ++icol) {

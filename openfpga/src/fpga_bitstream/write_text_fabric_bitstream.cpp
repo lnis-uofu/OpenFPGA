@@ -244,7 +244,7 @@ int write_memory_bank_shift_register_fabric_bitstream_to_text_file(std::fstream&
   fp << "// Bitstream word count: " << fabric_bits.num_words() << std::endl;
   fp << "// Bitstream word size: " << fabric_bits.word_size() << std::endl;
   fp << "// Bitstream width (LSB -> MSB): ";
-  fp << "<bl shift register heads" << fabric_bits.bl_width() << " bits>";
+  fp << "<bl shift register heads " << fabric_bits.bl_width() << " bits>";
   fp << "<wl shift register heads " << fabric_bits.wl_width() << " bits>";
   fp << std::endl;
 
@@ -255,8 +255,9 @@ int write_memory_bank_shift_register_fabric_bitstream_to_text_file(std::fstream&
     /* Write BL/WL address code */
     for (const auto& blwl_vec : fabric_bits.blwl_vectors(word)) {
       fp << blwl_vec;
+      fp << std::endl;
     }
-    fp << std::endl;
+    word_cnt++;
   }
 
   return status;
