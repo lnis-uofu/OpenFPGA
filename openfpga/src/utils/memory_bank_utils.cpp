@@ -90,11 +90,10 @@ size_t compute_memory_bank_regional_num_bls(const ModuleManager& module_manager,
                                             const CircuitLibrary& circuit_lib,
                                             const CircuitModelId& sram_model) {
   size_t num_bls = 0;
-
-  for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
-    ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
-    vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
-    num_bls += find_module_ql_memory_bank_num_blwls(module_manager, child_module, circuit_lib, sram_model, CONFIG_MEM_QL_MEMORY_BANK, CIRCUIT_MODEL_PORT_BL);
+  std::map<int, size_t> num_bls_per_tile = compute_memory_bank_regional_bitline_numbers_per_tile(module_manager, top_module,
+                                                                                                 config_region, circuit_lib, sram_model);
+  for (const auto& pair : num_bls_per_tile) {
+    num_bls += pair.second;
   }
 
   return num_bls;
@@ -123,10 +122,10 @@ size_t compute_memory_bank_regional_num_wls(const ModuleManager& module_manager,
                                             const CircuitModelId& sram_model) {
   size_t num_wls = 0;
 
-  for (size_t child_id = 0; child_id < module_manager.region_configurable_children(top_module, config_region).size(); ++child_id) {
-    ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
-    vtr::Point<int> coord = module_manager.region_configurable_child_coordinates(top_module, config_region)[child_id]; 
-    num_wls += find_module_ql_memory_bank_num_blwls(module_manager, child_module, circuit_lib, sram_model, CONFIG_MEM_QL_MEMORY_BANK, CIRCUIT_MODEL_PORT_WL);
+  std::map<int, size_t> num_wls_per_tile = compute_memory_bank_regional_wordline_numbers_per_tile(module_manager, top_module,
+                                                                                                  config_region, circuit_lib, sram_model);
+  for (const auto& pair : num_wls_per_tile) {
+    num_wls += pair.second;
   }
 
   return num_wls;

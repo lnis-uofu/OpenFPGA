@@ -1199,6 +1199,8 @@ void add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(ModuleMan
         ModulePortId child_blwl_port = module_manager.find_module_port(child_module, child_blwl_port_name);
         BasicPort child_blwl_port_info = module_manager.module_port(child_module, child_blwl_port);
 
+        cur_sr_module_blwl_pin_id = cur_sr_module_blwl_pin_id % sr_module_blwl_port_info.get_width();
+
         /* Create net */
         ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
                                                        sr_bank_module, sr_bank_instance,
@@ -1210,8 +1212,6 @@ void add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(ModuleMan
         size_t sink_pin_id = sr_banks.shift_register_bank_sink_pin_ids(config_region, sr_bank_module, sr_bank_instance)[sink_id];
         module_manager.add_module_net_sink(top_module, net,
                                            child_module, child_instance, child_blwl_port, sink_pin_id);
-
-        cur_sr_module_blwl_pin_id++;
       }
     }
   }
