@@ -62,6 +62,7 @@ size_t find_frame_based_fast_configuration_fabric_bitstream_size(const FabricBit
  * @note the std::map may cause large memory footprint for large bitstream databases!
  *******************************************************************/
 MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(const FabricBitstream& fabric_bitstream,
+                                                                            const bool& fast_configuration,
                                                                             const bool& bit_value_to_skip);
 
 /********************************************************************
@@ -93,6 +94,7 @@ MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(cons
  * @note the std::map may cause large memory footprint for large bitstream databases!
  *******************************************************************/
 MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_bitstream(const FabricBitstream& fabric_bitstream,
+                                                                                         const bool& fast_configuration,
                                                                                          //const std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
                                                                                          const bool& bit_value_to_skip);
 

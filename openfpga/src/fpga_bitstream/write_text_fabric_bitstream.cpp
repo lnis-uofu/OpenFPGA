@@ -190,11 +190,12 @@ int write_memory_bank_fabric_bitstream_to_text_file(std::fstream& fp,
  *******************************************************************/
 static 
 int write_memory_bank_flatten_fabric_bitstream_to_text_file(std::fstream& fp,
+                                                            const bool& fast_configuration,
                                                             const bool& bit_value_to_skip,
                                                             const FabricBitstream& fabric_bitstream) {
   int status = 0;
 
-  MemoryBankFlattenFabricBitstream fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, bit_value_to_skip);
+  MemoryBankFlattenFabricBitstream fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip);
 
   /* The address sizes and data input sizes are the same across any element, 
    * just get it from the 1st element to save runtime
@@ -234,11 +235,12 @@ int write_memory_bank_flatten_fabric_bitstream_to_text_file(std::fstream& fp,
  *******************************************************************/
 static 
 int write_memory_bank_shift_register_fabric_bitstream_to_text_file(std::fstream& fp,
+                                                                   const bool& fast_configuration,
                                                                    const bool& bit_value_to_skip,
                                                                    const FabricBitstream& fabric_bitstream) {
   int status = 0;
 
-  MemoryBankShiftRegisterFabricBitstream fabric_bits = build_memory_bank_shift_register_fabric_bitstream(fabric_bitstream, bit_value_to_skip);
+  MemoryBankShiftRegisterFabricBitstream fabric_bits = build_memory_bank_shift_register_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip);
 
   /* Output information about how to intepret the bitstream */
   fp << "// Bitstream word count: " << fabric_bits.num_words() << std::endl;
@@ -415,11 +417,13 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
                                                                fabric_bitstream);
     } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()) {
       status = write_memory_bank_flatten_fabric_bitstream_to_text_file(fp,
+                                                                       apply_fast_configuration,
                                                                        bit_value_to_skip,
                                                                        fabric_bitstream);
     } else {
       VTR_ASSERT(BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type());
       status = write_memory_bank_shift_register_fabric_bitstream_to_text_file(fp,
+                                                                              apply_fast_configuration,
                                                                               bit_value_to_skip,
                                                                               fabric_bitstream);
     }

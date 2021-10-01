@@ -233,14 +233,15 @@ MemoryBankFabricBitstream build_memory_bank_fabric_bitstream_by_address(const Fa
 }
 
 MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(const FabricBitstream& fabric_bitstream,
+                                                                            const bool& fast_configuration,
                                                                             const bool& bit_value_to_skip) {
   /* Build the bitstream by each region, here we use (WL, BL) pairs when storing bitstreams */
   vtr::vector<FabricBitRegionId, std::map<std::string, std::string>> fabric_bits_per_region;
   fabric_bits_per_region.resize(fabric_bitstream.num_regions());
   for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
     for (const FabricBitId& bit_id : fabric_bitstream.region_bits(region)) {
-      /* Skip din because they should be pre-configured through programming reset/set */
-      if (fabric_bitstream.bit_din(bit_id) == bit_value_to_skip) {
+      /* Only when fast configuration is required, skip din because they should be pre-configured through programming reset/set */
+      if (fast_configuration && fabric_bitstream.bit_din(bit_id) == bit_value_to_skip) {
         continue;
       }
       /* Create string for BL address */
@@ -374,9 +375,10 @@ std::vector<std::string> reshape_bitstream_vectors_to_last_element(const std::ve
 }
 
 MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_bitstream(const FabricBitstream& fabric_bitstream,
+                                                                                         const bool& fast_configuration,
                                                                                          //const std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
                                                                                          const bool& bit_value_to_skip) {
-  MemoryBankFlattenFabricBitstream raw_fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, bit_value_to_skip);
+  MemoryBankFlattenFabricBitstream raw_fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip);
   MemoryBankShiftRegisterFabricBitstream fabric_bits; 
 
   /* Iterate over each word */   

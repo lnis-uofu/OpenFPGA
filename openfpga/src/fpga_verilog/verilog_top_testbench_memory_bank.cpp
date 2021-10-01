@@ -187,6 +187,7 @@ void print_verilog_full_testbench_ql_memory_bank_flatten_bitstream(std::fstream&
 
   /* Reorganize the fabric bitstream by the same address across regions */
   MemoryBankFlattenFabricBitstream fabric_bits_by_addr = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream,
+                                                                                                    fast_configuration,
                                                                                                     bit_value_to_skip);
 
   /* Feed address and data input pair one by one

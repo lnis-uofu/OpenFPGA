@@ -862,7 +862,7 @@ size_t calculate_num_config_clock_cycles(const ConfigProtocol& config_protocol,
                 100. * ((float)num_config_clock_cycles / (float)full_num_config_clock_cycles - 1.));
       }
     } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()) {
-      num_config_clock_cycles = 1 + build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, bit_value_to_skip).size();
+      num_config_clock_cycles = 1 + build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip).size();
     } else if (BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type()) {
       /* TODO */
     }
