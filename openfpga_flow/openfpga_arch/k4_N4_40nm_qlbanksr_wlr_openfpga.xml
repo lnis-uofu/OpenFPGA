@@ -174,7 +174,7 @@
        <port type="input" prefix="D" lib_name="SIN" size="1"/>
        <port type="output" prefix="Q" lib_name="SOUT" size="1"/>
        <port type="bl" prefix="BL" lib_name="BL" size="1"/>
-       <port type="clock" prefix="sr_clk" lib_name="CK" size="1" is_global="true" default_val="0" is_prog="true" is_shift_register="true"/>
+       <port type="clock" prefix="bl_sr_clk" lib_name="CK" size="1" is_global="true" default_val="0" is_prog="true" is_shift_register="true"/>
     </circuit_model>
     <!-- The following flip-flop is used to build the shift register chains for configuring memory banks -->
     <circuit_model type="ccff" name="WLR_DFFRQ" prefix="WLR_DFFRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
@@ -186,7 +186,8 @@
        <port type="output" prefix="Q" lib_name="SOUT" size="1"/>
        <port type="wl" prefix="wl" lib_name="WLW" size="1"/>
        <port type="wlr" prefix="wlr" lib_name="WLR" size="1"/>
-       <port type="clock" prefix="sr_clk" lib_name="CK" size="1" is_global="true" default_val="0" is_prog="true" is_shift_register="true"/>
+       <port type="clock" prefix="wl_en" lib_name="WEN" size="1" is_global="true" default_val="0" is_prog="true"/>
+       <port type="clock" prefix="wl_sr_clk" lib_name="CK" size="1" is_global="true" default_val="0" is_prog="true" is_shift_register="true"/>
     </circuit_model>
   </circuit_library>
   <configuration_protocol>
