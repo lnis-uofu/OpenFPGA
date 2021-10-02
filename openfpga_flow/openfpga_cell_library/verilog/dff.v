@@ -475,6 +475,7 @@ module WL_DFFRQ (
   input RST, // Reset input
   input CK, // Clock Input
   input SIN, // Data Input
+  input WEN, // Write-enable
   output SOUT, // Q output
   output WLW // Drive WL write signals
 );
@@ -490,7 +491,7 @@ end else begin
 end
 
 assign SOUT = q_reg;
-assign WLW = q_reg;
+assign WLW = WEN ? q_reg : 1'b0;
 
 endmodule //End Of Module
 
@@ -503,6 +504,7 @@ module WLR_DFFRQ (
   input RST, // Reset input
   input CK, // Clock Input
   input SIN, // Data Input
+  input WEN, // Write-enable
   output SOUT, // Q output
   output WLW, // Drive WL write signals
   output WLR // Drive WL read signals
@@ -519,7 +521,7 @@ end else begin
 end
 
 assign SOUT = q_reg;
-assign WLW = q_reg;
+assign WLW = WEN ? q_reg : 1'b0;
 assign WLR = 1'b0; // Use a constant output just for simple testing
 
 endmodule //End Of Module
