@@ -124,6 +124,7 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
 
   /* Build fabric global port information */
   openfpga_ctx.mutable_fabric_global_port_info() = build_fabric_global_port_info(openfpga_ctx.module_graph(),
+                                                                                 openfpga_ctx.arch().config_protocol,
                                                                                  openfpga_ctx.arch().tile_annotations,
                                                                                  openfpga_ctx.arch().circuit_lib);
 

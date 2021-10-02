@@ -400,10 +400,10 @@ size_t check_wl_ccff_circuit_model_ports(const CircuitLibrary& circuit_lib,
   num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
                                                                  CIRCUIT_MODEL_PORT_INPUT,
                                                                  num_input_ports, 1, false);
-  /* Check if we have a clock */
+  /* Check if we have two clock: 1 for write-enable, 1 for shift register */
   num_err += check_one_circuit_model_port_type_and_size_required(circuit_lib, circuit_model, 
                                                                  CIRCUIT_MODEL_PORT_CLOCK,
-                                                                 1, 1, true);
+                                                                 2, 1, true);
 
 
   /* Check if we have 1 output*/

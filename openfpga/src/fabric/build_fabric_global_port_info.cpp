@@ -24,6 +24,7 @@ namespace openfpga {
  * and cache their port/pin index in the top-level module
  *******************************************************************/
 FabricGlobalPortInfo build_fabric_global_port_info(const ModuleManager& module_manager,
+                                                   const ConfigProtocol& config_protocol,
                                                    const TileAnnotation& tile_annotation,
                                                    const CircuitLibrary& circuit_lib) {
   vtr::ScopedStartFinishTimer timer("Create global port info for top module");
@@ -56,6 +57,15 @@ FabricGlobalPortInfo build_fabric_global_port_info(const ModuleManager& module_m
     fabric_global_port_info.set_global_port_is_shift_register(fabric_port, circuit_lib.port_is_shift_register(global_port));
     fabric_global_port_info.set_global_port_is_config_enable(fabric_port, circuit_lib.port_is_config_enable(global_port));
     fabric_global_port_info.set_global_port_default_value(fabric_port, circuit_lib.port_default_value(global_port));
+
+    /* Special for BL/WL shift register models: we should identify which clock belongs to BL and which clock belongs to WL */
+    if (config_protocol.bl_memory_model() == circuit_lib.port_parent_model(global_port)) {
+      fabric_global_port_info.set_global_port_is_bl(fabric_port, true);
+    }
+
+    if (config_protocol.wl_memory_model() == circuit_lib.port_parent_model(global_port)) {
+      fabric_global_port_info.set_global_port_is_wl(fabric_port, true);
+    }
   }
 
   /* Add the global ports from tile annotation */

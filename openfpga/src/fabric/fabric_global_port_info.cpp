@@ -55,6 +55,16 @@ bool FabricGlobalPortInfo::global_port_is_shift_register(const FabricGlobalPortI
   return global_port_is_shift_register_[global_port_id];
 }
 
+bool FabricGlobalPortInfo::global_port_is_bl(const FabricGlobalPortId& global_port_id) const {
+  VTR_ASSERT(valid_global_port_id(global_port_id));
+  return global_port_is_bl_[global_port_id];
+}
+
+bool FabricGlobalPortInfo::global_port_is_wl(const FabricGlobalPortId& global_port_id) const {
+  VTR_ASSERT(valid_global_port_id(global_port_id));
+  return global_port_is_wl_[global_port_id];
+}
+
 bool FabricGlobalPortInfo::global_port_is_config_enable(const FabricGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_is_config_enable_[global_port_id];
@@ -83,6 +93,8 @@ FabricGlobalPortId FabricGlobalPortInfo::create_global_port(const ModulePortId& 
   global_port_is_reset_.push_back(false);
   global_port_is_prog_.push_back(false);
   global_port_is_shift_register_.push_back(false);
+  global_port_is_bl_.push_back(false);
+  global_port_is_wl_.push_back(false);
   global_port_is_io_.push_back(false);
   global_port_is_config_enable_.push_back(false);
   global_port_default_values_.push_back(0);
@@ -118,6 +130,18 @@ void FabricGlobalPortInfo::set_global_port_is_shift_register(const FabricGlobalP
                                                              const bool& is_shift_register) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_is_shift_register_[global_port_id] = is_shift_register;
+}
+
+void FabricGlobalPortInfo::set_global_port_is_bl(const FabricGlobalPortId& global_port_id,
+                                                 const bool& is_bl) {
+  VTR_ASSERT(valid_global_port_id(global_port_id));
+  global_port_is_bl_[global_port_id] = is_bl;
+}
+
+void FabricGlobalPortInfo::set_global_port_is_wl(const FabricGlobalPortId& global_port_id,
+                                                 const bool& is_wl) {
+  VTR_ASSERT(valid_global_port_id(global_port_id));
+  global_port_is_wl_[global_port_id] = is_wl;
 }
 
 void FabricGlobalPortInfo::set_global_port_is_config_enable(const FabricGlobalPortId& global_port_id,

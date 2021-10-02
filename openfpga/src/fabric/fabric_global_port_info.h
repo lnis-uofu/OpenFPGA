@@ -36,6 +36,8 @@ class FabricGlobalPortInfo {
     bool global_port_is_set(const FabricGlobalPortId& global_port_id) const;
     bool global_port_is_reset(const FabricGlobalPortId& global_port_id) const;
     bool global_port_is_prog(const FabricGlobalPortId& global_port_id) const;
+    bool global_port_is_bl(const FabricGlobalPortId& global_port_id) const;
+    bool global_port_is_wl(const FabricGlobalPortId& global_port_id) const;
     bool global_port_is_shift_register(const FabricGlobalPortId& global_port_id) const;
     bool global_port_is_config_enable(const FabricGlobalPortId& global_port_id) const;
     bool global_port_is_io(const FabricGlobalPortId& global_port_id) const;
@@ -55,6 +57,10 @@ class FabricGlobalPortInfo {
                                  const bool& is_prog);
     void set_global_port_is_shift_register(const FabricGlobalPortId& global_port_id,
                                            const bool& is_shift_register);
+    void set_global_port_is_bl(const FabricGlobalPortId& global_port_id,
+                               const bool& is_bl);
+    void set_global_port_is_wl(const FabricGlobalPortId& global_port_id,
+                               const bool& is_wl);
     void set_global_port_is_config_enable(const FabricGlobalPortId& global_port_id,
                                           const bool& is_config_enable);
     void set_global_port_is_io(const FabricGlobalPortId& global_port_id,
@@ -72,6 +78,8 @@ class FabricGlobalPortInfo {
     vtr::vector<FabricGlobalPortId, bool> global_port_is_set_;
     vtr::vector<FabricGlobalPortId, bool> global_port_is_prog_;
     vtr::vector<FabricGlobalPortId, bool> global_port_is_shift_register_;
+    vtr::vector<FabricGlobalPortId, bool> global_port_is_bl_;
+    vtr::vector<FabricGlobalPortId, bool> global_port_is_wl_;
     vtr::vector<FabricGlobalPortId, bool> global_port_is_config_enable_;
     vtr::vector<FabricGlobalPortId, bool> global_port_is_io_;
     vtr::vector<FabricGlobalPortId, size_t> global_port_default_values_;
