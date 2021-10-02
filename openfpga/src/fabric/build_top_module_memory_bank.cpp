@@ -1188,7 +1188,6 @@ void add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(ModuleMan
       VTR_ASSERT(sr_module_blwl_port);
       BasicPort sr_module_blwl_port_info = module_manager.module_port(sr_bank_module, sr_module_blwl_port);
 
-      size_t cur_sr_module_blwl_pin_id = 0;
 
       for (size_t sink_id = 0; sink_id < sr_banks.shift_register_bank_sink_child_ids(config_region, sr_bank_module, sr_bank_instance).size(); ++sink_id) {
         size_t child_id = sr_banks.shift_register_bank_sink_child_ids(config_region, sr_bank_module, sr_bank_instance)[sink_id];
@@ -1199,7 +1198,7 @@ void add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(ModuleMan
         ModulePortId child_blwl_port = module_manager.find_module_port(child_module, child_blwl_port_name);
         BasicPort child_blwl_port_info = module_manager.module_port(child_module, child_blwl_port);
 
-        cur_sr_module_blwl_pin_id = cur_sr_module_blwl_pin_id % sr_module_blwl_port_info.get_width();
+        size_t cur_sr_module_blwl_pin_id = sr_banks.shift_register_bank_source_blwl_ids(config_region, sr_bank_module, sr_bank_instance)[sink_id];
 
         /* Create net */
         ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
@@ -1335,7 +1334,9 @@ void add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(Module
         size_t bl_pin_id = bl_start_index_per_tile[coord.x()] + cur_bl_index;
 
         sr_banks.add_shift_register_sink_nodes(config_region, sr_bank_module, cur_inst, child_id, sink_bl_pin);
-        sr_banks.add_shift_register_sink_blwls(config_region, sr_bank_module, cur_inst, bl_pin_id);
+        sr_banks.add_shift_register_source_blwls(config_region, sr_bank_module, cur_inst, bl_pin_id);
+
+        cur_bl_index++;
       }
     }
   }
@@ -1426,7 +1427,9 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(Module
       for (const size_t& sink_wl_pin : child_wl_port_info.pins()) {
         size_t wl_pin_id = wl_start_index_per_tile[coord.y()] + cur_wl_index;
         sr_banks.add_shift_register_sink_nodes(config_region, sr_bank_module, cur_inst, child_id, sink_wl_pin);
-        sr_banks.add_shift_register_sink_blwls(config_region, sr_bank_module, cur_inst, wl_pin_id);
+        sr_banks.add_shift_register_source_blwls(config_region, sr_bank_module, cur_inst, wl_pin_id);
+
+        cur_wl_index++;
       }
     }
   }

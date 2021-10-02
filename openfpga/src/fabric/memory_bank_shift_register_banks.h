@@ -44,6 +44,14 @@ class MemoryBankShiftRegisterBanks {
     std::vector<size_t> shift_register_bank_sink_pin_ids(const ConfigRegionId& region,
                                                          const ModuleId& sr_module,
                                                          const size_t& sr_instance) const; 
+
+    /* @brief Return a list of BL/WL ids of a given instance of shift register bank 
+     * under a specific configuration region of top-level module
+     */
+    std::vector<size_t> shift_register_bank_source_blwl_ids(const ConfigRegionId& region,
+                                                            const ModuleId& sr_module,
+                                                            const size_t& sr_instance) const; 
+
   public: /* Mutators */
     void resize_regions(const size_t& num_regions);
 
@@ -60,10 +68,10 @@ class MemoryBankShiftRegisterBanks {
                                        const size_t& sink_child_pin_id); 
 
     /* @brief Add the BL/WL id under a specific configuration region of top-level module to which a shift register is connected to */
-    void add_shift_register_sink_blwls(const ConfigRegionId& region,
-                                       const ModuleId& sr_module,
-                                       const size_t& sr_instance,
-                                       const size_t& sink_blwl_id); 
+    void add_shift_register_source_blwls(const ConfigRegionId& region,
+                                         const ModuleId& sr_module,
+                                         const size_t& sr_instance,
+                                         const size_t& sink_blwl_id); 
   public:  /* Validators */
     bool valid_region_id(const ConfigRegionId& region) const;
 
@@ -71,7 +79,7 @@ class MemoryBankShiftRegisterBanks {
     /* [config_region][(shift_register_module, shift_register_instance)][i] = (reconfigurable_child_id, blwl_port_pin_index)*/
     vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<size_t>>> sr_instance_sink_child_ids_;
     vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<size_t>>> sr_instance_sink_child_pin_ids_;
-    vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<size_t>>> sr_instance_sink_blwl_ids_;
+    vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<size_t>>> sr_instance_source_blwl_ids_;
 };
 
 } /* end namespace openfpga */
