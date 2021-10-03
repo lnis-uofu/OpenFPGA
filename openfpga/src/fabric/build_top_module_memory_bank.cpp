@@ -1588,7 +1588,7 @@ void add_top_module_ql_memory_bank_sram_ports(ModuleManager& module_manager,
         BasicPort blsr_head_port(generate_regional_blwl_port_name(std::string(BL_SHIFT_REGISTER_CHAIN_HEAD_NAME), config_region), num_heads);
         module_manager.add_port(module_id, blsr_head_port, ModuleManager::MODULE_INPUT_PORT);
         BasicPort blsr_tail_port(generate_regional_blwl_port_name(std::string(BL_SHIFT_REGISTER_CHAIN_TAIL_NAME), config_region), num_heads);
-        module_manager.add_port(module_id, blsr_tail_port, ModuleManager::MODULE_INPUT_PORT);
+        module_manager.add_port(module_id, blsr_tail_port, ModuleManager::MODULE_OUTPUT_PORT);
       }
       break;
     }
@@ -1637,7 +1637,7 @@ void add_top_module_ql_memory_bank_sram_ports(ModuleManager& module_manager,
         BasicPort wlsr_head_port(generate_regional_blwl_port_name(std::string(WL_SHIFT_REGISTER_CHAIN_HEAD_NAME), config_region), num_heads);
         module_manager.add_port(module_id, wlsr_head_port, ModuleManager::MODULE_INPUT_PORT);
         BasicPort wlsr_tail_port(generate_regional_blwl_port_name(std::string(WL_SHIFT_REGISTER_CHAIN_TAIL_NAME), config_region), num_heads);
-        module_manager.add_port(module_id, wlsr_tail_port, ModuleManager::MODULE_INPUT_PORT);
+        module_manager.add_port(module_id, wlsr_tail_port, ModuleManager::MODULE_OUTPUT_PORT);
       }
       break;
     }
