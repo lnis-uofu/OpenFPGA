@@ -366,8 +366,8 @@ MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(cons
  * 
  *******************************************************************/
 static 
-std::vector<std::string> reshape_bitstream_vectors_to_last_element(const std::vector<std::string>& bitstream_vectors,
-                                                                   const char& default_bit_to_fill) {
+std::vector<std::string> reshape_bitstream_vectors_to_first_element(const std::vector<std::string>& bitstream_vectors,
+                                                                    const char& default_bit_to_fill) {
   /* Find the max sizes of BL bits, this determines the size of shift register chain */
   size_t max_vec_size = 0;
   for (const auto& vec : bitstream_vectors) {
@@ -377,8 +377,8 @@ std::vector<std::string> reshape_bitstream_vectors_to_last_element(const std::ve
   std::vector<std::string> reshaped_vectors(bitstream_vectors.size(), std::string());
   size_t col_cnt = 0;
   for (const auto& vec : bitstream_vectors) {
-    reshaped_vectors[col_cnt].resize(max_vec_size - vec.size(), default_bit_to_fill);
     reshaped_vectors[col_cnt] += vec;
+    reshaped_vectors[col_cnt] += std::string(max_vec_size - vec.size(), default_bit_to_fill);
     col_cnt++;
   }
 
@@ -408,13 +408,17 @@ MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_b
 
     MemoryBankShiftRegisterFabricBitstreamWordId word_id = fabric_bits.create_word();
 
-    std::vector<std::string> reshaped_bl_vectors = reshape_bitstream_vectors_to_last_element(bl_vec, '0');
+    std::vector<std::string> reshaped_bl_vectors = reshape_bitstream_vectors_to_first_element(bl_vec, '0');
+    /* Reverse the vectors due to the shift register chain nature: first-in first-out */
+    //std::reverse(reshaped_bl_vectors.begin(), reshaped_bl_vectors.end());
     /* Add the BL word to final bitstream */
     for (const auto& reshaped_bl_vec : reshaped_bl_vectors) {
       fabric_bits.add_bl_vectors(word_id, reshaped_bl_vec); 
     }
 
-    std::vector<std::string> reshaped_wl_vectors = reshape_bitstream_vectors_to_last_element(wl_vec, '0');
+    std::vector<std::string> reshaped_wl_vectors = reshape_bitstream_vectors_to_first_element(wl_vec, '0');
+    /* Reverse the vectors due to the shift register chain nature: first-in first-out */
+    //std::reverse(reshaped_wl_vectors.begin(), reshaped_wl_vectors.end());
     /* Add the BL word to final bitstream */
     for (const auto& reshaped_wl_vec : reshaped_wl_vectors) {
       fabric_bits.add_wl_vectors(word_id, reshaped_wl_vec); 
