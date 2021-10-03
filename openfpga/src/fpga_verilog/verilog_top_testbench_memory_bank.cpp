@@ -199,6 +199,46 @@ void print_verilog_top_testbench_ql_memory_bank_port(std::fstream& fp,
   fp << ";" << std::endl;
 }
 
+
+void print_verilog_top_testbench_global_shift_register_clock_ports_stimuli(std::fstream& fp,
+                                                                           const ModuleManager& module_manager,
+                                                                           const ModuleId& top_module,
+                                                                           const FabricGlobalPortInfo& fabric_global_port_info) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  /* Connect global clock ports to shift-register programming clock signal */
+  for (const FabricGlobalPortId& fabric_global_port : fabric_global_port_info.global_ports()) {
+    /* Only care shift register clocks */
+    if (false == fabric_global_port_info.global_port_is_clock(fabric_global_port)
+      || false == fabric_global_port_info.global_port_is_shift_register(fabric_global_port)
+      || false == fabric_global_port_info.global_port_is_prog(fabric_global_port)) {
+      continue;
+    }
+    /* Find the module port */
+    ModulePortId module_global_port = fabric_global_port_info.global_module_port(fabric_global_port);
+    VTR_ASSERT(true == module_manager.valid_module_port_id(top_module, module_global_port));
+    
+    BasicPort stimuli_clock_port;
+
+    if (true == fabric_global_port_info.global_port_is_bl(fabric_global_port)) {
+      stimuli_clock_port.set_name(std::string(TOP_TB_BL_SHIFT_REGISTER_CLOCK_PORT_NAME));
+      stimuli_clock_port.set_width(1);
+    } else {
+      VTR_ASSERT(true == fabric_global_port_info.global_port_is_wl(fabric_global_port));
+      stimuli_clock_port.set_name(std::string(TOP_TB_BL_SHIFT_REGISTER_CLOCK_PORT_NAME));
+      stimuli_clock_port.set_width(1);
+    }
+
+    for (const size_t& pin : module_manager.module_port(top_module, module_global_port).pins()) {
+      BasicPort global_port_to_connect(module_manager.module_port(top_module, module_global_port).get_name(), pin, pin);
+      print_verilog_wire_connection(fp, global_port_to_connect,
+                                    stimuli_clock_port,
+                                    1 == fabric_global_port_info.global_port_default_value(fabric_global_port));
+     }
+  }
+}
+
 /**
  * @brief Generate the Verilog codes for a shift register clocks that controls BL/WL protocols
  */

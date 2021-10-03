@@ -271,6 +271,11 @@ void print_verilog_top_testbench_global_clock_ports_stimuli(std::fstream& fp,
     /* Find the module port */
     ModulePortId module_global_port = fabric_global_port_info.global_module_port(fabric_global_port);
     VTR_ASSERT(true == module_manager.valid_module_port_id(top_module, module_global_port));
+    
+    /* Skip shift register clocks, they are handled in another way */
+    if (true == fabric_global_port_info.global_port_is_shift_register(fabric_global_port)) {
+      continue;
+    }
 
     BasicPort stimuli_clock_port;
     if (true == fabric_global_port_info.global_port_is_prog(fabric_global_port)) {
@@ -562,6 +567,11 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
                                                          top_module,
                                                          fabric_global_port_info,
                                                          simulation_parameters);
+
+  print_verilog_top_testbench_global_shift_register_clock_ports_stimuli(fp,
+                                                                        module_manager,
+                                                                        top_module,
+                                                                        fabric_global_port_info);
 
   print_verilog_top_testbench_global_config_done_ports_stimuli(fp,
                                                                module_manager,
