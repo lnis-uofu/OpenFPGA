@@ -350,7 +350,6 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_clock_generator(
   fp << "\t\t";
   fp << "#0.05 ";
   print_verilog_register_connection(fp, sr_clock_port, sr_clock_port, true);
-  fp << ";" << std::endl;
 
   fp << "\t";
   fp << "end";
@@ -552,7 +551,7 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(std::f
 
   fp << "\t\t";
   fp << generate_verilog_port_constant_values(start_bl_sr_port, std::vector<size_t>(start_bl_sr_port.get_width(), 0), true);
-  fp << std::endl;
+  fp << ";" << std::endl;
 
   fp << "\t\t";
   fp << TOP_TB_BL_SHIFT_REGISTER_COUNT_PORT_NAME << " = 0;";
@@ -583,7 +582,7 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(std::f
 
   fp << "\t\t";
   fp << generate_verilog_port_constant_values(start_wl_sr_port, std::vector<size_t>(start_wl_sr_port.get_width(), 0), true);
-  fp << std::endl;
+  fp << ";" << std::endl;
 
   fp << "\t\t";
   fp << TOP_TB_WL_SHIFT_REGISTER_COUNT_PORT_NAME << " = 0;";
