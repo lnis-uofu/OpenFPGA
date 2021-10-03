@@ -275,6 +275,9 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_clock_generator(
   fp << "\t";
   fp << generate_verilog_port_constant_values(sr_clock_port, std::vector<size_t>(sr_clock_port.get_width(), 0), true);
   fp << ";" << std::endl;
+
+  fp << "end";
+  fp << std::endl;
 }
 
 void print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(std::fstream& fp,
@@ -638,6 +641,14 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(std::f
   fp << " begin";
   fp << std::endl;
 
+  fp << "\t";
+  fp << "if (";
+  fp << TOP_TB_BL_SHIFT_REGISTER_COUNT_PORT_NAME;
+  fp << " >= ";
+  fp << "`" << TOP_TB_BITSTREAM_BL_WORD_SIZE_VARIABLE;
+  fp << ") begin";
+  fp << std::endl;
+
   fp << "\t\t";
   fp << generate_verilog_port_constant_values(start_bl_sr_port, std::vector<size_t>(start_bl_sr_port.get_width(), 0), true);
   fp << ";" << std::endl;
@@ -667,6 +678,14 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(std::f
   fp << "always";
   fp << " @(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, wl_sr_clock_port) << ")"; 
   fp << " begin";
+  fp << std::endl;
+
+  fp << "\t";
+  fp << "if (";
+  fp << TOP_TB_WL_SHIFT_REGISTER_COUNT_PORT_NAME;
+  fp << " >= ";
+  fp << "`" << TOP_TB_BITSTREAM_WL_WORD_SIZE_VARIABLE;
+  fp << ") begin";
   fp << std::endl;
 
   fp << "\t\t";
