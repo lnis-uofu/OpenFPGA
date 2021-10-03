@@ -647,7 +647,7 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(std::f
   fp << "if (";
   fp << TOP_TB_BL_SHIFT_REGISTER_COUNT_PORT_NAME;
   fp << " >= ";
-  fp << "`" << TOP_TB_BITSTREAM_BL_WORD_SIZE_VARIABLE;
+  fp << "`" << TOP_TB_BITSTREAM_BL_WORD_SIZE_VARIABLE << " - 1";
   fp << ") begin";
   fp << std::endl;
 
@@ -691,7 +691,7 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(std::f
   fp << "if (";
   fp << TOP_TB_WL_SHIFT_REGISTER_COUNT_PORT_NAME;
   fp << " >= ";
-  fp << "`" << TOP_TB_BITSTREAM_WL_WORD_SIZE_VARIABLE;
+  fp << "`" << TOP_TB_BITSTREAM_WL_WORD_SIZE_VARIABLE << " - 1";
   fp << ") begin";
   fp << std::endl;
 
