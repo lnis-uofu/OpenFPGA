@@ -1112,21 +1112,30 @@ void print_verilog_top_testbench_generic_stimulus(std::fstream& fp,
  *******************************************************************/
 static
 void print_verilog_top_testbench_configuration_protocol_stimulus(std::fstream& fp,
-                                                                 const e_config_protocol_type& config_protocol_type, 
+                                                                 const ConfigProtocol& config_protocol, 
                                                                  const ModuleManager& module_manager,
                                                                  const ModuleId& top_module,
+                                                                 const bool& fast_configuration,
+                                                                 const bool& bit_value_to_skip,
+                                                                 const FabricBitstream& fabric_bitstream,
                                                                  const float& prog_clock_period,
                                                                  const float& timescale) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
   /* Branch on the type of configuration protocol */
-  switch (config_protocol_type) {
+  switch (config_protocol.type()) {
   case CONFIG_MEM_STANDALONE:
     break;
   case CONFIG_MEM_SCAN_CHAIN:
     break;
   case CONFIG_MEM_QL_MEMORY_BANK:
+    print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(fp,
+                                                                               config_protocol, 
+                                                                               module_manager,top_module,
+                                                                               fast_configuration, bit_value_to_skip, fabric_bitstream,
+                                                                               prog_clock_period, timescale);
+    break;
   case CONFIG_MEM_MEMORY_BANK:
   case CONFIG_MEM_FRAME_BASED: {
     ModulePortId en_port_id = module_manager.find_module_port(top_module,
@@ -1956,8 +1965,9 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
 
   /* Generate stimuli for programming interface */
   print_verilog_top_testbench_configuration_protocol_stimulus(fp, 
-                                                              config_protocol.type(),
+                                                              config_protocol,
                                                               module_manager, top_module,
+                                                              fast_configuration, bit_value_to_skip, fabric_bitstream,
                                                               prog_clock_period,
                                                               VERILOG_SIM_TIMESCALE);
                                                       

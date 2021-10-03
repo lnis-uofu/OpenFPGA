@@ -35,13 +35,17 @@ void print_verilog_top_testbench_ql_memory_bank_port(std::fstream& fp,
                                                      const ConfigProtocol& config_protocol);
 
 /**
- * @brief Generate the Verilog codes for a shift register clocks that controls BL/WL protocols
+ * @brief Generate the Verilog codes that generate stimuli waveforms for BL/WL protocols
  */
-void print_verilog_full_testbench_ql_memory_bank_shift_register_clock_generator(std::fstream& fp,
-                                                                                const BasicPort& prog_clock_port,
-                                                                                const BasicPort& start_sr_port,
-                                                                                const BasicPort& sr_clock_port);
-
+void print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(std::fstream& fp,
+                                                                                const ConfigProtocol& config_protocol, 
+                                                                                const ModuleManager& module_manager,
+                                                                                const ModuleId& top_module,
+                                                                                const bool& fast_configuration,
+                                                                                const bool& bit_value_to_skip,
+                                                                                const FabricBitstream& fabric_bitstream,
+                                                                                const float& prog_clock_period,
+                                                                                const float& timescale);
 
 /**
  * @brief Print stimulus for a FPGA fabric with a memory bank configuration protocol
