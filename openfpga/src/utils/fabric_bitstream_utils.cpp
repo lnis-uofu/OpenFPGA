@@ -410,7 +410,7 @@ MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_b
 
     std::vector<std::string> reshaped_bl_vectors = reshape_bitstream_vectors_to_first_element(bl_vec, '0');
     /* Reverse the vectors due to the shift register chain nature: first-in first-out */
-    //std::reverse(reshaped_bl_vectors.begin(), reshaped_bl_vectors.end());
+    std::reverse(reshaped_bl_vectors.begin(), reshaped_bl_vectors.end());
     /* Add the BL word to final bitstream */
     for (const auto& reshaped_bl_vec : reshaped_bl_vectors) {
       fabric_bits.add_bl_vectors(word_id, reshaped_bl_vec); 
@@ -418,7 +418,7 @@ MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_b
 
     std::vector<std::string> reshaped_wl_vectors = reshape_bitstream_vectors_to_first_element(wl_vec, '0');
     /* Reverse the vectors due to the shift register chain nature: first-in first-out */
-    //std::reverse(reshaped_wl_vectors.begin(), reshaped_wl_vectors.end());
+    std::reverse(reshaped_wl_vectors.begin(), reshaped_wl_vectors.end());
     /* Add the BL word to final bitstream */
     for (const auto& reshaped_wl_vec : reshaped_wl_vectors) {
       fabric_bits.add_wl_vectors(word_id, reshaped_wl_vec); 
