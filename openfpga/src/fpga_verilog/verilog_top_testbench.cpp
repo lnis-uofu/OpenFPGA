@@ -271,6 +271,11 @@ void print_verilog_top_testbench_global_clock_ports_stimuli(std::fstream& fp,
     /* Find the module port */
     ModulePortId module_global_port = fabric_global_port_info.global_module_port(fabric_global_port);
     VTR_ASSERT(true == module_manager.valid_module_port_id(top_module, module_global_port));
+    
+    /* Skip shift register clocks, they are handled in another way */
+    if (true == fabric_global_port_info.global_port_is_shift_register(fabric_global_port)) {
+      continue;
+    }
 
     BasicPort stimuli_clock_port;
     if (true == fabric_global_port_info.global_port_is_prog(fabric_global_port)) {
@@ -290,7 +295,7 @@ void print_verilog_top_testbench_global_clock_ports_stimuli(std::fstream& fp,
       /* Should try to find a port defintion from simulation parameters
        * If found, it means that we need to use special clock name! 
        */
-      for (const SimulationClockId& sim_clock : simulation_parameters.clocks()) { 
+      for (const SimulationClockId& sim_clock : simulation_parameters.operating_clocks()) { 
         if (global_port_to_connect == simulation_parameters.clock_port(sim_clock)) {
           stimuli_clock_port.set_name(generate_top_testbench_clock_name(std::string(TOP_TB_OP_CLOCK_PORT_PREFIX), simulation_parameters.clock_name(sim_clock)));
         }
@@ -563,6 +568,11 @@ void print_verilog_top_testbench_global_ports_stimuli(std::fstream& fp,
                                                          fabric_global_port_info,
                                                          simulation_parameters);
 
+  print_verilog_top_testbench_global_shift_register_clock_ports_stimuli(fp,
+                                                                        module_manager,
+                                                                        top_module,
+                                                                        fabric_global_port_info);
+
   print_verilog_top_testbench_global_config_done_ports_stimuli(fp,
                                                                module_manager,
                                                                top_module,
@@ -640,7 +650,7 @@ void print_verilog_top_testbench_benchmark_clock_ports(std::fstream& fp,
       /* Skip all the unrelated pin constraints */
       VTR_ASSERT(clock_port_name == pin_constraints.net(pin_constraint));
       /* Try to find which clock source is considered in simulation settings for this pin */
-      for (const SimulationClockId& sim_clock_id : simulation_parameters.clocks()) {
+      for (const SimulationClockId& sim_clock_id : simulation_parameters.operating_clocks()) {
         if (pin_constraints.pin(pin_constraint) == simulation_parameters.clock_port(sim_clock_id)) {
           std::string sim_clock_port_name = generate_top_testbench_clock_name(std::string(TOP_TB_OP_CLOCK_PORT_PREFIX), simulation_parameters.clock_name(sim_clock_id));
           clock_source_to_connect = BasicPort(sim_clock_port_name, 1);
@@ -742,7 +752,7 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
   fp << generate_verilog_port(VERILOG_PORT_REG, prog_clock_register_port) << ";" << std::endl;
 
   /* Multiple operating clocks based on the simulation settings */
-  for (const SimulationClockId& sim_clock : simulation_parameters.clocks()) {
+  for (const SimulationClockId& sim_clock : simulation_parameters.operating_clocks()) {
     std::string sim_clock_port_name = generate_top_testbench_clock_name(std::string(TOP_TB_OP_CLOCK_PORT_PREFIX), simulation_parameters.clock_name(sim_clock));
     BasicPort sim_clock_port(sim_clock_port_name, 1);
     fp << generate_verilog_port(VERILOG_PORT_WIRE, sim_clock_port) << ";" << std::endl;
@@ -862,9 +872,9 @@ size_t calculate_num_config_clock_cycles(const ConfigProtocol& config_protocol,
                 100. * ((float)num_config_clock_cycles / (float)full_num_config_clock_cycles - 1.));
       }
     } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()) {
-      num_config_clock_cycles = 1 + build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, bit_value_to_skip).size();
+      num_config_clock_cycles = 1 + build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip).size();
     } else if (BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type()) {
-      /* TODO */
+      num_config_clock_cycles = 1 + build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip).size();
     }
     break;
   }
@@ -1010,7 +1020,7 @@ void print_verilog_top_testbench_generic_stimulus(std::fstream& fp,
   fp << std::endl;
 
   /* Generate stimuli waveform for multiple user-defined operating clock signals */
-  for (const SimulationClockId& sim_clock : simulation_parameters.clocks()) {
+  for (const SimulationClockId& sim_clock : simulation_parameters.operating_clocks()) {
     print_verilog_comment(fp, "----- Begin raw operating clock signal '" + simulation_parameters.clock_name(sim_clock) + "' generation -----");
     std::string sim_clock_port_name = generate_top_testbench_clock_name(std::string(TOP_TB_OP_CLOCK_PORT_PREFIX), simulation_parameters.clock_name(sim_clock));
     BasicPort sim_clock_port(sim_clock_port_name, 1);
@@ -1112,21 +1122,30 @@ void print_verilog_top_testbench_generic_stimulus(std::fstream& fp,
  *******************************************************************/
 static
 void print_verilog_top_testbench_configuration_protocol_stimulus(std::fstream& fp,
-                                                                 const e_config_protocol_type& config_protocol_type, 
+                                                                 const ConfigProtocol& config_protocol, 
                                                                  const ModuleManager& module_manager,
                                                                  const ModuleId& top_module,
+                                                                 const bool& fast_configuration,
+                                                                 const bool& bit_value_to_skip,
+                                                                 const FabricBitstream& fabric_bitstream,
                                                                  const float& prog_clock_period,
                                                                  const float& timescale) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
   /* Branch on the type of configuration protocol */
-  switch (config_protocol_type) {
+  switch (config_protocol.type()) {
   case CONFIG_MEM_STANDALONE:
     break;
   case CONFIG_MEM_SCAN_CHAIN:
     break;
   case CONFIG_MEM_QL_MEMORY_BANK:
+    print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(fp,
+                                                                               config_protocol, 
+                                                                               module_manager,top_module,
+                                                                               fast_configuration, bit_value_to_skip, fabric_bitstream,
+                                                                               prog_clock_period, timescale);
+    break;
   case CONFIG_MEM_MEMORY_BANK:
   case CONFIG_MEM_FRAME_BASED: {
     ModulePortId en_port_id = module_manager.find_module_port(top_module,
@@ -1935,7 +1954,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
   float prog_clock_period = (1./simulation_parameters.programming_clock_frequency());
   float default_op_clock_period = (1./simulation_parameters.default_operating_clock_frequency());
   float max_op_clock_period = 0.;
-  for (const SimulationClockId& clock_id : simulation_parameters.clocks()) {
+  for (const SimulationClockId& clock_id : simulation_parameters.operating_clocks()) {
     max_op_clock_period = std::max(max_op_clock_period, (float)(1./simulation_parameters.clock_frequency(clock_id)));
   }
 
@@ -1956,8 +1975,9 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
 
   /* Generate stimuli for programming interface */
   print_verilog_top_testbench_configuration_protocol_stimulus(fp, 
-                                                              config_protocol.type(),
+                                                              config_protocol,
                                                               module_manager, top_module,
+                                                              fast_configuration, bit_value_to_skip, fabric_bitstream,
                                                               prog_clock_period,
                                                               VERILOG_SIM_TIMESCALE);
                                                       

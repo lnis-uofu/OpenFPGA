@@ -55,6 +55,7 @@ namespace openfpga {
  ********************************************************************/
 void fpga_fabric_verilog(ModuleManager &module_manager,
                          NetlistManager &netlist_manager,
+                         const std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
                          const CircuitLibrary &circuit_lib,
                          const MuxLibrary &mux_lib,
                          const DecoderLibrary &decoder_lib,
@@ -94,6 +95,7 @@ void fpga_fabric_verilog(ModuleManager &module_manager,
    * Without the modules in the module manager, core logic generation is not possible!!!
    */
   print_verilog_submodule(module_manager, netlist_manager,
+                          blwl_sr_banks,
                           mux_lib, decoder_lib, circuit_lib,
                           submodule_dir_path,
                           options);

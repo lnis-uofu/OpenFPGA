@@ -13,10 +13,18 @@ namespace openfpga {
 /* Top-level module name */
 constexpr char* FPGA_TOP_MODULE_NAME = "fpga_top";
 
+/* Configuration chain naming constant strings */
 constexpr char* CONFIGURABLE_MEMORY_CHAIN_IN_NAME = "ccff_head";
 constexpr char* CONFIGURABLE_MEMORY_CHAIN_OUT_NAME = "ccff_tail";
 constexpr char* CONFIGURABLE_MEMORY_DATA_OUT_NAME = "mem_out";
 constexpr char* CONFIGURABLE_MEMORY_INVERTED_DATA_OUT_NAME = "mem_outb";
+constexpr char* BL_SHIFT_REGISTER_CHAIN_HEAD_NAME = "bl_sr_head";
+constexpr char* BL_SHIFT_REGISTER_CHAIN_TAIL_NAME = "bl_sr_tail";
+constexpr char* BL_SHIFT_REGISTER_CHAIN_BL_OUT_NAME = "bl_sr_bl_out";
+constexpr char* WL_SHIFT_REGISTER_CHAIN_HEAD_NAME = "wl_sr_head";
+constexpr char* WL_SHIFT_REGISTER_CHAIN_TAIL_NAME = "wl_sr_tail";
+constexpr char* WL_SHIFT_REGISTER_CHAIN_WL_OUT_NAME = "wl_sr_wl_out";
+constexpr char* WL_SHIFT_REGISTER_CHAIN_WLR_OUT_NAME = "wl_sr_wlr_out";
 
 /* IO PORT */
 /* Prefix of global input, output and inout ports of FPGA fabric */

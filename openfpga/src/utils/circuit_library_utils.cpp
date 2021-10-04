@@ -305,8 +305,8 @@ bool check_configurable_memory_circuit_model(const ConfigProtocol& config_protoc
       num_err++;
     }
     if (bl_memory_model) { 
-      num_err += check_ccff_circuit_model_ports(circuit_lib,
-                                                bl_memory_model);
+      num_err += check_bl_ccff_circuit_model_ports(circuit_lib,
+                                                   bl_memory_model);
     }
 
     /* Check circuit model for WL protocol */ 
@@ -317,8 +317,8 @@ bool check_configurable_memory_circuit_model(const ConfigProtocol& config_protoc
       num_err++;
     }
     if (wl_memory_model) { 
-      num_err += check_ccff_circuit_model_ports(circuit_lib,
-                                                wl_memory_model);
+      num_err += check_wl_ccff_circuit_model_ports(circuit_lib,
+                                                   wl_memory_model);
     }
     break;
   }

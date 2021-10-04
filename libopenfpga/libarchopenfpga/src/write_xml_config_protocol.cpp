@@ -26,11 +26,24 @@ void write_xml_config_organization(std::fstream& fp,
   openfpga::check_file_stream(fname, fp);
 
   fp << "\t\t" << "<organization";
-
   write_xml_attribute(fp, "type", CONFIG_PROTOCOL_TYPE_STRING[config_protocol.type()]);
   write_xml_attribute(fp, "circuit_model_name", circuit_lib.model_name(config_protocol.memory_model()).c_str());
-
   fp << "/>" << "\n";
+
+  /* Output BL/WL protocols */
+  fp << "\t\t\t" << "<bl";
+  write_xml_attribute(fp, "protocol", BLWL_PROTOCOL_TYPE_STRING[config_protocol.bl_protocol_type()]);
+  write_xml_attribute(fp, "circuit_model_name", circuit_lib.model_name(config_protocol.bl_memory_model()).c_str());
+  write_xml_attribute(fp, "num_banks", config_protocol.bl_num_banks());
+  fp << "/>" << "\n";
+
+  fp << "\t\t\t" << "<wl";
+  write_xml_attribute(fp, "protocol", BLWL_PROTOCOL_TYPE_STRING[config_protocol.wl_protocol_type()]);
+  write_xml_attribute(fp, "circuit_model_name", circuit_lib.model_name(config_protocol.wl_memory_model()).c_str());
+  write_xml_attribute(fp, "num_banks", config_protocol.wl_num_banks());
+  fp << "/>" << "\n";
+
+  fp << "\t" << "</organization>" << "\n";
 }
 
 /********************************************************************

@@ -68,9 +68,13 @@ void read_xml_bl_protocol(pugi::xml_node& xml_bl_protocol,
 
   config_protocol.set_bl_protocol_type(blwl_protocol_type);
 
-  /* Find the memory model, only applicable to shift-registor protocol */
+  /* only applicable to shift-registor protocol
+   * - Find the memory model to build shift register chains
+   * - Find the number of shift register chains for each protocol
+   */
   if (BLWL_PROTOCOL_SHIFT_REGISTER == blwl_protocol_type) {
     config_protocol.set_bl_memory_model_name(get_attribute(xml_bl_protocol, "circuit_model_name", loc_data).as_string());
+    config_protocol.set_bl_num_banks(get_attribute(xml_bl_protocol, "num_banks", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(1));
   }
 }
 
@@ -94,9 +98,13 @@ void read_xml_wl_protocol(pugi::xml_node& xml_wl_protocol,
 
   config_protocol.set_wl_protocol_type(blwl_protocol_type);
 
-  /* Find the memory model, only applicable to shift-registor protocol */
+  /* only applicable to shift-registor protocol
+   * - Find the memory model to build shift register chains
+   * - Find the number of shift register chains for each protocol
+   */
   if (BLWL_PROTOCOL_SHIFT_REGISTER == blwl_protocol_type) {
     config_protocol.set_wl_memory_model_name(get_attribute(xml_wl_protocol, "circuit_model_name", loc_data).as_string());
+    config_protocol.set_wl_num_banks(get_attribute(xml_wl_protocol, "num_banks", loc_data, pugiutil::ReqOpt::OPTIONAL).as_int(1));
   }
 }
 

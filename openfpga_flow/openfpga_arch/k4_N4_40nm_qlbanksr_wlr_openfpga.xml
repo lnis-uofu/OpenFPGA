@@ -146,12 +146,13 @@
       <port type="sram" prefix="sram" size="16"/>
     </circuit_model>
     <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-    <circuit_model type="sram" name="SRAM" prefix="SRAM" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/sram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/sram.v">
+    <circuit_model type="sram" name="SRAM_RE" prefix="SRAM_RE" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/sram.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/sram.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
        <port type="bl" prefix="bl" lib_name="D" size="1"/>
        <port type="wl" prefix="wl" lib_name="WE" size="1"/>
+       <port type="wlr" prefix="wlr" lib_name="RE" size="1"/>
        <port type="output" prefix="out" lib_name="Q" size="1"/>
        <port type="output" prefix="outb" lib_name="QN" size="1"/>
     </circuit_model>
@@ -160,38 +161,39 @@
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <port type="inout" prefix="PAD" size="1" is_global="true" is_io="true" is_data_io="true"/>
-      <port type="sram" prefix="DIR" size="1" mode_select="true" circuit_model_name="SRAM" default_val="1"/>
+      <port type="sram" prefix="DIR" size="1" mode_select="true" circuit_model_name="SRAM_RE" default_val="1"/>
       <port type="input" prefix="outpad" lib_name="A" size="1"/>
       <port type="output" prefix="inpad" lib_name="Y" size="1"/>
     </circuit_model>
     <!-- The following flip-flop is used to build the shift register chains for configuring memory banks -->
-    <circuit_model type="ccff" name="BL_DFFRQ" prefix="BL_DFFRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v" is_default="true">
+    <circuit_model type="ccff" name="BL_DFFRQ" prefix="BL_DFFRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
-       <port type="input" prefix="srReset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
+       <port type="input" prefix="srReset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true" is_shift_register="true"/>
        <port type="input" prefix="D" lib_name="SIN" size="1"/>
        <port type="output" prefix="Q" lib_name="SOUT" size="1"/>
        <port type="bl" prefix="BL" lib_name="BL" size="1"/>
        <port type="clock" prefix="bl_sr_clk" lib_name="CK" size="1" is_global="true" default_val="0" is_prog="true" is_shift_register="true"/>
     </circuit_model>
     <!-- The following flip-flop is used to build the shift register chains for configuring memory banks -->
-    <circuit_model type="ccff" name="WL_DFFRQ" prefix="WL_DFFRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
+    <circuit_model type="ccff" name="WLR_DFFRQ" prefix="WLR_DFFRQ" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
        <design_technology type="cmos"/>
        <input_buffer exist="true" circuit_model_name="INVTX1"/>
        <output_buffer exist="true" circuit_model_name="INVTX1"/>
-       <port type="input" prefix="srReset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
+       <port type="input" prefix="srReset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true" is_shift_register="true"/>
        <port type="input" prefix="D" lib_name="SIN" size="1"/>
        <port type="output" prefix="Q" lib_name="SOUT" size="1"/>
        <port type="wl" prefix="wl" lib_name="WLW" size="1"/>
+       <port type="wlr" prefix="wlr" lib_name="WLR" size="1"/>
        <port type="clock" prefix="wl_en" lib_name="WEN" size="1" is_global="true" default_val="0" is_prog="true"/>
        <port type="clock" prefix="wl_sr_clk" lib_name="CK" size="1" is_global="true" default_val="0" is_prog="true" is_shift_register="true"/>
     </circuit_model>
   </circuit_library>
   <configuration_protocol>
-    <organization type="ql_memory_bank" circuit_model_name="SRAM">
+    <organization type="ql_memory_bank" circuit_model_name="SRAM_RE">
       <bl protocol="shift_register" circuit_model_name="BL_DFFRQ"/>
-      <wl protocol="shift_register" circuit_model_name="WL_DFFRQ"/>
+      <wl protocol="shift_register" circuit_model_name="WLR_DFFRQ"/>
     </organization>
   </configuration_protocol>
   <connection_block>

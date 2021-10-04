@@ -249,8 +249,12 @@ void build_module_fabric_dependent_bitstream_ql_memory_bank(const ConfigProtocol
       }
     }
   } else {
-    /* TODO */
     VTR_ASSERT(BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type());
+    bl_addr_port_info.set_width(1); /* Deposit minimum width */
+    for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+      size_t num_bls = compute_memory_bank_regional_num_bls(module_manager, top_module, config_region, circuit_lib, config_protocol.memory_model());
+      bl_addr_port_info.set_width(std::max(num_bls, bl_addr_port_info.get_width()));
+    }
   }
 
   /* For different WL control protocol, the address ports are different 
@@ -275,8 +279,12 @@ void build_module_fabric_dependent_bitstream_ql_memory_bank(const ConfigProtocol
       }
     }
   } else {
-    /* TODO */
     VTR_ASSERT(BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.wl_protocol_type());
+    wl_addr_port_info.set_width(1); /* Deposit minimum width */
+    for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+      size_t num_wls = compute_memory_bank_regional_num_wls(module_manager, top_module, config_region, circuit_lib, config_protocol.memory_model());
+      wl_addr_port_info.set_width(std::max(num_wls, wl_addr_port_info.get_width()));
+    }
   }
 
   /* Reserve bits before build-up */
@@ -297,26 +305,30 @@ void build_module_fabric_dependent_bitstream_ql_memory_bank(const ConfigProtocol
     
     /* Find the BL/WL port (different region may have different sizes of BL/WLs) */
     ModulePortId cur_bl_addr_port;
+    BasicPort cur_bl_addr_port_info;
     if (BLWL_PROTOCOL_DECODER == config_protocol.bl_protocol_type()) {
       cur_bl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_BL_ADDRESS_PORT_NAME));
+      cur_bl_addr_port_info = module_manager.module_port(top_module, cur_bl_addr_port);
     } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()) {
       cur_bl_addr_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(MEMORY_BL_PORT_NAME), config_region));
+      cur_bl_addr_port_info = module_manager.module_port(top_module, cur_bl_addr_port);
     } else {
-      /* TODO */
       VTR_ASSERT(BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type());
+      cur_bl_addr_port_info.set_width(compute_memory_bank_regional_num_bls(module_manager, top_module, config_region, circuit_lib, config_protocol.memory_model()));
     }
-    BasicPort cur_bl_addr_port_info = module_manager.module_port(top_module, cur_bl_addr_port);
 
     ModulePortId cur_wl_addr_port;
+    BasicPort cur_wl_addr_port_info;
     if (BLWL_PROTOCOL_DECODER == config_protocol.wl_protocol_type()) {
       cur_wl_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_WL_ADDRESS_PORT_NAME));
+      cur_wl_addr_port_info = module_manager.module_port(top_module, cur_wl_addr_port);
     } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type()) {
       cur_wl_addr_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(std::string(MEMORY_WL_PORT_NAME), config_region));
+      cur_wl_addr_port_info = module_manager.module_port(top_module, cur_wl_addr_port);
     } else {
-      /* TODO */
       VTR_ASSERT(BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.wl_protocol_type());
+      cur_wl_addr_port_info.set_width(compute_memory_bank_regional_num_wls(module_manager, top_module, config_region, circuit_lib, config_protocol.memory_model()));
     }
-    BasicPort cur_wl_addr_port_info = module_manager.module_port(top_module, cur_wl_addr_port);
 
     /************************************************************** 
      * Precompute the BLs and WLs distribution across the FPGA fabric

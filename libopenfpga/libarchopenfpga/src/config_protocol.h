@@ -29,9 +29,11 @@ class ConfigProtocol {
     e_blwl_protocol_type bl_protocol_type() const;
     std::string bl_memory_model_name() const;
     CircuitModelId bl_memory_model() const;
+    size_t bl_num_banks() const;
     e_blwl_protocol_type wl_protocol_type() const;
     std::string wl_memory_model_name() const;
     CircuitModelId wl_memory_model() const;
+    size_t wl_num_banks() const;
   public: /* Public Mutators */
     void set_type(const e_config_protocol_type& type);
     void set_memory_model_name(const std::string& memory_model_name);
@@ -41,9 +43,11 @@ class ConfigProtocol {
     void set_bl_protocol_type(const e_blwl_protocol_type& type);
     void set_bl_memory_model_name(const std::string& memory_model_name);
     void set_bl_memory_model(const CircuitModelId& memory_model);
+    void set_bl_num_banks(const size_t& num_banks);
     void set_wl_protocol_type(const e_blwl_protocol_type& type);
     void set_wl_memory_model_name(const std::string& memory_model_name);
     void set_wl_memory_model(const CircuitModelId& memory_model);
+    void set_wl_num_banks(const size_t& num_banks);
   private: /* Internal data */
     /* The type of configuration protocol. 
      * In other words, it is about how to organize and access each configurable memory 
@@ -58,17 +62,21 @@ class ConfigProtocol {
     int num_regions_;
 
     /* BL & WL protocol: This is only applicable to memory-bank configuration protocols
-     * - type: defines which protocol to be used. By default, we consider decoders
+     * - type:               defines which protocol to be used. By default, we consider decoders
      * - bl/wl_memory_model: defines the circuit model to be used when building shift register chains for BL/WL configuration. 
      *                       It must be a valid CCFF circuit model. This is only applicable when shift-register protocol is selected
      *                       for BL or WL.
+     * - bl/wl_num_banks:    defines the number of independent shift register chains (with separated head and tail ports)
+     *                       for a given BL protocol per configuration region
      */
     e_blwl_protocol_type bl_protocol_type_ = BLWL_PROTOCOL_DECODER;
     std::string bl_memory_model_name_;
     CircuitModelId bl_memory_model_;
+    size_t bl_num_banks_;
     e_blwl_protocol_type wl_protocol_type_ = BLWL_PROTOCOL_DECODER;
     std::string wl_memory_model_name_;
     CircuitModelId wl_memory_model_;
+    size_t wl_num_banks_;
 };
 
 #endif

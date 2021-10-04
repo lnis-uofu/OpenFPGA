@@ -190,23 +190,18 @@ int write_memory_bank_fabric_bitstream_to_text_file(std::fstream& fp,
  *******************************************************************/
 static 
 int write_memory_bank_flatten_fabric_bitstream_to_text_file(std::fstream& fp,
+                                                            const bool& fast_configuration,
                                                             const bool& bit_value_to_skip,
                                                             const FabricBitstream& fabric_bitstream) {
   int status = 0;
 
-  MemoryBankFlattenFabricBitstream fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, bit_value_to_skip);
+  MemoryBankFlattenFabricBitstream fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip);
 
   /* The address sizes and data input sizes are the same across any element, 
    * just get it from the 1st element to save runtime
    */
-  size_t bl_addr_size = 0;
-  for (const auto& bl_vec : fabric_bits.begin()->second) {
-    bl_addr_size += bl_vec.size();
-  } 
-  size_t wl_addr_size = 0;
-  for (const auto& wl_vec : fabric_bits.begin()->first) {
-    wl_addr_size += wl_vec.size();
-  } 
+  size_t bl_addr_size = fabric_bits.bl_vector_size();
+  size_t wl_addr_size = fabric_bits.wl_vector_size();
 
   /* Output information about how to intepret the bitstream */
   fp << "// Bitstream length: " << fabric_bits.size() << std::endl;
@@ -215,16 +210,67 @@ int write_memory_bank_flatten_fabric_bitstream_to_text_file(std::fstream& fp,
   fp << "<wl_address " << wl_addr_size << " bits>";
   fp << std::endl;
 
-  for (const auto& addr_pair : fabric_bits) {
+  for (const auto& wl_vec : fabric_bits.wl_vectors()) {
     /* Write BL address code */
-    for (const auto& bl_vec : addr_pair.second) {
-      fp << bl_vec;
+    for (const auto& bl_unit : fabric_bits.bl_vector(wl_vec)) {
+      fp << bl_unit;
     }
     /* Write WL address code */
-    for (const auto& wl_vec : addr_pair.first) {
-      fp << wl_vec;
+    for (const auto& wl_unit : wl_vec) {
+      fp << wl_unit;
     }
     fp << std::endl;
+  }
+
+  return status;
+}
+
+/********************************************************************
+ * Write the fabric bitstream fitting a memory bank protocol 
+ * to a plain text file 
+ *
+ * Return:
+ *  - 0 if succeed
+ *  - 1 if critical errors occured
+ *******************************************************************/
+static 
+int write_memory_bank_shift_register_fabric_bitstream_to_text_file(std::fstream& fp,
+                                                                   const bool& fast_configuration,
+                                                                   const bool& bit_value_to_skip,
+                                                                   const FabricBitstream& fabric_bitstream) {
+  int status = 0;
+
+  MemoryBankShiftRegisterFabricBitstream fabric_bits = build_memory_bank_shift_register_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip);
+
+  /* Output information about how to intepret the bitstream */
+  fp << "// Bitstream word count: " << fabric_bits.num_words() << std::endl;
+  fp << "// Bitstream bl word size: " << fabric_bits.bl_word_size() << std::endl;
+  fp << "// Bitstream wl word size: " << fabric_bits.wl_word_size() << std::endl;
+  fp << "// Bitstream width (LSB -> MSB): ";
+  fp << "<bl shift register heads " << fabric_bits.bl_width() << " bits>";
+  fp << "<wl shift register heads " << fabric_bits.wl_width() << " bits>";
+  fp << std::endl;
+
+  size_t word_cnt = 0;  
+
+  for (const auto& word : fabric_bits.words()) {
+    fp << "// Word " << word_cnt << std::endl;
+
+    /* Write BL address code */
+    fp << "// BL part " << std::endl;
+    for (const auto& bl_vec : fabric_bits.bl_vectors(word)) {
+      fp << bl_vec;
+      fp << std::endl;
+    }
+
+    /* Write WL address code */
+    fp << "// WL part " << std::endl;
+    for (const auto& wl_vec : fabric_bits.wl_vectors(word)) {
+      fp << wl_vec;
+      fp << std::endl;
+    }
+
+    word_cnt++;
   }
 
   return status;
@@ -369,12 +415,17 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
                                                                apply_fast_configuration,
                                                                bit_value_to_skip,
                                                                fabric_bitstream);
-    } else {
-      VTR_ASSERT(BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()
-              || BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type());
+    } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()) {
       status = write_memory_bank_flatten_fabric_bitstream_to_text_file(fp,
+                                                                       apply_fast_configuration,
                                                                        bit_value_to_skip,
                                                                        fabric_bitstream);
+    } else {
+      VTR_ASSERT(BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type());
+      status = write_memory_bank_shift_register_fabric_bitstream_to_text_file(fp,
+                                                                              apply_fast_configuration,
+                                                                              bit_value_to_skip,
+                                                                              fabric_bitstream);
     }
     break;
   } 

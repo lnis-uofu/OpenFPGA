@@ -16,6 +16,15 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+std::vector<ModuleNetId> add_module_output_nets_to_chain_mem_modules(ModuleManager& module_manager,
+                                                                     const ModuleId& mem_module,
+                                                                     const std::string& mem_module_output_name,
+                                                                     const CircuitLibrary& circuit_lib,
+                                                                     const CircuitPortId& circuit_port,
+                                                                     const ModuleId& child_module,
+                                                                     const size_t& child_index,
+                                                                     const size_t& child_instance);
+
 void build_memory_modules(ModuleManager& module_manager,
                           DecoderLibrary& arch_decoder_lib,
                           const MuxLibrary& mux_lib,

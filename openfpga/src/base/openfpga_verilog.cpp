@@ -52,6 +52,7 @@ int write_fabric_verilog(OpenfpgaContext& openfpga_ctx,
   
   fpga_fabric_verilog(openfpga_ctx.mutable_module_graph(),
                       openfpga_ctx.mutable_verilog_netlists(),
+                      openfpga_ctx.blwl_shift_register_banks(),
                       openfpga_ctx.arch().circuit_lib,
                       openfpga_ctx.mux_lib(),
                       openfpga_ctx.decoder_lib(),

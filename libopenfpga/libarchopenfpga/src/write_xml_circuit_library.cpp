@@ -220,6 +220,10 @@ void write_xml_circuit_port(std::fstream& fp,
     write_xml_attribute(fp, "is_prog", "true"); 
   }
 
+  if (true == circuit_lib.port_is_shift_register(port)) {
+    write_xml_attribute(fp, "is_shift_register", "true"); 
+  }
+
   if (true == circuit_lib.port_is_config_enable(port)) {
     write_xml_attribute(fp, "is_config_enable", "true"); 
   }

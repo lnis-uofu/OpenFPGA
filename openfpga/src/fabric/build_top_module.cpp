@@ -283,6 +283,7 @@ vtr::Matrix<size_t> add_top_module_connection_block_instances(ModuleManager& mod
  *******************************************************************/
 int build_top_module(ModuleManager& module_manager,
                      DecoderLibrary& decoder_lib,
+                     std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
                      const CircuitLibrary& circuit_lib,
                      const VprDeviceAnnotation& vpr_device_annotation,
                      const DeviceGrid& grids,
@@ -340,12 +341,6 @@ int build_top_module(ModuleManager& module_manager,
                                                 grids, grid_instance_ids,
                                                 tile_direct, arch_direct);
   }
-
-  /* Add global ports to the pb_module:
-   * This is a much easier job after adding sub modules (instances), 
-   * we just need to find all the global ports from the child modules and build a list of it
-   */
-  add_module_global_ports_from_child_modules(module_manager, top_module);
 
   /* Add global ports from grid ports that are defined as global in tile annotation */
   status = add_top_module_global_ports_from_grid_modules(module_manager, top_module, tile_annotation, vpr_device_annotation, grids, grid_instance_ids);
@@ -420,12 +415,19 @@ int build_top_module(ModuleManager& module_manager,
    * This is a one-shot addition that covers all the memory modules in this pb module!
    */
   if (0 < module_manager.configurable_children(top_module).size()) {
-    add_top_module_nets_memory_config_bus(module_manager, decoder_lib,
+    add_top_module_nets_memory_config_bus(module_manager, decoder_lib, blwl_sr_banks,
                                           top_module, 
                                           circuit_lib,
                                           config_protocol, circuit_lib.design_tech_type(sram_model),
                                           top_module_num_config_bits);
   }
+
+  /* Add global ports to the top module:
+   * This is a much easier job after adding sub modules (instances), 
+   * we just need to find all the global ports from the child modules and build a list of it
+   * @note This function is called after the add_top_module_nets_memory_config_bus() because it may add some sub modules
+   */
+  add_module_global_ports_from_child_modules(module_manager, top_module);
 
   return status;
 }

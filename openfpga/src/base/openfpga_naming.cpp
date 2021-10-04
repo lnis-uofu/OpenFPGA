@@ -823,6 +823,23 @@ std::string generate_regional_blwl_port_name(const std::string& blwl_port_prefix
 }
 
 /*********************************************************************
+ * Generate the module name for a shift register chain which configures BLs
+ *********************************************************************/
+std::string generate_bl_shift_register_module_name(const std::string& memory_model_name,
+                                                   const size_t& shift_register_size) {
+  return std::string("bl_shift_register_") + memory_model_name + std::string("_size") + std::to_string(shift_register_size);
+}
+
+/*********************************************************************
+ * Generate the module name for a shift register chain which configures WLs
+ *********************************************************************/
+std::string generate_wl_shift_register_module_name(const std::string& memory_model_name,
+                                                   const size_t& shift_register_size) {
+  return std::string("wl_shift_register_") + memory_model_name + std::string("_size") + std::to_string(shift_register_size);
+}
+
+
+/*********************************************************************
  * Generate the port name for the input bus of a routing multiplexer
  * This is very useful in Verilog code generation where the inputs of 
  * a routing multiplexer may come from different ports. 

@@ -187,6 +187,12 @@ std::string generate_sram_local_port_name(const CircuitLibrary& circuit_lib,
 std::string generate_regional_blwl_port_name(const std::string& blwl_port_prefix,
                                              const ConfigRegionId& region_id);
 
+std::string generate_bl_shift_register_module_name(const std::string& memory_model_name,
+                                                   const size_t& shift_register_size);
+
+std::string generate_wl_shift_register_module_name(const std::string& memory_model_name,
+                                                   const size_t& shift_register_size);
+
 std::string generate_mux_input_bus_port_name(const CircuitLibrary& circuit_lib,
                                              const CircuitModelId& mux_model,
                                              const size_t& mux_size, 
