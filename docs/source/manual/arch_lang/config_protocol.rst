@@ -167,10 +167,39 @@ The BL and WL protocols can be customized through the XML syntax ``bl`` and ``wl
     </organization>
   </configuration_protocol>
 
-.. option:: protocol="decoder|flatten"
+.. option:: protocol="decoder|flatten|shift_register"
 
-  - ``decoder``: BLs or WLs are controlled by decoders with address lines. For BLs, the decoder includes an enable signal as well as a data input signal. This is the default option if not specified.
-  - ``flatten``: BLs or WLs are directly available at the FPGA fabric. In this way, all the configurable memorys on the same WL can be written through the BL signals in one clock cycle
+  - ``decoder``: BLs or WLs are controlled by decoders with address lines. For BLs, the decoder includes an enable signal as well as a data input signal. This is the default option if not specified. See an illustrative example in :numref:`fig_memory_bank_decoder_based`. 
+  - ``flatten``: BLs or WLs are directly available at the FPGA fabric. In this way, all the configurable memorys on the same WL can be written through the BL signals in one clock cycle. See an illustrative example in :numref:`fig_memory_bank_flatten`. 
+  - ``shift_register``: BLs or WLs are controlled by shift register chains. The BL/WLs are programming each time the shift register chains are fully loaded. See an illustrative example in :numref:`fig_memory_bank_shift_register`. 
+
+.. _fig_memory_bank_decoder_based:
+
+.. figure:: figures/memory_bank_decoder.svg
+   :scale: 30%
+   :alt: map to buried treasure
+ 
+   Example of (a) a memory organization using address decoders; (b) single memory bank across the fabric; and (c) multiple memory banks across the fabric.
+
+
+.. _fig_memory_bank_flatten:
+
+.. figure:: figures/memory_bank_flatten.svg
+   :scale: 30%
+   :alt: map to buried treasure
+ 
+   Example of (a) a memory organization with direct access to BL/WL signals; (b) single memory bank across the fabric; and (c) multiple memory banks across the fabric.
+
+.. _fig_memory_bank_shift_register:
+
+.. figure:: figures/memory_bank_shift_register.svg
+   :scale: 30%
+   :alt: map to buried treasure
+ 
+   Example of (a) a memory organization using shift register chains to control BL/WLs; (b) single memory bank across the fabric; and (c) multiple memory banks across the fabric.
+
+
+.. note:: The flip-flop for WL shift register requires an enable signal to gate WL signals when loading WL shift registers
 
 .. note:: Memory-bank decoders does require a memory cell to have 
 
