@@ -301,10 +301,17 @@ ModuleId build_wl_shift_register_chain_module(ModuleManager& module_manager,
                             circuit_lib.port_size(sram_output_ports[0]));
   module_manager.add_port(mem_module, chain_tail_port, ModuleManager::MODULE_OUTPUT_PORT);
 
-  /* Add the output ports to output BL signals */
+  /* Add the output ports to output BL/WL signals */
   BasicPort chain_wl_port(WL_SHIFT_REGISTER_CHAIN_WL_OUT_NAME, 
                           num_mems);
   module_manager.add_port(mem_module, chain_wl_port, ModuleManager::MODULE_OUTPUT_PORT);
+
+  /* Add the output ports to output WLR signals */
+  if (!sram_wlr_ports.empty()) {
+    BasicPort chain_wlr_port(WL_SHIFT_REGISTER_CHAIN_WLR_OUT_NAME, 
+                            num_mems);
+    module_manager.add_port(mem_module, chain_wlr_port, ModuleManager::MODULE_OUTPUT_PORT);
+  }
 
   /* Find the sram module in the module manager */
   ModuleId sram_mem_module = module_manager.find_module(circuit_lib.model_name(sram_model));
