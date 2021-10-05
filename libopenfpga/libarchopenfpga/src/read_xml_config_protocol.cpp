@@ -152,6 +152,12 @@ void read_xml_config_organization(pugi::xml_node& xml_config_orgz,
     if (xml_wl_protocol) {
       read_xml_wl_protocol(xml_wl_protocol, loc_data, config_protocol);
     }
+ 
+    /* Throw an execption if the BL/WL protocols are different. We currently do not support it! */
+    if (config_protocol.bl_protocol_type() != config_protocol.wl_protocol_type()) {
+      archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_config_orgz),
+                     "Expect same type of protocol for both BL and WL! Other combinations are not supported yet\n");
+    }
   }
 }
 
