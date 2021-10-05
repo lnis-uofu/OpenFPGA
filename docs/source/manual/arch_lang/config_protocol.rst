@@ -47,7 +47,12 @@ Template
 
   Specify the number of configuration regions to be used across the fabrics. By default, it will be only 1 configuration region. Each configuration region contains independent configuration protocols, but the whole fabric should employ the same type of configuration protocols. For example, an FPGA fabric consists of 4 configuration regions, each of which includes a configuration chain. The more configuration chain to be used, the fast configuration runtime will be, but at the cost of more I/Os in the FPGA fabrics. The organization of each configurable region can be customized through the fabric key (see details in :ref:`fabric_key`).
 
-  .. warning:: Currently, multiple configuration regions is not applicable to ``standalone`` configuration protocol.
+  .. warning:: Currently, multiple configuration regions is not applicable to 
+
+    - ``standalone`` configuration protocol.
+    - ``ql_memory_bank`` configuration protocol when BL/WL protocol ``flatten`` is selected
+
+  .. note:: For ``ql_memory_bank`` configuration protocol when BL/WL protocol ``shift_register`` is selected, different configuration regions **cannot** share any WLs on the same row! In such case, the default fabric key may not work. Strongly recommend to craft your own fabric key based on your configuration region plannning!
 
 
 Configuration Chain Example
