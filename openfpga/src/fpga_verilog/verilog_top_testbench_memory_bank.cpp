@@ -298,8 +298,10 @@ int constrain_blwl_shift_register_clock_period_from_simulation_settings(const Si
   for (const SimulationClockId& sim_clk : sim_settings.programming_shift_register_clocks()) {
     /* Bypass all the clocks which does not match */
     if (sim_settings.clock_name(sim_clk) == sr_clock_port.get_name() && sim_settings.constrained_clock(sim_clk)) {
-      if (sr_clock_period > 0.5 * (1 / sim_settings.clock_frequency(sim_clk)) / timescale) {
-        VTR_LOG_ERROR("Constrained clock frequency for BL shift registers is lower than the minimum requirement (%g %s)! Shift register chain cannot load data completely!\n",
+      if (1. / (2. * sr_clock_period * timescale) > sim_settings.clock_frequency(sim_clk)) {
+        VTR_LOG_ERROR("Constrained clock frequency (=%g %s) for BL shift registers is lower than the minimum requirement (=%g %s)! Shift register chain cannot load data completely!\n",
+                      sim_settings.clock_frequency(sim_clk) / 1e6,
+                      time_unit_to_string(1e6, "Hz").c_str(),
                       1. / (2. * sr_clock_period * timescale) / 1e6,
                       time_unit_to_string(1e6, "Hz").c_str());
         return CMD_EXEC_FATAL_ERROR;
