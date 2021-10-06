@@ -84,7 +84,7 @@ std::string unit_to_string(const float& unit) {
  * Convert numeric time unit to string
  * e.g. 1e-12 -> ps
  *******************************************************************/
-std::string time_unit_to_string(const float& unit) {
+std::string time_unit_to_string(const float& unit, const std::string& postfix) {
   /* For larger than 1 unit, we do not accept */
   if (1e6 < unit) {
     VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -93,7 +93,7 @@ std::string time_unit_to_string(const float& unit) {
     exit(1);
   }
 
-  return unit_to_string(unit) + std::string("s");
+  return unit_to_string(unit) + postfix;
 }
 
 /********************************************************************
