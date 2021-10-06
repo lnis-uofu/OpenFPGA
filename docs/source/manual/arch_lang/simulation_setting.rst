@@ -14,7 +14,10 @@ General organization is as follows
           <clock name="<string>" port="<string>" frequency="<float>"/>
           ...
         </operating>
-        <programming frequency="<int>"/>
+        <programming frequency="<int>">
+          <clock name="<string>" port="<string>" frequency="auto|<float>" is_shift_register="<bool>"/>
+          ...
+        </programming>
       </clock_setting>
       <simulator_option>
         <operating_condition temperature="<int>"/>
@@ -61,7 +64,10 @@ We should the full syntax in the code block below and then provide details on ea
       <clock name="<string>" port="<string>" frequency="<float>"/>
       ...
     </operating>
-    <programming frequency="<float>"/>
+    <programming frequency="<float>">
+      <clock name="<string>" port="<string>" frequency="auto|<float>" is_shift_register="<bool>"/>
+      ...
+    </programming>
   </clock_setting>
 
 Operating clock setting
@@ -120,6 +126,22 @@ Programming clocks are defined under the XML node ``<programming>``
 - ``frequency="<float>"``
   Specify the frequency of the programming clock using an absolute value in the unit of ``[Hz]`` 
   This frequency is used in testbenches for programming phase simulation.
+
+.. option:: <clock name="<string>" port="<string>" frequency="auto|<float>" is_shift_register="<bool>"/>
+
+- ``name="<string>``
+  Specify a unique name for a clock signal. The name should match a reserved word of programming clock, i.e., ``bl_sr_clock`` and ``wl_sr_clock``.
+
+  .. note:: The ``bl_sr_clock`` represents the clock signal driving the BL shift register chains, while the ``wl_sr_clock`` represents the clock signal driving the WL shift register chains
+
+- ``port="<string>``
+  Specify the clock port which the clock signal should be applied to. The clock port must be a valid clock port defined in OpenFPGA architecture description. Explicit index is required, e.g., ``clk[1:1]``. Otherwise, default index ``0`` will be considered, e.g., ``clk`` will be translated as ``clk[0:0]``.
+
+- ``frequency="auto|<float>``
+  Specify frequency of a clock signal in the unit of ``[Hz]``. If ``auto`` is used, the programming clock frequency will be inferred by OpenFPGA.
+
+- ``is_shift_register="<bool>``
+  Specify if this clock signal is used to drive shift register chains in BL/WL protocols
 
 .. note:: Programming clock frequency is typically much slower than the operating clock and strongly depends on the process technology. Suggest to characterize the speed of your configuration protocols before specifying a value!
 
