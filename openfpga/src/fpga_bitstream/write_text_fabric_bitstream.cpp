@@ -12,6 +12,7 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
+#include "openfpga_decode.h"
 #include "openfpga_digest.h"
 #include "openfpga_version.h"
 
@@ -192,10 +193,15 @@ static
 int write_memory_bank_flatten_fabric_bitstream_to_text_file(std::fstream& fp,
                                                             const bool& fast_configuration,
                                                             const bool& bit_value_to_skip,
-                                                            const FabricBitstream& fabric_bitstream) {
+                                                            const FabricBitstream& fabric_bitstream,
+                                                            const bool& keep_dont_care_bits) {
   int status = 0;
 
-  MemoryBankFlattenFabricBitstream fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip, 'x');
+  char dont_care_bit = '0';
+  if (keep_dont_care_bits) {
+    dont_care_bit = DONT_CARE_CHAR; 
+  }
+  MemoryBankFlattenFabricBitstream fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip, dont_care_bit);
 
   /* The address sizes and data input sizes are the same across any element, 
    * just get it from the 1st element to save runtime
@@ -237,10 +243,15 @@ static
 int write_memory_bank_shift_register_fabric_bitstream_to_text_file(std::fstream& fp,
                                                                    const bool& fast_configuration,
                                                                    const bool& bit_value_to_skip,
-                                                                   const FabricBitstream& fabric_bitstream) {
+                                                                   const FabricBitstream& fabric_bitstream,
+                                                                   const bool& keep_dont_care_bits) {
   int status = 0;
 
-  MemoryBankShiftRegisterFabricBitstream fabric_bits = build_memory_bank_shift_register_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip, 'x');
+  char dont_care_bit = '0';
+  if (keep_dont_care_bits) {
+    dont_care_bit = DONT_CARE_CHAR; 
+  }
+  MemoryBankShiftRegisterFabricBitstream fabric_bits = build_memory_bank_shift_register_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip, dont_care_bit);
 
   /* Output information about how to intepret the bitstream */
   fp << "// Bitstream word count: " << fabric_bits.num_words() << std::endl;
@@ -356,6 +367,7 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
                                         const FabricGlobalPortInfo& global_ports,
                                         const std::string& fname,
                                         const bool& fast_configuration,
+                                        const bool& keep_dont_care_bits,
                                         const bool& verbose) {
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
@@ -419,13 +431,15 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
       status = write_memory_bank_flatten_fabric_bitstream_to_text_file(fp,
                                                                        apply_fast_configuration,
                                                                        bit_value_to_skip,
-                                                                       fabric_bitstream);
+                                                                       fabric_bitstream,
+                                                                       keep_dont_care_bits);
     } else {
       VTR_ASSERT(BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type());
       status = write_memory_bank_shift_register_fabric_bitstream_to_text_file(fp,
                                                                               apply_fast_configuration,
                                                                               bit_value_to_skip,
-                                                                              fabric_bitstream);
+                                                                              fabric_bitstream,
+                                                                              keep_dont_care_bits);
     }
     break;
   } 
