@@ -195,7 +195,7 @@ int write_memory_bank_flatten_fabric_bitstream_to_text_file(std::fstream& fp,
                                                             const FabricBitstream& fabric_bitstream) {
   int status = 0;
 
-  MemoryBankFlattenFabricBitstream fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip);
+  MemoryBankFlattenFabricBitstream fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip, 'x');
 
   /* The address sizes and data input sizes are the same across any element, 
    * just get it from the 1st element to save runtime
@@ -240,7 +240,7 @@ int write_memory_bank_shift_register_fabric_bitstream_to_text_file(std::fstream&
                                                                    const FabricBitstream& fabric_bitstream) {
   int status = 0;
 
-  MemoryBankShiftRegisterFabricBitstream fabric_bits = build_memory_bank_shift_register_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip);
+  MemoryBankShiftRegisterFabricBitstream fabric_bits = build_memory_bank_shift_register_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip, 'x');
 
   /* Output information about how to intepret the bitstream */
   fp << "// Bitstream word count: " << fabric_bits.num_words() << std::endl;

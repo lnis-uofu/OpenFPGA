@@ -63,7 +63,8 @@ size_t find_frame_based_fast_configuration_fabric_bitstream_size(const FabricBit
  *******************************************************************/
 MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(const FabricBitstream& fabric_bitstream,
                                                                             const bool& fast_configuration,
-                                                                            const bool& bit_value_to_skip);
+                                                                            const bool& bit_value_to_skip,
+                                                                            const char& dont_care_bit = 'x');
 
 /********************************************************************
  * @ brief Reorganize the fabric bitstream for memory banks which use shift register to manipulate BL and WLs
@@ -96,7 +97,8 @@ MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(cons
 MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_bitstream(const FabricBitstream& fabric_bitstream,
                                                                                          const bool& fast_configuration,
                                                                                          //const std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
-                                                                                         const bool& bit_value_to_skip);
+                                                                                         const bool& bit_value_to_skip,
+                                                                                         const char& dont_care_bit = 'x');
 
 /* Alias to a specific organization of bitstreams for memory bank configuration protocol */
 typedef std::map<std::pair<std::string, std::string>, std::vector<bool>> MemoryBankFabricBitstream;
