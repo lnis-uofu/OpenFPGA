@@ -8,8 +8,8 @@
   <clock_setting>
     <operating frequency="auto" num_cycles="auto" slack="0.2"/>
     <programming frequency="100e6">
-      <clock name="bl_shift_register_clk" port="bl_sr_clk[0:0]" frequency="1.5e9" is_shift_register="true"/>
-      <clock name="wl_shift_register_clk" port="wl_sr_clk[0:0]" frequency="1.5e9" is_shift_register="true"/>
+      <clock name="bl_sr_clock" port="bl_sr_clk[0:0]" frequency="1.5e9" is_shift_register="true"/>
+      <clock name="wl_sr_clock" port="wl_sr_clk[0:0]" frequency="1.5e9" is_shift_register="true"/>
     </programming>
   </clock_setting>
   <simulator_option>
