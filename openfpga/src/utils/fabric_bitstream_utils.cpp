@@ -234,7 +234,8 @@ MemoryBankFabricBitstream build_memory_bank_fabric_bitstream_by_address(const Fa
 
 MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(const FabricBitstream& fabric_bitstream,
                                                                             const bool& fast_configuration,
-                                                                            const bool& bit_value_to_skip) {
+                                                                            const bool& bit_value_to_skip,
+                                                                            const char& dont_care_bit) {
   /* If fast configuration is not enabled, we need all the wl address even some of them have all-zero BLs */
   if (!fast_configuration) {
     vtr::vector<FabricBitRegionId, std::map<std::string, std::string>> fabric_bits_per_region;
@@ -324,14 +325,14 @@ MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(cons
     std::vector<std::string> cur_wl_vectors;
     for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
       /* If the key id is in bound for the key list in this region, find the BL and WL and add to the final bitstream database
-       * If the key id is out of bound for the key list in this region, we append an all-zero string for both BL and WLs
+       * If the key id is out of bound for the key list in this region, we append an all-'x' string for both BL and WLs
        */
       if (ikey < fabric_bits_per_region_keys[region].size()) {
         cur_wl_vectors.push_back(fabric_bits_per_region_keys[region][ikey]);
         cur_bl_vectors.push_back(fabric_bits_per_region[region].at(fabric_bits_per_region_keys[region][ikey]));
       } else {
-        cur_wl_vectors.push_back(std::string(max_blwl_sizes_per_region[region].second, '0'));
-        cur_bl_vectors.push_back(std::string(max_blwl_sizes_per_region[region].first, '0'));
+        cur_wl_vectors.push_back(std::string(max_blwl_sizes_per_region[region].second, dont_care_bit));
+        cur_bl_vectors.push_back(std::string(max_blwl_sizes_per_region[region].first, dont_care_bit));
       }
     }
     /* Add the pair to std map */
@@ -398,8 +399,9 @@ std::vector<std::string> reshape_bitstream_vectors_to_first_element(const std::v
 MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_bitstream(const FabricBitstream& fabric_bitstream,
                                                                                          const bool& fast_configuration,
                                                                                          //const std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
-                                                                                         const bool& bit_value_to_skip) {
-  MemoryBankFlattenFabricBitstream raw_fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip);
+                                                                                         const bool& bit_value_to_skip,
+                                                                                         const char& dont_care_bit) {
+  MemoryBankFlattenFabricBitstream raw_fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip, dont_care_bit);
   MemoryBankShiftRegisterFabricBitstream fabric_bits; 
 
   /* Iterate over each word */   
@@ -408,7 +410,7 @@ MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_b
 
     MemoryBankShiftRegisterFabricBitstreamWordId word_id = fabric_bits.create_word();
 
-    std::vector<std::string> reshaped_bl_vectors = reshape_bitstream_vectors_to_first_element(bl_vec, '0');
+    std::vector<std::string> reshaped_bl_vectors = reshape_bitstream_vectors_to_first_element(bl_vec, dont_care_bit);
     /* Reverse the vectors due to the shift register chain nature: first-in first-out */
     std::reverse(reshaped_bl_vectors.begin(), reshaped_bl_vectors.end());
     /* Add the BL word to final bitstream */
@@ -416,7 +418,7 @@ MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_b
       fabric_bits.add_bl_vectors(word_id, reshaped_bl_vec); 
     }
 
-    std::vector<std::string> reshaped_wl_vectors = reshape_bitstream_vectors_to_first_element(wl_vec, '0');
+    std::vector<std::string> reshaped_wl_vectors = reshape_bitstream_vectors_to_first_element(wl_vec, dont_care_bit);
     /* Reverse the vectors due to the shift register chain nature: first-in first-out */
     std::reverse(reshaped_wl_vectors.begin(), reshaped_wl_vectors.end());
     /* Add the BL word to final bitstream */
