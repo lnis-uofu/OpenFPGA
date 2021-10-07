@@ -45,15 +45,16 @@ void print_verilog_top_testbench_global_shift_register_clock_ports_stimuli(std::
 /**
  * @brief Generate the Verilog codes that generate stimuli waveforms for BL/WL protocols
  */
-void print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(std::fstream& fp,
-                                                                                const ConfigProtocol& config_protocol, 
-                                                                                const ModuleManager& module_manager,
-                                                                                const ModuleId& top_module,
-                                                                                const bool& fast_configuration,
-                                                                                const bool& bit_value_to_skip,
-                                                                                const FabricBitstream& fabric_bitstream,
-                                                                                const float& prog_clock_period,
-                                                                                const float& timescale);
+int print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(std::fstream& fp,
+                                                                               const ConfigProtocol& config_protocol, 
+                                                                               const SimulationSetting& sim_settings, 
+                                                                               const ModuleManager& module_manager,
+                                                                               const ModuleId& top_module,
+                                                                               const bool& fast_configuration,
+                                                                               const bool& bit_value_to_skip,
+                                                                               const FabricBitstream& fabric_bitstream,
+                                                                               const float& prog_clock_period,
+                                                                               const float& timescale);
 
 /**
  * @brief Print stimulus for a FPGA fabric with a memory bank configuration protocol

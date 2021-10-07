@@ -83,7 +83,8 @@ echo -e "Testing separated Verilog fabric netlists and testbench locations";
 run-task basic_tests/custom_fabric_netlist_location --debug --show_thread_logs
 
 echo -e "Testing user-defined simulation settings: clock frequency and number of cycles";
-run-task basic_tests/fixed_simulation_settings --debug --show_thread_logs
+run-task basic_tests/fixed_simulation_settings/fixed_operating_clock_freq --debug --show_thread_logs
+run-task basic_tests/fixed_simulation_settings/fixed_shift_register_clock_freq --debug --show_thread_logs
 
 echo -e "Testing Secured FPGA fabrics";
 run-task basic_tests/fabric_key/generate_vanilla_key --debug --show_thread_logs

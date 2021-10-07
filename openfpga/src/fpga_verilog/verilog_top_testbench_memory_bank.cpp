@@ -11,7 +11,11 @@
 #include "vtr_assert.h"
 #include "vtr_time.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 /* Headers from openfpgautil library */
+#include "openfpga_scale.h"
 #include "openfpga_port.h"
 #include "openfpga_digest.h"
 
@@ -279,15 +283,51 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_clock_generator(
   fp << std::endl;
 }
 
-void print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(std::fstream& fp,
-                                                                                const ConfigProtocol& config_protocol, 
-                                                                                const ModuleManager& module_manager,
-                                                                                const ModuleId& top_module,
-                                                                                const bool& fast_configuration,
-                                                                                const bool& bit_value_to_skip,
-                                                                                const FabricBitstream& fabric_bitstream,
-                                                                                const float& prog_clock_period,
-                                                                                const float& timescale) {
+/**
+ * @brief Update the clock period of shift register chain by considering the constraints from simulation settings
+ * - If the frequency is lower than the pre-computed bound, we should error out! Shift register chain cannot load the data completely
+ * - If the frequency is higher than the pre-computed bound, we use the contrained frequency
+ * @param sr_clock_port is the clock port which expect constraints 
+ * @param sr_clock_period is the pre-constrained clock period. It is also the final clock period which will be return (if updated)
+ */
+static 
+int constrain_blwl_shift_register_clock_period_from_simulation_settings(const SimulationSetting& sim_settings,
+                                                                        const BasicPort& sr_clock_port,
+                                                                        const float& timescale,
+                                                                        float& sr_clock_period) {
+  for (const SimulationClockId& sim_clk : sim_settings.programming_shift_register_clocks()) {
+    /* Bypass all the clocks which does not match */
+    if (sim_settings.clock_name(sim_clk) == sr_clock_port.get_name() && sim_settings.constrained_clock(sim_clk)) {
+      if (1. / (2. * sr_clock_period * timescale) > sim_settings.clock_frequency(sim_clk)) {
+        VTR_LOG_ERROR("Constrained clock frequency (=%g %s) for BL shift registers is lower than the minimum requirement (=%g %s)! Shift register chain cannot load data completely!\n",
+                      sim_settings.clock_frequency(sim_clk) / 1e6,
+                      time_unit_to_string(1e6, "Hz").c_str(),
+                      1. / (2. * sr_clock_period * timescale) / 1e6,
+                      time_unit_to_string(1e6, "Hz").c_str());
+        return CMD_EXEC_FATAL_ERROR;
+      } else {
+        sr_clock_period = 0.5 * (1. / sim_settings.clock_frequency(sim_clk)) / timescale;
+        VTR_LOG("Will use constrained clock frequency (=%g %s) for %s.\n",
+                sim_settings.clock_frequency(sim_clk) / 1e6,
+                time_unit_to_string(1e6, "Hz").c_str(),
+                sr_clock_port.get_name().c_str());
+      }
+      break;
+    }
+  }
+  return CMD_EXEC_SUCCESS;
+}
+
+int print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(std::fstream& fp,
+                                                                               const ConfigProtocol& config_protocol, 
+                                                                               const SimulationSetting& sim_settings, 
+                                                                               const ModuleManager& module_manager,
+                                                                               const ModuleId& top_module,
+                                                                               const bool& fast_configuration,
+                                                                               const bool& bit_value_to_skip,
+                                                                               const FabricBitstream& fabric_bitstream,
+                                                                               const float& prog_clock_period,
+                                                                               const float& timescale) {
   ModulePortId en_port_id = module_manager.find_module_port(top_module,
                                                             std::string(DECODER_ENABLE_PORT_NAME));
   BasicPort en_port(std::string(DECODER_ENABLE_PORT_NAME), 1);
@@ -313,12 +353,36 @@ void print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(
                                                                                                                    fast_configuration,
                                                                                                                    bit_value_to_skip);
 
-    /* TODO: Consider auto-tuned clock period for now: 
+    /* Compute the auto-tuned clock period first, this is the lower bound of the shift register clock periods: 
      * - the BL/WL shift register clock only works in the second half of the programming clock period
      * - add 2 idle clocks to avoid racing between programming clock and shift register clocks at edge 
      */
     float bl_sr_clock_period = 0.25 * prog_clock_period / (fabric_bits_by_addr.bl_word_size() + 2) / timescale;
     float wl_sr_clock_period = 0.25 * prog_clock_period / (fabric_bits_by_addr.wl_word_size() + 2) / timescale;
+
+    VTR_LOG("Precomputed clock frequency (=%g %s) for %s.\n",
+            1. / (2. * bl_sr_clock_period * timescale) / 1e6,
+            time_unit_to_string(1e6, "Hz").c_str(),
+            bl_sr_clock_port.get_name().c_str());
+
+    VTR_LOG("Precomputed clock frequency (=%g %s) for %s.\n",
+            1. / (2. * wl_sr_clock_period * timescale) / 1e6,
+            time_unit_to_string(1e6, "Hz").c_str(),
+            wl_sr_clock_port.get_name().c_str());
+
+    if (CMD_EXEC_FATAL_ERROR == constrain_blwl_shift_register_clock_period_from_simulation_settings(sim_settings,
+                                                                                                    bl_sr_clock_port,
+                                                                                                    timescale,
+                                                                                                    bl_sr_clock_period)) {
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
+    if (CMD_EXEC_FATAL_ERROR == constrain_blwl_shift_register_clock_period_from_simulation_settings(sim_settings,
+                                                                                                    wl_sr_clock_port,
+                                                                                                    timescale,
+                                                                                                    wl_sr_clock_period)) {
+      return CMD_EXEC_FATAL_ERROR;
+    }
 
     if (BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type()) {
       print_verilog_comment(fp, "----- BL Shift register clock generator -----");
@@ -330,6 +394,8 @@ void print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(
       print_verilog_full_testbench_ql_memory_bank_shift_register_clock_generator(fp, start_wl_sr_port, wl_sr_clock_port, wl_sr_clock_period);
     }
   }
+
+  return CMD_EXEC_SUCCESS;
 }
 
 /* Verilog codes to load bitstream from a bit file for memory bank using flatten BL/WLs */

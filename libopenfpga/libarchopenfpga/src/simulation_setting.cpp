@@ -328,5 +328,9 @@ bool SimulationSetting::valid_clock_id(const SimulationClockId& clock_id) const 
   return ( size_t(clock_id) < clock_ids_.size() ) && ( clock_id == clock_ids_[clock_id] ); 
 }
 
+bool SimulationSetting::constrained_clock(const SimulationClockId& clock_id) const {
+  VTR_ASSERT(valid_clock_id(clock_id));
+  return 0. != clock_frequencies_[clock_id];
+}
 
 } /* namespace openfpga ends */

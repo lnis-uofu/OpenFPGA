@@ -139,6 +139,8 @@ class SimulationSetting {
   public: /* Public Validators */
     bool valid_signal_threshold(const float& threshold) const;
     bool valid_clock_id(const SimulationClockId& clock_id) const;
+    /** @brief Validate if a given clock is constrained or not */
+    bool constrained_clock(const SimulationClockId& clock_id) const;
   private: /* Internal data */
     /* Operating clock frequency: the default clock frequency to be applied to users' implemetation on FPGA 
      *                            This will be stored in the x() part of vtr::Point

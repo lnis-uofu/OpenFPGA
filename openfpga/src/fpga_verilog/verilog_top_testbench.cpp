@@ -11,6 +11,9 @@
 #include "vtr_assert.h"
 #include "vtr_time.h"
 
+/* Headers from openfpgashell library */
+#include "command_exit_codes.h"
+
 /* Headers from openfpgautil library */
 #include "openfpga_port.h"
 #include "openfpga_digest.h"
@@ -1121,15 +1124,16 @@ void print_verilog_top_testbench_generic_stimulus(std::fstream& fp,
  *   1. the enable signal 
  *******************************************************************/
 static
-void print_verilog_top_testbench_configuration_protocol_stimulus(std::fstream& fp,
-                                                                 const ConfigProtocol& config_protocol, 
-                                                                 const ModuleManager& module_manager,
-                                                                 const ModuleId& top_module,
-                                                                 const bool& fast_configuration,
-                                                                 const bool& bit_value_to_skip,
-                                                                 const FabricBitstream& fabric_bitstream,
-                                                                 const float& prog_clock_period,
-                                                                 const float& timescale) {
+int print_verilog_top_testbench_configuration_protocol_stimulus(std::fstream& fp,
+                                                                const ConfigProtocol& config_protocol, 
+                                                                const SimulationSetting& sim_settings, 
+                                                                const ModuleManager& module_manager,
+                                                                const ModuleId& top_module,
+                                                                const bool& fast_configuration,
+                                                                const bool& bit_value_to_skip,
+                                                                const FabricBitstream& fabric_bitstream,
+                                                                const float& prog_clock_period,
+                                                                const float& timescale) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -1140,11 +1144,11 @@ void print_verilog_top_testbench_configuration_protocol_stimulus(std::fstream& f
   case CONFIG_MEM_SCAN_CHAIN:
     break;
   case CONFIG_MEM_QL_MEMORY_BANK:
-    print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(fp,
-                                                                               config_protocol, 
-                                                                               module_manager,top_module,
-                                                                               fast_configuration, bit_value_to_skip, fabric_bitstream,
-                                                                               prog_clock_period, timescale);
+    return print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(fp,
+                                                                                      config_protocol, sim_settings, 
+                                                                                      module_manager, top_module,
+                                                                                      fast_configuration, bit_value_to_skip, fabric_bitstream,
+                                                                                      prog_clock_period, timescale);
     break;
   case CONFIG_MEM_MEMORY_BANK:
   case CONFIG_MEM_FRAME_BASED: {
@@ -1166,6 +1170,8 @@ void print_verilog_top_testbench_configuration_protocol_stimulus(std::fstream& f
                    "Invalid SRAM organization type!\n");
     exit(1);
   }
+
+  return CMD_EXEC_SUCCESS;
 }
 
 /********************************************************************
@@ -1974,12 +1980,17 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                                VERILOG_SIM_TIMESCALE);
 
   /* Generate stimuli for programming interface */
-  print_verilog_top_testbench_configuration_protocol_stimulus(fp, 
-                                                              config_protocol,
-                                                              module_manager, top_module,
-                                                              fast_configuration, bit_value_to_skip, fabric_bitstream,
-                                                              prog_clock_period,
-                                                              VERILOG_SIM_TIMESCALE);
+  int status = CMD_EXEC_SUCCESS;
+  status = print_verilog_top_testbench_configuration_protocol_stimulus(fp, 
+                                                                       config_protocol, simulation_parameters,
+                                                                       module_manager, top_module,
+                                                                       fast_configuration, bit_value_to_skip, fabric_bitstream,
+                                                                       prog_clock_period,
+                                                                       VERILOG_SIM_TIMESCALE);
+
+  if (status == CMD_EXEC_FATAL_ERROR) {
+    return status;
+  }
                                                       
   /* Identify the stimulus for global reset/set for programming purpose:
    * - If only reset port is seen we turn on Reset 
@@ -2124,7 +2135,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
   /* Close the file stream */
   fp.close();
 
-  return 0;
+  return status;
 }
 
 
