@@ -65,12 +65,13 @@ std::vector<size_t> ito1hot_vec(const size_t& in_int,
  *           
  ********************************************************************/
 std::vector<char> ito1hot_charvec(const size_t& in_int,
-                                  const size_t& bin_len) {
+                                  const size_t& bin_len,
+                                  const char& default_bit) {
   /* Make sure we do not have any overflow! */
   VTR_ASSERT ( (in_int <= bin_len) );
 
   /* Initialize */
-  std::vector<char> ret(bin_len, '0');
+  std::vector<char> ret(bin_len, default_bit);
 
   if (bin_len == in_int) {
     return ret; /* all zero case */
@@ -80,13 +81,23 @@ std::vector<char> ito1hot_charvec(const size_t& in_int,
   return ret;
 }
 
+void replace_str_bits(std::string& str_to_convert,
+                      const char& bit_in_place,
+                      const char& bit_to_replace) {
+  for (char& bit : str_to_convert) {
+    if (bit_in_place == bit) {
+      bit = bit_to_replace;
+    }
+  }
+}
+
 std::string combine_two_1hot_str(const std::string& code1,
                                  const std::string& code2) {
   VTR_ASSERT(code1.length() == code2.length());
   std::string ret = code1;
   for (size_t ichar = 0; ichar < code2.length(); ichar++) {
-    VTR_ASSERT('0' == code2[ichar] || '1' == code2[ichar]);
-    if ('1' == code2[ichar]) {
+    VTR_ASSERT('0' == code2[ichar] || '1' == code2[ichar] || 'x' == code2[ichar]);
+    if ('1' == code2[ichar] || '0' == code2[ichar]) {
       ret[ichar] = code2[ichar];
     }
   }

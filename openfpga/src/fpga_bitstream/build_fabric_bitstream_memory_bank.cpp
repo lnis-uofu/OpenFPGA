@@ -183,7 +183,7 @@ void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(const B
       bl_addr_bits_vec = itobin_charvec(cur_bl_index, bl_addr_size);
     } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()
             || BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type()) {
-      bl_addr_bits_vec = ito1hot_charvec(cur_bl_index, bl_addr_size);
+      bl_addr_bits_vec = ito1hot_charvec(cur_bl_index, bl_addr_size, DONT_CARE_CHAR);
     }
 
     /* Find WL address */
