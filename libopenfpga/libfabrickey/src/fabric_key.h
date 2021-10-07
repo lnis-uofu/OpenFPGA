@@ -12,6 +12,9 @@
 #include "vtr_vector.h"
 #include "vtr_geometry.h"
 
+/* Headers from openfpgautil library */
+#include "openfpga_port.h"
+
 #include "fabric_key_fwd.h"
 
 /********************************************************************
@@ -38,14 +41,20 @@ class FabricKey {
   public: /* Types */
     typedef vtr::vector<FabricKeyId, FabricKeyId>::const_iterator fabric_key_iterator;
     typedef vtr::vector<FabricRegionId, FabricRegionId>::const_iterator fabric_region_iterator;
+    typedef vtr::vector<FabricBitLineBankId, FabricBitLineBankId>::const_iterator fabric_bit_line_bank_iterator;
+    typedef vtr::vector<FabricWordLineBankId, FabricWordLineBankId>::const_iterator fabric_word_line_bank_iterator;
     /* Create range */
     typedef vtr::Range<fabric_region_iterator> fabric_region_range;
     typedef vtr::Range<fabric_key_iterator> fabric_key_range;
+    typedef vtr::Range<fabric_bit_line_bank_iterator> fabric_bit_line_bank_range;
+    typedef vtr::Range<fabric_word_line_bank_iterator> fabric_word_line_bank_range;
   public:  /* Constructors */
     FabricKey();
   public: /* Accessors: aggregates */
     fabric_key_range keys() const;
     fabric_region_range regions() const;
+    fabric_bit_line_bank_range bl_banks(const FabricRegionId& region_id) const;
+    fabric_word_line_bank_range wl_banks(const FabricRegionId& region_id) const;
   public: /* Public Accessors: Basic data query */
     /* Access all the keys of a region */
     std::vector<FabricKeyId> region_keys(const FabricRegionId& region_id) const;
@@ -64,6 +73,12 @@ class FabricKey {
 
     /* Check if there are any keys */
     bool empty() const;
+
+    /* Return a list of data ports which will be driven by a BL shift register bank */
+    std::vector<openfpga::BasicPort> bl_bank_data_ports(const FabricRegionId& region_id, const FabricBitLineBankId& bank_id) const;
+
+    /* Return a list of data ports which will be driven by a WL shift register bank */
+    std::vector<openfpga::BasicPort> wl_bank_data_ports(const FabricRegionId& region_id, const FabricWordLineBankId& bank_id) const;
 
   public: /* Public Mutators: model-related */
 
@@ -100,11 +115,29 @@ class FabricKey {
     void set_key_coordinate(const FabricKeyId& key_id,
                             const vtr::Point<int>& coord);
 
+    /* Create a new shift register bank for BLs and return an id */
+    FabricBitLineBankId create_bl_shift_register_bank(const FabricRegionId& region_id);
+
+    /* Add a data port to a given BL shift register bank */
+    void add_data_port_to_bl_shift_register_bank(const FabricRegionId& region_id,
+                                                 const FabricBitLineBankId& bank_id,
+                                                 const openfpga::BasicPort& data_port);
+
+    /* Create a new shift register bank for WLs and return an id */
+    FabricWordLineBankId create_wl_shift_register_bank(const FabricRegionId& region_id);
+
+    /* Add a data port to a given WL shift register bank */
+    void add_data_port_to_wl_shift_register_bank(const FabricRegionId& region_id,
+                                                 const FabricWordLineBankId& bank_id,
+                                                 const openfpga::BasicPort& data_port);
+
   public: /* Public invalidators/validators */
     bool valid_region_id(const FabricRegionId& region_id) const;
     bool valid_key_id(const FabricKeyId& key_id) const;
     /* Identify if key coordinate is acceptable to fabric key convention */
     bool valid_key_coordinate(const vtr::Point<int>& coord) const;
+    bool valid_bl_bank_id(const FabricRegionId& region_id, const FabricBitLineBankId& bank_id) const;
+    bool valid_wl_bank_id(const FabricRegionId& region_id, const FabricWordLineBankId& bank_id) const;
   private: /* Internal data */
     /* Unique ids for each region */
     vtr::vector<FabricRegionId, FabricRegionId> region_ids_;
@@ -129,6 +162,16 @@ class FabricKey {
 
     /* Optional alias for each key, with which a key can also be represented */
     vtr::vector<FabricKeyId, std::string> key_alias_;
+
+    /* Unique ids for each BL shift register bank */
+    vtr::vector<FabricRegionId, vtr::vector<FabricBitLineBankId, FabricBitLineBankId>> bl_bank_ids_;
+    /* Data ports to be connected to each BL shift register bank */
+    vtr::vector<FabricRegionId, vtr::vector<FabricBitLineBankId, std::vector<openfpga::BasicPort>>> bl_bank_data_ports_;
+
+    /* Unique ids for each WL shift register bank */
+    vtr::vector<FabricRegionId, vtr::vector<FabricWordLineBankId, FabricWordLineBankId>> wl_bank_ids_;
+    /* Data ports to be connected to each WL shift register bank */
+    vtr::vector<FabricRegionId, vtr::vector<FabricWordLineBankId, std::vector<openfpga::BasicPort>>> wl_bank_data_ports_;
 };
 
 #endif
