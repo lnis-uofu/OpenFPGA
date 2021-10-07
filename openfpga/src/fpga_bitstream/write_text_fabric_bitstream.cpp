@@ -419,8 +419,8 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
      * - If BL uses decoders, we have to config each memory cell one by one.
      * - If BL uses flatten, we can configure all the memory cells on the same row by enabling dedicated WL
      *   In such case, we will merge the BL data under the same WL address
-     *   Fast configuration is NOT applicable in this case
-     * - if BL uses shift-register, TODO
+     *   Fast configuration is applicable when a row of BLs are all zeros/ones while we have a global reset/set for all the memory cells
+     * - if BL uses shift-register, same as the flatten.
      */
     if (BLWL_PROTOCOL_DECODER == config_protocol.bl_protocol_type()) {
       status = write_memory_bank_fabric_bitstream_to_text_file(fp,

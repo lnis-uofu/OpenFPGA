@@ -236,14 +236,14 @@ MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(cons
                                                                             const bool& fast_configuration,
                                                                             const bool& bit_value_to_skip,
                                                                             const char& dont_care_bit) {
-  /* If fast configuration is not enabled, we need all the wl address even some of them have all-zero BLs */
+  /* If fast configuration is not enabled, we need all the wl address even some of them have all-dont-care-bits BLs */
   if (!fast_configuration) {
     vtr::vector<FabricBitRegionId, std::map<std::string, std::string>> fabric_bits_per_region;
     fabric_bits_per_region.resize(fabric_bitstream.num_regions());
     for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
       for (const FabricBitId& bit_id : fabric_bitstream.region_bits(region)) {
-        /* Create string for BL address */
-        std::string bl_addr_str(fabric_bitstream.bit_bl_address(bit_id).size(), bit_value_to_skip);
+        /* Create string for BL address with complete don't care bits */
+        std::string bl_addr_str(fabric_bitstream.bit_bl_address(bit_id).size(), dont_care_bit);
 
         /* Create string for WL address */
         std::string wl_addr_str;
@@ -262,14 +262,15 @@ MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(cons
   fabric_bits_per_region.resize(fabric_bitstream.num_regions());
   for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
     for (const FabricBitId& bit_id : fabric_bitstream.region_bits(region)) {
-      /* Skip din because they should be pre-configured through programming reset/set */
-      if (fabric_bitstream.bit_din(bit_id) == bit_value_to_skip) {
-        continue;
-      }
       /* Create string for BL address */
       std::string bl_addr_str;
       for (const char& addr_bit : fabric_bitstream.bit_bl_address(bit_id)) {
         bl_addr_str.push_back(addr_bit);
+      }
+
+      /* If this bit should be programmed to 0, convert the 1s in BL to 0s  */
+      if (fabric_bitstream.bit_din(bit_id) == bit_value_to_skip) {
+        replace_str_bits(bl_addr_str, '1', '0');
       }
 
       /* Create string for WL address */
@@ -284,7 +285,7 @@ MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(cons
         fabric_bits_per_region[region][wl_addr_str] = bl_addr_str;
       } else {
         VTR_ASSERT_SAFE(result != fabric_bits_per_region[region].end());
-        result->second = combine_two_1hot_str(bl_addr_str, result->second);
+        result->second = combine_two_1hot_str(result->second, bl_addr_str);
       }
     }
   }
