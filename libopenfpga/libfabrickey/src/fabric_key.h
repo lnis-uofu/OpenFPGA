@@ -115,6 +115,10 @@ class FabricKey {
     void set_key_coordinate(const FabricKeyId& key_id,
                             const vtr::Point<int>& coord);
 
+    /* Reserve a number of banks to be memory efficent */
+    void reserve_bl_shift_register_banks(const FabricRegionId& region_id, const size_t& num_banks);
+    void reserve_wl_shift_register_banks(const FabricRegionId& region_id, const size_t& num_banks);
+
     /* Create a new shift register bank for BLs and return an id */
     FabricBitLineBankId create_bl_shift_register_bank(const FabricRegionId& region_id);
 

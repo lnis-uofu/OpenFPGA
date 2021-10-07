@@ -198,6 +198,18 @@ void FabricKey::set_key_coordinate(const FabricKeyId& key_id,
   key_coordinates_[key_id] = coord;
 }
 
+void FabricKey::reserve_bl_shift_register_banks(const FabricRegionId& region_id, const size_t& num_banks) {
+  VTR_ASSERT(valid_region_id(region_id));
+  bl_bank_ids_[region_id].reserve(num_banks);
+  bl_bank_data_ports_[region_id].reserve(num_banks);
+}
+
+void FabricKey::reserve_wl_shift_register_banks(const FabricRegionId& region_id, const size_t& num_banks) {
+  VTR_ASSERT(valid_region_id(region_id));
+  wl_bank_ids_[region_id].reserve(num_banks);
+  wl_bank_data_ports_[region_id].reserve(num_banks);
+}
+
 FabricBitLineBankId FabricKey::create_bl_shift_register_bank(const FabricRegionId& region_id) {
   VTR_ASSERT(valid_region_id(region_id));
   
