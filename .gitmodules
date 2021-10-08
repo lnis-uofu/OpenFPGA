@@ -3,4 +3,4 @@
 	url = https://github.com/symbiflow/yosys
 [submodule "yosys-plugins"]
 	path = yosys-plugins
-	url = https://github.com/kkumar23/yosys-symbiflow-plugins
+	url = https://github.com/SymbiFlow/yosys-symbiflow-plugins
