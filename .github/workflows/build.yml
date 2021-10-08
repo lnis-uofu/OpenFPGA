@@ -157,6 +157,7 @@ jobs:
             openfpga/openfpga
             vpr/libvpr.a
             vpr/vpr
+            yosys/
             yosys/install/share/
             yosys/install/bin/yosys
             yosys/install/bin/yosys-abc
