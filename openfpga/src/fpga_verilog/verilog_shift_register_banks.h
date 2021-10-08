@@ -20,7 +20,7 @@ namespace openfpga {
 
 void print_verilog_submodule_shift_register_banks(const ModuleManager& module_manager,
                                                   NetlistManager& netlist_manager,
-                                                  const std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
+                                                  const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                                   const std::string& submodule_dir,
                                                   const FabricVerilogOption& options);
 

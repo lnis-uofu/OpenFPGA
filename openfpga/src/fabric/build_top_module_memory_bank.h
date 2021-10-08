@@ -26,7 +26,7 @@ namespace openfpga {
 
 void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_manager,
                                                         DecoderLibrary& decoder_lib,
-                                                        std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
+                                                        MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                                         const ModuleId& top_module,
                                                         const CircuitLibrary& circuit_lib,
                                                         const ConfigProtocol& config_protocol,

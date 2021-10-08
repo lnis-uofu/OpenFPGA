@@ -399,7 +399,7 @@ std::vector<std::string> reshape_bitstream_vectors_to_first_element(const std::v
 
 MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_bitstream(const FabricBitstream& fabric_bitstream,
                                                                                          const bool& fast_configuration,
-                                                                                         //const std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
+                                                                                         //const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                                                                          const bool& bit_value_to_skip,
                                                                                          const char& dont_care_bit) {
   MemoryBankFlattenFabricBitstream raw_fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip, dont_care_bit);

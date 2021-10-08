@@ -1086,9 +1086,25 @@ void add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_heads(ModuleMan
     ModulePortId blsr_head_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(head_port_name, config_region));
     BasicPort blsr_head_port_info = module_manager.module_port(top_module, blsr_head_port);
 
-    for (size_t iinst = 0; iinst < sr_banks.shift_register_bank_modules(config_region).size(); ++iinst) {
-      ModuleId sr_bank_module = sr_banks.shift_register_bank_modules(config_region)[iinst];
-      size_t sr_bank_instance = sr_banks.shift_register_bank_instances(config_region)[iinst];
+    size_t num_sr_bank_modules;
+    if (std::string(BL_SHIFT_REGISTER_CHAIN_HEAD_NAME) == head_port_name) {
+      num_sr_bank_modules = sr_banks.bl_shift_register_bank_modules(config_region).size();
+    } else {
+      VTR_ASSERT(std::string(WL_SHIFT_REGISTER_CHAIN_HEAD_NAME) == head_port_name);
+      num_sr_bank_modules = sr_banks.wl_shift_register_bank_modules(config_region).size();
+    }
+    for (size_t iinst = 0; iinst < num_sr_bank_modules; ++iinst) {
+      ModuleId sr_bank_module;
+      size_t sr_bank_instance;
+      if (std::string(BL_SHIFT_REGISTER_CHAIN_HEAD_NAME) == head_port_name) {
+        sr_bank_module = sr_banks.bl_shift_register_bank_modules(config_region)[iinst];
+        sr_bank_instance = sr_banks.bl_shift_register_bank_instances(config_region)[iinst];
+      } else {
+        VTR_ASSERT(std::string(WL_SHIFT_REGISTER_CHAIN_HEAD_NAME) == head_port_name);
+        sr_bank_module = sr_banks.wl_shift_register_bank_modules(config_region)[iinst];
+        sr_bank_instance = sr_banks.wl_shift_register_bank_instances(config_region)[iinst];
+      }
+
       VTR_ASSERT(sr_bank_module);
 
       ModulePortId sr_module_head_port = module_manager.find_module_port(sr_bank_module, head_port_name);
@@ -1125,10 +1141,24 @@ void add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_tails(ModuleMan
     ModulePortId blsr_tail_port = module_manager.find_module_port(top_module, generate_regional_blwl_port_name(tail_port_name, config_region));
     BasicPort blsr_tail_port_info = module_manager.module_port(top_module, blsr_tail_port);
 
-    for (size_t iinst = 0; iinst < sr_banks.shift_register_bank_modules(config_region).size(); ++iinst) {
-      ModuleId sr_bank_module = sr_banks.shift_register_bank_modules(config_region)[iinst];
-      size_t sr_bank_instance = sr_banks.shift_register_bank_instances(config_region)[iinst];
-      VTR_ASSERT(sr_bank_module);
+    size_t num_sr_bank_modules;
+    if (std::string(BL_SHIFT_REGISTER_CHAIN_TAIL_NAME) == tail_port_name) {
+      num_sr_bank_modules = sr_banks.bl_shift_register_bank_modules(config_region).size();
+    } else {
+      VTR_ASSERT(std::string(WL_SHIFT_REGISTER_CHAIN_TAIL_NAME) == tail_port_name);
+      num_sr_bank_modules = sr_banks.wl_shift_register_bank_modules(config_region).size();
+    }
+    for (size_t iinst = 0; iinst < num_sr_bank_modules; ++iinst) {
+      ModuleId sr_bank_module;
+      size_t sr_bank_instance;
+      if (std::string(BL_SHIFT_REGISTER_CHAIN_TAIL_NAME) == tail_port_name) {
+        sr_bank_module = sr_banks.bl_shift_register_bank_modules(config_region)[iinst];
+        sr_bank_instance = sr_banks.bl_shift_register_bank_instances(config_region)[iinst];
+      } else {
+        VTR_ASSERT(std::string(WL_SHIFT_REGISTER_CHAIN_TAIL_NAME) == tail_port_name);
+        sr_bank_module = sr_banks.wl_shift_register_bank_modules(config_region)[iinst];
+        sr_bank_instance = sr_banks.wl_shift_register_bank_instances(config_region)[iinst];
+      }
 
       ModulePortId sr_module_tail_port = module_manager.find_module_port(sr_bank_module, tail_port_name);
       BasicPort sr_module_tail_port_info = module_manager.module_port(sr_bank_module, sr_module_tail_port);
@@ -1183,9 +1213,25 @@ void add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(ModuleMan
                                                                        const std::string& child_blwl_port_name,
                                                                        const bool& optional_blwl = false) {
   for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
-    for (size_t iinst = 0; iinst < sr_banks.shift_register_bank_modules(config_region).size(); ++iinst) {
-      ModuleId sr_bank_module = sr_banks.shift_register_bank_modules(config_region)[iinst];
-      size_t sr_bank_instance = sr_banks.shift_register_bank_instances(config_region)[iinst];
+    size_t num_sr_bank_modules;
+    if (std::string(BL_SHIFT_REGISTER_CHAIN_BL_OUT_NAME) == sr_blwl_port_name) {
+      num_sr_bank_modules = sr_banks.bl_shift_register_bank_modules(config_region).size();
+    } else {
+      VTR_ASSERT(std::string(WL_SHIFT_REGISTER_CHAIN_WL_OUT_NAME) == sr_blwl_port_name);
+      num_sr_bank_modules = sr_banks.wl_shift_register_bank_modules(config_region).size();
+    }
+    for (size_t iinst = 0; iinst < num_sr_bank_modules; ++iinst) {
+      ModuleId sr_bank_module;
+      size_t sr_bank_instance;
+      if (std::string(BL_SHIFT_REGISTER_CHAIN_BL_OUT_NAME) == sr_blwl_port_name) {
+        sr_bank_module = sr_banks.bl_shift_register_bank_modules(config_region)[iinst];
+        sr_bank_instance = sr_banks.bl_shift_register_bank_instances(config_region)[iinst];
+      } else {
+        VTR_ASSERT(std::string(WL_SHIFT_REGISTER_CHAIN_WL_OUT_NAME) == sr_blwl_port_name);
+        sr_bank_module = sr_banks.wl_shift_register_bank_modules(config_region)[iinst];
+        sr_bank_instance = sr_banks.wl_shift_register_bank_instances(config_region)[iinst];
+      }
+
       VTR_ASSERT(sr_bank_module);
 
       ModulePortId sr_module_blwl_port = module_manager.find_module_port(sr_bank_module, sr_blwl_port_name);
@@ -1195,9 +1241,23 @@ void add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(ModuleMan
       VTR_ASSERT(sr_module_blwl_port);
       BasicPort sr_module_blwl_port_info = module_manager.module_port(sr_bank_module, sr_module_blwl_port);
 
+      size_t num_sink_child_ids;
+      if (std::string(BL_SHIFT_REGISTER_CHAIN_BL_OUT_NAME) == sr_blwl_port_name) {
+        num_sink_child_ids = sr_banks.bl_shift_register_bank_sink_child_ids(config_region, sr_bank_module, sr_bank_instance).size();
+      } else {
+        VTR_ASSERT(std::string(WL_SHIFT_REGISTER_CHAIN_WL_OUT_NAME) == sr_blwl_port_name);
+        num_sink_child_ids = sr_banks.wl_shift_register_bank_sink_child_ids(config_region, sr_bank_module, sr_bank_instance).size();
+      }
 
-      for (size_t sink_id = 0; sink_id < sr_banks.shift_register_bank_sink_child_ids(config_region, sr_bank_module, sr_bank_instance).size(); ++sink_id) {
-        size_t child_id = sr_banks.shift_register_bank_sink_child_ids(config_region, sr_bank_module, sr_bank_instance)[sink_id];
+      for (size_t sink_id = 0; sink_id < num_sink_child_ids; ++sink_id) {
+        size_t child_id;
+        if (std::string(BL_SHIFT_REGISTER_CHAIN_BL_OUT_NAME) == sr_blwl_port_name) {
+          child_id = sr_banks.bl_shift_register_bank_sink_child_ids(config_region, sr_bank_module, sr_bank_instance)[sink_id];
+        } else {
+          VTR_ASSERT(std::string(WL_SHIFT_REGISTER_CHAIN_WL_OUT_NAME) == sr_blwl_port_name);
+          child_id = sr_banks.wl_shift_register_bank_sink_child_ids(config_region, sr_bank_module, sr_bank_instance)[sink_id];
+        }
+
         ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
         size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
 
@@ -1205,7 +1265,13 @@ void add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(ModuleMan
         ModulePortId child_blwl_port = module_manager.find_module_port(child_module, child_blwl_port_name);
         BasicPort child_blwl_port_info = module_manager.module_port(child_module, child_blwl_port);
 
-        size_t cur_sr_module_blwl_pin_id = sr_banks.shift_register_bank_source_blwl_ids(config_region, sr_bank_module, sr_bank_instance)[sink_id];
+        size_t cur_sr_module_blwl_pin_id;
+        if (std::string(BL_SHIFT_REGISTER_CHAIN_BL_OUT_NAME) == sr_blwl_port_name) {
+          cur_sr_module_blwl_pin_id = sr_banks.bl_shift_register_bank_source_blwl_ids(config_region, sr_bank_module, sr_bank_instance)[sink_id];
+        } else {
+          VTR_ASSERT(std::string(WL_SHIFT_REGISTER_CHAIN_WL_OUT_NAME) == sr_blwl_port_name);
+          cur_sr_module_blwl_pin_id = sr_banks.wl_shift_register_bank_source_blwl_ids(config_region, sr_bank_module, sr_bank_instance)[sink_id];
+        }
 
         /* Create net */
         ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
@@ -1215,7 +1281,14 @@ void add_top_module_nets_cmos_ql_memory_bank_shift_register_bank_blwls(ModuleMan
         VTR_ASSERT(ModuleNetId::INVALID() != net);
 
         /* Add net sink */
-        size_t sink_pin_id = sr_banks.shift_register_bank_sink_pin_ids(config_region, sr_bank_module, sr_bank_instance)[sink_id];
+        size_t sink_pin_id;
+        if (std::string(BL_SHIFT_REGISTER_CHAIN_BL_OUT_NAME) == sr_blwl_port_name) {
+          sink_pin_id = sr_banks.bl_shift_register_bank_sink_pin_ids(config_region, sr_bank_module, sr_bank_instance)[sink_id];
+        } else {
+          VTR_ASSERT(std::string(WL_SHIFT_REGISTER_CHAIN_WL_OUT_NAME) == sr_blwl_port_name);
+          sink_pin_id = sr_banks.wl_shift_register_bank_sink_pin_ids(config_region, sr_bank_module, sr_bank_instance)[sink_id];
+        }
+
         module_manager.add_module_net_sink(top_module, net,
                                            child_module, child_instance, child_blwl_port, sink_pin_id);
       }
@@ -1315,7 +1388,7 @@ void add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(Module
     size_t cur_inst = module_manager.num_instance(top_module, sr_bank_module);
     module_manager.add_child_module(top_module, sr_bank_module);
 
-    sr_banks.add_shift_register_instance(config_region, sr_bank_module, cur_inst);
+    sr_banks.add_bl_shift_register_instance(config_region, sr_bank_module, cur_inst);
 
     /************************************************************** 
      * Precompute the BLs and WLs distribution across the FPGA fabric
@@ -1340,8 +1413,8 @@ void add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(Module
       for (const size_t& sink_bl_pin : child_bl_port_info.pins()) {
         size_t bl_pin_id = bl_start_index_per_tile[coord.x()] + cur_bl_index;
 
-        sr_banks.add_shift_register_sink_nodes(config_region, sr_bank_module, cur_inst, child_id, sink_bl_pin);
-        sr_banks.add_shift_register_source_blwls(config_region, sr_bank_module, cur_inst, bl_pin_id);
+        sr_banks.add_bl_shift_register_sink_nodes(config_region, sr_bank_module, cur_inst, child_id, sink_bl_pin);
+        sr_banks.add_bl_shift_register_source_blwls(config_region, sr_bank_module, cur_inst, bl_pin_id);
 
         cur_bl_index++;
       }
@@ -1409,7 +1482,7 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(Module
     size_t cur_inst = module_manager.num_instance(top_module, sr_bank_module);
     module_manager.add_child_module(top_module, sr_bank_module);
 
-    sr_banks.add_shift_register_instance(config_region, sr_bank_module, cur_inst);
+    sr_banks.add_wl_shift_register_instance(config_region, sr_bank_module, cur_inst);
 
     /************************************************************** 
      * Precompute the BLs and WLs distribution across the FPGA fabric
@@ -1433,8 +1506,8 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(Module
 
       for (const size_t& sink_wl_pin : child_wl_port_info.pins()) {
         size_t wl_pin_id = wl_start_index_per_tile[coord.y()] + cur_wl_index;
-        sr_banks.add_shift_register_sink_nodes(config_region, sr_bank_module, cur_inst, child_id, sink_wl_pin);
-        sr_banks.add_shift_register_source_blwls(config_region, sr_bank_module, cur_inst, wl_pin_id);
+        sr_banks.add_wl_shift_register_sink_nodes(config_region, sr_bank_module, cur_inst, child_id, sink_wl_pin);
+        sr_banks.add_wl_shift_register_source_blwls(config_region, sr_bank_module, cur_inst, wl_pin_id);
 
         cur_wl_index++;
       }
@@ -1477,7 +1550,7 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(Module
  ********************************************************************/
 void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_manager,
                                                         DecoderLibrary& decoder_lib,
-                                                        std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
+                                                        MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                                         const ModuleId& top_module,
                                                         const CircuitLibrary& circuit_lib,
                                                         const ConfigProtocol& config_protocol,
@@ -1495,7 +1568,7 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
       break;
     }
     case BLWL_PROTOCOL_SHIFT_REGISTER: {
-      add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(module_manager, blwl_sr_banks[0], top_module, circuit_lib, config_protocol);
+      add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(module_manager, blwl_sr_banks, top_module, circuit_lib, config_protocol);
       break;
     }
     default: {
@@ -1514,7 +1587,7 @@ void add_top_module_nets_cmos_ql_memory_bank_config_bus(ModuleManager& module_ma
       break;
     }
     case BLWL_PROTOCOL_SHIFT_REGISTER: {
-      add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(module_manager, blwl_sr_banks[1], top_module, circuit_lib, config_protocol);
+      add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(module_manager, blwl_sr_banks, top_module, circuit_lib, config_protocol);
       break;
     }
     default: {

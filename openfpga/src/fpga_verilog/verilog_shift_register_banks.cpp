@@ -34,7 +34,7 @@ namespace openfpga {
  ********************************************************************/
 void print_verilog_submodule_shift_register_banks(const ModuleManager& module_manager,
                                                   NetlistManager& netlist_manager,
-                                                  const std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
+                                                  const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                                   const std::string& submodule_dir,
                                                   const FabricVerilogOption& options) {
 
@@ -54,17 +54,26 @@ void print_verilog_submodule_shift_register_banks(const ModuleManager& module_ma
   print_verilog_file_header(fp, "Shift register banks used in FPGA"); 
 
   /* Create the memory circuits for the multiplexer */
-  for (const auto& sr_bank : blwl_sr_banks) {
-    for (const ModuleId& sr_module : sr_bank.shift_register_bank_unique_modules()) {
-      VTR_ASSERT(true == module_manager.valid_module_id(sr_module));
-      /* Write the module content in Verilog format */
-      write_verilog_module_to_file(fp, module_manager, sr_module, 
-                                   options.explicit_port_mapping(),
-                                   options.default_net_type());
+  for (const ModuleId& sr_module : blwl_sr_banks.bl_shift_register_bank_unique_modules()) {
+    VTR_ASSERT(true == module_manager.valid_module_id(sr_module));
+    /* Write the module content in Verilog format */
+    write_verilog_module_to_file(fp, module_manager, sr_module, 
+                                 options.explicit_port_mapping(),
+                                 options.default_net_type());
 
-      /* Add an empty line as a splitter */
-      fp << std::endl;
-    }
+    /* Add an empty line as a splitter */
+    fp << std::endl;
+  }
+
+  for (const ModuleId& sr_module : blwl_sr_banks.wl_shift_register_bank_unique_modules()) {
+    VTR_ASSERT(true == module_manager.valid_module_id(sr_module));
+    /* Write the module content in Verilog format */
+    write_verilog_module_to_file(fp, module_manager, sr_module, 
+                                 options.explicit_port_mapping(),
+                                 options.default_net_type());
+
+    /* Add an empty line as a splitter */
+    fp << std::endl;
   }
 
   /* Close the file stream */

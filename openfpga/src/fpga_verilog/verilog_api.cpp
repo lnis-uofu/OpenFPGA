@@ -55,7 +55,7 @@ namespace openfpga {
  ********************************************************************/
 void fpga_fabric_verilog(ModuleManager &module_manager,
                          NetlistManager &netlist_manager,
-                         const std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
+                         const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                          const CircuitLibrary &circuit_lib,
                          const MuxLibrary &mux_lib,
                          const DecoderLibrary &decoder_lib,

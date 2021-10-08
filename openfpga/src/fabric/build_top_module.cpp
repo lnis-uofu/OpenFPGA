@@ -283,7 +283,7 @@ vtr::Matrix<size_t> add_top_module_connection_block_instances(ModuleManager& mod
  *******************************************************************/
 int build_top_module(ModuleManager& module_manager,
                      DecoderLibrary& decoder_lib,
-                     std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
+                     MemoryBankShiftRegisterBanks& blwl_sr_banks,
                      const CircuitLibrary& circuit_lib,
                      const VprDeviceAnnotation& vpr_device_annotation,
                      const DeviceGrid& grids,
