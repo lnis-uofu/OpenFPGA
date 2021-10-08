@@ -64,6 +64,106 @@ int write_xml_fabric_component_key(std::fstream& fp,
 }
 
 /********************************************************************
+ * A writer to output a BL shift register bank description to XML format
+ *
+ * Return 0 if successful
+ * Return 1 if there are more serious bugs in the architecture 
+ * Return 2 if fail when creating files
+ *******************************************************************/
+static 
+int write_xml_fabric_bl_shift_register_banks(std::fstream& fp,
+                                             const FabricKey& fabric_key,
+                                             const FabricRegionId& region) {
+  /* Validate the file stream */
+  if (false == openfpga::valid_file_stream(fp)) {
+    return 2;
+  }
+
+  /* If we have an empty bank, we just skip it */
+  if (0 == fabric_key.bl_banks(region).size()) {
+    return 0;
+  }
+
+  /* Write the root node */
+  openfpga::write_tab_to_file(fp, 2);
+  fp << "<bl_shift_register_banks>" << "\n";
+
+  for (const auto& bank : fabric_key.bl_banks(region)) {
+    openfpga::write_tab_to_file(fp, 3);
+    fp << "<bank";
+
+    write_xml_attribute(fp, "id", size_t(bank));
+    
+    std::string port_str;
+    for (const auto& port : fabric_key.bl_bank_data_ports(region, bank)) {
+      port_str += generate_xml_port_name(port) + ",";
+    }
+    /* Chop the last comma */
+    if (!port_str.empty()) {
+      port_str.pop_back();
+    }
+    write_xml_attribute(fp, "range", port_str.c_str());
+
+    fp << "/>" << "\n";
+  }
+
+  openfpga::write_tab_to_file(fp, 2);
+  fp << "</bl_shift_register_banks>" << "\n";
+
+  return 0;
+}
+
+/********************************************************************
+ * A writer to output a WL shift register bank description to XML format
+ *
+ * Return 0 if successful
+ * Return 1 if there are more serious bugs in the architecture 
+ * Return 2 if fail when creating files
+ *******************************************************************/
+static 
+int write_xml_fabric_wl_shift_register_banks(std::fstream& fp,
+                                             const FabricKey& fabric_key,
+                                             const FabricRegionId& region) {
+  /* Validate the file stream */
+  if (false == openfpga::valid_file_stream(fp)) {
+    return 2;
+  }
+
+  /* If we have an empty bank, we just skip it */
+  if (0 == fabric_key.wl_banks(region).size()) {
+    return 0;
+  }
+
+  /* Write the root node */
+  openfpga::write_tab_to_file(fp, 2);
+  fp << "<wl_shift_register_banks>" << "\n";
+
+  for (const auto& bank : fabric_key.wl_banks(region)) {
+    openfpga::write_tab_to_file(fp, 3);
+    fp << "<bank";
+
+    write_xml_attribute(fp, "id", size_t(bank));
+    
+    std::string port_str;
+    for (const auto& port : fabric_key.wl_bank_data_ports(region, bank)) {
+      port_str += generate_xml_port_name(port) + ",";
+    }
+    /* Chop the last comma */
+    if (!port_str.empty()) {
+      port_str.pop_back();
+    }
+    write_xml_attribute(fp, "range", port_str.c_str());
+
+    fp << "/>" << "\n";
+  }
+
+  openfpga::write_tab_to_file(fp, 2);
+  fp << "</wl_shift_register_banks>" << "\n";
+
+  return 0;
+}
+
+/********************************************************************
  * A writer to output a fabric key to XML format
  *
  * Return 0 if successful
@@ -92,6 +192,10 @@ int write_xml_fabric_key(const char* fname,
   for (const FabricRegionId& region : fabric_key.regions()) {
     openfpga::write_tab_to_file(fp, 1);
     fp << "<region id=\"" << size_t(region) << "\"" << ">\n";
+
+    /* Write shift register banks */
+    write_xml_fabric_bl_shift_register_banks(fp, fabric_key, region);
+    write_xml_fabric_wl_shift_register_banks(fp, fabric_key, region);
 
     /* Write component by component */ 
     for (const FabricKeyId& key : fabric_key.region_keys(region)) {
