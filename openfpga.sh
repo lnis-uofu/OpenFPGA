@@ -16,7 +16,6 @@ export OPENFPGA_SCRIPT_PATH="${OPENFPGA_PATH}/openfpga_flow/scripts"
 export OPENFPGA_TASK_PATH="${OPENFPGA_PATH}/openfpga_flow/tasks"
 if [ -z $PYTHON_EXEC ]; then export PYTHON_EXEC="python3"; fi
 
-
 # This function checks the path and
 # raises warning if the command is not executing
 # inside current OpendFPGA folder
