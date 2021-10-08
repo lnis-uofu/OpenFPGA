@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include "vtr_vector.h"
+#include "fabric_key.h"
 #include "module_manager.h"
 
 /* begin namespace openfpga */
@@ -21,7 +22,28 @@ namespace openfpga {
  * @note This data structure is mainly used as a database for adding connections around shift register banks in top-level module
  ******************************************************************************/
 class MemoryBankShiftRegisterBanks {
+  public: /* Accessors: aggregates */
+    FabricKey::fabric_bit_line_bank_range bl_banks(const ConfigRegionId& region_id) const;
+    FabricKey::fabric_word_line_bank_range wl_banks(const ConfigRegionId& region_id) const;
   public: /* Accessors */
+    /* @brief Return a list of unique sizes of shift register banks for BL protocol */
+    std::vector<size_t> bl_bank_unique_sizes(const ConfigRegionId& region_id) const;
+
+    /* @brief Return the size of a BL shift register bank */
+    size_t bl_bank_size(const ConfigRegionId& region_id, const FabricBitLineBankId& bank_id) const;
+
+    /* @brief Return a list of data ports which will be driven by a BL shift register bank */
+    std::vector<BasicPort> bl_bank_data_ports(const ConfigRegionId& region_id, const FabricBitLineBankId& bank_id) const;
+
+    /* @brief Return a list of unique sizes of shift register banks for WL protocol */
+    std::vector<size_t> wl_bank_unique_sizes(const ConfigRegionId& region_id) const;
+
+    /* @brief Return the size of a WL shift register bank */
+    size_t wl_bank_size(const ConfigRegionId& region_id, const FabricWordLineBankId& bank_id) const;
+
+    /* @brief Return a list of data ports which will be driven by a WL shift register bank */
+    std::vector<BasicPort> wl_bank_data_ports(const ConfigRegionId& region_id, const FabricWordLineBankId& bank_id) const;
+
     /* @brief Return a list of modules of unique shift register banks across all the regions */
     std::vector<ModuleId> shift_register_bank_unique_modules() const; 
 
@@ -72,10 +94,41 @@ class MemoryBankShiftRegisterBanks {
                                          const ModuleId& sr_module,
                                          const size_t& sr_instance,
                                          const size_t& sink_blwl_id); 
+
+    /* Reserve a number of banks to be memory efficent */
+    void reserve_bl_shift_register_banks(const ConfigRegionId& region_id, const size_t& num_banks);
+    void reserve_wl_shift_register_banks(const ConfigRegionId& region_id, const size_t& num_banks);
+
+    /* Create a new shift register bank for BLs and return an id */
+    FabricBitLineBankId create_bl_shift_register_bank(const ConfigRegionId& region_id);
+
+    /* Add a data port to a given BL shift register bank */
+    void add_data_port_to_bl_shift_register_bank(const ConfigRegionId& region_id,
+                                                 const FabricBitLineBankId& bank_id,
+                                                 const openfpga::BasicPort& data_port);
+
+    /* Create a new shift register bank for WLs and return an id */
+    FabricWordLineBankId create_wl_shift_register_bank(const ConfigRegionId& region_id);
+
+    /* Add a data port to a given WL shift register bank */
+    void add_data_port_to_wl_shift_register_bank(const ConfigRegionId& region_id,
+                                                 const FabricWordLineBankId& bank_id,
+                                                 const openfpga::BasicPort& data_port);
+
   public:  /* Validators */
     bool valid_region_id(const ConfigRegionId& region) const;
+    bool valid_bl_bank_id(const ConfigRegionId& region_id, const FabricBitLineBankId& bank_id) const;
+    bool valid_wl_bank_id(const ConfigRegionId& region_id, const FabricWordLineBankId& bank_id) const;
 
   private: /* Internal data */
+    /* General information about the BL shift register bank */
+    vtr::vector<ConfigRegionId, vtr::vector<FabricBitLineBankId, FabricBitLineBankId>> bl_bank_ids_;
+    vtr::vector<ConfigRegionId, vtr::vector<FabricBitLineBankId, std::vector<BasicPort>>> bl_bank_data_ports_;
+
+    /* General information about the WL shift register bank */
+    vtr::vector<ConfigRegionId, vtr::vector<FabricWordLineBankId, FabricWordLineBankId>> wl_bank_ids_;
+    vtr::vector<ConfigRegionId, vtr::vector<FabricWordLineBankId, std::vector<BasicPort>>> wl_bank_data_ports_;
+
     /* [config_region][(shift_register_module, shift_register_instance)][i] = (reconfigurable_child_id, blwl_port_pin_index)*/
     vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<size_t>>> sr_instance_sink_child_ids_;
     vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<size_t>>> sr_instance_sink_child_pin_ids_;
