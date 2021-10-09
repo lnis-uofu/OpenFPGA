@@ -54,7 +54,7 @@ void print_verilog_submodule_shift_register_banks(const ModuleManager& module_ma
   print_verilog_file_header(fp, "Shift register banks used in FPGA"); 
 
   /* Create the memory circuits for the multiplexer */
-  for (const ModuleId& sr_module : blwl_sr_banks.bl_shift_register_bank_unique_modules()) {
+  for (const ModuleId& sr_module : blwl_sr_banks.bl_bank_unique_modules()) {
     VTR_ASSERT(true == module_manager.valid_module_id(sr_module));
     /* Write the module content in Verilog format */
     write_verilog_module_to_file(fp, module_manager, sr_module, 
@@ -65,7 +65,7 @@ void print_verilog_submodule_shift_register_banks(const ModuleManager& module_ma
     fp << std::endl;
   }
 
-  for (const ModuleId& sr_module : blwl_sr_banks.wl_shift_register_bank_unique_modules()) {
+  for (const ModuleId& sr_module : blwl_sr_banks.wl_bank_unique_modules()) {
     VTR_ASSERT(true == module_manager.valid_module_id(sr_module));
     /* Write the module content in Verilog format */
     write_verilog_module_to_file(fp, module_manager, sr_module, 

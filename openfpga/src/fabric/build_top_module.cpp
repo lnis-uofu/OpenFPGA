@@ -421,6 +421,7 @@ int build_top_module(ModuleManager& module_manager,
     add_top_module_sram_ports(module_manager, top_module,
                               circuit_lib, sram_model,
                               config_protocol,
+                              const_cast<const MemoryBankShiftRegisterBanks&>(blwl_sr_banks),
                               top_module_num_config_bits);
   }
 

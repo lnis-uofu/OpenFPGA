@@ -807,6 +807,7 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
                                const CircuitLibrary& circuit_lib,
                                const CircuitModelId& sram_model,
                                const ConfigProtocol& config_protocol,
+                               const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                const TopModuleNumConfigBits& num_config_bits) {
   std::vector<std::string> sram_port_names = generate_sram_port_names(circuit_lib, sram_model, config_protocol.type());
   size_t total_num_config_bits = 0;
@@ -852,7 +853,7 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
     break;
   }
   case CONFIG_MEM_QL_MEMORY_BANK: {
-    add_top_module_ql_memory_bank_sram_ports(module_manager, module_id, circuit_lib, config_protocol, num_config_bits);
+    add_top_module_ql_memory_bank_sram_ports(module_manager, module_id, circuit_lib, config_protocol, blwl_sr_banks, num_config_bits);
     break;
   }
   case CONFIG_MEM_SCAN_CHAIN: { 

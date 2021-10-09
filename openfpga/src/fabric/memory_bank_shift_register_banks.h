@@ -27,7 +27,10 @@ class MemoryBankShiftRegisterBanks {
     FabricKey::fabric_word_line_bank_range wl_banks(const ConfigRegionId& region_id) const;
   public: /* Accessors */
     /* @brief Return a list of unique sizes of shift register banks for BL protocol */
-    std::vector<size_t> bl_bank_unique_sizes(const ConfigRegionId& region_id) const;
+    std::vector<size_t> bl_bank_unique_sizes() const;
+
+    /* @brief Return a list of unique modules of shift register banks for BL protocol */
+    std::vector<ModuleId> bl_bank_unique_modules() const;
 
     /* @brief Return the size of a BL shift register bank */
     size_t bl_bank_size(const ConfigRegionId& region_id, const FabricBitLineBankId& bank_id) const;
@@ -35,8 +38,41 @@ class MemoryBankShiftRegisterBanks {
     /* @brief Return a list of data ports which will be driven by a BL shift register bank */
     std::vector<BasicPort> bl_bank_data_ports(const ConfigRegionId& region_id, const FabricBitLineBankId& bank_id) const;
 
+    /** @brief find the BL shift register bank id to which a BL port is connected to */
+    FabricBitLineBankId find_bl_shift_register_bank_id(const ConfigRegionId& region, const BasicPort& bl_port) const;
+
+    /** @brief find the data port of a BL shift register bank id to which a BL port is connected to */
+    BasicPort find_bl_shift_register_bank_data_port(const ConfigRegionId& region, const BasicPort& bl_port) const;
+
+    /** @brief Return the module id of a BL shift register bank */
+    ModuleId bl_shift_register_bank_module(const ConfigRegionId& region_id,
+                                           const FabricBitLineBankId& bank_id) const;
+
+    /** @brief Return the instance id of a BL shift register bank */
+    size_t bl_shift_register_bank_instance(const ConfigRegionId& region_id,
+                                           const FabricBitLineBankId& bank_id) const;
+
+    /** @brief return the child id at top-level module to which a data port (1-bit) of a BL shift register bank is connected to */
+    size_t bl_shift_register_bank_sink_child_id(const ConfigRegionId& region_id,
+                                                const FabricBitLineBankId& bank_id,
+                                                const BasicPort& src_port) const;
+
+    /** @brief return the child pin id of the child module at top-level module 
+     *  to which a data port (1-bit) of a BL shift register bank is connected to
+     */
+    size_t bl_shift_register_bank_sink_child_pin_id(const ConfigRegionId& region_id,
+                                                    const FabricBitLineBankId& bank_id,
+                                                    const BasicPort& src_port) const;
+
+    /** @brief Return a list of single-bit ports which are the data ports of a BL shift register bank */
+    std::vector<BasicPort> bl_shift_register_bank_source_ports(const ConfigRegionId& region_id,
+                                                               const FabricBitLineBankId& bank_id) const;
+
     /* @brief Return a list of unique sizes of shift register banks for WL protocol */
-    std::vector<size_t> wl_bank_unique_sizes(const ConfigRegionId& region_id) const;
+    std::vector<size_t> wl_bank_unique_sizes() const;
+
+    /* @brief Return a list of unique modules of shift register banks for WL protocol */
+    std::vector<ModuleId> wl_bank_unique_modules() const;
 
     /* @brief Return the size of a WL shift register bank */
     size_t wl_bank_size(const ConfigRegionId& region_id, const FabricWordLineBankId& bank_id) const;
@@ -44,77 +80,35 @@ class MemoryBankShiftRegisterBanks {
     /* @brief Return a list of data ports which will be driven by a WL shift register bank */
     std::vector<BasicPort> wl_bank_data_ports(const ConfigRegionId& region_id, const FabricWordLineBankId& bank_id) const;
 
-    /* @brief Return a list of modules of unique shift register banks across all the regions */
-    std::vector<ModuleId> bl_shift_register_bank_unique_modules() const; 
-
-    /* @brief Return a list of modules of shift register banks under a specific configuration region of top-level module */
-    std::vector<ModuleId> bl_shift_register_bank_modules(const ConfigRegionId& region) const; 
-
-    /* @brief Return a list of instances of shift register banks under a specific configuration region of top-level module */
-    std::vector<size_t> bl_shift_register_bank_instances(const ConfigRegionId& region) const; 
-
-    /* @brief Return a list of ids of reconfigurable children for a given instance of shift register bank 
-     * under a specific configuration region of top-level module
-     */
-    std::vector<size_t> bl_shift_register_bank_sink_child_ids(const ConfigRegionId& region,
-                                                              const ModuleId& sr_module,
-                                                              const size_t& sr_instance) const; 
-
-    /* @brief Return a list of BL ids of reconfigurable children for a given instance of shift register bank 
-     * under a specific configuration region of top-level module
-     */
-    std::vector<size_t> bl_shift_register_bank_sink_pin_ids(const ConfigRegionId& region,
-                                                            const ModuleId& sr_module,
-                                                            const size_t& sr_instance) const; 
-
-    /* @brief Return a list of BL ids of a given instance of shift register bank 
-     * under a specific configuration region of top-level module
-     */
-    std::vector<size_t> bl_shift_register_bank_source_blwl_ids(const ConfigRegionId& region,
-                                                               const ModuleId& sr_module,
-                                                               const size_t& sr_instance) const; 
-
-    /* @brief Return a list of modules of unique shift register banks across all the regions */
-    std::vector<ModuleId> wl_shift_register_bank_unique_modules() const; 
-
-    /* @brief Return a list of modules of shift register banks under a specific configuration region of top-level module */
-    std::vector<ModuleId> wl_shift_register_bank_modules(const ConfigRegionId& region) const; 
-
-    /* @brief Return a list of instances of shift register banks under a specific configuration region of top-level module */
-    std::vector<size_t> wl_shift_register_bank_instances(const ConfigRegionId& region) const; 
-
-    /* @brief Return a list of ids of reconfigurable children for a given instance of shift register bank 
-     * under a specific configuration region of top-level module
-     */
-    std::vector<size_t> wl_shift_register_bank_sink_child_ids(const ConfigRegionId& region,
-                                                              const ModuleId& sr_module,
-                                                              const size_t& sr_instance) const; 
-
-    /* @brief Return a list of WL ids of reconfigurable children for a given instance of shift register bank 
-     * under a specific configuration region of top-level module
-     */
-    std::vector<size_t> wl_shift_register_bank_sink_pin_ids(const ConfigRegionId& region,
-                                                            const ModuleId& sr_module,
-                                                            const size_t& sr_instance) const; 
-
-    /* @brief Return a list of WL ids of a given instance of shift register bank 
-     * under a specific configuration region of top-level module
-     */
-    std::vector<size_t> wl_shift_register_bank_source_blwl_ids(const ConfigRegionId& region,
-                                                               const ModuleId& sr_module,
-                                                               const size_t& sr_instance) const; 
-
-    /** @brief find the BL shift register bank id to which a BL port is connected to */
-    FabricBitLineBankId find_bl_shift_register_bank_id(const ConfigRegionId& region, const BasicPort& bl_port) const;
-
-    /** @brief find the data port of a BL shift register bank id to which a BL port is connected to */
-    BasicPort find_bl_shift_register_bank_data_port(const ConfigRegionId& region, const BasicPort& bl_port) const;
-
     /** @brief find the WL shift register bank id to which a BL port is connected to */
     FabricWordLineBankId find_wl_shift_register_bank_id(const ConfigRegionId& region, const BasicPort& wl_port) const;
 
     /** @brief find the data port of a WL shift register bank id to which a BL port is connected to */
     BasicPort find_wl_shift_register_bank_data_port(const ConfigRegionId& region, const BasicPort& wl_port) const;
+
+    /** @brief Return the module id of a WL shift register bank */
+    ModuleId wl_shift_register_bank_module(const ConfigRegionId& region_id,
+                                           const FabricWordLineBankId& bank_id) const;
+
+    /** @brief Return the instance id of a WL shift register bank */
+    size_t wl_shift_register_bank_instance(const ConfigRegionId& region_id,
+                                           const FabricWordLineBankId& bank_id) const;
+
+    /** @brief return the child id at top-level module to which a data port (1-bit) of a WL shift register bank is connected to */
+    size_t wl_shift_register_bank_sink_child_id(const ConfigRegionId& region,
+                                                const FabricWordLineBankId& bank_id,
+                                                const BasicPort& src_port) const;
+
+    /** @brief return the child pin id of the child module at top-level module 
+     *  to which a data port (1-bit) of a WL shift register bank is connected to
+     */
+    size_t wl_shift_register_bank_sink_child_pin_id(const ConfigRegionId& region,
+                                                    const FabricWordLineBankId& bank_id,
+                                                    const BasicPort& src_port) const;
+
+    /** @brief Return a list of single-bit ports which are the data ports of a WL shift register bank */
+    std::vector<BasicPort> wl_shift_register_bank_source_ports(const ConfigRegionId& region_id,
+                                                               const FabricWordLineBankId& bank_id) const;
 
   public: /* Mutators */
     void resize_regions(const size_t& num_regions);
@@ -122,8 +116,6 @@ class MemoryBankShiftRegisterBanks {
     /* Reserve a number of banks to be memory efficent */
     void reserve_bl_shift_register_banks(const FabricRegionId& region_id, const size_t& num_banks);
     void reserve_bl_shift_register_banks(const ConfigRegionId& region_id, const size_t& num_banks);
-    void reserve_wl_shift_register_banks(const FabricRegionId& region_id, const size_t& num_banks);
-    void reserve_wl_shift_register_banks(const ConfigRegionId& region_id, const size_t& num_banks);
 
     /* Create a new shift register bank for BLs and return an id */
     FabricBitLineBankId create_bl_shift_register_bank(const FabricRegionId& region_id);
@@ -137,6 +129,27 @@ class MemoryBankShiftRegisterBanks {
                                                  const FabricBitLineBankId& bank_id,
                                                  const openfpga::BasicPort& data_port);
 
+    /* Link a BL shift register bank to a module id */
+    void link_bl_shift_register_bank_to_module(const ConfigRegionId& region_id,
+                                               const FabricBitLineBankId& bank_id,
+                                               const ModuleId& module_id);
+
+    /* Link a BL shift register bank to a instance id */
+    void link_bl_shift_register_bank_to_instance(const ConfigRegionId& region_id,
+                                                 const FabricBitLineBankId& bank_id,
+                                                 const size_t& instance_id);
+
+    /* @brief Add the child id and pin id of BL to which a shift register is connected to under a specific configuration region of top-level module */
+    void add_bl_shift_register_bank_sink_node(const ConfigRegionId& region,
+                                              const FabricBitLineBankId& bank,
+                                              const BasicPort& src_port,
+                                              const size_t& sink_child_id,
+                                              const size_t& sink_child_pin_id); 
+
+    /* Reserve a number of banks to be memory efficent */
+    void reserve_wl_shift_register_banks(const FabricRegionId& region_id, const size_t& num_banks);
+    void reserve_wl_shift_register_banks(const ConfigRegionId& region_id, const size_t& num_banks);
+
     /* Create a new shift register bank for WLs and return an id */
     FabricWordLineBankId create_wl_shift_register_bank(const FabricRegionId& region_id);
     FabricWordLineBankId create_wl_shift_register_bank(const ConfigRegionId& region_id);
@@ -149,41 +162,22 @@ class MemoryBankShiftRegisterBanks {
                                                  const FabricWordLineBankId& bank_id,
                                                  const openfpga::BasicPort& data_port);
 
-    /* @brief Add the module id and instance id of a shift register under a specific configuration region of top-level module */
-    void add_bl_shift_register_instance(const ConfigRegionId& region,
-                                        const ModuleId& sr_module,
-                                        const size_t& sr_instance); 
+    /* Link a WL shift register bank to a module id */
+    void link_wl_shift_register_bank_to_module(const ConfigRegionId& region_id,
+                                               const FabricWordLineBankId& bank_id,
+                                               const ModuleId& module_id);
 
-    /* @brief Add the child id and pin id of BL to which a shift register is connected to under a specific configuration region of top-level module */
-    void add_bl_shift_register_sink_nodes(const ConfigRegionId& region,
-                                          const ModuleId& sr_module,
-                                          const size_t& sr_instance,
-                                          const size_t& sink_child_id,
-                                          const size_t& sink_child_pin_id); 
-
-    /* @brief Add the BL id under a specific configuration region of top-level module to which a shift register is connected to */
-    void add_bl_shift_register_source_blwls(const ConfigRegionId& region,
-                                            const ModuleId& sr_module,
-                                            const size_t& sr_instance,
-                                            const size_t& sink_blwl_id); 
-
-    /* @brief Add the module id and instance id of a shift register under a specific configuration region of top-level module */
-    void add_wl_shift_register_instance(const ConfigRegionId& region,
-                                        const ModuleId& sr_module,
-                                        const size_t& sr_instance); 
+    /* Link a WL shift register bank to a instance id */
+    void link_wl_shift_register_bank_to_instance(const ConfigRegionId& region_id,
+                                                 const FabricWordLineBankId& bank_id,
+                                                 const size_t& instance_id);
 
     /* @brief Add the child id and pin id of WL to which a shift register is connected to under a specific configuration region of top-level module */
-    void add_wl_shift_register_sink_nodes(const ConfigRegionId& region,
-                                          const ModuleId& sr_module,
-                                          const size_t& sr_instance,
-                                          const size_t& sink_child_id,
-                                          const size_t& sink_child_pin_id); 
-
-    /* @brief Add the BL/WL id under a specific configuration region of top-level module to which a shift register is connected to */
-    void add_wl_shift_register_source_blwls(const ConfigRegionId& region,
-                                            const ModuleId& sr_module,
-                                            const size_t& sr_instance,
-                                            const size_t& sink_blwl_id); 
+    void add_wl_shift_register_bank_sink_node(const ConfigRegionId& region,
+                                              const FabricWordLineBankId& bank,
+                                              const BasicPort& src_port,
+                                              const size_t& sink_child_id,
+                                              const size_t& sink_child_pin_id); 
 
   public:  /* Validators */
     bool valid_region_id(const ConfigRegionId& region) const;
@@ -203,20 +197,18 @@ class MemoryBankShiftRegisterBanks {
     /* General information about the BL shift register bank */
     vtr::vector<ConfigRegionId, vtr::vector<FabricBitLineBankId, FabricBitLineBankId>> bl_bank_ids_;
     vtr::vector<ConfigRegionId, vtr::vector<FabricBitLineBankId, std::vector<BasicPort>>> bl_bank_data_ports_;
-
-    /* BL: [config_region][(shift_register_module, shift_register_instance)][i] = (reconfigurable_child_id, blwl_port_pin_index)*/
-    vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<size_t>>> bl_sr_instance_sink_child_ids_;
-    vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<size_t>>> bl_sr_instance_sink_child_pin_ids_;
-    vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<size_t>>> bl_sr_instance_source_blwl_ids_;
+    vtr::vector<ConfigRegionId, vtr::vector<FabricBitLineBankId, ModuleId>> bl_bank_modules_;
+    vtr::vector<ConfigRegionId, vtr::vector<FabricBitLineBankId, size_t>> bl_bank_instances_;
+    vtr::vector<ConfigRegionId, vtr::vector<FabricBitLineBankId, std::map<BasicPort, size_t>>> bl_bank_sink_child_ids_;
+    vtr::vector<ConfigRegionId, vtr::vector<FabricBitLineBankId, std::map<BasicPort, size_t>>> bl_bank_sink_child_pin_ids_;
 
     /* General information about the WL shift register bank */
     vtr::vector<ConfigRegionId, vtr::vector<FabricWordLineBankId, FabricWordLineBankId>> wl_bank_ids_;
     vtr::vector<ConfigRegionId, vtr::vector<FabricWordLineBankId, std::vector<BasicPort>>> wl_bank_data_ports_;
-
-    /* WL: [config_region][(shift_register_module, shift_register_instance)][i] = (reconfigurable_child_id, blwl_port_pin_index)*/
-    vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<size_t>>> wl_sr_instance_sink_child_ids_;
-    vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<size_t>>> wl_sr_instance_sink_child_pin_ids_;
-    vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<size_t>>> wl_sr_instance_source_blwl_ids_;
+    vtr::vector<ConfigRegionId, vtr::vector<FabricWordLineBankId, ModuleId>> wl_bank_modules_;
+    vtr::vector<ConfigRegionId, vtr::vector<FabricWordLineBankId, size_t>> wl_bank_instances_;
+    vtr::vector<ConfigRegionId, vtr::vector<FabricWordLineBankId, std::map<BasicPort, size_t>>> wl_bank_sink_child_ids_;
+    vtr::vector<ConfigRegionId, vtr::vector<FabricWordLineBankId, std::map<BasicPort, size_t>>> wl_bank_sink_child_pin_ids_;
 
     /* Fast look-up: given a BL/Wl port, e.g., bl[i], find out
      * - the shift register bank id

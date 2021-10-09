@@ -36,6 +36,7 @@ void add_top_module_ql_memory_bank_sram_ports(ModuleManager& module_manager,
                                               const ModuleId& module_id,
                                               const CircuitLibrary& circuit_lib,
                                               const ConfigProtocol& config_protocol,
+                                              const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                               const TopModuleNumConfigBits& num_config_bits);
 
 int load_top_module_shift_register_banks_from_fabric_key(const FabricKey& fabric_key,
