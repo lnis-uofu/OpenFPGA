@@ -436,6 +436,7 @@ bool MemoryBankShiftRegisterBanks::empty() const {
 
 void MemoryBankShiftRegisterBanks::build_bl_port_fast_lookup() const {
   bl_ports_to_sr_bank_ids_.resize(bl_bank_data_ports_.size());
+  bl_ports_to_sr_bank_ports_.resize(bl_bank_data_ports_.size());
   for (const auto& region : bl_bank_data_ports_) {
     size_t bl_index = 0;
     for (const auto& bank : region) { 
@@ -458,6 +459,7 @@ void MemoryBankShiftRegisterBanks::build_bl_port_fast_lookup() const {
 
 void MemoryBankShiftRegisterBanks::build_wl_port_fast_lookup() const {
   wl_ports_to_sr_bank_ids_.resize(wl_bank_data_ports_.size());
+  wl_ports_to_sr_bank_ports_.resize(wl_bank_data_ports_.size());
   for (const auto& region : wl_bank_data_ports_) {
     size_t wl_index = 0;
     for (const auto& bank : region) { 

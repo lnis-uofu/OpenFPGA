@@ -1555,7 +1555,7 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(Module
   for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
     for (const FabricWordLineBankId& sr_bank : sr_banks.wl_banks(config_region)) {
       size_t wl_bank_size = sr_banks.wl_bank_size(config_region, sr_bank);
-      std::string sr_module_name = generate_bl_shift_register_module_name(circuit_lib.model_name(wl_memory_model), wl_bank_size); 
+      std::string sr_module_name = generate_wl_shift_register_module_name(circuit_lib.model_name(wl_memory_model), wl_bank_size); 
       ModuleId sr_bank_module = module_manager.find_module(sr_module_name);
       VTR_ASSERT(sr_bank_module);
 
