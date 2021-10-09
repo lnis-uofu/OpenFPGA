@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "vtr_assert.h"
+#include "openfpga_reserved_words.h"
 #include "memory_bank_shift_register_banks.h" 
 
 /* begin namespace openfpga */
@@ -201,6 +202,62 @@ std::vector<BasicPort> MemoryBankShiftRegisterBanks::wl_bank_data_ports(const Co
   return wl_bank_data_ports_[region_id][bank_id];
 }
 
+FabricBitLineBankId MemoryBankShiftRegisterBanks::find_bl_shift_register_bank_id(const ConfigRegionId& region,
+                                                                                 const BasicPort& bl_port) const {
+  if (is_bl_bank_dirty_) {
+    build_bl_port_fast_lookup(); 
+  }
+  
+  VTR_ASSERT(valid_region_id(region));
+  const auto& result = bl_ports_to_sr_bank_ids_[region].find(bl_port);
+  if (result == bl_ports_to_sr_bank_ids_[region].end()) {
+    return FabricBitLineBankId::INVALID();
+  }
+  return result->second;
+}
+
+BasicPort MemoryBankShiftRegisterBanks::find_bl_shift_register_bank_data_port(const ConfigRegionId& region,
+                                                                              const BasicPort& bl_port) const {
+  if (is_bl_bank_dirty_) {
+    build_bl_port_fast_lookup(); 
+  }
+  
+  VTR_ASSERT(valid_region_id(region));
+  const auto& result = bl_ports_to_sr_bank_ports_[region].find(bl_port);
+  if (result == bl_ports_to_sr_bank_ports_[region].end()) {
+    return BasicPort();
+  }
+  return result->second;
+}
+
+FabricWordLineBankId MemoryBankShiftRegisterBanks::find_wl_shift_register_bank_id(const ConfigRegionId& region,
+                                                                                  const BasicPort& wl_port) const {
+  if (is_wl_bank_dirty_) {
+    build_wl_port_fast_lookup(); 
+  }
+  
+  VTR_ASSERT(valid_region_id(region));
+  const auto& result = wl_ports_to_sr_bank_ids_[region].find(wl_port);
+  if (result == wl_ports_to_sr_bank_ids_[region].end()) {
+    return FabricWordLineBankId::INVALID();
+  }
+  return result->second;
+}
+
+BasicPort MemoryBankShiftRegisterBanks::find_wl_shift_register_bank_data_port(const ConfigRegionId& region,
+                                                                              const BasicPort& wl_port) const {
+  if (is_wl_bank_dirty_) {
+    build_wl_port_fast_lookup(); 
+  }
+  
+  VTR_ASSERT(valid_region_id(region));
+  const auto& result = wl_ports_to_sr_bank_ports_[region].find(wl_port);
+  if (result == wl_ports_to_sr_bank_ports_[region].end()) {
+    return BasicPort();
+  }
+  return result->second;
+}
+
 void MemoryBankShiftRegisterBanks::resize_regions(const size_t& num_regions) {
   bl_bank_ids_.resize(num_regions);
   bl_bank_data_ports_.resize(num_regions);
@@ -319,6 +376,7 @@ void MemoryBankShiftRegisterBanks::add_data_port_to_bl_shift_register_bank(const
                                                                            const openfpga::BasicPort& data_port) {
   VTR_ASSERT(valid_bl_bank_id(region_id, bank_id));
   bl_bank_data_ports_[region_id][bank_id].push_back(data_port);
+  is_bl_bank_dirty_ = true;
 }
 
 FabricWordLineBankId MemoryBankShiftRegisterBanks::create_wl_shift_register_bank(const FabricRegionId& region_id) {
@@ -349,6 +407,7 @@ void MemoryBankShiftRegisterBanks::add_data_port_to_wl_shift_register_bank(const
                                                                            const openfpga::BasicPort& data_port) {
   VTR_ASSERT(valid_wl_bank_id(region_id, bank_id));
   wl_bank_data_ports_[region_id][bank_id].push_back(data_port);
+  is_wl_bank_dirty_ = true;
 }
 
 bool MemoryBankShiftRegisterBanks::valid_region_id(const ConfigRegionId& region) const {
@@ -371,6 +430,50 @@ bool MemoryBankShiftRegisterBanks::valid_wl_bank_id(const ConfigRegionId& region
 
 bool MemoryBankShiftRegisterBanks::empty() const {
   return bl_bank_ids_.empty() && wl_bank_ids_.empty(); 
+}
+
+void MemoryBankShiftRegisterBanks::build_bl_port_fast_lookup() const {
+  bl_ports_to_sr_bank_ids_.resize(bl_bank_data_ports_.size());
+  for (const auto& region : bl_bank_data_ports_) {
+    size_t bl_index = 0;
+    for (const auto& bank : region) { 
+      for (const auto& port : bank) {
+        for (const auto& pin : port.pins()) {
+          BasicPort bl_port(std::string(MEMORY_BL_PORT_NAME), bl_index, bl_index);
+          BasicPort sr_bl_port(std::string(MEMORY_BL_PORT_NAME), pin, pin);
+          ConfigRegionId region_id = ConfigRegionId(&region - &bl_bank_data_ports_[ConfigRegionId(0)]);
+          FabricBitLineBankId bank_id = FabricBitLineBankId(&bank - &region[FabricBitLineBankId(0)]);
+          bl_ports_to_sr_bank_ids_[region_id][bl_port] = bank_id; 
+          bl_ports_to_sr_bank_ports_[region_id][bl_port] = sr_bl_port; 
+          bl_index++;
+        }
+      }
+    }
+  }
+  /* Clear the flag, now fast look-up is synchronized */
+  is_bl_bank_dirty_ = false;
+}
+
+void MemoryBankShiftRegisterBanks::build_wl_port_fast_lookup() const {
+  wl_ports_to_sr_bank_ids_.resize(wl_bank_data_ports_.size());
+  for (const auto& region : wl_bank_data_ports_) {
+    size_t wl_index = 0;
+    for (const auto& bank : region) { 
+      for (const auto& port : bank) {
+        for (const auto& pin : port.pins()) {
+          BasicPort wl_port(std::string(MEMORY_WL_PORT_NAME), wl_index, wl_index);
+          BasicPort sr_wl_port(std::string(MEMORY_WL_PORT_NAME), pin, pin);
+          ConfigRegionId region_id = ConfigRegionId(&region - &wl_bank_data_ports_[ConfigRegionId(0)]);
+          FabricWordLineBankId bank_id = FabricWordLineBankId(&bank - &region[FabricWordLineBankId(0)]);
+          wl_ports_to_sr_bank_ids_[region_id][wl_port] = bank_id; 
+          wl_ports_to_sr_bank_ports_[region_id][wl_port] = sr_wl_port; 
+          wl_index++;
+        }
+      }
+    }
+  }
+  /* Clear the flag, now fast look-up is synchronized */
+  is_wl_bank_dirty_ = false;
 }
 
 } /* end namespace openfpga */

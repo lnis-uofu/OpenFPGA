@@ -104,6 +104,18 @@ class MemoryBankShiftRegisterBanks {
                                                                const ModuleId& sr_module,
                                                                const size_t& sr_instance) const; 
 
+    /** @brief find the BL shift register bank id to which a BL port is connected to */
+    FabricBitLineBankId find_bl_shift_register_bank_id(const ConfigRegionId& region, const BasicPort& bl_port) const;
+
+    /** @brief find the data port of a BL shift register bank id to which a BL port is connected to */
+    BasicPort find_bl_shift_register_bank_data_port(const ConfigRegionId& region, const BasicPort& bl_port) const;
+
+    /** @brief find the WL shift register bank id to which a BL port is connected to */
+    FabricWordLineBankId find_wl_shift_register_bank_id(const ConfigRegionId& region, const BasicPort& wl_port) const;
+
+    /** @brief find the data port of a WL shift register bank id to which a BL port is connected to */
+    BasicPort find_wl_shift_register_bank_data_port(const ConfigRegionId& region, const BasicPort& wl_port) const;
+
   public: /* Mutators */
     void resize_regions(const size_t& num_regions);
 
@@ -179,6 +191,14 @@ class MemoryBankShiftRegisterBanks {
     bool valid_wl_bank_id(const ConfigRegionId& region_id, const FabricWordLineBankId& bank_id) const;
     bool empty() const;
 
+  private: /* Internal Mutators */
+    /** @brief Build the mapping from a BL/WL port to shift register bank and assoicated pins 
+     *  @note we use const here because the caller functions, e.g., find_bl_shift_register_bank_id(), is const
+     *        even though it does modify internal data
+     */
+    void build_bl_port_fast_lookup() const;
+    void build_wl_port_fast_lookup() const;
+
   private: /* Internal data */
     /* General information about the BL shift register bank */
     vtr::vector<ConfigRegionId, vtr::vector<FabricBitLineBankId, FabricBitLineBankId>> bl_bank_ids_;
@@ -198,6 +218,18 @@ class MemoryBankShiftRegisterBanks {
     vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<size_t>>> wl_sr_instance_sink_child_pin_ids_;
     vtr::vector<ConfigRegionId, std::map<std::pair<ModuleId, size_t>, std::vector<size_t>>> wl_sr_instance_source_blwl_ids_;
 
+    /* Fast look-up: given a BL/Wl port, e.g., bl[i], find out
+     * - the shift register bank id
+     * - the output pin id of the shift register bank
+     */
+    mutable vtr::vector<ConfigRegionId, std::map<BasicPort, FabricBitLineBankId>> bl_ports_to_sr_bank_ids_;
+    mutable vtr::vector<ConfigRegionId, std::map<BasicPort, BasicPort>> bl_ports_to_sr_bank_ports_;
+    mutable vtr::vector<ConfigRegionId, std::map<BasicPort, FabricWordLineBankId>> wl_ports_to_sr_bank_ids_;
+    mutable vtr::vector<ConfigRegionId, std::map<BasicPort, BasicPort>> wl_ports_to_sr_bank_ports_;
+
+    /* A flag to indicate that the general information of the shift register banks have been modified, fast look-up has to be updated */
+    mutable bool is_bl_bank_dirty_ = false;
+    mutable bool is_wl_bank_dirty_ = false;
 };
 
 } /* end namespace openfpga */
