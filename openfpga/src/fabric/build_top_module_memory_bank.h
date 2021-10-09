@@ -38,6 +38,14 @@ void add_top_module_ql_memory_bank_sram_ports(ModuleManager& module_manager,
                                               const ConfigProtocol& config_protocol,
                                               const TopModuleNumConfigBits& num_config_bits);
 
+int load_top_module_shift_register_banks_from_fabric_key(const FabricKey& fabric_key,
+                                                         MemoryBankShiftRegisterBanks& blwl_sr_banks);
+
+void sync_memory_bank_shift_register_banks_with_config_protocol_settings(ModuleManager& module_manager,
+                                                                         MemoryBankShiftRegisterBanks& blwl_sr_banks,
+                                                                         const ConfigProtocol& config_protocol,
+                                                                         const ModuleId& top_module,
+                                                                         const CircuitLibrary& circuit_lib);
 
 } /* end namespace openfpga */
 

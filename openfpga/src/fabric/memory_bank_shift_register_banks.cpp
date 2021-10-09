@@ -275,10 +275,20 @@ void MemoryBankShiftRegisterBanks::reserve_bl_shift_register_banks(const ConfigR
   bl_bank_data_ports_[region_id].reserve(num_banks);
 }
 
+void MemoryBankShiftRegisterBanks::reserve_bl_shift_register_banks(const FabricRegionId& region_id, const size_t& num_banks) {
+  ConfigRegionId config_region_id = ConfigRegionId(size_t(region_id));
+  reserve_bl_shift_register_banks(config_region_id, num_banks);
+}
+
 void MemoryBankShiftRegisterBanks::reserve_wl_shift_register_banks(const ConfigRegionId& region_id, const size_t& num_banks) {
   VTR_ASSERT(valid_region_id(region_id));
   wl_bank_ids_[region_id].reserve(num_banks);
   wl_bank_data_ports_[region_id].reserve(num_banks);
+}
+
+void MemoryBankShiftRegisterBanks::reserve_wl_shift_register_banks(const FabricRegionId& region_id, const size_t& num_banks) {
+  ConfigRegionId config_region_id = ConfigRegionId(size_t(region_id));
+  reserve_wl_shift_register_banks(config_region_id, num_banks);
 }
 
 FabricBitLineBankId MemoryBankShiftRegisterBanks::create_bl_shift_register_bank(const ConfigRegionId& region_id) {
@@ -292,11 +302,28 @@ FabricBitLineBankId MemoryBankShiftRegisterBanks::create_bl_shift_register_bank(
   return bank;
 }
 
+FabricBitLineBankId MemoryBankShiftRegisterBanks::create_bl_shift_register_bank(const FabricRegionId& region_id) {
+  ConfigRegionId config_region_id = ConfigRegionId(size_t(region_id));
+  return create_bl_shift_register_bank(config_region_id);
+}
+
+void MemoryBankShiftRegisterBanks::add_data_port_to_bl_shift_register_bank(const FabricRegionId& region_id,
+                                                                           const FabricBitLineBankId& bank_id,
+                                                                           const openfpga::BasicPort& data_port) {
+  ConfigRegionId config_region_id = ConfigRegionId(size_t(region_id));
+  add_data_port_to_bl_shift_register_bank(config_region_id, bank_id, data_port);
+}
+
 void MemoryBankShiftRegisterBanks::add_data_port_to_bl_shift_register_bank(const ConfigRegionId& region_id,
-                                                        const FabricBitLineBankId& bank_id,
-                                                        const openfpga::BasicPort& data_port) {
+                                                                           const FabricBitLineBankId& bank_id,
+                                                                           const openfpga::BasicPort& data_port) {
   VTR_ASSERT(valid_bl_bank_id(region_id, bank_id));
   bl_bank_data_ports_[region_id][bank_id].push_back(data_port);
+}
+
+FabricWordLineBankId MemoryBankShiftRegisterBanks::create_wl_shift_register_bank(const FabricRegionId& region_id) {
+  ConfigRegionId config_region_id = ConfigRegionId(size_t(region_id));
+  return create_wl_shift_register_bank(config_region_id);
 }
 
 FabricWordLineBankId MemoryBankShiftRegisterBanks::create_wl_shift_register_bank(const ConfigRegionId& region_id) {
@@ -310,13 +337,19 @@ FabricWordLineBankId MemoryBankShiftRegisterBanks::create_wl_shift_register_bank
   return bank;
 }
 
+void MemoryBankShiftRegisterBanks::add_data_port_to_wl_shift_register_bank(const FabricRegionId& region_id,
+                                                                           const FabricWordLineBankId& bank_id,
+                                                                           const openfpga::BasicPort& data_port) {
+  ConfigRegionId config_region_id = ConfigRegionId(size_t(region_id));
+  add_data_port_to_wl_shift_register_bank(config_region_id, bank_id, data_port);
+}
+
 void MemoryBankShiftRegisterBanks::add_data_port_to_wl_shift_register_bank(const ConfigRegionId& region_id,
-                                                        const FabricWordLineBankId& bank_id,
-                                                        const openfpga::BasicPort& data_port) {
+                                                                           const FabricWordLineBankId& bank_id,
+                                                                           const openfpga::BasicPort& data_port) {
   VTR_ASSERT(valid_wl_bank_id(region_id, bank_id));
   wl_bank_data_ports_[region_id][bank_id].push_back(data_port);
 }
-
 
 bool MemoryBankShiftRegisterBanks::valid_region_id(const ConfigRegionId& region) const {
   return size_t(region) < bl_sr_instance_sink_child_ids_.size();
@@ -334,6 +367,10 @@ bool MemoryBankShiftRegisterBanks::valid_wl_bank_id(const ConfigRegionId& region
     return false;
   }
   return ( size_t(bank_id) < wl_bank_ids_[region_id].size() ) && ( bank_id == wl_bank_ids_[region_id][bank_id] ); 
+}
+
+bool MemoryBankShiftRegisterBanks::empty() const {
+  return bl_bank_ids_.empty() && wl_bank_ids_.empty(); 
 }
 
 } /* end namespace openfpga */

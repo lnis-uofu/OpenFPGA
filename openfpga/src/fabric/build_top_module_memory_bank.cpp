@@ -1728,4 +1728,119 @@ void add_top_module_ql_memory_bank_sram_ports(ModuleManager& module_manager,
   }
 }
 
+/********************************************************************
+ * Load the shift register bank -related data from fabric key to 
+ * the dedicated and unified data structure 
+ ********************************************************************/
+int load_top_module_shift_register_banks_from_fabric_key(const FabricKey& fabric_key,
+                                                         MemoryBankShiftRegisterBanks& blwl_sr_banks) {
+  blwl_sr_banks.resize_regions(fabric_key.regions().size());
+
+  /* Load Bit-Line shift register banks */
+  for (const auto& region : fabric_key.regions()) {
+    blwl_sr_banks.reserve_bl_shift_register_banks(region, fabric_key.bl_banks(region).size());
+    for (const auto& bank : fabric_key.bl_banks(region)) {
+      FabricBitLineBankId sr_bank = blwl_sr_banks.create_bl_shift_register_bank(region);
+      for (const auto& data_port : fabric_key.bl_bank_data_ports(region, bank)) {
+        blwl_sr_banks.add_data_port_to_bl_shift_register_bank(region, sr_bank, data_port);
+      }
+    }
+  }
+
+  /* Load Bit-Line shift register banks */
+  for (const auto& region : fabric_key.regions()) {
+    blwl_sr_banks.reserve_wl_shift_register_banks(region, fabric_key.wl_banks(region).size());
+    for (const auto& bank : fabric_key.wl_banks(region)) {
+      FabricWordLineBankId sr_bank = blwl_sr_banks.create_wl_shift_register_bank(region);
+      for (const auto& data_port : fabric_key.wl_bank_data_ports(region, bank)) {
+        blwl_sr_banks.add_data_port_to_wl_shift_register_bank(region, sr_bank, data_port);
+      }
+    }
+  }
+}
+
+/********************************************************************
+ * @brief This functions synchronize the settings in configuration protocol (from architecture description)
+ * and the existing information (loaded from fabric key files)
+ * @note This function should be called AFTER load_top_module_shift_register_banks_from_fabric_key()
+ ********************************************************************/
+void sync_memory_bank_shift_register_banks_with_config_protocol_settings(ModuleManager& module_manager,
+                                                                         MemoryBankShiftRegisterBanks& blwl_sr_banks,
+                                                                         const ConfigProtocol& config_protocol,
+                                                                         const ModuleId& top_module,
+                                                                         const CircuitLibrary& circuit_lib) {
+  /* ONLY synchronize when the configuration protocol is memory bank using shift registers */
+  if ( CONFIG_MEM_QL_MEMORY_BANK != config_protocol.type()
+    || BLWL_PROTOCOL_SHIFT_REGISTER != config_protocol.bl_protocol_type()
+    || BLWL_PROTOCOL_SHIFT_REGISTER != config_protocol.wl_protocol_type() ) {
+    return;
+  }
+
+  /* Fabric key has a higher priority in defining the shift register bank organization */
+  if (!blwl_sr_banks.empty()) {
+    return;
+  }
+
+  CircuitModelId sram_model = config_protocol.memory_model();
+
+  /* Reach here, if means we do not have any definition from fabric key files, use the settings from the configuration protocol */
+  blwl_sr_banks.resize_regions(module_manager.regions(top_module).size());
+
+  /* Based on the number of shift register banks, evenly distribute the BLs in each region for each shift register bank */
+  for (const auto& config_region : module_manager.regions(top_module)) {
+    size_t num_bls = compute_memory_bank_regional_num_bls(module_manager, top_module,
+                                                          config_region,
+                                                          circuit_lib, sram_model);
+    size_t num_bl_banks = config_protocol.bl_num_banks();
+    blwl_sr_banks.reserve_bl_shift_register_banks(config_region, num_bl_banks);
+
+    size_t regular_sr_bank_size = num_bls / num_bl_banks;
+    size_t cur_bl_index = 0;
+    for (size_t ibank = 0; ibank < num_bl_banks; ++ibank) {
+      /* For last bank, use all the residual sizes */
+      size_t cur_sr_bank_size = regular_sr_bank_size;
+      if (ibank == num_bl_banks - 1) {
+        cur_sr_bank_size = num_bls - ibank * regular_sr_bank_size; 
+      }
+      /* Create a bank and assign data ports */
+      FabricBitLineBankId bank = blwl_sr_banks.create_bl_shift_register_bank(config_region);
+      BasicPort data_ports(std::string(MEMORY_BL_PORT_NAME), cur_bl_index, cur_bl_index + cur_sr_bank_size - 1);
+      blwl_sr_banks.add_data_port_to_bl_shift_register_bank(config_region, bank, data_ports);
+     
+      /* Increment the bl index */
+      cur_bl_index += cur_sr_bank_size;
+    }
+
+    VTR_ASSERT(cur_bl_index == num_bls);
+  }
+
+  /* Based on the number of shift register banks, evenly distribute the WLs in each region for each shift register bank */
+  for (const auto& config_region : module_manager.regions(top_module)) {
+    size_t num_wls = compute_memory_bank_regional_num_wls(module_manager, top_module,
+                                                          config_region,
+                                                          circuit_lib, sram_model);
+    size_t num_wl_banks = config_protocol.wl_num_banks();
+    blwl_sr_banks.reserve_wl_shift_register_banks(config_region, num_wl_banks);
+
+    size_t regular_sr_bank_size = num_wls / num_wl_banks;
+    size_t cur_wl_index = 0;
+    for (size_t ibank = 0; ibank < num_wl_banks; ++ibank) {
+      /* For last bank, use all the residual sizes */
+      size_t cur_sr_bank_size = regular_sr_bank_size;
+      if (ibank == num_wl_banks - 1) {
+        cur_sr_bank_size = num_wls - ibank * regular_sr_bank_size; 
+      }
+      /* Create a bank and assign data ports */
+      FabricWordLineBankId bank = blwl_sr_banks.create_wl_shift_register_bank(config_region);
+      BasicPort data_ports(std::string(MEMORY_WL_PORT_NAME), cur_wl_index, cur_wl_index + cur_sr_bank_size - 1);
+      blwl_sr_banks.add_data_port_to_wl_shift_register_bank(config_region, bank, data_ports);
+     
+      /* Increment the bl index */
+      cur_wl_index += cur_sr_bank_size;
+    }
+
+    VTR_ASSERT(cur_wl_index == num_wls);
+  }
+}
+
 } /* end namespace openfpga */

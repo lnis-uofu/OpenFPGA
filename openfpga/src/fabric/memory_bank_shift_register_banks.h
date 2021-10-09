@@ -108,21 +108,31 @@ class MemoryBankShiftRegisterBanks {
     void resize_regions(const size_t& num_regions);
 
     /* Reserve a number of banks to be memory efficent */
+    void reserve_bl_shift_register_banks(const FabricRegionId& region_id, const size_t& num_banks);
     void reserve_bl_shift_register_banks(const ConfigRegionId& region_id, const size_t& num_banks);
+    void reserve_wl_shift_register_banks(const FabricRegionId& region_id, const size_t& num_banks);
     void reserve_wl_shift_register_banks(const ConfigRegionId& region_id, const size_t& num_banks);
 
     /* Create a new shift register bank for BLs and return an id */
+    FabricBitLineBankId create_bl_shift_register_bank(const FabricRegionId& region_id);
     FabricBitLineBankId create_bl_shift_register_bank(const ConfigRegionId& region_id);
 
     /* Add a data port to a given BL shift register bank */
+    void add_data_port_to_bl_shift_register_bank(const FabricRegionId& region_id,
+                                                 const FabricBitLineBankId& bank_id,
+                                                 const openfpga::BasicPort& data_port);
     void add_data_port_to_bl_shift_register_bank(const ConfigRegionId& region_id,
                                                  const FabricBitLineBankId& bank_id,
                                                  const openfpga::BasicPort& data_port);
 
     /* Create a new shift register bank for WLs and return an id */
+    FabricWordLineBankId create_wl_shift_register_bank(const FabricRegionId& region_id);
     FabricWordLineBankId create_wl_shift_register_bank(const ConfigRegionId& region_id);
 
     /* Add a data port to a given WL shift register bank */
+    void add_data_port_to_wl_shift_register_bank(const FabricRegionId& region_id,
+                                                 const FabricWordLineBankId& bank_id,
+                                                 const openfpga::BasicPort& data_port);
     void add_data_port_to_wl_shift_register_bank(const ConfigRegionId& region_id,
                                                  const FabricWordLineBankId& bank_id,
                                                  const openfpga::BasicPort& data_port);
@@ -167,6 +177,7 @@ class MemoryBankShiftRegisterBanks {
     bool valid_region_id(const ConfigRegionId& region) const;
     bool valid_bl_bank_id(const ConfigRegionId& region_id, const FabricBitLineBankId& bank_id) const;
     bool valid_wl_bank_id(const ConfigRegionId& region_id, const FabricWordLineBankId& bank_id) const;
+    bool empty() const;
 
   private: /* Internal data */
     /* General information about the BL shift register bank */
