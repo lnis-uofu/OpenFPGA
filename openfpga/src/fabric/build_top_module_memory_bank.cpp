@@ -1757,6 +1757,8 @@ int load_top_module_shift_register_banks_from_fabric_key(const FabricKey& fabric
       }
     }
   }
+
+  return 0;
 }
 
 /********************************************************************
