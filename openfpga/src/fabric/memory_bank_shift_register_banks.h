@@ -52,17 +52,20 @@ class MemoryBankShiftRegisterBanks {
     size_t bl_shift_register_bank_instance(const ConfigRegionId& region_id,
                                            const FabricBitLineBankId& bank_id) const;
 
-    /** @brief return the child id at top-level module to which a data port (1-bit) of a BL shift register bank is connected to */
-    size_t bl_shift_register_bank_sink_child_id(const ConfigRegionId& region_id,
-                                                const FabricBitLineBankId& bank_id,
-                                                const BasicPort& src_port) const;
+    /** @brief return the child ids at top-level module to which a data port (1-bit) of a BL shift register bank is connected to 
+     *  @note a BL may drive multiple children (children on the same column share the same BLs)
+     */
+    std::vector<size_t> bl_shift_register_bank_sink_child_ids(const ConfigRegionId& region_id,
+                                                              const FabricBitLineBankId& bank_id,
+                                                              const BasicPort& src_port) const;
 
     /** @brief return the child pin id of the child module at top-level module 
      *  to which a data port (1-bit) of a BL shift register bank is connected to
+     *  @note a BL may drive multiple children (children on the same column share the same BLs)
      */
-    size_t bl_shift_register_bank_sink_child_pin_id(const ConfigRegionId& region_id,
-                                                    const FabricBitLineBankId& bank_id,
-                                                    const BasicPort& src_port) const;
+    std::vector<size_t> bl_shift_register_bank_sink_child_pin_ids(const ConfigRegionId& region_id,
+                                                                  const FabricBitLineBankId& bank_id,
+                                                                  const BasicPort& src_port) const;
 
     /** @brief Return a list of single-bit ports which are the data ports of a BL shift register bank */
     std::vector<BasicPort> bl_shift_register_bank_source_ports(const ConfigRegionId& region_id,
@@ -94,17 +97,20 @@ class MemoryBankShiftRegisterBanks {
     size_t wl_shift_register_bank_instance(const ConfigRegionId& region_id,
                                            const FabricWordLineBankId& bank_id) const;
 
-    /** @brief return the child id at top-level module to which a data port (1-bit) of a WL shift register bank is connected to */
-    size_t wl_shift_register_bank_sink_child_id(const ConfigRegionId& region,
-                                                const FabricWordLineBankId& bank_id,
-                                                const BasicPort& src_port) const;
+    /** @brief return the child id at top-level module to which a data port (1-bit) of a WL shift register bank is connected to
+     *  @note a WL may drive multiple children (children on the same row share the same WLs)
+     */
+    std::vector<size_t> wl_shift_register_bank_sink_child_ids(const ConfigRegionId& region,
+                                                              const FabricWordLineBankId& bank_id,
+                                                              const BasicPort& src_port) const;
 
     /** @brief return the child pin id of the child module at top-level module 
      *  to which a data port (1-bit) of a WL shift register bank is connected to
+     *  @note a WL may drive multiple children (children on the same row share the same WLs)
      */
-    size_t wl_shift_register_bank_sink_child_pin_id(const ConfigRegionId& region,
-                                                    const FabricWordLineBankId& bank_id,
-                                                    const BasicPort& src_port) const;
+    std::vector<size_t> wl_shift_register_bank_sink_child_pin_ids(const ConfigRegionId& region,
+                                                                  const FabricWordLineBankId& bank_id,
+                                                                  const BasicPort& src_port) const;
 
     /** @brief Return a list of single-bit ports which are the data ports of a WL shift register bank */
     std::vector<BasicPort> wl_shift_register_bank_source_ports(const ConfigRegionId& region_id,
@@ -199,16 +205,16 @@ class MemoryBankShiftRegisterBanks {
     vtr::vector<ConfigRegionId, vtr::vector<FabricBitLineBankId, std::vector<BasicPort>>> bl_bank_data_ports_;
     vtr::vector<ConfigRegionId, vtr::vector<FabricBitLineBankId, ModuleId>> bl_bank_modules_;
     vtr::vector<ConfigRegionId, vtr::vector<FabricBitLineBankId, size_t>> bl_bank_instances_;
-    vtr::vector<ConfigRegionId, vtr::vector<FabricBitLineBankId, std::map<BasicPort, size_t>>> bl_bank_sink_child_ids_;
-    vtr::vector<ConfigRegionId, vtr::vector<FabricBitLineBankId, std::map<BasicPort, size_t>>> bl_bank_sink_child_pin_ids_;
+    vtr::vector<ConfigRegionId, vtr::vector<FabricBitLineBankId, std::map<BasicPort, std::vector<size_t>>>> bl_bank_sink_child_ids_;
+    vtr::vector<ConfigRegionId, vtr::vector<FabricBitLineBankId, std::map<BasicPort, std::vector<size_t>>>> bl_bank_sink_child_pin_ids_;
 
     /* General information about the WL shift register bank */
     vtr::vector<ConfigRegionId, vtr::vector<FabricWordLineBankId, FabricWordLineBankId>> wl_bank_ids_;
     vtr::vector<ConfigRegionId, vtr::vector<FabricWordLineBankId, std::vector<BasicPort>>> wl_bank_data_ports_;
     vtr::vector<ConfigRegionId, vtr::vector<FabricWordLineBankId, ModuleId>> wl_bank_modules_;
     vtr::vector<ConfigRegionId, vtr::vector<FabricWordLineBankId, size_t>> wl_bank_instances_;
-    vtr::vector<ConfigRegionId, vtr::vector<FabricWordLineBankId, std::map<BasicPort, size_t>>> wl_bank_sink_child_ids_;
-    vtr::vector<ConfigRegionId, vtr::vector<FabricWordLineBankId, std::map<BasicPort, size_t>>> wl_bank_sink_child_pin_ids_;
+    vtr::vector<ConfigRegionId, vtr::vector<FabricWordLineBankId, std::map<BasicPort, std::vector<size_t>>>> wl_bank_sink_child_ids_;
+    vtr::vector<ConfigRegionId, vtr::vector<FabricWordLineBankId, std::map<BasicPort, std::vector<size_t>>>> wl_bank_sink_child_pin_ids_;
 
     /* Fast look-up: given a BL/Wl port, e.g., bl[i], find out
      * - the shift register bank id

@@ -1284,14 +1284,6 @@ void add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_bank_bls(ModuleMa
       BasicPort sr_module_blwl_port_info = module_manager.module_port(sr_bank_module, sr_module_blwl_port);
 
       for (const BasicPort& src_port : sr_banks.bl_shift_register_bank_source_ports(config_region, bank)) {
-        size_t child_id = sr_banks.bl_shift_register_bank_sink_child_id(config_region, bank, src_port);
-        ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
-        size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
-
-        /* Find the BL port */
-        ModulePortId child_blwl_port = module_manager.find_module_port(child_module, child_blwl_port_name);
-        BasicPort child_blwl_port_info = module_manager.module_port(child_module, child_blwl_port);
-
         VTR_ASSERT(1 == src_port.get_width());
         /* Create net */
         ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
@@ -1300,10 +1292,20 @@ void add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_bank_bls(ModuleMa
                                                        src_port.pins()[0]);
         VTR_ASSERT(ModuleNetId::INVALID() != net);
 
-        /* Add net sink */
-        size_t sink_child_pin_id = sr_banks.bl_shift_register_bank_sink_child_pin_id(config_region, bank, src_port);
-        module_manager.add_module_net_sink(top_module, net,
-                                           child_module, child_instance, child_blwl_port, sink_child_pin_id);
+        for (size_t ichild = 0; ichild < sr_banks.bl_shift_register_bank_sink_child_ids(config_region, bank, src_port).size(); ++ichild) {
+          size_t child_id = sr_banks.bl_shift_register_bank_sink_child_ids(config_region, bank, src_port)[ichild];
+          ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
+          size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
+
+          /* Find the BL port */
+          ModulePortId child_blwl_port = module_manager.find_module_port(child_module, child_blwl_port_name);
+          BasicPort child_blwl_port_info = module_manager.module_port(child_module, child_blwl_port);
+
+          /* Add net sink */
+          size_t sink_child_pin_id = sr_banks.bl_shift_register_bank_sink_child_pin_ids(config_region, bank, src_port)[ichild];
+          module_manager.add_module_net_sink(top_module, net,
+                                             child_module, child_instance, child_blwl_port, sink_child_pin_id);
+        }
       }
     }
   }
@@ -1359,14 +1361,6 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_bank_wls(ModuleMa
       BasicPort sr_module_blwl_port_info = module_manager.module_port(sr_bank_module, sr_module_blwl_port);
 
       for (const BasicPort& src_port : sr_banks.wl_shift_register_bank_source_ports(config_region, bank)) {
-        size_t child_id = sr_banks.wl_shift_register_bank_sink_child_id(config_region, bank, src_port);
-        ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
-        size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
-
-        /* Find the BL port */
-        ModulePortId child_blwl_port = module_manager.find_module_port(child_module, child_blwl_port_name);
-        BasicPort child_blwl_port_info = module_manager.module_port(child_module, child_blwl_port);
-
         VTR_ASSERT(1 == src_port.get_width());
         /* Create net */
         ModuleNetId net = create_module_source_pin_net(module_manager, top_module,
@@ -1375,10 +1369,20 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_bank_wls(ModuleMa
                                                        src_port.pins()[0]);
         VTR_ASSERT(ModuleNetId::INVALID() != net);
 
-        /* Add net sink */
-        size_t sink_child_pin_id = sr_banks.wl_shift_register_bank_sink_child_pin_id(config_region, bank, src_port);
-        module_manager.add_module_net_sink(top_module, net,
-                                           child_module, child_instance, child_blwl_port, sink_child_pin_id);
+        for (size_t ichild = 0; ichild < sr_banks.wl_shift_register_bank_sink_child_ids(config_region, bank, src_port).size(); ++ichild) {
+          size_t child_id = sr_banks.wl_shift_register_bank_sink_child_ids(config_region, bank, src_port)[ichild];
+          ModuleId child_module = module_manager.region_configurable_children(top_module, config_region)[child_id];
+          size_t child_instance = module_manager.region_configurable_child_instances(top_module, config_region)[child_id];
+
+          /* Find the BL port */
+          ModulePortId child_blwl_port = module_manager.find_module_port(child_module, child_blwl_port_name);
+          BasicPort child_blwl_port_info = module_manager.module_port(child_module, child_blwl_port);
+
+          /* Add net sink */
+          size_t sink_child_pin_id = sr_banks.wl_shift_register_bank_sink_child_pin_ids(config_region, bank, src_port)[ichild];
+          module_manager.add_module_net_sink(top_module, net,
+                                             child_module, child_instance, child_blwl_port, sink_child_pin_id);
+        }
       }
     }
   }
@@ -1501,6 +1505,7 @@ void add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(Module
         BasicPort src_bl_port(std::string(MEMORY_BL_PORT_NAME), bl_pin_id, bl_pin_id);
         FabricBitLineBankId sr_bank = sr_banks.find_bl_shift_register_bank_id(config_region, src_bl_port);
         BasicPort sr_bank_port = sr_banks.find_bl_shift_register_bank_data_port(config_region, src_bl_port);
+        VTR_ASSERT(sr_bank_port.is_valid());
 
         sr_banks.add_bl_shift_register_bank_sink_node(config_region, sr_bank, sr_bank_port, child_id, sink_bl_pin);
 
@@ -1594,6 +1599,7 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(Module
 
         FabricWordLineBankId sr_bank = sr_banks.find_wl_shift_register_bank_id(config_region, src_wl_port);
         BasicPort sr_bank_port = sr_banks.find_wl_shift_register_bank_data_port(config_region, src_wl_port);
+        VTR_ASSERT(sr_bank_port.is_valid());
 
         sr_banks.add_wl_shift_register_bank_sink_node(config_region, sr_bank, sr_bank_port, child_id, sink_wl_pin);
 

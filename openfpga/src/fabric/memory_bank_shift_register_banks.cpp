@@ -124,24 +124,24 @@ BasicPort MemoryBankShiftRegisterBanks::find_bl_shift_register_bank_data_port(co
   return result->second;
 }
 
-size_t MemoryBankShiftRegisterBanks::bl_shift_register_bank_sink_child_id(const ConfigRegionId& region_id,
-                                                                          const FabricBitLineBankId& bank_id,
-                                                                          const BasicPort& src_port) const {
+std::vector<size_t> MemoryBankShiftRegisterBanks::bl_shift_register_bank_sink_child_ids(const ConfigRegionId& region_id,
+                                                                                        const FabricBitLineBankId& bank_id,
+                                                                                        const BasicPort& src_port) const {
   VTR_ASSERT(valid_bl_bank_id(region_id, bank_id));
   auto result = bl_bank_sink_child_ids_[region_id][bank_id].find(src_port);
   if (result == bl_bank_sink_child_ids_[region_id][bank_id].end()) {
-    return -1; /* Not found, return an invalid value */
+    return std::vector<size_t>(); /* Not found, return an empty list */
   }
   return result->second;
 }
 
-size_t MemoryBankShiftRegisterBanks::bl_shift_register_bank_sink_child_pin_id(const ConfigRegionId& region_id,
-                                                                              const FabricBitLineBankId& bank_id,
-                                                                              const BasicPort& src_port) const {
+std::vector<size_t> MemoryBankShiftRegisterBanks::bl_shift_register_bank_sink_child_pin_ids(const ConfigRegionId& region_id,
+                                                                                            const FabricBitLineBankId& bank_id,
+                                                                                            const BasicPort& src_port) const {
   VTR_ASSERT(valid_bl_bank_id(region_id, bank_id));
   auto result = bl_bank_sink_child_pin_ids_[region_id][bank_id].find(src_port);
   if (result == bl_bank_sink_child_pin_ids_[region_id][bank_id].end()) {
-    return -1; /* Not found, return an invalid value */
+    return std::vector<size_t>(); /* Not found, return an empty list */
   }
   return result->second;
 }
@@ -151,9 +151,11 @@ std::vector<BasicPort> MemoryBankShiftRegisterBanks::bl_shift_register_bank_sour
   VTR_ASSERT(valid_bl_bank_id(region_id, bank_id));
   std::vector<BasicPort> src_ports;
 
+  size_t cur_pin =0;
   for (const BasicPort& wide_port : bl_bank_data_ports(region_id, bank_id)) {
-    for (const size_t& pin : wide_port.pins()) {
-      src_ports.push_back(BasicPort(wide_port.get_name(), pin, pin));
+    for (size_t ipin = 0; ipin < wide_port.pins().size(); ++ipin) {
+      src_ports.push_back(BasicPort(std::string(MEMORY_BL_PORT_NAME), cur_pin, cur_pin));
+      cur_pin++;
     }
   }
 
@@ -250,8 +252,8 @@ void MemoryBankShiftRegisterBanks::add_bl_shift_register_bank_sink_node(const Co
                                                                         const size_t& sink_child_id,
                                                                         const size_t& sink_child_pin_id) { 
   VTR_ASSERT(valid_bl_bank_id(region, bank));
-  bl_bank_sink_child_ids_[region][bank][src_port] = sink_child_id;
-  bl_bank_sink_child_pin_ids_[region][bank][src_port] = sink_child_pin_id;
+  bl_bank_sink_child_ids_[region][bank][src_port].push_back(sink_child_id);
+  bl_bank_sink_child_pin_ids_[region][bank][src_port].push_back(sink_child_pin_id);
 }
 
 void MemoryBankShiftRegisterBanks::add_wl_shift_register_bank_sink_node(const ConfigRegionId& region,
@@ -260,8 +262,8 @@ void MemoryBankShiftRegisterBanks::add_wl_shift_register_bank_sink_node(const Co
                                                                         const size_t& sink_child_id,
                                                                         const size_t& sink_child_pin_id) { 
   VTR_ASSERT(valid_wl_bank_id(region, bank));
-  wl_bank_sink_child_ids_[region][bank][src_port] = sink_child_id;
-  wl_bank_sink_child_pin_ids_[region][bank][src_port] = sink_child_pin_id;
+  wl_bank_sink_child_ids_[region][bank][src_port].push_back(sink_child_id);
+  wl_bank_sink_child_pin_ids_[region][bank][src_port].push_back(sink_child_pin_id);
 }
 
 void MemoryBankShiftRegisterBanks::reserve_bl_shift_register_banks(const ConfigRegionId& region_id, const size_t& num_banks) {
@@ -364,13 +366,13 @@ void MemoryBankShiftRegisterBanks::add_data_port_to_wl_shift_register_bank(const
   is_wl_bank_dirty_ = true;
 }
 
-size_t MemoryBankShiftRegisterBanks::wl_shift_register_bank_sink_child_id(const ConfigRegionId& region_id,
-                                                                          const FabricWordLineBankId& bank_id,
-                                                                          const BasicPort& src_port) const {
+std::vector<size_t> MemoryBankShiftRegisterBanks::wl_shift_register_bank_sink_child_ids(const ConfigRegionId& region_id,
+                                                                                        const FabricWordLineBankId& bank_id,
+                                                                                        const BasicPort& src_port) const {
   VTR_ASSERT(valid_wl_bank_id(region_id, bank_id));
   auto result = wl_bank_sink_child_ids_[region_id][bank_id].find(src_port);
   if (result == wl_bank_sink_child_ids_[region_id][bank_id].end()) {
-    return -1; /* Not found, return an invalid value */
+    return std::vector<size_t>(); /* Not found, return an empty list */
   }
   return result->second;
 }
@@ -387,13 +389,13 @@ size_t MemoryBankShiftRegisterBanks::wl_shift_register_bank_instance(const Confi
   return wl_bank_instances_[region_id][bank_id];
 }
 
-size_t MemoryBankShiftRegisterBanks::wl_shift_register_bank_sink_child_pin_id(const ConfigRegionId& region_id,
-                                                                              const FabricWordLineBankId& bank_id,
-                                                                              const BasicPort& src_port) const {
+std::vector<size_t> MemoryBankShiftRegisterBanks::wl_shift_register_bank_sink_child_pin_ids(const ConfigRegionId& region_id,
+                                                                                            const FabricWordLineBankId& bank_id,
+                                                                                            const BasicPort& src_port) const {
   VTR_ASSERT(valid_wl_bank_id(region_id, bank_id));
   auto result = wl_bank_sink_child_pin_ids_[region_id][bank_id].find(src_port);
   if (result == wl_bank_sink_child_pin_ids_[region_id][bank_id].end()) {
-    return -1; /* Not found, return an invalid value */
+    return std::vector<size_t>(); /* Not found, return an empty list */
   }
   return result->second;
 }
@@ -403,9 +405,11 @@ std::vector<BasicPort> MemoryBankShiftRegisterBanks::wl_shift_register_bank_sour
   VTR_ASSERT(valid_wl_bank_id(region_id, bank_id));
   std::vector<BasicPort> src_ports;
 
+  size_t cur_pin = 0;
   for (const BasicPort& wide_port : wl_bank_data_ports(region_id, bank_id)) {
-    for (const size_t& pin : wide_port.pins()) {
-      src_ports.push_back(BasicPort(wide_port.get_name(), pin, pin));
+    for (size_t ipin = 0; ipin < wide_port.pins().size(); ++ipin) {
+      src_ports.push_back(BasicPort(std::string(MEMORY_WL_PORT_NAME), cur_pin, cur_pin));
+      cur_pin++;
     }
   }
 
@@ -438,17 +442,17 @@ void MemoryBankShiftRegisterBanks::build_bl_port_fast_lookup() const {
   bl_ports_to_sr_bank_ids_.resize(bl_bank_data_ports_.size());
   bl_ports_to_sr_bank_ports_.resize(bl_bank_data_ports_.size());
   for (const auto& region : bl_bank_data_ports_) {
-    size_t bl_index = 0;
     for (const auto& bank : region) { 
+      size_t cur_pin = 0;
       for (const auto& port : bank) {
-        for (const auto& pin : port.pins()) {
+        for (const size_t& bl_index : port.pins()) {
           BasicPort bl_port(std::string(MEMORY_BL_PORT_NAME), bl_index, bl_index);
-          BasicPort sr_bl_port(std::string(MEMORY_BL_PORT_NAME), pin, pin);
+          BasicPort sr_bl_port(std::string(MEMORY_BL_PORT_NAME), cur_pin, cur_pin);
           ConfigRegionId region_id = ConfigRegionId(&region - &bl_bank_data_ports_[ConfigRegionId(0)]);
           FabricBitLineBankId bank_id = FabricBitLineBankId(&bank - &region[FabricBitLineBankId(0)]);
           bl_ports_to_sr_bank_ids_[region_id][bl_port] = bank_id; 
           bl_ports_to_sr_bank_ports_[region_id][bl_port] = sr_bl_port; 
-          bl_index++;
+          cur_pin++;
         }
       }
     }
@@ -461,17 +465,17 @@ void MemoryBankShiftRegisterBanks::build_wl_port_fast_lookup() const {
   wl_ports_to_sr_bank_ids_.resize(wl_bank_data_ports_.size());
   wl_ports_to_sr_bank_ports_.resize(wl_bank_data_ports_.size());
   for (const auto& region : wl_bank_data_ports_) {
-    size_t wl_index = 0;
     for (const auto& bank : region) { 
+      size_t cur_pin = 0;
       for (const auto& port : bank) {
-        for (const auto& pin : port.pins()) {
+        for (const size_t& wl_index : port.pins()) {
           BasicPort wl_port(std::string(MEMORY_WL_PORT_NAME), wl_index, wl_index);
-          BasicPort sr_wl_port(std::string(MEMORY_WL_PORT_NAME), pin, pin);
+          BasicPort sr_wl_port(std::string(MEMORY_WL_PORT_NAME), cur_pin, cur_pin);
           ConfigRegionId region_id = ConfigRegionId(&region - &wl_bank_data_ports_[ConfigRegionId(0)]);
           FabricWordLineBankId bank_id = FabricWordLineBankId(&bank - &region[FabricWordLineBankId(0)]);
           wl_ports_to_sr_bank_ids_[region_id][wl_port] = bank_id; 
           wl_ports_to_sr_bank_ports_[region_id][wl_port] = sr_wl_port; 
-          wl_index++;
+          cur_pin++;
         }
       }
     }
