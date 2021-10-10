@@ -408,7 +408,8 @@ std::vector<std::string> reshape_bitstream_vectors_to_first_element(const std::v
  */
 static 
 std::vector<std::string> redistribute_bl_vectors_to_shift_register_banks(const std::vector<std::string> bl_vectors, 
-                                                                         const MemoryBankShiftRegisterBanks& blwl_sr_banks) {
+                                                                         const MemoryBankShiftRegisterBanks& blwl_sr_banks,
+                                                                         const char& dont_care_bit) {
   std::vector<std::string> multi_bank_bl_vec;
 
   /* Resize the vector by counting the dimension */
@@ -427,7 +428,7 @@ std::vector<std::string> redistribute_bl_vectors_to_shift_register_banks(const s
   for (const auto& region : blwl_sr_banks.regions()) {
     for (const auto& bank : blwl_sr_banks.bl_banks(region)) {
       size_t bank_size = blwl_sr_banks.bl_bank_size(region, bank);
-      multi_bank_bl_vec[vec_start_index].resize(bank_size);
+      multi_bank_bl_vec[vec_start_index].resize(bank_size, dont_care_bit);
       vec_start_index++;
     }
   }
@@ -458,7 +459,8 @@ std::vector<std::string> redistribute_bl_vectors_to_shift_register_banks(const s
  */
 static 
 std::vector<std::string> redistribute_wl_vectors_to_shift_register_banks(const std::vector<std::string> wl_vectors, 
-                                                                         const MemoryBankShiftRegisterBanks& blwl_sr_banks) {
+                                                                         const MemoryBankShiftRegisterBanks& blwl_sr_banks,
+                                                                         const char& dont_care_bit) {
   std::vector<std::string> multi_bank_wl_vec;
 
   /* Resize the vector by counting the dimension */
@@ -477,7 +479,7 @@ std::vector<std::string> redistribute_wl_vectors_to_shift_register_banks(const s
   for (const auto& region : blwl_sr_banks.regions()) {
     for (const auto& bank : blwl_sr_banks.wl_banks(region)) {
       size_t bank_size = blwl_sr_banks.wl_bank_size(region, bank);
-      multi_bank_wl_vec[vec_start_index].resize(bank_size);
+      multi_bank_wl_vec[vec_start_index].resize(bank_size, dont_care_bit);
       vec_start_index++;
     }
   }
@@ -514,7 +516,7 @@ MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_b
     MemoryBankShiftRegisterFabricBitstreamWordId word_id = fabric_bits.create_word();
 
     /* Redistribute the BL vector to multiple banks */
-    std::vector<std::string> multi_bank_bl_vec = redistribute_bl_vectors_to_shift_register_banks(bl_vec, blwl_sr_banks);
+    std::vector<std::string> multi_bank_bl_vec = redistribute_bl_vectors_to_shift_register_banks(bl_vec, blwl_sr_banks, dont_care_bit);
 
     std::vector<std::string> reshaped_bl_vectors = reshape_bitstream_vectors_to_first_element(multi_bank_bl_vec, dont_care_bit);
     /* Reverse the vectors due to the shift register chain nature: first-in first-out */
@@ -525,7 +527,7 @@ MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_b
     }
 
     /* Redistribute the WL vector to multiple banks */
-    std::vector<std::string> multi_bank_wl_vec = redistribute_wl_vectors_to_shift_register_banks(wl_vec, blwl_sr_banks);
+    std::vector<std::string> multi_bank_wl_vec = redistribute_wl_vectors_to_shift_register_banks(wl_vec, blwl_sr_banks, dont_care_bit);
 
     std::vector<std::string> reshaped_wl_vectors = reshape_bitstream_vectors_to_first_element(multi_bank_wl_vec, dont_care_bit);
     /* Reverse the vectors due to the shift register chain nature: first-in first-out */
