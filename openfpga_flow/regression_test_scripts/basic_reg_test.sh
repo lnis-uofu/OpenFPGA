@@ -61,6 +61,7 @@ run-task basic_tests/full_testbench/ql_memory_bank_flatten --debug --show_thread
 run-task basic_tests/full_testbench/ql_memory_bank_flatten_use_wlr --debug --show_thread_logs
 run-task basic_tests/full_testbench/ql_memory_bank_shift_register --debug --show_thread_logs
 run-task basic_tests/full_testbench/ql_memory_bank_shift_register_use_wlr --debug --show_thread_logs
+run-task basic_tests/full_testbench/ql_memory_bank_shift_register_multi_chain --debug --show_thread_logs
 
 echo -e "Testing testbenches without self checking features";
 run-task basic_tests/full_testbench/full_testbench_without_self_checking --debug --show_thread_logs
