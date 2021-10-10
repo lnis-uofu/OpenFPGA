@@ -1132,6 +1132,7 @@ int print_verilog_top_testbench_configuration_protocol_stimulus(std::fstream& fp
                                                                 const bool& fast_configuration,
                                                                 const bool& bit_value_to_skip,
                                                                 const FabricBitstream& fabric_bitstream,
+                                                                const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                                                 const float& prog_clock_period,
                                                                 const float& timescale) {
   /* Validate the file stream */
@@ -1147,7 +1148,8 @@ int print_verilog_top_testbench_configuration_protocol_stimulus(std::fstream& fp
     return print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(fp,
                                                                                       config_protocol, sim_settings, 
                                                                                       module_manager, top_module,
-                                                                                      fast_configuration, bit_value_to_skip, fabric_bitstream,
+                                                                                      fast_configuration, bit_value_to_skip,
+                                                                                      fabric_bitstream, blwl_sr_banks,
                                                                                       prog_clock_period, timescale);
     break;
   case CONFIG_MEM_MEMORY_BANK:
@@ -1738,7 +1740,8 @@ void print_verilog_full_testbench_bitstream(std::fstream& fp,
                                             const ModuleManager& module_manager,
                                             const ModuleId& top_module,
                                             const BitstreamManager& bitstream_manager,
-                                            const FabricBitstream& fabric_bitstream) {
+                                            const FabricBitstream& fabric_bitstream,
+                                            const MemoryBankShiftRegisterBanks& blwl_sr_banks) {
 
   /* Branch on the type of configuration protocol */
   switch (config_protocol.type()) {
@@ -1771,7 +1774,7 @@ void print_verilog_full_testbench_bitstream(std::fstream& fp,
                                                           fast_configuration, 
                                                           bit_value_to_skip,
                                                           module_manager, top_module,
-                                                          fabric_bitstream);
+                                                          fabric_bitstream, blwl_sr_banks);
     break;
   case CONFIG_MEM_FRAME_BASED:
     print_verilog_full_testbench_frame_decoder_bitstream(fp, bitstream_file,
@@ -1893,6 +1896,7 @@ void print_verilog_top_testbench_check(std::fstream& fp,
 int print_verilog_full_testbench(const ModuleManager& module_manager,
                                  const BitstreamManager& bitstream_manager,
                                  const FabricBitstream& fabric_bitstream,
+                                 const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                  const CircuitLibrary& circuit_lib,
                                  const ConfigProtocol& config_protocol,
                                  const FabricGlobalPortInfo& global_ports,
@@ -1984,7 +1988,8 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
   status = print_verilog_top_testbench_configuration_protocol_stimulus(fp, 
                                                                        config_protocol, simulation_parameters,
                                                                        module_manager, top_module,
-                                                                       fast_configuration, bit_value_to_skip, fabric_bitstream,
+                                                                       fast_configuration, bit_value_to_skip,
+                                                                       fabric_bitstream, blwl_sr_banks,
                                                                        prog_clock_period,
                                                                        VERILOG_SIM_TIMESCALE);
 
@@ -2057,7 +2062,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                          apply_fast_configuration,
                                          bit_value_to_skip,
                                          module_manager, top_module,
-                                         bitstream_manager, fabric_bitstream);
+                                         bitstream_manager, fabric_bitstream, blwl_sr_banks);
 
   /* Add signal initialization: 
    * Bypass writing codes to files due to the autogenerated codes are very large.

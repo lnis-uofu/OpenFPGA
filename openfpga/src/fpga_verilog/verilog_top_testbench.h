@@ -17,6 +17,7 @@
 #include "fabric_global_port_info.h"
 #include "vpr_netlist_annotation.h"
 #include "simulation_setting.h"
+#include "memory_bank_shift_register_banks.h"
 #include "verilog_testbench_options.h"
 
 /********************************************************************
@@ -29,6 +30,7 @@ namespace openfpga {
 int print_verilog_full_testbench(const ModuleManager& module_manager,
                                  const BitstreamManager& bitstream_manager,
                                  const FabricBitstream& fabric_bitstream,
+                                 const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                  const CircuitLibrary& circuit_lib,
                                  const ConfigProtocol& config_protocol,
                                  const FabricGlobalPortInfo& global_ports,

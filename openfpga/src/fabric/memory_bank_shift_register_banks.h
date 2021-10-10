@@ -23,6 +23,7 @@ namespace openfpga {
  ******************************************************************************/
 class MemoryBankShiftRegisterBanks {
   public: /* Accessors: aggregates */
+    ModuleManager::region_range regions() const;
     FabricKey::fabric_bit_line_bank_range bl_banks(const ConfigRegionId& region_id) const;
     FabricKey::fabric_word_line_bank_range wl_banks(const ConfigRegionId& region_id) const;
   public: /* Accessors */
@@ -200,6 +201,8 @@ class MemoryBankShiftRegisterBanks {
     void build_wl_port_fast_lookup() const;
 
   private: /* Internal data */
+    vtr::vector<ConfigRegionId, ConfigRegionId> config_region_ids_;
+
     /* General information about the BL shift register bank */
     vtr::vector<ConfigRegionId, vtr::vector<FabricBitLineBankId, FabricBitLineBankId>> bl_bank_ids_;
     vtr::vector<ConfigRegionId, vtr::vector<FabricBitLineBankId, std::vector<BasicPort>>> bl_bank_data_ports_;

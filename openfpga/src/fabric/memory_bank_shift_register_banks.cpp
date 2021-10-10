@@ -6,6 +6,10 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+ModuleManager::region_range MemoryBankShiftRegisterBanks::regions() const {
+  return vtr::make_range(config_region_ids_.begin(), config_region_ids_.end());
+}
+
 std::vector<size_t> MemoryBankShiftRegisterBanks::bl_bank_unique_sizes() const {
   std::vector<size_t> unique_sizes;
   for (const auto& region : bl_bank_data_ports_) {
@@ -203,6 +207,10 @@ BasicPort MemoryBankShiftRegisterBanks::find_wl_shift_register_bank_data_port(co
 }
 
 void MemoryBankShiftRegisterBanks::resize_regions(const size_t& num_regions) {
+  config_region_ids_.resize(num_regions);
+  for (size_t iregion = 0; iregion < num_regions; ++iregion) {
+    config_region_ids_[ConfigRegionId(iregion)] = ConfigRegionId(iregion);
+  }
   bl_bank_ids_.resize(num_regions);
   bl_bank_data_ports_.resize(num_regions);
   bl_bank_modules_.resize(num_regions);

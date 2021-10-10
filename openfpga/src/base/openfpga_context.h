@@ -66,7 +66,7 @@ class OpenfpgaContext : public Context  {
     const openfpga::DeviceRRGSB& device_rr_gsb() const { return device_rr_gsb_; }
     const openfpga::MuxLibrary& mux_lib() const { return mux_lib_; }
     const openfpga::DecoderLibrary& decoder_lib() const { return decoder_lib_; }
-    const openfpga::MemoryBankShiftRegisterBanks& blwl_shift_register_banks() { return blwl_sr_banks_; }
+    const openfpga::MemoryBankShiftRegisterBanks& blwl_shift_register_banks() const { return blwl_sr_banks_; }
     const openfpga::TileDirect& tile_direct() const { return tile_direct_; }
     const openfpga::ModuleManager& module_graph() const { return module_graph_; }
     const openfpga::FlowManager& flow_manager() const { return flow_manager_; }

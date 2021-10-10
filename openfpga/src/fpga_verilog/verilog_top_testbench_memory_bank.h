@@ -17,6 +17,7 @@
 #include "fabric_global_port_info.h"
 #include "vpr_netlist_annotation.h"
 #include "simulation_setting.h"
+#include "memory_bank_shift_register_banks.h"
 #include "verilog_testbench_options.h"
 
 /********************************************************************
@@ -53,6 +54,7 @@ int print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(s
                                                                                const bool& fast_configuration,
                                                                                const bool& bit_value_to_skip,
                                                                                const FabricBitstream& fabric_bitstream,
+                                                                               const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                                                                const float& prog_clock_period,
                                                                                const float& timescale);
 
@@ -67,7 +69,8 @@ void print_verilog_full_testbench_ql_memory_bank_bitstream(std::fstream& fp,
                                                            const bool& bit_value_to_skip,
                                                            const ModuleManager& module_manager,
                                                            const ModuleId& top_module,
-                                                           const FabricBitstream& fabric_bitstream);
+                                                           const FabricBitstream& fabric_bitstream,
+                                                           const MemoryBankShiftRegisterBanks& blwl_sr_banks);
 
 } /* end namespace openfpga */
 

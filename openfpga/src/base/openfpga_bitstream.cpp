@@ -122,6 +122,7 @@ int write_fabric_bitstream(const OpenfpgaContext& openfpga_ctx,
     /* By default, output in plain text format */
     status = write_fabric_bitstream_to_text_file(openfpga_ctx.bitstream_manager(),
                                                  openfpga_ctx.fabric_bitstream(),
+                                                 openfpga_ctx.blwl_shift_register_banks(),
                                                  openfpga_ctx.arch().config_protocol,
                                                  openfpga_ctx.fabric_global_port_info(),
                                                  cmd_context.option_value(cmd, opt_file),

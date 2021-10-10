@@ -326,6 +326,7 @@ int print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(s
                                                                                const bool& fast_configuration,
                                                                                const bool& bit_value_to_skip,
                                                                                const FabricBitstream& fabric_bitstream,
+                                                                               const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                                                                const float& prog_clock_period,
                                                                                const float& timescale) {
   ModulePortId en_port_id = module_manager.find_module_port(top_module,
@@ -350,6 +351,7 @@ int print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(s
   /* Reorganize the fabric bitstream by the same address across regions */
   if (CONFIG_MEM_QL_MEMORY_BANK == config_protocol.type()) {
     MemoryBankShiftRegisterFabricBitstream fabric_bits_by_addr = build_memory_bank_shift_register_fabric_bitstream(fabric_bitstream,
+                                                                                                                   blwl_sr_banks,
                                                                                                                    fast_configuration,
                                                                                                                    bit_value_to_skip);
 
@@ -541,12 +543,14 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(std::f
                                                                           const bool& bit_value_to_skip,
                                                                           const ModuleManager& module_manager,
                                                                           const ModuleId& top_module,
-                                                                          const FabricBitstream& fabric_bitstream) {
+                                                                          const FabricBitstream& fabric_bitstream,
+                                                                          const MemoryBankShiftRegisterBanks& blwl_sr_banks) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
   /* Reorganize the fabric bitstream by the same address across regions */
   MemoryBankShiftRegisterFabricBitstream fabric_bits_by_addr = build_memory_bank_shift_register_fabric_bitstream(fabric_bitstream,
+                                                                                                                 blwl_sr_banks,
                                                                                                                  fast_configuration,
                                                                                                                  bit_value_to_skip);
 
@@ -940,7 +944,8 @@ void print_verilog_full_testbench_ql_memory_bank_bitstream(std::fstream& fp,
                                                            const bool& bit_value_to_skip,
                                                            const ModuleManager& module_manager,
                                                            const ModuleId& top_module,
-                                                           const FabricBitstream& fabric_bitstream) {
+                                                           const FabricBitstream& fabric_bitstream,
+                                                           const MemoryBankShiftRegisterBanks& blwl_sr_banks) {
   if ( (BLWL_PROTOCOL_DECODER == config_protocol.bl_protocol_type())
     && (BLWL_PROTOCOL_DECODER == config_protocol.wl_protocol_type()) ) {
     print_verilog_full_testbench_ql_memory_bank_decoder_bitstream(fp, bitstream_file,
@@ -961,7 +966,7 @@ void print_verilog_full_testbench_ql_memory_bank_bitstream(std::fstream& fp,
                                                                          fast_configuration, 
                                                                          bit_value_to_skip,
                                                                          module_manager, top_module,
-                                                                         fabric_bitstream);
+                                                                         fabric_bitstream, blwl_sr_banks);
   }
 }
 
