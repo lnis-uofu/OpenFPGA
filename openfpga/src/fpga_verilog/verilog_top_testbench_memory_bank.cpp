@@ -349,7 +349,9 @@ int print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(s
   BasicPort start_wl_sr_port(TOP_TB_START_WL_SHIFT_REGISTER_PORT_NAME, 1);
 
   /* Reorganize the fabric bitstream by the same address across regions */
-  if (CONFIG_MEM_QL_MEMORY_BANK == config_protocol.type()) {
+  if ( (CONFIG_MEM_QL_MEMORY_BANK == config_protocol.type())
+    && (BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type())
+    && (BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.wl_protocol_type()) ) {
     MemoryBankShiftRegisterFabricBitstream fabric_bits_by_addr = build_memory_bank_shift_register_fabric_bitstream(fabric_bitstream,
                                                                                                                    blwl_sr_banks,
                                                                                                                    fast_configuration,
