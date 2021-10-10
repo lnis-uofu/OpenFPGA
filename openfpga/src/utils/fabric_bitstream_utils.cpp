@@ -345,7 +345,7 @@ MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(cons
 }
 
 /********************************************************************
- * Reshape a list of vectors by aligning all of them to the last element
+ * Reshape a list of vectors by aligning all of them to the first element
  * For example:
  * - Align vectors to the last element
  *
@@ -357,15 +357,16 @@ MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(cons
  * - Fill void in each vector with desired bits (Here assume fill 'x'
  *   index ---------------------->
  *   vector 0: 000000001111101010
- *   vector 1: xxxx00000011010101
- *   vector 2: xx0010101111000110
+ *   vector 1: 00000011010101xxxx
+ *   vector 2: 0010101111000110xx
  * 
  * - Rotate the array by 90 degree
  *   index ----------------------->
- *   vector 0: 0xx
- *   vector 1: 0xx
+ *   vector 0: 000
+ *   vector 1: 000
+ *   vector 2: 001
  *   ...
- *   vector N: 010
+ *   vector N: 0xx
  * 
  *******************************************************************/
 static 
