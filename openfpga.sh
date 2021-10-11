@@ -21,7 +21,7 @@ if [ -z $PYTHON_EXEC ]; then export PYTHON_EXEC="python3"; fi
 # inside current OpendFPGA folder
 check_execution_path (){
     if [[ $1 != *"${OPENFPGA_PATH}"* ]]; then
-        echo -e "\e[33mCommand is not executed from configured OPNEFPGA directory\e[0m"
+        echo -e "\e[33mCommand is not executed from configured OPENFPGA directory\e[0m"
     fi
 }
 
