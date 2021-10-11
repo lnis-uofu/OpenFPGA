@@ -91,6 +91,10 @@ std::vector<openfpga::BasicPort> FabricKey::wl_bank_data_ports(const FabricRegio
 void FabricKey::reserve_regions(const size_t& num_regions) {
   region_ids_.reserve(num_regions);
   region_key_ids_.reserve(num_regions);
+  bl_bank_ids_.reserve(num_regions);
+  bl_bank_data_ports_.reserve(num_regions);
+  wl_bank_ids_.reserve(num_regions);
+  wl_bank_data_ports_.reserve(num_regions);
 }
 
 FabricRegionId FabricKey::create_region() {
@@ -98,6 +102,10 @@ FabricRegionId FabricKey::create_region() {
   FabricRegionId region = FabricRegionId(region_ids_.size());
   region_ids_.push_back(region);
   region_key_ids_.emplace_back();
+  bl_bank_ids_.emplace_back();
+  bl_bank_data_ports_.emplace_back();
+  wl_bank_ids_.emplace_back();
+  wl_bank_data_ports_.emplace_back();
   
   return region;
 }
