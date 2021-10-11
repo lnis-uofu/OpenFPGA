@@ -167,8 +167,8 @@ The BL and WL protocols can be customized through the XML syntax ``bl`` and ``wl
 
   <configuration_protocol>
     <organization type="ql_memory_bank" circuit_model_name="sram_blwl">
-      <bl protocol="<string>"/>
-      <wl protocol="<string>"/>
+      <bl protocol="<string>" num_banks="<int>"/>
+      <wl protocol="<string>" num_banks="<int>"/>
     </organization>
   </configuration_protocol>
 
@@ -203,6 +203,14 @@ The BL and WL protocols can be customized through the XML syntax ``bl`` and ``wl
  
    Example of (a) a memory organization using shift register chains to control BL/WLs; (b) single memory bank across the fabric; and (c) multiple memory banks across the fabric.
 
+.. option:: num_banks="<int>"
+
+  Specify the number of shift register banks (i.e., independent shift register chains) to be used in each configuration region. When enabled, the length of each shift register chain will be sized by OpenFPGA automatically based on the number of BL/WLs in each configuration region. OpenFPGA will try to create similar sizes for the shift register chains, in order to minimize the number of HDL modules. If not specified, the default number of banks will be ``1``.
+
+   
+  .. note:: This is available applicable to shift-register-based BL/WL protocols
+
+  .. note:: More customization on the shift register chains can be enabled through :ref:`fabric_key`
 
 .. note:: The flip-flop for WL shift register requires an enable signal to gate WL signals when loading WL shift registers
 

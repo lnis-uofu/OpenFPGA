@@ -42,6 +42,8 @@ namespace openfpga {
 
 constexpr char* TOP_TB_BL_SHIFT_REGISTER_CLOCK_PORT_NAME = "bl_sr_clock";
 constexpr char* TOP_TB_WL_SHIFT_REGISTER_CLOCK_PORT_NAME = "wl_sr_clock";
+constexpr char* TOP_TB_VIRTUAL_BL_SHIFT_REGISTER_CLOCK_PORT_NAME = "virtual_bl_sr_clock";
+constexpr char* TOP_TB_VIRTUAL_WL_SHIFT_REGISTER_CLOCK_PORT_NAME = "virtual_wl_sr_clock";
 constexpr char* TOP_TB_START_BL_SHIFT_REGISTER_PORT_NAME = "start_bl_sr";
 constexpr char* TOP_TB_START_WL_SHIFT_REGISTER_PORT_NAME = "start_wl_sr";
 constexpr char* TOP_TB_BL_SHIFT_REGISTER_COUNT_PORT_NAME = "bl_sr_count";
@@ -90,8 +92,11 @@ void print_verilog_top_testbench_ql_memory_bank_port(std::fstream& fp,
     }
 
     /* BL Shift register clock and registers */
+    BasicPort virtual_sr_clock_port(std::string(TOP_TB_VIRTUAL_BL_SHIFT_REGISTER_CLOCK_PORT_NAME), 1);
+    fp << generate_verilog_port(VERILOG_PORT_REG, virtual_sr_clock_port) << ";" << std::endl;
     BasicPort sr_clock_port(std::string(TOP_TB_BL_SHIFT_REGISTER_CLOCK_PORT_NAME), 1);
     fp << generate_verilog_port(VERILOG_PORT_REG, sr_clock_port) << ";" << std::endl;
+
 
     /* Register to enable/disable bl/wl shift register clocks */
     BasicPort start_bl_sr_port(TOP_TB_START_BL_SHIFT_REGISTER_PORT_NAME, 1);
@@ -132,6 +137,8 @@ void print_verilog_top_testbench_ql_memory_bank_port(std::fstream& fp,
     }
 
     /* WL Shift register clock and registers */
+    BasicPort virtual_sr_clock_port(std::string(TOP_TB_VIRTUAL_WL_SHIFT_REGISTER_CLOCK_PORT_NAME), 1);
+    fp << generate_verilog_port(VERILOG_PORT_REG, virtual_sr_clock_port) << ";" << std::endl;
     BasicPort sr_clock_port(std::string(TOP_TB_WL_SHIFT_REGISTER_CLOCK_PORT_NAME), 1);
     fp << generate_verilog_port(VERILOG_PORT_REG, sr_clock_port) << ";" << std::endl;
 
@@ -244,6 +251,49 @@ void print_verilog_top_testbench_global_shift_register_clock_ports_stimuli(std::
 }
 
 /**
+ * @brief Generate the Verilog codes for a shift register virtual clock that controls BL/WL protocols
+ *        The virtual clock is the reference clock, which include 1 additional clock cycle for reset
+ *        when compared to the actual clock
+ */
+static 
+void print_verilog_full_testbench_ql_memory_bank_shift_register_virtual_clock_generator(std::fstream& fp,
+                                                                                        const BasicPort& start_sr_port,
+                                                                                        const BasicPort& sr_clock_port,
+                                                                                        const float& sr_clock_period) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  fp << "always";
+  fp << " @(posedge " << generate_verilog_port(VERILOG_PORT_CONKT, start_sr_port) << ")"; 
+  fp << " begin";
+  fp << std::endl;
+
+  fp << "\t";
+  fp << generate_verilog_port_constant_values(sr_clock_port, std::vector<size_t>(sr_clock_port.get_width(), 0), true);
+  fp << ";" << std::endl;
+
+  fp << "\t";
+  fp << "while (" << generate_verilog_port(VERILOG_PORT_CONKT, start_sr_port) << ") begin";
+  fp << std::endl;
+
+  fp << "\t\t";
+  fp << "#" << sr_clock_period << " ";
+  print_verilog_register_connection(fp, sr_clock_port, sr_clock_port, true);
+
+  fp << "\t";
+  fp << "end";
+  fp << std::endl;
+
+  fp << "\t";
+  fp << generate_verilog_port_constant_values(sr_clock_port, std::vector<size_t>(sr_clock_port.get_width(), 0), true);
+  fp << ";" << std::endl;
+
+  fp << "end";
+  fp << std::endl;
+}
+
+
+/**
  * @brief Generate the Verilog codes for a shift register clocks that controls BL/WL protocols
  */
 static 
@@ -257,6 +307,11 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_clock_generator(
   fp << "always";
   fp << " @(posedge " << generate_verilog_port(VERILOG_PORT_CONKT, start_sr_port) << ")"; 
   fp << " begin";
+  fp << std::endl;
+
+  /* Skip the first the clock cycle which is reserved for reset */
+  fp << "\t";
+  fp << "#" << sr_clock_period * 2. << ";" << std::endl;
   fp << std::endl;
 
   fp << "\t";
@@ -326,6 +381,7 @@ int print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(s
                                                                                const bool& fast_configuration,
                                                                                const bool& bit_value_to_skip,
                                                                                const FabricBitstream& fabric_bitstream,
+                                                                               const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                                                                const float& prog_clock_period,
                                                                                const float& timescale) {
   ModulePortId en_port_id = module_manager.find_module_port(top_module,
@@ -342,20 +398,26 @@ int print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(s
 
   /* Stimulus only for shift-register-based BL/WL protocols */
   BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME) + std::string(TOP_TB_CLOCK_REG_POSTFIX), 1);
+  BasicPort virtual_bl_sr_clock_port(TOP_TB_VIRTUAL_BL_SHIFT_REGISTER_CLOCK_PORT_NAME, 1);
+  BasicPort virtual_wl_sr_clock_port(TOP_TB_VIRTUAL_WL_SHIFT_REGISTER_CLOCK_PORT_NAME, 1);
   BasicPort bl_sr_clock_port(TOP_TB_BL_SHIFT_REGISTER_CLOCK_PORT_NAME, 1);
   BasicPort wl_sr_clock_port(TOP_TB_WL_SHIFT_REGISTER_CLOCK_PORT_NAME, 1);
   BasicPort start_bl_sr_port(TOP_TB_START_BL_SHIFT_REGISTER_PORT_NAME, 1);
   BasicPort start_wl_sr_port(TOP_TB_START_WL_SHIFT_REGISTER_PORT_NAME, 1);
 
   /* Reorganize the fabric bitstream by the same address across regions */
-  if (CONFIG_MEM_QL_MEMORY_BANK == config_protocol.type()) {
+  if ( (CONFIG_MEM_QL_MEMORY_BANK == config_protocol.type())
+    && (BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type())
+    && (BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.wl_protocol_type()) ) {
     MemoryBankShiftRegisterFabricBitstream fabric_bits_by_addr = build_memory_bank_shift_register_fabric_bitstream(fabric_bitstream,
+                                                                                                                   blwl_sr_banks,
                                                                                                                    fast_configuration,
                                                                                                                    bit_value_to_skip);
 
     /* Compute the auto-tuned clock period first, this is the lower bound of the shift register clock periods: 
      * - the BL/WL shift register clock only works in the second half of the programming clock period
-     * - add 2 idle clocks to avoid racing between programming clock and shift register clocks at edge 
+     * - consider two additional clocks to avoid racing between programming clock and shift register clocks at edge 
+     *   TODO: To figure out what is the min. slack required here. See something strange in HDL simulation
      */
     float bl_sr_clock_period = 0.25 * prog_clock_period / (fabric_bits_by_addr.bl_word_size() + 2) / timescale;
     float wl_sr_clock_period = 0.25 * prog_clock_period / (fabric_bits_by_addr.wl_word_size() + 2) / timescale;
@@ -385,11 +447,16 @@ int print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(s
     }
 
     if (BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type()) {
+      print_verilog_comment(fp, "----- BL Shift register virtual clock generator -----");
+      print_verilog_full_testbench_ql_memory_bank_shift_register_virtual_clock_generator(fp, start_bl_sr_port, virtual_bl_sr_clock_port, bl_sr_clock_period);
+
       print_verilog_comment(fp, "----- BL Shift register clock generator -----");
       print_verilog_full_testbench_ql_memory_bank_shift_register_clock_generator(fp, start_bl_sr_port, bl_sr_clock_port, bl_sr_clock_period);
     }
 
     if (BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.wl_protocol_type()) {
+      print_verilog_comment(fp, "----- WL Shift register virtual clock generator -----");
+      print_verilog_full_testbench_ql_memory_bank_shift_register_virtual_clock_generator(fp, start_wl_sr_port, virtual_wl_sr_clock_port, wl_sr_clock_period);
       print_verilog_comment(fp, "----- WL Shift register clock generator -----");
       print_verilog_full_testbench_ql_memory_bank_shift_register_clock_generator(fp, start_wl_sr_port, wl_sr_clock_port, wl_sr_clock_period);
     }
@@ -541,12 +608,14 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(std::f
                                                                           const bool& bit_value_to_skip,
                                                                           const ModuleManager& module_manager,
                                                                           const ModuleId& top_module,
-                                                                          const FabricBitstream& fabric_bitstream) {
+                                                                          const FabricBitstream& fabric_bitstream,
+                                                                          const MemoryBankShiftRegisterBanks& blwl_sr_banks) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
   /* Reorganize the fabric bitstream by the same address across regions */
   MemoryBankShiftRegisterFabricBitstream fabric_bits_by_addr = build_memory_bank_shift_register_fabric_bitstream(fabric_bitstream,
+                                                                                                                 blwl_sr_banks,
                                                                                                                  fast_configuration,
                                                                                                                  bit_value_to_skip);
 
@@ -638,13 +707,36 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(std::f
   fp << ";";
   fp << std::endl;
 
+  BasicPort bl_sr_clock_port(TOP_TB_BL_SHIFT_REGISTER_CLOCK_PORT_NAME, 1);
+  BasicPort wl_sr_clock_port(TOP_TB_WL_SHIFT_REGISTER_CLOCK_PORT_NAME, 1);
+
+  fp << "\t";
+  fp << generate_verilog_port_constant_values(bl_sr_clock_port, std::vector<size_t>(bl_sr_clock_port.get_width(), 0), true);
+  fp << ";";
+  fp << std::endl;
+
+  fp << "\t";
+  fp << generate_verilog_port_constant_values(wl_sr_clock_port, std::vector<size_t>(wl_sr_clock_port.get_width(), 0), true);
+  fp << ";";
+  fp << std::endl;
+
+  BasicPort virtual_bl_sr_clock_port(TOP_TB_VIRTUAL_BL_SHIFT_REGISTER_CLOCK_PORT_NAME, 1);
+  BasicPort virtual_wl_sr_clock_port(TOP_TB_VIRTUAL_WL_SHIFT_REGISTER_CLOCK_PORT_NAME, 1);
+
+  fp << "\t";
+  fp << generate_verilog_port_constant_values(virtual_bl_sr_clock_port, std::vector<size_t>(virtual_bl_sr_clock_port.get_width(), 0), true);
+  fp << ";";
+  fp << std::endl;
+
+  fp << "\t";
+  fp << generate_verilog_port_constant_values(virtual_wl_sr_clock_port, std::vector<size_t>(virtual_wl_sr_clock_port.get_width(), 0), true);
+  fp << ";";
+  fp << std::endl;
+
   fp << "end";
   fp << std::endl;
 
-
   BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME) + std::string(TOP_TB_CLOCK_REG_POSTFIX), 1);
-  BasicPort bl_sr_clock_port(TOP_TB_BL_SHIFT_REGISTER_CLOCK_PORT_NAME, 1);
-  BasicPort wl_sr_clock_port(TOP_TB_WL_SHIFT_REGISTER_CLOCK_PORT_NAME, 1);
 
   print_verilog_comment(fp, "----- Begin bitstream loading during configuration phase -----");
   fp << "always";
@@ -705,7 +797,7 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(std::f
 
   /* Load data to BL shift register chains */
   fp << "always";
-  fp << " @(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, bl_sr_clock_port) << ")"; 
+  fp << " @(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, virtual_bl_sr_clock_port) << ")"; 
   fp << " begin";
   fp << std::endl;
 
@@ -720,6 +812,18 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(std::f
   fp << "\t\t";
   fp << generate_verilog_port_constant_values(start_bl_sr_port, std::vector<size_t>(start_bl_sr_port.get_width(), 0), true);
   fp << ";" << std::endl;
+
+  fp << "\t";
+  fp << "end" << std::endl;
+
+
+  fp << "\t";
+  fp << "if (";
+  fp << TOP_TB_BL_SHIFT_REGISTER_COUNT_PORT_NAME;
+  fp << " >= ";
+  fp << "`" << TOP_TB_BITSTREAM_BL_WORD_SIZE_VARIABLE;
+  fp << ") begin";
+  fp << std::endl;
 
   fp << "\t\t";
   fp << TOP_TB_BL_SHIFT_REGISTER_COUNT_PORT_NAME << " = 0;";
@@ -749,7 +853,7 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(std::f
 
   /* Load data to WL shift register chains */
   fp << "always";
-  fp << " @(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, wl_sr_clock_port) << ")"; 
+  fp << " @(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, virtual_wl_sr_clock_port) << ")"; 
   fp << " begin";
   fp << std::endl;
 
@@ -764,6 +868,17 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(std::f
   fp << "\t\t";
   fp << generate_verilog_port_constant_values(start_wl_sr_port, std::vector<size_t>(start_wl_sr_port.get_width(), 0), true);
   fp << ";" << std::endl;
+
+  fp << "\t";
+  fp << "end" << std::endl;
+
+  fp << "\t";
+  fp << "if (";
+  fp << TOP_TB_WL_SHIFT_REGISTER_COUNT_PORT_NAME;
+  fp << " >= ";
+  fp << "`" << TOP_TB_BITSTREAM_WL_WORD_SIZE_VARIABLE;
+  fp << ") begin";
+  fp << std::endl;
 
   fp << "\t\t";
   fp << TOP_TB_WL_SHIFT_REGISTER_COUNT_PORT_NAME << " = 0;";
@@ -940,7 +1055,8 @@ void print_verilog_full_testbench_ql_memory_bank_bitstream(std::fstream& fp,
                                                            const bool& bit_value_to_skip,
                                                            const ModuleManager& module_manager,
                                                            const ModuleId& top_module,
-                                                           const FabricBitstream& fabric_bitstream) {
+                                                           const FabricBitstream& fabric_bitstream,
+                                                           const MemoryBankShiftRegisterBanks& blwl_sr_banks) {
   if ( (BLWL_PROTOCOL_DECODER == config_protocol.bl_protocol_type())
     && (BLWL_PROTOCOL_DECODER == config_protocol.wl_protocol_type()) ) {
     print_verilog_full_testbench_ql_memory_bank_decoder_bitstream(fp, bitstream_file,
@@ -961,7 +1077,7 @@ void print_verilog_full_testbench_ql_memory_bank_bitstream(std::fstream& fp,
                                                                          fast_configuration, 
                                                                          bit_value_to_skip,
                                                                          module_manager, top_module,
-                                                                         fabric_bitstream);
+                                                                         fabric_bitstream, blwl_sr_banks);
   }
 }
 

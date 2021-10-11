@@ -61,11 +61,12 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
                                const CircuitLibrary& circuit_lib,
                                const CircuitModelId& sram_model,
                                const ConfigProtocol& config_protocol,
+                               const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                const TopModuleNumConfigBits& num_config_bits);
 
 void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            DecoderLibrary& decoder_lib,
-                                           std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
+                                           MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                            const ModuleId& parent_module,
                                            const CircuitLibrary& circuit_lib,
                                            const ConfigProtocol& config_protocol, 

@@ -244,6 +244,7 @@ int write_memory_bank_shift_register_fabric_bitstream_to_text_file(std::fstream&
                                                                    const bool& fast_configuration,
                                                                    const bool& bit_value_to_skip,
                                                                    const FabricBitstream& fabric_bitstream,
+                                                                   const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                                                    const bool& keep_dont_care_bits) {
   int status = 0;
 
@@ -251,7 +252,7 @@ int write_memory_bank_shift_register_fabric_bitstream_to_text_file(std::fstream&
   if (keep_dont_care_bits) {
     dont_care_bit = DONT_CARE_CHAR; 
   }
-  MemoryBankShiftRegisterFabricBitstream fabric_bits = build_memory_bank_shift_register_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip, dont_care_bit);
+  MemoryBankShiftRegisterFabricBitstream fabric_bits = build_memory_bank_shift_register_fabric_bitstream(fabric_bitstream, blwl_sr_banks, fast_configuration, bit_value_to_skip, dont_care_bit);
 
   /* Output information about how to intepret the bitstream */
   fp << "// Bitstream word count: " << fabric_bits.num_words() << std::endl;
@@ -363,6 +364,7 @@ int write_frame_based_fabric_bitstream_to_text_file(std::fstream& fp,
  *******************************************************************/
 int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manager,
                                         const FabricBitstream& fabric_bitstream,
+                                        const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                         const ConfigProtocol& config_protocol,
                                         const FabricGlobalPortInfo& global_ports,
                                         const std::string& fname,
@@ -439,6 +441,7 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
                                                                               apply_fast_configuration,
                                                                               bit_value_to_skip,
                                                                               fabric_bitstream,
+                                                                              blwl_sr_banks,
                                                                               keep_dont_care_bits);
     }
     break;

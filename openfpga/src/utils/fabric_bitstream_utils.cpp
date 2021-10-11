@@ -12,6 +12,7 @@
 #include "vtr_log.h"
 
 /* Headers from openfpgautil library */
+#include "openfpga_reserved_words.h"
 #include "openfpga_decode.h"
 
 #include "fabric_bitstream_utils.h"
@@ -344,7 +345,7 @@ MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(cons
 }
 
 /********************************************************************
- * Reshape a list of vectors by aligning all of them to the last element
+ * Reshape a list of vectors by aligning all of them to the first element
  * For example:
  * - Align vectors to the last element
  *
@@ -356,15 +357,16 @@ MemoryBankFlattenFabricBitstream build_memory_bank_flatten_fabric_bitstream(cons
  * - Fill void in each vector with desired bits (Here assume fill 'x'
  *   index ---------------------->
  *   vector 0: 000000001111101010
- *   vector 1: xxxx00000011010101
- *   vector 2: xx0010101111000110
+ *   vector 1: 00000011010101xxxx
+ *   vector 2: 0010101111000110xx
  * 
  * - Rotate the array by 90 degree
  *   index ----------------------->
- *   vector 0: 0xx
- *   vector 1: 0xx
+ *   vector 0: 000
+ *   vector 1: 000
+ *   vector 2: 001
  *   ...
- *   vector N: 010
+ *   vector N: 0xx
  * 
  *******************************************************************/
 static 
@@ -397,9 +399,111 @@ std::vector<std::string> reshape_bitstream_vectors_to_first_element(const std::v
   return rotated_vectors;
 }
 
+/** @brief Split each BL vector in a configuration region into multiple shift register banks
+ *  For example
+ *  Original vector: 1xxx010xxx1
+ *  Resulting vector (2 register register banks):
+ *   1xxx0
+ *   10xxx1 
+ */
+static 
+std::vector<std::string> redistribute_bl_vectors_to_shift_register_banks(const std::vector<std::string> bl_vectors, 
+                                                                         const MemoryBankShiftRegisterBanks& blwl_sr_banks,
+                                                                         const char& dont_care_bit) {
+  std::vector<std::string> multi_bank_bl_vec;
+
+  /* Resize the vector by counting the dimension */
+  /* Compute the start index of each region */
+  vtr::vector<ConfigRegionId, size_t> region_start_index;
+  region_start_index.resize(blwl_sr_banks.regions().size(), 0);
+  size_t total_num_banks = 0;
+  for (const auto& region : blwl_sr_banks.regions()) {
+    region_start_index[region] = total_num_banks; 
+    total_num_banks += blwl_sr_banks.bl_banks(region).size();
+  } 
+  multi_bank_bl_vec.resize(total_num_banks);
+
+  /* Resize each bank to be memory efficient */
+  size_t vec_start_index = 0;
+  for (const auto& region : blwl_sr_banks.regions()) {
+    for (const auto& bank : blwl_sr_banks.bl_banks(region)) {
+      size_t bank_size = blwl_sr_banks.bl_bank_size(region, bank);
+      multi_bank_bl_vec[vec_start_index].resize(bank_size, dont_care_bit);
+      vec_start_index++;
+    }
+  }
+
+  for (const std::string& region_bl_vec : bl_vectors) {
+    ConfigRegionId region = ConfigRegionId(&region_bl_vec - &bl_vectors[0]);
+    for (size_t ibit = 0; ibit < region_bl_vec.size(); ++ibit) {
+      /* Find the shift register bank id and the offset in data lines */
+      BasicPort bl_port(std::string(MEMORY_BL_PORT_NAME), ibit, ibit);
+      FabricBitLineBankId bank_id = blwl_sr_banks.find_bl_shift_register_bank_id(region, bl_port); 
+      BasicPort sr_port = blwl_sr_banks.find_bl_shift_register_bank_data_port(region, bl_port); 
+      VTR_ASSERT(1 == sr_port.get_width());
+      
+      size_t vec_index = region_start_index[region] + size_t(bank_id);
+      multi_bank_bl_vec[vec_index][sr_port.get_lsb()] = region_bl_vec[ibit];
+    }
+  }
+
+  return multi_bank_bl_vec;
+}
+
+/** @brief Split each WL vector in a configuration region into multiple shift register banks
+ *  For example
+ *  Original vector: 1xxx010xxx1
+ *  Resulting vector (2 register register banks):
+ *   1xxx0
+ *   10xxx1 
+ */
+static 
+std::vector<std::string> redistribute_wl_vectors_to_shift_register_banks(const std::vector<std::string> wl_vectors, 
+                                                                         const MemoryBankShiftRegisterBanks& blwl_sr_banks,
+                                                                         const char& dont_care_bit) {
+  std::vector<std::string> multi_bank_wl_vec;
+
+  /* Resize the vector by counting the dimension */
+  /* Compute the start index of each region */
+  vtr::vector<ConfigRegionId, size_t> region_start_index;
+  region_start_index.resize(blwl_sr_banks.regions().size(), 0);
+  size_t total_num_banks = 0;
+  for (const auto& region : blwl_sr_banks.regions()) {
+    region_start_index[region] = total_num_banks; 
+    total_num_banks += blwl_sr_banks.wl_banks(region).size();
+  } 
+  multi_bank_wl_vec.resize(total_num_banks);
+
+  /* Resize each bank to be memory efficient */
+  size_t vec_start_index = 0;
+  for (const auto& region : blwl_sr_banks.regions()) {
+    for (const auto& bank : blwl_sr_banks.wl_banks(region)) {
+      size_t bank_size = blwl_sr_banks.wl_bank_size(region, bank);
+      multi_bank_wl_vec[vec_start_index].resize(bank_size, dont_care_bit);
+      vec_start_index++;
+    }
+  }
+
+  for (const std::string& region_wl_vec : wl_vectors) {
+    ConfigRegionId region = ConfigRegionId(&region_wl_vec - &wl_vectors[0]);
+    for (size_t ibit = 0; ibit < region_wl_vec.size(); ++ibit) {
+      /* Find the shift register bank id and the offset in data lines */
+      BasicPort wl_port(std::string(MEMORY_WL_PORT_NAME), ibit, ibit);
+      FabricWordLineBankId bank_id = blwl_sr_banks.find_wl_shift_register_bank_id(region, wl_port); 
+      BasicPort sr_port = blwl_sr_banks.find_wl_shift_register_bank_data_port(region, wl_port); 
+      VTR_ASSERT(1 == sr_port.get_width());
+      
+      size_t vec_index = region_start_index[region] + size_t(bank_id);
+      multi_bank_wl_vec[vec_index][sr_port.get_lsb()] = region_wl_vec[ibit];
+    }
+  }
+
+  return multi_bank_wl_vec;
+}
+
 MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_bitstream(const FabricBitstream& fabric_bitstream,
+                                                                                         const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                                                                          const bool& fast_configuration,
-                                                                                         //const std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
                                                                                          const bool& bit_value_to_skip,
                                                                                          const char& dont_care_bit) {
   MemoryBankFlattenFabricBitstream raw_fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip, dont_care_bit);
@@ -411,7 +515,10 @@ MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_b
 
     MemoryBankShiftRegisterFabricBitstreamWordId word_id = fabric_bits.create_word();
 
-    std::vector<std::string> reshaped_bl_vectors = reshape_bitstream_vectors_to_first_element(bl_vec, dont_care_bit);
+    /* Redistribute the BL vector to multiple banks */
+    std::vector<std::string> multi_bank_bl_vec = redistribute_bl_vectors_to_shift_register_banks(bl_vec, blwl_sr_banks, dont_care_bit);
+
+    std::vector<std::string> reshaped_bl_vectors = reshape_bitstream_vectors_to_first_element(multi_bank_bl_vec, dont_care_bit);
     /* Reverse the vectors due to the shift register chain nature: first-in first-out */
     std::reverse(reshaped_bl_vectors.begin(), reshaped_bl_vectors.end());
     /* Add the BL word to final bitstream */
@@ -419,7 +526,10 @@ MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_b
       fabric_bits.add_bl_vectors(word_id, reshaped_bl_vec); 
     }
 
-    std::vector<std::string> reshaped_wl_vectors = reshape_bitstream_vectors_to_first_element(wl_vec, dont_care_bit);
+    /* Redistribute the WL vector to multiple banks */
+    std::vector<std::string> multi_bank_wl_vec = redistribute_wl_vectors_to_shift_register_banks(wl_vec, blwl_sr_banks, dont_care_bit);
+
+    std::vector<std::string> reshaped_wl_vectors = reshape_bitstream_vectors_to_first_element(multi_bank_wl_vec, dont_care_bit);
     /* Reverse the vectors due to the shift register chain nature: first-in first-out */
     std::reverse(reshaped_wl_vectors.begin(), reshaped_wl_vectors.end());
     /* Add the BL word to final bitstream */

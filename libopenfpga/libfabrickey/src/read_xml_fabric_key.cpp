@@ -13,6 +13,10 @@
 #include "vtr_assert.h"
 #include "vtr_time.h"
 
+/* Headers from openfpga util library */
+#include "openfpga_tokenizer.h"
+#include "openfpga_port_parser.h"
+
 /* Headers from libarchfpga */
 #include "arch_error.h"
 #include "read_xml_util.h"
@@ -71,6 +75,114 @@ void read_xml_region_key(pugi::xml_node& xml_component_key,
 }
 
 /********************************************************************
+ * Parse XML codes of a <bank> under <bl_shift_register_banks> to an object of FabricKey
+ *******************************************************************/
+static 
+void read_xml_region_bl_shift_register_bank(pugi::xml_node& xml_bank,
+                                            const pugiutil::loc_data& loc_data,
+                                            FabricKey& fabric_key,
+                                            const FabricRegionId& fabric_region) {
+  /* Find the id of the bank */
+  FabricBitLineBankId bank_id = FabricBitLineBankId(get_attribute(xml_bank, "id", loc_data).as_int());
+
+  if (!fabric_key.valid_bl_bank_id(fabric_region, bank_id)) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_bank),
+                   "Invalid 'id' attribute '%lu' (in total %lu BL banks)!\n",
+                   size_t(bank_id),
+                   fabric_key.bl_banks(fabric_region).size());
+  }
+
+  VTR_ASSERT_SAFE(true == fabric_key.valid_bl_bank_id(fabric_region, bank_id));
+
+  /* Parse the ports */
+  std::string data_ports = get_attribute(xml_bank, "range", loc_data).as_string();
+  /* Split with ',' if we have multiple ports */
+  openfpga::StringToken tokenizer(data_ports);
+  for (const std::string& data_port : tokenizer.split(',')) {
+    openfpga::PortParser data_port_parser(data_port);
+    fabric_key.add_data_port_to_bl_shift_register_bank(fabric_region, bank_id, data_port_parser.port());
+  }
+}
+
+/********************************************************************
+ * Parse XML codes of a <bl_shift_register_banks> to an object of FabricKey
+ *******************************************************************/
+static 
+void read_xml_region_bl_shift_register_banks(pugi::xml_node& xml_bl_bank,
+                                             const pugiutil::loc_data& loc_data,
+                                             FabricKey& fabric_key,
+                                             const FabricRegionId& fabric_region) {
+  size_t num_banks = count_children(xml_bl_bank, "bank", loc_data, pugiutil::ReqOpt::OPTIONAL);
+  fabric_key.reserve_bl_shift_register_banks(fabric_region, num_banks);
+
+  for (size_t ibank = 0; ibank < num_banks; ++ibank) {
+    fabric_key.create_bl_shift_register_bank(fabric_region);
+  }
+
+  for (pugi::xml_node xml_bank : xml_bl_bank.children()) {
+    /* Error out if the XML child has an invalid name! */
+    if (xml_bank.name() != std::string("bank")) {
+      bad_tag(xml_bank, loc_data, xml_bl_bank, {"bank"});
+    }
+    read_xml_region_bl_shift_register_bank(xml_bank, loc_data, fabric_key, fabric_region);
+  }
+}
+
+/********************************************************************
+ * Parse XML codes of a <bank> under <wl_shift_register_banks> to an object of FabricKey
+ *******************************************************************/
+static 
+void read_xml_region_wl_shift_register_bank(pugi::xml_node& xml_bank,
+                                            const pugiutil::loc_data& loc_data,
+                                            FabricKey& fabric_key,
+                                            const FabricRegionId& fabric_region) {
+  /* Find the id of the bank */
+  FabricWordLineBankId bank_id = FabricWordLineBankId(get_attribute(xml_bank, "id", loc_data).as_int());
+
+  if (!fabric_key.valid_wl_bank_id(fabric_region, bank_id)) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_bank),
+                   "Invalid 'id' attribute '%lu' (in total %lu WL banks)!\n",
+                   size_t(bank_id),
+                   fabric_key.wl_banks(fabric_region).size());
+  }
+
+  VTR_ASSERT_SAFE(true == fabric_key.valid_wl_bank_id(fabric_region, bank_id));
+
+  /* Parse the ports */
+  std::string data_ports = get_attribute(xml_bank, "range", loc_data).as_string();
+  /* Split with ',' if we have multiple ports */
+  openfpga::StringToken tokenizer(data_ports);
+  for (const std::string& data_port : tokenizer.split(',')) {
+    openfpga::PortParser data_port_parser(data_port);
+    fabric_key.add_data_port_to_wl_shift_register_bank(fabric_region, bank_id, data_port_parser.port());
+  }
+}
+
+/********************************************************************
+ * Parse XML codes of a <bl_shift_register_banks> to an object of FabricKey
+ *******************************************************************/
+static 
+void read_xml_region_wl_shift_register_banks(pugi::xml_node& xml_wl_bank,
+                                             const pugiutil::loc_data& loc_data,
+                                             FabricKey& fabric_key,
+                                             const FabricRegionId& fabric_region) {
+  size_t num_banks = count_children(xml_wl_bank, "bank", loc_data, pugiutil::ReqOpt::OPTIONAL);
+  fabric_key.reserve_wl_shift_register_banks(fabric_region, num_banks);
+
+  for (size_t ibank = 0; ibank < num_banks; ++ibank) {
+    fabric_key.create_wl_shift_register_bank(fabric_region);
+  }
+
+  for (pugi::xml_node xml_bank : xml_wl_bank.children()) {
+    /* Error out if the XML child has an invalid name! */
+    if (xml_bank.name() != std::string("bank")) {
+      bad_tag(xml_bank, loc_data, xml_wl_bank, {"bank"});
+    }
+    read_xml_region_wl_shift_register_bank(xml_bank, loc_data, fabric_key, fabric_region);
+  }
+}
+
+/********************************************************************
  * Parse XML codes of a <key> to an object of FabricKey
  *******************************************************************/
 static 
@@ -88,20 +200,25 @@ void read_xml_fabric_region(pugi::xml_node& xml_region,
   VTR_ASSERT_SAFE(true == fabric_key.valid_region_id(region_id));
 
   /* Reserve memory space for the keys in the region */
-  size_t num_keys = std::distance(xml_region.children().begin(), xml_region.children().end());
+  size_t num_keys = count_children(xml_region, "key", loc_data, pugiutil::ReqOpt::OPTIONAL);
   fabric_key.reserve_region_keys(region_id, num_keys);
 
-  for (pugi::xml_node xml_key : xml_region.children()) {
-    /* Error out if the XML child has an invalid name! */
-    if (xml_key.name() != std::string("key")) {
-      archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_region),
-                     "Unexpected child '%s' in region '%lu', Region XML node can only contain keys!\n",
-                     xml_key.name(),
-                     size_t(region_id));
-    }
-    /* Parse the key for this region */
-    read_xml_region_key(xml_key, loc_data, fabric_key, region_id);
+  /* Parse the key for this region */
+  if (0 < num_keys) {
+    pugi::xml_node xml_key = get_first_child(xml_region, "key", loc_data);
+    while (xml_key) {
+      read_xml_region_key(xml_key, loc_data, fabric_key, region_id);
+      xml_key = xml_key.next_sibling(xml_key.name());
+    } 
   }
+
+  /* Parse the BL shift register bank for this region */
+  pugi::xml_node xml_bl_bank = get_single_child(xml_region, "bl_shift_register_banks", loc_data, pugiutil::ReqOpt::OPTIONAL);
+  read_xml_region_bl_shift_register_banks(xml_bl_bank, loc_data, fabric_key, region_id);
+
+  /* Parse the WL shift register bank for this region */
+  pugi::xml_node xml_wl_bank = get_single_child(xml_region, "wl_shift_register_banks", loc_data, pugiutil::ReqOpt::OPTIONAL);
+  read_xml_region_wl_shift_register_banks(xml_wl_bank, loc_data, fabric_key, region_id);
 }
 
 /********************************************************************

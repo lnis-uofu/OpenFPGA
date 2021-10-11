@@ -1,0 +1,25 @@
+<fabric_key>
+	<region id="0">
+		<bl_shift_register_banks>
+			<bank id="0" range="bl[0:16]"/>
+			<bank id="1" range="bl[17:25]"/>
+			<bank id="2" range="bl[26:38]"/>
+		</bl_shift_register_banks>
+		<wl_shift_register_banks>
+			<bank id="0" range="wl[0:36]"/>
+		</wl_shift_register_banks>
+		<key id="0" name="grid_io_bottom" value="0" alias="grid_io_bottom_1__0_" column="2" row="0"/>
+		<key id="1" name="grid_io_right" value="0" alias="grid_io_right_2__1_" column="4" row="2"/>
+		<key id="2" name="sb_1__1_" value="0" alias="sb_1__1_" column="3" row="3"/>
+		<key id="3" name="cbx_1__1_" value="0" alias="cbx_1__1_" column="2" row="3"/>
+		<key id="4" name="grid_io_top" value="0" alias="grid_io_top_1__2_" column="2" row="4"/>
+		<key id="5" name="sb_0__1_" value="0" alias="sb_0__1_" column="1" row="3"/>
+		<key id="6" name="sb_0__0_" value="0" alias="sb_0__0_" column="1" row="1"/>
+		<key id="7" name="cby_0__1_" value="0" alias="cby_0__1_" column="1" row="2"/>
+		<key id="8" name="grid_io_left" value="0" alias="grid_io_left_0__1_" column="0" row="2"/>
+		<key id="9" name="sb_1__0_" value="0" alias="sb_1__0_" column="3" row="1"/>
+		<key id="10" name="cbx_1__0_" value="0" alias="cbx_1__0_" column="2" row="1"/>
+		<key id="11" name="cby_1__1_" value="0" alias="cby_1__1_" column="3" row="2"/>
+		<key id="12" name="grid_clb" value="0" alias="grid_clb_1__1_" column="2" row="2"/>
+	</region>
+</fabric_key>

@@ -66,7 +66,7 @@ class OpenfpgaContext : public Context  {
     const openfpga::DeviceRRGSB& device_rr_gsb() const { return device_rr_gsb_; }
     const openfpga::MuxLibrary& mux_lib() const { return mux_lib_; }
     const openfpga::DecoderLibrary& decoder_lib() const { return decoder_lib_; }
-    const std::array<openfpga::MemoryBankShiftRegisterBanks, 2>& blwl_shift_register_banks() { return blwl_sr_banks_; }
+    const openfpga::MemoryBankShiftRegisterBanks& blwl_shift_register_banks() const { return blwl_sr_banks_; }
     const openfpga::TileDirect& tile_direct() const { return tile_direct_; }
     const openfpga::ModuleManager& module_graph() const { return module_graph_; }
     const openfpga::FlowManager& flow_manager() const { return flow_manager_; }
@@ -89,7 +89,7 @@ class OpenfpgaContext : public Context  {
     openfpga::DeviceRRGSB& mutable_device_rr_gsb() { return device_rr_gsb_; }
     openfpga::MuxLibrary& mutable_mux_lib() { return mux_lib_; }
     openfpga::DecoderLibrary& mutable_decoder_lib() { return decoder_lib_; }
-    std::array<openfpga::MemoryBankShiftRegisterBanks, 2>& mutable_blwl_shift_register_banks() { return blwl_sr_banks_; }
+    openfpga::MemoryBankShiftRegisterBanks& mutable_blwl_shift_register_banks() { return blwl_sr_banks_; }
     openfpga::TileDirect& mutable_tile_direct() { return tile_direct_; }
     openfpga::ModuleManager& mutable_module_graph() { return module_graph_; }
     openfpga::FlowManager& mutable_flow_manager() { return flow_manager_; }
@@ -138,7 +138,7 @@ class OpenfpgaContext : public Context  {
     /* Library of shift register banks that control BLs and WLs
      * @note Only used when memory bank is used as configuration protocol
      */
-    std::array<openfpga::MemoryBankShiftRegisterBanks, 2> blwl_sr_banks_;
+    openfpga::MemoryBankShiftRegisterBanks blwl_sr_banks_;
 
     /* Fabric module graph */
     openfpga::ModuleManager module_graph_;

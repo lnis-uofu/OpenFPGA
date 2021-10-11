@@ -23,6 +23,7 @@
 #include "build_top_module_utils.h"
 #include "build_top_module_connection.h"
 #include "build_top_module_memory.h"
+#include "build_top_module_memory_bank.h"
 #include "build_top_module_directs.h"
 
 #include "build_module_graph_utils.h"
@@ -283,7 +284,7 @@ vtr::Matrix<size_t> add_top_module_connection_block_instances(ModuleManager& mod
  *******************************************************************/
 int build_top_module(ModuleManager& module_manager,
                      DecoderLibrary& decoder_lib,
-                     std::array<MemoryBankShiftRegisterBanks, 2>& blwl_sr_banks,
+                     MemoryBankShiftRegisterBanks& blwl_sr_banks,
                      const CircuitLibrary& circuit_lib,
                      const VprDeviceAnnotation& vpr_device_annotation,
                      const DeviceGrid& grids,
@@ -382,12 +383,24 @@ int build_top_module(ModuleManager& module_manager,
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
     }
+
+    status = load_top_module_shift_register_banks_from_fabric_key(fabric_key, blwl_sr_banks); 
+    if (CMD_EXEC_FATAL_ERROR == status) {
+      return status;
+    }
   }
 
   /* Shuffle the configurable children in a random sequence */
   if (true == generate_random_fabric_key) {
     shuffle_top_module_configurable_children(module_manager, top_module, config_protocol);
   }
+
+  /* Build shift register bank detailed connections */
+  sync_memory_bank_shift_register_banks_with_config_protocol_settings(module_manager, 
+                                                                      blwl_sr_banks,
+                                                                      config_protocol,
+                                                                      top_module,
+                                                                      circuit_lib);
 
   /* Add shared SRAM ports from the sub-modules under this Verilog module
    * This is a much easier job after adding sub modules (instances), 
@@ -408,6 +421,7 @@ int build_top_module(ModuleManager& module_manager,
     add_top_module_sram_ports(module_manager, top_module,
                               circuit_lib, sram_model,
                               config_protocol,
+                              const_cast<const MemoryBankShiftRegisterBanks&>(blwl_sr_banks),
                               top_module_num_config_bits);
   }
 
