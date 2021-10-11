@@ -1,5 +1,11 @@
 <fabric_key>
 	<region id="0">
+		<bl_shift_register_banks>
+			<bank id="0" range="bl[0:61]"/>
+		</bl_shift_register_banks>
+		<wl_shift_register_banks>
+			<bank id="0" range="wl[0:33]"/>
+		</wl_shift_register_banks>
 		<key id="0" name="grid_io_bottom" value="1" alias="grid_io_bottom_1__0_" column="2" row="0"/>
 		<key id="1" name="grid_io_bottom" value="0" alias="grid_io_bottom_2__0_" column="4" row="0"/>
 		<key id="2" name="grid_io_right" value="1" alias="grid_io_right_3__1_" column="6" row="2"/>
@@ -21,6 +27,12 @@
 		<key id="18" name="cbx_1__1_" value="0" alias="cbx_1__1_" column="2" row="3"/>
 	</region>
 	<region id="1">
+		<bl_shift_register_banks>
+			<bank id="0" range="bl[0:59]"/>
+		</bl_shift_register_banks>
+		<wl_shift_register_banks>
+			<bank id="0" range="wl[0:24]"/>
+		</wl_shift_register_banks>
 		<key id="19" name="grid_io_right" value="0" alias="grid_io_right_3__2_" column="6" row="4"/>
 		<key id="20" name="sb_2__2_" value="0" alias="sb_2__2_" column="5" row="5"/>
 		<key id="21" name="cbx_1__2_" value="1" alias="cbx_2__2_" column="4" row="5"/>
