@@ -24,21 +24,54 @@ The following example shows how to define multiple configuration regions in the 
 
   <fabric_key>
     <region id="0">
+      <bl_shift_register_banks>
+          <bank id="0" range="bl[0:24]"/>
+          <bank id="1" range="bl[25:40]"/>
+      </bl_shift_register_banks>
+      <wl_shift_register_banks>
+          <bank id="0" range="wl[0:19],wl[40:59]"/>
+          <bank id="1" range="wl[21:39],wl[60:69]"/>
+      </wl_shift_register_banks>
       <key id="0" name="grid_io_bottom" value="0" alias="grid_io_bottom_1__0_"/>
       <key id="1" name="grid_io_right" value="0" alias="grid_io_right_2__1_"/>
       <key id="2" name="sb_1__1_" value="0" alias="sb_1__1_"/>
     </region>
     <region id="1">
+      <bl_shift_register_banks>
+          <bank id="0" range="bl[0:24]"/>
+          <bank id="1" range="bl[25:40]"/>
+      </bl_shift_register_banks>
+      <wl_shift_register_banks>
+          <bank id="0" range="wl[0:19]"/>
+      </wl_shift_register_banks>
       <key id="3" name="cbx_1__1_" value="0" alias="cbx_1__1_"/>
       <key id="4" name="grid_io_top" value="0" alias="grid_io_top_1__2_"/>
       <key id="5" name="sb_0__1_" value="0" alias="sb_0__1_"/>
     </region>
     <region id="2">
+      <bl_shift_register_banks>
+          <bank id="0" range="bl[0:24]"/>
+          <bank id="1" range="bl[25:40]"/>
+          <bank id="2" range="bl[41:59]"/>
+      </bl_shift_register_banks>
+      <wl_shift_register_banks>
+          <bank id="0" range="wl[0:19]"/>
+          <bank id="1" range="wl[21:39]"/>
+      </wl_shift_register_banks>
       <key id="6" name="sb_0__0_" value="0" alias="sb_0__0_"/>
       <key id="7" name="cby_0__1_" value="0" alias="cby_0__1_"/>
       <key id="8" name="grid_io_left" value="0" alias="grid_io_left_0__1_"/>
     </region>
     <region id="3">
+      <bl_shift_register_banks>
+          <bank id="0" range="bl[0:24]"/>
+          <bank id="1" range="bl[25:40]"/>
+      </bl_shift_register_banks>
+      <wl_shift_register_banks>
+          <bank id="0" range="wl[0:19]"/>
+          <bank id="1" range="wl[21:39]"/>
+          <bank id="2" range="wl[40:49]"/>
+      </wl_shift_register_banks>
       <key id="9" name="sb_1__0_" value="0" alias="sb_1__0_"/>
       <key id="10" name="cbx_1__0_" value="0" alias="cbx_1__0_"/>
       <key id="11" name="cby_1__1_" value="0" alias="cby_1__1_"/>
@@ -200,3 +233,46 @@ This key contains only ``name``, ``value``, ``row`` and ``column``.
       <key id="32" name="grid_io_left" value="1" alias="grid_io_left_0__2_" column="0" row="4"/>
     </region>
   </fabric_key>
+
+BL Shift Register Banks
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. note:: The customizable is only available when the shift-register-based memory bank is selected in :ref:`config_protocol`
+
+Each Bit-Line (BL) shift register bank is defined in the code block ``<bl_shift_register_banks>``.
+A shift register bank may contain multiple shift register chains.
+- each shift register chain can be defined using the ``bank`` syntax
+- the BLs controlled by each chain can be customized through the ``range`` syntax.
+
+.. option:: <bank id="<int>" range="<ports>"/>
+
+  - ``id`` indicates the sequence of the shift register chain in the bank. The id denotes the index in the head or tail bus. For example, ``id="0"`` means the head or tail of the shift register will be in the first bit of a head bus ``head[0:4]``
+
+  - ``range`` indicates ``BL`` port to be controlled by this shift register chain. Multiple BL ports can be defined but the sequence matters. For example, ``bl[0:3], bl[6:10]`` infers a 9-bit shift register chain whose output ports are connected from ``bl[0]`` to ``bl[10]``.
+
+    .. note:: When creating the range, you must know the number of BLs in the configuration region
+
+    .. note:: ports must use ``bl`` as the reserved port name
+
+
+WL Shift Register Banks
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. note:: The customizable is only available when the shift-register-based memory bank is selected in :ref:`config_protocol`
+
+Each Word-Line (WL) shift register bank is defined in the code block ``<wl_shift_register_banks>``.
+A shift register bank may contain multiple shift register chains.
+- each shift register chain can be defined using the ``bank`` syntax
+- the BLs controlled by each chain can be customized through the ``range`` syntax.
+
+
+.. option:: <bank id="<int>" range="<ports>"/>
+
+  - ``id`` indicates the sequence of the shift register chain in the bank. The id denotes the index in the head or tail bus. For example, ``id="0"`` means the head or tail of the shift register will be in the first bit of a head bus ``head[0:4]``
+
+  - ``range`` indicates ``WL`` port to be controlled by this shift register chain. Multiple WL ports can be defined but the sequence matters. For example, ``wl[0:3], wl[6:10]`` infers a 9-bit shift register chain whose output ports are connected from ``wl[0]`` to ``wl[10]``.
+
+    .. note:: When creating the range, you must know the number of BLs in the configuration region
+
+    .. note:: ports must use ``wl`` as the reserved port name
+
