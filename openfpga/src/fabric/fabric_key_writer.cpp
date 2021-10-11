@@ -32,7 +32,7 @@ namespace openfpga {
 int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
                                  const std::string& fname,
                                  const ConfigProtocol& config_protocol,
-                                 MemoryBankShiftRegisterBanks& blwl_sr_banks,
+                                 const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                  const bool& verbose) {
   std::string timer_message = std::string("Write fabric key to XML file '") + fname + std::string("'");
 
@@ -75,7 +75,11 @@ int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
  
   /* Create regions for the keys and load keys by region */
   for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
-    FabricRegionId fabric_region = region_id_map[config_region];
+    /* Must have a valid one-to-one region mapping  */
+    auto result = region_id_map.find(config_region);
+    VTR_ASSERT_SAFE(result != region_id_map.end());
+    FabricRegionId fabric_region = result->second; 
+
     /* Each configuration protocol has some child which should not be in the list. They are typically decoders */
     size_t curr_region_num_config_child = module_manager.region_configurable_children(top_module, config_region).size();
     size_t num_child_to_skip = estimate_num_configurable_children_to_skip_by_config_protocol(config_protocol, curr_region_num_config_child);
@@ -104,24 +108,34 @@ int write_fabric_key_to_xml_file(const ModuleManager& module_manager,
     }
   }
 
-  /* Add BL shift register bank information, if there is any */
-  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
-    FabricRegionId fabric_region = region_id_map[config_region];
-    for (const FabricBitLineBankId& bank : blwl_sr_banks.bl_banks(config_region)) {
-      FabricBitLineBankId fabric_bank = fabric_key.create_bl_shift_register_bank(fabric_region);
-      for (const BasicPort& data_port : blwl_sr_banks.bl_bank_data_ports(config_region, bank)) {
-        fabric_key.add_data_port_to_bl_shift_register_bank(fabric_region, fabric_bank, data_port);
+  /* Skip invalid region, some architecture may not have BL/WL banks */
+  if (0 < blwl_sr_banks.regions().size()) {
+    /* Add BL shift register bank information, if there is any */
+    for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+      auto result = region_id_map.find(config_region);
+      /* Must have a valid one-to-one region mapping  */
+      VTR_ASSERT_SAFE(result != region_id_map.end());
+      FabricRegionId fabric_region = result->second; 
+      for (const FabricBitLineBankId& bank : blwl_sr_banks.bl_banks(config_region)) {
+        FabricBitLineBankId fabric_bank = fabric_key.create_bl_shift_register_bank(fabric_region);
+        for (const BasicPort& data_port : blwl_sr_banks.bl_bank_data_ports(config_region, bank)) {
+          fabric_key.add_data_port_to_bl_shift_register_bank(fabric_region, fabric_bank, data_port);
+        }
       }
     }
-  }
 
-  /* Add WL shift register bank information, if there is any */
-  for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
-    FabricRegionId fabric_region = region_id_map[config_region];
-    for (const FabricWordLineBankId& bank : blwl_sr_banks.wl_banks(config_region)) {
-      FabricWordLineBankId fabric_bank = fabric_key.create_wl_shift_register_bank(fabric_region);
-      for (const BasicPort& data_port : blwl_sr_banks.wl_bank_data_ports(config_region, bank)) {
-        fabric_key.add_data_port_to_wl_shift_register_bank(fabric_region, fabric_bank, data_port);
+    /* Add WL shift register bank information, if there is any */
+    for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+      auto result = region_id_map.find(config_region);
+      /* Must have a valid one-to-one region mapping  */
+      VTR_ASSERT_SAFE(result != region_id_map.end());
+      FabricRegionId fabric_region = result->second; 
+
+      for (const FabricWordLineBankId& bank : blwl_sr_banks.wl_banks(config_region)) {
+        FabricWordLineBankId fabric_bank = fabric_key.create_wl_shift_register_bank(fabric_region);
+        for (const BasicPort& data_port : blwl_sr_banks.wl_bank_data_ports(config_region, bank)) {
+          fabric_key.add_data_port_to_wl_shift_register_bank(fabric_region, fabric_bank, data_port);
+        }
       }
     }
   }

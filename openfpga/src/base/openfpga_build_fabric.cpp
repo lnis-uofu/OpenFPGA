@@ -135,7 +135,7 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
     curr_status = write_fabric_key_to_xml_file(openfpga_ctx.module_graph(),
                                                fkey_fname,
                                                openfpga_ctx.arch().config_protocol,
-                                               openfpga_ctx.mutable_blwl_shift_register_banks(),
+                                               openfpga_ctx.blwl_shift_register_banks(),
                                                cmd_context.option_enable(cmd, opt_verbose));
     /* If there is any error, final status cannot be overwritten by a success flag */
     if (CMD_EXEC_SUCCESS != curr_status) {
