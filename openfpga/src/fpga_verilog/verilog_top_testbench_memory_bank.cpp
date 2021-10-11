@@ -416,10 +416,11 @@ int print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(s
 
     /* Compute the auto-tuned clock period first, this is the lower bound of the shift register clock periods: 
      * - the BL/WL shift register clock only works in the second half of the programming clock period
-     * - add 2 idle clocks to avoid racing between programming clock and shift register clocks at edge 
+     * - consider a 10% slack for clocks to avoid racing between programming clock and shift register clocks at edge 
+     *   TODO: To figure out what is the min. slack required here. See something strange in HDL simulation
      */
-    float bl_sr_clock_period = 0.25 * prog_clock_period / (fabric_bits_by_addr.bl_word_size() + 2) / timescale;
-    float wl_sr_clock_period = 0.25 * prog_clock_period / (fabric_bits_by_addr.wl_word_size() + 2) / timescale;
+    float bl_sr_clock_period = 0.25 * prog_clock_period / (fabric_bits_by_addr.bl_word_size() * 1.1) / timescale;
+    float wl_sr_clock_period = 0.25 * prog_clock_period / (fabric_bits_by_addr.wl_word_size() * 1.1) / timescale;
 
     VTR_LOG("Precomputed clock frequency (=%g %s) for %s.\n",
             1. / (2. * bl_sr_clock_period * timescale) / 1e6,
@@ -804,7 +805,7 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(std::f
   fp << "if (";
   fp << TOP_TB_BL_SHIFT_REGISTER_COUNT_PORT_NAME;
   fp << " >= ";
-  fp << "`" << TOP_TB_BITSTREAM_BL_WORD_SIZE_VARIABLE << " - 1";
+  fp << "`" << TOP_TB_BITSTREAM_BL_WORD_SIZE_VARIABLE << " - 0";
   fp << ") begin";
   fp << std::endl;
 
@@ -860,7 +861,7 @@ void print_verilog_full_testbench_ql_memory_bank_shift_register_bitstream(std::f
   fp << "if (";
   fp << TOP_TB_WL_SHIFT_REGISTER_COUNT_PORT_NAME;
   fp << " >= ";
-  fp << "`" << TOP_TB_BITSTREAM_WL_WORD_SIZE_VARIABLE << " - 1";
+  fp << "`" << TOP_TB_BITSTREAM_WL_WORD_SIZE_VARIABLE << " - 0";
   fp << ") begin";
   fp << std::endl;
 
