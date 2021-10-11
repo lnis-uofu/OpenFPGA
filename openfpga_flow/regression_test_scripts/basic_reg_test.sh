@@ -98,6 +98,7 @@ run-task basic_tests/fabric_key/load_external_key_cc_fpga --debug --show_thread_
 run-task basic_tests/fabric_key/load_external_key_multi_region_cc_fpga --debug --show_thread_logs
 run-task basic_tests/fabric_key/load_external_key_qlbank_fpga --debug --show_thread_logs
 run-task basic_tests/fabric_key/load_external_key_multi_region_qlbank_fpga --debug --show_thread_logs
+run-task basic_tests/fabric_key/load_external_key_qlbanksr_multi_chain_fpga --debug --show_thread_logs
 # TODO: This feature is temporarily out of test due to the emergency in delivering netlists for multi-chain shift-register memory bank
 #run-task basic_tests/fabric_key/load_external_key_multi_region_qlbanksr_fpga --debug --show_thread_logs
 
