@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export OPENFPGA_PATH=/home/komal.javed@lmlhr.com/rapidsilicon/openfpga_new
+export OPENFPGA_PATH=~/rapidsilicon/openfpga_new
 
 for dir in RTL_Benchmark/*; do
  if [ -d "$dir" ]; then
