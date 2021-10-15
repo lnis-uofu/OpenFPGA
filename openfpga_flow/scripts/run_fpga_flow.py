@@ -271,7 +271,7 @@ def main():
 
     if (args.fpga_flow == "vpr_blif"):
         collect_files_for_vpr()
-    logger.info("Runing OpenFPGA Shell Engine ")
+    logger.info("Running OpenFPGA Shell Engine ")
     run_openfpga_shell()
     if args.end_flow_with_test:
         run_netlists_verification()
