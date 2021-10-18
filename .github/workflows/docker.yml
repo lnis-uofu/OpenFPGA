@@ -21,8 +21,8 @@ jobs:
             echo "name=docker_repo::$DOCKER_REPO"
             echo "::set-output name=docker_repo::$DOCKER_REPO"
           else
-            echo "name=docker_repo::$REPO_OWNER"
-            echo "::set-output name=docker_repo::$REPO_OWNER"
+            echo "name=docker_repo::lnis-uofu"
+            echo "::set-output name=docker_repo::lnis-uofu"
           fi
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
