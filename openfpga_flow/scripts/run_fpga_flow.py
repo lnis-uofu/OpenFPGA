@@ -99,6 +99,8 @@ parser.add_argument('--arch_variable_file', type=str, default=None,
 #                     help="Key file for shell")
 parser.add_argument('--yosys_tmpl', type=str, default=None,
                     help="Alternate yosys template, generates top_module.blif")
+parser.add_argument('--ys_rewrite_tmpl', type=str, default=None,
+                    help="Alternate yosys template, to rewrite verilog netlist")
 parser.add_argument('--disp', action="store_true",
                     help="Open display while running VPR")
 parser.add_argument('--debug', action="store_true",
@@ -260,7 +262,7 @@ def main():
         if args.power:
             run_ace2()
             run_pro_blif_3arg()
-        else: 
+        else:
             # Make a copy of the blif file to be compatible with vpr flow
             shutil.copy(args.top_module+'_yosys_out.blif', args.top_module+".blif")
 
@@ -269,7 +271,7 @@ def main():
 
     if (args.fpga_flow == "vpr_blif"):
         collect_files_for_vpr()
-    logger.info("Runing OpenFPGA Shell Engine ")
+    logger.info("Running OpenFPGA Shell Engine ")
     run_openfpga_shell()
     if args.end_flow_with_test:
         run_netlists_verification()
@@ -302,7 +304,7 @@ def check_required_file():
     }
     for filename, filepath in files_dict.items():
         if not os.path.isfile(filepath):
-            clean_up_and_exit("Not able to locate deafult file " + filename)
+            clean_up_and_exit("Not able to locate default file " + filename)
 
 
 def read_script_config():
@@ -345,7 +347,7 @@ def validate_command_line_arguments():
     - Activity file
     - Base verilog file
     '''
-    logger.info("Validating commnad line arguments")
+    logger.info("Validating command line arguments")
 
     if args.debug:
         logger.info("Setting loggger in debug mode")
@@ -361,19 +363,19 @@ def validate_command_line_arguments():
             dependent = dependent.split(",")
             for eachdep in dependent:
                 if not any([getattr(args, i, 0) for i in eachdep.split("|")]):
-                    clean_up_and_exit("'%s' argument depends on (%s) argumets" %
+                    clean_up_and_exit("'%s' argument depends on (%s) arguments" %
                                       (eacharg, ", ".join(dependent).replace("|", " or ")))
 
     # Check if architecrue files exists
     args.arch_file = os.path.abspath(args.arch_file)
     if not os.path.isfile(args.arch_file):
         clean_up_and_exit(
-            "VPR architecture file not found. -%s",
+            "VPR architecture file not found. -%s"%
             args.arch_file)
     args.openfpga_arch_file = os.path.abspath(args.openfpga_arch_file)
     if not os.path.isfile(args.openfpga_arch_file):
         clean_up_and_exit(
-            "OpenFPGA architecture file not found. -%s",
+            "OpenFPGA architecture file not found. -%s"% 
             args.openfpga_arch_file)
 
     # Filter provided benchmark files
@@ -387,14 +389,14 @@ def validate_command_line_arguments():
         for everyfile in glob.glob(args.benchmark_files[index]):
             if not os.path.isfile(everyfile):
                 clean_up_and_exit(
-                    "Failed to copy benchmark file-%s", args.arch_file)
+                    "Failed to copy benchmark file -%s" % args.arch_file)
 
     # Filter provided powertech files
     if args.power_tech:
         args.power_tech = os.path.abspath(args.power_tech)
         if not os.path.isfile(args.power_tech):
             clean_up_and_exit(
-                "Power Tech file not found. -%s", args.power_tech)
+                "Power Tech file not found. -%s" % args.power_tech)
 
     # Expand run directory to absolute path
     args.run_dir = os.path.abspath(args.run_dir)
@@ -481,14 +483,19 @@ def run_yosys_with_abc():
         clean_up_and_exit("")
     args.K = lut_size
     # Yosys script parameter mapping
-    ys_params = {
-        "READ_VERILOG_FILE": " \n".join([
+    ys_params = script_env_vars["PATH"]
+    ys_params["READ_VERILOG_FILE"] = " \n".join([
             "read_verilog -nolatches " + shlex.quote(eachfile)
-            for eachfile in args.benchmark_files]),
-        "TOP_MODULE": args.top_module,
-        "LUT_SIZE": lut_size,
-        "OUTPUT_BLIF": args.top_module+"_yosys_out.blif",
-    }
+            for eachfile in args.benchmark_files])
+    ys_params["TOP_MODULE"] = args.top_module
+    ys_params["LUT_SIZE"] = lut_size
+    ys_params["OUTPUT_BLIF"] = args.top_module+"_yosys_out.blif"
+    ys_params["OUTPUT_VERILOG"] = args.top_module+"_output_verilog.v"
+
+    for indx in range(0, len(OpenFPGAArgs), 2):
+        tmpVar = OpenFPGAArgs[indx][2:].upper()
+        ys_params[tmpVar] = OpenFPGAArgs[indx+1]
+    
     yosys_template = args.yosys_tmpl if args.yosys_tmpl else os.path.join(
         cad_tools["misc_dir"], "ys_tmpl_yosys_vpr_flow.ys")
     tmpl = Template(open(yosys_template, encoding='utf-8').read())
@@ -687,12 +694,41 @@ def extract_vpr_stats(logfile, r_filename="vpr_stat", parse_section="vpr"):
 
 def run_rewrite_verilog():
     # Rewrite the verilog after optimization
-    script_cmd = [
-        "read_blif %s" % args.top_module+".blif",
-        "write_verilog %s" % args.top_module+"_output_verilog.v"
-    ]
-    command = [cad_tools["yosys_path"], "-p", "; ".join(script_cmd)]
-    run_command("Yosys", "yosys_rewrite.log", command)
+    # If there is no template script provided, use a default template
+    # If there is a template script provided, replace parameters from configuration
+    if not args.ys_rewrite_tmpl:
+        script_cmd = [
+            "read_blif %s" % args.top_module+".blif",
+            "write_verilog %s" % args.top_module+"_output_verilog.v"
+        ]
+        command = [cad_tools["yosys_path"], "-p", "; ".join(script_cmd)]
+        run_command("Yosys", "yosys_rewrite.log", command)
+    else:
+        # Yosys script parameter mapping
+        ys_rewrite_params = {
+            "READ_VERILOG_FILE": " \n".join([
+                "read_verilog -nolatches " + shlex.quote(eachfile)
+                for eachfile in args.benchmark_files]),
+            "TOP_MODULE": args.top_module,
+            "OUTPUT_BLIF": args.top_module+"_yosys_out.blif",
+            "INPUT_BLIF": args.top_module+".blif",
+            "OUTPUT_VERILOG": args.top_module+"_output_verilog.v"
+        }
+
+        for indx in range(0, len(OpenFPGAArgs), 2):
+            tmpVar = OpenFPGAArgs[indx][2:].upper()
+            ys_rewrite_params[tmpVar] = OpenFPGAArgs[indx + 1]
+
+        # Split a series of scripts by delim ';'
+        # And execute the scripts serially
+        for iteration_idx, curr_rewrite_tmpl in enumerate(args.ys_rewrite_tmpl.split(";")):
+            tmpl = Template(open(curr_rewrite_tmpl, encoding='utf-8').read())
+            logger.info("Yosys rewrite iteration: " + str(iteration_idx))
+            with open("yosys_rewrite_" + str(iteration_idx) + ".ys", 'w') as archfile:
+                archfile.write(tmpl.safe_substitute(ys_rewrite_params))
+            run_command("Run yosys", "yosys_rewrite_output.log",
+                    [cad_tools["yosys_path"], "yosys_rewrite_" + str(iteration_idx) + ".ys"])
+
 
 
 def run_netlists_verification(exit_if_fail=True):
@@ -705,11 +741,6 @@ def run_netlists_verification(exit_if_fail=True):
 
     command = [cad_tools["iverilog_path"]]
     command += ["-o", compiled_file]
-    fpga_define_file = "./SRC/define_simulation.v"
-    fpga_define_file_bk = "./SRC/define_simulation.v.bak"
-    shutil.copy(fpga_define_file, fpga_define_file_bk)
-    with open(fpga_define_file, "r") as fp:
-        fpga_defines = fp.readlines()
 
     command += ["./SRC/%s_include_netlists.v" % args.top_module]
     command += ["-s"]
@@ -717,11 +748,6 @@ def run_netlists_verification(exit_if_fail=True):
         command += [tb_top_formal]
     else:
         command += [tb_top_autochecked]
-        with open(fpga_define_file, "w") as fp:
-            for eachLine in fpga_defines:
-                if not (("ENABLE_FORMAL_VERIFICATION" in eachLine) or
-                        "FORMAL_SIMULATION" in eachLine):
-                    fp.write(eachLine)
     run_command("iverilog_verification", "iverilog_output.txt", command)
 
     vvp_command = ["vvp", compiled_file]
@@ -779,7 +805,8 @@ def filter_openfpga_output(vpr_output):
 
 def filter_failed_process_output(vpr_output):
     for line in vpr_output.split("\n"):
-        if "error" in line.lower():
+        elements_to_log = ["error", "what()"]
+        if any(match in line.lower() for match in elements_to_log):
             logger.error("-->>" + line)
 
 

@@ -22,13 +22,13 @@ Once the ``openfpga.sh`` script is sourced, you can run any of the following com
 
 .. option:: run-task <task_name> **kwarags
 
-   This command runs the specified task listed from the ``list-task`` command or from the existing directory. The command name is relative to the ``TASK_DIRECTORY``. User can provide any additional arguments which are listed `here <_openfpga_task_args>`_ to this command.
+   This command runs the specified task listed from the ``list-task`` command or from the existing directory. The command name is relative to the ``TASK_DIRECTORY``. Users can provide any additional arguments which are listed `here <_openfpga_task_args>`_ to this command.
 
 .. option:: run-modelsim
 
    This command runs the verification using ModelSim.
    The test benches are generated during the OpenFPGA run.
-   **Note**: user need to have ``VSIM`` install and configured
+   **Note**: users need to have ``VSIM`` installed and configured
 
 
 .. option:: run-regression-local

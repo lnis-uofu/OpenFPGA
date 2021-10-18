@@ -14,14 +14,13 @@ namespace openfpga {
 /********************************************************************
  * Compute the time period for the simulation
  *******************************************************************/
-float find_operating_phase_simulation_time(const int& factor,
-                                           const int& num_op_clock_cycles,
+float find_operating_phase_simulation_time(const int& num_op_clock_cycles,
                                            const float& op_clock_period,
                                            const float& timescale) {
   /* Take into account the prog_reset and reset cycles 
    * 1e9 is to change the unit to ns rather than second 
    */
-  return ((float)factor * (float)num_op_clock_cycles * op_clock_period) / timescale; 
+  return ((float)num_op_clock_cycles * op_clock_period) / timescale; 
 }
 
 /********************************************************************

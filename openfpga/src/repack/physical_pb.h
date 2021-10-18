@@ -55,6 +55,9 @@ class PhysicalPb {
     std::map<const t_pb_graph_pin*, AtomNetlist::TruthTable> truth_tables(const PhysicalPbId& pb) const;
     std::vector<size_t> mode_bits(const PhysicalPbId& pb) const;
     std::string fixed_bitstream(const PhysicalPbId& pb) const;
+    size_t fixed_bitstream_offset(const PhysicalPbId& pb) const;
+    std::string fixed_mode_select_bitstream(const PhysicalPbId& pb) const;
+    size_t fixed_mode_select_bitstream_offset(const PhysicalPbId& pb) const;
   public: /* Public mutators */
     PhysicalPbId create_pb(const t_pb_graph_node* pb_graph_node);
     void add_child(const PhysicalPbId& parent,
@@ -75,6 +78,12 @@ class PhysicalPb {
                              const bool& wire_lut_output);
     void set_fixed_bitstream(const PhysicalPbId& pb,
                              const std::string& fixed_bitstream);
+    void set_fixed_bitstream_offset(const PhysicalPbId& pb,
+                                    const size_t& offset);
+    void set_fixed_mode_select_bitstream(const PhysicalPbId& pb,
+                                         const std::string& fixed_bitstream);
+    void set_fixed_mode_select_bitstream_offset(const PhysicalPbId& pb,
+                                                const size_t& offset);
   public: /* Public validators/invalidators */
     bool valid_pb_id(const PhysicalPbId& pb_id) const;
     bool empty() const;
@@ -98,6 +107,10 @@ class PhysicalPb {
     vtr::vector<PhysicalPbId, std::vector<size_t>> mode_bits_;
 
     vtr::vector<PhysicalPbId, std::string> fixed_bitstreams_;
+    vtr::vector<PhysicalPbId, size_t> fixed_bitstream_offsets_;
+
+    vtr::vector<PhysicalPbId, std::string> fixed_mode_select_bitstreams_;
+    vtr::vector<PhysicalPbId, size_t> fixed_mode_select_bitstream_offsets_;
 
     /* Fast lookup */
     std::map<const t_pb_graph_node*, PhysicalPbId> type2id_map_;

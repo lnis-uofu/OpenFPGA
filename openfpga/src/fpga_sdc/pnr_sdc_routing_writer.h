@@ -9,6 +9,8 @@
 #include "module_manager.h"
 #include "device_rr_gsb.h"
 #include "rr_graph_obj.h"
+#include "device_grid.h"
+#include "vpr_device_annotation.h"
 
 /********************************************************************
  * Function declaration
@@ -22,6 +24,8 @@ void print_pnr_sdc_flatten_routing_constrain_sb_timing(const std::string& sdc_di
                                                        const bool& hierarchical,
                                                        const ModuleManager& module_manager,
                                                        const ModuleId& top_module,
+                                                       const VprDeviceAnnotation& device_annotation,
+                                                       const DeviceGrid& grids,
                                                        const RRGraph& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb,
                                                        const bool& constrain_zero_delay_paths);
@@ -31,6 +35,8 @@ void print_pnr_sdc_compact_routing_constrain_sb_timing(const std::string& sdc_di
                                                        const bool& hierarchical,
                                                        const ModuleManager& module_manager,
                                                        const ModuleId& top_module,
+                                                       const VprDeviceAnnotation& device_annotation,
+                                                       const DeviceGrid& grids,
                                                        const RRGraph& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb,
                                                        const bool& constrain_zero_delay_paths);
@@ -40,6 +46,8 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_di
                                                        const bool& hierarchical,
                                                        const ModuleManager& module_manager, 
                                                        const ModuleId& top_module,
+                                                       const VprDeviceAnnotation& device_annotation,
+                                                       const DeviceGrid& grids,
                                                        const RRGraph& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb,
                                                        const bool& constrain_zero_delay_paths);
@@ -49,6 +57,8 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(const std::string& sdc_di
                                                        const bool& hierarchical,
                                                        const ModuleManager& module_manager,
                                                        const ModuleId& top_module,
+                                                       const VprDeviceAnnotation& device_annotation,
+                                                       const DeviceGrid& grids,
                                                        const RRGraph& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb,
                                                        const bool& constrain_zero_delay_paths);

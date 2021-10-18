@@ -8,6 +8,7 @@
 #include <string>
 #include "vtr_geometry.h"
 #include "device_grid.h"
+#include "vpr_device_annotation.h"
 #include "tile_annotation.h"
 #include "rr_graph_obj.h"
 #include "device_rr_gsb.h"
@@ -29,6 +30,7 @@ namespace openfpga {
 int build_top_module(ModuleManager& module_manager,
                      DecoderLibrary& decoder_lib,
                      const CircuitLibrary& circuit_lib,
+                     const VprDeviceAnnotation& vpr_device_annotation,
                      const DeviceGrid& grids,
                      const TileAnnotation& tile_annotation,
                      const RRGraph& rr_graph,

@@ -21,8 +21,10 @@ VerilogTestbenchOption::VerilogTestbenchOption() {
   print_top_testbench_ = false;
   simulation_ini_path_.clear();
   explicit_port_mapping_ = false;
-  support_icarus_simulator_ = false;
   include_signal_init_ = false;
+  default_net_type_ = VERILOG_DEFAULT_NET_TYPE_NONE;
+  embedded_bitstream_hdl_type_ = EMBEDDED_BITSTREAM_HDL_MODELSIM;
+  time_unit_ = 1E-3;
   verbose_output_ = false;
 }
 
@@ -73,8 +75,20 @@ bool VerilogTestbenchOption::include_signal_init() const {
   return include_signal_init_;
 }
 
-bool VerilogTestbenchOption::support_icarus_simulator() const {
-  return support_icarus_simulator_;
+bool VerilogTestbenchOption::no_self_checking() const {
+  return reference_benchmark_file_path_.empty();
+}
+
+e_verilog_default_net_type VerilogTestbenchOption::default_net_type() const {
+  return default_net_type_;
+}
+
+float VerilogTestbenchOption::time_unit() const {
+  return time_unit_;
+}
+
+e_embedded_bitstream_hdl_type VerilogTestbenchOption::embedded_bitstream_hdl_type() const {
+  return embedded_bitstream_hdl_type_; 
 }
 
 bool VerilogTestbenchOption::verbose_output() const {
@@ -137,8 +151,39 @@ void VerilogTestbenchOption::set_include_signal_init(const bool& enabled) {
   include_signal_init_ = enabled;
 }
 
-void VerilogTestbenchOption::set_support_icarus_simulator(const bool& enabled) {
-  support_icarus_simulator_ = enabled;
+void VerilogTestbenchOption::set_default_net_type(const std::string& default_net_type) {
+  /* Decode from net type string */;
+  if (default_net_type == std::string(VERILOG_DEFAULT_NET_TYPE_STRING[VERILOG_DEFAULT_NET_TYPE_NONE])) {
+    default_net_type_ = VERILOG_DEFAULT_NET_TYPE_NONE;
+  } else if (default_net_type == std::string(VERILOG_DEFAULT_NET_TYPE_STRING[VERILOG_DEFAULT_NET_TYPE_WIRE])) {
+    default_net_type_ = VERILOG_DEFAULT_NET_TYPE_WIRE;
+  } else {
+    VTR_LOG_WARN("Invalid default net type: '%s'! Expect ['%s'|'%s']\n",
+                 default_net_type.c_str(),
+                 VERILOG_DEFAULT_NET_TYPE_STRING[VERILOG_DEFAULT_NET_TYPE_NONE],
+                 VERILOG_DEFAULT_NET_TYPE_STRING[VERILOG_DEFAULT_NET_TYPE_WIRE]);
+  }
+}
+
+void VerilogTestbenchOption::set_embedded_bitstream_hdl_type(const std::string& embedded_bitstream_hdl_type) {
+  /* Decode from HDL type string */;
+  if (embedded_bitstream_hdl_type == std::string(EMBEDDED_BITSTREAM_HDL_TYPE_STRING[NUM_EMBEDDED_BITSTREAM_HDL_TYPES])) {
+    embedded_bitstream_hdl_type_ = NUM_EMBEDDED_BITSTREAM_HDL_TYPES;
+  } else if (embedded_bitstream_hdl_type == std::string(EMBEDDED_BITSTREAM_HDL_TYPE_STRING[EMBEDDED_BITSTREAM_HDL_IVERILOG])) {
+    embedded_bitstream_hdl_type_ = EMBEDDED_BITSTREAM_HDL_IVERILOG;
+  } else if (embedded_bitstream_hdl_type == std::string(EMBEDDED_BITSTREAM_HDL_TYPE_STRING[EMBEDDED_BITSTREAM_HDL_MODELSIM])) {
+    embedded_bitstream_hdl_type_ = EMBEDDED_BITSTREAM_HDL_MODELSIM;
+  } else {
+    VTR_LOG_WARN("Invalid embedded bitstream type: '%s'! Expect ['%s'|'%s'|'%s']\n",
+                 embedded_bitstream_hdl_type.c_str(),
+                 EMBEDDED_BITSTREAM_HDL_TYPE_STRING[NUM_EMBEDDED_BITSTREAM_HDL_TYPES],
+                 EMBEDDED_BITSTREAM_HDL_TYPE_STRING[EMBEDDED_BITSTREAM_HDL_IVERILOG],
+                 EMBEDDED_BITSTREAM_HDL_TYPE_STRING[EMBEDDED_BITSTREAM_HDL_MODELSIM]);
+  }
+}
+
+void VerilogTestbenchOption::set_time_unit(const float& time_unit) {
+  time_unit_ = time_unit;
 }
 
 void VerilogTestbenchOption::set_verbose_output(const bool& enabled) {

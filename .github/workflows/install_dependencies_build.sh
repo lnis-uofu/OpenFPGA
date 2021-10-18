@@ -37,4 +37,5 @@ apt-get update && apt-get install -y \
     texinfo \
     time \
     valgrind \
+    wget \
     zip

@@ -7,6 +7,7 @@ Please reveal the following architecture features in the names to help quickly s
 - N<le\_size>: Number of logic elements for a CLB. If you have multiple CLB architectures, this should be largest number.
 - tileable<IO>: If the routing architecture is tileable or not. 
   * The keyword 'IO' specifies if the I/O tile is tileable or not
+- fracdff: Use multi-mode DFF model, where reset/set/clock polarity is configurable
 - adder\_chain: If hard adder/carry chain is used inside CLBs
 - register\_chain: If shift register chain is used inside CLBs
 - scan\_chain: If scan chain testing infrastructure is used inside CLBs

@@ -16,24 +16,32 @@ In this part, we will introduce the hierarchy, dependency and functionality of e
 +-----------------+---------+----------------+---------------+
 
 OpenFPGA can auto-generate two types of Verilog testbenches to validate the correctness of the fabric: full and formal-oriented.
-Both testbenches share the same organization, as depicted in :numref:`fig_verilog_testbench_organization` (a).
+Both testbenches share the same organization, as depicted in :numref:`fig_verilog_testbench_organization`.
 To enable self-testing, the FPGA and user's RTL design (simulate using an HDL simulator) are driven by the same input stimuli, and any mismatch on their outputs will raise an error flag.
 
 .. _fig_verilog_testbench_organization:
 
-.. figure:: figures/verilog_testbench_organization.png
+.. figure:: figures/full_testbench_block_diagram.svg
    :scale: 50%
-   :alt: Functional Verification using ModelSim
+   :alt: Verilog testbench principles
 
-   Principles of Verilog testbenches organization: (a) block diagram and (b) waveforms. 
+   Principles of Verilog testbenches: (1) using common input stimuli; (2) applying bitstream; (3) checking output vectors.
+
+.. _fig_verilog_full_testbench_waveform:
+
+.. figure:: figures/full_testbench_waveform.svg
+   :scale: 50%
+   :alt: Full testbench waveform
+
+   Illustration on the waveforms in full testbench
 
 Full Testbench
 ~~~~~~~~~~~~~~
 Full testbench aims at simulating an entire FPGA operating period, consisting of two phases: 
 
-  - the **Configuration Phase**, where the synthesized design bitstream is loaded to the programmable fabric, as highlighted by the green rectangle of :numref:`fig_verilog_testbench_organization` (b);
+  - the **Configuration Phase**, where the synthesized design bitstream is loaded to the programmable fabric, as highlighted by the green rectangle of :numref:`fig_verilog_full_testbench_waveform`;
 
-  - the **Operating Phase**, where random input vectors are auto-generated to drive both Devices Under Test (DUTs), as highlighted by the red rectangle of :numref:`fig_verilog_testbench_organization` (b). Using the full testbench, users can validate both the configuration circuits and programming fabric of an FPGA.
+  - the **Operating Phase**, where random input vectors are auto-generated to drive both Devices Under Test (DUTs), as highlighted by the red rectangle of :numref:`fig_verilog_full_testbench_waveform`. Using the full testbench, users can validate both the configuration circuits and programming fabric of an FPGA.
 
 Formal-oriented Testbench
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -50,8 +58,8 @@ Inside the directory, the Verilog testbenches are organized as illustrated in :n
 
 .. _fig_verilog_testbench_hierarchy:
 
-.. figure:: ./figures/verilog_testbench_hierarchy.png
-   :scale: 90%
+.. figure:: ./figures/verilog_testbench_hierarchy.svg
+   :scale: 100%
 
    Hierarchy of Verilog testbenches for a FPGA fabric implemented with an application
 
@@ -64,37 +72,6 @@ Inside the directory, the Verilog testbenches are organized as illustrated in :n
    This is the only file you need to add to a simulator.
 
    .. note:: Fabric Verilog netlists are included in this file.
-
-.. option:: define_simulation.v
-
-   This file includes pre-processing flags required by the testbenches, to smooth HDL simulation.
-   It will include the folliwng pre-procesing flags:
-  
-   - ```define AUTOCHECK_SIMULATION`` When enabled, testbench will include self-testing features. The FPGA and user's RTL design (simulate using an HDL simulator) are driven by the same input stimuli, and any mismatch on their outputs will raise an error flag.
-
-   .. note:: OpenFPGA always enable the self-testing feature. Users can disable it by commenting out the associated line in the ``define_simulation.v``.
-
-   - ```define ENABLE_FORMAL_VERFICATION`` When enabled, the ``<bench_name>_include_netlist.v`` will include the pre-configured FPGA netlist for formal verification usage. This flag is added when ``--print_formal_verification_top_netlist`` option is enabled when calling the ``write_verilog_testbench`` command. 
-
-   - ```define ENABLE_FORMAL_SIMULATION`` When enabled, the ``<bench_name>_include_netlist.v`` will include the testbench netlist for formal-oriented simulation. This flag is added when ``--print_preconfig_top_testbench`` option is enabled when calling the ``write_verilog_testbench`` command. 
-
-   .. note:: To run full testbenches, both flags ``ENABLE_FORMAL_VERIFICATION`` and ``ENABLE_FORMAL_SIMULATION`` must be disabled!
-
-   - ```define ENABLE_SIGNAL_INITIALIZATION`` When enabled, all the outputs of primitive Verilog modules will be initialized with a random value. This flag is added when ``--include_signal_init`` option is enabled when calling the ``write_verilog_testbench`` command. 
-
-   .. note:: We strongly recommend users to turn on this flag as it can help simulators to converge quickly.
-
-   .. warning:: Signal initialization is only applied to the datapath inputs of routing multiplexers (considering the fact that they are indispensible cells of FPGAs)! If your FPGA does not contain any multiplexer cells, signal initialization is not applicable.
-   
-   - ```define ICARUS_SIMULATOR`` When enabled, Verilog netlists are generated to be compatible with the syntax required by `icarus iVerilog simulator`__. This flag is added when ``--support_icarus_simulator`` option is enabled when calling the ``write_verilog_testbench`` command. 
-
-   .. warning:: Please disable this flag if you are not using icarus iVerilog simulator.
-
-__ iverilog_website_
-
-.. _iverilog_website: http://iverilog.icarus.com/
-
-
 
 .. option:: <bench_name>_autocheck_top_tb.v
 

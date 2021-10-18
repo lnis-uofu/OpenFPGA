@@ -86,11 +86,11 @@ std::vector<std::string> PbTypeAnnotation::port_names() const {
   return keys;
 }
 
-std::map<BasicPort, std::array<int, 2>> PbTypeAnnotation::physical_pb_type_port(const std::string& port_name) const {
-  std::map<std::string, std::map<BasicPort, std::array<int, 2>>>::const_iterator it = operating_pb_type_ports_.find(port_name);
+std::map<BasicPort, std::array<int, 3>> PbTypeAnnotation::physical_pb_type_port(const std::string& port_name) const {
+  std::map<std::string, std::map<BasicPort, std::array<int, 3>>>::const_iterator it = operating_pb_type_ports_.find(port_name);
   if (it == operating_pb_type_ports_.end()) {
     /* Return an empty port */
-    return std::map<BasicPort, std::array<int, 2>>();
+    return std::map<BasicPort, std::array<int, 3>>();
   }
   return operating_pb_type_ports_.at(port_name);
 }
@@ -169,25 +169,25 @@ void PbTypeAnnotation::set_physical_pb_type_index_offset(const int& value) {
 void PbTypeAnnotation::add_pb_type_port_pair(const std::string& operating_pb_port_name,
                                              const BasicPort& physical_pb_port) {
   /* Give a warning if the operating_pb_port_name already exist */
-  std::map<std::string, std::map<BasicPort, std::array<int, 2>>>::const_iterator it = operating_pb_type_ports_.find(operating_pb_port_name);
+  std::map<std::string, std::map<BasicPort, std::array<int, 3>>>::const_iterator it = operating_pb_type_ports_.find(operating_pb_port_name);
 
   /* If not exist, initialize and set a default value */
   if (it == operating_pb_type_ports_.end()) {
-    operating_pb_type_ports_[operating_pb_port_name][physical_pb_port] = {0, 0};
+    operating_pb_type_ports_[operating_pb_port_name][physical_pb_port] = {0, 0, 0};
     /* We can return early */
     return;
   }
 
   /* If the physical port is not in the list, we create one and set a default value */
   if (0 == operating_pb_type_ports_[operating_pb_port_name].count(physical_pb_port)) {
-    operating_pb_type_ports_[operating_pb_port_name][physical_pb_port] = {0, 0};
+    operating_pb_type_ports_[operating_pb_port_name][physical_pb_port] = {0, 0, 0};
   }
 }
 
 void PbTypeAnnotation::set_physical_pin_initial_offset(const std::string& operating_pb_port_name,
                                                        const BasicPort& physical_pb_port,
                                                        const int& physical_pin_initial_offset) {
-  std::map<std::string, std::map<BasicPort, std::array<int, 2>>>::const_iterator it = operating_pb_type_ports_.find(operating_pb_port_name);
+  std::map<std::string, std::map<BasicPort, std::array<int, 3>>>::const_iterator it = operating_pb_type_ports_.find(operating_pb_port_name);
 
   if (it == operating_pb_type_ports_.end()) {
     VTR_LOG_ERROR("The operating pb_type port '%s' is not valid!\n",
@@ -210,7 +210,7 @@ void PbTypeAnnotation::set_physical_pin_initial_offset(const std::string& operat
 void PbTypeAnnotation::set_physical_pin_rotate_offset(const std::string& operating_pb_port_name,
                                                       const BasicPort& physical_pb_port,
                                                       const int& physical_pin_rotate_offset) {
-  std::map<std::string, std::map<BasicPort, std::array<int, 2>>>::const_iterator it = operating_pb_type_ports_.find(operating_pb_port_name);
+  std::map<std::string, std::map<BasicPort, std::array<int, 3>>>::const_iterator it = operating_pb_type_ports_.find(operating_pb_port_name);
 
   if (it == operating_pb_type_ports_.end()) {
     VTR_LOG_ERROR("The operating pb_type port '%s' is not valid!\n",
@@ -229,6 +229,30 @@ void PbTypeAnnotation::set_physical_pin_rotate_offset(const std::string& operati
 
   operating_pb_type_ports_[operating_pb_port_name][physical_pb_port][1] = physical_pin_rotate_offset;
 }
+
+void PbTypeAnnotation::set_physical_port_rotate_offset(const std::string& operating_pb_port_name,
+                                                       const BasicPort& physical_pb_port,
+                                                       const int& physical_port_rotate_offset) {
+  std::map<std::string, std::map<BasicPort, std::array<int, 3>>>::const_iterator it = operating_pb_type_ports_.find(operating_pb_port_name);
+
+  if (it == operating_pb_type_ports_.end()) {
+    VTR_LOG_ERROR("The operating pb_type port '%s' is not valid!\n",
+                  operating_pb_port_name.c_str());
+    exit(1);
+  }
+
+  if (operating_pb_type_ports_[operating_pb_port_name].end() == operating_pb_type_ports_[operating_pb_port_name].find(physical_pb_port)) {
+    VTR_LOG_ERROR("The physical pb_type port '%s[%lu:%lu]' definition for operating pb_type port '%s' is not valid!\n",
+                  physical_pb_port.get_name().c_str(),
+                  physical_pb_port.get_lsb(),
+                  physical_pb_port.get_msb(),
+                  operating_pb_port_name.c_str());
+    exit(1);
+  }
+
+  operating_pb_type_ports_[operating_pb_port_name][physical_pb_port][2] = physical_port_rotate_offset;
+}
+
 
 void PbTypeAnnotation::add_interconnect_circuit_model_pair(const std::string& interc_name,
                                                            const std::string& circuit_model_name) {

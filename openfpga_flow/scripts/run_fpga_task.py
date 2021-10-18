@@ -168,14 +168,20 @@ def generate_each_task_actions(taskname):
     # Check if task directory exists and consistent
     local_tasks = os.path.join(*(taskname))
     repo_tasks = os.path.join(gc["task_dir"], *(taskname))
+    abs_tasks = os.path.abspath('/' + local_tasks)
     if os.path.isdir(local_tasks):
         os.chdir(local_tasks)
         curr_task_dir = os.path.abspath(os.getcwd())
+    elif os.path.isdir(abs_tasks):
+        curr_task_dir = abs_tasks
     elif os.path.isdir(repo_tasks):
         curr_task_dir = repo_tasks
     else:
-        clean_up_and_exit("Task directory [%s] not found" % curr_task_dir)
-    
+        clean_up_and_exit("Task directory [%s] not found" % taskname +
+                          " locally at [%s]" % local_tasks +
+                          ", absolutely at [%s]" % abs_tasks +
+                          ", or in OpenFPGA task directory [%s]" % repo_tasks)
+
     os.chdir(curr_task_dir)
 
     curr_task_conf_file = os.path.join(curr_task_dir, "config", "task.conf")
@@ -254,7 +260,11 @@ def generate_each_task_actions(taskname):
 
         # Read provided benchmark configurations
         # Common configurations
+        # - All the benchmarks may share the same yosys synthesis template script
+        # - All the benchmarks may share the same rewrite yosys template script, which converts post-synthesis .v netlist to be compatible with .blif port definition. This is required for correct verification at the end of flows
+        # - All the benchmarks may share the same routing channel width in VPR runs. This is designed to enable architecture evaluations for a fixed device model
         ys_for_task_common = SynthSection.get("bench_yosys_common")
+        ys_rewrite_for_task_common = SynthSection.get("bench_yosys_rewrite_common")
         chan_width_common = SynthSection.get("bench_chan_width_common")
 
         # Individual benchmark configuration
@@ -263,8 +273,15 @@ def generate_each_task_actions(taskname):
                                                        fallback="top")
         CurrBenchPara["ys_script"] = SynthSection.get(bech_name+"_yosys",
                                                       fallback=ys_for_task_common)
+        CurrBenchPara["ys_rewrite_script"] = SynthSection.get(bech_name+"_yosys_rewrite",
+                                                      fallback=ys_rewrite_for_task_common)
         CurrBenchPara["chan_width"] = SynthSection.get(bech_name+"_chan_width",
                                                        fallback=chan_width_common)
+        CurrBenchPara["benchVariable"] = []
+        for eachKey, eachValue in SynthSection.items():
+            if bech_name in eachKey:
+                eachKey = eachKey.replace(bech_name+"_", "").upper()
+                CurrBenchPara["benchVariable"] += [f"--{eachKey}", eachValue]
 
         if GeneralSection.get("fpga_flow") == "vpr_blif":
             # Check if activity file exist
@@ -296,6 +313,13 @@ def generate_each_task_actions(taskname):
 
         benchmark_list.append(CurrBenchPara)
 
+    # Count the number of duplicated top module name among benchmark
+    # This is required as flow run directory names for these benchmarks are different than others
+    # which are uniquified
+    benchmark_top_module_count = []
+    for bench in benchmark_list:
+      benchmark_top_module_count.append(bench["top_module"])
+
     # Create OpenFPGA flow run commnad for each combination of
     # architecture, benchmark and parameters
     # Create run_job object [arch, bench, run_dir, commnad]
@@ -303,7 +327,11 @@ def generate_each_task_actions(taskname):
     for indx, arch in enumerate(archfile_list):
         for bench in benchmark_list:
             for lbl, param in bench["script_params"].items():
-                flow_run_dir = get_flow_rundir(arch, bench["top_module"], lbl)
+                if (benchmark_top_module_count.count(bench["top_module"]) > 1):
+                  flow_run_dir = get_flow_rundir(arch, "bench" + str(benchmark_list.index(bench)) + "_" + bench["top_module"], lbl)
+                else:
+                  flow_run_dir = get_flow_rundir(arch, bench["top_module"], lbl)
+
                 command = create_run_command(
                     curr_job_dir=flow_run_dir,
                     archfile=arch,
@@ -315,7 +343,7 @@ def generate_each_task_actions(taskname):
                     "bench": bench,
                     "name": "%02d_%s_%s" % (indx, bench["top_module"], lbl),
                     "run_dir": flow_run_dir,
-                    "commands": command,
+                    "commands": command + bench["benchVariable"],
                     "finished": False,
                     "status": False})
 
@@ -323,6 +351,9 @@ def generate_each_task_actions(taskname):
                 (len(archfile_list), len(benchmark_list), len(ScriptSections)))
     logger.info('Created total %d jobs' % len(flow_run_cmd_list))
     return flow_run_cmd_list
+
+# Make the directory name unique by including the benchmark index in the list.
+# This is because benchmarks may share the same top module names
 
 
 def get_flow_rundir(arch, top_module, flow_params=None):
@@ -380,6 +411,9 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, param, task_conf):
 
     if benchmark_obj.get("ys_script"):
         command += ["--yosys_tmpl", benchmark_obj["ys_script"]]
+
+    if benchmark_obj.get("ys_rewrite_script"):
+        command += ["--ys_rewrite_tmpl", benchmark_obj["ys_rewrite_script"]]
 
     if task_gc.getboolean("power_analysis"):
         command += ["--power"]

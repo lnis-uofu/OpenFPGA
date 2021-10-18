@@ -53,6 +53,10 @@ run-task basic_tests/full_testbench/smart_fast_memory_bank --debug --show_thread
 run-task basic_tests/full_testbench/smart_fast_multi_region_memory_bank --debug --show_thread_logs
 run-task basic_tests/preconfig_testbench/memory_bank --debug --show_thread_logs
 
+echo -e "Testing testbenches without self checking features";
+run-task basic_tests/full_testbench/full_testbench_without_self_checking --debug --show_thread_logs
+run-task basic_tests/preconfig_testbench/preconfigured_testbench_without_self_checking --debug --show_thread_logs
+
 echo -e "Testing standalone (flatten memory) configuration protocol of a K4N4 FPGA";
 run-task basic_tests/full_testbench/flatten_memory --debug --show_thread_logs
 run-task basic_tests/preconfig_testbench/flatten_memory --debug --show_thread_logs
@@ -84,6 +88,8 @@ run-task basic_tests/fabric_key/load_external_key_multi_region_cc_fpga --debug -
 echo -e "Testing K4 series FPGA";
 echo -e "Testing K4N4 with facturable LUTs";
 run-task basic_tests/k4_series/k4n4_frac_lut --debug --show_thread_logs
+echo -e "Testing K4N4 with asynchronous reset";
+run-task basic_tests/k4_series/k4n4_fracff --debug --show_thread_logs
 echo -e "Testing K4N4 with hard adders";
 run-task basic_tests/k4_series/k4n4_adder --debug --show_thread_logs
 echo -e "Testing K4N4 without local routing architecture";

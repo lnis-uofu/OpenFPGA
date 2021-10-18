@@ -20,12 +20,7 @@ always @ (posedge CK) begin
   q_reg <= D;
 end
 
-// Wire q_reg to Q
-`ifndef ENABLE_FORMAL_VERIFICATION
-  assign Q = q_reg;
-`else
-  assign Q = 1'bZ;
-`endif
+assign Q = q_reg;
 
 endmodule //End Of Module
 
@@ -46,14 +41,8 @@ always @ (posedge CK) begin
   q_reg <= D;
 end
 
-// Wire q_reg to Q
-`ifndef ENABLE_FORMAL_VERIFICATION
-  assign Q = q_reg;
-  assign QN = ~q_reg;
-`else
-  assign Q = 1'bZ;
-  assign QN = !Q;
-`endif
+assign Q = q_reg;
+assign QN = ~q_reg;
 
 endmodule //End Of Module
 
@@ -79,12 +68,7 @@ end else begin
   q_reg <= D;
 end
 
-// Wire q_reg to Q
-`ifndef ENABLE_FORMAL_VERIFICATION
-  assign Q = q_reg;
-`else
-  assign Q = 1'bZ;
-`endif
+assign Q = q_reg;
 
 endmodule //End Of Module
 
@@ -111,14 +95,8 @@ end else begin
   q_reg <= D;
 end
 
-// Wire q_reg to Q
-`ifndef ENABLE_FORMAL_VERIFICATION
-  assign Q = q_reg;
-  assign QN = ~q_reg;
-`else
-  assign Q = 1'bZ;
-  assign QN = !Q;
-`endif
+assign Q = q_reg;
+assign QN = ~q_reg;
 
 endmodule //End Of Module
 
@@ -144,14 +122,8 @@ end else begin
   q_reg <= D;
 end
 
-// Wire q_reg to Q
-`ifndef ENABLE_FORMAL_VERIFICATION
-  assign Q = q_reg;
-  assign QN = ~q_reg;
-`else
-  assign Q = 1'bZ;
-  assign QN = !Q;
-`endif
+assign Q = q_reg;
+assign QN = ~q_reg;
 
 endmodule //End Of Module
 
@@ -178,14 +150,8 @@ end else begin
   q_reg <= D;
 end
 
-// Wire q_reg to Q
-`ifndef ENABLE_FORMAL_VERIFICATION
-  assign Q = q_reg;
-  assign QN = ~q_reg;
-`else
-  assign Q = 1'bZ;
-  assign QN = !Q;
-`endif
+assign Q = q_reg;
+assign QN = ~q_reg;
 
 endmodule //End Of Module
 
@@ -211,14 +177,8 @@ end else begin
   q_reg <= D;
 end
 
-// Wire q_reg to Q
-`ifndef ENABLE_FORMAL_VERIFICATION
-  assign Q = q_reg;
-  assign QN = ~q_reg;
-`else
-  assign Q = 1'bZ;
-  assign QN = !Q;
-`endif
+assign Q = q_reg;
+assign QN = ~q_reg;
 
 endmodule //End Of Module
 
@@ -249,14 +209,8 @@ end else begin
   q_reg <= D;
 end
 
-// Wire q_reg to Q
-`ifndef ENABLE_FORMAL_VERIFICATION
-  assign Q = q_reg;
-  assign QN = ~q_reg;
-`else
-  assign Q = 1'bZ;
-  assign QN = !Q;
-`endif
+assign Q = q_reg;
+assign QN = ~q_reg;
 
 endmodule //End Of Module
 
@@ -286,6 +240,57 @@ end else begin
 end
 
 assign Q = q_reg;
+
+endmodule //End Of Module
+
+//-----------------------------------------------------
+// Function : A multi-functional D-type flip-flop with 
+//           - asynchronous reset 
+//             which can be switched between active-low and active high
+//           - asynchronous set 
+//             which can be switched between active-low and active high
+//-----------------------------------------------------
+module MULTI_MODE_DFFSRQ (
+  input SET, // Set input
+  input RST, // Reset input
+  input CK, // Clock Input
+  input D, // Data Input
+  output Q, // Q output
+  input [0:1] mode // mode-selection bits: bit0 for reset polarity; bit1 for set polarity
+);
+
+wire post_set = mode[1] ? ~SET : SET;
+wire post_reset = mode[0] ? ~RST : RST;
+
+DFFSRQ FF_CORE (.SET(post_set),
+                .RST(post_rst),
+                .CK(CK),
+                .D(D),
+                .Q(Q)
+               );
+
+endmodule //End Of Module
+
+//-----------------------------------------------------
+// Function : A multi-functional D-type flip-flop with 
+//           - asynchronous reset 
+//             which can be switched between active-low and active high
+//-----------------------------------------------------
+module MULTI_MODE_DFFRQ (
+  input RST, // Reset input
+  input CK, // Clock Input
+  input D, // Data Input
+  output Q, // Q output
+  input mode // mode-selection bits: bit0 for reset polarity; bit1 for set polarity
+);
+
+wire post_reset = mode ? ~RST : RST;
+
+DFFRQ FF_CORE (.RST(post_rst),
+               .CK(CK),
+               .D(D),
+               .Q(Q)
+               );
 
 endmodule //End Of Module
 
@@ -321,14 +326,8 @@ end else begin
   q_reg <= D;
 end
 
-`ifndef ENABLE_FORMAL_VERIFICATION
-// Wire q_reg to Q
-  assign Q = q_reg;
-  assign QN = !Q;
-`else
-  assign Q = 1'bZ;
-  assign QN = !Q;
-`endif
+assign Q = q_reg;
+assign QN = !Q;
 
 endmodule //End Of Module
 
@@ -434,13 +433,7 @@ end
 assign CFGQ = CFGE ? Q : 1'b0;
 assign CFGQN = CFGE ? QN : 1'b1;
 
-`ifndef ENABLE_FORMAL_VERIFICATION
-// Wire q_reg to Q
-  assign Q = q_reg;
-  assign QN = !Q;
-`else
-  assign Q = 1'bZ;
-  assign QN = !Q;
-`endif
+assign Q = q_reg;
+assign QN = !Q;
 
 endmodule //End Of Module

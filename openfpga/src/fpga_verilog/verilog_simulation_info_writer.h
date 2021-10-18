@@ -9,6 +9,7 @@
 #include "config_protocol.h"
 #include "vpr_context.h"
 #include "io_location_map.h"
+#include "verilog_testbench_options.h"
 
 /********************************************************************
  * Function declaration
@@ -18,6 +19,7 @@
 namespace openfpga {
 
 void print_verilog_simulation_info(const std::string& ini_fname,
+                                   const VerilogTestbenchOption& options,
                                    const std::string& circuit_name,
                                    const std::string& src_dir,
                                    const AtomContext& atom_ctx,

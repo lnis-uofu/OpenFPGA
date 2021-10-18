@@ -488,7 +488,7 @@ std::string generate_verilog_port(const enum e_dump_verilog_port_type& verilog_p
      && (0 == port_info.get_lsb())
      && (1 == port_info.get_origin_port_width())) {
       size_str.clear();
-    } else if ((1 == port_info.get_width()) && (0 != port_info.get_lsb())) {
+    } else if ((1 == port_info.get_width())) {
       size_str = "[" + std::to_string(port_info.get_lsb()) + "]";
     }
     verilog_line = port_info.get_name() + size_str;
@@ -724,14 +724,20 @@ std::string generate_verilog_constant_values(const std::vector<size_t>& const_va
  * Generate a verilog port with a deposite of constant values
  ********************************************************************/
 std::string generate_verilog_port_constant_values(const BasicPort& output_port,
-                                                  const std::vector<size_t>& const_values) {
+                                                  const std::vector<size_t>& const_values,
+                                                  const bool& is_register) {
   std::string port_str;
 
   /* Must check: the port width matches */
   VTR_ASSERT( const_values.size() == output_port.get_width() );
 
   port_str = generate_verilog_port(VERILOG_PORT_CONKT, output_port);
-  port_str += " = ";
+  if (is_register) {
+    port_str += " <= ";
+  } else {
+    VTR_ASSERT_SAFE(!is_register);
+    port_str += " = ";
+  }
   port_str += generate_verilog_constant_values(const_values);
   return port_str;
 }

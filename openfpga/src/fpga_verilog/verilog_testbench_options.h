@@ -5,9 +5,19 @@
  * Include header files required by the data structure definition
  *******************************************************************/
 #include <string>
+#include "verilog_port_types.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
+
+/* Embedded bitstream code style */
+enum e_embedded_bitstream_hdl_type {
+  EMBEDDED_BITSTREAM_HDL_IVERILOG,
+  EMBEDDED_BITSTREAM_HDL_MODELSIM,
+  NUM_EMBEDDED_BITSTREAM_HDL_TYPES
+};
+
+constexpr std::array<const char*, NUM_EMBEDDED_BITSTREAM_HDL_TYPES + 1> EMBEDDED_BITSTREAM_HDL_TYPE_STRING = {{"iverilog", "modelsim", "none"}}; //String versions of default net types
 
 /********************************************************************
  * Options for Verilog Testbench generator
@@ -33,7 +43,10 @@ class VerilogTestbenchOption {
     std::string simulation_ini_path() const;
     bool explicit_port_mapping() const;
     bool include_signal_init() const;
-    bool support_icarus_simulator() const;
+    bool no_self_checking() const;
+    e_verilog_default_net_type default_net_type() const;
+    e_embedded_bitstream_hdl_type embedded_bitstream_hdl_type() const;
+    float time_unit() const;
     bool verbose_output() const;
   public: /* Public validator */
     bool validate() const;
@@ -57,7 +70,9 @@ class VerilogTestbenchOption {
     void set_print_simulation_ini(const std::string& simulation_ini_path);
     void set_explicit_port_mapping(const bool& enabled);
     void set_include_signal_init(const bool& enabled);
-    void set_support_icarus_simulator(const bool& enabled);
+    void set_default_net_type(const std::string& default_net_type);
+    void set_time_unit(const float& time_unit);
+    void set_embedded_bitstream_hdl_type(const std::string& embedded_bitstream_hdl_type);
     void set_verbose_output(const bool& enabled);
   private: /* Internal Data */
     std::string output_directory_;
@@ -70,8 +85,10 @@ class VerilogTestbenchOption {
     /* Print simulation ini is enabled only when the path is not empty */
     std::string simulation_ini_path_;
     bool explicit_port_mapping_;
-    bool support_icarus_simulator_;
     bool include_signal_init_;
+    e_verilog_default_net_type default_net_type_;
+    e_embedded_bitstream_hdl_type embedded_bitstream_hdl_type_;
+    float time_unit_;
     bool verbose_output_;
 };
 

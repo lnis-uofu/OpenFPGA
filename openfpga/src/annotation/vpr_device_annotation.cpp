@@ -220,6 +220,21 @@ int VprDeviceAnnotation::physical_pb_pin_rotate_offset(t_port* operating_pb_port
   return physical_pb_pin_rotate_offsets_.at(operating_pb_port).at(physical_pb_port);
 }
 
+int VprDeviceAnnotation::physical_pb_port_rotate_offset(t_port* operating_pb_port,
+                                                        t_port* physical_pb_port) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_port*, std::map<t_port*, int>>::const_iterator it = physical_pb_port_rotate_offsets_.find(operating_pb_port);
+  if (it == physical_pb_port_rotate_offsets_.end()) {
+    /* Default value is 0 */
+    return 0;
+  }
+  if (0 == physical_pb_port_rotate_offsets_.at(operating_pb_port).count(physical_pb_port)) {
+    /* Default value is 0 */
+    return 0;
+  }
+  return physical_pb_port_rotate_offsets_.at(operating_pb_port).at(physical_pb_port);
+}
+
 int VprDeviceAnnotation::physical_pb_pin_offset(t_port* operating_pb_port,
                                                 t_port* physical_pb_port) const {
   /* Ensure that the pb_type is in the list */
@@ -233,6 +248,21 @@ int VprDeviceAnnotation::physical_pb_pin_offset(t_port* operating_pb_port,
     return 0;
   }
   return physical_pb_pin_offsets_.at(operating_pb_port).at(physical_pb_port);
+}
+
+int VprDeviceAnnotation::physical_pb_port_offset(t_port* operating_pb_port,
+                                                t_port* physical_pb_port) const {
+  /* Ensure that the pb_type is in the list */
+  std::map<t_port*, std::map<t_port*, int>>::const_iterator it = physical_pb_port_offsets_.find(operating_pb_port);
+  if (it == physical_pb_port_offsets_.end()) {
+    /* Default value is 0 */
+    return 0;
+  }
+  if (0 == physical_pb_port_offsets_.at(operating_pb_port).count(physical_pb_port)) {
+    /* Default value is 0 */
+    return 0;
+  }
+  return physical_pb_port_offsets_.at(operating_pb_port).at(physical_pb_port);
 }
 
 t_pb_graph_pin* VprDeviceAnnotation::physical_pb_graph_pin(const t_pb_graph_pin* pb_graph_pin) const {
@@ -276,6 +306,46 @@ LbRRGraph VprDeviceAnnotation::physical_lb_rr_graph(t_pb_graph_node* pb_graph_he
     return LbRRGraph();
   }
   return physical_lb_rr_graphs_.at(pb_graph_head);
+}
+
+BasicPort VprDeviceAnnotation::physical_tile_pin_port_info(t_physical_tile_type_ptr physical_tile,
+                                                           const int& pin_index) const {
+  /* Try to find the physical tile in the fast look-up */
+  auto physical_tile_search_result = physical_tile_pin2port_info_map_.find(physical_tile);
+  if (physical_tile_search_result == physical_tile_pin2port_info_map_.end()) {
+    /* Not found. Return an invalid port */
+    return BasicPort();
+  }
+
+  /* Try to find the physical tile port info with pin index */
+  auto pin_search_result = physical_tile_search_result->second.find(pin_index);
+  if (pin_search_result == physical_tile_search_result->second.end()) {
+    /* Not found. Return an invalid port */
+    return BasicPort();
+  }
+  
+  /* Reach here, we should find a port. Return the port information */
+  return pin_search_result->second;
+}
+
+int VprDeviceAnnotation::physical_tile_pin_subtile_index(t_physical_tile_type_ptr physical_tile,
+                                                         const int& pin_index) const {
+  /* Try to find the physical tile in the fast look-up */
+  auto physical_tile_search_result = physical_tile_pin_subtile_indices_.find(physical_tile);
+  if (physical_tile_search_result == physical_tile_pin_subtile_indices_.end()) {
+    /* Not found. Return an invalid index */
+    return -1;
+  }
+
+  /* Try to find the physical tile port info with pin index */
+  auto pin_search_result = physical_tile_search_result->second.find(pin_index);
+  if (pin_search_result == physical_tile_search_result->second.end()) {
+    /* Not found. Return an invalid index */
+    return -1;
+  }
+  
+  /* Reach here, we should find a port. Return the port information */
+  return pin_search_result->second;
 }
 
 /************************************************************************
@@ -438,6 +508,28 @@ void VprDeviceAnnotation::add_physical_pb_pin_initial_offset(t_port* operating_p
   physical_pb_pin_initial_offsets_[operating_pb_port][physical_pb_port] = offset;
 }
 
+void VprDeviceAnnotation::add_physical_pb_port_rotate_offset(t_port* operating_pb_port,
+                                                             t_port* physical_pb_port,
+                                                             const int& offset) {
+  /* Warn any override attempt */
+  std::map<t_port*, std::map<t_port*, int>>::const_iterator it = physical_pb_port_rotate_offsets_.find(operating_pb_port);
+  if ( (it != physical_pb_port_rotate_offsets_.end())
+    && (0 < physical_pb_port_rotate_offsets_[operating_pb_port].count(physical_pb_port)) ) {
+    VTR_LOG_WARN("Override the annotation between operating pb_port '%s' and it physical pb_port '%s' port rotate offset '%d'!\n",
+                 operating_pb_port->name, offset);
+  }
+
+  physical_pb_port_rotate_offsets_[operating_pb_port][physical_pb_port] = offset;
+  /* We initialize the accumulated offset to 0 */
+  physical_pb_port_offsets_[operating_pb_port][physical_pb_port] = 0;
+}
+
+
+void VprDeviceAnnotation::accumulate_physical_pb_port_rotate_offset(t_port* operating_pb_port,
+                                                                    t_port* physical_pb_port) {
+  physical_pb_port_offsets_[operating_pb_port][physical_pb_port] += physical_pb_port_rotate_offsets_[operating_pb_port][physical_pb_port];
+}
+
 void VprDeviceAnnotation::add_physical_pb_pin_rotate_offset(t_port* operating_pb_port,
                                                             t_port* physical_pb_port,
                                                             const int& offset) {
@@ -531,6 +623,18 @@ void VprDeviceAnnotation::add_physical_lb_rr_graph(t_pb_graph_node* pb_graph_hea
   }
 
   physical_lb_rr_graphs_[pb_graph_head] = lb_rr_graph;
+}
+
+void VprDeviceAnnotation::add_physical_tile_pin2port_info_pair(t_physical_tile_type_ptr physical_tile,
+                                                               const int& pin_index,
+                                                               const BasicPort& port) {
+  physical_tile_pin2port_info_map_[physical_tile][pin_index] = port;
+}
+
+void VprDeviceAnnotation::add_physical_tile_pin_subtile_index(t_physical_tile_type_ptr physical_tile,
+                                                              const int& pin_index,
+                                                              const int& subtile_index) {
+  physical_tile_pin_subtile_indices_[physical_tile][pin_index] = subtile_index;
 }
 
 } /* End namespace openfpga*/

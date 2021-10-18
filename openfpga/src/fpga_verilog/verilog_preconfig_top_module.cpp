@@ -135,16 +135,10 @@ int print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
         BasicPort module_clock_pin(module_global_port.get_name(), module_global_port.pins()[pin_id], module_global_port.pins()[pin_id]);
 
         /* If the clock port name is in the pin constraints, we should wire it to the constrained pin */
-        std::string constrained_net_name;
-        for (const PinConstraintId& pin_constraint : pin_constraints.pin_constraints()) {
-          if (module_clock_pin == pin_constraints.pin(pin_constraint)) {
-            constrained_net_name = pin_constraints.net(pin_constraint); 
-            break;
-          }
-        }
+        std::string constrained_net_name = pin_constraints.pin_net(module_clock_pin);
 
         /* If constrained to an open net or there is no clock in the benchmark, we assign it to a default value */
-        if ( (std::string(PIN_CONSTRAINT_OPEN_NET) == constrained_net_name)
+        if ( (true == pin_constraints.unmapped_net(constrained_net_name))
           || (true == benchmark_clock_port_names.empty())) {
           std::vector<size_t> default_values(1, fabric_global_ports.global_port_default_value(global_port_id));
           print_verilog_wire_constant_values(fp, module_clock_pin, default_values);
@@ -152,7 +146,7 @@ int print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
         }
 
         std::string clock_name_to_connect;
-        if (!constrained_net_name.empty()) {
+        if (!pin_constraints.unconstrained_net(constrained_net_name)) {
           clock_name_to_connect = constrained_net_name;
         } else {
           /* Otherwise, we must have a clear one-to-one clock net corresponding!!! */
@@ -173,8 +167,27 @@ int print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
     }
 
     /* For other ports, give an default value */
-    std::vector<size_t> default_values(module_global_port.get_width(), fabric_global_ports.global_port_default_value(global_port_id));
-    print_verilog_wire_constant_values(fp, module_global_port, default_values);
+    for (size_t pin_id = 0; pin_id < module_global_port.pins().size(); ++pin_id) {
+      BasicPort module_global_pin(module_global_port.get_name(),
+                                  module_global_port.pins()[pin_id],
+                                  module_global_port.pins()[pin_id]);
+
+      /* If the global port name is in the pin constraints, we should wire it to the constrained pin */
+      std::string constrained_net_name = pin_constraints.pin_net(module_global_pin);
+
+      /* - If constrained to a given net in the benchmark, we connect the global pin to the net
+       * - If constrained to an open net in the benchmark, we assign it to a default value 
+       */
+      if ( (false == pin_constraints.unconstrained_net(constrained_net_name))
+        && (false == pin_constraints.unmapped_net(constrained_net_name))) {
+        BasicPort benchmark_pin(constrained_net_name + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), 1);
+        print_verilog_wire_connection(fp, module_global_pin, benchmark_pin, false);
+      } else {
+        VTR_ASSERT_SAFE(std::string(PIN_CONSTRAINT_OPEN_NET) == constrained_net_name);
+        std::vector<size_t> default_values(module_global_pin.get_width(), fabric_global_ports.global_port_default_value(global_port_id));
+        print_verilog_wire_constant_values(fp, module_global_pin, default_values);
+      }
+    }
   }
 
   print_verilog_comment(fp, std::string("----- End Connect Global ports of FPGA top module -----"));
@@ -191,15 +204,17 @@ int print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
  * while uses 'force' syntax to impost the bitstream at mem_inv port
  *******************************************************************/
 static 
-void print_verilog_preconfig_top_module_assign_bitstream(std::fstream &fp,
-                                                         const ModuleManager &module_manager,
-                                                         const ModuleId &top_module,
-                                                         const BitstreamManager &bitstream_manager,
-                                                         const bool& output_datab_bits) {
+void print_verilog_preconfig_top_module_force_bitstream(std::fstream &fp,
+                                                        const ModuleManager &module_manager,
+                                                        const ModuleId &top_module,
+                                                        const BitstreamManager &bitstream_manager,
+                                                        const bool& output_datab_bits) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
   print_verilog_comment(fp, std::string("----- Begin assign bitstream to configuration memories -----"));
+
+  fp << "initial begin" << std::endl;
 
   for (const ConfigBlockId &config_block_id : bitstream_manager.blocks()) {
     /* We only cares blocks with configuration bits */
@@ -229,31 +244,9 @@ void print_verilog_preconfig_top_module_assign_bitstream(std::fstream &fp,
     for (const ConfigBitId config_bit : bitstream_manager.block_bits(config_block_id)) {
       config_data_values.push_back(bitstream_manager.bit_value(config_bit));
     }
-    print_verilog_wire_constant_values(fp, config_data_port, config_data_values);
-  }
+    print_verilog_force_wire_constant_values(fp, config_data_port, config_data_values);
 
-  if (true == output_datab_bits) {
-    fp << "initial begin" << std::endl;
-
-    for (const ConfigBlockId &config_block_id : bitstream_manager.blocks()) {
-      /* We only cares blocks with configuration bits */
-      if (0 == bitstream_manager.block_bits(config_block_id).size()) {
-        continue;
-      }
-      /* Build the hierarchical path of the configuration bit in modules */
-      std::vector<ConfigBlockId> block_hierarchy = find_bitstream_manager_block_hierarchy(bitstream_manager, config_block_id);
-      /* Drop the first block, which is the top module, it should be replaced by the instance name here */
-      /* Ensure that this is the module we want to drop! */
-      VTR_ASSERT(0 == module_manager.module_name(top_module).compare(bitstream_manager.block_name(block_hierarchy[0])));
-      block_hierarchy.erase(block_hierarchy.begin());
-      /* Build the full hierarchy path */
-      std::string bit_hierarchy_path(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME);
-      for (const ConfigBlockId &temp_block : block_hierarchy) {
-        bit_hierarchy_path += std::string(".");
-        bit_hierarchy_path += bitstream_manager.block_name(temp_block);
-      }
-      bit_hierarchy_path += std::string(".");
-
+    if (true == output_datab_bits) {
       /* Find the bit index in the parent block */
       BasicPort config_datab_port(bit_hierarchy_path + generate_configurable_memory_inverted_data_out_name(),
                                   bitstream_manager.block_bits(config_block_id).size());
@@ -264,9 +257,9 @@ void print_verilog_preconfig_top_module_assign_bitstream(std::fstream &fp,
       }
       print_verilog_force_wire_constant_values(fp, config_datab_port, config_datab_values);
     }
-
-    fp << "end" << std::endl;
   }
+
+  fp << "end" << std::endl;
 
   print_verilog_comment(fp, std::string("----- End assign bitstream to configuration memories -----"));
 }
@@ -351,7 +344,8 @@ void print_verilog_preconfig_top_module_load_bitstream(std::fstream &fp,
                                                        const ModuleId &top_module,
                                                        const CircuitLibrary& circuit_lib,
                                                        const CircuitModelId& mem_model,
-                                                       const BitstreamManager &bitstream_manager) {
+                                                       const BitstreamManager &bitstream_manager,
+                                                       const e_embedded_bitstream_hdl_type& embedded_bitstream_hdl_type) {
 
   /* Skip the datab port if there is only 1 output port in memory model
    * Currently, it assumes that the data output port is always defined while datab is optional
@@ -366,21 +360,17 @@ void print_verilog_preconfig_top_module_load_bitstream(std::fstream &fp,
 
   print_verilog_comment(fp, std::string("----- Begin load bitstream to configuration memories -----"));
 
-  print_verilog_preprocessing_flag(fp, std::string(ICARUS_SIMULATOR_FLAG));
-
   /* Use assign syntax for Icarus simulator */
-  print_verilog_preconfig_top_module_assign_bitstream(fp, module_manager, top_module,
-                                                      bitstream_manager,
-                                                      output_datab_bits);
-
-  fp << "`else" << std::endl;
-
-  /* Use assign syntax for Icarus simulator */
-  print_verilog_preconfig_top_module_deposit_bitstream(fp, module_manager, top_module,
+  if (EMBEDDED_BITSTREAM_HDL_IVERILOG == embedded_bitstream_hdl_type) {
+    print_verilog_preconfig_top_module_force_bitstream(fp, module_manager, top_module,
                                                        bitstream_manager,
                                                        output_datab_bits);
-
-  print_verilog_endif(fp);
+  /* Use deposit syntax for other simulators */
+  } else if (EMBEDDED_BITSTREAM_HDL_MODELSIM == embedded_bitstream_hdl_type) {
+    print_verilog_preconfig_top_module_deposit_bitstream(fp, module_manager, top_module,
+                                                         bitstream_manager,
+                                                         output_datab_bits);
+  }
 
   print_verilog_comment(fp, std::string("----- End load bitstream to configuration memories -----"));
 }
@@ -429,7 +419,7 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
                                        const VprNetlistAnnotation &netlist_annotation,
                                        const std::string &circuit_name,
                                        const std::string &verilog_fname,
-                                       const bool &explicit_port_mapping) {
+                                       const VerilogTestbenchOption& options) {
   std::string timer_message = std::string("Write pre-configured FPGA top-level Verilog netlist for design '") + circuit_name + std::string("'");
 
   int status = CMD_EXEC_SUCCESS;
@@ -449,7 +439,7 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
   print_verilog_file_header(fp, title);
 
   print_verilog_default_net_type_declaration(fp,
-                                             VERILOG_DEFAULT_NET_TYPE_NONE);
+                                             options.default_net_type());
 
   /* Print module declaration and ports */
   print_verilog_preconfig_top_module_ports(fp, circuit_name, atom_ctx, netlist_annotation);
@@ -464,7 +454,7 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
   /* Instanciate FPGA top-level module */
   print_verilog_testbench_fpga_instance(fp, module_manager, top_module,
                                         std::string(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME),
-                                        explicit_port_mapping);
+                                        options.explicit_port_mapping());
 
   /* Find clock ports in benchmark */
   std::vector<std::string> benchmark_clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
@@ -489,17 +479,23 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
   CircuitModelId sram_model = config_protocol.memory_model();  
   VTR_ASSERT(true == circuit_lib.valid_model_id(sram_model));
 
-  /* Assign FPGA internal SRAM/Memory ports to bitstream values */
+  /* Assign FPGA internal SRAM/Memory ports to bitstream values, only output when needed */
   print_verilog_preconfig_top_module_load_bitstream(fp, module_manager, top_module,
                                                     circuit_lib, sram_model, 
-                                                    bitstream_manager);
+                                                    bitstream_manager,
+                                                    options.embedded_bitstream_hdl_type());
 
-  /* Add signal initialization */
-  print_verilog_testbench_signal_initialization(fp,
-                                                std::string(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME),
-                                                circuit_lib,
-                                                module_manager,
-                                                top_module);
+  /* Add signal initialization: 
+   * Bypass writing codes to files due to the autogenerated codes are very large.
+   */
+  if (true == options.include_signal_init()) {
+    print_verilog_testbench_signal_initialization(fp,
+                                                  std::string(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME),
+                                                  circuit_lib,
+                                                  module_manager,
+                                                  top_module,
+                                                  false);
+  }
 
   /* Testbench ends*/
   print_verilog_module_end(fp, std::string(circuit_name) + std::string(FORMAL_VERIFICATION_TOP_MODULE_POSTFIX));

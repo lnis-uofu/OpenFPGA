@@ -42,27 +42,15 @@ build_architecture_bitstream --verbose --write_file fabric_indepenent_bitstream.
 # Build fabric-dependent bitstream
 build_fabric_bitstream --verbose
 
-# Write the Verilog netlist for FPGA fabric
-#  - Enable the use of explicit port mapping in Verilog netlist
-write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --print_user_defined_template --verbose
-
-# Write the Verilog testbench for FPGA fabric
-#  - We suggest the use of same output directory as fabric Verilog netlists
-#  - Must specify the reference benchmark file if you want to output any testbenches
-#  - Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
-#  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
-#  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
-write_verilog_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --print_top_testbench --print_preconfig_top_testbench --print_simulation_ini ./SimulationDeck/simulation_deck.ini --include_signal_init --support_icarus_simulator --explicit_port_mapping
-
 # Write the SDC files for PnR backend
 #  - Turn on every options here
-write_pnr_sdc --time_unit ps --file ./SDC
+write_pnr_sdc --time_unit ${OPENFPGA_SDC_TIME_UNIT} --file ./SDC
 
 # Write SDC to disable timing for configure ports
 write_sdc_disable_timing_configure_ports --file ./SDC/disable_configure_ports.sdc
 
 # Write the SDC to run timing analysis for a mapped FPGA fabric
-write_analysis_sdc --time_unit ps --file ./SDC_analysis
+write_analysis_sdc --time_unit ${OPENFPGA_SDC_TIME_UNIT} --file ./SDC_analysis
 
 # Finish and exit OpenFPGA
 exit
