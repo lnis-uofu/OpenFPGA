@@ -1,6 +1,12 @@
 name: Build docker CI images
 on:
   - workflow_dispatch
+
+# Environment variables
+env:
+  DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
+  REPO_OWNER: ${{ github.repository_owner }}
+
 jobs:
   base_images:
     name: Push Docker images
@@ -8,6 +14,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Check for source code changes
+        id: changes
+        run: |
+          if [[ -n "${DOCKER_REPO}" ]]; then
+            echo "name=docker_repo::$DOCKER_REPO"
+            echo "::set-output name=docker_repo::$DOCKER_REPO"
+          else
+            echo "name=docker_repo::$REPO_OWNER"
+            echo "::set-output name=docker_repo::$REPO_OWNER"
+          fi
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -16,7 +32,7 @@ jobs:
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          username: ${{ needs.change_detect.outputs.docker_repo }}
           password: ${{ secrets.CR_PAT }}
       - name: Build base
         uses: docker/build-push-action@v2
@@ -24,14 +40,14 @@ jobs:
           context: .
           file: ./docker/Dockerfile.base
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/openfpga-build-base:latest
+          tags: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-base:latest
       - name: Build environment image
         uses: docker/build-push-action@v2
         with:
           context: .
           file: ./docker/Dockerfile.env
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/openfpga-env:latest
+          tags: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-env:latest
   compiler_images:
     name: Build ${{ matrix.compiler }} compiler image
     needs: base_images
@@ -57,7 +73,7 @@ jobs:
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          username: ${{ needs.change_detect.outputs.docker_repo }}
           password: ${{ secrets.CR_PAT }}
       - name: Build ${{ matrix.compiler }} image
         uses: docker/build-push-action@v2
@@ -65,4 +81,4 @@ jobs:
           context: .
           file: ./docker/Dockerfile.${{ matrix.compiler }}
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/openfpga-build-${{ matrix.compiler }}:latest
+          tags: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.compiler }}:latest
