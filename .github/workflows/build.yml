@@ -50,7 +50,7 @@ jobs:
     if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
     name: ${{ matrix.config.name }}
     runs-on: ubuntu-18.04
-    container: ghcr.io/lnis-uofu/openfpga-build-${{ matrix.config.cc}}
+    container: ghcr.io/${{ github.repository_owner }}/openfpga-build-${{ matrix.config.cc}}
     # Branch on different OS and settings
     strategy:
       fail-fast: false
@@ -194,12 +194,12 @@ jobs:
           file: ./docker/Dockerfile.master
           push: ${{ github.ref == 'refs/heads/master' || needs.change_detect.outputs.force_upload }}
           tags: |
-            ghcr.io/lnis-uofu/openfpga-master:latest
-            ghcr.io/lnis-uofu/openfpga-master:${{ needs.change_detect.outputs.sha_short }}
+            ghcr.io/${{github.repository_owner}}/openfpga-master:latest
+            ghcr.io/${{github.repository_owner}}/openfpga-master:${{ needs.change_detect.outputs.sha_short }}
   linux_regression_tests:
     name: linux_regression_tests
     runs-on: ubuntu-18.04
-    container: ghcr.io/lnis-uofu/openfpga-env
+    container: ghcr.io/${{github.repository_owner}}/openfpga-env
     needs: linux_build
     strategy:
       fail-fast: false
@@ -248,7 +248,7 @@ jobs:
     if: ${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
     name: docker_regression_tests
     runs-on: ubuntu-18.04
-    container: ghcr.io/lnis-uofu/openfpga-master:latest
+    container: ghcr.io/${{github.repository_owner}}/openfpga-master:latest
     strategy:
       fail-fast: false
       matrix:

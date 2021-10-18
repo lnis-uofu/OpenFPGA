@@ -24,14 +24,14 @@ jobs:
           context: .
           file: ./docker/Dockerfile.base
           push: true
-          tags: ghcr.io/lnis-uofu/openfpga-build-base:latest
+          tags: ghcr.io/${{ github.repository_owner }}/openfpga-build-base:latest
       - name: Build environment image
         uses: docker/build-push-action@v2
         with:
           context: .
           file: ./docker/Dockerfile.env
           push: true
-          tags: ghcr.io/lnis-uofu/openfpga-env:latest
+          tags: ghcr.io/${{ github.repository_owner }}/openfpga-env:latest
   compiler_images:
     name: Build ${{ matrix.compiler }} compiler image
     needs: base_images
@@ -65,4 +65,4 @@ jobs:
           context: .
           file: ./docker/Dockerfile.${{ matrix.compiler }}
           push: true
-          tags: ghcr.io/lnis-uofu/openfpga-build-${{ matrix.compiler }}:latest
+          tags: ghcr.io/${{ github.repository_owner }}/openfpga-build-${{ matrix.compiler }}:latest
