@@ -304,7 +304,7 @@ def check_required_file():
     }
     for filename, filepath in files_dict.items():
         if not os.path.isfile(filepath):
-            clean_up_and_exit("Not able to locate deafult file " + filename)
+            clean_up_and_exit("Not able to locate default file " + filename)
 
 
 def read_script_config():
@@ -363,19 +363,19 @@ def validate_command_line_arguments():
             dependent = dependent.split(",")
             for eachdep in dependent:
                 if not any([getattr(args, i, 0) for i in eachdep.split("|")]):
-                    clean_up_and_exit("'%s' argument depends on (%s) argumets" %
+                    clean_up_and_exit("'%s' argument depends on (%s) arguments" %
                                       (eacharg, ", ".join(dependent).replace("|", " or ")))
 
     # Check if architecrue files exists
     args.arch_file = os.path.abspath(args.arch_file)
     if not os.path.isfile(args.arch_file):
         clean_up_and_exit(
-            "VPR architecture file not found. -%s",
+            "VPR architecture file not found. -%s"%
             args.arch_file)
     args.openfpga_arch_file = os.path.abspath(args.openfpga_arch_file)
     if not os.path.isfile(args.openfpga_arch_file):
         clean_up_and_exit(
-            "OpenFPGA architecture file not found. -%s",
+            "OpenFPGA architecture file not found. -%s"% 
             args.openfpga_arch_file)
 
     # Filter provided benchmark files
@@ -389,14 +389,14 @@ def validate_command_line_arguments():
         for everyfile in glob.glob(args.benchmark_files[index]):
             if not os.path.isfile(everyfile):
                 clean_up_and_exit(
-                    "Failed to copy benchmark file-%s", args.arch_file)
+                    "Failed to copy benchmark file -%s" % args.arch_file)
 
     # Filter provided powertech files
     if args.power_tech:
         args.power_tech = os.path.abspath(args.power_tech)
         if not os.path.isfile(args.power_tech):
             clean_up_and_exit(
-                "Power Tech file not found. -%s", args.power_tech)
+                "Power Tech file not found. -%s" % args.power_tech)
 
     # Expand run directory to absolute path
     args.run_dir = os.path.abspath(args.run_dir)
@@ -805,7 +805,8 @@ def filter_openfpga_output(vpr_output):
 
 def filter_failed_process_output(vpr_output):
     for line in vpr_output.split("\n"):
-        if "error" in line.lower():
+        elements_to_log = ["error", "what()"]
+        if any(match in line.lower() for match in elements_to_log):
             logger.error("-->>" + line)
 
 
