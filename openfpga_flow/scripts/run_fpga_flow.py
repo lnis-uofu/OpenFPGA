@@ -347,7 +347,7 @@ def validate_command_line_arguments():
     - Activity file
     - Base verilog file
     '''
-    logger.info("Validating commnad line arguments")
+    logger.info("Validating command line arguments")
 
     if args.debug:
         logger.info("Setting loggger in debug mode")
