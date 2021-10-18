@@ -47,8 +47,8 @@ jobs:
             echo "::set-output name=status_code::1"
           fi
           if [[ -n "${DOCKER_REPO}" ]]; then
-            echo "name=docker_repo::$DOCKER_REPO"
-            echo "::set-output name=docker_repo::$DOCKER_REPO"
+            echo "name=docker_repo::$REPO_OWNER"
+            echo "::set-output name=docker_repo::$REPO_OWNER"
           else
             echo "name=docker_repo::lnis-uofu"
             echo "::set-output name=docker_repo::lnis-uofu"
@@ -190,6 +190,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
+        # Temp change remove this
         if: ${{ env.DOCKER_REPO }}
         uses: docker/setup-buildx-action@v1
       - name: Login to GitHub Container Registry
