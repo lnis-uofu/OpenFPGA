@@ -11,6 +11,7 @@ jobs:
   base_images:
     name: Push Docker images
     runs-on: ubuntu-latest
+    if: ${{ secrets.DOCKER_REPO }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -18,8 +19,8 @@ jobs:
         id: changes
         run: |
           if [[ -n "${DOCKER_REPO}" ]]; then
-            echo "name=docker_repo::$DOCKER_REPO"
-            echo "::set-output name=docker_repo::$DOCKER_REPO"
+            echo "name=docker_repo::$REPO_OWNER"
+            echo "::set-output name=docker_repo::$REPO_OWNER"
           else
             echo "name=docker_repo::lnis-uofu"
             echo "::set-output name=docker_repo::lnis-uofu"
