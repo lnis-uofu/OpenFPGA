@@ -1,4 +1,4 @@
-me: Create Pull Request for Upstream Changes
+name: Create Pull Request for Upstream Changes
 on:
   push:
     branches:
