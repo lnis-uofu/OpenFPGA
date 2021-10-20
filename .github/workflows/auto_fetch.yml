@@ -1,0 +1,25 @@
+name: Create Pull Request for Upstream Changes
+on:
+  push:
+    branches:
+      - update_from_upstream  
+jobs:
+  pull-request:
+    runs-on: ubuntu-latest
+    env:
+      BRANCH_UPSTREAM: update_from_upstream
+    steps:
+    - uses: actions/checkout@v2
+    - name: pull-request
+      uses: repo-sync/pull-request@v2
+      with:
+        source_branch: ${{env.BRANCH_UPSTREAM}}           # name of branch for PR
+        destination_branch: "master"                      # name of branch on which PR go
+        pr_title: "Pulling ${{ github.ref }} into master" # Title of pull request
+        pr_body: ":crown: *An automated PR*"              # Full markdown support, requires pr_title
+        pr_reviewer: "tangxifan"                          # Comma-separated list (no spaces)
+        pr_assignee: "nadeemyaseen-rs,mahmoodulhassan-rs"                    # Comma-separated list (no spaces)
+        pr_label: "auto-pr"                               # Comma-separated list (no spaces)
+        pr_allow_empty: true                              # Creates pull request even if there are no changes
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+
