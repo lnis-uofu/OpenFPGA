@@ -13,6 +13,8 @@ env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
   MAKEFLAGS: "-j8"
+  DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
+  REPO_OWNER: ${{ github.repository_owner }}
 
 # Multiple job to tests
 jobs:
@@ -24,6 +26,7 @@ jobs:
       source_modified: ${{ steps.changes.outputs.status_code == '1' }}
       force_upload: false
       sha_short: ${{ steps.changes.outputs.sha_short }}
+      docker_repo: ${{ steps.changes.outputs.docker_repo }}
     steps:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
@@ -43,14 +46,22 @@ jobs:
             echo "Current brnach is master forcing source_modified"
             echo "::set-output name=status_code::1"
           fi
+          if [[ -n "${DOCKER_REPO}" ]]; then
+            echo "name=docker_repo::$REPO_OWNER"
+            echo "::set-output name=docker_repo::$REPO_OWNER"
+          else
+            echo "name=docker_repo::lnis-uofu"
+            echo "::set-output name=docker_repo::lnis-uofu"
+          fi
           echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
   # Test the compilation compatibility
   linux_build:
     needs: change_detect
     if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
     name: ${{ matrix.config.name }}
     runs-on: ubuntu-18.04
-    container: ghcr.io/lnis-uofu/openfpga-build-${{ matrix.config.cc}}
+    container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.config.cc}}
     # Branch on different OS and settings
     strategy:
       fail-fast: false
@@ -181,7 +192,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Login to GitHub Container Registry
-        if: ${{ (github.ref == 'refs/heads/master') || (needs.change_detect.outputs.force_upload == true) }}
+        if: ${{ (github.ref == 'refs/heads/master' && (env.DOCKER_REPO)) || (needs.change_detect.outputs.force_upload == true) }}
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
@@ -192,15 +203,15 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile.master
-          push: ${{ github.ref == 'refs/heads/master' || needs.change_detect.outputs.force_upload }}
+          push: ${{ (github.ref == 'refs/heads/master' && (env.DOCKER_REPO)) || needs.change_detect.outputs.force_upload }}
           tags: |
-            ghcr.io/lnis-uofu/openfpga-master:latest
-            ghcr.io/lnis-uofu/openfpga-master:${{ needs.change_detect.outputs.sha_short }}
+            ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-master:latest
+            ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-master:${{ needs.change_detect.outputs.sha_short }}
   linux_regression_tests:
     name: linux_regression_tests
     runs-on: ubuntu-18.04
-    container: ghcr.io/lnis-uofu/openfpga-env
-    needs: linux_build
+    needs: [linux_build, change_detect]
+    container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-env
     strategy:
       fail-fast: false
       matrix:
@@ -248,7 +259,7 @@ jobs:
     if: ${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
     name: docker_regression_tests
     runs-on: ubuntu-18.04
-    container: ghcr.io/lnis-uofu/openfpga-master:latest
+    container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-master:latest
     strategy:
       fail-fast: false
       matrix:
