@@ -11,7 +11,7 @@ jobs:
   base_images:
     name: Push Docker images
     runs-on: ubuntu-latest
-    if: ${{ secrets.DOCKER_REPO }}
+    if: ${{ env.DOCKER_REPO }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
