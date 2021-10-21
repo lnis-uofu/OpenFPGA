@@ -185,6 +185,8 @@ texinfo_documents = [
 ]
 
 
+bibtex_bibfiles = ["z_reference.bib"]
+
 # -- Options for Epub output -------------------------------------------------
 
 # Bibliographic Dublin Core info.

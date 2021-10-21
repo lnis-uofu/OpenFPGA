@@ -106,3 +106,15 @@ Release Docker Images
     This is a bleeding-edge release from the current master branch of OpenFPGA.
     It is updated automatically whenever there is activity on the master branch.
     Due to high development activity, we recommend the user to use the bleeding-edge version to get access to all new features and report an issue in case there are any bugs.
+
+
+CI after cloning repository
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+If you clone the repository the CI setup will still function, except the based images are  still pullled from "lnis-uofu" repsitory and the master branch
+of cloned repo will not push final docker image to any repository .
+
+**In case you want to host your own copies of OpenFPGA base images** and final release create a githib secret variable with name  ``DOCKER_REPO`` and set it to ``true``. This will make ci script to download base images from your own repo pakcages, and upload final realse to the same.
+
+**If you don not want to use docker images based regression test** and like to compile all the bianries for each CI run. You can set ``IGNORE_DOCKER_TEST`` secrete variable to ``true``.
+
+.. note:: Once you add ``DOCKER_REPO`` variable, you need to genrerate base images. To do this trigger mannual workflow ``Build docker CI images``
