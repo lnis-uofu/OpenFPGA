@@ -54,8 +54,6 @@ chtype -set $mul t:$__soft_mul# Extract arithmetic functions
 #########################
 # Run coarse synthesis
 #########################
-# Run a tech map with default library
-techmap
 alumacc
 share
 opt
@@ -65,6 +63,11 @@ opt -fast
 # Optimize any memory cells by merging share-able ports and collecting all the ports belonging to memorcy cells  
 memory -nomap
 opt_clean
+
+#########################
+# Map $alu to carry chain
+#########################
+techmap -map ${YOSYS_ADDER_MAP_VERILOG}
 
 #########################
 # Map logics to BRAMs
@@ -91,6 +94,8 @@ opt_merge
 opt_rmdff
 opt_clean
 opt
+
+stat
 
 #########################
 # Map LUTs

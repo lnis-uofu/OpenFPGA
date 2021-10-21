@@ -1,3 +1,12 @@
+module carry_adder (
+  input a, b, cin,
+  output sumout, cout
+);
+
+  assign {cout, sumout} = a + b + cin;
+
+endmodule
+
 //-----------------------------
 // Dual-port RAM 128x8 bit (1Kbit)
 // Core logic
