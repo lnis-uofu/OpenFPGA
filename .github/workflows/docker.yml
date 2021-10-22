@@ -8,23 +8,30 @@ env:
   REPO_OWNER: ${{ github.repository_owner }}
 
 jobs:
-  base_images:
-    name: Push Docker images
-    runs-on: ubuntu-latest
-    if: ${{ env.DOCKER_REPO }}
+  change_detect:
+    name: "Detect code changes"
+    runs-on: ubuntu-18.04
+    outputs:
+      docker_repo: ${{ steps.changes.outputs.docker_repo }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
       - name: Check for source code changes
         id: changes
         run: |
-          if [[ -n "${DOCKER_REPO}" ]]; then
-            echo "name=docker_repo::$REPO_OWNER"
-            echo "::set-output name=docker_repo::$REPO_OWNER"
-          else
-            echo "name=docker_repo::lnis-uofu"
-            echo "::set-output name=docker_repo::lnis-uofu"
-          fi
+            if [[ -n "${DOCKER_REPO}" ]]; then
+              echo "name=docker_repo::$REPO_OWNER"
+              echo "::set-output name=docker_repo::$REPO_OWNER"
+            else
+              echo "name=docker_repo::lnis-uofu"
+              echo "::set-output name=docker_repo::lnis-uofu"
+            fi
+
+  base_images:
+    name: Push Docker images
+    needs: [change_detect]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -40,18 +47,19 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile.base
-          push: true
+          push: ${{ (env.DOCKER_REPO) && (github.ref == 'refs/heads/master')}}
           tags: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-base:latest
       - name: Build environment image
         uses: docker/build-push-action@v2
         with:
           context: .
           file: ./docker/Dockerfile.env
-          push: true
+          push: ${{ (env.DOCKER_REPO) && (github.ref == 'refs/heads/master')}}
           tags: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-env:latest
+
   compiler_images:
     name: Build ${{ matrix.compiler }} compiler image
-    needs: base_images
+    needs: [base_images, change_detect]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -81,5 +89,5 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile.${{ matrix.compiler }}
-          push: true
+          push: ${{ (env.DOCKER_REPO) && (github.ref == 'refs/heads/master')}}
           tags: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.compiler }}:latest

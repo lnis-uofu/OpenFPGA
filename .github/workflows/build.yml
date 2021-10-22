@@ -14,6 +14,8 @@ env:
   BUILD_TYPE: Release
   MAKEFLAGS: "-j8"
   DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
+  # (Boolean) Setting this value to True, will force linux tet always
+  IGNORE_DOCKER_TEST: ${{ secrets.IGNORE_DOCKER_TEST }}
   REPO_OWNER: ${{ github.repository_owner }}
 
 # Multiple job to tests
@@ -42,8 +44,8 @@ jobs:
           else
             echo "::set-output name=status_code::$?"
           fi
-          if [[ ${GITHUB_REF} == 'refs/heads/master' ]]; then
-            echo "Current brnach is master forcing source_modified"
+          if [[ (${GITHUB_REF} == 'refs/heads/master') || -n "${IGNORE_DOCKER_TEST}"  ]]; then
+            echo "Current branch is master forcing source_modified"
             echo "::set-output name=status_code::1"
           fi
           if [[ -n "${DOCKER_REPO}" ]]; then
