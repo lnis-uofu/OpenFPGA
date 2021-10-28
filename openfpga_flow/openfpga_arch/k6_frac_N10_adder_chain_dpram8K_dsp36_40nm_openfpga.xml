@@ -210,8 +210,8 @@
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <port type="input" prefix="A" lib_name="A" size="36"/>
-      <port type="input" prefix="B" lib_name="B" size="36"/>
+      <port type="input" prefix="A" lib_name="a" size="36"/>
+      <port type="input" prefix="B" lib_name="b" size="36"/>
       <port type="output" prefix="Y" lib_name="out" size="72"/>
       <!-- As a fracturable multiplier, it requires 2 configuration bits to operate in 4 different modes -->
       <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
