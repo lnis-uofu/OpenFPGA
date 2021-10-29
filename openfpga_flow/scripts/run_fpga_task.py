@@ -398,6 +398,9 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, param, task_conf):
     if task_gc.get("fpga_flow"):
         command += ["--fpga_flow", task_gc.get("fpga_flow")]
 
+    if task_gc.getboolean("verific"):
+        command += ["--verific"]
+
     if task_gc.get("run_engine") == "openfpga_shell":
         for eachKey in task_OFPGAc.keys():
             command += [f"--{eachKey}",

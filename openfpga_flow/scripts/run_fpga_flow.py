@@ -101,6 +101,8 @@ parser.add_argument('--yosys_tmpl', type=str, default=None,
                     help="Alternate yosys template, generates top_module.blif")
 parser.add_argument('--ys_rewrite_tmpl', type=str, default=None,
                     help="Alternate yosys template, to rewrite verilog netlist")
+parser.add_argument('--verific', action="store_true",
+                    help="Run yosys with verific enabled")
 parser.add_argument('--disp', action="store_true",
                     help="Open display while running VPR")
 parser.add_argument('--debug', action="store_true",
@@ -465,11 +467,7 @@ def clean_up_and_exit(msg, clean=False):
     logger.error("Exiting . . . . . .")
     exit(1)
 
-
-def run_yosys_with_abc():
-    """
-    Execute yosys with ABC and optional blackbox support
-    """
+def create_yosys_params():
     tree = ET.parse(args.arch_file)
     root = tree.getroot()
     try:
@@ -484,18 +482,105 @@ def run_yosys_with_abc():
     args.K = lut_size
     # Yosys script parameter mapping
     ys_params = script_env_vars["PATH"]
-    ys_params["READ_VERILOG_FILE"] = " \n".join([
+
+    for indx in range(0, len(OpenFPGAArgs), 2):
+        tmpVar = OpenFPGAArgs[indx][2:].upper()
+        ys_params[tmpVar] = OpenFPGAArgs[indx+1]
+
+    if not args.verific:
+        ys_params["READ_VERILOG_FILE"] = " \n".join([
             "read_verilog -nolatches " + shlex.quote(eachfile)
             for eachfile in args.benchmark_files])
+    else:
+        if "ADD_INCLUDE_DIR" not in ys_params:
+            ys_params["ADD_INCLUDE_DIR"] = ""
+        if "ADD_LIBRARY_DIR" not in ys_params:
+            ys_params["ADD_LIBRARY_DIR"] = ""
+        if "ADD_BLACKBOX_MODULES" not in ys_params:
+            ys_params["ADD_BLACKBOX_MODULES"] = ""
+        if "READ_HDL_FILE" not in ys_params:
+            ys_params["READ_HDL_FILE"] = ""
+        if "READ_LIBRARY" not in ys_params:
+            ys_params["READ_LIBRARY"] = ""
+        if "VERIFIC_VERILOG_STANDARD" not in ys_params:
+            ys_params["VERIFIC_VERILOG_STANDARD"] = "-vlog2k"
+        if "VERIFIC_SYSTEMVERILOG_STANDARD" not in ys_params:
+            ys_params["VERIFIC_SYSTEMVERILOG_STANDARD"] = "-sv"
+        if "VERIFIC_VHDL_STANDARD" not in ys_params:
+            ys_params["VERIFIC_VHDL_STANDARD"] = "-vhdl"
+        ext_to_standard_map = {
+            ".v" : ys_params["VERIFIC_VERILOG_STANDARD"],
+            ".vh" : ys_params["VERIFIC_VERILOG_STANDARD"],
+            ".verilog" : ys_params["VERIFIC_VERILOG_STANDARD"],
+            ".vlg" : ys_params["VERIFIC_VERILOG_STANDARD"],
+            ".sv" : ys_params["VERIFIC_SYSTEMVERILOG_STANDARD"],
+            ".svh" : ys_params["VERIFIC_SYSTEMVERILOG_STANDARD"],
+            ".vhd" : ys_params["VERIFIC_VHDL_STANDARD"],
+            ".vhdl" : ys_params["VERIFIC_VHDL_STANDARD"]
+            }
+        lib_files = []
+        include_dirs = set([os.path.dirname(eachfile) for eachfile in args.benchmark_files])
+        if "VERIFIC_INCLUDE_DIR" in ys_params:
+            include_dirs.update(ys_params["VERIFIC_INCLUDE_DIR"].split(","))
+        if include_dirs and not ys_params["ADD_INCLUDE_DIR"]:
+            ys_params["ADD_INCLUDE_DIR"] = "\n".join(["verific -vlog-incdir " +
+                shlex.quote(eachdir) for eachdir in include_dirs])
+        if "VERIFIC_LIBRARY_DIR" in ys_params:
+            ys_params["ADD_LIBRARY_DIR"] = "\n".join(["verific -vlog-libdir " +
+                shlex.quote(eachdir) for eachdir in ys_params["VERIFIC_LIBRARY_DIR"].split(",")])
+        try:
+            if "VERIFIC_READ_LIB_NAME" in ys_params and "VERIFIC_READ_LIB_SRC" in ys_params:
+                for name in ys_params["VERIFIC_READ_LIB_SRC"].split(","):
+                    for eachfile in args.benchmark_files:
+                        if name in eachfile:
+                            lib_files.append(eachfile)
+                            break
+                if not lib_files:
+                    clean_up_and_exit("Failed to locate verific library files")
+                filename, file_extension = os.path.splitext(lib_files[0])
+                ys_params["READ_LIBRARY"] = " ".join(["verific -work",
+                    ys_params["VERIFIC_READ_LIB_NAME"], ext_to_standard_map[file_extension]] +
+                    [shlex.quote(eachfile) for eachfile in lib_files])
+            for eachfile in args.benchmark_files:
+                if eachfile in lib_files:
+                    continue
+                filename, file_extension = os.path.splitext(eachfile)
+                ys_params["READ_HDL_FILE"] += " ".join(["verific",
+                    "-L " + ys_params["VERIFIC_SEARCH_LIB"] if "VERIFIC_SEARCH_LIB" in ys_params else "",
+                    ext_to_standard_map[file_extension],
+                    shlex.quote(eachfile), "\n"])
+        except:
+            logger.exception("Failed to determine design file type")
+            clean_up_and_exit("")
+        if "YOSYS_CELL_SIM_VERILOG" in ys_params:
+            ys_params["READ_HDL_FILE"] += " ".join(["verific",
+                ys_params["VERIFIC_VERILOG_STANDARD"],
+                ys_params["YOSYS_CELL_SIM_VERILOG"], "\n"])
+        if "YOSYS_CELL_SIM_SYSTEMVERILOG" in ys_params:
+            ys_params["READ_HDL_FILE"] += " ".join(["verific",
+                ys_params["VERIFIC_SYSTEMVERILOG_STANDARD"],
+                ys_params["YOSYS_CELL_SIM_SYSTEMVERILOG"], "\n"])
+        if "YOSYS_CELL_SIM_VHDL" in ys_params:
+            ys_params["READ_HDL_FILE"] += " ".join(["verific",
+                ys_params["VERIFIC_VHDL_STANDARD"],
+                ys_params["YOSYS_CELL_SIM_VHDL"], "\n"])
+        if "YOSYS_BLACKBOX_MODULES" in ys_params:
+            ys_params["ADD_BLACKBOX_MODULES"] = ("blackbox " +
+            " ".join(["\\" + mod for mod in ys_params["YOSYS_BLACKBOX_MODULES"].split(",")]))
+
     ys_params["TOP_MODULE"] = args.top_module
     ys_params["LUT_SIZE"] = lut_size
     ys_params["OUTPUT_BLIF"] = args.top_module+"_yosys_out.blif"
     ys_params["OUTPUT_VERILOG"] = args.top_module+"_output_verilog.v"
 
-    for indx in range(0, len(OpenFPGAArgs), 2):
-        tmpVar = OpenFPGAArgs[indx][2:].upper()
-        ys_params[tmpVar] = OpenFPGAArgs[indx+1]
-    
+    return ys_params
+
+
+def run_yosys_with_abc():
+    """
+    Execute yosys with ABC and optional blackbox support
+    """
+    ys_params = create_yosys_params()
     yosys_template = args.yosys_tmpl if args.yosys_tmpl else os.path.join(
         cad_tools["misc_dir"], "ys_tmpl_yosys_vpr_flow.ys")
     tmpl = Template(open(yosys_template, encoding='utf-8').read())
@@ -705,19 +790,7 @@ def run_rewrite_verilog():
         run_command("Yosys", "yosys_rewrite.log", command)
     else:
         # Yosys script parameter mapping
-        ys_rewrite_params = {
-            "READ_VERILOG_FILE": " \n".join([
-                "read_verilog -nolatches " + shlex.quote(eachfile)
-                for eachfile in args.benchmark_files]),
-            "TOP_MODULE": args.top_module,
-            "OUTPUT_BLIF": args.top_module+"_yosys_out.blif",
-            "INPUT_BLIF": args.top_module+".blif",
-            "OUTPUT_VERILOG": args.top_module+"_output_verilog.v"
-        }
-
-        for indx in range(0, len(OpenFPGAArgs), 2):
-            tmpVar = OpenFPGAArgs[indx][2:].upper()
-            ys_rewrite_params[tmpVar] = OpenFPGAArgs[indx + 1]
+        ys_rewrite_params = create_yosys_params()
 
         # Split a series of scripts by delim ';'
         # And execute the scripts serially
@@ -726,7 +799,7 @@ def run_rewrite_verilog():
             logger.info("Yosys rewrite iteration: " + str(iteration_idx))
             with open("yosys_rewrite_" + str(iteration_idx) + ".ys", 'w') as archfile:
                 archfile.write(tmpl.safe_substitute(ys_rewrite_params))
-            run_command("Run yosys", "yosys_rewrite_output.log",
+            run_command("Run yosys", "yosys_rewrite_output_" + str(iteration_idx) + ".log",
                     [cad_tools["yosys_path"], "yosys_rewrite_" + str(iteration_idx) + ".ys"])
 
 
