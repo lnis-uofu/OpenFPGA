@@ -1,4 +1,4 @@
 [submodule "yosys"]
 	path = yosys
 	url = https://github.com/YosysHQ/yosys.git
-	branch = yosys-0.10
+	branch = release-branch-0.10
