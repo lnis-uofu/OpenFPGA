@@ -10,6 +10,7 @@ proc
 techmap -D NO_LUT -map ${YOSYS_DFF_MAP_VERILOG}
 
 # Synthesis
+flatten
 opt_expr
 opt_clean
 check
