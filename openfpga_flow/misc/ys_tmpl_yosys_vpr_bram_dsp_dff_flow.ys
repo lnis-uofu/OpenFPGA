@@ -25,12 +25,12 @@ opt_clean
 # demote inout ports to input or output port
 # with follow-up optimizations to clean up AST
 deminout
-opt
+opt -nodffe -nosdff
 
 opt_expr
 opt_clean
 check
-opt
+opt -nodffe -nosdff
 wreduce -keepdc
 peepopt
 pmuxtree
@@ -58,10 +58,10 @@ chtype -set $mul t:$__soft_mul# Extract arithmetic functions
 techmap
 alumacc
 share
-opt
+opt -nodffe -nosdff
 fsm
 # Run a quick follow-up optimization to sweep out unused nets/signals
-opt -fast
+opt -fast -nodffe -nosdff
 # Optimize any memory cells by merging share-able ports and collecting all the ports belonging to memorcy cells  
 memory -nomap
 opt_clean
@@ -71,9 +71,9 @@ opt_clean
 #########################
 memory_bram -rules ${YOSYS_BRAM_MAP_RULES}
 techmap -map ${YOSYS_BRAM_MAP_VERILOG}
-opt -fast -mux_undef -undriven -fine
+opt -fast -mux_undef -undriven -fine -nodffe -nosdff
 memory_map
-opt -undriven -fine
+opt -undriven -fine -nodffe -nosdff
 
 #########################
 # Map flip-flops
@@ -83,9 +83,9 @@ opt_expr -mux_undef
 simplemap
 opt_expr
 opt_merge
-opt_dff
+opt_dff -nodffe -nosdff
 opt_clean
-opt
+opt -nodffe -nosdff
 
 #########################
 # Map LUTs
