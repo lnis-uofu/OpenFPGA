@@ -61,7 +61,7 @@ share
 opt -nodffe -nosdff
 fsm
 # Run a quick follow-up optimization to sweep out unused nets/signals
-opt -fast #-nodffe -nosdff
+opt -fast -nodffe -nosdff
 # Optimize any memory cells by merging share-able ports and collecting all the ports belonging to memorcy cells  
 memory -nomap
 opt_clean
