@@ -71,9 +71,9 @@ opt_clean
 #########################
 memory_bram -rules ${YOSYS_BRAM_MAP_RULES}
 techmap -map ${YOSYS_BRAM_MAP_VERILOG}
-opt -fast -mux_undef -undriven -fine
+opt -fast -mux_undef -undriven -fine -nodffe -nosdff
 memory_map
-opt -undriven -fine
+opt -undriven -fine -nodffe -nosdff
 
 #########################
 # Map flip-flops
