@@ -260,7 +260,7 @@ module MULTI_MODE_DFFSRQ (
 );
 
 wire post_set = mode[1] ? ~SET : SET;
-wire post_reset = mode[0] ? ~RST : RST;
+wire post_rst = mode[0] ? ~RST : RST;
 
 DFFSRQ FF_CORE (.SET(post_set),
                 .RST(post_rst),
@@ -284,7 +284,7 @@ module MULTI_MODE_DFFRQ (
   input mode // mode-selection bits: bit0 for reset polarity; bit1 for set polarity
 );
 
-wire post_reset = mode ? ~RST : RST;
+wire post_rst = mode ? ~RST : RST;
 
 DFFRQ FF_CORE (.RST(post_rst),
                .CK(CK),
