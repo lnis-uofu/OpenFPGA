@@ -10,7 +10,7 @@ name,mult_blocks,memory_blocks
 00_bgm_MIN_ROUTE_CHAN_WIDTH,11,0
 00_RLE_BlobMerging_MIN_ROUTE_CHAN_WIDTH,0,0
 00_paj_boundtop_hierarchy_no_mem_MIN_ROUTE_CHAN_WIDTH,0,1
-00_memset_MIN_ROUTE_CHAN_WIDTH,0,1
+00_memset_MIN_ROUTE_CHAN_WIDTH,0,0
 00_diffeq_paj_convert_MIN_ROUTE_CHAN_WIDTH,5,0
 00_diffeq_f_systemC_MIN_ROUTE_CHAN_WIDTH,5,0
 00_LU8PEEng_MIN_ROUTE_CHAN_WIDTH,8,9 
@@ -20,7 +20,7 @@ name,mult_blocks,memory_blocks
 00_mkPktMerge_MIN_ROUTE_CHAN_WIDTH,0,3
 00_mkSMAdapter4B_MIN_ROUTE_CHAN_WIDTH,0,3
 00_or1200_flat_MIN_ROUTE_CHAN_WIDTH,1,2
-00_paj_raygentop_hierarchy_no_mem_MIN_ROUTE_CHAN_WIDTH,18,1
+00_paj_raygentop_hierarchy_no_mem_MIN_ROUTE_CHAN_WIDTH,18,0
 00_sha1_MIN_ROUTE_CHAN_WIDTH,0,0
 00_sv_chip0_hierarchy_no_mem_MIN_ROUTE_CHAN_WIDTH,0,0
 00_sv_chip1_hierarchy_no_mem_MIN_ROUTE_CHAN_WIDTH,152,0
