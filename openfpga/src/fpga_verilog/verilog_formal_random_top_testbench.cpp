@@ -143,6 +143,7 @@ void print_verilog_random_testbench_fpga_instance(std::fstream& fp,
                                                   const std::string& circuit_name,
                                                   const AtomContext& atom_ctx,
                                                   const VprNetlistAnnotation& netlist_annotation,
+                                                  const PinConstraints& pin_constraints,
                                                   const bool& explicit_port_mapping) {
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -157,7 +158,7 @@ void print_verilog_random_testbench_fpga_instance(std::fstream& fp,
                                              std::vector<std::string>(),
                                              std::string(FPGA_PORT_POSTFIX),
                                              atom_ctx, netlist_annotation,
-                                             PinConstraints(),
+                                             pin_constraints,
                                              explicit_port_mapping);
 
   print_verilog_comment(fp, std::string("----- End FPGA Fabric Instanication -------"));
@@ -301,6 +302,7 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
   /* Call defined top-level module */
   print_verilog_random_testbench_fpga_instance(fp, circuit_name,
                                                atom_ctx, netlist_annotation,
+                                               pin_constraints,
                                                options.explicit_port_mapping());
 
   /* Call defined benchmark */
