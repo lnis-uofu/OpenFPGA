@@ -8,7 +8,24 @@ proc
 techmap -D NO_LUT -map +/adff2dff.v
 
 # Synthesis
-synth -top ${TOP_MODULE} -flatten
+flatten
+opt_expr
+opt_clean
+check
+opt -nodffe -nosdff
+fsm
+opt -nodffe -nosdff
+wreduce
+peepopt
+opt_clean
+opt -nodffe -nosdff
+memory -nomap
+opt_clean
+opt -fast -full -nodffe -nosdff
+memory_map
+opt -full -nodffe -nosdff
+techmap
+opt -fast -nodffe -nosdff
 clean
 
 # LUT mapping
