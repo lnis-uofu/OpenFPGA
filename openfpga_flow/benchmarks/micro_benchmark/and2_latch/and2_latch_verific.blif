@@ -1,0 +1,12 @@
+# Benchmark "and2_latch" written by ABC on Wed Oct 27 18:22:39 2021
+.model and2_latch
+.inputs a b clk 
+.outputs c d 
+
+.latch n11 d re clk 2
+
+.names a b c
+11 1
+.names c n11
+1 1
+.end
