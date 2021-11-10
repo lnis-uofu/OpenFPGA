@@ -52,9 +52,16 @@ select -clear
 chtype -set $mul t:$__soft_mul# Extract arithmetic functions
 
 #########################
-# Run coarse synthesis
+# Map $alu to carry chain
 #########################
 alumacc
+techmap -map ${YOSYS_ADDER_MAP_VERILOG}
+
+#########################
+# Run coarse synthesis
+#########################
+# Run a tech map with default library
+techmap
 share
 opt
 fsm
@@ -64,10 +71,6 @@ opt -fast
 memory -nomap
 opt_clean
 
-#########################
-# Map $alu to carry chain
-#########################
-techmap -map ${YOSYS_ADDER_MAP_VERILOG}
 
 #########################
 # Map logics to BRAMs
@@ -94,8 +97,6 @@ opt_merge
 opt_rmdff
 opt_clean
 opt
-
-stat
 
 #########################
 # Map LUTs

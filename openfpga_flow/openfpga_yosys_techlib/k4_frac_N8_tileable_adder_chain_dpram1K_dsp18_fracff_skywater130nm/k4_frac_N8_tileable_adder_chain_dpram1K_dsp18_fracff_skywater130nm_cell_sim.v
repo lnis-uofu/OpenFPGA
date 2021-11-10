@@ -1,4 +1,4 @@
-module carry_adder (
+module adder (
   input a, b, cin,
   output sumout, cout
 );
