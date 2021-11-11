@@ -52,6 +52,12 @@ select -clear
 chtype -set $mul t:$__soft_mul# Extract arithmetic functions
 
 #########################
+# Map $alu to carry chain
+#########################
+alumacc
+techmap -map ${YOSYS_ADDER_MAP_VERILOG}
+
+#########################
 # Run coarse synthesis
 #########################
 # Run a tech map with default library
