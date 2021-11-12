@@ -5,6 +5,6 @@ plugin -i ql-qlf
 # Read verilog files
 ${READ_VERILOG_FILE}
 
-synth_quicklogic -blif ${OUTPUT_BLIF} -top ${TOP_MODULE} ${YOSYS_ARGS}
+synth_ql -blif ${OUTPUT_BLIF} -top ${TOP_MODULE} ${YOSYS_ARGS}
 
 write_verilog -noattr -nohex ${OUTPUT_VERILOG}
