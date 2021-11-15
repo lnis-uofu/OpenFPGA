@@ -231,7 +231,6 @@ include(CheckCXXCompilerFlag)
 add_custom_target(
     yosys ALL 
     COMMAND $(MAKE) config-gcc
-    COMMAND $(MAKE) clean
     COMMAND $(MAKE) install PREFIX=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys
     COMMENT "Compile Yosys with given Makefile"
@@ -242,7 +241,6 @@ add_custom_target(
 # yosys-plugins compilation starts
 add_custom_target(
     yosys-plugins ALL
-    COMMAND $(MAKE) clean YOSYS_PATH=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
     COMMAND $(MAKE) install_ql-qlf YOSYS_PATH=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install EXTRA_FLAGS="-DPASS_NAME=synth_ql"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-plugins
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install/bin/yosys
