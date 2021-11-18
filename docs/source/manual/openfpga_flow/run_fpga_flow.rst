@@ -109,8 +109,20 @@ General Arguments
 
 .. option:: --yosys_tmpl <yosys_template_file>
 
-    This option allows the user to provide a custom Yosys template
-    While running a yosys_vpr flow. Default template is stored in a directory ``open_fpga_flow\misc\ys_tmpl_yosys_vpr_flow.ys``. Yosys template script supports ``TOP_MODULE`` ``READ_VERILOG_FILE`` ``LUT_SIZE`` & ``OUTPUT_BLIF`` variables, which can be used as ``${var_name}``. Alternately, user can create a copy and modify according to their need.
+    This option allows the user to provide a custom Yosys template while running a yosys_vpr flow. Default template is stored in a directory ``open_fpga_flow\misc\ys_tmpl_yosys_vpr_flow.ys``. Alternately, user can create a copy and modify according to their need. Yosys template script supports ``TOP_MODULE`` ``READ_VERILOG_FILE`` ``LUT_SIZE`` & ``OUTPUT_BLIF`` variables. In case if ``--verific`` option is provided then ``ADD_INCLUDE_DIR``, ``ADD_LIBRARY_DIR``, ``ADD_BLACKBOX_MODULES``, ``READ_HDL_FILE`` (should be used instead of ``READ_VERILOG_FILE``) and ``READ_LIBRARY`` additional varialbes are supported. The variables can be used as ``${var_name}``.
+
+.. option:: --ys_rewrite_tmpl <yosys_rewrite_template_file>
+
+    This option allows the user to provide an alternate Yosys template to rewrite Verilog netlist while running a yosys_vpr flow. The alternate Yosys template script supports all of the main Yosys template script variables.
+
+.. option:: --verific
+
+    This option specifies to use Verific as a frontend for Yosys while running a yosys_vpr flow.
+    The following standards are used by default for reading input HDL files:
+    * Verilog - ``vlog95``
+    * System Verilog - ``sv2012``
+    * VHDL - ``vhdl2008``
+    The option should be used only with custom Yosys template containing Verific commands.
 
 .. option:: --debug
 
