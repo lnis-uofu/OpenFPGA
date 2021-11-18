@@ -766,12 +766,16 @@ def run_command(taskname, logfile, command, exit_if_fail=True):
     with open(logfile, 'w') as output:
         try:
             output.write(" ".join(command)+"\n")
-            process = subprocess.run(command,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE,
-                                     universal_newlines=True)
-            output.write(process.stdout)
-            output.write(process.stderr)
+            with subprocess.Popen(command,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    bufsize=1,
+                    universal_newlines=True) as process:
+                for line in process.stdout:
+                    output.write(line)
+                for line in process.stderr:
+                    output.write(line)
+            process.wait()
             output.write(str(process.returncode))
             if "openfpgashell" in logfile:
                 filter_openfpga_output(process.stdout)
