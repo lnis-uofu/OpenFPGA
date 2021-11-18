@@ -94,7 +94,7 @@ Declaring all the above sections are mandatory.
 General Section
 ^^^^^^^^^^^^^^^
 
-.. option:: fpga_flow==<yosys_vpr|vpr_blif>
+.. option:: fpga_flow=<yosys_vpr|vpr_blif>
 
     This option defines which OpenFPGA flow to run. By default ``yosys_vpr`` is executed.
 
@@ -118,7 +118,72 @@ General Section
 
 .. option:: timeout_each_job=<true|false>
 
-    Specifies the timeout for each :ref:`run_fpga_flow` execution. Default is set to ``20 min. ``
+    Specifies the timeout for each :ref:`run_fpga_flow` execution. Default is set to ``20 min.``
+
+.. option:: verific=<true|false>
+
+    Specifies to use Verific as a frontend for Yosys while running a yosys_vpr flow.
+    The following standards are used by default for reading input HDL files:
+    * Verilog - ``vlog95``
+    * System Verilog - ``sv2012``
+    * VHDL - ``vhdl2008``
+    The option should be used only with custom Yosys template containing Verific commands.
+
+
+OpenFPGA_SHELL Sections
+^^^^^^^^^^^^^^^^^^^^^^^
+
+    User can specify OpenFPGA_SHELL options in this section.
+
+.. option:: verific_include_dir=<include_dir>
+
+   The ``include_dir`` is path to the Verilog/VHDL include directory. If there are multiple paths then they can be
+   provided as a comma separated list.
+
+.. option:: verific_library_dir=<library_dir>
+
+   The ``library_dir`` is path to the Verilog/VHDL library directory. Verific will search in this directory to
+   find undefined modules. If there are multiple paths then they can be provided as a comma separated list.
+
+.. option:: verific_verilog_standard=<-vlog95|-vlog2k>
+
+   The option specifies Verilog language standard to be used while reading the Verilog files.
+
+.. option:: verific_systemverilog_standard=<-sv2005|-sv2009|-sv2012>
+
+   The option specifies SystemVerilog language standard to be used while reading the SystemVerilog files.
+
+.. option:: verific_vhdl_standard=<-vhdl87|-vhdl93|-vhdl2k|-vhdl2008>
+
+   The option specifies VHDL language standard to be used while reading the VHDL files.
+
+.. option:: verific_read_lib_name=<lib_name>
+
+   The option specifies library name where Verilog/SystemVerilog/VHDL files specified by ``verific_read_lib_src`` option will be loaded. This option should be used only with ``verific_read_lib_src`` option.
+
+.. option:: verific_read_lib_src=<library_src_files>
+
+   The option specifies Verilog/SystemVerilog/VHDL files to be loaded into library specified by ``verific_read_lib_name`` option. The ``library_src_files`` should be the source files names separated by commas. This option should be used only with ``verific_read_lib_name`` option.
+
+.. option:: verific_search_lib=<lib_name>
+
+   The option specifies library name from where will look up for external definitions while reading HDL files.
+
+.. option:: yosys_cell_sim_verilog=<verilog_files>
+
+   The option specifies Verilog files which should be separated by comma.
+
+.. option:: yosys_cell_sim_systemverilog=<systemverilog_files>
+
+   The option specifies SystemVerilog files which should be separated by comma.
+
+.. option:: yosys_cell_sim_vhdl=<vhdl_files>
+
+   The option specifies VHDL files which should be separated by comma.
+
+.. option:: yosys_blackbox_modules=<blackbox_modules>
+
+   The option specifies blackbox modules names which should be separated by comma (usually these are the modules defined in files specified with yosys_cell_sim_<verilog/systemverilog/vhdl> option).
 
 
 Architectures Sections

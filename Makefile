@@ -21,7 +21,7 @@ compile:
 	cd build && $(MAKE)
 
 clean:
-	rm -rf build
+	rm -rf build yosys/install
 
 build/Makefile:
 	make checkout
