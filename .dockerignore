@@ -12,12 +12,11 @@
 !/openfpga/openfpga
 !/vpr/libvpr.a
 !/vpr/vpr
-!/yosys/install/share/
+!/yosys/install/share/**
 !/yosys/install/bin/yosys
 !/yosys/install/bin/yosys-abc
 !/yosys/install/bin/yosys-config
 !/yosys/install/bin/yosys-filterlib
 !/yosys/install/bin/yosys-smtbmc
-!/openfpga_flow
 !/openfpga.sh
-!/openfpga_flow/
+!/openfpga_flow/**
