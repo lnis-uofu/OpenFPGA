@@ -170,12 +170,8 @@ jobs:
             openfpga/openfpga
             vpr/libvpr.a
             vpr/vpr
-            yosys/install/share/
-            yosys/install/bin/yosys
-            yosys/install/bin/yosys-abc
-            yosys/install/bin/yosys-config
-            yosys/install/bin/yosys-filterlib
-            yosys/install/bin/yosys-smtbmc
+            yosys/install/share
+            yosys/install/bin
             openfpga_flow
             openfpga.sh
   docker_distribution:
