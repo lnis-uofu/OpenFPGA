@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: "gitsubmodule"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    #assignees:
+    #  - "username"
+    labels:
+      - "submodule-updates"
+    # Must use the full team name, including the organization, as if you were @mentioning the team
+    #reviewers:
+    #  - "username"
+    # Allow dependabot to open up to 10 open pull requests. Default is 5.
+    # open-pull-requests-limit: 10
+    allow:
+      # only enable for the yosys-symbiflow-plugins submodule
+      - dependency-name: "yosys-plugins"
