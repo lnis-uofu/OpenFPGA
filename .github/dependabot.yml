@@ -4,8 +4,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-      #time: "00:00"
-      #timezone: "America/Los_Angeles"
+      time: "00:00"
+      timezone: "America/Denver"
     #assignees:
     #  - "username"
     #labels: need to add the required label to the repo first!
