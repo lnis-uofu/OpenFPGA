@@ -4,11 +4,13 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+      #time: "00:00"
+      #timezone: "America/Los_Angeles"
     #assignees:
     #  - "username"
-    labels:
-      - "submodule-updates"
-    # Must use the full team name, including the organization, as if you were @mentioning the team
+    #labels: need to add the required label to the repo first!
+    #  - "submodule-updates"
+    # must use the full team name, including the organization, as if you were @mentioning the team
     #reviewers:
     #  - "username"
     # Allow dependabot to open up to 10 open pull requests. Default is 5.
