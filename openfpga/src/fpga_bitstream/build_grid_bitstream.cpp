@@ -91,6 +91,23 @@ void build_primitive_bitstream(BitstreamManager& bitstream_manager,
   std::vector<bool> mode_select_bitstream;
   if (true == physical_pb.valid_pb_id(primitive_pb_id)) {
     mode_select_bitstream = generate_mode_select_bitstream(physical_pb.mode_bits(primitive_pb_id));
+    /* If the physical pb contains fixed mode-select bitstream, overload here */
+    if (false == physical_pb.fixed_mode_select_bitstream(primitive_pb_id).empty()) {
+      std::string fixed_mode_select_bitstream = physical_pb.fixed_mode_select_bitstream(primitive_pb_id);
+      size_t mode_bits_start_index = physical_pb.fixed_mode_select_bitstream_offset(primitive_pb_id);
+      /* Ensure the length matches!!! */
+      if (mode_select_bitstream.size() - mode_bits_start_index < fixed_mode_select_bitstream.size()) {
+        VTR_LOG_ERROR("Unmatched length of fixed mode_select_bitstream %s!Expected to be less than %ld bits\n",
+                      fixed_mode_select_bitstream.c_str(),
+                      mode_select_bitstream.size() - mode_bits_start_index);
+        exit(1);
+      }
+      /* Overload the bitstream here */
+      for (size_t bit_index = 0; bit_index < fixed_mode_select_bitstream.size(); ++bit_index) {
+        VTR_ASSERT('0' == fixed_mode_select_bitstream[bit_index] || '1' == fixed_mode_select_bitstream[bit_index]);
+        mode_select_bitstream[bit_index + mode_bits_start_index] = ('1' == fixed_mode_select_bitstream[bit_index]);
+      }
+    }
   } else { /* get default mode_bits */
     mode_select_bitstream = generate_mode_select_bitstream(device_annotation.pb_type_mode_bits(primitive_pb_type));
   }
