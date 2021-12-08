@@ -13,9 +13,11 @@ Technical Details about FPGA-SPICE/Verilog/Bitstream/SDC:
 
 Dr. Xifan Tang
 
-xifan.tang@utah.edu
+xifan@osfpga.org
 
-.. Technical Details about layout auto-generation
-.. Edouard Giacomin
-.. edouard.giacomin@utah.edu
+Technical Details about physical design
+
+Ganesh Gore
+
+ganesh.gore@utah.edu
 
