@@ -227,6 +227,10 @@ include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 #
 
+# we will check if yosys already exist. if not then build it
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install/bin/yosys)
+    message(STATUS "Yosys pre-build exist so skipping it")
+else ()
 # run makefile provided, we pass-on the options to the local make file 
 add_custom_target(
     yosys ALL 
@@ -248,6 +252,7 @@ add_custom_target(
 )
 
 add_dependencies(yosys-plugins yosys)
+endif()
 
 # run make to extract compiler options, linker options and list of source files
 #add_custom_target(
