@@ -30,6 +30,11 @@ jobs:
       sha_short: ${{ steps.changes.outputs.sha_short }}
       docker_repo: ${{ steps.changes.outputs.docker_repo }}
     steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+          
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
         with:
@@ -100,6 +105,11 @@ jobs:
       CCACHE_LOGFILE: ccache_log
       CCACHE_DIR: /__w/OpenFPGA/.ccache
     steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+          
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
         with:
@@ -179,6 +189,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [linux_build, change_detect]
     steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+          
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
       - name: Download a built artifacts
@@ -224,6 +239,11 @@ jobs:
           - name: vtr_benchmark_reg_test
           - name: iwls_benchmark_reg_test
     steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+    
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
       - name: Download a built artifacts
@@ -272,6 +292,11 @@ jobs:
           - name: vtr_benchmark_reg_test
           - name: iwls_benchmark_reg_test
     steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+          
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
         with:
