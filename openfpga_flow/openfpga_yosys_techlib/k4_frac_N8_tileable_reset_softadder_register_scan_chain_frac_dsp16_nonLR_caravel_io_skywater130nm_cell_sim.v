@@ -8,7 +8,7 @@ module mult_8(
 );
 
 assign Y = A * B;
-
+parameter MODE = 1'b1;
 endmodule
 
 //-----------------------------
@@ -22,4 +22,5 @@ module mult_16(
 
 assign Y = A * B;
 
+parameter MODE = 1'b0;
 endmodule

@@ -286,7 +286,7 @@
     <pb_type name="mult_16" physical_mode_name="mult_16x16"/>
     <!-- Bind the primitive pb_type in the physical mode to a circuit model --> 
     <pb_type name="mult_16[mult_16x16].mult_16x16_slice.mult_16x16" circuit_model_name="frac_mult_16x16" mode_bits="0"/>
-    <pb_type name="mult_16[mult_8x8].mult_8x8_slice.mult_8x8" physical_pb_type_name="mult_16[mult_16x16].mult_16x16_slice.mult_16x16" mode_bits="1" physical_pb_type_index_factor="0">
+    <pb_type name="mult_16[mult_8x8].mult_8x8_slice.mult_8x8" physical_pb_type_name="mult_16[mult_16x16].mult_16x16_slice.mult_16x16" mode_bits="0" physical_pb_type_index_factor="0">
       <port name="A" physical_mode_port="A[0:7]" physical_mode_port_rotate_offset="8"/>
       <port name="B" physical_mode_port="B[0:7]" physical_mode_port_rotate_offset="8"/>
       <port name="Y" physical_mode_port="Y[0:15]" physical_mode_port_rotate_offset="16"/>

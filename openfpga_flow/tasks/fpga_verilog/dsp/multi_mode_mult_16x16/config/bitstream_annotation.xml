@@ -1,0 +1,4 @@
+<openfpga_bitstream_setting>
+  <pb_type name="mult_16[mult_16x16].mult_16x16_slice.mult_16x16" source="eblif" content=".param MODE" is_mode_select_bitstream="true"/>
+  <pb_type name="mult_16[mult_8x8].mult_8x8_slice.mult_8x8" source="eblif" content=".param MODE" is_mode_select_bitstream="true"/>
+</openfpga_bitstream_setting>
