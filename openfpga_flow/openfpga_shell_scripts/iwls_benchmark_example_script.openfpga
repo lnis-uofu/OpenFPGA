@@ -2,7 +2,7 @@
 # When the global clock is defined as a port of a tile, clock routing in VPR should be skipped
 # This is due to the Fc_in of clock port is set to 0 for global wiring
 # The constant net such as logic '0' and logic '1' must be routed because current architecture cannot produce them locally
-vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --route_chan_width ${VPR_ROUTE_CHAN_WIDTH} --constant_net_method route --disp on
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --route_chan_width ${VPR_ROUTE_CHAN_WIDTH} --constant_net_method route
 
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}

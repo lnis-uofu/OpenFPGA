@@ -698,7 +698,7 @@ def run_rewrite_verilog():
     # If there is a template script provided, replace parameters from configuration
     if not args.ys_rewrite_tmpl:
         script_cmd = [
-            "read_blif -wideports %s" % args.top_module+".blif",
+            "read_blif %s" % args.top_module+".blif",
             "write_verilog %s" % args.top_module+"_output_verilog.v"
         ]
         command = [cad_tools["yosys_path"], "-p", "; ".join(script_cmd)]

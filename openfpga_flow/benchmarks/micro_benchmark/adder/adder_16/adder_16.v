@@ -1,7 +1,7 @@
 // Creating a scaleable adder
 
 module adder_16(cout, sum, a, b, cin);
-parameter size = 3;  /* declare a parameter. default required */
+parameter size = 16;  /* declare a parameter. default required */
 output cout;
 output [size-1:0] sum; 	 // sum uses the size parameter
 input cin;
