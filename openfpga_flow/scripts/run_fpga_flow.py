@@ -489,7 +489,8 @@ def create_yosys_params():
 
     if not args.verific:
         ys_params["READ_VERILOG_FILE"] = " \n".join([
-            "read_verilog -nolatches " + shlex.quote(eachfile)
+            #"read_verilog -nolatches " + shlex.quote(eachfile)
+            "read_verilog " + shlex.quote(eachfile)
             for eachfile in args.benchmark_files])
     else:
         if "ADD_INCLUDE_DIR" not in ys_params:
