@@ -498,7 +498,7 @@ def create_yosys_params():
      yosys_args, ExtraArgs = yosysargparser.parse_known_args(yosys_args)
 
     if not args.verific:
-      if yosys_args.family == "qlf_k6n10f":
+      if yosys_arg == 1 and yosys_args.family == "qlf_k6n10f":
         ys_params["READ_VERILOG_FILE"] = " \n".join([
             "read_verilog " + shlex.quote(eachfile)
             for eachfile in args.benchmark_files])
