@@ -12,7 +12,7 @@ module mult_8x8 (
   parameter B_WIDTH = 0;
   parameter Y_WIDTH = 0;
 
-  mult_8 #() _TECHMAP_REPLACE_ (
+  mult_8 #(.MODE(1'b1)) _TECHMAP_REPLACE_ (
     .A    (A),
     .B    (B),
     .Y    (Y) );
@@ -33,7 +33,7 @@ module mult_16x16 (
   parameter B_WIDTH = 0;
   parameter Y_WIDTH = 0;
 
-  mult_16 #() _TECHMAP_REPLACE_ (
+  mult_16 #(.MODE(1'b0)) _TECHMAP_REPLACE_ (
     .A    (A),
     .B    (B),
     .Y    (Y) );

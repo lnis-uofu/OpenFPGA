@@ -1,15 +1,12 @@
 # Run VPR for the 'and' design
 #--write_rr_graph example_rr_graph.xml
-vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --device ${OPENFPGA_VPR_DEVICE_LAYOUT} --constant_net_method route --circuit_format ${OPENFPGA_VPR_CIRCUIT_FORMAT}
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --device ${OPENFPGA_VPR_DEVICE_LAYOUT} --constant_net_method route
 
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
 
 # Read OpenFPGA simulation settings
 read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
-
-# Read OpenFPGA bitstream settings
-read_openfpga_bitstream_setting -f ${OPENFPGA_BITSTREAM_SETTING_FILE}
 
 # Annotate the OpenFPGA architecture to VPR data base
 # to debug use --verbose options
@@ -46,7 +43,7 @@ build_architecture_bitstream --verbose --write_file fabric_independent_bitstream
 build_fabric_bitstream --verbose
 
 # Write fabric-dependent bitstream
-write_fabric_bitstream --file fabric_bitstream.bit --format xml
+write_fabric_bitstream --file fabric_bitstream.bit --format plain_txt
 
 # Write the Verilog netlist for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
