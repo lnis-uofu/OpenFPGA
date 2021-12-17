@@ -99,6 +99,8 @@ parser.add_argument('--arch_variable_file', type=str, default=None,
 #                     help="Key file for shell")
 parser.add_argument('--yosys_tmpl', type=str, default=None,
                     help="Alternate yosys template, generates top_module.blif")
+parser.add_argument('--yosys_args', type=str, default=None,
+                    help="Arguments for yosys")
 parser.add_argument('--ys_rewrite_tmpl', type=str, default=None,
                     help="Alternate yosys template, to rewrite verilog netlist")
 parser.add_argument('--verific', action="store_true",
@@ -487,10 +489,21 @@ def create_yosys_params():
         tmpVar = OpenFPGAArgs[indx][2:].upper()
         ys_params[tmpVar] = OpenFPGAArgs[indx+1]
 
+    yosys_args = []
+    if args.yosys_args:
+     yosys_args = ys_params["YOSYS_ARGS"].split()
+     yosysargparser = argparse.ArgumentParser(description="Parses yosys arguments")
+     yosysargparser.add_argument("-family", type=str, help="Family")
+     yosys_args = yosysargparser.parse_args(yosys_args)
+
     if not args.verific:
+      if args.yosys_args and yosys_args.family == "qlf_k6n10f":
         ys_params["READ_VERILOG_FILE"] = " \n".join([
-            #"read_verilog -nolatches " + shlex.quote(eachfile)
             "read_verilog " + shlex.quote(eachfile)
+            for eachfile in args.benchmark_files])
+      else:
+        ys_params["READ_VERILOG_FILE"] = " \n".join([
+            "read_verilog -nolatches " + shlex.quote(eachfile)
             for eachfile in args.benchmark_files])
     else:
         if "ADD_INCLUDE_DIR" not in ys_params:
