@@ -26,7 +26,7 @@ jobs:
           sed -i "/^set(OPENFPGA_VERSION_PATCH /s/[0-9]*)/`git log ${TAG_COMMIT}  --oneline | wc -l`)/" CMakeLists.txt
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add Makefile
+          git add CMakeLists.txt
           git commit -m "Updated Patch Count"
       - name: Push changes # push the output folder to your repo
         if: "!contains(steps.log.outputs.message, 'Bump version') && contains(steps.repo.outputs.message, 'lnis-uofu/OpenFPGA')"
