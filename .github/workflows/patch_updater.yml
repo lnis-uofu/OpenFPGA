@@ -3,8 +3,11 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'
+
 env:
   TAG_COMMIT: 49a8273..
+  BRANCH_NAME: patch_update
+
 jobs:
   patch-count:
     runs-on: ubuntu-latest
@@ -13,12 +16,15 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
       - name: Get latest commit
         id: log
         run: echo "::set-output name=message::$(git log --no-merges -1 --oneline)"
+
       - name: Get repo name
         id: repo
         run: echo "::set-output name=message::$GITHUB_REPOSITORY"
+
       - name: Insert Patch Count
         if: "!contains(steps.log.outputs.message, 'Updated Patch Count') && contains(steps.repo.outputs.message, 'lnis-uofu/OpenFPGA')"
         run: |
@@ -27,8 +33,24 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git add CMakeLists.txt
           git commit -m "Updated Patch Count"
+
       - name: Push changes # push the output folder to your repo
-        if: "!contains(steps.log.outputs.message, 'Bump version') && contains(steps.repo.outputs.message, 'lnis-uofu/OpenFPGA')"
+        if: "!contains(steps.log.outputs.message, 'Updated Patch Count') && contains(steps.repo.outputs.message, 'lnis-uofu/OpenFPGA')"
         uses: ad-m/github-push-action@master
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{env.BRANCH_NAME}}
+
+      - name: Create Auto PR
+        if: "!contains(steps.log.outputs.message, 'Updated Patch Count') && contains(steps.repo.outputs.message, 'lnis-uofu/OpenFPGA')"
+        uses: repo-sync/pull-request@v2
+        with:
+          source_branch: ${{env.BRANCH_NAME}}           # name of branch for PR
+          destination_branch: "master"                      # name of branch on which PR go
+          pr_title: "Pulling ${{ github.ref }} into master" # Title of pull request
+          pr_body: ":crown: *An automated PR*"              # Full markdown support, requires pr_title
+          pr_reviewer: "tangxifan"                          # Comma-separated list (no spaces)
+          pr_assignee: "nadeemyaseen-rs"                    # Comma-separated list (no spaces)
+          pr_label: "auto-pr"                               # Comma-separated list (no spaces)
+          pr_allow_empty: true                              # Creates pull request even if there are no changes
           github_token: ${{ secrets.GITHUB_TOKEN }}
