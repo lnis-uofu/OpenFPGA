@@ -17,5 +17,7 @@ updates:
     # Allow dependabot to open up to 10 open pull requests. Default is 5.
     # open-pull-requests-limit: 10
     allow:
-      # only enable for the yosys-symbiflow-plugins submodule
+      # Enable for the yosys-symbiflow-plugins submodule
       - dependency-name: "yosys-plugins"
+      # Enable for the yosys submodule
+      - dependency-name: "yosys"
