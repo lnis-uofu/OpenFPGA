@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include "vtr_vector.h"
+#include "vtr_geometry.h"
 #include "module_manager_fwd.h"
 #include "openfpga_port.h"
 
@@ -148,6 +149,8 @@ class ModuleManager {
     std::vector<ModuleId> configurable_children(const ModuleId& parent_module) const;
     /* Find all the instances of configurable child modules under a parent module */
     std::vector<size_t> configurable_child_instances(const ModuleId& parent_module) const;
+    /* Find the coordindate of a configurable child module under a parent module */
+    std::vector<vtr::Point<int>> configurable_child_coordinates(const ModuleId& parent_module) const;
     /* Find the source ids of modules */
     module_net_src_range module_net_sources(const ModuleId& module, const ModuleNetId& net) const;
     /* Find the sink ids of modules */
@@ -161,6 +164,10 @@ class ModuleManager {
     /* Find all the instances of configurable child modules under a region of a parent module */
     std::vector<size_t> region_configurable_child_instances(const ModuleId& parent_module,
                                                             const ConfigRegionId& region) const;
+
+    /* Find all the coordinates of configurable child modules under a region of a parent module */
+    std::vector<vtr::Point<int>> region_configurable_child_coordinates(const ModuleId& parent_module,
+                                                                       const ConfigRegionId& region) const;
     
   public: /* Public accessors */
     size_t num_modules() const;
@@ -252,8 +259,13 @@ class ModuleManager {
     void add_child_module(const ModuleId& parent_module, const ModuleId& child_module);
     /* Set the instance name of a child module */
     void set_child_instance_name(const ModuleId& parent_module, const ModuleId& child_module, const size_t& instance_id, const std::string& instance_name);
-    /* Add a configurable child module to module */
-    void add_configurable_child(const ModuleId& module, const ModuleId& child_module, const size_t& child_instance);
+    /* Add a configurable child module to module
+     * This function also set the coordinate of a configurable child
+     * The coordinate is a relative position in each region, which is used to 
+     * idenify BL/WL sharing
+     * By default, it is an invalid coordinate 
+     */
+    void add_configurable_child(const ModuleId& module, const ModuleId& child_module, const size_t& child_instance, const vtr::Point<int> coord = vtr::Point<int>(-1, -1));
     /* Reserved a number of configurable children
      * for memory efficiency
      */
@@ -350,6 +362,7 @@ class ModuleManager {
     vtr::vector<ModuleId, std::vector<ModuleId>> configurable_children_;                /* Child modules with configurable memory bits that this module contain */
     vtr::vector<ModuleId, std::vector<size_t>> configurable_child_instances_;           /* Instances of child modules with configurable memory bits that this module contain */
     vtr::vector<ModuleId, std::vector<ConfigRegionId>> configurable_child_regions_;           /* Instances of child modules with configurable memory bits that this module contain */
+    vtr::vector<ModuleId, std::vector<vtr::Point<int>>> configurable_child_coordinates_;           /* Relative coorindates of child modules with configurable memory bits that this module contain */
 
     /* Configurable regions to group the configurable children
      * Note:

@@ -201,7 +201,7 @@ A circuit model may consist of a number of ports. The port list is mandatory in 
 
 .. note::  Different types of ``circuit_model`` have different XML syntax, with which users can highly customize their circuit topologies. See refer to examples of :ref:``circuit_model_example`` for more details.
 
-.. note:: Note that we have a list of reserved port names, which indicate the usage of these ports when building FPGA fabrics. Please do not use ``mem_out``, ``mem_inv``, ``bl``, ``wl``, ``blb``, ``wlb``, ``ccff_head`` and ``ccff_tail``.
+.. note:: Note that we have a list of reserved port names, which indicate the usage of these ports when building FPGA fabrics. Please do not use ``mem_out``, ``mem_inv``, ``bl``, ``wl``, ``blb``, ``wlb``, ``wlr``, ``ccff_head`` and ``ccff_tail``.
 
 FPGA I/O Port 
 ^^^^^^^^^^^^^

@@ -31,6 +31,7 @@ namespace openfpga {
  *******************************************************************/
 int build_device_module_graph(ModuleManager& module_manager,
                               DecoderLibrary& decoder_lib,
+                              MemoryBankShiftRegisterBanks& blwl_sr_banks,
                               const OpenfpgaContext& openfpga_ctx,
                               const DeviceContext& vpr_device_ctx,
                               const bool& frame_view,
@@ -112,6 +113,7 @@ int build_device_module_graph(ModuleManager& module_manager,
   /* Build FPGA fabric top-level module */
   status = build_top_module(module_manager,
                             decoder_lib,
+                            blwl_sr_banks,
                             openfpga_ctx.arch().circuit_lib, 
                             openfpga_ctx.vpr_device_annotation(),
                             vpr_device_ctx.grid,

@@ -257,6 +257,7 @@ size_t find_cmos_mux_num_config_bits(const CircuitLibrary& circuit_lib,
   size_t num_config_bits = 0; 
 
   switch (sram_orgz_type) {
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
   case CONFIG_MEM_SCAN_CHAIN:
   case CONFIG_MEM_STANDALONE:
@@ -298,6 +299,7 @@ size_t find_rram_mux_num_config_bits(const CircuitLibrary& circuit_lib,
                                      const e_config_protocol_type& sram_orgz_type) {
   size_t num_config_bits = 0; 
   switch (sram_orgz_type) {
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     /* In memory bank, by intensively share the Bit/Word Lines,
      * we only need 1 additional BL and WL for each MUX level.
@@ -365,6 +367,7 @@ size_t find_cmos_mux_num_shared_config_bits(const e_config_protocol_type& sram_o
   size_t num_shared_config_bits = 0; 
 
   switch (sram_orgz_type) {
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
   case CONFIG_MEM_SCAN_CHAIN:
   case CONFIG_MEM_STANDALONE:
@@ -388,7 +391,7 @@ size_t find_rram_mux_num_shared_config_bits(const CircuitLibrary& circuit_lib,
                                             const e_config_protocol_type& sram_orgz_type) {
   size_t num_shared_config_bits = 0; 
   switch (sram_orgz_type) {
-  case CONFIG_MEM_MEMORY_BANK: {
+  case CONFIG_MEM_QL_MEMORY_BANK: {
     /* In memory bank, the number of shared configuration bits is
      * the sum of largest branch size at each level 
      */

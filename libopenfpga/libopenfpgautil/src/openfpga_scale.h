@@ -18,7 +18,7 @@ bool same_float_number(const float& a,
 
 std::string unit_to_string(const float& unit);
 
-std::string time_unit_to_string(const float& unit);
+std::string time_unit_to_string(const float& unit, const std::string& postfix = "s");
 
 float string_to_unit(const std::string& scale);
 

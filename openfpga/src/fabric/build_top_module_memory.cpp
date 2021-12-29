@@ -20,9 +20,11 @@
 #include "openfpga_naming.h"
 
 #include "memory_utils.h"
+#include "memory_bank_utils.h"
 #include "decoder_library_utils.h"
 #include "module_manager_utils.h"
 #include "build_decoder_modules.h"
+#include "build_top_module_memory_bank.h"
 #include "build_top_module_memory.h"
 
 /* begin namespace openfpga */
@@ -74,8 +76,14 @@ void organize_top_module_tile_cb_modules(ModuleManager& module_manager,
   if (0 < find_module_num_config_bits(module_manager, cb_module,
                                       circuit_lib, sram_model, 
                                       sram_orgz_type)) {
+    /* CBX coordinate conversion calculation: (1,0) -> (2,1) */
+    vtr::Point<int> config_coord(rr_gsb.get_cb_x(cb_type) * 2, rr_gsb.get_cb_y(cb_type) * 2 + 1);
+    if (cb_type == CHANY) {
+      /* CBY has a different coordinate conversion calculation: (0,1) -> (1,2) */
+      config_coord.set(rr_gsb.get_cb_x(cb_type) * 2 + 1, rr_gsb.get_cb_y(cb_type) * 2);
+    }
     /* Note that use the original CB coodinate for instance id searching ! */
-    module_manager.add_configurable_child(top_module, cb_module, cb_instance_ids[rr_gsb.get_cb_x(cb_type)][rr_gsb.get_cb_y(cb_type)]);
+    module_manager.add_configurable_child(top_module, cb_module, cb_instance_ids[rr_gsb.get_cb_x(cb_type)][rr_gsb.get_cb_y(cb_type)], config_coord);
   }
 }
 
@@ -84,6 +92,37 @@ void organize_top_module_tile_cb_modules(ModuleManager& module_manager,
  * to the memory modules and memory instances 
  * This function is designed for organizing memory modules in top-level
  * module
+ * This function also adds coordindates for each configurable child under the top-level module 
+ * of a FPGA fabric. A configurable child could be a programmable block (grid), 
+ * a Connection Block (CBx/y) or a Switch block (SB).
+ * This function, we consider a coordinate system as follows
+ * - Each row may consist of either (1) grid and CBy or (2) CBx and SB
+ * - Each column may consist of either (1) grid and CBx or (2) CBy and SB
+ *
+ *          Column 0      Column 1 
+ *
+ *     +---------------+----------+
+ *     |               |          |
+ *     |               |          |
+ *     |     Grid      |   CBY    |   Row 3
+ *     |               |          |  
+ *     |               |          |
+ *     +---------------+----------+
+ *     |               |          |       
+ *     |     CBX       |   SB     |   Row 2
+ *     |               |          |
+ *     +---------------+----------+
+ *     |               |          |
+ *     |               |          |
+ *     |     Grid      |   CBY    |   Row 1
+ *     |               |          |  
+ *     |               |          |
+ *     +---------------+----------+
+ *     |               |          |       
+ *     |     CBX       |   SB     |   Row 0
+ *     |               |          |
+ *     +---------------+----------+
+ 
  *******************************************************************/
 static 
 void organize_top_module_tile_memory_modules(ModuleManager& module_manager, 
@@ -130,7 +169,8 @@ void organize_top_module_tile_memory_modules(ModuleManager& module_manager,
       if (0 < find_module_num_config_bits(module_manager, sb_module,
                                           circuit_lib, sram_model, 
                                           sram_orgz_type)) {
-        module_manager.add_configurable_child(top_module, sb_module, sb_instance_ids[rr_gsb.get_sb_x()][rr_gsb.get_sb_y()]);
+        vtr::Point<int> config_coord(rr_gsb.get_sb_x() * 2 + 1, rr_gsb.get_sb_y() * 2 + 1);
+        module_manager.add_configurable_child(top_module, sb_module, sb_instance_ids[rr_gsb.get_sb_x()][rr_gsb.get_sb_y()], config_coord);
       }
     }
     
@@ -172,10 +212,10 @@ void organize_top_module_tile_memory_modules(ModuleManager& module_manager,
   if (0 < find_module_num_config_bits(module_manager, grid_module,
                                       circuit_lib, sram_model, 
                                       sram_orgz_type)) {
-    module_manager.add_configurable_child(top_module, grid_module, grid_instance_ids[tile_coord.x()][tile_coord.y()]);
+    vtr::Point<int> config_coord(tile_coord.x() * 2, tile_coord.y() * 2);
+    module_manager.add_configurable_child(top_module, grid_module, grid_instance_ids[tile_coord.x()][tile_coord.y()], config_coord);
   }
 }
-
 
 /********************************************************************
  * Split memory modules into different configurable regions
@@ -231,7 +271,8 @@ void build_top_module_configurable_regions(ModuleManager& module_manager,
 
   /* Exclude decoders from the list */
   size_t num_configurable_children = module_manager.configurable_children(top_module).size();
-  if (CONFIG_MEM_MEMORY_BANK == config_protocol.type()) {
+  if (CONFIG_MEM_MEMORY_BANK == config_protocol.type()
+     || CONFIG_MEM_QL_MEMORY_BANK == config_protocol.type()) {
     num_configurable_children -= 2;
   } else if (CONFIG_MEM_FRAME_BASED == config_protocol.type()) {
     num_configurable_children -= 1;
@@ -496,6 +537,7 @@ void shuffle_top_module_configurable_children(ModuleManager& module_manager,
   /* Cache the configurable children and their instances */
   std::vector<ModuleId> orig_configurable_children = module_manager.configurable_children(top_module);
   std::vector<size_t> orig_configurable_child_instances = module_manager.configurable_child_instances(top_module);
+  std::vector<vtr::Point<int>> orig_configurable_child_coordinates = module_manager.configurable_child_coordinates(top_module);
  
   /* Reorganize the configurable children */
   module_manager.clear_configurable_children(top_module);
@@ -503,7 +545,8 @@ void shuffle_top_module_configurable_children(ModuleManager& module_manager,
   for (size_t ikey = 0; ikey < num_keys; ++ikey) {
     module_manager.add_configurable_child(top_module,
                                           orig_configurable_children[shuffled_keys[ikey]],
-                                          orig_configurable_child_instances[shuffled_keys[ikey]]);
+                                          orig_configurable_child_instances[shuffled_keys[ikey]],
+                                          orig_configurable_child_coordinates[shuffled_keys[ikey]]);
   }
 
   /* Reset configurable regions */
@@ -593,7 +636,8 @@ int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager
       /* Now we can add the child to configurable children of the top module */
       module_manager.add_configurable_child(top_module,
                                             instance_info.first,
-                                            instance_info.second);
+                                            instance_info.second,
+                                            fabric_key.key_coordinate(key));
       module_manager.add_configurable_child_to_region(top_module,
                                                       top_module_config_region,
                                                       instance_info.first, 
@@ -614,13 +658,13 @@ int load_top_module_memory_modules_from_fabric_key(ModuleManager& module_manager
  *   - This function should be called after the configurable children
  *     is loaded to the top-level module!
  ********************************************************************/
-vtr::vector<ConfigRegionId, size_t> find_top_module_regional_num_config_bit(const ModuleManager& module_manager,
-                                                                            const ModuleId& top_module,
-                                                                            const CircuitLibrary& circuit_lib,
-                                                                            const CircuitModelId& sram_model,
-                                                                            const e_config_protocol_type& config_protocol_type) {
+TopModuleNumConfigBits find_top_module_regional_num_config_bit(const ModuleManager& module_manager,
+                                                               const ModuleId& top_module,
+                                                               const CircuitLibrary& circuit_lib,
+                                                               const CircuitModelId& sram_model,
+                                                               const e_config_protocol_type& config_protocol_type) {
   /* Initialize the number of configuration bits for each region */
-  vtr::vector<ConfigRegionId, size_t> num_config_bits(module_manager.regions(top_module).size(), 0);
+  TopModuleNumConfigBits num_config_bits(module_manager.regions(top_module).size(), std::pair<size_t, size_t>(0, 0));
 
   switch (config_protocol_type) {
   case CONFIG_MEM_STANDALONE: 
@@ -632,7 +676,34 @@ vtr::vector<ConfigRegionId, size_t> find_top_module_regional_num_config_bit(cons
      */
     for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
       for (const ModuleId& child_module : module_manager.region_configurable_children(top_module, config_region)) {
-        num_config_bits[config_region] += find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, config_protocol_type);
+        num_config_bits[config_region].first += find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, config_protocol_type);
+      }
+    } 
+    break;
+  }
+  case CONFIG_MEM_QL_MEMORY_BANK: {
+    /* For QL memory bank: we will use the row and column information for each configuration child
+     * in order to identify the number of unique BLs and WLs
+     * In this configuration protocol, 
+     * - all the configurable child in the same row will share the same WLs
+     * - the number of WLs per row is limited by the configurable child which requires most WLs
+     * - each row has independent WLs
+     * - all the configurable child in the same column will share the same BLs
+     * - the number of BLs per column is limited by the configurable child which requires most BLs
+     * - each column has independent BLs
+     */
+    for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
+      std::map<int, size_t> num_bls_per_tile = compute_memory_bank_regional_bitline_numbers_per_tile(module_manager, top_module,
+                                                                                                     config_region,
+                                                                                                     circuit_lib, sram_model);
+      std::map<int, size_t> num_wls_per_tile = compute_memory_bank_regional_wordline_numbers_per_tile(module_manager, top_module,
+                                                                                                      config_region,
+                                                                                                      circuit_lib, sram_model);
+      for (const auto& kv : num_bls_per_tile) {
+        num_config_bits[config_region].first += kv.second;
+      }
+      for (const auto& kv : num_wls_per_tile) {
+        num_config_bits[config_region].second += kv.second;
       }
     } 
     break;
@@ -646,14 +717,14 @@ vtr::vector<ConfigRegionId, size_t> find_top_module_regional_num_config_bit(cons
     for (const ConfigRegionId& config_region : module_manager.regions(top_module)) {
       for (const ModuleId& child_module : module_manager.region_configurable_children(top_module, config_region)) {
         size_t temp_num_config_bits = find_module_num_config_bits(module_manager, child_module, circuit_lib, sram_model, config_protocol_type);
-        num_config_bits[config_region] = std::max((int)temp_num_config_bits, (int)num_config_bits[config_region]);
+        num_config_bits[config_region].first = std::max(temp_num_config_bits, num_config_bits[config_region].first);
       }
 
       /* If there are more than 2 configurable children, we need a decoder
        * Otherwise, we can just short wire the address port to the children
        */
       if (1 < module_manager.region_configurable_children(top_module, config_region).size()) {
-        num_config_bits[config_region] += find_mux_local_decoder_addr_size(module_manager.region_configurable_children(top_module, config_region).size());
+        num_config_bits[config_region].first += find_mux_local_decoder_addr_size(module_manager.region_configurable_children(top_module, config_region).size());
       }
     } 
 
@@ -687,6 +758,7 @@ size_t generate_top_module_sram_port_size(const ConfigProtocol& config_protocol,
   case CONFIG_MEM_STANDALONE: 
     break;
   case CONFIG_MEM_SCAN_CHAIN: 
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
   case CONFIG_MEM_FRAME_BASED:
     /* CCFF head/tail, data input could be multi-bit ports */
@@ -706,34 +778,41 @@ size_t generate_top_module_sram_port_size(const ConfigProtocol& config_protocol,
  * top-level module
  * The type and names of added ports strongly depend on the 
  * organization of SRAMs.
- * 1. Standalone SRAMs: 
- *    two ports will be added, which are BL and WL 
- * 2. Scan-chain Flip-flops:
- *    two ports will be added, which are the head of scan-chain 
- *    and the tail of scan-chain
- *    IMPORTANT: the port size will be forced to 1 in this case 
- *               because the head and tail are both 1-bit ports!!!
- * 3. Memory decoders:
- *    - An enable signal
- *    - A BL address port
- *    - A WL address port
- *    - A data-in port for the BL decoder
- * 4. Frame-based memory:
- *    - An Enable signal
- *    - An address port, whose size depends on the number of config bits 
- *      and the maximum size of address ports of configurable children
- *    - An data_in port (single-bit)
+ * - Standalone SRAMs: 
+ *   two ports will be added, which are BL and WL 
+ * - Scan-chain Flip-flops:
+ *   two ports will be added, which are the head of scan-chain 
+ *   and the tail of scan-chain
+ *   IMPORTANT: the port size will be forced to 1 in this case 
+ *              because the head and tail are both 1-bit ports!!!
+ * - Memory decoders:
+ *   - An enable signal
+ *   - A BL address port
+ *   - A WL address port
+ *   - A data-in port for the BL decoder
+ * - QL memory decoder:
+ *   - An enable signal
+ *   - An BL address port
+ *   - A WL address port
+ *   - A data-in port for the BL decoder
+ *   @note In this memory decoders, the address size will be computed in a different way than the regular one
+ * - Frame-based memory:
+ *   - An Enable signal
+ *   - An address port, whose size depends on the number of config bits 
+ *     and the maximum size of address ports of configurable children
+ *   - An data_in port (single-bit)
  ********************************************************************/
 void add_top_module_sram_ports(ModuleManager& module_manager, 
                                const ModuleId& module_id,
                                const CircuitLibrary& circuit_lib,
                                const CircuitModelId& sram_model,
                                const ConfigProtocol& config_protocol,
-                               const vtr::vector<ConfigRegionId, size_t>& num_config_bits) {
+                               const MemoryBankShiftRegisterBanks& blwl_sr_banks,
+                               const TopModuleNumConfigBits& num_config_bits) {
   std::vector<std::string> sram_port_names = generate_sram_port_names(circuit_lib, sram_model, config_protocol.type());
   size_t total_num_config_bits = 0;
-  for (const size_t& curr_num_config_bits : num_config_bits) {
-    total_num_config_bits += curr_num_config_bits;
+  for (const auto& curr_num_config_bits : num_config_bits) {
+    total_num_config_bits += curr_num_config_bits.first;
   }
   size_t sram_port_size = generate_top_module_sram_port_size(config_protocol, total_num_config_bits); 
 
@@ -754,7 +833,7 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
     /* BL address size is the largest among all the regions */
     size_t bl_addr_size = 0;
     for (const ConfigRegionId& config_region : module_manager.regions(module_id)) {
-       bl_addr_size = std::max(bl_addr_size, find_memory_decoder_addr_size(num_config_bits[config_region]));
+       bl_addr_size = std::max(bl_addr_size, find_memory_decoder_addr_size(num_config_bits[config_region].first));
     }
     BasicPort bl_addr_port(std::string(DECODER_BL_ADDRESS_PORT_NAME), bl_addr_size);
     module_manager.add_port(module_id, bl_addr_port, ModuleManager::MODULE_INPUT_PORT);
@@ -762,7 +841,7 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
     /* WL address size is the largest among all the regions */
     size_t wl_addr_size = 0;
     for (const ConfigRegionId& config_region : module_manager.regions(module_id)) {
-       wl_addr_size = std::max(wl_addr_size, find_memory_decoder_addr_size(num_config_bits[config_region]));
+       wl_addr_size = std::max(wl_addr_size, find_memory_decoder_addr_size(num_config_bits[config_region].first));
     }
     BasicPort wl_addr_port(std::string(DECODER_WL_ADDRESS_PORT_NAME), wl_addr_size);
     module_manager.add_port(module_id, wl_addr_port, ModuleManager::MODULE_INPUT_PORT);
@@ -771,6 +850,10 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
     BasicPort din_port(std::string(DECODER_DATA_IN_PORT_NAME), config_protocol.num_regions());
     module_manager.add_port(module_id, din_port, ModuleManager::MODULE_INPUT_PORT);
 
+    break;
+  }
+  case CONFIG_MEM_QL_MEMORY_BANK: {
+    add_top_module_ql_memory_bank_sram_ports(module_manager, module_id, circuit_lib, config_protocol, blwl_sr_banks, num_config_bits);
     break;
   }
   case CONFIG_MEM_SCAN_CHAIN: { 
@@ -798,8 +881,8 @@ void add_top_module_sram_ports(ModuleManager& module_manager,
     module_manager.add_port(module_id, en_port, ModuleManager::MODULE_INPUT_PORT);
 
     size_t max_num_config_bits = 0;
-    for (const size_t& curr_num_config_bits : num_config_bits) {
-      max_num_config_bits = std::max(max_num_config_bits, curr_num_config_bits);
+    for (const auto& curr_num_config_bits : num_config_bits) {
+      max_num_config_bits = std::max(max_num_config_bits, curr_num_config_bits.first);
     }
 
     BasicPort addr_port(std::string(DECODER_ADDRESS_PORT_NAME), max_num_config_bits);
@@ -910,7 +993,7 @@ static
 void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manager,
                                                      DecoderLibrary& decoder_lib,
                                                      const ModuleId& top_module,
-                                                     const vtr::vector<ConfigRegionId, size_t>& num_config_bits) {
+                                                     const TopModuleNumConfigBits& num_config_bits) {
   /* Find Enable port from the top-level module */ 
   ModulePortId en_port = module_manager.find_module_port(top_module, std::string(DECODER_ENABLE_PORT_NAME));
   BasicPort en_port_info = module_manager.module_port(top_module, en_port);
@@ -935,13 +1018,13 @@ void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manag
 
   /* Each memory bank has a unified number of BL/WLs */
   size_t num_bls = 0;
-  for (const size_t& curr_config_bits : num_config_bits) {
-     num_bls = std::max(num_bls, find_memory_decoder_data_size(curr_config_bits));
+  for (const auto& curr_config_bits : num_config_bits) {
+     num_bls = std::max(num_bls, find_memory_decoder_data_size(curr_config_bits.first));
   }
 
   size_t num_wls = 0;
-  for (const size_t& curr_config_bits : num_config_bits) {
-     num_wls = std::max(num_wls, find_memory_decoder_data_size(curr_config_bits));
+  for (const auto& curr_config_bits : num_config_bits) {
+     num_wls = std::max(num_wls, find_memory_decoder_data_size(curr_config_bits.first));
   }
 
   /* Create separated memory bank circuitry, i.e., BL/WL decoders for each region */
@@ -953,9 +1036,9 @@ void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manag
      * Otherwise, we create one and add it to the decoder library
      */
     DecoderId bl_decoder_id = decoder_lib.find_decoder(bl_addr_size, num_bls,
-                                                       true, true, false);
+                                                       true, true, false, false);
     if (DecoderId::INVALID() == bl_decoder_id) {
-      bl_decoder_id = decoder_lib.add_decoder(bl_addr_size, num_bls, true, true, false);
+      bl_decoder_id = decoder_lib.add_decoder(bl_addr_size, num_bls, true, true, false, false);
     }
     VTR_ASSERT(DecoderId::INVALID() != bl_decoder_id);
 
@@ -981,9 +1064,9 @@ void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manag
      * Otherwise, we create one and add it to the decoder library
      */
     DecoderId wl_decoder_id = decoder_lib.find_decoder(wl_addr_size, num_wls,
-                                                       true, false, false);
+                                                       true, false, false, false);
     if (DecoderId::INVALID() == wl_decoder_id) {
-      wl_decoder_id = decoder_lib.add_decoder(wl_addr_size, num_wls, true, false, false);
+      wl_decoder_id = decoder_lib.add_decoder(wl_addr_size, num_wls, true, false, false, false);
     }
     VTR_ASSERT(DecoderId::INVALID() != wl_decoder_id);
 
@@ -1430,9 +1513,9 @@ void add_top_module_nets_cmos_memory_frame_decoder_config_bus(ModuleManager& mod
   /* Search the decoder library and try to find one 
    * If not found, create a new module and add it to the module manager 
    */
-  DecoderId decoder_id = decoder_lib.find_decoder(addr_size, data_size, true, false, false);
+  DecoderId decoder_id = decoder_lib.find_decoder(addr_size, data_size, true, false, false, false);
   if (DecoderId::INVALID() == decoder_id) {
-    decoder_id = decoder_lib.add_decoder(addr_size, data_size, true, false, false);
+    decoder_id = decoder_lib.add_decoder(addr_size, data_size, true, false, false, false);
   }
   VTR_ASSERT(DecoderId::INVALID() != decoder_id);
 
@@ -1582,7 +1665,7 @@ static
 void add_top_module_nets_cmos_memory_frame_config_bus(ModuleManager& module_manager,
                                                       DecoderLibrary& decoder_lib,
                                                       const ModuleId& top_module,
-                                                      const vtr::vector<ConfigRegionId, size_t>& num_config_bits) {
+                                                      const TopModuleNumConfigBits& num_config_bits) {
   /* Find the number of address bits for the top-level module */
   ModulePortId top_addr_port = module_manager.find_module_port(top_module, std::string(DECODER_ADDRESS_PORT_NAME));
   BasicPort top_addr_port_info = module_manager.module_port(top_module, top_addr_port);
@@ -1598,7 +1681,7 @@ void add_top_module_nets_cmos_memory_frame_config_bus(ModuleManager& module_mana
      * - The number of address bits of the configurable child is the same as top-level
      */
     if ( (1 == module_manager.region_configurable_children(top_module, config_region).size())
-       && (num_config_bits[config_region] == top_addr_size)) { 
+       && (num_config_bits[config_region].first == top_addr_size)) { 
       add_top_module_nets_cmos_memory_frame_short_config_bus(module_manager, top_module, config_region);
     } else {
       add_top_module_nets_cmos_memory_frame_decoder_config_bus(module_manager, decoder_lib, top_module, config_region);
@@ -1653,9 +1736,11 @@ void add_top_module_nets_cmos_memory_frame_config_bus(ModuleManager& module_mana
 static 
 void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
                                                 DecoderLibrary& decoder_lib,
+                                                MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                                 const ModuleId& parent_module,
+                                                const CircuitLibrary& circuit_lib,
                                                 const ConfigProtocol& config_protocol, 
-                                                const vtr::vector<ConfigRegionId, size_t>& num_config_bits) {
+                                                const TopModuleNumConfigBits& num_config_bits) {
   switch (config_protocol.type()) {
   case CONFIG_MEM_STANDALONE:
     add_module_nets_cmos_flatten_memory_config_bus(module_manager, parent_module,
@@ -1669,6 +1754,10 @@ void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
   }
   case CONFIG_MEM_MEMORY_BANK:
     add_top_module_nets_cmos_memory_bank_config_bus(module_manager, decoder_lib, parent_module, num_config_bits);
+    break;
+  case CONFIG_MEM_QL_MEMORY_BANK:
+    add_top_module_nets_cmos_ql_memory_bank_config_bus(module_manager, decoder_lib, blwl_sr_banks,
+                                                       parent_module, circuit_lib, config_protocol, num_config_bits);
     break;
   case CONFIG_MEM_FRAME_BASED:
     add_top_module_nets_cmos_memory_frame_config_bus(module_manager, decoder_lib, parent_module, num_config_bits);
@@ -1714,17 +1803,21 @@ void add_top_module_nets_cmos_memory_config_bus(ModuleManager& module_manager,
  *******************************************************************/
 void add_top_module_nets_memory_config_bus(ModuleManager& module_manager,
                                            DecoderLibrary& decoder_lib,
+                                           MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                            const ModuleId& parent_module,
+                                           const CircuitLibrary& circuit_lib,
                                            const ConfigProtocol& config_protocol, 
                                            const e_circuit_model_design_tech& mem_tech,
-                                           const vtr::vector<ConfigRegionId, size_t>& num_config_bits) {
+                                           const TopModuleNumConfigBits& num_config_bits) {
 
   vtr::ScopedStartFinishTimer timer("Add module nets for configuration buses");
 
   switch (mem_tech) {
   case CIRCUIT_MODEL_DESIGN_CMOS:
     add_top_module_nets_cmos_memory_config_bus(module_manager, decoder_lib,
-                                               parent_module, 
+                                               blwl_sr_banks,
+                                               parent_module,
+                                               circuit_lib,
                                                config_protocol,
                                                num_config_bits);
     break;

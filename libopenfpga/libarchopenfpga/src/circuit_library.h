@@ -288,6 +288,7 @@ class CircuitLibrary {
     bool port_is_set(const CircuitPortId& circuit_port_id) const;
     bool port_is_config_enable(const CircuitPortId& circuit_port_id) const;
     bool port_is_prog(const CircuitPortId& circuit_port_id) const;
+    bool port_is_shift_register(const CircuitPortId& circuit_port_id) const;
     size_t port_lut_frac_level(const CircuitPortId& circuit_port_id) const;
     bool port_is_harden_lut_port(const CircuitPortId& circuit_port_id) const;
     std::vector<size_t> port_lut_output_mask(const CircuitPortId& circuit_port_id) const;
@@ -372,6 +373,8 @@ class CircuitLibrary {
                                    const bool& is_config_enable);
     void set_port_is_prog(const CircuitPortId& circuit_port_id, 
                           const bool& is_prog);
+    void set_port_is_shift_register(const CircuitPortId& circuit_port_id, 
+                                    const bool& is_shift_register);
     void set_port_tri_state_model_name(const CircuitPortId& circuit_port_id, 
                                        const std::string& model_name);
     void set_port_tri_state_model_id(const CircuitPortId& circuit_port_id, 
@@ -560,6 +563,7 @@ class CircuitLibrary {
     vtr::vector<CircuitPortId, bool> port_is_set_;
     vtr::vector<CircuitPortId, bool> port_is_config_enable_;
     vtr::vector<CircuitPortId, bool> port_is_prog_;
+    vtr::vector<CircuitPortId, bool> port_is_shift_register_;
     vtr::vector<CircuitPortId, std::string> port_tri_state_model_names_;
     vtr::vector<CircuitPortId, CircuitModelId> port_tri_state_model_ids_;
     vtr::vector<CircuitPortId, std::string> port_inv_model_names_;

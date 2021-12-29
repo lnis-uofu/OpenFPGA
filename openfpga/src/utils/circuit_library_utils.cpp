@@ -94,6 +94,7 @@ size_t find_rram_circuit_num_shared_config_bits(const CircuitLibrary& circuit_li
   case CONFIG_MEM_STANDALONE:
   case CONFIG_MEM_SCAN_CHAIN:
     break;
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK: {
     /* Find BL/WL ports */
     std::vector<CircuitPortId> blb_ports = circuit_lib.model_ports_by_type(rram_model, CIRCUIT_MODEL_PORT_BLB);
@@ -175,6 +176,7 @@ size_t find_circuit_num_config_bits(const e_config_protocol_type& config_protoco
   switch (config_protocol_type) {
   case CONFIG_MEM_STANDALONE: 
   case CONFIG_MEM_SCAN_CHAIN: 
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK: {
     break;
   }
@@ -278,19 +280,48 @@ std::vector<std::string> find_circuit_library_unique_spice_netlists(const Circui
  * Advanced check if the circuit model of configurable memory
  * satisfy the needs of configuration protocol
  * - Configuration chain -based: we check if we have a CCFF model
- * - Frame -based: we check if we have a SRAM model which has BL and WL
- * 
+ * - Flatten/Frame -based: we check if we have a SRAM model which has BL and WL
+ * - Memory bank: we check if we have a SRAM model. Also we need to check if we have valid CCFF models for BL/WL models (if selected)
  ***********************************************************************/
-bool check_configurable_memory_circuit_model(const e_config_protocol_type& config_protocol_type,
-                                             const CircuitLibrary& circuit_lib,
-                                             const CircuitModelId& config_mem_circuit_model) {
+bool check_configurable_memory_circuit_model(const ConfigProtocol& config_protocol,
+                                             const CircuitLibrary& circuit_lib) {
   size_t num_err = 0;
+  CircuitModelId config_mem_circuit_model = config_protocol.memory_model();
 
-  switch (config_protocol_type) {
+  switch (config_protocol.type()) {
   case CONFIG_MEM_SCAN_CHAIN:   
     num_err = check_ccff_circuit_model_ports(circuit_lib,
                                              config_mem_circuit_model);
     break;
+  case CONFIG_MEM_QL_MEMORY_BANK: {
+    num_err = check_sram_circuit_model_ports(circuit_lib,
+                                             config_mem_circuit_model,
+                                             true);
+    /* Check circuit model for BL protocol */ 
+    CircuitModelId bl_memory_model = config_protocol.bl_memory_model();
+    if ( BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type()
+      && CircuitModelId::INVALID() == bl_memory_model) { 
+      VTR_LOG_ERROR("Expect a valid CCFF circuit model for BL protocol");
+      num_err++;
+    }
+    if (bl_memory_model) { 
+      num_err += check_bl_ccff_circuit_model_ports(circuit_lib,
+                                                   bl_memory_model);
+    }
+
+    /* Check circuit model for WL protocol */ 
+    CircuitModelId wl_memory_model = config_protocol.wl_memory_model();
+    if ( BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.wl_protocol_type()
+      && CircuitModelId::INVALID() == wl_memory_model) { 
+      VTR_LOG_ERROR("Expect a valid CCFF circuit model for WL protocol");
+      num_err++;
+    }
+    if (wl_memory_model) { 
+      num_err += check_wl_ccff_circuit_model_ports(circuit_lib,
+                                                   wl_memory_model);
+    }
+    break;
+  }
   case CONFIG_MEM_STANDALONE: 
   case CONFIG_MEM_MEMORY_BANK:  
   case CONFIG_MEM_FRAME_BASED:  

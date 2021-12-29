@@ -55,6 +55,7 @@ namespace openfpga {
  ********************************************************************/
 void fpga_fabric_verilog(ModuleManager &module_manager,
                          NetlistManager &netlist_manager,
+                         const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                          const CircuitLibrary &circuit_lib,
                          const MuxLibrary &mux_lib,
                          const DecoderLibrary &decoder_lib,
@@ -94,6 +95,7 @@ void fpga_fabric_verilog(ModuleManager &module_manager,
    * Without the modules in the module manager, core logic generation is not possible!!!
    */
   print_verilog_submodule(module_manager, netlist_manager,
+                          blwl_sr_banks,
                           mux_lib, decoder_lib, circuit_lib,
                           submodule_dir_path,
                           options);
@@ -147,6 +149,7 @@ void fpga_fabric_verilog(ModuleManager &module_manager,
 int fpga_verilog_full_testbench(const ModuleManager &module_manager,
                                 const BitstreamManager &bitstream_manager,
                                 const FabricBitstream &fabric_bitstream,
+                                const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                 const AtomContext &atom_ctx,
                                 const PlacementContext &place_ctx,
                                 const PinConstraints& pin_constraints,
@@ -173,7 +176,7 @@ int fpga_verilog_full_testbench(const ModuleManager &module_manager,
   /* Generate full testbench for verification, including configuration phase and operating phase */
   std::string top_testbench_file_path = src_dir_path + netlist_name + std::string(AUTOCHECK_TOP_TESTBENCH_VERILOG_FILE_POSTFIX);
   print_verilog_full_testbench(module_manager,
-                              bitstream_manager, fabric_bitstream,
+                              bitstream_manager, fabric_bitstream, blwl_sr_banks,
                               circuit_lib,
                               config_protocol,
                               fabric_global_port_info,

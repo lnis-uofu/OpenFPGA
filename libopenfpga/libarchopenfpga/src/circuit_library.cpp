@@ -949,12 +949,18 @@ bool CircuitLibrary::port_is_config_enable(const CircuitPortId& circuit_port_id)
   return port_is_config_enable_[circuit_port_id];
 }
 
-
 /* Return a flag if the port is used during programming a FPGA in a circuit model */
 bool CircuitLibrary::port_is_prog(const CircuitPortId& circuit_port_id) const {
   /* validate the circuit_port_id */
   VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
   return port_is_prog_[circuit_port_id];
+}
+
+/* Return a flag if the port is used by shift register in a circuit model */
+bool CircuitLibrary::port_is_shift_register(const CircuitPortId& circuit_port_id) const {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  return port_is_shift_register_[circuit_port_id];
 }
 
 /* Return which level the output port locates at a LUT multiplexing structure */
@@ -1170,7 +1176,7 @@ CircuitModelId CircuitLibrary::add_model(const enum e_circuit_model_type& type) 
 
   /* Pass-gate-related parameters */
   pass_gate_logic_model_names_.emplace_back();
-  pass_gate_logic_model_ids_.emplace_back();
+  pass_gate_logic_model_ids_.emplace_back(CircuitModelId::INVALID());
 
   /* Delay information */
   delay_types_.emplace_back();
@@ -1401,6 +1407,7 @@ CircuitPortId CircuitLibrary::add_model_port(const CircuitModelId& model_id,
   port_is_set_.push_back(false);
   port_is_config_enable_.push_back(false);
   port_is_prog_.push_back(false);
+  port_is_shift_register_.push_back(false);
   port_tri_state_model_names_.emplace_back();
   port_tri_state_model_ids_.push_back(CircuitModelId::INVALID());
   port_inv_model_names_.emplace_back();
@@ -1535,6 +1542,15 @@ void CircuitLibrary::set_port_is_prog(const CircuitPortId& circuit_port_id,
   /* validate the circuit_port_id */
   VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
   port_is_prog_[circuit_port_id] = is_prog;
+  return;
+}
+
+/* Set the is_prog for a port of a circuit model */
+void CircuitLibrary::set_port_is_shift_register(const CircuitPortId& circuit_port_id, 
+                                                const bool& is_shift_register) {
+  /* validate the circuit_port_id */
+  VTR_ASSERT(valid_circuit_port_id(circuit_port_id));
+  port_is_shift_register_[circuit_port_id] = is_shift_register;
   return;
 }
 

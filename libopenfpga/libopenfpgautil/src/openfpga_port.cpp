@@ -51,11 +51,6 @@ BasicPort::BasicPort(const std::string& name, const size_t& width) {
   set_origin_port_width(-1);
 }
 
-/* Copy constructor */
-BasicPort::BasicPort(const BasicPort& basic_port) {
-  set(basic_port);
-} 
-
 /************************************************************************
  * Accessors 
  ***********************************************************************/

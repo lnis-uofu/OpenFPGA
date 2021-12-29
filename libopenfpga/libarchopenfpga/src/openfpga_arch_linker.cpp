@@ -22,6 +22,29 @@ void link_config_protocol_to_circuit_library(openfpga::Arch& openfpga_arch) {
   }
 
   openfpga_arch.config_protocol.set_memory_model(config_memory_model); 
+
+  /* Optional: we need to bind the memory model for BL/WL protocols */
+  if (!openfpga_arch.config_protocol.bl_memory_model_name().empty()) {
+    CircuitModelId bl_memory_model = openfpga_arch.circuit_lib.model(openfpga_arch.config_protocol.bl_memory_model_name());
+    /* Error out if the circuit model id is invalid */
+    if (CircuitModelId::INVALID() == bl_memory_model) {
+      VTR_LOG("Invalid bl memory model name '%s' defined in <configuration_protocol>!",
+              openfpga_arch.config_protocol.bl_memory_model_name().c_str());
+      exit(1);
+    }
+    openfpga_arch.config_protocol.set_bl_memory_model(bl_memory_model); 
+  }
+
+  if (!openfpga_arch.config_protocol.wl_memory_model_name().empty()) {
+    CircuitModelId wl_memory_model = openfpga_arch.circuit_lib.model(openfpga_arch.config_protocol.wl_memory_model_name());
+    /* Error out if the circuit model id is invalid */
+    if (CircuitModelId::INVALID() == wl_memory_model) {
+      VTR_LOG("Invalid wl memory model name '%s' defined in <configuration_protocol>!",
+              openfpga_arch.config_protocol.wl_memory_model_name().c_str());
+      exit(1);
+    }
+    openfpga_arch.config_protocol.set_wl_memory_model(wl_memory_model); 
+  }
 }
 
 /********************************************************************

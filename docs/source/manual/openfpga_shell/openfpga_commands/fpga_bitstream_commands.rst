@@ -77,6 +77,9 @@ write_fabric_bitstream
 
     .. note:: If both reset and set ports are defined in the circuit modeling for programming, OpenFPGA will pick the one that will bring largest benefit in speeding up configuration.
 
+  .. option:: --keep_dont_care_bits
+
+    Keep don't care bits (``x``) in the outputted bitstream file. This is only applicable to plain text file format. If not enabled, the don't care bits are converted to either logic ``0`` or ``1``.
 
   .. option:: --verbose
 

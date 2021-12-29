@@ -87,6 +87,7 @@ bool find_bit_value_to_skip_for_fast_configuration(const e_config_protocol_type&
     }
     break;
   }
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
   case CONFIG_MEM_FRAME_BASED: {
     /* Count how many logic '1' and logic '0' bits we can skip */

@@ -97,7 +97,7 @@ void print_pnr_sdc_global_clock_ports(std::fstream& fp,
       /* Should try to find a port defintion from simulation parameters
        * If found, it means that we need to use special clock name! 
        */
-      for (const SimulationClockId& sim_clock : sim_setting.clocks()) { 
+      for (const SimulationClockId& sim_clock : sim_setting.operating_clocks()) { 
         if (port_to_constrain == sim_setting.clock_port(sim_clock)) {
           clock_period = 1./sim_setting.clock_frequency(sim_clock);
         }

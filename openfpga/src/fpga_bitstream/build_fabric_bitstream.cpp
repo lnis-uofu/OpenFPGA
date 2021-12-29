@@ -19,6 +19,7 @@
 #include "decoder_library_utils.h"
 #include "bitstream_manager_utils.h"
 #include "build_fabric_bitstream.h"
+#include "build_fabric_bitstream_memory_bank.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -489,6 +490,7 @@ void rec_build_module_fabric_dependent_frame_bitstream(const BitstreamManager& b
  *******************************************************************/
 static 
 void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protocol,
+                                             const CircuitLibrary& circuit_lib,
                                              const BitstreamManager& bitstream_manager,
                                              const ConfigBlockId& top_block,
                                              const ModuleManager& module_manager,
@@ -573,6 +575,13 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
                                                               fabric_bitstream,
                                                               fabric_bitstream_region);
     }
+    break;
+  }
+  case CONFIG_MEM_QL_MEMORY_BANK: { 
+    build_module_fabric_dependent_bitstream_ql_memory_bank(config_protocol, circuit_lib,
+                                                           bitstream_manager, top_block,
+                                                           module_manager, top_module, 
+                                                           fabric_bitstream);
     break;
   }
   case CONFIG_MEM_FRAME_BASED: {
@@ -694,6 +703,7 @@ void build_module_fabric_dependent_bitstream(const ConfigProtocol& config_protoc
  *******************************************************************/
 FabricBitstream build_fabric_dependent_bitstream(const BitstreamManager& bitstream_manager,
                                                  const ModuleManager& module_manager,
+                                                 const CircuitLibrary& circuit_lib,
                                                  const ConfigProtocol& config_protocol,
                                                  const bool& verbose) {
   FabricBitstream fabric_bitstream; 
@@ -712,7 +722,7 @@ FabricBitstream build_fabric_dependent_bitstream(const BitstreamManager& bitstre
   VTR_ASSERT(0 == top_module_name.compare(bitstream_manager.block_name(top_block[0])));
 
   /* Start build-up formally */
-  build_module_fabric_dependent_bitstream(config_protocol,
+  build_module_fabric_dependent_bitstream(config_protocol, circuit_lib,
                                           bitstream_manager, top_block[0],
                                           module_manager, top_module, 
                                           fabric_bitstream);

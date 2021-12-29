@@ -103,6 +103,7 @@ int write_fabric_config_bit_to_xml_file(std::fstream& fp,
   case CONFIG_MEM_STANDALONE: 
   case CONFIG_MEM_SCAN_CHAIN:
     break;
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK: { 
     /* Bit line address */
     write_tab_to_file(fp, xml_hierarchy_depth + 1);

@@ -69,6 +69,13 @@ void add_sram_ports_to_module_manager(ModuleManager& module_manager,
                                       const e_config_protocol_type sram_orgz_type,
                                       const size_t& num_config_bits);
 
+void add_pb_sram_ports_to_module_manager(ModuleManager& module_manager, 
+                                         const ModuleId& module_id,
+                                         const CircuitLibrary& circuit_lib,
+                                         const CircuitModelId& sram_model,
+                                         const e_config_protocol_type sram_orgz_type,
+                                         const size_t& num_config_bits);
+
 void add_primitive_pb_type_ports_to_module_manager(ModuleManager& module_manager, 
                                                    const ModuleId& module_id,
                                                    t_pb_type* cur_pb_type,
@@ -109,6 +116,16 @@ void add_module_nets_cmos_flatten_memory_config_bus(ModuleManager& module_manage
                                                     const e_config_protocol_type& sram_orgz_type,
                                                     const e_circuit_model_port_type& config_port_type);
 
+void add_module_nets_cmos_memory_bank_bl_config_bus(ModuleManager& module_manager,
+                                                    const ModuleId& parent_module,
+                                                    const e_config_protocol_type& sram_orgz_type,
+                                                    const e_circuit_model_port_type& config_port_type);
+
+void add_module_nets_cmos_memory_bank_wl_config_bus(ModuleManager& module_manager,
+                                                    const ModuleId& parent_module,
+                                                    const e_config_protocol_type& sram_orgz_type,
+                                                    const e_circuit_model_port_type& config_port_type);
+
 void add_module_nets_cmos_memory_chain_config_bus(ModuleManager& module_manager,
                                                   const ModuleId& parent_module,
                                                   const e_config_protocol_type& sram_orgz_type);
@@ -122,6 +139,12 @@ void add_module_nets_memory_config_bus(ModuleManager& module_manager,
                                        const ModuleId& parent_module,
                                        const e_config_protocol_type& sram_orgz_type, 
                                        const e_circuit_model_design_tech& mem_tech);
+
+void add_pb_module_nets_memory_config_bus(ModuleManager& module_manager,
+                                          DecoderLibrary& decoder_lib,
+                                          const ModuleId& parent_module,
+                                          const e_config_protocol_type& sram_orgz_type, 
+                                          const e_circuit_model_design_tech& mem_tech);
 
 size_t find_module_num_shared_config_bits(const ModuleManager& module_manager,
                                           const ModuleId& module_id);

@@ -14,9 +14,13 @@
 
 struct fabric_region_id_tag;
 struct fabric_key_id_tag;
+struct fabric_bit_line_bank_id_tag;
+struct fabric_word_line_bank_id_tag;
 
 typedef vtr::StrongId<fabric_region_id_tag> FabricRegionId;
 typedef vtr::StrongId<fabric_key_id_tag> FabricKeyId;
+typedef vtr::StrongId<fabric_bit_line_bank_id_tag> FabricBitLineBankId;
+typedef vtr::StrongId<fabric_word_line_bank_id_tag> FabricWordLineBankId;
 
 /* Short declaration of class */
 class FabricKey;

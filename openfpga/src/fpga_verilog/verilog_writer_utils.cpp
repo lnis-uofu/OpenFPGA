@@ -721,7 +721,7 @@ std::string generate_verilog_constant_values(const std::vector<size_t>& const_va
 }
 
 /********************************************************************
- * Generate a verilog port with a deposite of constant values
+ * Generate a verilog port with a deposit of constant values
  ********************************************************************/
 std::string generate_verilog_port_constant_values(const BasicPort& output_port,
                                                   const std::vector<size_t>& const_values,
@@ -732,6 +732,32 @@ std::string generate_verilog_port_constant_values(const BasicPort& output_port,
   VTR_ASSERT( const_values.size() == output_port.get_width() );
 
   port_str = generate_verilog_port(VERILOG_PORT_CONKT, output_port);
+  if (is_register) {
+    port_str += " <= ";
+  } else {
+    VTR_ASSERT_SAFE(!is_register);
+    port_str += " = ";
+  }
+  port_str += generate_verilog_constant_values(const_values);
+  return port_str;
+}
+
+/********************************************************************
+ * Generate a list of verilog ports with a deposit of constant values
+ ********************************************************************/
+std::string generate_verilog_ports_constant_values(const std::vector<BasicPort>& output_ports,
+                                                   const std::vector<size_t>& const_values,
+                                                   const bool& is_register) {
+  std::string port_str;
+
+  /* Must check: the port width matches */
+  size_t total_width = 0;
+  for (const BasicPort& port : output_ports) {
+    total_width += port.get_width();
+  }
+  VTR_ASSERT( const_values.size() == total_width );
+
+  port_str = generate_verilog_ports(output_ports);
   if (is_register) {
     port_str += " <= ";
   } else {
@@ -1010,6 +1036,7 @@ void print_verilog_local_sram_wires(std::fstream& fp,
     print_verilog_wire_connection(fp, ccff_tail_local_port, ccff_tail_port, false); 
     break;
   }
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK: {
     /* Generate the name of local wire for the SRAM output and inverted output */
     std::vector<BasicPort> sram_ports;
@@ -1100,6 +1127,7 @@ void print_verilog_local_config_bus(std::fstream& fp,
      */
     break;
   case CONFIG_MEM_SCAN_CHAIN: 
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK: {
     /* Two configuration buses should be outputted
      * One for the regular SRAM ports of a routing multiplexer
@@ -1173,6 +1201,7 @@ void print_verilog_rram_mux_config_bus(std::fstream& fp,
      */
     break;
   }
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK: {
     /* This is currently most used in ReRAM FPGAs */
     /* Print configuration bus to group reserved BL/WLs */

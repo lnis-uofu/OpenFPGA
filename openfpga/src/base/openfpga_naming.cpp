@@ -703,6 +703,7 @@ std::string generate_sram_port_name(const e_config_protocol_type& sram_orgz_type
     }
     break;
   case CONFIG_MEM_STANDALONE:
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     /* Two types of ports are available:  
      * (1) Bit Lines (BLs) of a SRAM cell, enabled by port type of BL
@@ -718,9 +719,11 @@ std::string generate_sram_port_name(const e_config_protocol_type& sram_orgz_type
      */
     if (CIRCUIT_MODEL_PORT_BL == port_type) {
       port_name = std::string(MEMORY_BL_PORT_NAME); 
-    } else {
-      VTR_ASSERT( CIRCUIT_MODEL_PORT_WL == port_type );
+    } else if (CIRCUIT_MODEL_PORT_WL == port_type) {
       port_name = std::string(MEMORY_WL_PORT_NAME); 
+    } else {
+      VTR_ASSERT( CIRCUIT_MODEL_PORT_WLR == port_type );
+      port_name = std::string(MEMORY_WLR_PORT_NAME); 
     }
     break;
   case CONFIG_MEM_FRAME_BASED:
@@ -809,6 +812,32 @@ std::string generate_sram_local_port_name(const CircuitLibrary& circuit_lib,
 
   return port_name;
 }
+
+/*********************************************************************
+ * Generate the BL/WL port names for the top-level module of an FPGA fabric
+ * Each BL/WL bus drive a specific configuration region has an unique name
+ *********************************************************************/
+std::string generate_regional_blwl_port_name(const std::string& blwl_port_prefix,
+                                             const ConfigRegionId& region_id) {
+  return blwl_port_prefix + std::string("_config_region_") + std::to_string(size_t(region_id)); 
+}
+
+/*********************************************************************
+ * Generate the module name for a shift register chain which configures BLs
+ *********************************************************************/
+std::string generate_bl_shift_register_module_name(const std::string& memory_model_name,
+                                                   const size_t& shift_register_size) {
+  return std::string("bl_shift_register_") + memory_model_name + std::string("_size") + std::to_string(shift_register_size);
+}
+
+/*********************************************************************
+ * Generate the module name for a shift register chain which configures WLs
+ *********************************************************************/
+std::string generate_wl_shift_register_module_name(const std::string& memory_model_name,
+                                                   const size_t& shift_register_size) {
+  return std::string("wl_shift_register_") + memory_model_name + std::string("_size") + std::to_string(shift_register_size);
+}
+
 
 /*********************************************************************
  * Generate the port name for the input bus of a routing multiplexer

@@ -32,3 +32,7 @@ run-task fpga_bitstream/write_io_mapping --debug --show_thread_logs
 echo -e "Testing report bitstream distribution to file";
 run-task fpga_bitstream/report_bitstream_distribution/default_depth --debug --show_thread_logs
 run-task fpga_bitstream/report_bitstream_distribution/custom_depth --debug --show_thread_logs
+
+echo -e "Testing bitstream file with don't care bits";
+run-task fpga_bitstream/dont_care_bits/ql_memory_bank_flatten --debug --show_thread_logs
+run-task fpga_bitstream/dont_care_bits/ql_memory_bank_shift_register --debug --show_thread_logs

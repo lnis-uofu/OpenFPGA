@@ -56,9 +56,8 @@ int read_arch(OpenfpgaContext& openfpga_context,
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  if (false == check_configurable_memory_circuit_model(openfpga_context.arch().config_protocol.type(),
-                                                       openfpga_context.arch().circuit_lib,
-                                                       openfpga_context.arch().config_protocol.memory_model())) {
+  if (false == check_configurable_memory_circuit_model(openfpga_context.arch().config_protocol,
+                                                       openfpga_context.arch().circuit_lib)) {
     return CMD_EXEC_FATAL_ERROR;
   }
 

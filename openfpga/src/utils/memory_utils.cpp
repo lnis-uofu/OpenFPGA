@@ -7,6 +7,7 @@
 #include "vtr_log.h"
 
 #include "openfpga_naming.h"
+#include "decoder_library_utils.h"
 #include "memory_utils.h"
 
 /* begin namespace openfpga */
@@ -74,6 +75,7 @@ std::map<std::string, BasicPort> generate_cmos_mem_module_port2port_map(const Ba
     port2port_name_map[generate_configurable_memory_inverted_data_out_name()] = mem_output_bus_ports[1];
     break;
   }
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     /* TODO: */
     break;
@@ -131,6 +133,7 @@ std::map<std::string, BasicPort> generate_rram_mem_module_port2port_map(const Ba
     port2port_name_map[generate_configurable_memory_inverted_data_out_name()] = mem_output_bus_ports[1];
     break;
   }
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     /* TODO: link BL/WL/Reserved Ports to the inputs of a memory module */
     break;
@@ -189,6 +192,7 @@ void update_cmos_mem_module_config_bus(const e_config_protocol_type& sram_orgz_t
      */
     VTR_ASSERT(true == config_bus.rotate(1));
     break;
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     /* In this case, a memory module has a number of BL/WL and BLB/WLB (possibly).
      * LSB and MSB of configuration bus will be shifted by the number of BL/WL/BLB/WLB. 
@@ -219,6 +223,7 @@ void update_rram_mem_module_config_bus(const e_config_protocol_type& sram_orgz_t
      */
     VTR_ASSERT(true == config_bus.rotate(1));
     break;
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     /* In this case, a memory module contains unique BL/WL or BLB/WLB,
      * which are not shared with other modules   
@@ -275,6 +280,7 @@ bool check_mem_config_bus(const e_config_protocol_type& sram_orgz_type,
      */
     return (local_expected_msb == config_bus.get_msb());
     break;
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     /* TODO: comment on why
      */
@@ -319,11 +325,13 @@ std::vector<std::string> generate_sram_port_names(const CircuitLibrary& circuit_
     model_port_types.push_back(CIRCUIT_MODEL_PORT_OUTPUT);
     break;
   case CONFIG_MEM_STANDALONE: 
+  case CONFIG_MEM_QL_MEMORY_BANK: 
   case CONFIG_MEM_MEMORY_BANK: {
     std::vector<e_circuit_model_port_type> ports_to_search;
     ports_to_search.push_back(CIRCUIT_MODEL_PORT_BL);
     ports_to_search.push_back(CIRCUIT_MODEL_PORT_WL);
-    /* Try to find a BL/WL/BLB/WLB port and update the port types/module port types to be added */
+    ports_to_search.push_back(CIRCUIT_MODEL_PORT_WLR);
+    /* Try to find a BL/WL/WLR port and update the port types/module port types to be added */
     for (const auto& port_to_search : ports_to_search) {
       std::vector<CircuitPortId> found_port = circuit_lib.model_ports_by_type(sram_model, port_to_search);
       if (0 == found_port.size()) {
@@ -373,6 +381,7 @@ size_t generate_sram_port_size(const e_config_protocol_type sram_orgz_type,
     /* CCFF head/tail are single-bit ports */
     sram_port_size = 1;
     break;
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     break;
   case CONFIG_MEM_FRAME_BASED:
@@ -384,6 +393,74 @@ size_t generate_sram_port_size(const e_config_protocol_type sram_orgz_type,
   }
 
   return sram_port_size;
+}
+
+/********************************************************************
+ * @brief Generate a list of ports that are used for SRAM configuration to a module
+ * - Standalone SRAMs: use the suggested port_size 
+ * - Scan-chain Flip-flops: the port size will be forced to 1 in this case 
+ * - Memory decoders: use the suggested port_size 
+ * - QL Memory decoders: Apply square root as BL/WLs will be grouped
+ ********************************************************************/
+size_t generate_pb_sram_port_size(const e_config_protocol_type sram_orgz_type,
+                                  const size_t& num_config_bits) {
+  size_t sram_port_size = num_config_bits;
+
+  switch (sram_orgz_type) {
+  case CONFIG_MEM_STANDALONE: 
+    break;
+  case CONFIG_MEM_SCAN_CHAIN: 
+    /* CCFF head/tail are single-bit ports */
+    sram_port_size = 1;
+    break;
+  case CONFIG_MEM_QL_MEMORY_BANK:
+    sram_port_size = find_memory_decoder_data_size(num_config_bits);
+    break;
+  case CONFIG_MEM_MEMORY_BANK:
+    break;
+  case CONFIG_MEM_FRAME_BASED:
+    break;
+  default:
+    VTR_LOGF_ERROR(__FILE__, __LINE__,
+                   "Invalid type of SRAM organization!\n");
+    exit(1);
+  }
+
+  return sram_port_size;
+}
+
+size_t estimate_num_configurable_children_to_skip_by_config_protocol(const ConfigProtocol& config_protocol,
+                                                                     size_t curr_region_num_config_child) {
+  size_t num_child_to_skip = 0;
+  /* Frame-based configuration protocol will have 1 decoder
+   * if there are more than 1 configurable children
+   */
+  if ( (CONFIG_MEM_FRAME_BASED == config_protocol.type())
+    && (2 <= curr_region_num_config_child)) {
+    num_child_to_skip = 1;
+  }
+ 
+  /* Memory configuration protocol will have 2 decoders
+   * at the top-level
+   */
+  if (CONFIG_MEM_MEMORY_BANK == config_protocol.type()
+      || CONFIG_MEM_QL_MEMORY_BANK == config_protocol.type()) {
+    VTR_ASSERT(2 <= curr_region_num_config_child);
+    num_child_to_skip = 2;
+    /* - If flatten bus is used, BL/WL may not need decoders
+     * - If shift registers are used, BL/WLs do not need decoders. And shift registers are not counted as configurable children 
+     */
+    if ( BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()
+      || BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.bl_protocol_type() ) {
+      num_child_to_skip--;
+    }
+    if ( BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type()
+      || BLWL_PROTOCOL_SHIFT_REGISTER == config_protocol.wl_protocol_type() ) {
+      num_child_to_skip--;
+    }
+  }
+
+  return num_child_to_skip;
 }
 
 } /* end namespace openfpga */

@@ -19,6 +19,7 @@
 namespace openfpga {
 
 FabricGlobalPortInfo build_fabric_global_port_info(const ModuleManager& module_manager,
+                                                   const ConfigProtocol& config_protocol,
                                                    const TileAnnotation& tile_annotation,
                                                    const CircuitLibrary& circuit_lib);
 

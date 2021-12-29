@@ -52,7 +52,6 @@ namespace openfpga {
  *******************************************************************/
 class RRGSB {
   public: /* Contructors */
-    RRGSB(const RRGSB&);/* Copy constructor */
     RRGSB();/* Default constructor */
   public: /* Accessors */
     /* Get the number of sides of this SB */

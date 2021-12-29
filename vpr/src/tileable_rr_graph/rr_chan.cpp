@@ -11,12 +11,6 @@ namespace openfpga {
 /************************************************************************
  * Constructors
  ***********************************************************************/
-/* Copy Constructor */
-RRChan::RRChan(const RRChan& rr_chan) {
-  this->set(rr_chan);
-  return;
-}
-
 /* default constructor */
 RRChan::RRChan() {
   type_ = NUM_RR_TYPES;

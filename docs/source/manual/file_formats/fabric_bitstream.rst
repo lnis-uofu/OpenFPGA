@@ -65,6 +65,112 @@ The information depends on the type of configuration procotol.
 
   .. note:: When there are multiple configuration regions, each ``<bit_value>`` may consist of multiple bits. For example, ``0110`` represents the bits for 4 configuration regions, where the 4 digits correspond to the bits from region ``0, 1, 2, 3`` respectively.
 
+.. option:: ql_memory_bank using decoders
+
+  Multiple lines will be included, each of which is organized as <bl_address><wl_address><bits>.
+  The size of address line and data input bits are shown as a comment in the bitstream file, which eases the development of bitstream downloader.
+  For example 
+  
+  .. code-block:: verilog
+
+    // Bitstream width (LSB -> MSB): <bl_address 5 bits><wl_address 5 bits><data input 1 bits>
+
+  The first part represents the Bit-Line address.
+  The second part represents the Word-Line address.
+  The third part represents the configuration bit.
+  For example
+   
+  .. code-block:: xml
+     
+     <bitline_address><wordline_address><bit_value> 
+     <bitline_address><wordline_address><bit_value> 
+     ...
+     <bitline_address><wordline_address><bit_value> 
+
+  .. note:: When there are multiple configuration regions, each ``<bit_value>`` may consist of multiple bits. For example, ``0110`` represents the bits for 4 configuration regions, where the 4 digits correspond to the bits from region ``0, 1, 2, 3`` respectively.
+
+.. option:: ql_memory_bank using flatten BL and WLs
+
+  Multiple lines will be included, each of which is organized as <bl_data><wl_data>.
+  The size of data are shown as a comment in the bitstream file, which eases the development of bitstream downloader.
+  For example 
+  
+  .. code-block:: verilog
+
+    // Bitstream width (LSB -> MSB): <Region 1: bl_data 5 bits><Region 2: bl_data 4 bits><Region 1: wl_data 5 bits><Region 2: wl_data 6 bits>
+
+  The first part represents the Bit-Line data from multiple configuration regions.
+  The second part represents the Word-Line data from multiple configuration regions.
+  For example
+   
+  .. code-block:: xml
+     
+     <bitline_data_region1><bitline_data_region2><wordline_data_region1><wordline_data_region2> 
+     <bitline_data_region1><bitline_data_region2><wordline_data_region1><wordline_data_region2> 
+     ...
+     <bitline_data_region1><bitline_data_region2><wordline_data_region1><wordline_data_region2> 
+
+  .. note:: The WL data of region is one-hot.
+
+.. option:: ql_memory_bank using shift registers
+
+  Multiple lines will be included, each of which is organized as <bl_data> or <wl_data>.
+  The size of data are shown as a comment in the bitstream file, which eases the development of bitstream downloader.
+  For example 
+  
+  .. code-block:: verilog
+
+    // Bitstream word count: 36
+    // Bitstream bl word size: 39
+    // Bitstream wl word size: 37
+    // Bitstream width (LSB -> MSB): <bl shift register heads 1 bits><wl shift register heads 1 bits>
+
+  The bitstream data are organized by words. Each word consists of two parts, BL data to be loaded to BL shift register chains and WL data to be loaded to WL shift register chains 
+  For example
+   
+  .. code-block:: xml
+     
+     // Word 0
+     // BL Part
+     <bitline_shift_register_data@clock_0>  ----
+     <bitline_shift_register_data@clock_1>   ^
+     <bitline_shift_register_data@clock_1>   |
+     ...                                   BL word size
+     <bitline_shift_register_data@clock_n-2> |
+     <bitline_shift_register_data@clock_n-1> v
+     <bitline_shift_register_data@clock_n>  ----
+     // Word 0
+     // WL Part
+     <wordline_shift_register_data@clock_0>  ----
+     <wordline_shift_register_data@clock_1>   ^
+     <wordline_shift_register_data@clock_1>   |
+     ...                                   WL word size
+     <wordline_shift_register_data@clock_n-2> |
+     <wordline_shift_register_data@clock_n-1> v
+     <wordline_shift_register_data@clock_n>  ----
+     // Word 1
+     // BL Part
+     <bitline_shift_register_data@clock_0>  ----
+     <bitline_shift_register_data@clock_1>   ^
+     <bitline_shift_register_data@clock_1>   |
+     ...                                   BL word size
+     <bitline_shift_register_data@clock_n-2> |
+     <bitline_shift_register_data@clock_n-1> v
+     <bitline_shift_register_data@clock_n>  ----
+     // Word 1
+     // WL Part
+     <wordline_shift_register_data@clock_0>  ----
+     <wordline_shift_register_data@clock_1>   ^
+     <wordline_shift_register_data@clock_1>   |
+     ...                                   WL word size
+     <wordline_shift_register_data@clock_n-2> |
+     <wordline_shift_register_data@clock_n-1> v
+     <wordline_shift_register_data@clock_n>  ----
+     ... // More words
+
+  .. note:: The BL/WL data may be multi-bit, while each bit corresponds to a configuration region
+  .. note:: The WL data of region is one-hot.
+
 .. option:: frame_based 
 
   Multiple lines will be included, each of which is organized as ``<address><data_input_bits>``.

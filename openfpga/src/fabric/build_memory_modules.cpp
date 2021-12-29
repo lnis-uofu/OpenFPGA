@@ -78,7 +78,6 @@ void add_module_input_nets_to_mem_modules(ModuleManager& module_manager,
  *     pin of output port of the memory module, where W is the size of port 
  * 3. It assumes fixed port name for output ports
  ********************************************************************/
-static 
 std::vector<ModuleNetId> add_module_output_nets_to_chain_mem_modules(ModuleManager& module_manager,
                                                                      const ModuleId& mem_module,
                                                                      const std::string& mem_module_output_name,
@@ -366,12 +365,15 @@ void build_memory_flatten_module(ModuleManager& module_manager,
   /* Get the BL/WL ports from the SRAM */
   std::vector<CircuitPortId> sram_bl_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_BL, true);
   std::vector<CircuitPortId> sram_wl_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_WL, true);
+  /* Optional: Get the WLR ports from the SRAM */
+  std::vector<CircuitPortId> sram_wlr_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_WLR, true);
   /* Get the output ports from the SRAM */
   std::vector<CircuitPortId> sram_output_ports = circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_OUTPUT, true);
 
-  /* Ensure that we have only 1 BL, 1 WL and 2 output ports*/
+  /* Ensure that we have only 1 BL, 1 WL and 2 output ports, as well as an optional WLR*/
   VTR_ASSERT(1 == sram_bl_ports.size());
   VTR_ASSERT(1 == sram_wl_ports.size());
+  VTR_ASSERT(2 > sram_wlr_ports.size());
   VTR_ASSERT(2 == sram_output_ports.size());
 
   /* Create a module and add to the module manager */
@@ -388,6 +390,12 @@ void build_memory_flatten_module(ModuleManager& module_manager,
 
   BasicPort wl_port(std::string(MEMORY_WL_PORT_NAME), num_mems);
   ModulePortId mem_wl_port = module_manager.add_port(mem_module, wl_port, ModuleManager::MODULE_INPUT_PORT);
+
+  BasicPort wlr_port(std::string(MEMORY_WLR_PORT_NAME), num_mems);
+  ModulePortId mem_wlr_port = ModulePortId::INVALID();
+  if (!sram_wlr_ports.empty()) {
+    mem_wlr_port = module_manager.add_port(mem_module, wlr_port, ModuleManager::MODULE_INPUT_PORT);
+  }
 
   /* Add each output port: port width should match the number of memories */
   for (size_t iport = 0; iport < sram_output_ports.size(); ++iport) {
@@ -418,6 +426,9 @@ void build_memory_flatten_module(ModuleManager& module_manager,
     }
     for (const CircuitPortId& port : sram_wl_ports) {
       add_module_input_nets_to_mem_modules(module_manager, mem_module, mem_wl_port, circuit_lib, port, sram_mem_module, i, sram_mem_instance);
+    }
+    for (const CircuitPortId& port : sram_wlr_ports) {
+      add_module_input_nets_to_mem_modules(module_manager, mem_module, mem_wlr_port, circuit_lib, port, sram_mem_module, i, sram_mem_instance);
     }
     /* Wire outputs of child module to outputs of parent module */
     add_module_output_nets_to_mem_modules(module_manager, mem_module, circuit_lib, sram_output_ports, sram_mem_module, i, sram_mem_instance);
@@ -644,9 +655,9 @@ void build_frame_memory_module(ModuleManager& module_manager,
    * If we find one, we use the module.
    * Otherwise, we create one and add it to the decoder library
    */
-  DecoderId decoder_id = frame_decoder_lib.find_decoder(addr_size, data_size, true, false, use_data_inv);
+  DecoderId decoder_id = frame_decoder_lib.find_decoder(addr_size, data_size, true, false, use_data_inv, false);
   if (DecoderId::INVALID() == decoder_id) {
-    decoder_id = frame_decoder_lib.add_decoder(addr_size, data_size, true, false, use_data_inv);
+    decoder_id = frame_decoder_lib.add_decoder(addr_size, data_size, true, false, use_data_inv, false);
   }
   VTR_ASSERT(DecoderId::INVALID() != decoder_id);
 
@@ -786,6 +797,7 @@ void build_memory_module(ModuleManager& module_manager,
                          const size_t& num_mems) {
   switch (sram_orgz_type) {
   case CONFIG_MEM_STANDALONE:
+  case CONFIG_MEM_QL_MEMORY_BANK:
   case CONFIG_MEM_MEMORY_BANK:
     build_memory_flatten_module(module_manager, circuit_lib, 
                                 module_name, sram_model, num_mems);
