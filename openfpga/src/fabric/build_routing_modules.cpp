@@ -462,16 +462,16 @@ void build_switch_block_module(ModuleManager& module_manager,
    */
   size_t module_num_config_bits = find_module_num_config_bits_from_child_modules(module_manager, sb_module, circuit_lib, sram_model, sram_orgz_type); 
   if (0 < module_num_config_bits) {
-    add_sram_ports_to_module_manager(module_manager, sb_module, circuit_lib, sram_model, sram_orgz_type, module_num_config_bits);
+    add_pb_sram_ports_to_module_manager(module_manager, sb_module, circuit_lib, sram_model, sram_orgz_type, module_num_config_bits);
   }
 
   /* Add all the nets to connect configuration ports from memory module to primitive modules
    * This is a one-shot addition that covers all the memory modules in this primitive module!
    */
   if (0 < module_manager.configurable_children(sb_module).size()) {
-    add_module_nets_memory_config_bus(module_manager, decoder_lib, 
-                                      sb_module, 
-                                      sram_orgz_type, circuit_lib.design_tech_type(sram_model));
+    add_pb_module_nets_memory_config_bus(module_manager, decoder_lib, 
+                                         sb_module, 
+                                         sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
 
   VTR_LOGV(verbose, "Done\n");
@@ -890,16 +890,16 @@ void build_connection_block_module(ModuleManager& module_manager,
    */
   size_t module_num_config_bits = find_module_num_config_bits_from_child_modules(module_manager, cb_module, circuit_lib, sram_model, sram_orgz_type); 
   if (0 < module_num_config_bits) {
-    add_sram_ports_to_module_manager(module_manager, cb_module, circuit_lib, sram_model, sram_orgz_type, module_num_config_bits);
+    add_pb_sram_ports_to_module_manager(module_manager, cb_module, circuit_lib, sram_model, sram_orgz_type, module_num_config_bits);
   }
 
   /* Add all the nets to connect configuration ports from memory module to primitive modules
    * This is a one-shot addition that covers all the memory modules in this primitive module!
    */
   if (0 < module_manager.configurable_children(cb_module).size()) {
-    add_module_nets_memory_config_bus(module_manager, decoder_lib,
-                                      cb_module, 
-                                      sram_orgz_type, circuit_lib.design_tech_type(sram_model));
+    add_pb_module_nets_memory_config_bus(module_manager, decoder_lib,
+                                         cb_module, 
+                                         sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
 
   VTR_LOGV(verbose, "Done\n");

@@ -32,13 +32,6 @@ RRGSB::RRGSB() {
   opin_node_.clear();
 }
 
-/* Copy constructor */
-RRGSB::RRGSB(const RRGSB& src) {
-  /* Copy coordinate */
-  this->set(src);
-  return;
-}
-
 /************************************************************************
  * Accessors
  ***********************************************************************/

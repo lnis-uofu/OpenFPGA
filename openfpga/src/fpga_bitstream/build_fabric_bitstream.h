@@ -6,6 +6,7 @@
  *******************************************************************/
 #include <vector>
 #include "config_protocol.h"
+#include "circuit_library.h"
 #include "bitstream_manager.h"
 #include "fabric_bitstream.h"
 #include "module_manager.h"
@@ -19,6 +20,7 @@ namespace openfpga {
 
 FabricBitstream build_fabric_dependent_bitstream(const BitstreamManager& bitstream_manager,
                                                  const ModuleManager& module_manager,
+                                                 const CircuitLibrary& circuit_lib,
                                                  const ConfigProtocol& config_protocol,
                                                  const bool& verbose);
 

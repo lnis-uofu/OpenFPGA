@@ -23,6 +23,7 @@
 #include "io_location_map.h"
 #include "fabric_global_port_info.h"
 #include "vpr_netlist_annotation.h"
+#include "memory_bank_shift_register_banks.h"
 #include "fabric_verilog_options.h"
 #include "verilog_testbench_options.h"
 
@@ -35,6 +36,7 @@ namespace openfpga {
 
 void fpga_fabric_verilog(ModuleManager& module_manager,
                          NetlistManager& netlist_manager,
+                         const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                          const CircuitLibrary& circuit_lib,
                          const MuxLibrary& mux_lib,
                          const DecoderLibrary& decoder_lib,
@@ -46,6 +48,7 @@ void fpga_fabric_verilog(ModuleManager& module_manager,
 int fpga_verilog_full_testbench(const ModuleManager& module_manager,
                                 const BitstreamManager& bitstream_manager, 
                                 const FabricBitstream& fabric_bitstream, 
+                                const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                 const AtomContext& atom_ctx, 
                                 const PlacementContext& place_ctx, 
                                 const PinConstraints& pin_constraints,

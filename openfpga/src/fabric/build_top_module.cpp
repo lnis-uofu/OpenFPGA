@@ -23,6 +23,7 @@
 #include "build_top_module_utils.h"
 #include "build_top_module_connection.h"
 #include "build_top_module_memory.h"
+#include "build_top_module_memory_bank.h"
 #include "build_top_module_directs.h"
 
 #include "build_module_graph_utils.h"
@@ -283,6 +284,7 @@ vtr::Matrix<size_t> add_top_module_connection_block_instances(ModuleManager& mod
  *******************************************************************/
 int build_top_module(ModuleManager& module_manager,
                      DecoderLibrary& decoder_lib,
+                     MemoryBankShiftRegisterBanks& blwl_sr_banks,
                      const CircuitLibrary& circuit_lib,
                      const VprDeviceAnnotation& vpr_device_annotation,
                      const DeviceGrid& grids,
@@ -341,12 +343,6 @@ int build_top_module(ModuleManager& module_manager,
                                                 tile_direct, arch_direct);
   }
 
-  /* Add global ports to the pb_module:
-   * This is a much easier job after adding sub modules (instances), 
-   * we just need to find all the global ports from the child modules and build a list of it
-   */
-  add_module_global_ports_from_child_modules(module_manager, top_module);
-
   /* Add global ports from grid ports that are defined as global in tile annotation */
   status = add_top_module_global_ports_from_grid_modules(module_manager, top_module, tile_annotation, vpr_device_annotation, grids, grid_instance_ids);
   if (CMD_EXEC_FATAL_ERROR == status) {
@@ -387,12 +383,24 @@ int build_top_module(ModuleManager& module_manager,
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
     }
+
+    status = load_top_module_shift_register_banks_from_fabric_key(fabric_key, blwl_sr_banks); 
+    if (CMD_EXEC_FATAL_ERROR == status) {
+      return status;
+    }
   }
 
   /* Shuffle the configurable children in a random sequence */
   if (true == generate_random_fabric_key) {
     shuffle_top_module_configurable_children(module_manager, top_module, config_protocol);
   }
+
+  /* Build shift register bank detailed connections */
+  sync_memory_bank_shift_register_banks_with_config_protocol_settings(module_manager, 
+                                                                      blwl_sr_banks,
+                                                                      config_protocol,
+                                                                      top_module,
+                                                                      circuit_lib);
 
   /* Add shared SRAM ports from the sub-modules under this Verilog module
    * This is a much easier job after adding sub modules (instances), 
@@ -407,12 +415,13 @@ int build_top_module(ModuleManager& module_manager,
    * This is a much easier job after adding sub modules (instances), 
    * we just need to find all the I/O ports from the child modules and build a list of it
    */
-  vtr::vector<ConfigRegionId, size_t> top_module_num_config_bits = find_top_module_regional_num_config_bit(module_manager, top_module, circuit_lib, sram_model, config_protocol.type());
+  TopModuleNumConfigBits top_module_num_config_bits = find_top_module_regional_num_config_bit(module_manager, top_module, circuit_lib, sram_model, config_protocol.type());
 
   if (!top_module_num_config_bits.empty()) {
     add_top_module_sram_ports(module_manager, top_module,
                               circuit_lib, sram_model,
                               config_protocol,
+                              const_cast<const MemoryBankShiftRegisterBanks&>(blwl_sr_banks),
                               top_module_num_config_bits);
   }
 
@@ -420,11 +429,19 @@ int build_top_module(ModuleManager& module_manager,
    * This is a one-shot addition that covers all the memory modules in this pb module!
    */
   if (0 < module_manager.configurable_children(top_module).size()) {
-    add_top_module_nets_memory_config_bus(module_manager, decoder_lib,
+    add_top_module_nets_memory_config_bus(module_manager, decoder_lib, blwl_sr_banks,
                                           top_module, 
+                                          circuit_lib,
                                           config_protocol, circuit_lib.design_tech_type(sram_model),
                                           top_module_num_config_bits);
   }
+
+  /* Add global ports to the top module:
+   * This is a much easier job after adding sub modules (instances), 
+   * we just need to find all the global ports from the child modules and build a list of it
+   * @note This function is called after the add_top_module_nets_memory_config_bus() because it may add some sub modules
+   */
+  add_module_global_ports_from_child_modules(module_manager, top_module);
 
   return status;
 }

@@ -515,7 +515,7 @@ void print_verilog_testbench_clock_stimuli(std::fstream& fp,
       /* Skip all the unrelated pin constraints */
       VTR_ASSERT(clock_port.get_name() == pin_constraints.net(pin_constraint));
       /* Try to find which clock source is considered in simulation settings for this pin */
-      for (const SimulationClockId& sim_clock_id : simulation_parameters.clocks()) {
+      for (const SimulationClockId& sim_clock_id : simulation_parameters.operating_clocks()) {
         if (pin_constraints.pin(pin_constraint) == simulation_parameters.clock_port(sim_clock_id)) {
           clk_freq_to_use = (0.5 / simulation_parameters.clock_frequency(sim_clock_id)) / VERILOG_SIM_TIMESCALE;
         }

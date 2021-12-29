@@ -135,13 +135,16 @@ class FabricBitstream {
     FabricBitId add_bit(const ConfigBitId& config_bit_id);
 
     void set_bit_address(const FabricBitId& bit_id,
-                         const std::vector<char>& address);
+                         const std::vector<char>& address,
+                         const bool& tolerant_short_address = false);
 
     void set_bit_bl_address(const FabricBitId& bit_id,
-                            const std::vector<char>& address);
+                            const std::vector<char>& address,
+                            const bool& tolerant_short_address = false);
 
     void set_bit_wl_address(const FabricBitId& bit_id,
-                            const std::vector<char>& address);
+                            const std::vector<char>& address,
+                            const bool& tolerant_short_address = false);
 
     void set_bit_din(const FabricBitId& bit_id,
                      const char& din);

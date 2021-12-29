@@ -84,6 +84,13 @@ std::vector<size_t> ModuleManager::configurable_child_instances(const ModuleId& 
   return configurable_child_instances_[parent_module];
 }
 
+std::vector<vtr::Point<int>> ModuleManager::configurable_child_coordinates(const ModuleId& parent_module) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(parent_module));
+
+  return configurable_child_coordinates_[parent_module];
+}
+
 /* Find the source ids of modules */
 ModuleManager::module_net_src_range ModuleManager::module_net_sources(const ModuleId& module, const ModuleNetId& net) const {
   /* Validate the module_id */
@@ -133,6 +140,22 @@ std::vector<size_t> ModuleManager::region_configurable_child_instances(const Mod
   } 
 
   return region_config_child_instances;
+}
+
+std::vector<vtr::Point<int>> ModuleManager::region_configurable_child_coordinates(const ModuleId& parent_module,
+                                                                                  const ConfigRegionId& region) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(parent_module));
+  VTR_ASSERT(valid_region_id(parent_module, region));
+
+  std::vector<vtr::Point<int>> region_config_child_coordinates;
+  region_config_child_coordinates.reserve(config_region_children_[parent_module][region].size());
+
+  for (const size_t& child_id : config_region_children_[parent_module][region]) {
+    region_config_child_coordinates.push_back(configurable_child_coordinates_[parent_module][child_id]);
+  } 
+
+  return region_config_child_coordinates;
 }
 
 /******************************************************************************
@@ -534,6 +557,7 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   configurable_children_.emplace_back();
   configurable_child_instances_.emplace_back();
   configurable_child_regions_.emplace_back();
+  configurable_child_coordinates_.emplace_back();
 
   config_region_ids_.emplace_back(); 
   config_region_children_.emplace_back(); 
@@ -716,7 +740,8 @@ void ModuleManager::set_child_instance_name(const ModuleId& parent_module,
  */
 void ModuleManager::add_configurable_child(const ModuleId& parent_module, 
                                            const ModuleId& child_module, 
-                                           const size_t& child_instance) {
+                                           const size_t& child_instance,
+                                           const vtr::Point<int> coord) {
   /* Validate the id of both parent and child modules */
   VTR_ASSERT ( valid_module_id(parent_module) );
   VTR_ASSERT ( valid_module_id(child_module) );
@@ -726,6 +751,7 @@ void ModuleManager::add_configurable_child(const ModuleId& parent_module,
   configurable_children_[parent_module].push_back(child_module);
   configurable_child_instances_[parent_module].push_back(child_instance);
   configurable_child_regions_[parent_module].push_back(ConfigRegionId::INVALID());
+  configurable_child_coordinates_[parent_module].push_back(coord);
 }
 
 void ModuleManager::reserve_configurable_child(const ModuleId& parent_module,
@@ -738,8 +764,11 @@ void ModuleManager::reserve_configurable_child(const ModuleId& parent_module,
   if (num_children > configurable_child_instances_[parent_module].size()) {
     configurable_child_instances_[parent_module].reserve(num_children);
   }
-  if (num_children > configurable_child_instances_[parent_module].size()) {
+  if (num_children > configurable_child_regions_[parent_module].size()) {
     configurable_child_regions_[parent_module].reserve(num_children);
+  }
+  if (num_children > configurable_child_coordinates_[parent_module].size()) {
+    configurable_child_coordinates_[parent_module].reserve(num_children);
   }
 }
 
@@ -981,6 +1010,7 @@ void ModuleManager::clear_configurable_children(const ModuleId& parent_module) {
   configurable_children_[parent_module].clear();
   configurable_child_instances_[parent_module].clear();
   configurable_child_regions_[parent_module].clear();
+  configurable_child_coordinates_[parent_module].clear();
 }
 
 void ModuleManager::clear_config_region(const ModuleId& parent_module) {

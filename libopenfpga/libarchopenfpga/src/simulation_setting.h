@@ -62,6 +62,9 @@ class SimulationSetting {
     SimulationSetting();
   public: /* Accessors: aggregates */
     simulation_clock_range clocks() const;
+    std::vector<SimulationClockId> operating_clocks() const;
+    std::vector<SimulationClockId> programming_clocks() const;
+    std::vector<SimulationClockId> programming_shift_register_clocks() const;
   public: /* Public Accessors */
     float default_operating_clock_frequency() const;
     float programming_clock_frequency() const;
@@ -69,6 +72,8 @@ class SimulationSetting {
     std::string clock_name(const SimulationClockId& clock_id) const;
     BasicPort clock_port(const SimulationClockId& clock_id) const;
     float clock_frequency(const SimulationClockId& clock_id) const;
+    bool clock_is_programming(const SimulationClockId& clock_id) const;
+    bool clock_is_shift_register(const SimulationClockId& clock_id) const;
     bool auto_select_num_clock_cycles() const;
     size_t num_clock_cycles() const;
     float operating_clock_frequency_slack() const;
@@ -102,6 +107,10 @@ class SimulationSetting {
                         const BasicPort& port);
     void set_clock_frequency(const SimulationClockId& clock_id,
                              const float& frequency);
+    void set_clock_is_programming(const SimulationClockId& clock_id,
+                                  const float& is_prog);
+    void set_clock_is_shift_register(const SimulationClockId& clock_id,
+                                     const float& is_sr);
     void set_num_clock_cycles(const size_t& num_clk_cycles);
     void set_operating_clock_frequency_slack(const float& op_clk_freq_slack);
     void set_simulation_temperature(const float& sim_temp);
@@ -130,6 +139,8 @@ class SimulationSetting {
   public: /* Public Validators */
     bool valid_signal_threshold(const float& threshold) const;
     bool valid_clock_id(const SimulationClockId& clock_id) const;
+    /** @brief Validate if a given clock is constrained or not */
+    bool constrained_clock(const SimulationClockId& clock_id) const;
   private: /* Internal data */
     /* Operating clock frequency: the default clock frequency to be applied to users' implemetation on FPGA 
      *                            This will be stored in the x() part of vtr::Point
@@ -150,6 +161,8 @@ class SimulationSetting {
     vtr::vector<SimulationClockId, std::string> clock_names_;
     vtr::vector<SimulationClockId, BasicPort> clock_ports_;
     vtr::vector<SimulationClockId, float> clock_frequencies_;
+    vtr::vector<SimulationClockId, bool> clock_is_programming_;
+    vtr::vector<SimulationClockId, bool> clock_is_shift_register_;
 
     /* Fast name-to-id lookup */
     std::map<std::string, SimulationClockId> clock_name2ids_;

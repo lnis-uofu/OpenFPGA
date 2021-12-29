@@ -9,6 +9,7 @@
 #include "bitstream_manager.h"
 #include "fabric_bitstream.h"
 #include "config_protocol.h"
+#include "memory_bank_shift_register_banks.h"
 #include "fabric_global_port_info.h"
 
 /********************************************************************
@@ -20,10 +21,12 @@ namespace openfpga {
 
 int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manager,
                                         const FabricBitstream& fabric_bitstream,
+                                        const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                         const ConfigProtocol& config_protocol,
                                         const FabricGlobalPortInfo& global_ports,
                                         const std::string& fname,
                                         const bool& fast_configuration,
+                                        const bool& keep_dont_care_bits,
                                         const bool& verbose);
 
 } /* end namespace openfpga */

@@ -39,6 +39,12 @@ size_t check_ff_circuit_model_ports(const CircuitLibrary& circuit_lib,
 size_t check_ccff_circuit_model_ports(const CircuitLibrary& circuit_lib,
                                       const CircuitModelId& circuit_model);
 
+size_t check_bl_ccff_circuit_model_ports(const CircuitLibrary& circuit_lib,
+                                         const CircuitModelId& circuit_model);
+
+size_t check_wl_ccff_circuit_model_ports(const CircuitLibrary& circuit_lib,
+                                         const CircuitModelId& circuit_model);
+
 size_t check_sram_circuit_model_ports(const CircuitLibrary& circuit_lib,
                                       const CircuitModelId& circuit_model,
                                       const bool& check_blwl);

@@ -16,6 +16,36 @@ SimulationSetting::simulation_clock_range SimulationSetting::clocks() const {
   return vtr::make_range(clock_ids_.begin(), clock_ids_.end());
 }
 
+std::vector<SimulationClockId> SimulationSetting::operating_clocks() const {
+  std::vector<SimulationClockId> op_clks;
+  for (const SimulationClockId& clk : clocks()) {
+    if (!clock_is_programming(clk)) {
+      op_clks.push_back(clk);
+    }
+  }
+  return op_clks;
+}
+
+std::vector<SimulationClockId> SimulationSetting::programming_clocks() const {
+  std::vector<SimulationClockId> prog_clks;
+  for (const SimulationClockId& clk : clocks()) {
+    if (clock_is_programming(clk)) {
+      prog_clks.push_back(clk);
+    }
+  }
+  return prog_clks;
+}
+
+std::vector<SimulationClockId> SimulationSetting::programming_shift_register_clocks() const {
+  std::vector<SimulationClockId> prog_clks;
+  for (const SimulationClockId& clk : clocks()) {
+    if (clock_is_programming(clk) && clock_is_shift_register(clk)) {
+      prog_clks.push_back(clk);
+    }
+  }
+  return prog_clks;
+}
+
 /************************************************************************
  * Constructors
  ***********************************************************************/
@@ -51,6 +81,16 @@ BasicPort SimulationSetting::clock_port(const SimulationClockId& clock_id) const
 float SimulationSetting::clock_frequency(const SimulationClockId& clock_id) const {
   VTR_ASSERT(valid_clock_id(clock_id));
   return clock_frequencies_[clock_id];
+}
+
+bool SimulationSetting::clock_is_programming(const SimulationClockId& clock_id) const {
+  VTR_ASSERT(valid_clock_id(clock_id));
+  return clock_is_programming_[clock_id];
+}
+
+bool SimulationSetting::clock_is_shift_register(const SimulationClockId& clock_id) const {
+  VTR_ASSERT(valid_clock_id(clock_id));
+  return clock_is_shift_register_[clock_id];
 }
 
 bool SimulationSetting::auto_select_num_clock_cycles() const {
@@ -157,6 +197,8 @@ SimulationClockId SimulationSetting::create_clock(const std::string& name) {
   clock_names_.push_back(name);
   clock_ports_.emplace_back();
   clock_frequencies_.push_back(0.);
+  clock_is_programming_.push_back(false);
+  clock_is_shift_register_.push_back(false);
 
   /* Register in the name-to-id map */
   clock_name2ids_[name] = clock_id;
@@ -174,6 +216,18 @@ void SimulationSetting::set_clock_frequency(const SimulationClockId& clock_id,
                                             const float& frequency) {
   VTR_ASSERT(valid_clock_id(clock_id));
   clock_frequencies_[clock_id] = frequency;
+}
+
+void SimulationSetting::set_clock_is_programming(const SimulationClockId& clock_id,
+                                                 const float& is_prog) {
+  VTR_ASSERT(valid_clock_id(clock_id));
+  clock_is_programming_[clock_id] = is_prog;
+}
+
+void SimulationSetting::set_clock_is_shift_register(const SimulationClockId& clock_id,
+                                                    const float& is_sr) {
+  VTR_ASSERT(valid_clock_id(clock_id));
+  clock_is_shift_register_[clock_id] = is_sr;
 }
 
 void SimulationSetting::set_num_clock_cycles(const size_t& num_clk_cycles) {
@@ -274,5 +328,9 @@ bool SimulationSetting::valid_clock_id(const SimulationClockId& clock_id) const 
   return ( size_t(clock_id) < clock_ids_.size() ) && ( clock_id == clock_ids_[clock_id] ); 
 }
 
+bool SimulationSetting::constrained_clock(const SimulationClockId& clock_id) const {
+  VTR_ASSERT(valid_clock_id(clock_id));
+  return 0. != clock_frequencies_[clock_id];
+}
 
 } /* namespace openfpga ends */

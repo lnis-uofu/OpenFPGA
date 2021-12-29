@@ -36,7 +36,7 @@ e_sim_accuracy_type string_to_sim_accuracy_type(const std::string& type_string) 
 }
 
 /********************************************************************
- * Parse XML codes of a <clock> line to an object of simulation setting
+ * Parse XML codes of a <clock> line under <operating> to an object of simulation setting
  *******************************************************************/
 static 
 void read_xml_operating_clock_override_setting(pugi::xml_node& xml_clock_override_setting,
@@ -60,6 +60,40 @@ void read_xml_operating_clock_override_setting(pugi::xml_node& xml_clock_overrid
 
   /* Parse frequency information */
   sim_setting.set_clock_frequency(clock_id, get_attribute(xml_clock_override_setting, "frequency", loc_data).as_float(0.));
+}
+
+/********************************************************************
+ * Parse XML codes of a <clock> line under <programming> to an object of simulation setting
+ *******************************************************************/
+static 
+void read_xml_programming_clock_override_setting(pugi::xml_node& xml_clock_override_setting,
+                                                 const pugiutil::loc_data& loc_data,
+                                                 openfpga::SimulationSetting& sim_setting) {
+  std::string clock_name = get_attribute(xml_clock_override_setting, "name", loc_data).as_string();
+
+  /* Create a new clock override object in the sim_setting object with the given name */
+  SimulationClockId clock_id = sim_setting.create_clock(clock_name);
+ 
+  /* Report if the clock creation failed, this is due to a conflicts in naming*/
+  if (false == sim_setting.valid_clock_id(clock_id)) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_clock_override_setting),
+                   "Fail to create simulation clock '%s', it may share the same name as other simulation clock definition!\n",
+                   clock_name.c_str());
+  }
+
+  /* Parse port information */
+  openfpga::PortParser clock_port_parser(get_attribute(xml_clock_override_setting, "port", loc_data).as_string());
+  sim_setting.set_clock_port(clock_id, clock_port_parser.port());
+
+  /* Parse frequency information */
+  std::string clock_freq_str = get_attribute(xml_clock_override_setting, "frequency", loc_data).as_string();
+  if (std::string("auto") != clock_freq_str) {
+    sim_setting.set_clock_frequency(clock_id, get_attribute(xml_clock_override_setting, "frequency", loc_data).as_float(0.));
+  }
+
+  sim_setting.set_clock_is_programming(clock_id, true);
+
+  sim_setting.set_clock_is_shift_register(clock_id, get_attribute(xml_clock_override_setting, "is_shift_register", loc_data).as_bool(false));
 }
 
 /********************************************************************
@@ -102,6 +136,15 @@ void read_xml_clock_setting(pugi::xml_node& xml_clock_setting,
   pugi::xml_node xml_programming_clock_setting = get_single_child(xml_clock_setting, "programming", loc_data);
 
   sim_setting.set_programming_clock_frequency(get_attribute(xml_programming_clock_setting, "frequency", loc_data).as_float(0.));
+
+  /* Iterate over multiple operating clock settings and parse one by one */
+  for (pugi::xml_node xml_clock : xml_programming_clock_setting.children()) {
+    /* Error out if the XML child has an invalid name! */
+    if (xml_clock.name() != std::string("clock")) {
+      bad_tag(xml_clock, loc_data, xml_programming_clock_setting, {"clock"});
+    }
+    read_xml_programming_clock_override_setting(xml_clock, loc_data, sim_setting);
+  } 
 }
 
 /********************************************************************

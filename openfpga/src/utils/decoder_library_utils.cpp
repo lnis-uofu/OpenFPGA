@@ -87,6 +87,24 @@ size_t find_memory_decoder_data_size(const size_t& num_mems) {
 }
 
 /***************************************************************************************
+ * Find the size of WL data lines for a memory decoder to access a memory array
+ * This function is applicable to a memory bank organization where BL data lines 
+ * is the dominant factor. It means that the BL data lines is strictly an integeter close 
+ * to the square root of the number of memory cells. 
+ * For example, 203 memory cells leads to 15 BLs to control
+ * The WL data lines may not be exactly the same as the number of BLs.
+ * Considering the example of 203 memory cells again, when 15 BLs are used, we just need
+ * 203 / 15 = 13.5555 -> 14 WLs
+ ***************************************************************************************/
+size_t find_memory_wl_decoder_data_size(const size_t& num_mems, const size_t& num_bls) {
+  /* Handle exception: zero BLs should have zero WLs */
+  if (0 == num_bls) {
+    return 0;
+  }
+  return std::ceil((float)num_mems / (float)num_bls);
+}
+
+/***************************************************************************************
  * Try to find if the decoder already exists in the library, 
  * If there is no such decoder, add it to the library 
  ***************************************************************************************/
@@ -94,11 +112,11 @@ DecoderId add_mux_local_decoder_to_library(DecoderLibrary& decoder_lib,
                                            const size_t data_size) {
   size_t addr_size = find_mux_local_decoder_addr_size(data_size);
 
-  DecoderId decoder_id = decoder_lib.find_decoder(addr_size, data_size, false, false, true);
+  DecoderId decoder_id = decoder_lib.find_decoder(addr_size, data_size, false, false, true, false);
 
   if (DecoderId::INVALID() == decoder_id) { 
     /* Add the decoder */
-    return decoder_lib.add_decoder(addr_size, data_size, false, false, true);
+    return decoder_lib.add_decoder(addr_size, data_size, false, false, true, false);
   }
 
   /* There is already a decoder in the library, return the decoder id */

@@ -279,7 +279,7 @@ void build_primitive_block_module(ModuleManager& module_manager,
   size_t num_shared_config_bits = find_circuit_num_shared_config_bits(circuit_lib, primitive_model, sram_orgz_type);
   if (0 < num_shared_config_bits) {
     /* Check: this SRAM organization type must be memory-bank ! */
-    VTR_ASSERT( CONFIG_MEM_MEMORY_BANK == sram_orgz_type );
+    VTR_ASSERT( CONFIG_MEM_MEMORY_BANK == sram_orgz_type || CONFIG_MEM_QL_MEMORY_BANK == sram_orgz_type );
     /* Generate a list of ports */
     add_reserved_sram_ports_to_module_manager(module_manager, primitive_module, 
                                               num_shared_config_bits); 
@@ -1114,15 +1114,15 @@ void build_physical_tile_module(ModuleManager& module_manager,
    */
   size_t module_num_config_bits = find_module_num_config_bits_from_child_modules(module_manager, grid_module, circuit_lib, sram_model, sram_orgz_type); 
   if (0 < module_num_config_bits) {
-    add_sram_ports_to_module_manager(module_manager, grid_module, circuit_lib, sram_model, sram_orgz_type, module_num_config_bits);
+    add_pb_sram_ports_to_module_manager(module_manager, grid_module, circuit_lib, sram_model, sram_orgz_type, module_num_config_bits);
   }
 
   /* Add module nets to connect memory cells inside
    * This is a one-shot addition that covers all the memory modules in this pb module!
    */
   if (0 < module_manager.configurable_children(grid_module).size()) {
-    add_module_nets_memory_config_bus(module_manager, decoder_lib, grid_module, 
-                                      sram_orgz_type, circuit_lib.design_tech_type(sram_model));
+    add_pb_module_nets_memory_config_bus(module_manager, decoder_lib, grid_module, 
+                                         sram_orgz_type, circuit_lib.design_tech_type(sram_model));
   }
 
   VTR_LOGV(verbose, "Done\n");

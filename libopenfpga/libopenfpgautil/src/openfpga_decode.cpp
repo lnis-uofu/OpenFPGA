@@ -47,6 +47,64 @@ std::vector<size_t> ito1hot_vec(const size_t& in_int,
 }
 
 /******************************************************************** 
+ * Convert an integer to an one-hot encoding character array
+ * For example: 
+ *   Input integer: 3
+ *   Binary length : 4
+ *   Output:
+ *     index | 0 | 1 | 2 | 3
+ *     ret   | 0 | 0 | 0 | 1
+ *
+ * If you need all zero code, set the input integer same as the binary length
+ * For example: 
+ *   Input integer: 4
+ *   Binary length : 4
+ *   Output:
+ *     index | 0 | 1 | 2 | 3
+ *     ret   | 0 | 0 | 0 | 0
+ *           
+ ********************************************************************/
+std::vector<char> ito1hot_charvec(const size_t& in_int,
+                                  const size_t& bin_len,
+                                  const char& default_bit) {
+  /* Make sure we do not have any overflow! */
+  VTR_ASSERT ( (in_int <= bin_len) );
+
+  /* Initialize */
+  std::vector<char> ret(bin_len, default_bit);
+
+  if (bin_len == in_int) {
+    return ret; /* all zero case */
+  }
+  ret[in_int] = '1'; /* Keep a good sequence of bits */
+ 
+  return ret;
+}
+
+void replace_str_bits(std::string& str_to_convert,
+                      const char& bit_in_place,
+                      const char& bit_to_replace) {
+  for (char& bit : str_to_convert) {
+    if (bit_in_place == bit) {
+      bit = bit_to_replace;
+    }
+  }
+}
+
+std::string combine_two_1hot_str(const std::string& code1,
+                                 const std::string& code2) {
+  VTR_ASSERT(code1.length() == code2.length());
+  std::string ret = code1;
+  for (size_t ichar = 0; ichar < code2.length(); ichar++) {
+    VTR_ASSERT('0' == code2[ichar] || '1' == code2[ichar] || 'x' == code2[ichar]);
+    if ('1' == code2[ichar] || '0' == code2[ichar]) {
+      ret[ichar] = code2[ichar];
+    }
+  }
+  return ret;
+}
+
+/******************************************************************** 
  * Converter an integer to a binary vector 
  * For example: 
  *   Input integer: 4

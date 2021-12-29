@@ -154,6 +154,9 @@ ShellCommandId add_openfpga_write_fabric_bitstream_command(openfpga::Shell<Openf
   /* Add an option '--fast_configuration' */
   shell_cmd.add_option("fast_configuration", false, "Reduce the size of bitstream to be downloaded");
 
+  /* Add an option '--keep_dont_care_bit' */
+  shell_cmd.add_option("keep_dont_care_bits", false, "Keep don't care bits in bitstream file; If not enabled, don't care bits are converted to logic '0' or '1'");
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
 

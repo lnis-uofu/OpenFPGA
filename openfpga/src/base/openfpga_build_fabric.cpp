@@ -103,6 +103,7 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
 
   curr_status = build_device_module_graph(openfpga_ctx.mutable_module_graph(),
                                           openfpga_ctx.mutable_decoder_lib(),
+                                          openfpga_ctx.mutable_blwl_shift_register_banks(),
                                           const_cast<const OpenfpgaContext&>(openfpga_ctx),
                                           g_vpr_ctx.device(),
                                           cmd_context.option_enable(cmd, opt_frame_view),
@@ -123,6 +124,7 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
 
   /* Build fabric global port information */
   openfpga_ctx.mutable_fabric_global_port_info() = build_fabric_global_port_info(openfpga_ctx.module_graph(),
+                                                                                 openfpga_ctx.arch().config_protocol,
                                                                                  openfpga_ctx.arch().tile_annotations,
                                                                                  openfpga_ctx.arch().circuit_lib);
 
@@ -132,6 +134,8 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
     VTR_ASSERT(false == fkey_fname.empty());
     curr_status = write_fabric_key_to_xml_file(openfpga_ctx.module_graph(),
                                                fkey_fname,
+                                               openfpga_ctx.arch().config_protocol,
+                                               openfpga_ctx.blwl_shift_register_banks(),
                                                cmd_context.option_enable(cmd, opt_verbose));
     /* If there is any error, final status cannot be overwritten by a success flag */
     if (CMD_EXEC_SUCCESS != curr_status) {

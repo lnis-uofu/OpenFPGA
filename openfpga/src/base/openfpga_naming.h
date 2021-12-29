@@ -16,6 +16,7 @@
 #include "circuit_library.h"
 #include "device_grid.h"
 #include "openfpga_port.h"
+#include "module_manager_fwd.h"
 
 /********************************************************************
  * Function declaration
@@ -182,6 +183,15 @@ std::string generate_sram_local_port_name(const CircuitLibrary& circuit_lib,
                                           const CircuitModelId& sram_model,
                                           const e_config_protocol_type& sram_orgz_type,
                                           const e_circuit_model_port_type& port_type);
+
+std::string generate_regional_blwl_port_name(const std::string& blwl_port_prefix,
+                                             const ConfigRegionId& region_id);
+
+std::string generate_bl_shift_register_module_name(const std::string& memory_model_name,
+                                                   const size_t& shift_register_size);
+
+std::string generate_wl_shift_register_module_name(const std::string& memory_model_name,
+                                                   const size_t& shift_register_size);
 
 std::string generate_mux_input_bus_port_name(const CircuitLibrary& circuit_lib,
                                              const CircuitModelId& mux_model,

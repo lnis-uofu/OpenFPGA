@@ -8,8 +8,8 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <vector>
-#include "circuit_types.h"
 #include "circuit_library.h"
+#include "config_protocol.h"
 
 /********************************************************************
  * Function declaration
@@ -41,9 +41,8 @@ std::vector<std::string> find_circuit_library_unique_verilog_netlists(const Circ
 
 std::vector<std::string> find_circuit_library_unique_spice_netlists(const CircuitLibrary& circuit_lib);
 
-bool check_configurable_memory_circuit_model(const e_config_protocol_type& config_protocol_type,
-                                             const CircuitLibrary& circuit_lib,
-                                             const CircuitModelId& config_mem_circuit_model);
+bool check_configurable_memory_circuit_model(const ConfigProtocol& config_protocol,
+                                             const CircuitLibrary& circuit_lib);
 
 CircuitPortId find_circuit_model_power_gate_en_port(const CircuitLibrary& circuit_lib,
                                                     const CircuitModelId& circuit_model);

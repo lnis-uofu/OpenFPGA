@@ -41,7 +41,7 @@ void write_xml_clock_setting(std::fstream& fp,
   fp << ">" << "\n";
   
   /* Output clock information one by one */
-  for (const SimulationClockId& clock_id : sim_setting.clocks()) {
+  for (const SimulationClockId& clock_id : sim_setting.operating_clocks()) {
     fp << "\t\t\t" << "<clock";
     write_xml_attribute(fp, "name", sim_setting.clock_name(clock_id).c_str());
     write_xml_attribute(fp, "port", generate_xml_port_name(sim_setting.clock_port(clock_id)).c_str());
@@ -52,9 +52,22 @@ void write_xml_clock_setting(std::fstream& fp,
   fp << "\t\t" << "</operating";
   fp << ">" << "\n";
 
-  fp << "\t\t" << "<operating";
+  fp << "\t\t" << "<programming";
   write_xml_attribute(fp, "frequency", sim_setting.programming_clock_frequency());
-  fp << "/>" << "\n";
+  fp << ">" << "\n";
+
+  /* Output clock information one by one */
+  for (const SimulationClockId& clock_id : sim_setting.programming_clocks()) {
+    fp << "\t\t\t" << "<clock";
+    write_xml_attribute(fp, "name", sim_setting.clock_name(clock_id).c_str());
+    write_xml_attribute(fp, "port", generate_xml_port_name(sim_setting.clock_port(clock_id)).c_str());
+    write_xml_attribute(fp, "frequency", std::to_string(sim_setting.clock_frequency(clock_id)).c_str());
+    write_xml_attribute(fp, "is_shift_register", std::to_string(sim_setting.clock_is_shift_register(clock_id)).c_str());
+    fp << ">" << "\n";
+  }
+
+  fp << "\t\t" << "</programming";
+  fp << ">" << "\n";
 
   fp << "\t" << "</clock_setting>" << "\n";
 }

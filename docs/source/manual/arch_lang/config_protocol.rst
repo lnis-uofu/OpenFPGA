@@ -16,7 +16,7 @@ Template
     <organization type="<string>" circuit_model_name="<string>" num_regions="<int>"/>
   </configuration_protocol>
 
-.. option:: type="scan_chain|memory_bank|standalone"
+.. option:: type="scan_chain|memory_bank|standalone|frame_based|ql_memory_bank"
 
   Specify the type of configuration circuits.
 
@@ -24,6 +24,7 @@ Template
     - ``scan_chain``: configurable memories are connected in a chain. Bitstream is loaded serially to program a FPGA
     - ``frame_based``: configurable memories are organized by frames. Each module of a FPGA fabric, e.g., Configurable Logic Block (CLB), Switch Block (SB) and Connection Block (CB), is considered as a frame of configurable memories. Inside each frame, all the memory banks are accessed through an address decoder. Users can write each memory cell with a specific address. Note that the frame-based memory organization is applid hierarchically. Each frame may consists of a number of sub frames, each of which follows the similar organization.
     - ``memory_bank``: configurable memories are organized in an array, where each element can be accessed by an unique address to the BL/WL decoders
+    - ``ql_memory_bank``: configurable memories are organized in an array, where each element can be accessed by an unique address to the BL/WL decoders. This is a physical design friendly memory bank organization, where BL/WLs are efficiently shared by programmable blocks per column and row
     - ``standalone``: configurable memories are directly accessed through ports of FPGA fabrics. In other words, there are no protocol to control the memories. This allows full customization on the configuration protocol for hardware engineers.
 
   .. note:: Avoid to use ``standalone`` when designing an FPGA chip. It will causes a huge number of I/Os required, far beyond any package size. It is well applicable to eFPGAs, where designers do need customized protocols between FPGA and processors. 
@@ -39,13 +40,19 @@ Template
   - ``scan_chain`` requires a circuit model type of ``ccff``
   - ``frame_based`` requires a circuit model type of ``sram``
   - ``memory_bank`` requires a circuit model type of ``sram``
+  - ``ql_memory_bank`` requires a circuit model type of ``sram``
   - ``standalone`` requires a circuit model type of ``sram``
 
 .. option:: num_regions="<int>"
 
   Specify the number of configuration regions to be used across the fabrics. By default, it will be only 1 configuration region. Each configuration region contains independent configuration protocols, but the whole fabric should employ the same type of configuration protocols. For example, an FPGA fabric consists of 4 configuration regions, each of which includes a configuration chain. The more configuration chain to be used, the fast configuration runtime will be, but at the cost of more I/Os in the FPGA fabrics. The organization of each configurable region can be customized through the fabric key (see details in :ref:`fabric_key`).
 
-  .. warning:: Currently, multiple configuration regions is not applicable to ``standalone`` configuration protocol.
+  .. warning:: Currently, multiple configuration regions is not applicable to 
+
+    - ``standalone`` configuration protocol.
+    - ``ql_memory_bank`` configuration protocol when BL/WL protocol ``flatten`` is selected
+
+  .. note:: For ``ql_memory_bank`` configuration protocol when BL/WL protocol ``shift_register`` is selected, different configuration regions **cannot** share any WLs on the same row! In such case, the default fabric key may not work. Strongly recommend to craft your own fabric key based on your configuration region plannning!
 
 
 Configuration Chain Example
@@ -144,6 +151,75 @@ Users can customized the number of memory banks to be used across the fabrics. B
   -  two outputs (one regular and another inverted)
   -  a Bit-Line input to load the data
   -  a Word-Line input to enable data write 
+
+.. warning:: Please do NOT add inverted Bit-Line and Word-Line inputs. It is not supported yet!
+
+QuickLogic Memory bank Example
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The following XML code describes a physical design friendly memory-bank circuitry to configure the core logic of FPGA, as illustrated in :numref:`fig_memory_bank`.
+It will use the circuit model defined in :numref:`fig_sram_blwl`.
+
+The BL and WL protocols can be customized through the XML syntax ``bl`` and ``wl``.
+
+.. note:: If not specified, the BL/WL protocols will use decoders.
+
+.. code-block:: xml
+
+  <configuration_protocol>
+    <organization type="ql_memory_bank" circuit_model_name="sram_blwl">
+      <bl protocol="<string>" num_banks="<int>"/>
+      <wl protocol="<string>" num_banks="<int>"/>
+    </organization>
+  </configuration_protocol>
+
+.. option:: protocol="decoder|flatten|shift_register"
+
+  - ``decoder``: BLs or WLs are controlled by decoders with address lines. For BLs, the decoder includes an enable signal as well as a data input signal. This is the default option if not specified. See an illustrative example in :numref:`fig_memory_bank_decoder_based`. 
+  - ``flatten``: BLs or WLs are directly available at the FPGA fabric. In this way, all the configurable memorys on the same WL can be written through the BL signals in one clock cycle. See an illustrative example in :numref:`fig_memory_bank_flatten`. 
+  - ``shift_register``: BLs or WLs are controlled by shift register chains. The BL/WLs are programming each time the shift register chains are fully loaded. See an illustrative example in :numref:`fig_memory_bank_shift_register`. 
+
+.. _fig_memory_bank_decoder_based:
+
+.. figure:: figures/memory_bank_decoder.svg
+   :scale: 30%
+   :alt: map to buried treasure
+ 
+   Example of (a) a memory organization using address decoders; (b) single memory bank across the fabric; and (c) multiple memory banks across the fabric.
+
+
+.. _fig_memory_bank_flatten:
+
+.. figure:: figures/memory_bank_flatten.svg
+   :scale: 30%
+   :alt: map to buried treasure
+ 
+   Example of (a) a memory organization with direct access to BL/WL signals; (b) single memory bank across the fabric; and (c) multiple memory banks across the fabric.
+
+.. _fig_memory_bank_shift_register:
+
+.. figure:: figures/memory_bank_shift_register.svg
+   :scale: 30%
+   :alt: map to buried treasure
+ 
+   Example of (a) a memory organization using shift register chains to control BL/WLs; (b) single memory bank across the fabric; and (c) multiple memory banks across the fabric.
+
+.. option:: num_banks="<int>"
+
+  Specify the number of shift register banks (i.e., independent shift register chains) to be used in each configuration region. When enabled, the length of each shift register chain will be sized by OpenFPGA automatically based on the number of BL/WLs in each configuration region. OpenFPGA will try to create similar sizes for the shift register chains, in order to minimize the number of HDL modules. If not specified, the default number of banks will be ``1``.
+
+   
+  .. note:: This is available applicable to shift-register-based BL/WL protocols
+
+  .. note:: More customization on the shift register chains can be enabled through :ref:`fabric_key`
+
+.. note:: The flip-flop for WL shift register requires an enable signal to gate WL signals when loading WL shift registers
+
+.. note:: Memory-bank decoders does require a memory cell to have 
+
+  -  two outputs (one regular and another inverted)
+  -  a Bit-Line input to load the data
+  -  a Word-Line input to enable data write 
+  -  (optional) a Word-Line read input to enabe data readback
 
 .. warning:: Please do NOT add inverted Bit-Line and Word-Line inputs. It is not supported yet!
 

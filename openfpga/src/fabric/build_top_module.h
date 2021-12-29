@@ -19,6 +19,7 @@
 #include "config_protocol.h"
 #include "module_manager.h"
 #include "fabric_key.h"
+#include "memory_bank_shift_register_banks.h"
 
 /********************************************************************
  * Function declaration
@@ -29,6 +30,7 @@ namespace openfpga {
 
 int build_top_module(ModuleManager& module_manager,
                      DecoderLibrary& decoder_lib,
+                     MemoryBankShiftRegisterBanks& blwl_sr_banks,
                      const CircuitLibrary& circuit_lib,
                      const VprDeviceAnnotation& vpr_device_annotation,
                      const DeviceGrid& grids,

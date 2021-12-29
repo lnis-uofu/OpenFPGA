@@ -101,10 +101,11 @@ enum e_circuit_model_port_type {
   CIRCUIT_MODEL_PORT_BLB,
   CIRCUIT_MODEL_PORT_WL,
   CIRCUIT_MODEL_PORT_WLB,
+  CIRCUIT_MODEL_PORT_WLR,
   NUM_CIRCUIT_MODEL_PORT_TYPES
 };
 /* Strings correspond to each port type */
-constexpr std::array<const char*, NUM_CIRCUIT_MODEL_PORT_TYPES> CIRCUIT_MODEL_PORT_TYPE_STRING = {{"input", "output", "inout", "clock", "sram", "bl", "blb", "wl", "wlb"}};
+constexpr std::array<const char*, NUM_CIRCUIT_MODEL_PORT_TYPES> CIRCUIT_MODEL_PORT_TYPE_STRING = {{"input", "output", "inout", "clock", "sram", "bl", "blb", "wl", "wlb", "wlr"}};
 
 enum e_circuit_model_delay_type {
   CIRCUIT_MODEL_DELAY_RISE, 
@@ -125,10 +126,11 @@ enum e_config_protocol_type {
   CONFIG_MEM_STANDALONE,   
   CONFIG_MEM_SCAN_CHAIN,   
   CONFIG_MEM_MEMORY_BANK,  
+  CONFIG_MEM_QL_MEMORY_BANK,  
   CONFIG_MEM_FRAME_BASED,  
   NUM_CONFIG_PROTOCOL_TYPES
 };
 
-constexpr std::array<const char*, NUM_CONFIG_PROTOCOL_TYPES> CONFIG_PROTOCOL_TYPE_STRING = {{"standalone", "scan_chain", "memory_bank", "frame_based"}};
+constexpr std::array<const char*, NUM_CONFIG_PROTOCOL_TYPES> CONFIG_PROTOCOL_TYPE_STRING = {{"standalone", "scan_chain", "memory_bank", "ql_memory_bank", "frame_based"}};
 
 #endif

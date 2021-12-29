@@ -27,6 +27,16 @@ FabricKey::fabric_region_range FabricKey::regions() const {
   return vtr::make_range(region_ids_.begin(), region_ids_.end());
 }
 
+FabricKey::fabric_bit_line_bank_range FabricKey::bl_banks(const FabricRegionId& region_id) const {
+  VTR_ASSERT(valid_region_id(region_id));
+  return vtr::make_range(bl_bank_ids_[region_id].begin(), bl_bank_ids_[region_id].end());
+}
+
+FabricKey::fabric_word_line_bank_range FabricKey::wl_banks(const FabricRegionId& region_id) const {
+  VTR_ASSERT(valid_region_id(region_id));
+  return vtr::make_range(wl_bank_ids_[region_id].begin(), wl_bank_ids_[region_id].end());
+}
+
 /************************************************************************
  * Public Accessors : Basic data query 
  ***********************************************************************/
@@ -54,8 +64,24 @@ std::string FabricKey::key_alias(const FabricKeyId& key_id) const {
   return key_alias_[key_id]; 
 }
 
+vtr::Point<int> FabricKey::key_coordinate(const FabricKeyId& key_id) const {
+  /* validate the key_id */
+  VTR_ASSERT(valid_key_id(key_id));
+  return key_coordinates_[key_id]; 
+}
+
 bool FabricKey::empty() const {
   return 0 == key_ids_.size();
+}
+
+std::vector<openfpga::BasicPort> FabricKey::bl_bank_data_ports(const FabricRegionId& region_id, const FabricBitLineBankId& bank_id) const {
+  VTR_ASSERT(valid_bl_bank_id(region_id, bank_id));
+  return bl_bank_data_ports_[region_id][bank_id];
+}
+
+std::vector<openfpga::BasicPort> FabricKey::wl_bank_data_ports(const FabricRegionId& region_id, const FabricWordLineBankId& bank_id) const {
+  VTR_ASSERT(valid_wl_bank_id(region_id, bank_id));
+  return wl_bank_data_ports_[region_id][bank_id];
 }
 
 /************************************************************************
@@ -65,6 +91,10 @@ bool FabricKey::empty() const {
 void FabricKey::reserve_regions(const size_t& num_regions) {
   region_ids_.reserve(num_regions);
   region_key_ids_.reserve(num_regions);
+  bl_bank_ids_.reserve(num_regions);
+  bl_bank_data_ports_.reserve(num_regions);
+  wl_bank_ids_.reserve(num_regions);
+  wl_bank_data_ports_.reserve(num_regions);
 }
 
 FabricRegionId FabricKey::create_region() {
@@ -72,6 +102,10 @@ FabricRegionId FabricKey::create_region() {
   FabricRegionId region = FabricRegionId(region_ids_.size());
   region_ids_.push_back(region);
   region_key_ids_.emplace_back();
+  bl_bank_ids_.emplace_back();
+  bl_bank_data_ports_.emplace_back();
+  wl_bank_ids_.emplace_back();
+  wl_bank_data_ports_.emplace_back();
   
   return region;
 }
@@ -124,6 +158,7 @@ void FabricKey::reserve_keys(const size_t& num_keys) {
   key_values_.reserve(num_keys);
   key_regions_.reserve(num_keys);
   key_alias_.reserve(num_keys);
+  key_coordinates_.reserve(num_keys);
 }
 
 FabricKeyId FabricKey::create_key() {
@@ -134,6 +169,7 @@ FabricKeyId FabricKey::create_key() {
   key_values_.emplace_back();
   key_regions_.emplace_back(FabricRegionId::INVALID());
   key_alias_.emplace_back();
+  key_coordinates_.emplace_back(vtr::Point<int>(-1, -1));
   
   return key;
 }
@@ -162,6 +198,62 @@ void FabricKey::set_key_alias(const FabricKeyId& key_id,
   key_alias_[key_id] = alias;
 }
 
+void FabricKey::set_key_coordinate(const FabricKeyId& key_id,
+                                   const vtr::Point<int>& coord) {
+  /* validate the key_id */
+  VTR_ASSERT(valid_key_id(key_id));
+
+  key_coordinates_[key_id] = coord;
+}
+
+void FabricKey::reserve_bl_shift_register_banks(const FabricRegionId& region_id, const size_t& num_banks) {
+  VTR_ASSERT(valid_region_id(region_id));
+  bl_bank_ids_[region_id].reserve(num_banks);
+  bl_bank_data_ports_[region_id].reserve(num_banks);
+}
+
+void FabricKey::reserve_wl_shift_register_banks(const FabricRegionId& region_id, const size_t& num_banks) {
+  VTR_ASSERT(valid_region_id(region_id));
+  wl_bank_ids_[region_id].reserve(num_banks);
+  wl_bank_data_ports_[region_id].reserve(num_banks);
+}
+
+FabricBitLineBankId FabricKey::create_bl_shift_register_bank(const FabricRegionId& region_id) {
+  VTR_ASSERT(valid_region_id(region_id));
+  
+  /* Create a new id */
+  FabricBitLineBankId bank = FabricBitLineBankId(bl_bank_ids_[region_id].size());
+  bl_bank_ids_[region_id].push_back(bank);
+  bl_bank_data_ports_[region_id].emplace_back();
+
+  return bank;
+}
+
+void FabricKey::add_data_port_to_bl_shift_register_bank(const FabricRegionId& region_id,
+                                                        const FabricBitLineBankId& bank_id,
+                                                        const openfpga::BasicPort& data_port) {
+  VTR_ASSERT(valid_bl_bank_id(region_id, bank_id));
+  bl_bank_data_ports_[region_id][bank_id].push_back(data_port);
+}
+
+FabricWordLineBankId FabricKey::create_wl_shift_register_bank(const FabricRegionId& region_id) {
+  VTR_ASSERT(valid_region_id(region_id));
+  
+  /* Create a new id */
+  FabricWordLineBankId bank = FabricWordLineBankId(wl_bank_ids_[region_id].size());
+  wl_bank_ids_[region_id].push_back(bank);
+  wl_bank_data_ports_[region_id].emplace_back();
+
+  return bank;
+}
+
+void FabricKey::add_data_port_to_wl_shift_register_bank(const FabricRegionId& region_id,
+                                                        const FabricWordLineBankId& bank_id,
+                                                        const openfpga::BasicPort& data_port) {
+  VTR_ASSERT(valid_wl_bank_id(region_id, bank_id));
+  wl_bank_data_ports_[region_id][bank_id].push_back(data_port);
+}
+
 /************************************************************************
  * Internal invalidators/validators 
  ***********************************************************************/
@@ -172,4 +264,22 @@ bool FabricKey::valid_region_id(const FabricRegionId& region_id) const {
 
 bool FabricKey::valid_key_id(const FabricKeyId& key_id) const {
   return ( size_t(key_id) < key_ids_.size() ) && ( key_id == key_ids_[key_id] ); 
+}
+
+bool FabricKey::valid_key_coordinate(const vtr::Point<int>& coord) const {
+  return coord.x() > -1 && coord.y() > -1;
+}
+
+bool FabricKey::valid_bl_bank_id(const FabricRegionId& region_id, const FabricBitLineBankId& bank_id) const {
+  if (!valid_region_id(region_id)) {
+    return false;
+  }
+  return ( size_t(bank_id) < bl_bank_ids_[region_id].size() ) && ( bank_id == bl_bank_ids_[region_id][bank_id] ); 
+}
+
+bool FabricKey::valid_wl_bank_id(const FabricRegionId& region_id, const FabricWordLineBankId& bank_id) const {
+  if (!valid_region_id(region_id)) {
+    return false;
+  }
+  return ( size_t(bank_id) < wl_bank_ids_[region_id].size() ) && ( bank_id == wl_bank_ids_[region_id][bank_id] ); 
 }
