@@ -380,9 +380,9 @@
             </direct>
             <direct name="out2out" input="mult_8x8.Y" output="mult_8x8_slice.OUT_cfg">
             </direct>
-            <complete name="clk_ff_A" input="mult_8x8.clk" output="ff_A.clk">
-            <complete name="clk_ff_B" input="mult_8x8.clk" output="ff_B.clk">
-            <complete name="clk_ff_Y" input="mult_8x8.clk" output="ff_Y.clk">
+            <complete name="clk_ff_A" input="mult_8x8.clk" output="ff_A.clk"/>
+            <complete name="clk_ff_B" input="mult_8x8.clk" output="ff_B.clk"/>
+            <complete name="clk_ff_Y" input="mult_8x8.clk" output="ff_Y.clk"/>
           </interconnect>
           <power method="pin-toggle">
             <port name="A_cfg" energy_per_toggle="2.13e-12"/>
@@ -405,7 +405,7 @@
           <direct name="out2out" input="mult_8x8_slice.OUT_cfg" output="mult_8.out">
             <delay_constant max="1.93e-9" min="74e-12" in_port="mult_8x8_slice.OUT_cfg" out_port="mult_8.out"/>
           </direct>
-          <complete name="clk" input="mult_8.clk" output="mult_8x8_slice.clk">
+          <complete name="clk" input="mult_8.clk" output="mult_8x8_slice.clk"/>
         </interconnect>
       </mode>
       <!-- Place this multiplier block every 8 columns from (and including) the sixth column -->
