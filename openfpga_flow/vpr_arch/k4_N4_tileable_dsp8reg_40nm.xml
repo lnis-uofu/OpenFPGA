@@ -83,8 +83,8 @@
       <!--  Highly recommand to customize pin location when direct connection is used!!! -->
       <!-- pinlocations are designed to spread pin on 4 sides evenly -->
       <pinlocations pattern="custom">
-        <loc side="left">mult_8.a[0:3] mult_8.a[0:3] mult_8.out[0:7]</loc>
-        <loc side="top"></loc>
+        <loc side="left">mult_8.a[0:3] mult_8.b[0:3] mult_8.out[0:7]</loc>
+        <loc side="top">mult_8.clk</loc>
         <loc side="right">mult_8.a[4:7] mult_8.b[4:7] mult_8.out[8:15]</loc>
         <loc side="bottom"></loc>
       </pinlocations>
