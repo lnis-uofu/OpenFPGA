@@ -10,6 +10,10 @@ Note that an OpenFPGA architecture can be applied to multiple VPR architecture f
 - adder\_chain: If hard adder/carry chain is used inside CLBs
 - register\_chain: If shift register chain is used inside CLBs
 - scan\_chain: If scan chain testing infrastructure is used inside CLBs
+- <wide>\_<frac>\_dsp<dsp\_size>reg: If Digital Signal Processor (DSP) is used or not. If used, the input size should be clarified here.
+  - The keyword 'wide' is to specify if the DSP spans more than 1 column. 
+  - The keyword 'frac' is to specify if the DSP is fracturable to operate in different modes.
+  - The keyword 'reg' is to specify if the DSP has input and output registers. If only input or output registers are used, the keyword will be 'regin' or 'regout' respectively.
 - mem<mem\_size>: If block RAM (BRAM) is used or not. If used, the memory size should be clarified here. The keyword wide is to specify if the BRAM spanns more than 1 column.
 - aib: If the Advanced Interface Bus (AIB) is used in place of some I/Os.
 - <bank\|cc\|frame\|standalone>: specify the type of configuration protocol used in the architecture.
