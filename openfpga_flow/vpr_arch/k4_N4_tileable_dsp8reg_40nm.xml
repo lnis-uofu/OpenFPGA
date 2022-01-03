@@ -348,21 +348,21 @@
             <delay_constant max="1.523e-9" min="0.776e-9" in_port="mult_8x8.A" out_port="mult_8x8.Y"/>
             <delay_constant max="1.523e-9" min="0.776e-9" in_port="mult_8x8.B" out_port="mult_8x8.Y"/>
           </pb_type>
-          <pb_type name="ff_A" blif_model=".latch" num_pb="1" class="flipflop">
+          <pb_type name="ff_A" blif_model=".latch" num_pb="8" class="flipflop">
             <input name="D" num_pins="1" port_class="D"/>
             <output name="Q" num_pins="1" port_class="Q"/>
             <clock name="clk" num_pins="1" port_class="clock"/>
             <T_setup value="66e-12" port="ff_A.D" clock="clk"/>
             <T_clock_to_Q max="124e-12" port="ff_A.Q" clock="clk"/>
           </pb_type>
-          <pb_type name="ff_B" blif_model=".latch" num_pb="1" class="flipflop">
+          <pb_type name="ff_B" blif_model=".latch" num_pb="8" class="flipflop">
             <input name="D" num_pins="1" port_class="D"/>
             <output name="Q" num_pins="1" port_class="Q"/>
             <clock name="clk" num_pins="1" port_class="clock"/>
             <T_setup value="66e-12" port="ff_B.D" clock="clk"/>
             <T_clock_to_Q max="124e-12" port="ff_B.Q" clock="clk"/>
           </pb_type>
-          <pb_type name="ff_Y" blif_model=".latch" num_pb="1" class="flipflop">
+          <pb_type name="ff_Y" blif_model=".latch" num_pb="16" class="flipflop">
             <input name="D" num_pins="1" port_class="D"/>
             <output name="Q" num_pins="1" port_class="Q"/>
             <clock name="clk" num_pins="1" port_class="clock"/>
@@ -370,21 +370,44 @@
             <T_clock_to_Q max="124e-12" port="ff_Y.Q" clock="clk"/>
           </pb_type>
           <interconnect>
-            <mux name="a2a" input="mult_8x8_slice.A_cfg ff_A.Q" output="mult_8x8.A">
-            </mux>
-            <direct name="a2ff" input="mult_8x8_slice.A_cfg" output="ff_A.D">
-            </direct>
-            <mux name="b2b" input="mult_8x8_slice.B_cfg ff_b.Q" output="mult_8x8.B">
-            </mux>
-            <direct name="b2ff" input="mult_8x8_slice.B_cfg" output="ff_B.D">
-            </direct>
-            <mux name="out2out" input="mult_8x8.Y ff_Y.Q" output="mult_8x8_slice.OUT_cfg">
-            </mux>
-            <direct name="out2ff" input="mult_8x8.Y" output="ff_Y.D">
-            </direct>
-            <complete name="clk_ff_A" input="mult_8x8.clk" output="ff_A.clk"/>
-            <complete name="clk_ff_B" input="mult_8x8.clk" output="ff_B.clk"/>
-            <complete name="clk_ff_Y" input="mult_8x8.clk" output="ff_Y.clk"/>
+            <mux name="a2a0" input="mult_8x8_slice.A_cfg[0] ff_A[0].Q" output="mult_8x8.A[0]"/>
+            <mux name="a2a1" input="mult_8x8_slice.A_cfg[1] ff_A[1].Q" output="mult_8x8.A[1]"/>
+            <mux name="a2a2" input="mult_8x8_slice.A_cfg[2] ff_A[2].Q" output="mult_8x8.A[2]"/>
+            <mux name="a2a3" input="mult_8x8_slice.A_cfg[3] ff_A[3].Q" output="mult_8x8.A[3]"/>
+            <mux name="a2a4" input="mult_8x8_slice.A_cfg[4] ff_A[4].Q" output="mult_8x8.A[4]"/>
+            <mux name="a2a5" input="mult_8x8_slice.A_cfg[5] ff_A[5].Q" output="mult_8x8.A[5]"/>
+            <mux name="a2a6" input="mult_8x8_slice.A_cfg[6] ff_A[6].Q" output="mult_8x8.A[6]"/>
+            <mux name="a2a7" input="mult_8x8_slice.A_cfg[7] ff_A[7].Q" output="mult_8x8.A[7]"/>
+            <direct name="a2ff" input="mult_8x8_slice.A_cfg[7:0]" output="ff_A[7:0].D"/>
+            <mux name="b2b0" input="mult_8x8_slice.B_cfg[0] ff_B[0].Q" output="mult_8x8.B[0]"/>
+            <mux name="b2b1" input="mult_8x8_slice.B_cfg[1] ff_B[1].Q" output="mult_8x8.B[1]"/>
+            <mux name="b2b2" input="mult_8x8_slice.B_cfg[2] ff_B[2].Q" output="mult_8x8.B[2]"/>
+            <mux name="b2b3" input="mult_8x8_slice.B_cfg[3] ff_B[3].Q" output="mult_8x8.B[3]"/>
+            <mux name="b2b4" input="mult_8x8_slice.B_cfg[4] ff_B[4].Q" output="mult_8x8.B[4]"/>
+            <mux name="b2b5" input="mult_8x8_slice.B_cfg[5] ff_B[5].Q" output="mult_8x8.B[5]"/>
+            <mux name="b2b6" input="mult_8x8_slice.B_cfg[6] ff_B[6].Q" output="mult_8x8.B[6]"/>
+            <mux name="b2b7" input="mult_8x8_slice.B_cfg[7] ff_B[7].Q" output="mult_8x8.B[7]"/>
+            <direct name="b2ff" input="mult_8x8_slice.B_cfg[7:0]" output="ff_B[7:0].D"/>
+            <mux name="out2out0" input="mult_8x8.Y[0] ff_Y[0].Q" output="mult_8x8_slice.OUT_cfg[0]"/>
+            <mux name="out2out1" input="mult_8x8.Y[1] ff_Y[1].Q" output="mult_8x8_slice.OUT_cfg[1]"/>
+            <mux name="out2out2" input="mult_8x8.Y[2] ff_Y[2].Q" output="mult_8x8_slice.OUT_cfg[2]"/>
+            <mux name="out2out3" input="mult_8x8.Y[3] ff_Y[3].Q" output="mult_8x8_slice.OUT_cfg[3]"/>
+            <mux name="out2out4" input="mult_8x8.Y[4] ff_Y[4].Q" output="mult_8x8_slice.OUT_cfg[4]"/>
+            <mux name="out2out5" input="mult_8x8.Y[5] ff_Y[5].Q" output="mult_8x8_slice.OUT_cfg[5]"/>
+            <mux name="out2out6" input="mult_8x8.Y[6] ff_Y[6].Q" output="mult_8x8_slice.OUT_cfg[6]"/>
+            <mux name="out2out7" input="mult_8x8.Y[7] ff_Y[7].Q" output="mult_8x8_slice.OUT_cfg[7]"/>
+            <mux name="out2out8" input="mult_8x8.Y[8] ff_Y[8].Q" output="mult_8x8_slice.OUT_cfg[8]"/>
+            <mux name="out2out9" input="mult_8x8.Y[9] ff_Y[9].Q" output="mult_8x8_slice.OUT_cfg[9]"/>
+            <mux name="out2out10" input="mult_8x8.Y[10] ff_Y[10].Q" output="mult_8x8_slice.OUT_cfg[10]"/>
+            <mux name="out2out11" input="mult_8x8.Y[11] ff_Y[11].Q" output="mult_8x8_slice.OUT_cfg[11]"/>
+            <mux name="out2out12" input="mult_8x8.Y[12] ff_Y[12].Q" output="mult_8x8_slice.OUT_cfg[12]"/>
+            <mux name="out2out13" input="mult_8x8.Y[13] ff_Y[13].Q" output="mult_8x8_slice.OUT_cfg[13]"/>
+            <mux name="out2out14" input="mult_8x8.Y[14] ff_Y[14].Q" output="mult_8x8_slice.OUT_cfg[14]"/>
+            <mux name="out2out15" input="mult_8x8.Y[15] ff_Y[15].Q" output="mult_8x8_slice.OUT_cfg[15]"/>
+            <direct name="out2ff" input="mult_8x8.Y[15:0]" output="ff_Y[15:0].D"/>
+            <complete name="clk_ff_A" input="mult_8x8_slice.clk" output="ff_A.clk"/>
+            <complete name="clk_ff_B" input="mult_8x8_slice.clk" output="ff_B.clk"/>
+            <complete name="clk_ff_Y" input="mult_8x8_slice.clk" output="ff_Y.clk"/>
           </interconnect>
           <power method="pin-toggle">
             <port name="A_cfg" energy_per_toggle="2.13e-12"/>
