@@ -342,9 +342,9 @@
           <output name="OUT_cfg" num_pins="16"/>
           <clock name="clk" num_pins="1"/>
           <pb_type name="mult_8x8" blif_model=".subckt mult_8" num_pb="1">
-            <input name="A" num_pins="36"/>
-            <input name="B" num_pins="36"/>
-            <output name="Y" num_pins="72"/>
+            <input name="A" num_pins="8"/>
+            <input name="B" num_pins="8"/>
+            <output name="Y" num_pins="16"/>
             <delay_constant max="1.523e-9" min="0.776e-9" in_port="mult_8x8.A" out_port="mult_8x8.Y"/>
             <delay_constant max="1.523e-9" min="0.776e-9" in_port="mult_8x8.B" out_port="mult_8x8.Y"/>
           </pb_type>
