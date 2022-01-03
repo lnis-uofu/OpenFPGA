@@ -16,6 +16,7 @@ Please reveal the following architecture features in the names to help quickly s
   - The keyword 'wide' is to specify if the DSP spans more than 1 column. 
   - The keyword 'frac' is to specify if the DSP is fracturable to operate in different modes.
   - The keyword 'reg' is to specify if the DSP has input and output registers. If only input or output registers are used, the keyword will be 'regin' or 'regout' respectively.
+- mem<mem\_size>: If block RAM (BRAM) is used or not. If used, the memory size should be clarified here. The keyword wide is to specify if the BRAM spanns more than 1 column.
 - aib: If the Advanced Interface Bus (AIB) is used in place of some I/Os.
 - multi\_io\_capacity: If I/O capacity is different on each side of FPGAs.
 - reduced\_io: If I/Os only appear a certain or multiple sides of FPGAs 
