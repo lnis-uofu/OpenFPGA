@@ -376,9 +376,11 @@
             </direct>
             <mux name="b2b" input="mult_8x8_slice.B_cfg ff_b.Q" output="mult_8x8.B">
             </mux>
-            <direct name="a2ff" input="mult_8x8_slice.B_cfg" output="ff_B.D">
+            <direct name="b2ff" input="mult_8x8_slice.B_cfg" output="ff_B.D">
             </direct>
-            <direct name="out2out" input="mult_8x8.Y" output="mult_8x8_slice.OUT_cfg">
+            <mux name="out2out" input="mult_8x8.Y ff_Y.Q" output="mult_8x8_slice.OUT_cfg">
+            </mux>
+            <direct name="out2ff" input="mult_8x8.Y" output="ff_Y.D">
             </direct>
             <complete name="clk_ff_A" input="mult_8x8.clk" output="ff_A.clk"/>
             <complete name="clk_ff_B" input="mult_8x8.clk" output="ff_B.clk"/>
