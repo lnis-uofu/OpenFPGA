@@ -96,13 +96,14 @@ def main():
     for eachtask in args.tasks:
         logger.info("Currently running task %s" % eachtask)
         eachtask = eachtask.replace("\\", "/").split("/")
-        job_run_list = generate_each_task_actions(eachtask)
+        job_run_list, GeneralSection = generate_each_task_actions(eachtask)
         if args.remove_run_dir:
             continue
         eachtask = "_".join(eachtask)
         if not args.test_run:
             run_actions(job_run_list)
-            collect_results(job_run_list)
+            if not (GeneralSection.get("fpga_flow") == "yosys"):
+                collect_results(job_run_list)
         else:
             pprint.pprint(job_run_list)
     logger.info("Task execution completed")
@@ -350,7 +351,7 @@ def generate_each_task_actions(taskname):
     logger.info('Found %d Architectures %d Benchmarks & %d Script Parameters' %
                 (len(archfile_list), len(benchmark_list), len(ScriptSections)))
     logger.info('Created total %d jobs' % len(flow_run_cmd_list))
-    return flow_run_cmd_list
+    return flow_run_cmd_list,GeneralSection
 
 # Make the directory name unique by including the benchmark index in the list.
 # This is because benchmarks may share the same top module names
