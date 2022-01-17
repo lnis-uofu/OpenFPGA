@@ -157,13 +157,15 @@ OpenFPGA_SHELL Sections
 
    The option specifies VHDL language standard to be used while reading the VHDL files.
 
-.. option:: verific_read_lib_name=<lib_name>
+.. option:: verific_read_lib_name<lib_label>=<lib_name>
 
-   The option specifies library name where Verilog/SystemVerilog/VHDL files specified by ``verific_read_lib_src`` option will be loaded. This option should be used only with ``verific_read_lib_src`` option.
+   The ``lib_label`` variable can be any number of string without
+   white-spaces. The option specifies library name where Verilog/SystemVerilog/VHDL files specified by ``verific_read_lib_src<lib_label>`` option will be loaded. This option should be used only with ``verific_read_lib_src<lib_label>`` option.
 
-.. option:: verific_read_lib_src=<library_src_files>
+.. option:: verific_read_lib_src<lib_label>=<library_src_files>
 
-   The option specifies Verilog/SystemVerilog/VHDL files to be loaded into library specified by ``verific_read_lib_name`` option. The ``library_src_files`` should be the source files names separated by commas. This option should be used only with ``verific_read_lib_name`` option.
+   The ``lib_label`` variable can be any number of string without
+   white-spaces. The option specifies Verilog/SystemVerilog/VHDL files to be loaded into library specified by ``verific_read_lib_name<lib_label>`` option. The ``library_src_files`` should be the source files names separated by commas. This option should be used only with ``verific_read_lib_name<lib_label>`` option.
 
 .. option:: verific_search_lib=<lib_name>
 

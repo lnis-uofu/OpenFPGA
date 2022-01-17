@@ -109,7 +109,7 @@ General Arguments
 
 .. option:: --yosys_tmpl <yosys_template_file>
 
-    This option allows the user to provide a custom Yosys template while running a yosys_vpr flow. Default template is stored in a directory ``open_fpga_flow\misc\ys_tmpl_yosys_vpr_flow.ys``. Alternately, user can create a copy and modify according to their need. Yosys template script supports ``TOP_MODULE`` ``READ_VERILOG_FILE`` ``LUT_SIZE`` & ``OUTPUT_BLIF`` variables. In case if ``--verific`` option is provided then ``ADD_INCLUDE_DIR``, ``ADD_LIBRARY_DIR``, ``ADD_BLACKBOX_MODULES``, ``READ_HDL_FILE`` (should be used instead of ``READ_VERILOG_FILE``) and ``READ_LIBRARY`` additional varialbes are supported. The variables can be used as ``${var_name}``.
+    This option allows the user to provide a custom Yosys template while running a yosys_vpr flow. Default template is stored in a directory ``open_fpga_flow\misc\ys_tmpl_yosys_vpr_flow.ys``. Alternately, user can create a copy and modify according to their need. Yosys template script supports ``TOP_MODULE`` ``READ_VERILOG_OPTIONS`` ``VERILOG_FILES`` ``LUT_SIZE`` & ``OUTPUT_BLIF`` variables. In case if ``--verific`` option is provided then ``ADD_INCLUDE_DIR``, ``ADD_LIBRARY_DIR``, ``ADD_BLACKBOX_MODULES``, ``READ_HDL_FILE`` (should be used instead of ``READ_VERILOG_OPTIONS`` and ``VERILOG_FILES``) and ``READ_LIBRARY`` additional varialbes are supported. The variables can be used as ``${var_name}``.
 
 .. option:: --ys_rewrite_tmpl <yosys_rewrite_template_file>
 
