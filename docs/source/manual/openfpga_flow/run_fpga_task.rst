@@ -94,7 +94,7 @@ Declaring all the above sections are mandatory.
 General Section
 ^^^^^^^^^^^^^^^
 
-.. option:: fpga_flow=<yosys_vpr|vpr_blif>
+.. option:: fpga_flow=<yosys_vpr|vpr_blif|yosys>
 
     This option defines which OpenFPGA flow to run. By default ``yosys_vpr`` is executed.
 
