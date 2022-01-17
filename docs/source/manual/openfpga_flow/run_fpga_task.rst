@@ -265,6 +265,11 @@ Synthesis Parameter Sections
     the source Verilog design for ``bench_label`` benchmark to be used
     while verification.
 
+.. option:: bench<bench_label>_read_verilog_options=<Options>
+
+    This option defines the ``read_verilog`` command options for ``bench_label`` benchmark.
+    If all benchmarks share the same options then ``bench_read_verilog_options_common`` can be used to define common options.
+
 Script Parameter Sections
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 The script parameter section lists set of commnad line pararmeters to be passed to :ref:`run_fpga_flow` script. The section name is defines as ``SCRIPT_PARAM_<parameter_set_label>`` where `parameter_set_label` can be any word without white spaces.

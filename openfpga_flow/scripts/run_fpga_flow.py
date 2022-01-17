@@ -531,9 +531,9 @@ def create_yosys_params():
                 shlex.quote(eachdir) for eachdir in ys_params["VERIFIC_LIBRARY_DIR"].split(",")])
         try:
             for param, value in ys_params.items():
-                if param.startswith("LIB_NAME"):
-                    index = param[len("LIB_NAME"):]
-                    src_param = "LIB_SRC" + index
+                if param.startswith("VERIFIC_READ_LIB_NAME"):
+                    index = param[len("VERIFIC_READ_LIB_NAME"):]
+                    src_param = "VERIFIC_READ_LIB_SRC" + index
                     if src_param in ys_params:
                         src_files = []
                         for name in ys_params[src_param].split(","):
