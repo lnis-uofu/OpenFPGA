@@ -1,6 +1,6 @@
 # Yosys synthesis script for ${TOP_MODULE}
 # Read verilog files
-${READ_VERILOG_FILE}
+read_verilog ${READ_VERILOG_OPTIONS} ${VERILOG_FILES}
 # Read technology library
 read_verilog -lib -specify ${YOSYS_CELL_SIM_VERILOG}
 

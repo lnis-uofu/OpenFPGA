@@ -263,9 +263,11 @@ def generate_each_task_actions(taskname):
         # - All the benchmarks may share the same yosys synthesis template script
         # - All the benchmarks may share the same rewrite yosys template script, which converts post-synthesis .v netlist to be compatible with .blif port definition. This is required for correct verification at the end of flows
         # - All the benchmarks may share the same routing channel width in VPR runs. This is designed to enable architecture evaluations for a fixed device model
+        # - All the benchmarks may share the same options for reading verilog files
         ys_for_task_common = SynthSection.get("bench_yosys_common")
         ys_rewrite_for_task_common = SynthSection.get("bench_yosys_rewrite_common")
         chan_width_common = SynthSection.get("bench_chan_width_common")
+        read_verilog_options_common = SynthSection.get("bench_read_verilog_options_common")
 
         # Individual benchmark configuration
         CurrBenchPara["files"] = bench_files
@@ -282,6 +284,11 @@ def generate_each_task_actions(taskname):
             if bech_name in eachKey:
                 eachKey = eachKey.replace(bech_name+"_", "").upper()
                 CurrBenchPara["benchVariable"] += [f"--{eachKey}", eachValue]
+
+        if not "read_verilog_options".upper() in CurrBenchPara["benchVariable"]:
+            if read_verilog_options_common:
+                CurrBenchPara["benchVariable"] += ["--read_verilog_options".upper(), 
+                                                        read_verilog_options_common]
 
         if GeneralSection.get("fpga_flow") == "vpr_blif":
             # Check if activity file exist
