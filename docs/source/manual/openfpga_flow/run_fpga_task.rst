@@ -212,8 +212,7 @@ Benchmarks Sections
 .. option:: bench<bench_label>=<list_of_files_in_benchmark>
 
     The ``bench_label`` variable can be any number of string without
-    white-spaces. ``xml_architecture_file_path`` is path to the actual XML
-    architecture file
+    white-spaces. ``list_of_files_in_benchmark`` is a list of benchmark HDL files paths.
 
     For Example following code shows how to define a benchmarks,
     with a single file, multiple files and files added from a specific directory.
