@@ -273,23 +273,32 @@ def main():
 
     if (args.fpga_flow == "vpr_blif"):
         collect_files_for_vpr()
-    logger.info("Running OpenFPGA Shell Engine ")
-    run_openfpga_shell()
-    if args.end_flow_with_test:
-        run_netlists_verification()
+    if (args.fpga_flow == "yosys"):
+        run_yosys_with_abc()
+    if not (args.fpga_flow == "yosys"):
+        logger.info("Running OpenFPGA Shell Engine ")
+        run_openfpga_shell()
+        if args.end_flow_with_test:
+            run_netlists_verification()
 
     ExecTime["End"] = time.time()
     def timestr(x): return humanize.naturaldelta(timedelta(seconds=x)) \
         if "humanize" in sys.modules else str(int(x)) + " Sec "
-    TimeInfo = ("Openfpga_flow completed, " +
-                "Total Time Taken %s " %
-                timestr(ExecTime["End"]-ExecTime["Start"]) +
-                "VPR Time %s " %
-                timestr(ExecTime["VPREnd"]-ExecTime["VPRStart"]))
-    TimeInfo += ("Verification Time %s " %
-                 timestr(ExecTime["VerificationEnd"] -
-                         ExecTime["VerificationStart"])
-                 if args.end_flow_with_test else "")
+    
+    if (args.fpga_flow == "yosys"):
+        TimeInfo = ("Openfpga_flow completed, " +
+                    "Total Time Taken %s " %
+                    timestr(ExecTime["End"]-ExecTime["Start"]))
+    else:
+        TimeInfo = ("Openfpga_flow completed, " +
+                    "Total Time Taken %s " %
+                    timestr(ExecTime["End"]-ExecTime["Start"]) +
+                    "VPR Time %s " %
+                    timestr(ExecTime["VPREnd"]-ExecTime["VPRStart"]))
+        TimeInfo += ("Verification Time %s " %
+                     timestr(ExecTime["VerificationEnd"] -
+                             ExecTime["VerificationStart"])
+                     if args.end_flow_with_test else "")
     logger.info(TimeInfo)
     exit()
 

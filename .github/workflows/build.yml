@@ -229,6 +229,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
+          - name: basic_reg_yosys_only_test
           - name: basic_reg_test
           - name: fpga_verilog_reg_test
           - name: fpga_bitstream_reg_test
@@ -282,6 +283,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
+          - name: basic_reg_yosys_only_test
           - name: basic_reg_test
           - name: fpga_verilog_reg_test
           - name: fpga_bitstream_reg_test
