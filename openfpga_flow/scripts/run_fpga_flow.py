@@ -497,9 +497,10 @@ def create_yosys_params():
         ys_params[tmpVar] = OpenFPGAArgs[indx+1]
 
     if not args.verific:
-        ys_params["READ_VERILOG_FILE"] = " \n".join([
-            "read_verilog -nolatches " + shlex.quote(eachfile)
-            for eachfile in args.benchmark_files])
+        ys_params["VERILOG_FILES"] = " ".join([
+            shlex.quote(eachfile) for eachfile in args.benchmark_files])
+        if not "READ_VERILOG_OPTIONS" in ys_params:
+            ys_params["READ_VERILOG_OPTIONS"] = ""
     else:
         if "ADD_INCLUDE_DIR" not in ys_params:
             ys_params["ADD_INCLUDE_DIR"] = ""
@@ -538,26 +539,37 @@ def create_yosys_params():
             ys_params["ADD_LIBRARY_DIR"] = "\n".join(["verific -vlog-libdir " +
                 shlex.quote(eachdir) for eachdir in ys_params["VERIFIC_LIBRARY_DIR"].split(",")])
         try:
-            if "VERIFIC_READ_LIB_NAME" in ys_params and "VERIFIC_READ_LIB_SRC" in ys_params:
-                for name in ys_params["VERIFIC_READ_LIB_SRC"].split(","):
-                    for eachfile in args.benchmark_files:
-                        if name in eachfile:
-                            lib_files.append(eachfile)
-                            break
-                if not lib_files:
-                    clean_up_and_exit("Failed to locate verific library files")
-                filename, file_extension = os.path.splitext(lib_files[0])
-                ys_params["READ_LIBRARY"] = " ".join(["verific -work",
-                    ys_params["VERIFIC_READ_LIB_NAME"], ext_to_standard_map[file_extension]] +
-                    [shlex.quote(eachfile) for eachfile in lib_files])
+            for param, value in ys_params.items():
+                if param.startswith("VERIFIC_READ_LIB_NAME"):
+                    index = param[len("VERIFIC_READ_LIB_NAME"):]
+                    src_param = "VERIFIC_READ_LIB_SRC" + index
+                    if src_param in ys_params:
+                        src_files = []
+                        for name in ys_params[src_param].split(","):
+                            for eachfile in args.benchmark_files:
+                                if name.strip() in eachfile:
+                                    src_files.append(eachfile)
+                                    break
+                        if not src_files:
+                            clean_up_and_exit("Failed to locate verific library files")
+                        lib_files.extend(src_files)
+                        filename, file_extension = os.path.splitext(src_files[0])
+                        ys_params["READ_LIBRARY"] += " ".join(["verific -work",
+                            ys_params[param], ext_to_standard_map[file_extension]] +
+                            [shlex.quote(eachfile) for eachfile in src_files] + ["\n"])
+            standard_to_sources = {}
             for eachfile in args.benchmark_files:
                 if eachfile in lib_files:
                     continue
                 filename, file_extension = os.path.splitext(eachfile)
+                if ext_to_standard_map[file_extension] in standard_to_sources:
+                    standard_to_sources[ext_to_standard_map[file_extension]].append(eachfile)
+                else:
+                    standard_to_sources[ext_to_standard_map[file_extension]] = [eachfile]
+            for standard, sources in standard_to_sources.items():
                 ys_params["READ_HDL_FILE"] += " ".join(["verific",
                     "-L " + ys_params["VERIFIC_SEARCH_LIB"] if "VERIFIC_SEARCH_LIB" in ys_params else "",
-                    ext_to_standard_map[file_extension],
-                    shlex.quote(eachfile), "\n"])
+                    standard, " ".join([shlex.quote(src) for src in sources]), "\n"])
         except:
             logger.exception("Failed to determine design file type")
             clean_up_and_exit("")

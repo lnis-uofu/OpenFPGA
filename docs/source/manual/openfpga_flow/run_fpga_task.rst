@@ -157,13 +157,15 @@ OpenFPGA_SHELL Sections
 
    The option specifies VHDL language standard to be used while reading the VHDL files.
 
-.. option:: verific_read_lib_name=<lib_name>
+.. option:: verific_read_lib_name<lib_label>=<lib_name>
 
-   The option specifies library name where Verilog/SystemVerilog/VHDL files specified by ``verific_read_lib_src`` option will be loaded. This option should be used only with ``verific_read_lib_src`` option.
+   The ``lib_label`` variable can be any number of string without
+   white-spaces. The option specifies library name where Verilog/SystemVerilog/VHDL files specified by ``verific_read_lib_src<lib_label>`` option will be loaded. This option should be used only with ``verific_read_lib_src<lib_label>`` option.
 
-.. option:: verific_read_lib_src=<library_src_files>
+.. option:: verific_read_lib_src<lib_label>=<library_src_files>
 
-   The option specifies Verilog/SystemVerilog/VHDL files to be loaded into library specified by ``verific_read_lib_name`` option. The ``library_src_files`` should be the source files names separated by commas. This option should be used only with ``verific_read_lib_name`` option.
+   The ``lib_label`` variable can be any number of string without
+   white-spaces. The option specifies Verilog/SystemVerilog/VHDL files to be loaded into library specified by ``verific_read_lib_name<lib_label>`` option. The ``library_src_files`` should be the source files names separated by commas. This option should be used only with ``verific_read_lib_name<lib_label>`` option.
 
 .. option:: verific_search_lib=<lib_name>
 
@@ -210,8 +212,7 @@ Benchmarks Sections
 .. option:: bench<bench_label>=<list_of_files_in_benchmark>
 
     The ``bench_label`` variable can be any number of string without
-    white-spaces. ``xml_architecture_file_path`` is path to the actual XML
-    architecture file
+    white-spaces. ``list_of_files_in_benchmark`` is a list of benchmark HDL files paths.
 
     For Example following code shows how to define a benchmarks,
     with a single file, multiple files and files added from a specific directory.
@@ -262,6 +263,11 @@ Synthesis Parameter Sections
     In case of running ``blif_vpr_flow`` with verification this option provides
     the source Verilog design for ``bench_label`` benchmark to be used
     while verification.
+
+.. option:: bench<bench_label>_read_verilog_options=<Options>
+
+    This option defines the ``read_verilog`` command options for ``bench_label`` benchmark.
+    If all benchmarks share the same options then ``bench_read_verilog_options_common`` can be used to define common options.
 
 Script Parameter Sections
 ^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -3,7 +3,7 @@
 plugin -i ql-qlf
 
 # Read verilog files
-${READ_VERILOG_FILE}
+read_verilog ${READ_VERILOG_OPTIONS} ${VERILOG_FILES}
 
 synth_ql -blif ${OUTPUT_BLIF} -top ${TOP_MODULE} ${YOSYS_ARGS}
 

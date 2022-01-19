@@ -1,6 +1,6 @@
 # Yosys synthesis script for ${TOP_MODULE}
 # Read verilog files
-${READ_VERILOG_FILE}
+read_verilog ${READ_VERILOG_OPTIONS} ${VERILOG_FILES}
 
 # Technology mapping
 hierarchy -top ${TOP_MODULE}
