@@ -135,58 +135,6 @@ OpenFPGA_SHELL Sections
 
     User can specify OpenFPGA_SHELL options in this section.
 
-.. option:: verific_include_dir=<include_dir>
-
-   The ``include_dir`` is path to the Verilog/VHDL include directory. If there are multiple paths then they can be
-   provided as a comma separated list.
-
-.. option:: verific_library_dir=<library_dir>
-
-   The ``library_dir`` is path to the Verilog/VHDL library directory. Verific will search in this directory to
-   find undefined modules. If there are multiple paths then they can be provided as a comma separated list.
-
-.. option:: verific_verilog_standard=<-vlog95|-vlog2k>
-
-   The option specifies Verilog language standard to be used while reading the Verilog files.
-
-.. option:: verific_systemverilog_standard=<-sv2005|-sv2009|-sv2012>
-
-   The option specifies SystemVerilog language standard to be used while reading the SystemVerilog files.
-
-.. option:: verific_vhdl_standard=<-vhdl87|-vhdl93|-vhdl2k|-vhdl2008>
-
-   The option specifies VHDL language standard to be used while reading the VHDL files.
-
-.. option:: verific_read_lib_name<lib_label>=<lib_name>
-
-   The ``lib_label`` variable can be any number of string without
-   white-spaces. The option specifies library name where Verilog/SystemVerilog/VHDL files specified by ``verific_read_lib_src<lib_label>`` option will be loaded. This option should be used only with ``verific_read_lib_src<lib_label>`` option.
-
-.. option:: verific_read_lib_src<lib_label>=<library_src_files>
-
-   The ``lib_label`` variable can be any number of string without
-   white-spaces. The option specifies Verilog/SystemVerilog/VHDL files to be loaded into library specified by ``verific_read_lib_name<lib_label>`` option. The ``library_src_files`` should be the source files names separated by commas. This option should be used only with ``verific_read_lib_name<lib_label>`` option.
-
-.. option:: verific_search_lib=<lib_name>
-
-   The option specifies library name from where will look up for external definitions while reading HDL files.
-
-.. option:: yosys_cell_sim_verilog=<verilog_files>
-
-   The option specifies Verilog files which should be separated by comma.
-
-.. option:: yosys_cell_sim_systemverilog=<systemverilog_files>
-
-   The option specifies SystemVerilog files which should be separated by comma.
-
-.. option:: yosys_cell_sim_vhdl=<vhdl_files>
-
-   The option specifies VHDL files which should be separated by comma.
-
-.. option:: yosys_blackbox_modules=<blackbox_modules>
-
-   The option specifies blackbox modules names which should be separated by comma (usually these are the modules defined in files specified with yosys_cell_sim_<verilog/systemverilog/vhdl> option).
-
 
 Architectures Sections
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -243,9 +191,9 @@ Synthesis Parameter Sections
     This option defines the Top Level module name for ``bench_label`` benchmark.
     By default, the top-level module name is considered as a ``top``.
 
-.. option:: bench<bench_label>_yosys_tmpl=<yosys_template_file>
+.. option:: bench<bench_label>_yosys=<yosys_template_file>
 
-   [TODO]
+    This config defines Yosys template script file.
 
 .. option:: bench<bench_label>_chan_width=<chan_width_to_use>
 
@@ -266,8 +214,104 @@ Synthesis Parameter Sections
 
 .. option:: bench<bench_label>_read_verilog_options=<Options>
 
-    This option defines the ``read_verilog`` command options for ``bench_label`` benchmark.
-    If all benchmarks share the same options then ``bench_read_verilog_options_common`` can be used to define common options.
+    This config defines the ``read_verilog`` command options for ``bench_label`` benchmark.
+
+.. option:: bench<bench_label>_yosys_args=<Arguments>
+
+    This config defines Yosys arguments to be used in QuickLogic synthesis script for ``bench_label`` benchmark.
+
+.. option:: bench<bench_label>_yosys_dff_map_verilog=<dff_technology_file_path>
+
+    This config defines DFF technology file to be used in technology mapping for ``bench_label`` benchmark. 
+
+.. option:: bench<bench_label>_yosys_bram_map_verilog=<bram_technology_file_path>
+
+    This config defines BRAM technology file to be used in technology mapping for ``bench_label`` benchmark. 
+
+.. option:: bench<bench_label>_yosys_bram_map_rules=<bram_technology_rules_file_path>
+
+    This config defines BRAM technology rules file to be used in technology mapping for ``bench_label`` benchmark.  This config should be used with ``bench<bench_label>_yosys_bram_map_verilog`` config.
+
+.. option:: bench<bench_label>_yosys_dsp_map_verilog=<dsp_technology_file_path>
+
+    This config defines DSP technology file to be used in technology mapping for ``bench_label`` benchmark. 
+
+.. option:: bench<bench_label>_yosys_dsp_map_parameters=<dsp_mapping_parameters>
+
+    This config defines DSP technology parameters to be used in technology mapping for ``bench_label`` benchmark.  This config should be used with ``bench<bench_label>_yosys_dsp_map_verilog`` config.
+
+.. option:: bench<bench_label>_verific_include_dir=<include_dir_path>
+
+    This config defines include directory path for ``bench_label`` benchmark. Verific will search in this directory to find included files. If there are multiple paths then they can be provided as a comma separated list.
+
+.. option:: bench<bench_label>_verific_library_dir=<library_dir_path>
+
+    This config defines library directory path for ``bench_label`` benchmark. Verific will search in this directory to find undefined modules. If there are multiple paths then they can be provided as a comma separated list.
+
+.. option:: bench<bench_label>_verific_verilog_standard=<-vlog95|-vlog2k>
+
+    The config specifies Verilog language standard to be used while reading the Verilog files for ``bench_label`` benchmark.
+
+.. option:: bench<bench_label>_verific_systemverilog_standard=<-sv2005|-sv2009|-sv2012>
+
+    The config specifies SystemVerilog language standard to be used while reading the SystemVerilog files for ``bench_label`` benchmark.
+
+.. option:: bench<bench_label>_verific_vhdl_standard=<-vhdl87|-vhdl93|-vhdl2k|-vhdl2008>
+
+    The config specifies VHDL language standard to be used while reading the VHDL files for ``bench_label`` benchmark.
+
+.. option:: bench<bench_label>_verific_read_lib_name<lib_label>=<lib_name>
+
+    The ``lib_label`` variable can be any number of string without white-spaces. The config specifies library name for ``bench_label`` benchmark where Verilog/SystemVerilog/VHDL files specified by ``bench<bench_label>_verific_read_lib_src<lib_label>`` config will be loaded. This config should be used only with ``bench<bench_label>_verific_read_lib_src<lib_label>`` config.
+
+.. option:: bench<bench_label>_verific_read_lib_src<lib_label>=<library_src_files>
+
+    The ``lib_label`` variable can be any number of string without white-spaces. The config specifies Verilog/SystemVerilog/VHDL files to be loaded into library specified by ``bench<bench_label>_verific_read_lib_name<lib_label>`` config for ``bench_label`` benchmark. The ``library_src_files`` should be the source files names separated by commas. This config should be used only with ``bench<bench_label>_verific_read_lib_name<lib_label>`` config.
+
+.. option:: bench<bench_label>_verific_search_lib=<lib_name>
+
+    The config specifies library name for ``bench_label`` benchmark from where Verific will look up for external definitions while reading HDL files.
+
+.. option:: bench<bench_label>_yosys_cell_sim_verilog=<verilog_files>
+
+    The config specifies Verilog files for ``bench_label`` benchmark which should be separated by comma.
+
+.. option:: bench<bench_label>_yosys_cell_sim_systemverilog=<systemverilog_files>
+
+    The config specifies SystemVerilog files for ``bench_label`` benchmark which should be separated by comma.
+
+.. option:: bench<bench_label>_yosys_cell_sim_vhdl=<vhdl_files>
+
+    The config specifies VHDL files for ``bench_label`` benchmark which should be separated by comma.
+
+.. option:: bench<bench_label>_yosys_blackbox_modules=<blackbox_modules>
+
+    The config specifies blackbox modules names for ``bench_label`` benchmark which should be separated by comma (usually these are the modules defined in files specified with bench<bench_label>_yosys_cell_sim_<verilog/systemverilog/vhdl> option).
+
+.. note::
+    The following configs might be common for all benchmarks:
+
+* ``bench<bench_label>_yosys``
+* ``bench<bench_label>_chan_width``
+* ``bench<bench_label>_read_verilog_options``
+* ``bench<bench_label>_yosys_args``
+* ``bench<bench_label>_yosys_bram_map_rules``
+* ``bench<bench_label>_yosys_bram_map_verilog``
+* ``bench<bench_label>_yosys_cell_sim_verilog``
+* ``bench<bench_label>_yosys_cell_sim_systemverilog``
+* ``bench<bench_label>_yosys_cell_sim_vhdl``
+* ``bench<bench_label>_yosys_blackbox_modules``
+* ``bench<bench_label>_yosys_dff_map_verilog``
+* ``bench<bench_label>_yosys_dsp_map_parameters``
+* ``bench<bench_label>_yosys_dsp_map_verilog``
+* ``bench<bench_label>_verific_verilog_standard``
+* ``bench<bench_label>_verific_systemverilog_standard``
+* ``bench<bench_label>_verific_vhdl_standard``
+* ``bench<bench_label>_verific_include_dir``
+* ``bench<bench_label>_verific_library_dir``
+* ``bench<bench_label>_verific_search_lib``
+
+*The following syntax should be used to define common config:* ``bench_<config_name>_common``
 
 Script Parameter Sections
 ^^^^^^^^^^^^^^^^^^^^^^^^^

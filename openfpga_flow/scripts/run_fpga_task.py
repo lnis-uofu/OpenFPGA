@@ -268,7 +268,30 @@ def generate_each_task_actions(taskname):
         ys_for_task_common = SynthSection.get("bench_yosys_common")
         ys_rewrite_for_task_common = SynthSection.get("bench_yosys_rewrite_common")
         chan_width_common = SynthSection.get("bench_chan_width_common")
-        read_verilog_options_common = SynthSection.get("bench_read_verilog_options_common")
+
+        yosys_params = [
+            "read_verilog_options",
+            "yosys_args",
+            "yosys_bram_map_rules",
+            "yosys_bram_map_verilog",
+            "yosys_cell_sim_verilog",
+            "yosys_cell_sim_systemverilog",
+            "yosys_cell_sim_vhdl",
+            "yosys_blackbox_modules",
+            "yosys_dff_map_verilog",
+            "yosys_dsp_map_parameters",
+            "yosys_dsp_map_verilog",
+            "verific_verilog_standard",
+            "verific_systemverilog_standard",
+            "verific_vhdl_standard",
+            "verific_include_dir",
+            "verific_library_dir",
+            "verific_search_lib"
+        ]
+
+        yosys_params_common = {}
+        for param in yosys_params:
+            yosys_params_common[param.upper()] = SynthSection.get("bench_"+param+"_common")
 
         # Individual benchmark configuration
         CurrBenchPara["files"] = bench_files
@@ -285,11 +308,10 @@ def generate_each_task_actions(taskname):
             if bech_name in eachKey:
                 eachKey = eachKey.replace(bech_name+"_", "").upper()
                 CurrBenchPara["benchVariable"] += [f"--{eachKey}", eachValue]
-
-        if not "read_verilog_options".upper() in CurrBenchPara["benchVariable"]:
-            if read_verilog_options_common:
-                CurrBenchPara["benchVariable"] += ["--read_verilog_options".upper(), 
-                                                        read_verilog_options_common]
+        
+        for param, value in yosys_params_common.items():
+            if not param in CurrBenchPara["benchVariable"] and value:
+                CurrBenchPara["benchVariable"] += [f"--{param}", value]
 
         if GeneralSection.get("fpga_flow") == "vpr_blif":
             # Check if activity file exist
