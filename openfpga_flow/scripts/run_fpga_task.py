@@ -305,6 +305,7 @@ def generate_each_task_actions(taskname):
             CurrBenchPara["verilog_file"] = SynthSection.get(
                 bech_name+"_verilog")
 
+        CurrBenchPara["pcf_file"] = SynthSection.get(bech_name+"_pcf")
         # Add script parameter list in current benchmark
         ScriptSections = [x for x in TaskFileSections if "SCRIPT_PARAM" in x]
         script_para_list = {}
@@ -416,6 +417,9 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, param, task_conf):
 
     if benchmark_obj.get("activity_file"):
         command += ["--activity_file", benchmark_obj.get("activity_file")]
+
+    if benchmark_obj.get("pcf_file"):
+        command += ["--pcf_file", benchmark_obj.get("pcf_file")]
 
     if benchmark_obj.get("verilog_file"):
         command += ["--base_verilog", benchmark_obj.get("verilog_file")]

@@ -89,10 +89,21 @@ parser.add_argument('--openfpga_shell_template', type=str,
                                          "openfpga_shell_scripts",
                                          "example_script.openfpga"),
                     help="Sample openfpga shell script")
+parser.add_argument('--openfpga_vpr_packer_template', type=str,
+                    default=os.path.join(openfpga_base_dir, "openfpga_flow",
+                                         "openfpga_shell_scripts",
+                                         "run_vpr_packer.openfpga"),
+                    help="Vpr packer shell script")
 parser.add_argument('--openfpga_arch_file', type=str,
                     help="Openfpga architecture file for shell")
 parser.add_argument('--arch_variable_file', type=str, default=None,
                     help="Openfpga architecture file for shell")
+parser.add_argument('--pinmap_xml_file', type=str,
+                    default=None,
+                    help="pinmap xml file")
+parser.add_argument('--pinmap_csv_file', type=str,
+                    default=None,
+                    help="pinmap csv file")
 # parser.add_argument('--openfpga_sim_setting_file', type=str,
 #                     help="Openfpga simulation file for shell")
 # parser.add_argument('--external_fabric_key_file', type=str,
@@ -114,6 +125,10 @@ parser.add_argument('--activity_file', type=str,
 parser.add_argument('--base_verilog', type=str,
                     help="Original Verilog file to run verification in " +
                     "blif_VPR flow")
+
+#VPR IO placement constraint file
+parser.add_argument('--pcf_file', type=str,
+                    help="IO placement constraint file used while running vpr flow")
 
 # ACE2 and power estimation related arguments
 parser.add_argument('--K', type=int,
@@ -273,6 +288,12 @@ def main():
 
     if (args.fpga_flow == "vpr_blif"):
         collect_files_for_vpr()
+    logger.info("Running OpenFPGA Shell Engine ")
+
+    if (args.pcf_file):
+        run_openfpga_vpr_packer()
+        run_io_placement()
+
     if (args.fpga_flow == "yosys"):
         run_yosys_with_abc()
     if not (args.fpga_flow == "yosys"):
@@ -415,6 +436,9 @@ def validate_command_line_arguments():
         args.activity_file = os.path.abspath(args.activity_file)
     if args.base_verilog:
         args.base_verilog = os.path.abspath(args.base_verilog)
+    if args.pcf_file:
+        args.pcf_file = os.path.abspath(args.pcf_file)
+        logger.info("pcf file %s", args.pcf_file)
 
 
 def prepare_run_directory(run_dir):
@@ -459,6 +483,17 @@ def prepare_run_directory(run_dir):
         else:
             shutil.copy(args.openfpga_shell_template,
                         args.top_module+"_template.openfpga")
+
+    if (args.openfpga_vpr_packer_template):
+        args.openfpga_vpr_packer_template = os.path.expandvars(args.openfpga_vpr_packer_template)
+        if not os.path.isfile(args.openfpga_vpr_packer_template or ""):
+            logger.error("Openfpga shell file - %s" %
+                         args.openfpga_vpr_packer_template)
+            clean_up_and_exit("Provided openfpga_vpr_packer_template" +
+                              f" {args.openfpga_vpr_packer_template} file not found")
+        else:
+            shutil.copy(args.openfpga_vpr_packer_template,
+                        args.top_module+"_vpr_packer.openfpga")
 
     # Create benchmark dir in run_dir and copy flattern architecture file
     os.mkdir("benchmark")
@@ -708,6 +743,31 @@ def run_pro_blif_3arg():
     logger.info("blif_3args output is written in file %s" % filename)
 
 
+def run_io_placement():
+    command = [
+        "--pcf", args.pcf_file,
+        "--blif", os.path.join(args.run_dir, args.top_module + ".blif"),
+        "--net", os.path.join(args.run_dir, args.top_module+".net"),
+        "--pinmap_xml", args.pinmap_xml_file,
+        "--csv_file", args.pinmap_csv_file,
+        "-o", os.path.join(args.run_dir, args.top_module+"_io.place"),
+    ]
+    try:
+            #logger.info("run create_ioplace  %s %s", os.path.join(flow_script_dir,'create_ioplace.py'), command)
+            if not os.path.isfile( os.path.join(flow_script_dir,'create_ioplace.py')):
+            	clean_up_and_exit("Not able to locate io placement file " + os.path.join(flow_script_dir,'create_ioplace.py'))
+
+            process = subprocess.run(["python3", os.path.join(flow_script_dir,'create_ioplace.py')] +
+                                     command,
+                                     check=True,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE,
+                                     universal_newlines=True)
+    except:
+        logger.exception("Failed to run create_ioplace")
+        clean_up_and_exit("")
+
+
 def collect_files_for_vpr():
     # Sanitize provided Benchmark option
     if len(args.benchmark_files) > 1:
@@ -729,6 +789,29 @@ def collect_files_for_vpr():
     shutil.copy(args.base_verilog, args.top_module+"_output_verilog.v")
 
 
+def run_openfpga_vpr_packer():
+    tmpl = Template(open(args.top_module+"_vpr_packer.openfpga",
+                         encoding='utf-8').read())
+
+    path_variables = script_env_vars["PATH"]
+    path_variables["VPR_ARCH_FILE"] = args.arch_file
+    path_variables["OPENFPGA_ARCH_FILE"] = args.openfpga_arch_file
+    path_variables["VPR_TESTBENCH_BLIF"] = args.top_module+".blif"
+    path_variables["ACTIVITY_FILE"] = args.top_module+"_ace_out.act"
+    path_variables["REFERENCE_VERILOG_TESTBENCH"] = args.top_module + \
+        "_output_verilog.v"
+
+    for indx in range(0, len(OpenFPGAArgs), 2):
+        tmpVar = OpenFPGAArgs[indx][2:].upper()
+        path_variables[tmpVar] = OpenFPGAArgs[indx+1]
+
+    with open(args.top_module+"_run_vpr_packer.openfpga", 'w', encoding='utf-8') as archfile:
+        archfile.write(tmpl.safe_substitute(path_variables))
+    command = [cad_tools["openfpga_shell_path"], "-batch", "-f",
+               args.top_module+"_run_vpr_packer.openfpga"]
+    run_command("OpenFPGA Shell Run", "openfpgashell_vpr_packer.log", command)
+
+
 def run_openfpga_shell():
     ExecTime["VPRStart"] = time.time()
     # bench_blif, fixed_chan_width, logfile, route_only=False
@@ -739,6 +822,9 @@ def run_openfpga_shell():
     path_variables["VPR_ARCH_FILE"] = args.arch_file
     path_variables["OPENFPGA_ARCH_FILE"] = args.openfpga_arch_file
     path_variables["VPR_TESTBENCH_BLIF"] = args.top_module+".blif"
+    path_variables["VPR_IO_PLACE"] = "free"
+    if (args.pcf_file):
+        path_variables["VPR_IO_PLACE"] = args.top_module+"_io.place"
     path_variables["ACTIVITY_FILE"] = args.top_module+"_ace_out.act"
     path_variables["REFERENCE_VERILOG_TESTBENCH"] = args.top_module + \
         "_output_verilog.v"
