@@ -215,6 +215,9 @@ ShellCommandId add_openfpga_write_preconfigured_testbench_command(openfpga::Shel
   CommandOptionId default_net_type_opt = shell_cmd.add_option("default_net_type", false, "Set the default net type for Verilog netlists. Default value is 'none'");
   shell_cmd.set_option_require_value(default_net_type_opt, openfpga::OPT_STRING);
 
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false, "Do not print a time stamp in the output files");
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
   
