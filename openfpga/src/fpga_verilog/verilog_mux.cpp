@@ -1274,7 +1274,7 @@ void print_verilog_submodule_mux_primitives(ModuleManager& module_manager,
   VTR_LOG("Writing Verilog netlist for Multiplexer primitives '%s' ...",
           verilog_fname.c_str()); 
 
-  print_verilog_file_header(fp, "Multiplexer primitives"); 
+  print_verilog_file_header(fp, "Multiplexer primitives", options.time_stamp()); 
 
   /* Record if the branch module has been outputted
    * since different sizes of routing multiplexers may share the same branch module
@@ -1332,7 +1332,7 @@ void print_verilog_submodule_mux_top_modules(ModuleManager& module_manager,
   VTR_LOG("Writing Verilog netlist for Multiplexers '%s' ...",
           verilog_fname.c_str()); 
 
-  print_verilog_file_header(fp, "Multiplexers"); 
+  print_verilog_file_header(fp, "Multiplexers", options.time_stamp()); 
 
   /* Generate unique Verilog modules for the multiplexers */
   for (auto mux : mux_lib.muxes()) {

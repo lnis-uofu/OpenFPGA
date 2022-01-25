@@ -25,6 +25,7 @@ VerilogTestbenchOption::VerilogTestbenchOption() {
   default_net_type_ = VERILOG_DEFAULT_NET_TYPE_NONE;
   embedded_bitstream_hdl_type_ = EMBEDDED_BITSTREAM_HDL_MODELSIM;
   time_unit_ = 1E-3;
+  time_stamp_ = true;
   verbose_output_ = false;
 }
 
@@ -89,6 +90,10 @@ float VerilogTestbenchOption::time_unit() const {
 
 e_embedded_bitstream_hdl_type VerilogTestbenchOption::embedded_bitstream_hdl_type() const {
   return embedded_bitstream_hdl_type_; 
+}
+
+bool VerilogTestbenchOption::time_stamp() const {
+  return time_stamp_;
 }
 
 bool VerilogTestbenchOption::verbose_output() const {
@@ -184,6 +189,11 @@ void VerilogTestbenchOption::set_embedded_bitstream_hdl_type(const std::string& 
 
 void VerilogTestbenchOption::set_time_unit(const float& time_unit) {
   time_unit_ = time_unit;
+}
+
+
+void VerilogTestbenchOption::set_time_stamp(const bool& enabled) {
+  time_stamp_ = enabled;
 }
 
 void VerilogTestbenchOption::set_verbose_output(const bool& enabled) {

@@ -174,7 +174,7 @@ void print_one_verilog_template_module(const ModuleManager& module_manager,
 void print_verilog_submodule_templates(const ModuleManager& module_manager,
                                        const CircuitLibrary& circuit_lib,
                                        const std::string& submodule_dir,
-                                       const e_verilog_default_net_type& default_net_type) {
+                                       const FabricVerilogOption& options) {
   std::string verilog_fname(submodule_dir + USER_DEFINED_TEMPLATE_VERILOG_FILE_NAME);
 
   /* Create the file stream */
@@ -187,7 +187,7 @@ void print_verilog_submodule_templates(const ModuleManager& module_manager,
   VTR_LOG("Creating template for user-defined Verilog modules '%s'...",
           verilog_fname.c_str()); 
 
-  print_verilog_file_header(fp, "Template for user-defined Verilog modules"); 
+  print_verilog_file_header(fp, "Template for user-defined Verilog modules", options.time_stamp()); 
 
   /* Output essential models*/
   for (const auto& model : circuit_lib.models()) {
@@ -203,7 +203,7 @@ void print_verilog_submodule_templates(const ModuleManager& module_manager,
     print_one_verilog_template_module(module_manager,
                                       fp,
                                       circuit_lib.model_name(model),
-                                      default_net_type); 
+                                      options.default_net_type()); 
   }
 
   /* close file stream */

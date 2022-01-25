@@ -35,7 +35,8 @@ void print_verilog_default_net_type_declaration(std::fstream& fp,
                                                 const e_verilog_default_net_type& default_net_type);
 
 void print_verilog_file_header(std::fstream& fp,
-                               const std::string& usage);
+                               const std::string& usage,
+                               const bool& include_time_stamp);
 
 void print_verilog_include_netlist(std::fstream& fp, 
                                    const std::string& netlist_name);
@@ -201,7 +202,8 @@ void print_verilog_clock_stimuli(std::fstream& fp,
 
 void print_verilog_netlist_include_header_file(const std::vector<std::string>& netlists_to_be_included,
                                                const char* subckt_dir,
-                                               const char* header_file_name);
+                                               const char* header_file_name,
+                                               const bool& include_time_stamp);
 
 } /* end namespace openfpga */
 

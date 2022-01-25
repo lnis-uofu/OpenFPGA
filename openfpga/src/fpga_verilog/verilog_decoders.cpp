@@ -166,7 +166,7 @@ void print_verilog_submodule_mux_local_decoders(const ModuleManager& module_mana
                                                 const MuxLibrary& mux_lib,
                                                 const CircuitLibrary& circuit_lib,
                                                 const std::string& submodule_dir,
-                                                const e_verilog_default_net_type& default_net_type) {
+                                                const FabricVerilogOption& options) {
   std::string verilog_fname(submodule_dir + std::string(LOCAL_ENCODER_VERILOG_FILE_NAME));
 
   /* Create the file stream */
@@ -179,7 +179,7 @@ void print_verilog_submodule_mux_local_decoders(const ModuleManager& module_mana
   VTR_LOG("Writing Verilog netlist for local decoders for multiplexers '%s'...",
           verilog_fname.c_str()); 
 
-  print_verilog_file_header(fp, "Local Decoders for Multiplexers"); 
+  print_verilog_file_header(fp, "Local Decoders for Multiplexers", options.time_stamp()); 
 
   /* Create a library for local encoders with different sizes */
   DecoderLibrary decoder_lib;
@@ -214,7 +214,7 @@ void print_verilog_submodule_mux_local_decoders(const ModuleManager& module_mana
 
   /* Generate Verilog modules for the found unique local encoders */
   for (const auto& decoder : decoder_lib.decoders()) {
-    print_verilog_mux_local_decoder_module(fp, module_manager, decoder_lib, decoder, default_net_type);
+    print_verilog_mux_local_decoder_module(fp, module_manager, decoder_lib, decoder, options.default_net_type());
   }
 
   /* Close the file stream */
@@ -648,7 +648,7 @@ void print_verilog_submodule_arch_decoders(const ModuleManager& module_manager,
                                            NetlistManager& netlist_manager,
                                            const DecoderLibrary& decoder_lib,
                                            const std::string& submodule_dir,
-                                           const e_verilog_default_net_type& default_net_type) {
+                                           const FabricVerilogOption& options) {
   std::string verilog_fname(submodule_dir + std::string(ARCH_ENCODER_VERILOG_FILE_NAME));
 
   /* Create the file stream */
@@ -661,14 +661,14 @@ void print_verilog_submodule_arch_decoders(const ModuleManager& module_manager,
   VTR_LOG("Writing Verilog netlist for configuration decoders '%s'...",
           verilog_fname.c_str()); 
 
-  print_verilog_file_header(fp, "Decoders for fabric configuration protocol "); 
+  print_verilog_file_header(fp, "Decoders for fabric configuration protocol", options.time_stamp()); 
 
   /* Generate Verilog modules for the found unique local encoders */
   for (const auto& decoder : decoder_lib.decoders()) {
     if (true == decoder_lib.use_data_in(decoder)) {
-      print_verilog_arch_decoder_with_data_in_module(fp, module_manager, decoder_lib, decoder, default_net_type);
+      print_verilog_arch_decoder_with_data_in_module(fp, module_manager, decoder_lib, decoder, options.default_net_type());
     } else {
-      print_verilog_arch_decoder_module(fp, module_manager, decoder_lib, decoder, default_net_type);
+      print_verilog_arch_decoder_module(fp, module_manager, decoder_lib, decoder, options.default_net_type());
     }
   }
 

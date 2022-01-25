@@ -47,7 +47,7 @@ void print_verilog_submodule_luts(const ModuleManager& module_manager,
   VTR_LOG("Writing Verilog netlist for LUTs '%s'...",
           verilog_fname.c_str()); 
 
-  print_verilog_file_header(fp, "Look-Up Tables"); 
+  print_verilog_file_header(fp, "Look-Up Tables", options.time_stamp()); 
 
   /* Search for each LUT circuit model */
   for (const auto& lut_model : circuit_lib.models()) {

@@ -91,7 +91,9 @@ void print_verilog_routing_connection_box_unique_module(NetlistManager& netlist_
 
   check_file_stream(verilog_fname.c_str(), fp);
 
-  print_verilog_file_header(fp, std::string("Verilog modules for Unique Connection Blocks[" + std::to_string(rr_gsb.get_cb_x(cb_type)) + "]["+ std::to_string(rr_gsb.get_cb_y(cb_type)) + "]")); 
+  print_verilog_file_header(fp,
+                            std::string("Verilog modules for Unique Connection Blocks[" + std::to_string(rr_gsb.get_cb_x(cb_type)) + "]["+ std::to_string(rr_gsb.get_cb_y(cb_type)) + "]"),
+                            options.time_stamp()); 
 
   /* Create a Verilog Module based on the circuit model, and add to module manager */
   ModuleId cb_module = module_manager.find_module(generate_connection_block_module_name(cb_type, gsb_coordinate)); 
@@ -194,7 +196,9 @@ void print_verilog_routing_switch_box_unique_module(NetlistManager& netlist_mana
 
   check_file_stream(verilog_fname.c_str(), fp);
 
-  print_verilog_file_header(fp, std::string("Verilog modules for Unique Switch Blocks[" + std::to_string(rr_gsb.get_sb_x()) + "]["+ std::to_string(rr_gsb.get_sb_y()) + "]")); 
+  print_verilog_file_header(fp,
+                            std::string("Verilog modules for Unique Switch Blocks[" + std::to_string(rr_gsb.get_sb_x()) + "]["+ std::to_string(rr_gsb.get_sb_y()) + "]"),
+                            options.time_stamp()); 
 
   /* Create a Verilog Module based on the circuit model, and add to module manager */
   ModuleId sb_module = module_manager.find_module(generate_switch_block_module_name(gsb_coordinate)); 

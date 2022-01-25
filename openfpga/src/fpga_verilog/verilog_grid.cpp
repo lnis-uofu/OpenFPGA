@@ -95,7 +95,9 @@ void print_verilog_primitive_block(NetlistManager& netlist_manager,
 
   check_file_stream(verilog_fname.c_str(), fp);
 
-  print_verilog_file_header(fp, std::string("Verilog modules for primitive pb_type: " + std::string(primitive_pb_graph_node->pb_type->name))); 
+  print_verilog_file_header(fp,
+                            std::string("Verilog modules for primitive pb_type: " + std::string(primitive_pb_graph_node->pb_type->name)),
+                            options.time_stamp()); 
 
   /* Generate the module name for this primitive pb_graph_node*/
   std::string primitive_module_name = generate_physical_block_module_name(primitive_pb_graph_node->pb_type);
@@ -207,7 +209,9 @@ void rec_print_verilog_logical_tile(NetlistManager& netlist_manager,
 
   check_file_stream(verilog_fname.c_str(), fp);
 
-  print_verilog_file_header(fp, std::string("Verilog modules for pb_type: " + std::string(physical_pb_type->name))); 
+  print_verilog_file_header(fp,
+                            std::string("Verilog modules for pb_type: " + std::string(physical_pb_type->name)),
+                            options.time_stamp()); 
 
   /* Generate the name of the Verilog module for this pb_type */
   std::string pb_module_name = generate_physical_block_module_name(physical_pb_type);
@@ -320,7 +324,9 @@ void print_verilog_physical_tile_netlist(NetlistManager& netlist_manager,
 
   check_file_stream(verilog_fname.c_str(), fp);
 
-  print_verilog_file_header(fp, std::string("Verilog modules for physical tile: " + std::string(phy_block_type->name) + "]")); 
+  print_verilog_file_header(fp,
+                            std::string("Verilog modules for physical tile: " + std::string(phy_block_type->name) + "]"),
+                            options.time_stamp()); 
 
   /* Create a Verilog Module for the top-level physical block, and add to module manager */
   std::string grid_module_name = generate_grid_block_module_name(std::string(GRID_VERILOG_FILE_NAME_PREFIX), std::string(phy_block_type->name), is_io_type(phy_block_type), border_side);

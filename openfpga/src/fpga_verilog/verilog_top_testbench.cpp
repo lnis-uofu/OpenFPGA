@@ -1928,7 +1928,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
 
   /* Generate a brief description on the Verilog file*/
   std::string title = std::string("FPGA Verilog full testbench for top-level netlist of design: ") + circuit_name;
-  print_verilog_file_header(fp, title);
+  print_verilog_file_header(fp, title, options.time_stamp());
 
   /* Find the top_module */
   ModuleId top_module = module_manager.find_module(generate_fpga_top_module_name());

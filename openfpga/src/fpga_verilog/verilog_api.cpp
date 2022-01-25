@@ -133,7 +133,8 @@ void fpga_fabric_verilog(ModuleManager &module_manager,
   /* Generate an netlist including all the fabric-related netlists */
   print_verilog_fabric_include_netlist(const_cast<const NetlistManager &>(netlist_manager),
                                        src_dir_path,
-                                       circuit_lib);
+                                       circuit_lib,
+                                       options.time_stamp());
 
   /* Given a brief stats on how many Verilog modules have been written to files */
   VTR_LOGV(options.verbose_output(),
@@ -193,9 +194,7 @@ int fpga_verilog_full_testbench(const ModuleManager &module_manager,
   /* Generate a Verilog file including all the netlists that have been generated */
   print_verilog_full_testbench_include_netlists(src_dir_path,
                                                 netlist_name,
-                                                options.fabric_netlist_file_path(),
-                                                options.reference_benchmark_file_path(),
-                                                options.no_self_checking());
+                                                options);
 
   return status;
 }
@@ -284,9 +283,7 @@ int fpga_verilog_preconfigured_testbench(const ModuleManager &module_manager,
   /* Generate a Verilog file including all the netlists that have been generated */
   print_verilog_preconfigured_testbench_include_netlists(src_dir_path,
                                                          netlist_name,
-                                                         options.fabric_netlist_file_path(),
-                                                         options.reference_benchmark_file_path(),
-                                                         options.no_self_checking());
+                                                         options);
 
   return status;
 }

@@ -19,6 +19,7 @@ FabricVerilogOption::FabricVerilogOption() {
   compress_routing_ = false;
   print_user_defined_template_ = false;
   default_net_type_ = VERILOG_DEFAULT_NET_TYPE_NONE;
+  time_stamp_ = true;
   verbose_output_ = false;
 }
 
@@ -31,6 +32,10 @@ std::string FabricVerilogOption::output_directory() const {
 
 bool FabricVerilogOption::include_timing() const {
   return include_timing_;
+}
+
+bool FabricVerilogOption::time_stamp() const {
+  return time_stamp_;
 }
 
 bool FabricVerilogOption::explicit_port_mapping() const {
@@ -62,6 +67,10 @@ void FabricVerilogOption::set_output_directory(const std::string& output_dir) {
 
 void FabricVerilogOption::set_include_timing(const bool& enabled) {
   include_timing_ = enabled;
+}
+
+void FabricVerilogOption::set_time_stamp(const bool& enabled) {
+  time_stamp_ = enabled;
 }
 
 void FabricVerilogOption::set_explicit_port_mapping(const bool& enabled) {
