@@ -163,13 +163,16 @@ void print_pnr_sdc_global_non_clock_ports(std::fstream& fp,
  * should be treated in CTS or not
  * In general, we do not recommend to do this
  *******************************************************************/
-void print_pnr_sdc_global_ports(const std::string& sdc_dir, 
-                                const float& time_unit,
+void print_pnr_sdc_global_ports(const PnrSdcOption& options,
                                 const ModuleManager& module_manager,
                                 const ModuleId& top_module,
                                 const FabricGlobalPortInfo& global_ports,
-                                const SimulationSetting& sim_setting,
-                                const bool& constrain_non_clock_port) {
+                                const SimulationSetting& sim_setting) {
+
+  std::string sdc_dir = options.sdc_dir();
+  float time_unit = options.time_unit();
+  bool include_time_stamp = options.time_stamp();
+  bool constrain_non_clock_port = options.constrain_non_clock_global_port();
 
   /* Create the file name for Verilog netlist */
   std::string sdc_fname(sdc_dir + std::string(SDC_GLOBAL_PORTS_FILE_NAME));
@@ -185,7 +188,9 @@ void print_pnr_sdc_global_ports(const std::string& sdc_dir,
   check_file_stream(sdc_fname.c_str(), fp);
 
   /* Generate the descriptions*/
-  print_sdc_file_header(fp, std::string("Clock contraints for PnR"));
+  print_sdc_file_header(fp,
+                        std::string("Clock contraints for PnR"),
+                        include_time_stamp);
 
   /* Print time unit for the SDC file */
   print_sdc_timescale(fp, time_unit_to_string(time_unit));

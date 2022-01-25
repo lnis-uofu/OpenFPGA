@@ -24,12 +24,10 @@ namespace openfpga {
  * Write a head (description) in SDC file 
  *******************************************************************/
 void print_sdc_file_header(std::fstream& fp,
-                           const std::string& usage) {
+                           const std::string& usage,
+                           const bool& include_time_stamp) {
 
   valid_file_stream(fp);
-
-  auto end = std::chrono::system_clock::now(); 
-  std::time_t end_time = std::chrono::system_clock::to_time_t(end);
 
   fp << "#############################################" << std::endl;
   fp << "#\tSynopsys Design Constraints (SDC)" << std::endl;
@@ -37,7 +35,13 @@ void print_sdc_file_header(std::fstream& fp,
   fp << "#\tDescription: " << usage << std::endl;
   fp << "#\tAuthor: Xifan TANG " << std::endl;
   fp << "#\tOrganization: University of Utah " << std::endl;
-  fp << "#\tDate: " << std::ctime(&end_time);
+
+  if (include_time_stamp) {
+    auto end = std::chrono::system_clock::now(); 
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+    fp << "#\tDate: " << std::ctime(&end_time);
+  }
+
   fp << "#############################################" << std::endl;
   fp << std::endl;
 }

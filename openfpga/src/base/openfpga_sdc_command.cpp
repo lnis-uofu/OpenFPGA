@@ -66,6 +66,9 @@ ShellCommandId add_openfpga_write_pnr_sdc_command(openfpga::Shell<OpenfpgaContex
   /* Add an option '--constrain_zero_delay_paths' */
   shell_cmd.add_option("constrain_zero_delay_paths", false, "Constrain zero-delay paths in FPGA fabric");
 
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false, "Do not print time stamp in output files");
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
   
@@ -108,6 +111,9 @@ ShellCommandId add_openfpga_write_configuration_chain_sdc_command(openfpga::Shel
   CommandOptionId max_dly_opt = shell_cmd.add_option("max_delay", false, "Specify the maximum delay to be used.");
   shell_cmd.set_option_require_value(max_dly_opt, openfpga::OPT_STRING);
 
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false, "Do not print time stamp in output files");
+
   /* Add command 'write_configuration_chain_sdc' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "generate SDC files to constrain the configuration chain for FPGA fabric");
   shell.set_command_class(shell_cmd_id, cmd_class_id);
@@ -137,6 +143,9 @@ ShellCommandId add_openfpga_write_sdc_disable_timing_configure_ports_command(ope
 
   /* Add an option '--flatten_name' */
   shell_cmd.add_option("flatten_names", false, "Use flatten names (no wildcards) in SDC files");
+
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false, "Do not print time stamp in output files");
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose outputs");
@@ -177,6 +186,9 @@ ShellCommandId add_openfpga_write_analysis_sdc_command(openfpga::Shell<OpenfpgaC
   /* Add an option '--time_unit' */
   CommandOptionId time_unit_opt = shell_cmd.add_option("time_unit", false, "Specify the time unit in SDC files. Acceptable is [a|f|p|n|u|m|kM]s");
   shell_cmd.set_option_require_value(time_unit_opt, openfpga::OPT_STRING);
+
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false, "Do not print time stamp in output files");
 
   /* Add command 'write_fabric_verilog' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "generate SDC files for timing analysis a PnRed FPGA fabric mapped by a benchmark");

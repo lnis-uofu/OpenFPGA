@@ -19,6 +19,7 @@ namespace openfpga {
 
 void print_sdc_disable_routing_multiplexer_outputs(const std::string& sdc_dir,
                                                    const bool& flatten_names,
+                                                   const bool& include_time_stamp,
                                                    const MuxLibrary& mux_lib,
                                                    const CircuitLibrary& circuit_lib,
                                                    const ModuleManager& module_manager,

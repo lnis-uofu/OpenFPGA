@@ -35,6 +35,7 @@ namespace openfpga {
  *******************************************************************/
 void print_sdc_disable_routing_multiplexer_outputs(const std::string& sdc_dir,
                                                    const bool& flatten_names,
+                                                   const bool& include_time_stamp,
                                                    const MuxLibrary& mux_lib,
                                                    const CircuitLibrary& circuit_lib,
                                                    const ModuleManager& module_manager,
@@ -53,7 +54,7 @@ void print_sdc_disable_routing_multiplexer_outputs(const std::string& sdc_dir,
   check_file_stream(sdc_fname.c_str(), fp);
 
   /* Generate the descriptions*/
-  print_sdc_file_header(fp, std::string("Disable routing multiplexer outputs for PnR"));
+  print_sdc_file_header(fp, std::string("Disable routing multiplexer outputs for PnR"), include_time_stamp);
 
   /* Iterate over the MUX modules */
   for (const MuxId& mux_id : mux_lib.muxes()) {

@@ -30,6 +30,7 @@ class PnrSdcOption {
     bool constrain_routing_multiplexer_outputs() const;
     bool constrain_switch_block_outputs() const;
     bool constrain_zero_delay_paths() const;
+    bool time_stamp() const;
   public: /* Public mutators */
     void set_sdc_dir(const std::string& sdc_dir);
     void set_flatten_names(const bool& flatten_names);
@@ -46,6 +47,7 @@ class PnrSdcOption {
     void set_constrain_routing_multiplexer_outputs(const bool& constrain_routing_mux_outputs);
     void set_constrain_switch_block_outputs(const bool& constrain_sb_outputs);
     void set_constrain_zero_delay_paths(const bool& constrain_zero_delay_paths);
+    void set_time_stamp(const bool& enable);
   private: /* Internal data */
     std::string sdc_dir_;
     bool flatten_names_;
@@ -61,6 +63,7 @@ class PnrSdcOption {
     bool constrain_routing_multiplexer_outputs_;
     bool constrain_switch_block_outputs_;
     bool constrain_zero_delay_paths_;
+    bool time_stamp_;
 };
 
 } /* end namespace openfpga */

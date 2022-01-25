@@ -133,6 +133,7 @@ void print_pnr_sdc_constrain_configurable_chain(const std::string& sdc_fname,
                                                 const float& time_unit,
                                                 const float& max_delay,
                                                 const float& min_delay,
+                                                const bool& include_time_stamp,
                                                 const ModuleManager& module_manager) {
 
   /* Create the directory */
@@ -149,7 +150,9 @@ void print_pnr_sdc_constrain_configurable_chain(const std::string& sdc_fname,
   check_file_stream(sdc_fname.c_str(), fp);
 
   /* Generate the descriptions*/
-  print_sdc_file_header(fp, std::string("Timing constraints for configurable chains used in PnR"));
+  print_sdc_file_header(fp,
+                        std::string("Timing constraints for configurable chains used in PnR"),
+                        include_time_stamp);
 
   /* Print time unit for the SDC file */
   print_sdc_timescale(fp, time_unit_to_string(time_unit));

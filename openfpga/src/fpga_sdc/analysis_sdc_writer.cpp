@@ -235,7 +235,9 @@ void print_analysis_sdc(const AnalysisSdcOption& option,
   check_file_stream(sdc_fname.c_str(), fp);
 
   /* Generate the descriptions*/
-  print_sdc_file_header(fp, std::string("Constrain for Timing/Power analysis on the mapped FPGA"));
+  print_sdc_file_header(fp,
+                        std::string("Constrain for Timing/Power analysis on the mapped FPGA"),
+                        option.time_stamp());
 
   /* Find the top_module */
   ModuleId top_module = openfpga_ctx.module_graph().find_module(generate_fpga_top_module_name());
