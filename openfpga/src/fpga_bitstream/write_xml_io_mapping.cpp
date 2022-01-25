@@ -29,16 +29,20 @@ namespace openfpga {
  * This function write header information to an I/O mapping file
  *******************************************************************/
 static 
-void write_io_mapping_xml_file_head(std::fstream& fp) {
+void write_io_mapping_xml_file_head(std::fstream& fp,
+                                    const bool& include_time_stamp) {
   valid_file_stream(fp);
  
-  auto end = std::chrono::system_clock::now(); 
-  std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-
   fp << "<!--" << std::endl;
   fp << "\t- I/O mapping" << std::endl;
   fp << "\t- Version: " << openfpga::VERSION << std::endl;
-  fp << "\t- Date: " << std::ctime(&end_time) ;
+
+  if (include_time_stamp) {
+    auto end = std::chrono::system_clock::now(); 
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+    fp << "\t- Date: " << std::ctime(&end_time) ;
+  }
+
   fp << "-->" << std::endl;
   fp << std::endl;
 }
@@ -93,6 +97,7 @@ int write_io_mapping_pair_to_xml_file(std::fstream& fp,
  *******************************************************************/
 int write_io_mapping_to_xml_file(const IoMap& io_map,
                                  const std::string& fname,
+                                 const bool& include_time_stamp,
                                  const bool& verbose) {
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
@@ -110,7 +115,7 @@ int write_io_mapping_to_xml_file(const IoMap& io_map,
   check_file_stream(fname.c_str(), fp);
 
   /* Write XML head */
-  write_io_mapping_xml_file_head(fp);
+  write_io_mapping_xml_file_head(fp, include_time_stamp);
 
   int xml_hierarchy_depth = 0;
   fp << "<io_mapping>\n";
