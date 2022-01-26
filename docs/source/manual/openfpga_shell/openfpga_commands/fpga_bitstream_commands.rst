@@ -41,6 +41,10 @@ build_architecture_bitstream
   .. option:: --write_file <string>
 
     Output the fabric-independent bitstream to an XML file. See details at :ref:`file_formats_architecture_bitstream`.
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in bitstream files
   
   .. option:: --verbose
 
@@ -81,6 +85,10 @@ write_fabric_bitstream
 
     Keep don't care bits (``x``) in the outputted bitstream file. This is only applicable to plain text file format. If not enabled, the don't care bits are converted to either logic ``0`` or ``1``.
 
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in bitstream files
+
   .. option:: --verbose
 
     Show verbose log
@@ -94,6 +102,10 @@ write_io_mapping
 
     Specify the file name where the I/O mapping will be outputted to.
     See file formats in :ref:`file_format_io_mapping_file`.
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in bitstream files
 
   .. option:: --verbose
 
@@ -112,6 +124,10 @@ report_bitstream_distribution
   .. option:: --depth <int> or -d <int>
 
     Specify the maximum depth of the block which should appear in the block
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in bitstream files
 
   .. option:: --verbose
 

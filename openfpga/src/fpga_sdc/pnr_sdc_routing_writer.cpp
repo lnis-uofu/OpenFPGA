@@ -142,16 +142,18 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
  * file for each unique SB module
  *******************************************************************/
 static 
-void print_pnr_sdc_constrain_sb_timing(const std::string& sdc_dir,
-                                       const float& time_unit,
-                                       const bool& hierarchical,
+void print_pnr_sdc_constrain_sb_timing(const PnrSdcOption& options,
                                        const std::string& module_path,
                                        const ModuleManager& module_manager,
                                        const VprDeviceAnnotation& device_annotation,
                                        const DeviceGrid& grids,
                                        const RRGraph& rr_graph,
-                                       const RRGSB& rr_gsb,
-                                       const bool& constrain_zero_delay_paths) {
+                                       const RRGSB& rr_gsb) {
+  std::string sdc_dir = options.sdc_dir();
+  float time_unit = options.time_unit();
+  bool hierarchical = options.hierarchical();
+  bool include_time_stamp = options.time_stamp();
+  bool constrain_zero_delay_paths = options.constrain_zero_delay_paths();
 
   /* Create the file name for Verilog netlist */
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
@@ -169,7 +171,9 @@ void print_pnr_sdc_constrain_sb_timing(const std::string& sdc_dir,
   VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
 
   /* Generate the descriptions*/
-  print_sdc_file_header(fp, std::string("Constrain timing of Switch Block " + sb_module_name + " for PnR"));
+  print_sdc_file_header(fp,
+                        std::string("Constrain timing of Switch Block " + sb_module_name + " for PnR"),
+                        include_time_stamp);
 
   /* Print time unit for the SDC file */
   print_sdc_timescale(fp, time_unit_to_string(time_unit));
@@ -210,16 +214,13 @@ void print_pnr_sdc_constrain_sb_timing(const std::string& sdc_dir,
  * Print SDC timing constraints for Switch blocks
  * This function is designed for flatten routing hierarchy
  *******************************************************************/
-void print_pnr_sdc_flatten_routing_constrain_sb_timing(const std::string& sdc_dir,
-                                                       const float& time_unit,
-                                                       const bool& hierarchical,
+void print_pnr_sdc_flatten_routing_constrain_sb_timing(const PnrSdcOption& options,
                                                        const ModuleManager& module_manager,
                                                        const ModuleId& top_module,
                                                        const VprDeviceAnnotation& device_annotation,
                                                        const DeviceGrid& grids,
                                                        const RRGraph& rr_graph,
-                                                       const DeviceRRGSB& device_rr_gsb,
-                                                       const bool& constrain_zero_delay_paths) {
+                                                       const DeviceRRGSB& device_rr_gsb) {
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer("Write SDC for constrain Switch Block timing for P&R flow");
@@ -244,16 +245,13 @@ void print_pnr_sdc_flatten_routing_constrain_sb_timing(const std::string& sdc_di
 
       std::string module_path = format_dir_path(root_path) + sb_instance_name;
 
-      print_pnr_sdc_constrain_sb_timing(sdc_dir,
-                                        time_unit,
-                                        hierarchical,
+      print_pnr_sdc_constrain_sb_timing(options,
                                         module_path,
                                         module_manager,
                                         device_annotation,
                                         grids,
                                         rr_graph,
-                                        rr_gsb,
-                                        constrain_zero_delay_paths);
+                                        rr_gsb);
     }
   }
 }
@@ -262,16 +260,13 @@ void print_pnr_sdc_flatten_routing_constrain_sb_timing(const std::string& sdc_di
  * Print SDC timing constraints for Switch blocks
  * This function is designed for compact routing hierarchy
  *******************************************************************/
-void print_pnr_sdc_compact_routing_constrain_sb_timing(const std::string& sdc_dir,
-                                                       const float& time_unit,
-                                                       const bool& hierarchical,
+void print_pnr_sdc_compact_routing_constrain_sb_timing(const PnrSdcOption& options,
                                                        const ModuleManager& module_manager,
                                                        const ModuleId& top_module,
                                                        const VprDeviceAnnotation& device_annotation,
                                                        const DeviceGrid& grids,
                                                        const RRGraph& rr_graph,
-                                                       const DeviceRRGSB& device_rr_gsb,
-                                                       const bool& constrain_zero_delay_paths) {
+                                                       const DeviceRRGSB& device_rr_gsb) {
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer("Write SDC for constrain Switch Block timing for P&R flow");
@@ -295,16 +290,13 @@ void print_pnr_sdc_compact_routing_constrain_sb_timing(const std::string& sdc_di
     
     std::string module_path = format_dir_path(root_path) + sb_module_name;
 
-    print_pnr_sdc_constrain_sb_timing(sdc_dir,
-                                      time_unit,
-                                      hierarchical,
+    print_pnr_sdc_constrain_sb_timing(options,
                                       module_path,
                                       module_manager,
                                       device_annotation,
                                       grids,
                                       rr_graph,
-                                      rr_gsb,
-                                      constrain_zero_delay_paths);
+                                      rr_gsb);
   }
 }
 
@@ -420,17 +412,20 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
  * This function is designed for compact routing hierarchy
  *******************************************************************/
 static 
-void print_pnr_sdc_constrain_cb_timing(const std::string& sdc_dir,
-                                       const float& time_unit,
-                                       const bool& hierarchical,
+void print_pnr_sdc_constrain_cb_timing(const PnrSdcOption& options,
                                        const std::string& module_path,
                                        const ModuleManager& module_manager,
                                        const VprDeviceAnnotation& device_annotation,
                                        const DeviceGrid& grids,
                                        const RRGraph& rr_graph,
                                        const RRGSB& rr_gsb, 
-                                       const t_rr_type& cb_type,
-                                       const bool& constrain_zero_delay_paths) {
+                                       const t_rr_type& cb_type) {
+  std::string sdc_dir = options.sdc_dir();
+  float time_unit = options.time_unit();
+  bool include_time_stamp = options.time_stamp();
+  bool hierarchical = options.hierarchical();
+  bool constrain_zero_delay_paths = options.constrain_zero_delay_paths();
+
   /* Create the netlist */
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
 
@@ -449,7 +444,9 @@ void print_pnr_sdc_constrain_cb_timing(const std::string& sdc_dir,
   VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
 
   /* Generate the descriptions*/
-  print_sdc_file_header(fp, std::string("Constrain timing of Connection Block " + cb_module_name + " for PnR"));
+  print_sdc_file_header(fp,
+                        std::string("Constrain timing of Connection Block " + cb_module_name + " for PnR"),
+                        include_time_stamp);
 
   /* Print time unit for the SDC file */
   print_sdc_timescale(fp, time_unit_to_string(time_unit));
@@ -538,17 +535,14 @@ void print_pnr_sdc_constrain_cb_timing(const std::string& sdc_dir,
  * and print SDC file for each of them 
  *******************************************************************/
 static 
-void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_dir,
-                                                       const float& time_unit,
-                                                       const bool& hierarchical,
+void print_pnr_sdc_flatten_routing_constrain_cb_timing(const PnrSdcOption& options,
                                                        const ModuleManager& module_manager, 
                                                        const ModuleId& top_module,
                                                        const VprDeviceAnnotation& device_annotation,
                                                        const DeviceGrid& grids,
                                                        const RRGraph& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb,
-                                                       const t_rr_type& cb_type,
-                                                       const bool& constrain_zero_delay_paths) {
+                                                       const t_rr_type& cb_type) {
   /* Build unique X-direction connection block modules */
   vtr::Point<size_t> cb_range = device_rr_gsb.get_gsb_range();
 
@@ -575,17 +569,14 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_di
 
       std::string module_path = format_dir_path(root_path) + cb_instance_name;
 
-      print_pnr_sdc_constrain_cb_timing(sdc_dir,
-                                        time_unit,
-                                        hierarchical,
+      print_pnr_sdc_constrain_cb_timing(options,
                                         module_path,
                                         module_manager,
                                         device_annotation, 
                                         grids, 
                                         rr_graph, 
                                         rr_gsb, 
-                                        cb_type,
-                                        constrain_zero_delay_paths);
+                                        cb_type);
 
     }
   }
@@ -595,55 +586,45 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_di
  * Iterate over all the connection blocks in a device
  * and print SDC file for each of them 
  *******************************************************************/
-void print_pnr_sdc_flatten_routing_constrain_cb_timing(const std::string& sdc_dir,
-                                                       const float& time_unit,
-                                                       const bool& hierarchical,
+void print_pnr_sdc_flatten_routing_constrain_cb_timing(const PnrSdcOption& options,
                                                        const ModuleManager& module_manager, 
                                                        const ModuleId& top_module,
                                                        const VprDeviceAnnotation& device_annotation,
                                                        const DeviceGrid& grids,
                                                        const RRGraph& rr_graph,
-                                                       const DeviceRRGSB& device_rr_gsb,
-                                                       const bool& constrain_zero_delay_paths) {
+                                                       const DeviceRRGSB& device_rr_gsb) {
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer("Write SDC for constrain Connection Block timing for P&R flow");
 
-  print_pnr_sdc_flatten_routing_constrain_cb_timing(sdc_dir, time_unit,
-                                                    hierarchical,
+  print_pnr_sdc_flatten_routing_constrain_cb_timing(options,
                                                     module_manager, top_module,
                                                     device_annotation, 
                                                     grids, 
                                                     rr_graph,
                                                     device_rr_gsb,
-                                                    CHANX,
-                                                    constrain_zero_delay_paths);
+                                                    CHANX);
 
-  print_pnr_sdc_flatten_routing_constrain_cb_timing(sdc_dir, time_unit,
-                                                    hierarchical, 
+  print_pnr_sdc_flatten_routing_constrain_cb_timing(options, 
                                                     module_manager, top_module,
                                                     device_annotation, 
                                                     grids, 
                                                     rr_graph,
                                                     device_rr_gsb,
-                                                    CHANY,
-                                                    constrain_zero_delay_paths);
+                                                    CHANY);
 }
 
 /********************************************************************
  * Print SDC timing constraints for Connection blocks
  * This function is designed for compact routing hierarchy
  *******************************************************************/
-void print_pnr_sdc_compact_routing_constrain_cb_timing(const std::string& sdc_dir,
-                                                       const float& time_unit,
-                                                       const bool& hierarchical,
+void print_pnr_sdc_compact_routing_constrain_cb_timing(const PnrSdcOption& options,
                                                        const ModuleManager& module_manager,
                                                        const ModuleId& top_module,
                                                        const VprDeviceAnnotation& device_annotation,
                                                        const DeviceGrid& grids,
                                                        const RRGraph& rr_graph,
-                                                       const DeviceRRGSB& device_rr_gsb,
-                                                       const bool& constrain_zero_delay_paths) {
+                                                       const DeviceRRGSB& device_rr_gsb) {
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer("Write SDC for constrain Connection Block timing for P&R flow");
@@ -664,17 +645,14 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(const std::string& sdc_di
 
     std::string module_path = format_dir_path(root_path) + cb_module_name;
 
-    print_pnr_sdc_constrain_cb_timing(sdc_dir,
-                                      time_unit,
-                                      hierarchical,
+    print_pnr_sdc_constrain_cb_timing(options,
                                       module_path,
                                       module_manager,
                                       device_annotation, 
                                       grids, 
                                       rr_graph, 
                                       unique_mirror, 
-                                      CHANX,
-                                      constrain_zero_delay_paths);
+                                      CHANX);
   }
 
   /* Print SDC for unique Y-direction connection block modules */
@@ -691,17 +669,14 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(const std::string& sdc_di
 
     std::string module_path = format_dir_path(root_path) + cb_module_name;
 
-    print_pnr_sdc_constrain_cb_timing(sdc_dir,
-                                      time_unit,
-                                      hierarchical,
+    print_pnr_sdc_constrain_cb_timing(options,
                                       module_path,
                                       module_manager,
                                       device_annotation, 
                                       grids, 
                                       rr_graph, 
                                       unique_mirror, 
-                                      CHANY,
-                                      constrain_zero_delay_paths);
+                                      CHANY);
   }
 }
 

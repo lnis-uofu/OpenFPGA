@@ -40,6 +40,7 @@ int fpga_bitstream(OpenfpgaContext& openfpga_ctx,
                    const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_verbose = cmd.option("verbose");
+  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
   CommandOptionId opt_write_file = cmd.option("write_file");
   CommandOptionId opt_read_file = cmd.option("read_file");
 
@@ -58,7 +59,8 @@ int fpga_bitstream(OpenfpgaContext& openfpga_ctx,
     create_directory(src_dir_path);
 
     write_xml_architecture_bitstream(openfpga_ctx.bitstream_manager(),
-                                     cmd_context.option_value(cmd, opt_write_file));
+                                     cmd_context.option_value(cmd, opt_write_file),
+                                     !cmd_context.option_enable(cmd, opt_no_time_stamp));
   }
 
   /* TODO: should identify the error code from internal function execution */
@@ -95,6 +97,7 @@ int write_fabric_bitstream(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_file_format = cmd.option("format");
   CommandOptionId opt_fast_config = cmd.option("fast_configuration");
   CommandOptionId opt_keep_dont_care_bits = cmd.option("keep_dont_care_bits");
+  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
 
   /* Write fabric bitstream if required */
   int status = CMD_EXEC_SUCCESS;
@@ -117,6 +120,7 @@ int write_fabric_bitstream(const OpenfpgaContext& openfpga_ctx,
                                                 openfpga_ctx.fabric_bitstream(),
                                                 openfpga_ctx.arch().config_protocol,
                                                 cmd_context.option_value(cmd, opt_file),
+                                                !cmd_context.option_enable(cmd, opt_no_time_stamp),
                                                 cmd_context.option_enable(cmd, opt_verbose));
   } else {
     /* By default, output in plain text format */
@@ -128,6 +132,7 @@ int write_fabric_bitstream(const OpenfpgaContext& openfpga_ctx,
                                                  cmd_context.option_value(cmd, opt_file),
                                                  cmd_context.option_enable(cmd, opt_fast_config),
                                                  cmd_context.option_enable(cmd, opt_keep_dont_care_bits),
+                                                 !cmd_context.option_enable(cmd, opt_no_time_stamp),
                                                  cmd_context.option_enable(cmd, opt_verbose));
   }
   
@@ -141,6 +146,7 @@ int write_io_mapping(const OpenfpgaContext& openfpga_ctx,
                      const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_verbose = cmd.option("verbose");
+  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
   CommandOptionId opt_file = cmd.option("file");
 
   /* Write fabric bitstream if required */
@@ -175,6 +181,7 @@ int write_io_mapping(const OpenfpgaContext& openfpga_ctx,
 
   status = write_io_mapping_to_xml_file(io_map,
                                         cmd_context.option_value(cmd, opt_file),
+                                        !cmd_context.option_enable(cmd, opt_no_time_stamp),
                                         cmd_context.option_enable(cmd, opt_verbose));
   
   return status;
@@ -187,6 +194,7 @@ int report_bitstream_distribution(const OpenfpgaContext& openfpga_ctx,
                                   const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_file = cmd.option("file");
+  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
 
   int status = CMD_EXEC_SUCCESS;
   
@@ -212,6 +220,7 @@ int report_bitstream_distribution(const OpenfpgaContext& openfpga_ctx,
 
   status = report_architecture_bitstream_distribution(openfpga_ctx.bitstream_manager(),
                                                       cmd_context.option_value(cmd, opt_file),
+                                                      !cmd_context.option_enable(cmd, opt_no_time_stamp),
                                                       depth);
   
   return status;

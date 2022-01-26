@@ -56,7 +56,9 @@ void print_verilog_top_module(NetlistManager& netlist_manager,
 
   check_file_stream(verilog_fname.c_str(), fp);
 
-  print_verilog_file_header(fp, std::string("Top-level Verilog module for FPGA")); 
+  print_verilog_file_header(fp,
+                            std::string("Top-level Verilog module for FPGA"),
+                            options.time_stamp()); 
 
   /* Write the module content in Verilog format */
   write_verilog_module_to_file(fp,

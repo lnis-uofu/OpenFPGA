@@ -20,6 +20,7 @@ int print_sdc_disable_timing_configure_ports(const std::string& sdc_fname,
                                              const MuxLibrary& mux_lib,
                                              const CircuitLibrary& circuit_lib,
                                              const ModuleManager& module_manager,
+                                             const bool& include_time_stamp,
                                              const bool& verbose);
 
 } /* end namespace openfpga */

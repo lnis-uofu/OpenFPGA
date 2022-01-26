@@ -1,0 +1,10 @@
+<!--
+	- I/O mapping
+	- Version: 1.0.3764-dev+dd400579-dirty
+-->
+
+<io_mapping>
+	<io name="gfpga_pad_GPIO_PAD[6:6]" net="a" dir="input"/>
+	<io name="gfpga_pad_GPIO_PAD[1:1]" net="b" dir="input"/>
+	<io name="gfpga_pad_GPIO_PAD[9:9]" net="c" dir="output"/>
+</io_mapping>

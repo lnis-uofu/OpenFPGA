@@ -97,7 +97,7 @@ void print_verilog_submodule_wires(const ModuleManager& module_manager,
                                    NetlistManager& netlist_manager,
                                    const CircuitLibrary& circuit_lib,
                                    const std::string& submodule_dir,
-                                   const e_verilog_default_net_type& default_net_type) {
+                                   const FabricVerilogOption& options) {
   std::string verilog_fname(submodule_dir + std::string(WIRES_VERILOG_FILE_NAME));
 
   /* Create the file stream */
@@ -110,7 +110,7 @@ void print_verilog_submodule_wires(const ModuleManager& module_manager,
   VTR_LOG("Writing Verilog netlist for wires '%s'...",
           verilog_fname.c_str()); 
 
-  print_verilog_file_header(fp, "Wires"); 
+  print_verilog_file_header(fp, "Wires", options.time_stamp()); 
 
   /* Print Verilog models for regular wires*/
   print_verilog_comment(fp, std::string("----- BEGIN Verilog modules for regular wires -----"));
@@ -119,7 +119,7 @@ void print_verilog_submodule_wires(const ModuleManager& module_manager,
     if (!circuit_lib.model_verilog_netlist(model).empty()) {
       continue;
     }
-    print_verilog_wire_module(module_manager, circuit_lib, fp, model, default_net_type);
+    print_verilog_wire_module(module_manager, circuit_lib, fp, model, options.default_net_type());
   }
   print_verilog_comment(fp, std::string("----- END Verilog modules for regular wires -----"));
 

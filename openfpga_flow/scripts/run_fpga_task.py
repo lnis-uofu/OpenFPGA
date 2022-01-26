@@ -195,7 +195,6 @@ def generate_each_task_actions(taskname):
     curr_run_dir = "run%03d" % (max(run_dirs+[0, ])+1)
     if args.remove_run_dir:
         remove_run_dir()
-        return
     try:
         os.mkdir(curr_run_dir)
         if os.path.islink('latest') or os.path.exists('latest'):
@@ -380,6 +379,7 @@ def generate_each_task_actions(taskname):
     logger.info('Found %d Architectures %d Benchmarks & %d Script Parameters' %
                 (len(archfile_list), len(benchmark_list), len(ScriptSections)))
     logger.info('Created total %d jobs' % len(flow_run_cmd_list))
+
     return flow_run_cmd_list,GeneralSection
 
 # Make the directory name unique by including the benchmark index in the list.

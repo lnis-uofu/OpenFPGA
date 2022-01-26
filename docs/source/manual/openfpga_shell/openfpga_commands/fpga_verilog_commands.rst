@@ -28,6 +28,10 @@ write_fabric_verilog
 
     Output a template Verilog netlist for all the user-defined ``circuit models`` in :ref:`circuit_library`. This aims to help engineers to check what is the port sequence required by top-level Verilog netlists
 
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in Verilog netlists
+
   .. option:: --verbose
 
     Show verbose log
@@ -82,6 +86,9 @@ write_full_testbench
 
    .. warning:: Signal initialization is only applied to the datapath inputs of routing multiplexers (considering the fact that they are indispensible cells of FPGAs)! If your FPGA does not contain any multiplexer cells, signal initialization is not applicable.
 
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in Verilog netlists
 
   .. option:: --verbose
 
@@ -133,6 +140,10 @@ __ iverilog_website_
 
    .. warning:: Signal initialization is only applied to the datapath inputs of routing multiplexers (considering the fact that they are indispensible cells of FPGAs)! If your FPGA does not contain any multiplexer cells, signal initialization is not applicable.
 
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in Verilog netlists
+
   .. option:: --verbose
 
     Show verbose log
@@ -168,6 +179,10 @@ write_preconfigured_testbench
   .. option:: --default_net_type <string>
 
     Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in Verilog netlists
 
   .. option:: --verbose
 

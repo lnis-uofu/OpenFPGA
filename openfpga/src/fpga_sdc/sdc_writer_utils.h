@@ -17,7 +17,8 @@
 namespace openfpga {
 
 void print_sdc_file_header(std::fstream& fp,
-                           const std::string& usage);
+                           const std::string& usage,
+                           const bool& include_time_stamp);
 
 void print_sdc_timescale(std::fstream& fp,
                          const std::string& timescale);

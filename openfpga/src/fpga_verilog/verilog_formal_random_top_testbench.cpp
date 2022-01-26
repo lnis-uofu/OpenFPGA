@@ -291,7 +291,7 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
 
   /* Generate a brief description on the Verilog file*/
   std::string title = std::string("FPGA Verilog Testbench for Formal Top-level netlist of Design: ") + circuit_name;
-  print_verilog_file_header(fp, title); 
+  print_verilog_file_header(fp, title, options.time_stamp()); 
 
   /* Preparation: find all the clock ports */
   std::vector<std::string> clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);

@@ -19,6 +19,7 @@ class FabricVerilogOption {
     FabricVerilogOption();
   public: /* Public accessors */
     std::string output_directory() const;
+    bool time_stamp() const;
     bool include_timing() const;
     bool explicit_port_mapping() const;
     bool compress_routing() const;
@@ -27,6 +28,7 @@ class FabricVerilogOption {
     bool verbose_output() const;
   public: /* Public mutators */
     void set_output_directory(const std::string& output_dir);
+    void set_time_stamp(const bool& enabled);
     void set_include_timing(const bool& enabled);
     void set_explicit_port_mapping(const bool& enabled);
     void set_compress_routing(const bool& enabled);
@@ -40,6 +42,7 @@ class FabricVerilogOption {
     bool compress_routing_;
     bool print_user_defined_template_;
     e_verilog_default_net_type default_net_type_;
+    bool time_stamp_;
     bool verbose_output_;
 };
 

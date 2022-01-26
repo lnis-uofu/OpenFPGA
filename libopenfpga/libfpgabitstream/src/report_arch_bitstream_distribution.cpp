@@ -27,16 +27,20 @@ namespace openfpga {
  * This function write header information for an XML file of bitstream distribution
  *******************************************************************/
 static 
-void report_architecture_bitstream_distribution_xml_file_head(std::fstream& fp) {
+void report_architecture_bitstream_distribution_xml_file_head(std::fstream& fp,
+                                                              const bool& include_time_stamp) {
   valid_file_stream(fp);
  
-  auto end = std::chrono::system_clock::now(); 
-  std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-
   fp << "<!-- " << std::endl;
   fp << "\t- Report Architecture Bitstream Distribution" << std::endl;
   fp << "\t- Version: " << openfpga::VERSION << std::endl;
-  fp << "\t- Date: " << std::ctime(&end_time) ;
+
+  if (include_time_stamp) {
+    auto end = std::chrono::system_clock::now(); 
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+    fp << "\t- Date: " << std::ctime(&end_time) ;
+  }
+
   fp << "--> " << std::endl;
   fp << std::endl;
 }
@@ -88,6 +92,7 @@ void rec_report_block_bitstream_distribution_to_xml_file(std::fstream& fp,
  *******************************************************************/
 int report_architecture_bitstream_distribution(const BitstreamManager& bitstream_manager,
                                                const std::string& fname,
+                                               const bool& include_time_stamp,
                                                const size_t& max_hierarchy_level) {
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
@@ -105,7 +110,7 @@ int report_architecture_bitstream_distribution(const BitstreamManager& bitstream
   check_file_stream(fname.c_str(), fp);
 
   /* Put down a brief introduction */
-  report_architecture_bitstream_distribution_xml_file_head(fp);
+  report_architecture_bitstream_distribution_xml_file_head(fp, include_time_stamp);
 
   /* Find the top block, which has not parents */
   std::vector<ConfigBlockId> top_block = find_bitstream_manager_top_blocks(bitstream_manager);

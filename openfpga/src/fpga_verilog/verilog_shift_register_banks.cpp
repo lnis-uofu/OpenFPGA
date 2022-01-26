@@ -51,7 +51,7 @@ void print_verilog_submodule_shift_register_banks(const ModuleManager& module_ma
   VTR_LOG("Writing Verilog netlist for shift register banks '%s' ...",
           verilog_fname.c_str()); 
 
-  print_verilog_file_header(fp, "Shift register banks used in FPGA"); 
+  print_verilog_file_header(fp, "Shift register banks used in FPGA", options.time_stamp()); 
 
   /* Create the memory circuits for the multiplexer */
   for (const ModuleId& sr_module : blwl_sr_banks.bl_bank_unique_modules()) {

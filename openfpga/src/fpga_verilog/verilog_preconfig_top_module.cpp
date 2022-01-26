@@ -436,7 +436,7 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
 
   /* Generate a brief description on the Verilog file*/
   std::string title = std::string("Verilog netlist for pre-configured FPGA fabric by design: ") + circuit_name;
-  print_verilog_file_header(fp, title);
+  print_verilog_file_header(fp, title, options.time_stamp());
 
   print_verilog_default_net_type_declaration(fp,
                                              options.default_net_type());

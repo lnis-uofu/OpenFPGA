@@ -21,6 +21,7 @@ int write_fabric_bitstream_to_xml_file(const BitstreamManager& bitstream_manager
                                        const FabricBitstream& fabric_bitstream,
                                        const ConfigProtocol& config_protocol,
                                        const std::string& fname,
+                                       const bool& include_time_stamp,
                                        const bool& verbose);
 
 } /* end namespace openfpga */
