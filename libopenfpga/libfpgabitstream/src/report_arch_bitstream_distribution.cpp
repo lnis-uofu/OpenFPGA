@@ -33,11 +33,12 @@ void report_architecture_bitstream_distribution_xml_file_head(std::fstream& fp,
  
   fp << "<!-- " << std::endl;
   fp << "\t- Report Architecture Bitstream Distribution" << std::endl;
-  fp << "\t- Version: " << openfpga::VERSION << std::endl;
 
   if (include_time_stamp) {
     auto end = std::chrono::system_clock::now(); 
     std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+    /* Note that version is also a type of time stamp */
+    fp << "\t- Version: " << openfpga::VERSION << std::endl;
     fp << "\t- Date: " << std::ctime(&end_time) ;
   }
 

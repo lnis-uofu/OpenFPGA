@@ -1,6 +1,6 @@
 <!-- 
 	- Report Architecture Bitstream Distribution
-	- Version: 1.0.3764-dev+dd400579-dirty
+	- Version: 1.0.3764-dev+4a89d175
 --> 
 
 <block name="fpga_top" number_of_bits="527">

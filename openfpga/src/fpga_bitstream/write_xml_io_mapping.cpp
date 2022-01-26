@@ -35,11 +35,12 @@ void write_io_mapping_xml_file_head(std::fstream& fp,
  
   fp << "<!--" << std::endl;
   fp << "\t- I/O mapping" << std::endl;
-  fp << "\t- Version: " << openfpga::VERSION << std::endl;
 
   if (include_time_stamp) {
     auto end = std::chrono::system_clock::now(); 
     std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+    /* Note that version is also a type of time stamp */
+    fp << "\t- Version: " << openfpga::VERSION << std::endl;
     fp << "\t- Date: " << std::ctime(&end_time) ;
   }
 
