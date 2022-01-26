@@ -143,6 +143,18 @@ run-task basic_tests/verific_test --debug --show_thread_logs
 echo -e "Testing explicit multi verilog files";
 run-task basic_tests/explicit_multi_verilog_files --debug --show_thread_logs
 
+echo -e "Testing output files without time stamp";
+run-task basic_tests/no_time_stamp --debug --show_thread_logs
+# Run git-diff to ensure no changes on the golden netlists
+if git diff origin/main HEAD --name-status -- ':openfpga_flow/tasks/basic_tests/no_time_stamp/golden_output_no_time_stamp/**'; then
+  echo -e "Golden netlist remain unchanged"
+else
+  echo -e "Detect changes in golden scripts"; exit 1;
+fi
+
+echo -e "Test the remove of runtime directories"
+run-task basic_tests/explicit_multi_verilog_files --debug --show_thread_logs --remove_run_dir all
+
 # Repgression test to test multi-user enviroment
 cp -r */*/basic_tests/full_testbench/configuration_chain /tmp/
 cd /tmp/ && run-task configuration_chain --debug --show_thread_logs
