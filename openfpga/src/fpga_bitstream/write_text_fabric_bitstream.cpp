@@ -35,11 +35,12 @@ void write_fabric_bitstream_text_file_head(std::fstream& fp,
   valid_file_stream(fp);
  
   fp << "// Fabric bitstream" << std::endl;
-  fp << "// Version: " << openfpga::VERSION << std::endl;
 
   if (include_time_stamp) {
     auto end = std::chrono::system_clock::now(); 
     std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+    /* Note that version is also a type of time stamp */
+    fp << "// Version: " << openfpga::VERSION << std::endl;
     fp << "// Date: " << std::ctime(&end_time);
   }
 }

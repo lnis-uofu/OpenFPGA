@@ -148,7 +148,7 @@ run-task basic_tests/explicit_multi_verilog_files --debug --show_thread_logs
 echo -e "Testing output files without time stamp";
 run-task basic_tests/no_time_stamp --debug --show_thread_logs
 # Run git-diff to ensure no changes on the golden netlists
-if git diff origin/main HEAD --name-status -- ':openfpga_flow/tasks/basic_tests/no_time_stamp/golden_output_no_time_stamp/**'; then
+if git diff --name-status -- ':openfpga_flow/tasks/basic_tests/no_time_stamp/golden_outputs_no_time_stamp/**'; then
   echo -e "Golden netlist remain unchanged"
 else
   echo -e "Detect changes in golden scripts"; exit 1;
