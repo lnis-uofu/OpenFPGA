@@ -18,6 +18,7 @@ namespace openfpga {
 void write_device_rr_gsb_to_xml(const char* sb_xml_dir,
                                 const RRGraph& rr_graph,
                                 const DeviceRRGSB& device_rr_gsb,
+                                const bool& unique,
                                 const bool& verbose);
 
 } /* end namespace openfpga */

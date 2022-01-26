@@ -209,6 +209,9 @@ ShellCommandId add_openfpga_write_gsb_command(openfpga::Shell<OpenfpgaContext>& 
   shell_cmd.set_option_short_name(opt_file, "f");
   shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
 
+  /* Add an option '--unique' */
+  shell_cmd.add_option("unique", false, "Only output unique GSB blocks");
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
 

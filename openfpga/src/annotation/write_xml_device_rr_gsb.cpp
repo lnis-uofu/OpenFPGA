@@ -184,6 +184,7 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
 void write_device_rr_gsb_to_xml(const char* sb_xml_dir, 
                                 const RRGraph& rr_graph,
                                 const DeviceRRGSB& device_rr_gsb,
+                                const bool& unique,
                                 const bool& verbose) {
   std::string xml_dir_name = format_dir_path(std::string(sb_xml_dir));
 
@@ -195,11 +196,22 @@ void write_device_rr_gsb_to_xml(const char* sb_xml_dir,
   size_t gsb_counter = 0;
 
   /* For each switch block, an XML file will be outputted */
-  for (size_t ix = 0; ix < sb_range.x(); ++ix) {
-    for (size_t iy = 0; iy < sb_range.y(); ++iy) {
-      const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
+  if (unique) {
+    /* Only output unique GSB modules */
+    VTR_LOG("Only output unique GSB modules to XML\n");
+    for (size_t igsb = 0; igsb < device_rr_gsb.get_num_gsb_unique_module(); ++igsb) {
+      const RRGSB& rr_gsb = device_rr_gsb.get_gsb_unique_module(igsb);
       write_rr_switch_block_to_xml(xml_dir_name, rr_graph, rr_gsb, verbose);
       gsb_counter++;
+    } 
+  } else {
+    /* Output all GSB instances in the fabric (some instances may share the same module) */
+    for (size_t ix = 0; ix < sb_range.x(); ++ix) {
+      for (size_t iy = 0; iy < sb_range.y(); ++iy) {
+        const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
+        write_rr_switch_block_to_xml(xml_dir_name, rr_graph, rr_gsb, verbose);
+        gsb_counter++;
+      }
     }
   }
 
