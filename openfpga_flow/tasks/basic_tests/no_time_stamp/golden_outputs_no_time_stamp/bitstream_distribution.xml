@@ -1,0 +1,33 @@
+<!-- 
+	- Report Architecture Bitstream Distribution
+	- Version: 1.0.3764-dev+dd400579-dirty
+--> 
+
+<block name="fpga_top" number_of_bits="527">
+	<block name="grid_clb_1__1_" number_of_bits="136">
+	</block>
+	<block name="grid_io_top_1__2_" number_of_bits="8">
+	</block>
+	<block name="grid_io_right_2__1_" number_of_bits="8">
+	</block>
+	<block name="grid_io_bottom_1__0_" number_of_bits="8">
+	</block>
+	<block name="grid_io_left_0__1_" number_of_bits="8">
+	</block>
+	<block name="sb_0__0_" number_of_bits="58">
+	</block>
+	<block name="sb_0__1_" number_of_bits="57">
+	</block>
+	<block name="sb_1__0_" number_of_bits="59">
+	</block>
+	<block name="sb_1__1_" number_of_bits="56">
+	</block>
+	<block name="cbx_1__0_" number_of_bits="33">
+	</block>
+	<block name="cbx_1__1_" number_of_bits="33">
+	</block>
+	<block name="cby_0__1_" number_of_bits="30">
+	</block>
+	<block name="cby_1__1_" number_of_bits="33">
+	</block>
+</block>
