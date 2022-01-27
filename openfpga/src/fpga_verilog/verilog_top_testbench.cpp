@@ -1431,7 +1431,13 @@ void print_verilog_full_testbench_configuration_chain_bitstream(std::fstream& fp
   fp << ";" << std::endl;
 
   fp << "\t";
-  fp << "end else begin";
+  fp << "end else if (";
+  fp << TOP_TB_BITSTREAM_INDEX_REG_NAME;
+  fp << " >= 0 && ";
+  fp << TOP_TB_BITSTREAM_INDEX_REG_NAME;
+  fp << " < "
+  fp << "`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE;
+  fp << ") begin";
   fp << std::endl;
 
   fp << "\t\t";
