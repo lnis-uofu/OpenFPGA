@@ -33,6 +33,7 @@ int write_gsb(const OpenfpgaContext& openfpga_ctx,
   VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
 
+  CommandOptionId opt_unique = cmd.option("unique");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   std::string sb_file_name = cmd_context.option_value(cmd, opt_file);
@@ -40,6 +41,7 @@ int write_gsb(const OpenfpgaContext& openfpga_ctx,
   write_device_rr_gsb_to_xml(sb_file_name.c_str(),
                              g_vpr_ctx.device().rr_graph,
                              openfpga_ctx.device_rr_gsb(),
+                             cmd_context.option_enable(cmd, opt_unique),
                              cmd_context.option_enable(cmd, opt_verbose));
 
   /* TODO: should identify the error code from internal function execution */
