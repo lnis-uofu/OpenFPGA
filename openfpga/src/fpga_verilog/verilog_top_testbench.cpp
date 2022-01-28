@@ -1411,6 +1411,7 @@ void print_verilog_full_testbench_configuration_chain_bitstream(std::fstream& fp
   fp << std::endl;
 
   BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME) + std::string(TOP_TB_CLOCK_REG_POSTFIX), 1);
+  print_verilog_comment(fp, "----- 'else if' condition is required by Modelsim to synthesis the Verilog correctly -----");
   fp << "always";
   fp << " @(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ")"; 
   fp << " begin";
@@ -1431,7 +1432,13 @@ void print_verilog_full_testbench_configuration_chain_bitstream(std::fstream& fp
   fp << ";" << std::endl;
 
   fp << "\t";
-  fp << "end else begin";
+  fp << "end else if (";
+  fp << TOP_TB_BITSTREAM_INDEX_REG_NAME;
+  fp << " >= 0 && ";
+  fp << TOP_TB_BITSTREAM_INDEX_REG_NAME;
+  fp << " < ";
+  fp << "`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE;
+  fp << ") begin";
   fp << std::endl;
 
   fp << "\t\t";
