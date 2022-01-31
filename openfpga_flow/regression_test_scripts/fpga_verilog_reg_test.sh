@@ -143,3 +143,6 @@ run-task fpga_verilog/thru_channel/thru_wide_tile --debug --show_thread_logs
 echo -e "Testing the generation of preconfigured fabric wrapper for different HDL simulators";
 run-task fpga_verilog/verilog_netlist_formats/embed_bitstream_none --debug --show_thread_logs
 run-task fpga_verilog/verilog_netlist_formats/embed_bitstream_modelsim --debug --show_thread_logs
+
+echo -e "Testing the netlist generation by forcing the use of relative paths";
+run-task fpga_verilog/verilog_netlist_formats/use_relative_path--debug --show_thread_logs
