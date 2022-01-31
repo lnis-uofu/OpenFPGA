@@ -145,4 +145,4 @@ run-task fpga_verilog/verilog_netlist_formats/embed_bitstream_none --debug --sho
 run-task fpga_verilog/verilog_netlist_formats/embed_bitstream_modelsim --debug --show_thread_logs
 
 echo -e "Testing the netlist generation by forcing the use of relative paths";
-run-task fpga_verilog/verilog_netlist_formats/use_relative_path--debug --show_thread_logs
+run-task fpga_verilog/verilog_netlist_formats/use_relative_path --debug --show_thread_logs
