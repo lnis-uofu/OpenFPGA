@@ -166,18 +166,20 @@ void print_verilog_submodule_mux_local_decoders(const ModuleManager& module_mana
                                                 const MuxLibrary& mux_lib,
                                                 const CircuitLibrary& circuit_lib,
                                                 const std::string& submodule_dir,
+                                                const std::string& submodule_dir_name,
                                                 const FabricVerilogOption& options) {
-  std::string verilog_fname(submodule_dir + std::string(LOCAL_ENCODER_VERILOG_FILE_NAME));
+  std::string verilog_fname(LOCAL_ENCODER_VERILOG_FILE_NAME);
+  std::string verilog_fpath(submodule_dir + verilog_fname);
 
   /* Create the file stream */
   std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
 
-  check_file_stream(verilog_fname.c_str(), fp);
+  check_file_stream(verilog_fpath.c_str(), fp);
 
   /* Print out debugging information for if the file is not opened/created properly */
   VTR_LOG("Writing Verilog netlist for local decoders for multiplexers '%s'...",
-          verilog_fname.c_str()); 
+          verilog_fpath.c_str()); 
 
   print_verilog_file_header(fp, "Local Decoders for Multiplexers", options.time_stamp()); 
 
@@ -221,8 +223,13 @@ void print_verilog_submodule_mux_local_decoders(const ModuleManager& module_mana
   fp.close();
 
   /* Add fname to the netlist name list */
-  NetlistId nlist_id = netlist_manager.add_netlist(verilog_fname);
-  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  NetlistId nlist_id = NetlistId::INVALID();
+  if (options.use_relative_path()) {
+    nlist_id = netlist_manager.add_netlist(submodule_dir_name + verilog_fname);
+  } else {
+    nlist_id = netlist_manager.add_netlist(verilog_fpath);
+  }
+  VTR_ASSERT(nlist_id);
   netlist_manager.set_netlist_type(nlist_id, NetlistManager::SUBMODULE_NETLIST);
 
   VTR_LOG("Done\n");
@@ -648,18 +655,20 @@ void print_verilog_submodule_arch_decoders(const ModuleManager& module_manager,
                                            NetlistManager& netlist_manager,
                                            const DecoderLibrary& decoder_lib,
                                            const std::string& submodule_dir,
+                                           const std::string& submodule_dir_name,
                                            const FabricVerilogOption& options) {
-  std::string verilog_fname(submodule_dir + std::string(ARCH_ENCODER_VERILOG_FILE_NAME));
+  std::string verilog_fname(ARCH_ENCODER_VERILOG_FILE_NAME);
+  std::string verilog_fpath(submodule_dir + verilog_fname);
 
   /* Create the file stream */
   std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
 
-  check_file_stream(verilog_fname.c_str(), fp);
+  check_file_stream(verilog_fpath.c_str(), fp);
 
   /* Print out debugging information for if the file is not opened/created properly */
   VTR_LOG("Writing Verilog netlist for configuration decoders '%s'...",
-          verilog_fname.c_str()); 
+          verilog_fpath.c_str()); 
 
   print_verilog_file_header(fp, "Decoders for fabric configuration protocol", options.time_stamp()); 
 
@@ -676,8 +685,13 @@ void print_verilog_submodule_arch_decoders(const ModuleManager& module_manager,
   fp.close();
 
   /* Add fname to the netlist name list */
-  NetlistId nlist_id = netlist_manager.add_netlist(verilog_fname);
-  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  NetlistId nlist_id = NetlistId::INVALID();
+  if (options.use_relative_path()) {
+    nlist_id = netlist_manager.add_netlist(submodule_dir_name + verilog_fname);
+  } else {
+    nlist_id = netlist_manager.add_netlist(verilog_fpath);
+  }
+  VTR_ASSERT(nlist_id);
   netlist_manager.set_netlist_type(nlist_id, NetlistManager::SUBMODULE_NETLIST);
 
   VTR_LOG("Done\n");

@@ -29,12 +29,14 @@ void print_verilog_submodule_mux_local_decoders(const ModuleManager& module_mana
                                                 const MuxLibrary& mux_lib,
                                                 const CircuitLibrary& circuit_lib,
                                                 const std::string& submodule_dir,
+                                                const std::string& submodule_dir_name,
                                                 const FabricVerilogOption& options);
 
 void print_verilog_submodule_arch_decoders(const ModuleManager& module_manager,
                                            NetlistManager& netlist_manager,
                                            const DecoderLibrary& decoder_lib,
                                            const std::string& submodule_dir,
+                                           const std::string& submodule_dir_name,
                                            const FabricVerilogOption& options);
 
 

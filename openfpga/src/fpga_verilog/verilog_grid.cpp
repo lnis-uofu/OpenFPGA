@@ -69,6 +69,7 @@ static
 void print_verilog_primitive_block(NetlistManager& netlist_manager,
                                    const ModuleManager& module_manager,
                                    const std::string& subckt_dir,
+                                   const std::string& subckt_dir_name,
                                    t_pb_graph_node* primitive_pb_graph_node,
                                    const FabricVerilogOption& options,
                                    const bool& verbose) {
@@ -80,20 +81,19 @@ void print_verilog_primitive_block(NetlistManager& netlist_manager,
   }
 
   /* Give a name to the Verilog netlist */
+  std::string verilog_fname(generate_logical_tile_netlist_name(std::string(), primitive_pb_graph_node, std::string(VERILOG_NETLIST_FILE_POSTFIX)));
   /* Create the file name for Verilog */
-  std::string verilog_fname(subckt_dir 
-                          + generate_logical_tile_netlist_name(std::string(), primitive_pb_graph_node, std::string(VERILOG_NETLIST_FILE_POSTFIX))
-                           );
+  std::string verilog_fpath(subckt_dir + verilog_fname);
 
   VTR_LOG("Writing Verilog netlist '%s' for primitive pb_type '%s' ...",
-          verilog_fname.c_str(), primitive_pb_graph_node->pb_type->name);
+          verilog_fpath.c_str(), primitive_pb_graph_node->pb_type->name);
   VTR_LOGV(verbose, "\n");
 
   /* Create the file stream */
   std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
 
-  check_file_stream(verilog_fname.c_str(), fp);
+  check_file_stream(verilog_fpath.c_str(), fp);
 
   print_verilog_file_header(fp,
                             std::string("Verilog modules for primitive pb_type: " + std::string(primitive_pb_graph_node->pb_type->name)),
@@ -122,8 +122,13 @@ void print_verilog_primitive_block(NetlistManager& netlist_manager,
   fp.close();
 
   /* Add fname to the netlist name list */
-  NetlistId nlist_id = netlist_manager.add_netlist(verilog_fname);
-  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  NetlistId nlist_id = NetlistId::INVALID();
+  if (options.use_relative_path()) {
+    nlist_id = netlist_manager.add_netlist(subckt_dir_name + verilog_fname);
+  } else {
+    nlist_id = netlist_manager.add_netlist(verilog_fpath);
+  }
+  VTR_ASSERT(nlist_id);
   netlist_manager.set_netlist_type(nlist_id, NetlistManager::LOGIC_BLOCK_NETLIST);
 
   VTR_LOGV(verbose, "Done\n");
@@ -149,6 +154,7 @@ void rec_print_verilog_logical_tile(NetlistManager& netlist_manager,
                                     const ModuleManager& module_manager,
                                     const VprDeviceAnnotation& device_annotation,
                                     const std::string& subckt_dir,
+                                    const std::string& subckt_dir_name,
                                     t_pb_graph_node* physical_pb_graph_node,
                                     const FabricVerilogOption& options,
                                     const bool& verbose) {
@@ -175,6 +181,7 @@ void rec_print_verilog_logical_tile(NetlistManager& netlist_manager,
       rec_print_verilog_logical_tile(netlist_manager,
                                      module_manager, device_annotation,
                                      subckt_dir, 
+                                     subckt_dir_name, 
                                      &(physical_pb_graph_node->child_pb_graph_nodes[physical_mode->index][ipb][0]),
                                      options,
                                      verbose);
@@ -186,6 +193,7 @@ void rec_print_verilog_logical_tile(NetlistManager& netlist_manager,
     print_verilog_primitive_block(netlist_manager,
                                   module_manager,
                                   subckt_dir,
+                                  subckt_dir_name,
                                   physical_pb_graph_node, 
                                   options, 
                                   verbose);
@@ -195,19 +203,18 @@ void rec_print_verilog_logical_tile(NetlistManager& netlist_manager,
 
   /* Give a name to the Verilog netlist */
   /* Create the file name for Verilog */
-  std::string verilog_fname(subckt_dir 
-                          + generate_logical_tile_netlist_name(std::string(), physical_pb_graph_node, std::string(VERILOG_NETLIST_FILE_POSTFIX))
-                           );
+  std::string verilog_fname(generate_logical_tile_netlist_name(std::string(), physical_pb_graph_node, std::string(VERILOG_NETLIST_FILE_POSTFIX)));
+  std::string verilog_fpath(subckt_dir + verilog_fname);
 
   VTR_LOG("Writing Verilog netlist '%s' for pb_type '%s' ...",
-          verilog_fname.c_str(), physical_pb_type->name);
+          verilog_fpath.c_str(), physical_pb_type->name);
   VTR_LOGV(verbose, "\n");
 
   /* Create the file stream */
   std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
 
-  check_file_stream(verilog_fname.c_str(), fp);
+  check_file_stream(verilog_fpath.c_str(), fp);
 
   print_verilog_file_header(fp,
                             std::string("Verilog modules for pb_type: " + std::string(physical_pb_type->name)),
@@ -240,8 +247,13 @@ void rec_print_verilog_logical_tile(NetlistManager& netlist_manager,
   fp.close();
 
   /* Add fname to the netlist name list */
-  NetlistId nlist_id = netlist_manager.add_netlist(verilog_fname);
-  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  NetlistId nlist_id = NetlistId::INVALID();
+  if (options.use_relative_path()) {
+    nlist_id = netlist_manager.add_netlist(subckt_dir_name + verilog_fname);
+  } else {
+    nlist_id = netlist_manager.add_netlist(verilog_fpath);
+  }
+  VTR_ASSERT(nlist_id);
   netlist_manager.set_netlist_type(nlist_id, NetlistManager::LOGIC_BLOCK_NETLIST);
 
   VTR_LOGV(verbose, "Done\n");
@@ -256,6 +268,7 @@ void print_verilog_logical_tile_netlist(NetlistManager& netlist_manager,
                                         const ModuleManager& module_manager,
                                         const VprDeviceAnnotation& device_annotation,
                                         const std::string& subckt_dir,
+                                        const std::string& subckt_dir_name,
                                         t_pb_graph_node* pb_graph_head,
                                         const FabricVerilogOption& options,
                                         const bool& verbose) {
@@ -275,6 +288,7 @@ void print_verilog_logical_tile_netlist(NetlistManager& netlist_manager,
                                  module_manager,
                                  device_annotation, 
                                  subckt_dir,
+                                 subckt_dir_name,
                                  pb_graph_head,
                                  options,
                                  verbose);
@@ -295,34 +309,36 @@ static
 void print_verilog_physical_tile_netlist(NetlistManager& netlist_manager,
                                          const ModuleManager& module_manager,
                                          const std::string& subckt_dir,
+                                         const std::string& subckt_dir_name,
                                          t_physical_tile_type_ptr phy_block_type,
                                          const e_side& border_side,
                                          const FabricVerilogOption& options) {
   /* Give a name to the Verilog netlist */
-  /* Create the file name for Verilog */
-  std::string verilog_fname(subckt_dir 
-                          + generate_grid_block_netlist_name(std::string(GRID_MODULE_NAME_PREFIX) + std::string(phy_block_type->name), 
+  std::string verilog_fname(generate_grid_block_netlist_name(std::string(GRID_MODULE_NAME_PREFIX) + std::string(phy_block_type->name), 
                                                              is_io_type(phy_block_type), 
                                                              border_side, 
                                                              std::string(VERILOG_NETLIST_FILE_POSTFIX))
                            );
 
+  /* Create the file name for Verilog */
+  std::string verilog_fpath(subckt_dir + verilog_fname);
+
   /* Echo status */
   if (true == is_io_type(phy_block_type)) {
     SideManager side_manager(border_side);
     VTR_LOG("Writing Verilog Netlist '%s' for physical tile '%s' at %s side ...",
-            verilog_fname.c_str(), phy_block_type->name, 
+            verilog_fpath.c_str(), phy_block_type->name, 
             side_manager.c_str());
   } else { 
     VTR_LOG("Writing Verilog Netlist '%s' for physical_tile '%s'...",
-            verilog_fname.c_str(), phy_block_type->name);
+            verilog_fpath.c_str(), phy_block_type->name);
   }
 
   /* Create the file stream */
   std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
 
-  check_file_stream(verilog_fname.c_str(), fp);
+  check_file_stream(verilog_fpath.c_str(), fp);
 
   print_verilog_file_header(fp,
                             std::string("Verilog modules for physical tile: " + std::string(phy_block_type->name) + "]"),
@@ -350,8 +366,13 @@ void print_verilog_physical_tile_netlist(NetlistManager& netlist_manager,
   fp.close();
 
   /* Add fname to the netlist name list */
-  NetlistId nlist_id = netlist_manager.add_netlist(verilog_fname);
-  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  NetlistId nlist_id = NetlistId::INVALID();
+  if (options.use_relative_path()) {
+    nlist_id = netlist_manager.add_netlist(subckt_dir_name + verilog_fname);
+  } else {
+    nlist_id = netlist_manager.add_netlist(verilog_fpath);
+  }
+  VTR_ASSERT(nlist_id);
   netlist_manager.set_netlist_type(nlist_id, NetlistManager::LOGIC_BLOCK_NETLIST);
 
   VTR_LOG("Done\n");
@@ -368,6 +389,7 @@ void print_verilog_grids(NetlistManager& netlist_manager,
                          const DeviceContext& device_ctx,
                          const VprDeviceAnnotation& device_annotation,
                          const std::string& subckt_dir,
+                         const std::string& subckt_dir_name,
                          const FabricVerilogOption& options,
                          const bool& verbose) {
   /* Create a vector to contain all the Verilog netlist names that have been generated in this function */
@@ -391,6 +413,7 @@ void print_verilog_grids(NetlistManager& netlist_manager,
                                        module_manager,
                                        device_annotation,
                                        subckt_dir,
+                                       subckt_dir_name,
                                        logical_tile.pb_graph_head,
                                        options,
                                        verbose);
@@ -424,6 +447,7 @@ void print_verilog_grids(NetlistManager& netlist_manager,
         print_verilog_physical_tile_netlist(netlist_manager,
                                             module_manager,
                                             subckt_dir, 
+                                            subckt_dir_name, 
                                             &physical_tile,
                                             io_type_side,
                                             options);
@@ -434,6 +458,7 @@ void print_verilog_grids(NetlistManager& netlist_manager,
       print_verilog_physical_tile_netlist(netlist_manager,
                                           module_manager,
                                           subckt_dir, 
+                                          subckt_dir_name, 
                                           &physical_tile,
                                           NUM_SIDES,
                                           options);
@@ -442,17 +467,6 @@ void print_verilog_grids(NetlistManager& netlist_manager,
   VTR_LOG("Building physical tiles...");
   VTR_LOG("Done\n");
   VTR_LOG("\n");
-
-  /* Output a header file for all the logic blocks */
-  /*
-  std::string grid_verilog_fname(LOGIC_BLOCK_VERILOG_FILE_NAME);
-  VTR_LOG("Writing header file for grid Verilog modules '%s' ...",
-          grid_verilog_fname.c_str());
-  print_verilog_netlist_include_header_file(netlist_names,
-                                            subckt_dir.c_str(),
-                                            grid_verilog_fname.c_str());
-  VTR_LOG("Done\n");
-   */
 }
 
 } /* end namespace openfpga */

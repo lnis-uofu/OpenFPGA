@@ -21,6 +21,7 @@ namespace openfpga {
 void print_verilog_submodule_essentials(const ModuleManager& module_manager, 
                                         NetlistManager& netlist_manager,
                                         const std::string& submodule_dir,
+                                        const std::string& submodule_dir_name,
                                         const CircuitLibrary& circuit_lib,
                                         const FabricVerilogOption& options);
 

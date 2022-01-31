@@ -22,12 +22,14 @@ void print_verilog_flatten_routing_modules(NetlistManager& netlist_manager,
                                            const ModuleManager& module_manager,
                                            const DeviceRRGSB& device_rr_gsb,
                                            const std::string& subckt_dir,
+                                           const std::string& subckt_dir_name,
                                            const FabricVerilogOption& options);
 
 void print_verilog_unique_routing_modules(NetlistManager& netlist_manager,
                                           const ModuleManager& module_manager,
                                           const DeviceRRGSB& device_rr_gsb,
                                           const std::string& subckt_dir,
+                                          const std::string& subckt_dir_name,
                                           const FabricVerilogOption& options);
 
 } /* end namespace openfpga */
