@@ -1260,19 +1260,21 @@ void print_verilog_submodule_mux_primitives(ModuleManager& module_manager,
                                             const MuxLibrary& mux_lib,
                                             const CircuitLibrary& circuit_lib,
                                             const std::string& submodule_dir,
+                                            const std::string& submodule_dir_name,
                                             const FabricVerilogOption& options) {
   /* Output primitive cells for MUX modules */ 
-  std::string verilog_fname(submodule_dir + std::string(MUX_PRIMITIVES_VERILOG_FILE_NAME));
+  std::string verilog_fname(MUX_PRIMITIVES_VERILOG_FILE_NAME);
+  std::string verilog_fpath(submodule_dir + verilog_fname);
 
   /* Create the file stream */
   std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
 
-  check_file_stream(verilog_fname.c_str(), fp);
+  check_file_stream(verilog_fpath.c_str(), fp);
 
   /* Print out debugging information for if the file is not opened/created properly */
   VTR_LOG("Writing Verilog netlist for Multiplexer primitives '%s' ...",
-          verilog_fname.c_str()); 
+          verilog_fpath.c_str()); 
 
   print_verilog_file_header(fp, "Multiplexer primitives", options.time_stamp()); 
 
@@ -1301,8 +1303,13 @@ void print_verilog_submodule_mux_primitives(ModuleManager& module_manager,
   fp.close();
 
   /* Add fname to the netlist name list */
-  NetlistId nlist_id = netlist_manager.add_netlist(verilog_fname);
-  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  NetlistId nlist_id = NetlistId::INVALID();
+  if (options.use_relative_path()) {
+    netlist_manager.add_netlist(submodule_dir_name + verilog_fname);
+  } else {
+    netlist_manager.add_netlist(verilog_fpath);
+  }
+  VTR_ASSERT(nlist_id);
   netlist_manager.set_netlist_type(nlist_id, NetlistManager::SUBMODULE_NETLIST);
 
   VTR_LOG("Done\n");
@@ -1318,19 +1325,21 @@ void print_verilog_submodule_mux_top_modules(ModuleManager& module_manager,
                                              const MuxLibrary& mux_lib,
                                              const CircuitLibrary& circuit_lib,
                                              const std::string& submodule_dir,
+                                             const std::string& submodule_dir_name,
                                              const FabricVerilogOption& options) {
   /* Output top-level MUX modules */ 
-  std::string verilog_fname(submodule_dir + std::string(MUXES_VERILOG_FILE_NAME));
+  std::string verilog_fname(MUXES_VERILOG_FILE_NAME);
+  std::string verilog_fpath(submodule_dir + verilog_fname);
 
   /* Create the file stream */
   std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
 
-  check_file_stream(verilog_fname.c_str(), fp);
+  check_file_stream(verilog_fpath.c_str(), fp);
 
   /* Print out debugging information for if the file is not opened/created properly */
   VTR_LOG("Writing Verilog netlist for Multiplexers '%s' ...",
-          verilog_fname.c_str()); 
+          verilog_fpath.c_str()); 
 
   print_verilog_file_header(fp, "Multiplexers", options.time_stamp()); 
 
@@ -1352,8 +1361,13 @@ void print_verilog_submodule_mux_top_modules(ModuleManager& module_manager,
   fp.close();
 
   /* Add fname to the netlist name list */
-  NetlistId nlist_id = netlist_manager.add_netlist(verilog_fname);
-  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  NetlistId nlist_id = NetlistId::INVALID();
+  if (options.use_relative_path()) {
+    netlist_manager.add_netlist(submodule_dir_name + verilog_fname);
+  } else {
+    netlist_manager.add_netlist(verilog_fpath);
+  }
+  VTR_ASSERT(nlist_id);
   netlist_manager.set_netlist_type(nlist_id, NetlistManager::SUBMODULE_NETLIST);
 
   VTR_LOG("Done\n");
@@ -1373,12 +1387,14 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
                                    const MuxLibrary& mux_lib,
                                    const CircuitLibrary& circuit_lib,
                                    const std::string& submodule_dir,
+                                   const std::string& submodule_dir_name,
                                    const FabricVerilogOption& options) {
   print_verilog_submodule_mux_primitives(module_manager,
                                          netlist_manager,
                                          mux_lib,
                                          circuit_lib,
                                          submodule_dir,
+                                         submodule_dir_name,
                                          options);
 
   print_verilog_submodule_mux_top_modules(module_manager,
@@ -1386,6 +1402,7 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
                                           mux_lib,
                                           circuit_lib,
                                           submodule_dir,
+                                          submodule_dir_name,
                                           options);
 }
 

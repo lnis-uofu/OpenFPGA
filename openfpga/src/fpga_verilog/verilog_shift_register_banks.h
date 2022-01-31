@@ -22,6 +22,7 @@ void print_verilog_submodule_shift_register_banks(const ModuleManager& module_ma
                                                   NetlistManager& netlist_manager,
                                                   const MemoryBankShiftRegisterBanks& blwl_sr_banks,
                                                   const std::string& submodule_dir,
+                                                  const std::string& submodule_dir_name,
                                                   const FabricVerilogOption& options);
 
 } /* end namespace openfpga */

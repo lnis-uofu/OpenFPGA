@@ -31,9 +31,15 @@ namespace openfpga {
  * Some netlists are open to compile under specific preprocessing flags
  *******************************************************************/
 void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
-                                          const std::string& src_dir,
+                                          const std::string& src_dir_path,
                                           const CircuitLibrary& circuit_lib,
+                                          const bool& use_relative_path,
                                           const bool& include_time_stamp) {
+  /* If we force the use of relative path, the src dir path should NOT be included in any output */
+  std::string src_dir = src_dir_path;
+  if (use_relative_path) {
+    src_dir.clear();
+  }
   std::string verilog_fname = src_dir + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME);
 
   /* Create the file stream */

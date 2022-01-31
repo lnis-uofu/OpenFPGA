@@ -98,6 +98,7 @@ void fpga_fabric_verilog(ModuleManager &module_manager,
                           blwl_sr_banks,
                           mux_lib, decoder_lib, circuit_lib,
                           submodule_dir_path,
+                          std::string(DEFAULT_SUBMODULE_DIR_NAME),
                           options);
 
   /* Generate routing blocks */
@@ -106,6 +107,7 @@ void fpga_fabric_verilog(ModuleManager &module_manager,
                                          const_cast<const ModuleManager &>(module_manager),
                                          device_rr_gsb,
                                          rr_dir_path,
+                                         std::string(DEFAULT_RR_DIR_NAME),
                                          options);
   } else {
     VTR_ASSERT(false == options.compress_routing());
@@ -113,6 +115,7 @@ void fpga_fabric_verilog(ModuleManager &module_manager,
                                           const_cast<const ModuleManager &>(module_manager),
                                           device_rr_gsb,
                                           rr_dir_path,
+                                          std::string(DEFAULT_RR_DIR_NAME),
                                           options);
   }
 
@@ -121,6 +124,7 @@ void fpga_fabric_verilog(ModuleManager &module_manager,
                       const_cast<const ModuleManager &>(module_manager),
                       device_ctx, device_annotation,
                       lb_dir_path,
+                      std::string(DEFAULT_LB_DIR_NAME),
                       options,
                       options.verbose_output());
 
@@ -134,6 +138,7 @@ void fpga_fabric_verilog(ModuleManager &module_manager,
   print_verilog_fabric_include_netlist(const_cast<const NetlistManager &>(netlist_manager),
                                        src_dir_path,
                                        circuit_lib,
+                                       options.use_relative_path(),
                                        options.time_stamp());
 
   /* Given a brief stats on how many Verilog modules have been written to files */

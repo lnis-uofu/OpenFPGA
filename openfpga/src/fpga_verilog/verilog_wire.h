@@ -24,6 +24,7 @@ void print_verilog_submodule_wires(const ModuleManager& module_manager,
                                    NetlistManager& netlist_manager,
                                    const CircuitLibrary& circuit_lib,
                                    const std::string& submodule_dir,
+                                   const std::string& submodule_dir_name,
                                    const FabricVerilogOption& options);
 
 } /* end namespace openfpga */

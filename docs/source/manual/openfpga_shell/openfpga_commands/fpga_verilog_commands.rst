@@ -23,6 +23,10 @@ write_fabric_verilog
   .. option:: --include_timing
 
     Output timing information to Verilog netlists for primitive modules
+
+  .. option:: --use_relative_path
+
+    Force to use relative path in netlists when including other netlists. By default, this is off, which means that netlists use absolute paths when including other netlists
  
   .. option:: --print_user_defined_template
 
