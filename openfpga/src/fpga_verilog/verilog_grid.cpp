@@ -212,7 +212,7 @@ void rec_print_verilog_logical_tile(NetlistManager& netlist_manager,
 
   /* Create the file stream */
   std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
 
   check_file_stream(verilog_fpath.c_str(), fp);
 

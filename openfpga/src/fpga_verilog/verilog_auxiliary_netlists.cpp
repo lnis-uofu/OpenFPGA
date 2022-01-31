@@ -40,14 +40,14 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
   if (use_relative_path) {
     src_dir.clear();
   }
-  std::string verilog_fname = src_dir + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME);
+  std::string verilog_fpath = src_dir_path + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME);
 
   /* Create the file stream */
   std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
 
   /* Validate the file stream */
-  check_file_stream(verilog_fname.c_str(), fp);
+  check_file_stream(verilog_fpath.c_str(), fp);
 
   /* Print the title */
   print_verilog_file_header(fp, std::string("Fabric Netlist Summary"), include_time_stamp); 
