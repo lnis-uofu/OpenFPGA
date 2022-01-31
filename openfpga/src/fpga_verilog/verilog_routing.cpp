@@ -116,9 +116,9 @@ void print_verilog_routing_connection_box_unique_module(NetlistManager& netlist_
   /* Add fname to the netlist name list */
   NetlistId nlist_id = NetlistId::INVALID();
   if (options.use_relative_path()) {
-    netlist_manager.add_netlist(subckt_dir_name + verilog_fname);
+    nlist_id = netlist_manager.add_netlist(subckt_dir_name + verilog_fname);
   } else {
-    netlist_manager.add_netlist(verilog_fpath);
+    nlist_id = netlist_manager.add_netlist(verilog_fpath);
   }
   VTR_ASSERT(nlist_id);
   netlist_manager.set_netlist_type(nlist_id, NetlistManager::ROUTING_MODULE_NETLIST);
@@ -226,9 +226,9 @@ void print_verilog_routing_switch_box_unique_module(NetlistManager& netlist_mana
   /* Add fname to the netlist name list */
   NetlistId nlist_id = NetlistId::INVALID();
   if (options.use_relative_path()) {
-    netlist_manager.add_netlist(subckt_dir_name + verilog_fname);
+    nlist_id = netlist_manager.add_netlist(subckt_dir_name + verilog_fname);
   } else {
-    netlist_manager.add_netlist(verilog_fpath);
+    nlist_id = netlist_manager.add_netlist(verilog_fpath);
   }
   VTR_ASSERT(nlist_id);
   netlist_manager.set_netlist_type(nlist_id, NetlistManager::ROUTING_MODULE_NETLIST);

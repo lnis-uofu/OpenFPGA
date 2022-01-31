@@ -72,9 +72,9 @@ void print_verilog_submodule_luts(const ModuleManager& module_manager,
   /* Add fname to the netlist name list */
   NetlistId nlist_id = NetlistId::INVALID();
   if (options.use_relative_path()) {
-    netlist_manager.add_netlist(submodule_dir_name + verilog_fname);
+    nlist_id = netlist_manager.add_netlist(submodule_dir_name + verilog_fname);
   } else {
-    netlist_manager.add_netlist(verilog_fpath);
+    nlist_id = netlist_manager.add_netlist(verilog_fpath);
   }
   VTR_ASSERT(nlist_id);
   netlist_manager.set_netlist_type(nlist_id, NetlistManager::SUBMODULE_NETLIST);
