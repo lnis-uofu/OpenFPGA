@@ -101,10 +101,10 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
  * that have been generated and user-defined.
  * Some netlists are open to compile under specific preprocessing flags
  *******************************************************************/
-void print_verilog_full_testbench_include_netlists(const std::string& src_dir,
+void print_verilog_full_testbench_include_netlists(const std::string& src_dir_path,
                                                    const std::string& circuit_name,
                                                    const VerilogTestbenchOption& options) {
-  std::string verilog_fname = src_dir + circuit_name + std::string(TOP_VERILOG_TESTBENCH_INCLUDE_NETLIST_FILE_NAME_POSTFIX);
+  std::string verilog_fname = src_dir_path + circuit_name + std::string(TOP_VERILOG_TESTBENCH_INCLUDE_NETLIST_FILE_NAME_POSTFIX);
   std::string fabric_netlist_file = options.fabric_netlist_file_path();
   std::string reference_benchmark_file = options.reference_benchmark_file_path();
   bool no_self_checking = options.no_self_checking();
@@ -118,6 +118,12 @@ void print_verilog_full_testbench_include_netlists(const std::string& src_dir,
 
   /* Print the title */
   print_verilog_file_header(fp, std::string("Netlist Summary"), options.time_stamp()); 
+
+  /* If relative path is forced, we do not include an src_dir_path in the netlist */
+  std::string src_dir = src_dir_path;
+  if (options.use_relative_path()) {
+    src_dir.clear();
+  }
 
   /* Include FPGA top module */
   print_verilog_comment(fp, std::string("------ Include fabric top-level netlists -----"));

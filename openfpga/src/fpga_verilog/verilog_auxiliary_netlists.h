@@ -23,7 +23,7 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
                                           const bool& use_relative_path,
                                           const bool& include_time_stamp);
 
-void print_verilog_full_testbench_include_netlists(const std::string& src_dir,
+void print_verilog_full_testbench_include_netlists(const std::string& src_dir_path,
                                                    const std::string& circuit_name,
                                                    const VerilogTestbenchOption& options);
 

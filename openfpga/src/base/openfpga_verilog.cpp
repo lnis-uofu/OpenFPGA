@@ -85,6 +85,7 @@ int write_full_testbench(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
   CommandOptionId opt_include_signal_init = cmd.option("include_signal_init");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
+  CommandOptionId opt_use_relative_path = cmd.option("use_relative_path");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
@@ -98,6 +99,7 @@ int write_full_testbench(const OpenfpgaContext& openfpga_ctx,
   options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_time_stamp(!cmd_context.option_enable(cmd, opt_no_time_stamp));
+  options.set_use_relative_path(cmd_context.option_enable(cmd, opt_use_relative_path));
   options.set_print_top_testbench(true);
   options.set_include_signal_init(cmd_context.option_enable(cmd, opt_include_signal_init));
   if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {

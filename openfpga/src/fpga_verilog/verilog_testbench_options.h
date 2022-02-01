@@ -48,6 +48,7 @@ class VerilogTestbenchOption {
     e_embedded_bitstream_hdl_type embedded_bitstream_hdl_type() const;
     float time_unit() const;
     bool time_stamp() const;
+    bool use_relative_path() const;
     bool verbose_output() const;
   public: /* Public validator */
     bool validate() const;
@@ -75,6 +76,7 @@ class VerilogTestbenchOption {
     void set_time_unit(const float& time_unit);
     void set_embedded_bitstream_hdl_type(const std::string& embedded_bitstream_hdl_type);
     void set_time_stamp(const bool& enabled);
+    void set_use_relative_path(const bool& enabled);
     void set_verbose_output(const bool& enabled);
   private: /* Internal Data */
     std::string output_directory_;
@@ -92,6 +94,7 @@ class VerilogTestbenchOption {
     e_embedded_bitstream_hdl_type embedded_bitstream_hdl_type_;
     float time_unit_;
     bool time_stamp_;
+    bool use_relative_path_;
     bool verbose_output_;
 };
 
