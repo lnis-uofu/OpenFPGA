@@ -27,7 +27,7 @@ void print_verilog_full_testbench_include_netlists(const std::string& src_dir_pa
                                                    const std::string& circuit_name,
                                                    const VerilogTestbenchOption& options);
 
-void print_verilog_preconfigured_testbench_include_netlists(const std::string& src_dir,
+void print_verilog_preconfigured_testbench_include_netlists(const std::string& src_dir_path,
                                                             const std::string& circuit_name,
                                                             const VerilogTestbenchOption& options);
 

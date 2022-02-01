@@ -224,6 +224,9 @@ ShellCommandId add_openfpga_write_preconfigured_testbench_command(openfpga::Shel
   /* Add an option '--no_time_stamp' */
   shell_cmd.add_option("no_time_stamp", false, "Do not print a time stamp in the output files");
 
+  /* Add an option '--use_relative_path' */
+  shell_cmd.add_option("use_relative_path", false, "Force to use relative path in netlists when including other netlists");
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
   

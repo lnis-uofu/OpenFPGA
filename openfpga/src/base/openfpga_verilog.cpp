@@ -197,6 +197,7 @@ int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
+  CommandOptionId opt_use_relative_path = cmd.option("use_relative_path");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
@@ -208,6 +209,7 @@ int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
   options.set_reference_benchmark_file_path(cmd_context.option_value(cmd, opt_reference_benchmark));
   options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
   options.set_time_stamp(!cmd_context.option_enable(cmd, opt_no_time_stamp));
+  options.set_use_relative_path(cmd_context.option_enable(cmd, opt_use_relative_path));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_print_preconfig_top_testbench(true);
   if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
