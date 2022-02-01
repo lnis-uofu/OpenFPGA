@@ -842,6 +842,9 @@ def run_netlists_verification(exit_if_fail=True):
         command += [tb_top_formal]
     else:
         command += [tb_top_autochecked]
+    # TODO: This is NOT flexible!!! We should consider to make the include directory customizable through options
+    # Add source directory to the include dir
+    command += ["-I", "./SRC"]
     run_command("iverilog_verification", "iverilog_output.txt", command)
 
     vvp_command = ["vvp", compiled_file]
