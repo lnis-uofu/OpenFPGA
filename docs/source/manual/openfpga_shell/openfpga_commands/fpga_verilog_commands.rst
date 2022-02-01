@@ -192,6 +192,10 @@ write_preconfigured_testbench
 
     Do not print time stamp in Verilog netlists
 
+  .. option:: --use_relative_path
+
+    Force to use relative path in netlists when including other netlists. By default, this is off, which means that netlists use absolute paths when including other netlists
+
   .. option:: --verbose
 
     Show verbose log
