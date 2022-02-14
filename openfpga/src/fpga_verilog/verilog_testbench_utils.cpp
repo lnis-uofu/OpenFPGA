@@ -54,7 +54,9 @@ void print_verilog_testbench_fpga_instance(std::fstream& fp,
   if (!net_postfix.empty()) { 
     for (const ModulePortId &module_port_id : module_manager.module_ports(top_module)) {
       BasicPort module_port = module_manager.module_port(top_module, module_port_id);
-      port2port_name_map[module_port.get_name()] = module_port.get_name() + net_postfix;
+      BasicPort net_port = module_port;
+      net_port.set_name(module_port.get_name() + net_postfix);
+      port2port_name_map[module_port.get_name()] = net_port;
     }
   }
 
