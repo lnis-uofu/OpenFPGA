@@ -68,9 +68,9 @@ void print_verilog_preconfig_top_module_ports(std::fstream &fp,
       block_name = netlist_annotation.block_name(atom_blk);
     }
     /* For output block, remove the prefix which is added by VPR */
-    std::vector<std::string> prefix_to_remove;
-    prefix_to_remove.push_back(std::string(VPR_BENCHMARK_OUT_PORT_PREFIX));
-    prefix_to_remove.push_back(std::string(OPENFPGA_BENCHMARK_OUT_PORT_PREFIX));
+    std::vector<std::string> output_port_prefix_to_remove;
+    output_port_prefix_to_remove.push_back(std::string(VPR_BENCHMARK_OUT_PORT_PREFIX));
+    output_port_prefix_to_remove.push_back(std::string(OPENFPGA_BENCHMARK_OUT_PORT_PREFIX));
     if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
       for (const std::string& prefix_to_remove : output_port_prefix_to_remove) {
         if (!prefix_to_remove.empty()) {
