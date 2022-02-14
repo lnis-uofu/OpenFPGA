@@ -580,6 +580,7 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
                                             const FabricGlobalPortInfo& global_ports,
                                             const PinConstraints& pin_constraints,
                                             const std::vector<std::string>& clock_port_names,
+                                            const std::string& input_port_postfix,
                                             const std::string& check_flag_port_postfix,
                                             const std::vector<BasicPort>& clock_ports,
                                             const bool& no_self_checking) {
@@ -617,7 +618,7 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
 
     /* TODO: find the clock inputs will be initialized later */
     if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
-      fp << "\t\t" << block_name << " <= 1'b0;" << std::endl;
+      fp << "\t\t" << block_name + input_port_postfix << " <= 1'b0;" << std::endl;
     }
   }
 
@@ -686,7 +687,7 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
 
     /* TODO: find the clock inputs will be initialized later */
     if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
-      fp << "\t\t" << block_name << " <= $random;" << std::endl;
+      fp << "\t\t" << block_name + input_port_postfix << " <= $random;" << std::endl;
     }
   }
 
@@ -709,6 +710,7 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
                                           const AtomContext& atom_ctx,
                                           const VprNetlistAnnotation& netlist_annotation,
                                           const std::vector<std::string>& clock_port_names,
+                                          const std::string& shared_input_port_postfix,
                                           const std::string& benchmark_output_port_postfix,
                                           const std::string& fpga_output_port_postfix,
                                           const std::string& check_flag_port_postfix,
@@ -736,7 +738,7 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
     }
    
     /* Each logical block assumes a single-width port */
-    BasicPort input_port(block_name, 1); 
+    BasicPort input_port(block_name + shared_input_port_postfix, 1); 
     fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, input_port) << ";" << std::endl;
   }
 
