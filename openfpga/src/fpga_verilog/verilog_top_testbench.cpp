@@ -2052,6 +2052,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                            std::string(),
                                            std::string(),
                                            std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
+                                           std::vector<std::string>(),
                                            (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
   /* Instanciate input benchmark */

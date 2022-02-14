@@ -14,6 +14,7 @@
 /* Headers from openfpgautil library */
 #include "openfpga_port.h"
 #include "openfpga_digest.h"
+#include "openfpga_reserved_words.h"
 
 #include "bitstream_manager_utils.h"
 #include "openfpga_atom_netlist_utils.h"
@@ -65,6 +66,20 @@ void print_verilog_preconfig_top_module_ports(std::fstream &fp,
     std::string block_name = atom_ctx.nlist.block_name(atom_blk);
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
+    }
+    /* For output block, remove the prefix which is added by VPR */
+    std::vector<std::string> prefix_to_remove;
+    prefix_to_remove.push_back(std::string(VPR_BENCHMARK_OUT_PORT_PREFIX));
+    prefix_to_remove.push_back(std::string(OPENFPGA_BENCHMARK_OUT_PORT_PREFIX));
+    if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+      for (const std::string& prefix_to_remove : output_port_prefix_to_remove) {
+        if (!prefix_to_remove.empty()) {
+          if (0 == block_name.find(prefix_to_remove)) {
+            block_name.erase(0, prefix_to_remove.length());
+            break;
+          }
+        }
+      }
     }
 
     if (0 < port_counter) {
@@ -471,12 +486,16 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
   }
 
   /* Connect I/Os to benchmark I/Os or constant driver */
+  std::vector<std::string> prefix_to_remove;
+  prefix_to_remove.push_back(std::string(VPR_BENCHMARK_OUT_PORT_PREFIX));
+  prefix_to_remove.push_back(std::string(OPENFPGA_BENCHMARK_OUT_PORT_PREFIX));
   print_verilog_testbench_connect_fpga_ios(fp, module_manager, top_module,
                                            atom_ctx, place_ctx, io_location_map,
                                            netlist_annotation,
                                            std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
                                            std::string(),
                                            std::string(),
+                                           prefix_to_remove,
                                            (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
   /* Assign the SRAM model applied to the FPGA fabric */
