@@ -8,6 +8,7 @@ PYTHON_EXEC=python3.8
 ##############################################
 echo -e "Micro benchmark regression tests";
 run-task benchmark_sweep/counter8 --debug --show_thread_logs
+run-task benchmark_sweep/counter8_full_testbench --debug --show_thread_logs
 run-task benchmark_sweep/counter128 --debug --show_thread_logs
 run-task benchmark_sweep/mac_units --debug --show_thread_logs
 
