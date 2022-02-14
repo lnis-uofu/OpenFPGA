@@ -27,6 +27,7 @@ void print_verilog_testbench_fpga_instance(std::fstream& fp,
                                            const ModuleManager& module_manager,
                                            const ModuleId& top_module,
                                            const std::string& top_instance_name,
+                                           const std::string& net_postfix,
                                            const bool& explicit_port_mapping);
 
 void print_verilog_testbench_benchmark_instance(std::fstream& fp,
@@ -48,6 +49,7 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
                                               const PlacementContext& place_ctx,
                                               const IoLocationMap& io_location_map,
                                               const VprNetlistAnnotation& netlist_annotation,
+                                              const std::string& net_name_postfix,
                                               const std::string& io_input_port_name_postfix,
                                               const std::string& io_output_port_name_postfix,
                                               const size_t& unused_io_value);

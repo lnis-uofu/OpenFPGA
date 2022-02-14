@@ -71,7 +71,7 @@ void print_verilog_preconfig_top_module_ports(std::fstream &fp,
       fp << "," << std::endl;
     }
     /* Both input and output ports have only size of 1 */
-    BasicPort module_port(std::string(block_name + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX)), 1);
+    BasicPort module_port(std::string(block_name), 1);
     fp << generate_verilog_port(port_type2type_map[atom_ctx.nlist.block_type(atom_blk)], module_port);
 
     /* Update port counter */
@@ -100,6 +100,8 @@ void print_verilog_preconfig_top_module_internal_wires(std::fstream &fp,
   print_verilog_comment(fp, std::string("----- Local wires for FPGA fabric -----"));
   for (const ModulePortId &module_port_id : module_manager.module_ports(top_module)) {
     BasicPort module_port = module_manager.module_port(top_module, module_port_id);
+    /* Add a postfix to the internal wires to be different from other reserved ports */
+    module_port.set_name(module_port.get_name() + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX));
     fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port) << ";" << std::endl;
   }
   /* Add an empty line as a splitter */
@@ -132,7 +134,7 @@ int print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
      && (false == fabric_global_ports.global_port_is_prog(global_port_id))) {
       /* Wiring to each pin of the global port: benchmark clock is always 1-bit */
       for (size_t pin_id = 0; pin_id < module_global_port.pins().size(); ++pin_id) {
-        BasicPort module_clock_pin(module_global_port.get_name(), module_global_port.pins()[pin_id], module_global_port.pins()[pin_id]);
+        BasicPort module_clock_pin(module_global_port.get_name() + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), module_global_port.pins()[pin_id], module_global_port.pins()[pin_id]);
 
         /* If the clock port name is in the pin constraints, we should wire it to the constrained pin */
         std::string constrained_net_name = pin_constraints.pin_net(module_clock_pin);
@@ -159,7 +161,7 @@ int print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
           clock_name_to_connect = benchmark_clock_port_names[pin_id]; 
         }
 
-        BasicPort benchmark_clock_pin(clock_name_to_connect + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), 1);
+        BasicPort benchmark_clock_pin(clock_name_to_connect, 1);
         print_verilog_wire_connection(fp, module_clock_pin, benchmark_clock_pin, false);
       }
       /* Finish, go to the next */
@@ -168,7 +170,7 @@ int print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
 
     /* For other ports, give an default value */
     for (size_t pin_id = 0; pin_id < module_global_port.pins().size(); ++pin_id) {
-      BasicPort module_global_pin(module_global_port.get_name(),
+      BasicPort module_global_pin(module_global_port.get_name() + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
                                   module_global_port.pins()[pin_id],
                                   module_global_port.pins()[pin_id]);
 
@@ -180,7 +182,7 @@ int print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
        */
       if ( (false == pin_constraints.unconstrained_net(constrained_net_name))
         && (false == pin_constraints.unmapped_net(constrained_net_name))) {
-        BasicPort benchmark_pin(constrained_net_name + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), 1);
+        BasicPort benchmark_pin(constrained_net_name, 1);
         print_verilog_wire_connection(fp, module_global_pin, benchmark_pin, false);
       } else {
         VTR_ASSERT_SAFE(std::string(PIN_CONSTRAINT_OPEN_NET) == constrained_net_name);
@@ -454,6 +456,7 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
   /* Instanciate FPGA top-level module */
   print_verilog_testbench_fpga_instance(fp, module_manager, top_module,
                                         std::string(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME),
+                                        std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
                                         options.explicit_port_mapping());
 
   /* Find clock ports in benchmark */
@@ -472,7 +475,8 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
                                            atom_ctx, place_ctx, io_location_map,
                                            netlist_annotation,
                                            std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
-                                           std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
+                                           std::string(),
+                                           std::string(),
                                            (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
   /* Assign the SRAM model applied to the FPGA fabric */
