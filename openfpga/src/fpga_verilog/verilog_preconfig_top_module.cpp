@@ -152,7 +152,7 @@ int print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
         BasicPort module_clock_pin(module_global_port.get_name() + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), module_global_port.pins()[pin_id], module_global_port.pins()[pin_id]);
 
         /* If the clock port name is in the pin constraints, we should wire it to the constrained pin */
-        std::string constrained_net_name = pin_constraints.pin_net(module_clock_pin);
+        std::string constrained_net_name = pin_constraints.pin_net(BasicPort(module_global_port.get_name(), module_global_port.pins()[pin_id], module_global_port.pins()[pin_id]));
 
         /* If constrained to an open net or there is no clock in the benchmark, we assign it to a default value */
         if ( (true == pin_constraints.unmapped_net(constrained_net_name))
