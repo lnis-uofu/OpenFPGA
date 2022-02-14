@@ -185,12 +185,14 @@ int print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
 
     /* For other ports, give an default value */
     for (size_t pin_id = 0; pin_id < module_global_port.pins().size(); ++pin_id) {
-      BasicPort module_global_pin(module_global_port.get_name() + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
+      BasicPort module_global_pin(module_global_port.get_name(),
                                   module_global_port.pins()[pin_id],
                                   module_global_port.pins()[pin_id]);
 
       /* If the global port name is in the pin constraints, we should wire it to the constrained pin */
       std::string constrained_net_name = pin_constraints.pin_net(module_global_pin);
+
+      module_global_pin.set_name(module_global_port.get_name() + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX));
 
       /* - If constrained to a given net in the benchmark, we connect the global pin to the net
        * - If constrained to an open net in the benchmark, we assign it to a default value 
