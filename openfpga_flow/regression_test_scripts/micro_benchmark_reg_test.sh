@@ -7,7 +7,8 @@ PYTHON_EXEC=python3.8
 # OpenFPGA Shell with VPR8
 ##############################################
 echo -e "Micro benchmark regression tests";
-run-task benchmark_sweep/counter --debug --show_thread_logs
+run-task benchmark_sweep/counter8 --debug --show_thread_logs
+run-task benchmark_sweep/counter128 --debug --show_thread_logs
 run-task benchmark_sweep/mac_units --debug --show_thread_logs
 
 # Verify MCNC big20 benchmark suite with ModelSim
