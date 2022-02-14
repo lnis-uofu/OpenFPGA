@@ -32,11 +32,16 @@ namespace openfpga {
 
 /********************************************************************
  * Print an instance of the FPGA top-level module
+ * When net_postfix is not empty, the instance net will contain a postfix like
+ *   fpga fpga_core(.in(in_<postfix>),
+                    .out(out_postfix>)
+                   );
  *******************************************************************/
 void print_verilog_testbench_fpga_instance(std::fstream& fp,
                                            const ModuleManager& module_manager,
                                            const ModuleId& top_module,
                                            const std::string& top_instance_name,
+                                           const std::string& net_postfix,
                                            const bool& explicit_port_mapping) {
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -46,6 +51,14 @@ void print_verilog_testbench_fpga_instance(std::fstream& fp,
 
   /* Create an empty port-to-port name mapping, because we use default names */
   std::map<std::string, BasicPort> port2port_name_map;
+  if (!net_postfix.empty()) { 
+    for (const ModulePortId &module_port_id : module_manager.module_ports(top_module)) {
+      BasicPort module_port = module_manager.module_port(top_module, module_port_id);
+      BasicPort net_port = module_port;
+      net_port.set_name(module_port.get_name() + net_postfix);
+      port2port_name_map[module_port.get_name()] = net_port;
+    }
+  }
 
   /* Use explicit port mapping for a clean instanciation */
   print_verilog_module_instance(fp, module_manager, top_module, 
@@ -157,8 +170,10 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
                                               const PlacementContext& place_ctx,
                                               const IoLocationMap& io_location_map,
                                               const VprNetlistAnnotation& netlist_annotation,
+                                              const std::string& net_name_postfix,
                                               const std::string& io_input_port_name_postfix,
                                               const std::string& io_output_port_name_postfix,
+                                              const std::vector<std::string>& output_port_prefix_to_remove,
                                               const size_t& unused_io_value) {
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -242,6 +257,7 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
 
     /* Set the port pin index */ 
     VTR_ASSERT(io_index < module_mapped_io_port.get_width());
+    module_mapped_io_port.set_name(module_mapped_io_port.get_name() + net_name_postfix);
     module_mapped_io_port.set_width(io_index, io_index);
 
     /* The block may be renamed as it contains special characters which violate Verilog syntax */
@@ -249,6 +265,18 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     } 
+    /* Note that VPR added a prefix to the name of output blocks
+     * We can remove this when specified through input argument 
+     */
+    for (const std::string& prefix_to_remove : output_port_prefix_to_remove) {
+      if (!prefix_to_remove.empty()) {
+        if (0 == block_name.find(prefix_to_remove)) {
+          block_name.erase(0, prefix_to_remove.length());
+          break;
+        }
+      }
+    }
+
 
     /* Create the port for benchmark I/O, due to BLIF benchmark, each I/O always has a size of 1 
      * In addition, the input and output ports may have different postfix in naming
@@ -292,6 +320,7 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
       /* Wire to a contant */
       BasicPort module_unused_io_port = module_manager.module_port(top_module, module_io_port_id);
       /* Set the port pin index */ 
+      module_unused_io_port.set_name(module_unused_io_port.get_name() + net_name_postfix);
       module_unused_io_port.set_width(io_index, io_index);
 
       std::vector<size_t> default_values(module_unused_io_port.get_width(), unused_io_value);

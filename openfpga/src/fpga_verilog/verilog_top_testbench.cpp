@@ -2042,6 +2042,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
   /* Instanciate FPGA top-level module */
   print_verilog_testbench_fpga_instance(fp, module_manager, top_module,
                                         std::string(TOP_TESTBENCH_FPGA_INSTANCE_NAME),
+                                        std::string(),
                                         explicit_port_mapping);
 
   /* Connect I/Os to benchmark I/Os or constant driver */
@@ -2049,7 +2050,9 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                            atom_ctx, place_ctx, io_location_map,
                                            netlist_annotation,
                                            std::string(),
+                                           std::string(),
                                            std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
+                                           std::vector<std::string>(),
                                            (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
   /* Instanciate input benchmark */
