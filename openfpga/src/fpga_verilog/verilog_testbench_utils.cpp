@@ -78,8 +78,10 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
                                                 const std::string& instance_name,
                                                 const std::string& module_input_port_postfix,
                                                 const std::string& module_output_port_postfix,
+                                                const std::string& input_port_postfix,
                                                 const std::vector<std::string>& output_port_prefix_to_remove,
                                                 const std::string& output_port_postfix,
+                                                const std::vector<std::string>& clock_port_names,
                                                 const AtomContext& atom_ctx,
                                                 const VprNetlistAnnotation& netlist_annotation,
                                                 const PinConstraints& pin_constraints,
@@ -122,7 +124,12 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
       if (PinConstraints::LOGIC_HIGH == pin_constraints.net_default_value(block_name)) {
         fp << "~";
       }
-      fp << block_name;
+      /* For clock ports, skip postfix */
+      if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
+        fp << block_name;
+      } else {
+        fp << block_name << input_port_postfix;
+      }
       if (true == use_explicit_port_map) {
         fp << ")";
       }
@@ -174,6 +181,7 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
                                               const std::string& io_input_port_name_postfix,
                                               const std::string& io_output_port_name_postfix,
                                               const std::vector<std::string>& output_port_prefix_to_remove,
+                                              const std::vector<std::string>& clock_port_names,
                                               const size_t& unused_io_value) {
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -277,14 +285,18 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
       }
     }
 
-
     /* Create the port for benchmark I/O, due to BLIF benchmark, each I/O always has a size of 1 
      * In addition, the input and output ports may have different postfix in naming
      * due to verification context! Here, we give full customization on naming 
      */
     BasicPort benchmark_io_port;
     if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
-      benchmark_io_port.set_name(std::string(block_name + io_input_port_name_postfix)); 
+      /* If the port is a clock, do not add a postfix */
+      if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
+        benchmark_io_port.set_name(block_name); 
+      } else {
+        benchmark_io_port.set_name(std::string(block_name + io_input_port_name_postfix)); 
+      }
       benchmark_io_port.set_width(1);
       print_verilog_comment(fp, std::string("----- Blif Benchmark input " + block_name + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
       print_verilog_wire_connection(fp, module_mapped_io_port, benchmark_io_port, false);
@@ -580,6 +592,7 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
                                             const FabricGlobalPortInfo& global_ports,
                                             const PinConstraints& pin_constraints,
                                             const std::vector<std::string>& clock_port_names,
+                                            const std::string& input_port_postfix,
                                             const std::string& check_flag_port_postfix,
                                             const std::vector<BasicPort>& clock_ports,
                                             const bool& no_self_checking) {
@@ -617,7 +630,7 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
 
     /* TODO: find the clock inputs will be initialized later */
     if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
-      fp << "\t\t" << block_name << " <= 1'b0;" << std::endl;
+      fp << "\t\t" << block_name + input_port_postfix << " <= 1'b0;" << std::endl;
     }
   }
 
@@ -686,7 +699,7 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
 
     /* TODO: find the clock inputs will be initialized later */
     if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
-      fp << "\t\t" << block_name << " <= $random;" << std::endl;
+      fp << "\t\t" << block_name + input_port_postfix << " <= $random;" << std::endl;
     }
   }
 
@@ -709,6 +722,7 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
                                           const AtomContext& atom_ctx,
                                           const VprNetlistAnnotation& netlist_annotation,
                                           const std::vector<std::string>& clock_port_names,
+                                          const std::string& shared_input_port_postfix,
                                           const std::string& benchmark_output_port_postfix,
                                           const std::string& fpga_output_port_postfix,
                                           const std::string& check_flag_port_postfix,
@@ -736,7 +750,7 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
     }
    
     /* Each logical block assumes a single-width port */
-    BasicPort input_port(block_name, 1); 
+    BasicPort input_port(block_name + shared_input_port_postfix, 1); 
     fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, input_port) << ";" << std::endl;
   }
 

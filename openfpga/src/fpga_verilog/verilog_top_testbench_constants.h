@@ -6,6 +6,7 @@ namespace openfpga {
 
 constexpr char* TOP_TESTBENCH_REFERENCE_INSTANCE_NAME = "REF_DUT";
 constexpr char* TOP_TESTBENCH_FPGA_INSTANCE_NAME = "FPGA_DUT";
+constexpr char* TOP_TESTBENCH_SHARED_INPUT_POSTFIX = "_shared_input";
 constexpr char* TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX = "_benchmark";
 constexpr char* TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX = "_fpga";
 
