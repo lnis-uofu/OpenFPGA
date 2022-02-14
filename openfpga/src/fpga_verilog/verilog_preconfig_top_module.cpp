@@ -496,6 +496,7 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
                                            std::string(),
                                            std::string(),
                                            prefix_to_remove,
+                                           std::vector<std::string>(),
                                            (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
   /* Assign the SRAM model applied to the FPGA fabric */

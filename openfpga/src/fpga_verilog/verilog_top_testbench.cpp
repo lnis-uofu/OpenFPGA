@@ -928,6 +928,7 @@ void print_verilog_top_testbench_benchmark_instance(std::fstream& fp,
                                                     const AtomContext& atom_ctx,
                                                     const VprNetlistAnnotation& netlist_annotation,
                                                     const PinConstraints& pin_constraints,
+                                                    const std::vector<std::string>& clock_port_names,
                                                     const bool& explicit_port_mapping) {
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -945,8 +946,10 @@ void print_verilog_top_testbench_benchmark_instance(std::fstream& fp,
                                              std::string(TOP_TESTBENCH_REFERENCE_INSTANCE_NAME),
                                              std::string(),
                                              std::string(),
+                                             std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
                                              prefix_to_remove,
                                              std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
+                                             clock_port_names,
                                              atom_ctx, netlist_annotation,
                                              pin_constraints,
                                              explicit_port_mapping);
@@ -2052,9 +2055,10 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                            atom_ctx, place_ctx, io_location_map,
                                            netlist_annotation,
                                            std::string(),
-                                           std::string(),
+                                           std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
                                            std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
                                            std::vector<std::string>(),
+                                           clock_port_names,
                                            (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
   /* Instanciate input benchmark */
@@ -2064,6 +2068,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                                    atom_ctx,
                                                    netlist_annotation,
                                                    pin_constraints,
+                                                   clock_port_names,
                                                    explicit_port_mapping);
   }
 
