@@ -10,6 +10,11 @@ module counter_4bit_2clock(clk0, rst0, clk1, rst1, q0, q1);
     output [3:0] q1;
     reg [3:0] q1;
 
+    initial begin
+      q0 <= 0;
+      q1 <= 0;
+    end
+
     always @ (posedge clk0)
     begin
         if(rst0)
