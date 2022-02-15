@@ -408,9 +408,14 @@ void print_verilog_top_testbench_global_reset_ports_stimuli(std::fstream& fp,
         if ( (false == pin_constraints.unconstrained_net(constrained_net_name))
           && (false == pin_constraints.unmapped_net(constrained_net_name))) {
           BasicPort benchmark_pin(constrained_net_name + std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX), 1);
+          /* Polarity of some input may have to be inverted, as defined in pin constraints
+           * For example, the reset signal of the benchmark is active low 
+           * while the reset signal of the FPGA fabric is active high (inside FPGA, the reset signal will be inverted)
+           * However, to ensure correct stimuli to the benchmark, we have to invert the signal
+           */
           print_verilog_wire_connection(fp, module_global_pin,
                                         benchmark_pin,
-                                        false);
+                                        PinConstraints::LOGIC_HIGH == pin_constraints.net_default_value(constrained_net_name));
           continue; /* Finish the net assignment for this reset pin */
         }
       }
