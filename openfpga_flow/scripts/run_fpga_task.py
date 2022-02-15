@@ -190,11 +190,15 @@ def generate_each_task_actions(taskname):
         clean_up_and_exit(
             "Missing configuration file for task %s" % curr_task_dir)
 
+    if args.remove_run_dir:
+        remove_run_dir()
+        flow_run_cmd_list = []
+        GeneralSection = []
+        return flow_run_cmd_list,GeneralSection
+
     # Create run directory for current task run ./runxxx
     run_dirs = [int(os.path.basename(x)[-3:]) for x in glob.glob('run*[0-9]')]
     curr_run_dir = "run%03d" % (max(run_dirs+[0, ])+1)
-    if args.remove_run_dir:
-        remove_run_dir()
     try:
         os.mkdir(curr_run_dir)
         if os.path.islink('latest') or os.path.exists('latest'):
