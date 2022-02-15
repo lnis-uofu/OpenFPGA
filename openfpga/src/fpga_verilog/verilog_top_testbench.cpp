@@ -407,7 +407,7 @@ void print_verilog_top_testbench_global_reset_ports_stimuli(std::fstream& fp,
         /* - If constrained to a given net in the benchmark, we connect the global pin to the net */
         if ( (false == pin_constraints.unconstrained_net(constrained_net_name))
           && (false == pin_constraints.unmapped_net(constrained_net_name))) {
-          BasicPort benchmark_pin(constrained_net_name, 1);
+          BasicPort benchmark_pin(constrained_net_name + std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX), 1);
           print_verilog_wire_connection(fp, module_global_pin,
                                         benchmark_pin,
                                         false);
@@ -693,6 +693,7 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
                                        const AtomContext& atom_ctx,
                                        const VprNetlistAnnotation& netlist_annotation,
                                        const std::vector<std::string>& clock_port_names,
+                                       const FabricGlobalPortInfo& global_ports,
                                        const PinConstraints& pin_constraints,
                                        const SimulationSetting& simulation_parameters,
                                        const ConfigProtocol& config_protocol,
@@ -798,7 +799,10 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
                                                     simulation_parameters,
                                                     op_clock_port);
 
-  print_verilog_testbench_shared_ports(fp, atom_ctx, netlist_annotation,
+  std::vector<std::string> global_port_names;
+  print_verilog_testbench_shared_ports(fp, 
+                                       module_manager, global_ports, pin_constraints,
+                                       atom_ctx, netlist_annotation,
                                        clock_port_names,
                                        std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
                                        std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
@@ -1967,6 +1971,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
   print_verilog_top_testbench_ports(fp, module_manager, top_module,
                                     atom_ctx, netlist_annotation,
                                     clock_port_names,
+                                    global_ports,
                                     pin_constraints,
                                     simulation_parameters, config_protocol,
                                     circuit_name,

@@ -719,6 +719,9 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
  *    same input vectors
  *******************************************************************/
 void print_verilog_testbench_shared_ports(std::fstream& fp,
+                                          const ModuleManager& module_manager,
+                                          const FabricGlobalPortInfo& global_ports,
+                                          const PinConstraints& pin_constraints,
                                           const AtomContext& atom_ctx,
                                           const VprNetlistAnnotation& netlist_annotation,
                                           const std::vector<std::string>& clock_port_names,
@@ -751,7 +754,12 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
    
     /* Each logical block assumes a single-width port */
     BasicPort input_port(block_name + shared_input_port_postfix, 1); 
-    fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, input_port) << ";" << std::endl;
+    /* For global ports, use wires; otherwise, use registers*/
+    if (false == port_is_fabric_global_reset_port(global_ports, module_manager, pin_constraints.net_pin(block_name))) { 
+      fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, input_port) << ";" << std::endl;
+    } else {
+      fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, input_port) << ";" << std::endl;
+    }
   }
 
   /* Add an empty line as splitter */

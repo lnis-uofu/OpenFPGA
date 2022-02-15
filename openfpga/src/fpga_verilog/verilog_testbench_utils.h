@@ -15,6 +15,8 @@
 #include "fabric_global_port_info.h"
 #include "pin_constraints.h"
 #include "simulation_setting.h"
+#include "fabric_global_port_info.h"
+#include "pin_constraints.h"
 
 /********************************************************************
  * Function declaration
@@ -98,6 +100,9 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
                                             const bool& no_self_checking);
 
 void print_verilog_testbench_shared_ports(std::fstream& fp,
+                                          const ModuleManager& module_manager,
+                                          const FabricGlobalPortInfo& global_ports,
+                                          const PinConstraints& pin_constraints,
                                           const AtomContext& atom_ctx,
                                           const VprNetlistAnnotation& netlist_annotation,
                                           const std::vector<std::string>& clock_port_names,
