@@ -53,6 +53,7 @@ constexpr char* FORMAL_TB_SIM_START_PORT_NAME = "sim_start";
  *******************************************************************/
 static 
 void print_verilog_top_random_testbench_ports(std::fstream& fp,
+                                              const ModuleManager& module_manager,
                                               const std::string& circuit_name,
                                               const std::vector<std::string>& clock_port_names,
                                               const AtomContext& atom_ctx,
@@ -79,7 +80,8 @@ void print_verilog_top_random_testbench_ports(std::fstream& fp,
   /* Add an empty line as splitter */
   fp << std::endl;
 
-  print_verilog_testbench_shared_ports(fp, atom_ctx, netlist_annotation,
+  print_verilog_testbench_shared_ports(fp, module_manager, FabricGlobalPortInfo(), PinConstraints(),
+                                       atom_ctx, netlist_annotation,
                                        clock_port_names,
                                        std::string(),
                                        std::string(BENCHMARK_PORT_POSTFIX),
@@ -308,7 +310,7 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
   std::vector<std::string> clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
 
   /* Start of testbench */
-  print_verilog_top_random_testbench_ports(fp, circuit_name, clock_port_names, atom_ctx, netlist_annotation, options);
+  print_verilog_top_random_testbench_ports(fp, module_manager, circuit_name, clock_port_names, atom_ctx, netlist_annotation, options);
 
   /* Call defined top-level module */
   print_verilog_random_testbench_fpga_instance(fp, circuit_name,
