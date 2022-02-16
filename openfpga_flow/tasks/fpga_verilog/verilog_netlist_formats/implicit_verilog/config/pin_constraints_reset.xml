@@ -2,6 +2,6 @@
   <!-- For a given .blif file, we want to assign 
        - the reset signal to the op_reset[0] port of the FPGA fabric
     -->
-  <set_io pin="reset[0]" net="reset"/>
+  <set_io pin="reset[0]" net="rst_counter"/>
 </pin_constraints>
 
