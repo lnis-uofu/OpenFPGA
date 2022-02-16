@@ -433,6 +433,7 @@ void print_verilog_testbench_check(std::fstream& fp,
                                    const std::string& benchmark_port_postfix,
                                    const std::string& fpga_port_postfix,
                                    const std::string& check_flag_port_postfix,
+                                   const std::string& config_done_name,
                                    const std::string& error_counter_name,
                                    const AtomContext& atom_ctx,
                                    const VprNetlistAnnotation& netlist_annotation,
@@ -465,7 +466,12 @@ void print_verilog_testbench_check(std::fstream& fp,
   fp << "\t\tif (1'b1 == " << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port) << ") begin" << std::endl;
   fp << "\t\t";
   print_verilog_register_connection(fp, sim_start_port, sim_start_port, true);
-  fp << "\t\tend else begin" << std::endl;
+  fp << "\t\tend else " << std::endl;
+  /* If there is a config done signal specified, consider it as a trigger on checking */
+  if (!config_done_name.empty()) {
+    fp << "if (1'b1 == " << config_done_name << ") "; 
+  }
+  fp << "begin" << std::endl;
 
   for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
     /* Bypass non-I/O atom blocks ! */

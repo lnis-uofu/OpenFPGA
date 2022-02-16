@@ -15,6 +15,10 @@ module counter (
 
 	reg [127:0] result;
 
+    initial begin
+      result <= 0;
+    end
+
 	always @(posedge clk or negedge resetb)
 	begin
 		if (~resetb) 
