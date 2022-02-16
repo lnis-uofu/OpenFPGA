@@ -7,6 +7,6 @@
   <set_io pin="clk[1]" net="clk1"/>
   <set_io pin="clk[2]" net="OPEN"/>
   <set_io pin="clk[3]" net="OPEN"/>
-  <set_io pin="reset[0]" net="rst0"/>
+  <set_io pin="reset[0]" net="rst"/>
 </pin_constraints>
 
