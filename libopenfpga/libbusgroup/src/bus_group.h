@@ -36,8 +36,10 @@
 class BusGroup {
   public: /* Types */
     typedef vtr::vector<BusGroupId, BusGroupId>::const_iterator bus_group_iterator;
+    typedef vtr::vector<BusPinId, BusPinId>::const_iterator bus_pin_iterator;
     /* Create range */
     typedef vtr::Range<bus_group_iterator> bus_group_range;
+    typedef vtr::Range<bus_pin_iterator> bus_pin_range;
   public:  /* Constructors */
     BusGroup();
   public: /* Accessors: aggregates */
@@ -53,12 +55,27 @@ class BusGroup {
     /* Reserve a number of buses to be memory efficent */
     void reserve_buses(const size_t& num_buses);
 
+    /* Reserve a number of pins to be memory efficent */
+    void reserve_pins(const size_t& num_pins);
+
     /* Add a bus to storage */
     BusGroupId create_bus(const openfpga::BasicPort& bus_port);
 
+    /* Add a pin to a bus */
+    BusPinId create_pin(const BusGroupId& bus_id);
+
+    /* Set the index for a pin */
+    void set_pin_index(const BusPinId& pin_id, const int& index);
+
+    /* Set the name for a pin */
+    void set_pin_index(const BusPinId& pin_id, const std::string& name);
+
   public: /* Public invalidators/validators */
-    /* Show if the pin constraint id is a valid for data queries */
+    /* Show if the bus id is a valid for data queries */
     bool valid_bus_id(const BusGroupId& bus_id) const;
+
+    /* Show if the pin id is a valid for data queries */
+    bool valid_pin_id(const BusPinId& pin_id) const;
 
   private: /* Internal data */
     /* Unique ids for each bus */
@@ -68,10 +85,16 @@ class BusGroup {
     vtr::vector<BusGroupId, openfpga::BasicPort> bus_ports_;
 
     /* Indices of each pin under each bus */
-    vtr::vector<BusGroupId, std::vector<int>> bus_pin_indices_;
+    vtr::vector<BusGroupId, std::vector<BusPinId>> bus_pin_ids_;
+
+    /* Unique ids for each pin */
+    vtr::vector<BusPinId, BusPinId> pin_ids_;
+
+    /* Index for each pin */
+    vtr::vector<BusPinId, int> pin_indices_;
 
     /* Name of each pin under each bus */
-    vtr::vector<BusGroupId, std::vector<std::string>> bus_pin_names_;
+    vtr::vector<BusPinId, std::string> pin_names_;
 };
 
 #endif
