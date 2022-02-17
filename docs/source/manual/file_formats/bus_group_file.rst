@@ -12,29 +12,21 @@ An example of file is shown as follows.
 
 .. code-block:: xml
 
-  <bus_groups>
-    <bus name="i_addr" lsb="0" msb="3">
+  <bus_group>
+    <bus name="i_addr[0:3]">
       <pin id="0" name="i_addr_0_"/>
       <pin id="1" name="i_addr_1_"/>
       <pin id="2" name="i_addr_2_"/>
       <pin id="3" name="i_addr_3_"/>
     </bus>
-  </bus_groups>
+  </bus_group>
 
 Bus-related Syntax
 ------------------
 
 .. option:: name="<string>"
 
-  The bus port name defined before synthesis.
-
-.. option:: lsb="<int>"
-
-  The *Least Significant Bit* (LSB) of the bus
-
-.. option:: msb="<int>"
-
-  The *Most Significant Bit* (MSB) of the bus
+  The bus port defined before synthesis, e.g., addr[0:3]
 
 Pin-related Syntax
 ------------------
