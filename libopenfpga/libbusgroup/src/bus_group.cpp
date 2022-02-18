@@ -133,7 +133,7 @@ BusPinId BusGroup::create_pin(const BusGroupId& bus_id, const int& index) {
   pin_parent_bus_ids_.push_back(bus_id);
   
   /* If the pin index is beyond the range of the bus_pin_ids, resize it */
-  if (size_t(index) > bus_pin_ids_[bus_id].size()) {
+  if (size_t(index) >= bus_pin_ids_[bus_id].size()) {
     bus_pin_ids_[bus_id].resize(index + 1);
   }
   bus_pin_ids_[bus_id][index] = pin_id;
