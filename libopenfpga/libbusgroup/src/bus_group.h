@@ -59,6 +59,12 @@ class BusGroup {
     /* Get the name of a pin */
     std::string pin_name(const BusPinId& pin_id) const;
 
+    /* Find the bus that a pin belongs to */
+    BusGroupId find_pin_bus(const std::string& pin_name) const;
+
+    /* Find the pin id with a given name */
+    BusPinId find_pin(const std::string& pin_name) const;
+
     /* Check if there are any buses */
     bool empty() const;
 
@@ -106,6 +112,12 @@ class BusGroup {
 
     /* Name of each pin under each bus */
     vtr::vector<BusPinId, std::string> pin_names_;
+
+    /* Parent bus of each pin */
+    vtr::vector<BusPinId, BusGroupId> pin_parent_bus_ids_;
+
+    /* Fast look-up */
+    std::map<std::string, BusPinId> pin_name2id_map_;
 };
 
 } // End of namespace openfpga

@@ -38,7 +38,8 @@ static
 void print_verilog_preconfig_top_module_ports(std::fstream &fp,
                                               const std::string &circuit_name,
                                               const AtomContext &atom_ctx,
-                                              const VprNetlistAnnotation &netlist_annotation) {
+                                              const VprNetlistAnnotation &netlist_annotation,
+                                              const BusGroup& bus_group) {
 
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -47,13 +48,14 @@ void print_verilog_preconfig_top_module_ports(std::fstream &fp,
   fp << "module " << circuit_name << std::string(FORMAL_VERIFICATION_TOP_MODULE_POSTFIX);
   fp << " (" << std::endl;
 
-  /* Add module ports */
-  size_t port_counter = 0;
-
   /* Port type-to-type mapping */
   std::map<AtomBlockType, enum e_dump_verilog_port_type> port_type2type_map;
   port_type2type_map[AtomBlockType::INPAD] = VERILOG_PORT_INPUT;
   port_type2type_map[AtomBlockType::OUTPAD] = VERILOG_PORT_OUTPUT;
+
+  /* Ports to be added, this is to avoid any bus port */
+  std::vector<BasicPort> port_list;
+  std::vector<AtomBlockType> port_types;
 
   /* Print all the I/Os of the circuit implementation to be tested*/
   for (const AtomBlockId &atom_blk : atom_ctx.nlist.blocks()) {
@@ -62,11 +64,28 @@ void print_verilog_preconfig_top_module_ports(std::fstream &fp,
       continue;
     }
 
-    /* The block may be renamed as it contains special characters which violate Verilog syntax */
     std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    /* If the pin is part of a bus,
+     * - Check if the bus is already in the list
+     *   - If not, add it to the port list
+     *   - If yes, do nothing and move onto the next port
+     * If the pin does not belong to any bus
+     * - Add it to the bus port
+     */
+    BusGroupId bus_id = bus_group.find_pin_bus(block_name);
+    if (bus_id) {
+      if (port_list.end() == std::find(port_list.begin(), port_list.end(), bus_group.bus_port(bus_id))) {
+        port_list.push_back(bus_group.bus_port(bus_id));
+        port_types.push_back(atom_ctx.nlist.block_type(atom_blk));
+      }
+      continue;
+    }
+
+    /* The block may be renamed as it contains special characters which violate Verilog syntax */
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     }
+
     /* For output block, remove the prefix which is added by VPR */
     std::vector<std::string> output_port_prefix_to_remove;
     output_port_prefix_to_remove.push_back(std::string(VPR_BENCHMARK_OUT_PORT_PREFIX));
@@ -82,12 +101,22 @@ void print_verilog_preconfig_top_module_ports(std::fstream &fp,
       }
     }
 
+    /* Both input and output ports have only size of 1 */
+    BasicPort module_port(std::string(block_name), 1);
+    port_list.push_back(module_port);
+    port_types.push_back(atom_ctx.nlist.block_type(atom_blk));
+  }
+
+  /* After collecting all the ports, now print the port mapping */
+  size_t port_counter = 0;
+  for (size_t iport = 0; iport < port_list.size(); ++iport) {
+    BasicPort module_port = port_list[iport];
+    AtomBlockType port_type = port_types[iport];
     if (0 < port_counter) {
       fp << "," << std::endl;
     }
-    /* Both input and output ports have only size of 1 */
-    BasicPort module_port(std::string(block_name), 1);
-    fp << generate_verilog_port(port_type2type_map[atom_ctx.nlist.block_type(atom_blk)], module_port);
+
+    fp << generate_verilog_port(port_type2type_map[port_type], module_port);
 
     /* Update port counter */
     port_counter++;
@@ -434,6 +463,7 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
                                        const AtomContext &atom_ctx,
                                        const PlacementContext &place_ctx,
                                        const PinConstraints& pin_constraints,
+                                       const BusGroup& bus_group,
                                        const IoLocationMap &io_location_map,
                                        const VprNetlistAnnotation &netlist_annotation,
                                        const std::string &circuit_name,
@@ -461,7 +491,7 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
                                              options.default_net_type());
 
   /* Print module declaration and ports */
-  print_verilog_preconfig_top_module_ports(fp, circuit_name, atom_ctx, netlist_annotation);
+  print_verilog_preconfig_top_module_ports(fp, circuit_name, atom_ctx, netlist_annotation, bus_group);
 
   /* Find the top_module */
   ModuleId top_module = module_manager.find_module(generate_fpga_top_module_name());
@@ -494,6 +524,7 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
   print_verilog_testbench_connect_fpga_ios(fp, module_manager, top_module,
                                            atom_ctx, place_ctx, io_location_map,
                                            netlist_annotation,
+                                           bus_group,
                                            std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
                                            std::string(),
                                            std::string(),

@@ -177,6 +177,7 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
                                               const PlacementContext& place_ctx,
                                               const IoLocationMap& io_location_map,
                                               const VprNetlistAnnotation& netlist_annotation,
+                                              const BusGroup& bus_group,
                                               const std::string& net_name_postfix,
                                               const std::string& io_input_port_name_postfix,
                                               const std::string& io_output_port_name_postfix,
@@ -285,11 +286,24 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
       }
     }
 
+
     /* Create the port for benchmark I/O, due to BLIF benchmark, each I/O always has a size of 1 
      * In addition, the input and output ports may have different postfix in naming
      * due to verification context! Here, we give full customization on naming 
      */
     BasicPort benchmark_io_port;
+
+    /* If this benchmark pin belongs to any bus group, use the bus pin instead */
+    BusGroupId bus_id = bus_group.find_pin_bus(block_name);
+    BusPinId bus_pin_id = bus_group.find_pin(block_name);
+    if (bus_id) {
+      block_name = bus_group.bus_port(bus_id).get_name(); 
+      VTR_ASSERT_SAFE(bus_pin_id);
+      benchmark_io_port.set_width(bus_group.pin_index(bus_pin_id), bus_group.pin_index(bus_pin_id));
+    } else {
+      benchmark_io_port.set_width(1);
+    }
+
     if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
       /* If the port is a clock, do not add a postfix */
       if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
@@ -297,13 +311,11 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
       } else {
         benchmark_io_port.set_name(std::string(block_name + io_input_port_name_postfix)); 
       }
-      benchmark_io_port.set_width(1);
       print_verilog_comment(fp, std::string("----- Blif Benchmark input " + block_name + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
       print_verilog_wire_connection(fp, module_mapped_io_port, benchmark_io_port, false);
     } else {
       VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
       benchmark_io_port.set_name(std::string(block_name + io_output_port_name_postfix)); 
-      benchmark_io_port.set_width(1);
       print_verilog_comment(fp, std::string("----- Blif Benchmark output " + block_name + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
       print_verilog_wire_connection(fp, benchmark_io_port, module_mapped_io_port, false);
     }

@@ -48,6 +48,27 @@ std::string BusGroup::pin_name(const BusPinId& pin_id) const {
   return pin_names_[pin_id]; 
 }
 
+BusGroupId BusGroup::find_pin_bus(const std::string& pin_name) const {
+  std::map<std::string, BusPinId>::const_iterator result = pin_name2id_map_.find(pin_name);
+  if (result == pin_name2id_map_.end()) {
+    /* Not found, return an invalid id */
+    return BusGroupId::INVALID();
+  }
+  /* Found, we should get the parent bus */
+  BusPinId pin_id = result->second; 
+  return pin_parent_bus_ids_[pin_id];
+}
+
+BusPinId BusGroup::find_pin(const std::string& pin_name) const {
+  std::map<std::string, BusPinId>::const_iterator result = pin_name2id_map_.find(pin_name);
+  if (result == pin_name2id_map_.end()) {
+    /* Not found, return an invalid id */
+    return BusPinId::INVALID();
+  }
+  /* Found, we should get the parent bus */
+  return result->second; 
+}
+
 bool BusGroup::empty() const {
   return 0 == bus_ids_.size();
 }
@@ -65,6 +86,7 @@ void BusGroup::reserve_pins(const size_t& num_pins) {
   pin_ids_.reserve(num_pins);
   pin_indices_.reserve(num_pins);
   pin_names_.reserve(num_pins);
+  pin_parent_bus_ids_.reserve(num_pins);
 }
 
 BusGroupId BusGroup::create_bus(const openfpga::BasicPort& bus_port) {
@@ -89,8 +111,9 @@ BusPinId BusGroup::create_pin(const BusGroupId& bus_id) {
 
   /* Register the pin to the bus */
   VTR_ASSERT(valid_bus_id(bus_id));
+  pin_parent_bus_ids_.push_back(bus_id);
   bus_pin_ids_[bus_id].push_back(pin_id);
-  
+
   return pin_id;
 }
 
@@ -102,6 +125,15 @@ void BusGroup::set_pin_index(const BusPinId& pin_id, const int& index) {
 void BusGroup::set_pin_name(const BusPinId& pin_id, const std::string& name) {
   VTR_ASSERT(valid_pin_id(pin_id));
   pin_names_[pin_id] = name;
+
+  /* Register to fast look-up */
+  auto result = pin_name2id_map_.find(name);
+  if (result == pin_name2id_map_.end()) {
+    pin_name2id_map_[name] = pin_id;
+  } else {
+    VTR_LOG_ERROR("Duplicated pin name '%s' in bus group", name.c_str());
+    exit(1);
+  }
 }
 
 /************************************************************************

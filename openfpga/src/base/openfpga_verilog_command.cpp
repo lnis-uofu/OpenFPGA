@@ -89,6 +89,11 @@ ShellCommandId add_openfpga_write_full_testbench_command(openfpga::Shell<Openfpg
   shell_cmd.set_option_short_name(pcf_opt, "pcf");
   shell_cmd.set_option_require_value(pcf_opt, openfpga::OPT_STRING);
 
+  /* add an option '--bus_group_file in short '-bgf' */
+  CommandOptionId bgf_opt = shell_cmd.add_option("bus_group_file", false, "specify the file path to the group pins to bus");
+  shell_cmd.set_option_short_name(bgf_opt, "bgf");
+  shell_cmd.set_option_require_value(bgf_opt, openfpga::OPT_STRING);
+
   /* add an option '--reference_benchmark_file_path'*/
   CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", false, "specify the file path to the reference verilog netlist. If specified, the testbench will include self-checking codes");
   shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);
@@ -153,6 +158,11 @@ ShellCommandId add_openfpga_write_preconfigured_fabric_wrapper_command(openfpga:
   CommandOptionId pcf_opt = shell_cmd.add_option("pin_constraints_file", false, "specify the file path to the pin constraints");
   shell_cmd.set_option_short_name(pcf_opt, "pcf");
   shell_cmd.set_option_require_value(pcf_opt, openfpga::OPT_STRING);
+
+  /* add an option '--bus_group_file in short '-bgf' */
+  CommandOptionId bgf_opt = shell_cmd.add_option("bus_group_file", false, "specify the file path to the group pins to bus");
+  shell_cmd.set_option_short_name(bgf_opt, "bgf");
+  shell_cmd.set_option_require_value(bgf_opt, openfpga::OPT_STRING);
 
   /* add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false, "use explicit port mapping in verilog netlists");

@@ -24,6 +24,7 @@
 #include "fabric_global_port_info.h"
 #include "vpr_netlist_annotation.h"
 #include "memory_bank_shift_register_banks.h"
+#include "bus_group.h"
 #include "fabric_verilog_options.h"
 #include "verilog_testbench_options.h"
 
@@ -52,6 +53,7 @@ int fpga_verilog_full_testbench(const ModuleManager& module_manager,
                                 const AtomContext& atom_ctx, 
                                 const PlacementContext& place_ctx, 
                                 const PinConstraints& pin_constraints,
+                                const BusGroup& bus_group,
                                 const std::string& bitstream_file,
                                 const IoLocationMap& io_location_map,
                                 const FabricGlobalPortInfo &fabric_global_port_info,
@@ -66,6 +68,7 @@ int fpga_verilog_preconfigured_fabric_wrapper(const ModuleManager &module_manage
                                               const AtomContext &atom_ctx,
                                               const PlacementContext &place_ctx,
                                               const PinConstraints& pin_constraints,
+                                              const BusGroup& bus_group,
                                               const IoLocationMap &io_location_map,
                                               const FabricGlobalPortInfo &fabric_global_port_info,
                                               const VprNetlistAnnotation &netlist_annotation,

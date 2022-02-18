@@ -17,6 +17,7 @@
 #include "simulation_setting.h"
 #include "fabric_global_port_info.h"
 #include "pin_constraints.h"
+#include "bus_group.h"
 
 /********************************************************************
  * Function declaration
@@ -53,6 +54,7 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
                                               const PlacementContext& place_ctx,
                                               const IoLocationMap& io_location_map,
                                               const VprNetlistAnnotation& netlist_annotation,
+                                              const BusGroup& bus_group,
                                               const std::string& net_name_postfix,
                                               const std::string& io_input_port_name_postfix,
                                               const std::string& io_output_port_name_postfix,
