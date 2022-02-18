@@ -56,7 +56,7 @@ int write_xml_bus(std::fstream& fp,
     write_xml_attribute(fp, XML_PIN_INDEX_ATTRIBUTE_NAME, bus_group.pin_index(pin_id));
     write_xml_attribute(fp, XML_PIN_NAME_ATTRIBUTE_NAME, bus_group.pin_name(pin_id).c_str());
 
-    fp << "</" << XML_PIN_NODE_NAME << "/>" << "\n";
+    fp << "/>" << "\n";
   }
 
   openfpga::write_tab_to_file(fp, 1);
