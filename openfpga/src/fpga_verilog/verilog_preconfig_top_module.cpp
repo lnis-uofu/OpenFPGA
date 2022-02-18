@@ -517,9 +517,6 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
   }
 
   /* Connect I/Os to benchmark I/Os or constant driver */
-  std::vector<std::string> prefix_to_remove;
-  prefix_to_remove.push_back(std::string(VPR_BENCHMARK_OUT_PORT_PREFIX));
-  prefix_to_remove.push_back(std::string(OPENFPGA_BENCHMARK_OUT_PORT_PREFIX));
   print_verilog_testbench_connect_fpga_ios(fp, module_manager, top_module,
                                            atom_ctx, place_ctx, io_location_map,
                                            netlist_annotation,
@@ -527,7 +524,6 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
                                            std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
                                            std::string(),
                                            std::string(),
-                                           prefix_to_remove,
                                            std::vector<std::string>(),
                                            (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 

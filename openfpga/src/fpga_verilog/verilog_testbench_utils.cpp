@@ -252,7 +252,6 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
                                               const std::string& net_name_postfix,
                                               const std::string& io_input_port_name_postfix,
                                               const std::string& io_output_port_name_postfix,
-                                              const std::vector<std::string>& output_port_prefix_to_remove,
                                               const std::vector<std::string>& clock_port_names,
                                               const size_t& unused_io_value) {
   /* Validate the file stream */
@@ -348,15 +347,9 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
     /* Note that VPR added a prefix to the name of output blocks
      * We can remove this when specified through input argument 
      */
-    for (const std::string& prefix_to_remove : output_port_prefix_to_remove) {
-      if (!prefix_to_remove.empty()) {
-        if (0 == block_name.find(prefix_to_remove)) {
-          block_name.erase(0, prefix_to_remove.length());
-          break;
-        }
-      }
+    if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+      block_name = remove_atom_block_name_prefix(block_name);
     }
-
 
     /* Create the port for benchmark I/O, due to BLIF benchmark, each I/O always has a size of 1 
      * In addition, the input and output ports may have different postfix in naming

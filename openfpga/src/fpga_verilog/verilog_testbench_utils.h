@@ -58,7 +58,6 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
                                               const std::string& net_name_postfix,
                                               const std::string& io_input_port_name_postfix,
                                               const std::string& io_output_port_name_postfix,
-                                              const std::vector<std::string>& output_port_prefix_to_remove,
                                               const std::vector<std::string>& clock_port_names,
                                               const size_t& unused_io_value);
 

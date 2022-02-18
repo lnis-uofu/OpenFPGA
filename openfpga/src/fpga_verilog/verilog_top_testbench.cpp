@@ -2064,7 +2064,6 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                            std::string(),
                                            std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
                                            std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
-                                           std::vector<std::string>(),
                                            clock_port_names,
                                            (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
