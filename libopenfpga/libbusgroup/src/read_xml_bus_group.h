@@ -11,6 +11,11 @@
 /********************************************************************
  * Function declaration
  *******************************************************************/
+
+namespace openfpga { // Begin namespace openfpga
+
 BusGroup read_xml_bus_group(const char* fname);
+
+} // End of namespace openfpga
 
 #endif

@@ -16,6 +16,8 @@
 
 #include "bus_group_fwd.h"
 
+namespace openfpga { // Begin namespace openfpga
+
 /********************************************************************
  * A data structure to describe the bus-to-pin mapping
  * This data structure may include a number of buses
@@ -46,7 +48,7 @@ class BusGroup {
     bus_group_range buses() const;
   public: /* Public Accessors: Basic data query */
     /** Get port information of a bus with a given id */
-    openfpga::BasicPort BusGroup::bus_port(const BusGroupId& bus_id) const;
+    BasicPort bus_port(const BusGroupId& bus_id) const;
 
     /* Get the pins under a specific bus */
     std::vector<BusPinId> bus_pins(const BusGroupId& bus_id) const;
@@ -77,7 +79,7 @@ class BusGroup {
     void set_pin_index(const BusPinId& pin_id, const int& index);
 
     /* Set the name for a pin */
-    void set_pin_index(const BusPinId& pin_id, const std::string& name);
+    void set_pin_name(const BusPinId& pin_id, const std::string& name);
 
   public: /* Public invalidators/validators */
     /* Show if the bus id is a valid for data queries */
@@ -91,7 +93,7 @@ class BusGroup {
     vtr::vector<BusGroupId, BusGroupId> bus_ids_;
 
     /* Port information of each bus */
-    vtr::vector<BusGroupId, openfpga::BasicPort> bus_ports_;
+    vtr::vector<BusGroupId, BasicPort> bus_ports_;
 
     /* Indices of each pin under each bus */
     vtr::vector<BusGroupId, std::vector<BusPinId>> bus_pin_ids_;
@@ -106,4 +108,5 @@ class BusGroup {
     vtr::vector<BusPinId, std::string> pin_names_;
 };
 
+} // End of namespace openfpga
 #endif

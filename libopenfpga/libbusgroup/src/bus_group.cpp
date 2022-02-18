@@ -5,6 +5,8 @@
 
 #include "bus_group.h"
 
+namespace openfpga { // Begin namespace openfpga
+
 /************************************************************************
  * Member functions for class BusGroup
  ***********************************************************************/
@@ -56,8 +58,7 @@ bool BusGroup::empty() const {
 void BusGroup::reserve_buses(const size_t& num_buses) {
   bus_ids_.reserve(num_buses);
   bus_ports_.reserve(num_buses);
-  bus_pin_indices_.reserve(num_buses);
-  bus_pin_names_.reserve(num_buses);
+  bus_pin_ids_.reserve(num_buses);
 }
 
 void BusGroup::reserve_pins(const size_t& num_pins) {
@@ -71,14 +72,13 @@ BusGroupId BusGroup::create_bus(const openfpga::BasicPort& bus_port) {
   BusGroupId bus_id = BusGroupId(bus_ids_.size());
   
   bus_ids_.push_back(bus_id);
-  bus_ports.push_back(bus_port);
-  bus_pin_indices_.emplace_back();
-  bus_pin_names_.emplace_back();
+  bus_ports_.push_back(bus_port);
+  bus_pin_ids_.emplace_back();
   
   return bus_id;
 }
 
-BusPinId BasicGroup::create_pin(const BusGroupId& bus_id) {
+BusPinId BusGroup::create_pin(const BusGroupId& bus_id) {
   /* Create a new id */
   BusPinId pin_id = BusPinId(pin_ids_.size());
   
@@ -91,7 +91,7 @@ BusPinId BasicGroup::create_pin(const BusGroupId& bus_id) {
   VTR_ASSERT(valid_bus_id(bus_id));
   bus_pin_ids_[bus_id].push_back(pin_id);
   
-  return bus_id;
+  return pin_id;
 }
 
 void BusGroup::set_pin_index(const BusPinId& pin_id, const int& index) {
@@ -115,3 +115,4 @@ bool BusGroup::valid_pin_id(const BusPinId& pin_id) const {
   return ( size_t(pin_id) < pin_ids_.size() ) && ( pin_id == pin_ids_[pin_id] ); 
 }
 
+} // End of namespace openfpga

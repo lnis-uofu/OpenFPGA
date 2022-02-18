@@ -23,6 +23,8 @@
 #include "bus_group_xml_constants.h"
 #include "read_xml_bus_group.h"
 
+namespace openfpga { // Begin namespace openfpga
+
 /********************************************************************
  * Parse XML codes of a <pin> to an object of BusGroup
  *******************************************************************/
@@ -71,14 +73,14 @@ void read_xml_bus(pugi::xml_node& xml_bus,
 
   /* Ensure the bus port is valid */
   if (!bus_group.bus_port(bus_id).is_valid()) {
-    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_pin),
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_bus),
                    "Bus port is invalid, check LSB and MSB!\n");
   }
 
   for (pugi::xml_node xml_pin : xml_bus.children()) {
     /* Error out if the XML child has an invalid name! */
     if (xml_pin.name() != std::string(XML_PIN_NODE_NAME)) {
-      bad_tag(xml_pin, loc_data, xml_root, {XML_PIN_NODE_NAME});
+      bad_tag(xml_pin, loc_data, xml_bus, {XML_PIN_NODE_NAME});
     }
     read_xml_pin(xml_pin, loc_data, bus_group, bus_id);
   } 
@@ -130,3 +132,4 @@ BusGroup read_xml_bus_group(const char* fname) {
   return bus_group; 
 }
 
+} // End of namespace openfpga

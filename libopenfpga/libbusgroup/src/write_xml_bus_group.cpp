@@ -20,6 +20,8 @@
 #include "bus_group_xml_constants.h"
 #include "write_xml_bus_group.h"
 
+namespace openfpga { // Begin namespace openfpga
+
 /********************************************************************
  * A writer to output a bus to XML format
  *
@@ -106,3 +108,5 @@ int write_xml_bus_group(const char* fname,
 
   return err_code;
 }
+
+} // End of namespace openfpga

@@ -10,7 +10,11 @@
 /********************************************************************
  * Function declaration
  *******************************************************************/
+namespace openfpga { // Begin namespace openfpga
+
 int write_xml_bus_group(const char* fname,
                         const BusGroup& bus_group);
+
+} // End of namespace openfpga
 
 #endif

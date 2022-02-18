@@ -12,6 +12,8 @@
 
 #include "vtr_strong_id.h"
 
+namespace openfpga { // Begin namespace openfpga
+
 struct bus_group_id_tag;
 struct bus_pin_id_tag;
 
@@ -20,5 +22,7 @@ typedef vtr::StrongId<bus_pin_id_tag> BusPinId;
 
 /* Short declaration of class */
 class BusGroup;
+
+} // End of namespace openfpga
 
 #endif
