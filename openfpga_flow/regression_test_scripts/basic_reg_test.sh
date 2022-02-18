@@ -171,3 +171,4 @@ echo -e "Testing bus group features";
 run-task basic_tests/bus_group/preconfig_testbench_explicit_mapping --debug --show_thread_logs
 run-task basic_tests/bus_group/preconfig_testbench_implicit_mapping --debug --show_thread_logs
 run-task basic_tests/bus_group/full_testbench_explicit_mapping --debug --show_thread_logs
+run-task basic_tests/bus_group/full_testbench_implicit_mapping --debug --show_thread_logs
