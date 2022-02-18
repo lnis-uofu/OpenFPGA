@@ -39,3 +39,4 @@ synth -run check
 # Clean and output blif
 opt_clean -purge
 write_blif rewritten_${OUTPUT_BLIF}
+write_verilog ${OUTPUT_VERILOG}
