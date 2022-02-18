@@ -20,6 +20,7 @@
 #include "arch_error.h"
 #include "read_xml_util.h"
 
+#include "bus_group_xml_constants.h"
 #include "read_xml_bus_group.h"
 
 /********************************************************************
@@ -35,8 +36,8 @@ void read_xml_pin(pugi::xml_node& xml_pin,
                    "Invalid id of a bus group!\n");
   }
 
-  int pin_index = get_attribute(xml_pin, "id", loc_data).as_int();
-  std::string pin_name = get_attribute(xml_pin, "name", loc_data).as_string();
+  int pin_index = get_attribute(xml_pin, XML_PIN_INDEX_ATTRIBUTE_NAME, loc_data).as_int();
+  std::string pin_name = get_attribute(xml_pin, XML_PIN_NAME_ATTRIBUTE_NAME, loc_data).as_string();
 
   /* Before update storage, check if the pin index is in the range */
   BasicPort pin_port(bus_group.bus_port(bus_id).get_name(), pin_index, pin_index);
@@ -58,7 +59,7 @@ void read_xml_bus(pugi::xml_node& xml_bus,
                   const pugiutil::loc_data& loc_data,
                   BusGroup& bus_group) {
 
-  openfpga::PortParser port_parser(get_attribute(xml_bus, "name", loc_data).as_string());
+  openfpga::PortParser port_parser(get_attribute(xml_bus, XML_BUS_PORT_ATTRIBUTE_NAME, loc_data).as_string());
 
   /* Create a new bus in the storage */
   BusGroupId bus_id = bus_group.create_bus(port_parser.port());
@@ -76,8 +77,8 @@ void read_xml_bus(pugi::xml_node& xml_bus,
 
   for (pugi::xml_node xml_pin : xml_bus.children()) {
     /* Error out if the XML child has an invalid name! */
-    if (xml_pin.name() != std::string("pin")) {
-      bad_tag(xml_pin, loc_data, xml_root, {"pin"});
+    if (xml_pin.name() != std::string(XML_PIN_NODE_NAME)) {
+      bad_tag(xml_pin, loc_data, xml_root, {XML_PIN_NODE_NAME});
     }
     read_xml_pin(xml_pin, loc_data, bus_group, bus_id);
   } 
@@ -99,7 +100,7 @@ BusGroup read_xml_bus_group(const char* fname) {
   try {
     loc_data = pugiutil::load_xml(doc, fname);
 
-    pugi::xml_node xml_root = get_single_child(doc, "bus_group", loc_data);
+    pugi::xml_node xml_root = get_single_child(doc, XML_BUS_GROUP_NODE_NAME, loc_data);
 
     size_t num_buses = std::distance(xml_root.children().begin(), xml_root.children().end());
 
@@ -116,8 +117,8 @@ BusGroup read_xml_bus_group(const char* fname) {
 
     for (pugi::xml_node xml_bus : xml_root.children()) {
       /* Error out if the XML child has an invalid name! */
-      if (xml_bus.name() != std::string("bus")) {
-        bad_tag(xml_bus, loc_data, xml_root, {"bus"});
+      if (xml_bus.name() != std::string(XML_BUS_NODE_NAME)) {
+        bad_tag(xml_bus, loc_data, xml_root, {XML_BUS_NODE_NAME});
       }
       read_xml_bus(xml_bus, loc_data, bus_group);
     } 

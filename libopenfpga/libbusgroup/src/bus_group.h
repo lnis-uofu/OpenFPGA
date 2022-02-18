@@ -48,6 +48,15 @@ class BusGroup {
     /** Get port information of a bus with a given id */
     openfpga::BasicPort BusGroup::bus_port(const BusGroupId& bus_id) const;
 
+    /* Get the pins under a specific bus */
+    std::vector<BusPinId> bus_pins(const BusGroupId& bus_id) const;
+
+    /* Get the index of a pin */
+    int pin_index(const BusPinId& pin_id) const;
+
+    /* Get the name of a pin */
+    std::string pin_name(const BusPinId& pin_id) const;
+
     /* Check if there are any buses */
     bool empty() const;
 

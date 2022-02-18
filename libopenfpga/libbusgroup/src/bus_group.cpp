@@ -27,9 +27,23 @@ BusGroup::bus_group_range BusGroup::buses() const {
  * Public Accessors : Basic data query 
  ***********************************************************************/
 openfpga::BasicPort BusGroup::bus_port(const BusGroupId& bus_id) const {
-  /* validate the bus_id */
   VTR_ASSERT(valid_bus_id(bus_id));
   return bus_ports_[bus_id]; 
+}
+
+std::vector<BusPinId> BusGroup::bus_pins(const BusGroupId& bus_id) const {
+  VTR_ASSERT(valid_bus_id(bus_id));
+  return bus_pin_ids_[bus_id]; 
+}
+
+int BusGroup::pin_index(const BusPinId& pin_id) const {
+  VTR_ASSERT(valid_pin_id(pin_id));
+  return pin_indices_[pin_id]; 
+}
+
+std::string BusGroup::pin_name(const BusPinId& pin_id) const {
+  VTR_ASSERT(valid_pin_id(pin_id));
+  return pin_names_[pin_id]; 
 }
 
 bool BusGroup::empty() const {
