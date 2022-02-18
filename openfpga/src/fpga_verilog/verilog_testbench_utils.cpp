@@ -126,28 +126,7 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
     }
 
     /* Input port follows the logical block name while output port requires a special postfix */
-    if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
-      std::string port_name;
-      /* Polarity of some input may have to be inverted, as defined in pin constraints
-       * For example, the reset signal of the benchmark is active low 
-       * while the reset signal of the FPGA fabric is active high (inside FPGA, the reset signal will be inverted)
-       * However, to ensure correct stimuli to the benchmark, we have to invert the signal
-       */
-      if (PinConstraints::LOGIC_HIGH == pin_constraints.net_default_value(block_name)) {
-        port_name += std::string("~");
-      }
-      /* For clock ports, skip postfix */
-      if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
-        port_name += block_name;
-      } else {
-        port_name += block_name + input_port_postfix;
-      }
-      port_names.push_back(port_name);
-    } else {
-      VTR_ASSERT_SAFE(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
-      port_names.push_back(block_name);
-    }
-
+    port_names.push_back(block_name);
     port_types.push_back(atom_ctx.nlist.block_type(atom_blk));
   }
 
@@ -163,7 +142,22 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
       if (true == use_explicit_port_map) {
         fp << "." << port_names[iport] << module_input_port_postfix << "(";
       }
-      fp << port_names[iport];
+      /* Polarity of some input may have to be inverted, as defined in pin constraints
+       * For example, the reset signal of the benchmark is active low 
+       * while the reset signal of the FPGA fabric is active high (inside FPGA, the reset signal will be inverted)
+       * However, to ensure correct stimuli to the benchmark, we have to invert the signal
+       */
+      if (PinConstraints::LOGIC_HIGH == pin_constraints.net_default_value(port_names[iport])) {
+        fp << "~";
+      }
+
+      /* For clock ports, skip postfix */
+      if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), port_names[iport])) {
+        fp << port_names[iport];
+      } else {
+        fp << port_names[iport] << input_port_postfix;
+      }
+
       if (true == use_explicit_port_map) {
         fp << ")";
       }
