@@ -166,3 +166,6 @@ run-task basic_tests/write_gsb/write_gsb_to_xml --debug --show_thread_logs
 run-task basic_tests/write_gsb/write_gsb_to_xml_compress_routing --debug --show_thread_logs
 run-task basic_tests/write_gsb/write_unique_gsb_to_xml --debug --show_thread_logs
 run-task basic_tests/write_gsb/write_unique_gsb_to_xml_compress_routing --debug --show_thread_logs
+
+echo -e "Testing bus group features";
+run-task basic_tests/bus_group/preconfig_testbench_explicit_mapping --debug --show_thread_logs
