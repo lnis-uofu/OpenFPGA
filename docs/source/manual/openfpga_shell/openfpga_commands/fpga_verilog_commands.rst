@@ -120,6 +120,11 @@ write_preconfigured_fabric_wrapper
     Specify the *Pin Constraints File* (PCF) if you want to custom stimulus in testbenches. For example, ``-pin_constraints_file pin_constraints.xml``
     Strongly recommend for multi-clock simulations. See detailed file format about :ref:`file_format_pin_constraints_file`.
 
+  .. option:: --bus_group_file <string> or -bgf <string>
+
+    Specify the *Bus Group File* (BGF) if you want to group pins to buses. For example, ``-bgf bus_group.xml``
+    Strongly recommend when input HDL contains bus ports. See detailed file format about :ref:`file_format_bus_group_file`.
+
   .. option:: --explicit_port_mapping
 
     Use explicit port mapping when writing the Verilog netlists
