@@ -117,18 +117,11 @@ void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp,
   /* Instanciate benchmark */
   print_verilog_comment(fp, std::string("----- Reference Benchmark Instanication -------"));
 
-  /* Do NOT use explicit port mapping here: 
-   * VPR added a prefix of "out_" to the output ports of input benchmark
-   */
-  std::vector<std::string> prefix_to_remove;
-  prefix_to_remove.push_back(std::string(VPR_BENCHMARK_OUT_PORT_PREFIX));
-  prefix_to_remove.push_back(std::string(OPENFPGA_BENCHMARK_OUT_PORT_PREFIX));
   print_verilog_testbench_benchmark_instance(fp, reference_verilog_top_name,
                                              std::string(BENCHMARK_INSTANCE_NAME),
                                              std::string(),
                                              std::string(),
                                              std::string(),
-                                             prefix_to_remove,
                                              std::string(BENCHMARK_PORT_POSTFIX),
                                              std::vector<std::string>(),
                                              atom_ctx, netlist_annotation,
@@ -158,19 +151,12 @@ void print_verilog_random_testbench_fpga_instance(std::fstream& fp,
 
   print_verilog_comment(fp, std::string("----- FPGA fabric instanciation -------"));
 
-  /* VPR added a prefix of "out_" to the output ports of input benchmark */
-  std::vector<std::string> prefix_to_remove;
-  prefix_to_remove.push_back(std::string(VPR_BENCHMARK_OUT_PORT_PREFIX));
-  prefix_to_remove.push_back(std::string(OPENFPGA_BENCHMARK_OUT_PORT_PREFIX));
-
-
   /* Always use explicit port mapping */
   print_verilog_testbench_benchmark_instance(fp, std::string(circuit_name + std::string(FORMAL_VERIFICATION_TOP_MODULE_POSTFIX)),
                                              std::string(FPGA_INSTANCE_NAME),
                                              std::string(),
                                              std::string(),
                                              std::string(),
-                                             prefix_to_remove,
                                              std::string(FPGA_PORT_POSTFIX),
                                              std::vector<std::string>(),
                                              atom_ctx, netlist_annotation,

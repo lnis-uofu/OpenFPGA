@@ -22,6 +22,7 @@
 
 #include "module_manager_utils.h"
 #include "fabric_global_port_info_utils.h"
+#include "openfpga_atom_netlist_utils.h"
 
 #include "verilog_constants.h"
 #include "verilog_writer_utils.h"
@@ -79,7 +80,6 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
                                                 const std::string& module_input_port_postfix,
                                                 const std::string& module_output_port_postfix,
                                                 const std::string& input_port_postfix,
-                                                const std::vector<std::string>& output_port_prefix_to_remove,
                                                 const std::string& output_port_postfix,
                                                 const std::vector<std::string>& clock_port_names,
                                                 const AtomContext& atom_ctx,
@@ -108,6 +108,13 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     } 
+
+    /* Note that VPR added a prefix "out_" or "out:" to the name of output blocks
+     * We can remove this when specified through input argument 
+     */
+    if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+      block_name = remove_atom_block_name_prefix(block_name);
+    }
 
     /* If the pin is part of a bus,
      * - Check if the bus is already in the list
@@ -195,21 +202,8 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
       }
     } else {
       VTR_ASSERT_SAFE(AtomBlockType::OUTPAD == port_types[iport]);
-      /* Note that VPR added a prefix "out_" or "out:" to the name of output blocks
-       * We can remove this when specified through input argument 
-       */
-      std::string output_block_name = port_names[iport];
-      for (const std::string& prefix_to_remove : output_port_prefix_to_remove) {
-        if (!prefix_to_remove.empty()) {
-          if (0 == output_block_name.find(prefix_to_remove)) {
-            output_block_name.erase(0, prefix_to_remove.length());
-            break;
-          }
-        }
-      }
-
       if (true == use_explicit_port_map) {
-        fp << "." << output_block_name << module_output_port_postfix << "(";
+        fp << "." << port_names[iport] << module_output_port_postfix << "(";
       }
 
       /* For bus ports, include a complete list of pins */
@@ -237,7 +231,7 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
     /* Update the counter */
     port_counter++;
   }
-  fp << "\t);" << std::endl;
+  fp << "\n\t);" << std::endl;
 }
 
 /********************************************************************
@@ -576,6 +570,7 @@ void print_verilog_testbench_check(std::fstream& fp,
     } 
 
     if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+     block_name = remove_atom_block_name_prefix(block_name);
      fp << "\t\t\tif(!(" << block_name << fpga_port_postfix;
      fp << " === " << block_name << benchmark_port_postfix;
      fp << ") && !(" << block_name << benchmark_port_postfix;
@@ -603,6 +598,7 @@ void print_verilog_testbench_check(std::fstream& fp,
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     } 
+    block_name = remove_atom_block_name_prefix(block_name);
 
     fp << "\talways@(posedge " << block_name << check_flag_port_postfix << ") begin" << std::endl;
     fp << "\t\tif(" << block_name << check_flag_port_postfix << ") begin" << std::endl;
@@ -874,6 +870,7 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     } 
+    block_name = remove_atom_block_name_prefix(block_name);
 
     /* Each logical block assumes a single-width port */
     BasicPort output_port(std::string(block_name + fpga_output_port_postfix), 1); 
