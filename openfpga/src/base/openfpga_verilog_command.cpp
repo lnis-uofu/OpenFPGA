@@ -220,6 +220,11 @@ ShellCommandId add_openfpga_write_preconfigured_testbench_command(openfpga::Shel
   shell_cmd.set_option_short_name(pcf_opt, "pcf");
   shell_cmd.set_option_require_value(pcf_opt, openfpga::OPT_STRING);
 
+  /* add an option '--bus_group_file in short '-bgf' */
+  CommandOptionId bgf_opt = shell_cmd.add_option("bus_group_file", false, "specify the file path to the group pins to bus");
+  shell_cmd.set_option_short_name(bgf_opt, "bgf");
+  shell_cmd.set_option_require_value(bgf_opt, openfpga::OPT_STRING);
+
   /* Add an option '--reference_benchmark_file_path'*/
   CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", false, "Specify the file path to the reference Verilog netlist. If specified, the testbench will include self-checking codes");
   shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);

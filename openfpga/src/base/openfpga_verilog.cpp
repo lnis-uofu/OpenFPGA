@@ -211,6 +211,7 @@ int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
 
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
+  CommandOptionId opt_bgf = cmd.option("bus_group_file");
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
@@ -240,10 +241,17 @@ int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
   if (true == cmd_context.option_enable(cmd, opt_pcf)) {
     pin_constraints = read_xml_pin_constraints(cmd_context.option_value(cmd, opt_pcf).c_str());
   }
+
+  /* If bug group file are enabled by command options, read the file */
+  BusGroup bus_group;
+  if (true == cmd_context.option_enable(cmd, opt_bgf)) {
+    bus_group = read_xml_bus_group(cmd_context.option_value(cmd, opt_bgf).c_str());
+  }
   
   return fpga_verilog_preconfigured_testbench(openfpga_ctx.module_graph(),
                                               g_vpr_ctx.atom(),
                                               pin_constraints,
+                                              bus_group,
                                               openfpga_ctx.fabric_global_port_info(),
                                               openfpga_ctx.vpr_netlist_annotation(),
                                               openfpga_ctx.simulation_setting(),

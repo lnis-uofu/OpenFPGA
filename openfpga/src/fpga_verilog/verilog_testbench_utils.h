@@ -45,6 +45,7 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
                                                 const AtomContext& atom_ctx,
                                                 const VprNetlistAnnotation& netlist_annotation,
                                                 const PinConstraints& pin_constraints,
+                                                const BusGroup& bus_group,
                                                 const bool& use_explicit_port_map);
 
 void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,

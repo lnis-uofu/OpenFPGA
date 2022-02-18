@@ -85,13 +85,17 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
                                                 const AtomContext& atom_ctx,
                                                 const VprNetlistAnnotation& netlist_annotation,
                                                 const PinConstraints& pin_constraints,
+                                                const BusGroup& bus_group,
                                                 const bool& use_explicit_port_map) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
   fp << "\t" << module_name << " " << instance_name << "(" << std::endl;
 
-  size_t port_counter = 0;
+  /* Consider all the unique port names */
+  std::vector<std::string> port_names;
+  std::vector<AtomBlockType> port_types;
+
   for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
     /* Bypass non-I/O atom blocks ! */
     if ( (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk))
@@ -105,41 +109,70 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
       block_name = netlist_annotation.block_name(atom_blk);
     } 
 
-    /* The first port does not need a comma */
-    if(0 < port_counter){
-      fp << "," << std::endl;
+    /* If the pin is part of a bus,
+     * - Check if the bus is already in the list
+     *   - If not, add it to the port list
+     *   - If yes, do nothing and move onto the next port
+     * If the pin does not belong to any bus
+     * - Add it to the bus port
+     */
+    BusGroupId bus_id = bus_group.find_pin_bus(block_name);
+    if (bus_id) {
+      if (port_names.end() == std::find(port_names.begin(), port_names.end(), bus_group.bus_port(bus_id).get_name())) {
+        port_names.push_back(bus_group.bus_port(bus_id).get_name());
+        port_types.push_back(atom_ctx.nlist.block_type(atom_blk));
+      }
+      continue;
     }
+
     /* Input port follows the logical block name while output port requires a special postfix */
     if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
-      fp << "\t\t";
-      if (true == use_explicit_port_map) {
-        fp << "." << block_name << module_input_port_postfix << "(";
-      }
-
+      std::string port_name;
       /* Polarity of some input may have to be inverted, as defined in pin constraints
        * For example, the reset signal of the benchmark is active low 
        * while the reset signal of the FPGA fabric is active high (inside FPGA, the reset signal will be inverted)
        * However, to ensure correct stimuli to the benchmark, we have to invert the signal
        */
       if (PinConstraints::LOGIC_HIGH == pin_constraints.net_default_value(block_name)) {
-        fp << "~";
+        port_name += std::string("~");
       }
       /* For clock ports, skip postfix */
       if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
-        fp << block_name;
+        port_name += block_name;
       } else {
-        fp << block_name << input_port_postfix;
+        port_name += block_name + input_port_postfix;
       }
+      port_names.push_back(port_name);
+    } else {
+      VTR_ASSERT_SAFE(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
+      port_names.push_back(block_name);
+    }
+
+    port_types.push_back(atom_ctx.nlist.block_type(atom_blk));
+  }
+
+  size_t port_counter = 0;
+  for (size_t iport = 0; iport < port_names.size(); ++iport) {
+    /* The first port does not need a comma */
+    if (0 < port_counter){
+      fp << "," << std::endl;
+    }
+
+    fp << "\t\t";
+    if (AtomBlockType::INPAD == port_types[iport]) {
+      if (true == use_explicit_port_map) {
+        fp << "." << port_names[iport] << module_input_port_postfix << "(";
+      }
+      fp << port_names[iport];
       if (true == use_explicit_port_map) {
         fp << ")";
       }
     } else {
-      VTR_ASSERT_SAFE(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
-      fp << "\t\t";
+      VTR_ASSERT_SAFE(AtomBlockType::OUTPAD == port_types[iport]);
       /* Note that VPR added a prefix "out_" or "out:" to the name of output blocks
        * We can remove this when specified through input argument 
        */
-      std::string output_block_name = block_name;
+      std::string output_block_name = port_names[iport];
       for (const std::string& prefix_to_remove : output_port_prefix_to_remove) {
         if (!prefix_to_remove.empty()) {
           if (0 == output_block_name.find(prefix_to_remove)) {
@@ -152,11 +185,12 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
       if (true == use_explicit_port_map) {
         fp << "." << output_block_name << module_output_port_postfix << "(";
       }
-      fp << block_name << output_port_postfix;
+      fp << port_names[iport] << output_port_postfix;
       if (true == use_explicit_port_map) {
         fp << ")";
       }
-    }
+    } 
+
     /* Update the counter */
     port_counter++;
   }

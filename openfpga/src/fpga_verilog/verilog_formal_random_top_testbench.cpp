@@ -109,6 +109,7 @@ void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp,
                                                            const AtomContext& atom_ctx,
                                                            const VprNetlistAnnotation& netlist_annotation,
                                                            const PinConstraints& pin_constraints,
+                                                           const BusGroup& bus_group,
                                                            const bool& explicit_port_mapping) {
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -132,6 +133,7 @@ void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp,
                                              std::vector<std::string>(),
                                              atom_ctx, netlist_annotation,
                                              pin_constraints,
+                                             bus_group,
                                              explicit_port_mapping);
 
   print_verilog_comment(fp, std::string("----- End reference Benchmark Instanication -------"));
@@ -149,6 +151,7 @@ void print_verilog_random_testbench_fpga_instance(std::fstream& fp,
                                                   const AtomContext& atom_ctx,
                                                   const VprNetlistAnnotation& netlist_annotation,
                                                   const PinConstraints& pin_constraints,
+                                                  const BusGroup& bus_group,
                                                   const bool& explicit_port_mapping) {
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -172,6 +175,7 @@ void print_verilog_random_testbench_fpga_instance(std::fstream& fp,
                                              std::vector<std::string>(),
                                              atom_ctx, netlist_annotation,
                                              pin_constraints,
+                                             bus_group,
                                              explicit_port_mapping);
 
   print_verilog_comment(fp, std::string("----- End FPGA Fabric Instanication -------"));
@@ -288,6 +292,7 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
                                         const ModuleManager& module_manager,
                                         const FabricGlobalPortInfo& global_ports,
                                         const PinConstraints& pin_constraints,
+                                        const BusGroup& bus_group,
                                         const SimulationSetting& simulation_parameters,
                                         const VerilogTestbenchOption &options) {
   std::string timer_message = std::string("Write configuration-skip testbench for FPGA top-level Verilog netlist implemented by '") + circuit_name.c_str() + std::string("'");
@@ -316,6 +321,7 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
   print_verilog_random_testbench_fpga_instance(fp, circuit_name,
                                                atom_ctx, netlist_annotation,
                                                pin_constraints,
+                                               bus_group,
                                                options.explicit_port_mapping());
 
   /* Call defined benchmark */
@@ -323,6 +329,7 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
     print_verilog_top_random_testbench_benchmark_instance(fp, circuit_name,
                                                           atom_ctx, netlist_annotation,
                                                           pin_constraints,
+                                                          bus_group,
                                                           options.explicit_port_mapping());
   }
 

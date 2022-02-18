@@ -937,6 +937,7 @@ void print_verilog_top_testbench_benchmark_instance(std::fstream& fp,
                                                     const AtomContext& atom_ctx,
                                                     const VprNetlistAnnotation& netlist_annotation,
                                                     const PinConstraints& pin_constraints,
+                                                    const BusGroup& bus_group,
                                                     const std::vector<std::string>& clock_port_names,
                                                     const bool& explicit_port_mapping) {
   /* Validate the file stream */
@@ -961,6 +962,7 @@ void print_verilog_top_testbench_benchmark_instance(std::fstream& fp,
                                              clock_port_names,
                                              atom_ctx, netlist_annotation,
                                              pin_constraints,
+                                             bus_group,
                                              explicit_port_mapping);
 
   print_verilog_comment(fp, std::string("----- End reference Benchmark Instanication -------"));
@@ -2080,6 +2082,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                                    atom_ctx,
                                                    netlist_annotation,
                                                    pin_constraints,
+                                                   bus_group,
                                                    clock_port_names,
                                                    explicit_port_mapping);
   }

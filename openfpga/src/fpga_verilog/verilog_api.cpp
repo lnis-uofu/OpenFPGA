@@ -261,6 +261,7 @@ int fpga_verilog_preconfigured_fabric_wrapper(const ModuleManager &module_manage
 int fpga_verilog_preconfigured_testbench(const ModuleManager &module_manager,
                                          const AtomContext &atom_ctx,
                                          const PinConstraints& pin_constraints,
+                                         const BusGroup& bus_group,
                                          const FabricGlobalPortInfo &fabric_global_port_info,
                                          const VprNetlistAnnotation &netlist_annotation,
                                          const SimulationSetting &simulation_setting,
@@ -286,6 +287,7 @@ int fpga_verilog_preconfigured_testbench(const ModuleManager &module_manager,
                                      module_manager,
                                      fabric_global_port_info,
                                      pin_constraints,
+                                     bus_group,
                                      simulation_setting,
                                      options);
 
