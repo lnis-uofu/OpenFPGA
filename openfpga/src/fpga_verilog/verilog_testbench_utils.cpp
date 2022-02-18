@@ -706,6 +706,9 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     } 
+    if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+      block_name = remove_atom_block_name_prefix(block_name);
+    }
 
     /* Bypass clock ports because their stimulus cannot be random */
     if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
@@ -741,6 +744,7 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
       if (true == netlist_annotation.is_block_renamed(atom_blk)) {
         block_name = netlist_annotation.block_name(atom_blk);
       } 
+      block_name = remove_atom_block_name_prefix(block_name);
 
       /* Each logical block assumes a single-width port */
       BasicPort output_port(std::string(block_name + check_flag_port_postfix), 1); 
@@ -775,6 +779,9 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     } 
+    if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+      block_name = remove_atom_block_name_prefix(block_name);
+    }
 
     /* Bypass clock ports because their stimulus cannot be random */
     if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
@@ -897,6 +904,7 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     } 
+    block_name = remove_atom_block_name_prefix(block_name);
 
     /* Each logical block assumes a single-width port */
     BasicPort output_port(std::string(block_name + benchmark_output_port_postfix), 1); 
@@ -919,6 +927,7 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     } 
+    block_name = remove_atom_block_name_prefix(block_name);
 
     /* Each logical block assumes a single-width port */
     BasicPort output_port(std::string(block_name + check_flag_port_postfix), 1); 
