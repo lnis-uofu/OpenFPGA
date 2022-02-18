@@ -59,6 +59,16 @@ BusGroupId BusGroup::find_pin_bus(const std::string& pin_name) const {
   return pin_parent_bus_ids_[pin_id];
 }
 
+BusGroupId BusGroup::find_bus(const std::string& bus_name) const {
+  std::map<std::string, BusGroupId>::const_iterator result = bus_name2id_map_.find(bus_name);
+  if (result == bus_name2id_map_.end()) {
+    /* Not found, return an invalid id */
+    return BusGroupId::INVALID();
+  }
+  /* Found, we should get the parent bus */
+  return result->second; 
+}
+
 BusPinId BusGroup::find_pin(const std::string& pin_name) const {
   std::map<std::string, BusPinId>::const_iterator result = pin_name2id_map_.find(pin_name);
   if (result == pin_name2id_map_.end()) {
@@ -96,31 +106,41 @@ BusGroupId BusGroup::create_bus(const openfpga::BasicPort& bus_port) {
   bus_ids_.push_back(bus_id);
   bus_ports_.push_back(bus_port);
   bus_pin_ids_.emplace_back();
+
+  /* Register to fast look-up */
+  auto result = bus_name2id_map_.find(bus_port.get_name());
+  if (result == bus_name2id_map_.end()) {
+    bus_name2id_map_[bus_port.get_name()] = bus_id;
+  } else {
+    VTR_LOG_ERROR("Duplicated bus name '%s' in bus group", bus_port.get_name().c_str());
+    exit(1);
+  }
   
   return bus_id;
 }
 
-BusPinId BusGroup::create_pin(const BusGroupId& bus_id) {
+BusPinId BusGroup::create_pin(const BusGroupId& bus_id, const int& index) {
   /* Create a new id */
   BusPinId pin_id = BusPinId(pin_ids_.size());
   
   pin_ids_.push_back(pin_id);
 
-  pin_indices_.emplace_back();
+  pin_indices_.push_back(index);
   pin_names_.emplace_back();
 
   /* Register the pin to the bus */
   VTR_ASSERT(valid_bus_id(bus_id));
   pin_parent_bus_ids_.push_back(bus_id);
-  bus_pin_ids_[bus_id].push_back(pin_id);
+  
+  /* If the pin index is beyond the range of the bus_pin_ids, resize it */
+  if (size_t(index) > bus_pin_ids_[bus_id].size()) {
+    bus_pin_ids_[bus_id].resize(index + 1);
+  }
+  bus_pin_ids_[bus_id][index] = pin_id;
 
   return pin_id;
 }
 
-void BusGroup::set_pin_index(const BusPinId& pin_id, const int& index) {
-  VTR_ASSERT(valid_pin_id(pin_id));
-  pin_indices_[pin_id] = index;
-}
 
 void BusGroup::set_pin_name(const BusPinId& pin_id, const std::string& name) {
   VTR_ASSERT(valid_pin_id(pin_id));

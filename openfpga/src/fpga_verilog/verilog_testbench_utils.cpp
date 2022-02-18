@@ -130,6 +130,7 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
     port_types.push_back(atom_ctx.nlist.block_type(atom_blk));
   }
 
+  /* Print out the instance with port mapping */
   size_t port_counter = 0;
   for (size_t iport = 0; iport < port_names.size(); ++iport) {
     /* The first port does not need a comma */
@@ -142,20 +143,51 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
       if (true == use_explicit_port_map) {
         fp << "." << port_names[iport] << module_input_port_postfix << "(";
       }
-      /* Polarity of some input may have to be inverted, as defined in pin constraints
-       * For example, the reset signal of the benchmark is active low 
-       * while the reset signal of the FPGA fabric is active high (inside FPGA, the reset signal will be inverted)
-       * However, to ensure correct stimuli to the benchmark, we have to invert the signal
-       */
-      if (PinConstraints::LOGIC_HIGH == pin_constraints.net_default_value(port_names[iport])) {
-        fp << "~";
-      }
 
-      /* For clock ports, skip postfix */
-      if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), port_names[iport])) {
-        fp << port_names[iport];
+      /* For bus ports, include a complete list of pins */
+      BusGroupId bus_id = bus_group.find_bus(port_names[iport]);
+      if (bus_id) {
+        fp << "{";
+        int pin_counter = 0;
+        /* Include all the pins */
+        for (const BusPinId& pin : bus_group.bus_pins(bus_id)) {
+          if (0 < pin_counter) {
+            fp << ", ";
+          }
+          /* Polarity of some input may have to be inverted, as defined in pin constraints
+           * For example, the reset signal of the benchmark is active low 
+           * while the reset signal of the FPGA fabric is active high (inside FPGA, the reset signal will be inverted)
+           * However, to ensure correct stimuli to the benchmark, we have to invert the signal
+           */
+          if (PinConstraints::LOGIC_HIGH == pin_constraints.net_default_value(bus_group.pin_name(pin))) {
+            fp << "~";
+          }
+
+          fp << bus_group.pin_name(pin);
+
+          /* For clock ports, skip postfix */
+          if (clock_port_names.end() == std::find(clock_port_names.begin(), clock_port_names.end(), port_names[iport])) {
+            fp << input_port_postfix;
+          }
+
+          pin_counter++;
+        }
+        fp << "}";
       } else {
-        fp << port_names[iport] << input_port_postfix;
+        /* Polarity of some input may have to be inverted, as defined in pin constraints
+         * For example, the reset signal of the benchmark is active low 
+         * while the reset signal of the FPGA fabric is active high (inside FPGA, the reset signal will be inverted)
+         * However, to ensure correct stimuli to the benchmark, we have to invert the signal
+         */
+        if (PinConstraints::LOGIC_HIGH == pin_constraints.net_default_value(port_names[iport])) {
+          fp << "~";
+        }
+
+        fp << port_names[iport];
+        /* For clock ports, skip postfix */
+        if (clock_port_names.end() == std::find(clock_port_names.begin(), clock_port_names.end(), port_names[iport])) {
+          fp << input_port_postfix;
+        }
       }
 
       if (true == use_explicit_port_map) {
@@ -179,7 +211,24 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
       if (true == use_explicit_port_map) {
         fp << "." << output_block_name << module_output_port_postfix << "(";
       }
-      fp << port_names[iport] << output_port_postfix;
+
+      /* For bus ports, include a complete list of pins */
+      BusGroupId bus_id = bus_group.find_bus(port_names[iport]);
+      if (bus_id) {
+        fp << "{";
+        int pin_counter = 0;
+        /* Include all the pins */
+        for (const BusPinId& pin : bus_group.bus_pins(bus_id)) {
+          if (0 < pin_counter) {
+            fp << ", ";
+          }
+          fp << bus_group.pin_name(pin) << output_port_postfix;
+          pin_counter++;
+        }
+        fp << "}";
+      } else {
+        fp << port_names[iport] << output_port_postfix;
+      }
       if (true == use_explicit_port_map) {
         fp << ")";
       }

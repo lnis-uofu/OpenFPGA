@@ -62,6 +62,9 @@ class BusGroup {
     /* Find the bus that a pin belongs to */
     BusGroupId find_pin_bus(const std::string& pin_name) const;
 
+    /* Find the bus id with a given name */
+    BusGroupId find_bus(const std::string& bus_name) const;
+
     /* Find the pin id with a given name */
     BusPinId find_pin(const std::string& pin_name) const;
 
@@ -78,11 +81,8 @@ class BusGroup {
     /* Add a bus to storage */
     BusGroupId create_bus(const openfpga::BasicPort& bus_port);
 
-    /* Add a pin to a bus */
-    BusPinId create_pin(const BusGroupId& bus_id);
-
-    /* Set the index for a pin */
-    void set_pin_index(const BusPinId& pin_id, const int& index);
+    /* Add a pin to a bus, with a given index in the bus, e.g., A[1] in A[0:2] */
+    BusPinId create_pin(const BusGroupId& bus_id, const int& index);
 
     /* Set the name for a pin */
     void set_pin_name(const BusPinId& pin_id, const std::string& name);
@@ -117,6 +117,7 @@ class BusGroup {
     vtr::vector<BusPinId, BusGroupId> pin_parent_bus_ids_;
 
     /* Fast look-up */
+    std::map<std::string, BusGroupId> bus_name2id_map_;
     std::map<std::string, BusPinId> pin_name2id_map_;
 };
 

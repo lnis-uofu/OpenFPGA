@@ -48,8 +48,7 @@ void read_xml_pin(pugi::xml_node& xml_pin,
                    "Pin index is out of range of the bus port width!\n");
   }
 
-  BusPinId pin_id = bus_group.create_pin(bus_id);
-  bus_group.set_pin_index(pin_id, pin_index);
+  BusPinId pin_id = bus_group.create_pin(bus_id, pin_index);
   bus_group.set_pin_name(pin_id, pin_name);
 }
 
