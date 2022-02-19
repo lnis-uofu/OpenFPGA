@@ -46,6 +46,7 @@ int write_xml_bus(std::fstream& fp,
   }
 
   write_xml_attribute(fp, XML_BUS_PORT_ATTRIBUTE_NAME, generate_xml_port_name(bus_group.bus_port(bus_id)).c_str());
+  write_xml_attribute(fp, XML_BUS_BIG_ENDIAN_ATTRIBUTE_NAME, bus_group.is_big_endian(bus_id));
   fp << ">" << "\n";
 
   /* Output all the pins under this bus */

@@ -466,13 +466,19 @@ void print_verilog_module_end(std::fstream& fp,
  ***********************************************/
 std::string generate_verilog_port(const enum e_dump_verilog_port_type& verilog_port_type,
                                   const BasicPort& port_info,
-                                  const bool& must_print_port_size) {  
+                                  const bool& must_print_port_size,
+								  const bool& big_endian) {
   std::string verilog_line;
 
   /* Ensure the port type is valid */
   VTR_ASSERT(verilog_port_type < NUM_VERILOG_PORT_TYPES);
 
-  std::string size_str = "[" + std::to_string(port_info.get_lsb()) + ":" + std::to_string(port_info.get_msb()) + "]";
+  std::string size_str;
+  if (big_endian) {
+    size_str = "[" + std::to_string(port_info.get_lsb()) + ":" + std::to_string(port_info.get_msb()) + "]";
+  } else {
+    size_str = "[" + std::to_string(port_info.get_msb()) + ":" + std::to_string(port_info.get_lsb()) + "]";
+  }
 
   /* Only connection require a format of <port_name>[<lsb>:<msb>]
    * others require a format of <port_type> [<lsb>:<msb>] <port_name> 

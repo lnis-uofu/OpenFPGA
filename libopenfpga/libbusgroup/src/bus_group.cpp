@@ -33,6 +33,11 @@ openfpga::BasicPort BusGroup::bus_port(const BusGroupId& bus_id) const {
   return bus_ports_[bus_id]; 
 }
 
+bool BusGroup::is_big_endian(const BusGroupId& bus_id) const {
+  VTR_ASSERT(valid_bus_id(bus_id));
+  return bus_big_endians_[bus_id]; 
+}
+
 std::vector<BusPinId> BusGroup::bus_pins(const BusGroupId& bus_id) const {
   VTR_ASSERT(valid_bus_id(bus_id));
   return bus_pin_ids_[bus_id]; 
@@ -89,6 +94,7 @@ bool BusGroup::empty() const {
 void BusGroup::reserve_buses(const size_t& num_buses) {
   bus_ids_.reserve(num_buses);
   bus_ports_.reserve(num_buses);
+  bus_big_endians_.reserve(num_buses);
   bus_pin_ids_.reserve(num_buses);
 }
 
@@ -105,6 +111,7 @@ BusGroupId BusGroup::create_bus(const openfpga::BasicPort& bus_port) {
   
   bus_ids_.push_back(bus_id);
   bus_ports_.push_back(bus_port);
+  bus_big_endians_.push_back(true);
   bus_pin_ids_.emplace_back();
 
   /* Register to fast look-up */
@@ -117,6 +124,11 @@ BusGroupId BusGroup::create_bus(const openfpga::BasicPort& bus_port) {
   }
   
   return bus_id;
+}
+
+void BusGroup::set_bus_big_endian(const BusGroupId& bus_id, const bool& big_endian) {
+  VTR_ASSERT(valid_bus_id(bus_id));
+  bus_big_endians_[bus_id] = big_endian;
 }
 
 BusPinId BusGroup::create_pin(const BusGroupId& bus_id, const int& index) {

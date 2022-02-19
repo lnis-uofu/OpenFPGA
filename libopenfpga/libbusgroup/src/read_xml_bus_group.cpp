@@ -76,6 +76,9 @@ void read_xml_bus(pugi::xml_node& xml_bus,
                    "Bus port is invalid, check LSB and MSB!\n");
   }
 
+  /* Find big endian */
+  bus_group.set_bus_big_endian(bus_id, get_attribute(xml_bus, XML_BUS_BIG_ENDIAN_ATTRIBUTE_NAME, loc_data, pugiutil::OPTIONAL).as_bool(true));
+
   for (pugi::xml_node xml_pin : xml_bus.children()) {
     /* Error out if the XML child has an invalid name! */
     if (xml_pin.name() != std::string(XML_PIN_NODE_NAME)) {

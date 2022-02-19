@@ -56,6 +56,7 @@ void print_verilog_preconfig_top_module_ports(std::fstream &fp,
   /* Ports to be added, this is to avoid any bus port */
   std::vector<BasicPort> port_list;
   std::vector<AtomBlockType> port_types;
+  std::vector<bool> port_big_endian;
 
   /* Print all the I/Os of the circuit implementation to be tested*/
   for (const AtomBlockId &atom_blk : atom_ctx.nlist.blocks()) {
@@ -96,6 +97,7 @@ void print_verilog_preconfig_top_module_ports(std::fstream &fp,
       if (port_list.end() == std::find(port_list.begin(), port_list.end(), bus_group.bus_port(bus_id))) {
         port_list.push_back(bus_group.bus_port(bus_id));
         port_types.push_back(atom_ctx.nlist.block_type(atom_blk));
+        port_big_endian.push_back(bus_group.is_big_endian(bus_id));
       }
       continue;
     }
@@ -104,6 +106,7 @@ void print_verilog_preconfig_top_module_ports(std::fstream &fp,
     BasicPort module_port(std::string(block_name), 1);
     port_list.push_back(module_port);
     port_types.push_back(atom_ctx.nlist.block_type(atom_blk));
+    port_big_endian.push_back(true);
   }
 
   /* After collecting all the ports, now print the port mapping */
@@ -115,7 +118,7 @@ void print_verilog_preconfig_top_module_ports(std::fstream &fp,
       fp << "," << std::endl;
     }
 
-    fp << generate_verilog_port(port_type2type_map[port_type], module_port);
+    fp << generate_verilog_port(port_type2type_map[port_type], module_port, true, port_big_endian[iport]);
 
     /* Update port counter */
     port_counter++;
