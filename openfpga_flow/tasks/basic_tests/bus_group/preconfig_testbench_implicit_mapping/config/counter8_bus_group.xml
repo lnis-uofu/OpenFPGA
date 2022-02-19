@@ -1,0 +1,12 @@
+<bus_group>
+  <bus name="result[0:7]">
+    <pin id="0" name="result_7_"/>
+    <pin id="1" name="result_6_"/>
+    <pin id="2" name="result_5_"/>
+    <pin id="3" name="result_4_"/>
+    <pin id="4" name="result_3_"/>
+    <pin id="5" name="result_2_"/>
+    <pin id="6" name="result_1_"/>
+    <pin id="7" name="result_0_"/>
+  </bus>
+</bus_group>

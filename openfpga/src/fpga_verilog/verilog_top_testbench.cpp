@@ -937,6 +937,7 @@ void print_verilog_top_testbench_benchmark_instance(std::fstream& fp,
                                                     const AtomContext& atom_ctx,
                                                     const VprNetlistAnnotation& netlist_annotation,
                                                     const PinConstraints& pin_constraints,
+                                                    const BusGroup& bus_group,
                                                     const std::vector<std::string>& clock_port_names,
                                                     const bool& explicit_port_mapping) {
   /* Validate the file stream */
@@ -945,22 +946,16 @@ void print_verilog_top_testbench_benchmark_instance(std::fstream& fp,
   /* Instanciate benchmark */
   print_verilog_comment(fp, std::string("----- Reference Benchmark Instanication -------"));
 
-  /* Do NOT use explicit port mapping here:
-   * VPR added a prefix of "out_" to the output ports of input benchmark
-   */
-  std::vector<std::string> prefix_to_remove;
-  prefix_to_remove.push_back(std::string(VPR_BENCHMARK_OUT_PORT_PREFIX));
-  prefix_to_remove.push_back(std::string(OPENFPGA_BENCHMARK_OUT_PORT_PREFIX));
   print_verilog_testbench_benchmark_instance(fp, reference_verilog_top_name,
                                              std::string(TOP_TESTBENCH_REFERENCE_INSTANCE_NAME),
                                              std::string(),
                                              std::string(),
                                              std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
-                                             prefix_to_remove,
                                              std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
                                              clock_port_names,
                                              atom_ctx, netlist_annotation,
                                              pin_constraints,
+                                             bus_group,
                                              explicit_port_mapping);
 
   print_verilog_comment(fp, std::string("----- End reference Benchmark Instanication -------"));
@@ -1924,6 +1919,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                  const AtomContext& atom_ctx,
                                  const PlacementContext& place_ctx,
                                  const PinConstraints& pin_constraints,
+                                 const BusGroup& bus_group,
                                  const std::string& bitstream_file,
                                  const IoLocationMap& io_location_map,
                                  const VprNetlistAnnotation& netlist_annotation,
@@ -2064,10 +2060,10 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
   print_verilog_testbench_connect_fpga_ios(fp, module_manager, top_module,
                                            atom_ctx, place_ctx, io_location_map,
                                            netlist_annotation,
+                                           BusGroup(),
                                            std::string(),
                                            std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
                                            std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
-                                           std::vector<std::string>(),
                                            clock_port_names,
                                            (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
@@ -2078,6 +2074,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                                    atom_ctx,
                                                    netlist_annotation,
                                                    pin_constraints,
+                                                   bus_group,
                                                    clock_port_names,
                                                    explicit_port_mapping);
   }

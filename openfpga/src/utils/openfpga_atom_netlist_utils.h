@@ -19,6 +19,8 @@ namespace openfpga {
 std::vector<std::string> find_atom_netlist_clock_port_names(const AtomNetlist& atom_nlist,
                                                             const VprNetlistAnnotation& netlist_annotation);
 
+std::string remove_atom_block_name_prefix(const std::string& block_name);
+
 } /* end namespace openfpga */
 
 #endif

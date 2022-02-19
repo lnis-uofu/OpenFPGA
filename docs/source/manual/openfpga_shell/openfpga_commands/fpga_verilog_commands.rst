@@ -68,6 +68,11 @@ write_full_testbench
     Specify the *Pin Constraints File* (PCF) if you want to custom stimulus in testbenches. For example, ``-pin_constraints_file pin_constraints.xml``
     Strongly recommend for multi-clock simulations. See detailed file format about :ref:`file_format_pin_constraints_file`.
 
+  .. option:: --bus_group_file <string> or -bgf <string>
+
+    Specify the *Bus Group File* (BGF) if you want to group pins to buses. For example, ``-bgf bus_group.xml``
+    Strongly recommend when input HDL contains bus ports. See detailed file format about :ref:`file_format_bus_group_file`.
+
   .. option:: --fast_configuration
 
     Enable fast configuration phase for the top-level testbench in order to reduce runtime of simulations. It is applicable to configuration chain, memory bank and frame-based configuration protocols. For configuration chain, when enabled, the zeros at the head of the bitstream will be skipped. For memory bank and frame-based, when enabled, all the zero configuration bits will be skipped. So ensure that your memory cells can be correctly reset to zero with a reset signal. 
@@ -119,6 +124,11 @@ write_preconfigured_fabric_wrapper
 
     Specify the *Pin Constraints File* (PCF) if you want to custom stimulus in testbenches. For example, ``-pin_constraints_file pin_constraints.xml``
     Strongly recommend for multi-clock simulations. See detailed file format about :ref:`file_format_pin_constraints_file`.
+
+  .. option:: --bus_group_file <string> or -bgf <string>
+
+    Specify the *Bus Group File* (BGF) if you want to group pins to buses. For example, ``-bgf bus_group.xml``
+    Strongly recommend when input HDL contains bus ports. See detailed file format about :ref:`file_format_bus_group_file`.
 
   .. option:: --explicit_port_mapping
 
@@ -179,6 +189,11 @@ write_preconfigured_testbench
 
     Specify the *Pin Constraints File* (PCF) if you want to custom stimulus in testbenches. For example, ``-pin_constraints_file pin_constraints.xml``
     Strongly recommend for multi-clock simulations. See detailed file format about :ref:`file_format_pin_constraints_file`.
+
+  .. option:: --bus_group_file <string> or -bgf <string>
+
+    Specify the *Bus Group File* (BGF) if you want to group pins to buses. For example, ``-bgf bus_group.xml``
+    Strongly recommend when input HDL contains bus ports. See detailed file format about :ref:`file_format_bus_group_file`.
 
   .. option:: --explicit_port_mapping
 

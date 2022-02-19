@@ -17,6 +17,7 @@
 #include "simulation_setting.h"
 #include "fabric_global_port_info.h"
 #include "pin_constraints.h"
+#include "bus_group.h"
 
 /********************************************************************
  * Function declaration
@@ -38,12 +39,12 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
                                                 const std::string& module_input_port_postfix,
                                                 const std::string& module_output_port_postfix,
                                                 const std::string& input_port_postfix,
-                                                const std::vector<std::string>& output_port_prefix_to_remove,
                                                 const std::string& output_port_postfix,
                                                 const std::vector<std::string>& clock_port_names,
                                                 const AtomContext& atom_ctx,
                                                 const VprNetlistAnnotation& netlist_annotation,
                                                 const PinConstraints& pin_constraints,
+                                                const BusGroup& bus_group,
                                                 const bool& use_explicit_port_map);
 
 void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
@@ -53,10 +54,10 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
                                               const PlacementContext& place_ctx,
                                               const IoLocationMap& io_location_map,
                                               const VprNetlistAnnotation& netlist_annotation,
+                                              const BusGroup& bus_group,
                                               const std::string& net_name_postfix,
                                               const std::string& io_input_port_name_postfix,
                                               const std::string& io_output_port_name_postfix,
-                                              const std::vector<std::string>& output_port_prefix_to_remove,
                                               const std::vector<std::string>& clock_port_names,
                                               const size_t& unused_io_value);
 
