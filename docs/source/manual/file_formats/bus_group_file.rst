@@ -13,7 +13,7 @@ An example of file is shown as follows.
 .. code-block:: xml
 
   <bus_group>
-    <bus name="i_addr[0:3]">
+    <bus name="i_addr[0:3]" big_endian="false">
       <pin id="0" name="i_addr_0_"/>
       <pin id="1" name="i_addr_1_"/>
       <pin id="2" name="i_addr_2_"/>
@@ -27,6 +27,10 @@ Bus-related Syntax
 .. option:: name="<string>"
 
   The bus port defined before synthesis, e.g., addr[0:3]
+
+.. option:: big_endian="<bool>"
+
+  Specify if this port should follow big endian or little endian in Verilog netlist. By default, big endian is assumed, e.g., addr[0:3].
 
 Pin-related Syntax
 ------------------
