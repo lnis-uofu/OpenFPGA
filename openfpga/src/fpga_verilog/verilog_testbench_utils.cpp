@@ -156,8 +156,12 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
       if (bus_id) {
         fp << "{";
         int pin_counter = 0;
-        /* Include all the pins */
-        for (const BusPinId& pin : bus_group.bus_pins(bus_id)) {
+        /* Include all the pins: If it follows little endian, reverse the pin sequence */
+        std::vector<BusPinId> bus_pins = bus_group.bus_pins(bus_id);
+        if (!bus_group.is_big_endian(bus_id)) {
+          std::reverse(bus_pins.begin(), bus_pins.end());
+        }
+        for (const BusPinId& pin : bus_pins) {
           if (0 < pin_counter) {
             fp << ", ";
           }
@@ -208,11 +212,16 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
 
       /* For bus ports, include a complete list of pins */
       BusGroupId bus_id = bus_group.find_bus(port_names[iport]);
+
       if (bus_id) {
         fp << "{";
         int pin_counter = 0;
-        /* Include all the pins */
-        for (const BusPinId& pin : bus_group.bus_pins(bus_id)) {
+        /* Include all the pins: If it follows little endian, reverse the pin sequence */
+        std::vector<BusPinId> bus_pins = bus_group.bus_pins(bus_id);
+        if (!bus_group.is_big_endian(bus_id)) {
+          std::reverse(bus_pins.begin(), bus_pins.end());
+        }
+        for (const BusPinId& pin : bus_pins) {
           if (0 < pin_counter) {
             fp << ", ";
           }

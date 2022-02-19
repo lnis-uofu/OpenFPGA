@@ -50,6 +50,9 @@ class BusGroup {
     /** Get port information of a bus with a given id */
     BasicPort bus_port(const BusGroupId& bus_id) const;
 
+    /* Check if a bus follows big endian */
+    bool is_big_endian(const BusGroupId& bus_id) const;
+
     /* Get the pins under a specific bus */
     std::vector<BusPinId> bus_pins(const BusGroupId& bus_id) const;
 
@@ -81,6 +84,9 @@ class BusGroup {
     /* Add a bus to storage */
     BusGroupId create_bus(const openfpga::BasicPort& bus_port);
 
+    /* Set endianness for a bus; If not set, by default it assumes big-endian */
+    void set_bus_big_endian(const BusGroupId& bus_id, const bool& big_endian);
+
     /* Add a pin to a bus, with a given index in the bus, e.g., A[1] in A[0:2] */
     BusPinId create_pin(const BusGroupId& bus_id, const int& index);
 
@@ -100,6 +106,9 @@ class BusGroup {
 
     /* Port information of each bus */
     vtr::vector<BusGroupId, BasicPort> bus_ports_;
+
+    /* Endianness of each bus: big endian by default */
+    vtr::vector<BusGroupId, bool> bus_big_endians_;
 
     /* Indices of each pin under each bus */
     vtr::vector<BusGroupId, std::vector<BusPinId>> bus_pin_ids_;
