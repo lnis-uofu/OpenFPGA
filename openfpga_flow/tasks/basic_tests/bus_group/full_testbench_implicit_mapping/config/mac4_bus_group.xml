@@ -1,0 +1,26 @@
+<bus_group>
+  <bus name="a[3:0]" big_endian="false">
+    <pin id="0" name="a_0_"/>
+    <pin id="1" name="a_1_"/>
+    <pin id="2" name="a_2_"/>
+    <pin id="3" name="a_3_"/>
+  </bus>
+  <bus name="b[3:0]" big_endian="false">
+    <pin id="0" name="b_0_"/>
+    <pin id="1" name="b_1_"/>
+    <pin id="2" name="b_2_"/>
+    <pin id="3" name="b_3_"/>
+  </bus>
+  <bus name="c[3:0]" big_endian="false">
+    <pin id="0" name="c_0_"/>
+    <pin id="1" name="c_1_"/>
+    <pin id="2" name="c_2_"/>
+    <pin id="3" name="c_3_"/>
+  </bus>
+  <bus name="out[3:0]" big_endian="false">
+    <pin id="0" name="out_0_"/>
+    <pin id="1" name="out_1_"/>
+    <pin id="2" name="out_2_"/>
+    <pin id="3" name="out_3_"/>
+  </bus>
+</bus_group>
