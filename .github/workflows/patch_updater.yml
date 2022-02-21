@@ -5,7 +5,7 @@ on:
     - cron: '0 0 * * *'
 
 env:
-  TAG_COMMIT: 49a8273..
+  TAG_COMMIT: 781ea3f..
   BRANCH_NAME: patch_update
 
 jobs:
