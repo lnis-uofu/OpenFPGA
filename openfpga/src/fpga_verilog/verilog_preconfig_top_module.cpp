@@ -235,6 +235,10 @@ int print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
       } else {
         VTR_ASSERT_SAFE(std::string(PIN_CONSTRAINT_OPEN_NET) == constrained_net_name);
         std::vector<size_t> default_values(module_global_pin.get_width(), fabric_global_ports.global_port_default_value(global_port_id));
+        /* For configuration done signals, we should enable them in preconfigured wrapper */
+        if (fabric_global_ports.global_port_is_config_enable(global_port_id)) {
+          default_values.resize(module_global_pin.get_width(), 1 - fabric_global_ports.global_port_default_value(global_port_id));
+        }
         print_verilog_wire_constant_values(fp, module_global_pin, default_values);
       }
     }
