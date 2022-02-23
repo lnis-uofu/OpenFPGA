@@ -149,9 +149,11 @@ endif()
 
 # Set final flags
 #
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARN_FLAGS} ${SANITIZE_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARN_FLAGS} ${SANITIZE_FLAGS} -fpic -ltcl")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
+# TCL package required to link with SWIG generated wrapper
+find_package(TCL)
 
 # Unit Testing
 #

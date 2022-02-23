@@ -11,7 +11,7 @@ files_to_dirs(LIB_HEADERS LIB_INCLUDE_DIRS)
 list(REMOVE_ITEM LIB_SOURCES ${EXEC_SOURCE})
 
 #Create the library
-add_library(libopenfpga STATIC
+add_library(libopenfpga SHARED
             ${LIB_HEADERS}
             ${LIB_SOURCES})
 target_include_directories(libopenfpga PUBLIC ${LIB_INCLUDE_DIRS})
