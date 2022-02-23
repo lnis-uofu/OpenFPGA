@@ -272,6 +272,18 @@ void Shell<T>::run_interactive_mode(T& context, const bool& quiet_mode) {
 }
 
 template <class T>
+void Shell<T>::run_tcl_mode(T& context, const std::string& cmd_opts) {
+
+  VTR_LOG("\nCommand line to execute: \n%s", cmd_opts.c_str());
+  int status = execute_command(cmd_opts.c_str(), context);
+  if (CMD_EXEC_FATAL_ERROR == status) {
+        VTR_LOG("Fatal error occurred!\n");
+        exit(CMD_EXEC_FATAL_ERROR);
+      }
+
+}
+
+template <class T>
 void Shell<T>::run_script_mode(const char* script_file_name,
                                T& context,
                                const bool& batch_mode) {

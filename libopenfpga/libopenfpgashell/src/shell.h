@@ -142,6 +142,8 @@ class Shell {
   public: /* Public executors */
     /* Start the interactive mode, where users will type-in command by command */
     void run_interactive_mode(T& context, const bool& quiet_mode = false);
+    /* Start the TCL mode, where command from SWIG wrapper i.e. from TCL shell will be executed  */
+    void run_tcl_mode(T& context, const std::string& cmd_opts);
     /* Start the script mode, where users provide a file which includes all the commands to run */
     void run_script_mode(const char* script_file_name,
                          T& context,
