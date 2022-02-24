@@ -23,7 +23,7 @@ endmodule
 // Function    : A minimum general purpose I/O with config_done signal
 //               which can block signals during configuration phase
 //-----------------------------------------------------
-module GPIO (
+module GPIO_CFGD (
   input CONFIG_DONE, // Control signal to block signals
   input A, // Data output
   output Y, // Data input
