@@ -20,6 +20,24 @@ module GPIO (
 endmodule
 
 //-----------------------------------------------------
+// Function    : A minimum general purpose I/O with config_done signal
+//               which can block signals during configuration phase
+//-----------------------------------------------------
+module GPIO_CFGD (
+  input CONFIG_DONE, // Control signal to block signals
+  input A, // Data output
+  output Y, // Data input
+  inout PAD, // bi-directional pad
+  input DIR // direction control
+);
+  //----- when direction enabled, the signal is propagated from PAD to data input
+  assign Y = CONFIG_DONE ? (DIR ? PAD : 1'bz) : 1'bz;
+  //----- when direction is disabled, the signal is propagated from data out to pad
+  assign PAD = CONFIG_DONE ? (DIR ? 1'bz : A) : 1'bz;
+endmodule
+
+
+//-----------------------------------------------------
 // Function    : A minimum input pad
 //-----------------------------------------------------
 module GPIN (

@@ -23,6 +23,7 @@ run-task basic_tests/full_testbench/fast_configuration_chain_use_set --debug --s
 run-task basic_tests/full_testbench/smart_fast_configuration_chain --debug --show_thread_logs
 run-task basic_tests/full_testbench/smart_fast_multi_region_configuration_chain --debug --show_thread_logs
 run-task basic_tests/preconfig_testbench/configuration_chain --debug --show_thread_logs
+run-task basic_tests/preconfig_testbench/configuration_chain_config_done_io --debug --show_thread_logs
 run-task basic_tests/preconfig_testbench/configuration_chain_no_time_stamp --debug --show_thread_logs
 
 echo -e "Testing fram-based configuration protocol of a K4N4 FPGA";
