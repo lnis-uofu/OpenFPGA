@@ -147,9 +147,10 @@ if(OPENFPGA_ENABLE_SANITIZE)
     link_libraries("-static-libasan") #Fixes 'ASan runtime does not come first in initial library list'
 endif()
 
-# TCL package required to link with SWIG generated wrapper
+# TCL file/lib required to link with SWIG generated wrapper
 include(FindTCL)
-
+message(STATUS "tcl.h path is : ${TCL_INCLUDE_PATH}")
+message(STATUS "libtcl.so path is : ${TCL_LIBRARY}") 
 
 # Set final flags
 #
