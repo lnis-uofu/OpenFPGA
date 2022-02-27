@@ -147,13 +147,14 @@ if(OPENFPGA_ENABLE_SANITIZE)
     link_libraries("-static-libasan") #Fixes 'ASan runtime does not come first in initial library list'
 endif()
 
+# TCL package required to link with SWIG generated wrapper
+include(FindTCL)
+
+
 # Set final flags
 #
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARN_FLAGS} ${SANITIZE_FLAGS} -fpic -ltcl")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARN_FLAGS} ${SANITIZE_FLAGS} -I${TCL_INCLUDE_PATH} -fpic -ltcl")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
-
-# TCL package required to link with SWIG generated wrapper
-find_package(TCL)
 
 # Unit Testing
 #
