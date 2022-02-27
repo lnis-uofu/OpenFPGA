@@ -176,7 +176,7 @@ jobs:
             abc/libabc.a
             ace2/ace
             ace2/libace.a
-            openfpga/libopenfpga.a
+            openfpga/libopenfpga.so
             openfpga/openfpga
             vpr/libvpr.a
             vpr/vpr
