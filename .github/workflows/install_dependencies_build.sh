@@ -33,7 +33,7 @@ apt-get update && apt-get install -y \
     python3-pip \
     qt5-default \
     tcllib \
-    tcl8.6-dev \
+    tcl-dev \
     texinfo \
     time \
     valgrind \
