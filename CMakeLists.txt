@@ -154,7 +154,7 @@ message(STATUS "libtcl.so path is : ${TCL_LIBRARY}")
 
 # Set final flags
 #
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARN_FLAGS} ${SANITIZE_FLAGS} -I${TCL_INCLUDE_PATH} -fpic -ltcl -ltcl8.6")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARN_FLAGS} ${SANITIZE_FLAGS} -I${TCL_INCLUDE_PATH} -fpic")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
 # Unit Testing
