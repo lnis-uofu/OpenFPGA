@@ -195,7 +195,17 @@ A circuit model may consist of a number of ports. The port list is mandatory in 
 
   - ``is_reset="true|false"`` Specify if this port controls a reset signal. All the reset ports are connected to a global reset voltage stimuli in testbenches.
 
-  - ``is_config_enable="true|false"`` Specify if this port controls a configuration-enable signal. Only valid when ``is_global`` is ``true``. This port is only enabled during FPGA configuration, and always disabled during FPGA operation. All the ``config_enable`` ports are connected to global configuration-enable voltage stimuli in testbenches.
+  - ``is_config_enable="true|false"`` Specify if this port controls a configuration-enable signal. Only valid when ``is_global`` is ``true``. This port is only enabled during FPGA configuration, and always disabled during FPGA operation. All the ``config_enable`` ports are connected to global configuration-enable voltage stimuli in testbenches. 
+
+  .. note:: This attribute is used by testbench generators (see :ref:`fpga_verilog_testbench`) 
+
+            - In full testbench, 
+        
+              - There is a ``config_done`` signal, which stay at logic ``0`` during bitstream loading phase, and is pulled up to logic ``1`` during operating phase
+              - When ``default_value="0"``, the port will be wired to a ``config_done`` signal.
+              - When ``default_value="1"``, the port will be wired to an inverted ``config_done`` signal.
+              
+            - In preconfigured wrapper, the port will be set to the inversion of ``default_value``, as the preconfigured testbenches consider operating phase only.
 
 .. note:: ``is_set``, ``is_reset`` and ``is_config_enable`` are only valid when ``is_global`` is ``true``. 
 
