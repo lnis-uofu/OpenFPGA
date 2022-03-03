@@ -93,7 +93,7 @@ int mode_invoker (std::vector<std::string> &cmd_opts, const bool& tcl_mode) {
   if (true == tcl_mode) {
     
     //VTR_LOG("I am in TCL mode ... \n");
-
+    
     std::string to_send;
     /* convert vector into string */
     for (auto const& s : cmd_opts) { to_send += s; }

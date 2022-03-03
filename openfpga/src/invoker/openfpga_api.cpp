@@ -6,12 +6,19 @@
 #include "openfpga_invoker.h"
 
 openfpga_api::openfpga_api(){
-  version();
+  start_tcl_shell();
   //printf("Constructor is called, object created!!\n");
 }
 
 openfpga_api::~openfpga_api(){
   printf("Destructor is called, object distroyed!!\n");
+}
+
+void openfpga_api::start_tcl_shell(){
+  std::vector<std::string> tcl_cmd_opts;
+  tcl_cmd_opts.push_back("call_title");
+  /* call mode invoker function with TCL mode true */
+  int return_status = mode_invoker(tcl_cmd_opts,true);
 }
 
 void openfpga_api::version(){
