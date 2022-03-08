@@ -21,6 +21,17 @@ oo::define OpenFPGA_API {
          #puts "the given arguments are\n$comnd"
          openfpga_api "$comnd"
     }
+     method write_arch { args } {
+         if { ( $args eq "" ) || ( $args eq {-help} ) || ( $args eq {-h} ) } {
+            return [ my ComndHelp "\nCommand OPENFPGA write_arch usage:\n\n OPENFPGA write_arch -f or --file <specify the architecture XML name>\n"]
+         }
+         set comnd write_openfpga_arch
+         foreach item $args {
+            lappend comnd $item
+         }
+         #puts "the given arguments are\n$comnd"
+         openfpga_api "$comnd"
+    }
 }
 
 oo::define OpenFPGA_API {
