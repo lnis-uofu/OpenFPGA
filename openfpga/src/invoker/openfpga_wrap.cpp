@@ -1649,9 +1649,8 @@ SWIG_Tcl_GetArgs(Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], const char
 /* -------- TYPES TABLE (BEGIN) -------- */
 
 #define SWIGTYPE_p_char swig_types[0]
-#define SWIGTYPE_p_openfpga_api swig_types[1]
-static swig_type_info *swig_types[3];
-static swig_module_info swig_module = {swig_types, 2, 0, 0, 0, 0};
+static swig_type_info *swig_types[2];
+static swig_module_info swig_module = {swig_types, 1, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -1698,7 +1697,10 @@ SWIGEXPORT int SWIG_init(Tcl_Interp *);
 #include <string>
 
 
-  #include "openfpga_api.h"
+  //#include "openfpga_api.h"
+
+void openfpga_api(std::string opt);
+
 
 
 SWIGINTERN int
@@ -1750,111 +1752,20 @@ SWIG_AsPtr_std_string SWIG_TCL_DECL_ARGS_2(Tcl_Obj * obj, std::string **val)
 extern "C" {
 #endif
 SWIGINTERN int
-_wrap_new_openfpga_api(ClientData clientData SWIGUNUSED, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-  openfpga_api *result = 0 ;
+_wrap_openfpga_api(ClientData clientData SWIGUNUSED, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
+  std::string arg1 ;
   
-  if (SWIG_GetArgs(interp, objc, objv,":new_openfpga_api ") == TCL_ERROR) SWIG_fail;
-  result = (openfpga_api *)new openfpga_api();
-  Tcl_SetObjResult(interp, SWIG_NewInstanceObj( SWIG_as_voidptr(result), SWIGTYPE_p_openfpga_api,0));
-  return TCL_OK;
-fail:
-  return TCL_ERROR;
-}
-
-
-SWIGINTERN int
-_wrap_delete_openfpga_api(ClientData clientData SWIGUNUSED, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-  openfpga_api *arg1 = (openfpga_api *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  
-  if (SWIG_GetArgs(interp, objc, objv,"o:delete_openfpga_api self ",(void *)0) == TCL_ERROR) SWIG_fail;
-  res1 = SWIG_ConvertPtr(objv[1], &argp1,SWIGTYPE_p_openfpga_api, SWIG_POINTER_DISOWN |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_openfpga_api" "', argument " "1"" of type '" "openfpga_api *""'"); 
-  }
-  arg1 = reinterpret_cast< openfpga_api * >(argp1);
-  delete arg1;
-  
-  return TCL_OK;
-fail:
-  return TCL_ERROR;
-}
-
-
-SWIGINTERN int
-_wrap_openfpga_api_version(ClientData clientData SWIGUNUSED, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-  openfpga_api *arg1 = (openfpga_api *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  
-  if (SWIG_GetArgs(interp, objc, objv,"o:openfpga_api_version self ",(void *)0) == TCL_ERROR) SWIG_fail;
-  res1 = SWIG_ConvertPtr(objv[1], &argp1,SWIGTYPE_p_openfpga_api, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "openfpga_api_version" "', argument " "1"" of type '" "openfpga_api *""'"); 
-  }
-  arg1 = reinterpret_cast< openfpga_api * >(argp1);
-  (arg1)->version();
-  
-  return TCL_OK;
-fail:
-  return TCL_ERROR;
-}
-
-
-SWIGINTERN int
-_wrap_openfpga_api_start_tcl_shell(ClientData clientData SWIGUNUSED, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-  openfpga_api *arg1 = (openfpga_api *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  
-  if (SWIG_GetArgs(interp, objc, objv,"o:openfpga_api_start_tcl_shell self ",(void *)0) == TCL_ERROR) SWIG_fail;
-  res1 = SWIG_ConvertPtr(objv[1], &argp1,SWIGTYPE_p_openfpga_api, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "openfpga_api_start_tcl_shell" "', argument " "1"" of type '" "openfpga_api *""'"); 
-  }
-  arg1 = reinterpret_cast< openfpga_api * >(argp1);
-  (arg1)->start_tcl_shell();
-  
-  return TCL_OK;
-fail:
-  return TCL_ERROR;
-}
-
-
-SWIGINTERN int
-_wrap_openfpga_api_read_arch(ClientData clientData SWIGUNUSED, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]) {
-  openfpga_api *arg1 = (openfpga_api *) 0 ;
-  std::string arg2 ;
-  std::string arg3 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  
-  if (SWIG_GetArgs(interp, objc, objv,"ooo:openfpga_api_read_arch self opt path ",(void *)0,(void *)0,(void *)0) == TCL_ERROR) SWIG_fail;
-  res1 = SWIG_ConvertPtr(objv[1], &argp1,SWIGTYPE_p_openfpga_api, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "openfpga_api_read_arch" "', argument " "1"" of type '" "openfpga_api *""'"); 
-  }
-  arg1 = reinterpret_cast< openfpga_api * >(argp1);
+  if (SWIG_GetArgs(interp, objc, objv,"o:openfpga_api opt ",(void *)0) == TCL_ERROR) SWIG_fail;
   {
     std::string *ptr = (std::string *)0;
-    int res = SWIG_AsPtr_std_string SWIG_TCL_CALL_ARGS_2(objv[2], &ptr);
+    int res = SWIG_AsPtr_std_string SWIG_TCL_CALL_ARGS_2(objv[1], &ptr);
     if (!SWIG_IsOK(res) || !ptr) {
-      SWIG_exception_fail(SWIG_ArgError((ptr ? res : SWIG_TypeError)), "in method '" "openfpga_api_read_arch" "', argument " "2"" of type '" "std::string""'"); 
+      SWIG_exception_fail(SWIG_ArgError((ptr ? res : SWIG_TypeError)), "in method '" "openfpga_api" "', argument " "1"" of type '" "std::string""'"); 
     }
-    arg2 = *ptr;
+    arg1 = *ptr;
     if (SWIG_IsNewObj(res)) delete ptr;
   }
-  {
-    std::string *ptr = (std::string *)0;
-    int res = SWIG_AsPtr_std_string SWIG_TCL_CALL_ARGS_2(objv[3], &ptr);
-    if (!SWIG_IsOK(res) || !ptr) {
-      SWIG_exception_fail(SWIG_ArgError((ptr ? res : SWIG_TypeError)), "in method '" "openfpga_api_read_arch" "', argument " "3"" of type '" "std::string""'"); 
-    }
-    arg3 = *ptr;
-    if (SWIG_IsNewObj(res)) delete ptr;
-  }
-  (arg1)->read_arch(arg2,arg3);
+  openfpga_api(arg1);
   
   return TCL_OK;
 fail:
@@ -1862,30 +1773,9 @@ fail:
 }
 
 
-SWIGINTERN void swig_delete_openfpga_api(void *obj) {
-openfpga_api *arg1 = (openfpga_api *) obj;
-delete arg1;
-}
-static swig_method swig_openfpga_api_methods[] = {
-    {"version", _wrap_openfpga_api_version}, 
-    {"start_tcl_shell", _wrap_openfpga_api_start_tcl_shell}, 
-    {"read_arch", _wrap_openfpga_api_read_arch}, 
-    {0,0}
-};
-static swig_attribute swig_openfpga_api_attributes[] = {
-    {0,0,0}
-};
-static swig_class *swig_openfpga_api_bases[] = {0};
-static const char * swig_openfpga_api_base_names[] = {0};
-static swig_class _wrap_class_openfpga_api = { "openfpga_api", &SWIGTYPE_p_openfpga_api,_wrap_new_openfpga_api, swig_delete_openfpga_api, swig_openfpga_api_methods, swig_openfpga_api_attributes, swig_openfpga_api_bases,swig_openfpga_api_base_names, &swig_module, SWIG_TCL_HASHTABLE_INIT };
 
 static swig_command_info swig_commands[] = {
-    { SWIG_prefix "new_openfpga_api", (swig_wrapper_func) _wrap_new_openfpga_api, NULL},
-    { SWIG_prefix "delete_openfpga_api", (swig_wrapper_func) _wrap_delete_openfpga_api, NULL},
-    { SWIG_prefix "openfpga_api_version", (swig_wrapper_func) _wrap_openfpga_api_version, NULL},
-    { SWIG_prefix "openfpga_api_start_tcl_shell", (swig_wrapper_func) _wrap_openfpga_api_start_tcl_shell, NULL},
-    { SWIG_prefix "openfpga_api_read_arch", (swig_wrapper_func) _wrap_openfpga_api_read_arch, NULL},
-    { SWIG_prefix "openfpga_api", (swig_wrapper_func) SWIG_ObjectConstructor, (ClientData)&_wrap_class_openfpga_api},
+    { SWIG_prefix "openfpga_api", (swig_wrapper_func) _wrap_openfpga_api, NULL},
     {0, 0, 0}
 };
 
@@ -1900,19 +1790,15 @@ static swig_const_info swig_constants[] = {
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_openfpga_api = {"_p_openfpga_api", "openfpga_api *", 0, 0, (void*)&_wrap_class_openfpga_api, 0};
 
 static swig_type_info *swig_type_initial[] = {
   &_swigt__p_char,
-  &_swigt__p_openfpga_api,
 };
 
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_openfpga_api[] = {  {&_swigt__p_openfpga_api, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_char,
-  _swigc__p_openfpga_api,
 };
 
 

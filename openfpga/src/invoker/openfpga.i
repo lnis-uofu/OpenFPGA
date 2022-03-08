@@ -4,8 +4,9 @@
 //%include "std_vector.i"
 
 %{
-  #include "openfpga_api.h"
+
+void openfpga_api(std::string opt);
+
 %}
 
-%include "openfpga_api.h"
-
+void openfpga_api(std::string opt);
