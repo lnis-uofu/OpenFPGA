@@ -20,6 +20,15 @@ compile:
 	mkdir -p build && cd build && $(CMAKE_COMMAND) ${CMAKE_FLAGS} ..
 	cd build && $(MAKE)
 
+check_tclshrc:
+	@touch ~/.tclshrc
+	@[[ ! `grep "package require OpenFPGA" ~/.tclshrc` ]] && echo "if { [ file exists ~/.openfpga_tcl_check ] } { package require OpenFPGA }" >> ~/.tclshrc || echo " "
+
+tcl_mode: check_tclshrc
+	@touch ~/.openfpga_tcl_check
+	@tclsh8.6 $(TCL_FILE)
+	@rm ~/.openfpga_tcl_check
+
 clean:
 	rm -rf build yosys/install
 
