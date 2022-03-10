@@ -2191,7 +2191,7 @@ void print_verilog_port(std::ostream& os, size_t& unconn_count, const std::strin
                     os << "1'b0";
                 } else {
                     VTR_ASSERT(type == PortType::OUTPUT);
-                    os << "";
+                    os << create_unconn_net(unconn_count);
                 }
             } else {
                 //Connected
