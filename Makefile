@@ -1,4 +1,5 @@
 # Makefile
+# swig -tcl -v -c++ -cppext cpp openfpg.i
 
 ifeq ($(origin CMAKE_COMMAND),undefined)
 CMAKE_COMMAND := cmake

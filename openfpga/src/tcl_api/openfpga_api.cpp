@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <vector>
 #include <string>
 #include "openfpga_api.h"
 
@@ -27,6 +26,7 @@
 #include "openfpga_title.h"
 #include "openfpga_context.h"
 
+// TODO  this is duplication of main function, call it in main to avoid duplication
 openfpga::Shell<OpenfpgaContext> initialize_mini_shell (){
 
   /* Create a shell object
@@ -69,8 +69,6 @@ openfpga::Shell<OpenfpgaContext> initialize_mini_shell (){
 openfpga_api::openfpga_api(){
   // call OpenFPGA shell initializer once
   shell = initialize_mini_shell ();
-  /* call title of OpenFPGA shell */
-  start_tcl_shell();
   //printf("Constructor is called, object created!!\n");
 }
 
@@ -78,38 +76,15 @@ openfpga_api::~openfpga_api(){
   printf("Destructor is called, object distroyed!!\n");
 }
 
-void openfpga_api::call_openfpga_shell (std::string& tcl_comnd){
+void openfpga_api::call_openfpga_shell(std::string tcl_comnd){
     
-  /* call tcl mode in of mini shell */
+  /* call tcl mode of mini shell */
   shell.run_tcl_mode(openfpga_context,tcl_comnd);
   int status = shell.exit_code();
-  VTR_LOG("And its exit status is '%d'...\n",
-          status);
-
-}
-
-void openfpga_api::start_tcl_shell(){
-  std::string to_send = "call_title";
-  call_openfpga_shell(to_send);
+  // TODO make this status as data member and access it in TCL class to decide whether to exit or not
+  //VTR_LOG("exit status is '%d'...\n", status);
 }
 
 void openfpga_api::version(){
   print_openfpga_version_info();
-}
-
-void openfpga_api::read_arch(std::string opt, std::string path){
-  
-  std::string to_send = "read_openfpga_arch ";
-  to_send = to_send + opt + " " +path;
-  
-  VTR_LOG("to send command is '%s'...\n",to_send.c_str());
-  call_openfpga_shell(to_send);
-}
-void openfpga_api::write_arch(std::string opt, std::string path){
-  
-  std::string to_send = "write_openfpga_arch ";
-  to_send = to_send + opt + " " +path;
-  
-  VTR_LOG("to send command is '%s'...\n",to_send.c_str());
-  call_openfpga_shell(to_send);
 }

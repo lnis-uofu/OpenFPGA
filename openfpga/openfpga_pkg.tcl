@@ -1,13 +1,20 @@
 # export TCLLIBPATH=$(pwd)/openfpga
 # Variable for the path of the script
 set home [file join [pwd] [file dirname [info script]]]
-#Load the shared library
+#Load the shared library of OpenFPGA
 catch { load $home/libopenfpga[info sharedlibextension] openfpga}
+# create OpenFPGA API cpp classe object
+openfpga_api tool
 # OpenFPGA class have all the command name functions
-oo::class create OpenFPGA_API
-oo::define OpenFPGA_API {
+oo::class create OpenFPGA_TCL_API
+oo::define OpenFPGA_TCL_API {
     method ComndHelp { args } {
        puts $args
+    }
+
+    method version { } {
+         #puts "the given arguments are\n$comnd"
+         tool version
     }
 
     method read_arch { args } {
@@ -19,7 +26,7 @@ oo::define OpenFPGA_API {
             lappend comnd $item
          }
          #puts "the given arguments are\n$comnd"
-         openfpga_api "$comnd"
+         tool call_openfpga_shell "$comnd"
     }
      method write_arch { args } {
          if { ( $args eq "" ) || ( $args eq {-help} ) || ( $args eq {-h} ) } {
@@ -30,21 +37,22 @@ oo::define OpenFPGA_API {
             lappend comnd $item
          }
          #puts "the given arguments are\n$comnd"
-         openfpga_api "$comnd"
+         tool call_openfpga_shell "$comnd"
     }
 }
 
-oo::define OpenFPGA_API {
+oo::define OpenFPGA_TCL_API {
     constructor {} {
         #puts "called constructor"
-        openfpga_api "call_title"
+        tool call_openfpga_shell "call_title"
     }
     destructor {  1
-        puts "[self] saving OpenFPGA_API data to database"
+        puts "[self] saving OpenFPGA_TCL_API data to database"
     }
 }
 
-OpenFPGA_API create OPENFPGA
+# TODO count overall time of execution in TCL
+OpenFPGA_TCL_API create OPENFPGA
 # Variables for version and testing
 set version 1.0
 set testvar "Hello from OpenFPGA"
