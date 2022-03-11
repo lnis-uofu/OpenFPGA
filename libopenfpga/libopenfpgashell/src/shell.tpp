@@ -274,6 +274,7 @@ void Shell<T>::run_interactive_mode(T& context, const bool& quiet_mode) {
 template <class T>
 void Shell<T>::run_tcl_mode(T& context, const std::string& cmd_opts) {
 
+  // TODO start and end time of each command, if possible 
   if (cmd_opts == "call_title"){
     VTR_LOG("%s\n", title().c_str());
   }
@@ -281,8 +282,8 @@ void Shell<T>::run_tcl_mode(T& context, const std::string& cmd_opts) {
   VTR_LOG("\nCommand line to execute: \n%s", cmd_opts.c_str());
   int status = execute_command(cmd_opts.c_str(), context);
   if (CMD_EXEC_FATAL_ERROR == status) {
-        VTR_LOG("Fatal error occurred!\n");
-        exit(CMD_EXEC_FATAL_ERROR);
+        VTR_LOG("Fatal error occurred!\nFailed to execute %s\n",cmd_opts);
+        //exit(CMD_EXEC_FATAL_ERROR);
       }
   }
 }
