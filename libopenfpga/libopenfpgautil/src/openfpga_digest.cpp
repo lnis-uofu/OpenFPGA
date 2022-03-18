@@ -49,13 +49,14 @@ void check_file_stream(const char* fname,
 std::string format_dir_path(const std::string& dir_path_to_format) {
   std::string formatted_dir_path = dir_path_to_format;
 
-  char illegal_back_slash = '\\';
-  char legal_back_slash = '/';
 
 #ifdef _WIN32
 /* For windows OS, replace any '/' with '\' */
   char illegal_back_slash = '/';
   char legal_back_slash = '\\';
+#else
+  char illegal_back_slash = '\\';
+  char legal_back_slash = '/';
 #endif
 
   /* Return an empty string if the input is empty */
@@ -81,11 +82,12 @@ std::string format_dir_path(const std::string& dir_path_to_format) {
  ********************************************************************/
 std::string find_path_file_name(const std::string& file_name) {
 
-  char back_slash = '/';
 
 #ifdef _WIN32
 /* For windows OS, replace any '/' with '\' */
   char back_slash = '\\';
+#else
+  char back_slash = '/';
 #endif 
 
   /* Find the last '/' in the string and return the left part */
@@ -104,11 +106,12 @@ std::string find_path_file_name(const std::string& file_name) {
  ********************************************************************/
 std::string find_path_dir_name(const std::string& file_name) {
 
-  char back_slash = '/';
 
 #ifdef _WIN32
 /* For windows OS, replace any '/' with '\' */
   char back_slash = '\\';
+#else
+  char back_slash = '/';
 #endif 
 
   /* Find the last '/' in the string and return the left part */
@@ -133,7 +136,11 @@ bool create_dir_path(const std::string& dir_path,
   }
 
   /* Try to create a directory */
+#ifdef _WIN32
+  int ret = mkdir(dir_path.c_str());
+#else  
   int ret = mkdir(dir_path.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH);
+#endif
 
   /* Analyze the return flag and output status */
   switch (ret) {
@@ -182,11 +189,12 @@ bool rec_create_dir_path(const std::string& dir_path) {
   /* Try to find the positions of all the slashes
    * which are the splitter between directories
    */
-  char back_slash = '/';
 
 #ifdef _WIN32
 /* For windows OS, replace any '/' with '\' */
   char back_slash = '\\';
+#else
+  char back_slash = '/';
 #endif 
 
   std::vector<size_t> slash_pos; 
