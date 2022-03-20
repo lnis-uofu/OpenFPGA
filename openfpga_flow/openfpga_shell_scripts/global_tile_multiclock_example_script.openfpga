@@ -72,7 +72,9 @@ write_pnr_sdc --file ./SDC
 write_sdc_disable_timing_configure_ports --file ./SDC/disable_configure_ports.sdc
 
 # Write the SDC to run timing analysis for a mapped FPGA fabric
-write_analysis_sdc --file ./SDC_analysis
+# TODO: Currently analysis SDC does not support multiple clocks due to 
+# - Missing information about which I/Os are constrained by which clock
+#write_analysis_sdc --file ./SDC_analysis
 
 # Finish and exit OpenFPGA
 exit
