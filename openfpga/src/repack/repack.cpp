@@ -479,8 +479,7 @@ void add_lb_router_nets(LbRouter& lb_router,
                      constrained_net_name.c_str());
       } else {
         VTR_ASSERT_SAFE(false == atom_ctx.nlist.valid_net_id(constrained_atom_net_id));
-        VTR_LOGV(verbose,
-                 "Accept net '%s' to be constrained on pin '%s[%d]' during repacking\n", 
+        VTR_LOG("Accept net '%s' to be constrained on pin '%s[%d]' during repacking\n", 
                  constrained_net_name.c_str(),
                  source_pb_pin->port->name,
                  source_pb_pin->pin_number);
