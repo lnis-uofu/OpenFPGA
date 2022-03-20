@@ -782,11 +782,19 @@ int build_top_module_global_net_for_given_grid_module(ModuleManager& module_mana
 
   /* Ensure port width is in range */
   BasicPort src_port = module_manager.module_port(top_module, top_module_port);
-  VTR_ASSERT(src_port.get_width() >= size_t(physical_tile_port.num_pins));
+  VTR_ASSERT(src_port.get_width() == tile_port_to_connect.get_width());
+
+  /* Create a pin id mapping between the source port (top module) and the sink port (grid module) */
+  std::map<size_t, size_t> sink2src_pin_map;
+  for (size_t ipin = 0; ipin < tile_port_to_connect.get_width(); ++ipin) {
+    size_t sink_pin = tile_port_to_connect.pins()[ipin];
+    size_t src_pin = src_port.pins()[ipin];
+    sink2src_pin_map[sink_pin] = src_pin;
+  }
 
   /* A tile may consist of multiple subtile, connect to all the pins from sub tiles */
   for (int iz = 0; iz < physical_tile->capacity; ++iz) {
-    for (size_t pin_id = 0; pin_id < size_t(physical_tile_port.num_pins); ++pin_id) {
+    for (size_t pin_id = tile_port_to_connect.get_lsb(); pin_id < tile_port_to_connect.get_msb() + 1; ++pin_id) {
       /* TODO: This should be replaced by using a pin mapping data structure from physical tile! */
       int grid_pin_index = grid_pin_start_index + iz * physical_tile->equivalent_sites[0]->pb_type->num_pins + pin_id;
       /* Find the module pin */
@@ -811,7 +819,7 @@ int build_top_module_global_net_for_given_grid_module(ModuleManager& module_mana
 
         ModuleNetId net = create_module_source_pin_net(module_manager, top_module, 
                                                        top_module, 0, 
-                                                       top_module_port, src_port.pins()[pin_id]);
+                                                       top_module_port, src_port.pins()[sink2src_pin_map[pin_id]]);
         VTR_ASSERT(ModuleNetId::INVALID() != net);
         
         /* Configure the net sink */
