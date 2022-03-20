@@ -31,6 +31,8 @@ Note that an OpenFPGA architecture can be applied to multiple VPR architecture f
 - tree\_mux: If routing multiplexers are built with a tree-like structure
 - <feature_size>: The technology node which the delay numbers are extracted from.
 - powergate : The FPGA has power-gating techniques applied. If not defined, there is no power-gating.
-- GlobalTile<Int>Clk: How many clocks are defined through global ports from physical tiles. <Int> is the number of clocks 
+- GlobalTile<Int>Clk<Pin>: How many clocks are defined through global ports from physical tiles.
+  * <Int> is the number of clocks 
+  * <Pin> When specified, multiple clocks are in separated pins with different names
 
 Other features are used in naming should be listed here.
