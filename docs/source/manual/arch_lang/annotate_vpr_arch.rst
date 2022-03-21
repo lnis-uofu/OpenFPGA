@@ -134,6 +134,16 @@ When a global port, e.g., ``clk``, is defined in ``tile_annotation`` using the f
     </global_port>
   </tile_annotations>
 
+Note that a global port can also be defined to drive only a partial bit of a port of a physical tile.
+
+.. code-block:: xml
+
+  <tile_annotations>
+    <global_port name="clk" is_clock="true">
+      <tile name="clb" port="clk[3:3]"/>
+    </global_port>
+  </tile_annotations>
+
 Clock port ``clk`` of each ``clb`` tile will be connected to a common clock port of the top module, while local clock network is customizable through VPR's architecture description language. For instance, the local clock network can be a programmable clock network. 
 
 .. _annotate_vpr_arch_pb_type_annotation:

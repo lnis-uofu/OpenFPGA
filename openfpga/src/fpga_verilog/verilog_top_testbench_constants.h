@@ -18,16 +18,16 @@ constexpr char* TOP_TESTBENCH_SIM_START_PORT_NAME = "sim_start";
 
 constexpr char* TOP_TESTBENCH_ERROR_COUNTER = "nb_error";
 
-constexpr char* TOP_TB_RESET_PORT_NAME = "greset";
-constexpr char* TOP_TB_SET_PORT_NAME = "gset";
-constexpr char* TOP_TB_PROG_RESET_PORT_NAME = "prog_reset";
-constexpr char* TOP_TB_PROG_SET_PORT_NAME = "prog_set";
-constexpr char* TOP_TB_CONFIG_DONE_PORT_NAME = "config_done";
-constexpr char* TOP_TB_OP_CLOCK_PORT_NAME = "op_clock";
-constexpr char* TOP_TB_OP_CLOCK_PORT_PREFIX = "operating_clk_";
-constexpr char* TOP_TB_PROG_CLOCK_PORT_NAME = "prog_clock";
-constexpr char* TOP_TB_INOUT_REG_POSTFIX = "_reg";
-constexpr char* TOP_TB_CLOCK_REG_POSTFIX = "_reg";
+constexpr char* TOP_TB_RESET_PORT_NAME = "__greset__";
+constexpr char* TOP_TB_SET_PORT_NAME = "__gset__";
+constexpr char* TOP_TB_PROG_RESET_PORT_NAME = "__prog_reset__";
+constexpr char* TOP_TB_PROG_SET_PORT_NAME = "__prog_set_";
+constexpr char* TOP_TB_CONFIG_DONE_PORT_NAME = "__config_done__";
+constexpr char* TOP_TB_OP_CLOCK_PORT_NAME = "__op_clock__";
+constexpr char* TOP_TB_OP_CLOCK_PORT_PREFIX = "__operating_clk_";
+constexpr char* TOP_TB_PROG_CLOCK_PORT_NAME = "__prog_clock__";
+constexpr char* TOP_TB_INOUT_REG_POSTFIX = "_reg__";
+constexpr char* TOP_TB_CLOCK_REG_POSTFIX = "_reg__";
 constexpr char* TOP_TB_BITSTREAM_LENGTH_VARIABLE = "BITSTREAM_LENGTH";
 constexpr char* TOP_TB_BITSTREAM_WIDTH_VARIABLE = "BITSTREAM_WIDTH";
 constexpr char* TOP_TB_BITSTREAM_MEM_REG_NAME = "bit_mem";
