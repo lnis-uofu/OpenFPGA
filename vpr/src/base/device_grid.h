@@ -1,8 +1,18 @@
 #ifndef DEVICE_GRID
 #define DEVICE_GRID
 
+#include <string>
+#include <vector>
 #include "vtr_ndmatrix.h"
-#include "vpr_types.h"
+#include "physical_types.h"
+
+///@brief s_grid_tile is the minimum tile of the fpga
+struct t_grid_tile {
+    t_physical_tile_type_ptr type = nullptr; ///<Pointer to type descriptor, NULL for illegal
+    int width_offset = 0;                    ///<Number of grid tiles reserved based on width (right) of a block
+    int height_offset = 0;                   ///<Number of grid tiles reserved based on height (top) of a block
+    const t_metadata_dict* meta = nullptr;
+};
 
 class DeviceGrid {
   public:
@@ -19,12 +29,18 @@ class DeviceGrid {
     auto operator[](size_t index) const { return grid_[index]; }
     auto operator[](size_t index) { return grid_[index]; }
 
+    const vtr::Matrix<t_grid_tile>& matrix() const {
+        return grid_;
+    }
+
     void clear();
 
     size_t num_instances(t_physical_tile_type_ptr type) const;
 
-    //Returns the block types which limits the device size (may be empty if
-    //resource limits were not considered when selecting the device).
+    /**
+     * @brief Returns the block types which limits the device size (may be empty if
+     *        resource limits were not considered when selecting the device).
+     */
     std::vector<t_logical_block_type_ptr> limiting_resources() const { return limiting_resources_; }
 
   private:

@@ -78,7 +78,7 @@ static void find_all_the_macro(int* num_of_macro, std::vector<ClusterBlockId>& p
     num_macro = 0;
     for (auto blk_id : cluster_ctx.clb_nlist.blocks()) {
         auto logical_block = cluster_ctx.clb_nlist.block_type(blk_id);
-        auto physical_tile = pick_best_physical_type(logical_block);
+        auto physical_tile = pick_physical_type(logical_block);
 
         num_blk_pins = cluster_ctx.clb_nlist.block_type(blk_id)->pb_type->num_pins;
         for (to_iblk_pin = 0; to_iblk_pin < num_blk_pins; to_iblk_pin++) {
@@ -355,7 +355,7 @@ std::vector<t_pl_macro> alloc_and_load_placement_macros(t_direct_inf* directs, i
         for (size_t imember = 0; imember < macros[imacro].members.size(); imember++) {
             macros[imacro].members[imember].offset.x = imember * directs[pl_macro_idirect[imacro]].x_offset;
             macros[imacro].members[imember].offset.y = imember * directs[pl_macro_idirect[imacro]].y_offset;
-            macros[imacro].members[imember].offset.z = directs[pl_macro_idirect[imacro]].z_offset;
+            macros[imacro].members[imember].offset.sub_tile = directs[pl_macro_idirect[imacro]].sub_tile_offset;
             macros[imacro].members[imember].blk_index = pl_macro_member_blk_num[imacro][imember];
         }
     }
@@ -450,7 +450,7 @@ static void write_place_macros(std::string filename, const std::vector<t_pl_macr
                     cluster_ctx.clb_nlist.block_name(macro_memb->blk_index).c_str(),
                     macro_memb->offset.x,
                     macro_memb->offset.y,
-                    macro_memb->offset.z);
+                    macro_memb->offset.sub_tile);
         }
         fprintf(f, "\n");
     }
@@ -497,7 +497,11 @@ static bool net_is_driven_by_direct(ClusterNetId clb_net) {
     ClusterBlockId block_id = cluster_ctx.clb_nlist.net_driver_block(clb_net);
     int pin_index = cluster_ctx.clb_nlist.net_pin_logical_index(clb_net, 0);
 
-    auto direct = f_idirect_from_blk_pin[cluster_ctx.clb_nlist.block_type(block_id)->index][pin_index];
+    auto logical_block = cluster_ctx.clb_nlist.block_type(block_id);
+    auto physical_tile = pick_physical_type(logical_block);
+    auto physical_pin = get_physical_pin(physical_tile, logical_block, pin_index);
+
+    auto direct = f_idirect_from_blk_pin[physical_tile->index][physical_pin];
 
     return direct != OPEN;
 }

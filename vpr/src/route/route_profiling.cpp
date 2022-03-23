@@ -2,6 +2,7 @@
 #include "globals.h"
 #include "vpr_types.h"
 #include "route_profiling.h"
+#include "rr_graph.h"
 
 namespace profiling {
 
@@ -28,6 +29,10 @@ void time_on_criticality_analysis() {}
 void time_on_fanout_analysis() {}
 
 void profiling_initialization(unsigned /*max_net_fanout*/) {}
+
+void conn_start() {}
+void conn_finish(int /*src_rr*/, int /*sink_rr*/, float /*criticality*/) {}
+void net_finish() {}
 
 #else
 
@@ -147,8 +152,8 @@ void congestion_analysis() {
 	// print out specific node information if congestion for type is low enough
 
 	int total_congestion = 0;
-	for (int inode = 0; inode < device_ctx.rr_nodes.size(); ++inode) {
-		const t_rr_node& node = device_ctx.rr_nodes[inode];
+    for (const RRNodeId& rr_id : device_ctx.rr_graph.nodes()){
+		const t_rr_node& node = device_ctx.rr_nodes[(size_t)rr_id];
 		int congestion = node.get_occ() - node.get_capacity();
 
 		if (congestion > 0) {
@@ -170,8 +175,8 @@ void congestion_analysis() {
 	// specific print out each congested node
 	if (!congested.empty()) {
 		VTR_LOG("Specific congested nodes\nxlow ylow   type\n");
-		for (int inode = 0; inode < device_ctx.rr_nodes.size(); ++inode) {
-			const t_rr_node& node = device_ctx.rr_nodes[inode];
+        for (const RRNodeId& rr_id : device_ctx.rr_graph.nodes()){
+			const t_rr_node& node = device_ctx.rr_nodes[(size_t)rr_id];
 			if (congested.is_congested(node.type) && (node.get_occ() - node.get_capacity()) > 0) {
 				VTR_LOG("(%3d,%3d) %6s\n", node.get_xlow(), node.get_ylow(), node_typename[node.type]);
 			}
@@ -180,6 +185,12 @@ void congestion_analysis() {
 	return;
 #    endif
 }
+
+static clock_t conn_start_time;
+static float worst_conn_time = 0.f;
+static int worst_src_rr;
+static int worst_sink_rr;
+static float worst_crit;
 
 void profiling_initialization(unsigned max_fanout) {
     // add 1 so that indexing on the max fanout would still be valid
@@ -195,7 +206,36 @@ void profiling_initialization(unsigned max_fanout) {
     part_tree_preserved = 0;
     connections_forced_to_reroute = 0;
     connections_rerouted_due_to_forcing = 0;
+    worst_conn_time = 0.f;
     return;
+}
+
+void conn_start() {
+    conn_start_time = clock();
+}
+void conn_finish(int src_rr, int sink_rr, float criticality) {
+    float route_time = static_cast<float>(clock() - conn_start_time) / CLOCKS_PER_SEC;
+    if (route_time > worst_conn_time) {
+        worst_src_rr = src_rr;
+        worst_sink_rr = sink_rr;
+        worst_conn_time = route_time;
+        worst_crit = criticality;
+    }
+
+    VTR_LOG("%s to %s (crit: %f) took %f\n",
+            describe_rr_node(src_rr).c_str(),
+            describe_rr_node(sink_rr).c_str(),
+            criticality,
+            route_time);
+}
+void net_finish() {
+    if (worst_conn_time > 0.f) {
+        VTR_LOG("Worst conn was %s to %s (crit: %f) took %f\n",
+                describe_rr_node(worst_src_rr).c_str(),
+                describe_rr_node(worst_sink_rr).c_str(),
+                worst_crit,
+                worst_conn_time);
+    }
 }
 #endif
 

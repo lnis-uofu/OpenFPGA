@@ -69,8 +69,10 @@ t_mode* t_pb::get_mode() const {
     }
 }
 
-//Returns the t_pb associated with the specified gnode which is contained
-//within the current pb
+/**
+ * @brief Returns the read-only t_pb associated with the specified gnode which is contained
+ *        within the current pb
+ */
 const t_pb* t_pb::find_pb(const t_pb_graph_node* gnode) const {
     //Base case
     if (pb_graph_node == gnode) {
@@ -85,6 +87,33 @@ const t_pb* t_pb::find_pb(const t_pb_graph_node* gnode) const {
             const t_pb* child_pb = &child_pbs[ichild_type][ipb];
 
             const t_pb* found_pb = child_pb->find_pb(gnode);
+            if (found_pb != nullptr) {
+                VTR_ASSERT(found_pb->pb_graph_node == gnode);
+                return found_pb; //Found
+            }
+        }
+    }
+    return nullptr; //Not found
+}
+
+/**
+ * @brief Returns the mutable t_pb associated with the specified gnode which is contained
+ *        within the current pb
+ */
+t_pb* t_pb::find_mutable_pb(const t_pb_graph_node* gnode) {
+    //Base case
+    if (pb_graph_node == gnode) {
+        return this;
+    }
+
+    //Search recursively
+    for (int ichild_type = 0; ichild_type < get_num_child_types(); ++ichild_type) {
+        if (child_pbs[ichild_type] == nullptr) continue;
+
+        for (int ipb = 0; ipb < get_num_children_of_type(ichild_type); ++ipb) {
+            t_pb* child_pb = &child_pbs[ichild_type][ipb];
+
+            t_pb* found_pb = child_pb->find_mutable_pb(gnode);
             if (found_pb != nullptr) {
                 VTR_ASSERT(found_pb->pb_graph_node == gnode);
                 return found_pb; //Found
@@ -117,7 +146,9 @@ const t_pb* t_pb::find_pb_for_model(const std::string& blif_model) const {
     return nullptr; //Not found
 }
 
-//Returns the root pb containing this pb
+/**
+ * @brief Returns the root pb containing this pb
+ */
 const t_pb* t_pb::root_pb() const {
     const t_pb* curr_pb = this;
     while (!curr_pb->is_root()) {
@@ -153,9 +184,11 @@ std::string t_pb::hierarchical_type_name() const {
     return vtr::join(names.rbegin(), names.rend(), "/");
 }
 
-//Returns the bit index into the AtomPort for the specified primitive
-//pb_graph_pin, considering any pin rotations which have been applied to logically
-//equivalent pins
+/**
+ * @brief Returns the bit index into the AtomPort for the specified primitive
+ *        pb_graph_pin, considering any pin rotations which have been applied to logically
+ *        equivalent pins
+ */
 BitIndex t_pb::atom_pin_bit_index(const t_pb_graph_pin* gpin) const {
     VTR_ASSERT_MSG(is_primitive(), "Atom pin indicies can only be looked up from primitives");
 
@@ -170,9 +203,13 @@ BitIndex t_pb::atom_pin_bit_index(const t_pb_graph_pin* gpin) const {
     }
 }
 
-//For a given gpin, sets the mapping to the original atom netlist pin's bit index in
-//it's AtomPort.  This is used to record any pin rotations which have been applied to
-//logically equivalent pins
+/**
+ * @brief For a given gpin, sets the mapping to the original atom netlist pin's bit index in
+ *        it's AtomPort.
+ *
+ * This is used to record any pin rotations which have been applied to
+ * logically equivalent pins
+ */
 void t_pb::set_atom_pin_bit_index(const t_pb_graph_pin* gpin, BitIndex atom_pin_bit_idx) {
     pin_rotations_[gpin] = atom_pin_bit_idx;
 }

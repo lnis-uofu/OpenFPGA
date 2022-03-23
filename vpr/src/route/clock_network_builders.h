@@ -8,8 +8,11 @@
 
 #include "vpr_types.h"
 
+#include "rr_graph_builder.h"
+#include "rr_graph2.h"
 #include "rr_graph_clock.h"
 
+class t_rr_graph_storage;
 class ClockRRGraphBuilder;
 
 enum class ClockType {
@@ -19,50 +22,50 @@ enum class ClockType {
 };
 
 struct MetalLayer {
-    float r_metal;
-    float c_metal;
+    float r_metal = std::numeric_limits<float>::quiet_NaN();
+    float c_metal = std::numeric_limits<float>::quiet_NaN();
 };
 
 struct Wire {
     MetalLayer layer;
-    int start;
-    int length;
-    int position;
+    int start = OPEN;
+    int length = OPEN;
+    int position = OPEN;
 };
 
 struct WireRepeat {
-    int x;
-    int y;
+    int x = OPEN;
+    int y = OPEN;
 };
 
 struct RibDrive {
     std::string name;
-    int offset;
-    int switch_idx;
+    int offset = OPEN;
+    int switch_idx = OPEN;
 };
 
 struct RibTaps {
     std::string name;
-    int offset;
-    int increment;
+    int offset = OPEN;
+    int increment = OPEN;
 };
 
 struct SpineDrive {
     std::string name;
-    int offset;
-    int switch_idx;
+    int offset = OPEN;
+    int switch_idx = OPEN;
 };
 
 struct SpineTaps {
     std::string name;
-    int offset;
-    int increment;
+    int offset = OPEN;
+    int increment = OPEN;
 };
 
 struct HtreeDrive {
     std::string name;
     Coordinates offset;
-    int switch_idx;
+    int switch_idx = OPEN;
 };
 
 struct HtreeTaps {
@@ -74,7 +77,7 @@ struct HtreeTaps {
 class ClockNetwork {
   protected:
     std::string clock_name_;
-    int num_inst_;
+    int num_inst_ = OPEN;
 
   public:
     /*
@@ -101,9 +104,18 @@ class ClockNetwork {
     /* Creates the RR nodes for the clock network wires and adds them to the reverse lookup
      * in ClockRRGraphBuilder. The reverse lookup maps the nodes to their switch point locations */
     void create_rr_nodes_for_clock_network_wires(ClockRRGraphBuilder& clock_graph,
+                                                 t_rr_graph_storage* rr_nodes,
+                                                 RRGraphBuilder& rr_graph_builder,
+                                                 t_rr_edge_info_set* rr_edges_to_create,
                                                  int num_segments);
     virtual void create_segments(std::vector<t_segment_inf>& segment_inf) = 0;
-    virtual void create_rr_nodes_and_internal_edges_for_one_instance(ClockRRGraphBuilder& clock_graph, int num_segments) = 0;
+    virtual void create_rr_nodes_and_internal_edges_for_one_instance(ClockRRGraphBuilder& clock_graph,
+                                                                     t_rr_graph_storage* rr_nodes,
+                                                                     RRGraphBuilder& rr_graph_builder,
+                                                                     t_rr_edge_info_set* rr_edges_to_create,
+                                                                     int num_segments)
+        = 0;
+    virtual size_t estimate_additional_nodes(const DeviceGrid& grid) = 0;
 };
 
 class ClockRib : public ClockNetwork {
@@ -119,9 +131,9 @@ class ClockRib : public ClockNetwork {
     RibTaps tap;
 
     // segment indices
-    int right_seg_idx = -1;
-    int left_seg_idx = -1;
-    int drive_seg_idx = -1;
+    int right_seg_idx = OPEN;
+    int left_seg_idx = OPEN;
+    int drive_seg_idx = OPEN;
 
   public:
     /** Constructor**/
@@ -134,7 +146,7 @@ class ClockRib : public ClockNetwork {
     /*
      * Getters
      */
-    ClockType get_network_type() const;
+    ClockType get_network_type() const override;
 
     /*
      * Setters
@@ -152,20 +164,25 @@ class ClockRib : public ClockNetwork {
     /*
      * Member functions
      */
-    void create_segments(std::vector<t_segment_inf>& segment_inf);
+    void create_segments(std::vector<t_segment_inf>& segment_inf) override;
     void create_rr_nodes_and_internal_edges_for_one_instance(ClockRRGraphBuilder& clock_graph,
-                                                             int num_segments);
-    RRNodeId create_chanx_wire(int x_start,
-                               int x_end,
-                               int y,
-                               int ptc_num,
-                               e_direction direction,
-                               RRGraph& rr_graph);
+                                                             t_rr_graph_storage* rr_nodes,
+                                                             RRGraphBuilder& rr_graph_builder,
+                                                             t_rr_edge_info_set* rr_edges_to_create,
+                                                             int num_segments) override;
+    size_t estimate_additional_nodes(const DeviceGrid& grid) override;
+    int create_chanx_wire(int x_start,
+                          int x_end,
+                          int y,
+                          int ptc_num,
+                          Direction direction,
+                          t_rr_graph_storage* rr_nodes,
+                          RRGraphBuilder& rr_graph_builder);
     void record_tap_locations(unsigned x_start,
                               unsigned x_end,
                               unsigned y,
-                              const RRNodeId& left_rr_node_idx,
-                              const RRNodeId& right_rr_node_idx,
+                              int left_rr_node_idx,
+                              int right_rr_node_idx,
                               ClockRRGraphBuilder& clock_graph);
 };
 
@@ -182,15 +199,15 @@ class ClockSpine : public ClockNetwork {
     SpineTaps tap;
 
     // segment indices
-    int right_seg_idx = -1;
-    int left_seg_idx = -1;
-    int drive_seg_idx = -1;
+    int right_seg_idx = OPEN;
+    int left_seg_idx = OPEN;
+    int drive_seg_idx = OPEN;
 
   public:
     /*
      * Getters
      */
-    ClockType get_network_type() const;
+    ClockType get_network_type() const override;
 
     /*
      * Setters
@@ -208,21 +225,26 @@ class ClockSpine : public ClockNetwork {
     /*
      * Member functions
      */
-    void create_segments(std::vector<t_segment_inf>& segment_inf);
+    void create_segments(std::vector<t_segment_inf>& segment_inf) override;
     void create_rr_nodes_and_internal_edges_for_one_instance(ClockRRGraphBuilder& clock_graph,
-                                                             int num_segments);
-    RRNodeId create_chany_wire(int y_start,
-                               int y_end,
-                               int x,
-                               int ptc_num,
-                               e_direction direction,
-                               RRGraph& rr_graph,
-                               int num_segments);
+                                                             t_rr_graph_storage* rr_nodes,
+                                                             RRGraphBuilder& rr_graph_builder,
+                                                             t_rr_edge_info_set* rr_edges_to_create,
+                                                             int num_segments) override;
+    size_t estimate_additional_nodes(const DeviceGrid& grid) override;
+    int create_chany_wire(int y_start,
+                          int y_end,
+                          int x,
+                          int ptc_num,
+                          Direction direction,
+                          t_rr_graph_storage* rr_nodes,
+                          RRGraphBuilder& rr_graph_builder,
+                          int num_segments);
     void record_tap_locations(unsigned y_start,
                               unsigned y_end,
                               unsigned x,
-                              const RRNodeId& left_node_idx,
-                              const RRNodeId& right_node_idx,
+                              int left_node_idx,
+                              int right_node_idx,
                               ClockRRGraphBuilder& clock_graph);
 };
 
@@ -238,11 +260,15 @@ class ClockHTree : private ClockNetwork {
     HtreeTaps tap;
 
   public:
-    ClockType get_network_type() const { return ClockType::H_TREE; }
+    ClockType get_network_type() const override { return ClockType::H_TREE; }
     // TODO: Unimplemented member function
-    void create_segments(std::vector<t_segment_inf>& segment_inf);
+    void create_segments(std::vector<t_segment_inf>& segment_inf) override;
     void create_rr_nodes_and_internal_edges_for_one_instance(ClockRRGraphBuilder& clock_graph,
-                                                             int num_segments);
+                                                             t_rr_graph_storage* rr_nodes,
+                                                             RRGraphBuilder& rr_graph_builder,
+                                                             t_rr_edge_info_set* rr_edges_to_create,
+                                                             int num_segments) override;
+    size_t estimate_additional_nodes(const DeviceGrid& grid) override;
 };
 
 #endif

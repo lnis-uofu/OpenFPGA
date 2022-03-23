@@ -20,7 +20,7 @@ static bool add_activity_to_net(const AtomNetlist& netlist, std::unordered_map<A
     }
 
     VTR_LOG_WARN(
-        "net %s found in activity file, but it does not exist in the .blif file.\n",
+        "Net %s found in activity file, but it does not exist in the .blif file.\n",
         net_name);
     return true;
 }

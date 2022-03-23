@@ -33,7 +33,7 @@ static void count_unidir_routing_transistors(std::vector<t_segment_inf>& segment
                                              float R_minW_pmos,
                                              const float trans_sram_bit);
 
-static float get_cblock_trans(const vtr::vector<RRNodeId, int>& num_inputs_to_cblock, int wire_to_ipin_switch, int max_inputs_to_cblock, float trans_sram_bit);
+static float get_cblock_trans(int* num_inputs_to_cblock, int wire_to_ipin_switch, int max_inputs_to_cblock, float trans_sram_bit);
 
 static float* alloc_and_load_unsharable_switch_trans(int num_switch,
                                                      float trans_sram_bit,
@@ -100,8 +100,9 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
      * something that is 1.5x or 2x the largest buffer, so this may be a bit     *
      * optimistic (but I still think it's pretty reasonable).                    */
     auto& device_ctx = g_vpr_ctx.device();
+    const auto& rr_graph = device_ctx.rr_graph;
 
-    vtr::vector<RRNodeId, int> num_inputs_to_cblock; /* [0..device_ctx.rr_nodes.size()-1], but all entries not    */
+    int* num_inputs_to_cblock; /* [0..device_ctx.rr_nodes.size()-1], but all entries not    */
 
     /* corresponding to IPINs will be 0.           */
 
@@ -110,7 +111,7 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
     float *unsharable_switch_trans, *sharable_switch_trans; /* [0..num_switch-1] */
 
     t_rr_type from_rr_type, to_rr_type;
-    int maxlen;
+    int iedge, num_edges, maxlen;
     int iswitch, i, j, iseg, max_inputs_to_cblock;
     float input_cblock_trans, shared_opin_buffer_trans;
 
@@ -144,7 +145,7 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
         trans_track_to_cblock_buf = 0;
     }
 
-    num_inputs_to_cblock.resize(device_ctx.rr_graph.nodes().size(), 0);
+    num_inputs_to_cblock = (int*)vtr::calloc(rr_graph.num_nodes(), sizeof(int));
 
     maxlen = std::max(device_ctx.grid.width(), device_ctx.grid.height());
     cblock_counted = (bool*)vtr::calloc(maxlen, sizeof(bool));
@@ -156,37 +157,38 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
     sharable_switch_trans = alloc_and_load_sharable_switch_trans(num_switch,
                                                                  R_minW_nmos, R_minW_pmos);
 
-    for (const RRNodeId& from_node : device_ctx.rr_graph.nodes()) {
-        from_rr_type = device_ctx.rr_graph.node_type(from_node);
+    for (const RRNodeId& from_rr_node : device_ctx.rr_graph.nodes()) {
+        size_t from_node = (size_t)from_rr_node;
+        from_rr_type = rr_graph.node_type(from_rr_node);
 
         switch (from_rr_type) {
             case CHANX:
             case CHANY:
-                for (const RREdgeId& iedge : device_ctx.rr_graph.node_out_edges(from_node)) {
-                    RRNodeId to_node = device_ctx.rr_graph.edge_sink_node(iedge);
-                    to_rr_type = device_ctx.rr_graph.node_type(to_node);
+                num_edges = rr_graph.num_edges(RRNodeId(from_node));
+
+                for (iedge = 0; iedge < num_edges; iedge++) {
+                    RRNodeId to_node = rr_graph.edge_sink_node(RRNodeId(from_node), iedge);
+                    to_rr_type = rr_graph.node_type(to_node);
 
                     /* Ignore any uninitialized rr_graph nodes */
-                    if ((device_ctx.rr_graph.node_type(to_node) == SOURCE)
-                        && (device_ctx.rr_graph.node_xlow(to_node) == 0) && (device_ctx.rr_graph.node_ylow(to_node) == 0)
-                        && (device_ctx.rr_graph.node_xhigh(to_node) == 0) && (device_ctx.rr_graph.node_yhigh(to_node) == 0)) {
+                    if (!rr_graph.node_is_initialized(to_node)) {
                         continue;
                     }
 
                     switch (to_rr_type) {
                         case CHANX:
                         case CHANY:
-                            iswitch = (short)size_t(device_ctx.rr_graph.edge_switch(iedge));
+                            iswitch = rr_graph.edge_switch(RRNodeId(from_node), iedge);
 
-                            if (device_ctx.rr_switch_inf[iswitch].buffered()) {
-                                iseg = seg_index_of_sblock(from_node, to_node);
+                            if (rr_graph.rr_switch_inf(RRSwitchId(iswitch)).buffered()) {
+                                iseg = seg_index_of_sblock(from_node, size_t(to_node));
                                 shared_buffer_trans[iseg] = std::max(shared_buffer_trans[iseg],
                                                                      sharable_switch_trans[iswitch]);
 
                                 ntrans_no_sharing += unsharable_switch_trans[iswitch]
                                                      + sharable_switch_trans[iswitch];
                                 ntrans_sharing += unsharable_switch_trans[iswitch];
-                            } else if (from_node < to_node) {
+                            } else if (from_node < size_t(to_node)) {
                                 /* Pass transistor shared by two edges -- only count once.  *
                                  * Also, no part of a pass transistor is sharable.          */
 
@@ -196,11 +198,11 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
                             break;
 
                         case IPIN:
-                            num_inputs_to_cblock[to_node]++;
+                            num_inputs_to_cblock[size_t(to_node)]++;
                             max_inputs_to_cblock = std::max(max_inputs_to_cblock,
-                                                            num_inputs_to_cblock[to_node]);
+                                                            num_inputs_to_cblock[size_t(to_node)]);
 
-                            iseg = seg_index_of_cblock(from_rr_type, to_node);
+                            iseg = seg_index_of_cblock(from_rr_type, size_t(to_node));
 
                             if (cblock_counted[iseg] == false) {
                                 cblock_counted[iseg] = true;
@@ -212,8 +214,8 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
                         default:
                             VPR_ERROR(VPR_ERROR_ROUTE,
                                       "in count_routing_transistors:\n"
-                                      "\tUnexpected connection from node %ld (type %s) to node %ld (type %s).\n",
-                                      size_t(from_node), rr_node_typename[from_rr_type], size_t(to_node), rr_node_typename[to_rr_type]);
+                                      "\tUnexpected connection from node %d (type %s) to node %d (type %s).\n",
+                                      from_node, rr_node_typename[from_rr_type], size_t(to_node), rr_node_typename[to_rr_type]);
                             break;
 
                     } /* End switch on to_rr_type. */
@@ -223,34 +225,35 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
                 /* Now add in the shared buffer transistors, and reset some flags. */
 
                 if (from_rr_type == CHANX) {
-                    for (i = device_ctx.rr_graph.node_xlow(from_node) - 1;
-                         i <= device_ctx.rr_graph.node_xhigh(from_node); i++) {
+                    for (i = rr_graph.node_xlow(from_rr_node) - 1;
+                         i <= rr_graph.node_xhigh(from_rr_node); i++) {
                         ntrans_sharing += shared_buffer_trans[i];
                         shared_buffer_trans[i] = 0.;
                     }
 
-                    for (i = device_ctx.rr_graph.node_xlow(from_node); i <= device_ctx.rr_graph.node_xhigh(from_node);
+                    for (i = rr_graph.node_xlow(from_rr_node); i <= rr_graph.node_xhigh(from_rr_node);
                          i++)
                         cblock_counted[i] = false;
 
                 } else { /* CHANY */
-                    for (j = device_ctx.rr_graph.node_ylow(from_node) - 1;
-                         j <= device_ctx.rr_graph.node_yhigh(from_node); j++) {
+                    for (j = rr_graph.node_ylow(from_rr_node) - 1;
+                         j <= rr_graph.node_yhigh(from_rr_node); j++) {
                         ntrans_sharing += shared_buffer_trans[j];
                         shared_buffer_trans[j] = 0.;
                     }
 
-                    for (j = device_ctx.rr_graph.node_ylow(from_node); j <= device_ctx.rr_graph.node_yhigh(from_node);
+                    for (j = rr_graph.node_ylow(from_rr_node); j <= rr_graph.node_yhigh(from_rr_node);
                          j++)
                         cblock_counted[j] = false;
                 }
                 break;
 
             case OPIN:
+                num_edges = rr_graph.num_edges(RRNodeId(from_node));
                 shared_opin_buffer_trans = 0.;
 
-                for (const RREdgeId& iedge : device_ctx.rr_graph.node_out_edges(from_node)) {
-                    iswitch = (short)size_t(device_ctx.rr_graph.edge_switch(iedge));
+                for (iedge = 0; iedge < num_edges; iedge++) {
+                    iswitch = rr_graph.edge_switch(RRNodeId(from_node), iedge);
                     ntrans_no_sharing += unsharable_switch_trans[iswitch]
                                          + sharable_switch_trans[iswitch];
                     ntrans_sharing += unsharable_switch_trans[iswitch];
@@ -278,7 +281,7 @@ void count_bidir_routing_transistors(int num_switch, int wire_to_ipin_switch, fl
     input_cblock_trans = get_cblock_trans(num_inputs_to_cblock, wire_to_ipin_switch,
                                           max_inputs_to_cblock, trans_sram_bit);
 
-    num_inputs_to_cblock.clear();
+    free(num_inputs_to_cblock);
 
     ntrans_sharing += input_cblock_trans;
     ntrans_no_sharing += input_cblock_trans;
@@ -298,14 +301,15 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
                                       float R_minW_pmos,
                                       const float trans_sram_bit) {
     auto& device_ctx = g_vpr_ctx.device();
+    const auto& rr_graph = device_ctx.rr_graph;
 
     bool* cblock_counted;      /* [0..max(device_ctx.grid.width(),device_ctx.grid.height())] -- 0th element unused. */
-    vtr::vector<RRNodeId, int> num_inputs_to_cblock; /* [0..device_ctx.rr_nodes.size()-1], but all entries not    */
+    int* num_inputs_to_cblock; /* [0..device_ctx.rr_nodes.size()-1], but all entries not    */
 
     /* corresponding to IPINs will be 0.           */
 
     t_rr_type from_rr_type, to_rr_type;
-    int i, j, iseg, maxlen;
+    int i, j, iseg, iedge, num_edges, maxlen;
     int max_inputs_to_cblock;
     float input_cblock_trans;
 
@@ -314,7 +318,8 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
      * a single mux. We should count this mux only once as we look at the outgoing
      * switches of all rr nodes. Thus we keep track of which muxes we have already
      * counted via the variable below. */
-    vtr::vector<RRNodeId, bool> chan_node_switch_done(device_ctx.rr_graph.nodes().size(), false);
+    bool* chan_node_switch_done;
+    chan_node_switch_done = (bool*)vtr::calloc(rr_graph.num_nodes(), sizeof(bool));
 
     /* The variable below is an accumulator variable that will add up all the   *
      * transistors in the routing.  Make double so that it doesn't stop         *
@@ -344,49 +349,50 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
         trans_track_to_cblock_buf = 0;
     }
 
-    num_inputs_to_cblock.resize(device_ctx.rr_graph.nodes().size(), 0);
+    num_inputs_to_cblock = (int*)vtr::calloc(rr_graph.num_nodes(), sizeof(int));
     maxlen = std::max(device_ctx.grid.width(), device_ctx.grid.height());
     cblock_counted = (bool*)vtr::calloc(maxlen, sizeof(bool));
 
     ntrans = 0;
-    for (const RRNodeId& from_node : device_ctx.rr_graph.nodes()) {
-        from_rr_type = device_ctx.rr_graph.node_type(from_node);
+    for (const RRNodeId& from_rr_node : device_ctx.rr_graph.nodes()) {
+        size_t from_node = size_t(from_rr_node);
+        from_rr_type = rr_graph.node_type(from_rr_node);
 
         switch (from_rr_type) {
             case CHANX:
             case CHANY:
+                num_edges = rr_graph.num_edges(RRNodeId(from_node));
+
                 /* Increment number of inputs per cblock if IPIN */
-                for (const RREdgeId& iedge : device_ctx.rr_graph.node_out_edges(from_node)) {
-                    RRNodeId to_node = device_ctx.rr_graph.edge_sink_node(iedge);
-                    to_rr_type = device_ctx.rr_graph.node_type(to_node);
+                for (iedge = 0; iedge < num_edges; iedge++) {
+                    RRNodeId to_node = rr_graph.edge_sink_node(RRNodeId(from_node), iedge);
+                    to_rr_type = rr_graph.node_type(to_node);
 
                     /* Ignore any uninitialized rr_graph nodes */
-                    if ((device_ctx.rr_graph.node_type(to_node) == SOURCE)
-                        && (device_ctx.rr_graph.node_xlow(to_node) == 0) && (device_ctx.rr_graph.node_ylow(to_node) == 0)
-                        && (device_ctx.rr_graph.node_xhigh(to_node) == 0) && (device_ctx.rr_graph.node_yhigh(to_node) == 0)) {
+                    if (!rr_graph.node_is_initialized(to_node)) {
                         continue;
                     }
 
                     switch (to_rr_type) {
                         case CHANX:
                         case CHANY:
-                            if (!chan_node_switch_done[to_node]) {
-                                int switch_index = (int)size_t(device_ctx.rr_graph.edge_switch(iedge));
-                                auto switch_type = device_ctx.rr_switch_inf[switch_index].type();
+                            if (!chan_node_switch_done[size_t(to_node)]) {
+                                int switch_index = rr_graph.edge_switch(RRNodeId(from_node), iedge);
+                                auto switch_type = rr_graph.rr_switch_inf(RRSwitchId(switch_index)).type();
 
-                                int fan_in = device_ctx.rr_graph.node_in_edges(to_node).size();
+                                int fan_in = rr_graph.node_fan_in(to_node);
 
-                                if (device_ctx.rr_switch_inf[switch_index].type() == SwitchType::MUX) {
+                                if (rr_graph.rr_switch_inf(RRSwitchId(switch_index)).type() == SwitchType::MUX) {
                                     /* Each wire segment begins with a multipexer followed by a driver for unidirectional */
                                     /* Each multiplexer contains all the fan-in to that routing node */
                                     /* Add up area of multiplexer */
                                     ntrans += trans_per_mux(fan_in, trans_sram_bit,
-                                                            device_ctx.rr_switch_inf[switch_index].mux_trans_size);
+                                                            rr_graph.rr_switch_inf(RRSwitchId(switch_index)).mux_trans_size);
 
                                     /* Add up area of buffer */
                                     /* The buffer size should already have been auto-sized (if required) when
                                      * the rr switches were created from the arch switches */
-                                    ntrans += device_ctx.rr_switch_inf[switch_index].buf_size;
+                                    ntrans += rr_graph.rr_switch_inf(RRSwitchId(switch_index)).buf_size;
                                 } else if (switch_type == SwitchType::SHORT) {
                                     ntrans += 0.; //Electrical shorts contribute no transisitor area
                                 } else if (switch_type == SwitchType::BUFFER) {
@@ -395,26 +401,26 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
                                             "Uni-directional RR node driven by non-configurable "
                                             "BUFFER has fan in %d (expected 1)\n",
                                             fan_in);
-                                        msg += "  " + describe_rr_node(to_node);
+                                        msg += "  " + describe_rr_node(size_t(to_node));
                                         VPR_FATAL_ERROR(VPR_ERROR_OTHER, msg.c_str());
                                     }
 
                                     //This is a non-configurable buffer, so there are no mux transistors,
                                     //only the buffer area
-                                    ntrans += device_ctx.rr_switch_inf[switch_index].buf_size;
+                                    ntrans += rr_graph.rr_switch_inf(RRSwitchId(switch_index)).buf_size;
                                 } else {
                                     VPR_FATAL_ERROR(VPR_ERROR_OTHER, "Unexpected switch type %d while calculating area of uni-directional routing", switch_type);
                                 }
-                                chan_node_switch_done[to_node] = true;
+                                chan_node_switch_done[size_t(to_node)] = true;
                             }
 
                             break;
 
                         case IPIN:
-                            num_inputs_to_cblock[to_node]++;
+                            num_inputs_to_cblock[size_t(to_node)]++;
                             max_inputs_to_cblock = std::max(max_inputs_to_cblock,
-                                                            num_inputs_to_cblock[to_node]);
-                            iseg = seg_index_of_cblock(from_rr_type, to_node);
+                                                            num_inputs_to_cblock[size_t(to_node)]);
+                            iseg = seg_index_of_cblock(from_rr_type, size_t(to_node));
 
                             if (cblock_counted[iseg] == false) {
                                 cblock_counted[iseg] = true;
@@ -428,8 +434,8 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
                         default:
                             VPR_ERROR(VPR_ERROR_ROUTE,
                                       "in count_routing_transistors:\n"
-                                      "\tUnexpected connection from node %ld (type %d) to node %ld (type %d).\n",
-                                      size_t(from_node), from_rr_type, size_t(to_node), to_rr_type);
+                                      "\tUnexpected connection from node %d (type %d) to node %d (type %d).\n",
+                                      from_node, from_rr_type, size_t(to_node), to_rr_type);
                             break;
 
                     } /* End switch on to_rr_type. */
@@ -438,11 +444,11 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
 
                 /* Reset some flags */
                 if (from_rr_type == CHANX) {
-                    for (i = device_ctx.rr_graph.node_xlow(from_node); i <= device_ctx.rr_graph.node_xhigh(from_node); i++)
+                    for (i = rr_graph.node_xlow(from_rr_node); i <= rr_graph.node_xhigh(from_rr_node); i++)
                         cblock_counted[i] = false;
 
                 } else { /* CHANY */
-                    for (j = device_ctx.rr_graph.node_ylow(from_node); j <= device_ctx.rr_graph.node_yhigh(from_node);
+                    for (j = rr_graph.node_ylow(from_rr_node); j <= rr_graph.node_yhigh(from_rr_node);
                          j++)
                         cblock_counted[j] = false;
                 }
@@ -462,8 +468,8 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
                                           max_inputs_to_cblock, trans_sram_bit);
 
     free(cblock_counted);
-    num_inputs_to_cblock.clear();
-    chan_node_switch_done.clear();
+    free(num_inputs_to_cblock);
+    free(chan_node_switch_done);
 
     ntrans += input_cblock_trans;
 
@@ -472,7 +478,7 @@ void count_unidir_routing_transistors(std::vector<t_segment_inf>& /*segment_inf*
     VTR_LOG("\tTotal routing area: %#g, per logic tile: %#g\n", ntrans, ntrans / (float)(device_ctx.grid.width() * device_ctx.grid.height()));
 }
 
-static float get_cblock_trans(const vtr::vector<RRNodeId, int>& num_inputs_to_cblock, int wire_to_ipin_switch, int max_inputs_to_cblock, float trans_sram_bit) {
+static float get_cblock_trans(int* num_inputs_to_cblock, int wire_to_ipin_switch, int max_inputs_to_cblock, float trans_sram_bit) {
     /* Computes the transistors in the input connection block multiplexers and   *
      * the buffers from connection block outputs to the logic block input pins.  *
      * For speed, I precompute the number of transistors in the multiplexers of  *
@@ -483,7 +489,7 @@ static float get_cblock_trans(const vtr::vector<RRNodeId, int>& num_inputs_to_cb
     int num_inputs;
 
     auto& device_ctx = g_vpr_ctx.device();
-
+    const auto& rr_graph = device_ctx.rr_graph;
     trans_per_cblock = (float*)vtr::malloc((max_inputs_to_cblock + 1) * sizeof(float));
 
     trans_per_cblock[0] = 0.; /* i.e., not an IPIN or no inputs */
@@ -494,14 +500,14 @@ static float get_cblock_trans(const vtr::vector<RRNodeId, int>& num_inputs_to_cb
 
     for (int i = 1; i <= max_inputs_to_cblock; i++) {
         trans_per_cblock[i] = trans_per_mux(i, trans_sram_bit,
-                                            device_ctx.rr_switch_inf[wire_to_ipin_switch].mux_trans_size);
-        trans_per_cblock[i] += device_ctx.rr_switch_inf[wire_to_ipin_switch].buf_size;
+                                            rr_graph.rr_switch_inf(RRSwitchId(wire_to_ipin_switch)).mux_trans_size);
+        trans_per_cblock[i] += rr_graph.rr_switch_inf(RRSwitchId(wire_to_ipin_switch)).buf_size;
     }
 
     trans_count = 0.;
 
-    for (const RRNodeId& i : device_ctx.rr_graph.nodes()) {
-        num_inputs = num_inputs_to_cblock[i];
+    for (const RRNodeId& rr_id : device_ctx.rr_graph.nodes()) {
+        num_inputs = num_inputs_to_cblock[(size_t)rr_id];
         trans_count += trans_per_cblock[num_inputs];
     }
 
@@ -520,23 +526,23 @@ alloc_and_load_unsharable_switch_trans(int num_switch, float trans_sram_bit, flo
     int i;
 
     auto& device_ctx = g_vpr_ctx.device();
-
+    const auto& rr_graph = device_ctx.rr_graph;
     unsharable_switch_trans = (float*)vtr::malloc(num_switch * sizeof(float));
 
     for (i = 0; i < num_switch; i++) {
-        if (device_ctx.rr_switch_inf[i].type() == SwitchType::SHORT) {
+        if (rr_graph.rr_switch_inf(RRSwitchId(i)).type() == SwitchType::SHORT) {
             //Electrical shorts do not use any transistors
             unsharable_switch_trans[i] = 0.;
         } else {
-            if (!device_ctx.rr_switch_inf[i].buffered()) {
-                Rpass = device_ctx.rr_switch_inf[i].R;
+            if (!rr_graph.rr_switch_inf(RRSwitchId(i)).buffered()) {
+                Rpass = rr_graph.rr_switch_inf(RRSwitchId(i)).R;
             } else { /* Buffer.  Set Rpass = Rbuf = 1/2 Rtotal. */
-                Rpass = device_ctx.rr_switch_inf[i].R / 2.;
+                Rpass = rr_graph.rr_switch_inf(RRSwitchId(i)).R / 2.;
             }
 
             unsharable_switch_trans[i] = trans_per_R(Rpass, R_minW_nmos);
 
-            if (device_ctx.rr_switch_inf[i].configurable()) {
+            if (rr_graph.rr_switch_inf(RRSwitchId(i)).configurable()) {
                 //Configurable switches use SRAM
                 unsharable_switch_trans[i] += trans_sram_bit;
             }
@@ -560,14 +566,14 @@ alloc_and_load_sharable_switch_trans(int num_switch,
     int i;
 
     auto& device_ctx = g_vpr_ctx.device();
-
+    const auto& rr_graph = device_ctx.rr_graph;
     sharable_switch_trans = (float*)vtr::malloc(num_switch * sizeof(float));
 
     for (i = 0; i < num_switch; i++) {
-        if (!device_ctx.rr_switch_inf[i].buffered()) {
+        if (!rr_graph.rr_switch_inf(RRSwitchId(i)).buffered()) {
             sharable_switch_trans[i] = 0.;
         } else { /* Buffer.  Set Rbuf = Rpass = 1/2 Rtotal. */
-            Rbuf = device_ctx.rr_switch_inf[i].R / 2.;
+            Rbuf = rr_graph.rr_switch_inf(RRSwitchId(i)).R / 2.;
             sharable_switch_trans[i] = trans_per_buf(Rbuf, R_minW_nmos,
                                                      R_minW_pmos);
         }

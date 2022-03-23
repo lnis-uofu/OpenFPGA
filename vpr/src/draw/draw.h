@@ -13,6 +13,8 @@
 #    include "ezgl/graphics.hpp"
 #    include "draw_color.h"
 #    include "search_bar.h"
+#    include "draw_debug.h"
+#    include "manual_moves.h"
 
 extern ezgl::application::settings settings;
 extern ezgl::application application;
@@ -24,14 +26,15 @@ void update_screen(ScreenUpdatePriority priority, const char* msg, enum pic_type
 //FIXME: Currently broken if no rr-graph is loaded
 void init_draw_coords(float clb_width);
 
-void init_graphics_state(bool show_graphics_val, int gr_automode_val, enum e_route_type route_type, bool save_graphics);
+void init_graphics_state(bool show_graphics_val, int gr_automode_val, enum e_route_type route_type, bool save_graphics, std::string graphics_commands);
 
 void alloc_draw_structs(const t_arch* arch);
 void free_draw_structs();
 
 #ifndef NO_GRAPHICS
 
-void draw_get_rr_pin_coords(const RRNodeId& inode, float* xcen, float* ycen);
+void draw_get_rr_pin_coords(int inode, float* xcen, float* ycen, const e_side& pin_side);
+void draw_get_rr_pin_coords(const t_rr_node& node, float* xcen, float* ycen, const e_side& pin_side);
 
 void draw_triangle_along_line(ezgl::renderer* g, ezgl::point2d start, ezgl::point2d end, float relative_position = 1., float arrow_size = DEFAULT_ARROW_SIZE);
 void draw_triangle_along_line(ezgl::renderer* g, ezgl::point2d loc, ezgl::point2d start, ezgl::point2d end, float arrow_size = DEFAULT_ARROW_SIZE);
@@ -57,11 +60,11 @@ ezgl::color to_ezgl_color(vtr::Color<float> color);
 void draw_screen();
 
 // search bar related functions
-ezgl::rectangle draw_get_rr_chan_bbox(const RRNodeId& inode);
+ezgl::rectangle draw_get_rr_chan_bbox(int inode);
 void draw_highlight_blocks_color(t_logical_block_type_ptr type, ClusterBlockId blk_id);
-void highlight_nets(char* message, const RRNodeId& hit_node);
-void draw_highlight_fan_in_fan_out(const std::set<RRNodeId>& nodes);
-std::set<RRNodeId> draw_expand_non_configurable_rr_nodes(const RRNodeId& hit_node);
+void highlight_nets(char* message, int hit_node);
+void draw_highlight_fan_in_fan_out(const std::set<int>& nodes);
+std::set<int> draw_expand_non_configurable_rr_nodes(int hit_node);
 void deselect_all();
 
 // toggle functions
@@ -73,10 +76,32 @@ void toggle_routing_bounding_box(GtkWidget* /*widget*/, gint /*response_id*/, gp
 void toggle_routing_util(GtkWidget* /*widget*/, gint /*response_id*/, gpointer /*data*/);
 void toggle_crit_path(GtkWidget* /*widget*/, gint /*response_id*/, gpointer /*data*/);
 void toggle_block_pin_util(GtkWidget* /*widget*/, gint /*response_id*/, gpointer /*data*/);
-void toggle_router_rr_costs(GtkWidget* /*widget*/, gint /*response_id*/, gpointer /*data*/);
+void toggle_router_expansion_costs(GtkWidget* /*widget*/, gint /*response_id*/, gpointer /*data*/);
 void toggle_placement_macros(GtkWidget* /*widget*/, gint /*response_id*/, gpointer /*data*/);
+void net_max_fanout(GtkWidget* /*widget*/, gint /*response_id*/, gpointer /*data*/);
+void set_net_alpha_value(GtkWidget* widget, gint /*response_id*/, gpointer /*data*/);
+void set_net_alpha_value_with_enter(GtkWidget* widget, gint /*response_id*/, gpointer /*data*/);
+float get_net_alpha();
 
 ezgl::color get_block_type_color(t_physical_tile_type_ptr type);
+
+/* This routine highlights the blocks affected in the latest move      *
+ * It highlights the old and new locations of the moved blocks         *
+ * It also highlights the moved block input and output terminals       *
+ * Currently, it is used in placer debugger when breakpoint is reached */
+void highlight_moved_block_and_its_terminals(const t_pl_blocks_to_be_moved&);
+
+// pass in an (x,y,subtile) location and the color in which it should be drawn.
+// This overrides the color of any block placed in that location, and also applies if the location is empty.
+void set_draw_loc_color(t_pl_loc, ezgl::color);
+
+// clear the colored_locations vector
+void clear_colored_locations();
+
+// This routine takes in a (x,y) location.
+// If the input loc is marked in colored_locations vector, the function will return true and the correspnding color is sent back in loc_color
+// otherwise, the function returns false (the location isn't among the highlighted locations)
+bool highlight_loc_with_specific_color(int x, int y, ezgl::color& loc_color);
 
 #endif /* NO_GRAPHICS */
 

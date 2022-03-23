@@ -29,6 +29,7 @@
 #include "prepack.h"
 #include "vpr_utils.h"
 #include "echo_files.h"
+#include "attraction_groups.h"
 
 /*****************************************/
 /*Local Function Declaration			 */
@@ -40,7 +41,7 @@ static void forward_infer_pattern(t_pb_graph_pin* pb_graph_pin);
 
 static void backward_infer_pattern(t_pb_graph_pin* pb_graph_pin);
 
-static t_pack_patterns* alloc_and_init_pattern_list_from_hash(std::unordered_map<std::string, int> pattern_names);
+static std::vector<t_pack_patterns> alloc_and_init_pattern_list_from_hash(std::unordered_map<std::string, int> pattern_names);
 
 static t_pb_graph_edge* find_expansion_edge_of_pattern(const int pattern_index,
                                                        const t_pb_graph_node* pb_graph_node);
@@ -60,7 +61,7 @@ static void backward_expand_pack_pattern_from_edge(const t_pb_graph_edge* expans
 
 static int compare_pack_pattern(const t_pack_patterns* pattern_a, const t_pack_patterns* pattern_b);
 
-static void free_pack_pattern(t_pack_pattern_block* pattern_block, t_pack_pattern_block** pattern_block_list);
+static void free_pack_pattern_block(t_pack_pattern_block* pattern_block, t_pack_pattern_block** pattern_block_list);
 
 static t_pack_molecule* try_create_molecule(t_pack_patterns* list_of_pack_patterns,
                                             std::multimap<AtomBlockId, t_pack_molecule*>& atom_molecules,
@@ -117,9 +118,9 @@ static void print_chain_starting_points(t_pack_patterns* chain_pattern);
  * (general packing) or upstream (in tech mapping).
  * If this limitation is too constraining, code is designed so that this limitation can be removed.
  */
-t_pack_patterns* alloc_and_load_pack_patterns(int* num_packing_patterns) {
+std::vector<t_pack_patterns> alloc_and_load_pack_patterns() {
     int L_num_blocks;
-    t_pack_patterns* list_of_packing_patterns;
+    std::vector<t_pack_patterns> list_of_packing_patterns;
     t_pb_graph_edge* expansion_edge;
     auto& device_ctx = g_vpr_ctx.device();
 
@@ -144,7 +145,7 @@ t_pack_patterns* alloc_and_load_pack_patterns(int* num_packing_patterns) {
             list_of_packing_patterns[i].base_cost = 0;
             // use the found expansion edge to build the pack pattern
             backward_expand_pack_pattern_from_edge(expansion_edge,
-                                                   list_of_packing_patterns, i, nullptr, nullptr, &L_num_blocks);
+                                                   list_of_packing_patterns.data(), i, nullptr, nullptr, &L_num_blocks);
             list_of_packing_patterns[i].num_blocks = L_num_blocks;
 
             /* Default settings: A section of a netlist must match all blocks in a pack
@@ -178,8 +179,6 @@ t_pack_patterns* alloc_and_load_pack_patterns(int* num_packing_patterns) {
             VPR_FATAL_ERROR(VPR_ERROR_ARCH, "Failed to find root block for pack pattern %s", list_of_packing_patterns[i].name);
         }
     }
-
-    *num_packing_patterns = pattern_names.size();
 
     return list_of_packing_patterns;
 }
@@ -332,8 +331,8 @@ static void backward_infer_pattern(t_pb_graph_pin* pb_graph_pin) {
  * Allocates memory for models and loads the name of the packing pattern
  * so that it can be identified and loaded with more complete information later
  */
-static t_pack_patterns* alloc_and_init_pattern_list_from_hash(std::unordered_map<std::string, int> pattern_names) {
-    t_pack_patterns* nlist = new t_pack_patterns[pattern_names.size()];
+static std::vector<t_pack_patterns> alloc_and_init_pattern_list_from_hash(std::unordered_map<std::string, int> pattern_names) {
+    std::vector<t_pack_patterns> nlist(pattern_names.size());
 
     for (const auto& curr_pattern : pattern_names) {
         VTR_ASSERT(nlist[curr_pattern.second].name == nullptr);
@@ -346,22 +345,23 @@ static t_pack_patterns* alloc_and_init_pattern_list_from_hash(std::unordered_map
     return nlist;
 }
 
-void free_list_of_pack_patterns(t_pack_patterns* list_of_pack_patterns, const int num_packing_patterns) {
-    int i, j, num_pack_pattern_blocks;
-    t_pack_pattern_block** pattern_block_list;
-    if (list_of_pack_patterns != nullptr) {
-        for (i = 0; i < num_packing_patterns; i++) {
-            num_pack_pattern_blocks = list_of_pack_patterns[i].num_blocks;
-            pattern_block_list = (t_pack_pattern_block**)vtr::calloc(num_pack_pattern_blocks, sizeof(t_pack_pattern_block*));
-            free(list_of_pack_patterns[i].name);
-            free(list_of_pack_patterns[i].is_block_optional);
-            free_pack_pattern(list_of_pack_patterns[i].root_block, pattern_block_list);
-            for (j = 0; j < num_pack_pattern_blocks; j++) {
-                free(pattern_block_list[j]);
-            }
-            free(pattern_block_list);
+void free_list_of_pack_patterns(std::vector<t_pack_patterns>& list_of_pack_patterns) {
+    for (size_t i = 0; i < list_of_pack_patterns.size(); i++) {
+        free_pack_pattern(&list_of_pack_patterns[i]);
+    }
+}
+
+void free_pack_pattern(t_pack_patterns* pack_pattern) {
+    if (pack_pattern) {
+        int num_pack_pattern_blocks = pack_pattern->num_blocks;
+        t_pack_pattern_block** pattern_block_list = (t_pack_pattern_block**)vtr::calloc(num_pack_pattern_blocks, sizeof(t_pack_pattern_block*));
+        free(pack_pattern->name);
+        free(pack_pattern->is_block_optional);
+        free_pack_pattern_block(pack_pattern->root_block, pattern_block_list);
+        for (int j = 0; j < num_pack_pattern_blocks; j++) {
+            free(pattern_block_list[j]);
         }
-        delete[] list_of_pack_patterns;
+        free(pattern_block_list);
     }
 }
 
@@ -791,10 +791,11 @@ t_pack_molecule* alloc_and_load_pack_molecules(t_pack_patterns* list_of_pack_pat
      * TODO: Need to investigate better mapping strategies than first-fit
      */
     for (i = 0; i < num_packing_patterns; i++) {
-
-        /* Xifan Tang: skip patterns that belong to unpackable modes */
-        if ( (nullptr != list_of_pack_patterns[i].root_block->pb_type->parent_mode)
-          && (false == list_of_pack_patterns[i].root_block->pb_type->parent_mode->packable) ) {
+        /* Skip pack patterns for modes that are disabled for packing,
+         * Ensure no resources in unpackable modes will be mapped during pre-packing stage 
+         */
+        if ((nullptr != list_of_pack_patterns[i].root_block->pb_type->parent_mode)
+            && (true == list_of_pack_patterns[i].root_block->pb_type->parent_mode->disable_packing)) {
             continue;
         }
 
@@ -806,7 +807,7 @@ t_pack_molecule* alloc_and_load_pack_molecules(t_pack_patterns* list_of_pack_pat
                 best_pattern = j;
             }
         }
-        VTR_ASSERT(is_used[best_pattern] == false); 
+        VTR_ASSERT(is_used[best_pattern] == false);
         is_used[best_pattern] = true;
 
         auto blocks = atom_ctx.nlist.blocks();
@@ -849,7 +850,23 @@ t_pack_molecule* alloc_and_load_pack_molecules(t_pack_patterns* list_of_pack_pat
      * more difficult because now it needs to consider splitting molecules.
      */
     for (auto blk_id : atom_ctx.nlist.blocks()) {
-        expected_lowest_cost_pb_gnode[blk_id] = get_expected_lowest_cost_primitive_for_atom_block(blk_id);
+        t_pb_graph_node* best = get_expected_lowest_cost_primitive_for_atom_block(blk_id);
+        if (!best) {
+            /* Free the molecules in the linked list to avoid memory leakage */
+            cur_molecule = list_of_molecules_head;
+            while (cur_molecule) {
+                t_pack_molecule* molecule_to_free = cur_molecule;
+                cur_molecule = cur_molecule->next;
+                delete molecule_to_free;
+            }
+
+            VPR_FATAL_ERROR(VPR_ERROR_PACK, "Failed to find any location to pack primitive of type '%s' in architecture",
+                            atom_ctx.nlist.block_model(blk_id)->name);
+        }
+
+        VTR_ASSERT_SAFE(nullptr != best);
+
+        expected_lowest_cost_pb_gnode[blk_id] = best;
 
         auto rng = atom_molecules.equal_range(blk_id);
         bool rng_empty = (rng.first == rng.second);
@@ -880,7 +897,16 @@ t_pack_molecule* alloc_and_load_pack_molecules(t_pack_patterns* list_of_pack_pat
     return list_of_molecules_head;
 }
 
-static void free_pack_pattern(t_pack_pattern_block* pattern_block, t_pack_pattern_block** pattern_block_list) {
+void free_pack_molecules(t_pack_molecule* list_of_pack_molecules) {
+    t_pack_molecule* cur_pack_molecule = list_of_pack_molecules;
+    while (cur_pack_molecule != nullptr) {
+        cur_pack_molecule = list_of_pack_molecules->next;
+        delete list_of_pack_molecules;
+        list_of_pack_molecules = cur_pack_molecule;
+    }
+}
+
+static void free_pack_pattern_block(t_pack_pattern_block* pattern_block, t_pack_pattern_block** pattern_block_list) {
     t_pack_pattern_connections *connection, *next;
     if (pattern_block == nullptr || pattern_block->block_id == OPEN) {
         /* already traversed, return */
@@ -890,8 +916,8 @@ static void free_pack_pattern(t_pack_pattern_block* pattern_block, t_pack_patter
     pattern_block->block_id = OPEN;
     connection = pattern_block->connections;
     while (connection) {
-        free_pack_pattern(connection->from_block, pattern_block_list);
-        free_pack_pattern(connection->to_block, pattern_block_list);
+        free_pack_pattern_block(connection->from_block, pattern_block_list);
+        free_pack_pattern_block(connection->to_block, pattern_block_list);
         next = connection->next;
         free(connection);
         connection = next;
@@ -1098,10 +1124,6 @@ static AtomBlockId get_sink_block(const AtomBlockId block_id, const t_model_port
  *      pin_number : the pin_number of the pin driven by the net (pin index within the port)
  */
 static AtomBlockId get_driving_block(const AtomBlockId block_id, const t_model_ports* model_port, const BitIndex pin_number) {
-    if (model_port->is_clock) {
-        VTR_ASSERT(pin_number == 1); //TODO: support multi-clock primitives
-    }
-
     auto& atom_ctx = g_vpr_ctx.atom();
 
     auto port_id = atom_ctx.nlist.find_atom_port(block_id, model_port);
@@ -1109,6 +1131,20 @@ static AtomBlockId get_driving_block(const AtomBlockId block_id, const t_model_p
     if (port_id) {
         auto net_id = atom_ctx.nlist.port_net(port_id, pin_number);
         if (net_id && atom_ctx.nlist.net_sinks(net_id).size() == 1) { /* Single fanout assumption */
+
+            auto driver_blk_id = atom_ctx.nlist.net_driver_block(net_id);
+
+            if (model_port->is_clock) {
+                auto driver_blk_type = atom_ctx.nlist.block_type(driver_blk_id);
+
+                // TODO: support multi-clock primitives.
+                //       If the driver block is a .input block, this assertion should not
+                //       be triggered as the sink block might have only one input pin, which
+                //       would be a clock pin in case the sink block primitive is a clock generator,
+                //       resulting in a pin_number == 0.
+                VTR_ASSERT(pin_number == 1 || (pin_number == 0 && driver_blk_type == AtomBlockType::INPAD));
+            }
+
             return atom_ctx.nlist.net_driver_block(net_id);
         }
     }
@@ -1190,12 +1226,6 @@ static t_pb_graph_node* get_expected_lowest_cost_primitive_for_atom_block(const 
         }
     }
 
-    if (!best) {
-        auto& atom_ctx = g_vpr_ctx.atom();
-        VPR_FATAL_ERROR(VPR_ERROR_PACK, "Failed to find any location to pack primitive of type '%s' in architecture",
-                        atom_ctx.nlist.block_model(blk_id)->name);
-    }
-
     return best;
 }
 
@@ -1220,8 +1250,8 @@ static t_pb_graph_node* get_expected_lowest_cost_primitive_for_atom_block_in_pb_
         }
     } else {
         for (i = 0; i < curr_pb_graph_node->pb_type->num_modes; i++) {
-            /* Xifan Tang: early fail if this primitive in a unpackable mode */
-            if (false == curr_pb_graph_node->pb_type->modes[i].packable) {
+            /* Early fail if this primitive for a mode that is disabled for packing */
+            if (true == curr_pb_graph_node->pb_type->modes[i].disable_packing) {
                 continue;
             }
 
@@ -1519,6 +1549,16 @@ static void update_chain_root_pins(t_pack_patterns* chain_pattern,
     for (const auto pin_ptr : chain_input_pins) {
         std::vector<t_pb_graph_pin*> connected_primitive_pins;
         get_all_connected_primitive_pins(pin_ptr, connected_primitive_pins);
+
+        /**
+         * It is required that the chain pins are connected inside a complex
+         * block. Although it is allowed to have them disconnected in some
+         * modes of the block provided that there is always at least one mode
+         * that has them connected inside. The following assert checks for
+         * that.
+         */
+        VTR_ASSERT(connected_primitive_pins.size());
+
         primitive_input_pins.push_back(connected_primitive_pins);
     }
 
@@ -1557,10 +1597,9 @@ static t_pb_graph_pin* get_connected_primitive_pin(const t_pb_graph_pin* cluster
  *  will be only one pin connected to the very first adder in the cluster.
  */
 static void get_all_connected_primitive_pins(const t_pb_graph_pin* cluster_input_pin, std::vector<t_pb_graph_pin*>& connected_primitive_pins) {
-
-    /* Xifan Tang: Skip pins belong to unpackable modes */
-    if ( (nullptr != cluster_input_pin->parent_node->pb_type->parent_mode)
-       && (false == cluster_input_pin->parent_node->pb_type->parent_mode->packable) ) {
+    /* Skip pins for modes that are disabled for packing*/
+    if ((nullptr != cluster_input_pin->parent_node->pb_type->parent_mode)
+        && (true == cluster_input_pin->parent_node->pb_type->parent_mode->disable_packing)) {
         return;
     }
 
@@ -1574,8 +1613,6 @@ static void get_all_connected_primitive_pins(const t_pb_graph_pin* cluster_input
             }
         }
     }
-
-    VTR_ASSERT(connected_primitive_pins.size());
 }
 
 /**

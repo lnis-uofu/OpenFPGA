@@ -146,8 +146,13 @@ AtomPinId AtomLookup::tnode_atom_pin(const tatum::NodeId tnode) const {
     return AtomPinId::INVALID(); //Not found
 }
 
-AtomLookup::tnode_pin_range AtomLookup::tnode_atom_pins() const {
-    return vtr::make_range(tnode_atom_pin_.begin(), tnode_atom_pin_.end());
+AtomLookup::pin_tnode_range AtomLookup::atom_pin_tnodes(BlockTnode block_tnode_type) const {
+    if (block_tnode_type == BlockTnode::EXTERNAL) {
+        return vtr::make_range(atom_pin_tnode_external_.begin(), atom_pin_tnode_external_.end());
+    } else {
+        VTR_ASSERT(block_tnode_type == BlockTnode::INTERNAL);
+        return vtr::make_range(atom_pin_tnode_internal_.begin(), atom_pin_tnode_internal_.end());
+    }
 }
 
 void AtomLookup::set_atom_pin_tnode(const AtomPinId pin, const tatum::NodeId node, BlockTnode block_tnode_type) {
@@ -160,6 +165,6 @@ void AtomLookup::set_atom_pin_tnode(const AtomPinId pin, const tatum::NodeId nod
         atom_pin_tnode_internal_[pin] = node;
     }
 
-    //Each tnode maps to precisely one pin
+    //Each tnode maps to precisely one pin at any point in time
     tnode_atom_pin_[node] = pin;
 }

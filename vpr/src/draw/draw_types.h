@@ -26,6 +26,8 @@
 #    include "vpr_types.h"
 #    include "vtr_color_map.h"
 #    include "vtr_vector.h"
+#    include "breakpoint.h"
+#    include "manual_moves.h"
 
 #    include "ezgl/point.hpp"
 #    include "ezgl/rectangle.hpp"
@@ -52,8 +54,9 @@ enum e_draw_nets {
 enum e_draw_rr_toggle {
     DRAW_NO_RR = 0,
     DRAW_NODES_RR,
-    DRAW_NODES_AND_SBOX_RR,
-    DRAW_ALL_BUT_BUFFERS_RR,
+    DRAW_NODES_SBOX_RR,
+    DRAW_NODES_SBOX_CBOX_RR,
+    DRAW_NODES_SBOX_CBOX_INTERNAL_RR,
     DRAW_ALL_RR,
 };
 
@@ -89,11 +92,14 @@ enum e_draw_routing_util {
     DRAW_ROUTING_UTIL_OVER_BLOCKS, //Draw over blocks at full opacity (useful for figure generation)
 };
 
-enum e_draw_router_rr_cost {
-    DRAW_NO_ROUTER_RR_COST,
-    DRAW_ROUTER_RR_COST_TOTAL,
-    DRAW_ROUTER_RR_COST_KNOWN,
-    DRAW_ROUTER_RR_COST_EXPECTED,
+enum e_draw_router_expansion_cost {
+    DRAW_NO_ROUTER_EXPANSION_COST,
+    DRAW_ROUTER_EXPANSION_COST_TOTAL,
+    DRAW_ROUTER_EXPANSION_COST_KNOWN,
+    DRAW_ROUTER_EXPANSION_COST_EXPECTED,
+    DRAW_ROUTER_EXPANSION_COST_TOTAL_WITH_EDGES,
+    DRAW_ROUTER_EXPANSION_COST_KNOWN_WITH_EDGES,
+    DRAW_ROUTER_EXPANSION_COST_EXPECTED_WITH_EDGES,
 };
 
 enum e_draw_placement_macros {
@@ -139,8 +145,9 @@ typedef struct {
  * max_sub_blk_lvl: The maximum number of sub-block levels among all
  *                  physical block types in the FPGA.
  * show_graphics: Whether graphics is enabled.
- * gr_automode: How often is user input required. (0: each t,
- *				1: each place, 2: never)
+ * gr_automode: How often is user input required. (0: each t, 1: each place, 2: never)
+ * auto_proceed: Should we automatically finish drawing (instead of waiting in the event
+ *               loop for user interaction?
  * draw_route_type: GLOBAL or DETAILED
  * default_message: default screen message on screen
  * net_color: color in which each net should be drawn.
@@ -152,6 +159,9 @@ typedef struct {
  *				 ROUTING is on screen.
  *				 [0..device_ctx.rr_nodes.size()-1]
  * save_graphics: Whether to generate an output graphcis file
+ * force_pause: Should we pause for user interaction (since the user requested it)
+ * save_graphics_file_base: Base of save graphis file name (i.e. before extension)
+ * pres_fac: present congestion cost factor
  */
 struct t_draw_state {
     pic_type pic_on_screen = NO_PICTURE;
@@ -160,26 +170,42 @@ struct t_draw_state {
     e_draw_congestion show_congestion = DRAW_NO_CONGEST;
     e_draw_routing_costs show_routing_costs;
     e_draw_block_pin_util show_blk_pin_util = DRAW_NO_BLOCK_PIN_UTIL;
-    e_draw_router_rr_cost show_router_rr_cost = DRAW_NO_ROUTER_RR_COST;
+    e_draw_router_expansion_cost show_router_expansion_cost = DRAW_NO_ROUTER_EXPANSION_COST;
     e_draw_placement_macros show_placement_macros = DRAW_NO_PLACEMENT_MACROS;
     int show_routing_bb = OPEN;
     e_draw_routing_util show_routing_util = DRAW_NO_ROUTING_UTIL;
     e_draw_rr_toggle draw_rr_toggle = DRAW_NO_RR;
+    bool clip_routing_util = false;
+    bool draw_block_outlines = true;
+    bool draw_block_text = true;
+    int draw_net_max_fanout = std::numeric_limits<int>::max();
     int max_sub_blk_lvl = 0;
     int show_blk_internal = 0;
     bool show_graphics = false;
     int gr_automode = 0;
+    bool auto_proceed = false;
     e_route_type draw_route_type = GLOBAL;
     char default_message[vtr::bufsize];
     vtr::vector<ClusterNetId, ezgl::color> net_color;
-    vtr::vector<RRNodeId, t_draw_rr_node> draw_rr_node;
+    t_draw_rr_node* draw_rr_node = nullptr;
     std::shared_ptr<const SetupTimingInfo> setup_timing_info;
     const t_arch* arch_info = nullptr;
-    std::unique_ptr<const vtr::ColorMap> color_map = nullptr;
+    std::shared_ptr<const vtr::ColorMap> color_map = nullptr;
     bool save_graphics = false;
+    std::string graphics_commands;
     bool forced_pause = false;
+    int sequence_number = 0;
+    float net_alpha = 0.1;
+    float pres_fac = 1.;
+    ManualMovesState manual_moves_state;
+
+    std::vector<Breakpoint> list_of_breakpoints;
+
+    std::string save_graphics_file_base = "vpr";
 
     t_draw_state() = default;
+    t_draw_state(const t_draw_state&) = default;
+    t_draw_state& operator=(const t_draw_state&) = default;
 
     void reset_nets_congestion_and_rr();
 
@@ -189,6 +215,8 @@ struct t_draw_state {
     void set_block_color(ClusterBlockId blk, ezgl::color color);
     void reset_block_color(ClusterBlockId blk);
     void reset_block_colors();
+
+    std::vector<std::pair<t_pl_loc, ezgl::color>> colored_locations;
 
   private:
     friend void alloc_draw_structs(const t_arch* arch);

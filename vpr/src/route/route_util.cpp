@@ -5,19 +5,20 @@ vtr::Matrix<float> calculate_routing_usage(t_rr_type rr_type) {
     VTR_ASSERT(rr_type == CHANX || rr_type == CHANY);
 
     auto& device_ctx = g_vpr_ctx.device();
+    const auto& rr_graph = device_ctx.rr_graph;
     auto& cluster_ctx = g_vpr_ctx.clustering();
     auto& route_ctx = g_vpr_ctx.routing();
 
     vtr::Matrix<float> usage({{device_ctx.grid.width(), device_ctx.grid.height()}}, 0.);
 
     //Collect all the in-use RR nodes
-    std::set<RRNodeId> rr_nodes;
+    std::set<int> rr_nodes;
     for (auto net : cluster_ctx.clb_nlist.nets()) {
         t_trace* tptr = route_ctx.trace[net].head;
         while (tptr != nullptr) {
-            RRNodeId inode = tptr->index;
+            int inode = tptr->index;
 
-            if (device_ctx.rr_graph.node_type(inode) == rr_type) {
+            if (rr_graph.node_type(RRNodeId(inode)) == rr_type) {
                 rr_nodes.insert(inode);
             }
             tptr = tptr->next;
@@ -25,22 +26,24 @@ vtr::Matrix<float> calculate_routing_usage(t_rr_type rr_type) {
     }
 
     //Record number of used resources in each x/y channel
-    for (const RRNodeId& inode : rr_nodes) {
-        if (rr_type == CHANX) {
-            VTR_ASSERT(device_ctx.rr_graph.node_type(inode) == CHANX);
-            VTR_ASSERT(device_ctx.rr_graph.node_ylow(inode) == device_ctx.rr_graph.node_yhigh(inode));
+    for (int inode : rr_nodes) {
+        RRNodeId rr_node = RRNodeId(inode);
 
-            int y = device_ctx.rr_graph.node_ylow(inode);
-            for (int x = device_ctx.rr_graph.node_xlow(inode); x <= device_ctx.rr_graph.node_xhigh(inode); ++x) {
+        if (rr_type == CHANX) {
+            VTR_ASSERT(rr_graph.node_type(rr_node) == CHANX);
+            VTR_ASSERT(rr_graph.node_ylow(rr_node) == rr_graph.node_yhigh(rr_node));
+
+            int y = rr_graph.node_ylow(rr_node);
+            for (int x = rr_graph.node_xlow(rr_node); x <= rr_graph.node_xhigh(rr_node); ++x) {
                 usage[x][y] += route_ctx.rr_node_route_inf[inode].occ();
             }
         } else {
             VTR_ASSERT(rr_type == CHANY);
-            VTR_ASSERT(device_ctx.rr_graph.node_type(inode) == CHANY);
-            VTR_ASSERT(device_ctx.rr_graph.node_xlow(inode) == device_ctx.rr_graph.node_xhigh(inode));
+            VTR_ASSERT(rr_graph.node_type(rr_node) == CHANY);
+            VTR_ASSERT(rr_graph.node_xlow(rr_node) == rr_graph.node_xhigh(rr_node));
 
-            int x = device_ctx.rr_graph.node_xlow(inode);
-            for (int y = device_ctx.rr_graph.node_ylow(inode); y <= device_ctx.rr_graph.node_yhigh(inode); ++y) {
+            int x = rr_graph.node_xlow(rr_node);
+            for (int y = rr_graph.node_ylow(rr_node); y <= rr_graph.node_yhigh(rr_node); ++y) {
                 usage[x][y] += route_ctx.rr_node_route_inf[inode].occ();
             }
         }
@@ -53,25 +56,27 @@ vtr::Matrix<float> calculate_routing_avail(t_rr_type rr_type) {
     VTR_ASSERT(rr_type == CHANX || rr_type == CHANY);
 
     auto& device_ctx = g_vpr_ctx.device();
+    const auto& rr_graph = device_ctx.rr_graph;
 
     vtr::Matrix<float> avail({{device_ctx.grid.width(), device_ctx.grid.height()}}, 0.);
-    for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
+    for (const RRNodeId& rr_node : rr_graph.nodes()) {
+        const short& rr_node_capacity = rr_graph.node_capacity(rr_node);
 
-        if (device_ctx.rr_graph.node_type(inode) == CHANX && rr_type == CHANX) {
-            VTR_ASSERT(device_ctx.rr_graph.node_type(inode) == CHANX);
-            VTR_ASSERT(device_ctx.rr_graph.node_ylow(inode) == device_ctx.rr_graph.node_yhigh(inode));
+        if (rr_graph.node_type(rr_node) == CHANX && rr_type == CHANX) {
+            VTR_ASSERT(rr_graph.node_type(rr_node) == CHANX);
+            VTR_ASSERT(rr_graph.node_ylow(rr_node) == rr_graph.node_yhigh(rr_node));
 
-            int y = device_ctx.rr_graph.node_ylow(inode);
-            for (int x = device_ctx.rr_graph.node_xlow(inode); x <= device_ctx.rr_graph.node_xhigh(inode); ++x) {
-                avail[x][y] += device_ctx.rr_graph.node_capacity(inode);
+            int y = rr_graph.node_ylow(rr_node);
+            for (int x = rr_graph.node_xlow(rr_node); x <= rr_graph.node_xhigh(rr_node); ++x) {
+                avail[x][y] += rr_node_capacity;
             }
-        } else if (device_ctx.rr_graph.node_type(inode) == CHANY && rr_type == CHANY) {
-            VTR_ASSERT(device_ctx.rr_graph.node_type(inode) == CHANY);
-            VTR_ASSERT(device_ctx.rr_graph.node_xlow(inode) == device_ctx.rr_graph.node_xhigh(inode));
+        } else if (rr_graph.node_type(rr_node) == CHANY && rr_type == CHANY) {
+            VTR_ASSERT(rr_graph.node_type(rr_node) == CHANY);
+            VTR_ASSERT(rr_graph.node_xlow(rr_node) == rr_graph.node_xhigh(rr_node));
 
-            int x = device_ctx.rr_graph.node_xlow(inode);
-            for (int y = device_ctx.rr_graph.node_ylow(inode); y <= device_ctx.rr_graph.node_yhigh(inode); ++y) {
-                avail[x][y] += device_ctx.rr_graph.node_capacity(inode);
+            int x = rr_graph.node_xlow(rr_node);
+            for (int y = rr_graph.node_ylow(rr_node); y <= rr_graph.node_yhigh(rr_node); ++y) {
+                avail[x][y] += rr_node_capacity;
             }
         }
     }

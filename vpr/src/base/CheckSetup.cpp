@@ -23,7 +23,7 @@ void CheckSetup(const t_packer_opts& PackerOpts,
     }
 
     if ((GLOBAL == RouterOpts.route_type)
-        && (BOUNDING_BOX_PLACE != PlacerOpts.place_algorithm)) {
+        && (PlacerOpts.place_algorithm.is_timing_driven())) {
         /* Works, but very weird.  Can't optimize timing well, since you're
          * not doing proper architecture delay modelling. */
         VTR_LOG_WARN(
@@ -32,15 +32,25 @@ void CheckSetup(const t_packer_opts& PackerOpts,
     }
 
     if ((false == Timing.timing_analysis_enabled)
-        && (PlacerOpts.place_algorithm == PATH_TIMING_DRIVEN_PLACE)) {
+        && (PlacerOpts.place_algorithm.is_timing_driven())) {
         /* May work, not tested */
         VPR_FATAL_ERROR(VPR_ERROR_OTHER,
                         "Timing analysis must be enabled for timing-driven placement.\n");
     }
 
-    if (!PlacerOpts.doPlacement && (USER == PlacerOpts.pad_loc_type)) {
+    if (!PlacerOpts.doPlacement && ("" != PlacerOpts.constraints_file)) {
         VPR_FATAL_ERROR(VPR_ERROR_OTHER,
-                        "A pad location file requires that placement is enabled.\n");
+                        "A block location file requires that placement is enabled.\n");
+    }
+
+    if (PlacerOpts.place_static_move_prob.size() != NUM_PL_MOVE_TYPES) {
+        VPR_FATAL_ERROR(VPR_ERROR_OTHER,
+                        "The number of placer move probabilities should equal to the total number of supported moves. %d\n", PlacerOpts.place_static_move_prob.size());
+    }
+
+    if (PlacerOpts.place_static_notiming_move_prob.size() != NUM_PL_NONTIMING_MOVE_TYPES) {
+        VPR_FATAL_ERROR(VPR_ERROR_OTHER,
+                        "The number of placer non timing move probabilities should equal to the total number of supported moves. %d\n", PlacerOpts.place_static_notiming_move_prob.size());
     }
 
     if (RouterOpts.doRouting) {
@@ -53,10 +63,9 @@ void CheckSetup(const t_packer_opts& PackerOpts,
 
     if (DETAILED == RouterOpts.route_type) {
         if ((Chans.chan_x_dist.type != UNIFORM)
-            || (Chans.chan_y_dist.type != UNIFORM)
-            || (Chans.chan_x_dist.peak != Chans.chan_y_dist.peak)) {
+            || (Chans.chan_y_dist.type != UNIFORM)) {
             VPR_FATAL_ERROR(VPR_ERROR_OTHER,
-                            "Detailed routing currently only supported on FPGAs with all channels of equal width.\n");
+                            "Detailed routing currently only supported on FPGAs with uniform channel distributions.\n");
         }
     }
 

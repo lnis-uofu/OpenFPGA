@@ -28,6 +28,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <ctime>
 
 #include <gtk/gtk.h>
 
@@ -35,6 +36,13 @@
  * A library for creating a graphical user interface.
  */
 namespace ezgl {
+
+// A flag to specify whether the GUI is built from an XML file or an XML resource
+#ifndef ECE297
+const bool build_ui_from_file = false;
+#else
+const bool build_ui_from_file = true;
+#endif
 
 class application;
 
@@ -81,7 +89,7 @@ public:
    */
   struct settings {
     /**
-     * The resource path that contains the XML file, which describes the GUI.
+     * The resource/file path that contains the XML file, which describes the GUI.
      */
     std::string main_ui_resource;
 
@@ -94,6 +102,15 @@ public:
      * The name of the main canvas in the XML file.
      */
     std::string canvas_identifier;
+
+    /**
+     * A user-defined name of the GTK application
+     *
+     * Application identifiers should follow the following format:
+     * https://developer.gnome.org/gio/stable/GApplication.html#g-application-id-is-valid
+     * Use g_application_id_is_valid () to check its validity
+     */
+    std::string application_identifier;
 
     /**
      * Specify the function that will connect GUI objects to user-defined callbacks.
@@ -112,16 +129,27 @@ public:
      * Create the settings structure with default values
      */
     settings()
-    : main_ui_resource("/ezgl/main.ui"), window_identifier("MainWindow"), canvas_identifier("MainCanvas"), setup_callbacks(nullptr)
+    : main_ui_resource(build_ui_from_file ? "main_ui" : "/ezgl/main.ui"), window_identifier("MainWindow"), canvas_identifier("MainCanvas"), application_identifier("ezgl.app"),
+      setup_callbacks(nullptr)
     {
+      // Uniquify the application_identifier by appending a time stamp,
+      // so that each instance of the same program has a different application ID.
+      // This allows multiple instance of the program to run independelty.
+      application_identifier += ".t" + std::to_string(std::time(nullptr));
     }
 
     /**
      * Create the settings structure with user-defined values
      */
-    settings(std::string m_resource, std::string w_identifier, std::string c_identifier, connect_g_objects_fn s_callbacks = nullptr)
-    : main_ui_resource(m_resource), window_identifier(w_identifier), canvas_identifier(c_identifier), setup_callbacks(s_callbacks)
+    settings(std::string m_resource, std::string w_identifier, std::string c_identifier, std::string a_identifier = "ezgl.app",
+        connect_g_objects_fn s_callbacks = nullptr)
+    : main_ui_resource(m_resource), window_identifier(w_identifier), canvas_identifier(c_identifier), application_identifier(a_identifier),
+      setup_callbacks(s_callbacks)
     {
+      // Uniquify the application_identifier by appending a time stamp,
+      // so that each instance of the same program has a different application ID.
+      // This allows multiple instance of the program to run independelty.
+      application_identifier += ".t" + std::to_string(std::time(nullptr));
     }
   };
 
@@ -340,6 +368,9 @@ private:
   // The ID of the main canvas
   std::string m_canvas_id;
 
+  // The ID of the GTK application
+  std::string m_application_id;
+
   // The GTK application.
   GtkApplication *m_application;
 
@@ -388,7 +419,6 @@ public:
 /**
  * Set the disable_event_loop flag to new_setting
  * Call with new_setting == true to make the event_loop immediately return.
- * Needed only for auto-marking
  *
  * @param new_setting The new state of disable_event_loop flag
  */

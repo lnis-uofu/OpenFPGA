@@ -378,7 +378,7 @@ static void alloc_and_load_interconnect_pins(t_interconnect_pins* interc_pins,
     interc_pins->interconnect = interconnect;
 
     switch (interconnect->type) {
-        case DIRECT_INTERC:
+        case DIRECT_INTERC: /* intentionally fallthrough */
             VTR_ASSERT(num_output_sets == 1);
             /* intentionally fallthrough */
         case MUX_INTERC:
@@ -1098,9 +1098,12 @@ static bool realloc_and_load_pb_graph_pin_ptrs_at_var(const int line_num,
         return false; //clb[9:0]123
     }
     (*token_index)++;
-    if (!checkTokenType(tokens[*token_index], TOKEN_STRING)) {
-        return false; //clb[9:0].123
-    }
+
+    bool is_string = !checkTokenType(tokens[*token_index], TOKEN_STRING);
+    bool is_int = !checkTokenType(tokens[*token_index], TOKEN_INT);
+
+    if (!is_string && !is_int)
+        return false;
 
     /* parse ports and port pins of pb */
     port_name = tokens[*token_index].data;

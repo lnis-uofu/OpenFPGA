@@ -71,6 +71,12 @@ void alloc_and_load_echo_file_info() {
     setEchoFileName(E_ECHO_ATOM_NETLIST_ORIG, "atom_netlist.orig.echo.blif");
     setEchoFileName(E_ECHO_ATOM_NETLIST_CLEANED, "atom_netlist.cleaned.echo.blif");
 
+    //Vpr constraints
+    setEchoFileName(E_ECHO_VPR_CONSTRAINTS, "vpr_constraints.echo");
+
+    //Packing
+    setEchoFileName(E_ECHO_CLUSTERS, "clusters.echo");
+
     //Intra-block routing
     setEchoFileName(E_ECHO_INTRA_LB_FAILED_ROUTE, "intra_lb_failed_route.echo");
 
@@ -114,6 +120,9 @@ void alloc_and_load_echo_file_info() {
     setEchoFileName(E_ECHO_CHAN_DETAILS, "chan_details.txt");
     setEchoFileName(E_ECHO_SBLOCK_PATTERN, "sblock_pattern.txt");
     setEchoFileName(E_ECHO_ENDPOINT_TIMING, "endpoint_timing.echo.json");
+    setEchoFileName(E_ECHO_LOOKAHEAD_MAP, "lookahead_map.echo");
+    setEchoFileName(E_ECHO_RR_GRAPH_INDEXED_DATA, "rr_indexed_data.echo");
+    setEchoFileName(E_ECHO_COMPRESSED_GRIDS, "compressed_grids.echo");
 }
 
 void free_echo_file_info() {

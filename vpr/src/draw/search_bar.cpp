@@ -68,14 +68,14 @@ void search_and_highlight(GtkWidget* /*widget*/, ezgl::application* app) {
         ss >> rr_node_id;
 
         // valid rr node id check
-        if (rr_node_id < 0 || rr_node_id >= int(device_ctx.rr_graph.nodes().size())) {
+        if (rr_node_id < 0 || rr_node_id >= int(device_ctx.rr_graph.num_nodes())) {
             warning_dialog_box("Invalid RR Node ID");
             app->refresh_drawing();
             return;
         }
 
-        highlight_rr_nodes(RRNodeId(rr_node_id));
-        auto_zoom_rr_node(RRNodeId(rr_node_id));
+        highlight_rr_nodes(rr_node_id);
+        auto_zoom_rr_node(rr_node_id);
     }
 
     else if (search_type == "Block ID") {
@@ -125,12 +125,12 @@ void search_and_highlight(GtkWidget* /*widget*/, ezgl::application* app) {
     app->refresh_drawing();
 }
 
-bool highlight_rr_nodes(const RRNodeId& hit_node) {
+bool highlight_rr_nodes(int hit_node) {
     t_draw_state* draw_state = get_draw_state_vars();
 
     char message[250] = "";
 
-    if (hit_node != RRNodeId::INVALID()) {
+    if (hit_node != OPEN) {
         auto nodes = draw_expand_non_configurable_rr_nodes(hit_node);
         for (auto node : nodes) {
             if (draw_state->draw_rr_node[node].color != ezgl::MAGENTA) {
@@ -177,27 +177,27 @@ bool highlight_rr_nodes(const RRNodeId& hit_node) {
     return true;
 }
 
-void auto_zoom_rr_node(const RRNodeId& rr_node_id) {
+void auto_zoom_rr_node(int rr_node_id) {
     t_draw_coords* draw_coords = get_draw_coords_vars();
     auto& device_ctx = g_vpr_ctx.device();
+    const auto& rr_graph = device_ctx.rr_graph;
     ezgl::rectangle rr_node;
 
     // find the location of the node
-    switch (device_ctx.rr_graph.node_type(rr_node_id)) {
+    switch (rr_graph.node_type(RRNodeId(rr_node_id))) {
         case IPIN:
         case OPIN: {
-            int i = device_ctx.rr_graph.node_xlow(rr_node_id);
-            int j = device_ctx.rr_graph.node_ylow(rr_node_id);
+            int i = rr_graph.node_xlow(RRNodeId(rr_node_id));
+            int j = rr_graph.node_ylow(RRNodeId(rr_node_id));
             t_physical_tile_type_ptr type = device_ctx.grid[i][j].type;
             int width_offset = device_ctx.grid[i][j].width_offset;
             int height_offset = device_ctx.grid[i][j].height_offset;
-            int ipin = device_ctx.rr_graph.node_ptc_num(rr_node_id);
+            int ipin = rr_graph.node_ptc_num(RRNodeId(rr_node_id));
             float xcen, ycen;
 
-            int iside;
-            for (iside = 0; iside < 4; iside++) {
-                if (type->pinloc[width_offset][height_offset][iside][ipin]) {
-                    draw_get_rr_pin_coords(rr_node_id, &xcen, &ycen);
+            for (const e_side& iside : SIDES) {
+                if (type->pinloc[width_offset][height_offset][size_t(iside)][ipin]) {
+                    draw_get_rr_pin_coords(rr_node_id, &xcen, &ycen, iside);
                     rr_node = {{xcen - draw_coords->pin_size, ycen - draw_coords->pin_size},
                                {xcen + draw_coords->pin_size, ycen + draw_coords->pin_size}};
                 }

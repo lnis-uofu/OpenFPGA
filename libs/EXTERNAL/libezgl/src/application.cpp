@@ -19,7 +19,9 @@
 #include "ezgl/application.hpp"
 
 namespace ezgl {
+
 // A flag to disable event loop (default is false)
+// This allows basic scripted testing even if the GUI is on (return immediately when the event loop is called)
 bool disable_event_loop = false;
 
 void application::startup(GtkApplication *, gpointer user_data)
@@ -29,10 +31,21 @@ void application::startup(GtkApplication *, gpointer user_data)
 
   char const *main_ui_resource = ezgl_app->m_main_ui.c_str();
 
-  // Build the main user interface from the XML resource.
-  GError *error = nullptr;
-  if(gtk_builder_add_from_resource(ezgl_app->m_builder, main_ui_resource, &error) == 0) {
-    g_error("%s.", error->message);
+  if (!build_ui_from_file) {
+    // Build the main user interface from the XML resource.
+    // The XML resource is built from an XML file using the glib-compile-resources tool.
+    // This adds an extra compilation step, but it embeds the UI description in the executable.
+    GError *error = nullptr;
+    if(gtk_builder_add_from_resource(ezgl_app->m_builder, main_ui_resource, &error) == 0) {
+      g_error("%s.", error->message);
+    }
+  }
+  else {
+    // Build the main user interface from the XML file.
+    GError *error = nullptr;
+    if(gtk_builder_add_from_file(ezgl_app->m_builder, main_ui_resource, &error) == 0) {
+      g_error("%s.", error->message);
+    }
   }
 
   for(auto &c_pair : ezgl_app->m_canvases) {
@@ -72,7 +85,8 @@ application::application(application::settings s)
     : m_main_ui(s.main_ui_resource)
     , m_window_id(s.window_identifier)
     , m_canvas_id(s.canvas_identifier)
-    , m_application(gtk_application_new("ezgl.app", G_APPLICATION_FLAGS_NONE))
+    , m_application_id(s.application_identifier)
+    , m_application(gtk_application_new(s.application_identifier.c_str(), G_APPLICATION_FLAGS_NONE))
     , m_builder(gtk_builder_new())
     , m_register_callbacks(s.setup_callbacks)
 {
@@ -191,7 +205,7 @@ int application::run(setup_callback_fn initial_setup_user_callback,
     g_object_unref(m_builder);
 
     // Reconstruct the GTK application
-    m_application = (gtk_application_new("edu.toronto.eecg.ezgl.app", G_APPLICATION_FLAGS_NONE));
+    m_application = (gtk_application_new(m_application_id.c_str(), G_APPLICATION_FLAGS_NONE));
     m_builder = (gtk_builder_new());
     g_signal_connect(m_application, "startup", G_CALLBACK(startup), this);
     g_signal_connect(m_application, "activate", G_CALLBACK(activate), this);
@@ -305,6 +319,11 @@ void application::create_button(const char *button_text,
 
   // create the new button with the given label
   GtkWidget *new_button = gtk_button_new_with_label(button_text);
+
+  // set can_focus property to false
+#if GTK_CHECK_VERSION (3, 20, 0)
+  gtk_widget_set_focus_on_click(new_button, false);
+#endif
 
   // connect the buttons clicked event to the callback
   if(button_func != NULL) {
