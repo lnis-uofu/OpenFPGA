@@ -11,14 +11,22 @@
 #include <vector>
 
 #include "arch_types.h"
-#include "vpr_types.h"
 #include "atom_netlist_fwd.h"
-
-#include "lb_rr_graph_types.h"
+#include "attraction_groups.h"
 
 /**************************************************************************
  * Packing Algorithm Enumerations
  ***************************************************************************/
+
+/* Describes different types of intra-logic cluster_ctx.blocks routing resource nodes */
+enum e_lb_rr_type {
+    LB_SOURCE = 0,
+    LB_SINK,
+    LB_INTERMEDIATE,
+    NUM_LB_RR_TYPES
+};
+const std::vector<const char*> lb_rr_type_str{
+    "LB_SOURCE", "LB_SINK", "LB_INTERMEDIATE", "INVALID"};
 
 /**************************************************************************
  * Packing Algorithm Data Structures
@@ -44,6 +52,17 @@ struct t_pb_stats {
      * used by all other child pbs in this parent pb.                               */
     std::map<AtomBlockId, float> hillgain;
 
+    /*
+     * stores the number of times atoms have failed to be packed into the cluster
+     * key: root block id of the molecule, value: number of times the molecule has failed to be packed into the cluster
+     */
+    std::map<AtomBlockId, int> atom_failures;
+
+    int pulled_from_atom_groups;
+    int num_att_group_atoms_used;
+
+    std::vector<AtomBlockId> available_att_group_atoms;
+
     std::vector<AtomNetId> marked_nets;     //List of nets with the num_pins_of_net_in_pb and gain entries altered
     std::vector<AtomBlockId> marked_blocks; //List of blocks with the num_pins_of_net_in_pb and gain entries altered
 
@@ -66,6 +85,10 @@ struct t_pb_stats {
     /* Use vector because array size is expected to be small so runtime should be faster using vector than map despite the O(N) vs O(log(n)) behaviour.*/
     std::vector<std::vector<AtomNetId>> lookahead_input_pins_used;  /* [0..pb_graph_node->num_pin_classes-1] vector of input pins of this class that are speculatively used */
     std::vector<std::vector<AtomNetId>> lookahead_output_pins_used; /* [0..pb_graph_node->num_pin_classes-1] vector of input pins of this class that are speculatively used */
+
+    //The attraction group associated with the cluster.
+    //Will be AttractGroupId::INVALID() if no attraction group is associated with the cluster.
+    AttractGroupId attraction_grp_id;
 
     /* Array of feasible blocks to select from [0..max_array_size-1]
      * Sorted in ascending gain order so that the last cluster_ctx.blocks is the most desirable (this makes it easy to pop blocks off the list

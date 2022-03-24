@@ -10,15 +10,34 @@
 
 /*********************** Subroutines local to this module *******************/
 
-static bool rr_node_is_global_clb_ipin(const RRNodeId& inode);
+static bool rr_node_is_global_clb_ipin(RRNodeId inode);
 
-static void check_unbuffered_edges(const RRNodeId& from_node);
+static void check_unbuffered_edges(int from_node);
 
-static bool has_adjacent_channel(const RRGraph& rr_graph, const RRNodeId& node, const DeviceGrid& grid);
+static bool has_adjacent_channel(const t_rr_node& node, const DeviceGrid& grid);
 
-static void check_rr_edge(const RREdgeId& from_edge, const RRNodeId& to_node);
+static void check_rr_edge(int from_node, int from_edge, int to_node);
 
 /************************ Subroutine definitions ****************************/
+
+class node_edge_sorter {
+  public:
+    bool operator()(const std::pair<int, int>& lhs, const std::pair<int, int>& rhs) const {
+        return lhs.first < rhs.first;
+    }
+
+    bool operator()(const std::pair<int, int>& lhs, const int& rhs) const {
+        return lhs.first < rhs;
+    }
+
+    bool operator()(const int& lhs, const std::pair<int, int>& rhs) const {
+        return lhs < rhs.first;
+    }
+
+    bool operator()(const int& lhs, const int& rhs) const {
+        return lhs < rhs;
+    }
+};
 
 void check_rr_graph(const t_graph_type graph_type,
                     const DeviceGrid& grid,
@@ -29,81 +48,117 @@ void check_rr_graph(const t_graph_type graph_type,
     }
 
     auto& device_ctx = g_vpr_ctx.device();
+    const auto& rr_graph = device_ctx.rr_graph;
 
-    auto total_edges_to_node = vtr::vector<RRNodeId, int>(device_ctx.rr_graph.nodes().size());
-    auto switch_types_from_current_to_node = vtr::vector<RRNodeId, unsigned char>(device_ctx.rr_graph.nodes().size());
-    const int num_rr_switches = device_ctx.rr_switch_inf.size();
+    auto total_edges_to_node = std::vector<int>(rr_graph.num_nodes());
+    auto switch_types_from_current_to_node = std::vector<unsigned char>(rr_graph.num_nodes());
+    const int num_rr_switches = rr_graph.num_rr_switches();
 
-    for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
+    std::vector<std::pair<int, int>> edges;
+
+    for (const RRNodeId& rr_node : rr_graph.nodes()) {
+        size_t inode = (size_t)rr_node;
+        rr_graph.validate_node(rr_node);
 
         /* Ignore any uninitialized rr_graph nodes */
-        if ((device_ctx.rr_graph.node_type(inode) == SOURCE)
-            && (device_ctx.rr_graph.node_xlow(inode) == 0) && (device_ctx.rr_graph.node_ylow(inode) == 0)
-            && (device_ctx.rr_graph.node_xhigh(inode) == 0) && (device_ctx.rr_graph.node_yhigh(inode) == 0)) {
+        if (!rr_graph.node_is_initialized(rr_node)) {
             continue;
         }
 
-        t_rr_type rr_type = device_ctx.rr_graph.node_type(inode);
+        // Virtual clock network sink is special, ignore.
+        if (device_ctx.virtual_clock_network_root_idx == int(inode)) {
+            continue;
+        }
+
+        t_rr_type rr_type = rr_graph.node_type(rr_node);
+        int num_edges = rr_graph.num_edges(RRNodeId(inode));
 
         check_rr_node(inode, route_type, device_ctx);
 
         /* Check all the connectivity (edges, etc.) information.                    */
+        edges.resize(0);
+        edges.reserve(num_edges);
 
-        std::map<RRNodeId, std::vector<RREdgeId>> edges_from_current_to_node;
-        for (const RREdgeId& iedge : device_ctx.rr_graph.node_out_edges(inode)) {
-            RRNodeId to_node = device_ctx.rr_graph.edge_sink_node(iedge);
+        for (int iedge = 0; iedge < num_edges; iedge++) {
+            int to_node = size_t(rr_graph.edge_sink_node(rr_node, iedge));
 
-            if (false == device_ctx.rr_graph.valid_node_id(to_node)) {
+            if (to_node < 0 || to_node >= (int)rr_graph.num_nodes()) {
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
                                 "in check_rr_graph: node %d has an edge %d.\n"
                                 "\tEdge is out of range.\n",
-                                size_t(inode), size_t(to_node));
+                                inode, to_node);
             }
 
-            check_rr_edge(iedge, to_node);
+            check_rr_edge(inode, iedge, to_node);
 
-            edges_from_current_to_node[to_node].push_back(iedge);
+            edges.emplace_back(to_node, iedge);
             total_edges_to_node[to_node]++;
 
-            auto switch_type = size_t(device_ctx.rr_graph.edge_switch(iedge));
+            auto switch_type = rr_graph.edge_switch(rr_node, iedge);
 
-            if (switch_type >= (size_t)num_rr_switches) {
+            if (switch_type < 0 || switch_type >= num_rr_switches) {
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
                                 "in check_rr_graph: node %d has a switch type %d.\n"
                                 "\tSwitch type is out of range.\n",
-                                size_t(inode), switch_type);
+                                inode, switch_type);
             }
         } /* End for all edges of node. */
 
+        std::sort(edges.begin(), edges.end(), [](const std::pair<int, int>& lhs, const std::pair<int, int>& rhs) {
+            return lhs.first < rhs.first;
+        });
+
         //Check that multiple edges between the same from/to nodes make sense
-        for (const RREdgeId& iedge : device_ctx.rr_graph.node_out_edges(inode)) {
-            RRNodeId to_node = device_ctx.rr_graph.edge_sink_node(iedge);
+        for (int iedge = 0; iedge < num_edges; iedge++) {
+            int to_node = size_t(rr_graph.edge_sink_node(rr_node, iedge));
 
-            if (edges_from_current_to_node[to_node].size() == 1) continue; //Single edges are always OK
+            auto range = std::equal_range(edges.begin(), edges.end(),
+                                          to_node, node_edge_sorter());
 
-            VTR_ASSERT_MSG(edges_from_current_to_node[to_node].size() > 1, "Expect multiple edges");
+            size_t num_edges_to_node = std::distance(range.first, range.second);
 
-            t_rr_type to_rr_type = device_ctx.rr_graph.node_type(to_node);
+            if (num_edges_to_node == 1) continue; //Single edges are always OK
 
-            //Only expect chan <-> chan connections to have multiple edges
-            if ((to_rr_type != CHANX && to_rr_type != CHANY)
-                || (rr_type != CHANX && rr_type != CHANY)) {
+            VTR_ASSERT_MSG(num_edges_to_node > 1, "Expect multiple edges");
+
+            t_rr_type to_rr_type = rr_graph.node_type(RRNodeId(to_node));
+
+            /* It is unusual to have more than one programmable switch (in the same direction) between a from_node and a to_node,
+             * as the duplicate switch doesn't add more routing flexibility.
+             *
+             * However, such duplicate switches can occur for some types of nodes, which we allow below.
+             * Reasons one could have duplicate switches between two nodes include:
+             *      - The two switches have different electrical characteristics.
+             *      - Wires near the edges of an FPGA are often cut off, and the stubs connected together.
+             *        A regular switch pattern could then result in one physical wire connecting multiple
+             *        times to other wires, IPINs or OPINs.
+             *
+             * Only expect the following cases to have multiple edges
+             * - CHAN <-> CHAN connections
+             * - CHAN  -> IPIN connections (unique rr_node for IPIN nodes on multiple sides)
+             * - OPIN  -> CHAN connections (unique rr_node for OPIN nodes on multiple sides)
+             */
+            bool is_chan_to_chan = (rr_type == CHANX || rr_type == CHANY) && (to_rr_type == CHANY || to_rr_type == CHANX);
+            bool is_chan_to_ipin = (rr_type == CHANX || rr_type == CHANY) && to_rr_type == IPIN;
+            bool is_opin_to_chan = rr_type == OPIN && (to_rr_type == CHANX || to_rr_type == CHANY);
+            if (!(is_chan_to_chan || is_chan_to_ipin || is_opin_to_chan)) {
                 VPR_ERROR(VPR_ERROR_ROUTE,
-                          "in check_rr_graph: node %d (%s) connects to node %d (%s) %zu times - multi-connections only expected for CHAN->CHAN.\n",
-                          size_t(inode), rr_node_typename[rr_type], size_t(to_node), rr_node_typename[to_rr_type], edges_from_current_to_node[to_node].size());
+                          "in check_rr_graph: node %d (%s) connects to node %d (%s) %zu times - multi-connections only expected for CHAN<->CHAN, CHAN->IPIN, OPIN->CHAN.\n",
+                          inode, rr_node_typename[rr_type], to_node, rr_node_typename[to_rr_type], num_edges_to_node);
             }
 
             //Between two wire segments
-            VTR_ASSERT_MSG(to_rr_type == CHANX || to_rr_type == CHANY, "Expect channel type");
-            VTR_ASSERT_MSG(rr_type == CHANX || rr_type == CHANY, "Expect channel type");
+            VTR_ASSERT_MSG(to_rr_type == CHANX || to_rr_type == CHANY || to_rr_type == IPIN, "Expect channel type or input pin type");
+            VTR_ASSERT_MSG(rr_type == CHANX || rr_type == CHANY || rr_type == OPIN, "Expect channel type or output pin type");
 
             //While multiple connections between the same wires can be electrically legal,
             //they are redundant if they are of the same switch type.
             //
             //Identify any such edges with identical switches
             std::map<short, int> switch_counts;
-            for (auto edge : edges_from_current_to_node[to_node]) {
-                auto edge_switch = size_t(device_ctx.rr_graph.edge_switch(edge));
+            for (const auto& to_edge : vtr::Range<decltype(edges)::const_iterator>(range.first, range.second)) {
+                auto edge = to_edge.second;
+                auto edge_switch = rr_graph.edge_switch(rr_node, edge);
 
                 switch_counts[edge_switch]++;
             }
@@ -112,10 +167,16 @@ void check_rr_graph(const t_graph_type graph_type,
             for (auto kv : switch_counts) {
                 if (kv.second <= 1) continue;
 
-                auto switch_type = device_ctx.rr_switch_inf[kv.first].type();
+                /* Redundant edges are not allowed for chan <-> chan connections
+                 * but allowed for input pin <-> chan or output pin <-> chan connections 
+                 */
+                if ((to_rr_type == CHANX || to_rr_type == CHANY)
+                    && (rr_type == CHANX || rr_type == CHANY)) {
+                    auto switch_type = rr_graph.rr_switch_inf(RRSwitchId(kv.first)).type();
 
-                VPR_ERROR(VPR_ERROR_ROUTE, "in check_rr_graph: node %d has %d redundant connections to node %d of switch type %d (%s)",
-                          size_t(inode), kv.second, size_t(to_node), kv.first, SWITCH_TYPE_STRINGS[size_t(switch_type)]);
+                    VPR_ERROR(VPR_ERROR_ROUTE, "in check_rr_graph: node %d has %d redundant connections to node %d of switch type %d (%s)",
+                              inode, kv.second, to_node, kv.first, SWITCH_TYPE_STRINGS[size_t(switch_type)]);
+                }
             }
         }
 
@@ -123,17 +184,17 @@ void check_rr_graph(const t_graph_type graph_type,
         check_unbuffered_edges(inode);
 
         //Check that all config/non-config edges are appropriately organized
-        for (auto edge : device_ctx.rr_graph.node_configurable_out_edges(inode)) {
-            if (!device_ctx.rr_graph.edge_is_configurable(edge)) {
+        for (auto edge : rr_graph.configurable_edges(RRNodeId(inode))) {
+            if (!rr_graph.edge_is_configurable(RRNodeId(inode), edge)) {
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "in check_rr_graph: node %d edge %d is non-configurable, but in configurable edges",
-                                size_t(inode), size_t(edge));
+                                inode, edge);
             }
         }
 
-        for (auto edge : device_ctx.rr_graph.node_non_configurable_out_edges(inode)) {
-            if (device_ctx.rr_graph.edge_is_configurable(edge)) {
+        for (auto edge : rr_graph.non_configurable_edges(RRNodeId(inode))) {
+            if (rr_graph.edge_is_configurable(RRNodeId(inode), edge)) {
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE, "in check_rr_graph: node %d edge %d is configurable, but in non-configurable edges",
-                                size_t(inode), size_t(edge));
+                                inode, edge);
             }
         }
 
@@ -143,18 +204,19 @@ void check_rr_graph(const t_graph_type graph_type,
      * now I check that everything is reachable.                                */
     bool is_fringe_warning_sent = false;
 
-    for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
-        t_rr_type rr_type = device_ctx.rr_graph.node_type(inode);
+    for (const RRNodeId& rr_node : device_ctx.rr_graph.nodes()) {
+        size_t inode = (size_t)rr_node;
+        t_rr_type rr_type = rr_graph.node_type(rr_node);
 
         if (rr_type != SOURCE) {
-            if (total_edges_to_node[inode] < 1 && !rr_node_is_global_clb_ipin(inode)) {
+            if (total_edges_to_node[inode] < 1 && !rr_node_is_global_clb_ipin(rr_node)) {
                 /* A global CLB input pin will not have any edges, and neither will  *
                  * a SOURCE or the start of a carry-chain.  Anything else is an error.
                  * For simplicity, carry-chain input pin are entirely ignored in this test
                  */
                 bool is_chain = false;
                 if (rr_type == IPIN) {
-                    t_physical_tile_type_ptr type = device_ctx.grid[device_ctx.rr_graph.node_xlow(inode)][device_ctx.rr_graph.node_ylow(inode)].type;
+                    t_physical_tile_type_ptr type = device_ctx.grid[rr_graph.node_xlow(rr_node)][rr_graph.node_ylow(rr_node)].type;
                     for (const t_fc_specification& fc_spec : types[type->index].fc_specs) {
                         if (fc_spec.fc_value == 0 && fc_spec.seg_index == 0) {
                             is_chain = true;
@@ -162,61 +224,70 @@ void check_rr_graph(const t_graph_type graph_type,
                     }
                 }
 
-                bool is_fringe = ((device_ctx.rr_graph.node_xlow(inode) == 1)
-                                  || (device_ctx.rr_graph.node_ylow(inode) == 1)
-                                  || (device_ctx.rr_graph.node_xhigh(inode) == int(grid.width()) - 2)
-                                  || (device_ctx.rr_graph.node_yhigh(inode) == int(grid.height()) - 2));
-                bool is_wire = (device_ctx.rr_graph.node_type(inode) == CHANX
-                                || device_ctx.rr_graph.node_type(inode) == CHANY);
+                const auto& node = rr_graph.rr_nodes()[inode];
+
+                bool is_fringe = ((rr_graph.node_xlow(rr_node) == 1)
+                                  || (rr_graph.node_ylow(rr_node) == 1)
+                                  || (rr_graph.node_xhigh(rr_node) == int(grid.width()) - 2)
+                                  || (rr_graph.node_yhigh(rr_node) == int(grid.height()) - 2));
+                bool is_wire = (rr_graph.node_type(rr_node) == CHANX
+                                || rr_graph.node_type(rr_node) == CHANY);
 
                 if (!is_chain && !is_fringe && !is_wire) {
-                    if (device_ctx.rr_graph.node_type(inode) == IPIN || device_ctx.rr_graph.node_type(inode) == OPIN) {
-                        if (has_adjacent_channel(device_ctx.rr_graph, inode, device_ctx.grid)) {
-                            auto block_type = device_ctx.grid[device_ctx.rr_graph.node_xlow(inode)][device_ctx.rr_graph.node_ylow(inode)].type;
-                            std::string pin_name = block_type_pin_index_to_name(block_type, device_ctx.rr_graph.node_pin_num(inode));
-                            VTR_LOG_ERROR("in check_rr_graph: node %d (%s) at (%d,%d) block=%s side=%s pin=%s has no fanin.\n",
-                                          size_t(inode), rr_node_typename[device_ctx.rr_graph.node_type(inode)], device_ctx.rr_graph.node_xlow(inode), device_ctx.rr_graph.node_ylow(inode), block_type->name, SIDE_STRING[device_ctx.rr_graph.node_side(inode)], pin_name.c_str());
+                    if (rr_graph.node_type(rr_node) == IPIN || rr_graph.node_type(rr_node) == OPIN) {
+                        if (has_adjacent_channel(node, device_ctx.grid)) {
+                            auto block_type = device_ctx.grid[rr_graph.node_xlow(rr_node)][rr_graph.node_ylow(rr_node)].type;
+                            std::string pin_name = block_type_pin_index_to_name(block_type, rr_graph.node_pin_num(rr_node));
+                            /* Print error messages for all the sides that a node may appear */
+                            for (const e_side& node_side : SIDES) {
+                                if (!rr_graph.is_node_on_specific_side(rr_node, node_side)) {
+                                    continue;
+                                }
+                                VTR_LOG_ERROR("in check_rr_graph: node %d (%s) at (%d,%d) block=%s side=%s pin=%s has no fanin.\n",
+                                              inode, rr_graph.node_type_string(rr_node), rr_graph.node_xlow(rr_node), rr_graph.node_ylow(rr_node), block_type->name, SIDE_STRING[node_side], pin_name.c_str());
+                            }
                         }
                     } else {
                         VTR_LOG_ERROR("in check_rr_graph: node %d (%s) has no fanin.\n",
-                                      size_t(inode), rr_node_typename[device_ctx.rr_graph.node_type(inode)]);
+                                      inode, rr_graph.node_type_string(rr_node));
                     }
                 } else if (!is_chain && !is_fringe_warning_sent) {
                     VTR_LOG_WARN(
                         "in check_rr_graph: fringe node %d %s at (%d,%d) has no fanin.\n"
                         "\t This is possible on a fringe node based on low Fc_out, N, and certain lengths.\n",
-                        size_t(inode), rr_node_typename[device_ctx.rr_graph.node_type(inode)], device_ctx.rr_graph.node_xlow(inode), device_ctx.rr_graph.node_ylow(inode));
+                        inode, rr_graph.node_type_string(rr_node), rr_graph.node_xlow(rr_node), rr_graph.node_ylow(rr_node));
                     is_fringe_warning_sent = true;
                 }
             }
         } else { /* SOURCE.  No fanin for now; change if feedthroughs allowed. */
             if (total_edges_to_node[inode] != 0) {
                 VTR_LOG_ERROR("in check_rr_graph: SOURCE node %d has a fanin of %d, expected 0.\n",
-                              size_t(inode), total_edges_to_node[inode]);
+                              inode, total_edges_to_node[inode]);
             }
         }
     }
 }
 
-static bool rr_node_is_global_clb_ipin(const RRNodeId& inode) {
+static bool rr_node_is_global_clb_ipin(RRNodeId inode) {
     /* Returns true if inode refers to a global CLB input pin node.   */
 
     int ipin;
     t_physical_tile_type_ptr type;
 
     auto& device_ctx = g_vpr_ctx.device();
+    const auto& rr_graph = device_ctx.rr_graph;
 
-    type = device_ctx.grid[device_ctx.rr_graph.node_xlow(inode)][device_ctx.rr_graph.node_ylow(inode)].type;
+    type = device_ctx.grid[rr_graph.node_xlow(inode)][rr_graph.node_ylow(inode)].type;
 
-    if (device_ctx.rr_graph.node_type(inode) != IPIN)
+    if (rr_graph.node_type(inode) != IPIN)
         return (false);
 
-    ipin = device_ctx.rr_graph.node_ptc_num(inode);
+    ipin = rr_graph.node_pin_num(inode);
 
     return type->is_ignored_pin[ipin];
 }
 
-void check_rr_node(const RRNodeId& inode, enum e_route_type route_type, const DeviceContext& device_ctx) {
+void check_rr_node(int inode, enum e_route_type route_type, const DeviceContext& device_ctx) {
     /* This routine checks that the rr_node is inside the grid and has a valid
      * pin number, etc.
      */
@@ -224,17 +295,20 @@ void check_rr_node(const RRNodeId& inode, enum e_route_type route_type, const De
     int xlow, ylow, xhigh, yhigh, ptc_num, capacity;
     t_rr_type rr_type;
     t_physical_tile_type_ptr type;
-    int nodes_per_chan, tracks_per_node, num_edges, cost_index;
+    int nodes_per_chan, tracks_per_node, num_edges;
+    RRIndexedDataId cost_index;
     float C, R;
+    const auto& rr_graph = device_ctx.rr_graph;
+    RRNodeId rr_node = RRNodeId(inode);
 
-    rr_type = device_ctx.rr_graph.node_type(inode);
-    xlow = device_ctx.rr_graph.node_xlow(inode);
-    xhigh = device_ctx.rr_graph.node_xhigh(inode);
-    ylow = device_ctx.rr_graph.node_ylow(inode);
-    yhigh = device_ctx.rr_graph.node_yhigh(inode);
-    ptc_num = device_ctx.rr_graph.node_ptc_num(inode);
-    capacity = device_ctx.rr_graph.node_capacity(inode);
-    cost_index = device_ctx.rr_graph.node_cost_index(inode);
+    rr_type = rr_graph.node_type(rr_node);
+    xlow = rr_graph.node_xlow(rr_node);
+    xhigh = rr_graph.node_xhigh(rr_node);
+    ylow = rr_graph.node_ylow(rr_node);
+    yhigh = rr_graph.node_yhigh(rr_node);
+    ptc_num = rr_graph.node_ptc_num(rr_node);
+    capacity = rr_graph.node_capacity(rr_node);
+    cost_index = rr_graph.node_cost_index(rr_node);
     type = nullptr;
 
     const auto& grid = device_ctx.grid;
@@ -253,7 +327,7 @@ void check_rr_node(const RRNodeId& inode, enum e_route_type route_type, const De
                   "in check_rr_node: inode %d (type %d) had a ptc_num of %d.\n", inode, rr_type, ptc_num);
     }
 
-    if (cost_index < 0 || cost_index >= (int)device_ctx.rr_indexed_data.size()) {
+    if (!cost_index || (size_t)cost_index >= (size_t)device_ctx.rr_indexed_data.size()) {
         VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
                         "in check_rr_node: node %d cost index (%d) is out of range.\n", inode, cost_index);
     }
@@ -265,8 +339,8 @@ void check_rr_node(const RRNodeId& inode, enum e_route_type route_type, const De
         case SOURCE:
         case SINK:
             if (type == nullptr) {
-                VPR_ERROR(VPR_ERROR_ROUTE,
-                          "in check_rr_node: node %d (type %d) is at an illegal clb location (%d, %d).\n", inode, rr_type, xlow, ylow);
+                VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
+                                "in check_rr_node: node %d (type %d) is at an illegal clb location (%d, %d).\n", inode, rr_type, xlow, ylow);
             }
             if (xlow != (xhigh - type->width + 1) || ylow != (yhigh - type->height + 1)) {
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
@@ -276,8 +350,8 @@ void check_rr_node(const RRNodeId& inode, enum e_route_type route_type, const De
         case IPIN:
         case OPIN:
             if (type == nullptr) {
-                VPR_ERROR(VPR_ERROR_ROUTE,
-                          "in check_rr_node: node %d (type %d) is at an illegal clb location (%d, %d).\n", inode, rr_type, xlow, ylow);
+                VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
+                                "in check_rr_node: node %d (type %d) is at an illegal clb location (%d, %d).\n", inode, rr_type, xlow, ylow);
             }
             if (xlow != xhigh || ylow != yhigh) {
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
@@ -316,7 +390,7 @@ void check_rr_node(const RRNodeId& inode, enum e_route_type route_type, const De
 
     switch (rr_type) {
         case SOURCE:
-            if (ptc_num >= type->num_class
+            if (ptc_num >= (int)type->class_inf.size()
                 || type->class_inf[ptc_num].type != DRIVER) {
                 VPR_ERROR(VPR_ERROR_ROUTE,
                           "in check_rr_node: inode %d (type %d) had a ptc_num of %d.\n", inode, rr_type, ptc_num);
@@ -328,7 +402,7 @@ void check_rr_node(const RRNodeId& inode, enum e_route_type route_type, const De
             break;
 
         case SINK:
-            if (ptc_num >= type->num_class
+            if (ptc_num >= (int)type->class_inf.size()
                 || type->class_inf[ptc_num].type != RECEIVER) {
                 VPR_ERROR(VPR_ERROR_ROUTE,
                           "in check_rr_node: inode %d (type %d) had a ptc_num of %d.\n", inode, rr_type, ptc_num);
@@ -409,7 +483,7 @@ void check_rr_node(const RRNodeId& inode, enum e_route_type route_type, const De
     }
 
     /* Check that the number of (out) edges is reasonable. */
-    num_edges = device_ctx.rr_graph.node_out_edges(inode).size();
+    num_edges = rr_graph.num_edges(RRNodeId(inode));
 
     if (rr_type != SINK && rr_type != IPIN) {
         if (num_edges <= 0) {
@@ -420,7 +494,7 @@ void check_rr_node(const RRNodeId& inode, enum e_route_type route_type, const De
             //Don't worry about disconnect PINs which have no adjacent channels (i.e. on the device perimeter)
             bool check_for_out_edges = true;
             if (rr_type == IPIN || rr_type == OPIN) {
-                if (!has_adjacent_channel(device_ctx.rr_graph, inode, device_ctx.grid)) {
+                if (!has_adjacent_channel(rr_graph.rr_nodes()[inode], device_ctx.grid)) {
                     check_for_out_edges = false;
                 }
             }
@@ -433,62 +507,67 @@ void check_rr_node(const RRNodeId& inode, enum e_route_type route_type, const De
     } else if (rr_type == SINK) { /* SINK -- remove this check if feedthroughs allowed */
         if (num_edges != 0) {
             VPR_FATAL_ERROR(VPR_ERROR_ROUTE,
-                            "in check_rr_node: node %d is a sink, but has %d edges.\n", size_t(inode), num_edges);
+                            "in check_rr_node: node %d is a sink, but has %d edges.\n", inode, num_edges);
         }
     }
 
     /* Check that the capacitance and resistance are reasonable. */
-    C = device_ctx.rr_graph.node_C(inode);
-    R = device_ctx.rr_graph.node_R(inode);
+    C = rr_graph.node_C(rr_node);
+    R = rr_graph.node_R(rr_node);
 
     if (rr_type == CHANX || rr_type == CHANY) {
         if (C < 0. || R < 0.) {
             VPR_ERROR(VPR_ERROR_ROUTE,
-                      "in check_rr_node: node %d of type %d has R = %g and C = %g.\n", size_t(inode), rr_type, R, C);
+                      "in check_rr_node: node %d of type %d has R = %g and C = %g.\n", inode, rr_type, R, C);
         }
     } else {
         if (C != 0. || R != 0.) {
             VPR_ERROR(VPR_ERROR_ROUTE,
-                      "in check_rr_node: node %d of type %d has R = %g and C = %g.\n", size_t(inode), rr_type, R, C);
+                      "in check_rr_node: node %d of type %d has R = %g and C = %g.\n", inode, rr_type, R, C);
         }
     }
 }
 
-static void check_unbuffered_edges(const RRNodeId& from_node) {
+static void check_unbuffered_edges(int from_node) {
     /* This routine checks that all pass transistors in the routing truly are  *
      * bidirectional.  It may be a slow check, so don't use it all the time.   */
 
+    int from_edge, to_node, to_edge, from_num_edges, to_num_edges;
     t_rr_type from_rr_type, to_rr_type;
     short from_switch_type;
     bool trans_matched;
 
     auto& device_ctx = g_vpr_ctx.device();
+    const auto& rr_graph = device_ctx.rr_graph;
 
-    from_rr_type = device_ctx.rr_graph.node_type(from_node);
+    from_rr_type = rr_graph.node_type(RRNodeId(from_node));
     if (from_rr_type != CHANX && from_rr_type != CHANY)
         return;
 
-    for (const RREdgeId& from_edge : device_ctx.rr_graph.node_out_edges(from_node)) {
-        RRNodeId to_node = device_ctx.rr_graph.edge_sink_node(from_edge);
-        to_rr_type = device_ctx.rr_graph.node_type(to_node);
+    from_num_edges = rr_graph.num_edges(RRNodeId(from_node));
+
+    for (from_edge = 0; from_edge < from_num_edges; from_edge++) {
+        to_node = size_t(rr_graph.edge_sink_node(RRNodeId(from_node), from_edge));
+        to_rr_type = rr_graph.node_type(RRNodeId(to_node));
 
         if (to_rr_type != CHANX && to_rr_type != CHANY)
             continue;
 
-        from_switch_type = size_t(device_ctx.rr_graph.edge_switch(from_edge));
+        from_switch_type = rr_graph.edge_switch(RRNodeId(from_node), from_edge);
 
-        if (device_ctx.rr_switch_inf[from_switch_type].buffered())
+        if (rr_graph.rr_switch_inf(RRSwitchId(from_switch_type)).buffered())
             continue;
 
         /* We know that we have a pass transistor from from_node to to_node. Now *
          * check that there is a corresponding edge from to_node back to         *
          * from_node.                                                            */
 
+        to_num_edges = rr_graph.num_edges(RRNodeId(to_node));
         trans_matched = false;
 
-        for (const RREdgeId& to_edge : device_ctx.rr_graph.node_out_edges(to_node)) {
-            if (device_ctx.rr_graph.edge_sink_node(to_edge) == from_node
-                && (short)size_t(device_ctx.rr_graph.edge_switch(to_edge)) == from_switch_type) {
+        for (to_edge = 0; to_edge < to_num_edges; to_edge++) {
+            if (size_t(rr_graph.edge_sink_node(RRNodeId(to_node), to_edge)) == size_t(from_node)
+                && rr_graph.edge_switch(RRNodeId(to_node), to_edge) == from_switch_type) {
                 trans_matched = true;
                 break;
             }
@@ -499,33 +578,38 @@ static void check_unbuffered_edges(const RRNodeId& from_node) {
                       "in check_unbuffered_edges:\n"
                       "connection from node %d to node %d uses an unbuffered switch (switch type %d '%s')\n"
                       "but there is no corresponding unbuffered switch edge in the other direction.\n",
-                      size_t(from_node), size_t(to_node), from_switch_type, device_ctx.rr_switch_inf[from_switch_type].name);
+                      from_node, to_node, from_switch_type, rr_graph.rr_switch_inf(RRSwitchId(from_switch_type)).name);
         }
 
     } /* End for all from_node edges */
 }
 
-static bool has_adjacent_channel(const RRGraph& rr_graph, const RRNodeId& node, const DeviceGrid& grid) {
-    VTR_ASSERT(rr_graph.node_type(node) == IPIN || rr_graph.node_type(node) == OPIN);
+static bool has_adjacent_channel(const t_rr_node& node, const DeviceGrid& grid) {
+    /* TODO: this function should be reworked later to adapt RRGraphView interface 
+     *       once xlow(), ylow(), side() APIs are implemented
+     */
+    const auto& rr_graph = g_vpr_ctx.device().rr_graph;
+    VTR_ASSERT(rr_graph.node_type(node.id()) == IPIN || rr_graph.node_type(node.id()) == OPIN);
 
-    if ((rr_graph.node_xlow(node) == 0 && rr_graph.node_side(node) != RIGHT)                          //left device edge connects only along block's right side
-        || (rr_graph.node_ylow(node) == int(grid.height() - 1) && rr_graph.node_side(node) != BOTTOM) //top device edge connects only along block's bottom side
-        || (rr_graph.node_xlow(node) == int(grid.width() - 1) && rr_graph.node_side(node) != LEFT)    //right deivce edge connects only along block's left side
-        || (rr_graph.node_ylow(node) == 0 && rr_graph.node_side(node) != TOP)                         //bottom deivce edge connects only along block's top side
+    if ((rr_graph.node_xlow(node.id()) == 0 && !rr_graph.is_node_on_specific_side(node.id(), RIGHT))                          //left device edge connects only along block's right side
+        || (rr_graph.node_ylow(node.id()) == int(grid.height() - 1) && !rr_graph.is_node_on_specific_side(node.id(), BOTTOM)) //top device edge connects only along block's bottom side
+        || (rr_graph.node_xlow(node.id()) == int(grid.width() - 1) && !rr_graph.is_node_on_specific_side(node.id(), LEFT))    //right deivce edge connects only along block's left side
+        || (rr_graph.node_ylow(node.id()) == 0 && !rr_graph.is_node_on_specific_side(node.id(), TOP))                         //bottom deivce edge connects only along block's top side
     ) {
         return false;
     }
     return true; //All other blocks will be surrounded on all sides by channels
 }
 
-static void check_rr_edge(const RREdgeId& iedge, const RRNodeId& to_node) {
+static void check_rr_edge(int from_node, int iedge, int to_node) {
     auto& device_ctx = g_vpr_ctx.device();
+    const auto& rr_graph = device_ctx.rr_graph;
 
     //Check that to to_node's fan-in is correct, given the switch type
-    int iswitch = (int)size_t(device_ctx.rr_graph.edge_switch(iedge));
-    auto switch_type = device_ctx.rr_switch_inf[iswitch].type();
+    int iswitch = rr_graph.edge_switch(RRNodeId(from_node), iedge);
+    auto switch_type = rr_graph.rr_switch_inf(RRSwitchId(iswitch)).type();
 
-    int to_fanin = device_ctx.rr_graph.node_in_edges(to_node).size();
+    int to_fanin = rr_graph.node_fan_in(RRNodeId(to_node));
     switch (switch_type) {
         case SwitchType::BUFFER:
             //Buffer switches are non-configurable, and uni-directional -- they must have only one driver
@@ -537,6 +621,7 @@ static void check_rr_edge(const RREdgeId& iedge, const RRNodeId& to_node) {
 
                 VPR_FATAL_ERROR(VPR_ERROR_ROUTE, msg.c_str());
             }
+            break;
         case SwitchType::TRISTATE:  //Fallthrough
         case SwitchType::MUX:       //Fallthrough
         case SwitchType::PASS_GATE: //Fallthrough

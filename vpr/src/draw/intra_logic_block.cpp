@@ -364,7 +364,10 @@ static void draw_internal_pb(const ClusterBlockId clb_index, t_pb* pb, const ezg
     }
     g->fill_rectangle(abs_bbox);
     g->set_color(ezgl::BLACK);
-    g->draw_rectangle(abs_bbox);
+
+    if (draw_state->draw_block_outlines) {
+        g->draw_rectangle(abs_bbox);
+    }
 
     /// then draw text ///
 
@@ -381,30 +384,36 @@ static void draw_internal_pb(const ClusterBlockId clb_index, t_pb* pb, const ezg
 
             sprintf(blk_tag, "%s (%s)", pb_type->name, pb->name);
 
-            g->draw_text(
-                abs_bbox.center(),
-                blk_tag,
-                abs_bbox.width(),
-                abs_bbox.height());
+            if (draw_state->draw_block_text) {
+                g->draw_text(
+                    abs_bbox.center(),
+                    blk_tag,
+                    abs_bbox.width(),
+                    abs_bbox.height());
+            }
 
             free(blk_tag);
         } else {
             // else (ie. has chilren, and isn't at the lowest displayed level)
             // just label its type, and put it up at the top so we can see it
+            if (draw_state->draw_block_text) {
+                g->draw_text(
+                    ezgl::point2d(abs_bbox.center_x(),
+                                  abs_bbox.top() - (abs_bbox.height()) / 15.0),
+                    pb_type->name,
+                    abs_bbox.width(),
+                    abs_bbox.height());
+            }
+        }
+    } else {
+        // If child block is not used, label it only by its type
+        if (draw_state->draw_block_text) {
             g->draw_text(
-                ezgl::point2d(abs_bbox.center_x(),
-                              abs_bbox.top() - (abs_bbox.height()) / 15.0),
+                abs_bbox.center(),
                 pb_type->name,
                 abs_bbox.width(),
                 abs_bbox.height());
         }
-    } else {
-        // If child block is not used, label it only by its type
-        g->draw_text(
-            abs_bbox.center(),
-            pb_type->name,
-            abs_bbox.width(),
-            abs_bbox.height());
     }
 
     /// now recurse on the child pbs. ///
@@ -538,8 +547,15 @@ void draw_logical_connections(ezgl::renderer* g) {
 
     g->set_line_dash(ezgl::line_dash::none);
 
+    //constexpr float NET_ALPHA = 0.0275;
+    float NET_ALPHA = draw_state->net_alpha;
+
     // iterate over all the atom nets
     for (auto net_id : atom_ctx.nlist.nets()) {
+        if ((int)atom_ctx.nlist.net_pins(net_id).size() > draw_state->draw_net_max_fanout) {
+            continue;
+        }
+
         AtomPinId driver_pin_id = atom_ctx.nlist.net_driver(net_id);
         AtomBlockId src_blk_id = atom_ctx.nlist.pin_block(driver_pin_id);
         const t_pb_graph_node* src_pb_gnode = atom_ctx.lookup.atom_pb_graph_node(src_blk_id);
@@ -554,11 +570,11 @@ void draw_logical_connections(ezgl::renderer* g) {
             ClusterBlockId sink_clb = atom_ctx.lookup.atom_clb(sink_blk_id);
 
             if (src_is_selected && sel_subblk_info.is_sink_of_selected(sink_pb_gnode, sink_clb)) {
-                g->set_color(DRIVES_IT_COLOR);
+                g->set_color(DRIVES_IT_COLOR, DRIVES_IT_COLOR.alpha * NET_ALPHA);
             } else if (src_is_src_of_selected && sel_subblk_info.is_in_selected_subtree(sink_pb_gnode, sink_clb)) {
-                g->set_color(DRIVEN_BY_IT_COLOR);
+                g->set_color(DRIVEN_BY_IT_COLOR, DRIVEN_BY_IT_COLOR.alpha * NET_ALPHA);
             } else if (draw_state->show_nets == DRAW_LOGICAL_CONNECTIONS && (draw_state->showing_sub_blocks() || src_clb != sink_clb)) {
-                g->set_color(ezgl::BLACK); // if showing all, draw the other ones in black
+                g->set_color(ezgl::BLACK, ezgl::BLACK.alpha * NET_ALPHA); // if showing all, draw the other ones in black
             } else {
                 continue; // not showing all, and not the sperified block, so skip
             }

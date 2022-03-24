@@ -37,16 +37,19 @@ static void get_channel_occupancy_stats();
 
 /************************* Subroutine definitions ****************************/
 
+/**
+ * @brief Prints out various statistics about the current routing.
+ *
+ * Both a routing and an rr_graph must exist when you call this routine.
+ */
 void routing_stats(bool full_stats, enum e_route_type route_type, std::vector<t_segment_inf>& segment_inf, float R_minW_nmos, float R_minW_pmos, float grid_logic_tile_area, enum e_directionality directionality, int wire_to_ipin_switch) {
-    /* Prints out various statistics about the current routing.  Both a routing *
-     * and an rr_graph must exist when you call this routine.                   */
-
     float area, used_area;
 
     auto& device_ctx = g_vpr_ctx.device();
+    auto& rr_graph = device_ctx.rr_graph;
     auto& cluster_ctx = g_vpr_ctx.clustering();
 
-    int num_rr_switch = device_ctx.rr_switch_inf.size();
+    int num_rr_switch = rr_graph.num_rr_switches();
 
     length_and_bends_stats();
     print_channel_stats();
@@ -96,8 +99,10 @@ void routing_stats(bool full_stats, enum e_route_type route_type, std::vector<t_
         print_wirelen_prob_dist();
 }
 
-/* Figures out maximum, minimum and average number of bends and net length   *
- * in the routing.                                                           */
+/**
+ * @brief Figures out maximum, minimum and average number of bends
+ *        and net length in the routing.
+ */
 void length_and_bends_stats() {
     int bends, total_bends, max_bends;
     int length, total_length, max_length;
@@ -155,8 +160,8 @@ void length_and_bends_stats() {
     VTR_LOG("\tTotal local nets with reserved CLB opins: %d\n", num_clb_opins_reserved);
 }
 
+///@brief Determines how many tracks are used in each channel.
 static void get_channel_occupancy_stats() {
-    /* Determines how many tracks are used in each channel.                    */
     auto& device_ctx = g_vpr_ctx.device();
 
     auto chanx_occ = vtr::Matrix<int>({{
@@ -212,14 +217,17 @@ static void get_channel_occupancy_stats() {
     VTR_LOG("\n");
 }
 
-/* Loads the two arrays passed in with the total occupancy at each of the  *
- * channel segments in the FPGA.                                           */
+/**
+ * @brief Loads the two arrays passed in with the total occupancy at each of the
+ *        channel segments in the FPGA.
+ */
 static void load_channel_occupancies(vtr::Matrix<int>& chanx_occ, vtr::Matrix<int>& chany_occ) {
-    int i, j;
+    int i, j, inode;
     t_trace* tptr;
     t_rr_type rr_type;
 
     auto& device_ctx = g_vpr_ctx.device();
+    const auto& rr_graph = device_ctx.rr_graph;
     auto& cluster_ctx = g_vpr_ctx.clustering();
     auto& route_ctx = g_vpr_ctx.routing();
 
@@ -235,8 +243,8 @@ static void load_channel_occupancies(vtr::Matrix<int>& chanx_occ, vtr::Matrix<in
 
         tptr = route_ctx.trace[net_id].head;
         while (tptr != nullptr) {
-            const RRNodeId& inode = tptr->index;
-            rr_type = device_ctx.rr_graph.node_type(inode);
+            inode = tptr->index;
+            rr_type = rr_graph.node_type(RRNodeId(inode));
 
             if (rr_type == SINK) {
                 tptr = tptr->next; /* Skip next segment. */
@@ -245,14 +253,14 @@ static void load_channel_occupancies(vtr::Matrix<int>& chanx_occ, vtr::Matrix<in
             }
 
             else if (rr_type == CHANX) {
-                j = device_ctx.rr_graph.node_ylow(inode);
-                for (i = device_ctx.rr_graph.node_xlow(inode); i <= device_ctx.rr_graph.node_xhigh(inode); i++)
+                j = rr_graph.node_ylow(RRNodeId(inode));
+                for (i = rr_graph.node_xlow(RRNodeId(inode)); i <= rr_graph.node_xhigh(RRNodeId(inode)); i++)
                     chanx_occ[i][j]++;
             }
 
             else if (rr_type == CHANY) {
-                i = device_ctx.rr_graph.node_xlow(inode);
-                for (j = device_ctx.rr_graph.node_ylow(inode); j <= device_ctx.rr_graph.node_yhigh(inode); j++)
+                i = rr_graph.node_xlow(RRNodeId(inode));
+                for (j = rr_graph.node_ylow(RRNodeId(inode)); j <= rr_graph.node_yhigh(RRNodeId(inode)); j++)
                     chany_occ[i][j]++;
             }
 
@@ -261,13 +269,17 @@ static void load_channel_occupancies(vtr::Matrix<int>& chanx_occ, vtr::Matrix<in
     }
 }
 
+/**
+ * @brief Counts and returns the number of bends, wirelength, and number of routing
+ *        resource segments in net inet's routing.
+ */
 void get_num_bends_and_length(ClusterNetId inet, int* bends_ptr, int* len_ptr, int* segments_ptr) {
-    /* Counts and returns the number of bends, wirelength, and number of routing *
-     * resource segments in net inet's routing.                                  */
     auto& route_ctx = g_vpr_ctx.routing();
     auto& device_ctx = g_vpr_ctx.device();
+    const auto& rr_graph = device_ctx.rr_graph;
 
     t_trace *tptr, *prevptr;
+    int inode;
     t_rr_type curr_type, prev_type;
     int bends, length, segments;
 
@@ -280,27 +292,26 @@ void get_num_bends_and_length(ClusterNetId inet, int* bends_ptr, int* len_ptr, i
         VPR_FATAL_ERROR(VPR_ERROR_OTHER,
                         "in get_num_bends_and_length: net #%lu has no traceback.\n", size_t(inet));
     }
-    RRNodeId inode = prevptr->index;
-    prev_type = device_ctx.rr_graph.node_type(inode);
+    inode = prevptr->index;
+    prev_type = rr_graph.node_type(RRNodeId(inode));
 
     tptr = prevptr->next;
 
     while (tptr != nullptr) {
         inode = tptr->index;
-        curr_type = device_ctx.rr_graph.node_type(inode);
+        curr_type = rr_graph.node_type(RRNodeId(inode));
 
         if (curr_type == SINK) { /* Starting a new segment */
             tptr = tptr->next;   /* Link to existing path - don't add to len. */
             if (tptr == nullptr)
                 break;
 
-            curr_type = device_ctx.rr_graph.node_type(tptr->index);
+            curr_type = rr_graph.node_type(RRNodeId(tptr->index));
         }
 
         else if (curr_type == CHANX || curr_type == CHANY) {
             segments++;
-            length += 1 + device_ctx.rr_graph.node_xhigh(inode) - device_ctx.rr_graph.node_xlow(inode)
-                      + device_ctx.rr_graph.node_yhigh(inode) - device_ctx.rr_graph.node_ylow(inode);
+            length += rr_graph.node_length(RRNodeId(inode));
 
             if (curr_type != prev_type && (prev_type == CHANX || prev_type == CHANY))
                 bends++;
@@ -315,10 +326,12 @@ void get_num_bends_and_length(ClusterNetId inet, int* bends_ptr, int* len_ptr, i
     *segments_ptr = segments;
 }
 
+/**
+ * @brief Prints out the probability distribution of the wirelength / number
+ *        input pins on a net -- i.e. simulates 2-point net length probability
+ *        distribution.
+ */
 void print_wirelen_prob_dist() {
-    /* Prints out the probability distribution of the wirelength / number   *
-     * input pins on a net -- i.e. simulates 2-point net length probability *
-     * distribution.                                                        */
     auto& device_ctx = g_vpr_ctx.device();
     auto& cluster_ctx = g_vpr_ctx.clustering();
 
@@ -398,11 +411,13 @@ void print_wirelen_prob_dist() {
     free(prob_dist);
 }
 
+/**
+ * @brief  Finds the average number of input pins used per clb.
+ *
+ * Does not count inputs which are hooked to global nets
+ * (i.e. the clock when it is marked global).
+ */
 void print_lambda() {
-    /* Finds the average number of input pins used per clb.  Does not    *
-     * count inputs which are hooked to global nets (i.e. the clock     *
-     * when it is marked global).                                       */
-
     int ipin, iclass;
     int num_inputs_used = 0;
     float lambda;
@@ -429,9 +444,8 @@ void print_lambda() {
     VTR_LOG("Average lambda (input pins used per clb) is: %g\n", lambda);
 }
 
+///@brief Count how many clocks are in the netlist.
 int count_netlist_clocks() {
-    /* Count how many clocks are in the netlist. */
-
     auto& atom_ctx = g_vpr_ctx.atom();
 
     std::set<std::string> clock_names;

@@ -64,6 +64,20 @@ void print_histogram(std::vector<HistogramBucket> histogram) {
     }
 }
 
+float get_histogram_mode(std::vector<HistogramBucket> histogram) {
+    size_t max_count = 0;
+    float mode = 0.0;
+    for (auto bucket : histogram) {
+        if (bucket.count > max_count) {
+            mode = bucket.max_value;
+
+            max_count = bucket.count;
+        }
+    }
+
+    return mode;
+}
+
 std::vector<std::string> format_histogram(std::vector<HistogramBucket> histogram, size_t width) {
     std::vector<std::string> lines;
 
@@ -91,7 +105,7 @@ std::vector<std::string> format_histogram(std::vector<HistogramBucket> histogram
 
         float pct = histogram[ibucket].count / float(total_count) * 100;
 
-        line += vtr::string_fmt("[% 9.2g:% 9.2g) %*zu (%4.1f%) |", histogram[ibucket].min_value, histogram[ibucket].max_value, count_digits, histogram[ibucket].count, pct);
+        line += vtr::string_fmt("[% 9.2g:% 9.2g) %*zu (%5.1f%%) |", histogram[ibucket].min_value, histogram[ibucket].max_value, count_digits, histogram[ibucket].count, pct);
 
         size_t num_chars = std::round((double(histogram[ibucket].count) / max_count) * bar_len);
         for (size_t i = 0; i < num_chars; ++i) {

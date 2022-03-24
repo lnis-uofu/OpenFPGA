@@ -38,11 +38,17 @@ class TimingInfo {
   public:
     //Mutators
 
+    //Invalidate a timing edgge (i.e. due to delay change)
+    virtual void invalidate_delay(const tatum::EdgeId edge) = 0;
+
     //Update all timing information
     virtual void update() = 0;
 
     //Return the underlying timing analyzer
     virtual std::shared_ptr<const tatum::TimingAnalyzer> analyzer() const = 0;
+
+    //Return the underlying delay calculator
+    virtual std::shared_ptr<const tatum::DelayCalculator> delay_calculator() const = 0;
 
     //Return the underlying timing graph
     virtual std::shared_ptr<const tatum::TimingGraph> timing_graph() const = 0;
@@ -60,7 +66,15 @@ class TimingInfo {
 //information (e.g. to optimize critical path delay)
 class SetupTimingInfo : public virtual TimingInfo {
   public:
+    //Types
+    typedef std::vector<AtomPinId>::const_iterator pin_iterator;
+    typedef vtr::Range<pin_iterator> pin_range;
+
+  public:
     //Accessors
+
+    //Returns the underlying setup timing analyzer
+    virtual std::shared_ptr<const tatum::SetupTimingAnalyzer> setup_analyzer() const = 0;
 
     //Return the critical path with the least slack
     virtual tatum::TimingPathInfo least_slack_critical_path() const = 0;
@@ -83,8 +97,11 @@ class SetupTimingInfo : public virtual TimingInfo {
     //Return the setup criticality of the worst connection passing through pin
     virtual float setup_pin_criticality(AtomPinId pin) const = 0;
 
-    //Return the underlying timing analyzer
-    virtual std::shared_ptr<const tatum::SetupTimingAnalyzer> setup_analyzer() const = 0;
+    //Return the range of pins with modified setup slack
+    virtual pin_range pins_with_modified_setup_slack() const = 0;
+    //
+    //Return the range of pins with modified setup criticality
+    virtual pin_range pins_with_modified_setup_criticality() const = 0;
 
   public:
     //Mutators
@@ -99,6 +116,9 @@ class HoldTimingInfo : public virtual TimingInfo {
   public:
     //Accessors
 
+    //Returns the underlying hold timing analyzer
+    virtual std::shared_ptr<const tatum::HoldTimingAnalyzer> hold_analyzer() const = 0;
+
     //Return the total negative slack w.r.t. hold constraints
     virtual float hold_total_negative_slack() const = 0;
 
@@ -110,9 +130,6 @@ class HoldTimingInfo : public virtual TimingInfo {
 
     //Return the hold criticality of the worst connection passing through pin
     virtual float hold_pin_criticality(AtomPinId pin) const = 0;
-
-    //Return the underlying timing analyzer
-    virtual std::shared_ptr<const tatum::HoldTimingAnalyzer> hold_analyzer() const = 0;
 
   public:
     //Mutators
@@ -142,28 +159,47 @@ class SetupHoldTimingInfo : public SetupTimingInfo, public HoldTimingInfo {
 #include "concrete_timing_info.h"
 
 template<class DelayCalc>
-std::unique_ptr<SetupTimingInfo> make_setup_timing_info(std::shared_ptr<DelayCalc> delay_calculator) {
+std::unique_ptr<SetupTimingInfo> make_setup_timing_info(std::shared_ptr<DelayCalc> delay_calculator, e_timing_update_type update_type) {
     auto& timing_ctx = g_vpr_ctx.timing();
 
-    std::shared_ptr<tatum::SetupTimingAnalyzer> analyzer = tatum::AnalyzerFactory<tatum::SetupAnalysis, tatum::ParallelWalker>::make(*timing_ctx.graph, *timing_ctx.constraints, *delay_calculator);
+    std::shared_ptr<tatum::SetupTimingAnalyzer> analyzer;
+
+    if (update_type == e_timing_update_type::FULL || update_type == e_timing_update_type::AUTO) {
+        analyzer = tatum::AnalyzerFactory<tatum::SetupAnalysis, tatum::ParallelWalker>::make(*timing_ctx.graph, *timing_ctx.constraints, *delay_calculator);
+    } else {
+        VTR_ASSERT(update_type == e_timing_update_type::INCREMENTAL);
+        analyzer = tatum::AnalyzerFactory<tatum::SetupAnalysis, tatum::SerialIncrWalker>::make(*timing_ctx.graph, *timing_ctx.constraints, *delay_calculator);
+    }
 
     return std::make_unique<ConcreteSetupTimingInfo<DelayCalc>>(timing_ctx.graph, timing_ctx.constraints, delay_calculator, analyzer);
 }
 
 template<class DelayCalc>
-std::unique_ptr<HoldTimingInfo> make_hold_timing_info(std::shared_ptr<DelayCalc> delay_calculator) {
+std::unique_ptr<HoldTimingInfo> make_hold_timing_info(std::shared_ptr<DelayCalc> delay_calculator, e_timing_update_type update_type) {
     auto& timing_ctx = g_vpr_ctx.timing();
 
-    std::shared_ptr<tatum::HoldTimingAnalyzer> analyzer = tatum::AnalyzerFactory<tatum::HoldAnalysis, tatum::ParallelWalker>::make(*timing_ctx.graph, *timing_ctx.constraints, *delay_calculator);
+    std::shared_ptr<tatum::HoldTimingAnalyzer> analyzer;
+    if (update_type == e_timing_update_type::FULL || update_type == e_timing_update_type::AUTO) {
+        analyzer = tatum::AnalyzerFactory<tatum::HoldAnalysis, tatum::ParallelWalker>::make(*timing_ctx.graph, *timing_ctx.constraints, *delay_calculator);
+    } else {
+        VTR_ASSERT(update_type == e_timing_update_type::INCREMENTAL);
+        analyzer = tatum::AnalyzerFactory<tatum::HoldAnalysis, tatum::SerialIncrWalker>::make(*timing_ctx.graph, *timing_ctx.constraints, *delay_calculator);
+    }
 
     return std::make_unique<ConcreteHoldTimingInfo<DelayCalc>>(timing_ctx.graph, timing_ctx.constraints, delay_calculator, analyzer);
 }
 
 template<class DelayCalc>
-std::unique_ptr<SetupHoldTimingInfo> make_setup_hold_timing_info(std::shared_ptr<DelayCalc> delay_calculator) {
+std::unique_ptr<SetupHoldTimingInfo> make_setup_hold_timing_info(std::shared_ptr<DelayCalc> delay_calculator, e_timing_update_type update_type) {
     auto& timing_ctx = g_vpr_ctx.timing();
 
-    std::shared_ptr<tatum::SetupHoldTimingAnalyzer> analyzer = tatum::AnalyzerFactory<tatum::SetupHoldAnalysis, tatum::ParallelWalker>::make(*timing_ctx.graph, *timing_ctx.constraints, *delay_calculator);
+    std::shared_ptr<tatum::SetupHoldTimingAnalyzer> analyzer;
+    if (update_type == e_timing_update_type::FULL || update_type == e_timing_update_type::AUTO) {
+        analyzer = tatum::AnalyzerFactory<tatum::SetupHoldAnalysis, tatum::ParallelWalker>::make(*timing_ctx.graph, *timing_ctx.constraints, *delay_calculator);
+    } else {
+        VTR_ASSERT(update_type == e_timing_update_type::INCREMENTAL);
+        analyzer = tatum::AnalyzerFactory<tatum::SetupHoldAnalysis, tatum::SerialIncrWalker>::make(*timing_ctx.graph, *timing_ctx.constraints, *delay_calculator);
+    }
 
     return std::make_unique<ConcreteSetupHoldTimingInfo<DelayCalc>>(timing_ctx.graph, timing_ctx.constraints, delay_calculator, analyzer);
 }

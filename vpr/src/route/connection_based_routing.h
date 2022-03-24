@@ -4,6 +4,7 @@
 #include "route_tree_type.h"
 #include "vpr_types.h"
 #include "timing_info.h"
+#include "vpr_net_pins_matrix.h"
 
 /***************** Connection based rerouting **********************/
 // encompasses both incremental rerouting through route tree pruning
@@ -14,11 +15,6 @@
 // reroute only the connections to the ones that did not have a legal connection the previous time
 class Connection_based_routing_resources {
     // Incremental reroute resources --------------
-    // conceptually works like rr_sink_node_to_pin[inet][sink_rr_node_index] to get the pin index for that net
-    // each net maps SINK node index -> PIN index for net
-    // only need to be built once at the start since the SINK nodes never change
-    // the reverse lookup of route_ctx.net_rr_terminals
-    vtr::vector<ClusterNetId, std::unordered_map<int, int>> rr_sink_node_to_pin;
 
     // a property of each net, but only valid after pruning the previous route tree
     // the "targets" in question can be either rr_node indices or pin indices, the
@@ -34,18 +30,13 @@ class Connection_based_routing_resources {
     Connection_based_routing_resources();
     // adding to the resources when they are reached during pruning
     // mark rr sink node as something that still needs to be reached
-    void toreach_rr_sink(const int& rr_sink_node) { remaining_targets.push_back(rr_sink_node); }
+    void toreach_rr_sink(int rr_sink_node) { remaining_targets.push_back(rr_sink_node); }
     // mark rt sink node as something that has been legally reached
     void reached_rt_sink(t_rt_node* rt_sink) { reached_rt_sinks.push_back(rt_sink); }
 
     // get a handle on the resources
     std::vector<int>& get_remaining_targets() { return remaining_targets; }
     std::vector<t_rt_node*>& get_reached_rt_sinks() { return reached_rt_sinks; }
-
-    void convert_sink_nodes_to_net_pins(std::vector<int>& rr_sink_nodes) const;
-
-    void put_sink_rt_nodes_in_net_pins_lookup(const std::vector<t_rt_node*>& sink_rt_nodes,
-                                              t_rt_node** rt_node_of_sink) const;
 
     bool sanity_check_lookup() const;
 
@@ -85,7 +76,10 @@ class Connection_based_routing_resources {
 
   public:
     // after timing analysis of 1st iteration, can set a lower bound on connection delay
-    void set_lower_bound_connection_delays(vtr::vector<ClusterNetId, float*>& net_delay);
+    void set_lower_bound_connection_delays(ClbNetPinsMatrix<float>& net_delay);
+
+    //Updates the connection delay lower bound (if less than current best found)
+    void update_lower_bound_connection_delay(ClusterNetId net, int ipin, float delay);
 
     // initialize routing resources at the start of routing to a new net
     void prepare_routing_for_net(ClusterNetId inet) {
@@ -123,7 +117,7 @@ class Connection_based_routing_resources {
     bool forcibly_reroute_connections(float max_criticality,
                                       std::shared_ptr<const SetupTimingInfo> timing_info,
                                       const ClusteredPinAtomPinsLookup& netlist_pin_lookup,
-                                      vtr::vector<ClusterNetId, float*>& net_delay);
+                                      ClbNetPinsMatrix<float>& net_delay);
 };
 
 using CBRR = Connection_based_routing_resources; // shorthand

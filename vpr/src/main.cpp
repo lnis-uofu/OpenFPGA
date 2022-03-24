@@ -55,32 +55,28 @@ int main(int argc, const char** argv) {
         vpr_init(argc, argv, &Options, &vpr_setup, &Arch);
 
         if (Options.show_version) {
+            vpr_free_all(Arch, vpr_setup);
             return SUCCESS_EXIT_CODE;
         }
 
         bool flow_succeeded = vpr_flow(vpr_setup, Arch);
         if (!flow_succeeded) {
             VTR_LOG("VPR failed to implement circuit\n");
+            vpr_free_all(Arch, vpr_setup);
             return UNIMPLEMENTABLE_EXIT_CODE;
         }
 
         auto& timing_ctx = g_vpr_ctx.timing();
-        VTR_LOG("Timing analysis took %g seconds (%g STA, %g slack) (%zu full updates: %zu setup, %zu hold, %zu combined).\n",
-                timing_ctx.stats.timing_analysis_wallclock_time(),
-                timing_ctx.stats.sta_wallclock_time,
-                timing_ctx.stats.slack_wallclock_time,
-                timing_ctx.stats.num_full_updates(),
-                timing_ctx.stats.num_full_setup_updates,
-                timing_ctx.stats.num_full_hold_updates,
-                timing_ctx.stats.num_full_setup_hold_updates);
+        print_timing_stats("Flow", timing_ctx.stats);
 
         /* free data structures */
         vpr_free_all(Arch, vpr_setup);
 
-        VTR_LOG("VPR suceeded\n");
+        VTR_LOG("VPR succeeded\n");
 
     } catch (const tatum::Error& tatum_error) {
         VTR_LOG_ERROR("%s\n", format_tatum_error(tatum_error).c_str());
+        vpr_free_all(Arch, vpr_setup);
 
         return ERROR_EXIT_CODE;
 
@@ -88,13 +84,16 @@ int main(int argc, const char** argv) {
         vpr_print_error(vpr_error);
 
         if (vpr_error.type() == VPR_ERROR_INTERRUPTED) {
+            vpr_free_all(Arch, vpr_setup);
             return INTERRUPTED_EXIT_CODE;
         } else {
+            vpr_free_all(Arch, vpr_setup);
             return ERROR_EXIT_CODE;
         }
 
     } catch (const vtr::VtrError& vtr_error) {
         VTR_LOG_ERROR("%s:%d %s\n", vtr_error.filename_c_str(), vtr_error.line(), vtr_error.what());
+        vpr_free_all(Arch, vpr_setup);
 
         return ERROR_EXIT_CODE;
     }

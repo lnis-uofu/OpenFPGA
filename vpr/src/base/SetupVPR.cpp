@@ -15,6 +15,7 @@
 
 #include "globals.h"
 #include "read_xml_arch_file.h"
+#include "read_fpga_interchange_arch.h"
 #include "SetupVPR.h"
 #include "pb_type_graph.h"
 #include "pack_types.h"
@@ -24,6 +25,7 @@
 #include "read_options.h"
 #include "echo_files.h"
 #include "clock_modeling.h"
+#include "ShowSetup.h"
 
 static void SetupNetlistOpts(const t_options& Options, t_netlist_opts& NetlistOpts);
 static void SetupPackerOpts(const t_options& Options,
@@ -43,8 +45,12 @@ static void SetupAnalysisOpts(const t_options& Options, t_analysis_opts& analysi
 static void SetupPowerOpts(const t_options& Options, t_power_opts* power_opts, t_arch* Arch);
 static int find_ipin_cblock_switch_index(const t_arch& Arch);
 
-/* Sets VPR parameters and defaults. Does not do any error checking
- * as this should have been done by the various input checkers */
+/**
+ * @brief Sets VPR parameters and defaults.
+ *
+ * Does not do any error checking as this should have been done by
+ * the various input checkers
+ */
 void SetupVPR(const t_options* Options,
               const bool TimingEnabled,
               const bool readArchFile,
@@ -65,7 +71,9 @@ void SetupVPR(const t_options* Options,
               bool* ShowGraphics,
               int* GraphPause,
               bool* SaveGraphics,
-              t_power_opts* PowerOpts) {
+              std::string* GraphicsCommands,
+              t_power_opts* PowerOpts,
+              t_vpr_setup* vpr_setup) {
     using argparse::Provenance;
 
     auto& device_ctx = g_vpr_ctx.mutable_device();
@@ -80,7 +88,7 @@ void SetupVPR(const t_options* Options,
     //TODO: Move FileNameOpts setup into separate function
     FileNameOpts->CircuitName = Options->CircuitName;
     FileNameOpts->ArchFile = Options->ArchFile;
-    FileNameOpts->BlifFile = Options->BlifFile;
+    FileNameOpts->CircuitFile = Options->CircuitFile;
     FileNameOpts->NetFile = Options->NetFile;
     FileNameOpts->PlaceFile = Options->PlaceFile;
     FileNameOpts->RouteFile = Options->RouteFile;
@@ -88,6 +96,9 @@ void SetupVPR(const t_options* Options,
     FileNameOpts->PowerFile = Options->PowerFile;
     FileNameOpts->CmosTechFile = Options->CmosTechFile;
     FileNameOpts->out_file_prefix = Options->out_file_prefix;
+    FileNameOpts->read_vpr_constraints_file = Options->read_vpr_constraints_file;
+    FileNameOpts->write_vpr_constraints_file = Options->write_vpr_constraints_file;
+    FileNameOpts->write_block_usage = Options->write_block_usage;
 
     FileNameOpts->verify_file_digests = Options->verify_file_digests;
 
@@ -100,43 +111,56 @@ void SetupVPR(const t_options* Options,
 
     if (readArchFile == true) {
         vtr::ScopedStartFinishTimer t("Loading Architecture Description");
-        XmlReadArch(Options->ArchFile.value().c_str(),
-                    TimingEnabled,
-                    Arch,
-                    device_ctx.physical_tile_types,
-                    device_ctx.logical_block_types);
+        switch (Options->arch_format) {
+            case e_arch_format::VTR:
+                XmlReadArch(Options->ArchFile.value().c_str(),
+                            TimingEnabled,
+                            Arch,
+                            device_ctx.physical_tile_types,
+                            device_ctx.logical_block_types);
+                break;
+            case e_arch_format::FPGAInterchange:
+                VTR_LOG("Use FPGA Interchange device\n");
+                FPGAInterchangeReadArch(Options->ArchFile.value().c_str(),
+                                        TimingEnabled,
+                                        Arch,
+                                        device_ctx.physical_tile_types,
+                                        device_ctx.logical_block_types);
+                break;
+            default:
+                VPR_FATAL_ERROR(VPR_ERROR_ARCH, "Invalid architecture format!");
+        }
     }
+    VTR_LOG("\n");
 
     *user_models = Arch->models;
     *library_models = Arch->model_library;
 
-    /* TODO: this is inelegant, I should be populating this information in XmlReadArch */
     device_ctx.EMPTY_PHYSICAL_TILE_TYPE = nullptr;
-    for (const auto& type : device_ctx.physical_tile_types) {
-        if (strcmp(type.name, EMPTY_BLOCK_NAME) == 0) {
+    int num_inputs = 0;
+    int num_outputs = 0;
+    for (auto& type : device_ctx.physical_tile_types) {
+        if (type.is_empty()) {
             VTR_ASSERT(device_ctx.EMPTY_PHYSICAL_TILE_TYPE == nullptr);
+            VTR_ASSERT(type.num_pins == 0);
             device_ctx.EMPTY_PHYSICAL_TILE_TYPE = &type;
-        } else {
-            for (const auto& equivalent_site : type.equivalent_sites) {
-                if (block_type_contains_blif_model(equivalent_site, MODEL_INPUT)) {
-                    device_ctx.input_types.insert(&type);
-                    break;
-                }
-            }
+        }
 
-            for (const auto& equivalent_site : type.equivalent_sites) {
-                if (block_type_contains_blif_model(equivalent_site, MODEL_OUTPUT)) {
-                    device_ctx.output_types.insert(&type);
-                    break;
-                }
-            }
+        if (type.is_input_type) {
+            num_inputs += 1;
+        }
+
+        if (type.is_output_type) {
+            num_outputs += 1;
         }
     }
 
     device_ctx.EMPTY_LOGICAL_BLOCK_TYPE = nullptr;
     int max_equivalent_tiles = 0;
     for (const auto& type : device_ctx.logical_block_types) {
-        if (0 == strcmp(type.name, EMPTY_BLOCK_NAME)) {
+        if (type.is_empty()) {
+            VTR_ASSERT(device_ctx.EMPTY_LOGICAL_BLOCK_TYPE == nullptr);
+            VTR_ASSERT(type.pb_type == nullptr);
             device_ctx.EMPTY_LOGICAL_BLOCK_TYPE = &type;
         }
 
@@ -149,12 +173,12 @@ void SetupVPR(const t_options* Options,
     VTR_ASSERT(device_ctx.EMPTY_PHYSICAL_TILE_TYPE != nullptr);
     VTR_ASSERT(device_ctx.EMPTY_LOGICAL_BLOCK_TYPE != nullptr);
 
-    if (device_ctx.input_types.empty()) {
+    if (num_inputs == 0) {
         VPR_ERROR(VPR_ERROR_ARCH,
                   "Architecture contains no top-level block type containing '.input' models");
     }
 
-    if (device_ctx.output_types.empty()) {
+    if (num_outputs == 0) {
         VPR_ERROR(VPR_ERROR_ARCH,
                   "Architecture contains no top-level block type containing '.output' models");
     }
@@ -209,6 +233,8 @@ void SetupVPR(const t_options* Options,
         }
     }
 
+    ShowSetup(*vpr_setup);
+
     /* init global variables */
     vtr::out_file_prefix = Options->out_file_prefix;
 
@@ -239,6 +265,7 @@ void SetupVPR(const t_options* Options,
     *ShowGraphics = Options->show_graphics;
 
     *SaveGraphics = Options->save_graphics;
+    *GraphicsCommands = Options->graphics_commands;
 
     if (getEchoEnabled() && isEchoFileEnabled(E_ECHO_ARCH)) {
         EchoArch(getEchoFileName(E_ECHO_ARCH), device_ctx.physical_tile_types, device_ctx.logical_block_types, Arch);
@@ -256,8 +283,10 @@ static void SetupTiming(const t_options& Options, const bool TimingEnabled, t_ti
     Timing->SDCFile = Options.SDCFile;
 }
 
-/* This loads up VPR's arch_switch_inf data by combining the switches from
- * the arch file with the special switches that VPR needs. */
+/**
+ * @brief This loads up VPR's arch_switch_inf data by combining the switches
+ *        from the arch file with the special switches that VPR needs.
+ */
 static void SetupSwitches(const t_arch& Arch,
                           t_det_routing_arch* RoutingArch,
                           const t_arch_switch_inf* ArchSwitches,
@@ -280,7 +309,7 @@ static void SetupSwitches(const t_arch& Arch,
 
     /* Delayless switch for connecting sinks and sources with their pins. */
     device_ctx.arch_switch_inf[RoutingArch->delayless_switch].set_type(SwitchType::MUX);
-    device_ctx.arch_switch_inf[RoutingArch->delayless_switch].name = vtr::strdup("__vpr_delayless_switch__");
+    device_ctx.arch_switch_inf[RoutingArch->delayless_switch].name = vtr::strdup(VPR_DELAYLESS_SWITCH_NAME);
     device_ctx.arch_switch_inf[RoutingArch->delayless_switch].R = 0.;
     device_ctx.arch_switch_inf[RoutingArch->delayless_switch].Cin = 0.;
     device_ctx.arch_switch_inf[RoutingArch->delayless_switch].Cout = 0.;
@@ -304,16 +333,17 @@ static void SetupSwitches(const t_arch& Arch,
     }
 }
 
-/* Sets up routing structures. Since checks are already done, this
- * just copies values across */
+/**
+ * @brief Sets up routing structures.
+ *
+ * Since checks are already done, this just copies values across
+ */
 static void SetupRoutingArch(const t_arch& Arch,
                              t_det_routing_arch* RoutingArch) {
     RoutingArch->switch_block_type = Arch.SBType;
-    RoutingArch->switch_block_subtype = Arch.SBSubType;
     RoutingArch->R_minW_nmos = Arch.R_minW_nmos;
     RoutingArch->R_minW_pmos = Arch.R_minW_pmos;
     RoutingArch->Fs = Arch.Fs;
-    RoutingArch->subFs = Arch.subFs;
     RoutingArch->directionality = BI_DIRECTIONAL;
     if (Arch.Segments.size()) {
         RoutingArch->directionality = Arch.Segments[0].directionality;
@@ -321,14 +351,12 @@ static void SetupRoutingArch(const t_arch& Arch,
 
     /* copy over the switch block information */
     RoutingArch->switchblocks = Arch.switchblocks;
-
-    /* Copy the tileable routing setting */
-    RoutingArch->tileable = Arch.tileable;
-    RoutingArch->through_channel = Arch.through_channel;
 }
 
 static void SetupRouterOpts(const t_options& Options, t_router_opts* RouterOpts) {
+    RouterOpts->do_check_rr_graph = Options.check_rr_graph;
     RouterOpts->astar_fac = Options.astar_fac;
+    RouterOpts->router_profiler_astar_fac = Options.router_profiler_astar_fac;
     RouterOpts->bb_factor = Options.bb_factor;
     RouterOpts->criticality_exp = Options.criticality_exp;
     RouterOpts->max_criticality = Options.max_criticality;
@@ -350,10 +378,10 @@ static void SetupRouterOpts(const t_options& Options, t_router_opts* RouterOpts)
     RouterOpts->router_algorithm = Options.RouterAlgorithm;
     RouterOpts->fixed_channel_width = Options.RouteChanWidth;
     RouterOpts->min_channel_width_hint = Options.min_route_chan_width_hint;
-
-    //TODO document these?
-    RouterOpts->trim_empty_channels = false; /* DEFAULT */
-    RouterOpts->trim_obs_channels = false;   /* DEFAULT */
+    RouterOpts->read_rr_edge_metadata = Options.read_rr_edge_metadata;
+    RouterOpts->reorder_rr_graph_nodes_algorithm = Options.reorder_rr_graph_nodes_algorithm;
+    RouterOpts->reorder_rr_graph_nodes_threshold = Options.reorder_rr_graph_nodes_threshold;
+    RouterOpts->reorder_rr_graph_nodes_seed = Options.reorder_rr_graph_nodes_seed;
 
     RouterOpts->initial_pres_fac = Options.initial_pres_fac;
     RouterOpts->base_cost_type = Options.base_cost_type;
@@ -371,17 +399,29 @@ static void SetupRouterOpts(const t_options& Options, t_router_opts* RouterOpts)
     RouterOpts->clock_modeling = Options.clock_modeling;
     RouterOpts->two_stage_clock_routing = Options.two_stage_clock_routing;
     RouterOpts->high_fanout_threshold = Options.router_high_fanout_threshold;
+    RouterOpts->high_fanout_max_slope = Options.router_high_fanout_max_slope;
     RouterOpts->router_debug_net = Options.router_debug_net;
     RouterOpts->router_debug_sink_rr = Options.router_debug_sink_rr;
+    RouterOpts->router_debug_iteration = Options.router_debug_iteration;
     RouterOpts->lookahead_type = Options.router_lookahead_type;
     RouterOpts->max_convergence_count = Options.router_max_convergence_count;
     RouterOpts->reconvergence_cpd_threshold = Options.router_reconvergence_cpd_threshold;
+    RouterOpts->initial_timing = Options.router_initial_timing;
+    RouterOpts->update_lower_bound_delays = Options.router_update_lower_bound_delays;
     RouterOpts->first_iteration_timing_report_file = Options.router_first_iteration_timing_report_file;
-
     RouterOpts->strict_checks = Options.strict_checks;
 
     RouterOpts->write_router_lookahead = Options.write_router_lookahead;
     RouterOpts->read_router_lookahead = Options.read_router_lookahead;
+
+    RouterOpts->router_heap = Options.router_heap;
+    RouterOpts->exit_after_first_routing_iteration = Options.exit_after_first_routing_iteration;
+
+    RouterOpts->check_route = Options.check_route;
+    RouterOpts->timing_update_type = Options.timing_update_type;
+
+    RouterOpts->max_logged_overused_rr_nodes = Options.max_logged_overused_rr_nodes;
+    RouterOpts->generate_rr_node_overuse_report = Options.generate_rr_node_overuse_report;
 }
 
 static void SetupAnnealSched(const t_options& Options,
@@ -410,17 +450,46 @@ static void SetupAnnealSched(const t_options& Options,
         VPR_FATAL_ERROR(VPR_ERROR_OTHER, "inner_num must be greater than 0.\n");
     }
 
+    AnnealSched->alpha_min = Options.PlaceAlphaMin;
+    if (AnnealSched->alpha_min >= 1 || AnnealSched->alpha_min <= 0) {
+        VPR_FATAL_ERROR(VPR_ERROR_OTHER, "alpha_min must be between 0 and 1 exclusive.\n");
+    }
+
+    AnnealSched->alpha_max = Options.PlaceAlphaMax;
+    if (AnnealSched->alpha_max >= 1 || AnnealSched->alpha_max <= AnnealSched->alpha_min) {
+        VPR_FATAL_ERROR(VPR_ERROR_OTHER, "alpha_max must be between alpha_min and 1 exclusive.\n");
+    }
+
+    AnnealSched->alpha_decay = Options.PlaceAlphaDecay;
+    if (AnnealSched->alpha_decay >= 1 || AnnealSched->alpha_decay <= 0) {
+        VPR_FATAL_ERROR(VPR_ERROR_OTHER, "alpha_decay must be between 0 and 1 exclusive.\n");
+    }
+
+    AnnealSched->success_min = Options.PlaceSuccessMin;
+    if (AnnealSched->success_min >= 1 || AnnealSched->success_min <= 0) {
+        VPR_FATAL_ERROR(VPR_ERROR_OTHER, "success_min must be between 0 and 1 exclusive.\n");
+    }
+
+    AnnealSched->success_target = Options.PlaceSuccessTarget;
+    if (AnnealSched->success_target >= 1 || AnnealSched->success_target <= 0) {
+        VPR_FATAL_ERROR(VPR_ERROR_OTHER, "success_target must be between 0 and 1 exclusive.\n");
+    }
+
     AnnealSched->type = Options.anneal_sched_type;
 }
 
-/* Sets up the s_packer_opts structure baesd on users inputs and on the architecture specified.
- * Error checking, such as checking for conflicting params is assumed to be done beforehand
+/**
+ * @brief Sets up the s_packer_opts structure baesd on users inputs and
+ *        on the architecture specified.
+ *
+ * Error checking, such as checking for conflicting params is assumed
+ * to be done beforehand
  */
 void SetupPackerOpts(const t_options& Options,
                      t_packer_opts* PackerOpts) {
     PackerOpts->output_file = Options.NetFile;
 
-    PackerOpts->blif_file_name = Options.BlifFile;
+    PackerOpts->circuit_file_name = Options.CircuitFile;
 
     if (Options.do_packing) {
         PackerOpts->doPacking = STAGE_DO;
@@ -445,6 +514,7 @@ void SetupPackerOpts(const t_options& Options,
     PackerOpts->high_fanout_threshold = Options.pack_high_fanout_threshold;
     PackerOpts->transitive_fanout_threshold = Options.pack_transitive_fanout_threshold;
     PackerOpts->feasible_block_array_size = Options.pack_feasible_block_array_size;
+    PackerOpts->use_attraction_groups = Options.use_attraction_groups;
 
     //TODO: document?
     PackerOpts->inter_cluster_net_delay = 1.0; /* DEFAULT */
@@ -452,6 +522,8 @@ void SetupPackerOpts(const t_options& Options,
     PackerOpts->packer_algorithm = PACK_GREEDY; /* DEFAULT */
 
     PackerOpts->device_layout = Options.device_layout;
+
+    PackerOpts->timing_update_type = Options.timing_update_type;
 }
 
 static void SetupNetlistOpts(const t_options& Options, t_netlist_opts& NetlistOpts) {
@@ -464,14 +536,19 @@ static void SetupNetlistOpts(const t_options& Options, t_netlist_opts& NetlistOp
     NetlistOpts.netlist_verbosity = Options.netlist_verbosity;
 }
 
-/* Sets up the s_placer_opts structure based on users input. Error checking,
- * such as checking for conflicting params is assumed to be done beforehand */
+/**
+ * @brief Sets up the s_placer_opts structure based on users input.
+ *
+ * Error checking, such as checking for conflicting params
+ * is assumed to be done beforehand
+ */
 static void SetupPlacerOpts(const t_options& Options, t_placer_opts* PlacerOpts) {
     if (Options.do_placement) {
         PlacerOpts->doPlacement = STAGE_DO;
     }
 
     PlacerOpts->inner_loop_recompute_divider = Options.inner_loop_recompute_divider;
+    PlacerOpts->quench_recompute_divider = Options.quench_recompute_divider;
 
     //TODO: document?
     PlacerOpts->place_cost_exp = 1;
@@ -481,8 +558,10 @@ static void SetupPlacerOpts(const t_options& Options, t_placer_opts* PlacerOpts)
     PlacerOpts->td_place_exp_last = Options.place_exp_last;
 
     PlacerOpts->place_algorithm = Options.PlaceAlgorithm;
+    PlacerOpts->place_quench_algorithm = Options.PlaceQuenchAlgorithm;
 
-    PlacerOpts->pad_loc_file = Options.pad_loc_file;
+    PlacerOpts->constraints_file = Options.constraints_file;
+
     PlacerOpts->pad_loc_type = Options.pad_loc_type;
 
     PlacerOpts->place_chan_width = Options.PlaceChanWidth;
@@ -492,8 +571,6 @@ static void SetupPlacerOpts(const t_options& Options, t_placer_opts* PlacerOpts)
     PlacerOpts->timing_tradeoff = Options.PlaceTimingTradeoff;
 
     /* Depends on PlacerOpts->place_algorithm */
-    PlacerOpts->enable_timing_computations = Options.ShowPlaceTiming;
-
     PlacerOpts->delay_offset = Options.place_delay_offset;
     PlacerOpts->delay_ramp_delta_threshold = Options.place_delay_ramp_delta_threshold;
     PlacerOpts->delay_ramp_slope = Options.place_delay_ramp_slope;
@@ -509,6 +586,8 @@ static void SetupPlacerOpts(const t_options& Options, t_placer_opts* PlacerOpts)
 
     PlacerOpts->rlim_escape_fraction = Options.place_rlim_escape_fraction;
     PlacerOpts->move_stats_file = Options.place_move_stats_file;
+    PlacerOpts->placement_saves_per_temperature = Options.placement_saves_per_temperature;
+    PlacerOpts->place_delta_delay_matrix_calculation_method = Options.place_delta_delay_matrix_calculation_method;
 
     PlacerOpts->strict_checks = Options.strict_checks;
 
@@ -516,6 +595,26 @@ static void SetupPlacerOpts(const t_options& Options, t_placer_opts* PlacerOpts)
     PlacerOpts->read_placement_delay_lookup = Options.read_placement_delay_lookup;
 
     PlacerOpts->allowed_tiles_for_delay_model = Options.allowed_tiles_for_delay_model;
+
+    PlacerOpts->effort_scaling = Options.place_effort_scaling;
+    PlacerOpts->timing_update_type = Options.timing_update_type;
+    PlacerOpts->enable_analytic_placer = Options.enable_analytic_placer;
+    PlacerOpts->place_static_move_prob = Options.place_static_move_prob;
+    PlacerOpts->place_static_notiming_move_prob = Options.place_static_notiming_move_prob;
+    PlacerOpts->place_high_fanout_net = Options.place_high_fanout_net;
+    PlacerOpts->RL_agent_placement = Options.RL_agent_placement;
+    PlacerOpts->place_agent_multistate = Options.place_agent_multistate;
+    PlacerOpts->place_checkpointing = Options.place_checkpointing;
+    PlacerOpts->place_agent_epsilon = Options.place_agent_epsilon;
+    PlacerOpts->place_agent_gamma = Options.place_agent_gamma;
+    PlacerOpts->place_dm_rlim = Options.place_dm_rlim;
+    PlacerOpts->place_reward_fun = Options.place_reward_fun;
+    PlacerOpts->place_crit_limit = Options.place_crit_limit;
+    PlacerOpts->place_agent_algorithm = Options.place_agent_algorithm;
+    PlacerOpts->place_constraint_expand = Options.place_constraint_expand;
+    PlacerOpts->place_constraint_subtile = Options.place_constraint_subtile;
+    PlacerOpts->floorplan_num_horizontal_partitions = Options.floorplan_num_horizontal_partitions;
+    PlacerOpts->floorplan_num_vertical_partitions = Options.floorplan_num_vertical_partitions;
 }
 
 static void SetupAnalysisOpts(const t_options& Options, t_analysis_opts& analysis_opts) {
@@ -528,6 +627,13 @@ static void SetupAnalysisOpts(const t_options& Options, t_analysis_opts& analysi
     analysis_opts.timing_report_npaths = Options.timing_report_npaths;
     analysis_opts.timing_report_detail = Options.timing_report_detail;
     analysis_opts.timing_report_skew = Options.timing_report_skew;
+    analysis_opts.echo_dot_timing_graph_node = Options.echo_dot_timing_graph_node;
+
+    analysis_opts.post_synth_netlist_unconn_input_handling = Options.post_synth_netlist_unconn_input_handling;
+    analysis_opts.post_synth_netlist_unconn_output_handling = Options.post_synth_netlist_unconn_output_handling;
+
+    analysis_opts.timing_update_type = Options.timing_update_type;
+    analysis_opts.write_timing_summary = Options.write_timing_summary;
 }
 
 static void SetupPowerOpts(const t_options& Options, t_power_opts* power_opts, t_arch* Arch) {

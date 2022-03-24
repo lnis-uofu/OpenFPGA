@@ -19,7 +19,7 @@ bool try_route(int width_fac,
                const t_analysis_opts& analysis_opts,
                t_det_routing_arch* det_routing_arch,
                std::vector<t_segment_inf>& segment_inf,
-               vtr::vector<ClusterNetId, float*>& net_delay,
+               ClbNetPinsMatrix<float>& net_delay,
                std::shared_ptr<SetupHoldTimingInfo> timing_info,
                std::shared_ptr<RoutingDelayCalculator> delay_calc,
                t_chan_width_dist chan_width_dist,
@@ -29,9 +29,9 @@ bool try_route(int width_fac,
 
 bool feasible_routing();
 
-std::vector<RRNodeId> collect_congested_rr_nodes();
+std::vector<int> collect_congested_rr_nodes();
 
-vtr::vector<RRNodeId, std::set<ClusterNetId>> collect_rr_node_nets();
+std::vector<std::set<ClusterNetId>> collect_rr_node_nets();
 
 t_clb_opins_used alloc_route_structs();
 
