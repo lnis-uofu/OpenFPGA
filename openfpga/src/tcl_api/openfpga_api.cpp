@@ -80,7 +80,7 @@ openfpga_api::~openfpga_api(){
 
 void openfpga_api::read_openfpga_arch (std::string flag , std::string path){
     
-  tcl_comnd = flag + " " + path;  
+  tcl_comnd =  "read_openfpga_arch " + flag + " " + path;  
   /* call tcl mode of mini shell */
   shell.run_tcl_mode(openfpga_context,tcl_comnd);
   status = shell.exit_code();
