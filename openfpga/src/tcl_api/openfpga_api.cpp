@@ -88,6 +88,36 @@ void openfpga_api::read_openfpga_arch (std::string flag , std::string path){
   //VTR_LOG("exit status is '%d'...\n", status);
 }
 
+void openfpga_api::write_openfpga_arch (std::string flag , std::string path){
+    
+  tcl_comnd =  "write_openfpga_arch " + flag + " " + path;  
+  /* call tcl mode of mini shell */
+  shell.run_tcl_mode(openfpga_context,tcl_comnd);
+  status = shell.exit_code();
+  // TODO make this status as data member and access it in TCL class to decide whether to exit or not
+  //VTR_LOG("exit status is '%d'...\n", status);
+}
+
+void openfpga_api::read_openfpga_simulation_setting (std::string flag , std::string path){
+    
+  tcl_comnd =  "read_openfpga_simulation_setting " + flag + " " + path;  
+  /* call tcl mode of mini shell */
+  shell.run_tcl_mode(openfpga_context,tcl_comnd);
+  status = shell.exit_code();
+  // TODO make this status as data member and access it in TCL class to decide whether to exit or not
+  //VTR_LOG("exit status is '%d'...\n", status);
+}
+
+void openfpga_api::write_openfpga_simulation_setting (std::string flag , std::string path){
+    
+  tcl_comnd =  "write_openfpga_simulation_setting " + flag + " " + path;  
+  /* call tcl mode of mini shell */
+  shell.run_tcl_mode(openfpga_context,tcl_comnd);
+  status = shell.exit_code();
+  // TODO make this status as data member and access it in TCL class to decide whether to exit or not
+  //VTR_LOG("exit status is '%d'...\n", status);
+}
+
 void openfpga_api::version(){
   print_openfpga_version_info();
 }

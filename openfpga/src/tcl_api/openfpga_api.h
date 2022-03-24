@@ -15,7 +15,9 @@ class openfpga_api {
   //void call_openfpga_shell (std::string tcl_comnd);
   // read_arch command
   void read_openfpga_arch (std::string flag , std::string path);
-
+  void write_openfpga_arch (std::string flag , std::string path);
+  void read_openfpga_simulation_setting (std::string flag , std::string path);
+  void write_openfpga_simulation_setting (std::string flag , std::string path);
   //void read_openfpga_arch (std::string flag std::string path);
 
   private:
