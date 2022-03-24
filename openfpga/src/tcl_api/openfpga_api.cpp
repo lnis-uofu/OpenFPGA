@@ -69,6 +69,8 @@ openfpga::Shell<OpenfpgaContext> initialize_mini_shell (){
 openfpga_api::openfpga_api(){
   // call OpenFPGA shell initializer once
   shell = initialize_mini_shell ();
+  tcl_comnd = "call_title";
+  shell.run_tcl_mode(openfpga_context,tcl_comnd);
   //printf("Constructor is called, object created!!\n");
 }
 
@@ -76,11 +78,12 @@ openfpga_api::~openfpga_api(){
   printf("Destructor is called, object distroyed!!\n");
 }
 
-void openfpga_api::call_openfpga_shell(std::string tcl_comnd){
+void openfpga_api::read_openfpga_arch (std::string flag , std::string path){
     
+  tcl_comnd = flag + " " + path;  
   /* call tcl mode of mini shell */
   shell.run_tcl_mode(openfpga_context,tcl_comnd);
-  int status = shell.exit_code();
+  status = shell.exit_code();
   // TODO make this status as data member and access it in TCL class to decide whether to exit or not
   //VTR_LOG("exit status is '%d'...\n", status);
 }

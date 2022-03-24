@@ -12,11 +12,17 @@ class openfpga_api {
   ~openfpga_api();
   void version();
   // method call to call OpenFPGA mini shell
-  void call_openfpga_shell (std::string tcl_comnd);
+  //void call_openfpga_shell (std::string tcl_comnd);
+  // read_arch command
+  void read_openfpga_arch (std::string flag , std::string path);
+
+  //void read_openfpga_arch (std::string flag std::string path);
 
   private:
   // declare dummy 
   openfpga::Shell<OpenfpgaContext> shell {"OpenFPGA"};
+  std::string tcl_comnd;
+  int status;
   
 };
 
