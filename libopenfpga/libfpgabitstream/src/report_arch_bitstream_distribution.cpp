@@ -88,8 +88,9 @@ int report_architecture_bitstream_distribution(std::fstream& fp,
   VTR_ASSERT(1 == top_block.size());
 
   /* Write bitstream, block by block, in a recursive way */
-  rec_report_block_bitstream_distribution_to_xml_file(fp, bitstream_manager, top_block[0], max_hierarchy_level, curr_level + 1);
+  rec_report_block_bitstream_distribution_to_xml_file(fp, bitstream_manager, top_block[0], max_hierarchy_level + 2, curr_level + 1);
 
+  write_tab_to_file(fp, curr_level);
   fp << "</blocks>" <<std::endl;
 
   return 0;
