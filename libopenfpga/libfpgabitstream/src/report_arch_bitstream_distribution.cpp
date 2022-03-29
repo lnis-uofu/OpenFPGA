@@ -24,29 +24,6 @@
 namespace openfpga {
 
 /********************************************************************
- * This function write header information for an XML file of bitstream distribution
- *******************************************************************/
-static 
-void report_architecture_bitstream_distribution_xml_file_head(std::fstream& fp,
-                                                              const bool& include_time_stamp) {
-  valid_file_stream(fp);
- 
-  fp << "<!-- " << std::endl;
-  fp << "\t- Report Architecture Bitstream Distribution" << std::endl;
-
-  if (include_time_stamp) {
-    auto end = std::chrono::system_clock::now(); 
-    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-    /* Note that version is also a type of time stamp */
-    fp << "\t- Version: " << openfpga::VERSION << std::endl;
-    fp << "\t- Date: " << std::ctime(&end_time) ;
-  }
-
-  fp << "--> " << std::endl;
-  fp << std::endl;
-}
-
-/********************************************************************
  * Recursively report the bitstream distribution of a block to a file
  * This function will use a Depth-First Search in outputting bitstream
  * for each block 
@@ -91,27 +68,19 @@ void rec_report_block_bitstream_distribution_to_xml_file(std::fstream& fp,
  * Notes: 
  *   - The output format is a table whose format is compatible with RST files
  *******************************************************************/
-int report_architecture_bitstream_distribution(const BitstreamManager& bitstream_manager,
-                                               const std::string& fname,
-                                               const bool& include_time_stamp,
-                                               const size_t& max_hierarchy_level) {
-  /* Ensure that we have a valid file name */
-  if (true == fname.empty()) {
-    VTR_LOG_ERROR("Received empty file name to report bitstream!\n\tPlease specify a valid file name.\n");
-    return 1;
-  }
-
-  std::string timer_message = std::string("Report architecture bitstream distribution into XML file '") + fname + std::string("'");
+int report_architecture_bitstream_distribution(std::fstream& fp,
+                                               const BitstreamManager& bitstream_manager,
+                                               const size_t& max_hierarchy_level,
+                                               const size_t& hierarchy_level) {
+  std::string timer_message = std::string("Report architecture bitstream distribution");
   vtr::ScopedStartFinishTimer timer(timer_message);
 
-  /* Create the file stream */
-  std::fstream fp;
-  fp.open(fname, std::fstream::out | std::fstream::trunc);
+  /* Check the file stream */
+  valid_file_stream(fp);
 
-  check_file_stream(fname.c_str(), fp);
-
-  /* Put down a brief introduction */
-  report_architecture_bitstream_distribution_xml_file_head(fp, include_time_stamp);
+  int curr_level = hierarchy_level;
+  write_tab_to_file(fp, curr_level);
+  fp << "<blocks>" <<std::endl;
 
   /* Find the top block, which has not parents */
   std::vector<ConfigBlockId> top_block = find_bitstream_manager_top_blocks(bitstream_manager);
@@ -119,10 +88,10 @@ int report_architecture_bitstream_distribution(const BitstreamManager& bitstream
   VTR_ASSERT(1 == top_block.size());
 
   /* Write bitstream, block by block, in a recursive way */
-  rec_report_block_bitstream_distribution_to_xml_file(fp, bitstream_manager, top_block[0], max_hierarchy_level, 0);
+  rec_report_block_bitstream_distribution_to_xml_file(fp, bitstream_manager, top_block[0], max_hierarchy_level + 2, curr_level + 1);
 
-  /* Close file handler */
-  fp.close();
+  write_tab_to_file(fp, curr_level);
+  fp << "</blocks>" <<std::endl;
 
   return 0;
 }

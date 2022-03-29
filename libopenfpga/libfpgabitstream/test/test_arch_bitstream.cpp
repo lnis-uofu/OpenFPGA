@@ -3,6 +3,7 @@
  * 1. parser of data structures
  * 2. writer of data structures
  *******************************************************************/
+#include <fstream>
 /* Headers from vtrutils */
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -36,11 +37,12 @@ int main(int argc, const char** argv) {
    * This is optional only used when there is a third argument
    */
   if (4 <= argc) { 
-    openfpga::report_architecture_bitstream_distribution(test_bitstream, argv[3], true);
-    VTR_LOG("Echo the bitstream distribution (with time stamp) to an XML file: %s.\n",
-            argv[3]);
-    openfpga::report_architecture_bitstream_distribution(test_bitstream, argv[3], false);
-    VTR_LOG("Echo the bitstream distribution (w/o time stamp) to an XML file: %s.\n",
+    /* Create the file stream */
+    std::fstream fp;
+    fp.open(argv[3], std::fstream::out | std::fstream::trunc);
+
+    openfpga::report_architecture_bitstream_distribution(fp, test_bitstream, 1, 0);
+    VTR_LOG("Echo the bitstream distribution to an XML file: %s.\n",
             argv[3]);
   }
 
