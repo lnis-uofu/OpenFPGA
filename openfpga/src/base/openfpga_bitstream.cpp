@@ -15,7 +15,7 @@
 /* Headers from fpgabitstream library */
 #include "read_xml_arch_bitstream.h"
 #include "write_xml_arch_bitstream.h"
-#include "report_arch_bitstream_distribution.h"
+#include "report_bitstream_distribution.h"
 
 #include "openfpga_naming.h"
 
@@ -218,10 +218,11 @@ int report_bitstream_distribution(const OpenfpgaContext& openfpga_ctx,
     }
   }
 
-  status = report_architecture_bitstream_distribution(openfpga_ctx.bitstream_manager(),
-                                                      cmd_context.option_value(cmd, opt_file),
-                                                      !cmd_context.option_enable(cmd, opt_no_time_stamp),
-                                                      depth);
+  status = report_bitstream_distribution(cmd_context.option_value(cmd, opt_file),
+                                         openfpga_ctx.bitstream_manager(),
+                                         openfpga_ctx.fabric_bitstream(),
+                                         !cmd_context.option_enable(cmd, opt_no_time_stamp),
+                                         depth);
   
   return status;
 }
