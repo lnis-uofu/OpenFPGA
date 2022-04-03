@@ -3,6 +3,13 @@ namespace vtr {
  * Point
  */
 
+// Below is to create a no argument constructor for libopenfpga/libopenfpgautil/src/openfpga_pb_parser.h
+// A better way need to be figured out later to avoid this change in libs
+template<class T>
+Point<T>::Point() {
+    //pass
+}
+
 template<class T>
 Point<T>::Point(T x_val, T y_val) noexcept
     : x_(x_val)

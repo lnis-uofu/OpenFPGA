@@ -9,7 +9,7 @@ endif(CCACHE_FOUND)
 if (${CMAKE_VERSION} VERSION_GREATER "3.8")
     #For cmake >= 3.9 INTERPROCEDURAL_OPTIMIZATION behaviour we need to explicitly
     #set the cmake policy version number
-    cmake_policy(VERSION 3.9) 
+    cmake_policy(VERSION 3.9)
 
     # If we are using verison < 3.9 then setting INTERPROCEDURAL_OPTIMIZATION
     # has no effect unless an Intel compiler is used
@@ -38,7 +38,30 @@ endif()
 set(VTR_ASSERT_LEVEL "2" CACHE STRING "VTR assertion checking level. 0: no assertions, 1: fast assertions, 2: regular assertions, 3: additional assertions with noticable run-time overhead, 4: all assertions (including those with significant run-time cost)")
 set_property(CACHE VTR_ASSERT_LEVEL PROPERTY STRINGS 0 1 2 3 4)
 
-#Create the project 
+#Options for vtr/vpr and vtr/libs
+option(VTR_ENABLE_STRICT_COMPILE "Specifies whether compiler warnings should be treated as errors (e.g. -Werror)" OFF)
+option(VTR_ENABLE_SANITIZE "Enable address/leak/undefined-behaviour sanitizers (i.e. run-time error checking)" OFF)
+option(VTR_ENABLE_PROFILING "Enable performance profiler (gprof)" OFF)
+option(VTR_ENABLE_COVERAGE "Enable code coverage tracking (gcov)" OFF)
+option(VTR_ENABLE_DEBUG_LOGGING "Enable debug logging" OFF)
+option(VTR_ENABLE_CAPNPROTO "Enable capnproto binary serialization support in VPR." ON)
+#Allow the user to enable/disable VPR analytic placement
+#VPR option --enable_analytic_placer is also required for Analytic Placement
+option(VPR_ANALYTIC_PLACE "Enable analytic placement in VPR." ON)
+option(VPR_ENABLE_INTERCHANGE "Enable FPGA interchange." ON)
+option(WITH_BLIFEXPLORER "Enable build with blifexplorer" OFF)
+option(WITH_ABC "Enable building abc" ON)
+option(WITH_ODIN "Enable building odin" ON)
+option(ODIN_DEBUG "Enable building odin with debug flags" OFF)
+option(ODIN_WARN "Enable building odin with extra warning flags" OFF)
+option(ODIN_COVERAGE "Enable building odin with coverage flags" OFF)
+option(ODIN_TIDY "Enable building odin with clang tidy" OFF)
+option(ODIN_SANITIZE "Enable building odin with sanitize flags" OFF)
+# Allow the user to enable building Yosys
+option(WITH_YOSYS "Enable building Yosys" OFF)
+option(ODIN_USE_YOSYS "Enable building Yosys" OFF)
+
+#Create the project
 project("OPENFPGA" C CXX)
 
 # Options
@@ -77,8 +100,24 @@ set(CMAKE_CXX_EXTENSIONS OFF) #No compiler specific extensions
 # Set WARN FLAGS
 set(WARN_FLAGS "")
 
+#
+# Build type flags
+#
+
+set(EXTRA_FLAGS "")
+if(VPR_ENABLE_INTERCHANGE)
+    set(EXTRA_FLAGS "-lz")
+endif()
+
+if(NOT MSVC)
+    # for GCC and Clang
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g3")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
+    message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+endif()
+
 if (MSVC)
-  # Visual studio warnings 
+  # Visual studio warnings
   # Note that we do not use /Wall since it generates warnings about standard library headers
   set(WARN_FLAGS_TO_CHECK # the flags to check if the compiler supports
       "/W4" # Most warnings
@@ -149,10 +188,12 @@ endif()
 
 # Set final flags
 #
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARN_FLAGS} ${SANITIZE_FLAGS}")
-message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
-
-
+separate_arguments(
+    ADDITIONAL_FLAGS UNIX_COMMAND "${SANITIZE_FLAGS} ${PROFILING_FLAGS} ${COVERAGE_FLAGS} ${LOGGING_FLAGS} ${COLORED_COMPILE} ${EXTRA_FLAGS}"
+    )
+separate_arguments(
+    WARN_FLAGS UNIX_COMMAND "${WARN_FLAGS}"
+    )
 # Unit Testing
 #
 enable_testing()
@@ -178,7 +219,7 @@ if (VPR_USE_EZGL STREQUAL "auto")
 endif()
 
 
-# 
+#
 # Sub-projects
 #
 #add_subdirectory(iverilog)
@@ -210,7 +251,7 @@ option(YOSYS_ENABLE_NDEBUG, "Enable non-debugging feature in compiled yosys" OFF
 
 #
 ## Search and link dependent packages
-## We need readline to compile 
+## We need readline to compile
 if (YOSYS_ENABLE_READLINE)
   find_package(Readline REQUIRED)
 endif()
@@ -231,9 +272,9 @@ include(CheckCXXCompilerFlag)
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install/bin/yosys)
     message(STATUS "Yosys pre-build exist so skipping it")
 else ()
-# run makefile provided, we pass-on the options to the local make file 
+# run makefile provided, we pass-on the options to the local make file
 add_custom_target(
-    yosys ALL 
+    yosys ALL
     COMMAND $(MAKE) config-gcc
     COMMAND $(MAKE) install PREFIX=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys

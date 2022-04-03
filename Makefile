@@ -6,6 +6,9 @@ else
 CMAKE_COMMAND := ${CMAKE_COMMAND}
 endif
 
+# to trace cmake output 
+CMAKE_FLAGS := -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
+
 .PHONY: all checkout compile
 
 all: checkout
