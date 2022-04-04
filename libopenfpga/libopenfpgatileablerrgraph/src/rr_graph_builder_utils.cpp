@@ -427,11 +427,11 @@ short get_track_rr_node_end_track_id(const RRGraph& rr_graph,
   VTR_ASSERT( (CHANX == rr_graph.node_type(track_rr_node))
            || (CHANY == rr_graph.node_type(track_rr_node)) );
  
-  if (INC_DIRECTION == rr_graph.node_direction(track_rr_node)) {
+  if (Direction::INC == rr_graph.node_direction(track_rr_node)) {
     return tileable_rr_graph_node_track_ids[track_rr_node].back(); 
   }
 
-  VTR_ASSERT(DEC_DIRECTION == rr_graph.node_direction(track_rr_node));
+  VTR_ASSERT(Direction::DEC == rr_graph.node_direction(track_rr_node));
   return tileable_rr_graph_node_track_ids[track_rr_node].front(); 
 }
 

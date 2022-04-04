@@ -9,6 +9,7 @@
 #include "vtr_log.h"
 
 #include "openfpga_rr_graph_utils.h"
+#include "rr_graph_types.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -29,10 +30,10 @@ vtr::Point<size_t> get_track_rr_node_start_coordinate(const RRGraph& rr_graph,
  
   vtr::Point<size_t> start_coordinator;
 
-  if (INC_DIRECTION == rr_graph.node_direction(track_rr_node)) {
+  if (Direction::INC == rr_graph.node_direction(track_rr_node)) {
     start_coordinator.set(rr_graph.node_xlow(track_rr_node), rr_graph.node_ylow(track_rr_node));
   } else {
-    VTR_ASSERT(DEC_DIRECTION == rr_graph.node_direction(track_rr_node));
+    VTR_ASSERT(Direction::DEC == rr_graph.node_direction(track_rr_node));
     start_coordinator.set(rr_graph.node_xhigh(track_rr_node), rr_graph.node_yhigh(track_rr_node));
   }
 
@@ -55,10 +56,10 @@ vtr::Point<size_t> get_track_rr_node_end_coordinate(const RRGraph& rr_graph,
  
   vtr::Point<size_t> end_coordinator;
 
-  if (INC_DIRECTION == rr_graph.node_direction(track_rr_node)) {
+  if (Direction::INC == rr_graph.node_direction(track_rr_node)) {
     end_coordinator.set(rr_graph.node_xhigh(track_rr_node), rr_graph.node_yhigh(track_rr_node));
   } else {
-    VTR_ASSERT(DEC_DIRECTION == rr_graph.node_direction(track_rr_node));
+    VTR_ASSERT(Direction::DEC == rr_graph.node_direction(track_rr_node));
     end_coordinator.set(rr_graph.node_xlow(track_rr_node), rr_graph.node_ylow(track_rr_node));
   }
 

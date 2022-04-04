@@ -51,6 +51,15 @@ files_to_dirs(RR_GRAPH_LIB_HEADERS RR_GRAPH_LIB_INCLUDE_DIRS)
 file(GLOB_RECURSE OPENFPGA_LIB_HEADERS ../../openfpga/src/base/*.h)
 files_to_dirs(OPENFPGA_LIB_HEADERS OPENFPGA_LIB_INCLUDE_DIRS)
 
+#Add openfpgautil
+file(GLOB_RECURSE OPENFPGA_UTIL_LIB_HEADERS ../libopenfpgautil/src/*.h)
+files_to_dirs(OPENFPGA_UTIL_LIB_HEADERS OPENFPGA_UTIL_LIB_INCLUDE_DIRS)
+
+#Add tatum
+#file(GLOB_RECURSE TATUM_LIB_HEADERS ../../libs/EXTERNAL/libtatum/libtatum/tatum/*.hpp)
+#files_to_dirs(TATUM_LIB_HEADERS TATUM_LIB_INCLUDE_DIRS)
+set(TATUM_LIB_INCLUDE_DIRS ../../libs/EXTERNAL/libtatum/libtatum)
+
 #Add the version file to the sources
 list(APPEND LIB_SOURCES ${OPENFPGA_VERSION_FILE_OUT})
 
@@ -61,7 +70,7 @@ list(APPEND LIB_SOURCES ${OPENFPGA_VERSION_FILE_OUT})
 add_library(libopenfpgatileablerrgraph STATIC
             ${LIB_HEADERS}
             ${LIB_SOURCES})
-        target_include_directories(libopenfpgatileablerrgraph PUBLIC ${LIB_INCLUDE_DIRS} ${VPR_LIB_INCLUDE_DIRS} ${RR_GRAPH_LIB_INCLUDE_DIRS} ${OPENFPGA_LIB_INCLUDE_DIRS})
+        target_include_directories(libopenfpgatileablerrgraph PUBLIC ${LIB_INCLUDE_DIRS} ${VPR_LIB_INCLUDE_DIRS} ${RR_GRAPH_LIB_INCLUDE_DIRS} ${OPENFPGA_LIB_INCLUDE_DIRS} ${OPENFPGA_UTIL_LIB_INCLUDE_DIRS} ${TATUM_LIB_INCLUDE_DIRS})
 set_target_properties(libopenfpgatileablerrgraph PROPERTIES PREFIX "") #Avoid extra 'lib' prefix
 
 #Ensure version is always up to date by requiring version to be run first

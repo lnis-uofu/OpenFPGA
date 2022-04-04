@@ -6,6 +6,8 @@
  *******************************************************************/
 #include <vector>
 #include "vpr_types.h"
+#include "rr_node_types.h"
+#include "rr_graph_types.h"
 
 /************************************************************************
  *  This file contains a class to model the details of routing node
