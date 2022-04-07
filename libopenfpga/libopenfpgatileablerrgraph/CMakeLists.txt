@@ -40,7 +40,7 @@ file(GLOB_RECURSE LIB_HEADERS src/*.h)
 files_to_dirs(LIB_HEADERS LIB_INCLUDE_DIRS)
 
 #Add vpr include files dirs
-file(GLOB_RECURSE VPR_LIB_HEADERS ../../vpr/src/*.h)
+file(GLOB_RECURSE VPR_LIB_HEADERS ../../vpr/src/*/*.h)
 files_to_dirs(VPR_LIB_HEADERS VPR_LIB_INCLUDE_DIRS)
 
 #Add libs/librrgraph
