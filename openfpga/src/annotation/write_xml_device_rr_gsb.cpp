@@ -150,7 +150,7 @@ void write_rr_gsb_chan_connection_to_xml(std::fstream& fp,
              << "\" index=\"" << driver_node_index  
              << "\" node_id=\"" << size_t(driver_rr_node)
              << "\" grid_side=\"" <<  grid_side.to_string() 
-             << "\" sb_module_pin_name=\"" << generate_sb_module_grid_port_name(gsb_side, driver_node_side, vpr_device_grid, vpr_device_annotation, rr_graph, cur_rr_node) 
+             << "\" sb_module_pin_name=\"" << generate_sb_module_grid_port_name(gsb_side, driver_node_side, vpr_device_grid, vpr_device_annotation, rr_graph, driver_rr_node) 
              <<"\"/>" 
              << std::endl; 
         } else {
