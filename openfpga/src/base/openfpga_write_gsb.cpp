@@ -39,6 +39,8 @@ int write_gsb(const OpenfpgaContext& openfpga_ctx,
   std::string sb_file_name = cmd_context.option_value(cmd, opt_file);
 
   write_device_rr_gsb_to_xml(sb_file_name.c_str(),
+                             g_vpr_ctx.device().grid,
+                             openfpga_ctx.vpr_device_annotation(),
                              g_vpr_ctx.device().rr_graph,
                              openfpga_ctx.device_rr_gsb(),
                              cmd_context.option_enable(cmd, opt_unique),
