@@ -174,3 +174,6 @@ run-task basic_tests/bus_group/preconfig_testbench_explicit_mapping --debug --sh
 run-task basic_tests/bus_group/preconfig_testbench_implicit_mapping --debug --show_thread_logs
 run-task basic_tests/bus_group/full_testbench_explicit_mapping --debug --show_thread_logs
 run-task basic_tests/bus_group/full_testbench_implicit_mapping --debug --show_thread_logs
+
+echo -e "Testing fix pins features";
+run-task basic_tests/fix_pins --debug --show_thread_logs
