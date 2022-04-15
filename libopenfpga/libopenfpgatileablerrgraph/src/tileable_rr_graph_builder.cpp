@@ -69,6 +69,27 @@ namespace openfpga {
  *    a. cost_index
  *    b. RC tree
  ***********************************************************************/
+
+// external functions: in vpr/src/route/rr_graph.cpp
+extern std::vector<vtr::Matrix<int>> alloc_and_load_actual_fc(const std::vector<t_physical_tile_type>& types,
+                                                        const int max_pins,
+                                                        const std::vector<t_segment_inf>& segment_inf,
+
+                                                        const int* sets_per_seg_type,
+                                                        const int max_chan_width,
+                                                        const e_fc_type fc_type,
+                                                        const enum                 e_directionality directionality,
+                                                        bool* Fc_clipped);
+extern t_clb_to_clb_directs*                                         alloc_and_load_clb_to_clb_directs(const t_direct_inf* directs,       const int num_directs, int delayless_switch);
+extern void alloc_and_load_rr_switch_inf(const int num_arch_switches,
+                                          const float R_minW_nmos,
+                                          const float R_minW_pmos,
+                                          const int wire_to_arch_ipin_switch,
+                                          int* wire_to_rr_ipin_switch);
+extern void rr_graph_externals(const std::vector<t_segment_inf>& segment_inf,
+                                int wire_to_rr_ipin_switch,
+                                enum e_base_cost_type base_cost_type);
+
 void build_tileable_unidir_rr_graph(const std::vector<t_physical_tile_type>& types,
                                     const DeviceGrid& grids,
                                     const t_chan_width& chan_width,
@@ -233,7 +254,7 @@ void build_tileable_unidir_rr_graph(const std::vector<t_physical_tile_type>& typ
    * Add edges that bridge OPINs and IPINs to the rr_graph
    ***********************************************************************/
   /* Create edges for a tileable rr_graph */
-  build_rr_graph_edges(device_ctx.rr_graph_builder,
+  build_rr_graph_edges(device_ctx.rr_graph,
                        rr_node_driver_switches,
                        grids,
                        device_chan_width,
@@ -258,13 +279,17 @@ void build_tileable_unidir_rr_graph(const std::vector<t_physical_tile_type>& typ
     clb2clb_directs.push_back(clb_to_clb_directs[idirect]);
   }
 
-  build_rr_graph_direct_connections(device_ctx.rr_graph_builder, grids, delayless_rr_switch, 
+  build_rr_graph_direct_connections(device_ctx.rr_graph, grids, delayless_rr_switch, 
                                     arch_directs, clb2clb_directs);
 
   /* First time to build edges so that we can remap the architecture switch to rr_switch
    * This is a must-do before function alloc_and_load_rr_switch_inf() 
    */
-  device_ctx.rr_graph_builder.rebuild_node_edges();
+  // vpr integration: this API no longer exist in DeviceContext.RRGraphBuiler
+  // we can skip it
+#if 0 
+  device_ctx.rr_graph.rebuild_node_edges();
+#endif
 
   /* Allocate and load routing resource switches, which are derived from the switches from the architecture file,
    * based on their fanin in the rr graph. This routine also adjusts the rr nodes to point to these new rr switches */
@@ -274,28 +299,31 @@ void build_tileable_unidir_rr_graph(const std::vector<t_physical_tile_type>& typ
   device_ctx.chan_width = chan_width;
 
   /* Save the track ids for tileable routing resource graph */
+  // vpr integration: DeviceContext does not hold such data
+#if 0
   device_ctx.rr_node_track_ids = rr_node_track_ids;
+#endif
 
   /************************************************************************
    * Allocate external data structures
    *  a. cost_index
    *  b. RC tree
    ***********************************************************************/
-  rr_graph_externals(segment_inf, max_chan_width,
+  rr_graph_externals(segment_inf,
                      *wire_to_rr_ipin_switch, base_cost_type);
 
   /* Rebuild the link between RRGraph node and segments 
    * Should be called only AFTER the function
    * rr_graph_externals()
    */
-  for (const RRNodeId& inode : device_ctx.rr_graph_builder.nodes()) {
-    if ( (CHANX != device_ctx.rr_graph_builder.node_type(inode))
-      && (CHANY != device_ctx.rr_graph_builder.node_type(inode)) ) {
+  for (const RRNodeId& inode : device_ctx.rr_graph.nodes()) {
+    if ( (CHANX != device_ctx.rr_graph.node_type(inode))
+      && (CHANY != device_ctx.rr_graph.node_type(inode)) ) {
       continue;
     }
-    short irc_data = device_ctx.rr_graph_builder.node_cost_index(inode);
+    RRIndexedDataId irc_data = device_ctx.rr_graph.node_cost_index(inode);
     short iseg = device_ctx.rr_indexed_data[irc_data].seg_index;
-    device_ctx.rr_graph_builder.set_node_segment(inode, RRSegmentId(iseg));
+    // device_ctx.rr_graph.set_node_segment(inode, RRSegmentId(iseg));
   }
 
   /************************************************************************
@@ -311,6 +339,10 @@ void build_tileable_unidir_rr_graph(const std::vector<t_physical_tile_type>& typ
   }
 
   check_rr_graph(GRAPH_UNIDIR, grids, types);
+
+  // vpr integration: DeviceContext does not provide direct RRGraph access
+  // we can skip it since check_rr_graph(GRAPH_UNDIR, GRIDS, TYPES) has been called above
+#if 0 
   /* Error out if advanced checker of rr_graph fails */
   if (false == check_rr_graph(device_ctx.rr_graph)) {
     vpr_throw(VPR_ERROR_ROUTE,
@@ -319,6 +351,7 @@ void build_tileable_unidir_rr_graph(const std::vector<t_physical_tile_type>& typ
               "Advanced checking rr_graph object fails! Routing may still work "
               "but not smooth\n");
   }
+#endif
 
   /************************************************************************
    * Free all temp stucts 

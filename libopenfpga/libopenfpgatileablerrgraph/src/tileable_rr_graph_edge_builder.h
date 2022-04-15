@@ -14,6 +14,7 @@
 #include "device_grid.h"
 #include "rr_graph_obj.h"
 #include "clb2clb_directs.h"
+#include "rr_graph_view.h"
 
 /********************************************************************
  * Function declaration
@@ -22,7 +23,7 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void build_rr_graph_edges(RRGraph& rr_graph, 
+void build_rr_graph_edges(RRGraphView& rr_graph, 
                           const vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches,
                           const DeviceGrid& grids,
                           const vtr::Point<size_t>& device_chan_width, 
@@ -33,7 +34,7 @@ void build_rr_graph_edges(RRGraph& rr_graph,
                           const e_switch_block_type& sb_subtype, const int& subFs,
                           const bool& wire_opposite_side);
 
-void build_rr_graph_direct_connections(RRGraph& rr_graph, 
+void build_rr_graph_direct_connections(RRGraphView& rr_graph, 
                                        const DeviceGrid& grids, 
                                        const RRSwitchId& delayless_switch, 
                                        const std::vector<t_direct_inf>& directs, 

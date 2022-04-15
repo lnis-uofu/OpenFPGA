@@ -788,10 +788,10 @@ RRGSB build_one_tileable_rr_gsb(const DeviceGrid& grids,
       rr_chan_dir.resize(rr_chan.get_chan_width());
       for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
         /* Identify the directionality, record it in rr_node_direction */
-        if (INC_DIRECTION == rr_graph.node_direction(rr_chan.get_node(itrack))) {
+        if (Direction::INC == rr_graph.node_direction(rr_chan.get_node(itrack))) {
           rr_chan_dir[itrack] = chan_dir_to_port_dir_mapping[0];
         } else {
-          VTR_ASSERT(DEC_DIRECTION == rr_graph.node_direction(rr_chan.get_node(itrack)));
+          VTR_ASSERT(Direction::DEC == rr_graph.node_direction(rr_chan.get_node(itrack)));
           rr_chan_dir[itrack] = chan_dir_to_port_dir_mapping[1];
         }
       }

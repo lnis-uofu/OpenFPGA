@@ -54,7 +54,7 @@ std::vector<size_t> ChanNodeDetails::get_track_node_ids() const {
   return copy;
 }
 
-e_direction ChanNodeDetails::get_track_direction(const size_t& track_id) const {
+Direction ChanNodeDetails::get_track_direction(const size_t& track_id) const {
   VTR_ASSERT(validate_track_id(track_id));
   return track_direction_[track_id];
 }
@@ -126,7 +126,7 @@ std::vector<size_t> ChanNodeDetails::get_seg_group_node_id(const std::vector<siz
 }
 
 /* Get the number of tracks that starts in this routing channel */
-size_t ChanNodeDetails::get_num_starting_tracks(const e_direction& track_direction) const {
+size_t ChanNodeDetails::get_num_starting_tracks(const Direction& track_direction) const {
   size_t counter = 0;
   for (size_t itrack = 0; itrack < get_chan_width(); ++itrack) {
     /* Bypass unmatched track_direction */
@@ -142,7 +142,7 @@ size_t ChanNodeDetails::get_num_starting_tracks(const e_direction& track_directi
 }
 
 /* Get the number of tracks that ends in this routing channel */
-size_t ChanNodeDetails::get_num_ending_tracks(const e_direction& track_direction) const {
+size_t ChanNodeDetails::get_num_ending_tracks(const Direction& track_direction) const {
   size_t counter = 0;
   for (size_t itrack = 0; itrack < get_chan_width(); ++itrack) {
     /* Bypass unmatched track_direction */
@@ -172,7 +172,7 @@ void ChanNodeDetails::reserve(const size_t& chan_width) {
 }
 
 /* Add a track to the channel */
-void ChanNodeDetails::add_track(const size_t& track_node_id, const e_direction& track_direction,
+void ChanNodeDetails::add_track(const size_t& track_node_id, const Direction& track_direction,
                                 const size_t& seg_id, const size_t& seg_length,
                                 const size_t& is_start, const size_t& is_end) {
   track_node_ids_.push_back(track_node_id);
@@ -199,7 +199,7 @@ void ChanNodeDetails::set_track_node_ids(const std::vector<size_t>& track_node_i
 }
 
 /* Set tracks with a given direction to start */
-void ChanNodeDetails::set_tracks_start(const e_direction& track_direction) {
+void ChanNodeDetails::set_tracks_start(const Direction& track_direction) {
   for (size_t inode = 0; inode < get_chan_width(); ++inode) {
     /* Bypass non-match tracks */
     if (track_direction != get_track_direction(inode)) {
@@ -210,7 +210,7 @@ void ChanNodeDetails::set_tracks_start(const e_direction& track_direction) {
 }
 
 /* Set tracks with a given direction to end */
-void ChanNodeDetails::set_tracks_end(const e_direction& track_direction) {
+void ChanNodeDetails::set_tracks_end(const Direction& track_direction) {
   for (size_t inode = 0; inode < get_chan_width(); ++inode) {
     /* Bypass non-match tracks */
     if (track_direction != get_track_direction(inode)) {
@@ -221,7 +221,7 @@ void ChanNodeDetails::set_tracks_end(const e_direction& track_direction) {
 }
 
 /* rotate the track_node_id by an offset */
-void ChanNodeDetails::rotate_track_node_id(const size_t& offset, const e_direction& track_direction, const bool& counter_rotate) {
+void ChanNodeDetails::rotate_track_node_id(const size_t& offset, const Direction& track_direction, const bool& counter_rotate) {
   /* Direct return if offset = 0*/
   if (0 == offset) {
     return;

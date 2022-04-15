@@ -201,11 +201,11 @@ ChanNodeDetails build_unidir_chan_node_details(const size_t& chan_width,
         seg_end = true;
       }
       /* Since this is a unidirectional routing architecture,
-       * Add a pair of tracks, 1 INC_DIRECTION track and 1 DEC_DIRECTION track 
+       * Add a pair of tracks, 1 INC track and 1 DEC track 
        */
-      chan_node_details.add_track(cur_track, INC_DIRECTION, iseg, seg_len, seg_start, seg_end);
+      chan_node_details.add_track(cur_track, Direction::INC, iseg, seg_len, seg_start, seg_end);
       cur_track++;
-      chan_node_details.add_track(cur_track, DEC_DIRECTION, iseg, seg_len, seg_start, seg_end);
+      chan_node_details.add_track(cur_track, Direction::DEC, iseg, seg_len, seg_start, seg_end);
       cur_track++;
     }    
   }
@@ -214,18 +214,18 @@ ChanNodeDetails build_unidir_chan_node_details(const size_t& chan_width,
   
   /* If this is on the border of a device/heterogeneous blocks, segments should start/end */
   if (true == force_start) {
-    /* INC_DIRECTION should all start */
-    chan_node_details.set_tracks_start(INC_DIRECTION);
-    /* DEC_DIRECTION should all end */
-    chan_node_details.set_tracks_end(DEC_DIRECTION);
+    /* INC should all start */
+    chan_node_details.set_tracks_start(Direction::INC);
+    /* DEC should all end */
+    chan_node_details.set_tracks_end(Direction::DEC);
   }
 
   /* If this is on the border of a device/heterogeneous blocks, segments should start/end */
   if (true == force_end) {
-    /* INC_DIRECTION should all end */
-    chan_node_details.set_tracks_end(INC_DIRECTION);
-    /* DEC_DIRECTION should all start */
-    chan_node_details.set_tracks_start(DEC_DIRECTION);
+    /* INC should all end */
+    chan_node_details.set_tracks_end(Direction::INC);
+    /* DEC should all start */
+    chan_node_details.set_tracks_start(Direction::DEC);
   }
 
   return chan_node_details; 
