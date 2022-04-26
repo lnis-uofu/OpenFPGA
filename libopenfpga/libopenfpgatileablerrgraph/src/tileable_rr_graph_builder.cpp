@@ -169,6 +169,33 @@ void build_tileable_unidir_rr_graph(const std::vector<t_physical_tile_type>& typ
   std::map<RRNodeId, std::vector<size_t>> rr_node_track_ids;
 
   /************************
+   * Prepare data for indexing - channel details
+   ************************/
+  // todo: check and declare missing arguments/information for chan details
+  // note: based on discussing with Xifan, this chan details building API may not work in tileable rr graph
+  t_chan_details chan_details_x;
+  t_chan_details chan_details_y;
+
+  alloc_and_load_chan_details(grids, 
+                              &chan_width,
+                              trim_empty_channels,
+                              trim_obs_channels,
+                              num_seg_details,
+                              seg_details,
+                              chan_details_x,
+                              chan_details_y);
+
+  /************************
+   * Build indexed nodes 
+   ************************/
+  alloc_and_load_rr_node_indices(device_ctx.rr_graph_builder,
+                                 max_chan_width,
+                                 grids,
+                                 &num_rr_nodes,
+                                 chan_details_x,
+                                 chan_details_y);
+
+  /************************
    * Allocate the rr_nodes 
    ************************/
   alloc_tileable_rr_graph_nodes(device_ctx.rr_graph_builder,
@@ -177,6 +204,11 @@ void build_tileable_unidir_rr_graph(const std::vector<t_physical_tile_type>& typ
                                 device_chan_width,
                                 segment_inf,
                                 through_channel);
+
+  // todo: start from this point, all down stream functions should use index id in builder's lookup table
+  //       to refer a specific node in graph to be built
+  //       this allows to adapt APIs from graph builder and view by replacing the counter APIs in rr_graph
+  //       object
 
   /************************
    * Create all the rr_nodes 

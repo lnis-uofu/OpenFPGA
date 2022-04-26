@@ -13,6 +13,7 @@
 /* Headers from vpr library */
 #include "rr_graph_obj.h"
 #include "device_grid.h"
+#include "rr_graph_builder.h"
 
 /********************************************************************
  * Function declaration

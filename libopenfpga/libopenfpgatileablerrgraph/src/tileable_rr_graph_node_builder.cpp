@@ -16,6 +16,7 @@
 #include "rr_node.h"
 
 #include "rr_graph_builder_utils.h"
+#include "rr_graph_builder.h"
 #include "tileable_chan_details_builder.h"
 #include "tileable_rr_graph_node_builder.h"
 
@@ -213,9 +214,9 @@ size_t estimate_num_chanx_rr_nodes(const DeviceGrid& grids,
       /* Evaluate if the routing channel locates in the middle of a grid */
       ChanNodeDetails chanx_details = build_unidir_chan_node_details(chan_width, grids.width() - 2, force_start, force_end, segment_infs); 
       /* When an INC_DIRECTION CHANX starts, we need a new rr_node */
-      num_chanx_rr_nodes += chanx_details.get_num_starting_tracks(INC_DIRECTION);
+      num_chanx_rr_nodes += chanx_details.get_num_starting_tracks(Direction::INC);
       /* When an DEC_DIRECTION CHANX ends, we need a new rr_node */
-      num_chanx_rr_nodes += chanx_details.get_num_ending_tracks(DEC_DIRECTION);
+      num_chanx_rr_nodes += chanx_details.get_num_ending_tracks(Direction::DEC);
     }
   }
 
@@ -266,9 +267,9 @@ size_t estimate_num_chany_rr_nodes(const DeviceGrid& grids,
 
       ChanNodeDetails chany_details = build_unidir_chan_node_details(chan_width, grids.height() - 2, force_start, force_end, segment_infs); 
       /* When an INC_DIRECTION CHANX starts, we need a new rr_node */
-      num_chany_rr_nodes += chany_details.get_num_starting_tracks(INC_DIRECTION);
+      num_chany_rr_nodes += chany_details.get_num_starting_tracks(Direction::INC);
       /* When an DEC_DIRECTION CHANX ends, we need a new rr_node */
-      num_chany_rr_nodes += chany_details.get_num_ending_tracks(DEC_DIRECTION);
+      num_chany_rr_nodes += chany_details.get_num_ending_tracks(Direction::DEC);
     }
   }
 
@@ -335,7 +336,7 @@ void alloc_tileable_rr_graph_nodes(RRGraphBuilder& rr_graph_builder,
                                    const vtr::Point<size_t>& chan_width,
                                    const std::vector<t_segment_inf>& segment_infs,
                                    const bool& through_channel) {
-  VTR_ASSERT(0 == rr_graph_builder.nodes().size());
+  VTR_ASSERT(0 == rr_graph_builder.rr_nodes().size());
 
   std::vector<size_t> num_rr_nodes_per_type = estimate_num_rr_nodes(grids,
                                                                     chan_width,
@@ -372,6 +373,7 @@ void load_one_grid_opin_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
   /* Walk through the width height of each grid,
    * get pins and configure the rr_nodes
    */
+#if 0 
   for (int width = 0; width < cur_grid.type->width; ++width) {
     for (int height = 0; height < cur_grid.type->height; ++height) {
       /* Walk through sides */
@@ -414,6 +416,12 @@ void load_one_grid_opin_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
       } /* End of side enumeration */
     } /* End of height enumeration */
   } /* End of width enumeration */
+#endif
+  for (int width = 0; width < cur_grid.type->width; ++width) {
+     
+  }
+      
+
 }
 
 /************************************************************************
@@ -671,11 +679,11 @@ void load_one_chan_rr_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
   for (size_t itrack = 0; itrack < chan_details.get_chan_width(); ++itrack) {
     /* For INC direction, a starting point requires a new chan rr_node  */
     if ( ( (true == chan_details.is_track_start(itrack))
-        && (INC_DIRECTION == chan_details.get_track_direction(itrack)) ) 
+        && (Direction::INC == chan_details.get_track_direction(itrack)) ) 
     /* For DEC direction, an ending point requires a new chan rr_node  */
       ||
        ( (true == chan_details.is_track_end(itrack))
-      && (DEC_DIRECTION == chan_details.get_track_direction(itrack)) ) ) {
+      && (Direction::DEC == chan_details.get_track_direction(itrack)) ) ) {
 
       /* Create a new chan rr_node  */
       const RRNodeId& node = rr_graph_builder.create_node(chan_type);
@@ -710,11 +718,11 @@ void load_one_chan_rr_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
 
     /* For INC direction, an ending point requires an update on xhigh and yhigh  */
     if (   ( (true == chan_details.is_track_end(itrack))
-          && (INC_DIRECTION == chan_details.get_track_direction(itrack)) ) 
+          && (Direction::INC == chan_details.get_track_direction(itrack)) ) 
        ||
        /* For DEC direction, an starting point requires an update on xlow and ylow  */
            ( (true == chan_details.is_track_start(itrack))
-          && (DEC_DIRECTION == chan_details.get_track_direction(itrack)) ) ) {
+          && (Direction::DEC == chan_details.get_track_direction(itrack)) ) ) {
 
       /* Get the node_id */
       const RRNodeId& rr_node_id = RRNodeId(chan_details.get_track_node_id(itrack));
@@ -848,14 +856,14 @@ void load_chanx_rr_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
            * node_id C ----> /  ----> node_id B
            * node_id D ---->    ----> node_id C 
            */
-          chanx_details_tt.rotate_track_node_id(1, INC_DIRECTION, true);
+          chanx_details_tt.rotate_track_node_id(1, Direction::INC, true);
           /* For DEC_DIRECTION, we use clockwise rotation 
            * node_id A <-----    <----- node_id B
            * node_id B <----- \  <----- node_id C
            * node_id C <-----  \ <----- node_id D
            * node_id D <-----    <----- node_id A 
            */
-          chanx_details_tt.rotate_track_node_id(1, DEC_DIRECTION, false);
+          chanx_details_tt.rotate_track_node_id(1, Direction::DEC, false);
         }     
 
         track_node_ids = chanx_details_tt.get_track_node_ids();
@@ -959,14 +967,14 @@ void load_chany_rr_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
            * node_id C ----> /  ----> node_id B
            * node_id D ---->    ----> node_id C 
            */
-          chany_details_tt.rotate_track_node_id(1, INC_DIRECTION, true);
+          chany_details_tt.rotate_track_node_id(1, Direction::INC, true);
           /* For DEC_DIRECTION, we use clockwise rotation 
            * node_id A <-----    <----- node_id B
            * node_id B <----- \  <----- node_id C
            * node_id C <-----  \ <----- node_id D
            * node_id D <-----    <----- node_id A 
            */
-          chany_details_tt.rotate_track_node_id(1, DEC_DIRECTION, false);
+          chany_details_tt.rotate_track_node_id(1, Direction::DEC, false);
         }
 
         track_node_ids = chany_details_tt.get_track_node_ids();
@@ -1005,7 +1013,7 @@ void reverse_dec_chan_rr_node_track_ids(const RRGraphBuilder& rr_graph_builder,
       continue;
     }
     /* Reach here, we must have a node of CHANX or CHANY */
-    if (DEC_DIRECTION != rr_graph_builder.node_direction(node)) {
+    if (Direction::DEC != rr_graph_builder.node_direction(node)) {
       continue;
     }
     std::reverse(rr_node_track_ids[node].begin(),
