@@ -1,19 +1,19 @@
 OpenFPGA shortcuts
 ------------------
 
-OpenFPGA provides bash/zsh shell-based shortcuts to perform all essential functions and navigating through the directories. Go to the OpenFPGA directory and source ``openfpga.sh``
+OpenFPGA provides `bash`/`zsh` shell-based shortcuts to perform all essential functions and navigate through the directories. Go to the OpenFPGA directory and source ``openfpga.sh``
 
 .. code-block:: bash
 
    cd ${OPENFPGA_PATH} && source openfpga.sh
 
 .. note::
-    The OpenFPGA shortcuts are designed to work with only bash based shells. e.g. bash/zsh/fish etc.
+    The OpenFPGA shortcut works with only a bash-like shell. e.g., `bash`/`zsh`/`fish,` etc.
 
 Shortcut Commands
 ^^^^^^^^^^^^^^^^^
 
-Once the ``openfpga.sh`` script is sourced, you can run any of the following commands directly in the terminal.
+Once the ``openfpga.sh`` script is sourced, you can run any following commands directly in the terminal.
 
 .. option:: list-tasks
 
@@ -22,7 +22,19 @@ Once the ``openfpga.sh`` script is sourced, you can run any of the following com
 
 .. option:: run-task <task_name> **kwarags
 
-   This command runs the specified task listed from the ``list-task`` command or from the existing directory. The command name is relative to the ``TASK_DIRECTORY``. Users can provide any additional arguments which are listed `here <_openfpga_task_args>`_ to this command.
+   This command runs the specified task. The script will first look for the task in the current working directory.
+   If it is not in the current directory, it will then search in ``TASK_DIRECTORY`` (relative to task directory).
+   You can also provide a path as a task_name, for example, ``run-task basic_tests/generate_fabric``
+   The valid arguments listed here <_openfpga_task_args>`_, you can also run `run-task run-task` to get the list of command-line arguments.
+
+
+.. option:: create-task <task_name> <template>
+
+   It creates a template project with the task name in the current directory.
+   There are two templates currently configurate 
+   - ``vpr_blif``: A template task for running flow with `.blif` file as an input (VPR + Netlist generation)
+   - ``yosys_vpr``: A template task for running flow with `.v` file as an input (Synthesis + VPR + Netlist generation)
+
 
 .. option:: run-modelsim
 

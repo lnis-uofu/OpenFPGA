@@ -42,7 +42,7 @@ create-task () {
     fi
     flow="yosys_vpr"
     if [ -z $1 ]; then flow=$2; fi 
-    mkdir $1
+    mkdir -p $1
     cp -r $OPENFPGA_PATH/openfpga_flow/tasks/template_tasks/${flow}_template/* $1/
 }
 
