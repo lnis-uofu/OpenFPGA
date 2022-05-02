@@ -53,7 +53,7 @@ set_property(CACHE VPR_USE_EZGL PROPERTY STRINGS auto off on)
 # Version number
 set(OPENFPGA_VERSION_MAJOR 1)
 set(OPENFPGA_VERSION_MINOR 1)
-set(OPENFPGA_VERSION_PATCH 134)
+set(OPENFPGA_VERSION_PATCH 143)
 set(OPENFPGA_VERSION_PRERELEASE "dev")
 
 # Include user-defined functions
