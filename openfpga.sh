@@ -31,6 +31,21 @@ run-task-with-modelsim () {
     $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_modelsim.py "$@"
 }
 
+create-task () {
+    if [ -z $1 ]; then
+        echo "requires task name create-task <task_name>"
+        return
+    fi
+    if [ -d $1 ]; then
+        echo "Task $1 already exists"
+        return
+    fi
+    flow="yosys_vpr"
+    if [ -z $1 ]; then flow=$2; fi 
+    mkdir $1
+    cp -r $OPENFPGA_PATH/openfpga_flow/tasks/template_tasks/${flow}_template/* $1/
+}
+
 run-task () {
     $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_fpga_task.py "$@"
 }
