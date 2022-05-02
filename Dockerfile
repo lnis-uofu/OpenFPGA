@@ -35,3 +35,6 @@ RUN npm install @jupyterlab/server-proxy
 RUN jupyter serverextension enable --py jupyter_server_proxy
 RUN jupyter labextension install @jupyterlab/server-proxy
 RUN jupyter lab build
+
+# Set up terminal
+RUN echo 'export PS1="\[$(tput bold)\]\[\033[38;5;220m\]\u\[$(tput sgr0)\]:\[$(tput sgr0)\]\[$(tput bold)\]\[\033[38;5;14m\]\W\[$(tput sgr0)\]\\$\[$(tput sgr0)\]"' >> ~/.bashrc
