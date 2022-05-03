@@ -177,3 +177,7 @@ run-task basic_tests/bus_group/full_testbench_implicit_mapping --debug --show_th
 
 echo -e "Testing fix pins features";
 run-task basic_tests/fix_pins --debug --show_thread_logs
+
+echo -e "Testing project templates";
+run-task template_tasks/vpr_blif_template --debug --show_thread_logs
+run-task template_tasks/yosys_vpr_template --debug --show_thread_logs
