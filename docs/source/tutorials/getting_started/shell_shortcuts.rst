@@ -30,11 +30,13 @@ Once the ``openfpga.sh`` script is sourced, you can run any following commands d
 
 .. option:: create-task <task_name> <template>
 
-   It creates a template project with the task name in the current directory.
-   There are two templates currently configurate 
+   It creates a template task in the current directory with the given task_name.
+   the template is an optional argument; there are two templates currently configured
    - ``vpr_blif``: A template task for running flow with `.blif` file as an input (VPR + Netlist generation)
    - ``yosys_vpr``: A template task for running flow with `.v` file as an input (Synthesis + VPR + Netlist generation)
-
+   you can also use this command to copy any example project; use a ``list-tasks`` command to get the list of example projects
+   for example  ``create-task _my_task_copy basic_tests/generate_fabric`` create a copy of the ``basic_tests/generate_fabric`` task in
+   the current directory with  ``_my_task_copy`` name.
 
 .. option:: run-modelsim
 

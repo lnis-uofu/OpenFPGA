@@ -181,3 +181,7 @@ run-task basic_tests/fix_pins --debug --show_thread_logs
 echo -e "Testing project templates";
 run-task template_tasks/vpr_blif_template --debug --show_thread_logs
 run-task template_tasks/yosys_vpr_template --debug --show_thread_logs
+
+echo -e "Testing create tsk from template and run task"
+create-task _task_copy basic_tests/generate_fabric
+run-task _task_copy

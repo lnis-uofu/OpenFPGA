@@ -40,10 +40,20 @@ create-task () {
         echo "Task $1 already exists"
         return
     fi
-    flow="yosys_vpr"
-    if [ -z $1 ]; then flow=$2; fi 
+    template="template_tasks/yosys_vpr_template"
+    if [ ${#2} -ge 1 ]; then 
+        if   [[ "$2" == "vpr_blif" ]]; then template="template_tasks/${2}_template/";
+        elif [[ "$2" == "yosys_vpr" ]]; then template="template_tasks/${2}_template/"; 
+        else template="$2" 
+        fi
+    fi
+    if [ ! -f $OPENFPGA_PATH/openfpga_flow/tasks/${template}/config/task.conf ]; then 
+        echo "Template project [${template}] does not exist" ; return; 
+    fi
+    echo "Creating task     $1"
+    echo "Template project  ${template}"
     mkdir -p $1
-    cp -r $OPENFPGA_PATH/openfpga_flow/tasks/template_tasks/${flow}_template/* $1/
+    cp -r $OPENFPGA_PATH/openfpga_flow/tasks/${template}/* $1/
 }
 
 run-task () {
