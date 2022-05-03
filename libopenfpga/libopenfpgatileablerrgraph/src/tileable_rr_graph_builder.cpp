@@ -171,15 +171,28 @@ void build_tileable_unidir_rr_graph(const std::vector<t_physical_tile_type>& typ
   /************************
    * Prepare data for indexing - channel details
    ************************/
-  // todo: check and declare missing arguments/information for chan details
-  // note: based on discussing with Xifan, this chan details building API may not work in tileable rr graph
+  // segment details 
+  size_t max_dim = std::max(grids.width(), grids.height()) - 2; //-2 for no perim channels
+  int num_seg_details = 0;
+  int max_chan_width = 0;
+  t_seg_details* seg_details = nullptr;
+  seg_details = alloc_and_load_seg_details(&max_chan_width,
+                                           max_dim, segment_inf,
+                                           true /*use_full_seg_groups*/, false /*is_global_graph*/, UNI_DIRECTIONAL /*directionality*/,
+                                           &num_seg_details);
+  // chan_width is read only (const)
+#if 0
+  if (chan_width.max != max_chan_width) {
+    chan_width.max = max_chan_width;
+    *Warnings |= RR_GRAPH_WARN_CHAN_WIDTH_CHANGED;
+  }
+#endif 
+
+  // channel details
   t_chan_details chan_details_x;
   t_chan_details chan_details_y;
-
   alloc_and_load_chan_details(grids, 
                               &chan_width,
-                              trim_empty_channels,
-                              trim_obs_channels,
                               num_seg_details,
                               seg_details,
                               chan_details_x,
@@ -188,6 +201,7 @@ void build_tileable_unidir_rr_graph(const std::vector<t_physical_tile_type>& typ
   /************************
    * Build indexed nodes 
    ************************/
+  int num_rr_nodes = 0;
   alloc_and_load_rr_node_indices(device_ctx.rr_graph_builder,
                                  max_chan_width,
                                  grids,
@@ -233,7 +247,11 @@ void build_tileable_unidir_rr_graph(const std::vector<t_physical_tile_type>& typ
    *   b. the connection pattern should be same across the fabric
    ***********************************************************************/
   /* Global routing uses a single longwire track */
+
+  // this has been done in building segment details
+#if 0
   int max_chan_width = find_unidir_routing_channel_width(chan_width.max);
+#endif
   VTR_ASSERT(max_chan_width > 0);
 
   /* get maximum number of pins across all blocks */
