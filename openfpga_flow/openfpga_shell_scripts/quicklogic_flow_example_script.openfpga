@@ -38,7 +38,9 @@ repack #--verbose
 
 # Build the bitstream
 #  - Output the fabric-independent bitstream to a file
-build_architecture_bitstream --verbose --write_file fabric_independent_bitstream.xml
+# Skipped becasue it takes long time to run for bigger fabric
+# --write_file fabric_independent_bitstream.xml
+build_architecture_bitstream --verbose 
 
 # Build fabric-dependent bitstream
 build_fabric_bitstream --verbose 
