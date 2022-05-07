@@ -44,6 +44,7 @@ create-task () {
     if [ ${#2} -ge 1 ]; then 
         if   [[ "$2" == "vpr_blif" ]]; then template="template_tasks/${2}_template/";
         elif [[ "$2" == "yosys_vpr" ]]; then template="template_tasks/${2}_template/"; 
+        elif [[ "$2" == "vtr_benchmarks" ]]; then template="template_tasks/${2}_template/"; 
         else template="$2" 
         fi
     fi
@@ -74,7 +75,9 @@ run-flow () {
 
 # lists all the configure task in task directory
 list-tasks () {
-    check_execution_path "$(pwd)"
+    echo "Repository Task"
+    tree -P 'task.conf' --prune $OPENFPGA_TASK_PATH | sed "/.* task.conf/d" | sed "/.* config/d" | sed '$d'
+    echo "Local Task"
     tree -P 'task.conf' --prune | sed "/.* task.conf/d" | sed "/.* config/d" | sed '$d'
 }
 
@@ -96,6 +99,8 @@ goto-task () {
         return
     fi
     goto_path=$OPENFPGA_TASK_PATH/$1
+    if [ -d $1 ]; then  goto_path=./$1; fi
+    echo $goto_path
     # Selects the run directory
     run_num=""
     if [ ! -d $goto_path ]; then echo "Task directory not found"; return; fi
@@ -130,12 +135,18 @@ fi
 
 command -v shopt && shopt -s globstar
 # TaskList=$(ls -tdalh ${OPENFPGA_TASK_PATH}/* | awk '{system("basename " $9)}' |  awk '{printf("%s ",$1)}')
-TaskList=$(ls -tdalh ${OPENFPGA_TASK_PATH}/**/task.conf  |
+RepoTaskList=$(ls -tdalh ${OPENFPGA_TASK_PATH}/**/task.conf  |
 awk '{print $9}' | sed -e "s/\/config\/task.conf//" |
 sed -e "s/${OPENFPGA_PATH//\//\\/}\/openfpga_flow\/tasks\///" |
 awk '{printf("%s ",$1)}')
 
-complete -W "${TaskList}" goto-task
-complete -W "${TaskList}" run-task
-complete -W "${TaskList}" run-shell-task
-complete -W "${TaskList}" run-modelsim
+_TaskList()
+{
+  local cur
+  COMPREPLY+=($( ls -R ./*/*/task.conf | sed -e "s/\/config\/task.conf//" | sed -e "s/^\.\///" | awk '{printf("%s ",$1)}' ) )
+}
+
+complete -W "${RepoTaskList}" -F _TaskList goto-task
+complete -W "${RepoTaskList}" -F _TaskList run-task
+complete -W "${RepoTaskList}" -F _TaskList run-modelsim
+complete -W "${RepoTaskList}" create-task
