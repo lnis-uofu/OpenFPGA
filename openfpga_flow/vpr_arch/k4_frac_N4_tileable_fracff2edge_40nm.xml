@@ -70,6 +70,17 @@
         <port name="Q" clock="C"/>
       </output_ports>
     </model>
+    <!-- A virtual model for scan-chain flip-flop to be used in the physical mode of FF -->
+    <model name="dffnr">
+      <input_ports>
+        <port name="D" clock="CN"/>
+        <port name="R" clock="CN"/>
+        <port name="CN" is_clock="1"/>
+      </input_ports>
+      <output_ports>
+        <port name="Q" clock="CN"/>
+      </output_ports>
+    </model>
    <!-- A virtual model for scan-chain flip-flop to be used in the physical mode of FF -->
     <model name="dffrn">
       <input_ports>
@@ -82,17 +93,6 @@
       </output_ports>
     </model>
     <!-- A virtual model for scan-chain flip-flop to be used in the physical mode of FF -->
-    <model name="dffnrn">
-      <input_ports>
-        <port name="D" clock="CN"/>
-        <port name="R" clock="CN"/>
-        <port name="CN" is_clock="1"/>
-      </input_ports>
-      <output_ports>
-        <port name="Q" clock="CN"/>
-      </output_ports>
-    </model>
-   <!-- A virtual model for scan-chain flip-flop to be used in the physical mode of FF -->
     <model name="dffnrn">
       <input_ports>
         <port name="D" clock="CN"/>
@@ -447,7 +447,7 @@
                   </pb_type> 
                   <interconnect>
                     <direct name="direct1" input="ff.D" output="dffn.D"/>
-                    <direct name="direct2" input="ff.CN" output="dffn.CN"/>
+                    <direct name="direct2" input="ff.C" output="dffn.CN"/>
                     <direct name="direct3" input="dffn.Q" output="ff.Q"/>
                   </interconnect>
                 </mode>
@@ -624,7 +624,7 @@
                 </pb_type> 
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="dffn.D"/>
-                  <direct name="direct2" input="ff.CN" output="dffn.CN"/>
+                  <direct name="direct2" input="ff.C" output="dffn.CN"/>
                   <direct name="direct3" input="dffn.Q" output="ff.Q"/>
                 </interconnect>
               </mode>
