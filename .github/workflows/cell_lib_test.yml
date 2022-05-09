@@ -27,7 +27,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          source .github/workflow/install_dependencies_run.sh
+          source .github/workflows/install_dependencies_run.sh
 
       - name: Dump tool versions
         run: |
