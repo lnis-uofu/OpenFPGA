@@ -301,7 +301,7 @@ endmodule //End Of Module
 //           - clock
 //             which can be switched between positive edge triggered and negative edge triggered
 //-----------------------------------------------------
-module MULTI_MODE_DFFRCKQ (
+module MULTI_MODE_DFFNRQ (
   input RST, // Reset input
   input CK, // Clock Input
   input D, // Data Input
