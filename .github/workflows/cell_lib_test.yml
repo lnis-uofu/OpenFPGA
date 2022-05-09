@@ -1,0 +1,36 @@
+name: Cell Library Tests
+
+# Run CI on push, PR, and weekly.
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 0 * * 0 " # weekly
+
+# Multiple job to tests
+jobs:
+  # Test the RTL compilation compatibility
+  verilog:
+    name: RTL compilation and tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+          
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Dump tool versions
+        run: |
+          iverilog -V
+          vvp -V
+
+      - name: Verilog compilation
+        run: |
+          cd openfpga_flow/openfpga_cell_library
+          make compile_verilog 
