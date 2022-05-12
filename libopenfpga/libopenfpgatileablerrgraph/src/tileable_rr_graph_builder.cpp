@@ -227,7 +227,8 @@ void build_tileable_unidir_rr_graph(const std::vector<t_physical_tile_type>& typ
   /************************
    * Create all the rr_nodes 
    ************************/
-  create_tileable_rr_graph_nodes(device_ctx.rr_graph_builder,
+  create_tileable_rr_graph_nodes(device_ctx.rr_graph,
+                                 device_ctx.rr_graph_builder,
                                  rr_node_driver_switches,
                                  rr_node_track_ids,
                                  grids,

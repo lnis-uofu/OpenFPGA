@@ -19,6 +19,7 @@
 #include "rr_graph_builder.h"
 #include "tileable_chan_details_builder.h"
 #include "tileable_rr_graph_node_builder.h"
+#include "rr_rc_data.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -373,11 +374,10 @@ void load_one_grid_opin_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
   /* Walk through the width height of each grid,
    * get pins and configure the rr_nodes
    */
-#if 0 
   for (int width = 0; width < cur_grid.type->width; ++width) {
     for (int height = 0; height < cur_grid.type->height; ++height) {
       /* Walk through sides */
-      for (size_t side = 0; side < NUM_SIDES; ++side) {
+      for (e_side side : SIDES) {
         SideManager side_manager(side);
         /* skip unwanted sides */
         if ( (true == is_io_type(cur_grid.type))
@@ -390,37 +390,32 @@ void load_one_grid_opin_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
                                                         width, height);
         for (const int& pin_num : opin_list) {
           /* Create a new node and fill information */
-          const RRNodeId& node = rr_graph_builder.create_node(OPIN);
+          const RRNodeId& node = rr_graph_builder.node_lookup().find_node(width, height, OPIN, pin_num, side);
  
           /* node bounding box */
-          rr_graph_builder.set_node_bounding_box(node, vtr::Rect<short>(grid_coordinate.x() + width,
-                                                                grid_coordinate.y() + height,
-                                                                grid_coordinate.x() + width,
-                                                                grid_coordinate.y() + height));
-          rr_graph_builder.set_node_side(node, side_manager.get_side());  
+          rr_graph_builder.set_node_coordinates(node, grid_coordinate.x() + width,
+                                                      grid_coordinate.y() + height,
+                                                      grid_coordinate.x() + width,
+                                                      grid_coordinate.y() + height);
+          rr_graph_builder.add_node_side(node, side_manager.get_side());  
           rr_graph_builder.set_node_pin_num(node, pin_num);  
 
           rr_graph_builder.set_node_capacity(node, 1);
 
           /* cost index is a FIXED value for OPIN */
-          rr_graph_builder.set_node_cost_index(node, OPIN_COST_INDEX); 
+          rr_graph_builder.set_node_cost_index(node, RRIndexedDataId(OPIN_COST_INDEX));
 
           /* Switch info */
           VTR_ASSERT(size_t(node) == rr_node_driver_switches.size());
           rr_node_driver_switches.push_back(delayless_switch); 
 
           /* RC data */
-          rr_graph_builder.set_node_rc_data_index(node, find_create_rr_rc_data(0., 0.));
+          rr_graph_builder.set_node_rc_index(node, NodeRCIndex(find_create_rr_rc_data(0., 0.)));
 
         } /* End of loading OPIN rr_nodes */
       } /* End of side enumeration */
     } /* End of height enumeration */
   } /* End of width enumeration */
-#endif
-  for (int width = 0; width < cur_grid.type->width; ++width) {
-     
-  }
-      
 
 }
 
@@ -446,7 +441,7 @@ void load_one_grid_ipin_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
   for (int width = 0; width < cur_grid.type->width; ++width) {
     for (int height = 0; height < cur_grid.type->height; ++height) {
       /* Walk through sides */
-      for (size_t side = 0; side < NUM_SIDES; ++side) {
+      for (e_side side : SIDES) {
         SideManager side_manager(side);
         /* skip unwanted sides */
         if ( (true == is_io_type(cur_grid.type))
@@ -459,27 +454,27 @@ void load_one_grid_ipin_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
         std::vector<int> ipin_list = get_grid_side_pins(cur_grid, RECEIVER, side_manager.get_side(), width, height);
         for (const int& pin_num : ipin_list) {
           /* Create a new node and fill information */
-          const RRNodeId& node = rr_graph_builder.create_node(IPIN);
+          const RRNodeId& node = rr_graph_builder.node_lookup().find_node(width, height, IPIN, pin_num, side);
  
           /* node bounding box */
-          rr_graph_builder.set_node_bounding_box(node, vtr::Rect<short>(grid_coordinate.x() + width,
-                                                                grid_coordinate.y() + height,
-                                                                grid_coordinate.x() + width,
-                                                                grid_coordinate.y() + height));
-          rr_graph_builder.set_node_side(node, side_manager.get_side());  
+          rr_graph_builder.set_node_coordinates(node, grid_coordinate.x() + width,
+                                                      grid_coordinate.y() + height,
+                                                      grid_coordinate.x() + width,
+                                                      grid_coordinate.y() + height);
+          rr_graph_builder.add_node_side(node, side_manager.get_side());  
           rr_graph_builder.set_node_pin_num(node, pin_num);  
 
           rr_graph_builder.set_node_capacity(node, 1);
 
           /* cost index is a FIXED value for OPIN */
-          rr_graph_builder.set_node_cost_index(node, IPIN_COST_INDEX); 
+          rr_graph_builder.set_node_cost_index(node, RRIndexedDataId(IPIN_COST_INDEX)); 
 
           /* Switch info */
           VTR_ASSERT(size_t(node) == rr_node_driver_switches.size());
           rr_node_driver_switches.push_back(wire_to_ipin_switch); 
 
           /* RC data */
-          rr_graph_builder.set_node_rc_data_index(node, find_create_rr_rc_data(0., 0.));
+          rr_graph_builder.set_node_rc_index(node, NodeRCIndex(find_create_rr_rc_data(0., 0.)));
 
         } /* End of loading IPIN rr_nodes */
       } /* End of side enumeration */
@@ -495,7 +490,7 @@ void load_one_grid_ipin_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
  * Note: this function should be applied ONLY to grid with 0 width offset and 0 height offset!!!
  ***********************************************************************/
 static 
-void load_one_grid_source_nodes_basic_info(RRGraphBuillder& rr_graph_builder,
+void load_one_grid_source_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
                                            vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches, 
                                            const vtr::Point<size_t>& grid_coordinate, 
                                            const t_grid_tile& cur_grid, 
@@ -511,13 +506,13 @@ void load_one_grid_source_nodes_basic_info(RRGraphBuillder& rr_graph_builder,
     } 
 
     /* Create a new node and fill information */
-    const RRNodeId& node = rr_graph_builder.create_node(SOURCE);
+    const RRNodeId& node = rr_graph_builder.node_lookup().find_node(grid_coordinate.x(), grid_coordinate.y(), SOURCE, iclass);
 
     /* node bounding box */
-    rr_graph_builder.set_node_bounding_box(node, vtr::Rect<short>(grid_coordinate.x(),
-                                                          grid_coordinate.y(),
-                                                          grid_coordinate.x() + cur_grid.type->width - 1,
-                                                          grid_coordinate.y() + cur_grid.type->height - 1));
+    rr_graph_builder.set_node_coordinates(node, grid_coordinate.x(),
+                                                grid_coordinate.y(),
+                                                grid_coordinate.x() + cur_grid.type->width - 1,
+                                                grid_coordinate.y() + cur_grid.type->height - 1);
     rr_graph_builder.set_node_class_num(node, iclass);  
 
     rr_graph_builder.set_node_capacity(node, 1);
@@ -526,14 +521,14 @@ void load_one_grid_source_nodes_basic_info(RRGraphBuillder& rr_graph_builder,
     rr_graph_builder.set_node_capacity(node, cur_grid.type->class_inf[iclass].num_pins); 
 
     /* cost index is a FIXED value for SOURCE */
-    rr_graph_builder.set_node_cost_index(node, SOURCE_COST_INDEX); 
+    rr_graph_builder.set_node_cost_index(node, RRIndexedDataId(SOURCE_COST_INDEX));
 
     /* Switch info */
     VTR_ASSERT(size_t(node) == rr_node_driver_switches.size());
     rr_node_driver_switches.push_back(delayless_switch); 
 
     /* RC data */
-    rr_graph_builder.set_node_rc_data_index(node, find_create_rr_rc_data(0., 0.));
+    rr_graph_builder.set_node_rc_index(node, NodeRCIndex(find_create_rr_rc_data(0., 0.)));
 
   } /* End of class enumeration */
 }
@@ -562,13 +557,13 @@ void load_one_grid_sink_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
     }
 
     /* Create a new node and fill information */
-    const RRNodeId& node = rr_graph_builder.create_node(SINK);
+    const RRNodeId& node = rr_graph_builder.node_lookup().find_node(grid_coordinate.x(), grid_coordinate.y(), SINK, iclass);
 
     /* node bounding box */
-    rr_graph_builder.set_node_bounding_box(node, vtr::Rect<short>(grid_coordinate.x(),
-                                                          grid_coordinate.y(),
-                                                          grid_coordinate.x() + cur_grid.type->width - 1,
-                                                          grid_coordinate.y() + cur_grid.type->height - 1));
+    rr_graph_builder.set_node_coordinates(node, grid_coordinate.x(),
+                                                grid_coordinate.y(),
+                                                grid_coordinate.x() + cur_grid.type->width - 1,
+                                                grid_coordinate.y() + cur_grid.type->height - 1);
     rr_graph_builder.set_node_class_num(node, iclass);  
 
     rr_graph_builder.set_node_capacity(node, 1);
@@ -577,14 +572,14 @@ void load_one_grid_sink_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
     rr_graph_builder.set_node_capacity(node, cur_grid.type->class_inf[iclass].num_pins); 
 
     /* cost index is a FIXED value for SINK */
-    rr_graph_builder.set_node_cost_index(node, SINK_COST_INDEX); 
+    rr_graph_builder.set_node_cost_index(node, RRIndexedDataId(SINK_COST_INDEX));
 
     /* Switch info */
     VTR_ASSERT(size_t(node) == rr_node_driver_switches.size());
     rr_node_driver_switches.push_back(delayless_switch); 
 
     /* RC data */
-    rr_graph_builder.set_node_rc_data_index(node, find_create_rr_rc_data(0., 0.));
+    rr_graph_builder.set_node_rc_index(node, NodeRCIndex(find_create_rr_rc_data(0., 0.)));
 
   } /* End of class enumeration */
 }
@@ -663,7 +658,8 @@ void load_grid_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
  * features: capacity, track_ids, ptc_num, direction 
  ***********************************************************************/
 static 
-void load_one_chan_rr_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
+void load_one_chan_rr_nodes_basic_info(RRGraphView& rr_graph,
+                                       RRGraphBuilder& rr_graph_builder,
                                        vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches, 
                                        std::map<RRNodeId, std::vector<size_t>>& rr_node_track_ids,
                                        const vtr::Point<size_t>& chan_coordinate, 
@@ -686,17 +682,8 @@ void load_one_chan_rr_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
       && (Direction::DEC == chan_details.get_track_direction(itrack)) ) ) {
 
       /* Create a new chan rr_node  */
-      const RRNodeId& node = rr_graph_builder.create_node(chan_type);
+      const RRNodeId& node = rr_graph_builder.node_lookup().find_node(chan_coordinate.x(), chan_coordinate.y(), chan_type, itrack);
     
-      rr_graph_builder.set_node_xlow(node, chan_coordinate.x());
-      rr_graph_builder.set_node_ylow(node, chan_coordinate.y());
-     
-      /* Deposit xhigh and yhigh as the same value as xlow and ylow
-       * We will update when this track ends
-       */
-      rr_graph_builder.set_node_xhigh(node, chan_coordinate.x());
-      rr_graph_builder.set_node_yhigh(node, chan_coordinate.y());
-
       rr_graph_builder.set_node_direction(node, chan_details.get_track_direction(itrack)); 
       rr_graph_builder.set_node_track_num(node, itrack);
       rr_node_track_ids[node].push_back(itrack);
@@ -712,7 +699,7 @@ void load_one_chan_rr_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
       chan_details.set_track_node_id(itrack, size_t(node));
 
       /* cost index depends on the segment index */
-      rr_graph_builder.set_node_cost_index(node, cost_index_offset + seg_id); 
+      rr_graph_builder.set_node_cost_index(node, RRIndexedDataId(cost_index_offset + seg_id)); 
       /* Finish here, go to next */
     }
 
@@ -728,18 +715,20 @@ void load_one_chan_rr_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
       const RRNodeId& rr_node_id = RRNodeId(chan_details.get_track_node_id(itrack));
 
       /* Do a quick check, make sure we do not mistakenly modify other nodes */
-      VTR_ASSERT(chan_type == rr_graph_builder.node_type(rr_node_id));
-      VTR_ASSERT(chan_details.get_track_direction(itrack) == rr_graph_builder.node_direction(rr_node_id));
+      VTR_ASSERT(chan_type == rr_graph.node_type(rr_node_id));
+      VTR_ASSERT(chan_details.get_track_direction(itrack) == rr_graph.node_direction(rr_node_id));
 
       /* set xhigh/yhigh and push changes to track_ids */
-      rr_graph_builder.set_node_xhigh(rr_node_id, chan_coordinate.x());
-      rr_graph_builder.set_node_yhigh(rr_node_id, chan_coordinate.y());
+      rr_graph_builder.set_node_coordinates(rr_node_id, rr_graph.node_xlow(rr_node_id),
+                                                        rr_graph.node_ylow(rr_node_id),
+                                                        chan_coordinate.x(),
+                                                        chan_coordinate.y());
 
       /* Do not update track_ids for length-1 wires, they should have only 1 track_id */
-      if ( (rr_graph_builder.node_xhigh(rr_node_id) > rr_graph_builder.node_xlow(rr_node_id))
-        || (rr_graph_builder.node_yhigh(rr_node_id) > rr_graph_builder.node_ylow(rr_node_id)) ) {
+      if ( (rr_graph.node_xhigh(rr_node_id) > rr_graph.node_xlow(rr_node_id))
+        || (rr_graph.node_yhigh(rr_node_id) > rr_graph.node_ylow(rr_node_id)) ) {
         rr_node_track_ids[rr_node_id].push_back(itrack);
-        rr_graph_builder.add_node_track_num(rr_node_id, chan_coordinate, itrack);
+        rr_graph_builder.set_node_track_num(rr_node_id, itrack);
       }
       /* Finish here, go to next */
     }
@@ -760,18 +749,20 @@ void load_one_chan_rr_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
     const RRNodeId& rr_node_id = RRNodeId(chan_details.get_track_node_id(itrack));
 
     /* Do a quick check, make sure we do not mistakenly modify other nodes */
-    VTR_ASSERT(chan_type == rr_graph_builder.node_type(rr_node_id));
-    VTR_ASSERT(chan_details.get_track_direction(itrack) == rr_graph_builder.node_direction(rr_node_id));
+    VTR_ASSERT(chan_type == rr_graph.node_type(rr_node_id));
+    VTR_ASSERT(chan_details.get_track_direction(itrack) == rr_graph.node_direction(rr_node_id));
 
     /* Deposit xhigh and yhigh using the current chan_coordinate
      * We will update when this track ends
      */
-    rr_graph_builder.set_node_xhigh(rr_node_id, chan_coordinate.x());
-    rr_graph_builder.set_node_yhigh(rr_node_id, chan_coordinate.y());
+    rr_graph_builder.set_node_coordinates(rr_node_id, rr_graph.node_xlow(rr_node_id),
+                                                      rr_graph.node_ylow(rr_node_id),
+                                                      chan_coordinate.x(),
+                                                      chan_coordinate.y());
 
     /* Update track_ids */
     rr_node_track_ids[rr_node_id].push_back(itrack);
-    rr_graph_builder.add_node_track_num(rr_node_id, chan_coordinate, itrack);
+    rr_graph_builder.set_node_track_num(rr_node_id, itrack);
     /* Finish here, go to next */
   }
 } 
@@ -783,7 +774,8 @@ void load_one_chan_rr_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
  * grid_info : pb_graph_pin
  ***********************************************************************/
 static 
-void load_chanx_rr_nodes_basic_info(RRGraphBuilder& rr_graph_builder, 
+void load_chanx_rr_nodes_basic_info(RRGraphView& rr_graph, 
+                                    RRGraphBuilder& rr_graph_builder, 
                                     vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches, 
                                     std::map<RRNodeId, std::vector<size_t>>& rr_node_track_ids,
                                     const DeviceGrid& grids,
@@ -871,7 +863,8 @@ void load_chanx_rr_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
       }
 
       /* Configure CHANX in this channel */
-      load_one_chan_rr_nodes_basic_info(rr_graph_builder,
+      load_one_chan_rr_nodes_basic_info(rr_graph,
+                                        rr_graph_builder,
                                         rr_node_driver_switches,
                                         rr_node_track_ids,
                                         chanx_coord, CHANX, 
@@ -890,7 +883,8 @@ void load_chanx_rr_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
  * features: capacity, track_ids, ptc_num, direction 
  ***********************************************************************/
 static 
-void load_chany_rr_nodes_basic_info(RRGraphBuilder& rr_graph_builder, 
+void load_chany_rr_nodes_basic_info(RRGraphView& rr_graph, 
+                                    RRGraphBuilder& rr_graph_builder, 
                                     vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches, 
                                     std::map<RRNodeId, std::vector<size_t>>& rr_node_track_ids,
                                     const DeviceGrid& grids,
@@ -981,7 +975,8 @@ void load_chany_rr_nodes_basic_info(RRGraphBuilder& rr_graph_builder,
         chany_details.set_track_node_ids(track_node_ids);
       }
       /* Configure CHANX in this channel */
-      load_one_chan_rr_nodes_basic_info(rr_graph_builder,
+      load_one_chan_rr_nodes_basic_info(rr_graph,
+                                        rr_graph_builder,
                                         rr_node_driver_switches, 
                                         rr_node_track_ids, 
                                         chany_coord, CHANY, 
@@ -1025,7 +1020,8 @@ void reverse_dec_chan_rr_node_track_ids(const RRGraphBuilder& rr_graph_builder,
 /************************************************************************
  * Create all the rr_nodes covering both grids and routing channels
  ***********************************************************************/
-void create_tileable_rr_graph_nodes(RRGraphBuilder& rr_graph_builder,
+void create_tileable_rr_graph_nodes(RRGraphView& rr_graph,
+                                    RRGraphBuilder& rr_graph_builder,
                                     vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches, 
                                     std::map<RRNodeId, std::vector<size_t>>& rr_node_track_ids,
                                     const DeviceGrid& grids, 
@@ -1040,7 +1036,8 @@ void create_tileable_rr_graph_nodes(RRGraphBuilder& rr_graph_builder,
                              wire_to_ipin_switch,
                              delayless_switch);
 
-  load_chanx_rr_nodes_basic_info(rr_graph_builder, 
+  load_chanx_rr_nodes_basic_info(rr_graph,
+                                 rr_graph_builder, 
                                  rr_node_driver_switches, 
                                  rr_node_track_ids, 
                                  grids,
@@ -1048,7 +1045,8 @@ void create_tileable_rr_graph_nodes(RRGraphBuilder& rr_graph_builder,
                                  segment_infs,
                                  through_channel);
 
-  load_chany_rr_nodes_basic_info(rr_graph_builder, 
+  load_chany_rr_nodes_basic_info(rr_graph,
+                                 rr_graph_builder, 
                                  rr_node_driver_switches, 
                                  rr_node_track_ids, 
                                  grids,
