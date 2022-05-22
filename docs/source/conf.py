@@ -37,10 +37,10 @@ copyright = u'2018, Xifan Tang'
 author = u'Xifan Tang'
 
 # The short X.Y version
-version = u''
-# The full version, including alpha/beta/rc tags
-release = u'1.0'
-
+with open("VERSION.md") as ver_f:
+  version = ver_f.readline().rstrip()
+  # The full version, including alpha/beta/rc tags
+  release = version
 
 # -- General configuration ---------------------------------------------------
 
