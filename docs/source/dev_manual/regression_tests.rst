@@ -14,6 +14,8 @@ Considering the large number of technical features, regression tests are categor
 Run a Test
 ----------
 
+.. note:: Make sure you have compiled OpenFPGA and set up your environment before reaching this step. See details in :ref:`getting_started_tutorials`.
+
 To run a regression test, users can execute a shell script (assume you are under the root directory of the project), for example, 
 
 ```
