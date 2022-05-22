@@ -65,7 +65,7 @@ clean-run () {
     rm -rf ./openfpga_flow/**/run???
 }
 
-run-task-run () {
+clear-task-run () {
     $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_fpga_task.py --remove_run_dir all
 }
 
