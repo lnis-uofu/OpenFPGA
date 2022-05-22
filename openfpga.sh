@@ -66,7 +66,7 @@ clean-run () {
 }
 
 clear-task-run () {
-    $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_fpga_task.py --remove_run_dir all
+    $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_fpga_task.py "$@" --remove_run_dir all 
 }
 
 run-modelsim () {
