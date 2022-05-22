@@ -19,29 +19,31 @@ module and2_top_formal_verification_random_tb;
 	reg [0:0] b;
 
 // ----- FPGA fabric outputs -------
-	wire [0:0] out_c_gfpga;
+	wire [0:0] c_gfpga;
 
 // ----- Benchmark outputs -------
-	wire [0:0] out_c_bench;
+	wire [0:0] c_bench;
 
 // ----- Output vectors checking flags -------
-	reg [0:0] out_c_flag;
+	reg [0:0] c_flag;
 
 // ----- Error counter -------
 	integer nb_error= 0;
 
 // ----- FPGA fabric instanciation -------
 	and2_top_formal_verification FPGA_DUT(
-		.a_fm(a),
-		.b_fm(b),
-		.out_c_fm(out_c_gfpga)	);
+		.a(a),
+		.b(b),
+		.c(c_gfpga)
+	);
 // ----- End FPGA Fabric Instanication -------
 
 // ----- Reference Benchmark Instanication -------
 	and2 REF_DUT(
 		.a(a),
 		.b(b),
-		.c(out_c_bench)	);
+		.c(c_bench)
+	);
 // ----- End reference Benchmark Instanication -------
 
 // ----- Clock 'clk' Initialization -------
@@ -61,7 +63,7 @@ module and2_top_formal_verification_random_tb;
 		a <= 1'b0;
 		b <= 1'b0;
 
-		out_c_flag[0] <= 1'b0;
+		c_flag[0] <= 1'b0;
 	end
 
 // ----- Input Stimulus -------
@@ -77,19 +79,20 @@ module and2_top_formal_verification_random_tb;
 	always@(negedge clk[0]) begin
 		if (1'b1 == sim_start[0]) begin
 			sim_start[0] <= ~sim_start[0];
-		end else begin
-			if(!(out_c_gfpga === out_c_bench) && !(out_c_bench === 1'bx)) begin
-				out_c_flag <= 1'b1;
+		end else 
+begin
+			if(!(c_gfpga === c_bench) && !(c_bench === 1'bx)) begin
+				c_flag <= 1'b1;
 			end else begin
-				out_c_flag<= 1'b0;
+				c_flag<= 1'b0;
 			end
 		end
 	end
 
-	always@(posedge out_c_flag) begin
-		if(out_c_flag) begin
+	always@(posedge c_flag) begin
+		if(c_flag) begin
 			nb_error = nb_error + 1;
-			$display("Mismatch on out_c_gfpga at time = %t", $realtime);
+			$display("Mismatch on c_gfpga at time = %t", $realtime);
 		end
 	end
 

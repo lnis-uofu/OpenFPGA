@@ -11,76 +11,76 @@
 `default_nettype none
 
 module and2_top_formal_verification (
-input [0:0] a_fm,
-input [0:0] b_fm,
-output [0:0] out_c_fm);
+input [0:0] a,
+input [0:0] b,
+output [0:0] c);
 
 // ----- Local wires for FPGA fabric -----
-wire [0:31] gfpga_pad_GPIO_PAD;
-wire [0:0] ccff_head;
-wire [0:0] ccff_tail;
-wire [0:0] prog_clk;
-wire [0:0] set;
-wire [0:0] reset;
-wire [0:0] clk;
+wire [0:31] gfpga_pad_GPIO_PAD_fm;
+wire [0:0] ccff_head_fm;
+wire [0:0] ccff_tail_fm;
+wire [0:0] prog_clk_fm;
+wire [0:0] set_fm;
+wire [0:0] reset_fm;
+wire [0:0] clk_fm;
 
 // ----- FPGA top-level module to be capsulated -----
 	fpga_top U0_formal_verification (
-		.prog_clk(prog_clk[0]),
-		.set(set[0]),
-		.reset(reset[0]),
-		.clk(clk[0]),
-		.gfpga_pad_GPIO_PAD(gfpga_pad_GPIO_PAD[0:31]),
-		.ccff_head(ccff_head[0]),
-		.ccff_tail(ccff_tail[0]));
+		.prog_clk(prog_clk_fm[0]),
+		.set(set_fm[0]),
+		.reset(reset_fm[0]),
+		.clk(clk_fm[0]),
+		.gfpga_pad_GPIO_PAD(gfpga_pad_GPIO_PAD_fm[0:31]),
+		.ccff_head(ccff_head_fm[0]),
+		.ccff_tail(ccff_tail_fm[0]));
 
 // ----- Begin Connect Global ports of FPGA top module -----
-	assign set[0] = 1'b0;
-	assign reset[0] = 1'b0;
-	assign clk[0] = 1'b0;
-	assign prog_clk[0] = 1'b0;
+	assign set_fm[0] = 1'b0;
+	assign reset_fm[0] = 1'b0;
+	assign clk_fm[0] = 1'b0;
+	assign prog_clk_fm[0] = 1'b0;
 // ----- End Connect Global ports of FPGA top module -----
 
 // ----- Link BLIF Benchmark I/Os to FPGA I/Os -----
-// ----- Blif Benchmark input a is mapped to FPGA IOPAD gfpga_pad_GPIO_PAD[6] -----
-	assign gfpga_pad_GPIO_PAD[6] = a_fm[0];
+// ----- Blif Benchmark input a is mapped to FPGA IOPAD gfpga_pad_GPIO_PAD_fm[6] -----
+	assign gfpga_pad_GPIO_PAD_fm[6] = a[0];
 
-// ----- Blif Benchmark input b is mapped to FPGA IOPAD gfpga_pad_GPIO_PAD[1] -----
-	assign gfpga_pad_GPIO_PAD[1] = b_fm[0];
+// ----- Blif Benchmark input b is mapped to FPGA IOPAD gfpga_pad_GPIO_PAD_fm[1] -----
+	assign gfpga_pad_GPIO_PAD_fm[1] = b[0];
 
-// ----- Blif Benchmark output out_c is mapped to FPGA IOPAD gfpga_pad_GPIO_PAD[9] -----
-	assign out_c_fm[0] = gfpga_pad_GPIO_PAD[9];
+// ----- Blif Benchmark output c is mapped to FPGA IOPAD gfpga_pad_GPIO_PAD_fm[9] -----
+	assign c[0] = gfpga_pad_GPIO_PAD_fm[9];
 
 // ----- Wire unused FPGA I/Os to constants -----
-	assign gfpga_pad_GPIO_PAD[0] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[2] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[3] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[4] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[5] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[7] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[8] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[10] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[11] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[12] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[13] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[14] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[15] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[16] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[17] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[18] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[19] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[20] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[21] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[22] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[23] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[24] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[25] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[26] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[27] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[28] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[29] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[30] = 1'b0;
-	assign gfpga_pad_GPIO_PAD[31] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[0] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[2] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[3] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[4] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[5] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[7] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[8] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[10] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[11] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[12] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[13] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[14] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[15] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[16] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[17] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[18] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[19] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[20] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[21] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[22] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[23] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[24] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[25] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[26] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[27] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[28] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[29] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[30] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[31] = 1'b0;
 
 // ----- Begin load bitstream to configuration memories -----
 // ----- Begin assign bitstream to configuration memories -----
