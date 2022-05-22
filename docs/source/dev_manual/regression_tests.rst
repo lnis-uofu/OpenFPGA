@@ -18,9 +18,9 @@ Run a Test
 
 To run a regression test, users can execute a shell script (assume you are under the root directory of the project), for example, 
 
-```
-./openfpga_flow/regression_test_scripts/basic_reg_test.sh [OPTIONS]
-```
+.. code-block:: shell
+
+  ./openfpga_flow/regression_test_scripts/basic_reg_test.sh [OPTIONS]
 
 .. note:: ``basic_reg_test`` can be replaced by other tests which are under ``openfpga_flow/regression_test_scripts/``
 
