@@ -278,7 +278,9 @@ jobs:
     if: ${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
     name: docker_regression_tests
     runs-on: ubuntu-18.04
-    container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-master:latest
+    container: 
+      image: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-master:latest
+      options: --user root --workdir /home/openfpga_user
     strategy:
       fail-fast: false
       matrix:
