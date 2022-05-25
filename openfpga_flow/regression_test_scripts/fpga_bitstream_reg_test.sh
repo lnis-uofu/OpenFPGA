@@ -9,13 +9,13 @@ PYTHON_EXEC=python3.8
 echo -e "FPGA-Bitstream regression tests";
 
 echo -e "Testing bitstream generation for an auto-sized device";
-run-task fpga_bitstream/generate_bitstream/device_auto $@
+run-task fpga_bitstream/generate_bitstream/configuration_chain/device_auto $@
 
 echo -e "Testing bitstream generation for an 48x48 FPGA device";
-run-task fpga_bitstream/generate_bitstream/device_48x48 $@
+run-task fpga_bitstream/generate_bitstream/configuration_chain/device_48x48 $@
 
 echo -e "Testing bitstream generation for an 96x96 FPGA device";
-run-task fpga_bitstream/generate_bitstream/device_96x96 $@
+run-task fpga_bitstream/generate_bitstream/configuration_chain/device_96x96 $@
 
 echo -e "Testing loading architecture bitstream from an external file";
 run-task fpga_bitstream/load_external_architecture_bitstream $@
