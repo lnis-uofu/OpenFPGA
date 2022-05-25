@@ -187,6 +187,12 @@ class FabricBitstream {
     bool valid_bit_id(const FabricBitId& bit_id) const;
     bool valid_region_id(const FabricBitRegionId& bit_id) const;
 
+  private: /* Private APIs */
+    size_t encode_address_1bits(const std::vector<char>& address) const;
+    size_t encode_address_xbits(const std::vector<char>& address) const;
+    std::vector<char> decode_address_bits(const size_t& bit1, const size_t& bitx) const;
+    std::vector<char> decode_wl_address_bits(const size_t& bit1, const size_t& bitx) const;
+
   private: /* Internal data */
     /* Unique id of a region in the Bitstream */
     size_t num_regions_; 
@@ -206,17 +212,22 @@ class FabricBitstream {
     size_t wl_address_length_;
 
     /* Address bits: this is designed for memory decoders
-     * Here we store the binary format of the address, which can be loaded
+     * Here we store the encoded format of the address, and decoded to binary format which can be loaded
      * to the configuration protocol directly 
      *
-     * We use a 2-element array, as we may have a BL address and a WL address
-     *
-     * TODO: use nested vector may cause large memory footprint 
-     *       when bitstream size increases
-     *       NEED TO THINK ABOUT A COMPACT MODELING
+     * Encoding strategy is as follows:
+     * - An address bit which may contain '0', '1', 'x'. For example
+     *     101x1
+     * - The string can be encoded into two integer numbers:
+     *   - bit-one number: which encodes the '0' and '1' bits into a number. For example,
+     *       101x1 -> 10101 -> 21
+     *   - bit-x number: which encodes the 'x' bits into a number. For example,
+     *       101x1 -> 00010 -> 2
      */
-    vtr::vector<FabricBitId, std::vector<char>> bit_addresses_;
-    vtr::vector<FabricBitId, std::vector<char>> bit_wl_addresses_;
+    vtr::vector<FabricBitId, size_t> bit_address_1bits_;
+    vtr::vector<FabricBitId, size_t> bit_address_xbits_;
+    vtr::vector<FabricBitId, size_t> bit_wl_address_1bits_;
+    vtr::vector<FabricBitId, size_t> bit_wl_address_xbits_;
 
     /* Data input (Din) bits: this is designed for memory decoders */
     vtr::vector<FabricBitId, char> bit_dins_;
