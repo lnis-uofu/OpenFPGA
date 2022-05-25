@@ -223,6 +223,11 @@ class FabricBitstream {
      *       101x1 -> 10101 -> 21
      *   - bit-x number: which encodes the 'x' bits into a number. For example,
      *       101x1 -> 00010 -> 2
+     *
+     * TODO: There is a limitation here, when the length of address vector is more than 64,
+     * A size_t number overflows (cannot represent any binary number > 64 bit).
+     * Such thing can entirely happen even in a medium sized FPGA. 
+     * A solution can be use multiple size_t to fit. But clearly, we should not use vector in vector, which causes large memory overhead!
      */
     vtr::vector<FabricBitId, size_t> bit_address_1bits_;
     vtr::vector<FabricBitId, size_t> bit_address_xbits_;
