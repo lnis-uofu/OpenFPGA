@@ -445,6 +445,7 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
       status = write_memory_bank_shift_register_fabric_bitstream_to_text_file(fp,
                                                                               apply_fast_configuration,
                                                                               bit_value_to_skip,
+
                                                                               fabric_bitstream,
                                                                               blwl_sr_banks,
                                                                               keep_dont_care_bits);

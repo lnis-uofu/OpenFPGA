@@ -42,7 +42,8 @@ build_fabric_bitstream --verbose
 
 # Write fabric-dependent bitstream
 write_fabric_bitstream --file fabric_bitstream.txt --format plain_text
-write_fabric_bitstream --file fabric_bitstream.xml --format xml
+# Skip this because the XML file is too large to fit Github runners
+#write_fabric_bitstream --file fabric_bitstream.xml --format xml
 
 # Finish and exit OpenFPGA
 exit
