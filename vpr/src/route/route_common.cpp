@@ -1510,7 +1510,7 @@ void print_route(FILE* fp, const vtr::vector<ClusterNetId, t_traceback>& traceba
                                 fprintf(fp, "(");
                                 for (size_t itrack = 0; itrack < device_ctx.rr_graph.node_track_ids(inode).size(); ++itrack) {
                                     if (0 < itrack) {
-                                      fprintf(fp, ", ");
+                                      fprintf(fp, ",");
                                     }
                                     fprintf(fp, "%d", device_ctx.rr_graph.node_track_ids(inode)[itrack]);
                                 }
