@@ -154,7 +154,7 @@ jobs:
         run: |
           ccache -p
           ccache -z
-          bash .github/workflows/install_dependencies_build.sh
+          bash /__w/OpenFPGA/.github/workflows/install_dependencies_build.sh
           cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE
 
       - name: Build
