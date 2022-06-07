@@ -12,6 +12,10 @@ if [ -z $OPENFPGA_PATH ]; then
 else
     echo "OPENFPGA_PATH=${OPENFPGA_PATH}"
 fi
+
+export LD_LIBRARY_PATH="${OPENFPGA_PATH}/vpr"
+echo  "LD_LIBRARY_PATH=${OPENFPGA_PATH}/vpr"
+
 export OPENFPGA_SCRIPT_PATH="${OPENFPGA_PATH}/openfpga_flow/scripts"
 export OPENFPGA_TASK_PATH="${OPENFPGA_PATH}/openfpga_flow/tasks"
 if [ -z $PYTHON_EXEC ]; then export PYTHON_EXEC="python3"; fi
