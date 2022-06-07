@@ -1,0 +1,14 @@
+# Index file to load the TDBC MySQL package.
+
+if {![package vsatisfies [package provide Tcl] 8.6-]} {
+    return
+}
+if {[package vsatisfies [package provide Tcl] 9.0-]} {
+    package ifneeded tdbc::mysql @PACKAGE_VERSION@ \
+	    "[list source [file join $dir @PACKAGE_NAME@.tcl]]\;\
+	    [list load [file join $dir @PKG_LIB_FILE9@] [string totitle @PACKAGE_NAME@]]"
+} else {
+    package ifneeded tdbc::mysql @PACKAGE_VERSION@ \
+	    "[list source [file join $dir @PACKAGE_NAME@.tcl]]\;\
+	    [list load [file join $dir @PKG_LIB_FILE8@] [string totitle @PACKAGE_NAME@]]"
+}

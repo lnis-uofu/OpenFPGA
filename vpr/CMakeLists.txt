@@ -9,6 +9,8 @@ option(VPR_USE_SIGNAL_HANDLER "Should VPR use a signal handler to intercept sign
 
 set(VPR_PGO_CONFIG "none" CACHE STRING "Configure VPR Profile-Guided Optimization (PGO). prof_gen: built executable will produce profiling info, prof_use: built executable will be optimized based on generated profiling info, none: disable pgo")
 set_property(CACHE VPR_PGO_CONFIG PROPERTY STRINGS prof_gen prof_use none)
+find_package(SWIG REQUIRED)
+
 
 #Handle graphics setup
 set(GRAPHICS_DEFINES "")
@@ -31,6 +33,27 @@ else()
 endif()
 
 #
+# Tcl Interface Generation
+#
+
+set ( vpr_tcl-GENERATED_SRC
+    ${PROJECT_SOURCE_DIR}/src/tcl_api/vpr_tcl_wrap.cpp
+)
+foreach(gen_src ${vpr_tcl-GENERATED_SRC})
+set_source_files_properties(${gen_src} PROPERTIES GENERATED TRUE)
+endforeach()
+
+add_custom_command(
+    OUTPUT ${vpr_tcl-GENERATED_SRC}
+    DEPENDS ${PROJECT_SOURCE_DIR}/src/tcl_api/vpr_tcl_api.cpp
+            ${PROJECT_SOURCE_DIR}/src/tcl_api/vpr_tcl_api.h
+            ${PROJECT_SOURCE_DIR}/src/tcl_api/vpr_tcl.i
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    COMMAND echo "---------- Tcl vpr API generation ----------"
+    COMMAND ${SWIG_EXECUTABLE} -c++ -tcl -cppext cpp -o ${vpr_tcl-GENERATED_SRC} ${PROJECT_SOURCE_DIR}/src/tcl_api/vpr_tcl.i
+)
+
+#
 # Build Configuration
 #
 include(CheckCXXSymbolExists)
@@ -40,13 +63,20 @@ file(GLOB_RECURSE EXEC_SOURCES src/main.cpp)
 file(GLOB_RECURSE LIB_SOURCES src/*/*.cpp)
 file(GLOB_RECURSE LIB_HEADERS src/*/*.h)
 files_to_dirs(LIB_HEADERS LIB_INCLUDE_DIRS)
-
+list(APPEND LIB_INCLUDE_DIRS ../libs/EXTERNAL/tcl8.6.12/generic/)
 if(${VTR_ENABLE_CAPNPROTO})
     add_definitions("-DVTR_ENABLE_CAPNPROTO")
 endif()
 
-#Create the library
-add_library(libvpr STATIC
+#Create the shared library
+add_library(libvpr SHARED
+             ${LIB_HEADERS}
+             ${LIB_SOURCES}
+             ${vpr_tcl-GENERATED_SRC}
+)
+
+#Create the static library
+add_library(libvprst STATIC
              ${LIB_HEADERS}
              ${LIB_SOURCES}
 )
@@ -63,11 +93,29 @@ target_link_libraries(libvpr
                       libblifparse
                       libtatum
                       libargparse
+                      libpugixml
+		      libtcl8.6.so
+                      ${TCL_LIBRARY})
+
+target_include_directories(libvprst PUBLIC ${LIB_INCLUDE_DIRS})
+set_target_properties(libvprst PROPERTIES PREFIX "") #Avoid extra 'lib' prefix
+
+#Specify link-time dependancies
+target_link_libraries(libvprst
+                      libvtrutil
+                      libopenfpgautil
+                      libarchfpga
+                      libsdcparse
+                      libblifparse
+                      libtatum
+                      libargparse
                       libpugixml)
 
 #link graphics library only when graphics set to on
 if (VPR_USE_EZGL STREQUAL "on")
     target_link_libraries(libvpr
+			     ezgl)
+    target_link_libraries(libvprst
 			     ezgl)
 
     compile_gresources(
@@ -100,15 +148,21 @@ if (VPR_USE_EZGL STREQUAL "on")
 
 endif()
 
+target_compile_definitions(libvprst PUBLIC ${GRAPHICS_DEFINES})
+
+if(${VTR_ENABLE_CAPNPROTO})
+    target_link_libraries(libvprst libvtrcapnproto)
+endif()
+
+add_executable(vpr ${EXEC_SOURCES})
+
+target_link_libraries(vpr libvprst)
+
 target_compile_definitions(libvpr PUBLIC ${GRAPHICS_DEFINES})
 
 if(${VTR_ENABLE_CAPNPROTO})
     target_link_libraries(libvpr libvtrcapnproto)
 endif()
-
-add_executable(vpr ${EXEC_SOURCES})
-
-target_link_libraries(vpr libvpr)
 
 
 #Supress IPO link warnings if IPO is enabled
@@ -146,6 +200,7 @@ if (VPR_PGO_CONFIG STREQUAL "prof_gen")
         CHECK_CXX_COMPILER_FLAG(${flag} CXX_COMPILER_SUPPORTS_${flag})
         if(CXX_COMPILER_SUPPORTS_${flag})
             target_compile_options(libvpr PUBLIC ${flag})
+            target_compile_options(libvprst PUBLIC ${flag})
             target_compile_options(vpr PUBLIC ${flag})
             target_link_libraries(vpr ${flag})
         endif()
@@ -156,6 +211,7 @@ elseif (VPR_PGO_CONFIG STREQUAL "prof_use")
         CHECK_CXX_COMPILER_FLAG(${flag} CXX_COMPILER_SUPPORTS_${flag})
         if(CXX_COMPILER_SUPPORTS_${flag})
             target_compile_options(libvpr PUBLIC ${flag})
+            target_compile_options(libvprst PUBLIC ${flag})
             target_compile_options(vpr PUBLIC ${flag})
             target_link_libraries(vpr ${flag})
         endif()
@@ -171,6 +227,7 @@ if (VTR_COMPILE_OPTIONS STREQUAL "strict")
     foreach(flag ${VPR_COMPILE_OPTIONS_FLAGS})
         message(STATUS "\tAdding CXX flag: ${flag}")
         target_compile_options(libvpr PRIVATE ${flag})
+        target_compile_options(libvprst PRIVATE ${flag})
         target_compile_options(vpr PRIVATE ${flag})
         target_link_libraries(vpr ${flag})
     endforeach()
@@ -208,6 +265,9 @@ if (VPR_USE_EXECUTION_ENGINE STREQUAL "tbb")
     target_compile_definitions(libvpr PRIVATE VPR_USE_TBB)
     target_link_libraries(libvpr tbb)
     target_link_libraries(libvpr tbbmalloc_proxy) #Use the scalable memory allocator
+    target_compile_definitions(libvprst PRIVATE VPR_USE_TBB)
+    target_link_libraries(libvprst tbb)
+    target_link_libraries(libvprst tbbmalloc_proxy) #Use the scalable memory allocator
     message(STATUS "VPR: will support parallel execution using '${VPR_USE_EXECUTION_ENGINE}'")
 elseif(VPR_USE_EXECUTION_ENGINE STREQUAL "serial")
     message(STATUS "VPR: will only support serial execution")
@@ -223,10 +283,12 @@ if (VPR_USE_SIGNAL_HANDLER)
     CHECK_CXX_SYMBOL_EXISTS(sigaction csignal HAVE_SIGACTION)
     if(HAVE_SIGACTION)
         target_compile_definitions(libvpr PRIVATE VPR_USE_SIGACTION)
+        target_compile_definitions(libvprst PRIVATE VPR_USE_SIGACTION)
     endif()
 endif()
 
-install(TARGETS vpr libvpr DESTINATION bin)
+install(TARGETS vpr DESTINATION bin)
+install(TARGETS libvpr libvprst DESTINATION lib)
 
 
 #
@@ -236,7 +298,7 @@ file(GLOB_RECURSE TEST_SOURCES test/*.cpp)
 add_executable(test_vpr ${TEST_SOURCES})
 target_link_libraries(test_vpr
                         libcatch
-                        libvpr)
+                        libvprst)
 
 #Supress IPO link warnings if IPO is enabled
 get_target_property(TEST_VPR_USES_IPO vpr INTERPROCEDURAL_OPTIMIZATION)
