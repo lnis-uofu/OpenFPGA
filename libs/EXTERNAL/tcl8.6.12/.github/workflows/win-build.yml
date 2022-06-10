@@ -1,0 +1,80 @@
+name: Windows
+on: [push]
+env:
+  ERROR_ON_FAILURES: 1
+jobs:
+  msvc:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: powershell
+        working-directory: win
+    strategy:
+      matrix:
+        cfgopt:
+          - ""
+          - "OPTS=static,msvcrt"
+          - "OPTS=symbols"
+          - "OPTS=memdbg"
+    # Using powershell means we need to explicitly stop on failure
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Init MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Build ${{ matrix.cfgopt }}
+        run: |
+          &nmake -f makefile.vc ${{ matrix.cfgopt }} all
+          if ($lastexitcode -ne 0) {
+             throw "nmake exit code: $lastexitcode"
+          }
+      - name: Build Test Harness ${{ matrix.cfgopt }}
+        run: |
+          &nmake -f makefile.vc ${{ matrix.cfgopt }} tcltest
+          if ($lastexitcode -ne 0) {
+             throw "nmake exit code: $lastexitcode"
+          }
+      - name: Run Tests ${{ matrix.cfgopt }}
+        run: |
+          &nmake -f makefile.vc ${{ matrix.cfgopt }} test
+          if ($lastexitcode -ne 0) {
+             throw "nmake exit code: $lastexitcode"
+          }
+  gcc:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+        working-directory: win
+    strategy:
+      matrix:
+        cfgopt:
+          - ""
+          - "--disable-shared"
+          - "--enable-symbols"
+          - "--enable-symbols=mem"
+    # Using powershell means we need to explicitly stop on failure
+    steps:
+      - name: Install MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: git mingw-w64-x86_64-toolchain make
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Prepare
+        run: |
+          touch tclStubInit.c tclOOStubInit.c
+          mkdir "${HOME}/install dir"
+        working-directory: generic
+      - name: Configure ${{ matrix.cfgopt }}
+        run: |
+          ./configure ${CFGOPT} "--prefix=$HOME/install dir" || (cat config.log && exit 1)
+        env:
+          CFGOPT: --enable-64bit ${{ matrix.cfgopt }}
+      - name: Build
+        run: make all
+      - name: Build Test Harness
+        run: make tcltest
+      - name: Run Tests
+        run: make test
