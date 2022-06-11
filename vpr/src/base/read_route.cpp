@@ -40,6 +40,7 @@
 #include "echo_files.h"
 #include "route_common.h"
 #include "read_route.h"
+#include "openfpga_tokenizer.h"
 
 /*************Functions local to this module*************/
 static void process_route(std::ifstream& fp, const char* filename, int& lineno);
@@ -47,7 +48,7 @@ static void process_nodes(std::ifstream& fp, ClusterNetId inet, const char* file
 static void process_nets(std::ifstream& fp, ClusterNetId inet, std::string name, std::vector<std::string> input_tokens, const char* filename, int& lineno);
 static void process_global_blocks(std::ifstream& fp, ClusterNetId inet, const char* filename, int& lineno);
 static void format_coordinates(int& x, int& y, std::string coord, ClusterNetId net, const char* filename, const int lineno);
-static void format_ptc_num(int& n0, int& n1, int& n2, int& n3, std::string coord, ClusterNetId net, const char* filename, const int lineno);
+static void format_ptc_num(std::vector<int>& ptc_nums, std::string coord, ClusterNetId net, const char* filename, const int lineno);
 static void format_pin_info(std::string& pb_name, std::string& port_name, int& pb_pin_num, std::string input);
 static std::string format_name(std::string name);
 
@@ -282,9 +283,9 @@ static void process_nodes(std::ifstream& fp, ClusterNetId inet, const char* file
                 }
             }
 
-            int ptc0, ptc1, ptc2, ptc3;
-            format_ptc_num(ptc0, ptc1, ptc2, ptc3, tokens[5 + offset], inet, filename, lineno);
-            if (device_ctx.rr_graph.node_ptc_num(node) != ptc0) {
+            std::vector<int> ptc_nums;
+            format_ptc_num(ptc_nums, tokens[5 + offset], inet, filename, lineno);
+            if (device_ctx.rr_graph.node_ptc_num(node) != ptc_nums[0]) { // always the first ptc_num and track_num in rr_graph
                 vpr_throw(VPR_ERROR_ROUTE, filename, lineno,
                           "The ptc num of node %d does not match the rr graph", inode);
             }
@@ -418,26 +419,25 @@ static void format_coordinates(int& x, int& y, std::string coord, ClusterNetId n
 //  Node:   728   OPIN (4,1)  Pin: 57   clb.O[17] Switch: 2
 //  Node:   16733    CHANX (6,2) to (9,2)  Track: (56,58,60,62)  Switch: 1
 //  Node:   23176    CHANY (4,1) to (4,3)  Track: (69,67,65)  Switch: 1
-static void format_ptc_num(int& n0, int& n1, int& n2, int& n3, std::string ptc_str, ClusterNetId net, const char* filename, const int lineno) {
-    // detect how many number needs to be extracted
-    size_t ptc_count = std::count(ptc_str.begin(), ptc_str.end(), ',') + 1;
+static void format_ptc_num(std::vector<int>& ptc_nums, std::string ptc_str, ClusterNetId net, const char* filename, const int lineno) {
     // detect and remove the parenthesis
-    std::stringstream ptc_stream(ptc_count > 1? format_name(ptc_str) : ptc_str);
-    for (size_t i = 0; i < ptc_count; i++) {
-        if (i == 0) {
-            ptc_stream >> n0; 
-        } else if (i == 1) {
-            ptc_stream >> n1; 
-        } else if (i == 2) {
-            ptc_stream >> n2; 
-        } else if (i == 3) {
-            ptc_stream >> n3; 
-        }
+    openfpga::StringToken tokenizer0(ptc_str);
+    std::vector<std::string> tokens0 = tokenizer0.split(',');
+    size_t ptc_count = tokens0.size() + 1;
+    openfpga::StringToken tokenizer1(ptc_count > 1? format_name(ptc_str) : ptc_str);
+
+    // now do the real job
+    std::vector<std::string> tokens1 = tokenizer1.split(',');
+    std::stringstream ptc_stream;
+    int num;
+    for (size_t i = 0; i < tokens1.size(); i++) {
+        ptc_stream << tokens1[i];
+        ptc_stream >> num;
         if (ptc_stream.fail()) {
             vpr_throw(VPR_ERROR_ROUTE, filename, lineno,
                   "Net %lu has bad ptc info in the form (n0,...,n3)", size_t(net));
         }
-        ptc_stream.ignore(1, ' ');
+        ptc_nums.push_back(num); 
     }
     return;
 }
