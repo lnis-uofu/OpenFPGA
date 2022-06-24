@@ -40,6 +40,7 @@
 #include "echo_files.h"
 #include "route_common.h"
 #include "read_route.h"
+#include "openfpga_tokenizer.h"
 
 /*************Functions local to this module*************/
 static void process_route(std::ifstream& fp, const char* filename, int& lineno);
@@ -47,6 +48,7 @@ static void process_nodes(std::ifstream& fp, ClusterNetId inet, const char* file
 static void process_nets(std::ifstream& fp, ClusterNetId inet, std::string name, std::vector<std::string> input_tokens, const char* filename, int& lineno);
 static void process_global_blocks(std::ifstream& fp, ClusterNetId inet, const char* filename, int& lineno);
 static void format_coordinates(int& x, int& y, std::string coord, ClusterNetId net, const char* filename, const int lineno);
+static void format_ptc_num(std::vector<int>& ptc_nums, std::string coord, ClusterNetId net, const char* filename, const int lineno);
 static void format_pin_info(std::string& pb_name, std::string& port_name, int& pb_pin_num, std::string input);
 static std::string format_name(std::string name);
 
@@ -201,7 +203,7 @@ static void process_nodes(std::ifstream& fp, ClusterNetId inet, const char* file
 
     /*remember the position of the last line in order to go back*/
     std::streampos oldpos = fp.tellg();
-    int inode, x, y, x2, y2, ptc, switch_id, offset;
+    int inode, x, y, x2, y2, switch_id, offset;
     int node_count = 0;
     std::string input;
     std::vector<std::string> tokens;
@@ -281,8 +283,9 @@ static void process_nodes(std::ifstream& fp, ClusterNetId inet, const char* file
                 }
             }
 
-            ptc = atoi(tokens[5 + offset].c_str());
-            if (device_ctx.rr_graph.node_ptc_num(node) != ptc) {
+            std::vector<int> ptc_nums;
+            format_ptc_num(ptc_nums, tokens[5 + offset], inet, filename, lineno);
+            if (device_ctx.rr_graph.node_ptc_num(node) != ptc_nums[0]) { // always the first ptc_num and track_num in rr_graph
                 vpr_throw(VPR_ERROR_ROUTE, filename, lineno,
                           "The ptc num of node %d does not match the rr graph", inode);
             }
@@ -409,6 +412,34 @@ static void format_coordinates(int& x, int& y, std::string coord, ClusterNetId n
         vpr_throw(VPR_ERROR_ROUTE, filename, lineno,
                   "Net %lu has coordinates that is not in the form (x,y)", size_t(net));
     }
+}
+
+// ptc (Pin-Track-Class) can be one of below patterns in route graph
+//  Node:   714 SOURCE (4,1)  Class: 18  Switch: 0
+//  Node:   728   OPIN (4,1)  Pin: 57   clb.O[17] Switch: 2
+//  Node:   16733    CHANX (6,2) to (9,2)  Track: (56,58,60,62)  Switch: 1
+//  Node:   23176    CHANY (4,1) to (4,3)  Track: (69,67,65)  Switch: 1
+static void format_ptc_num(std::vector<int>& ptc_nums, std::string ptc_str, ClusterNetId net, const char* filename, const int lineno) {
+    // detect and remove the parenthesis
+    openfpga::StringToken tokenizer0(ptc_str);
+    std::vector<std::string> tokens0 = tokenizer0.split(',');
+    size_t ptc_count = tokens0.size() + 1;
+    openfpga::StringToken tokenizer1(ptc_count > 1? format_name(ptc_str) : ptc_str);
+
+    // now do the real job
+    std::vector<std::string> tokens1 = tokenizer1.split(',');
+    std::stringstream ptc_stream;
+    int num;
+    for (size_t i = 0; i < tokens1.size(); i++) {
+        ptc_stream << tokens1[i];
+        ptc_stream >> num;
+        if (ptc_stream.fail()) {
+            vpr_throw(VPR_ERROR_ROUTE, filename, lineno,
+                  "Net %lu has bad ptc info in the form (n0,...,n3)", size_t(net));
+        }
+        ptc_nums.push_back(num); 
+    }
+    return;
 }
 
 static void format_pin_info(std::string& pb_name, std::string& port_name, int& pb_pin_num, std::string input) {
