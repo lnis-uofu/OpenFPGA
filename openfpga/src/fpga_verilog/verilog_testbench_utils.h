@@ -15,6 +15,9 @@
 #include "fabric_global_port_info.h"
 #include "pin_constraints.h"
 #include "simulation_setting.h"
+#include "fabric_global_port_info.h"
+#include "pin_constraints.h"
+#include "bus_group.h"
 
 /********************************************************************
  * Function declaration
@@ -27,6 +30,7 @@ void print_verilog_testbench_fpga_instance(std::fstream& fp,
                                            const ModuleManager& module_manager,
                                            const ModuleId& top_module,
                                            const std::string& top_instance_name,
+                                           const std::string& net_postfix,
                                            const bool& explicit_port_mapping);
 
 void print_verilog_testbench_benchmark_instance(std::fstream& fp,
@@ -34,11 +38,13 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
                                                 const std::string& instance_name,
                                                 const std::string& module_input_port_postfix,
                                                 const std::string& module_output_port_postfix,
-                                                const std::vector<std::string>& output_port_prefix_to_remove,
+                                                const std::string& input_port_postfix,
                                                 const std::string& output_port_postfix,
+                                                const std::vector<std::string>& clock_port_names,
                                                 const AtomContext& atom_ctx,
                                                 const VprNetlistAnnotation& netlist_annotation,
                                                 const PinConstraints& pin_constraints,
+                                                const BusGroup& bus_group,
                                                 const bool& use_explicit_port_map);
 
 void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
@@ -48,8 +54,11 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
                                               const PlacementContext& place_ctx,
                                               const IoLocationMap& io_location_map,
                                               const VprNetlistAnnotation& netlist_annotation,
+                                              const BusGroup& bus_group,
+                                              const std::string& net_name_postfix,
                                               const std::string& io_input_port_name_postfix,
                                               const std::string& io_output_port_name_postfix,
+                                              const std::vector<std::string>& clock_port_names,
                                               const size_t& unused_io_value);
 
 void print_verilog_timeout_and_vcd(std::fstream& fp,
@@ -68,6 +77,7 @@ void print_verilog_testbench_check(std::fstream& fp,
                                    const std::string& benchmark_port_postfix,
                                    const std::string& fpga_port_postfix,
                                    const std::string& check_flag_port_postfix,
+                                   const std::string& config_done_name,
                                    const std::string& error_counter_name,
                                    const AtomContext& atom_ctx,
                                    const VprNetlistAnnotation& netlist_annotation,
@@ -86,14 +96,19 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
                                             const FabricGlobalPortInfo& global_ports,
                                             const PinConstraints& pin_constraints,
                                             const std::vector<std::string>& clock_port_names,
+                                            const std::string& input_port_postfix,
                                             const std::string& check_flag_port_postfix,
                                             const std::vector<BasicPort>& clock_ports,
                                             const bool& no_self_checking);
 
 void print_verilog_testbench_shared_ports(std::fstream& fp,
+                                          const ModuleManager& module_manager,
+                                          const FabricGlobalPortInfo& global_ports,
+                                          const PinConstraints& pin_constraints,
                                           const AtomContext& atom_ctx,
                                           const VprNetlistAnnotation& netlist_annotation,
                                           const std::vector<std::string>& clock_port_names,
+                                          const std::string& shared_input_port_postfix,
                                           const std::string& benchmark_output_port_postfix,
                                           const std::string& fpga_output_port_postfix,
                                           const std::string& check_flag_port_postfix,

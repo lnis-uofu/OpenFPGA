@@ -190,12 +190,15 @@ def generate_each_task_actions(taskname):
         clean_up_and_exit(
             "Missing configuration file for task %s" % curr_task_dir)
 
+    if args.remove_run_dir:
+        remove_run_dir()
+        flow_run_cmd_list = []
+        GeneralSection = []
+        return flow_run_cmd_list,GeneralSection
+
     # Create run directory for current task run ./runxxx
     run_dirs = [int(os.path.basename(x)[-3:]) for x in glob.glob('run*[0-9]')]
     curr_run_dir = "run%03d" % (max(run_dirs+[0, ])+1)
-    if args.remove_run_dir:
-        remove_run_dir()
-        return
     try:
         os.mkdir(curr_run_dir)
         if os.path.islink('latest') or os.path.exists('latest'):
@@ -241,7 +244,7 @@ def generate_each_task_actions(taskname):
         clean_up_and_exit("Found duplicate architectures in config file")
 
     # Get Flow information
-    logger.info('Running "%s" flow' %
+    logger.info('Running "%s" flow',
                 GeneralSection.get("fpga_flow", fallback="yosys_vpr"))
 
     # Check if specified benchmark files exist
@@ -268,7 +271,30 @@ def generate_each_task_actions(taskname):
         ys_for_task_common = SynthSection.get("bench_yosys_common")
         ys_rewrite_for_task_common = SynthSection.get("bench_yosys_rewrite_common")
         chan_width_common = SynthSection.get("bench_chan_width_common")
-        read_verilog_options_common = SynthSection.get("bench_read_verilog_options_common")
+
+        yosys_params = [
+            "read_verilog_options",
+            "yosys_args",
+            "yosys_bram_map_rules",
+            "yosys_bram_map_verilog",
+            "yosys_cell_sim_verilog",
+            "yosys_cell_sim_systemverilog",
+            "yosys_cell_sim_vhdl",
+            "yosys_blackbox_modules",
+            "yosys_dff_map_verilog",
+            "yosys_dsp_map_parameters",
+            "yosys_dsp_map_verilog",
+            "verific_verilog_standard",
+            "verific_systemverilog_standard",
+            "verific_vhdl_standard",
+            "verific_include_dir",
+            "verific_library_dir",
+            "verific_search_lib"
+        ]
+
+        yosys_params_common = {}
+        for param in yosys_params:
+            yosys_params_common[param.upper()] = SynthSection.get("bench_"+param+"_common")
 
         # Individual benchmark configuration
         CurrBenchPara["files"] = bench_files
@@ -285,11 +311,10 @@ def generate_each_task_actions(taskname):
             if bech_name in eachKey:
                 eachKey = eachKey.replace(bech_name+"_", "").upper()
                 CurrBenchPara["benchVariable"] += [f"--{eachKey}", eachValue]
-
-        if not "read_verilog_options".upper() in CurrBenchPara["benchVariable"]:
-            if read_verilog_options_common:
-                CurrBenchPara["benchVariable"] += ["--read_verilog_options".upper(), 
-                                                        read_verilog_options_common]
+        
+        for param, value in yosys_params_common.items():
+            if not param in CurrBenchPara["benchVariable"] and value:
+                CurrBenchPara["benchVariable"] += [f"--{param}", value]
 
         if GeneralSection.get("fpga_flow") == "vpr_blif":
             # Check if activity file exist
@@ -359,6 +384,7 @@ def generate_each_task_actions(taskname):
     logger.info('Found %d Architectures %d Benchmarks & %d Script Parameters' %
                 (len(archfile_list), len(benchmark_list), len(ScriptSections)))
     logger.info('Created total %d jobs' % len(flow_run_cmd_list))
+
     return flow_run_cmd_list,GeneralSection
 
 # Make the directory name unique by including the benchmark index in the list.
@@ -491,7 +517,7 @@ def run_single_script(s, eachJob, job_list):
                     raise subprocess.CalledProcessError(0, " ".join(command))
                 eachJob["status"] = True
         except:
-            logger.exception("Failed to execute openfpga flow - " +
+            logger.exception("Failed to execute openfpga flow - %s", 
                              eachJob["name"])
             if not args.continue_on_fail:
                 os._exit(1)
@@ -499,11 +525,11 @@ def run_single_script(s, eachJob, job_list):
         timediff = timedelta(seconds=(eachJob["endtime"]-eachJob["starttime"]))
         timestr = humanize.naturaldelta(timediff) if "humanize" in sys.modules \
             else str(timediff)
-        logger.info("%s Finished with returncode %d, Time Taken %s " %
-                    (thread_name, process.returncode, timestr))
+        logger.info("%s Finished with returncode %d, Time Taken %s " ,
+                    thread_name, process.returncode, timestr)
         eachJob["finished"] = True
         no_of_finished_job = sum([not eachJ["finished"] for eachJ in job_list])
-        logger.info("***** %d runs pending *****" % (no_of_finished_job))
+        logger.info("***** %d runs pending *****" , no_of_finished_job)
 
 
 def run_actions(job_list):
@@ -544,7 +570,7 @@ def collect_results(job_run_list):
     if len(task_result):
         with open("task_result.csv", 'w', newline='') as csvfile:
             writer = csv.DictWriter(
-                csvfile, extrasaction='ignore', fieldnames=list(set(colnames)))
+                csvfile, extrasaction='ignore', fieldnames=list(colnames))
             writer.writeheader()
             for eachResult in task_result:
                 writer.writerow(eachResult)

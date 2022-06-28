@@ -264,7 +264,7 @@ jobs:
           chmod +x yosys/install/bin/yosys-smtbmc
       - name: ${{matrix.config.name}}_GCC-8_(Ubuntu 18.04)
         shell: bash
-        run: source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh
+        run: source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh --debug --show_thread_logs
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         if: ${{ failure() }}
@@ -278,7 +278,9 @@ jobs:
     if: ${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
     name: docker_regression_tests
     runs-on: ubuntu-18.04
-    container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-master:latest
+    container: 
+      image: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-master:latest
+      options: --user root --workdir /home/openfpga_user
     strategy:
       fail-fast: false
       matrix:
@@ -310,7 +312,7 @@ jobs:
           ${PYTHON_EXEC} -m pip install -r requirements.txt
           rsync -am --exclude='openfpga_flow/**' /opt/openfpga/. .
           unset OPENFPGA_PATH
-          source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh
+          source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh --debug --show_thread_logs
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         if: ${{ failure() }}

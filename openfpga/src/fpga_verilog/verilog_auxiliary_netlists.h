@@ -18,20 +18,18 @@
 namespace openfpga {
 
 void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
-                                          const std::string& src_dir,
-                                          const CircuitLibrary& circuit_lib);
+                                          const std::string& src_dir_path,
+                                          const CircuitLibrary& circuit_lib,
+                                          const bool& use_relative_path,
+                                          const bool& include_time_stamp);
 
-void print_verilog_full_testbench_include_netlists(const std::string& src_dir,
+void print_verilog_full_testbench_include_netlists(const std::string& src_dir_path,
                                                    const std::string& circuit_name,
-                                                   const std::string& fabric_netlist_file,
-                                                   const std::string& reference_benchmark_file,
-                                                   const bool& no_self_checking);
+                                                   const VerilogTestbenchOption& options);
 
-void print_verilog_preconfigured_testbench_include_netlists(const std::string& src_dir,
+void print_verilog_preconfigured_testbench_include_netlists(const std::string& src_dir_path,
                                                             const std::string& circuit_name,
-                                                            const std::string& fabric_netlist_file,
-                                                            const std::string& reference_benchmark_file,
-                                                            const bool& no_self_checking);
+                                                            const VerilogTestbenchOption& options);
 
 void print_verilog_preprocessing_flags_netlist(const std::string& src_dir,
                                                const FabricVerilogOption& fabric_verilog_opts);

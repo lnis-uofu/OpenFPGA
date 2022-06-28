@@ -47,6 +47,7 @@ namespace openfpga {
 static 
 void print_pnr_sdc_constrain_configurable_memory_outputs(const std::string& sdc_dir,
                                                          const bool& flatten_names,
+                                                         const bool& include_time_stamp,
                                                          const ModuleManager& module_manager,
                                                          const ModuleId& top_module) {
 
@@ -64,7 +65,7 @@ void print_pnr_sdc_constrain_configurable_memory_outputs(const std::string& sdc_
   check_file_stream(sdc_fname.c_str(), fp);
 
   /* Generate the descriptions*/
-  print_sdc_file_header(fp, std::string("Disable configurable memory outputs for PnR"));
+  print_sdc_file_header(fp, std::string("Disable configurable memory outputs for PnR"), include_time_stamp);
 
   /* Go recursively in the module manager, starting from the top-level module: instance id of the top-level module is 0 by default */
   rec_print_pnr_sdc_disable_configurable_memory_module_output(fp, flatten_names,
@@ -84,6 +85,7 @@ void print_pnr_sdc_constrain_configurable_memory_outputs(const std::string& sdc_
 static 
 void print_pnr_sdc_flatten_routing_disable_switch_block_outputs(const std::string& sdc_dir,
                                                                 const bool& flatten_names,
+                                                                const bool& include_time_stamp,
                                                                 const ModuleManager& module_manager,
                                                                 const ModuleId& top_module,
                                                                 const DeviceRRGSB& device_rr_gsb) {
@@ -101,7 +103,7 @@ void print_pnr_sdc_flatten_routing_disable_switch_block_outputs(const std::strin
   check_file_stream(sdc_fname.c_str(), fp);
 
   /* Generate the descriptions*/
-  print_sdc_file_header(fp, std::string("Disable Switch Block outputs for PnR"));
+  print_sdc_file_header(fp, std::string("Disable Switch Block outputs for PnR"), include_time_stamp);
 
   std::string root_path = format_dir_path(module_manager.module_name(top_module));
 
@@ -201,6 +203,7 @@ void print_pnr_sdc_flatten_routing_disable_switch_block_outputs(const std::strin
 static 
 void print_pnr_sdc_compact_routing_disable_switch_block_outputs(const std::string& sdc_dir,
                                                                 const bool& flatten_names,
+                                                                const bool& include_time_stamp,
                                                                 const ModuleManager& module_manager,
                                                                 const ModuleId& top_module,
                                                                 const DeviceRRGSB& device_rr_gsb) {
@@ -218,7 +221,7 @@ void print_pnr_sdc_compact_routing_disable_switch_block_outputs(const std::strin
   check_file_stream(sdc_fname.c_str(), fp);
 
   /* Generate the descriptions*/
-  print_sdc_file_header(fp, std::string("Disable Switch Block outputs for PnR"));
+  print_sdc_file_header(fp, std::string("Disable Switch Block outputs for PnR"), include_time_stamp);
 
   std::string root_path = format_dir_path(module_manager.module_name(top_module));
 
@@ -335,17 +338,16 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
 
   /* Constrain global ports */
   if (true == sdc_options.constrain_global_port()) {
-    print_pnr_sdc_global_ports(sdc_options.sdc_dir(),
-                               sdc_options.time_unit(),
+    print_pnr_sdc_global_ports(sdc_options,
                                module_manager, top_module, global_ports,
-                               sim_setting,
-                               sdc_options.constrain_non_clock_global_port());
+                               sim_setting);
   }
 
   /* Output Design Constraints to disable outputs of memory cells */
   if (true == sdc_options.constrain_configurable_memory_outputs()) {
     print_pnr_sdc_constrain_configurable_memory_outputs(sdc_options.sdc_dir(),
                                                         sdc_options.flatten_names(),
+                                                        sdc_options.time_stamp(),
                                                         module_manager,
                                                         top_module); 
   } 
@@ -354,6 +356,7 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
   if (true == sdc_options.constrain_routing_multiplexer_outputs()) {
     print_sdc_disable_routing_multiplexer_outputs(sdc_options.sdc_dir(),
                                                   sdc_options.flatten_names(),
+                                                  sdc_options.time_stamp(),
                                                   mux_lib, circuit_lib,
                                                   module_manager,
                                                   top_module);
@@ -364,12 +367,14 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
     if (true == compact_routing_hierarchy) {
       print_pnr_sdc_compact_routing_disable_switch_block_outputs(sdc_options.sdc_dir(),
                                                                  sdc_options.flatten_names(),
+                                                                 sdc_options.time_stamp(),
                                                                  module_manager, top_module,
                                                                  device_rr_gsb);
     } else {
       VTR_ASSERT_SAFE (false == compact_routing_hierarchy);
       print_pnr_sdc_flatten_routing_disable_switch_block_outputs(sdc_options.sdc_dir(),
                                                                  sdc_options.flatten_names(),
+                                                                 sdc_options.time_stamp(),
                                                                  module_manager, top_module,
                                                                  device_rr_gsb);
     }
@@ -378,28 +383,22 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
   /* Output routing constraints for Switch Blocks */
   if (true == sdc_options.constrain_sb()) {
     if (true == compact_routing_hierarchy) {
-      print_pnr_sdc_compact_routing_constrain_sb_timing(sdc_options.sdc_dir(),
-                                                        sdc_options.time_unit(),
-                                                        sdc_options.hierarchical(),
+      print_pnr_sdc_compact_routing_constrain_sb_timing(sdc_options,
                                                         module_manager,
                                                         top_module,
                                                         device_annotation,
                                                         device_ctx.grid,
                                                         device_ctx.rr_graph,
-                                                        device_rr_gsb,
-                                                        sdc_options.constrain_zero_delay_paths());
+                                                        device_rr_gsb);
     } else {
 	  VTR_ASSERT_SAFE (false == compact_routing_hierarchy);
-      print_pnr_sdc_flatten_routing_constrain_sb_timing(sdc_options.sdc_dir(),
-                                                        sdc_options.time_unit(),
-                                                        sdc_options.hierarchical(),
+      print_pnr_sdc_flatten_routing_constrain_sb_timing(sdc_options,
                                                         module_manager,
                                                         top_module,
                                                         device_annotation,
                                                         device_ctx.grid,
                                                         device_ctx.rr_graph,
-                                                        device_rr_gsb,
-                                                        sdc_options.constrain_zero_delay_paths());
+                                                        device_rr_gsb);
     }
   }
 
@@ -416,28 +415,22 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
   /* Output routing constraints for Connection Blocks */
   if (true == sdc_options.constrain_cb()) {
     if (true == compact_routing_hierarchy) {
-      print_pnr_sdc_compact_routing_constrain_cb_timing(sdc_options.sdc_dir(),
-                                                        sdc_options.time_unit(),
-                                                        sdc_options.hierarchical(),
+      print_pnr_sdc_compact_routing_constrain_cb_timing(sdc_options,
                                                         module_manager,
                                                         top_module,
                                                         device_annotation,
                                                         device_ctx.grid,
                                                         device_ctx.rr_graph,
-                                                        device_rr_gsb,
-                                                        sdc_options.constrain_zero_delay_paths());
+                                                        device_rr_gsb);
     } else {
 	  VTR_ASSERT_SAFE (false == compact_routing_hierarchy);
-      print_pnr_sdc_flatten_routing_constrain_cb_timing(sdc_options.sdc_dir(),
-                                                        sdc_options.time_unit(),
-                                                        sdc_options.hierarchical(),
+      print_pnr_sdc_flatten_routing_constrain_cb_timing(sdc_options,
                                                         module_manager, 
                                                         top_module,
                                                         device_annotation,
                                                         device_ctx.grid,
                                                         device_ctx.rr_graph,
-                                                        device_rr_gsb,
-                                                        sdc_options.constrain_zero_delay_paths());
+                                                        device_rr_gsb);
     }
   }
 
@@ -460,14 +453,11 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
 
   /* Output Timing constraints for Programmable blocks */
   if (true == sdc_options.constrain_grid()) {
-    print_pnr_sdc_constrain_grid_timing(sdc_options.sdc_dir(),
-                                        sdc_options.time_unit(),
-                                        sdc_options.hierarchical(),
+    print_pnr_sdc_constrain_grid_timing(sdc_options,
                                         device_ctx,
                                         device_annotation,
                                         module_manager,
-                                        top_module,
-                                        sdc_options.constrain_zero_delay_paths());
+                                        top_module);
   }
 
   if ( (true == sdc_options.constrain_grid())

@@ -14,9 +14,10 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-int report_architecture_bitstream_distribution(const BitstreamManager& bitstream_manager,
-                                               const std::string& fname,
-                                               const size_t& max_hierarchy_level = 1);
+int report_architecture_bitstream_distribution(std::fstream& fp,
+                                               const BitstreamManager& bitstream_manager,
+                                               const size_t& max_hierarchy_level,
+                                               const size_t& hierarchy_level);
 
 } /* end namespace openfpga */
 

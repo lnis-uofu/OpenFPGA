@@ -87,6 +87,13 @@ size_t DeviceRRGSB::get_num_gsb_unique_module() const {
 } 
 
 /* Get a rr switch block which a unique mirror */ 
+const RRGSB& DeviceRRGSB::get_gsb_unique_module(const size_t& index) const {
+  VTR_ASSERT (validate_gsb_unique_module_index(index));
+  
+  return rr_gsb_[gsb_unique_module_[index].x()][gsb_unique_module_[index].y()];
+}
+
+/* Get a rr switch block which a unique mirror */ 
 const RRGSB& DeviceRRGSB::get_sb_unique_module(const size_t& index) const {
   VTR_ASSERT (validate_sb_unique_module_index(index));
   
@@ -460,6 +467,11 @@ bool DeviceRRGSB::validate_coordinate(const vtr::Point<size_t>& coordinate) cons
   }
   return (coordinate.y() < rr_gsb_[coordinate.x()].capacity());
 } 
+
+/* Validate if the index in the range of unique_mirror vector*/
+bool DeviceRRGSB::validate_gsb_unique_module_index(const size_t& index) const { 
+  return (index < gsb_unique_module_.size());
+}
 
 /* Validate if the index in the range of unique_mirror vector*/
 bool DeviceRRGSB::validate_sb_unique_module_index(const size_t& index) const { 

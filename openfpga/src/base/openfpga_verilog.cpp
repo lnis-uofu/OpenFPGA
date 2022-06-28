@@ -17,6 +17,9 @@
 /* Headers from pcf library */
 #include "read_xml_pin_constraints.h"
 
+/* Headers from bgf library */
+#include "read_xml_bus_group.h"
+
 /* Include global variables of VPR */
 #include "globals.h"
 
@@ -34,6 +37,8 @@ int write_fabric_verilog(OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_include_timing = cmd.option("include_timing");
   CommandOptionId opt_print_user_defined_template = cmd.option("print_user_defined_template");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
+  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
+  CommandOptionId opt_use_relative_path = cmd.option("use_relative_path");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
@@ -43,6 +48,8 @@ int write_fabric_verilog(OpenfpgaContext& openfpga_ctx,
   options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
   options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
   options.set_include_timing(cmd_context.option_enable(cmd, opt_include_timing));
+  options.set_time_stamp(!cmd_context.option_enable(cmd, opt_no_time_stamp));
+  options.set_use_relative_path(cmd_context.option_enable(cmd, opt_use_relative_path));
   options.set_print_user_defined_template(cmd_context.option_enable(cmd, opt_print_user_defined_template));
   if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
     options.set_default_net_type(cmd_context.option_value(cmd, opt_default_net_type));
@@ -75,11 +82,14 @@ int write_full_testbench(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_bitstream = cmd.option("bitstream");
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
+  CommandOptionId opt_bgf = cmd.option("bus_group_file");
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
   CommandOptionId opt_fast_configuration = cmd.option("fast_configuration");
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
   CommandOptionId opt_include_signal_init = cmd.option("include_signal_init");
+  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
+  CommandOptionId opt_use_relative_path = cmd.option("use_relative_path");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
@@ -92,6 +102,8 @@ int write_full_testbench(const OpenfpgaContext& openfpga_ctx,
   options.set_fast_configuration(cmd_context.option_enable(cmd, opt_fast_configuration));
   options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
+  options.set_time_stamp(!cmd_context.option_enable(cmd, opt_no_time_stamp));
+  options.set_use_relative_path(cmd_context.option_enable(cmd, opt_use_relative_path));
   options.set_print_top_testbench(true);
   options.set_include_signal_init(cmd_context.option_enable(cmd, opt_include_signal_init));
   if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
@@ -103,6 +115,12 @@ int write_full_testbench(const OpenfpgaContext& openfpga_ctx,
   if (true == cmd_context.option_enable(cmd, opt_pcf)) {
     pin_constraints = read_xml_pin_constraints(cmd_context.option_value(cmd, opt_pcf).c_str());
   }
+
+  /* If bug group file are enabled by command options, read the file */
+  BusGroup bus_group;
+  if (true == cmd_context.option_enable(cmd, opt_bgf)) {
+    bus_group = read_xml_bus_group(cmd_context.option_value(cmd, opt_bgf).c_str());
+  }
   
   return fpga_verilog_full_testbench(openfpga_ctx.module_graph(),
                                      openfpga_ctx.bitstream_manager(),
@@ -111,6 +129,7 @@ int write_full_testbench(const OpenfpgaContext& openfpga_ctx,
                                      g_vpr_ctx.atom(),
                                      g_vpr_ctx.placement(),
                                      pin_constraints,
+                                     bus_group,
                                      cmd_context.option_value(cmd, opt_bitstream),
                                      openfpga_ctx.io_location_map(),
                                      openfpga_ctx.fabric_global_port_info(),
@@ -130,10 +149,12 @@ int write_preconfigured_fabric_wrapper(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
+  CommandOptionId opt_bgf = cmd.option("bus_group_file");
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
   CommandOptionId opt_include_signal_init = cmd.option("include_signal_init");
   CommandOptionId opt_embed_bitstream = cmd.option("embed_bitstream");
+  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
@@ -143,6 +164,7 @@ int write_preconfigured_fabric_wrapper(const OpenfpgaContext& openfpga_ctx,
   options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
   options.set_fabric_netlist_file_path(cmd_context.option_value(cmd, opt_fabric_netlist));
   options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
+  options.set_time_stamp(!cmd_context.option_enable(cmd, opt_no_time_stamp));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_include_signal_init(cmd_context.option_enable(cmd, opt_include_signal_init));
   options.set_print_formal_verification_top_netlist(true);
@@ -160,12 +182,19 @@ int write_preconfigured_fabric_wrapper(const OpenfpgaContext& openfpga_ctx,
   if (true == cmd_context.option_enable(cmd, opt_pcf)) {
     pin_constraints = read_xml_pin_constraints(cmd_context.option_value(cmd, opt_pcf).c_str());
   }
+
+  /* If bug group file are enabled by command options, read the file */
+  BusGroup bus_group;
+  if (true == cmd_context.option_enable(cmd, opt_bgf)) {
+    bus_group = read_xml_bus_group(cmd_context.option_value(cmd, opt_bgf).c_str());
+  }
   
   return fpga_verilog_preconfigured_fabric_wrapper(openfpga_ctx.module_graph(),
                                                    openfpga_ctx.bitstream_manager(),
                                                    g_vpr_ctx.atom(),
                                                    g_vpr_ctx.placement(),
                                                    pin_constraints,
+                                                   bus_group,
                                                    openfpga_ctx.io_location_map(),
                                                    openfpga_ctx.fabric_global_port_info(),
                                                    openfpga_ctx.vpr_netlist_annotation(),
@@ -182,10 +211,13 @@ int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
 
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
+  CommandOptionId opt_bgf = cmd.option("bus_group_file");
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_reference_benchmark = cmd.option("reference_benchmark_file_path");
   CommandOptionId opt_explicit_port_mapping = cmd.option("explicit_port_mapping");
   CommandOptionId opt_default_net_type = cmd.option("default_net_type");
+  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
+  CommandOptionId opt_use_relative_path = cmd.option("use_relative_path");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-Verilog
@@ -196,6 +228,8 @@ int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
   options.set_fabric_netlist_file_path(cmd_context.option_value(cmd, opt_fabric_netlist));
   options.set_reference_benchmark_file_path(cmd_context.option_value(cmd, opt_reference_benchmark));
   options.set_explicit_port_mapping(cmd_context.option_enable(cmd, opt_explicit_port_mapping));
+  options.set_time_stamp(!cmd_context.option_enable(cmd, opt_no_time_stamp));
+  options.set_use_relative_path(cmd_context.option_enable(cmd, opt_use_relative_path));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_print_preconfig_top_testbench(true);
   if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
@@ -207,10 +241,17 @@ int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
   if (true == cmd_context.option_enable(cmd, opt_pcf)) {
     pin_constraints = read_xml_pin_constraints(cmd_context.option_value(cmd, opt_pcf).c_str());
   }
+
+  /* If bug group file are enabled by command options, read the file */
+  BusGroup bus_group;
+  if (true == cmd_context.option_enable(cmd, opt_bgf)) {
+    bus_group = read_xml_bus_group(cmd_context.option_value(cmd, opt_bgf).c_str());
+  }
   
   return fpga_verilog_preconfigured_testbench(openfpga_ctx.module_graph(),
                                               g_vpr_ctx.atom(),
                                               pin_constraints,
+                                              bus_group,
                                               openfpga_ctx.fabric_global_port_info(),
                                               openfpga_ctx.vpr_netlist_annotation(),
                                               openfpga_ctx.simulation_setting(),

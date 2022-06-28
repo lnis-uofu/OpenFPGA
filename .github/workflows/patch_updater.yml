@@ -5,7 +5,8 @@ on:
     - cron: '0 0 * * *'
 
 env:
-  TAG_COMMIT: 49a8273..
+  TAG_COMMIT: 781ea3f..
+  VERSION_FILE: VERSION.md
   BRANCH_NAME: patch_update
 
 jobs:
@@ -28,10 +29,10 @@ jobs:
       - name: Insert Patch Count
         if: "!contains(steps.log.outputs.message, 'Updated Patch Count') && contains(steps.repo.outputs.message, 'lnis-uofu/OpenFPGA')"
         run: |
-          sed -i "/^set(OPENFPGA_VERSION_PATCH /s/[0-9]*)/`git log ${TAG_COMMIT}  --oneline | wc -l`)/" CMakeLists.txt
+          sed -i "s/[0-9]*$/`git log ${TAG_COMMIT}  --oneline | wc -l`/" ${VERSION_FILE}
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add CMakeLists.txt
+          git add ${VERSION_FILE}
           git commit -m "Updated Patch Count"
 
       - name: Push changes # push the output folder to your repo

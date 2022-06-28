@@ -9,6 +9,7 @@
 #include "module_manager.h"
 #include "fabric_global_port_info.h"
 #include "simulation_setting.h"
+#include "pnr_sdc_option.h"
 
 /********************************************************************
  * Function declaration
@@ -17,13 +18,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_pnr_sdc_global_ports(const std::string& sdc_dir, 
-                                const float& time_unit,
+void print_pnr_sdc_global_ports(const PnrSdcOption& options,
                                 const ModuleManager& module_manager,
                                 const ModuleId& top_module,
                                 const FabricGlobalPortInfo& global_ports,
-                                const SimulationSetting& sim_setting,
-                                const bool& constrain_non_clock_port);
+                                const SimulationSetting& sim_setting);
 
 } /* end namespace openfpga */
 

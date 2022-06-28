@@ -18,6 +18,7 @@ namespace openfpga {
 
 int write_io_mapping_to_xml_file(const IoMap& io_map,
                                  const std::string& fname,
+                                 const bool& include_time_stamp,
                                  const bool& verbose);
 
 } /* end namespace openfpga */

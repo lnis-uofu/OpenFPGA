@@ -10,6 +10,7 @@
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
 #include "vtr_log.h"
+#include "vtr_time.h"
 
 /* Headers from openfpgautil library */
 #include "openfpga_reserved_words.h"
@@ -506,6 +507,7 @@ MemoryBankShiftRegisterFabricBitstream build_memory_bank_shift_register_fabric_b
                                                                                          const bool& fast_configuration,
                                                                                          const bool& bit_value_to_skip,
                                                                                          const char& dont_care_bit) {
+  vtr::ScopedStartFinishTimer timer("Reshape fabric bitstream for memory bank using shift registers");
   MemoryBankFlattenFabricBitstream raw_fabric_bits = build_memory_bank_flatten_fabric_bitstream(fabric_bitstream, fast_configuration, bit_value_to_skip, dont_care_bit);
   MemoryBankShiftRegisterFabricBitstream fabric_bits; 
 

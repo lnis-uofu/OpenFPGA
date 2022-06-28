@@ -5,6 +5,10 @@ module counter(clk_counter, q_counter, rst_counter);
     output [7:0] q_counter;
     reg [7:0] q_counter;
 
+    initial begin
+      q_counter <= 0;
+    end
+
     always @ (posedge clk_counter)
     begin
         if(rst_counter)

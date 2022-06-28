@@ -31,19 +31,26 @@ namespace openfpga {
  * Some netlists are open to compile under specific preprocessing flags
  *******************************************************************/
 void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
-                                          const std::string& src_dir,
-                                          const CircuitLibrary& circuit_lib) {
-  std::string verilog_fname = src_dir + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME);
+                                          const std::string& src_dir_path,
+                                          const CircuitLibrary& circuit_lib,
+                                          const bool& use_relative_path,
+                                          const bool& include_time_stamp) {
+  /* If we force the use of relative path, the src dir path should NOT be included in any output */
+  std::string src_dir = src_dir_path;
+  if (use_relative_path) {
+    src_dir.clear();
+  }
+  std::string verilog_fpath = src_dir_path + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME);
 
   /* Create the file stream */
   std::fstream fp;
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
 
   /* Validate the file stream */
-  check_file_stream(verilog_fname.c_str(), fp);
+  check_file_stream(verilog_fpath.c_str(), fp);
 
   /* Print the title */
-  print_verilog_file_header(fp, std::string("Fabric Netlist Summary")); 
+  print_verilog_file_header(fp, std::string("Fabric Netlist Summary"), include_time_stamp); 
 
   /* Print preprocessing flags */
   print_verilog_comment(fp, std::string("------ Include defines: preproc flags -----"));
@@ -94,12 +101,13 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
  * that have been generated and user-defined.
  * Some netlists are open to compile under specific preprocessing flags
  *******************************************************************/
-void print_verilog_full_testbench_include_netlists(const std::string& src_dir,
+void print_verilog_full_testbench_include_netlists(const std::string& src_dir_path,
                                                    const std::string& circuit_name,
-                                                   const std::string& fabric_netlist_file,
-                                                   const std::string& reference_benchmark_file,
-                                                   const bool& no_self_checking) {
-  std::string verilog_fname = src_dir + circuit_name + std::string(TOP_VERILOG_TESTBENCH_INCLUDE_NETLIST_FILE_NAME_POSTFIX);
+                                                   const VerilogTestbenchOption& options) {
+  std::string verilog_fname = src_dir_path + circuit_name + std::string(TOP_VERILOG_TESTBENCH_INCLUDE_NETLIST_FILE_NAME_POSTFIX);
+  std::string fabric_netlist_file = options.fabric_netlist_file_path();
+  std::string reference_benchmark_file = options.reference_benchmark_file_path();
+  bool no_self_checking = options.no_self_checking();
 
   /* Create the file stream */
   std::fstream fp;
@@ -109,7 +117,13 @@ void print_verilog_full_testbench_include_netlists(const std::string& src_dir,
   check_file_stream(verilog_fname.c_str(), fp);
 
   /* Print the title */
-  print_verilog_file_header(fp, std::string("Netlist Summary")); 
+  print_verilog_file_header(fp, std::string("Netlist Summary"), options.time_stamp()); 
+
+  /* If relative path is forced, we do not include an src_dir_path in the netlist */
+  std::string src_dir = src_dir_path;
+  if (options.use_relative_path()) {
+    src_dir.clear();
+  }
 
   /* Include FPGA top module */
   print_verilog_comment(fp, std::string("------ Include fabric top-level netlists -----"));
@@ -140,12 +154,13 @@ void print_verilog_full_testbench_include_netlists(const std::string& src_dir,
  * that have been generated and user-defined.
  * Some netlists are open to compile under specific preprocessing flags
  *******************************************************************/
-void print_verilog_preconfigured_testbench_include_netlists(const std::string& src_dir,
+void print_verilog_preconfigured_testbench_include_netlists(const std::string& src_dir_path,
                                                             const std::string& circuit_name,
-                                                            const std::string& fabric_netlist_file,
-                                                            const std::string& reference_benchmark_file,
-                                                            const bool& no_self_checking) {
-  std::string verilog_fname = src_dir + circuit_name + std::string(TOP_VERILOG_TESTBENCH_INCLUDE_NETLIST_FILE_NAME_POSTFIX);
+                                                            const VerilogTestbenchOption& options) {
+  std::string verilog_fname = src_dir_path + circuit_name + std::string(TOP_VERILOG_TESTBENCH_INCLUDE_NETLIST_FILE_NAME_POSTFIX);
+  std::string fabric_netlist_file = options.fabric_netlist_file_path();
+  std::string reference_benchmark_file = options.reference_benchmark_file_path();
+  bool no_self_checking = options.no_self_checking();
 
   /* Create the file stream */
   std::fstream fp;
@@ -155,7 +170,13 @@ void print_verilog_preconfigured_testbench_include_netlists(const std::string& s
   check_file_stream(verilog_fname.c_str(), fp);
 
   /* Print the title */
-  print_verilog_file_header(fp, std::string("Netlist Summary")); 
+  print_verilog_file_header(fp, std::string("Netlist Summary"), options.time_stamp()); 
+
+  /* If relative path is forced, we do not include an src_dir_path in the netlist */
+  std::string src_dir = src_dir_path;
+  if (options.use_relative_path()) {
+    src_dir.clear();
+  }
 
   /* Include FPGA top module */
   print_verilog_comment(fp, std::string("------ Include fabric top-level netlists -----"));
@@ -200,7 +221,9 @@ void print_verilog_preprocessing_flags_netlist(const std::string& src_dir,
   check_file_stream(verilog_fname.c_str(), fp);
 
   /* Print the title */
-  print_verilog_file_header(fp, std::string("Preprocessing flags to enable/disable features in FPGA Verilog modules")); 
+  print_verilog_file_header(fp,
+                            std::string("Preprocessing flags to enable/disable features in FPGA Verilog modules"),
+                            fabric_verilog_opts.time_stamp()); 
 
   /* To enable timing */
   if (true == fabric_verilog_opts.include_timing()) {

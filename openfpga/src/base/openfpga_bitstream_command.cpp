@@ -57,6 +57,8 @@ ShellCommandId add_openfpga_build_arch_bitstream_command(openfpga::Shell<Openfpg
   CommandOptionId opt_read_file = shell_cmd.add_option("read_file", false, "file path to read the bitstream database");
   shell_cmd.set_option_require_value(opt_read_file, openfpga::OPT_STRING);
 
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false, "Do not print time stamp in output files");
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
@@ -91,6 +93,9 @@ ShellCommandId add_openfpga_report_bitstream_distribution_command(openfpga::Shel
   /* Add an option '--depth' */
   CommandOptionId opt_depth = shell_cmd.add_option("depth", false, "Specify the max. depth of blocks which will appear in report");
   shell_cmd.set_option_require_value(opt_depth, openfpga::OPT_STRING);
+
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false, "Do not print time stamp in output files");
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
@@ -157,6 +162,9 @@ ShellCommandId add_openfpga_write_fabric_bitstream_command(openfpga::Shell<Openf
   /* Add an option '--keep_dont_care_bit' */
   shell_cmd.add_option("keep_dont_care_bits", false, "Keep don't care bits in bitstream file; If not enabled, don't care bits are converted to logic '0' or '1'");
 
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false, "Do not print time stamp in output files");
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
 
@@ -186,6 +194,9 @@ ShellCommandId add_openfpga_write_io_mapping_command(openfpga::Shell<OpenfpgaCon
   CommandOptionId opt_file = shell_cmd.add_option("file", true, "file path to output the io mapping information");
   shell_cmd.set_option_short_name(opt_file, "f");
   shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false, "Do not print time stamp in output files");
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");

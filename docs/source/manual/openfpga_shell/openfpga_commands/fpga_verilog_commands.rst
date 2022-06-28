@@ -23,10 +23,18 @@ write_fabric_verilog
   .. option:: --include_timing
 
     Output timing information to Verilog netlists for primitive modules
+
+  .. option:: --use_relative_path
+
+    Force to use relative path in netlists when including other netlists. By default, this is off, which means that netlists use absolute paths when including other netlists
  
   .. option:: --print_user_defined_template
 
     Output a template Verilog netlist for all the user-defined ``circuit models`` in :ref:`circuit_library`. This aims to help engineers to check what is the port sequence required by top-level Verilog netlists
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in Verilog netlists
 
   .. option:: --verbose
 
@@ -60,6 +68,11 @@ write_full_testbench
     Specify the *Pin Constraints File* (PCF) if you want to custom stimulus in testbenches. For example, ``-pin_constraints_file pin_constraints.xml``
     Strongly recommend for multi-clock simulations. See detailed file format about :ref:`file_format_pin_constraints_file`.
 
+  .. option:: --bus_group_file <string> or -bgf <string>
+
+    Specify the *Bus Group File* (BGF) if you want to group pins to buses. For example, ``-bgf bus_group.xml``
+    Strongly recommend when input HDL contains bus ports. See detailed file format about :ref:`file_format_bus_group_file`.
+
   .. option:: --fast_configuration
 
     Enable fast configuration phase for the top-level testbench in order to reduce runtime of simulations. It is applicable to configuration chain, memory bank and frame-based configuration protocols. For configuration chain, when enabled, the zeros at the head of the bitstream will be skipped. For memory bank and frame-based, when enabled, all the zero configuration bits will be skipped. So ensure that your memory cells can be correctly reset to zero with a reset signal. 
@@ -82,6 +95,13 @@ write_full_testbench
 
    .. warning:: Signal initialization is only applied to the datapath inputs of routing multiplexers (considering the fact that they are indispensible cells of FPGAs)! If your FPGA does not contain any multiplexer cells, signal initialization is not applicable.
 
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in Verilog netlists
+
+  .. option:: --use_relative_path
+
+    Force to use relative path in netlists when including other netlists. By default, this is off, which means that netlists use absolute paths when including other netlists
 
   .. option:: --verbose
 
@@ -104,6 +124,11 @@ write_preconfigured_fabric_wrapper
 
     Specify the *Pin Constraints File* (PCF) if you want to custom stimulus in testbenches. For example, ``-pin_constraints_file pin_constraints.xml``
     Strongly recommend for multi-clock simulations. See detailed file format about :ref:`file_format_pin_constraints_file`.
+
+  .. option:: --bus_group_file <string> or -bgf <string>
+
+    Specify the *Bus Group File* (BGF) if you want to group pins to buses. For example, ``-bgf bus_group.xml``
+    Strongly recommend when input HDL contains bus ports. See detailed file format about :ref:`file_format_bus_group_file`.
 
   .. option:: --explicit_port_mapping
 
@@ -133,6 +158,10 @@ __ iverilog_website_
 
    .. warning:: Signal initialization is only applied to the datapath inputs of routing multiplexers (considering the fact that they are indispensible cells of FPGAs)! If your FPGA does not contain any multiplexer cells, signal initialization is not applicable.
 
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in Verilog netlists
+
   .. option:: --verbose
 
     Show verbose log
@@ -161,6 +190,11 @@ write_preconfigured_testbench
     Specify the *Pin Constraints File* (PCF) if you want to custom stimulus in testbenches. For example, ``-pin_constraints_file pin_constraints.xml``
     Strongly recommend for multi-clock simulations. See detailed file format about :ref:`file_format_pin_constraints_file`.
 
+  .. option:: --bus_group_file <string> or -bgf <string>
+
+    Specify the *Bus Group File* (BGF) if you want to group pins to buses. For example, ``-bgf bus_group.xml``
+    Strongly recommend when input HDL contains bus ports. See detailed file format about :ref:`file_format_bus_group_file`.
+
   .. option:: --explicit_port_mapping
 
     Use explicit port mapping when writing the Verilog netlists
@@ -168,6 +202,14 @@ write_preconfigured_testbench
   .. option:: --default_net_type <string>
 
     Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in Verilog netlists
+
+  .. option:: --use_relative_path
+
+    Force to use relative path in netlists when including other netlists. By default, this is off, which means that netlists use absolute paths when including other netlists
 
   .. option:: --verbose
 

@@ -14,6 +14,7 @@
 #include "io_location_map.h"
 #include "fabric_global_port_info.h"
 #include "config_protocol.h"
+#include "bus_group.h"
 #include "vpr_netlist_annotation.h"
 #include "verilog_testbench_options.h"
 
@@ -32,6 +33,7 @@ int print_verilog_preconfig_top_module(const ModuleManager& module_manager,
                                        const AtomContext& atom_ctx,
                                        const PlacementContext& place_ctx,
                                        const PinConstraints& pin_constraints,
+                                       const BusGroup& bus_group,
                                        const IoLocationMap& io_location_map,
                                        const VprNetlistAnnotation& netlist_annotation,
                                        const std::string& circuit_name,

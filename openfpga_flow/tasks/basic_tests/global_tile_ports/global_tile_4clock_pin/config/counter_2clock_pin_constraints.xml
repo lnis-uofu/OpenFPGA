@@ -1,0 +1,12 @@
+<pin_constraints>
+  <!-- For a given .blif file, we want to assign 
+       - the clk0 signal to the clk[0] port of the FPGA fabric
+       - the clk1 signal to the clk[1] port of the FPGA fabric
+    -->
+  <set_io pin="clk0" net="OPEN"/>
+  <set_io pin="clk1" net="OPEN"/>
+  <set_io pin="clk2" net="clk0"/>
+  <set_io pin="clk3" net="clk1"/>
+  <set_io pin="reset[0]" net="rst"/>
+</pin_constraints>
+

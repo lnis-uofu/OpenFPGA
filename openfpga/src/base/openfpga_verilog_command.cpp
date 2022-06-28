@@ -40,6 +40,12 @@ ShellCommandId add_openfpga_write_fabric_verilog_command(openfpga::Shell<Openfpg
   CommandOptionId default_net_type_opt = shell_cmd.add_option("default_net_type", false, "Set the default net type for Verilog netlists. Default value is 'none'");
   shell_cmd.set_option_require_value(default_net_type_opt, openfpga::OPT_STRING);
 
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false, "Do not print a time stamp in the output files");
+
+  /* Add an option '--use_relative_path' */
+  shell_cmd.add_option("use_relative_path", false, "Force to use relative path in netlists when including other netlists");
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
   
@@ -83,6 +89,11 @@ ShellCommandId add_openfpga_write_full_testbench_command(openfpga::Shell<Openfpg
   shell_cmd.set_option_short_name(pcf_opt, "pcf");
   shell_cmd.set_option_require_value(pcf_opt, openfpga::OPT_STRING);
 
+  /* add an option '--bus_group_file in short '-bgf' */
+  CommandOptionId bgf_opt = shell_cmd.add_option("bus_group_file", false, "specify the file path to the group pins to bus");
+  shell_cmd.set_option_short_name(bgf_opt, "bgf");
+  shell_cmd.set_option_require_value(bgf_opt, openfpga::OPT_STRING);
+
   /* add an option '--reference_benchmark_file_path'*/
   CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", false, "specify the file path to the reference verilog netlist. If specified, the testbench will include self-checking codes");
   shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);
@@ -102,6 +113,12 @@ ShellCommandId add_openfpga_write_full_testbench_command(openfpga::Shell<Openfpg
 
   /* add an option '--include_signal_init' */
   shell_cmd.add_option("include_signal_init", false, "initialize all the signals in verilog testbenches");
+
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false, "Do not print a time stamp in the output files");
+
+  /* Add an option '--use_relative_path' */
+  shell_cmd.add_option("use_relative_path", false, "Force to use relative path in netlists when including other netlists");
 
   /* add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "enable verbose output");
@@ -142,6 +159,11 @@ ShellCommandId add_openfpga_write_preconfigured_fabric_wrapper_command(openfpga:
   shell_cmd.set_option_short_name(pcf_opt, "pcf");
   shell_cmd.set_option_require_value(pcf_opt, openfpga::OPT_STRING);
 
+  /* add an option '--bus_group_file in short '-bgf' */
+  CommandOptionId bgf_opt = shell_cmd.add_option("bus_group_file", false, "specify the file path to the group pins to bus");
+  shell_cmd.set_option_short_name(bgf_opt, "bgf");
+  shell_cmd.set_option_require_value(bgf_opt, openfpga::OPT_STRING);
+
   /* add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false, "use explicit port mapping in verilog netlists");
 
@@ -155,6 +177,9 @@ ShellCommandId add_openfpga_write_preconfigured_fabric_wrapper_command(openfpga:
 
   /* add an option '--include_signal_init' */
   shell_cmd.add_option("include_signal_init", false, "initialize all the signals in verilog testbenches");
+
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false, "Do not print a time stamp in the output files");
 
   /* add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "enable verbose output");
@@ -195,6 +220,11 @@ ShellCommandId add_openfpga_write_preconfigured_testbench_command(openfpga::Shel
   shell_cmd.set_option_short_name(pcf_opt, "pcf");
   shell_cmd.set_option_require_value(pcf_opt, openfpga::OPT_STRING);
 
+  /* add an option '--bus_group_file in short '-bgf' */
+  CommandOptionId bgf_opt = shell_cmd.add_option("bus_group_file", false, "specify the file path to the group pins to bus");
+  shell_cmd.set_option_short_name(bgf_opt, "bgf");
+  shell_cmd.set_option_require_value(bgf_opt, openfpga::OPT_STRING);
+
   /* Add an option '--reference_benchmark_file_path'*/
   CommandOptionId ref_bm_opt = shell_cmd.add_option("reference_benchmark_file_path", false, "Specify the file path to the reference Verilog netlist. If specified, the testbench will include self-checking codes");
   shell_cmd.set_option_require_value(ref_bm_opt, openfpga::OPT_STRING);
@@ -205,6 +235,12 @@ ShellCommandId add_openfpga_write_preconfigured_testbench_command(openfpga::Shel
   /* Add an option '--default_net_type' */
   CommandOptionId default_net_type_opt = shell_cmd.add_option("default_net_type", false, "Set the default net type for Verilog netlists. Default value is 'none'");
   shell_cmd.set_option_require_value(default_net_type_opt, openfpga::OPT_STRING);
+
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false, "Do not print a time stamp in the output files");
+
+  /* Add an option '--use_relative_path' */
+  shell_cmd.add_option("use_relative_path", false, "Force to use relative path in netlists when including other netlists");
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");

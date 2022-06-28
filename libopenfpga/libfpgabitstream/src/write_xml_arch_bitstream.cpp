@@ -27,17 +27,21 @@ namespace openfpga {
  * This function write header information to a bitstream file
  *******************************************************************/
 static 
-void write_bitstream_xml_file_head(std::fstream& fp) {
+void write_bitstream_xml_file_head(std::fstream& fp,
+                                   const bool& include_time_stamp) {
   valid_file_stream(fp);
  
-  auto end = std::chrono::system_clock::now(); 
-  std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-
   fp << "<!--" << std::endl;
   fp << "\t- Architecture independent bitstream" << std::endl;
   fp << "\t- Author: Xifan TANG" << std::endl;
   fp << "\t- Organization: University of Utah" << std::endl;
-  fp << "\t- Date: " << std::ctime(&end_time) ;
+
+  if (include_time_stamp) {
+    auto end = std::chrono::system_clock::now(); 
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+    fp << "\t- Date: " << std::ctime(&end_time) ;
+  }
+
   fp << "-->" << std::endl;
   fp << std::endl;
 }
@@ -172,7 +176,8 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
  * 3. TODO: support FASM format 
  *******************************************************************/
 void write_xml_architecture_bitstream(const BitstreamManager& bitstream_manager,
-                                      const std::string& fname) {
+                                      const std::string& fname,
+                                      const bool& include_time_stamp) {
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
     VTR_LOG_ERROR("Received empty file name to output bitstream!\n\tPlease specify a valid file name.\n");
@@ -188,7 +193,7 @@ void write_xml_architecture_bitstream(const BitstreamManager& bitstream_manager,
   check_file_stream(fname.c_str(), fp);
 
   /* Put down a brief introduction */
-  write_bitstream_xml_file_head(fp);
+  write_bitstream_xml_file_head(fp, include_time_stamp);
 
   /* Find the top block, which has not parents */
   std::vector<ConfigBlockId> top_block = find_bitstream_manager_top_blocks(bitstream_manager);

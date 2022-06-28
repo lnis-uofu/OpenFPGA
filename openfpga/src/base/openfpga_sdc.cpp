@@ -45,6 +45,7 @@ int write_pnr_sdc(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_constrain_routing_multiplexer_outputs = cmd.option("constrain_routing_multiplexer_outputs");
   CommandOptionId opt_constrain_switch_block_outputs = cmd.option("constrain_switch_block_outputs");
   CommandOptionId opt_constrain_zero_delay_paths = cmd.option("constrain_zero_delay_paths");
+  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-SDC
    * Keep it independent from any other outside data structures
@@ -74,6 +75,7 @@ int write_pnr_sdc(const OpenfpgaContext& openfpga_ctx,
   options.set_constrain_routing_multiplexer_outputs(cmd_context.option_enable(cmd, opt_constrain_routing_multiplexer_outputs));
   options.set_constrain_switch_block_outputs(cmd_context.option_enable(cmd, opt_constrain_switch_block_outputs));
   options.set_constrain_zero_delay_paths(cmd_context.option_enable(cmd, opt_constrain_zero_delay_paths));
+  options.set_time_stamp(!cmd_context.option_enable(cmd, opt_no_time_stamp));
 
   /* We first turn on default sdc option and then disable part of them by following users' options */
   if (false == options.generate_sdc_pnr()) {
@@ -118,6 +120,7 @@ int write_configuration_chain_sdc(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_time_unit = cmd.option("time_unit");
   CommandOptionId opt_min_delay = cmd.option("min_delay");
   CommandOptionId opt_max_delay = cmd.option("max_delay");
+  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
 
   std::string sdc_dir_path = format_dir_path(cmd_context.option_value(cmd, opt_output_dir));
 
@@ -128,6 +131,7 @@ int write_configuration_chain_sdc(const OpenfpgaContext& openfpga_ctx,
                                              time_unit,
                                              std::stof(cmd_context.option_value(cmd, opt_max_delay)),
                                              std::stof(cmd_context.option_value(cmd, opt_min_delay)),
+                                             !cmd_context.option_enable(cmd, opt_no_time_stamp),
                                              openfpga_ctx.module_graph());
 
   return CMD_EXEC_SUCCESS;
@@ -143,6 +147,7 @@ int write_sdc_disable_timing_configure_ports(const OpenfpgaContext& openfpga_ctx
   /* Get command options */
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_flatten_names = cmd.option("flatten_names");
+  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   std::string sdc_dir_path = format_dir_path(cmd_context.option_value(cmd, opt_output_dir));
@@ -154,6 +159,7 @@ int write_sdc_disable_timing_configure_ports(const OpenfpgaContext& openfpga_ctx
                                                  openfpga_ctx.mux_lib(),
                                                  openfpga_ctx.arch().circuit_lib,
                                                  openfpga_ctx.module_graph(),
+                                                 !cmd_context.option_enable(cmd, opt_no_time_stamp),
                                                  cmd_context.option_enable(cmd, opt_verbose))) {
     return CMD_EXEC_FATAL_ERROR;
   }
@@ -170,6 +176,7 @@ int write_analysis_sdc(const OpenfpgaContext& openfpga_ctx,
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_flatten_names = cmd.option("flatten_names");
   CommandOptionId opt_time_unit = cmd.option("time_unit");
+  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
 
   /* This is an intermediate data structure which is designed to modularize the FPGA-SDC
    * Keep it independent from any other outside data structures
@@ -182,6 +189,7 @@ int write_analysis_sdc(const OpenfpgaContext& openfpga_ctx,
   AnalysisSdcOption options(sdc_dir_path);
   options.set_generate_sdc_analysis(true);
   options.set_flatten_names(cmd_context.option_enable(cmd, opt_flatten_names));
+  options.set_time_stamp(!cmd_context.option_enable(cmd, opt_no_time_stamp));
 
   if (true == cmd_context.option_enable(cmd, opt_time_unit)) {
     options.set_time_unit(string_to_time_unit(cmd_context.option_value(cmd, opt_time_unit)));

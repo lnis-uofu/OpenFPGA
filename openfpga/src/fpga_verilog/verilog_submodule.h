@@ -25,6 +25,7 @@ void print_verilog_submodule(ModuleManager& module_manager,
                              const DecoderLibrary& decoder_lib,
                              const CircuitLibrary& circuit_lib, 
                              const std::string& submodule_dir, 
+                             const std::string& submodule_dir_name, 
                              const FabricVerilogOption& fpga_verilog_opts);
 
 } /* end namespace openfpga */

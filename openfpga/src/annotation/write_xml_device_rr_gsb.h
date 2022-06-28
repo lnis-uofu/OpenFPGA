@@ -6,6 +6,8 @@
  *******************************************************************/
 #include <string>
 #include "rr_graph_obj.h"
+#include "device_grid.h"
+#include "vpr_device_annotation.h"
 #include "device_rr_gsb.h"
 
 /********************************************************************
@@ -16,8 +18,11 @@
 namespace openfpga {
 
 void write_device_rr_gsb_to_xml(const char* sb_xml_dir,
+                                const DeviceGrid& vpr_device_grid,
+                                const VprDeviceAnnotation& vpr_device_annotation,
                                 const RRGraph& rr_graph,
                                 const DeviceRRGSB& device_rr_gsb,
+                                const bool& unique,
                                 const bool& verbose);
 
 } /* end namespace openfpga */

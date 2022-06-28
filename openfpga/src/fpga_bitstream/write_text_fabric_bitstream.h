@@ -27,6 +27,7 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
                                         const std::string& fname,
                                         const bool& fast_configuration,
                                         const bool& keep_dont_care_bits,
+                                        const bool& include_time_stamp,
                                         const bool& verbose);
 
 } /* end namespace openfpga */

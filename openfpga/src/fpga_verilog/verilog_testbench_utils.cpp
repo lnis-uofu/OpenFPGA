@@ -22,6 +22,7 @@
 
 #include "module_manager_utils.h"
 #include "fabric_global_port_info_utils.h"
+#include "openfpga_atom_netlist_utils.h"
 
 #include "verilog_constants.h"
 #include "verilog_writer_utils.h"
@@ -32,11 +33,16 @@ namespace openfpga {
 
 /********************************************************************
  * Print an instance of the FPGA top-level module
+ * When net_postfix is not empty, the instance net will contain a postfix like
+ *   fpga fpga_core(.in(in_<postfix>),
+                    .out(out_postfix>)
+                   );
  *******************************************************************/
 void print_verilog_testbench_fpga_instance(std::fstream& fp,
                                            const ModuleManager& module_manager,
                                            const ModuleId& top_module,
                                            const std::string& top_instance_name,
+                                           const std::string& net_postfix,
                                            const bool& explicit_port_mapping) {
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -46,6 +52,14 @@ void print_verilog_testbench_fpga_instance(std::fstream& fp,
 
   /* Create an empty port-to-port name mapping, because we use default names */
   std::map<std::string, BasicPort> port2port_name_map;
+  if (!net_postfix.empty()) { 
+    for (const ModulePortId &module_port_id : module_manager.module_ports(top_module)) {
+      BasicPort module_port = module_manager.module_port(top_module, module_port_id);
+      BasicPort net_port = module_port;
+      net_port.set_name(module_port.get_name() + net_postfix);
+      port2port_name_map[module_port.get_name()] = net_port;
+    }
+  }
 
   /* Use explicit port mapping for a clean instanciation */
   print_verilog_module_instance(fp, module_manager, top_module, 
@@ -65,18 +79,23 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
                                                 const std::string& instance_name,
                                                 const std::string& module_input_port_postfix,
                                                 const std::string& module_output_port_postfix,
-                                                const std::vector<std::string>& output_port_prefix_to_remove,
+                                                const std::string& input_port_postfix,
                                                 const std::string& output_port_postfix,
+                                                const std::vector<std::string>& clock_port_names,
                                                 const AtomContext& atom_ctx,
                                                 const VprNetlistAnnotation& netlist_annotation,
                                                 const PinConstraints& pin_constraints,
+                                                const BusGroup& bus_group,
                                                 const bool& use_explicit_port_map) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
   fp << "\t" << module_name << " " << instance_name << "(" << std::endl;
 
-  size_t port_counter = 0;
+  /* Consider all the unique port names */
+  std::vector<std::string> port_names;
+  std::vector<AtomBlockType> port_types;
+
   for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
     /* Bypass non-I/O atom blocks ! */
     if ( (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk))
@@ -90,57 +109,138 @@ void print_verilog_testbench_benchmark_instance(std::fstream& fp,
       block_name = netlist_annotation.block_name(atom_blk);
     } 
 
+    /* Note that VPR added a prefix "out_" or "out:" to the name of output blocks
+     * We can remove this when specified through input argument 
+     */
+    if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+      block_name = remove_atom_block_name_prefix(block_name);
+    }
+
+    /* If the pin is part of a bus,
+     * - Check if the bus is already in the list
+     *   - If not, add it to the port list
+     *   - If yes, do nothing and move onto the next port
+     * If the pin does not belong to any bus
+     * - Add it to the bus port
+     */
+    BusGroupId bus_id = bus_group.find_pin_bus(block_name);
+    if (bus_id) {
+      if (port_names.end() == std::find(port_names.begin(), port_names.end(), bus_group.bus_port(bus_id).get_name())) {
+        port_names.push_back(bus_group.bus_port(bus_id).get_name());
+        port_types.push_back(atom_ctx.nlist.block_type(atom_blk));
+      }
+      continue;
+    }
+
+    /* Input port follows the logical block name while output port requires a special postfix */
+    port_names.push_back(block_name);
+    port_types.push_back(atom_ctx.nlist.block_type(atom_blk));
+  }
+
+  /* Print out the instance with port mapping */
+  size_t port_counter = 0;
+  for (size_t iport = 0; iport < port_names.size(); ++iport) {
     /* The first port does not need a comma */
-    if(0 < port_counter){
+    if (0 < port_counter){
       fp << "," << std::endl;
     }
-    /* Input port follows the logical block name while output port requires a special postfix */
-    if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
-      fp << "\t\t";
+
+    fp << "\t\t";
+    if (AtomBlockType::INPAD == port_types[iport]) {
       if (true == use_explicit_port_map) {
-        fp << "." << block_name << module_input_port_postfix << "(";
+        fp << "." << port_names[iport] << module_input_port_postfix << "(";
       }
 
-      /* Polarity of some input may have to be inverted, as defined in pin constraints
-       * For example, the reset signal of the benchmark is active low 
-       * while the reset signal of the FPGA fabric is active high (inside FPGA, the reset signal will be inverted)
-       * However, to ensure correct stimuli to the benchmark, we have to invert the signal
-       */
-      if (PinConstraints::LOGIC_HIGH == pin_constraints.net_default_value(block_name)) {
-        fp << "~";
-      }
-      fp << block_name;
-      if (true == use_explicit_port_map) {
-        fp << ")";
-      }
-    } else {
-      VTR_ASSERT_SAFE(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
-      fp << "\t\t";
-      /* Note that VPR added a prefix "out_" or "out:" to the name of output blocks
-       * We can remove this when specified through input argument 
-       */
-      std::string output_block_name = block_name;
-      for (const std::string& prefix_to_remove : output_port_prefix_to_remove) {
-        if (!prefix_to_remove.empty()) {
-          if (0 == output_block_name.find(prefix_to_remove)) {
-            output_block_name.erase(0, prefix_to_remove.length());
-            break;
+      /* For bus ports, include a complete list of pins */
+      BusGroupId bus_id = bus_group.find_bus(port_names[iport]);
+      if (bus_id) {
+        fp << "{";
+        int pin_counter = 0;
+        /* Include all the pins: If it follows little endian, reverse the pin sequence */
+        std::vector<BusPinId> bus_pins = bus_group.bus_pins(bus_id);
+        if (!bus_group.is_big_endian(bus_id)) {
+          std::reverse(bus_pins.begin(), bus_pins.end());
+        }
+        for (const BusPinId& pin : bus_pins) {
+          if (0 < pin_counter) {
+            fp << ", ";
           }
+          /* Polarity of some input may have to be inverted, as defined in pin constraints
+           * For example, the reset signal of the benchmark is active low 
+           * while the reset signal of the FPGA fabric is active high (inside FPGA, the reset signal will be inverted)
+           * However, to ensure correct stimuli to the benchmark, we have to invert the signal
+           */
+          if (PinConstraints::LOGIC_HIGH == pin_constraints.net_default_value(bus_group.pin_name(pin))) {
+            fp << "~";
+          }
+
+          fp << bus_group.pin_name(pin);
+
+          /* For clock ports, skip postfix */
+          if (clock_port_names.end() == std::find(clock_port_names.begin(), clock_port_names.end(), port_names[iport])) {
+            fp << input_port_postfix;
+          }
+
+          pin_counter++;
+        }
+        fp << "}";
+      } else {
+        /* Polarity of some input may have to be inverted, as defined in pin constraints
+         * For example, the reset signal of the benchmark is active low 
+         * while the reset signal of the FPGA fabric is active high (inside FPGA, the reset signal will be inverted)
+         * However, to ensure correct stimuli to the benchmark, we have to invert the signal
+         */
+        if (PinConstraints::LOGIC_HIGH == pin_constraints.net_default_value(port_names[iport])) {
+          fp << "~";
+        }
+
+        fp << port_names[iport];
+        /* For clock ports, skip postfix */
+        if (clock_port_names.end() == std::find(clock_port_names.begin(), clock_port_names.end(), port_names[iport])) {
+          fp << input_port_postfix;
         }
       }
 
       if (true == use_explicit_port_map) {
-        fp << "." << output_block_name << module_output_port_postfix << "(";
+        fp << ")";
       }
-      fp << block_name << output_port_postfix;
+    } else {
+      VTR_ASSERT_SAFE(AtomBlockType::OUTPAD == port_types[iport]);
+      if (true == use_explicit_port_map) {
+        fp << "." << port_names[iport] << module_output_port_postfix << "(";
+      }
+
+      /* For bus ports, include a complete list of pins */
+      BusGroupId bus_id = bus_group.find_bus(port_names[iport]);
+
+      if (bus_id) {
+        fp << "{";
+        int pin_counter = 0;
+        /* Include all the pins: If it follows little endian, reverse the pin sequence */
+        std::vector<BusPinId> bus_pins = bus_group.bus_pins(bus_id);
+        if (!bus_group.is_big_endian(bus_id)) {
+          std::reverse(bus_pins.begin(), bus_pins.end());
+        }
+        for (const BusPinId& pin : bus_pins) {
+          if (0 < pin_counter) {
+            fp << ", ";
+          }
+          fp << bus_group.pin_name(pin) << output_port_postfix;
+          pin_counter++;
+        }
+        fp << "}";
+      } else {
+        fp << port_names[iport] << output_port_postfix;
+      }
       if (true == use_explicit_port_map) {
         fp << ")";
       }
-    }
+    } 
+
     /* Update the counter */
     port_counter++;
   }
-  fp << "\t);" << std::endl;
+  fp << "\n\t);" << std::endl;
 }
 
 /********************************************************************
@@ -157,8 +257,11 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
                                               const PlacementContext& place_ctx,
                                               const IoLocationMap& io_location_map,
                                               const VprNetlistAnnotation& netlist_annotation,
+                                              const BusGroup& bus_group,
+                                              const std::string& net_name_postfix,
                                               const std::string& io_input_port_name_postfix,
                                               const std::string& io_output_port_name_postfix,
+                                              const std::vector<std::string>& clock_port_names,
                                               const size_t& unused_io_value) {
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -242,6 +345,7 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
 
     /* Set the port pin index */ 
     VTR_ASSERT(io_index < module_mapped_io_port.get_width());
+    module_mapped_io_port.set_name(module_mapped_io_port.get_name() + net_name_postfix);
     module_mapped_io_port.set_width(io_index, io_index);
 
     /* The block may be renamed as it contains special characters which violate Verilog syntax */
@@ -249,21 +353,42 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     } 
+    /* Note that VPR added a prefix to the name of output blocks
+     * We can remove this when specified through input argument 
+     */
+    if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+      block_name = remove_atom_block_name_prefix(block_name);
+    }
 
     /* Create the port for benchmark I/O, due to BLIF benchmark, each I/O always has a size of 1 
      * In addition, the input and output ports may have different postfix in naming
      * due to verification context! Here, we give full customization on naming 
      */
     BasicPort benchmark_io_port;
-    if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
-      benchmark_io_port.set_name(std::string(block_name + io_input_port_name_postfix)); 
+
+    /* If this benchmark pin belongs to any bus group, use the bus pin instead */
+    BusGroupId bus_id = bus_group.find_pin_bus(block_name);
+    BusPinId bus_pin_id = bus_group.find_pin(block_name);
+    if (bus_id) {
+      block_name = bus_group.bus_port(bus_id).get_name(); 
+      VTR_ASSERT_SAFE(bus_pin_id);
+      benchmark_io_port.set_width(bus_group.pin_index(bus_pin_id), bus_group.pin_index(bus_pin_id));
+    } else {
       benchmark_io_port.set_width(1);
+    }
+
+    if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
+      /* If the port is a clock, do not add a postfix */
+      if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
+        benchmark_io_port.set_name(block_name); 
+      } else {
+        benchmark_io_port.set_name(std::string(block_name + io_input_port_name_postfix)); 
+      }
       print_verilog_comment(fp, std::string("----- Blif Benchmark input " + block_name + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
       print_verilog_wire_connection(fp, module_mapped_io_port, benchmark_io_port, false);
     } else {
       VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
       benchmark_io_port.set_name(std::string(block_name + io_output_port_name_postfix)); 
-      benchmark_io_port.set_width(1);
       print_verilog_comment(fp, std::string("----- Blif Benchmark output " + block_name + " is mapped to FPGA IOPAD " + module_mapped_io_port.get_name() + "[" + std::to_string(io_index) + "] -----"));
       print_verilog_wire_connection(fp, benchmark_io_port, module_mapped_io_port, false);
     }
@@ -292,6 +417,7 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
       /* Wire to a contant */
       BasicPort module_unused_io_port = module_manager.module_port(top_module, module_io_port_id);
       /* Set the port pin index */ 
+      module_unused_io_port.set_name(module_unused_io_port.get_name() + net_name_postfix);
       module_unused_io_port.set_width(io_index, io_index);
 
       std::vector<size_t> default_values(module_unused_io_port.get_width(), unused_io_value);
@@ -392,6 +518,7 @@ void print_verilog_testbench_check(std::fstream& fp,
                                    const std::string& benchmark_port_postfix,
                                    const std::string& fpga_port_postfix,
                                    const std::string& check_flag_port_postfix,
+                                   const std::string& config_done_name,
                                    const std::string& error_counter_name,
                                    const AtomContext& atom_ctx,
                                    const VprNetlistAnnotation& netlist_annotation,
@@ -424,7 +551,12 @@ void print_verilog_testbench_check(std::fstream& fp,
   fp << "\t\tif (1'b1 == " << generate_verilog_port(VERILOG_PORT_CONKT, sim_start_port) << ") begin" << std::endl;
   fp << "\t\t";
   print_verilog_register_connection(fp, sim_start_port, sim_start_port, true);
-  fp << "\t\tend else begin" << std::endl;
+  fp << "\t\tend else " << std::endl;
+  /* If there is a config done signal specified, consider it as a trigger on checking */
+  if (!config_done_name.empty()) {
+    fp << "if (1'b1 == " << config_done_name << ") "; 
+  }
+  fp << "begin" << std::endl;
 
   for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
     /* Bypass non-I/O atom blocks ! */
@@ -440,6 +572,7 @@ void print_verilog_testbench_check(std::fstream& fp,
     } 
 
     if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+     block_name = remove_atom_block_name_prefix(block_name);
      fp << "\t\t\tif(!(" << block_name << fpga_port_postfix;
      fp << " === " << block_name << benchmark_port_postfix;
      fp << ") && !(" << block_name << benchmark_port_postfix;
@@ -467,6 +600,7 @@ void print_verilog_testbench_check(std::fstream& fp,
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     } 
+    block_name = remove_atom_block_name_prefix(block_name);
 
     fp << "\talways@(posedge " << block_name << check_flag_port_postfix << ") begin" << std::endl;
     fp << "\t\tif(" << block_name << check_flag_port_postfix << ") begin" << std::endl;
@@ -551,6 +685,7 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
                                             const FabricGlobalPortInfo& global_ports,
                                             const PinConstraints& pin_constraints,
                                             const std::vector<std::string>& clock_port_names,
+                                            const std::string& input_port_postfix,
                                             const std::string& check_flag_port_postfix,
                                             const std::vector<BasicPort>& clock_ports,
                                             const bool& no_self_checking) {
@@ -573,6 +708,9 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     } 
+    if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+      block_name = remove_atom_block_name_prefix(block_name);
+    }
 
     /* Bypass clock ports because their stimulus cannot be random */
     if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
@@ -588,7 +726,7 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
 
     /* TODO: find the clock inputs will be initialized later */
     if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
-      fp << "\t\t" << block_name << " <= 1'b0;" << std::endl;
+      fp << "\t\t" << block_name + input_port_postfix << " <= 1'b0;" << std::endl;
     }
   }
 
@@ -608,6 +746,7 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
       if (true == netlist_annotation.is_block_renamed(atom_blk)) {
         block_name = netlist_annotation.block_name(atom_blk);
       } 
+      block_name = remove_atom_block_name_prefix(block_name);
 
       /* Each logical block assumes a single-width port */
       BasicPort output_port(std::string(block_name + check_flag_port_postfix), 1); 
@@ -642,6 +781,9 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     } 
+    if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+      block_name = remove_atom_block_name_prefix(block_name);
+    }
 
     /* Bypass clock ports because their stimulus cannot be random */
     if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
@@ -657,7 +799,7 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
 
     /* TODO: find the clock inputs will be initialized later */
     if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
-      fp << "\t\t" << block_name << " <= $random;" << std::endl;
+      fp << "\t\t" << block_name + input_port_postfix << " <= $random;" << std::endl;
     }
   }
 
@@ -677,9 +819,13 @@ void print_verilog_testbench_random_stimuli(std::fstream& fp,
  *    same input vectors
  *******************************************************************/
 void print_verilog_testbench_shared_ports(std::fstream& fp,
+                                          const ModuleManager& module_manager,
+                                          const FabricGlobalPortInfo& global_ports,
+                                          const PinConstraints& pin_constraints,
                                           const AtomContext& atom_ctx,
                                           const VprNetlistAnnotation& netlist_annotation,
                                           const std::vector<std::string>& clock_port_names,
+                                          const std::string& shared_input_port_postfix,
                                           const std::string& benchmark_output_port_postfix,
                                           const std::string& fpga_output_port_postfix,
                                           const std::string& check_flag_port_postfix,
@@ -707,8 +853,13 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
     }
    
     /* Each logical block assumes a single-width port */
-    BasicPort input_port(block_name, 1); 
-    fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, input_port) << ";" << std::endl;
+    BasicPort input_port(block_name + shared_input_port_postfix, 1); 
+    /* For global ports, use wires; otherwise, use registers*/
+    if (false == port_is_fabric_global_reset_port(global_ports, module_manager, pin_constraints.net_pin(block_name))) { 
+      fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, input_port) << ";" << std::endl;
+    } else {
+      fp << "\t" << generate_verilog_port(VERILOG_PORT_WIRE, input_port) << ";" << std::endl;
+    }
   }
 
   /* Add an empty line as splitter */
@@ -728,6 +879,7 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     } 
+    block_name = remove_atom_block_name_prefix(block_name);
 
     /* Each logical block assumes a single-width port */
     BasicPort output_port(std::string(block_name + fpga_output_port_postfix), 1); 
@@ -754,6 +906,7 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     } 
+    block_name = remove_atom_block_name_prefix(block_name);
 
     /* Each logical block assumes a single-width port */
     BasicPort output_port(std::string(block_name + benchmark_output_port_postfix), 1); 
@@ -776,6 +929,7 @@ void print_verilog_testbench_shared_ports(std::fstream& fp,
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     } 
+    block_name = remove_atom_block_name_prefix(block_name);
 
     /* Each logical block assumes a single-width port */
     BasicPort output_port(std::string(block_name + check_flag_port_postfix), 1); 

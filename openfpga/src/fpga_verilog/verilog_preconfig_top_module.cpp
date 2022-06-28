@@ -14,6 +14,7 @@
 /* Headers from openfpgautil library */
 #include "openfpga_port.h"
 #include "openfpga_digest.h"
+#include "openfpga_reserved_words.h"
 
 #include "bitstream_manager_utils.h"
 #include "openfpga_atom_netlist_utils.h"
@@ -37,7 +38,8 @@ static
 void print_verilog_preconfig_top_module_ports(std::fstream &fp,
                                               const std::string &circuit_name,
                                               const AtomContext &atom_ctx,
-                                              const VprNetlistAnnotation &netlist_annotation) {
+                                              const VprNetlistAnnotation &netlist_annotation,
+                                              const BusGroup& bus_group) {
 
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -46,13 +48,15 @@ void print_verilog_preconfig_top_module_ports(std::fstream &fp,
   fp << "module " << circuit_name << std::string(FORMAL_VERIFICATION_TOP_MODULE_POSTFIX);
   fp << " (" << std::endl;
 
-  /* Add module ports */
-  size_t port_counter = 0;
-
   /* Port type-to-type mapping */
   std::map<AtomBlockType, enum e_dump_verilog_port_type> port_type2type_map;
   port_type2type_map[AtomBlockType::INPAD] = VERILOG_PORT_INPUT;
   port_type2type_map[AtomBlockType::OUTPAD] = VERILOG_PORT_OUTPUT;
+
+  /* Ports to be added, this is to avoid any bus port */
+  std::vector<BasicPort> port_list;
+  std::vector<AtomBlockType> port_types;
+  std::vector<bool> port_big_endian;
 
   /* Print all the I/Os of the circuit implementation to be tested*/
   for (const AtomBlockId &atom_blk : atom_ctx.nlist.blocks()) {
@@ -61,18 +65,60 @@ void print_verilog_preconfig_top_module_ports(std::fstream &fp,
       continue;
     }
 
-    /* The block may be renamed as it contains special characters which violate Verilog syntax */
     std::string block_name = atom_ctx.nlist.block_name(atom_blk);
+    /* The block may be renamed as it contains special characters which violate Verilog syntax */
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
     }
+    /* For output block, remove the prefix which is added by VPR */
+    std::vector<std::string> output_port_prefix_to_remove;
+    output_port_prefix_to_remove.push_back(std::string(VPR_BENCHMARK_OUT_PORT_PREFIX));
+    output_port_prefix_to_remove.push_back(std::string(OPENFPGA_BENCHMARK_OUT_PORT_PREFIX));
+    if (AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk)) {
+      for (const std::string& prefix_to_remove : output_port_prefix_to_remove) {
+        if (!prefix_to_remove.empty()) {
+          if (0 == block_name.find(prefix_to_remove)) {
+            block_name.erase(0, prefix_to_remove.length());
+            break;
+          }
+        }
+      }
+    }
 
+    /* If the pin is part of a bus,
+     * - Check if the bus is already in the list
+     *   - If not, add it to the port list
+     *   - If yes, do nothing and move onto the next port
+     * If the pin does not belong to any bus
+     * - Add it to the bus port
+     */
+    BusGroupId bus_id = bus_group.find_pin_bus(block_name);
+    if (bus_id) {
+      if (port_list.end() == std::find(port_list.begin(), port_list.end(), bus_group.bus_port(bus_id))) {
+        port_list.push_back(bus_group.bus_port(bus_id));
+        port_types.push_back(atom_ctx.nlist.block_type(atom_blk));
+        port_big_endian.push_back(bus_group.is_big_endian(bus_id));
+      }
+      continue;
+    }
+
+    /* Both input and output ports have only size of 1 */
+    BasicPort module_port(std::string(block_name), 1);
+    port_list.push_back(module_port);
+    port_types.push_back(atom_ctx.nlist.block_type(atom_blk));
+    port_big_endian.push_back(true);
+  }
+
+  /* After collecting all the ports, now print the port mapping */
+  size_t port_counter = 0;
+  for (size_t iport = 0; iport < port_list.size(); ++iport) {
+    BasicPort module_port = port_list[iport];
+    AtomBlockType port_type = port_types[iport];
     if (0 < port_counter) {
       fp << "," << std::endl;
     }
-    /* Both input and output ports have only size of 1 */
-    BasicPort module_port(std::string(block_name + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX)), 1);
-    fp << generate_verilog_port(port_type2type_map[atom_ctx.nlist.block_type(atom_blk)], module_port);
+
+    fp << generate_verilog_port(port_type2type_map[port_type], module_port, true, port_big_endian[iport]);
 
     /* Update port counter */
     port_counter++;
@@ -100,6 +146,8 @@ void print_verilog_preconfig_top_module_internal_wires(std::fstream &fp,
   print_verilog_comment(fp, std::string("----- Local wires for FPGA fabric -----"));
   for (const ModulePortId &module_port_id : module_manager.module_ports(top_module)) {
     BasicPort module_port = module_manager.module_port(top_module, module_port_id);
+    /* Add a postfix to the internal wires to be different from other reserved ports */
+    module_port.set_name(module_port.get_name() + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX));
     fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port) << ";" << std::endl;
   }
   /* Add an empty line as a splitter */
@@ -132,10 +180,10 @@ int print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
      && (false == fabric_global_ports.global_port_is_prog(global_port_id))) {
       /* Wiring to each pin of the global port: benchmark clock is always 1-bit */
       for (size_t pin_id = 0; pin_id < module_global_port.pins().size(); ++pin_id) {
-        BasicPort module_clock_pin(module_global_port.get_name(), module_global_port.pins()[pin_id], module_global_port.pins()[pin_id]);
+        BasicPort module_clock_pin(module_global_port.get_name() + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), module_global_port.pins()[pin_id], module_global_port.pins()[pin_id]);
 
         /* If the clock port name is in the pin constraints, we should wire it to the constrained pin */
-        std::string constrained_net_name = pin_constraints.pin_net(module_clock_pin);
+        std::string constrained_net_name = pin_constraints.pin_net(BasicPort(module_global_port.get_name(), module_global_port.pins()[pin_id], module_global_port.pins()[pin_id]));
 
         /* If constrained to an open net or there is no clock in the benchmark, we assign it to a default value */
         if ( (true == pin_constraints.unmapped_net(constrained_net_name))
@@ -159,7 +207,7 @@ int print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
           clock_name_to_connect = benchmark_clock_port_names[pin_id]; 
         }
 
-        BasicPort benchmark_clock_pin(clock_name_to_connect + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), 1);
+        BasicPort benchmark_clock_pin(clock_name_to_connect, 1);
         print_verilog_wire_connection(fp, module_clock_pin, benchmark_clock_pin, false);
       }
       /* Finish, go to the next */
@@ -175,16 +223,24 @@ int print_verilog_preconfig_top_module_connect_global_ports(std::fstream &fp,
       /* If the global port name is in the pin constraints, we should wire it to the constrained pin */
       std::string constrained_net_name = pin_constraints.pin_net(module_global_pin);
 
+      module_global_pin.set_name(module_global_port.get_name() + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX));
+
       /* - If constrained to a given net in the benchmark, we connect the global pin to the net
        * - If constrained to an open net in the benchmark, we assign it to a default value 
        */
       if ( (false == pin_constraints.unconstrained_net(constrained_net_name))
         && (false == pin_constraints.unmapped_net(constrained_net_name))) {
-        BasicPort benchmark_pin(constrained_net_name + std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), 1);
+        BasicPort benchmark_pin(constrained_net_name, 1);
         print_verilog_wire_connection(fp, module_global_pin, benchmark_pin, false);
       } else {
         VTR_ASSERT_SAFE(std::string(PIN_CONSTRAINT_OPEN_NET) == constrained_net_name);
         std::vector<size_t> default_values(module_global_pin.get_width(), fabric_global_ports.global_port_default_value(global_port_id));
+        /* For configuration done signals, we should enable them in preconfigured wrapper */
+        if (fabric_global_ports.global_port_is_config_enable(global_port_id)) {
+          VTR_LOG("Config-enable port '%s' is detected with default value '%ld'", module_global_pin.get_name().c_str(), fabric_global_ports.global_port_default_value(global_port_id));
+          default_values.clear();
+          default_values.resize(module_global_pin.get_width(), 1 - fabric_global_ports.global_port_default_value(global_port_id));
+        }
         print_verilog_wire_constant_values(fp, module_global_pin, default_values);
       }
     }
@@ -415,6 +471,7 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
                                        const AtomContext &atom_ctx,
                                        const PlacementContext &place_ctx,
                                        const PinConstraints& pin_constraints,
+                                       const BusGroup& bus_group,
                                        const IoLocationMap &io_location_map,
                                        const VprNetlistAnnotation &netlist_annotation,
                                        const std::string &circuit_name,
@@ -436,13 +493,13 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
 
   /* Generate a brief description on the Verilog file*/
   std::string title = std::string("Verilog netlist for pre-configured FPGA fabric by design: ") + circuit_name;
-  print_verilog_file_header(fp, title);
+  print_verilog_file_header(fp, title, options.time_stamp());
 
   print_verilog_default_net_type_declaration(fp,
                                              options.default_net_type());
 
   /* Print module declaration and ports */
-  print_verilog_preconfig_top_module_ports(fp, circuit_name, atom_ctx, netlist_annotation);
+  print_verilog_preconfig_top_module_ports(fp, circuit_name, atom_ctx, netlist_annotation, bus_group);
 
   /* Find the top_module */
   ModuleId top_module = module_manager.find_module(generate_fpga_top_module_name());
@@ -454,6 +511,7 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
   /* Instanciate FPGA top-level module */
   print_verilog_testbench_fpga_instance(fp, module_manager, top_module,
                                         std::string(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME),
+                                        std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
                                         options.explicit_port_mapping());
 
   /* Find clock ports in benchmark */
@@ -471,8 +529,11 @@ int print_verilog_preconfig_top_module(const ModuleManager &module_manager,
   print_verilog_testbench_connect_fpga_ios(fp, module_manager, top_module,
                                            atom_ctx, place_ctx, io_location_map,
                                            netlist_annotation,
+                                           bus_group,
                                            std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
-                                           std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
+                                           std::string(),
+                                           std::string(),
+                                           std::vector<std::string>(),
                                            (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
   /* Assign the SRAM model applied to the FPGA fabric */

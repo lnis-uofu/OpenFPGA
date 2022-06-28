@@ -38,4 +38,6 @@ apt-get update && apt-get install -y \
     time \
     valgrind \
     wget \
-    zip
+    zip \
+    swig \
+    expect 

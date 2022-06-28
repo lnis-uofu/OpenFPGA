@@ -30,15 +30,19 @@ namespace openfpga {
  * This function write header information to a bitstream file
  *******************************************************************/
 static 
-void write_fabric_bitstream_text_file_head(std::fstream& fp) {
+void write_fabric_bitstream_text_file_head(std::fstream& fp,
+                                           const bool& include_time_stamp) {
   valid_file_stream(fp);
  
-  auto end = std::chrono::system_clock::now(); 
-  std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-
   fp << "// Fabric bitstream" << std::endl;
-  fp << "// Version: " << openfpga::VERSION << std::endl;
-  fp << "// Date: " << std::ctime(&end_time);
+
+  if (include_time_stamp) {
+    auto end = std::chrono::system_clock::now(); 
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+    /* Note that version is also a type of time stamp */
+    fp << "// Version: " << openfpga::VERSION << std::endl;
+    fp << "// Date: " << std::ctime(&end_time);
+  }
 }
 
 /********************************************************************
@@ -370,6 +374,7 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
                                         const std::string& fname,
                                         const bool& fast_configuration,
                                         const bool& keep_dont_care_bits,
+                                        const bool& include_time_stamp,
                                         const bool& verbose) {
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
@@ -399,7 +404,7 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
   }
 
   /* Write file head */
-  write_fabric_bitstream_text_file_head(fp);
+  write_fabric_bitstream_text_file_head(fp, include_time_stamp);
 
   /* Output fabric bitstream to the file */
   int status = 0;
@@ -440,6 +445,7 @@ int write_fabric_bitstream_to_text_file(const BitstreamManager& bitstream_manage
       status = write_memory_bank_shift_register_fabric_bitstream_to_text_file(fp,
                                                                               apply_fast_configuration,
                                                                               bit_value_to_skip,
+
                                                                               fabric_bitstream,
                                                                               blwl_sr_banks,
                                                                               keep_dont_care_bits);

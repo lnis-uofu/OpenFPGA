@@ -1,0 +1,8 @@
+<bus_group>
+  <bus name="i_addr[0:3]">
+    <pin id="0" name="i_addr_0_"/>
+    <pin id="1" name="i_addr_1_"/>
+    <pin id="2" name="i_addr_2_"/>
+    <pin id="3" name="i_addr_3_"/>
+  </bus>
+</bus_group>

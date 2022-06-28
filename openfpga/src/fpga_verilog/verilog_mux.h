@@ -26,6 +26,7 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
                                    const MuxLibrary& mux_lib,
                                    const CircuitLibrary& circuit_lib,
                                    const std::string& submodule_dir,
+                                   const std::string& submodule_dir_name,
                                    const FabricVerilogOption& options);
 
 } /* end namespace openfpga */

@@ -11,7 +11,7 @@ To enable various design purposes, OpenFPGA integrates several tools to i.e., FP
 .. _fig_openfpga_tools:
 
 .. figure:: figures/openfpga_tools.svg
-   :scale: 25%
+   :width: 100%
    :alt: map to buried treasure
 
    OpenFPGA tool suites and design flows 

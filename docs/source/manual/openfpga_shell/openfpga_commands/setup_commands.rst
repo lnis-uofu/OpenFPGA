@@ -111,6 +111,10 @@ write_gsb_to_xml
     Specify the output directory of the XML files. Each GSB will be written to an indepedent XML file
     For example, ``--file /temp/gsb_output``
 
+  .. option:: --unique
+
+    Only output unique GSBs to XML files
+
   .. option:: --verbose
 
     Show verbose log

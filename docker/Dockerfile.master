@@ -7,3 +7,22 @@ RUN chmod +x yosys/install/bin/yosys yosys/install/bin/yosys-abc yosys/install/b
 ENV PATH="/opt/openfpga/openfpga:/opt/openfpga/yosys/install/bin:${PATH}"
 ENV PATH="/opt/openfpga/ace2:/opt/openfpga/abc:/opt/openfpga/vpr:${PATH}"
 ENV OPENFPGA_PATH="/opt/openfpga"
+
+ARG NB_USER=openfpga_user
+ARG NB_UID=1000
+ENV USER ${NB_USER}
+ENV NB_UID ${NB_UID}
+ENV HOME /home/${NB_USER}
+
+RUN adduser --disabled-password \
+    --gecos "Default user" \
+    --uid ${NB_UID} \
+    ${NB_USER}
+
+USER root
+RUN chown -R ${NB_UID} ${HOME}
+RUN chmod -R +r /opt/openfpga/
+RUN git config --global --add safe.directory .
+USER ${NB_USER}
+
+WORKDIR ${HOME}

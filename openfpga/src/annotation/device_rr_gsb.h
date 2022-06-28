@@ -32,6 +32,7 @@ class DeviceRRGSB {
     const RRGSB& get_gsb(const size_t& x, const size_t& y) const; /* Get a rr switch block in the array with a coordinate */
     size_t get_num_gsb_unique_module() const; /* get the number of unique mirrors of GSB */
     size_t get_num_sb_unique_module() const; /* get the number of unique mirrors of switch blocks */
+    const RRGSB& get_gsb_unique_module(const size_t& index) const; /* Get a rr-gsb which is a unique mirror */ 
     const RRGSB& get_sb_unique_module(const size_t& index) const; /* Get a rr switch block which a unique mirror */ 
     const RRGSB& get_sb_unique_module(const vtr::Point<size_t>& coordinate) const; /* Get a rr switch block which a unique mirror */ 
     const RRGSB& get_cb_unique_module(const t_rr_type& cb_type, const size_t& index) const; /* Get a rr switch block which a unique mirror */ 
@@ -58,6 +59,7 @@ class DeviceRRGSB {
   private: /* Validators */
     bool validate_coordinate(const vtr::Point<size_t>& coordinate) const; /* Validate if the (x,y) is the range of this device */
     bool validate_side(const e_side& side) const; /* validate if side is in the range of unique_side_module_ */
+    bool validate_gsb_unique_module_index(const size_t& index) const; /* Validate if the index in the range of unique_mirror vector*/
     bool validate_sb_unique_module_index(const size_t& index) const; /* Validate if the index in the range of unique_mirror vector*/
     bool validate_cb_unique_module_index(const t_rr_type& cb_type, const size_t& index) const; /* Validate if the index in the range of unique_mirror vector*/
     bool validate_cb_type(const t_rr_type& cb_type) const;

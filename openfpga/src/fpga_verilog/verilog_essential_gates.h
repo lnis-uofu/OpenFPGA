@@ -9,6 +9,7 @@
 #include "module_manager.h"
 #include "netlist_manager.h"
 #include "verilog_port_types.h"
+#include "fabric_verilog_options.h"
 
 /********************************************************************
  * Function declaration
@@ -20,8 +21,9 @@ namespace openfpga {
 void print_verilog_submodule_essentials(const ModuleManager& module_manager, 
                                         NetlistManager& netlist_manager,
                                         const std::string& submodule_dir,
+                                        const std::string& submodule_dir_name,
                                         const CircuitLibrary& circuit_lib,
-                                        const e_verilog_default_net_type& default_net_type);
+                                        const FabricVerilogOption& options);
 
 } /* end namespace openfpga */
 

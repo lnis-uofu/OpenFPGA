@@ -19,6 +19,7 @@
 #include "simulation_setting.h"
 #include "memory_bank_shift_register_banks.h"
 #include "verilog_testbench_options.h"
+#include "bus_group.h"
 
 /********************************************************************
  * Function declaration
@@ -37,6 +38,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                  const AtomContext& atom_ctx,
                                  const PlacementContext& place_ctx,
                                  const PinConstraints& pin_constraints,
+                                 const BusGroup& bus_group,
                                  const std::string& bitstream_file,
                                  const IoLocationMap& io_location_map,
                                  const VprNetlistAnnotation& netlist_annotation,

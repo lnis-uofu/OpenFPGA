@@ -11,6 +11,7 @@
 /* Headers from vtrutil library */
 #include "atom_netlist_utils.h"
 
+#include "openfpga_reserved_words.h"
 #include "openfpga_atom_netlist_utils.h"
 
 /* begin namespace openfpga */
@@ -36,6 +37,29 @@ std::vector<std::string> find_atom_netlist_clock_port_names(const AtomNetlist& a
   }
 
   return clock_names;
+}
+
+/********************************************************************
+ * Remove the prefix that is added to the name of a output block (by VPR) 
+ *******************************************************************/
+std::string remove_atom_block_name_prefix(const std::string& block_name) {
+  /* VPR added a prefix of "out_" to the output ports of input benchmark */
+  std::vector<std::string> prefix_to_remove;
+  prefix_to_remove.push_back(std::string(VPR_BENCHMARK_OUT_PORT_PREFIX));
+  prefix_to_remove.push_back(std::string(OPENFPGA_BENCHMARK_OUT_PORT_PREFIX));
+
+  std::string ret_block_name = block_name;
+
+  for (const std::string& cur_prefix_to_remove : prefix_to_remove) {
+    if (!cur_prefix_to_remove.empty()) {
+      if (0 == ret_block_name.find(cur_prefix_to_remove)) {
+        ret_block_name.erase(0, cur_prefix_to_remove.length());
+        break;
+      }
+    }
+  }
+  
+  return ret_block_name;
 }
 
 } /* end namespace openfpga */

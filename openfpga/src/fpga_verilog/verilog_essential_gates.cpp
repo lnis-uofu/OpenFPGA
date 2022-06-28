@@ -504,29 +504,30 @@ void print_verilog_constant_generator_module(const ModuleManager& module_manager
 void print_verilog_submodule_essentials(const ModuleManager& module_manager, 
                                         NetlistManager& netlist_manager,
                                         const std::string& submodule_dir,
+                                        const std::string& submodule_dir_name,
                                         const CircuitLibrary& circuit_lib,
-                                        const e_verilog_default_net_type& default_net_type) {
-  /* TODO: remove .bak when this part is completed and tested */
-  std::string verilog_fname = submodule_dir + std::string(ESSENTIALS_VERILOG_FILE_NAME);
+                                        const FabricVerilogOption& options) { 
+  std::string verilog_fname(ESSENTIALS_VERILOG_FILE_NAME);
+  std::string verilog_fpath = submodule_dir + verilog_fname;
 
   std::fstream fp;
 
   /* Create the file stream */
-  fp.open(verilog_fname, std::fstream::out | std::fstream::trunc);
+  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
   /* Check if the file stream if valid or not */
-  check_file_stream(verilog_fname.c_str(), fp); 
+  check_file_stream(verilog_fpath.c_str(), fp); 
 
   /* Create file */
   VTR_LOG("Generating Verilog netlist '%s' for essential gates...",
-          verilog_fname.c_str()); 
+          verilog_fpath.c_str()); 
 
-  print_verilog_file_header(fp, "Essential gates");
+  print_verilog_file_header(fp, "Essential gates", options.time_stamp());
 
   /* Print constant generators */
   /* VDD */
-  print_verilog_constant_generator_module(module_manager, fp, 0, default_net_type);
+  print_verilog_constant_generator_module(module_manager, fp, 0, options.default_net_type());
   /* GND */
-  print_verilog_constant_generator_module(module_manager, fp, 1, default_net_type);
+  print_verilog_constant_generator_module(module_manager, fp, 1, options.default_net_type());
 
   for (const auto& circuit_model : circuit_lib.models()) {
     /* By pass user-defined modules */
@@ -534,15 +535,15 @@ void print_verilog_submodule_essentials(const ModuleManager& module_manager,
       continue;
     }
     if (CIRCUIT_MODEL_INVBUF == circuit_lib.model_type(circuit_model)) {
-      print_verilog_invbuf_module(module_manager, fp, circuit_lib, circuit_model, default_net_type);
+      print_verilog_invbuf_module(module_manager, fp, circuit_lib, circuit_model, options.default_net_type());
       continue;
     }
     if (CIRCUIT_MODEL_PASSGATE == circuit_lib.model_type(circuit_model)) {
-      print_verilog_passgate_module(module_manager, fp, circuit_lib, circuit_model, default_net_type);
+      print_verilog_passgate_module(module_manager, fp, circuit_lib, circuit_model, options.default_net_type());
       continue;
     }
     if (CIRCUIT_MODEL_GATE == circuit_lib.model_type(circuit_model)) {
-      print_verilog_gate_module(module_manager, fp, circuit_lib, circuit_model, default_net_type);
+      print_verilog_gate_module(module_manager, fp, circuit_lib, circuit_model, options.default_net_type());
       continue;
     }
   }
@@ -551,8 +552,13 @@ void print_verilog_submodule_essentials(const ModuleManager& module_manager,
   fp.close();
 
   /* Add fname to the netlist name list */
-  NetlistId nlist_id = netlist_manager.add_netlist(verilog_fname);
-  VTR_ASSERT(NetlistId::INVALID() != nlist_id);
+  NetlistId nlist_id = NetlistId::INVALID();
+  if (options.use_relative_path()) {
+    nlist_id = netlist_manager.add_netlist(submodule_dir_name + verilog_fname);
+  } else {
+    nlist_id = netlist_manager.add_netlist(verilog_fpath);
+  }
+  VTR_ASSERT(nlist_id);
   netlist_manager.set_netlist_type(nlist_id, NetlistManager::SUBMODULE_NETLIST);
 
   VTR_LOG("Done\n");

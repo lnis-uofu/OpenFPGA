@@ -295,6 +295,33 @@ DFFRQ FF_CORE (.RST(post_rst),
 endmodule //End Of Module
 
 //-----------------------------------------------------
+// Function : A multi-functional D-type flip-flop with 
+//           - asynchronous reset 
+//             which can be switched between active-low and active high
+//           - clock
+//             which can be switched between positive edge triggered and negative edge triggered
+//-----------------------------------------------------
+module MULTI_MODE_DFFNRQ (
+  input RST, // Reset input
+  input CK, // Clock Input
+  input D, // Data Input
+  output Q, // Q output
+  input [0:1] mode // mode-selection bits: bit0 for reset polarity; bit1 for set polarity
+);
+
+wire post_rst = mode[0] ? ~RST : RST;
+wire post_clk = mode[1] ? ~CK : CK;
+
+DFFRQ FF_CORE (.RST(post_rst),
+               .CK(post_clk),
+               .D(D),
+               .Q(Q)
+               );
+
+endmodule //End Of Module
+
+
+//-----------------------------------------------------
 // Function    : D-type flip-flop with 
 //               - asynchronous active high reset
 //               - asynchronous active high set
@@ -437,6 +464,50 @@ assign Q = q_reg;
 assign QN = !Q;
 
 endmodule //End Of Module
+
+//-----------------------------------------------------
+// Function    : D-type flip-flop with 
+//               - asynchronous active high reset
+//               - scan-chain input
+//               - a scan-chain enable 
+//               - a configure enable, when enabled the registered output will
+//               be released to the CFGQ
+//               - a configure done, when enable, the regsitered output will be released to the Q
+//-----------------------------------------------------
+module CFGDSDFFR (
+  input RST, // Reset input
+  input CK, // Clock Input
+  input SE, // Scan-chain Enable
+  input D, // Data Input
+  input SI, // Scan-chain input
+  input CFGE, // Configure enable
+  input CFG_DONE, // Configure done
+  output Q, // Regular Q output
+  output CFGQ, // Data Q output which is released when configure enable is activated
+  output CFGQN // Data Qb output which is released when configure enable is activated
+);
+//------------Internal Variables--------
+reg q_reg;
+wire QN;
+
+//-------------Code Starts Here---------
+always @ ( posedge CK or posedge RST)
+if (RST) begin
+  q_reg <= 1'b0;
+end else if (SE) begin
+  q_reg <= SI;
+end else begin
+  q_reg <= D;
+end
+
+assign CFGQ = CFGE ? Q : 1'b0;
+assign CFGQN = CFGE ? QN : 1'b1;
+
+assign Q = CFG_DONE ? q_reg : 1'b0;
+assign QN = CFG_DONE ? !Q : 1'b1;
+
+endmodule //End Of Module
+
 
 //-----------------------------------------------------
 // Function    : D-type flip-flop with 

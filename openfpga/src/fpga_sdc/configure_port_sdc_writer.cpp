@@ -187,6 +187,7 @@ int print_sdc_disable_timing_configure_ports(const std::string& sdc_fname,
                                              const MuxLibrary& mux_lib,
                                              const CircuitLibrary& circuit_lib,
                                              const ModuleManager& module_manager,
+                                             const bool& include_time_stamp,
                                              const bool& verbose) {
   /* Create the directory */
   create_directory(find_path_dir_name(sdc_fname));
@@ -202,7 +203,9 @@ int print_sdc_disable_timing_configure_ports(const std::string& sdc_fname,
   check_file_stream(sdc_fname.c_str(), fp);
 
   /* Generate the descriptions*/
-  print_sdc_file_header(fp, std::string("Disable configuration outputs of all the programmable cells for PnR"));
+  print_sdc_file_header(fp,
+                        std::string("Disable configuration outputs of all the programmable cells for PnR"),
+                        include_time_stamp);
 
   std::string top_module_name = generate_fpga_top_module_name();
   ModuleId top_module = module_manager.find_module(top_module_name);

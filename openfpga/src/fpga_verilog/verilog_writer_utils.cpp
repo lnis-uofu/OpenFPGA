@@ -43,19 +43,24 @@ void print_verilog_default_net_type_declaration(std::fstream& fp,
  * include the description 
  ***********************************************/
 void print_verilog_file_header(std::fstream& fp,
-                               const std::string& usage) {
+                               const std::string& usage,
+                               const bool& include_time_stamp) {
   VTR_ASSERT(true == valid_file_stream(fp));
  
-  auto end = std::chrono::system_clock::now(); 
-  std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-
   fp << "//-------------------------------------------" << std::endl;
   fp << "//\tFPGA Synthesizable Verilog Netlist" << std::endl;
   fp << "//\tDescription: " << usage << std::endl;
   fp << "//\tAuthor: Xifan TANG" << std::endl;
   fp << "//\tOrganization: University of Utah" << std::endl;
-  fp << "//\tDate: " << std::ctime(&end_time) ;
+
+  if (include_time_stamp) {
+    auto end = std::chrono::system_clock::now(); 
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+    fp << "//\tDate: " << std::ctime(&end_time) ;
+  }
+
   fp << "//-------------------------------------------" << std::endl;
+
   fp << "//----- Time scale -----" << std::endl;
   fp << "`timescale 1ns / 1ps" << std::endl;
   fp << std::endl;
@@ -461,13 +466,19 @@ void print_verilog_module_end(std::fstream& fp,
  ***********************************************/
 std::string generate_verilog_port(const enum e_dump_verilog_port_type& verilog_port_type,
                                   const BasicPort& port_info,
-                                  const bool& must_print_port_size) {  
+                                  const bool& must_print_port_size,
+								  const bool& big_endian) {
   std::string verilog_line;
 
   /* Ensure the port type is valid */
   VTR_ASSERT(verilog_port_type < NUM_VERILOG_PORT_TYPES);
 
-  std::string size_str = "[" + std::to_string(port_info.get_lsb()) + ":" + std::to_string(port_info.get_msb()) + "]";
+  std::string size_str;
+  if (big_endian) {
+    size_str = "[" + std::to_string(port_info.get_lsb()) + ":" + std::to_string(port_info.get_msb()) + "]";
+  } else {
+    size_str = "[" + std::to_string(port_info.get_msb()) + ":" + std::to_string(port_info.get_lsb()) + "]";
+  }
 
   /* Only connection require a format of <port_name>[<lsb>:<msb>]
    * others require a format of <port_type> [<lsb>:<msb>] <port_name> 
@@ -1531,7 +1542,8 @@ void print_verilog_clock_stimuli(std::fstream& fp,
  ********************************************************************/
 void print_verilog_netlist_include_header_file(const std::vector<std::string>& netlists_to_be_included,
                                                const char* subckt_dir,
-                                               const char* header_file_name) {
+                                               const char* header_file_name,
+                                               const bool& include_time_stamp) {
 
   std::string verilog_fname(std::string(subckt_dir) + std::string(header_file_name));
 
@@ -1542,7 +1554,7 @@ void print_verilog_netlist_include_header_file(const std::vector<std::string>& n
   VTR_ASSERT(true == valid_file_stream(fp));
 
   /* Generate the descriptions*/
-  print_verilog_file_header(fp, "Header file to include other Verilog netlists"); 
+  print_verilog_file_header(fp, "Header file to include other Verilog netlists", include_time_stamp); 
 
   /* Output file names */
   for (const std::string& netlist_name : netlists_to_be_included) {

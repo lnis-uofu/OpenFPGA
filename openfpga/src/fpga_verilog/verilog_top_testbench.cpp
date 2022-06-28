@@ -407,10 +407,15 @@ void print_verilog_top_testbench_global_reset_ports_stimuli(std::fstream& fp,
         /* - If constrained to a given net in the benchmark, we connect the global pin to the net */
         if ( (false == pin_constraints.unconstrained_net(constrained_net_name))
           && (false == pin_constraints.unmapped_net(constrained_net_name))) {
-          BasicPort benchmark_pin(constrained_net_name, 1);
+          BasicPort benchmark_pin(constrained_net_name + std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX), 1);
+          /* Polarity of some input may have to be inverted, as defined in pin constraints
+           * For example, the reset signal of the benchmark is active low 
+           * while the reset signal of the FPGA fabric is active high (inside FPGA, the reset signal will be inverted)
+           * However, to ensure correct stimuli to the benchmark, we have to invert the signal
+           */
           print_verilog_wire_connection(fp, module_global_pin,
                                         benchmark_pin,
-                                        false);
+                                        PinConstraints::LOGIC_HIGH == pin_constraints.net_default_value(constrained_net_name));
           continue; /* Finish the net assignment for this reset pin */
         }
       }
@@ -693,6 +698,7 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
                                        const AtomContext& atom_ctx,
                                        const VprNetlistAnnotation& netlist_annotation,
                                        const std::vector<std::string>& clock_port_names,
+                                       const FabricGlobalPortInfo& global_ports,
                                        const PinConstraints& pin_constraints,
                                        const SimulationSetting& simulation_parameters,
                                        const ConfigProtocol& config_protocol,
@@ -798,8 +804,12 @@ void print_verilog_top_testbench_ports(std::fstream& fp,
                                                     simulation_parameters,
                                                     op_clock_port);
 
-  print_verilog_testbench_shared_ports(fp, atom_ctx, netlist_annotation,
+  std::vector<std::string> global_port_names;
+  print_verilog_testbench_shared_ports(fp, 
+                                       module_manager, global_ports, pin_constraints,
+                                       atom_ctx, netlist_annotation,
                                        clock_port_names,
+                                       std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
                                        std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
                                        std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
                                        std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
@@ -927,6 +937,8 @@ void print_verilog_top_testbench_benchmark_instance(std::fstream& fp,
                                                     const AtomContext& atom_ctx,
                                                     const VprNetlistAnnotation& netlist_annotation,
                                                     const PinConstraints& pin_constraints,
+                                                    const BusGroup& bus_group,
+                                                    const std::vector<std::string>& clock_port_names,
                                                     const bool& explicit_port_mapping) {
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -934,20 +946,16 @@ void print_verilog_top_testbench_benchmark_instance(std::fstream& fp,
   /* Instanciate benchmark */
   print_verilog_comment(fp, std::string("----- Reference Benchmark Instanication -------"));
 
-  /* Do NOT use explicit port mapping here:
-   * VPR added a prefix of "out_" to the output ports of input benchmark
-   */
-  std::vector<std::string> prefix_to_remove;
-  prefix_to_remove.push_back(std::string(VPR_BENCHMARK_OUT_PORT_PREFIX));
-  prefix_to_remove.push_back(std::string(OPENFPGA_BENCHMARK_OUT_PORT_PREFIX));
   print_verilog_testbench_benchmark_instance(fp, reference_verilog_top_name,
                                              std::string(TOP_TESTBENCH_REFERENCE_INSTANCE_NAME),
                                              std::string(),
                                              std::string(),
-                                             prefix_to_remove,
+                                             std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
                                              std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
+                                             clock_port_names,
                                              atom_ctx, netlist_annotation,
                                              pin_constraints,
+                                             bus_group,
                                              explicit_port_mapping);
 
   print_verilog_comment(fp, std::string("----- End reference Benchmark Instanication -------"));
@@ -1411,6 +1419,7 @@ void print_verilog_full_testbench_configuration_chain_bitstream(std::fstream& fp
   fp << std::endl;
 
   BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME) + std::string(TOP_TB_CLOCK_REG_POSTFIX), 1);
+  print_verilog_comment(fp, "----- 'else if' condition is required by Modelsim to synthesis the Verilog correctly -----");
   fp << "always";
   fp << " @(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ")"; 
   fp << " begin";
@@ -1431,7 +1440,13 @@ void print_verilog_full_testbench_configuration_chain_bitstream(std::fstream& fp
   fp << ";" << std::endl;
 
   fp << "\t";
-  fp << "end else begin";
+  fp << "end else if (";
+  fp << TOP_TB_BITSTREAM_INDEX_REG_NAME;
+  fp << " >= 0 && ";
+  fp << TOP_TB_BITSTREAM_INDEX_REG_NAME;
+  fp << " < ";
+  fp << "`" << TOP_TB_BITSTREAM_LENGTH_VARIABLE;
+  fp << ") begin";
   fp << std::endl;
 
   fp << "\t\t";
@@ -1803,6 +1818,7 @@ void print_verilog_top_testbench_reset_stimuli(std::fstream& fp,
                                                const ModuleManager& module_manager,
                                                const FabricGlobalPortInfo& global_ports,
                                                const PinConstraints& pin_constraints,
+                                               const std::string& port_name_postfix,
                                                const std::vector<std::string>& clock_port_names) {
   valid_file_stream(fp);
 
@@ -1835,7 +1851,7 @@ void print_verilog_top_testbench_reset_stimuli(std::fstream& fp,
     size_t initial_value = global_ports.global_port_default_value(find_fabric_global_port(global_ports, module_manager, pin_constraints.net_pin(block_name)));
 
     /* Connect stimuli to greset with an optional inversion, depending on the default value */
-    BasicPort reset_port(block_name, 1);
+    BasicPort reset_port(block_name + port_name_postfix, 1);
     print_verilog_wire_connection(fp, reset_port,
                                   BasicPort(TOP_TB_RESET_PORT_NAME, 1),
                                   1 == initial_value);
@@ -1903,6 +1919,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                  const AtomContext& atom_ctx,
                                  const PlacementContext& place_ctx,
                                  const PinConstraints& pin_constraints,
+                                 const BusGroup& bus_group,
                                  const std::string& bitstream_file,
                                  const IoLocationMap& io_location_map,
                                  const VprNetlistAnnotation& netlist_annotation,
@@ -1928,7 +1945,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
 
   /* Generate a brief description on the Verilog file*/
   std::string title = std::string("FPGA Verilog full testbench for top-level netlist of design: ") + circuit_name;
-  print_verilog_file_header(fp, title);
+  print_verilog_file_header(fp, title, options.time_stamp());
 
   /* Find the top_module */
   ModuleId top_module = module_manager.find_module(generate_fpga_top_module_name());
@@ -1955,6 +1972,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
   print_verilog_top_testbench_ports(fp, module_manager, top_module,
                                     atom_ctx, netlist_annotation,
                                     clock_port_names,
+                                    global_ports,
                                     pin_constraints,
                                     simulation_parameters, config_protocol,
                                     circuit_name,
@@ -2035,14 +2053,18 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
   /* Instanciate FPGA top-level module */
   print_verilog_testbench_fpga_instance(fp, module_manager, top_module,
                                         std::string(TOP_TESTBENCH_FPGA_INSTANCE_NAME),
+                                        std::string(),
                                         explicit_port_mapping);
 
   /* Connect I/Os to benchmark I/Os or constant driver */
   print_verilog_testbench_connect_fpga_ios(fp, module_manager, top_module,
                                            atom_ctx, place_ctx, io_location_map,
                                            netlist_annotation,
+                                           BusGroup(),
                                            std::string(),
+                                           std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
                                            std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
+                                           clock_port_names,
                                            (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
   /* Instanciate input benchmark */
@@ -2052,6 +2074,8 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                                    atom_ctx,
                                                    netlist_annotation,
                                                    pin_constraints,
+                                                   bus_group,
+                                                   clock_port_names,
                                                    explicit_port_mapping);
   }
 
@@ -2084,6 +2108,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                             module_manager,
                                             global_ports, 
                                             pin_constraints, 
+                                            std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
                                             clock_port_names);
   print_verilog_testbench_random_stimuli(fp, atom_ctx,
                                          netlist_annotation,
@@ -2091,6 +2116,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                          global_ports,
                                          pin_constraints,
                                          clock_port_names,
+                                         std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
                                          std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
                                          std::vector<BasicPort>(1, BasicPort(std::string(TOP_TB_OP_CLOCK_PORT_NAME), 1)),
                                          options.no_self_checking());
@@ -2102,6 +2128,7 @@ int print_verilog_full_testbench(const ModuleManager& module_manager,
                                   std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
                                   std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
                                   std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
+                                  std::string(TOP_TB_CONFIG_DONE_PORT_NAME),
                                   std::string(TOP_TESTBENCH_ERROR_COUNTER),
                                   atom_ctx,
                                   netlist_annotation,
