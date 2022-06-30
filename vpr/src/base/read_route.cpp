@@ -423,7 +423,7 @@ static void format_ptc_num(std::vector<int>& ptc_nums, std::string ptc_str, Clus
     // detect and remove the parenthesis
     openfpga::StringToken tokenizer0(ptc_str);
     std::vector<std::string> tokens0 = tokenizer0.split(',');
-    size_t ptc_count = tokens0.size() + 1;
+    size_t ptc_count = tokens0.size();
     openfpga::StringToken tokenizer1(ptc_count > 1? format_name(ptc_str) : ptc_str);
 
     // now do the real job
@@ -431,6 +431,7 @@ static void format_ptc_num(std::vector<int>& ptc_nums, std::string ptc_str, Clus
     std::stringstream ptc_stream;
     int num;
     for (size_t i = 0; i < tokens1.size(); i++) {
+        ptc_stream.clear();
         ptc_stream << tokens1[i];
         ptc_stream >> num;
         if (ptc_stream.fail()) {
