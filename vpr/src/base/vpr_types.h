@@ -900,6 +900,13 @@ enum class e_timing_report_detail {
     DETAILED_ROUTING, //Show inter-block routing resources used
 };
 
+enum class e_post_synth_netlist_unconn_handling {
+    UNCONNECTED, // Leave unrouted ports unconnected
+    NETS,        // Leave unrouted ports unconnected but add new named nets to each of them
+    GND,         // Tie unrouted ports to ground (only for input ports)
+    VCC          // Tie unrouted ports to VCC (only for input ports)
+};
+
 enum class e_incr_reroute_delay_ripup {
     ON,
     OFF,
@@ -959,6 +966,9 @@ struct t_analysis_opts {
     e_stage_action doAnalysis;
 
     bool gen_post_synthesis_netlist;
+    bool gen_post_implementation_merged_netlist;
+    e_post_synth_netlist_unconn_handling post_synth_netlist_unconn_input_handling;
+    e_post_synth_netlist_unconn_handling post_synth_netlist_unconn_output_handling;
 
     int timing_report_npaths;
     e_timing_report_detail timing_report_detail;

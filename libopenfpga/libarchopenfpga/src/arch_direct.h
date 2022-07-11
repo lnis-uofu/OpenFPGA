@@ -2,6 +2,7 @@
 #define ARCH_DIRECT_H
 
 #include <map>
+#include <array>
 
 #include "vtr_vector.h"
 #include "vtr_geometry.h"
