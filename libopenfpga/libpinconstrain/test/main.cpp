@@ -20,7 +20,7 @@ int main(int argc, const char** argv) {
      }
      command_line += argv[i];
   }
-  VTR_LOG("Created command line <%s> for test.\n", command_line);
+  VTR_LOG("Created command line <%s> for test.\n", command_line.c_str());
   cmd_line pin_c_cmd (argc, argv);
   VTR_LOG("Testing reader and writer.\n");
   int status = pin_constrain_location_cmd_line(pin_c_cmd);
