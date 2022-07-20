@@ -2,6 +2,7 @@
 #include "read_blif.h"
 #include "blifparse.hpp"
 #include "blif_reader.h"
+#include "vtr_log.h"
 
 // blif parser callback
  using namespace blifparse;
@@ -34,7 +35,7 @@
          void finish_parse() override {}
 
          void parse_error(const int curr_lineno, const std::string& near_text, const   std::string& msg) override {
-              fprintf(stderr, "Custom Error at line %d near '%s': %s\n", curr_lineno,  near_text.c_str(), msg.c_str());
+              VTR_LOG_ERROR("Custom Error at line %d near '%s': %s\n", curr_lineno,  near_text.c_str(), msg.c_str());
               had_error_ = true;
          }
 

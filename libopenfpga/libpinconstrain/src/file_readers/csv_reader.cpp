@@ -1,5 +1,6 @@
 #include "csv_reader.h"
 #include <algorithm>
+#include "vtr_log.h"
 
 
 bool CvsReader::read_cvs(const std::string &f)
@@ -7,7 +8,7 @@ bool CvsReader::read_cvs(const std::string &f)
     std::ifstream infile(f);
     if (!infile.is_open())
     {
-        cout << "ERROR: cound not open the file " << f << endl;
+        VTR_LOG_ERROR("ERROR: cound not open the file %s.\n", f.c_str());
         return false;
     }
 

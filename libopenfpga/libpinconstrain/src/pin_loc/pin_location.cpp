@@ -7,6 +7,7 @@
 #include "pin_location.h"
 #include <algorithm>
 #include <set>
+#include "vtr_log.h"
 
 const string USAGE_MSG = "usage options: --xml PINMAP_XML --pcf PCF --blif BLIF --csv CSV_FILE --output OUTPUT";
 const cmd_line & pin_location::get_cmd() const
@@ -24,14 +25,14 @@ bool pin_location::reader_and_writer()
     string output_name = cmd.get_param("--output");
     if ((xml_name == "") || (csv_name == "") || (pcf_name == "") ||  (blif_name == "")|| (output_name == "") )
     {
-        CERROR << error_messages[MISSING_IN_OUT_FILES] << std::endl << USAGE_MSG << endl;
+        VTR_LOG_ERROR("%s\n %s\n", error_messages[MISSING_IN_OUT_FILES].c_str(), USAGE_MSG.c_str());
         return false;
     }
   
     XmlReader rd_xml;
     if (!rd_xml.read_xml(xml_name))
     {
-        CERROR << error_messages[PIN_LOC_XML_PARSE_ERROR] << std::endl;
+        VTR_LOG_ERROR("%s.\n", error_messages[PIN_LOC_XML_PARSE_ERROR].c_str());
         return false;
     }
     std::map<std::string, PinMappingData>  xml_port_map = rd_xml.get_port_map();
@@ -39,7 +40,7 @@ bool pin_location::reader_and_writer()
     CvsReader rd_csv;
     if (!rd_csv.read_cvs(csv_name))
     {
-        CERROR << error_messages[PIN_MAP_CSV_PARSE_ERROR] << std::endl;
+        VTR_LOG_ERROR("%s.\n", error_messages[PIN_MAP_CSV_PARSE_ERROR].c_str());
         return false;
     }
     map<string, string> csv_port_map = rd_csv.get_port_map();
@@ -47,14 +48,14 @@ bool pin_location::reader_and_writer()
     PcfReader rd_pcf;
     if (!rd_pcf.read_pcf(pcf_name))
     {
-        CERROR << error_messages[PIN_CONSTRAINT_PARSE_ERROR] << std::endl;
+        VTR_LOG_ERROR("%s.\n", error_messages[PIN_CONSTRAINT_PARSE_ERROR].c_str());
         return false;
     }
 
     // read port info from blif file
     BlifReader rd_blif;
     if (!rd_blif.read_blif(blif_name)) {
-        CERROR << error_messages[INPUT_DESIGN_PARSE_ERROR] << std::endl;
+        VTR_LOG_ERROR("%s.\n", error_messages[INPUT_DESIGN_PARSE_ERROR].c_str());
         return false;
     }
     std::vector<std::string> inputs = rd_blif.get_inputs();
@@ -89,7 +90,7 @@ bool pin_location::reader_and_writer()
             }
             else
             {
-                CERROR << error_messages[CONSTRAINED_PORT_NOT_FOUND] << ": <" << pin_name << ">"  << std::endl;
+                VTR_LOG_ERROR("%s: <%s>.\n", error_messages[CONSTRAINED_PORT_NOT_FOUND].c_str(), pin_name.c_str());
                 out_file.close();
                 return false;
             }
@@ -97,7 +98,7 @@ bool pin_location::reader_and_writer()
         if (constrained_ports.find(pin_name) == constrained_ports.end()) {
             constrained_ports.insert(pin_name);
         } else {
-            CERROR << error_messages[RE_CONSTRAINED_PORT] << ": <" << pin_name << ">"  << std::endl;
+            VTR_LOG_ERROR("%s: <%s>.\n", error_messages[RE_CONSTRAINED_PORT].c_str(), pin_name.c_str());
             out_file.close();
             return false;
         }
@@ -114,7 +115,7 @@ bool pin_location::reader_and_writer()
             if (constrained_pins.find(cstr_name) == constrained_pins.end()) {
                 constrained_pins.insert(cstr_name);
             } else {
-                CERROR << error_messages[OVERLAP_PIN_IN_CONSTRAINT] << ": <" << cstr_name << ">"  << std::endl;
+                VTR_LOG_ERROR("%s: <%s>.\n", error_messages[OVERLAP_PIN_IN_CONSTRAINT].c_str(), cstr_name.c_str());
                 out_file.close();
                 return false;
             }
@@ -127,7 +128,7 @@ bool pin_location::reader_and_writer()
            }
             content_to_write += pin_name + "        " +  std::to_string(pinMapData.get_x()) + "   " + std::to_string(pinMapData.get_y()) + "   " + std::to_string(pinMapData.get_z()) + "\n";
         } else {
-           CERROR << error_messages[CONSTRAINED_PIN_NOT_FOUND] << ": <" << cstr_name << ">" << std::endl;
+           VTR_LOG_ERROR("%s: <%s>.\n", error_messages[CONSTRAINED_PIN_NOT_FOUND].c_str(),  cstr_name.c_str());
            out_file.close();
            return false;
         }

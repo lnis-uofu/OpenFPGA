@@ -1,5 +1,5 @@
-#ifndef PIN_LOCATION
-#define PIN_LOCATION
+#ifndef PIN_LOCATION_H
+#define PIN_LOCATION_H
 #include "cmd_line.h"
 
 // number of arguments for "pin_c", inlcuding the "pin_c" command itself
@@ -30,7 +30,6 @@ private:
        "Re-constrained port",                       // RE_CONSTRAINED_PORT
        "Overlap pin found in constraint"            // OVERLAP_PIN_IN_CONSTRAINT
     };
-    #define CERROR std::cerr << "[Error] "
 
     cmd_line cl_;
 

@@ -17,11 +17,9 @@ Supported PCF commands:
 
   Every tile where <net> is present will be constrained to use a given global clock.
 */
-using namespace std;
 class PcfReader
 {
-  vector<vector<string>> commands;
-  //std::map<string, string> pcf_pin_map;
+  std::vector<std::vector<std::string>> commands;
 
 public:
   PcfReader() {}
@@ -30,8 +28,7 @@ public:
     read_pcf(f);
   }
   bool read_pcf(const std::string &f);
-  const vector<vector<string>>& get_commands()const { return commands;}
-  //const unordered_map<string, string>& get_pcf_pin_map()const { return pcf_pin_map;}
+  const std::vector<std::vector<std::string>>& get_commands()const { return commands;}
 };
 
 #endif
