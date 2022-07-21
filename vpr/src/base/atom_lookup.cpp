@@ -150,6 +150,15 @@ AtomLookup::tnode_pin_range AtomLookup::tnode_atom_pins() const {
     return vtr::make_range(tnode_atom_pin_.begin(), tnode_atom_pin_.end());
 }
 
+AtomLookup::pin_tnode_range AtomLookup::atom_pin_tnodes(BlockTnode block_tnode_type) const {
+    if (block_tnode_type == BlockTnode::EXTERNAL) {
+        return vtr::make_range(atom_pin_tnode_external_.begin(), atom_pin_tnode_external_.end());
+    } else {
+        VTR_ASSERT(block_tnode_type == BlockTnode::INTERNAL);
+        return vtr::make_range(atom_pin_tnode_internal_.begin(), atom_pin_tnode_internal_.end());
+    }
+}
+
 void AtomLookup::set_atom_pin_tnode(const AtomPinId pin, const tatum::NodeId node, BlockTnode block_tnode_type) {
     //A pin always expands to an external tnode (i.e. it's external connectivity in the netlist)
     //but some pins may expand to an additional tnode (i.e. to SOURCE/SINK to cover internal sequential paths within a block)
