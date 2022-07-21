@@ -1,0 +1,9 @@
+# Run VPR for the 'and' design
+#--write_rr_graph example_rr_graph.xml
+#
+
+# constraint pin
+# same to script usage (no "-net" yet):
+#  python3 create_ioplace.py --pcf “pcf_file” --blif “blif_file” --net “net_file” --pinmap_xml “pinmap_xml_file” --csv_file “csv_file” --output “outputplace_file”
+constrain_pin_location --pcf ./simple_pic_cstr_pin.pcf --blif simple_pic.blif --net NOT_YET_SUPPORT --pinmap_xml pinmap_qlf_k6n10_tsmc22.xml --csv_file pinmap_qlf_k6n10_tsmc22.csv --output simple_pic_pin_constained.place
+exit

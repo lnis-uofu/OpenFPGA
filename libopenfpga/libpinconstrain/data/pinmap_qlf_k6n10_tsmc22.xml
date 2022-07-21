@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  XML file specification is primarily to define the mapping of the interface cell ports defined
+  in vpr_arch xml, to the EFPGA IO interface port names. This mapping is required by Symbiflow
+  alongwith architecture definition file i.e. vpr_arch xml file. Symbiflow will process this 
+  file and use this information for IO placement and then later on use this to map it with the 
+  user-defined pin-mapping file.
+-->
+<DEVICE name= "qlf_k6n10_tsmc22" family="qlf_k6n10" width="6" height="6" z="20">
+  <IO>
+    <TOP_IO y="5">
+        <CELL port_name="f2a_i" mapped_name="gfpga_pad_IO_F2A[0:79]" startx="1" endx="4"/>
+        <CELL port_name="a2f_o" mapped_name="gfpga_pad_IO_A2F[0:79]" startx="1" endx="4"/>
+    </TOP_IO>
+    <RIGHT_IO x="5">
+        <CELL port_name="f2a_i" mapped_name="gfpga_pad_IO_F2A[80:159]" starty="4" endy="1"/>
+        <CELL port_name="a2f_o" mapped_name="gfpga_pad_IO_A2F[80:159]" starty="4" endy="1"/>
+    </RIGHT_IO>
+    <BOTTOM_IO y="0">
+        <CELL port_name="f2a_i" mapped_name="gfpga_pad_IO_F2A[160:239]" startx="4" endx="1"/>
+        <CELL port_name="a2f_o" mapped_name="gfpga_pad_IO_A2F[160:239]" startx="4" endx="1"/>
+    </BOTTOM_IO>
+    <LEFT_IO x="0">
+        <CELL port_name="f2a_i" mapped_name="gfpga_pad_IO_F2A[240:319]" starty="1" endy="4"/>
+        <CELL port_name="a2f_o" mapped_name="gfpga_pad_IO_A2F[240:319]" starty="1" endy="4"/>
+    </LEFT_IO>
+  </IO>
+</DEVICE>
