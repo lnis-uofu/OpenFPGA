@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  XML file specification is primarily to define the mapping of the interface cell ports defined
+  in vpr_arch xml, to the EFPGA IO interface port names. This mapping is required by OpenFPGA
+  alongwith architecture definition file i.e. vpr_arch xml file. OpenFPGA will process this 
+  file and use this information for IO placement and then later on use this to map it with the 
+  user-defined pin-mapping file.
+-->
+<DEVICE name= "k4_N4_tileable_40nm" family="k4n4" width="6" height="6" z="8">
+  <IO>
+    <TOP_IO y="5">
+        <CELL port_name="output" mapped_name="gfpga_pad_IO_F2A[0:31]" startx="1" endx="4"/>
+        <CELL port_name="input" mapped_name="gfpga_pad_IO_A2F[0:31]" startx="1" endx="4"/>
+    </TOP_IO>
+    <RIGHT_IO x="5">
+        <CELL port_name="output" mapped_name="gfpga_pad_IO_F2A[32:63]" starty="4" endy="1"/>
+        <CELL port_name="input" mapped_name="gfpga_pad_IO_A2F[32:63]" starty="4" endy="1"/>
+    </RIGHT_IO>
+    <BOTTOM_IO y="0">
+        <CELL port_name="output" mapped_name="gfpga_pad_IO_F2A[64:95]" startx="4" endx="1"/>
+        <CELL port_name="input" mapped_name="gfpga_pad_IO_A2F[64:95]" startx="4" endx="1"/>
+    </BOTTOM_IO>
+    <LEFT_IO x="0">
+        <CELL port_name="output" mapped_name="gfpga_pad_IO_F2A[96:127]" starty="1" endy="4"/>
+        <CELL port_name="input" mapped_name="gfpga_pad_IO_A2F[96:127]" starty="1" endy="4"/>
+    </LEFT_IO>
+  </IO>
+</DEVICE>
