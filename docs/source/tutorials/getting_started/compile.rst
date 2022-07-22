@@ -30,11 +30,15 @@ In general, please follow the steps to compile
 
 **Quick Compilation Verification**
 
+.. note:: Ensure that you install python dependences in :ref:`tutorial_compile_dependencies`.
+
 To quickly verify the tool is well compiled, users can run the following command from OpenFPGA root repository
 
 .. code-block:: shell
 
   python3 openfpga_flow/scripts/run_fpga_task.py compilation_verification --debug --show_thread_logs
+
+.. _tutorial_compile_dependencies:
 
 Dependencies
 ~~~~~~~~~~~~
@@ -50,7 +54,10 @@ In particular, OpenFPGA requires specific versions for the following dependencie
 :python dependencies:
   python packages are also required:
   
+.. code-block::
+
   python3 -m pip install -r requirements.txt
+
 
 .. _install_dependencies_build: https://github.com/lnis-uofu/OpenFPGA/blob/master/.github/workflows/install_dependencies_build.sh
 
