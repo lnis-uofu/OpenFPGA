@@ -388,6 +388,39 @@ ShellCommandId add_openfpga_write_fabric_hierarchy_command(openfpga::Shell<Openf
   return shell_cmd_id;
 }
 
+/********************************************************************
+ * - Add a command to Shell environment: write_fabric_io_info
+ * - Add associated options 
+ * - Add command dependency
+ *******************************************************************/
+static 
+ShellCommandId add_openfpga_write_fabric_io_info_command(openfpga::Shell<OpenfpgaContext>& shell,
+                                                         const ShellCommandClassId& cmd_class_id,
+                                                         const std::vector<ShellCommandId>& dependent_cmds) {
+  Command shell_cmd("write_fabric_io_info");
+
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file = shell_cmd.add_option("file", true, "file path to output the I/O information");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false, "Do not print time stamp in output files");
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Enable verbose output");
+
+  /* Add command the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "Write the I/O information, e.g., locations and similar attributes, to a file");
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id, write_fabric_io_info);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
 void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /* Get the unique id of 'vpr' command which is to be used in creating the dependency graph */
   const ShellCommandId& vpr_cmd_id = shell.command(std::string("vpr"));
@@ -515,6 +548,14 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   add_openfpga_write_fabric_hierarchy_command(shell,
                                               openfpga_setup_cmd_class,
                                               write_fabric_hie_dependent_cmds);
+
+  /******************************** 
+   * Command 'write_fabric_io_info' 
+   */
+  /* The 'write_fabric_io_info' command should NOT be executed before 'build_fabric' */
+  std::vector<ShellCommandId> cmd_dependency_write_fabric_io_info;
+  cmd_dependency_write_fabric_io_info.push_back(shell_cmd_build_fabric_id);
+  add_openfpga_write_fabric_io_info_command(shell, openfpga_setup_cmd_class, cmd_dependency_write_fabric_io_info);
 } 
 
 } /* end namespace openfpga */

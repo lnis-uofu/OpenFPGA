@@ -40,6 +40,10 @@ class IoLocationMap {
                       const size_t& z,
                       const std::string& io_port_name,
                       const size_t& io_index);
+  public: /* Public writer */
+    int write_to_xml_file(const std::string& fname,
+                          const bool& include_time_stamp,
+                          const bool& verbose) const;
   private: /* Internal Data */
     /* I/O index fast lookup by [x][y][z] location */
     std::vector<std::vector<std::vector<std::map<std::string, size_t>>>> io_indices_;

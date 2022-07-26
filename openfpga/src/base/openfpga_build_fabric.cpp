@@ -147,7 +147,7 @@ int build_fabric(OpenfpgaContext& openfpga_ctx,
 } 
 
 /********************************************************************
- * Build the module graph for FPGA device
+ * Write hierarchy of the module graph for FPGA device to a file
  *******************************************************************/
 int write_fabric_hierarchy(const OpenfpgaContext& openfpga_ctx,
                            const Command& cmd, const CommandContext& cmd_context) { 
@@ -183,5 +183,30 @@ int write_fabric_hierarchy(const OpenfpgaContext& openfpga_ctx,
                                              size_t(depth),
                                              cmd_context.option_enable(cmd, opt_verbose));
 }
+
+/********************************************************************
+ * Write the I/O information of module graph to a file
+ *******************************************************************/
+int write_fabric_io_info(const OpenfpgaContext& openfpga_ctx,
+                         const Command& cmd, const CommandContext& cmd_context) { 
+
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* Check the option '--file' is enabled or not 
+   * Actually, it must be enabled as the shell interface will check 
+   * before reaching this fuction
+   */
+  CommandOptionId opt_file = cmd.option("file");
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  std::string file_name = cmd_context.option_value(cmd, opt_file);
+
+  /* Write hierarchy to a file */
+  return openfpga_ctx.io_location_map().write_to_xml_file(file_name,
+                                                          !cmd_context.option_enable(cmd, opt_no_time_stamp),
+                                                          cmd_context.option_enable(cmd, opt_verbose));
+}
+
 
 } /* end namespace openfpga */
