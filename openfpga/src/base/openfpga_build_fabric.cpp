@@ -191,6 +191,7 @@ int write_fabric_io_info(const OpenfpgaContext& openfpga_ctx,
                          const Command& cmd, const CommandContext& cmd_context) { 
 
   CommandOptionId opt_verbose = cmd.option("verbose");
+  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
 
   /* Check the option '--file' is enabled or not 
    * Actually, it must be enabled as the shell interface will check 

@@ -554,7 +554,7 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
    */
   /* The 'write_fabric_io_info' command should NOT be executed before 'build_fabric' */
   std::vector<ShellCommandId> cmd_dependency_write_fabric_io_info;
-  cmd_dependency_write_fabric_io_info.push_back(shell_cmd_build_fabric_id);
+  cmd_dependency_write_fabric_io_info.push_back(build_fabric_cmd_id);
   add_openfpga_write_fabric_io_info_command(shell, openfpga_setup_cmd_class, cmd_dependency_write_fabric_io_info);
 } 
 
