@@ -24,6 +24,10 @@ build_fabric --compress_routing #--verbose
 # This is used by hierarchical PnR flows
 write_fabric_hierarchy --file ./fabric_hierarchy.txt
 
+# Write the fabric I/O attributes to a file
+# This is used by pin constraint files
+write_fabric_io_info --file ./fabric_io_location.xml --verbose
+
 # Write the Verilog netlist for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
 write_fabric_verilog --file ${OPENFPGA_VERILOG_OUTPUT_DIR}/SRC --explicit_port_mapping --include_timing --print_user_defined_template --verbose

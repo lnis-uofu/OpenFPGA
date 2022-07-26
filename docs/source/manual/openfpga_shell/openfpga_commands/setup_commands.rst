@@ -217,3 +217,22 @@ write_fabric_hierarchy
     Show verbose log
 
   .. note:: This file is designed for hierarchical PnR flow, which requires the tree of Multiple-Instanced-Blocks (MIBs).
+
+write_fabric_io_info
+~~~~~~~~~~~~~~~~~~~~
+
+  Write the I/O information of FPGA fabric to an XML file
+  
+  .. option:: --file <string> or -f <string>
+  
+    Specify the file name to write the I/O information
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in bitstream files
+
+  .. option:: --verbose
+
+    Show verbose log
+
+  .. note:: This file is designed for pin constraint file conversion.
