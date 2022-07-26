@@ -108,7 +108,7 @@ int IoLocationMap::write_to_xml_file(const std::string& fname,
   /* Walk through the fabric I/O location map data structure */
   for (size_t x = 0; x < io_indices_.size(); ++x) {
     for (size_t y = 0; y < io_indices_[x].size(); ++y) {
-      for (size_t z = 0; z < io_indices_[y].size(); ++z) {
+      for (size_t z = 0; z < io_indices_[x][y].size(); ++z) {
         for (const auto& name_id_pair : io_indices_[x][y][z]) {
           fp << "\t" << "<io pad=\"" << name_id_pair.first << "[" << name_id_pair.second << "]\"";
           fp << " " << "x=\"" << x << "\"";

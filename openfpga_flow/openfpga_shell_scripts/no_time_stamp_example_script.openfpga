@@ -34,7 +34,7 @@ write_fabric_hierarchy --file ./fabric_hierarchy.txt
 
 # Write the fabric I/O attributes to a file
 # This is used by pin constraint files
-write_fabric_io --file ./fabric_io_location.xml --verbose --no_time_stamp
+write_fabric_io_info --file ./fabric_io_location.xml --verbose --no_time_stamp
 
 # Repack the netlist to physical pbs
 # This must be done before bitstream generator and testbench generation
