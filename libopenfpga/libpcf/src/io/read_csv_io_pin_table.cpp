@@ -28,7 +28,7 @@ IoPinTable read_csv_io_pin_table(const char* fname) {
 
   IoPinTable io_pin_table;
 
-  rapidcsv::Document doc(fname, rapidcsv::LabelParams(-1, 0),
+  rapidcsv::Document doc(fname, rapidcsv::LabelParams(-1, -1),
                          rapidcsv::SeparatorParams(','));
 
   /* TODO: Move this to constants */
@@ -37,7 +37,7 @@ IoPinTable read_csv_io_pin_table(const char* fname) {
   int num_rows = doc.GetRowCount();
   io_pin_table.reserve_pins(num_rows);
 
-  for (int irow = 0; irow < num_rows; irow++) { 
+  for (int irow = 1; irow < num_rows; irow++) { 
     std::vector<std::string> row_vec = doc.GetRow<std::string>(irow);
     IoPinTableId pin_id = io_pin_table.create_pin();
     /* Fill pin-level information */
@@ -49,7 +49,7 @@ IoPinTable read_csv_io_pin_table(const char* fname) {
 
     std::string pin_side_str = row_vec.at(0);
     if (side_str_map.end() == side_str_map.find(pin_side_str)) {
-      VTR_LOG("Invalid side defintion! Expect [TOP|RIGHT|LEFT|BOTTOM]\n");
+      VTR_LOG("Invalid side defintion (='%s')! Expect [TOP|RIGHT|LEFT|BOTTOM]\n", pin_side_str.c_str());
       exit(1);
     } else {
       io_pin_table.set_pin_side(pin_id, side_str_map[pin_side_str]);

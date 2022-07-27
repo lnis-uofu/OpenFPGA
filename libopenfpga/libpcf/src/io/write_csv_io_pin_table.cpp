@@ -47,6 +47,7 @@ int write_csv_io_pin_table(const char* fname,
       fp << ",";
     }
   }
+  fp << "\n";
 
   /* Print data */
   for (const IoPinTableId& pin_id : io_pin_table.pins()) {
@@ -61,6 +62,7 @@ int write_csv_io_pin_table(const char* fname,
         fp << ",";
       }
     }
+    fp << "\n";
   }
 
   return 0;
