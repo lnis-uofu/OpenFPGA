@@ -13,7 +13,8 @@
 namespace openfpga {
 
 /* Parse a .pcf file through a stream, return an object which contains all the data */
-PcfData read_pcf(const char* fname);
+int read_pcf(const char* fname,
+             PcfData& pcf_data);
 
 } /* End namespace openfpga*/
 
