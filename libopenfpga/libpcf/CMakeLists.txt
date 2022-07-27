@@ -23,6 +23,7 @@ target_link_libraries(libpcf
                       libarchfpga
                       libarchopenfpga
                       libvtrutil
+                      libblifparse
                       libpugixml
                       libpugiutil)
 
