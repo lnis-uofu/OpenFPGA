@@ -8,7 +8,17 @@
 #include <vector>
 #include <algorithm>
 #include <map>
-#include "main.h"
+#include <climits>
+
+bool VERBOSE_V_MODE = true;
+struct PCFlayout {
+    std::string pinName;        //with the [7:0] bitfield(maybe)
+    int pinNameBit = 0;
+    std::string pinNameBase;    //without the bitfield
+    std::string pinNum;
+    int pinNumInt;
+    std::string comment;
+};
 
 #define TEST_PRINT_PCFREAD_CHECK 0
 

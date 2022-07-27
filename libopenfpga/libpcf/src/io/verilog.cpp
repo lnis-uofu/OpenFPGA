@@ -8,7 +8,26 @@
 #include <vector>
 #include <algorithm>
 #include <map>
-#include "main.h"
+#include <climits>
+
+struct PCFlayout {
+    std::string pinName;        //with the [7:0] bitfield(maybe)
+    int pinNameBit = 0;
+    std::string pinNameBase;    //without the bitfield
+    std::string pinNum;
+    int pinNumInt;
+    std::string comment;
+};
+
+struct Veriloglayout {
+    std::string inpout;
+    std::string bitfield;
+    int bits = 1;
+    int hibit = INT_MAX;
+    int lobit = 0;
+    std::string pinName;
+    std::string comment;
+};
 
 #define TEST_PRINT_VERILOG_CHECK 0
 #define TEST_PCFMAP_PIN_COUNT 0
