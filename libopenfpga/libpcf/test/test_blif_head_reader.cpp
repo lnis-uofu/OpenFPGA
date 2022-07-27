@@ -21,9 +21,9 @@ int main(int argc, const char** argv) {
           argv[1]);
 
   if (callback.had_error()) {
+    VTR_LOG("Read the blif ends with errors\n",
+            argv[1]);
     return 1;
-  } else {
-    return 0;
   }
 
   /* Output */
