@@ -15,8 +15,6 @@
 /* Headers from arch openfpga library */
 #include "write_xml_utils.h" 
 
-#include "csv.hpp"
-
 #include "write_csv_io_pin_table.h"
 
 /* Begin namespace openfpga */
@@ -38,14 +36,17 @@ int write_csv_io_pin_table(const char* fname,
   /* Open the file stream */
   fp.open(std::string(fname), std::fstream::out | std::fstream::trunc);
 
-  auto writer = csv::make_csv_writer(fp);
-
   /* TODO: Move this to constants header file */
   std::array<std::string, IoPinTable::NUM_IO_DIRECTIONS> IO_DIRECTION_STRING = {"input", "output"};
 
   /* Print head row */
   std::vector<std::string> head_row_str({"orientation", "port_name", "mapped_pin", "direction"});
-  writer << head_row_str;
+  for (size_t icol = 0; icol < head_row_str.size(); icol++) {
+    fp << head_row_str[icol];
+    if (icol < head_row_str.size() - 1) {
+      fp << ",";
+    }
+  }
 
   /* Print data */
   for (const IoPinTableId& pin_id : io_pin_table.pins()) {
@@ -54,7 +55,12 @@ int write_csv_io_pin_table(const char* fname,
     data_row_str.push_back(generate_xml_port_name(io_pin_table.internal_pin(pin_id)));
     data_row_str.push_back(generate_xml_port_name(io_pin_table.external_pin(pin_id)));
     data_row_str.push_back(IO_DIRECTION_STRING[io_pin_table.pin_direction(pin_id)]);
-    writer << data_row_str;
+    for (size_t icol = 0; icol < head_row_str.size(); icol++) {
+      fp << data_row_str[icol];
+      if (icol < data_row_str.size() - 1) {
+        fp << ",";
+      }
+    }
   }
 
   return 0;
