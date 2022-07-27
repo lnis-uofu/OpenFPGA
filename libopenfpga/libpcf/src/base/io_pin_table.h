@@ -72,18 +72,23 @@ class IoPinTable {
      */
     io_pin_table_range internal_pins() const;
   public: /* Public Accessors: Basic data query */
-    /* Get the internal pin */
+    /* Get the basic information for a pin */
     openfpga::BasicPort internal_pin(const IoPinTableId& pin_id) const;
-
+    openfpga::BasicPort external_pin(const IoPinTableId& pin_id) const;
+    e_side pin_side(const IoPinTableId& pin_id) const;
+    e_io_direction pin_direction(const IoPinTableId& pin_id) const;
     /* Check if there are any pins */
     bool empty() const;
-
   public: /* Public Mutators */
     /* Reserve to be memory efficent */
     void reserve_pins(const size_t& num_pins);
-
     /* Add a pin to storage */
     IoPinTableId create_pin();
+    /* Set pin attributes */
+    void set_internal_pin(const IoPinTableId& pin_id, const BasicPort& pin);
+    void set_external_pin(const IoPinTableId& pin_id, const BasicPort& pin);
+    void set_pin_side(const IoPinTableId& pin_id, const e_side& side);
+    void set_pin_direction(const IoPinTableId& pin_id, const e_io_direction& direction);
 
   public: /* Public invalidators/validators */
     /* Show if the pin id is a valid for data queries */

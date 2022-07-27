@@ -29,10 +29,28 @@ IoPinTable::io_pin_table_range IoPinTable::internal_pins() const {
 /************************************************************************
  * Public Accessors : Basic data query 
  ***********************************************************************/
-openfpga::BasicPort IoPinTable::internal_pin(const IoPinTableId& pin_id) const {
+BasicPort IoPinTable::internal_pin(const IoPinTableId& pin_id) const {
   /* validate the pin_id */
   VTR_ASSERT(valid_pin_id(pin_id));
   return internal_pins_[pin_id]; 
+}
+
+BasicPort IoPinTable::external_pin(const IoPinTableId& pin_id) const {
+  /* validate the pin_id */
+  VTR_ASSERT(valid_pin_id(pin_id));
+  return external_pins_[pin_id]; 
+}
+
+e_side IoPinTable::pin_side(const IoPinTableId& pin_id) const {
+  /* validate the pin_id */
+  VTR_ASSERT(valid_pin_id(pin_id));
+  return pin_sides_[pin_id]; 
+}
+
+IoPinTable::e_io_direction IoPinTable::pin_direction(const IoPinTableId& pin_id) const {
+  /* validate the pin_id */
+  VTR_ASSERT(valid_pin_id(pin_id));
+  return pin_directions_[pin_id]; 
 }
 
 bool IoPinTable::empty() const {
@@ -61,6 +79,26 @@ IoPinTableId IoPinTable::create_pin() {
   pin_directions_.emplace_back(NUM_IO_DIRECTIONS); 
   
   return pin_id;
+}
+
+void IoPinTable::set_internal_pin(const IoPinTableId& pin_id, const BasicPort& pin) {
+  VTR_ASSERT(valid_pin_id(pin_id));
+  internal_pins_[pin_id] = pin;
+}
+
+void IoPinTable::set_external_pin(const IoPinTableId& pin_id, const BasicPort& pin) {
+  VTR_ASSERT(valid_pin_id(pin_id));
+  external_pins_[pin_id] = pin;
+}
+
+void IoPinTable::set_pin_side(const IoPinTableId& pin_id, const e_side& side) {
+  VTR_ASSERT(valid_pin_id(pin_id));
+  pin_sides_[pin_id] = side;
+}
+
+void IoPinTable::set_pin_direction(const IoPinTableId& pin_id, const e_io_direction& direction) {
+  VTR_ASSERT(valid_pin_id(pin_id));
+  pin_directions_[pin_id] = direction;
 }
 
 /************************************************************************
