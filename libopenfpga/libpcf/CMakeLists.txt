@@ -20,6 +20,7 @@ set_target_properties(libpcf PROPERTIES PREFIX "") #Avoid extra 'lib' prefix
 #Specify link-time dependancies
 target_link_libraries(libpcf
                       libopenfpgautil
+                      libarchfpga
                       libarchopenfpga
                       libvtrutil
                       libpugixml

@@ -12,6 +12,9 @@
 #include "vtr_vector.h"
 #include "vtr_geometry.h"
 
+/* Headers from libarchfpga library */
+#include "physical_types.h"
+
 /* Headers from openfpgautil library */
 #include "openfpga_port.h"
 
@@ -62,7 +65,7 @@ class IoPinTable {
       NUM_IO_DIRECTIONS
     };
   public:  /* Constructors */
-    IoPinTables();
+    IoPinTable();
   public: /* Accessors: aggregates */
     /* Walk through the internal pins. We do not walk through external pins because they are not unique in the table. 
      * An external pin may be accessible by two internal pins
@@ -79,8 +82,8 @@ class IoPinTable {
     /* Reserve to be memory efficent */
     void reserve_pins(const size_t& num_pins);
 
-    /* Add a pin constraint to storage */
-    IoPinTableId create_pin(const openfpga::BasicPort& pin);
+    /* Add a pin to storage */
+    IoPinTableId create_pin();
 
   public: /* Public invalidators/validators */
     /* Show if the pin id is a valid for data queries */
@@ -93,7 +96,7 @@ class IoPinTable {
     vtr::vector<IoPinTableId, BasicPort> internal_pins_;
     vtr::vector<IoPinTableId, BasicPort> external_pins_;
     vtr::vector<IoPinTableId, e_side> pin_sides_;
-    vtr::vector<IoPinTableId, e_io_direction> pin_drections_;
+    vtr::vector<IoPinTableId, e_io_direction> pin_directions_;
 };
 
 } /* end namespace openfpga */
