@@ -22,7 +22,7 @@ IoPinTable::IoPinTable() {
 /************************************************************************
  * Public Accessors : aggregates
  ***********************************************************************/
-IoPinTable::io_pin_table_range IoPinTable::internal_pins() const {
+IoPinTable::io_pin_table_range IoPinTable::pins() const {
   return vtr::make_range(pin_ids_.begin(), pin_ids_.end());
 }
 

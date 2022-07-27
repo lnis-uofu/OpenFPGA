@@ -45,16 +45,16 @@ int write_csv_io_pin_table(const char* fname,
 
   /* Print head row */
   std::vector<std::string> head_row_str({"orientation", "port_name", "mapped_pin", "direction"});
-  writer << head_row_str << "\n";
+  writer << head_row_str;
 
   /* Print data */
   for (const IoPinTableId& pin_id : io_pin_table.pins()) {
     std::vector<std::string> data_row_str;
-    data_row_str.append(SIDE_STRING[io_pin_table.pin_side(pin_id)]);
-    data_row_str.append(generate_xml_port_name(io_pin_table.internal_pin(pin_id)));
-    data_row_str.append(generate_xml_port_name(io_pin_table.external_pin(pin_id)));
-    data_row_str.append(IO_DIRECTION_STRING[io_pin_table.pin_direction(pin_id)]);
-    writer << data_row_str << "\n";
+    data_row_str.push_back(SIDE_STRING[io_pin_table.pin_side(pin_id)]);
+    data_row_str.push_back(generate_xml_port_name(io_pin_table.internal_pin(pin_id)));
+    data_row_str.push_back(generate_xml_port_name(io_pin_table.external_pin(pin_id)));
+    data_row_str.push_back(IO_DIRECTION_STRING[io_pin_table.pin_direction(pin_id)]);
+    writer << data_row_str;
   }
 
   return 0;

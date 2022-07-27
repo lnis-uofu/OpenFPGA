@@ -12,6 +12,8 @@ endif(CSV_CXX_STANDARD)
 option(BUILD_PYTHON "Build Python Binding" OFF)
 
 message("Building CSV library using C++${CMAKE_CXX_STANDARD}")
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads QUIET REQUIRED)
 
 # Defines CSV_HAS_CXX17 in compatibility.hpp
 if (CMAKE_VERSION VERSION_LESS "3.12.0")

@@ -16,7 +16,7 @@ int main(int argc, const char** argv) {
   VTR_ASSERT((2 == argc) || (3 == argc));
 
   /* Parse the fabric key from an XML file */
-  openfpga::IoPinTable io_pin_table = openfpga::read_csv_io_io_pin_table(argv[1]);
+  openfpga::IoPinTable io_pin_table = openfpga::read_csv_io_pin_table(argv[1]);
   VTR_LOG("Read the I/O pin table from a csv file: %s.\n",
           argv[1]);
 
@@ -24,7 +24,7 @@ int main(int argc, const char** argv) {
    * This is optional only used when there is a second argument
    */
   if (3 <= argc) { 
-    write_csv_io_pin_table(std::string(argv[2]), io_pin_table);
+    write_csv_io_pin_table(argv[2], io_pin_table);
     VTR_LOG("Echo the I/O pin table to a csv file: %s.\n",
             argv[2]);
   }

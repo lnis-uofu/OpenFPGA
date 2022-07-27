@@ -70,7 +70,7 @@ class IoPinTable {
     /* Walk through the internal pins. We do not walk through external pins because they are not unique in the table. 
      * An external pin may be accessible by two internal pins
      */
-    io_pin_table_range internal_pins() const;
+    io_pin_table_range pins() const;
   public: /* Public Accessors: Basic data query */
     /* Get the basic information for a pin */
     openfpga::BasicPort internal_pin(const IoPinTableId& pin_id) const;
