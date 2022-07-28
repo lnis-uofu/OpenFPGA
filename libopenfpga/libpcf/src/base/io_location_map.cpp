@@ -2,6 +2,7 @@
  * Memember functions for data structure IoLocationMap
  ******************************************************************************/
 /* Headers from vtrutil library */
+#include <algorithm>
 #include "vtr_log.h"
 #include "vtr_assert.h"
 #include "vtr_time.h"
@@ -26,17 +27,24 @@ size_t IoLocationMap::io_index(const size_t& x,
   if (result == io_indices_.end()) {
     return size_t(-1);
   }
-  if (result->second.get_name() != io_port_name) {
-    return size_t(-1);
+  for (const BasicPort& candidate : result->second) {
+    if (candidate.get_name() == io_port_name) {
+      /* First found, first return. This may create bugs when FPGA architecture are more flexible
+       * FIXME: However, we should not have multiple I/O in the same name, mapped to the same coordindate
+       * For example, PAD[0] -> (1, 0, 1) and PAD[1] -> (1, 0, 1) 
+       */
+      return candidate.get_lsb();
+    }
   }
-
-  return result->second.get_lsb();
+  return size_t(-1);
 }
 
 size_t IoLocationMap::io_x(const BasicPort& io_port) const {
   for (auto pair : io_indices_) {
-    if (pair.second == io_port) {
-      return pair.first[0];
+    for (const BasicPort& candidate : pair.second) {
+      if (candidate == io_port) {
+        return pair.first[0];
+      }
     }
   }
   return size_t(-1);
@@ -44,8 +52,10 @@ size_t IoLocationMap::io_x(const BasicPort& io_port) const {
 
 size_t IoLocationMap::io_y(const BasicPort& io_port) const {
   for (auto pair : io_indices_) {
-    if (pair.second == io_port) {
-      return pair.first[1];
+    for (const BasicPort& candidate : pair.second) {
+      if (candidate == io_port) {
+        return pair.first[1];
+      }
     }
   }
   return size_t(-1);
@@ -53,13 +63,14 @@ size_t IoLocationMap::io_y(const BasicPort& io_port) const {
 
 size_t IoLocationMap::io_z(const BasicPort& io_port) const {
   for (auto pair : io_indices_) {
-    if (pair.second == io_port) {
-      return pair.first[2];
+    for (const BasicPort& candidate : pair.second) {
+      if (candidate == io_port) {
+        return pair.first[2];
+      }
     }
   }
   return size_t(-1);
 }
-
 
 void IoLocationMap::set_io_index(const size_t& x,
                                  const size_t& y,
@@ -67,15 +78,17 @@ void IoLocationMap::set_io_index(const size_t& x,
                                  const std::string& io_port_name,
                                  const size_t& io_index) {
   std::array<size_t, 3> coord = {x, y, z};
+  BasicPort port_to_add(io_port_name, io_index, io_index);
   auto result = io_indices_.find(coord);
-  if (result != io_indices_.end()) {
-    VTR_LOG_WARN("Overwrite io '%s[%lu]' coordinate (%lu, %lu, %lu) with '%s[%lu]'!\n",
-                 io_port_name.c_str(), io_index,
-                 x, y, z,
-                 result->second.get_name().c_str(), result->second.get_lsb());
+  if (result == io_indices_.end()) {
+    if (io_indices_.at(coord).end() == std::find(io_indices_.at(coord).begin(), io_indices_.at(coord).end(), port_to_add)) { 
+      VTR_LOG_WARN("Attempt to add duplicated io '%s[%lu]' to coordinate (%lu, %lu, %lu)! Skip to save memory\n",
+                   io_port_name.c_str(), io_index,
+                   x, y, z);
+    }
   }
 
-  io_indices_[coord] = BasicPort(io_port_name, io_index, io_index);
+  io_indices_[coord].push_back(port_to_add);
 }
 
 int IoLocationMap::write_to_xml_file(const std::string& fname,
@@ -124,13 +137,15 @@ int IoLocationMap::write_to_xml_file(const std::string& fname,
 
   /* Walk through the fabric I/O location map data structure */
   for (auto pair : io_indices_) {
-    fp << "\t" << "<io pad=\"" << pair.second.get_name().c_str() << "[" << pair.second.get_lsb() << "]\"";
-    fp << " " << "x=\"" << pair.first[0] << "\"";
-    fp << " " << "y=\"" << pair.first[1] << "\"";
-    fp << " " << "z=\"" << pair.first[2] << "\"";
-    fp << "/>";
-    fp << "\n";
-    io_cnt++;
+    for (const BasicPort& port : pair.second) {
+      fp << "\t" << "<io pad=\"" << port.get_name().c_str() << "[" << port.get_lsb() << "]\"";
+      fp << " " << "x=\"" << pair.first[0] << "\"";
+      fp << " " << "y=\"" << pair.first[1] << "\"";
+      fp << " " << "z=\"" << pair.first[2] << "\"";
+      fp << "/>";
+      fp << "\n";
+      io_cnt++;
+    }
   } 
 
   /* Print an end to the file here */

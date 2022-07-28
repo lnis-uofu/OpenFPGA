@@ -49,8 +49,10 @@ class IoLocationMap {
                           const bool& include_time_stamp,
                           const bool& verbose) const;
   private: /* Internal Data */
-    /* I/O index fast lookup by [x][y][z] location */
-    std::map<std::array<size_t, 3>, BasicPort> io_indices_;
+    /* I/O index fast lookup by [x][y][z] location 
+     * Note that multiple I/Os may be assigned to the same coordinate!
+     */
+    std::map<std::array<size_t, 3>, std::vector<BasicPort>> io_indices_;
 };
 
 } /* End namespace openfpga*/
