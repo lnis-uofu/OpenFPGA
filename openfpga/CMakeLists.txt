@@ -28,8 +28,7 @@ target_link_libraries(libopenfpga
                       libpcf
                       libvtrutil
                       libbusgroup
-                      libvpr
-                      libpinconstrain)
+                      libvpr)
 
 #Create the test executable
 add_executable(openfpga ${EXEC_SOURCE})

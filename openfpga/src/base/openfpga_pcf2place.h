@@ -1,10 +1,11 @@
-#ifndef OPENFPGA_CONSTRAIN_PIN_LOCATION_COMMAND_H
-#define OPENFPGA_CONSTRAIN_PIN_LOCATION_COMMAND_H
+#ifndef OPENFPGA_PCF2PLACE_H
+#define OPENFPGA_PCF2PLACE_H
 
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "shell.h"
+#include "command.h"
+#include "command_context.h"
 #include "openfpga_context.h"
 
 /********************************************************************
@@ -14,7 +15,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void add_openfpga_constrain_pin_location_command(openfpga::Shell<OpenfpgaContext>& shell); 
+int pcf2place_wrapper(const OpenfpgaContext& openfpga_context,
+                      const Command& cmd, const CommandContext& cmd_context); 
 
 } /* end namespace openfpga */
 
