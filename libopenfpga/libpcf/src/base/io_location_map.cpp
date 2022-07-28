@@ -80,8 +80,8 @@ void IoLocationMap::set_io_index(const size_t& x,
   std::array<size_t, 3> coord = {x, y, z};
   BasicPort port_to_add(io_port_name, io_index, io_index);
   auto result = io_indices_.find(coord);
-  if (result == io_indices_.end()) {
-    if (io_indices_.at(coord).end() == std::find(io_indices_.at(coord).begin(), io_indices_.at(coord).end(), port_to_add)) { 
+  if (result != io_indices_.end()) {
+    if (io_indices_.at(coord).end() != std::find(io_indices_.at(coord).begin(), io_indices_.at(coord).end(), port_to_add)) { 
       VTR_LOG_WARN("Attempt to add duplicated io '%s[%lu]' to coordinate (%lu, %lu, %lu)! Skip to save memory\n",
                    io_port_name.c_str(), io_index,
                    x, y, z);
