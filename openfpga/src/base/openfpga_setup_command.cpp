@@ -10,6 +10,7 @@
 #include "check_netlist_naming_conflict.h"
 #include "openfpga_build_fabric.h"
 #include "openfpga_write_gsb.h"
+#include "openfpga_pcf2place.h"
 #include "openfpga_setup_command.h"
 
 /* begin namespace openfpga */

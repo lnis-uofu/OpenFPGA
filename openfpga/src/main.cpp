@@ -17,7 +17,6 @@
 #include "openfpga_bitstream_command.h"
 #include "openfpga_spice_command.h"
 #include "openfpga_sdc_command.h"
-#include "openfpga_constrain_pin_location_command.h"
 #include "basic_command.h"
 
 #include "openfpga_title.h"
