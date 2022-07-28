@@ -1,3 +1,0 @@
-set_io a pad_fpga_io[0]
-set_io b pad_fpga_io[4]
-set_io c pad_fpga_io[6]
