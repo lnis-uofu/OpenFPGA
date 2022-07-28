@@ -29,3 +29,5 @@ OpenFPGA widely uses XML format for interchangable files
    bitstream_distribution_file
 
    bus_group_file
+
+   pcf_file

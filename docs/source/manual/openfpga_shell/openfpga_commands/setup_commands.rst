@@ -242,7 +242,7 @@ write_fabric_io_info
 pcf2place
 ~~~~~~~~~
 
-  Convert a Pin Constraint File (.pcf, see details in :ref:`file_format_pcf`) to a `placement file<https://docs.verilogtorouting.org/en/latest/vpr/file_formats/#placement-file-format-place>`_)
+  Convert a Pin Constraint File (.pcf, see details in :ref:`file_format_pcf_file`) to a `placement file<https://docs.verilogtorouting.org/en/latest/vpr/file_formats/#placement-file-format-place>`_)
   
   .. option:: --pcf <string>
   
