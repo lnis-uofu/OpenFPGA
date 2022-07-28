@@ -1,0 +1,18 @@
+<io_coordinates>
+  <io pad="gfpga_pad_IO_A2F[0]" x="1" y="2" z="0"/>
+  <io pad="gfpga_pad_IO_F2A[0]" x="1" y="2" z="1"/>
+  <io pad="gfpga_pad_IO_A2F[1]" x="1" y="2" z="2"/>
+  <io pad="gfpga_pad_IO_F2A[1]" x="1" y="2" z="3"/>
+  <io pad="gfpga_pad_IO_A2F[2]" x="1" y="2" z="4"/>
+  <io pad="gfpga_pad_IO_F2A[2]" x="1" y="2" z="5"/>
+  <io pad="gfpga_pad_IO_A2F[3]" x="1" y="2" z="6"/>
+  <io pad="gfpga_pad_IO_F2A[3]" x="1" y="2" z="7"/>
+  <io pad="gfpga_pad_IO_A2F[4]" x="2" y="1" z="0"/>
+  <io pad="gfpga_pad_IO_F2A[4]" x="2" y="1" z="1"/>
+  <io pad="gfpga_pad_IO_A2F[5]" x="2" y="1" z="2"/>
+  <io pad="gfpga_pad_IO_F2A[5]" x="2" y="1" z="3"/>
+  <io pad="gfpga_pad_IO_A2F[6]" x="2" y="1" z="4"/>
+  <io pad="gfpga_pad_IO_F2A[6]" x="2" y="1" z="5"/>
+  <io pad="gfpga_pad_IO_A2F[7]" x="2" y="1" z="6"/>
+  <io pad="gfpga_pad_IO_F2A[7]" x="2" y="1" z="7"/>
+</io_coordinates>
