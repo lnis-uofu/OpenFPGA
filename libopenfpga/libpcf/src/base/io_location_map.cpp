@@ -33,6 +33,34 @@ size_t IoLocationMap::io_index(const size_t& x,
   return result->second.get_lsb();
 }
 
+size_t IoLocationMap::io_x(const BasicPort& io_port) const {
+  for (auto pair : io_indices_) {
+    if (pair.second == io_port) {
+      return pair.first[0];
+    }
+  }
+  return size_t(-1);
+}
+
+size_t IoLocationMap::io_y(const BasicPort& io_port) const {
+  for (auto pair : io_indices_) {
+    if (pair.second == io_port) {
+      return pair.first[1];
+    }
+  }
+  return size_t(-1);
+}
+
+size_t IoLocationMap::io_z(const BasicPort& io_port) const {
+  for (auto pair : io_indices_) {
+    if (pair.second == io_port) {
+      return pair.first[2];
+    }
+  }
+  return size_t(-1);
+}
+
+
 void IoLocationMap::set_io_index(const size_t& x,
                                  const size_t& y,
                                  const size_t& z,
