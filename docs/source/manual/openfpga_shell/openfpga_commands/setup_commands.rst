@@ -258,7 +258,7 @@ pcf2place
 
   .. option:: --pin_table <string>
 
-    Specify the path to the pin table file, which describes the pin mapping between chip I/Os to FPGA I/Os
+    Specify the path to the pin table file, which describes the pin mapping between chip I/Os and FPGA I/Os. See details in :ref:`file_format_pin_table_file`
 
   .. option:: --fpga_fix_pins <string>
 

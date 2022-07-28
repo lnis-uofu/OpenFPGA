@@ -31,3 +31,5 @@ OpenFPGA widely uses XML format for interchangable files
    bus_group_file
 
    pcf_file
+
+   pin_table_file
