@@ -57,7 +57,7 @@ int pcf2place(const PcfData& pcf_data,
     } else {
       /* Cannot find the pin, error out! */
       VTR_LOG_ERROR("Net '%s' from .pcf is neither defined as input nor output in .blif!\n",
-                    net_name.c_str()); 
+                    net.c_str()); 
       num_err++;
       return 1;
     }
@@ -67,8 +67,12 @@ int pcf2place(const PcfData& pcf_data,
     size_t x = io_location_map.io_x(int_pin); 
     size_t y = io_location_map.io_y(int_pin); 
     size_t z = io_location_map.io_z(int_pin); 
+    /* Add a fixed prefix to net namei, this is hard coded by VPR */
+    if (OUTPUT == pin_direction) {
+      net = "out:" + net; 
+    }
     /* Add the information to I/O place data */
-    io_net_place.add_net_coord(net_name, x, y, z, pin_direction);
+    io_net_place.set_net_coord(net, x, y, z);
   }
 
   return num_err;
