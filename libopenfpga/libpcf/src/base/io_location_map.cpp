@@ -21,24 +21,16 @@ size_t IoLocationMap::io_index(const size_t& x,
                                const size_t& y,
                                const size_t& z,
                                const std::string& io_port_name) const {
-  if (x >= io_indices_.size()) {
+  std::array<size_t, 3> coord = {x, y, z};
+  auto result = io_indices_.find(coord);
+  if (result == io_indices_.end()) {
+    return size_t(-1);
+  }
+  if (result->second.get_name() != io_port_name) {
     return size_t(-1);
   }
 
-  if (y >= io_indices_[x].size()) {
-    return size_t(-1);
-  }
-
-  if (z >= io_indices_[x][y].size()) {
-    return size_t(-1);
-  }
-
-  auto result = io_indices_[x][y][z].find(io_port_name);
-  if (result == io_indices_[x][y][z].end()) {
-    return size_t(-1);
-  }
-
-  return result->second;
+  return result->second.get_lsb();
 }
 
 void IoLocationMap::set_io_index(const size_t& x,
@@ -46,19 +38,16 @@ void IoLocationMap::set_io_index(const size_t& x,
                                  const size_t& z,
                                  const std::string& io_port_name,
                                  const size_t& io_index) {
-  if (x >= io_indices_.size()) {
-    io_indices_.resize(x + 1);
+  std::array<size_t, 3> coord = {x, y, z};
+  auto result = io_indices_.find(coord);
+  if (result != io_indices_.end()) {
+    VTR_LOG_WARN("Overwrite io '%s[%lu]' coordinate (%lu, %lu, %lu) with '%s[%lu]'!\n",
+                 io_port_name.c_str(), io_index,
+                 x, y, z,
+                 result->second.get_name().c_str(), result->second.get_lsb());
   }
 
-  if (y >= io_indices_[x].size()) {
-    io_indices_[x].resize(y + 1);
-  }
-
-  if (z >= io_indices_[x][y].size()) {
-    io_indices_[x][y].resize(z + 1);
-  }
-
-  io_indices_[x][y][z][io_port_name] = io_index;
+  io_indices_[coord] = BasicPort(io_port_name, io_index, io_index);
 }
 
 int IoLocationMap::write_to_xml_file(const std::string& fname,
@@ -106,20 +95,14 @@ int IoLocationMap::write_to_xml_file(const std::string& fname,
   size_t io_cnt = 0;
 
   /* Walk through the fabric I/O location map data structure */
-  for (size_t x = 0; x < io_indices_.size(); ++x) {
-    for (size_t y = 0; y < io_indices_[x].size(); ++y) {
-      for (size_t z = 0; z < io_indices_[x][y].size(); ++z) {
-        for (const auto& name_id_pair : io_indices_[x][y][z]) {
-          fp << "\t" << "<io pad=\"" << name_id_pair.first << "[" << name_id_pair.second << "]\"";
-          fp << " " << "x=\"" << x << "\"";
-          fp << " " << "y=\"" << y << "\"";
-          fp << " " << "z=\"" << z << "\"";
-          fp << "/>";
-          fp << "\n";
-          io_cnt++;
-        }
-      }
-    }
+  for (auto pair : io_indices_) {
+    fp << "\t" << "<io pad=\"" << pair.second.get_name().c_str() << "[" << pair.second.get_lsb() << "]\"";
+    fp << " " << "x=\"" << pair.first[0] << "\"";
+    fp << " " << "y=\"" << pair.first[1] << "\"";
+    fp << " " << "z=\"" << pair.first[2] << "\"";
+    fp << "/>";
+    fp << "\n";
+    io_cnt++;
   } 
 
   /* Print an end to the file here */

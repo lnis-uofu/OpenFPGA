@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include "openfpga_port.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -34,6 +35,9 @@ class IoLocationMap {
                     const size_t& y,
                     const size_t& z,
                     const std::string& io_port_name) const;
+    size_t io_x(const BasicPort& io_port) const;
+    size_t io_y(const BasicPort& io_port) const;
+    size_t io_z(const BasicPort& io_port) const;
   public: /* Public mutators */
     void set_io_index(const size_t& x,
                       const size_t& y,
@@ -46,7 +50,7 @@ class IoLocationMap {
                           const bool& verbose) const;
   private: /* Internal Data */
     /* I/O index fast lookup by [x][y][z] location */
-    std::vector<std::vector<std::vector<std::map<std::string, size_t>>>> io_indices_;
+    std::map<std::array<size_t, 3>, BasicPort> io_indices_;
 };
 
 } /* End namespace openfpga*/

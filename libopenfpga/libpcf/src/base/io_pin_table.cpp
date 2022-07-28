@@ -53,6 +53,17 @@ IoPinTable::e_io_direction IoPinTable::pin_direction(const IoPinTableId& pin_id)
   return pin_directions_[pin_id]; 
 }
 
+std::vector<IoPinTableId> IoPinTable::find_internal_pin(const BasicPort& ext_pin,
+                                                        const e_io_direction& pin_direction) const {
+  std::vector<IoPinTableId> int_pin_ids;
+  for (auto pin_id : pin_ids_) {
+    if ((external_pins_[pin_id] == ext_pin) && (pin_directions_[pin_id] == pin_direction)) {
+      int_pin_ids.push_back(pin_id);
+    }
+  }
+  return int_pin_ids;
+}
+
 bool IoPinTable::empty() const {
   return 0 == pin_ids_.size();
 }

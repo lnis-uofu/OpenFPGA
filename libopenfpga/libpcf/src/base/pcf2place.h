@@ -3,8 +3,9 @@
 /********************************************************************
  * Include header files required by the data structure definition
  *******************************************************************/
+#include <string>
+#include <vector>
 #include "pcf_data.h"
-#include "blif_head_reader.h"
 #include "io_pin_table.h"
 #include "io_location_map.h"
 #include "io_net_place.h"
@@ -14,12 +15,13 @@ namespace openfpga {
 
 /* Generate a .place file with the following input files
  * - A Pin Constraint File (.pcf)
- * - A netlist (.blif)
+ * - Input and output lists from a netlist
  * - A chip I/O pin table file (.csv)
  * - An FPGA I/O location file (.xml)
  */
 int pcf2place(const PcfData& pcf_data,
-              const blifparse::BlifHeadReader& blif_head,
+              const std::vector<std::string>& input_nets,
+              const std::vector<std::string>& output_nets,
               const IoPinTable& io_pin_table,
               const IoLocationMap& io_location_map,
               IoNetPlace& io_net_place);

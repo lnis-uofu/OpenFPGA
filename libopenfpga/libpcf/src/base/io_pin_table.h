@@ -73,10 +73,13 @@ class IoPinTable {
     io_pin_table_range pins() const;
   public: /* Public Accessors: Basic data query */
     /* Get the basic information for a pin */
-    openfpga::BasicPort internal_pin(const IoPinTableId& pin_id) const;
-    openfpga::BasicPort external_pin(const IoPinTableId& pin_id) const;
+    BasicPort internal_pin(const IoPinTableId& pin_id) const;
+    BasicPort external_pin(const IoPinTableId& pin_id) const;
     e_side pin_side(const IoPinTableId& pin_id) const;
     e_io_direction pin_direction(const IoPinTableId& pin_id) const;
+    /* Given an external pin, find all the internal pin that is mapped */
+    std::vector<IoPinTableId> find_internal_pin(const BasicPort& ext_pin,
+                                                const e_io_direction& pin_direction) const;
     /* Check if there are any pins */
     bool empty() const;
   public: /* Public Mutators */
