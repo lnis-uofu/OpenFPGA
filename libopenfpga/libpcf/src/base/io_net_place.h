@@ -34,6 +34,10 @@ class IoNetPlace {
     size_t io_x(const std::string& net) const;
     size_t io_y(const std::string& net) const;
     size_t io_z(const std::string& net) const;
+  public: /* Writers */
+    int write_to_place_file(const std::string& fname,
+                            const bool& include_time_stamp,
+                            const bool& verbose) const;
   public: /* Public mutators */
     void set_net_coord(const std::string& net,
                       const size_t& x,
