@@ -46,6 +46,43 @@ bool PcfData::empty() const {
   return 0 == io_constraint_ids_.size();
 }
 
+bool PcfData::validate() const {
+  size_t num_err = 0;
+  /* In principle, we do not expect duplicated assignment: 1 net -> 2 pins */
+  std::map<std::string, BasicPort> net2pin; 
+  for (const PcfIoConstraintId& io_id : io_constraints()) {
+    std::string curr_net = io_constraint_nets_[io_id];
+    BasicPort curr_pin = io_constraint_pins_[io_id];
+    auto result = net2pin.find(curr_net);
+    if (result != net2pin.end()) {
+      /* Found one nets assigned to two pins, throw warning  */
+      VTR_LOG_WARN("Net '%s' is assigned to two pins '%s[%lu]' and '%s[%lu]'!\n",
+                   curr_net.c_str(),
+                   curr_pin.get_name().c_str(), curr_pin.get_lsb(),
+                   result->second.get_name().c_str(), result->second.get_lsb());
+    }
+    net2pin[curr_net] = curr_pin;
+  }
+  /* We should not have duplicated pins in assignment: 1 pin -> 2 nets */
+  std::map<BasicPort, std::string> pin2net; 
+  for (const PcfIoConstraintId& io_id : io_constraints()) {
+    std::string curr_net = io_constraint_nets_[io_id];
+    BasicPort curr_pin = io_constraint_pins_[io_id];
+    auto result = pin2net.find(curr_pin);
+    if (result != pin2net.end()) {
+      /* Found one pin assigned to two nets, this is definitely an error  */
+      VTR_LOG_ERROR("Pin '%s[%lu]' is assigned to two nets '%s' and '%s'!\n",
+                    curr_pin.get_name().c_str(), curr_pin.get_lsb(),
+                    result->second.c_str(), curr_net.c_str());
+    }
+    pin2net[curr_pin] = curr_net;
+  }
+  if (num_err) {
+    return true;
+  }
+  return false;
+}
+
 /************************************************************************
  * Public Mutators
  ***********************************************************************/

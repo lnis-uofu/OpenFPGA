@@ -54,6 +54,9 @@ class PcfData {
     /* Check if there are any io constraints */
     bool empty() const;
 
+    /* Check if the data is valid: each pin can only be mapped to one net */
+    bool validate() const;
+
   public: /* Public Mutators */
     /* Reserve a number of design constraints to be memory efficent */
     void reserve_io_constraints(const size_t& num_io_constraints);
