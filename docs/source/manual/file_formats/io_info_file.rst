@@ -3,7 +3,7 @@
 I/O Information File (.xml)
 ---------------------------
 
-.. note:: This file is in a different usage than the I/O mapping file (see details in :ref:`file_format_io_info_file`)
+.. note:: This file is in a different usage than the I/O mapping file (see details in :ref:`file_format_io_mapping_file`)
 
 The I/O information file aims to show 
 

@@ -5,7 +5,7 @@ Pin Constraints File (.pcf)
 
 .. note:: This file is in a different usage than the Pin Constraints File in XML format (see details in :ref:`file_format_pin_constraints_file`)
 
-The PCF file is the file which users should craft to assign their I/O constraints
+The PCF file is the file which **users** should craft to assign their I/O constraints
 
 An example of the file is shown as follows.
 
