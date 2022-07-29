@@ -79,9 +79,6 @@ int pcf2place(const PcfData& pcf_data,
       }
       num_err++;
       continue;
-    } else {
-      VTR_LOG_ERROR("Internal error, please contact us!\n"); 
-      continue;
     }
     VTR_ASSERT(1 == int_pin_ids.size());
     BasicPort int_pin = io_pin_table.internal_pin(int_pin_ids[0]);

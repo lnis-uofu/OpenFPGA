@@ -78,9 +78,9 @@ bool PcfData::validate() const {
     pin2net[curr_pin] = curr_net;
   }
   if (num_err) {
-    return true;
+    return false;
   }
-  return false;
+  return true;
 }
 
 /************************************************************************
