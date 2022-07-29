@@ -218,6 +218,8 @@ write_fabric_hierarchy
 
   .. note:: This file is designed for hierarchical PnR flow, which requires the tree of Multiple-Instanced-Blocks (MIBs).
 
+.. _openfpga_setup_commands_write_fabric_io_info:
+
 write_fabric_io_info
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -236,3 +238,36 @@ write_fabric_io_info
     Show verbose log
 
   .. note:: This file is designed for pin constraint file conversion.
+
+pcf2place
+~~~~~~~~~
+
+  Convert a Pin Constraint File (.pcf, see details in :ref:`file_format_pcf_file`) to a `placement file <https://docs.verilogtorouting.org/en/latest/vpr/file_formats/#placement-file-format-place>`_)
+  
+  .. option:: --pcf <string>
+  
+    Specify the path to the users' pin constraint file
+
+  .. option:: --blif <string>
+
+    Specify the path to the users' post-synthesis netlist
+
+  .. option:: --fpga_io_map <string>
+
+    Specify the path to the FPGA I/O location. Achieved by the command :ref:`openfpga_setup_commands_write_fabric_io_info`
+
+  .. option:: --pin_table <string>
+
+    Specify the path to the pin table file, which describes the pin mapping between chip I/Os and FPGA I/Os. See details in :ref:`file_format_pin_table_file`
+
+  .. option:: --fpga_fix_pins <string>
+
+    Specify the path to the placement file which will be outputted by running this command 
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in bitstream files
+
+  .. option:: --verbose
+
+    Show verbose log

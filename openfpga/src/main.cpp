@@ -17,7 +17,6 @@
 #include "openfpga_bitstream_command.h"
 #include "openfpga_spice_command.h"
 #include "openfpga_sdc_command.h"
-#include "openfpga_constrain_pin_location_command.h"
 #include "basic_command.h"
 
 #include "openfpga_title.h"
@@ -80,9 +79,6 @@ int main(int argc, char** argv) {
 
   /* Add openfpga sdc commands */
   openfpga::add_openfpga_sdc_commands(shell);
-
-  /* Add constrain pin location command */
-  openfpga::add_openfpga_constrain_pin_location_command(shell);
 
   /* Add basic commands: exit, help, etc. 
    * Note:

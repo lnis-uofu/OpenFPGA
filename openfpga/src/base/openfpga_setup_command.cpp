@@ -10,6 +10,7 @@
 #include "check_netlist_naming_conflict.h"
 #include "openfpga_build_fabric.h"
 #include "openfpga_write_gsb.h"
+#include "openfpga_pcf2place.h"
 #include "openfpga_setup_command.h"
 
 /* begin namespace openfpga */
@@ -421,12 +422,62 @@ ShellCommandId add_openfpga_write_fabric_io_info_command(openfpga::Shell<Openfpg
   return shell_cmd_id;
 }
 
+/********************************************************************
+ * - Add a command to Shell environment: pcf2place
+ * - Add associated options 
+ * - Add command dependency
+ *******************************************************************/
+static 
+ShellCommandId add_openfpga_pcf2place_command(openfpga::Shell<OpenfpgaContext>& shell,
+                                              const ShellCommandClassId& cmd_class_id) {
+  Command shell_cmd("pcf2place");
+
+  /* Add an option '--pcf'*/
+  CommandOptionId opt_pcf_file = shell_cmd.add_option("pcf", true, "file path to the user pin constraint");
+  shell_cmd.set_option_require_value(opt_pcf_file, openfpga::OPT_STRING);
+
+  /* Add an option '--blif'*/
+  CommandOptionId opt_blif_file = shell_cmd.add_option("blif", true, "file path to the synthesized netlist (.blif)");
+  shell_cmd.set_option_require_value(opt_blif_file, openfpga::OPT_STRING);
+
+  /* Add an option '--fpga_io_map'*/
+  CommandOptionId opt_fpga_io_map_file = shell_cmd.add_option("fpga_io_map", true, "file path to FPGA I/O location map (.xml)");
+  shell_cmd.set_option_require_value(opt_fpga_io_map_file, openfpga::OPT_STRING);
+
+  /* Add an option '--pin_table'*/
+  CommandOptionId opt_pin_table_file = shell_cmd.add_option("pin_table", true, "file path to the pin table (.csv)");
+  shell_cmd.set_option_require_value(opt_pin_table_file, openfpga::OPT_STRING);
+
+  /* Add an option '--fpga_fix_pins'*/
+  CommandOptionId opt_fpga_fix_pins_file = shell_cmd.add_option("fpga_fix_pins", true, "file path to the output fix-pin placement file (.place)");
+  shell_cmd.set_option_require_value(opt_fpga_fix_pins_file, openfpga::OPT_STRING);
+
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false, "Do not print time stamp in output files");
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Enable verbose output");
+
+  /* Add command to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(shell_cmd, "Convert user Pin Constraint File (.pcf) to an placement file");
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id, pcf2place_wrapper);
+
+  return shell_cmd_id;
+}
+
 void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /* Get the unique id of 'vpr' command which is to be used in creating the dependency graph */
   const ShellCommandId& vpr_cmd_id = shell.command(std::string("vpr"));
 
   /* Add a new class of commands */
   ShellCommandClassId openfpga_setup_cmd_class = shell.add_command_class("OpenFPGA setup");
+
+  /******************************** 
+   * Command 'pcf2place' 
+   */
+  ShellCommandId pcf2place_cmd_id = add_openfpga_pcf2place_command(shell,
+                                                                   openfpga_setup_cmd_class);
 
   /******************************** 
    * Command 'read_openfpga_arch' 

@@ -1,5 +1,5 @@
-# Run constrain_pin_location
-constrain_pin_location --pcf ${AND2_PIN_CONSTRAIN_FILE} --blif ${VPR_TESTBENCH_BLIF} --pinmap_xml ${AND2_PIN_MAP_XML_FILE} --csv_file ${AND2_PIN_MAP_CSV_FILE} --output ${OPENFPGA_VPR_FIX_PINS_FILE}
+# Convert .pcf to a .place file that VPR can accept
+pcf2place --pcf ${OPENFPGA_PCF} --blif ${VPR_TESTBENCH_BLIF} --pin_table ${OPENFPGA_PIN_TABLE} --fpga_io_map ${OPENFPGA_IO_MAP_FILE} --fpga_fix_pins ${OPENFPGA_VPR_FIX_PINS_FILE}
 
 # Run VPR for the 'and' design
 #--write_rr_graph example_rr_graph.xml
