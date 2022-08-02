@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <array>
 #include "openfpga_port.h"
 
 /* Begin namespace openfpga */

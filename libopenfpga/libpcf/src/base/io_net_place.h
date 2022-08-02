@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <array>
 
 /* Begin namespace openfpga */
 namespace openfpga {
