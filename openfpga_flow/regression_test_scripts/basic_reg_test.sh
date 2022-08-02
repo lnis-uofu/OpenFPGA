@@ -88,6 +88,7 @@ run-task basic_tests/custom_fabric_netlist_location $@
 
 echo -e "Testing user-defined simulation settings: clock frequency and number of cycles";
 run-task basic_tests/fixed_simulation_settings/fixed_operating_clock_freq $@
+run-task basic_tests/fixed_simulation_settings/fixed_operating_clock_freq_no_ace $@
 # TODO: This feature is temporarily out of test due to the emergency in delivering netlists for multi-chain shift-register memory bank
 #run-task basic_tests/fixed_simulation_settings/fixed_shift_register_clock_freq $@
 
