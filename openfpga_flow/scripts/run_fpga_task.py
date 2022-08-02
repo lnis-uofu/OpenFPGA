@@ -317,11 +317,18 @@ def generate_each_task_actions(taskname):
                 CurrBenchPara["benchVariable"] += [f"--{param}", value]
 
         if GeneralSection.get("fpga_flow") == "vpr_blif":
-            # Check if activity file exist
-            if not SynthSection.get(bech_name+"_act"):
-                clean_up_and_exit("Missing argument %s" % (bech_name+"_act") +
-                                  "for vpr_blif flow")
-            CurrBenchPara["activity_file"] = SynthSection.get(bech_name+"_act")
+            # Check if activity file exist only when power analysis is required
+            if (GeneralSection.getboolean("power_analysis")):
+                if not SynthSection.get(bech_name+"_act"):
+                    clean_up_and_exit("Missing argument %s" % (bech_name+"_act") +
+                                      "for vpr_blif flow")
+                CurrBenchPara["activity_file"] = SynthSection.get(bech_name+"_act")
+            else:
+                # If users defined an activity file, we use it otherwise create a dummy act
+                if not SynthSection.get(bech_name+"_act"):
+                  CurrBenchPara["activity_file"] = bech_name+"_act"
+                else:
+                  CurrBenchPara["activity_file"] = SynthSection.get(bech_name+"_act")
 
             # Check if base verilog file exists
             if not SynthSection.get(bech_name+"_verilog"):
