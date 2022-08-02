@@ -411,8 +411,9 @@ def validate_command_line_arguments():
 
     # Expand run directory to absolute path
     args.run_dir = os.path.abspath(args.run_dir)
-    if args.activity_file:
-        args.activity_file = os.path.abspath(args.activity_file)
+    if args.power:
+      if args.activity_file:
+          args.activity_file = os.path.abspath(args.activity_file)
     if args.base_verilog:
         args.base_verilog = os.path.abspath(args.base_verilog)
 
@@ -717,10 +718,11 @@ def collect_files_for_vpr():
     shutil.copy(args.benchmark_files[0], args.top_module+".blif")
 
     # Sanitize provided Activity file option
-    if not os.path.isfile(args.activity_file or ""):
-        logger.error("Activity File - %s" % args.activity_file)
-        clean_up_and_exit("Provided activity file not found")
-    shutil.copy(args.activity_file, args.top_module+"_ace_out.act")
+    if args.power:
+      if not os.path.isfile(args.activity_file or ""):
+          logger.error("Activity File - %s" % args.activity_file)
+          clean_up_and_exit("Provided activity file not found")
+      shutil.copy(args.activity_file, args.top_module+"_ace_out.act")
 
     # Sanitize provided Benchmark option
     if not os.path.isfile(args.base_verilog or ""):
@@ -736,6 +738,7 @@ def run_openfpga_shell():
                          encoding='utf-8').read())
 
     path_variables = script_env_vars["PATH"]
+    path_variables["TOP_MODULE"] = args.top_module
     path_variables["VPR_ARCH_FILE"] = args.arch_file
     path_variables["OPENFPGA_ARCH_FILE"] = args.openfpga_arch_file
     path_variables["VPR_TESTBENCH_BLIF"] = args.top_module+".blif"
