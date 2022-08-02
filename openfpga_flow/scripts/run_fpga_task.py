@@ -324,8 +324,11 @@ def generate_each_task_actions(taskname):
                                       "for vpr_blif flow")
                 CurrBenchPara["activity_file"] = SynthSection.get(bech_name+"_act")
             else:
-                # Send a dummy act
-                CurrBenchPara["activity_file"] = bech_name+"_act"
+                # If users defined an acitivity file, we use it otherwise create a dummy act
+                if not SynthSection.get(bech_name+"_act"):
+                  CurrBenchPara["activity_file"] = bech_name+"_act"
+                else:
+                  CurrBenchPara["activity_file"] = SynthSection.get(bech_name+"_act")
 
             # Check if base verilog file exists
             if not SynthSection.get(bech_name+"_verilog"):

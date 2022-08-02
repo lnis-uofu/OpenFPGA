@@ -722,7 +722,9 @@ def collect_files_for_vpr():
       if not os.path.isfile(args.activity_file or ""):
           logger.error("Activity File - %s" % args.activity_file)
           clean_up_and_exit("Provided activity file not found")
-      shutil.copy(args.activity_file, args.top_module+"_ace_out.act")
+    else:
+      if os.path.isfile(args.activity_file):
+        shutil.copy(args.activity_file, args.top_module+"_ace_out.act")
 
     # Sanitize provided Benchmark option
     if not os.path.isfile(args.base_verilog or ""):
