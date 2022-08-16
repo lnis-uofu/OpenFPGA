@@ -33,7 +33,7 @@ RRNodeId VprRoutingAnnotation::rr_node_prev_node(const RRNodeId& rr_node) const 
 /************************************************************************
  * Public mutators
  ***********************************************************************/
-void VprRoutingAnnotation::init(const RRGraph& rr_graph) {
+void VprRoutingAnnotation::init(const RRGraphView& rr_graph) {
   rr_node_nets_.resize(rr_graph.nodes().size(), ClusterNetId::INVALID());
   rr_node_prev_nodes_.resize(rr_graph.nodes().size(), RRNodeId::INVALID());
 }

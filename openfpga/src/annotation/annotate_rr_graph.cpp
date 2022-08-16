@@ -11,7 +11,7 @@
 #include "openfpga_side_manager.h"
 
 /* Headers from vpr library */
-#include "rr_graph_obj_util.h"
+#include "rr_graph_obj_utils.h"
 #include "openfpga_rr_graph_utils.h"
 
 #include "annotate_rr_graph.h"

@@ -151,7 +151,7 @@
 #include "physical_types.h"
 
 /* Header from vpr library */
-#include "lb_rr_graph_types.h"
+#include "pack_types.h"
 
 #include "lb_rr_graph_fwd.h"
 
