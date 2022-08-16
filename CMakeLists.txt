@@ -184,12 +184,9 @@ endif()
 # Sub-projects
 #
 #add_subdirectory(iverilog)
-add_subdirectory(libs)
 add_subdirectory(libopenfpga)
 #add_subdirectory(yosys)
-add_subdirectory(abc)
-add_subdirectory(ace2)
-add_subdirectory(vpr)
+add_subdirectory(verilog-to-routing)
 add_subdirectory(openfpga)
 
 # yosys compilation starts
@@ -266,37 +263,6 @@ endif()
 # Add extra compilation flags to suppress warnings from some libraries/tools
 # Note that target_compile_options() *appends* to the current compilation options of
 # the specified target
-
-#Since ABC is an externally developed tool, we suppress all compiler warnings
-CHECK_CXX_COMPILER_FLAG("-w" CXX_COMPILER_SUPPORTS_-w)
-if(CXX_COMPILER_SUPPORTS_-w)
-    target_compile_options(libabc PRIVATE "-w")
-    target_compile_options(abc PRIVATE "-w")
-endif()
-
-#Some ABC headers generate warnings, treat them as system headers to suppress warnings
-get_property(ABC_INCLUDE_DIRS TARGET libabc PROPERTY INCLUDE_DIRECTORIES)
-target_include_directories(libabc SYSTEM INTERFACE ${ABC_INCLUDE_DIRS})
-
-# We use Yosys and abc Makefile now, TODO: create CMakeLists.txt as well
-set_target_properties(libabc abc
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/abc"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/abc"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/abc")
-
-# Set output locations to be in the main source tree under the relevant folder
-set_target_properties(libace ace
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ace2"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ace2"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ace2")
-
-set_target_properties(libvpr vpr
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr")
 
 set_target_properties(libopenfpga openfpga
   PROPERTIES
