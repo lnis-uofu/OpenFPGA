@@ -186,7 +186,7 @@ endif()
 #add_subdirectory(iverilog)
 add_subdirectory(libopenfpga)
 #add_subdirectory(yosys)
-add_subdirectory(verilog-to-routing)
+add_subdirectory(vtr-verilog-to-routing)
 add_subdirectory(openfpga)
 
 # yosys compilation starts
