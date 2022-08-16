@@ -32,7 +32,7 @@ void build_routing_bitstream(BitstreamManager& bitstream_manager,
                              const AtomContext& atom_ctx,
                              const VprDeviceAnnotation& device_annotation,
                              const VprRoutingAnnotation& routing_annotation,
-                             const RRGraph& rr_graph,
+                             const RRGraphView& rr_graph,
                              const DeviceRRGSB& device_rr_gsb,
                              const bool& compact_routing_hierarchy);
 

@@ -8,7 +8,7 @@
 #include "vtr_geometry.h"
 
 /* Header files from vpr library */
-#include "rr_graph_obj.h"
+#include "rr_graph_view.h"
 
 #include "rr_gsb.h"
 
@@ -46,7 +46,7 @@ class DeviceRRGSB {
     void add_rr_gsb(const vtr::Point<size_t>& coordinate, const RRGSB& rr_gsb); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
     RRGSB& get_mutable_gsb(const vtr::Point<size_t>& coordinate); /* Get a rr switch block in the array with a coordinate */
     RRGSB& get_mutable_gsb(const size_t& x, const size_t& y); /* Get a rr switch block in the array with a coordinate */
-    void build_unique_module(const RRGraph& rr_graph); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
+    void build_unique_module(const RRGraphView& rr_graph); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
     void clear(); /* clean the content */
   private: /* Internal cleaners */
     void clear_gsb(); /* clean the content */
@@ -67,8 +67,8 @@ class DeviceRRGSB {
     void add_gsb_unique_module(const vtr::Point<size_t>& coordinate);
     void add_cb_unique_module(const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate);
     void set_cb_unique_module_id(const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate, size_t id);
-    void build_sb_unique_module(const RRGraph& rr_graph); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
-    void build_cb_unique_module(const RRGraph& rr_graph, const t_rr_type& cb_type); /* Add a switch block to the array, which will automatically identify and update the lists of unique side module */
+    void build_sb_unique_module(const RRGraphView& rr_graph); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
+    void build_cb_unique_module(const RRGraphView& rr_graph, const t_rr_type& cb_type); /* Add a switch block to the array, which will automatically identify and update the lists of unique side module */
     void build_gsb_unique_module(); /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
   private: /* Internal Data */
     std::vector<std::vector<RRGSB>> rr_gsb_;

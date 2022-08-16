@@ -8,7 +8,7 @@
 #include "vtr_geometry.h"
 #include "vtr_ndmatrix.h"
 #include "device_grid.h"
-#include "rr_graph_obj.h"
+#include "rr_graph_view.h"
 #include "device_rr_gsb.h"
 #include "tile_annotation.h"
 #include "vpr_device_annotation.h"
@@ -26,7 +26,7 @@ void add_top_module_nets_connect_grids_and_gsbs(ModuleManager& module_manager,
                                                 const VprDeviceAnnotation& vpr_device_annotation,
                                                 const DeviceGrid& grids,
                                                 const vtr::Matrix<size_t>& grid_instance_ids,
-                                                const RRGraph& rr_graph,
+                                                const RRGraphView& rr_graph,
                                                 const DeviceRRGSB& device_rr_gsb,
                                                 const vtr::Matrix<size_t>& sb_instance_ids,
                                                 const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,

@@ -60,7 +60,7 @@ void annotate_rr_node_nets(const DeviceContext& device_ctx,
  * If not validated, try to find a right one in the routing traces
  *******************************************************************/
 static 
-RRNodeId find_previous_node_from_routing_traces(const RRGraph& rr_graph,
+RRNodeId find_previous_node_from_routing_traces(const RRGraphView& rr_graph,
                                                 t_trace* routing_trace_head,
                                                 const RRNodeId& prev_node_candidate,
                                                 const RRNodeId& cur_rr_node) {

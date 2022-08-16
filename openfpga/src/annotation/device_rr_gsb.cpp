@@ -213,7 +213,7 @@ RRGSB& DeviceRRGSB::get_mutable_gsb(const size_t& x, const size_t& y) {
 }
 
 /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
-void DeviceRRGSB::build_cb_unique_module(const RRGraph& rr_graph, const t_rr_type& cb_type) {
+void DeviceRRGSB::build_cb_unique_module(const RRGraphView& rr_graph, const t_rr_type& cb_type) {
   /* Make sure a clean start */
   clear_cb_unique_module(cb_type);
 
@@ -249,7 +249,7 @@ void DeviceRRGSB::build_cb_unique_module(const RRGraph& rr_graph, const t_rr_typ
 }
 
 /* Add a switch block to the array, which will automatically identify and update the lists of unique mirrors and rotatable mirrors */
-void DeviceRRGSB::build_sb_unique_module(const RRGraph& rr_graph) {
+void DeviceRRGSB::build_sb_unique_module(const RRGraphView& rr_graph) {
   /* Make sure a clean start */
   clear_sb_unique_module();
 
@@ -323,7 +323,7 @@ void DeviceRRGSB::build_gsb_unique_module() {
   } 
 }
 
-void DeviceRRGSB::build_unique_module(const RRGraph& rr_graph) {
+void DeviceRRGSB::build_unique_module(const RRGraphView& rr_graph) {
   build_sb_unique_module(rr_graph);
 
   build_cb_unique_module(rr_graph, CHANX);

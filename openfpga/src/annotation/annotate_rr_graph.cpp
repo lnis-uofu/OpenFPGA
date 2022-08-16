@@ -445,7 +445,7 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
  * Sort all the incoming edges for each channel node which are
  * output ports of the GSB
  *******************************************************************/
-void sort_device_rr_gsb_chan_node_in_edges(const RRGraph& rr_graph,
+void sort_device_rr_gsb_chan_node_in_edges(const RRGraphView& rr_graph,
                                            DeviceRRGSB& device_rr_gsb,
                                            const bool& verbose_output) {
   vtr::ScopedStartFinishTimer timer("Sort incoming edges for each routing track output node of General Switch Block(GSB)");

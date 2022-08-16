@@ -41,7 +41,7 @@ namespace openfpga {
  *   It means every routing tracks must have a direction
  *******************************************************************/
 static 
-bool is_vpr_rr_graph_supported(const RRGraph& rr_graph) {
+bool is_vpr_rr_graph_supported(const RRGraphView& rr_graph) {
   /* Check if the rr_graph is uni-directional*/
   for (const RRNodeId& node : rr_graph.nodes()) {
     if (CHANX != rr_graph.node_type(node) && CHANY != rr_graph.node_type(node)) {

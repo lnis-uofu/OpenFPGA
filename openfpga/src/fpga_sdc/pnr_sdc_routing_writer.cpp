@@ -57,7 +57,7 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
                                            const ModuleId& sb_module, 
                                            const VprDeviceAnnotation& device_annotation,
                                            const DeviceGrid& grids,
-                                           const RRGraph& rr_graph,
+                                           const RRGraphView& rr_graph,
                                            const RRGSB& rr_gsb,
                                            const e_side& output_node_side,
                                            const RRNodeId& output_rr_node,
@@ -147,7 +147,7 @@ void print_pnr_sdc_constrain_sb_timing(const PnrSdcOption& options,
                                        const ModuleManager& module_manager,
                                        const VprDeviceAnnotation& device_annotation,
                                        const DeviceGrid& grids,
-                                       const RRGraph& rr_graph,
+                                       const RRGraphView& rr_graph,
                                        const RRGSB& rr_gsb) {
   std::string sdc_dir = options.sdc_dir();
   float time_unit = options.time_unit();
@@ -219,7 +219,7 @@ void print_pnr_sdc_flatten_routing_constrain_sb_timing(const PnrSdcOption& optio
                                                        const ModuleId& top_module,
                                                        const VprDeviceAnnotation& device_annotation,
                                                        const DeviceGrid& grids,
-                                                       const RRGraph& rr_graph,
+                                                       const RRGraphView& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb) {
 
   /* Start time count */
@@ -265,7 +265,7 @@ void print_pnr_sdc_compact_routing_constrain_sb_timing(const PnrSdcOption& optio
                                                        const ModuleId& top_module,
                                                        const VprDeviceAnnotation& device_annotation,
                                                        const DeviceGrid& grids,
-                                                       const RRGraph& rr_graph,
+                                                       const RRGraphView& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb) {
 
   /* Start time count */
@@ -313,7 +313,7 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
                                            const ModuleId& cb_module, 
                                            const VprDeviceAnnotation& device_annotation,
                                            const DeviceGrid& grids,
-                                           const RRGraph& rr_graph,
+                                           const RRGraphView& rr_graph,
                                            const RRGSB& rr_gsb,
                                            const t_rr_type& cb_type,
                                            const RRNodeId& output_rr_node,
@@ -417,7 +417,7 @@ void print_pnr_sdc_constrain_cb_timing(const PnrSdcOption& options,
                                        const ModuleManager& module_manager,
                                        const VprDeviceAnnotation& device_annotation,
                                        const DeviceGrid& grids,
-                                       const RRGraph& rr_graph,
+                                       const RRGraphView& rr_graph,
                                        const RRGSB& rr_gsb, 
                                        const t_rr_type& cb_type) {
   std::string sdc_dir = options.sdc_dir();
@@ -540,7 +540,7 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const PnrSdcOption& optio
                                                        const ModuleId& top_module,
                                                        const VprDeviceAnnotation& device_annotation,
                                                        const DeviceGrid& grids,
-                                                       const RRGraph& rr_graph,
+                                                       const RRGraphView& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb,
                                                        const t_rr_type& cb_type) {
   /* Build unique X-direction connection block modules */
@@ -591,7 +591,7 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const PnrSdcOption& optio
                                                        const ModuleId& top_module,
                                                        const VprDeviceAnnotation& device_annotation,
                                                        const DeviceGrid& grids,
-                                                       const RRGraph& rr_graph,
+                                                       const RRGraphView& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb) {
 
   /* Start time count */
@@ -623,7 +623,7 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(const PnrSdcOption& optio
                                                        const ModuleId& top_module,
                                                        const VprDeviceAnnotation& device_annotation,
                                                        const DeviceGrid& grids,
-                                                       const RRGraph& rr_graph,
+                                                       const RRGraphView& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb) {
 
   /* Start time count */

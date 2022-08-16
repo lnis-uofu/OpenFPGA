@@ -19,7 +19,7 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
                             DeviceRRGSB& device_rr_gsb,
                             const bool& verbose_output);
 
-void sort_device_rr_gsb_chan_node_in_edges(const RRGraph& rr_graph,
+void sort_device_rr_gsb_chan_node_in_edges(const RRGraphView& rr_graph,
                                            DeviceRRGSB& device_rr_gsb,
                                            const bool& verbose_output);
 

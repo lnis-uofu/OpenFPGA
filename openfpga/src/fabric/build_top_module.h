@@ -10,7 +10,7 @@
 #include "device_grid.h"
 #include "vpr_device_annotation.h"
 #include "tile_annotation.h"
-#include "rr_graph_obj.h"
+#include "rr_graph_view.h"
 #include "device_rr_gsb.h"
 #include "circuit_library.h"
 #include "decoder_library.h"
@@ -35,7 +35,7 @@ int build_top_module(ModuleManager& module_manager,
                      const VprDeviceAnnotation& vpr_device_annotation,
                      const DeviceGrid& grids,
                      const TileAnnotation& tile_annotation,
-                     const RRGraph& rr_graph,
+                     const RRGraphView& rr_graph,
                      const DeviceRRGSB& device_rr_gsb,
                      const TileDirect& tile_direct,
                      const ArchDirect& arch_direct,

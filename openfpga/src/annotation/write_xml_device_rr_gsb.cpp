@@ -24,7 +24,7 @@ namespace openfpga {
  ***************************************************************************************/
 static 
 void write_rr_gsb_ipin_connection_to_xml(std::fstream& fp,
-                                         const RRGraph& rr_graph,
+                                         const RRGraphView& rr_graph,
                                          const RRGSB& rr_gsb,
                                          const enum e_side& gsb_side) {
   /* Validate the file stream */
@@ -83,7 +83,7 @@ static
 void write_rr_gsb_chan_connection_to_xml(std::fstream& fp,
                                          const DeviceGrid& vpr_device_grid,
                                          const VprDeviceAnnotation& vpr_device_annotation,
-                                         const RRGraph& rr_graph,
+                                         const RRGraphView& rr_graph,
                                          const RRGSB& rr_gsb,
                                          const enum e_side& gsb_side) {
   /* Validate the file stream */
@@ -180,7 +180,7 @@ static
 void write_rr_switch_block_to_xml(const std::string fname_prefix,
                                   const DeviceGrid& vpr_device_grid,
                                   const VprDeviceAnnotation& vpr_device_annotation,
-                                  const RRGraph& rr_graph,
+                                  const RRGraphView& rr_graph,
                                   const RRGSB& rr_gsb,
                                   const bool& verbose) {
   /* Prepare file name */
@@ -231,7 +231,7 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
 void write_device_rr_gsb_to_xml(const char* sb_xml_dir, 
                                 const DeviceGrid& vpr_device_grid,
                                 const VprDeviceAnnotation& vpr_device_annotation,
-                                const RRGraph& rr_graph,
+                                const RRGraphView& rr_graph,
                                 const DeviceRRGSB& device_rr_gsb,
                                 const bool& unique,
                                 const bool& verbose) {
