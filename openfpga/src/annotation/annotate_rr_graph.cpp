@@ -491,8 +491,8 @@ void annotate_rr_switch_circuit_models(const DeviceContext& vpr_device_ctx,
                                        const bool& verbose_output) {
   size_t count = 0;
 
-  for (const RRSwitchId& rr_switch_id : vpr_device_ctx.rr_graph.rr_switch()) {
-    std::string switch_name(vpr_device_ctx.rr_graph.rr_switch()[rr_switch_id].name); 
+  for (size_t rr_switch_id = 0; rr_switch_id < vpr_device_ctx.rr_graph.rr_switch().size(); rr_switch_id++) {
+    std::string switch_name(vpr_device_ctx.rr_graph.rr_switch()[RRSwitchId(rr_switch_id)].name); 
     /* Skip the delayless switch, which is only used by the edges between
      * - SOURCE and OPIN
      * - IPIN and SINK  
@@ -534,7 +534,7 @@ void annotate_rr_switch_circuit_models(const DeviceContext& vpr_device_ctx,
     }
   
     /* Now update the device annotation */
-    vpr_device_annotation.add_rr_switch_circuit_model(rr_switch_id, circuit_model);
+    vpr_device_annotation.add_rr_switch_circuit_model(RRSwitchId(rr_switch_id), circuit_model);
     VTR_LOGV(verbose_output, 
              "Binded a routing resource graph switch '%s' to circuit model '%s'\n",
              switch_name.c_str(),
