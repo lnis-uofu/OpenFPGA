@@ -364,7 +364,7 @@ void build_connection_block_interc_bitstream(BitstreamManager& bitstream_manager
     /* No bitstream generation required by a special direct connection*/
   } else if (1 < driver_rr_nodes.size()) {
     /* Create the block denoting the memory instances that drives this node in Switch Block */
-    std::string mem_block_name = generate_cb_memory_instance_name(CONNECTION_BLOCK_MEM_INSTANCE_PREFIX, rr_graph.node_side(src_rr_node), ipin_index, std::string(""));
+    std::string mem_block_name = generate_cb_memory_instance_name(CONNECTION_BLOCK_MEM_INSTANCE_PREFIX, get_rr_graph_single_node_side(rr_graph, src_rr_node), ipin_index, std::string(""));
     ConfigBlockId mux_mem_block = bitstream_manager.add_block(mem_block_name);
     bitstream_manager.add_child_block(cb_configurable_block, mux_mem_block);
     /* This is a routing multiplexer! Generate bitstream */
