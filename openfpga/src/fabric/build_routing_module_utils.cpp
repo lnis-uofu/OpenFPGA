@@ -74,7 +74,7 @@ std::string generate_sb_module_grid_port_name(const e_side& sb_side,
 
   /* Collect the attributes of the rr_node required to generate the port name */
   int pin_id = rr_graph.node_pin_num(rr_node);
-  e_side pin_side = rr_graph.node_side(rr_node);
+  e_side pin_side = get_rr_graph_single_node_side(rr_graph, rr_node);
   t_physical_tile_type_ptr physical_tile = vpr_device_grid[rr_graph.node_xlow(rr_node)][rr_graph.node_ylow(rr_node)].type;
   int pin_width_offset = physical_tile->pin_width_offset[pin_id]; 
   int pin_height_offset = physical_tile->pin_height_offset[pin_id]; 
@@ -103,7 +103,7 @@ std::string generate_cb_module_grid_port_name(const e_side& cb_side,
 
   /* Collect the attributes of the rr_node required to generate the port name */
   int pin_id = rr_graph.node_pin_num(rr_node);
-  e_side pin_side = rr_graph.node_side(rr_node);
+  e_side pin_side = get_rr_graph_single_node_side(rr_graph, rr_node);
   t_physical_tile_type_ptr physical_tile = vpr_device_grid[rr_graph.node_xlow(rr_node)][rr_graph.node_ylow(rr_node)].type;
   int pin_width_offset = physical_tile->pin_width_offset[pin_id]; 
   int pin_height_offset = physical_tile->pin_height_offset[pin_id]; 
@@ -180,7 +180,7 @@ ModulePinInfo find_switch_block_module_input_port(const ModuleManager& module_ma
                                         rr_graph.node_ylow(input_rr_node));
 
     /* Find the side where the grid pin locates in the grid */
-    enum e_side grid_pin_side = rr_graph.node_side(input_rr_node);
+    enum e_side grid_pin_side = get_rr_graph_single_node_side(rr_graph, input_rr_node);
     VTR_ASSERT(NUM_SIDES != grid_pin_side);
 
     std::string input_port_name = generate_sb_module_grid_port_name(input_side,
