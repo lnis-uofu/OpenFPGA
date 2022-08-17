@@ -36,7 +36,7 @@ void annotate_rr_node_nets(const DeviceContext& device_ctx,
     }
     t_trace* tptr = routing_ctx.trace[net_id].head;
     while (tptr != nullptr) {
-      RRNodeId rr_node = tptr->index;
+      RRNodeId rr_node = RRNodeId(tptr->index);
       /* Ignore source and sink nodes, they are the common node multiple starting and ending points */
       if ( (SOURCE != device_ctx.rr_graph.node_type(rr_node)) 
         && (SINK != device_ctx.rr_graph.node_type(rr_node)) ) {
@@ -101,7 +101,7 @@ RRNodeId find_previous_node_from_routing_traces(const RRGraphView& rr_graph,
     if (false == valid_prev_node) {
       t_trace* tptr = routing_trace_head;
       while (tptr != nullptr) {
-        RRNodeId cand_prev_node = tptr->index;
+        RRNodeId cand_prev_node = RRNodeId(tptr->index);
         bool is_good_cand = false;
         for (const RREdgeId& in_edge : rr_graph.node_in_edges(cur_rr_node)) {
           if (cand_prev_node == rr_graph.edge_src_node(in_edge)) {
