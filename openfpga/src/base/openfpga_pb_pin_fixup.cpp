@@ -86,8 +86,8 @@ void update_cluster_pin_with_post_routing_results(const DeviceContext& device_ct
     }
 
     /* Find the net mapped to this pin in routing results */
-    const RRNodeId& rr_node = device_ctx.rr_graph.find_node(grid_coord.x(), grid_coord.y(), rr_node_type, physical_pin, pin_side); 
-    if (false == device_ctx.rr_graph.valid_node_id(rr_node)) {
+    const RRNodeId& rr_node = device_ctx.rr_graph.node_lookup().find_node(grid_coord.x(), grid_coord.y(), rr_node_type, physical_pin, pin_side); 
+    if (false == device_ctx.rr_graph.valid_node(rr_node)) {
       continue;
     }
     /* Get the cluster net id which has been mapped to this net */
@@ -198,7 +198,7 @@ void update_pb_pin_with_post_routing_results(const DeviceContext& device_ctx,
                                                      vpr_routing_annotation,
                                                      vpr_clustering_annotation,
                                                      grid_coord, cluster_blk_id, NUM_SIDES,
-                                                     placement_ctx.block_locs[cluster_blk_id].loc.z,
+                                                     placement_ctx.block_locs[cluster_blk_id].loc.sub_tile,
                                                      verbose);
       } 
     }
@@ -246,7 +246,7 @@ void update_pb_pin_with_post_routing_results(const DeviceContext& device_ctx,
                                                      vpr_routing_annotation,
                                                      vpr_clustering_annotation,
                                                      io_coord, cluster_blk_id, io_side,
-                                                     placement_ctx.block_locs[cluster_blk_id].loc.z,
+                                                     placement_ctx.block_locs[cluster_blk_id].loc.sub_tile,
                                                      verbose);
       }
     }

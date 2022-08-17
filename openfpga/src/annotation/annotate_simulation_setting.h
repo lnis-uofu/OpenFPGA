@@ -15,6 +15,7 @@
 namespace openfpga {
 
 int annotate_simulation_setting(const AtomContext& atom_ctx, 
+                                const ClusteringContext& cluster_ctx,
                                 const std::unordered_map<AtomNetId, t_net_power>& net_activity, 
                                 SimulationSetting& sim_setting);
 

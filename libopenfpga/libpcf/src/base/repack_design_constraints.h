@@ -18,7 +18,7 @@
 #include "repack_design_constraints_fwd.h"
 
 /* Constants */
-constexpr char* REPACK_DESIGN_CONSTRAINT_OPEN_NET = "OPEN";
+constexpr const char* REPACK_DESIGN_CONSTRAINT_OPEN_NET = "OPEN";
 
 /********************************************************************
  * A data structure to describe the design constraints for repacking tools

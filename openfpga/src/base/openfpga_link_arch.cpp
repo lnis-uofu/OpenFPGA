@@ -174,6 +174,7 @@ int link_arch(OpenfpgaContext& openfpga_ctx,
    */
   //openfpga_ctx.mutable_simulation_setting() = openfpga_ctx.mutable_arch().sim_setting;
   if (CMD_EXEC_FATAL_ERROR == annotate_simulation_setting(g_vpr_ctx.atom(),
+                                                          g_vpr_ctx.clustering(),
                                                           net_activity,
                                                           openfpga_ctx.mutable_simulation_setting())) {
     return CMD_EXEC_FATAL_ERROR;

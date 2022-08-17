@@ -44,7 +44,6 @@ project("OPENFPGA" C CXX)
 # Options
 # Option to enable/disable graphic in compilation
 option(ENABLE_VPR_GRAPHICS "Enables VPR graphics" ON)
-option(ENABLE_VPR_GRAPHICS "Enables build with librtlnumber" OFF)
 
 #Allow the user to decide weather to compile the graphics library
 set(VPR_USE_EZGL "auto" CACHE STRING "Specify whether vpr uses the graphics library")
@@ -75,6 +74,11 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF) #No compiler specific extensions
 
+if(NOT MSVC)
+    # for GCC and Clang
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g3")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
+endif()
 
 # Set WARN FLAGS
 set(WARN_FLAGS "")
@@ -88,13 +92,6 @@ if (MSVC)
 else ()
   set(WARN_FLAGS_TO_CHECK # the flags to check if the compiler supports
       #GCC-like
-      "-Wpointer-arith"
-      "-Wcast-qual"
-      "-D__USE_FIXED_PROTOTYPES__"
-      "-ansi"
-      "-Wshadow"
-      "-Wno-write-strings"
-      "-D_POSIX_SOURCE"
       "-Wall"                         #Most warnings, typically good
       "-Wextra"                       #Extra warning, usually good
       "-Wpedantic"                    #Ensure ISO compliance (i.e. no non-standard extensions)
@@ -124,7 +121,7 @@ else ()
       "-Winit-self"                   #Warn about self-initialization
       "-Wcatch-value=3"               #Warn when catch statements don't catch by reference
       "-Wextra-semi"                  #Warn about redudnant semicolons
-      "-Wimplicit-fallthrough=3"      #Warn about case fallthroughs, but allow 'fallthrough' comments to suppress warnings
+      "-Wimplicit-fallthrough=4"      #Warn about case fallthroughs, but allow 'fallthrough' comments to suppress warnings
       #GCC-like optional
       #"-Wsuggest-final-types"         #Suggest where 'final' would help if specified on a type methods
       #"-Wsuggest-final-methods"       #Suggest where 'final' would help if specified on methods

@@ -109,7 +109,10 @@ void add_grid_module_nets_connect_pb_type_ports(ModuleManager& module_manager,
   /* Ensure that we have a valid grid_type_descriptor */
   VTR_ASSERT(nullptr != grid_type_descriptor);
 
-  for (t_logical_block_type_ptr lb_type : grid_type_descriptor->equivalent_sites) {
+  /* FIXME: Currently support only 1 equivalent site! Should clarify this limitation in documentation! */
+  for (const t_sub_tile& sub_tile : grid_type_descriptor->sub_tiles) {
+    VTR_ASSERT(sub_tile.equivalent_sites.size() == 1);
+    t_logical_block_type_ptr lb_type = sub_tile.equivalent_sites[0];
     t_pb_graph_node* top_pb_graph_node = lb_type->pb_graph_head;
     VTR_ASSERT(nullptr != top_pb_graph_node); 
 
@@ -1009,9 +1012,10 @@ void build_physical_tile_module(ModuleManager& module_manager,
    * If you need different equivalent sites, you can always define 
    * it as a mode under a <pb_type>
    */
-  for (int iz = 0; iz < phy_block_type->capacity; ++iz) {
-    VTR_ASSERT(1 == phy_block_type->equivalent_sites.size());
-    for (t_logical_block_type_ptr lb_type : phy_block_type->equivalent_sites) {
+  for (const t_sub_tile& sub_tile : phy_block_type->sub_tiles) {
+    for (int iz = 0; iz < sub_tile.capacity.total(); ++iz) {
+      VTR_ASSERT(1 == sub_tile.equivalent_sites.size());
+      t_logical_block_type_ptr lb_type = sub_tile.equivalent_sites[0];
       /* Bypass empty pb_graph */
       if (nullptr == lb_type->pb_graph_head) {
         continue;
@@ -1047,7 +1051,9 @@ void build_physical_tile_module(ModuleManager& module_manager,
                                   vpr_device_annotation,
                                   phy_block_type, border_side);
     /* Add module nets to connect the pb_type ports to sub modules */
-    for (t_logical_block_type_ptr lb_type : phy_block_type->equivalent_sites) {
+    for (const t_sub_tile& sub_tile : phy_block_type->sub_tiles) {
+      VTR_ASSERT(sub_tile.equivalent_sites.size() == 1);
+      t_logical_block_type_ptr lb_type = sub_tile.equivalent_sites[0];
       /* Bypass empty pb_graph */
       if (nullptr == lb_type->pb_graph_head) {
         continue;
@@ -1070,7 +1076,9 @@ void build_physical_tile_module(ModuleManager& module_manager,
                                              phy_block_type, border_side);
     
     /* Add module nets to connect the duplicated pb_type ports to sub modules */
-    for (t_logical_block_type_ptr lb_type : phy_block_type->equivalent_sites) {
+    for (const t_sub_tile& sub_tile : phy_block_type->sub_tiles) {
+      VTR_ASSERT(sub_tile.equivalent_sites.size() == 1);
+      t_logical_block_type_ptr lb_type = sub_tile.equivalent_sites[0];
       /* Bypass empty pb_graph */
       if (nullptr == lb_type->pb_graph_head) {
         continue;
