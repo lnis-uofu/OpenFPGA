@@ -187,6 +187,7 @@ size_t recommend_num_sim_clock_cycle(const AtomContext& atom_ctx,
  *    we will infer the number based on the average signal density
  *******************************************************************/
 int annotate_simulation_setting(const AtomContext& atom_ctx, 
+                                const ClusteringContext& cluster_ctx,
                                 const std::unordered_map<AtomNetId, t_net_power>& net_activity, 
                                 SimulationSetting& sim_setting) {
 
@@ -199,15 +200,13 @@ int annotate_simulation_setting(const AtomContext& atom_ctx,
      * Note:
      *   - MUST mention in documentation that VPR should be run in timing enabled mode
      */
-    vtr::vector<ClusterNetId, float*> net_delay;
-    vtr::t_chunk net_delay_ch;
+    ClbNetPinsMatrix<float> net_delay = make_net_pins_matrix<float>(cluster_ctx.clb_nlist);
     /* Load the net delays */
-    net_delay = alloc_net_delay(&net_delay_ch);
     load_net_delay_from_routing(net_delay);
 
     /* Do final timing analysis */
     auto analysis_delay_calc = std::make_shared<AnalysisDelayCalculator>(atom_ctx.nlist, atom_ctx.lookup, net_delay);
-    auto timing_info = make_setup_hold_timing_info(analysis_delay_calc);
+    auto timing_info = make_setup_hold_timing_info(analysis_delay_calc, e_timing_update_type::FULL);
     timing_info->update();
 
     /* Get critical path delay. Update simulation settings */
