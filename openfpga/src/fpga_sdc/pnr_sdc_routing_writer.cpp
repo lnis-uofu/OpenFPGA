@@ -92,7 +92,7 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
   for (const RREdgeId& edge : rr_graph.node_configurable_in_edges(output_rr_node)) {
     /* Get the switch delay */
     const RRSwitchId& driver_switch = rr_graph.edge_switch(edge);
-    switch_delays[module_input_ports[edge_counter]] = find_pnr_sdc_switch_tmax(rr_graph.get_switch(driver_switch));
+    switch_delays[module_input_ports[edge_counter]] = find_pnr_sdc_switch_tmax(rr_graph.rr_switch_inf(driver_switch));
     edge_counter++;
   }
 
@@ -368,7 +368,7 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
   for (const RREdgeId& edge : rr_graph.node_configurable_in_edges(output_rr_node)) {
     /* Get the switch delay */
     const RRSwitchId& driver_switch = rr_graph.edge_switch(edge);
-    switch_delays[module_input_ports[edge_counter]] = find_pnr_sdc_switch_tmax(rr_graph.get_switch(driver_switch));
+    switch_delays[module_input_ports[edge_counter]] = find_pnr_sdc_switch_tmax(rr_graph.rr_switch_inf(driver_switch));
     edge_counter++;
   }
 
@@ -477,8 +477,8 @@ void print_pnr_sdc_constrain_cb_timing(const PnrSdcOption& options,
      * TODO: Should consider multi-level RC delay models
      *       where the number of levels are defined by users
      */
-    float routing_segment_delay = rr_graph.get_segment(segment_id).Rmetal
-                                * rr_graph.get_segment(segment_id).Cmetal;
+    float routing_segment_delay = rr_graph.rr_segments(segment_id).Rmetal
+                                * rr_graph.rr_segments(segment_id).Cmetal;
 
     /* If we have a zero-delay path to contrain, we will skip unless users want so */
     if ( (false == constrain_zero_delay_paths) 

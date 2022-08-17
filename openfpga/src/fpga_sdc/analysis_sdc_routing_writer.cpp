@@ -15,6 +15,7 @@
 
 #include "openfpga_reserved_words.h"
 #include "openfpga_naming.h"
+#include "openfpga_rr_graph_utils.h"
 
 #include "build_routing_module_utils.h"
 #include "sdc_writer_utils.h"
@@ -131,7 +132,7 @@ void print_analysis_sdc_disable_cb_unused_resources(std::fstream& fp,
       RRNodeId ipin_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
 
       /* Find the MUX instance that drives the IPIN! */
-      std::string mux_instance_name = generate_cb_mux_instance_name(CONNECTION_BLOCK_MUX_INSTANCE_PREFIX, rr_graph.node_side(ipin_node), inode, std::string(""));
+      std::string mux_instance_name = generate_cb_mux_instance_name(CONNECTION_BLOCK_MUX_INSTANCE_PREFIX, get_rr_graph_single_node_side(rr_graph, ipin_node), inode, std::string(""));
       mux_instance_to_net_map[mux_instance_name] = atom_ctx.lookup.atom_net(routing_annotation.rr_node_net(ipin_node));  
 
       if (false == is_rr_node_to_be_disable_for_analysis(routing_annotation, ipin_node)) {
@@ -390,7 +391,7 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
       const RRNodeId& opin_node = rr_gsb.get_opin_node(side_manager.get_side(), inode);
 
       std::string port_name = generate_sb_module_grid_port_name(side_manager.get_side(), 
-                                                                rr_graph.node_side(opin_node),
+                                                                get_rr_graph_single_node_side(rr_graph, opin_node),
                                                                 grids,
                                                                 device_annotation,
                                                                 rr_graph,
@@ -403,7 +404,7 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
         const RRNodeId& unique_mirror_opin_node = unique_mirror.get_opin_node(side_manager.get_side(), inode);
 
         port_name = generate_sb_module_grid_port_name(side_manager.get_side(),
-                                                      rr_graph.node_side(unique_mirror_opin_node),
+                                                      get_rr_graph_single_node_side(rr_graph, unique_mirror_opin_node),
                                                       grids,
                                                       device_annotation,
                                                       rr_graph,
@@ -458,7 +459,7 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
       const RRNodeId& opin_node = rr_gsb.get_opin_node(side_manager.get_side(), inode);
 
       std::string port_name = generate_sb_module_grid_port_name(side_manager.get_side(),
-                                                                rr_graph.node_side(opin_node),
+                                                                get_rr_graph_single_node_side(rr_graph, opin_node),
                                                                 grids,
                                                                 device_annotation,
                                                                 rr_graph,
@@ -471,7 +472,7 @@ void print_analysis_sdc_disable_sb_unused_resources(std::fstream& fp,
         const RRNodeId& unique_mirror_opin_node = unique_mirror.get_opin_node(side_manager.get_side(), inode);
 
         port_name = generate_sb_module_grid_port_name(side_manager.get_side(),
-                                                      rr_graph.node_side(unique_mirror_opin_node),
+                                                      get_rr_graph_single_node_side(rr_graph, unique_mirror_opin_node),
                                                       grids,
                                                       device_annotation,
                                                       rr_graph,

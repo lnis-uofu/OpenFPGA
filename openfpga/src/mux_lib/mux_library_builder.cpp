@@ -29,7 +29,7 @@ namespace openfpga {
  * found in the global routing architecture
  *******************************************************************/
 static 
-void build_routing_arch_mux_library(const DeviceContext& vpr_device_ctx,
+void build_routing_arch_mux_library(const RRGraphView& rr_graph,
                                     const CircuitLibrary& circuit_lib,
                                     const VprDeviceAnnotation& vpr_device_annotation, 
                                     MuxLibrary& mux_lib) {
@@ -39,31 +39,32 @@ void build_routing_arch_mux_library(const DeviceContext& vpr_device_ctx,
    * for the rest is a switch box
    */
   /* Count the sizes of muliplexers in routing architecture */  
-  for (const RRNodeId& node : vpr_device_ctx.rr_graph.nodes()) {
-    switch (vpr_device_ctx.rr_graph.node_type(node)) {
+  for (const RRNodeId& node : rr_graph.nodes()) {
+    switch (rr_graph.node_type(node)) {
     case IPIN: 
     case CHANX:
     case CHANY: {
       /* Have to consider the fan_in only, it is a connection block (multiplexer)*/
-      if ( (0 == vpr_device_ctx.rr_graph.node_in_edges(node).size()) 
-        || (1 == vpr_device_ctx.rr_graph.node_in_edges(node).size()) ) { 
+      if ( (0 == rr_graph.node_in_edges(node).size()) 
+        || (1 == rr_graph.node_in_edges(node).size()) ) { 
         break; 
       }
       /* Find the circuit_model for multiplexers in connection blocks */
-      std::vector<RRSwitchId> driver_switches = get_rr_graph_driver_switches(vpr_device_ctx.rr_graph, node);
+      std::vector<RRSwitchId> driver_switches = get_rr_graph_driver_switches(rr_graph, node);
       VTR_ASSERT(1 == driver_switches.size());
       const CircuitModelId& rr_switch_circuit_model = vpr_device_annotation.rr_switch_circuit_model(driver_switches[0]);
       /* we should select a circuit model for the routing resource switch */
       if (CircuitModelId::INVALID() == rr_switch_circuit_model) {
-        VTR_LOG_ERROR("Unable to find the circuit mode for rr_switch '%s'!\n",
-                      vpr_device_ctx.rr_graph.get_switch(driver_switches[0]).name);
-        vpr_device_ctx.rr_graph.print_node(node);
+        VTR_LOG_ERROR("Unable to find the circuit model for rr_switch '%s'!\n",
+                      rr_graph.rr_switch_inf(driver_switches[0]).name);
+        VTR_LOG("Node type: %s\n", rr_graph.node_type_string(node));
+        VTR_LOG("Node coordinate: %s\n", rr_graph.node_coordinate_to_string(node));
         exit(1);
       }
      
       VTR_ASSERT(CircuitModelId::INVALID() != rr_switch_circuit_model);
       /* Add the mux to mux_library */
-      mux_lib.add_mux(circuit_lib, rr_switch_circuit_model, vpr_device_ctx.rr_graph.node_in_edges(node).size()); 
+      mux_lib.add_mux(circuit_lib, rr_switch_circuit_model, rr_graph.node_in_edges(node).size()); 
       break;
     }
     default:
@@ -206,7 +207,7 @@ MuxLibrary build_device_mux_library(const DeviceContext& vpr_device_ctx,
   MuxLibrary mux_lib;
 
   /* Step 1: We should check the multiplexer spice models defined in routing architecture.*/
-  build_routing_arch_mux_library(vpr_device_ctx, openfpga_ctx.arch().circuit_lib, 
+  build_routing_arch_mux_library(vpr_device_ctx.rr_graph, openfpga_ctx.arch().circuit_lib, 
                                  openfpga_ctx.vpr_device_annotation(),
                                  mux_lib);
 

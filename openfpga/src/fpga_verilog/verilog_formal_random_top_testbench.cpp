@@ -33,14 +33,14 @@ namespace openfpga {
 /********************************************************************
  * Local variables used only in this file
  *******************************************************************/
-constexpr char* FPGA_PORT_POSTFIX = "_gfpga";
-constexpr char* BENCHMARK_PORT_POSTFIX = "_bench";
-constexpr char* CHECKFLAG_PORT_POSTFIX = "_flag";
-constexpr char* DEFAULT_CLOCK_NAME = "clk";
-constexpr char* BENCHMARK_INSTANCE_NAME = "REF_DUT";
-constexpr char* FPGA_INSTANCE_NAME = "FPGA_DUT";
-constexpr char* ERROR_COUNTER = "nb_error";
-constexpr char* FORMAL_TB_SIM_START_PORT_NAME = "sim_start";
+constexpr const char* FPGA_PORT_POSTFIX = "_gfpga";
+constexpr const char* BENCHMARK_PORT_POSTFIX = "_bench";
+constexpr const char* CHECKFLAG_PORT_POSTFIX = "_flag";
+constexpr const char* DEFAULT_CLOCK_NAME = "clk";
+constexpr const char* BENCHMARK_INSTANCE_NAME = "REF_DUT";
+constexpr const char* FPGA_INSTANCE_NAME = "FPGA_DUT";
+constexpr const char* ERROR_COUNTER = "nb_error";
+constexpr const char* FORMAL_TB_SIM_START_PORT_NAME = "sim_start";
 
 /********************************************************************
  * Print the module ports for the Verilog testbench 
