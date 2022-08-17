@@ -90,7 +90,7 @@ std::vector<size_t> find_physical_tile_pin_id(t_physical_tile_type_ptr physical_
   std::vector<size_t> pin_ids;
 
   /* Walk through the port of the tile */
-  for (const t_sub_tile& sub_tile : physical_tile.sub_tiles) {
+  for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
     for (const t_physical_tile_port& physical_tile_port : sub_tile.ports) {
       if (std::string(physical_tile_port.name) != tile_port.get_name()) {
         continue;
