@@ -11,15 +11,14 @@
 #include "openfpga_side_manager.h"
 
 /* Headers from vpr library */
-#include "rr_graph_obj_utils.h"
+#include "physical_types.h"
+#include "rr_graph_view_util.h"
 #include "openfpga_rr_graph_utils.h"
 
 #include "annotate_rr_graph.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
-
-constexpr char* VPR_DELAYLESS_SWITCH_NAME = "__vpr_delayless_switch__";
 
 /* Build a RRChan Object with the given channel type and coorindators */
 static 
@@ -244,10 +243,10 @@ RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
       rr_chan_dir.resize(rr_chan.get_chan_width());
       for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
         /* Identify the directionality, record it in rr_node_direction */
-        if (INC_DIRECTION == vpr_device_ctx.rr_graph.node_direction(rr_chan.get_node(itrack))) {
+        if (Direction::INC == vpr_device_ctx.rr_graph.node_direction(rr_chan.get_node(itrack))) {
           rr_chan_dir[itrack] = chan_dir_to_port_dir_mapping[0];
         } else {
-          VTR_ASSERT(DEC_DIRECTION == vpr_device_ctx.rr_graph.node_direction(rr_chan.get_node(itrack)));
+          VTR_ASSERT(Direction::DEC == vpr_device_ctx.rr_graph.node_direction(rr_chan.get_node(itrack)));
           rr_chan_dir[itrack] = chan_dir_to_port_dir_mapping[1];
         }
       }
@@ -492,8 +491,8 @@ void annotate_rr_switch_circuit_models(const DeviceContext& vpr_device_ctx,
                                        const bool& verbose_output) {
   size_t count = 0;
 
-  for (size_t iswitch = 0; iswitch < vpr_device_ctx.rr_switch_inf.size(); ++iswitch) {
-    std::string switch_name(vpr_device_ctx.rr_switch_inf[iswitch].name); 
+  for (const RRSwitchId& rr_switch_id : vpr_device_ctx.rr_graph.rr_switch()) {
+    std::string switch_name(vpr_device_ctx.rr_graph.rr_switch()[rr_switch_id].name); 
     /* Skip the delayless switch, which is only used by the edges between
      * - SOURCE and OPIN
      * - IPIN and SINK  
@@ -535,7 +534,7 @@ void annotate_rr_switch_circuit_models(const DeviceContext& vpr_device_ctx,
     }
   
     /* Now update the device annotation */
-    vpr_device_annotation.add_rr_switch_circuit_model(RRSwitchId(iswitch), circuit_model);
+    vpr_device_annotation.add_rr_switch_circuit_model(rr_switch_id, circuit_model);
     VTR_LOGV(verbose_output, 
              "Binded a routing resource graph switch '%s' to circuit model '%s'\n",
              switch_name.c_str(),

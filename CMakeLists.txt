@@ -123,7 +123,24 @@ else ()
       "-Wuninitialized"               #Warn about unitialized values
       "-Winit-self"                   #Warn about self-initialization
       "-Wcatch-value=3"               #Warn when catch statements don't catch by reference
-"-Wextra-semi" #Warn about redudnant semicolons
+      "-Wextra-semi"                  #Warn about redudnant semicolons
+      "-Wimplicit-fallthrough=3"      #Warn about case fallthroughs, but allow 'fallthrough' comments to suppress warnings
+      #GCC-like optional
+      #"-Wsuggest-final-types"         #Suggest where 'final' would help if specified on a type methods
+      #"-Wsuggest-final-methods"       #Suggest where 'final' would help if specified on methods
+      #"-Wsuggest-override"            #Suggest where 'override' should be specified
+      #"-Wold-style-cast"              #Warn about using c-style casts
+      #"-Wconversion"                  #Warn when type conversions may change value
+      #"-Wsign-conversion"             #Warn if a conversion may change the sign
+      #"-Wpadded"                      #Will warn if additional padding is introduced to a struct/class. Turn on if optimizing class memory layouts
+      #"-Wstrict-overflow=2"           #Warn if the compiler optimizes assuming signed overflow does not occur
+      #"-Wfloat-equal"                 #Warn about using direct floating point equality
+      #"-Wunsafe-loop-optimizations"   #Warn when loops can't be optimized
+      #"-Wswitch-enum"                 #Warn about uncovered enumeration values in a switch (even if there is a default)
+      #"-Wsign-promo"                  #Warn when overload resolution converts an unsigned type to signed when an unsigned overload exists
+      #"-Wdouble-promotion"            #Warn when float is implicitly propted to double
+      #"-Wuseless-cast"                #Warn about casts to the same type
+      #"-Wzero-as-null-pointer-constant" #Warn about using '0' instead of nullptr
       )
 endif()
 
