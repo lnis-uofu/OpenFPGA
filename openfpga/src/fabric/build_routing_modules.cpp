@@ -409,7 +409,7 @@ void build_switch_block_module(ModuleManager& module_manager,
       vtr::Point<size_t> port_coord(rr_graph.node_xlow(rr_gsb.get_opin_node(side_manager.get_side(), inode)),
                                     rr_graph.node_ylow(rr_gsb.get_opin_node(side_manager.get_side(), inode)));
       std::string port_name = generate_sb_module_grid_port_name(side_manager.get_side(),
-                                                                rr_graph.node_side(rr_gsb.get_opin_node(side_manager.get_side(), inode)),
+                                                                get_rr_graph_single_node_side(rr_graph, rr_gsb.get_opin_node(side_manager.get_side(), inode)),
                                                                 grids,
                                                                 device_annotation,
                                                                 rr_graph,
@@ -581,7 +581,7 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
   /* Give an instance name: this name should be consistent with the block name given in SDC manager,
    * If you want to bind the SDC generation to modules
    */
-  std::string mux_instance_name = generate_cb_mux_instance_name(CONNECTION_BLOCK_MUX_INSTANCE_PREFIX, rr_graph.node_side(rr_gsb.get_ipin_node(cb_ipin_side, ipin_index)), ipin_index, std::string(""));
+  std::string mux_instance_name = generate_cb_mux_instance_name(CONNECTION_BLOCK_MUX_INSTANCE_PREFIX, get_rr_graph_single_node_side(rr_graph, rr_gsb.get_ipin_node(cb_ipin_side, ipin_index)), ipin_index, std::string(""));
   module_manager.set_child_instance_name(cb_module, mux_module, mux_instance_id, mux_instance_name);
 
   /* TODO: Generate input ports that are wired to the input bus of the routing multiplexer */
@@ -636,7 +636,7 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
   /* Give an instance name: this name should be consistent with the block name given in bitstream manager,
    * If you want to bind the bitstream generation to modules
    */
-  std::string mem_instance_name = generate_cb_memory_instance_name(CONNECTION_BLOCK_MEM_INSTANCE_PREFIX, rr_graph.node_side(rr_gsb.get_ipin_node(cb_ipin_side, ipin_index)), ipin_index, std::string(""));
+  std::string mem_instance_name = generate_cb_memory_instance_name(CONNECTION_BLOCK_MEM_INSTANCE_PREFIX, get_rr_graph_single_node_side(rr_graph, rr_gsb.get_ipin_node(cb_ipin_side, ipin_index)), ipin_index, std::string(""));
   module_manager.set_child_instance_name(cb_module, mem_module, mem_instance_id, mem_instance_name);
 
   /* Add nets to connect regular and mode-select SRAM ports to the SRAM port of memory module */

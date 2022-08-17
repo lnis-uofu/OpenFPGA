@@ -12,6 +12,7 @@
 
 #include "openfpga_side_manager.h"
 #include "openfpga_naming.h"
+#include "openfpga_rr_graph_utils.h"
 
 #include "build_routing_module_utils.h"
 
