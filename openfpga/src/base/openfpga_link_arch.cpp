@@ -47,10 +47,15 @@ bool is_vpr_rr_graph_supported(const RRGraphView& rr_graph) {
     if (CHANX != rr_graph.node_type(node) && CHANY != rr_graph.node_type(node)) {
       continue;
     }
-    if (BI_DIRECTION == rr_graph.node_direction(node)) {
+    if (Direction::BIDIR == rr_graph.node_direction(node)) {
       VTR_LOG_ERROR("Routing resource graph is bi-directional. OpenFPGA currently supports uni-directional routing architecture only.\n");
       return false;
     }
+    if (Direction::NONE == rr_graph.node_direction(node)) {
+      VTR_LOG_ERROR("Routing resource graph contains routing tracks which has not specific direction. OpenFPGA currently supports uni-directional routing architecture only.\n");
+      return false;
+    }
+
   }
  
   return true;

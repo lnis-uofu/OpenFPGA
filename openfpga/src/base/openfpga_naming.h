@@ -17,6 +17,7 @@
 #include "device_grid.h"
 #include "openfpga_port.h"
 #include "module_manager_fwd.h"
+#include "rr_node_types.h"
 
 /********************************************************************
  * Function declaration

@@ -116,7 +116,7 @@ void write_rr_gsb_chan_connection_to_xml(std::fstream& fp,
        << "\" index=\"" << inode 
        << "\" node_id=\"" << size_t(cur_rr_node)
        << "\" segment_id=\"" << size_t(src_segment_id)
-       << "\" segment_name=\"" << rr_graph.get_segment(src_segment_id).name
+       << "\" segment_name=\"" << rr_graph.rr_segments()[src_segment_id].name
        << "\" mux_size=\"" << driver_rr_edges.size()
        << "\" sb_module_pin_name=\"" << generate_sb_module_track_port_name(cur_node_type, gsb_side, OUT_PORT) 
        << "\">" 
@@ -130,7 +130,7 @@ void write_rr_gsb_chan_connection_to_xml(std::fstream& fp,
          << "\" index=\"" << rr_gsb.get_node_index(rr_graph, cur_rr_node, oppo_side.get_side(), IN_PORT)
          << "\" node_id=\"" << size_t(cur_rr_node)
          << "\" segment_id=\"" << size_t(src_segment_id)
-         << "\" segment_name=\"" << rr_graph.get_segment(src_segment_id).name
+         << "\" segment_name=\"" << rr_graph.rr_segments()[src_segment_id].name
          << "\" sb_module_pin_name=\"" << generate_sb_module_track_port_name(cur_node_type, oppo_side.get_side(), IN_PORT) 
          << "\"/>" 
          << std::endl; 
@@ -144,12 +144,11 @@ void write_rr_gsb_chan_connection_to_xml(std::fstream& fp,
         SideManager driver_side(driver_node_side);
 
         if (OPIN == rr_graph.node_type(driver_rr_node)) {
-          SideManager grid_side(rr_graph.node_side(driver_rr_node));
           fp << "\t\t<driver_node type=\"" << rr_node_typename[OPIN]
              << "\" side=\"" << driver_side.to_string() 
              << "\" index=\"" << driver_node_index  
              << "\" node_id=\"" << size_t(driver_rr_node)
-             << "\" grid_side=\"" <<  grid_side.to_string() 
+             << "\" grid_side=\"" <<  rr_graph.node_side_string(driver_rr_node) 
              << "\" sb_module_pin_name=\"" << generate_sb_module_grid_port_name(gsb_side, driver_node_side, vpr_device_grid, vpr_device_annotation, rr_graph, driver_rr_node) 
              <<"\"/>" 
              << std::endl; 
@@ -160,7 +159,7 @@ void write_rr_gsb_chan_connection_to_xml(std::fstream& fp,
              << "\" index=\"" << driver_node_index 
              << "\" node_id=\"" << size_t(driver_rr_node)
              << "\" segment_id=\"" << size_t(des_segment_id)
-             << "\" segment_name=\"" << rr_graph.get_segment(des_segment_id).name
+             << "\" segment_name=\"" << rr_graph.rr_segments()[des_segment_id].name
              << "\" sb_module_pin_name=\"" << generate_sb_module_track_port_name(rr_graph.node_type(driver_rr_node), driver_side.get_side(), IN_PORT) 
              << "\"/>" 
              << std::endl; 
