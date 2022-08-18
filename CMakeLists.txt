@@ -153,7 +153,6 @@ endforeach()
 #
 # Sanitizer flags
 #
-
 set(SANITIZE_FLAGS "")
 if(OPENFPGA_ENABLE_SANITIZE)
     #Enable sanitizers
@@ -197,10 +196,8 @@ endif()
 # 
 # Sub-projects
 #
-#add_subdirectory(iverilog)
-add_subdirectory(libopenfpga)
-#add_subdirectory(yosys)
 add_subdirectory(vtr-verilog-to-routing)
+add_subdirectory(libs)
 add_subdirectory(openfpga)
 
 # yosys compilation starts
