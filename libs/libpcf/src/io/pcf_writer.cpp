@@ -21,7 +21,7 @@ namespace openfpga {
 /**************************************************
  * Constants
  *************************************************/
-constexpr char* CMD_SET_IO = "set_io";
+constexpr const char* CMD_SET_IO = "set_io";
 
 /********************************************************************
  * A writer to output a repack pin constraint object to XML format

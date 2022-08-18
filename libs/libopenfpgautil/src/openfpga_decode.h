@@ -17,7 +17,7 @@ namespace openfpga {
 /**************************************** 
  * Constants 
  */
-constexpr char DONT_CARE_CHAR = 'x';
+constexpr const char DONT_CARE_CHAR = 'x';
 
 std::vector<size_t> ito1hot_vec(const size_t& in_int,
                                 const size_t& bin_len);

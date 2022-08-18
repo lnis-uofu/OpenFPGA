@@ -19,7 +19,7 @@ namespace openfpga {
 /**************************************************
  * Constants
  *************************************************/
-constexpr char COMMENT = '#';
+constexpr const char COMMENT = '#';
 
 /********************************************************************
  * A writer to output a repack pin constraint object to XML format
