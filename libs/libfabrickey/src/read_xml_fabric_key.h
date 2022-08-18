@@ -4,8 +4,6 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "pugixml_util.hpp"
-#include "pugixml.hpp"
 #include "fabric_key.h"
 
 /********************************************************************
