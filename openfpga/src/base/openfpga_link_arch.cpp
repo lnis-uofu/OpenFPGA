@@ -19,7 +19,7 @@
 #include "annotate_physical_tiles.h"
 #include "annotate_pb_types.h"
 #include "annotate_pb_graph.h"
-#include "annotate_routing.h"
+#include "openfpga_annotate_routing.h"
 #include "annotate_rr_graph.h"
 #include "annotate_simulation_setting.h"
 #include "annotate_bitstream_setting.h"

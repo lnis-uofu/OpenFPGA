@@ -1,5 +1,5 @@
-#ifndef ANNOTATE_ROUTING_H
-#define ANNOTATE_ROUTING_H
+#ifndef OPENFPGA_ANNOTATE_ROUTING_H
+#define OPENFPGA_ANNOTATE_ROUTING_H
 
 /********************************************************************
  * Include header files that are required by function declaration

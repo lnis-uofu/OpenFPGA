@@ -6,7 +6,7 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
-#include "annotate_routing.h"
+#include "openfpga_annotate_routing.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
