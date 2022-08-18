@@ -22,7 +22,6 @@ target_link_libraries(libfabrickey
                       libopenfpgautil
                       libarchopenfpga
                       libvtrutil
-                      libpugixml
                       libpugiutil)
 
 #Create the test executable

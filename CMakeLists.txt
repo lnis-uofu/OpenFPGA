@@ -39,7 +39,7 @@ set(VTR_ASSERT_LEVEL "2" CACHE STRING "VTR assertion checking level. 0: no asser
 set_property(CACHE VTR_ASSERT_LEVEL PROPERTY STRINGS 0 1 2 3 4)
 
 #Create the project 
-project("OPENFPGA" C CXX)
+project("OpenFPGA-tool-suites" C CXX)
 
 # Options
 # Option to enable/disable graphic in compilation

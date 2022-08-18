@@ -24,7 +24,6 @@ target_link_libraries(libpcf
                       libarchopenfpga
                       libvtrutil
                       libblifparse
-                      libpugixml
                       libpugiutil)
 
 #Create the test executable

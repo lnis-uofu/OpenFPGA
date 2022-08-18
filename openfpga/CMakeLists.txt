@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 
-project("libopenfpga")
+project("openfpga")
 
 file(GLOB_RECURSE EXEC_SOURCE src/main.cpp)
 file(GLOB_RECURSE LIB_SOURCES src/*/*.cpp)

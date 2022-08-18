@@ -22,7 +22,6 @@ target_link_libraries(libarchopenfpga
                       libopenfpgautil
                       libvtrutil
                       libarchfpga
-                      libpugixml
                       libpugiutil)
 
 #Create the test executable
