@@ -28,6 +28,7 @@ target_link_libraries(libopenfpga
                       libpcf
                       libvtrutil
                       libbusgroup
+                      libpugixml
                       libvpr)
 
 #Create the test executable
