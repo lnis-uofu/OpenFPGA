@@ -15,13 +15,13 @@ if (${CMAKE_VERSION} VERSION_GREATER "3.8")
     # has no effect unless an Intel compiler is used
 endif()
 
-# Set the default build type if not specified
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release CACHE STRING
-        "Choose the type of build: None, Debug, Release, RelWithDebInfo, MinSizeRel"
-        FORCE)
-endif()
-message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+## Set the default build type if not specified
+#if(NOT CMAKE_BUILD_TYPE)
+#    set(CMAKE_BUILD_TYPE Release CACHE STRING
+#        "Choose the type of build: None, Debug, Release, RelWithDebInfo, MinSizeRel"
+#        FORCE)
+#endif()
+#message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     message("CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
