@@ -78,8 +78,8 @@ def convert_arch_xml_from_v1p1_to_v1p2(input_fname, output_fname):
       child_clone = child.cloneNode(deep=True)
       sub_tile_node.appendChild(child_clone)
     # Remove no longer required child nodes
-    for child in tile_node.childNodes:
-      tile_node.removeChild(child)
+    while (tile_node.hasChildNodes()):
+      tile_node.removeChild(tile_node.firstChild)
     # Append the sub tile child to the tile node
     tile_node.appendChild(sub_tile_node)
 
