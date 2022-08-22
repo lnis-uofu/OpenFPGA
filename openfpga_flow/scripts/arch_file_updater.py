@@ -68,8 +68,13 @@ def convert_arch_xml_from_v1p1_to_v1p2(input_fname, output_fname):
       # Add the node to the child node
       sub_tile_node.append(child)
     # Delete the out-of-date attributes
-    tile_node.pop(CAPACITY_TAG)
-    tile_node.SubElement(
+    tile_node.set(CAPACITY_TAG, None)
+    for child in tile_node:
+      if (child.tag != SUB_TILE_NODE_TAG):
+        tile_node.remove(child)
+
+  # Output the modified content
+  etree.dump(output_fname)
 
   logging.info("[Done]")
 
