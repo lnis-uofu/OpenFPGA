@@ -10,7 +10,7 @@ from os.path import dirname, abspath
 import argparse
 import logging
 import shutil
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as etree
 
 #####################################################################
 # Error codes
@@ -37,18 +37,39 @@ logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO);
 # - The attribute 'capacity' of parent <tile> is removed
 #####################################################################
 def convert_arch_xml_from_v1p1_to_v1p2(input_fname, output_fname):
+  # Constants
+  TILE_ROOT_TAG = "tiles"
+  TILE_NODE_TAG = "tile"
+  SUB_TILE_NODE_TAG = "sub_tile"
+  NAME_TAG = "capacity" 
+  CAPACITY_TAG = "capacity" 
+
   logging.info("Converting \'" + input_fname + "\'" + " to " + "\'" + output_fname + "\'")
   # Parse the input file
-  tree = ET.parse(input_fname)
+  tree = etree.parse(input_fname)
   root = tree.getroot() 
 
   # Iterate over <tile> nodes
-  tile_root_count = 0
-  for tile_root in root.iter("tiles"):
-    tile_root_count += 1
-  if (tile_root_count != 1):
-  logging.error("Fail to find a require node (one and only one) <tiles> under the root node!")
-    
+  if (root.findall(TILE_ROOT_TAG) != 1):
+    logging.error("Fail to find a require node (one and only one) <" + TILE_ROOT_TAG + "> under the root node!")
+  tile_root = root.find(TILE_ROOT_TAG)
+  for tile_node in tile_root.iter(TILE_NODE_TAG): 
+    # Create a new child node <sub_tile>
+    sub_tile_node = etree.SubElement(tile_node, SUB_TILE_NODE_TAG)
+    # Add attributes to the new child node
+    sub_tile_node.set(NAME_TAG, tile_node.get(NAME_TAG))
+    if tile_node.get(CAPACITY_TAG) is not None:
+      sub_tile_node.set(CAPACITY_TAG, tile_node.get(CAPACITY_TAG))
+    # Move other subelements to the new child node
+    for child in tile_node:
+      # Bypass new node
+      if (child.tag == SUB_TILE_NODE_TAG):
+        continue
+      # Add the node to the child node
+      sub_tile_node.append(child)
+    # Delete the out-of-date attributes
+    tile_node.pop(CAPACITY_TAG)
+    tile_node.SubElement(
 
   logging.info("[Done]")
 
