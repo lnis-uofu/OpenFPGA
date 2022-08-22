@@ -10,7 +10,10 @@ from os.path import dirname, abspath
 import argparse
 import logging
 import shutil
-import xml.etree.ElementTree as etree
+from xml.dom import minidom
+from datetime import timedelta
+import time
+import datetime
 
 #####################################################################
 # Error codes
@@ -41,42 +44,56 @@ def convert_arch_xml_from_v1p1_to_v1p2(input_fname, output_fname):
   TILE_ROOT_TAG = "tiles"
   TILE_NODE_TAG = "tile"
   SUB_TILE_NODE_TAG = "sub_tile"
-  NAME_TAG = "capacity" 
+  NAME_TAG = "name" 
   CAPACITY_TAG = "capacity" 
 
-  logging.info("Converting \'" + input_fname + "\'" + " to " + "\'" + output_fname + "\'")
+  # Log runtime and status
+  status = error_codes["SUCCESS"]
+  start_time = time.time()
+
+  log_str = "Converting \'" + input_fname + "\'" + " to " + "\'" + output_fname + "\'..."
+  logging.info(log_str)
   # Parse the input file
-  tree = etree.parse(input_fname)
-  root = tree.getroot() 
+  doc = minidom.parse(input_fname)
 
   # Iterate over <tile> nodes
-  if (root.findall(TILE_ROOT_TAG) != 1):
+  num_tile_roots = len(doc.getElementsByTagName(TILE_ROOT_TAG))
+  if (num_tile_roots != 1):
+    logging.info("Found " + str(num_tile_roots) + " <" + TILE_ROOT_TAG + ">")
     logging.error("Fail to find a require node (one and only one) <" + TILE_ROOT_TAG + "> under the root node!")
-  tile_root = root.find(TILE_ROOT_TAG)
-  for tile_node in tile_root.iter(TILE_NODE_TAG): 
+    return error_codes["ERROR"]
+  tile_root = doc.getElementsByTagName(TILE_ROOT_TAG)[0]
+  for tile_node in tile_root.getElementsByTagName(TILE_NODE_TAG):
     # Create a new child node <sub_tile>
-    sub_tile_node = etree.SubElement(tile_node, SUB_TILE_NODE_TAG)
+    sub_tile_node = doc.createElement(SUB_TILE_NODE_TAG)
     # Add attributes to the new child node
-    sub_tile_node.set(NAME_TAG, tile_node.get(NAME_TAG))
-    if tile_node.get(CAPACITY_TAG) is not None:
-      sub_tile_node.set(CAPACITY_TAG, tile_node.get(CAPACITY_TAG))
+    sub_tile_node.setAttribute(NAME_TAG, tile_node.getAttribute(NAME_TAG))
+    if tile_node.hasAttribute(CAPACITY_TAG):
+      sub_tile_node.setAttribute(CAPACITY_TAG, tile_node.getAttribute(CAPACITY_TAG))
+      # Delete the out-of-date attributes
+      tile_node.removeAttribute(CAPACITY_TAG)
     # Move other subelements to the new child node
-    for child in tile_node:
-      # Bypass new node
-      if (child.tag == SUB_TILE_NODE_TAG):
-        continue
+    for child in tile_node.childNodes:
       # Add the node to the child node
-      sub_tile_node.append(child)
-    # Delete the out-of-date attributes
-    tile_node.set(CAPACITY_TAG, None)
-    for child in tile_node:
-      if (child.tag != SUB_TILE_NODE_TAG):
-        tile_node.remove(child)
+      child_clone = child.cloneNode(deep=True)
+      sub_tile_node.appendChild(child_clone)
+    # Remove no longer required child nodes
+    for child in tile_node.childNodes:
+      tile_node.removeChild(child)
+    # Append the sub tile child to the tile node
+    tile_node.appendChild(sub_tile_node)
 
   # Output the modified content
-  etree.dump(output_fname)
+  output_xml_str = doc.toprettyxml(indent="  ")
+  with open(output_fname, "w") as output_xml_f:
+    output_xml_f.write(output_xml_str)
 
-  logging.info("[Done]")
+  # Finish up
+  end_time = time.time()
+  end_time_str = datetime.datetime.fromtimestamp(end_time).isoformat()
+  log_end_str = " [Done] took " + end_time_str
+  logging.info("." * (len(log_str) - len(log_end_str)) + log_end_str)
+  return status
 
 
 #####################################################################
