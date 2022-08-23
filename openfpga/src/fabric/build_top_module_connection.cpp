@@ -744,70 +744,68 @@ int build_top_module_global_net_for_given_grid_module(ModuleManager& module_mana
                                                       const vtr::Matrix<size_t>& grid_instance_ids) {
 
   t_physical_tile_type_ptr physical_tile = grids[grid_coordinate.x()][grid_coordinate.y()].type;
+   /* Find the module name for this type of grid */
+   std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
+   std::string grid_module_name = generate_grid_block_module_name(grid_module_name_prefix, std::string(physical_tile->name), is_io_type(physical_tile), border_side);
+   ModuleId grid_module = module_manager.find_module(grid_module_name);
+   VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
+   size_t grid_instance = grid_instance_ids[grid_coordinate.x()][grid_coordinate.y()];
+   /* Find the source port at the top-level module */
+   BasicPort src_port = module_manager.module_port(top_module, top_module_port);
 
-  /* Find the port of the grid module according to the tile annotation */
-  int grid_pin_start_index = physical_tile->num_pins;
-  t_physical_tile_port physical_tile_port;
-  physical_tile_port.num_pins = 0;
-  bool found_tile_port = false;
-  /* TODO: This part may be buggy. Need to investigate how sub tile organize information. 
-   * For example, how the ports are indexed in each sub tile which is repeated a few time (capacity > 1) */
-  for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
-    for (const t_physical_tile_port& tile_port : sub_tile.ports) { 
-      if (std::string(tile_port.name) == tile_port_to_connect.get_name()) {
-        BasicPort ref_tile_port(tile_port.name, tile_port.num_pins);
-        /* Port size must match!!! */
-        if (false == ref_tile_port.contained(tile_port_to_connect)) {
-          VTR_LOG_ERROR("Tile annotation '%s' port '%s[%lu:%lu]' is out of the range of physical tile port '%s[%lu:%lu]'!",
-                        tile_annotation.global_port_name(tile_global_port).c_str(),
-                        tile_port_to_connect.get_name().c_str(),
-                        tile_port_to_connect.get_lsb(),
-                        tile_port_to_connect.get_msb(),
-                        ref_tile_port.get_name().c_str(),
-                        ref_tile_port.get_lsb(),
-                        ref_tile_port.get_msb());
-          return CMD_EXEC_FATAL_ERROR;
-        }
-        grid_pin_start_index = tile_port.absolute_first_pin_index;
-        physical_tile_port = tile_port;
-        found_tile_port = true;
-        break;
-      }
-    }
-    /* Found the port, exit early */
-    if (found_tile_port) {
-      break;
-    }
-  }
-  /* Ensure the pin index is valid */
-  VTR_ASSERT(grid_pin_start_index < physical_tile->num_pins);
-
-  /* Find the module name for this type of grid */
-  std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
-  std::string grid_module_name = generate_grid_block_module_name(grid_module_name_prefix, std::string(physical_tile->name), is_io_type(physical_tile), border_side);
-  ModuleId grid_module = module_manager.find_module(grid_module_name);
-  VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
-  size_t grid_instance = grid_instance_ids[grid_coordinate.x()][grid_coordinate.y()];
-
-  /* Ensure port width is in range */
-  BasicPort src_port = module_manager.module_port(top_module, top_module_port);
-  VTR_ASSERT(src_port.get_width() == tile_port_to_connect.get_width());
-
-  /* Create a pin id mapping between the source port (top module) and the sink port (grid module) */
-  std::map<size_t, size_t> sink2src_pin_map;
-  for (size_t ipin = 0; ipin < tile_port_to_connect.get_width(); ++ipin) {
-    size_t sink_pin = tile_port_to_connect.pins()[ipin];
-    size_t src_pin = src_port.pins()[ipin];
-    sink2src_pin_map[sink_pin] = src_pin;
-  }
-
-  /* A tile may consist of multiple subtile, connect to all the pins from sub tiles */
+  /* Walk through each instance considering the unique sub tile and capacity range,
+   * each instance may have an independent pin to be driven by a global net! */
   for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
     VTR_ASSERT(1 == sub_tile.equivalent_sites.size());
-    for (int iz = 0; iz < sub_tile.capacity.total(); ++iz) {
+    int grid_pin_start_index = physical_tile->num_pins;
+    t_physical_tile_port physical_tile_port;
+    physical_tile_port.num_pins = 0;
+
+    /* Count the total number of pins for this type of sub tile */
+    int sub_tile_num_pins = 0;
+    for (const t_physical_tile_port& tile_port : sub_tile.ports) { 
+      sub_tile_num_pins += tile_port.num_pins;
+    }
+
+    /* For each instance of the same sub tile type, find the port of the grid module according to the tile annotation
+     * A tile may consist of multiple subtile, connect to all the pins from sub tiles */
+    for (int subtile_index = sub_tile.capacity.low; subtile_index <= sub_tile.capacity.high; subtile_index++) {
+      for (const t_physical_tile_port& tile_port : sub_tile.ports) { 
+        if (std::string(tile_port.name) == tile_port_to_connect.get_name()) {
+          BasicPort ref_tile_port(tile_port.name, tile_port.num_pins);
+          /* Port size must match!!! */
+          if (false == ref_tile_port.contained(tile_port_to_connect)) {
+            VTR_LOG_ERROR("Tile annotation '%s' port '%s[%lu:%lu]' is out of the range of physical tile port '%s[%lu:%lu]'!",
+                          tile_annotation.global_port_name(tile_global_port).c_str(),
+                          tile_port_to_connect.get_name().c_str(),
+                          tile_port_to_connect.get_lsb(),
+                          tile_port_to_connect.get_msb(),
+                          ref_tile_port.get_name().c_str(),
+                          ref_tile_port.get_lsb(),
+                          ref_tile_port.get_msb());
+            return CMD_EXEC_FATAL_ERROR;
+          }
+          grid_pin_start_index = (subtile_index - sub_tile.capacity.low) * sub_tile_num_pins + tile_port.absolute_first_pin_index;
+          physical_tile_port = tile_port;
+          break;
+        }
+      }
+      /* Ensure the pin index is valid */
+      VTR_ASSERT(grid_pin_start_index < physical_tile->num_pins);
+      /* Ensure port width is in range */
+      VTR_ASSERT(src_port.get_width() == tile_port_to_connect.get_width());
+
+      /* Create a pin id mapping between the source port (top module) and the sink port (grid module) */
+      std::map<size_t, size_t> sink2src_pin_map;
+      for (size_t ipin = 0; ipin < tile_port_to_connect.get_width(); ++ipin) {
+        size_t sink_pin = tile_port_to_connect.pins()[ipin];
+        size_t src_pin = src_port.pins()[ipin];
+        sink2src_pin_map[sink_pin] = src_pin;
+      }
+
+      /* Create the connections */
       for (size_t pin_id = tile_port_to_connect.get_lsb(); pin_id < tile_port_to_connect.get_msb() + 1; ++pin_id) {
-        /* TODO: This should be replaced by using a pin mapping data structure from physical tile! */
-        int grid_pin_index = grid_pin_start_index + iz * sub_tile.equivalent_sites[0]->pb_type->num_pins + pin_id;
+        int grid_pin_index = grid_pin_start_index + pin_id;
         /* Find the module pin */
         size_t grid_pin_width = physical_tile->pin_width_offset[grid_pin_index];
         size_t grid_pin_height = physical_tile->pin_height_offset[grid_pin_index];
@@ -815,8 +813,6 @@ int build_top_module_global_net_for_given_grid_module(ModuleManager& module_mana
 
         BasicPort grid_pin_info = vpr_device_annotation.physical_tile_pin_port_info(physical_tile, grid_pin_index);
         VTR_ASSERT(true == grid_pin_info.is_valid());
-        int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(physical_tile, grid_pin_index);
-        VTR_ASSERT(OPEN != subtile_index && subtile_index < physical_tile->capacity);
 
         /* Build nets */
         for (const e_side& pin_side : pin_sides) {

@@ -27,6 +27,9 @@ void build_physical_tile_pin2port_info(const DeviceContext& vpr_device_ctx,
     for (const t_sub_tile& sub_tile : physical_tile.sub_tiles) { 
       /* Walk through capacity */ 
       for (int subtile_index = sub_tile.capacity.low; subtile_index <= sub_tile.capacity.high; subtile_index++) {
+        vpr_device_annotation.add_physical_tile_z_to_start_pin_index(&physical_tile,
+                                                                     subtile_index,
+                                                                     curr_pin_index);
         /* For each sub tile, the starting pin index is (num_pins_per_subtile * index) + abs_index */
         for (const t_physical_tile_port& tile_port : sub_tile.ports) {
           for (int pin_index = 0; pin_index < tile_port.num_pins; ++pin_index) {
