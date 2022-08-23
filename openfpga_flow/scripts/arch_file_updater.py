@@ -86,7 +86,8 @@ def convert_arch_xml_from_v1p1_to_v1p2(input_fname, output_fname):
 
   # Output the modified content
   with open(output_fname, "w") as output_xml_f:
-    doc.writexml(output_xml_f, indent="  ", newl='\n')
+    doc.writexml(output_xml_f, indent="  ", newl='')
+  doc.unlink()
 
   # Finish up
   end_time = time.time()
