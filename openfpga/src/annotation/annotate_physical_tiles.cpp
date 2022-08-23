@@ -38,6 +38,10 @@ void build_physical_tile_pin2port_info(const DeviceContext& vpr_device_ctx,
             vpr_device_annotation.add_physical_tile_pin_subtile_index(&physical_tile,
                                                                       absolute_pin_index,
                                                                       subtile_index);
+            vpr_device_annotation.add_physical_tile_z_to_subtile_index(&physical_tile,
+                                                                       subtile_index,
+                                                                       &sub_tile - &(physical_tile.sub_tiles[0])
+                                                                      );
           }
         }
         /* Count the number of pins for each sub tile */

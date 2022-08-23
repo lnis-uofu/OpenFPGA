@@ -348,6 +348,26 @@ int VprDeviceAnnotation::physical_tile_pin_subtile_index(t_physical_tile_type_pt
   return pin_search_result->second;
 }
 
+int VprDeviceAnnotation::physical_tile_z_to_subtile_index(t_physical_tile_type_ptr physical_tile,
+                                                          const int& sub_tile_z) const {
+  /* Try to find the physical tile in the fast look-up */
+  auto physical_tile_search_result = physical_tile_z_to_subtile_indices_.find(physical_tile);
+  if (physical_tile_search_result == physical_tile_z_to_subtile_indices_.end()) {
+    /* Not found. Return an invalid index */
+    return -1;
+  }
+
+  /* Try to find the physical tile port info with pin index */
+  auto pin_search_result = physical_tile_search_result->second.find(sub_tile_z);
+  if (pin_search_result == physical_tile_search_result->second.end()) {
+    /* Not found. Return an invalid index */
+    return -1;
+  }
+  
+  /* Reach here, we should find a port. Return the port information */
+  return pin_search_result->second;
+}
+
 /************************************************************************
  * Public mutators
  ***********************************************************************/
@@ -635,6 +655,12 @@ void VprDeviceAnnotation::add_physical_tile_pin_subtile_index(t_physical_tile_ty
                                                               const int& pin_index,
                                                               const int& subtile_index) {
   physical_tile_pin_subtile_indices_[physical_tile][pin_index] = subtile_index;
+}
+
+void VprDeviceAnnotation::add_physical_tile_z_to_subtile_index(t_physical_tile_type_ptr physical_tile,
+                                                               const int& subtile_z,
+                                                               const int& subtile_index) {
+  physical_tile_z_to_subtile_indices_[physical_tile][subtile_z] = subtile_index;
 }
 
 } /* End namespace openfpga*/
