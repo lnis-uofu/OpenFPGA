@@ -97,7 +97,6 @@ def convert_arch_xml_from_v1p1_to_v1p2(input_fname, output_fname):
   logging.info(log_end_str1 + "." * (len(log_str) - len(log_end_str1) - len(log_end_str2)) + log_end_str2)
   return status
 
-
 #####################################################################
 # Main function
 #####################################################################
@@ -115,4 +114,4 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   # Run conversion: from v1.1 syntax to v1.2 syntax
-  convert_arch_xml_from_v1p1_to_v1p2(args.input_file, args.output_file)
+  return convert_arch_xml_from_v1p1_to_v1p2(args.input_file, args.output_file)

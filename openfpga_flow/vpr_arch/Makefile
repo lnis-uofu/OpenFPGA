@@ -8,6 +8,10 @@ SHELL = bash
 PYTHON_EXEC ?= python3
 ARCH_UPDATER = ../scripts/arch_file_updater.py
 
+.SILENT:
+
+.ONESHELL:
+
 # Put it first so that "make" without argument is like "make help".
 export COMMENT_EXTRACT
 
@@ -17,7 +21,9 @@ help:
 
 v1p1_to_v1p2:
 # This commands will update all the architecture file from v1.1 to v1.2
-	for f in `ls *.xml`; do ${PYTHON_EXEC} ${ARCH_UPDATER} --input_file $${f} --output_file $${f}; done;
+	for f in `ls *.xml`; \
+	do ${PYTHON_EXEC} ${ARCH_UPDATER} --input_file $${f} --output_file $${f} || exit 1; \
+	done;
 
 # Functions to extract comments from Makefiles
 define COMMENT_EXTRACT
