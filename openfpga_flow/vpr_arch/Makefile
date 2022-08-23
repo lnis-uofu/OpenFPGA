@@ -17,7 +17,7 @@ help:
 
 v1p1_to_v1p2:
 # This commands will update all the architecture file from v1.1 to v1.2
-	for f in `ls .`; do ${PYTHON_EXEC} ${ARCH_UPDATER} --input_file $${f} --output_file $${f}; done;
+	for f in `ls *.xml`; do ${PYTHON_EXEC} ${ARCH_UPDATER} --input_file $${f} --output_file $${f}; done;
 
 # Functions to extract comments from Makefiles
 define COMMENT_EXTRACT
