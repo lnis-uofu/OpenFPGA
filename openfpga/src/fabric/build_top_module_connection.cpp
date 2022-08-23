@@ -453,6 +453,10 @@ void add_top_module_nets_connect_grids_and_cb(ModuleManager& module_manager,
       ModulePortId sink_grid_port_id = module_manager.find_module_port(sink_grid_module, sink_grid_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(sink_grid_module, sink_grid_port_id));
       BasicPort sink_grid_port = module_manager.module_port(sink_grid_module, sink_grid_port_id); 
+      VTR_LOG("src: %s[%d:%d] -> sink: %s[%ld:%ld]\n", 
+              src_cb_port.get_name().c_str(), src_cb_port.get_lsb(), src_cb_port.get_msb(),
+              sink_grid_port.get_name().c_str(), sink_grid_port.get_lsb(), sink_grid_port.get_msb()
+             );
 
       /* Source and sink port should match in size */
       VTR_ASSERT(src_cb_port.get_width() == sink_grid_port.get_width());
