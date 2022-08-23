@@ -40,7 +40,7 @@ int pcf2place(const PcfData& pcf_data,
     VTR_LOG_ERROR("PCF contains invalid I/O assignment!\n"); 
     return 1;
   } else {
-    VTR_LOG_ERROR("PCF basic check passed\n"); 
+    VTR_LOG_INFO("PCF basic check passed\n"); 
   }
 
   /* Build the I/O place */
