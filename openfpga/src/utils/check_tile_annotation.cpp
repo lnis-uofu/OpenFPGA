@@ -125,7 +125,7 @@ int check_tile_annotation_conflicts_with_physical_tile(const TileAnnotation& til
               continue;
             }
 
-            BasicPort ref_tile_port(tile_port.name, tile_port.num_pins);
+            BasicPort ref_tile_port(tile_port.name, sub_tile.capacity.total() * tile_port.num_pins);
             /* Port size must be in range!!! */
             if (false == ref_tile_port.contained(required_tile_port)) {
               VTR_LOG_ERROR("Tile annotation port '%s[%lu:%lu]' is out of the range of physical tile port '%s[%lu:%lu]'!",

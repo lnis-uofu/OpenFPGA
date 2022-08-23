@@ -477,8 +477,9 @@ void print_analysis_sdc_disable_pb_block_unused_resources(std::fstream& fp,
     VTR_ASSERT(false == physical_pb.empty());
   }
 
-  VTR_ASSERT(1 == grid_type->sub_tiles[grid_z].equivalent_sites.size());
-  t_pb_graph_node* pb_graph_head = grid_type->sub_tiles[grid_z].equivalent_sites[0]->pb_graph_head; 
+  int sub_tile_index = device_annotation.physical_tile_z_to_subtile_index(grid_type, grid_z);
+  VTR_ASSERT(1 == grid_type->sub_tiles[sub_tile_index].equivalent_sites.size());
+  t_pb_graph_node* pb_graph_head = grid_type->sub_tiles[sub_tile_index].equivalent_sites[0]->pb_graph_head; 
   VTR_ASSERT(nullptr != pb_graph_head);
 
   /* Find an unique name to the pb instance in this grid

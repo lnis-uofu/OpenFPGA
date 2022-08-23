@@ -97,15 +97,17 @@ std::vector<size_t> find_physical_tile_pin_id(t_physical_tile_type_ptr physical_
       }
       /* If the wanted port is invalid, it assumes that we want the full port */
       if (false == tile_port.is_valid()) {
-        for (int ipin = 0; ipin < physical_tile_port.num_pins; ++ipin) {
-          int pin_id = physical_tile_port.absolute_first_pin_index + ipin;
-          VTR_ASSERT(pin_id < physical_tile->num_pins);
-          /* Check if the pin is located on the wanted side */
-          if (true == is_pin_locate_at_physical_tile_side(physical_tile,
-                                                          pin_width_offset,
-                                                          pin_height_offset,
-                                                          pin_id, pin_side)) {
-            pin_ids.push_back(pin_id);
+        for (int subtile_index = sub_tile.capacity.low; subtile_index <= sub_tile.capacity.high; subtile_index++) {
+          for (int ipin = 0; ipin < physical_tile_port.num_pins; ++ipin) {
+            int pin_id = (subtile_index - sub_tile.capacity.low) * sub_tile.num_phy_pins / sub_tile.capacity.total() + physical_tile_port.absolute_first_pin_index + ipin;
+            VTR_ASSERT(pin_id < physical_tile->num_pins);
+            /* Check if the pin is located on the wanted side */
+            if (true == is_pin_locate_at_physical_tile_side(physical_tile,
+                                                            pin_width_offset,
+                                                            pin_height_offset,
+                                                            pin_id, pin_side)) {
+              pin_ids.push_back(pin_id);
+            }
           }
         }
         continue;
@@ -122,7 +124,7 @@ std::vector<size_t> find_physical_tile_pin_id(t_physical_tile_type_ptr physical_
         exit(1);
       }
       for (const size_t& ipin : tile_port.pins()) {
-        int pin_id = physical_tile_port.absolute_first_pin_index + ipin;
+        int pin_id = physical_tile_port.absolute_first_pin_index + ipin * sub_tile.num_phy_pins / sub_tile.capacity.total() + ipin;
         VTR_ASSERT(pin_id < physical_tile->num_pins);
         /* Check if the pin is located on the wanted side */
         if (true == is_pin_locate_at_physical_tile_side(physical_tile,

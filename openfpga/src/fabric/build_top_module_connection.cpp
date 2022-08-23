@@ -762,10 +762,7 @@ int build_top_module_global_net_for_given_grid_module(ModuleManager& module_mana
     physical_tile_port.num_pins = 0;
 
     /* Count the total number of pins for this type of sub tile */
-    int sub_tile_num_pins = 0;
-    for (const t_physical_tile_port& tile_port : sub_tile.ports) { 
-      sub_tile_num_pins += tile_port.num_pins;
-    }
+    int sub_tile_num_pins = sub_tile.num_phy_pins / sub_tile.capacity.total();
 
     /* For each instance of the same sub tile type, find the port of the grid module according to the tile annotation
      * A tile may consist of multiple subtile, connect to all the pins from sub tiles */
