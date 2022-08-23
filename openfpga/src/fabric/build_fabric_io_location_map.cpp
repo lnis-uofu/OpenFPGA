@@ -132,6 +132,7 @@ IoLocationMap build_fabric_io_location_map(const ModuleManager& module_manager,
        * that GPIOs are wired in function connect_gpio_module()
        *
        * Note: if you change the GPIO function, you should update here as well!
+       * FIXME: The codes should be adapt to support sub tiles!!!
        */
       for (int z = 0; z < grids[ix][iy].type->capacity; ++z) {
         for (const ModuleManager::e_module_port_type& module_io_port_type : MODULE_IO_PORT_TYPES) {

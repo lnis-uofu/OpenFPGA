@@ -48,9 +48,7 @@ void build_physical_tile_pin2port_info(const DeviceContext& vpr_device_ctx,
           }
         }
         /* Count the number of pins for each sub tile */
-        for (const t_physical_tile_port& tile_port : sub_tile.ports) {
-          curr_pin_index += tile_port.num_pins;
-        }
+        curr_pin_index += sub_tile.num_phy_pins / sub_tile.capacity.total();
       }
     }
   }
