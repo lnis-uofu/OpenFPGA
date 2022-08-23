@@ -70,8 +70,8 @@ IoLocationMap read_xml_io_location_map(const char* fname) {
 
     pugi::xml_node xml_root = get_single_child(doc, "io_coordinates", loc_data);
 
-    size_t num_children = std::distance(xml_root.children().begin(), xml_root.children().end());
-    /* TODO: Reserve memory space for efficiency */
+    /*size_t num_children = std::distance(xml_root.children().begin(), xml_root.children().end());
+     * TODO: Reserve memory space for efficiency */
 
     for (pugi::xml_node xml_io : xml_root.children()) {
       /* Error out if the XML child has an invalid name! */

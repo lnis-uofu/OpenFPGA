@@ -476,8 +476,7 @@ void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /******************************** 
    * Command 'pcf2place' 
    */
-  ShellCommandId pcf2place_cmd_id = add_openfpga_pcf2place_command(shell,
-                                                                   openfpga_setup_cmd_class);
+  add_openfpga_pcf2place_command(shell, openfpga_setup_cmd_class);
 
   /******************************** 
    * Command 'read_openfpga_arch' 
