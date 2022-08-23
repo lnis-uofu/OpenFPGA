@@ -114,4 +114,4 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   # Run conversion: from v1.1 syntax to v1.2 syntax
-  return convert_arch_xml_from_v1p1_to_v1p2(args.input_file, args.output_file)
+  exit(convert_arch_xml_from_v1p1_to_v1p2(args.input_file, args.output_file))
