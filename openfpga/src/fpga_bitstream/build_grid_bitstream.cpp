@@ -708,8 +708,9 @@ void build_physical_block_bitstream(BitstreamManager& bitstream_manager,
    * it as a mode under a <pb_type>
    */
   for (size_t z = 0; z < place_annotation.grid_blocks(grid_coord).size(); ++z) {
-    VTR_ASSERT(1 == grid_type->sub_tiles[z].equivalent_sites.size());
-    for (t_logical_block_type_ptr lb_type : grid_type->sub_tiles[z].equivalent_sites) {
+    int sub_tile_index = device_annotation.physical_tile_z_to_subtile_index(grid_type, z);
+    VTR_ASSERT(1 == grid_type->sub_tiles[sub_tile_index].equivalent_sites.size());
+    for (t_logical_block_type_ptr lb_type : grid_type->sub_tiles[sub_tile_index].equivalent_sites) {
       /* Bypass empty pb_graph */
       if (nullptr == lb_type->pb_graph_head) {
         continue;
