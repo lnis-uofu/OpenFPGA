@@ -14,6 +14,7 @@ from xml.dom import minidom
 from datetime import timedelta
 import time
 import datetime
+import re
 
 #####################################################################
 # Error codes
@@ -84,15 +85,15 @@ def convert_arch_xml_from_v1p1_to_v1p2(input_fname, output_fname):
     tile_node.appendChild(sub_tile_node)
 
   # Output the modified content
-  output_xml_str = doc.toprettyxml(indent="  ")
   with open(output_fname, "w") as output_xml_f:
-    output_xml_f.write(output_xml_str)
+    doc.writexml(output_xml_f, indent="  ", newl='\n')
 
   # Finish up
   end_time = time.time()
-  end_time_str = datetime.datetime.fromtimestamp(end_time).isoformat()
-  log_end_str = " [Done] took " + end_time_str
-  logging.info("." * (len(log_str) - len(log_end_str)) + log_end_str)
+  time_diff = timedelta(seconds=(end_time - start_time))
+  log_end_str1 = "[Done]"
+  log_end_str2 = " took " + str(time_diff)
+  logging.info(log_end_str1 + "." * (len(log_str) - len(log_end_str1) - len(log_end_str2)) + log_end_str2)
   return status
 
 
