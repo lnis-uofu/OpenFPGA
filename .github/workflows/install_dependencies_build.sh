@@ -45,18 +45,18 @@ sudo apt-get install -y \
     zip \
     swig \
     expect \
-    g++-6 \ 
-    gcc-6 \ 
-    g++-7 \ 
-    gcc-7 \ 
-    g++-8 \ 
-    gcc-8 \ 
-    g++-9 \ 
-    gcc-9 \ 
-    g++-10 \ 
-    gcc-10 \ 
-    g++-11 \ 
-    gcc-11 \ 
-    clang-6.0 \ 
-    clang-7 \ 
+    g++-6 \
+    gcc-6 \
+    g++-7 \
+    gcc-7 \
+    g++-8 \
+    gcc-8 \
+    g++-9 \
+    gcc-9 \
+    g++-10 \
+    gcc-10 \
+    g++-11 \
+    gcc-11 \
+    clang-6.0 \
+    clang-7 \
     clang-10
