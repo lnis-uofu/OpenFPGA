@@ -8,7 +8,7 @@
 #include <string>
 #include <map>
 #include "module_manager.h"
-#include "rr_graph_obj.h"
+#include "rr_graph_fwd.h"
 #include "atom_netlist_fwd.h"
 #include "vpr_routing_annotation.h"
 

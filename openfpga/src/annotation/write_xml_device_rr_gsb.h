@@ -5,9 +5,9 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <string>
-#include "rr_graph_obj.h"
 #include "device_grid.h"
 #include "vpr_device_annotation.h"
+#include "rr_graph_view.h"
 #include "device_rr_gsb.h"
 
 /********************************************************************

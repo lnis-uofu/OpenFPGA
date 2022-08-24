@@ -12,9 +12,6 @@
 /* Header from archfpga library */
 #include "physical_types.h"
 
-/* Header from vpr library */
-#include "rr_graph_obj.h"
-
 /* Header from openfpgautil library */
 #include "openfpga_port.h"
 #include "circuit_library.h"
