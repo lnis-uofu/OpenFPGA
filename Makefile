@@ -28,6 +28,10 @@ override CMAKE_FLAGS := -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -G 'Unix Makefiles' ${C
 # --output-sync target : For parallel compilation ensure output for each target is synchronized (make version >= 4.0)
 MAKEFLAGS := -s
 
+# Directory to build the codes
+SOURCE_DIR :=${PWD}
+BUILD_DIR ?= build
+
 # Find CMake command from system variable, otherwise use a default one
 ifeq ($(origin CMAKE_COMMAND),undefined)
 CMAKE_COMMAND := cmake
@@ -45,12 +49,7 @@ export COMMENT_EXTRACT
 help:
 	@${PYTHON_EXEC} -c "$$COMMENT_EXTRACT"
 
-.PHONY: all checkout compile
-
-all: checkout
-# Update all the submodules and compile the codebase
-	mkdir -p build && cd build && $(CMAKE_COMMAND) ${CMAKE_FLAGS} ..
-	cd build && $(MAKE)
+.PHONY: all
 
 checkout: 
 # Update all the submodules
@@ -59,20 +58,18 @@ checkout:
 
 compile:
 # Compile the code base
-	mkdir -p build && cd build && $(CMAKE_COMMAND) ${CMAKE_FLAGS} ..
-	cd build && $(MAKE)
+	@mkdir -p ${BUILD_DIR}
+	echo "cd ${BUILD_DIR} && ${CMAKE_COMMAND} ${CMAKE_FLAGS} ${SOURCE_DIR}"
+	cd ${BUILD_DIR} && ${CMAKE_COMMAND} ${CMAKE_FLAGS} ${SOURCE_DIR}
+	echo "Building target(s): ${MAKECMDGOALS}"
+	@+${MAKE} -C ${BUILD_DIR} ${MAKECMDGOALS}
+
+all: checkout compile
+# A shortcut command to run checkout and compile in serial
 
 clean:
 # Remove current build results
-	rm -rf build yosys/install
-
-build/Makefile:
-	make checkout
-
-.PHONY: Makefile
-
-%: build/Makefile
-	cd build && $(MAKE) $@
+	rm -rf ${BUILD_DIR} yosys/install
 
 # Functions to extract comments from Makefiles
 define COMMENT_EXTRACT
