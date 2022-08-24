@@ -16,12 +16,12 @@ if (${CMAKE_VERSION} VERSION_GREATER "3.8")
 endif()
 
 ## Set the default build type if not specified
-#if(NOT CMAKE_BUILD_TYPE)
-#    set(CMAKE_BUILD_TYPE Release CACHE STRING
-#        "Choose the type of build: None, Debug, Release, RelWithDebInfo, MinSizeRel"
-#        FORCE)
-#endif()
-#message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING
+        "Choose the type of build: None, Debug, Release, RelWithDebInfo, MinSizeRel"
+        FORCE)
+endif()
+message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     message("CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
@@ -33,6 +33,10 @@ endif()
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}" CACHE PATH "default install path" FORCE)
 endif()
+
+set(OPENFPGA_IPO_BUILD "auto" CACHE STRING "Should OpenFPGA be compiled with interprocedural compiler optimizations?")
+set_property(CACHE OPENFPGA_IPO_BUILD PROPERTY STRINGS auto on off)
+
 
 #Allow the user to configure how much assertion checking should occur
 set(VTR_ASSERT_LEVEL "2" CACHE STRING "VTR assertion checking level. 0: no assertions, 1: fast assertions, 2: regular assertions, 3: additional assertions with noticable run-time overhead, 4: all assertions (including those with significant run-time cost)")
@@ -65,6 +69,31 @@ include(CheckCXXCompilerFlag)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF) #No compiler specific extensions
+
+#
+# Interprocedural optimization
+#
+#   Note that we manually clear the INTERPROCEDURAL_OPTIMIZATION flag on ABC later
+#   to avoid cmake warnings
+include(CheckIPOSupported)
+check_ipo_supported(RESULT IPO_SUPPORTED)
+if (VTR_IPO_BUILD STREQUAL "on")
+    if (IPO_SUPPORTED)
+        message(STATUS "Building with IPO: on")
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+    else()
+        message(ERROR "Building with IPO unsupported with this compiler!")
+    endif()
+elseif(VTR_IPO_BUILD STREQUAL "auto")
+    if (IPO_SUPPORTED AND NOT CMAKE_BUILD_TYPE STREQUAL "debug")
+        message(STATUS "Building with IPO: on (auto)")
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+    else()
+        message(STATUS "Building with IPO: off (auto)")
+    endif()
+else()
+    message(STATUS "Building with IPO: off")
+endif()
 
 if(NOT MSVC)
     # for GCC and Clang
