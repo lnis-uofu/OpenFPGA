@@ -67,34 +67,40 @@ jobs:
     needs: change_detect
     if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
     name: ${{ matrix.config.name }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.config.cc}}
     # Branch on different OS and settings
     strategy:
       fail-fast: false
       matrix:
         config:
-          - name: "Build Compatibility: GCC-5 (Ubuntu 18.04)"
-            cc: gcc-5
-            cxx: g++-5
-          - name: "Build Compatibility: GCC-6 (Ubuntu 18.04)"
-            cc: gcc-6
-            cxx: g++-6
-          - name: "Build Compatibility: GCC-7 (Ubuntu 18.04)"
+          - name: "Build Compatibility: GCC-7 (Ubuntu 20.04)"
             cc: gcc-7
             cxx: g++-7
-          - name: "Build Compatibility: GCC-8 (Ubuntu 18.04)"
+          - name: "Build Compatibility: GCC-8 (Ubuntu 20.04)"
             cc: gcc-8
             cxx: g++-8
-          - name: "Build Compatibility: GCC-9 (Ubuntu 18.04)"
+          - name: "Build Compatibility: GCC-9 (Ubuntu 20.04)"
             cc: gcc-9
             cxx: g++-9
-          - name: "Build Compatibility: Clang-6 (Ubuntu 18.04)"
+          - name: "Build Compatibility: GCC-10 (Ubuntu 20.04)"
+            cc: gcc-10
+            cxx: g++-10
+          - name: "Build Compatibility: GCC-11 (Ubuntu 20.04)"
+            cc: gcc-11
+            cxx: g++-11
+          - name: "Build Compatibility: Clang-6 (Ubuntu 20.04)"
             cc: clang-6.0
             cxx: clang++-6.0
-          - name: "Build Compatibility: Clang-8 (Ubuntu 18.04)"
+          - name: "Build Compatibility: Clang-7 (Ubuntu 20.04)"
+            cc: clang-7
+            cxx: clang++-7
+          - name: "Build Compatibility: Clang-8 (Ubuntu 20.04)"
             cc: clang-8
             cxx: clang++-8
+          - name: "Build Compatibility: Clang-10 (Ubuntu 20.04)"
+            cc: clang-10
+            cxx: clang++-10
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
@@ -222,7 +228,7 @@ jobs:
             ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-master:${{ needs.change_detect.outputs.sha_short }}
   linux_regression_tests:
     name: linux_regression_tests
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     needs: [linux_build, change_detect]
     container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-env
     strategy:
@@ -277,7 +283,7 @@ jobs:
     needs: change_detect
     if: ${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
     name: docker_regression_tests
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     container: 
       image: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-master:latest
       options: --user root --workdir /home/openfpga_user
@@ -305,7 +311,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: true
-      - name: ${{matrix.config.name}}_GCC-8_(Ubuntu 18.04)
+      - name: ${{matrix.config.name}}_GCC-8_(Ubuntu 20.04)
         shell: bash
         run: |
           bash .github/workflows/install_dependencies_run.sh
