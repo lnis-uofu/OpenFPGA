@@ -129,6 +129,10 @@ int link_arch(OpenfpgaContext& openfpga_ctx,
     return CMD_EXEC_FATAL_ERROR;
   }
 
+  /* Build incoming edges as VPR only builds fan-out edges for each node */
+  g_vpr_ctx.mutable_device().rr_graph_builder.build_in_edges();
+  VTR_LOG("Built %ld incoming edges for routing resource graph\n", g_vpr_ctx.device().rr_graph.in_edges_count());
+  VTR_ASSERT(g_vpr_ctx.device().rr_graph.validate_in_edges());
   annotate_device_rr_gsb(g_vpr_ctx.device(),
                          openfpga_ctx.mutable_device_rr_gsb(),
                          cmd_context.option_enable(cmd, opt_verbose));
