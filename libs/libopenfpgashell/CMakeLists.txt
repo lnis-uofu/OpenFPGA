@@ -5,15 +5,13 @@ project("libopenfpgashell")
 # We need readline to compile
 find_package(Readline REQUIRED)
 
-file(GLOB_RECURSE EXEC_TEST_SHELL test/test_shell.cpp)
-file(GLOB_RECURSE EXEC_TEST_CMD test/test_command_parser.cpp)
+file(GLOB_RECURSE EXEC_SOURCES test/*.cpp)
 file(GLOB_RECURSE LIB_SOURCES src/*.cpp)
 file(GLOB_RECURSE LIB_HEADERS src/*.h)
 files_to_dirs(LIB_HEADERS LIB_INCLUDE_DIRS)
 
 #Remove test executable from library
-list(REMOVE_ITEM LIB_SOURCES ${EXEC_TEST_SHELL})
-list(REMOVE_ITEM LIB_SOURCES ${EXEC_TEST_CMD})
+list(REMOVE_ITEM LIB_SOURCES ${EXEC_SOURCES})
 
 #Create the library
 add_library(libopenfpgashell STATIC
@@ -28,11 +26,13 @@ target_link_libraries(libopenfpgashell
                       libvtrutil
                       readline)
 
-#Create the test executable
-add_executable(test_shell ${EXEC_TEST_SHELL})
-target_link_libraries(test_shell libopenfpgashell)
-
-add_executable(test_command_parser ${EXEC_TEST_CMD})
-target_link_libraries(test_command_parser libopenfpgashell)
+# Create the test executable
+foreach(testsourcefile ${EXEC_SOURCES})
+    # Use a simple string replace, to cut off .cpp.
+    get_filename_component(testname ${testsourcefile} NAME_WE)
+    add_executable(${testname} ${testsourcefile})
+    # Make sure the library is linked to each test executable
+    target_link_libraries(${testname} libopenfpgashell)
+endforeach(testsourcefile ${EXEC_SOURCES})
 
 install(TARGETS libopenfpgashell DESTINATION bin)
