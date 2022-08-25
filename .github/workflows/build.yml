@@ -122,8 +122,8 @@ jobs:
       - name: Dump tool versions
         run: |
           cmake --version
-          ${CC} -V
-          ${CXX} -V
+          ${CC} --version
+          ${CXX} --version
 
       - uses: hendrikmuhs/ccache-action@v1
 
