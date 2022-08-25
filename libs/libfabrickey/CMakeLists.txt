@@ -32,3 +32,5 @@ foreach(testsourcefile ${EXEC_SOURCES})
     # Make sure the library is linked to each test executable
     target_link_libraries(${testname} libfabrickey)
 endforeach(testsourcefile ${EXEC_SOURCES})
+
+install(TARGETS libfabrickey DESTINATION bin)

@@ -35,10 +35,4 @@ target_link_libraries(test_shell libopenfpgashell)
 add_executable(test_command_parser ${EXEC_TEST_CMD})
 target_link_libraries(test_command_parser libopenfpgashell)
 
-#Supress IPO link warnings if IPO is enabled
-#get_target_property(READ_ARCH_USES_IPO read_arch_openfpga INTERPROCEDURAL_OPTIMIZATION)
-#if (READ_ARCH_USES_IPO)
-#    set_target_properties(read_arch_openfpga PROPERTIES LINK_FLAGS ${IPO_LINK_WARN_SUPRESS_FLAGS})
-#endif()
-
-#install(TARGETS libarchopenfpga read_arch_openfpga DESTINATION bin)
+install(TARGETS libopenfpgashell DESTINATION bin)

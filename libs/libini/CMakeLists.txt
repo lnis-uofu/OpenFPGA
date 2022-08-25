@@ -11,3 +11,5 @@ add_library(libini STATIC
 
 target_include_directories(libini PUBLIC ${LIB_INCLUDE_DIRS})
 set_target_properties(libini PROPERTIES PREFIX "" LINKER_LANGUAGE CXX)
+
+install(TARGETS libini DESTINATION bin)

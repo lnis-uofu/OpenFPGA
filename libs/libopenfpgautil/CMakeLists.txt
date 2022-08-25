@@ -81,14 +81,4 @@ target_link_libraries(libopenfpgautil
                       libarchfpga
                       libvtrutil)
 
-#Create the test executable
-#add_executable(read_arch_openfpga ${EXEC_SOURCES})
-#target_link_libraries(read_arch_openfpga libarchopenfpga)
-
-#Supress IPO link warnings if IPO is enabled
-#get_target_property(READ_ARCH_USES_IPO read_arch_openfpga INTERPROCEDURAL_OPTIMIZATION)
-#if (READ_ARCH_USES_IPO)
-#    set_target_properties(read_arch_openfpga PROPERTIES LINK_FLAGS ${IPO_LINK_WARN_SUPRESS_FLAGS})
-#endif()
-
-#install(TARGETS libarchopenfpga read_arch_openfpga DESTINATION bin)
+install(TARGETS libopenfpgautil DESTINATION bin)
