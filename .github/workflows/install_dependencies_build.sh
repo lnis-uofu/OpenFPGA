@@ -45,8 +45,6 @@ sudo apt-get install -y \
     zip \
     swig \
     expect \
-    g++-6 \
-    gcc-6 \
     g++-7 \
     gcc-7 \
     g++-8 \
