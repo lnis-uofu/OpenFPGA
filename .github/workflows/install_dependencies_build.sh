@@ -57,4 +57,5 @@ sudo apt-get install -y \
     gcc-11 \
     clang-6.0 \
     clang-7 \
+    clang-8 \
     clang-10
