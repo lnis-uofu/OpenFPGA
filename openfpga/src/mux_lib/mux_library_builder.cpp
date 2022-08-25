@@ -58,7 +58,7 @@ void build_routing_arch_mux_library(const RRGraphView& rr_graph,
         VTR_LOG_ERROR("Unable to find the circuit model for rr_switch '%s'!\n",
                       rr_graph.rr_switch_inf(driver_switches[0]).name);
         VTR_LOG("Node type: %s\n", rr_graph.node_type_string(node));
-        VTR_LOG("Node coordinate: %s\n", rr_graph.node_coordinate_to_string(node));
+        VTR_LOG("Node coordinate: %s\n", rr_graph.node_coordinate_to_string(node).c_str());
         exit(1);
       }
      
