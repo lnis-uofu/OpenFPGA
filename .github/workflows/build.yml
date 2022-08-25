@@ -69,7 +69,8 @@ jobs:
     name: ${{ matrix.config.name }}
     runs-on: ubuntu-20.04
     # Note: dependencies are installed in the container. See details about dependency list in docker/Dockerfile.master
-    container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.config.cc}}
+    # Comment the line out when base image is built again
+    #container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.config.cc}}
     # Branch on different OS and settings
     strategy:
       fail-fast: false
@@ -116,6 +117,9 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: true
+
+      - name: Install dependencies
+        run: ./.github/workflows/install_dependencies_build.sh
       
       - name: Dump tool versions
         run: |
