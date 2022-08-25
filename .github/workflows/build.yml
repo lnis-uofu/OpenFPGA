@@ -141,14 +141,13 @@ jobs:
         with:
           name: openfpga
           path: |
-            abc/abc
-            abc/libabc.a
-            ace2/ace
-            ace2/libace.a
-            openfpga/libopenfpga.a
-            openfpga/openfpga
-            vpr/libvpr.a
-            vpr/vpr
+            build/vtr-verilog-to-routing/abc/abc
+            build/vtr-verilog-to-routing/abc/libabc.a
+            build/vtr-verilog-to-routing/ace2/ace
+            build/vtr-verilog-to-routing/vpr/libvpr.a
+            build/vtr-verilog-to-routing/vpr/vpr
+            build/openfpga/libopenfpga.a
+            build/openfpga/openfpga
             yosys/install/share
             yosys/install/bin
             openfpga_flow
@@ -222,10 +221,10 @@ jobs:
           name: openfpga
       - name: chmod
         run: |
-          chmod +x abc/abc
-          chmod +x ace2/ace
-          chmod +x openfpga/openfpga
-          chmod +x vpr/vpr
+          chmod +x build/vtr-verilog-to-routing/abc/abc
+          chmod +x build/vtr-verilog-to-routing/ace2/ace
+          chmod +x build/vtr-verilog-to-routing/vpr/vpr
+          chmod +x build/openfpga/openfpga
           chmod +x yosys/install/bin/yosys
           chmod +x yosys/install/bin/yosys-abc
           chmod +x yosys/install/bin/yosys-config
