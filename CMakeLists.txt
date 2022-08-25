@@ -37,7 +37,6 @@ endif()
 set(OPENFPGA_IPO_BUILD "auto" CACHE STRING "Should OpenFPGA be compiled with interprocedural compiler optimizations?")
 set_property(CACHE OPENFPGA_IPO_BUILD PROPERTY STRINGS auto on off)
 
-
 #Allow the user to configure how much assertion checking should occur
 set(VTR_ASSERT_LEVEL "2" CACHE STRING "VTR assertion checking level. 0: no assertions, 1: fast assertions, 2: regular assertions, 3: additional assertions with noticable run-time overhead, 4: all assertions (including those with significant run-time cost)")
 set_property(CACHE VTR_ASSERT_LEVEL PROPERTY STRINGS 0 1 2 3 4)
@@ -77,14 +76,14 @@ set(CMAKE_CXX_EXTENSIONS OFF) #No compiler specific extensions
 #   to avoid cmake warnings
 include(CheckIPOSupported)
 check_ipo_supported(RESULT IPO_SUPPORTED)
-if (VTR_IPO_BUILD STREQUAL "on")
+if (OPENFPGA_IPO_BUILD STREQUAL "on")
     if (IPO_SUPPORTED)
         message(STATUS "Building with IPO: on")
         set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
     else()
         message(ERROR "Building with IPO unsupported with this compiler!")
     endif()
-elseif(VTR_IPO_BUILD STREQUAL "auto")
+elseif(OPENFPGA_IPO_BUILD STREQUAL "auto")
     if (IPO_SUPPORTED AND NOT CMAKE_BUILD_TYPE STREQUAL "debug")
         message(STATUS "Building with IPO: on (auto)")
         set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
@@ -184,7 +183,6 @@ foreach(flag ${IPO_LINK_WARN_SUPRESS_FLAGS_TO_CHECK})
         set(IPO_LINK_WARN_SUPRESS_FLAGS "${IPO_LINK_WARN_SUPRESS_FLAGS} ${flag}")
     endif()
 endforeach()
-
 
 #
 # Sanitizer flags
