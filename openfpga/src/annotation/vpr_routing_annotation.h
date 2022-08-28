@@ -33,7 +33,8 @@ class VprRoutingAnnotation {
     void init(const RRGraphView& rr_graph);
     void set_rr_node_net(const RRNodeId& rr_node,
                          const ClusterNetId& net_id);
-    void set_rr_node_prev_node(const RRNodeId& rr_node,
+    void set_rr_node_prev_node(const RRGraphView& rr_graph,
+                               const RRNodeId& rr_node,
                                const RRNodeId& prev_node);
   private: /* Internal data */
     /* Clustered net ids mapped to each rr_node */

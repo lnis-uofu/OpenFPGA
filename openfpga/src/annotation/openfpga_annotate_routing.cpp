@@ -143,7 +143,7 @@ void annotate_rr_node_previous_nodes(const DeviceContext& device_ctx,
 
       /* Only update mapped nodes */
       if (prev_node) {
-        vpr_routing_annotation.set_rr_node_prev_node(rr_node, prev_node);
+        vpr_routing_annotation.set_rr_node_prev_node(device_ctx.rr_graph, rr_node, prev_node);
         counter++;
       }
 
