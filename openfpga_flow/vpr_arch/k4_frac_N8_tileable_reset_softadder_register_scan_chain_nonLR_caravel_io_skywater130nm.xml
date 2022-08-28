@@ -142,21 +142,21 @@
           <equivalent_sites>     
              <site pb_type="clb"/>     
           </equivalent_sites>    
-          <input name="I0" num_pins="2" equivalent="full"/>    
+          <input name="I0" num_pins="2" equivalent="none"/>    
           <input name="I0i" num_pins="2" equivalent="none"/>    
-          <input name="I1" num_pins="2" equivalent="full"/>    
+          <input name="I1" num_pins="2" equivalent="none"/>    
           <input name="I1i" num_pins="2" equivalent="none"/>    
-          <input name="I2" num_pins="2" equivalent="full"/>    
+          <input name="I2" num_pins="2" equivalent="none"/>    
           <input name="I2i" num_pins="2" equivalent="none"/>    
-          <input name="I3" num_pins="2" equivalent="full"/>    
+          <input name="I3" num_pins="2" equivalent="none"/>    
           <input name="I3i" num_pins="2" equivalent="none"/>    
-          <input name="I4" num_pins="2" equivalent="full"/>    
+          <input name="I4" num_pins="2" equivalent="none"/>    
           <input name="I4i" num_pins="2" equivalent="none"/>    
-          <input name="I5" num_pins="2" equivalent="full"/>    
+          <input name="I5" num_pins="2" equivalent="none"/>    
           <input name="I5i" num_pins="2" equivalent="none"/>    
-          <input name="I6" num_pins="2" equivalent="full"/>    
+          <input name="I6" num_pins="2" equivalent="none"/>    
           <input name="I6i" num_pins="2" equivalent="none"/>    
-          <input name="I7" num_pins="2" equivalent="full"/>    
+          <input name="I7" num_pins="2" equivalent="none"/>    
           <input name="I7i" num_pins="2" equivalent="none"/>    
           <input name="reg_in" num_pins="1"/>    
           <input name="sc_in" num_pins="1"/>    
@@ -356,21 +356,21 @@
          So pin equivalence should be applied to the first 3 inputs only
 	  -->  
       <pb_type name="clb">   
-         <input name="I0" num_pins="2" equivalent="full"/>   
+         <input name="I0" num_pins="2" equivalent="none"/>   
          <input name="I0i" num_pins="2" equivalent="none"/>   
-         <input name="I1" num_pins="2" equivalent="full"/>   
+         <input name="I1" num_pins="2" equivalent="none"/>   
          <input name="I1i" num_pins="2" equivalent="none"/>   
-         <input name="I2" num_pins="2" equivalent="full"/>   
+         <input name="I2" num_pins="2" equivalent="none"/>   
          <input name="I2i" num_pins="2" equivalent="none"/>   
-         <input name="I3" num_pins="2" equivalent="full"/>   
+         <input name="I3" num_pins="2" equivalent="none"/>   
          <input name="I3i" num_pins="2" equivalent="none"/>   
-         <input name="I4" num_pins="2" equivalent="full"/>   
+         <input name="I4" num_pins="2" equivalent="none"/>   
          <input name="I4i" num_pins="2" equivalent="none"/>   
-         <input name="I5" num_pins="2" equivalent="full"/>   
+         <input name="I5" num_pins="2" equivalent="none"/>   
          <input name="I5i" num_pins="2" equivalent="none"/>   
-         <input name="I6" num_pins="2" equivalent="full"/>   
+         <input name="I6" num_pins="2" equivalent="none"/>   
          <input name="I6i" num_pins="2" equivalent="none"/>   
-         <input name="I7" num_pins="2" equivalent="full"/>   
+         <input name="I7" num_pins="2" equivalent="none"/>   
          <input name="I7i" num_pins="2" equivalent="none"/>   
          <input name="reg_in" num_pins="1"/>   
          <input name="sc_in" num_pins="1"/>   
