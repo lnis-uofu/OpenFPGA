@@ -72,7 +72,9 @@ LbRouter::NetId add_lb_router_net_to_route(LbRouter& lb_router,
  ***************************************************************************************/
 void save_lb_router_results_to_physical_pb(PhysicalPb& phy_pb,
                                            const LbRouter& lb_router,
-                                           const LbRRGraph& lb_rr_graph) {
+                                           const LbRRGraph& lb_rr_graph,
+                                           const AtomNetlist& atom_netlist,
+                                           const bool& verbose) {
   /* Get mapping routing nodes per net */
   for (const LbRouter::NetId& net : lb_router.nets()) {
     std::vector<LbRRNodeId> routed_nodes = lb_router.net_routed_nodes(net);
@@ -87,15 +89,13 @@ void save_lb_router_results_to_physical_pb(PhysicalPb& phy_pb,
 
       const AtomNetId& atom_net = lb_router.net_atom_net_id(net);
 
-      /* Print info to help debug 
-      bool verbose = true;
+      /* Print info to help debug */
       VTR_LOGV(verbose,
-               "\nSave net '%lu' to physical pb_graph_pin '%s.%s[%d]'\n",
-               size_t(atom_net),
+               "Save net '%s' to physical pb_graph_pin '%s.%s[%d]'\n",
+               atom_netlist.net_name(atom_net).c_str(),
                pb_graph_pin->parent_node->pb_type->name,
                pb_graph_pin->port->name,
                pb_graph_pin->pin_number);
-       */
       
       if (AtomNetId::INVALID() == phy_pb.pb_graph_pin_atom_net(pb_id, pb_graph_pin)) {
         phy_pb.set_pb_graph_pin_atom_net(pb_id, pb_graph_pin, atom_net);

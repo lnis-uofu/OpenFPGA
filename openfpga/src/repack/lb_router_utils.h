@@ -25,7 +25,9 @@ LbRouter::NetId add_lb_router_net_to_route(LbRouter& lb_router,
 
 void save_lb_router_results_to_physical_pb(PhysicalPb& phy_pb,
                                            const LbRouter& lb_router,
-                                           const LbRRGraph& lb_rr_graph);
+                                           const LbRRGraph& lb_rr_graph,
+                                           const AtomNetlist& atom_netlist,
+                                           const bool& verbose);
 
 } /* end namespace openfpga */
 
