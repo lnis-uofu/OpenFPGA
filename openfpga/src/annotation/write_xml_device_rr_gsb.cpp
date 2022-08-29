@@ -182,7 +182,12 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
                                   const VprDeviceAnnotation& vpr_device_annotation,
                                   const RRGraph& rr_graph,
                                   const RRGSB& rr_gsb,
-                                  const bool& verbose) {
+                                  const RRGSBWriterOption& options) {
+
+  /* If there is a list of gsb list, we skip those which are not in the list */
+  if (!include_gsb_names.empty() && include_gsb_names.end() != std::find(include_gsb_names.begin(), include_gsb_names.end(), curr_gsb_name()
+    write_rr_switch_block_to_xml(xml_dir_name, vpr_device_grid, vpr_device_annotation, rr_graph, rr_gsb, options);
+
   /* Prepare file name */
   std::string fname(fname_prefix);
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
@@ -225,48 +230,132 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
 }
 
 /***************************************************************************************
+ * Output internal structure (only the connection block part) of a RRGSB to XML format 
+ ***************************************************************************************/
+static 
+void write_rr_connection_block_to_xml(const std::string fname_prefix,
+                                      const DeviceGrid& vpr_device_grid,
+                                      const VprDeviceAnnotation& vpr_device_annotation,
+                                      const RRGraph& rr_graph,
+                                      const RRGSB& rr_gsb,
+                                      const t_rr_type& cb_type,
+                                      const RRGSBWriterOption& options) {
+
+  /* If there is a list of gsb list, we skip those which are not in the list */
+  if (!include_gsb_names.empty() && include_gsb_names.end() != std::find(include_gsb_names.begin(), include_gsb_names.end(), curr_gsb_name()
+    write_rr_switch_block_to_xml(xml_dir_name, vpr_device_grid, vpr_device_annotation, rr_graph, rr_gsb, options);
+
+  /* Prepare file name */
+  std::string fname(fname_prefix);
+  vtr::Point<size_t> cb_coordinate(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
+  fname += generate_connection_block_module_name(cb_type, cb_coordinate);
+  fname += ".xml";
+
+  VTR_LOGV(verbose,
+           "Output internal structure of Connection Block to '%s'\n",
+           fname.c_str());
+
+  /* Create a file handler*/
+  std::fstream fp;
+  /* Open a file */
+  fp.open(fname, std::fstream::out | std::fstream::trunc);
+
+  /* Validate the file stream */
+  check_file_stream(fname.c_str(), fp);
+
+  /* Output location of the Switch Block */
+  fp << "<rr_cb x=\"" << rr_gsb.get_cb_x(cb_type) << "\" y=\"" << rr_gsb.get_cb_y(cb_type) << "\""
+     << " num_sides=\"" << rr_gsb.get_num_sides() << "\">" << std::endl;
+
+  /* Output each side */ 
+  for (size_t side = 0; side < rr_gsb.get_cb_ipin_sides(cb_type); ++side) {
+    SideManager gsb_side_manager(side);
+    enum e_side gsb_side = gsb_side_manager.get_side();
+   
+    /* IPIN nodes and related connections */
+    write_rr_gsb_ipin_connection_to_xml(fp, rr_graph, rr_gsb, gsb_side);
+  }
+
+  fp << "</rr_cb>" 
+     << std::endl;
+
+  /* close a file */
+  fp.close();
+}
+
+
+/***************************************************************************************
  * Output internal structure (only the switch block part) of all the RRGSBs
  * in a DeviceRRGSB  to XML format 
  ***************************************************************************************/
-void write_device_rr_gsb_to_xml(const char* sb_xml_dir, 
-                                const DeviceGrid& vpr_device_grid,
+void write_device_rr_gsb_to_xml(const DeviceGrid& vpr_device_grid,
                                 const VprDeviceAnnotation& vpr_device_annotation,
                                 const RRGraph& rr_graph,
                                 const DeviceRRGSB& device_rr_gsb,
-                                const bool& unique,
-                                const bool& verbose) {
-  std::string xml_dir_name = format_dir_path(std::string(sb_xml_dir));
+                                const RRGSBWriterOption& options) {
+  std::string xml_dir_name = format_dir_path(options.output_directory);
 
   /* Create directories */
   create_directory(xml_dir_name);
 
   vtr::Point<size_t> sb_range = device_rr_gsb.get_gsb_range();
 
-  size_t gsb_counter = 0;
+  size_t sb_counter = 0;
+  std::map<t_rr_type, size_t> cb_counters = 0;
+  std::map<t_rr_type, std::string> cb_names = { {CHANX, "X-direction"}, {CHANY, "Y-direction"} };
+
+  std::vector<std::string> include_gsb_names = options.include_gsb_names();
 
   /* For each switch block, an XML file will be outputted */
-  if (unique) {
+  if (options.unique_module_only()) {
     /* Only output unique GSB modules */
     VTR_LOG("Only output unique GSB modules to XML\n");
     for (size_t igsb = 0; igsb < device_rr_gsb.get_num_gsb_unique_module(); ++igsb) {
-      const RRGSB& rr_gsb = device_rr_gsb.get_gsb_unique_module(igsb);
-      write_rr_switch_block_to_xml(xml_dir_name, vpr_device_grid, vpr_device_annotation, rr_graph, rr_gsb, verbose);
-      gsb_counter++;
+      const RRGSB& rr_gsb = device_rr_gsb.get_sb_unique_module(igsb);
+      /* Write CBx, CBy, SB on need */
+      if (options.include_sb_content()) {
+        write_rr_switch_block_to_xml(xml_dir_name, vpr_device_grid, vpr_device_annotation, rr_graph, rr_gsb, options);
+      }
+      sb_counter++;
+    }
+    for (size_t igsb = 0; igsb < device_rr_gsb.get_num_gsb_unique_module(); ++igsb) {
+      const RRGSB& rr_gsb = device_rr_gsb.get_sb_unique_module(igsb);
+      for (t_rr_type cb_type : {CHANX, CHANY}) {
+        if (options.include_cb_content(cb_type)) {
+          write_rr_connection_block_to_xml(xml_dir_name, vpr_device_grid, vpr_device_annotation, rr_graph, rr_gsb, cb_type, options);
+          cb_counters[cb_type]++;
+        }
+      }
     } 
   } else {
     /* Output all GSB instances in the fabric (some instances may share the same module) */
     for (size_t ix = 0; ix < sb_range.x(); ++ix) {
       for (size_t iy = 0; iy < sb_range.y(); ++iy) {
         const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
-        write_rr_switch_block_to_xml(xml_dir_name, vpr_device_grid, vpr_device_annotation, rr_graph, rr_gsb, verbose);
-        gsb_counter++;
+        /* Write CBx, CBy, SB on need */
+        if (options.include_sb_content()) {
+          write_rr_switch_block_to_xml(xml_dir_name, vpr_device_grid, vpr_device_annotation, rr_graph, rr_gsb, options);
+          sb_counter++;
+        }
+        for (t_rr_type cb_type : {CHANX, CHANY}) {
+          if (options.include_cb_content(cb_type)) {
+            write_rr_connection_block_to_xml(xml_dir_name, vpr_device_grid, vpr_device_annotation, rr_graph, rr_gsb, cb_type, options);
+            cb_counters[cb_type]++;
+          }
+        }
       }
     }
   }
 
-  VTR_LOG("Output %lu XML files to directory '%s'\n",
-          gsb_counter,
+  VTR_LOG("Output %lu Switch blocks to XML files under directory '%s'\n",
+          sb_counter,
           xml_dir_name.c_str());
+  for (t_rr_type cb_type : {CHANX, CHANY}) {
+    VTR_LOG("Output %lu %s Connection blocks to XML files under directory '%s'\n",
+            cb_counters[cb_type],
+            cb_names[cb_type].c_str(),
+            xml_dir_name.c_str());
+  }
 }
 
 } /* end namespace openfpga */

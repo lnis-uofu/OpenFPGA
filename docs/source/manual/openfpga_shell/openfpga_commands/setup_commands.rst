@@ -127,15 +127,18 @@ write_gsb_to_xml
       - ``--exclude sb``
       - ``--exclude [sb, cbx]``
 
-  .. option:: --gsb_list <string>
+  .. option:: --gsb_names <string>
 
     Specify the name of GSB to be outputted. Users can specify multiple GSBs by using a splitter ``,``.
     When specified, only the GSBs whose names match the list will be outputted to files.
     If not specified, all the GSBs will be outputted.
+
+    .. note:: When option ``--unique`` is enable, the given name of GSBs should match the unique modules! 
+
     For example,
 
-      - ``--gsb_list [gsb_2__4_, gsb_3__2_]``
-      - ``--gsb_list gsb_2__4_``
+      - ``--gsb_names [gsb_2__4_, gsb_3__2_]``
+      - ``--gsb_names gsb_2__4_``
 
   .. option:: --verbose
 
