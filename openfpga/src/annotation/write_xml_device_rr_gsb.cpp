@@ -322,7 +322,7 @@ void write_device_rr_gsb_to_xml(const DeviceGrid& vpr_device_grid,
   if (options.unique_module_only()) {
     /* Only output unique GSB modules */
     VTR_LOG("Only output unique GSB modules to XML\n");
-    for (size_t igsb = 0; igsb < device_rr_gsb.get_num_gsb_unique_module(); ++igsb) {
+    for (size_t igsb = 0; igsb < device_rr_gsb.get_num_sb_unique_module(); ++igsb) {
       const RRGSB& rr_gsb = device_rr_gsb.get_sb_unique_module(igsb);
       /* Write CBx, CBy, SB on need */
       if (options.include_sb_content()) {
@@ -330,9 +330,9 @@ void write_device_rr_gsb_to_xml(const DeviceGrid& vpr_device_grid,
       }
       sb_counter++;
     }
-    for (size_t igsb = 0; igsb < device_rr_gsb.get_num_gsb_unique_module(); ++igsb) {
-      const RRGSB& rr_gsb = device_rr_gsb.get_sb_unique_module(igsb);
-      for (t_rr_type cb_type : {CHANX, CHANY}) {
+    for (t_rr_type cb_type : {CHANX, CHANY}) {
+      for (size_t igsb = 0; igsb < device_rr_gsb.get_num_cb_unique_module(cb_type); ++igsb) {
+        const RRGSB& rr_gsb = device_rr_gsb.get_cb_unique_module(cb_type, igsb);
         if (options.include_cb_content(cb_type)) {
           write_rr_connection_block_to_xml(xml_dir_name, rr_graph, rr_gsb, cb_type, options);
           cb_counters[cb_type]++;
