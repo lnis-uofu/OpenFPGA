@@ -155,6 +155,17 @@ clear-task-run basic_tests/explicit_multi_verilog_files $@
 
 echo -e "Testing write GSB to files";
 run-task basic_tests/write_gsb/write_gsb_to_xml $@
+run-task basic_tests/write_gsb/write_gsb_to_xml_exclude_rr_info $@
+run-task basic_tests/write_gsb/write_gsb_to_xml_exclude_cbx $@
+run-task basic_tests/write_gsb/write_gsb_to_xml_exclude_cby $@
+run-task basic_tests/write_gsb/write_gsb_to_xml_exclude_cbx_cby $@
+run-task basic_tests/write_gsb/write_gsb_to_xml_exclude_sb $@
+run-task basic_tests/write_gsb/write_gsb_to_xml_exclude_sb_cbx $@
+run-task basic_tests/write_gsb/write_gsb_to_xml_exclude_sb_cby $@
+run-task basic_tests/write_gsb/write_gsb_to_xml_exclude_sb_cbx_cby $@
+run-task basic_tests/write_gsb/write_gsb_to_xml_include_single_cbx $@
+run-task basic_tests/write_gsb/write_gsb_to_xml_include_single_cby $@
+run-task basic_tests/write_gsb/write_gsb_to_xml_include_single_sb $@
 run-task basic_tests/write_gsb/write_gsb_to_xml_compress_routing $@
 run-task basic_tests/write_gsb/write_unique_gsb_to_xml $@
 run-task basic_tests/write_gsb/write_unique_gsb_to_xml_compress_routing $@
