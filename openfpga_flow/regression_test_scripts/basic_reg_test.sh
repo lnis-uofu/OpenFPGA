@@ -162,7 +162,7 @@ run-task basic_tests/write_gsb/write_gsb_to_xml_exclude_cbx_cby $@
 run-task basic_tests/write_gsb/write_gsb_to_xml_exclude_sb $@
 run-task basic_tests/write_gsb/write_gsb_to_xml_exclude_sb_cbx $@
 run-task basic_tests/write_gsb/write_gsb_to_xml_exclude_sb_cby $@
-run-task basic_tests/write_gsb/write_gsb_to_xml_inlude_sb_cbx_cby $@
+run-task basic_tests/write_gsb/write_gsb_to_xml_include_sb_cbx_cby $@
 run-task basic_tests/write_gsb/write_gsb_to_xml_include_single_cbx $@
 run-task basic_tests/write_gsb/write_gsb_to_xml_include_single_cby $@
 run-task basic_tests/write_gsb/write_gsb_to_xml_include_single_sb $@
