@@ -125,7 +125,7 @@ write_gsb_to_xml
     For example, 
 
       - ``--exclude sb``
-      - ``--exclude [sb, cbx]``
+      - ``--exclude sb,cbx``
 
   .. option:: --gsb_names <string>
 
@@ -137,7 +137,7 @@ write_gsb_to_xml
 
     For example,
 
-      - ``--gsb_names [gsb_2__4_, gsb_3__2_]``
+      - ``--gsb_names gsb_2__4_,gsb_3__2_``
       - ``--gsb_names gsb_2__4_``
 
   .. option:: --verbose
