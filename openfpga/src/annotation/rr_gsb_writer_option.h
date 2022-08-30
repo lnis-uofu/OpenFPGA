@@ -5,6 +5,8 @@
  * Include header files required by the data structure definition
  *******************************************************************/
 #include <string>
+#include <vector>
+#include "rr_graph_types.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -53,7 +55,7 @@ class RRGSBWriterOption {
      */
     std::array<bool, 4> exclude_content_;
 
-    std::vector<std::string> gsb_names_;
+    std::vector<std::string> include_gsb_names_;
     bool verbose_output_;
 
     /* A flag to indicate if the data parse is invalid or not */

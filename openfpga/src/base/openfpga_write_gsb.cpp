@@ -45,8 +45,13 @@ int write_gsb(const OpenfpgaContext& openfpga_ctx,
   options.set_unique_module_only(cmd_context.option_enable(cmd, opt_unique));
   options.set_exclude_rr_info(cmd_context.option_enable(cmd, opt_exclude_rr_info));
   options.set_exclude_content(cmd_context.option_value(cmd, opt_exclude));
-  options.set_include_gsb_list(cmd_context.option_value(cmd, opt_gsb_names));
+  options.set_include_gsb_names(cmd_context.option_value(cmd, opt_gsb_names));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
+
+  if (!options.valid()) {
+    VTR_LOG("Detected errors when parsing options!\n");
+    return CMD_EXEC_FATAL_ERROR;
+  }
 
   write_device_rr_gsb_to_xml(g_vpr_ctx.device().grid,
                              openfpga_ctx.vpr_device_annotation(),

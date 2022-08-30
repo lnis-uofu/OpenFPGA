@@ -1,6 +1,7 @@
 /******************************************************************************
  * Memember functions for data structure RRGSBWriterOption
  ******************************************************************************/
+#include <map>
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
@@ -17,7 +18,7 @@ RRGSBWriterOption::RRGSBWriterOption() {
   output_directory_.clear();
   unique_module_only_ = false;
   exclude_content_ = {false, false, false, false};
-  gsb_names_.clear();
+  include_gsb_names_.clear();
   verbose_output_ = false;
   num_parse_errors_ = 0;
 }
@@ -76,7 +77,7 @@ void RRGSBWriterOption::set_exclude_content(const std::string& content) {
   num_parse_errors_ = 0;
   /* Split the content using a tokenizer */
   StringToken tokenizer(content);
-  std::string tokens = tokenizer.split(',');
+  std::vector<std::string> tokens = tokenizer.split(',');
   /* Parse each token */
   std::map<std::string, int> token2index = { {"sb", 3}, {"cbx", 1}, {"cby", 2} };
   for (std::string token : tokens) {
@@ -88,7 +89,8 @@ void RRGSBWriterOption::set_exclude_content(const std::string& content) {
         keyword_list += pair.first + "|";
       }
       keyword_list.pop_back();
-      VTR_LOG_ERROR("Invalid content '" + token + "' to skip, expect [ " + keyword_list + " ]");
+      std::string err_msg = std::string("Invalid content '") + token + std::string("' to skip, expect [ ") + keyword_list + std::string(" ]");
+      VTR_LOG_ERROR(err_msg.c_str());
       num_parse_errors_++;
       continue;
     }
@@ -97,10 +99,10 @@ void RRGSBWriterOption::set_exclude_content(const std::string& content) {
   }
 }
 
-void RRGSBWriterOption::set_include_gsb_names(const std::string& gsb_names) {
+void RRGSBWriterOption::set_include_gsb_names(const std::string& content) {
   /* Split the content using a tokenizer */
   StringToken tokenizer(content);
-  gsb_names_ = tokenizer.split(',');
+  include_gsb_names_ = tokenizer.split(',');
 }
 
 void RRGSBWriterOption::set_verbose_output(const bool& enabled) {

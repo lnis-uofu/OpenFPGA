@@ -173,10 +173,10 @@ void write_rr_gsb_chan_connection_to_xml(std::fstream& fp,
              << "\" side=\"" << driver_side.to_string() 
              << "\" index=\"" << driver_node_index; 
           if (include_rr_info) {
-            fp << "\" node_id=\"" << size_t(driver_rr_node);
+            fp << "\" node_id=\"" << size_t(driver_rr_node)
                << "\" segment_id=\"" << size_t(des_segment_id)
                << "\" segment_name=\"" << rr_graph.get_segment(des_segment_id).name
-               << "\" sb_module_pin_name=\"" << generate_sb_module_track_port_name(rr_graph.node_type(driver_rr_node), driver_side.get_side(), IN_PORT) 
+               << "\" sb_module_pin_name=\"" << generate_sb_module_track_port_name(rr_graph.node_type(driver_rr_node), driver_side.get_side(), IN_PORT); 
           }
           fp << "\"/>" 
              << std::endl; 
@@ -213,7 +213,7 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
     return;
   }
 
-  VTR_LOGV(verbose,
+  VTR_LOGV(options.verbose_output(),
            "Output internal structure of Switch Block to '%s'\n",
            fname.c_str());
 
@@ -250,8 +250,6 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
  ***************************************************************************************/
 static 
 void write_rr_connection_block_to_xml(const std::string fname_prefix,
-                                      const DeviceGrid& vpr_device_grid,
-                                      const VprDeviceAnnotation& vpr_device_annotation,
                                       const RRGraph& rr_graph,
                                       const RRGSB& rr_gsb,
                                       const t_rr_type& cb_type,
@@ -269,7 +267,7 @@ void write_rr_connection_block_to_xml(const std::string fname_prefix,
     return;
   }
 
-  VTR_LOGV(verbose,
+  VTR_LOGV(options.verbose_output(),
            "Output internal structure of Connection Block to '%s'\n",
            fname.c_str());
 
@@ -286,12 +284,9 @@ void write_rr_connection_block_to_xml(const std::string fname_prefix,
      << " num_sides=\"" << rr_gsb.get_num_sides() << "\">" << std::endl;
 
   /* Output each side */ 
-  for (size_t side = 0; side < rr_gsb.get_cb_ipin_sides(cb_type); ++side) {
-    SideManager gsb_side_manager(side);
-    enum e_side gsb_side = gsb_side_manager.get_side();
-   
+  for (e_side side : rr_gsb.get_cb_ipin_sides(cb_type)) {
     /* IPIN nodes and related connections */
-    write_rr_gsb_ipin_connection_to_xml(fp, rr_graph, rr_gsb, gsb_side, options.include_rr_info());
+    write_rr_gsb_ipin_connection_to_xml(fp, rr_graph, rr_gsb, side, options.include_rr_info());
   }
 
   fp << "</rr_cb>" 
@@ -310,7 +305,7 @@ void write_device_rr_gsb_to_xml(const DeviceGrid& vpr_device_grid,
                                 const RRGraph& rr_graph,
                                 const DeviceRRGSB& device_rr_gsb,
                                 const RRGSBWriterOption& options) {
-  std::string xml_dir_name = format_dir_path(options.output_directory);
+  std::string xml_dir_name = format_dir_path(options.output_directory());
 
   /* Create directories */
   create_directory(xml_dir_name);
@@ -318,7 +313,7 @@ void write_device_rr_gsb_to_xml(const DeviceGrid& vpr_device_grid,
   vtr::Point<size_t> sb_range = device_rr_gsb.get_gsb_range();
 
   size_t sb_counter = 0;
-  std::map<t_rr_type, size_t> cb_counters = 0;
+  std::map<t_rr_type, size_t> cb_counters = { {CHANX, 0}, {CHANY, 0} };
   std::map<t_rr_type, std::string> cb_names = { {CHANX, "X-direction"}, {CHANY, "Y-direction"} };
 
   std::vector<std::string> include_gsb_names = options.include_gsb_names();
@@ -339,7 +334,7 @@ void write_device_rr_gsb_to_xml(const DeviceGrid& vpr_device_grid,
       const RRGSB& rr_gsb = device_rr_gsb.get_sb_unique_module(igsb);
       for (t_rr_type cb_type : {CHANX, CHANY}) {
         if (options.include_cb_content(cb_type)) {
-          write_rr_connection_block_to_xml(xml_dir_name, vpr_device_grid, vpr_device_annotation, rr_graph, rr_gsb, cb_type, options);
+          write_rr_connection_block_to_xml(xml_dir_name, rr_graph, rr_gsb, cb_type, options);
           cb_counters[cb_type]++;
         }
       }
@@ -356,7 +351,7 @@ void write_device_rr_gsb_to_xml(const DeviceGrid& vpr_device_grid,
         }
         for (t_rr_type cb_type : {CHANX, CHANY}) {
           if (options.include_cb_content(cb_type)) {
-            write_rr_connection_block_to_xml(xml_dir_name, vpr_device_grid, vpr_device_annotation, rr_graph, rr_gsb, cb_type, options);
+            write_rr_connection_block_to_xml(xml_dir_name, rr_graph, rr_gsb, cb_type, options);
             cb_counters[cb_type]++;
           }
         }
