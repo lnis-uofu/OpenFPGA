@@ -26,7 +26,8 @@ static
 void write_rr_gsb_ipin_connection_to_xml(std::fstream& fp,
                                          const RRGraph& rr_graph,
                                          const RRGSB& rr_gsb,
-                                         const enum e_side& gsb_side) {
+                                         const enum e_side& gsb_side,
+                                         const bool& include_rr_info) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -37,9 +38,11 @@ void write_rr_gsb_ipin_connection_to_xml(std::fstream& fp,
     /* General information of this IPIN */
     fp << "\t<" << rr_node_typename[rr_graph.node_type(cur_rr_node)]
        << " side=\"" << gsb_side_manager.to_string() 
-       << "\" index=\"" << inode 
-       << "\" node_id=\"" << size_t(cur_rr_node)
-       << "\" mux_size=\"" << get_rr_graph_configurable_driver_nodes(rr_graph, cur_rr_node).size()
+       << "\" index=\"" << inode;
+    if (include_rr_info) {
+       fp << "\" node_id=\"" << size_t(cur_rr_node);
+    }
+    fp << "\" mux_size=\"" << get_rr_graph_configurable_driver_nodes(rr_graph, cur_rr_node).size()
        << "\">" 
        << std::endl; 
     /* General information of each driving nodes */
@@ -63,9 +66,11 @@ void write_rr_gsb_ipin_connection_to_xml(std::fstream& fp,
       const RRSegmentId& des_segment_id = rr_gsb.get_chan_node_segment(chan_side, driver_node_index);
 
       fp << "\t\t<driver_node type=\"" << rr_node_typename[rr_graph.node_type(driver_node)]
-         << "\" side=\"" << chan_side_manager.to_string() 
-         << "\" node_id=\"" << size_t(driver_node)
-         << "\" index=\"" << driver_node_index 
+         << "\" side=\"" << chan_side_manager.to_string(); 
+      if (include_rr_info) {
+         fp << "\" node_id=\"" << size_t(driver_node);
+      }
+      fp << "\" index=\"" << driver_node_index 
          << "\" segment_id=\"" << size_t(des_segment_id)
          << "\"/>" 
          << std::endl; 
@@ -85,7 +90,8 @@ void write_rr_gsb_chan_connection_to_xml(std::fstream& fp,
                                          const VprDeviceAnnotation& vpr_device_annotation,
                                          const RRGraph& rr_graph,
                                          const RRGSB& rr_gsb,
-                                         const enum e_side& gsb_side) {
+                                         const enum e_side& gsb_side,
+                                         const bool& include_rr_info) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -113,13 +119,17 @@ void write_rr_gsb_chan_connection_to_xml(std::fstream& fp,
 
     fp << "\t<" << rr_node_typename[cur_node_type]
        << " side=\"" << gsb_side_manager.to_string() 
-       << "\" index=\"" << inode 
-       << "\" node_id=\"" << size_t(cur_rr_node)
-       << "\" segment_id=\"" << size_t(src_segment_id)
-       << "\" segment_name=\"" << rr_graph.get_segment(src_segment_id).name
-       << "\" mux_size=\"" << driver_rr_edges.size()
-       << "\" sb_module_pin_name=\"" << generate_sb_module_track_port_name(cur_node_type, gsb_side, OUT_PORT) 
-       << "\">" 
+       << "\" index=\"" << inode;
+    if (include_rr_info) {
+       fp << "\" node_id=\"" << size_t(cur_rr_node)
+          << "\" segment_id=\"" << size_t(src_segment_id)
+          << "\" segment_name=\"" << rr_graph.get_segment(src_segment_id).name;
+    }
+    fp << "\" mux_size=\"" << driver_rr_edges.size();
+    if (include_rr_info) {
+      fp << "\" sb_module_pin_name=\"" << generate_sb_module_track_port_name(cur_node_type, gsb_side, OUT_PORT);
+    }
+    fp << "\">" 
        << std::endl; 
 
     /* Direct connection: output the node on the opposite side */
@@ -127,12 +137,14 @@ void write_rr_gsb_chan_connection_to_xml(std::fstream& fp,
       SideManager oppo_side =  gsb_side_manager.get_opposite();
       fp << "\t\t<driver_node type=\"" << rr_node_typename[cur_node_type]
          << "\" side=\"" << oppo_side.to_string() 
-         << "\" index=\"" << rr_gsb.get_node_index(rr_graph, cur_rr_node, oppo_side.get_side(), IN_PORT)
-         << "\" node_id=\"" << size_t(cur_rr_node)
-         << "\" segment_id=\"" << size_t(src_segment_id)
-         << "\" segment_name=\"" << rr_graph.get_segment(src_segment_id).name
-         << "\" sb_module_pin_name=\"" << generate_sb_module_track_port_name(cur_node_type, oppo_side.get_side(), IN_PORT) 
-         << "\"/>" 
+         << "\" index=\"" << rr_gsb.get_node_index(rr_graph, cur_rr_node, oppo_side.get_side(), IN_PORT);
+      if (include_rr_info) {
+        fp << "\" node_id=\"" << size_t(cur_rr_node)
+           << "\" segment_id=\"" << size_t(src_segment_id)
+           << "\" segment_name=\"" << rr_graph.get_segment(src_segment_id).name
+           << "\" sb_module_pin_name=\"" << generate_sb_module_track_port_name(cur_node_type, oppo_side.get_side(), IN_PORT);
+      }
+      fp << "\"/>" 
          << std::endl; 
     } else {
       for (const RREdgeId& driver_rr_edge : driver_rr_edges) {
@@ -147,22 +159,26 @@ void write_rr_gsb_chan_connection_to_xml(std::fstream& fp,
           SideManager grid_side(rr_graph.node_side(driver_rr_node));
           fp << "\t\t<driver_node type=\"" << rr_node_typename[OPIN]
              << "\" side=\"" << driver_side.to_string() 
-             << "\" index=\"" << driver_node_index  
-             << "\" node_id=\"" << size_t(driver_rr_node)
-             << "\" grid_side=\"" <<  grid_side.to_string() 
-             << "\" sb_module_pin_name=\"" << generate_sb_module_grid_port_name(gsb_side, driver_node_side, vpr_device_grid, vpr_device_annotation, rr_graph, driver_rr_node) 
-             <<"\"/>" 
+             << "\" index=\"" << driver_node_index;
+          if (include_rr_info) {
+            fp << "\" node_id=\"" << size_t(driver_rr_node)
+               << "\" grid_side=\"" << grid_side.to_string() 
+               << "\" sb_module_pin_name=\"" << generate_sb_module_grid_port_name(gsb_side, driver_node_side, vpr_device_grid, vpr_device_annotation, rr_graph, driver_rr_node); 
+          }
+          fp <<"\"/>" 
              << std::endl; 
         } else {
           const RRSegmentId& des_segment_id = rr_gsb.get_chan_node_segment(driver_node_side, driver_node_index);
           fp << "\t\t<driver_node type=\"" << rr_node_typename[rr_graph.node_type(driver_rr_node)]
              << "\" side=\"" << driver_side.to_string() 
-             << "\" index=\"" << driver_node_index 
-             << "\" node_id=\"" << size_t(driver_rr_node)
-             << "\" segment_id=\"" << size_t(des_segment_id)
-             << "\" segment_name=\"" << rr_graph.get_segment(des_segment_id).name
-             << "\" sb_module_pin_name=\"" << generate_sb_module_track_port_name(rr_graph.node_type(driver_rr_node), driver_side.get_side(), IN_PORT) 
-             << "\"/>" 
+             << "\" index=\"" << driver_node_index; 
+          if (include_rr_info) {
+            fp << "\" node_id=\"" << size_t(driver_rr_node);
+               << "\" segment_id=\"" << size_t(des_segment_id)
+               << "\" segment_name=\"" << rr_graph.get_segment(des_segment_id).name
+               << "\" sb_module_pin_name=\"" << generate_sb_module_track_port_name(rr_graph.node_type(driver_rr_node), driver_side.get_side(), IN_PORT) 
+          }
+          fp << "\"/>" 
              << std::endl; 
         }
       }  
@@ -184,15 +200,18 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
                                   const RRGSB& rr_gsb,
                                   const RRGSBWriterOption& options) {
 
-  /* If there is a list of gsb list, we skip those which are not in the list */
-  if (!include_gsb_names.empty() && include_gsb_names.end() != std::find(include_gsb_names.begin(), include_gsb_names.end(), curr_gsb_name()
-    write_rr_switch_block_to_xml(xml_dir_name, vpr_device_grid, vpr_device_annotation, rr_graph, rr_gsb, options);
-
   /* Prepare file name */
   std::string fname(fname_prefix);
-  vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
-  fname += generate_switch_block_module_name(gsb_coordinate);
+  vtr::Point<size_t> sb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
+  std::string curr_sb_name = generate_switch_block_module_name(sb_coordinate);
+  fname += curr_sb_name; 
   fname += ".xml";
+
+  /* If there is a list of gsb list, we skip those which are not in the list */
+  std::vector<std::string> include_gsb_names = options.include_gsb_names();
+  if (!include_gsb_names.empty() && include_gsb_names.end() == std::find(include_gsb_names.begin(), include_gsb_names.end(), curr_sb_name)) {
+    return;
+  }
 
   VTR_LOGV(verbose,
            "Output internal structure of Switch Block to '%s'\n",
@@ -207,7 +226,7 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
   check_file_stream(fname.c_str(), fp);
 
   /* Output location of the Switch Block */
-  fp << "<rr_gsb x=\"" << rr_gsb.get_x() << "\" y=\"" << rr_gsb.get_y() << "\""
+  fp << "<rr_sb x=\"" << rr_gsb.get_x() << "\" y=\"" << rr_gsb.get_y() << "\""
      << " num_sides=\"" << rr_gsb.get_num_sides() << "\">" << std::endl;
 
   /* Output each side */ 
@@ -215,14 +234,11 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
     SideManager gsb_side_manager(side);
     enum e_side gsb_side = gsb_side_manager.get_side();
    
-    /* IPIN nodes and related connections */
-    write_rr_gsb_ipin_connection_to_xml(fp, rr_graph, rr_gsb, gsb_side);
-
     /* routing-track and related connections */
-    write_rr_gsb_chan_connection_to_xml(fp, vpr_device_grid, vpr_device_annotation, rr_graph, rr_gsb, gsb_side);
+    write_rr_gsb_chan_connection_to_xml(fp, vpr_device_grid, vpr_device_annotation, rr_graph, rr_gsb, gsb_side, options.include_rr_info());
   }
 
-  fp << "</rr_gsb>" 
+  fp << "</rr_sb>" 
      << std::endl;
 
   /* close a file */
@@ -240,16 +256,18 @@ void write_rr_connection_block_to_xml(const std::string fname_prefix,
                                       const RRGSB& rr_gsb,
                                       const t_rr_type& cb_type,
                                       const RRGSBWriterOption& options) {
-
-  /* If there is a list of gsb list, we skip those which are not in the list */
-  if (!include_gsb_names.empty() && include_gsb_names.end() != std::find(include_gsb_names.begin(), include_gsb_names.end(), curr_gsb_name()
-    write_rr_switch_block_to_xml(xml_dir_name, vpr_device_grid, vpr_device_annotation, rr_graph, rr_gsb, options);
-
   /* Prepare file name */
   std::string fname(fname_prefix);
   vtr::Point<size_t> cb_coordinate(rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
-  fname += generate_connection_block_module_name(cb_type, cb_coordinate);
+  std::string curr_cb_name = generate_connection_block_module_name(cb_type, cb_coordinate);
+  fname += curr_cb_name; 
   fname += ".xml";
+
+  /* If there is a list of gsb list, we skip those which are not in the list */
+  std::vector<std::string> include_gsb_names = options.include_gsb_names();
+  if (!include_gsb_names.empty() && include_gsb_names.end() == std::find(include_gsb_names.begin(), include_gsb_names.end(), curr_cb_name)) {
+    return;
+  }
 
   VTR_LOGV(verbose,
            "Output internal structure of Connection Block to '%s'\n",
@@ -273,7 +291,7 @@ void write_rr_connection_block_to_xml(const std::string fname_prefix,
     enum e_side gsb_side = gsb_side_manager.get_side();
    
     /* IPIN nodes and related connections */
-    write_rr_gsb_ipin_connection_to_xml(fp, rr_graph, rr_gsb, gsb_side);
+    write_rr_gsb_ipin_connection_to_xml(fp, rr_graph, rr_gsb, gsb_side, options.include_rr_info());
   }
 
   fp << "</rr_cb>" 
@@ -282,7 +300,6 @@ void write_rr_connection_block_to_xml(const std::string fname_prefix,
   /* close a file */
   fp.close();
 }
-
 
 /***************************************************************************************
  * Output internal structure (only the switch block part) of all the RRGSBs
