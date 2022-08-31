@@ -213,6 +213,17 @@ ShellCommandId add_openfpga_write_gsb_command(openfpga::Shell<OpenfpgaContext>& 
   /* Add an option '--unique' */
   shell_cmd.add_option("unique", false, "Only output unique GSB blocks");
 
+  /* Add an option '--exclude_rr_info' */
+  shell_cmd.add_option("exclude_rr_info", false, "Exclude routing resource graph information from output files, e.g., node id as well as other attributes. This is useful to check the connection inside GSBs purely.");
+
+  /* Add an option '--exclude'*/
+  CommandOptionId opt_exclude = shell_cmd.add_option("exclude", false, "Exclude part of the GSB data to be outputted. Can be [``sb``|``cbx``|``cby``]. Users can exclude multiple parts by using a splitter ``,``");
+  shell_cmd.set_option_require_value(opt_exclude, openfpga::OPT_STRING);
+
+  /* Add an option '--gsb_names'*/
+  CommandOptionId opt_gsb_names = shell_cmd.add_option("gsb_names", false, "Specify the name of GSB to be outputted. Users can specify multiple GSBs by using a splitter ``,``");
+  shell_cmd.set_option_require_value(opt_gsb_names, openfpga::OPT_STRING);
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
 

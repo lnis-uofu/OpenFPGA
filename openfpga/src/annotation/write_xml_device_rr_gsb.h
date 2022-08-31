@@ -9,6 +9,7 @@
 #include "vpr_device_annotation.h"
 #include "rr_graph_view.h"
 #include "device_rr_gsb.h"
+#include "rr_gsb_writer_option.h"
 
 /********************************************************************
  * Function declaration
@@ -17,13 +18,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void write_device_rr_gsb_to_xml(const char* sb_xml_dir,
-                                const DeviceGrid& vpr_device_grid,
+void write_device_rr_gsb_to_xml(const DeviceGrid& vpr_device_grid,
                                 const VprDeviceAnnotation& vpr_device_annotation,
                                 const RRGraphView& rr_graph,
                                 const DeviceRRGSB& device_rr_gsb,
-                                const bool& unique,
-                                const bool& verbose);
+                                const RRGSBWriterOption& options);
 
 } /* end namespace openfpga */
 

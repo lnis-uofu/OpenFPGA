@@ -115,6 +115,31 @@ write_gsb_to_xml
 
     Only output unique GSBs to XML files
 
+  .. option:: --exclude_rr_info
+
+    Exclude routing resource graph information from output files, e.g., node id as well as other attributes. This is useful to check the connection inside GSBs purely.
+
+  .. option:: --exclude <string>
+
+    Exclude part of the GSB data to be outputted. Can be [``sb``|``cbx``|``cby``]. Users can exclude multiple parts by using a splitter ``,``.
+    For example, 
+
+      - ``--exclude sb``
+      - ``--exclude sb,cbx``
+
+  .. option:: --gsb_names <string>
+
+    Specify the name of GSB to be outputted. Users can specify multiple GSBs by using a splitter ``,``.
+    When specified, only the GSBs whose names match the list will be outputted to files.
+    If not specified, all the GSBs will be outputted.
+
+    .. note:: When option ``--unique`` is enable, the given name of GSBs should match the unique modules! 
+
+    For example,
+
+      - ``--gsb_names gsb_2__4_,gsb_3__2_``
+      - ``--gsb_names gsb_2__4_``
+
   .. option:: --verbose
 
     Show verbose log
