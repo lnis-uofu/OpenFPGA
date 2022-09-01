@@ -34,7 +34,11 @@ write_fabric_hierarchy --file ./fabric_hierarchy.txt
 
 # Write the fabric I/O attributes to a file
 # This is used by pin constraint files
-write_fabric_io_info --file ./fabric_io_location.xml --verbose --no_time_stamp
+write_fabric_io_info --file ${OPENFPGA_OUTPUT_DIR}/fabric_io_location.xml --verbose --no_time_stamp
+
+# Write gsb to XML
+write_gsb_to_xml --file ${OPENFPGA_OUTPUT_DIR}/gsb_xml --verbose
+write_gsb_to_xml --file ${OPENFPGA_OUTPUT_DIR}/gsb_xml_no_rr_info --verbose --exclude_rr_info
 
 # Repack the netlist to physical pbs
 # This must be done before bitstream generator and testbench generation
