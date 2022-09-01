@@ -224,15 +224,12 @@ class FabricBitstream {
      *   - bit-x number: which encodes the 'x' bits into a number. For example,
      *       101x1 -> 00010 -> 2
      *
-     * TODO: There is a limitation here, when the length of address vector is more than 64,
-     * A size_t number overflows (cannot represent any binary number > 64 bit).
-     * Such thing can entirely happen even in a medium sized FPGA. 
-     * A solution can be use multiple size_t to fit. But clearly, we should not use vector in vector, which causes large memory overhead!
+     * Note that when the length of address vector is more than 64, we use multiple 64-bit data to store the encoded values 
      */
-    vtr::vector<FabricBitId, size_t> bit_address_1bits_;
-    vtr::vector<FabricBitId, size_t> bit_address_xbits_;
-    vtr::vector<FabricBitId, size_t> bit_wl_address_1bits_;
-    vtr::vector<FabricBitId, size_t> bit_wl_address_xbits_;
+    vtr::vector<FabricBitId, std::vector<uint64_t>> bit_address_1bits_;
+    vtr::vector<FabricBitId, std::vector<uint64_t>> bit_address_xbits_;
+    vtr::vector<FabricBitId, std::vector<uint64_t>> bit_wl_address_1bits_;
+    vtr::vector<FabricBitId, std::vector<uint64_t>> bit_wl_address_xbits_;
 
     /* Data input (Din) bits: this is designed for memory decoders */
     vtr::vector<FabricBitId, char> bit_dins_;
