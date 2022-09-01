@@ -22,7 +22,7 @@ void annotate_vpr_rr_node_nets(const DeviceContext& device_ctx,
                                const RoutingContext& routing_ctx,
                                VprRoutingAnnotation& vpr_routing_annotation,
                                const bool& verbose) {
-  vtr::vector<RRNodeId, ClusterNetId> node2net = annotate_rr_node_nets(device_ctx, clustering_ctx, routing_ctx, verbose);
+  vtr::vector<RRNodeId, ClusterNetId> node2net = annotate_rr_node_nets(device_ctx, clustering_ctx, routing_ctx, verbose, false);
   for (size_t node_id = 0; node_id < device_ctx.rr_graph.num_nodes(); ++node_id) {
     vpr_routing_annotation.set_rr_node_net(RRNodeId(node_id), node2net[RRNodeId(node_id)]);
   }
