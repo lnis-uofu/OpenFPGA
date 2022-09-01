@@ -123,7 +123,7 @@ void write_rr_gsb_chan_connection_to_xml(std::fstream& fp,
     if (include_rr_info) {
        fp << "\" node_id=\"" << size_t(cur_rr_node)
           << "\" segment_id=\"" << size_t(src_segment_id)
-          << "\" segment_name=\"" << rr_graph.get_segment(src_segment_id).name;
+          << "\" segment_name=\"" << rr_graph.rr_segments(src_segment_id).name;
     }
     fp << "\" mux_size=\"" << driver_rr_edges.size();
     if (include_rr_info) {
@@ -141,7 +141,7 @@ void write_rr_gsb_chan_connection_to_xml(std::fstream& fp,
       if (include_rr_info) {
         fp << "\" node_id=\"" << size_t(cur_rr_node)
            << "\" segment_id=\"" << size_t(src_segment_id)
-           << "\" segment_name=\"" << rr_graph.get_segment(src_segment_id).name
+           << "\" segment_name=\"" << rr_graph.rr_segments(src_segment_id).name
            << "\" sb_module_pin_name=\"" << generate_sb_module_track_port_name(cur_node_type, oppo_side.get_side(), IN_PORT);
       }
       fp << "\"/>" 
@@ -156,6 +156,7 @@ void write_rr_gsb_chan_connection_to_xml(std::fstream& fp,
         SideManager driver_side(driver_node_side);
 
         if (OPIN == rr_graph.node_type(driver_rr_node)) {
+          SideManager grid_side(get_rr_graph_single_node_side(rr_graph, driver_rr_node));
           fp << "\t\t<driver_node type=\"" << rr_node_typename[OPIN]
              << "\" side=\"" << driver_side.to_string() 
              << "\" index=\"" << driver_node_index;
@@ -174,7 +175,7 @@ void write_rr_gsb_chan_connection_to_xml(std::fstream& fp,
           if (include_rr_info) {
             fp << "\" node_id=\"" << size_t(driver_rr_node)
                << "\" segment_id=\"" << size_t(des_segment_id)
-               << "\" segment_name=\"" << rr_graph.get_segment(des_segment_id).name
+               << "\" segment_name=\"" << rr_graph.rr_segments(des_segment_id).name
                << "\" sb_module_pin_name=\"" << generate_sb_module_track_port_name(rr_graph.node_type(driver_rr_node), driver_side.get_side(), IN_PORT); 
           }
           fp << "\"/>" 
@@ -249,7 +250,7 @@ void write_rr_switch_block_to_xml(const std::string fname_prefix,
  ***************************************************************************************/
 static 
 void write_rr_connection_block_to_xml(const std::string fname_prefix,
-                                      const RRGraph& rr_graph,
+                                      const RRGraphView& rr_graph,
                                       const RRGSB& rr_gsb,
                                       const t_rr_type& cb_type,
                                       const RRGSBWriterOption& options) {
