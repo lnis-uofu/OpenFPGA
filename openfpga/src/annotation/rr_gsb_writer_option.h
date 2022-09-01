@@ -6,7 +6,7 @@
  *******************************************************************/
 #include <string>
 #include <vector>
-#include "rr_graph_types.h"
+#include "rr_node_types.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
