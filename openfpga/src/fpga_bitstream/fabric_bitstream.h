@@ -188,10 +188,9 @@ class FabricBitstream {
     bool valid_region_id(const FabricBitRegionId& bit_id) const;
 
   private: /* Private APIs */
-    size_t encode_address_1bits(const std::vector<char>& address) const;
-    size_t encode_address_xbits(const std::vector<char>& address) const;
-    std::vector<char> decode_address_bits(const size_t& bit1, const size_t& bitx) const;
-    std::vector<char> decode_wl_address_bits(const size_t& bit1, const size_t& bitx) const;
+    uint64_t encode_address_1bits(const std::vector<char>& address) const;
+    uint64_t encode_address_xbits(const std::vector<char>& address) const;
+    std::vector<char> decode_address_bits(const size_t& bit1, const size_t& bitx, const size_t& addr_len) const;
 
   private: /* Internal data */
     /* Unique id of a region in the Bitstream */

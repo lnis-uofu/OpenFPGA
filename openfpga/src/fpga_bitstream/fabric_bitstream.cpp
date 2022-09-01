@@ -75,9 +75,9 @@ std::vector<char> FabricBitstream::bit_address(const FabricBitId& bit_id) const 
   std::vector<char> addr_bits;
   addr_bits.reserve(address_length_);
   for (size_t curr_idx = 0; curr_idx < bit_address_1bits_[bit_id].size(); curr_idx++) {
-    size_t curr_addr_len = std::min(64, address_length_ - curr_idx * 64);
+    size_t curr_addr_len = std::min(size_t(64), address_length_ - curr_idx * 64);
     std::vector<char> curr_addr_vec = decode_address_bits(bit_address_1bits_[bit_id][curr_idx], bit_address_xbits_[bit_id][curr_idx], curr_addr_len);
-    addr_bits.insert(addr_bits.end(), curr_addr_len.begin(), curr_addr_len.end());
+    addr_bits.insert(addr_bits.end(), curr_addr_vec.begin(), curr_addr_vec.end());
   }
   return addr_bits;
 }
@@ -96,9 +96,9 @@ std::vector<char> FabricBitstream::bit_wl_address(const FabricBitId& bit_id) con
   std::vector<char> addr_bits;
   addr_bits.reserve(wl_address_length_);
   for (size_t curr_idx = 0; curr_idx < bit_wl_address_1bits_[bit_id].size(); curr_idx++) {
-    size_t curr_addr_len = std::min(64, wl_address_length_ - curr_idx * 64);
+    size_t curr_addr_len = std::min(size_t(64), wl_address_length_ - curr_idx * 64);
     std::vector<char> curr_addr_vec = decode_address_bits(bit_wl_address_1bits_[bit_id][curr_idx], bit_wl_address_xbits_[bit_id][curr_idx], curr_addr_len);
-    addr_bits.insert(addr_bits.end(), curr_addr_len.begin(), curr_addr_len.end());
+    addr_bits.insert(addr_bits.end(), curr_addr_vec.begin(), curr_addr_vec.end());
   }
   return addr_bits;
 }
@@ -199,8 +199,8 @@ void FabricBitstream::set_bit_wl_address(const FabricBitId& bit_id,
     size_t curr_end_idx = std::min(address.size(), start_idx + 64);
     std::vector<char> curr_addr_vec64(address.begin() + start_idx, address.begin() + curr_end_idx);
     /* Encode bit '1' and bit 'x' into two numbers */
-    bit_wl_address_1bits_[bit_id] = encode_address_1bits(curr_addr_vec64);
-    bit_wl_address_xbits_[bit_id] = encode_address_xbits(curr_addr_vec64);
+    bit_wl_address_1bits_[bit_id].push_back(encode_address_1bits(curr_addr_vec64));
+    bit_wl_address_xbits_[bit_id].push_back(encode_address_xbits(curr_addr_vec64));
   }
 }
 
@@ -294,7 +294,7 @@ bool FabricBitstream::valid_region_id(const FabricBitRegionId& region_id) const 
   return (size_t(region_id) < num_regions_);
 }
 
-size_t FabricBitstream::encode_address_1bits(const std::vector<char>& address) const {
+uint64_t FabricBitstream::encode_address_1bits(const std::vector<char>& address) const {
   /* Convert all the 'x' bit into 0 */
   std::vector<char> binary_address = address;
   for (char& bit : binary_address) {
@@ -306,7 +306,7 @@ size_t FabricBitstream::encode_address_1bits(const std::vector<char>& address) c
   return (uint64_t)bintoi_charvec(binary_address);
 }
 
-size_t FabricBitstream::encode_address_xbits(const std::vector<char>& address) const {
+uint64_t FabricBitstream::encode_address_xbits(const std::vector<char>& address) const {
   /* Convert all the '1' bit into 0 and Convert all the 'x' bit into 1 */
   std::vector<char> binary_address = address;
   for (char& bit : binary_address) {
