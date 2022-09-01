@@ -2,7 +2,7 @@
 # This script is designed to test the option --no_time_stamp in related commands
 # It can NOT be used an example script to achieve other objectives
 #--write_rr_graph example_rr_graph.xml
-vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --clock_modeling route
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH} --clock_modeling route
 
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
@@ -34,7 +34,11 @@ write_fabric_hierarchy --file ./fabric_hierarchy.txt
 
 # Write the fabric I/O attributes to a file
 # This is used by pin constraint files
-write_fabric_io_info --file ./fabric_io_location.xml --verbose --no_time_stamp
+write_fabric_io_info --file ${OPENFPGA_OUTPUT_DIR}/fabric_io_location.xml --verbose --no_time_stamp
+
+# Write gsb to XML
+write_gsb_to_xml --file ${OPENFPGA_OUTPUT_DIR}/gsb_xml --verbose
+write_gsb_to_xml --file ${OPENFPGA_OUTPUT_DIR}/gsb_xml_no_rr_info --verbose --exclude_rr_info
 
 # Repack the netlist to physical pbs
 # This must be done before bitstream generator and testbench generation
