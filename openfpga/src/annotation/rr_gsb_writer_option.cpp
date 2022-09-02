@@ -2,6 +2,7 @@
  * Memember functions for data structure RRGSBWriterOption
  ******************************************************************************/
 #include <map>
+#include <array>
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
