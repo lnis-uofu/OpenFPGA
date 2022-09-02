@@ -428,12 +428,14 @@ int build_top_module(ModuleManager& module_manager,
   /* Add module nets to connect memory cells inside
    * This is a one-shot addition that covers all the memory modules in this pb module!
    */
-  if (0 < module_manager.configurable_children(top_module).size()) {
-    add_top_module_nets_memory_config_bus(module_manager, decoder_lib, blwl_sr_banks,
-                                          top_module, 
-                                          circuit_lib,
-                                          config_protocol, circuit_lib.design_tech_type(sram_model),
-                                          top_module_num_config_bits);
+  if (false == frame_view) {
+    if (0 < module_manager.configurable_children(top_module).size()) {
+      add_top_module_nets_memory_config_bus(module_manager, decoder_lib, blwl_sr_banks,
+                                            top_module, 
+                                            circuit_lib,
+                                            config_protocol, circuit_lib.design_tech_type(sram_model),
+                                            top_module_num_config_bits);
+    }
   }
 
   /* Add global ports to the top module:
