@@ -188,10 +188,9 @@ class FabricBitstream {
     bool valid_region_id(const FabricBitRegionId& bit_id) const;
 
   private: /* Private APIs */
-    size_t encode_address_1bits(const std::vector<char>& address) const;
-    size_t encode_address_xbits(const std::vector<char>& address) const;
-    std::vector<char> decode_address_bits(const size_t& bit1, const size_t& bitx) const;
-    std::vector<char> decode_wl_address_bits(const size_t& bit1, const size_t& bitx) const;
+    uint64_t encode_address_1bits(const std::vector<char>& address) const;
+    uint64_t encode_address_xbits(const std::vector<char>& address) const;
+    std::vector<char> decode_address_bits(const size_t& bit1, const size_t& bitx, const size_t& addr_len) const;
 
   private: /* Internal data */
     /* Unique id of a region in the Bitstream */
@@ -224,15 +223,12 @@ class FabricBitstream {
      *   - bit-x number: which encodes the 'x' bits into a number. For example,
      *       101x1 -> 00010 -> 2
      *
-     * TODO: There is a limitation here, when the length of address vector is more than 64,
-     * A size_t number overflows (cannot represent any binary number > 64 bit).
-     * Such thing can entirely happen even in a medium sized FPGA. 
-     * A solution can be use multiple size_t to fit. But clearly, we should not use vector in vector, which causes large memory overhead!
+     * Note that when the length of address vector is more than 64, we use multiple 64-bit data to store the encoded values 
      */
-    vtr::vector<FabricBitId, size_t> bit_address_1bits_;
-    vtr::vector<FabricBitId, size_t> bit_address_xbits_;
-    vtr::vector<FabricBitId, size_t> bit_wl_address_1bits_;
-    vtr::vector<FabricBitId, size_t> bit_wl_address_xbits_;
+    vtr::vector<FabricBitId, std::vector<uint64_t>> bit_address_1bits_;
+    vtr::vector<FabricBitId, std::vector<uint64_t>> bit_address_xbits_;
+    vtr::vector<FabricBitId, std::vector<uint64_t>> bit_wl_address_1bits_;
+    vtr::vector<FabricBitId, std::vector<uint64_t>> bit_wl_address_xbits_;
 
     /* Data input (Din) bits: this is designed for memory decoders */
     vtr::vector<FabricBitId, char> bit_dins_;
