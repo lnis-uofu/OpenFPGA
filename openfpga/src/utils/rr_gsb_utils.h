@@ -23,6 +23,10 @@ std::vector<RRNodeId> get_rr_gsb_chan_node_configurable_driver_nodes(const RRGra
                                                                      const e_side& chan_side,
                                                                      const size_t& track_id);
 
+bool is_sb_mirror(const RRGraph& rr_graph, const RRGSB& base, const RRGSB& cand);
+
+bool is_cb_mirror(const RRGraph& rr_graph, const RRGSB& base, const RRGSB& cand, const t_rr_type& cb_type);
+
 } /* end namespace openfpga */
 
 #endif

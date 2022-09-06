@@ -66,6 +66,9 @@ class RRGSB {
     /* Get the maximum number of routing tracks on all sides */
     size_t get_max_chan_width() const; 
 
+    /* Return read-only object of the routing channels with a given side */
+    const RRChan& chan(const e_side& chan_side) const;
+
     /* Get the number of routing tracks of a X/Y-direction CB */
     size_t get_cb_chan_width(const t_rr_type& cb_type) const; 
 
