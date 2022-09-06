@@ -4,6 +4,7 @@
  *******************************************************************/
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
+#include "vtr_log.h"
 
 /* Headers from openfpgautil library */
 #include "openfpga_side_manager.h"
@@ -210,6 +211,7 @@ bool is_sb_mirror(const RRGraph& rr_graph, const RRGSB& base, const RRGSB& cand)
  * 1. CHANX or CHANY: should have the same side and index
  * 2. each drive_rr_switch should be the same 
  */
+static 
 bool is_cb_node_mirror(const RRGraph& rr_graph,
                        const RRGSB& base, 
                        const RRGSB& cand, 
@@ -251,7 +253,7 @@ bool is_cb_node_mirror(const RRGraph& rr_graph,
 
     int src_node_id, des_node_id;
     enum e_side src_node_side, des_node_side; 
-    enum e_side chan_side = get_cb_chan_side(cb_type);
+    enum e_side chan_side = base.get_cb_chan_side(cb_type);
     switch (rr_graph.node_type(src_node)) {
     case CHANX:
     case CHANY:
@@ -288,7 +290,7 @@ bool is_cb_mirror(const RRGraph& rr_graph, const RRGSB& base, const RRGSB& cand,
   enum e_side chan_side = base.get_cb_chan_side(cb_type);
 
   /* check the numbers/directionality of channel rr_nodes */
-  if ( false == base.chan(chan_side).is_mirror(rr_graph, cand.chan_node(chan_side)) ) {
+  if ( false == base.chan(chan_side).is_mirror(rr_graph, cand.chan(chan_side)) ) {
      return false;
   }
 
