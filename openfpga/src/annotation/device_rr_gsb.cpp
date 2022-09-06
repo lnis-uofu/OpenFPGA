@@ -12,6 +12,9 @@ namespace openfpga {
 /************************************************************************
  * Constructors
  ***********************************************************************/
+DeviceRRGSB::DeviceRRGSB(const VprDeviceAnnotation& device_annotation)
+  : device_annotation_(device_annotation) {
+}
 
 /************************************************************************
  * Public accessors
@@ -231,7 +234,7 @@ void DeviceRRGSB::build_cb_unique_module(const RRGraph& rr_graph, const t_rr_typ
       /* Traverse the unique_mirror list and check it is an mirror of another */
       for (size_t id = 0; id < get_num_cb_unique_module(cb_type); ++id) {
         const RRGSB& unique_module = get_cb_unique_module(cb_type, id);
-        if (true == is_cb_mirror(rr_graph, rr_gsb_[ix][iy], unique_module, cb_type)) {
+        if (true == is_cb_mirror(rr_graph, device_annotation_, rr_gsb_[ix][iy], unique_module, cb_type)) {
           /* This is a mirror, raise the flag and we finish */
           is_unique_module = false;
           /* Record the id of unique mirror */
@@ -267,7 +270,7 @@ void DeviceRRGSB::build_sb_unique_module(const RRGraph& rr_graph) {
          * else the sb is unique 
          */
         const RRGSB& unique_module = get_sb_unique_module(id);
-        if (true == is_sb_mirror(rr_graph, rr_gsb_[ix][iy], unique_module)) {
+        if (true == is_sb_mirror(rr_graph, device_annotation_, rr_gsb_[ix][iy], unique_module)) {
           /* This is a mirror, raise the flag and we finish */
           is_unique_module = false;
           /* Record the id of unique mirror */

@@ -56,6 +56,40 @@ std::vector<RRNodeId> get_rr_gsb_chan_node_configurable_driver_nodes(const RRGra
   return driver_nodes;
 }
 
+/** @brief Evaluate if two RRChan is mirror to each other */
+static 
+bool is_chan_mirror(const RRGraph& rr_graph,
+                    const VprDeviceAnnotation& device_annotation,
+                    const RRChan& base,
+                    const RRChan& cand) {
+  /* If any following element does not match, it is not mirror */
+  /* 1. type  */
+  if (base.get_type() != cand.get_type()) {
+    return false;
+  }
+  /* 2. track_width  */
+  if (base.get_chan_width() != cand.get_chan_width()) {
+    return false;
+  }
+  /* 3. for each node */
+  for (size_t inode = 0; inode < base.get_chan_width(); ++inode) {
+    /* 3.1 check node type */
+    if (rr_graph.node_type(base.get_node(inode)) != rr_graph.node_type(cand.get_node(inode))) {
+      return false;
+    }
+    /* 3.2 check node directionality */
+    if (rr_graph.node_direction(base.get_node(inode)) != rr_graph.node_direction(cand.get_node(inode))) {
+      return false;
+    }
+    /* 3.3 check node segment */
+    if (device_annotation.rr_segment_circuit_model(base.get_node_segment(inode)) != device_annotation.rr_segment_circuit_model(cand.get_node_segment(inode))) {
+      return false;
+    }
+  }
+ 
+  return true;
+}
+
 /** @brief check if two rr_nodes in two GSBs have a similar set of drive_rr_nodes for each drive_rr_node:
  * 1. CHANX or CHANY: should have the same side and index
  * 2. OPIN or IPIN: should have the same side and index
@@ -63,6 +97,7 @@ std::vector<RRNodeId> get_rr_gsb_chan_node_configurable_driver_nodes(const RRGra
  */
 static 
 bool is_sb_node_mirror(const RRGraph& rr_graph,
+                       const VprDeviceAnnotation& device_annotation,
                        const RRGSB& base, 
                        const RRGSB& cand, 
                        const e_side& node_side, 
@@ -103,7 +138,7 @@ bool is_sb_node_mirror(const RRGraph& rr_graph,
       return false;
     }
     /* switch type should be the same  */
-    if (rr_graph.edge_switch(src_edge) != rr_graph.edge_switch(src_cand_edge)) {
+    if (device_annotation.rr_switch_circuit_model(rr_graph.edge_switch(src_edge)) != device_annotation.rr_switch_circuit_model(rr_graph.edge_switch(src_cand_edge))) {
       return false;
     }
     int src_node_id, des_node_id;
@@ -123,8 +158,12 @@ bool is_sb_node_mirror(const RRGraph& rr_graph,
 
 /** @brief Check if all the routing segments of a side of candidate SB is a mirror of the current one */
 static 
-bool is_sb_side_segment_mirror(const RRGraph& rr_graph, const RRGSB& base, const RRGSB& cand, 
-                               const e_side& side, const RRSegmentId& seg_id) {
+bool is_sb_side_segment_mirror(const RRGraph& rr_graph,
+                               const VprDeviceAnnotation& device_annotation,
+                               const RRGSB& base,
+                               const RRGSB& cand, 
+                               const e_side& side,
+                               const RRSegmentId& seg_id) {
   /* Create a side manager */
   SideManager side_manager(side);
 
@@ -139,7 +178,7 @@ bool is_sb_side_segment_mirror(const RRGraph& rr_graph, const RRGSB& base, const
   }
   for (size_t itrack = 0; itrack < base.get_chan_width(side); ++itrack) {
     /* Bypass unrelated segments */
-    if (seg_id != base.get_chan_node_segment(side, itrack)) {
+    if (device_annotation.rr_segment_circuit_model(seg_id) != device_annotation.rr_segment_circuit_model(base.get_chan_node_segment(side, itrack))) {
       continue;
     }
     /* Check the directionality of each node */
@@ -154,7 +193,7 @@ bool is_sb_side_segment_mirror(const RRGraph& rr_graph, const RRGSB& base, const
       continue; /* skip IN_PORT */
     }
 
-    if (false == is_sb_node_mirror(rr_graph, base, cand, side, itrack)) {
+    if (false == is_sb_node_mirror(rr_graph, device_annotation, base, cand, side, itrack)) {
       return false;
     } 
   }
@@ -172,16 +211,29 @@ bool is_sb_side_segment_mirror(const RRGraph& rr_graph, const RRGSB& base, const
   return true;
 } 
 
-
-/** @brief check if a side of candidate SB is a mirror of the current one */
+/** @brief check if a side of candidate SB is a mirror of the current one
+ * Check the specified side of two switch blocks: 
+ * 1. Number of channel/opin/ipin rr_nodes are same 
+ * For channel rr_nodes
+ * 2. check if their track_ids (ptc_num) are same
+ * 3. Check if the switches (ids) are same
+ * For opin/ipin rr_nodes, 
+ * 4. check if their parent type_descriptors same, 
+ * 5. check if pin class id and pin id are same 
+ * If all above are satisfied, the side of the two switch blocks are mirrors!
+ */
 static 
-bool is_sb_side_mirror(const RRGraph& rr_graph, const RRGSB& base, const RRGSB& cand, const e_side& side) {
+bool is_sb_side_mirror(const RRGraph& rr_graph,
+                       const VprDeviceAnnotation& device_annotation,
+                       const RRGSB& base,
+                       const RRGSB& cand,
+                       const e_side& side) {
 
   /* get a list of segments */
   std::vector<RRSegmentId> seg_ids = base.get_chan_segment_ids(side);
 
   for (size_t iseg = 0; iseg < seg_ids.size(); ++iseg) {
-    if (false == is_sb_side_segment_mirror(rr_graph, base, cand, side, seg_ids[iseg])) {
+    if (false == is_sb_side_segment_mirror(rr_graph, device_annotation, base, cand, side, seg_ids[iseg])) {
       return false;
     }
   }
@@ -189,8 +241,22 @@ bool is_sb_side_mirror(const RRGraph& rr_graph, const RRGSB& base, const RRGSB& 
   return true;
 }
 
-/** @brief Identify if the Switch Block part of two GSBs are mirror (same in structure) or not. Return true if so, otherwise return false */
-bool is_sb_mirror(const RRGraph& rr_graph, const RRGSB& base, const RRGSB& cand) {
+/** @brief Identify if the Switch Block part of two GSBs are mirror (same in structure) or not. Return true if so, otherwise return false
+ * Idenify mirror Switch blocks 
+ * Check each two switch blocks: 
+ * 1. Number of channel/opin/ipin rr_nodes are same 
+ * For channel rr_nodes
+ * 2. check if their track_ids (ptc_num) are same
+ * 3. Check if the switches (ids) are same
+ * For opin/ipin rr_nodes, 
+ * 4. check if their parent type_descriptors same, 
+ * 5. check if pin class id and pin id are same 
+ * If all above are satisfied, the two switch blocks are mirrors!
+ */
+bool is_sb_mirror(const RRGraph& rr_graph,
+                  const VprDeviceAnnotation& device_annotation,
+                  const RRGSB& base,
+                  const RRGSB& cand) {
   /* check the numbers of sides */
   if (base.get_num_sides() != cand.get_num_sides()) {
     return false;
@@ -199,7 +265,7 @@ bool is_sb_mirror(const RRGraph& rr_graph, const RRGSB& base, const RRGSB& cand)
   /* check the numbers/directionality of channel rr_nodes */
   for (size_t side = 0; side < base.get_num_sides(); ++side) {
     SideManager side_manager(side);
-    if (false == is_sb_side_mirror(rr_graph, base, cand, side_manager.get_side())) {
+    if (false == is_sb_side_mirror(rr_graph, device_annotation, base, cand, side_manager.get_side())) {
       return false;
     } 
   }
@@ -213,6 +279,7 @@ bool is_sb_mirror(const RRGraph& rr_graph, const RRGSB& base, const RRGSB& cand)
  */
 static 
 bool is_cb_node_mirror(const RRGraph& rr_graph,
+                       const VprDeviceAnnotation& device_annotation,
                        const RRGSB& base, 
                        const RRGSB& cand, 
                        const t_rr_type& cb_type,
@@ -247,7 +314,7 @@ bool is_cb_node_mirror(const RRGraph& rr_graph,
       return false;
     }
     /* switch type should be the same  */
-    if (rr_graph.edge_switch(src_edge)!= rr_graph.edge_switch(src_cand_edge)) {
+    if (device_annotation.rr_switch_circuit_model(rr_graph.edge_switch(src_edge)) != device_annotation.rr_switch_circuit_model(rr_graph.edge_switch(src_cand_edge))) {
       return false;
     }
 
@@ -281,7 +348,11 @@ bool is_cb_node_mirror(const RRGraph& rr_graph,
 } 
 
 /** @brief Check if the candidate CB is a mirror of the current baselien */
-bool is_cb_mirror(const RRGraph& rr_graph, const RRGSB& base, const RRGSB& cand, const t_rr_type& cb_type) { 
+bool is_cb_mirror(const RRGraph& rr_graph,
+                  const VprDeviceAnnotation& device_annotation,
+                  const RRGSB& base,
+                  const RRGSB& cand,
+                  const t_rr_type& cb_type) { 
   /* Check if channel width is the same */
   if ( base.get_cb_chan_width(cb_type) != cand.get_cb_chan_width(cb_type) ) {
     return false;
@@ -290,7 +361,7 @@ bool is_cb_mirror(const RRGraph& rr_graph, const RRGSB& base, const RRGSB& cand,
   enum e_side chan_side = base.get_cb_chan_side(cb_type);
 
   /* check the numbers/directionality of channel rr_nodes */
-  if ( false == base.chan(chan_side).is_mirror(rr_graph, cand.chan(chan_side)) ) {
+  if ( false == is_chan_mirror(rr_graph, device_annotation, base.chan(chan_side), cand.chan(chan_side)) ) {
      return false;
   }
 
@@ -302,7 +373,7 @@ bool is_cb_mirror(const RRGraph& rr_graph, const RRGSB& base, const RRGSB& cand,
       return false;
     }
     for (size_t inode = 0; inode < base.get_num_ipin_nodes(ipin_side[side]); ++inode) {
-      if (false == is_cb_node_mirror(rr_graph, base, cand, cb_type, ipin_side[side], inode)) {
+      if (false == is_cb_node_mirror(rr_graph, device_annotation, base, cand, cb_type, ipin_side[side], inode)) {
         return false;
       }
     }
