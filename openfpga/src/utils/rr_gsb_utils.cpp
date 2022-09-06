@@ -56,7 +56,7 @@ std::vector<RRNodeId> get_rr_gsb_chan_node_configurable_driver_nodes(const RRGra
   return driver_nodes;
 }
 
-/** @brief Evaluate if two RRChan is mirror to each other */
+/** @brief Evaluate if two routing channels are mirror to each other */
 static 
 bool is_chan_mirror(const RRGraph& rr_graph,
                     const VprDeviceAnnotation& device_annotation,
@@ -82,6 +82,7 @@ bool is_chan_mirror(const RRGraph& rr_graph,
       return false;
     }
     /* 3.3 check node segment */
+    /* FIXME: Maybe this is too tight! Consider to remove the restrictions on segments */
     if (device_annotation.rr_segment_circuit_model(base.get_node_segment(inode)) != device_annotation.rr_segment_circuit_model(cand.get_node_segment(inode))) {
       return false;
     }
@@ -177,7 +178,7 @@ bool is_sb_side_segment_mirror(const RRGraph& rr_graph,
     return false;
   }
   for (size_t itrack = 0; itrack < base.get_chan_width(side); ++itrack) {
-    /* Bypass unrelated segments */
+    /* FIXME: Maybe this is too tight! Consider to remove the restrictions on segments */
     if (device_annotation.rr_segment_circuit_model(seg_id) != device_annotation.rr_segment_circuit_model(base.get_chan_node_segment(side, itrack))) {
       continue;
     }
