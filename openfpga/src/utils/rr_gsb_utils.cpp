@@ -58,7 +58,7 @@ std::vector<RRNodeId> get_rr_gsb_chan_node_configurable_driver_nodes(const RRGra
 
 /** @brief Evaluate if two routing channels are mirror to each other */
 static 
-bool is_chan_mirror(const RRGraph& rr_graph,
+bool is_chan_mirror(const RRGraphView& rr_graph,
                     const VprDeviceAnnotation& device_annotation,
                     const RRChan& base,
                     const RRChan& cand) {
@@ -97,7 +97,7 @@ bool is_chan_mirror(const RRGraph& rr_graph,
  * 3. each drive_rr_switch should be the same 
  */
 static 
-bool is_sb_node_mirror(const RRGraph& rr_graph,
+bool is_sb_node_mirror(const RRGraphView& rr_graph,
                        const VprDeviceAnnotation& device_annotation,
                        const RRGSB& base, 
                        const RRGSB& cand, 
@@ -159,7 +159,7 @@ bool is_sb_node_mirror(const RRGraph& rr_graph,
 
 /** @brief Check if all the routing segments of a side of candidate SB is a mirror of the current one */
 static 
-bool is_sb_side_segment_mirror(const RRGraph& rr_graph,
+bool is_sb_side_segment_mirror(const RRGraphView& rr_graph,
                                const VprDeviceAnnotation& device_annotation,
                                const RRGSB& base,
                                const RRGSB& cand, 
@@ -219,7 +219,7 @@ bool is_sb_side_segment_mirror(const RRGraph& rr_graph,
  * If all above are satisfied, the side of the two switch blocks are mirrors!
  */
 static 
-bool is_sb_side_mirror(const RRGraph& rr_graph,
+bool is_sb_side_mirror(const RRGraphView& rr_graph,
                        const VprDeviceAnnotation& device_annotation,
                        const RRGSB& base,
                        const RRGSB& cand,
@@ -249,7 +249,7 @@ bool is_sb_side_mirror(const RRGraph& rr_graph,
  * 5. check if pin class id and pin id are same 
  * If all above are satisfied, the two switch blocks are mirrors!
  */
-bool is_sb_mirror(const RRGraph& rr_graph,
+bool is_sb_mirror(const RRGraphView& rr_graph,
                   const VprDeviceAnnotation& device_annotation,
                   const RRGSB& base,
                   const RRGSB& cand) {
@@ -274,7 +274,7 @@ bool is_sb_mirror(const RRGraph& rr_graph,
  * 2. each drive_rr_switch should be the same 
  */
 static 
-bool is_cb_node_mirror(const RRGraph& rr_graph,
+bool is_cb_node_mirror(const RRGraphView& rr_graph,
                        const VprDeviceAnnotation& device_annotation,
                        const RRGSB& base, 
                        const RRGSB& cand, 
@@ -344,7 +344,7 @@ bool is_cb_node_mirror(const RRGraph& rr_graph,
 } 
 
 /** @brief Check if the candidate CB is a mirror of the current baselien */
-bool is_cb_mirror(const RRGraph& rr_graph,
+bool is_cb_mirror(const RRGraphView& rr_graph,
                   const VprDeviceAnnotation& device_annotation,
                   const RRGSB& base,
                   const RRGSB& cand,

@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include "rr_gsb.h"
+#include "rr_graph_view.h"
 #include "vpr_device_annotation.h"
 
 /********************************************************************
@@ -24,12 +25,12 @@ std::vector<RRNodeId> get_rr_gsb_chan_node_configurable_driver_nodes(const RRGra
                                                                      const e_side& chan_side,
                                                                      const size_t& track_id);
 
-bool is_sb_mirror(const RRGraph& rr_graph,
+bool is_sb_mirror(const RRGraphView& rr_graph,
                   const VprDeviceAnnotation& device_annotation,
                   const RRGSB& base,
                   const RRGSB& cand);
 
-bool is_cb_mirror(const RRGraph& rr_graph,
+bool is_cb_mirror(const RRGraphView& rr_graph,
                   const VprDeviceAnnotation& device_annotation,
                   const RRGSB& base,
                   const RRGSB& cand,
