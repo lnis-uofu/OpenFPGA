@@ -1,0 +1,66 @@
+<rr_cb x="2" y="0" num_sides="4">
+	<IPIN side="top" index="0" node_id="197" mux_size="4">
+		<driver_node type="CHANX" side="left" node_id="868" index="0" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="851" index="1" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="856" index="10" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="861" index="11" segment_id="0"/>
+	</IPIN>
+	<IPIN side="top" index="1" node_id="198" mux_size="2">
+		<driver_node type="CHANX" side="left" node_id="848" index="2" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="853" index="3" segment_id="0"/>
+	</IPIN>
+	<IPIN side="top" index="2" node_id="199" mux_size="4">
+		<driver_node type="CHANX" side="left" node_id="850" index="4" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="855" index="5" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="860" index="14" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="871" index="15" segment_id="0"/>
+	</IPIN>
+	<IPIN side="bottom" index="0" node_id="56" mux_size="4">
+		<driver_node type="CHANX" side="left" node_id="852" index="6" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="869" index="7" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="872" index="16" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="867" index="17" segment_id="0"/>
+	</IPIN>
+	<IPIN side="bottom" index="1" node_id="57" mux_size="4">
+		<driver_node type="CHANX" side="left" node_id="870" index="8" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="859" index="9" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="864" index="18" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="873" index="19" segment_id="0"/>
+	</IPIN>
+	<IPIN side="bottom" index="2" node_id="58" mux_size="4">
+		<driver_node type="CHANX" side="left" node_id="868" index="0" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="851" index="1" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="856" index="10" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="861" index="11" segment_id="0"/>
+	</IPIN>
+	<IPIN side="bottom" index="3" node_id="59" mux_size="4">
+		<driver_node type="CHANX" side="left" node_id="848" index="2" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="853" index="3" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="858" index="12" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="863" index="13" segment_id="0"/>
+	</IPIN>
+	<IPIN side="bottom" index="4" node_id="60" mux_size="4">
+		<driver_node type="CHANX" side="left" node_id="850" index="4" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="855" index="5" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="860" index="14" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="871" index="15" segment_id="0"/>
+	</IPIN>
+	<IPIN side="bottom" index="5" node_id="61" mux_size="4">
+		<driver_node type="CHANX" side="left" node_id="852" index="6" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="869" index="7" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="872" index="16" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="867" index="17" segment_id="0"/>
+	</IPIN>
+	<IPIN side="bottom" index="6" node_id="62" mux_size="4">
+		<driver_node type="CHANX" side="left" node_id="870" index="8" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="859" index="9" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="864" index="18" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="873" index="19" segment_id="0"/>
+	</IPIN>
+	<IPIN side="bottom" index="7" node_id="63" mux_size="4">
+		<driver_node type="CHANX" side="left" node_id="868" index="0" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="851" index="1" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="856" index="10" segment_id="0"/>
+		<driver_node type="CHANX" side="left" node_id="861" index="11" segment_id="0"/>
+	</IPIN>
+</rr_cb>

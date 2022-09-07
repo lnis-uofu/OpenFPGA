@@ -2,7 +2,7 @@
 # This script is designed to test the option --no_time_stamp in related commands
 # It can NOT be used an example script to achieve other objectives
 #--write_rr_graph example_rr_graph.xml
-vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH} --clock_modeling route
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --device ${OPENFPGA_VPR_DEVICE_LAYOUT} --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH} --clock_modeling route
 
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
@@ -60,7 +60,7 @@ report_bitstream_distribution --file ${OPENFPGA_OUTPUT_DIR}/bitstream_distributi
 
 # Write the Verilog netlist for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
-write_fabric_verilog --file ${OPENFPGA_OUTPUT_DIR} --explicit_port_mapping --include_timing --print_user_defined_template --verbose --no_time_stamp
+write_fabric_verilog --file ${OPENFPGA_OUTPUT_DIR} --explicit_port_mapping --include_timing --print_user_defined_template --use_relative_path --verbose --no_time_stamp
 
 # Write the Verilog testbench for FPGA fabric
 #  - We suggest the use of same output directory as fabric Verilog netlists
@@ -69,7 +69,7 @@ write_fabric_verilog --file ${OPENFPGA_OUTPUT_DIR} --explicit_port_mapping --inc
 #  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
 write_preconfigured_fabric_wrapper --embed_bitstream iverilog --file ${OPENFPGA_OUTPUT_DIR} --explicit_port_mapping --no_time_stamp
-write_preconfigured_testbench --file ${OPENFPGA_OUTPUT_DIR} --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --explicit_port_mapping --no_time_stamp
+write_preconfigured_testbench --file ${OPENFPGA_OUTPUT_DIR} --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --use_relative_path --explicit_port_mapping --no_time_stamp
 
 # Write the SDC files for PnR backend
 #  - Turn on every options here
