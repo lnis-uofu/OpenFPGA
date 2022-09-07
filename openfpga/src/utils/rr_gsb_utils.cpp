@@ -204,11 +204,6 @@ bool is_sb_side_segment_mirror(const RRGraph& rr_graph,
     return false;
   }
 
-  /* check the numbers of ipin_rr_nodes */
-  if (base.get_num_ipin_nodes(side) != cand.get_num_ipin_nodes(side)) {
-    return false;
-  }
-
   return true;
 } 
 
