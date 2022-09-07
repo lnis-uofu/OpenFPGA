@@ -124,7 +124,7 @@ class OpenfpgaContext : public Context  {
     openfpga::VprBitstreamAnnotation vpr_bitstream_annotation_;
 
     /* Device-level annotation */
-    openfpga::DeviceRRGSB device_rr_gsb_;
+    openfpga::DeviceRRGSB device_rr_gsb_{vpr_device_annotation_};
     
     /* Library of physical implmentation of routing multiplexers */
     openfpga::MuxLibrary mux_lib_;

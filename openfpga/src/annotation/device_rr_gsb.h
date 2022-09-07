@@ -11,6 +11,7 @@
 #include "rr_graph_view.h"
 
 #include "rr_gsb.h"
+#include "vpr_device_annotation.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
@@ -26,6 +27,7 @@ namespace openfpga {
  *******************************************************************/
 class DeviceRRGSB {
   public: /* Contructors */
+    DeviceRRGSB(const VprDeviceAnnotation& device_annotation);
   public: /* Accessors */
     vtr::Point<size_t> get_gsb_range() const; /* get the max coordinate of the switch block array */
     const RRGSB& get_gsb(const vtr::Point<size_t>& coordinate) const; /* Get a rr switch block in the array with a coordinate */
@@ -84,6 +86,9 @@ class DeviceRRGSB {
 
     std::vector<std::vector<size_t>> cby_unique_module_id_; /* A map from rr_gsb to its unique mirror */
     std::vector<vtr::Point<size_t>> cby_unique_module_; /* For each side of connection block, we identify a list of unique modules based on its connection. This is a matrix [0..num_module] */
+
+    /* Cached data */
+    const VprDeviceAnnotation& device_annotation_;
 };
 
 } /* End namespace openfpga*/
