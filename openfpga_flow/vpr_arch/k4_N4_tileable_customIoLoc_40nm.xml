@@ -76,7 +76,7 @@
       <output name="inpad" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
       <pinlocations pattern="custom">
-        <loc side="left">io_right[1:1].inpad io_right[1:0].outpad io_right[1:1].inpad</loc>
+        <loc side="left">io_right[1:1].inpad io_right[1:0].outpad io_right[0:0].inpad</loc>
       </pinlocations>
     </tile>
     <tile name="clb" area="53894">
