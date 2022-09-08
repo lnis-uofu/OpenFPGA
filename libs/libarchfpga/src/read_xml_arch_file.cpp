@@ -90,6 +90,11 @@ static std::pair<int, int> ProcessPinString(pugi::xml_node Locations,
                                             T type,
                                             const char* pin_loc_string,
                                             const pugiutil::loc_data& loc_data);
+template<typename T>
+static std::pair<int, int> ProcessInstanceString(pugi::xml_node Locations,
+                                                 T type,
+                                                 const char* pin_loc_string,
+                                                 const pugiutil::loc_data& loc_data);
 
 /*    Process XML hierarchy */
 static void ProcessTiles(pugi::xml_node Node,
@@ -943,7 +948,7 @@ static std::pair<int, int> ProcessInstanceString(pugi::xml_node Locations,
                        "No integer to indicate most significant pin index: %s\n", pin_loc_string);
     }
 
-    int last_inst = vtr::atoi(token.data);
+    last_inst = vtr::atoi(token.data);
 
     token_index++;
     token = tokens[token_index];
