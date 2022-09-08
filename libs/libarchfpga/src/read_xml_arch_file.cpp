@@ -899,8 +899,8 @@ static std::pair<int, int> ProcessInstanceString(pugi::xml_node Locations,
  
     /* If there is a dot, such as io.input[0:3], it indicates the full range of the capacity, the default value should be returned */
     if (token.type == TOKEN_DOT) {
-      freeTokens(tokens, num_tokens);
-      return std::make_pair(first_inst, last_inst);
+        freeTokens(tokens, num_tokens);
+        return std::make_pair(first_inst, last_inst);
     }
 
     /* If the string contains index for capacity range, e.g., io[3:3].in[0:5], we skip the capacity range here. */
@@ -914,7 +914,7 @@ static std::pair<int, int> ProcessInstanceString(pugi::xml_node Locations,
 
     if (token.type != TOKEN_INT) {
         archfpga_throw(loc_data.filename_c_str(), loc_data.line(Locations),
-                       "No integer to indicate least significant pin index: %s\n", pin_loc_string);
+                       "No integer to indicate least significant instance index: %s\n", pin_loc_string);
     }
 
     first_inst = vtr::atoi(token.data);
@@ -933,7 +933,7 @@ static std::pair<int, int> ProcessInstanceString(pugi::xml_node Locations,
 
         if (token_index != num_tokens) {
             archfpga_throw(loc_data.filename_c_str(), loc_data.line(Locations),
-                           "pin location should be completed, but more tokens are present: %s\n", pin_loc_string);
+                           "instance of pin location should be completed, but more tokens are present: %s\n", pin_loc_string);
         }
 
         freeTokens(tokens, num_tokens);
@@ -945,7 +945,7 @@ static std::pair<int, int> ProcessInstanceString(pugi::xml_node Locations,
 
     if (token.type != TOKEN_INT) {
         archfpga_throw(loc_data.filename_c_str(), loc_data.line(Locations),
-                       "No integer to indicate most significant pin index: %s\n", pin_loc_string);
+                       "No integer to indicate most significant instance index: %s\n", pin_loc_string);
     }
 
     last_inst = vtr::atoi(token.data);
@@ -956,13 +956,6 @@ static std::pair<int, int> ProcessInstanceString(pugi::xml_node Locations,
     if (token.type != TOKEN_CLOSE_SQUARE_BRACKET) {
         archfpga_throw(loc_data.filename_c_str(), loc_data.line(Locations),
                        "No closed square bracket: %s\n", pin_loc_string);
-    }
-
-    token_index++;
-
-    if (token_index != num_tokens) {
-        archfpga_throw(loc_data.filename_c_str(), loc_data.line(Locations),
-                       "pin location should be completed, but more tokens are present: %s\n", pin_loc_string);
     }
 
     if (first_inst > last_inst) {
