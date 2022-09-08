@@ -43,7 +43,7 @@
       <output name="inpad" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
       <pinlocations pattern="custom">
-        <loc side="bottom">io[0:3].inpad io[0:7].outpad io[4:7].inpad</loc>
+        <loc side="bottom">io_top[0:3].inpad io_top[0:7].outpad io_top[4:7].inpad</loc>
       </pinlocations>
     </tile>
     <tile name="io_bottom" capacity="6" area="0">
@@ -54,7 +54,7 @@
       <output name="inpad" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
       <pinlocations pattern="custom">
-        <loc side="top">io[0:4].outpad io[0:1].inpad io[5:7].outpad io[2:7].inpad</loc>
+        <loc side="top">io_bottom[0:4].outpad io_bottom[0:1].inpad io_bottom[5:7].outpad io_bottom[2:7].inpad</loc>
       </pinlocations>
     </tile>
     <tile name="io_left" capacity="4" area="0">
@@ -65,7 +65,7 @@
       <output name="inpad" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
       <pinlocations pattern="custom">
-        <loc side="right">io.inpad io.outpad</loc>
+        <loc side="right">io_left.inpad io_left.outpad</loc>
       </pinlocations>
     </tile>
     <tile name="io_right" capacity="2" area="0">
@@ -76,7 +76,7 @@
       <output name="inpad" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
       <pinlocations pattern="custom">
-        <loc side="left">io[3:0].inpad io[7:0].outpad io[4:7].inpad</loc>
+        <loc side="left">io_right[3:0].inpad io_right[7:0].outpad io_right[4:7].inpad</loc>
       </pinlocations>
     </tile>
     <tile name="clb" area="53894">
