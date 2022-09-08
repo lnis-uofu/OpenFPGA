@@ -995,10 +995,9 @@ static std::pair<int, int> ProcessPinString(pugi::xml_node Locations,
                                "Found an open '[' but miss close ']' of the port: %s\n", pin_loc_string);
             }
         }
+        token_index++;
+        token = tokens[token_index];
     }
-
-    token_index++;
-    token = tokens[token_index];
 
     if (token.type != TOKEN_DOT) {
         archfpga_throw(loc_data.filename_c_str(), loc_data.line(Locations),
