@@ -22,6 +22,25 @@ Each ``<pb_type>`` should contain a ``<mode>`` that describes the physical imple
 
   .. note:: Once a mode is disabled in packing, its child modes will be disabled as well.
 
+.. note:: The following syntax is only available in OpenFPGA!
+
+We allow more flexible pin location assignment when a ``<tile>`` has a capacity > 1.
+User can specify the location using the index of instance, e.g.,
+
+.. code-block:: xml
+
+    <tile name="io_bottom" capacity="6" area="0">
+      <equivalent_sites>
+        <site pb_type="io"/>
+      </equivalent_sites>
+      <input name="outpad" num_pins="1"/>
+      <output name="inpad" num_pins="1"/>
+      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+      <pinlocations pattern="custom">
+        <loc side="top">io_bottom[0:1].outpad io_bottom[0:3].inpad io_bottom[2:5].outpad io_bottom[4:5].inpad</loc>
+      </pinlocations>
+    </tile>
+
 Layout
 ~~~~~~
 

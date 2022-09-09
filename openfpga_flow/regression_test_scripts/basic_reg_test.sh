@@ -127,6 +127,8 @@ echo -e "Testing K4N4 with 32-bit fracturable multiplier";
 run-task basic_tests/k4_series/k4n4_frac_mult $@
 echo -e "Testing K4N5 with pattern based local routing";
 run-task basic_tests/k4_series/k4n5_pattern_local_routing $@
+echo -e "Testing K4N4 with custom I/O location syntax";
+run-task basic_tests/k4_series/k4n4_custom_io_loc $@
 
 echo -e "Testing different tile organizations";
 echo -e "Testing tiles with pins only on top and left sides";
