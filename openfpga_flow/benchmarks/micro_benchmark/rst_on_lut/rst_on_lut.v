@@ -12,7 +12,7 @@ input wire a;
 input wire b;
 output reg out;
 
-always @(rst or posedge clk) begin
+always @(posedge rst or posedge clk) begin
   if (rst) begin
     out <= 0;
   end else begin
