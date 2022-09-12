@@ -68,7 +68,7 @@ void RepackOption::set_ignore_global_nets_on_pins(const std::string& content) {
     std::vector<std::string> pin_info = pin_tokenizer.split('.');
     /* Expect two contents, otherwise error out */
     if (pin_info.size() != 2) {
-      std::string err_msg = std::string("Invalid content '") + token + std::string("' to skip, expect <pb_type_name>.<pin>");
+      std::string err_msg = std::string("Invalid content '") + token + std::string("' to skip, expect <pb_type_name>.<pin>\n");
       VTR_LOG_ERROR(err_msg.c_str());
       num_parse_errors_++;
       continue;
@@ -77,7 +77,7 @@ void RepackOption::set_ignore_global_nets_on_pins(const std::string& content) {
     PortParser port_parser(pin_info[1]);
     BasicPort curr_port = port_parser.port();
     if (!curr_port.is_valid()) {
-      std::string err_msg = std::string("Invalid pin definition '") + token + std::string("', expect <pb_type_name>.<pin_name>[int:int]");
+      std::string err_msg = std::string("Invalid pin definition '") + token + std::string("', expect <pb_type_name>.<pin_name>[int:int]\n");
       VTR_LOG_ERROR(err_msg.c_str());
       num_parse_errors_++;
       continue;
@@ -87,20 +87,27 @@ void RepackOption::set_ignore_global_nets_on_pins(const std::string& content) {
     auto result = ignore_global_nets_on_pins_.find(pb_type_name);
     if (result == ignore_global_nets_on_pins_.end()) {
       /* Not found, push the port */
-      result->second.push_back(curr_port);
+      ignore_global_nets_on_pins_[pb_type_name].push_back(curr_port);
     } else {
       /* Already a list of ports. Check one by one. 
        * - It already contained, do nothing but throw a warning. 
        * - If we can merge, merge it.
        * - Otherwise, create it */
+      bool included_by_existing_port = false;
       for (BasicPort existing_port : result->second) {
         if (existing_port.mergeable(curr_port)) {
           if (!existing_port.contained(curr_port)) {
             result->second.push_back(curr_port);
+            included_by_existing_port = true;
+            break;
+          } else {
+            std::string warn_msg = std::string("Pin definition '") + token + std::string("' is already included by other pin\n");
+            VTR_LOG_WARN(warn_msg.c_str());
           }
-        } else {
-          result->second.push_back(curr_port);
         }
+      }
+      if (!included_by_existing_port) {
+        result->second.push_back(curr_port);
       }
     }
   }

@@ -440,6 +440,7 @@ void add_lb_router_nets(LbRouter& lb_router,
 
   /* Cache the sink nodes/routing traces for the global nets which is specifed to be ignored on given pins */
   std::map<AtomNetId, std::vector<LbRRNodeId>> ignored_global_net_sinks;
+  std::map<AtomNetId, bool> ignored_atom_nets;
   for (int j = 0; j < lb_type->pb_type->num_pins; j++) {
     /* Get the source pb_graph pin and find the rr_node in logical block routing resource graph */
     const t_pb_graph_pin* source_pb_pin = get_pb_graph_node_pin_from_block_pin(block_id, j);
@@ -481,6 +482,7 @@ void add_lb_router_nets(LbRouter& lb_router,
       std::vector<LbRRNodeId> sink_lb_rr_nodes = find_lb_net_physical_sink_lb_rr_nodes(lb_rr_graph, sink_pb_graph_pins, device_annotation);
       VTR_ASSERT(sink_lb_rr_nodes.size() == sink_pb_graph_pins.size());
       ignored_global_net_sinks[atom_net_id].insert(ignored_global_net_sinks[atom_net_id].end(), sink_lb_rr_nodes.begin(), sink_lb_rr_nodes.end());
+      ignored_atom_nets[atom_net_id] = true;
     }
   }
 
@@ -506,6 +508,12 @@ void add_lb_router_nets(LbRouter& lb_router,
 
     /* Find the net mapped to this pin in clustering results*/
     AtomNetId atom_net_id = pb_pin_mapped_nets[source_pb_pin];
+
+    BasicPort curr_pin(std::string(source_pb_pin->port->name), source_pb_pin->pin_number, source_pb_pin->pin_number);
+    if ( (ignored_atom_nets[atom_net_id]) 
+      && (options.is_pin_ignore_global_nets(std::string(lb_type->pb_type->name), curr_pin))) {
+      continue;
+    }
 
     /* Check if the net information is constrained or not */
     std::string constrained_net_name = design_constraints.find_constrained_pin_net(std::string(lb_type->pb_type->name), BasicPort(std::string(source_pb_pin->port->name), source_pb_pin->pin_number, source_pb_pin->pin_number));
@@ -622,7 +630,7 @@ void add_lb_router_nets(LbRouter& lb_router,
 
     /* Append sink nodes from ignored global net cache */
     sink_lb_rr_nodes.insert(sink_lb_rr_nodes.end(), ignored_global_net_sinks[atom_net_id_to_route].begin(), ignored_global_net_sinks[atom_net_id_to_route].end());
-    VTR_LOGV(verbose, "Append %ld sinks from the routing traces of ignored global nets\n", ignored_global_net_sinks.size());
+    VTR_LOGV(verbose, "Append %ld sinks from the routing traces of ignored global nets\n", ignored_global_net_sinks[atom_net_id_to_route].size());
 
     /* Add the net */
     add_lb_router_net_to_route(lb_router, lb_rr_graph,
