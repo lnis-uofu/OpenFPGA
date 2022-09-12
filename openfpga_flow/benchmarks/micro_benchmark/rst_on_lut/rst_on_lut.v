@@ -4,20 +4,23 @@
 ////////////////////////////////////////
 `timescale 1ns / 1ps
 
-module rst_on_lut(a, b, out, clk, rst);
+module rst_on_lut(a, b, q, out, clk, rst);
 
 input wire rst;
 input wire clk;
 input wire a;
 input wire b;
-output reg out;
+output reg q;
+output wire out;
 
 always @(posedge rst or posedge clk) begin
   if (rst) begin
-    out <= 0;
+    q <= 0;
   end else begin
-    out <= a & b & rst;
+    q <= a;
   end
 end
+
+assign out = b & ~rst;
 
 endmodule
