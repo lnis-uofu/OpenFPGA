@@ -30,6 +30,7 @@ int repack(OpenfpgaContext& openfpga_ctx,
            const Command& cmd, const CommandContext& cmd_context) {
 
   CommandOptionId opt_design_constraints = cmd.option("design_constraints");
+  CommandOptionId opt_ignore_global_nets = cmd.option("ignore_global_nets_on_pins");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* Load design constraints from file */
@@ -40,22 +41,32 @@ int repack(OpenfpgaContext& openfpga_ctx,
     repack_design_constraints = read_xml_repack_design_constraints(dc_fname.c_str());
   }
 
+  /* Setup repacker options */
+  RepackOption options;
+  options.set_design_constraints(repack_design_constraints);
+  options.set_ignore_global_nets_on_pins(cmd_context.option_value(cmd, opt_ignore_global_nets));
+  options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
+
+  if (!options.valid()) {
+    VTR_LOG("Detected errors when parsing options!\n");
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
   pack_physical_pbs(g_vpr_ctx.device(),
                     g_vpr_ctx.atom(),
                     g_vpr_ctx.clustering(),
                     openfpga_ctx.mutable_vpr_device_annotation(),
                     openfpga_ctx.mutable_vpr_clustering_annotation(),
                     openfpga_ctx.vpr_bitstream_annotation(),
-                    repack_design_constraints,
                     openfpga_ctx.arch().circuit_lib,
-                    cmd_context.option_enable(cmd, opt_verbose));
+                    options);
 
   build_physical_lut_truth_tables(openfpga_ctx.mutable_vpr_clustering_annotation(),
                                   g_vpr_ctx.atom(),
                                   g_vpr_ctx.clustering(),
                                   openfpga_ctx.vpr_device_annotation(),
                                   openfpga_ctx.arch().circuit_lib,
-                                  cmd_context.option_enable(cmd, opt_verbose));
+                                  options.verbose_output());
 
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;

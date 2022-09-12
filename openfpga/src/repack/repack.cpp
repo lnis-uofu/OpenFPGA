@@ -388,10 +388,11 @@ void add_lb_router_nets(LbRouter& lb_router,
                         const VprDeviceAnnotation& device_annotation,
                         const ClusteringContext& clustering_ctx,
                         const VprClusteringAnnotation& clustering_annotation,
-                        const RepackDesignConstraints& design_constraints,
                         const ClusterBlockId& block_id,
-                        const bool& verbose) {
+                        const RepackOption& options) {
   size_t net_counter = 0;
+  bool verbose = options.verbose_output();
+  RepackDesignConstraints design_constraints = options.design_constraints();
 
   /* Two spots to find source nodes for each nets
    *  - nets that appear in the inputs of a clustered block
@@ -435,6 +436,52 @@ void add_lb_router_nets(LbRouter& lb_router,
     VTR_ASSERT(AtomNetId::INVALID() != atom_net_id);
 
     pb_pin_mapped_nets[pb_pin] = atom_net_id;
+  }
+
+  /* Cache the sink nodes/routing traces for the global nets which is specifed to be ignored on given pins */
+  std::map<AtomNetId, std::vector<LbRRNodeId>> ignored_global_net_sinks;
+  for (int j = 0; j < lb_type->pb_type->num_pins; j++) {
+    /* Get the source pb_graph pin and find the rr_node in logical block routing resource graph */
+    const t_pb_graph_pin* source_pb_pin = get_pb_graph_node_pin_from_block_pin(block_id, j);
+    VTR_ASSERT(source_pb_pin->parent_node == pb->pb_graph_node);
+
+    /* Bypass output pins */
+    if (OUT_PORT == source_pb_pin->port->type) {
+      continue;
+    }
+
+    /* Find the net mapped to this pin in clustering results*/
+    ClusterNetId cluster_net_id = clustering_ctx.clb_nlist.block_net(block_id, j);
+    /* Get the actual net id because it may be renamed during routing */
+    if (true == clustering_annotation.is_net_renamed(block_id, j)) {
+      cluster_net_id = clustering_annotation.net(block_id, j);
+    }
+
+    /* Bypass unmapped pins */
+    if (ClusterNetId::INVALID() == cluster_net_id) {
+      continue;
+    }
+
+    /* Only for global net which should be ignored, cache the sink nodes */
+    BasicPort curr_pin(std::string(source_pb_pin->port->name), source_pb_pin->pin_number, source_pb_pin->pin_number);
+    if ( (clustering_ctx.clb_nlist.net_is_ignored(cluster_net_id)) 
+      && (clustering_ctx.clb_nlist.net_is_global(cluster_net_id)) 
+      && (options.is_pin_ignore_global_nets(std::string(lb_type->pb_type->name), curr_pin))) {
+      /* Find the net mapped to this pin in clustering results*/
+      AtomNetId atom_net_id = pb_pin_mapped_nets[source_pb_pin];
+
+      std::vector<int> pb_route_indices = find_pb_route_by_atom_net(pb, source_pb_pin, atom_net_id);
+      VTR_ASSERT(1 == pb_route_indices.size());
+      int pb_route_index = pb_route_indices[0];
+      t_pb_graph_pin* packing_source_pb_pin = get_pb_graph_node_pin_from_block_pin(block_id, pb_route_index);
+      VTR_ASSERT(nullptr != packing_source_pb_pin);
+
+      /* Find all the sink pins in the pb_route, we walk through the input pins and find the pin  */
+      std::vector<t_pb_graph_pin*> sink_pb_graph_pins = find_routed_pb_graph_pins_atom_net(pb, source_pb_pin, packing_source_pb_pin, atom_net_id, device_annotation, pb_pin_mapped_nets, pb_graph_pin_lookup_from_index);
+      std::vector<LbRRNodeId> sink_lb_rr_nodes = find_lb_net_physical_sink_lb_rr_nodes(lb_rr_graph, sink_pb_graph_pins, device_annotation);
+      VTR_ASSERT(sink_lb_rr_nodes.size() == sink_pb_graph_pins.size());
+      ignored_global_net_sinks[atom_net_id].insert(ignored_global_net_sinks[atom_net_id].end(), sink_lb_rr_nodes.begin(), sink_lb_rr_nodes.end());
+    }
   }
 
   /* Cache all the source nodes and sinks node for each net
@@ -573,6 +620,10 @@ void add_lb_router_nets(LbRouter& lb_router,
                sink_pb_pin->to_string().c_str());
     }
 
+    /* Append sink nodes from ignored global net cache */
+    sink_lb_rr_nodes.insert(sink_lb_rr_nodes.end(), ignored_global_net_sinks[atom_net_id_to_route].begin(), ignored_global_net_sinks[atom_net_id_to_route].end());
+    VTR_LOGV(verbose, "Append %ld sinks from the routing traces of ignored global nets\n", ignored_global_net_sinks.size());
+
     /* Add the net */
     add_lb_router_net_to_route(lb_router, lb_rr_graph,
                                std::vector<LbRRNodeId>(1, source_lb_rr_node),
@@ -671,13 +722,13 @@ void repack_cluster(const AtomContext& atom_ctx,
                     const VprDeviceAnnotation& device_annotation,
                     VprClusteringAnnotation& clustering_annotation,
                     const VprBitstreamAnnotation& bitstream_annotation,
-                    const RepackDesignConstraints& design_constraints,
                     const ClusterBlockId& block_id,
-                    const bool& verbose) {
+                    const RepackOption& options) {
   /* Get the pb graph that current clustered block is mapped to */
   t_logical_block_type_ptr lb_type = clustering_ctx.clb_nlist.block_type(block_id);
   t_pb_graph_node* pb_graph_head = lb_type->pb_graph_head;
   VTR_ASSERT(nullptr != pb_graph_head);
+  bool verbose = options.verbose_output();
 
   /* We should get a non-empty graph */
   const LbRRGraph& lb_rr_graph = device_annotation.physical_lb_rr_graph(pb_graph_head);
@@ -693,8 +744,7 @@ void repack_cluster(const AtomContext& atom_ctx,
   /* Add nets to be routed with source and terminals */
   add_lb_router_nets(lb_router, lb_type, lb_rr_graph, atom_ctx, device_annotation,
                      clustering_ctx, const_cast<const VprClusteringAnnotation&>(clustering_annotation),
-                     design_constraints,
-                     block_id, verbose);
+                     block_id, options);
 
   /* Initialize the modes to expand routing trees with the physical modes in device annotation
    * This is a must-do before running the routeri in the purpose of repacking!!!
@@ -740,8 +790,7 @@ void repack_clusters(const AtomContext& atom_ctx,
                      const VprDeviceAnnotation& device_annotation,
                      VprClusteringAnnotation& clustering_annotation,
                      const VprBitstreamAnnotation& bitstream_annotation,
-                     const RepackDesignConstraints& design_constraints,
-                     const bool& verbose) {
+                     const RepackOption& options) {
   vtr::ScopedStartFinishTimer timer("Repack clustered blocks to physical implementation of logical tile");
 
   for (auto blk_id : clustering_ctx.clb_nlist.blocks()) {
@@ -749,8 +798,8 @@ void repack_clusters(const AtomContext& atom_ctx,
                    device_annotation,
                    clustering_annotation, 
                    bitstream_annotation,
-                   design_constraints,
-                   blk_id, verbose);
+                   blk_id,
+                   options);
   }
 }
 
@@ -808,22 +857,20 @@ void pack_physical_pbs(const DeviceContext& device_ctx,
                        VprDeviceAnnotation& device_annotation,
                        VprClusteringAnnotation& clustering_annotation,
                        const VprBitstreamAnnotation& bitstream_annotation,
-                       const RepackDesignConstraints& design_constraints,
                        const CircuitLibrary& circuit_lib,
-                       const bool& verbose) {
+                       const RepackOption& options) {
 
   /* build the routing resource graph for each logical tile */
   build_physical_lb_rr_graphs(device_ctx,
                               device_annotation,
-                              verbose);
+                              options.verbose_output());
 
   /* Call the LbRouter to re-pack each clustered block to physical implementation */ 
   repack_clusters(atom_ctx, clustering_ctx, 
                   const_cast<const VprDeviceAnnotation&>(device_annotation),
                   clustering_annotation, 
                   bitstream_annotation,
-                  design_constraints,
-                  verbose);
+                  options);
 
   /* Annnotate wire LUTs that are ONLY created by repacker!!!
    * This is a MUST RUN!
@@ -833,7 +880,7 @@ void pack_physical_pbs(const DeviceContext& device_ctx,
                                                   clustering_ctx,
                                                   device_annotation,
                                                   circuit_lib,
-                                                  verbose);
+                                                  options.verbose_output());
 }
 
 } /* end namespace openfpga */
