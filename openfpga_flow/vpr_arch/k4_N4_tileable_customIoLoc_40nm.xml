@@ -94,61 +94,85 @@
   <!-- Physical descriptions begin -->
   <layout tileable="true">
     <auto_layout aspect_ratio="1.0">
-      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
-      <row type="io_top" starty="H-1" priority="100"/>
-      <row type="io_bottom" starty="0" priority="100"/>
-      <col type="io_left" startx="0" priority="100"/>
-      <col type="io_right" startx="W-1" priority="100"/>
+      <!--Perimeter of 'EMPTY' blocks, I/Os are placed on the inner ring -->
+      <row type="io_top" starty="H-2" priority="90"/>
+      <row type="io_bottom" starty="1" priority="91"/>
+      <col type="io_left" startx="1" priority="92"/>
+      <col type="io_right" startx="W-2" priority="93"/>
+      <row type="EMPTY" starty="H-1" priority="101"/>
+      <row type="EMPTY" starty="0" priority="102"/>
+      <col type="EMPTY" startx="0" priority="103"/>
+      <col type="EMPTY" startx="W-1" priority="104"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
     </auto_layout>
     <fixed_layout name="2x2" width="4" height="4">
-      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
-      <row type="io_top" starty="H-1" priority="100"/>
-      <row type="io_bottom" starty="0" priority="100"/>
-      <col type="io_left" startx="0" priority="100"/>
-      <col type="io_right" startx="W-1" priority="100"/>
+      <!--Perimeter of 'EMPTY' blocks, I/Os are placed on the inner ring -->
+      <row type="io_top" starty="H-2" priority="90"/>
+      <row type="io_bottom" starty="1" priority="91"/>
+      <col type="io_left" startx="1" priority="92"/>
+      <col type="io_right" startx="W-2" priority="93"/>
+      <row type="EMPTY" starty="H-1" priority="101"/>
+      <row type="EMPTY" starty="0" priority="102"/>
+      <col type="EMPTY" startx="0" priority="103"/>
+      <col type="EMPTY" startx="W-1" priority="104"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
     </fixed_layout>
     <fixed_layout name="4x4" width="6" height="6">
-      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
-      <row type="io_top" starty="H-1" priority="100"/>
-      <row type="io_bottom" starty="0" priority="100"/>
-      <col type="io_left" startx="0" priority="100"/>
-      <col type="io_right" startx="W-1" priority="100"/>
+      <!--Perimeter of 'EMPTY' blocks, I/Os are placed on the inner ring -->
+      <row type="io_top" starty="H-2" priority="90"/>
+      <row type="io_bottom" starty="1" priority="91"/>
+      <col type="io_left" startx="1" priority="92"/>
+      <col type="io_right" startx="W-2" priority="93"/>
+      <row type="EMPTY" starty="H-1" priority="101"/>
+      <row type="EMPTY" starty="0" priority="102"/>
+      <col type="EMPTY" startx="0" priority="103"/>
+      <col type="EMPTY" startx="W-1" priority="104"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
     </fixed_layout>
     <fixed_layout name="48x48" width="50" height="50">
-      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
-      <row type="io_top" starty="H-1" priority="100"/>
-      <row type="io_bottom" starty="0" priority="100"/>
-      <col type="io_left" startx="0" priority="100"/>
-      <col type="io_right" startx="W-1" priority="100"/>
+      <!--Perimeter of 'EMPTY' blocks, I/Os are placed on the inner ring -->
+      <row type="io_top" starty="H-2" priority="90"/>
+      <row type="io_bottom" starty="1" priority="91"/>
+      <col type="io_left" startx="1" priority="92"/>
+      <col type="io_right" startx="W-2" priority="93"/>
+      <row type="EMPTY" starty="H-1" priority="101"/>
+      <row type="EMPTY" starty="0" priority="102"/>
+      <col type="EMPTY" startx="0" priority="103"/>
+      <col type="EMPTY" startx="W-1" priority="104"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
     </fixed_layout>
     <fixed_layout name="72x72" width="74" height="74">
-      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
-      <row type="io_top" starty="H-1" priority="100"/>
-      <row type="io_bottom" starty="0" priority="100"/>
-      <col type="io_left" startx="0" priority="100"/>
-      <col type="io_right" startx="W-1" priority="100"/>
+      <!--Perimeter of 'EMPTY' blocks, I/Os are placed on the inner ring -->
+      <row type="io_top" starty="H-2" priority="90"/>
+      <row type="io_bottom" starty="1" priority="91"/>
+      <col type="io_left" startx="1" priority="92"/>
+      <col type="io_right" startx="W-2" priority="93"/>
+      <row type="EMPTY" starty="H-1" priority="101"/>
+      <row type="EMPTY" starty="0" priority="102"/>
+      <col type="EMPTY" startx="0" priority="103"/>
+      <col type="EMPTY" startx="W-1" priority="104"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
     </fixed_layout>
     <fixed_layout name="96x96" width="98" height="98">
-      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
-      <row type="io_top" starty="H-1" priority="100"/>
-      <row type="io_bottom" starty="0" priority="100"/>
-      <col type="io_left" startx="0" priority="100"/>
-      <col type="io_right" startx="W-1" priority="100"/>
+      <!--Perimeter of 'EMPTY' blocks, I/Os are placed on the inner ring -->
+      <row type="io_top" starty="H-2" priority="90"/>
+      <row type="io_bottom" starty="1" priority="91"/>
+      <col type="io_left" startx="1" priority="92"/>
+      <col type="io_right" startx="W-2" priority="93"/>
+      <row type="EMPTY" starty="H-1" priority="101"/>
+      <row type="EMPTY" starty="0" priority="102"/>
+      <col type="EMPTY" startx="0" priority="103"/>
+      <col type="EMPTY" startx="W-1" priority="104"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
