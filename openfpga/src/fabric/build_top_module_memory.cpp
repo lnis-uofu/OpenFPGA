@@ -1055,7 +1055,7 @@ void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manag
     }
     VTR_ASSERT(ModuleId::INVALID() != bl_decoder_module);
     size_t curr_bl_decoder_instance_id = module_manager.num_instance(top_module, bl_decoder_module);
-    module_manager.add_child_module(top_module, bl_decoder_module);
+    module_manager.add_child_module(top_module, bl_decoder_module, false);
 
     /************************************************************** 
      * Add the WL decoder module 
@@ -1083,7 +1083,7 @@ void add_top_module_nets_cmos_memory_bank_config_bus(ModuleManager& module_manag
     }
     VTR_ASSERT(ModuleId::INVALID() != wl_decoder_module);
     size_t curr_wl_decoder_instance_id = module_manager.num_instance(top_module, wl_decoder_module);
-    module_manager.add_child_module(top_module, wl_decoder_module);
+    module_manager.add_child_module(top_module, wl_decoder_module, false);
 
     /************************************************************** 
      * Add module nets from the top module to BL decoder's inputs
@@ -1531,7 +1531,7 @@ void add_top_module_nets_cmos_memory_frame_decoder_config_bus(ModuleManager& mod
 
   /* Instanciate the decoder module here */
   size_t decoder_instance = module_manager.num_instance(parent_module, decoder_module);
-  module_manager.add_child_module(parent_module, decoder_module);
+  module_manager.add_child_module(parent_module, decoder_module, false);
 
   /* Connect the enable (EN) port of memory modules under the parent module
    * to the frame decoder inputs

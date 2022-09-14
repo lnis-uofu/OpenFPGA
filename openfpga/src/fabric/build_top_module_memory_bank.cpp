@@ -507,7 +507,7 @@ void add_top_module_nets_cmos_ql_memory_bank_bl_decoder_config_bus(ModuleManager
     }
     VTR_ASSERT(ModuleId::INVALID() != bl_decoder_module);
     size_t curr_bl_decoder_instance_id = module_manager.num_instance(top_module, bl_decoder_module);
-    module_manager.add_child_module(top_module, bl_decoder_module);
+    module_manager.add_child_module(top_module, bl_decoder_module, false);
 
     /************************************************************** 
      * Add module nets from the top module to BL decoder's inputs
@@ -705,7 +705,7 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_decoder_config_bus(ModuleManager
     }
     VTR_ASSERT(ModuleId::INVALID() != wl_decoder_module);
     size_t curr_wl_decoder_instance_id = module_manager.num_instance(top_module, wl_decoder_module);
-    module_manager.add_child_module(top_module, wl_decoder_module);
+    module_manager.add_child_module(top_module, wl_decoder_module, false);
 
     /************************************************************** 
      * Add module nets from the top module to WL decoder's inputs 
@@ -1471,7 +1471,7 @@ void add_top_module_nets_cmos_ql_memory_bank_bl_shift_register_config_bus(Module
       VTR_ASSERT(sr_bank_module);
 
       size_t cur_inst = module_manager.num_instance(top_module, sr_bank_module);
-      module_manager.add_child_module(top_module, sr_bank_module);
+      module_manager.add_child_module(top_module, sr_bank_module, false);
 
       sr_banks.link_bl_shift_register_bank_to_module(config_region, sr_bank, sr_bank_module);
       sr_banks.link_bl_shift_register_bank_to_instance(config_region, sr_bank, cur_inst);
@@ -1565,7 +1565,7 @@ void add_top_module_nets_cmos_ql_memory_bank_wl_shift_register_config_bus(Module
       VTR_ASSERT(sr_bank_module);
 
       size_t cur_inst = module_manager.num_instance(top_module, sr_bank_module);
-      module_manager.add_child_module(top_module, sr_bank_module);
+      module_manager.add_child_module(top_module, sr_bank_module, false);
 
       sr_banks.link_wl_shift_register_bank_to_module(config_region, sr_bank, sr_bank_module);
       sr_banks.link_wl_shift_register_bank_to_instance(config_region, sr_bank, cur_inst);
