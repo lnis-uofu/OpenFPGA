@@ -43,7 +43,10 @@
       <output name="inpad" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
       <pinlocations pattern="custom">
-        <loc side="bottom">io_top[0:3].inpad io_top[0:7].outpad io_top[4:7].inpad</loc>
+        <loc side="top">io_top[0:1].inpad io_top[0:1].outpad</loc>
+        <loc side="right">io_top[3:2].inpad</loc>
+        <loc side="bottom">io_top[4:5].inpad io_top[2:4].outpad</loc>
+        <loc side="left">io_top[6:7].inpad io_top[5:7].outpad</loc>
       </pinlocations>
     </tile>
     <tile name="io_bottom" capacity="6" area="0">
@@ -54,7 +57,10 @@
       <output name="inpad" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
       <pinlocations pattern="custom">
-        <loc side="top">io_bottom[0:1].outpad io_bottom[0:3].inpad io_bottom[2:5].outpad io_bottom[4:5].inpad</loc>
+        <loc side="top">io_bottom[0:1].outpad</loc>
+        <loc side="right">io_bottom[2:2].outpad io_bottom[0:3].inpad</loc>
+        <loc side="bottom">io_bottom[3:3].outpad</loc>
+        <loc side="left">io_bottom[4:5].outpad io_bottom[4:5].inpad</loc>
       </pinlocations>
     </tile>
     <tile name="io_left" capacity="4" area="0">
@@ -65,7 +71,10 @@
       <output name="inpad" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
       <pinlocations pattern="custom">
-        <loc side="right">io_left.inpad io_left.outpad</loc>
+        <loc side="top">io_left[1:1].inpad io_left[1:1].outpad</loc>
+        <loc side="right">io_left[0:0].inpad io_left[0:0].outpad</loc>
+        <loc side="bottom">io_left[2:2].inpad io_left[2:2].outpad</loc>
+        <loc side="left">io_left[3:3].inpad io_left[3:3].outpad</loc>
       </pinlocations>
     </tile>
     <tile name="io_right" capacity="2" area="0">
@@ -76,7 +85,10 @@
       <output name="inpad" num_pins="1"/>
       <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
       <pinlocations pattern="custom">
-        <loc side="left">io_right[1:1].inpad io_right[1:0].outpad io_right[0:0].inpad</loc>
+        <loc side="top">io_right[0:0].inpad</loc>
+        <loc side="right">io_right[1:1].outpad</loc>
+        <loc side="bottom">io_right[0:0].outpad</loc>
+        <loc side="left">io_right[1:1].inpad</loc>
       </pinlocations>
     </tile>
     <tile name="clb" area="53894">
