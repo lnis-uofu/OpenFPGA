@@ -102,33 +102,6 @@ vtr::Matrix<size_t> add_top_module_grid_instances(ModuleManager& module_manager,
   vtr::Matrix<size_t> grid_instance_ids({grids.width(), grids.height()}); 
   grid_instance_ids.fill(size_t(-1));
 
-  /* Instanciate core grids */
-  for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
-    for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
-      /* Bypass EMPTY grid */
-      if (true == is_empty_type(grids[ix][iy].type)) {
-        continue;
-      } 
-      /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
-      if ( (0 < grids[ix][iy].width_offset)
-        || (0 < grids[ix][iy].height_offset)) {
-        /* Find the root of this grid, the instance id should be valid. 
-         * We just copy it here
-         */
-        vtr::Point<size_t> root_grid_coord(ix - grids[ix][iy].width_offset,
-                                           iy - grids[ix][iy].height_offset);
-        VTR_ASSERT(size_t(-1) != grid_instance_ids[root_grid_coord.x()][root_grid_coord.y()]);
-        grid_instance_ids[ix][iy] = grid_instance_ids[root_grid_coord.x()][root_grid_coord.y()];
-        continue;
-      }
-      /* Add a grid module to top_module*/
-      vtr::Point<size_t> grid_coord(ix, iy);
-      grid_instance_ids[ix][iy] = add_top_module_grid_instance(module_manager, top_module,
-                                                               grids[ix][iy].type,
-                                                               NUM_SIDES, grid_coord);
-    }
-  }
-
   /* Instanciate I/O grids */
   /* Create the coordinate range for each side of FPGA fabric */
   std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates = generate_perimeter_grid_coordinates( grids);
@@ -154,6 +127,37 @@ vtr::Matrix<size_t> add_top_module_grid_instances(ModuleManager& module_manager,
 
       /* Add a grid module to top_module*/
       grid_instance_ids[io_coordinate.x()][io_coordinate.y()] = add_top_module_grid_instance(module_manager, top_module, grids[io_coordinate.x()][io_coordinate.y()].type, io_side, io_coordinate);
+    }
+  }
+
+  /* Instanciate core grids
+   * IMPORTANT: sequence matters here, it impacts the I/O indexing.
+   * We should follow the same sequence as the build_io_location_map()! 
+   * If you change the sequence of walking through grids here, you should change it in the build_io_location map()!
+   */
+  for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
+    for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
+      /* Bypass EMPTY grid */
+      if (true == is_empty_type(grids[ix][iy].type)) {
+        continue;
+      } 
+      /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
+      if ( (0 < grids[ix][iy].width_offset)
+        || (0 < grids[ix][iy].height_offset)) {
+        /* Find the root of this grid, the instance id should be valid. 
+         * We just copy it here
+         */
+        vtr::Point<size_t> root_grid_coord(ix - grids[ix][iy].width_offset,
+                                           iy - grids[ix][iy].height_offset);
+        VTR_ASSERT(size_t(-1) != grid_instance_ids[root_grid_coord.x()][root_grid_coord.y()]);
+        grid_instance_ids[ix][iy] = grid_instance_ids[root_grid_coord.x()][root_grid_coord.y()];
+        continue;
+      }
+      /* Add a grid module to top_module*/
+      vtr::Point<size_t> grid_coord(ix, iy);
+      grid_instance_ids[ix][iy] = add_top_module_grid_instance(module_manager, top_module,
+                                                               grids[ix][iy].type,
+                                                               NUM_SIDES, grid_coord);
     }
   }
 
