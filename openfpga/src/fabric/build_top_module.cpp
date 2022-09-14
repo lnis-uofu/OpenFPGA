@@ -50,7 +50,8 @@ size_t add_top_module_grid_instance(ModuleManager& module_manager,
   /* Record the instance id */
   size_t grid_instance = module_manager.num_instance(top_module, grid_module);
   /* Add the module to top_module */ 
-  module_manager.add_child_module(top_module, grid_module);
+  module_manager.add_child_module(top_module, grid_module, false);
+  module_manager.add_io_child(top_module, grid_module, grid_instance, vtr::Point<int>(grid_coord.x(), grid_coord.y()));
   /* Set an unique name to the instance
    * Note: it is your risk to gurantee the name is unique!
    */
@@ -205,7 +206,7 @@ vtr::Matrix<size_t> add_top_module_switch_block_instances(ModuleManager& module_
       /* Record the instance id */
       sb_instance_ids[rr_gsb.get_sb_x()][rr_gsb.get_sb_y()] = module_manager.num_instance(top_module, sb_module);
       /* Add the module to top_module */ 
-      module_manager.add_child_module(top_module, sb_module);
+      module_manager.add_child_module(top_module, sb_module, false);
       /* Set an unique name to the instance
        * Note: it is your risk to gurantee the name is unique!
        */
@@ -261,7 +262,7 @@ vtr::Matrix<size_t> add_top_module_connection_block_instances(ModuleManager& mod
       /* Record the instance id */
       cb_instance_ids[rr_gsb.get_cb_x(cb_type)][rr_gsb.get_cb_y(cb_type)] = module_manager.num_instance(top_module, cb_module);
       /* Add the module to top_module */ 
-      module_manager.add_child_module(top_module, cb_module);
+      module_manager.add_child_module(top_module, cb_module, false);
       /* Set an unique name to the instance
        * Note: it is your risk to gurantee the name is unique!
        */
@@ -354,8 +355,7 @@ int build_top_module(ModuleManager& module_manager,
   }
 
   /* Add GPIO ports from the sub-modules under this Verilog module 
-   * This is a much easier job after adding sub modules (instances), 
-   * we just need to find all the I/O ports from the child modules and build a list of it
+   * For top-level module, we follow a special sequencing for I/O modules. So we rebuild the I/O children list here
    */
   add_module_gpio_ports_from_child_modules(module_manager, top_module);
 

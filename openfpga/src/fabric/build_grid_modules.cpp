@@ -1022,7 +1022,9 @@ void build_physical_tile_module(ModuleManager& module_manager,
 
       /* Add all the sub modules */
       size_t pb_instance_id = module_manager.num_instance(grid_module, pb_module);
-      module_manager.add_child_module(grid_module, pb_module);
+      module_manager.add_child_module(grid_module, pb_module, false);
+      /* Add a custom I/O child with coordinate 'z' */
+      module_manager.add_io_child(grid_module, pb_module, pb_instance_id, vtr::Point<int>(iz, 0));
 
       /* Give the child module with a unique instance name */
       std::string instance_name = generate_physical_block_instance_name(lb_type->pb_graph_head->pb_type, iz);
