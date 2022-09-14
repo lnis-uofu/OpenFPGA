@@ -66,6 +66,9 @@ IoLocationMap build_fabric_io_location_map(const ModuleManager& module_manager,
     /* MUST DO: register in io location mapping!
      * I/O location mapping is a critical look-up for testbench generators
      */
+    if (size_t(grids[coord.x()][coord.y()].type->capacity) != module_manager.io_children(child).size()) {
+      VTR_LOG("%s[%ld][%ld] capacity: %d while io_child number is %d", grids[coord.x()][coord.y()].type->name, coord.x(), coord.y(), grids[coord.x()][coord.y()].type->capacity, module_manager.io_children(child).size());
+    }
     VTR_ASSERT(size_t(grids[coord.x()][coord.y()].type->capacity) == module_manager.io_children(child).size());
     for (size_t isubchild = 0; isubchild < module_manager.io_children(child).size(); ++isubchild) {
       vtr::Point<int> subchild_coord = module_manager.io_child_coordinates(child)[isubchild];

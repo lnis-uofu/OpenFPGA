@@ -1326,7 +1326,7 @@ void add_module_nets_cmos_memory_frame_decoder_config_bus(ModuleManager& module_
 
   /* Instanciate the decoder module here */
   VTR_ASSERT(0 == module_manager.num_instance(parent_module, decoder_module));
-  module_manager.add_child_module(parent_module, decoder_module);
+  module_manager.add_child_module(parent_module, decoder_module, false);
 
   /* Connect the enable (EN) port of memory modules under the parent module
    * to the frame decoder inputs
