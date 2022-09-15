@@ -151,6 +151,14 @@ class ModuleManager {
     std::vector<size_t> configurable_child_instances(const ModuleId& parent_module) const;
     /* Find the coordindate of a configurable child module under a parent module */
     std::vector<vtr::Point<int>> configurable_child_coordinates(const ModuleId& parent_module) const;
+
+    /* Find all the I/O child modules under a parent module */
+    std::vector<ModuleId> io_children(const ModuleId& parent_module) const;
+    /* Find all the instances of I/O child modules under a parent module */
+    std::vector<size_t> io_child_instances(const ModuleId& parent_module) const;
+    /* Find the coordindate of an I/O child module under a parent module */
+    std::vector<vtr::Point<int>> io_child_coordinates(const ModuleId& parent_module) const;
+
     /* Find the source ids of modules */
     module_net_src_range module_net_sources(const ModuleId& module, const ModuleNetId& net) const;
     /* Find the sink ids of modules */
@@ -255,8 +263,13 @@ class ModuleManager {
     void set_port_is_register(const ModuleId& module, const std::string& port_name, const bool& is_register);
     /* Set the preprocessing flag for a port */
     void set_port_preproc_flag(const ModuleId& module, const ModulePortId& port, const std::string& preproc_flag);
-    /* Add a child module to a parent module */
-    void add_child_module(const ModuleId& parent_module, const ModuleId& child_module);
+    /** @brief Add a child module to a parent module.
+     *  By default, it considers the child module as an I/O child, and update the children list of I/O modules inside
+     *  It not needed, just turn it off. Then you need to call add_io_child() API to update child list
+     * 
+     *  .. note:: By default, we assume the I/O indexing to the same as sequence when adding child modules to a parent. However, it may not be true all the time, especially for the top-level module, where customization is needed.  
+     */
+    void add_child_module(const ModuleId& parent_module, const ModuleId& child_module, const bool& is_io_child = true);
     /* Set the instance name of a child module */
     void set_child_instance_name(const ModuleId& parent_module, const ModuleId& child_module, const size_t& instance_id, const std::string& instance_name);
     /* Add a configurable child module to module
@@ -266,9 +279,7 @@ class ModuleManager {
      * By default, it is an invalid coordinate 
      */
     void add_configurable_child(const ModuleId& module, const ModuleId& child_module, const size_t& child_instance, const vtr::Point<int> coord = vtr::Point<int>(-1, -1));
-    /* Reserved a number of configurable children
-     * for memory efficiency
-     */
+    /* Reserved a number of configurable children for memory efficiency */
     void reserve_configurable_child(const ModuleId& module, const size_t& num_children);
 
     /* Create a new configurable region under a module */
@@ -283,10 +294,18 @@ class ModuleManager {
                                           const ModuleId& child_module,
                                           const size_t& child_instance,
                                           const size_t& config_child_id);
-
-    /* Reserved a number of module nets for a given module
-     * for memory efficiency
+    /** @brief Add a I/O child to module
+     * This function also set the coordinate of a configurable child
+     * The coordinate is used for build I/O location map. So it is consistent with the VPR coordinate system
+     * By default, it is an invalid coordinate 
+     *
+     * .. note:: I/O child does not necessary have to be a I/O block. It just provide a sequence for other functions, e.g., connect_gpio_module() to index the I/Os from each child module/instance.
      */
+    void add_io_child(const ModuleId& module, const ModuleId& child_module, const size_t& child_instance, const vtr::Point<int> coord = vtr::Point<int>(-1, -1));
+    /** @brief Reserved a number of I/O children for memory efficiency */
+    void reserve_io_child(const ModuleId& module, const size_t& num_children);
+
+    /* Reserved a number of module nets for a given module for memory efficiency */
     void reserve_module_nets(const ModuleId& module, const size_t& num_nets);
 
     /* Add a net to the connection graph of the module */ 
@@ -295,9 +314,7 @@ class ModuleManager {
     void set_net_name(const ModuleId& module, const ModuleNetId& net,
                       const std::string& name);
 
-    /* Reserved a number of sources for a module net for a given module
-     * for memory efficiency
-     */
+    /* Reserved a number of sources for a module net for a given module for memory efficiency */
     void reserve_module_net_sources(const ModuleId& module, const ModuleNetId& net,
                                     const size_t& num_sources);
 
@@ -306,9 +323,7 @@ class ModuleManager {
                                          const ModuleId& src_module, const size_t& instance_id,
                                          const ModulePortId& src_port, const size_t& src_pin);
 
-    /* Reserved a number of sinks for a module net for a given module
-     * for memory efficiency
-     */
+    /* Reserved a number of sinks for a module net for a given module for memory efficiency */
     void reserve_module_net_sinks(const ModuleId& module, const ModuleNetId& net,
                                   const size_t& num_sinks);
 
@@ -330,6 +345,14 @@ class ModuleManager {
      * Do NOT use unless you know what you are doing!!!
      */
     void clear_config_region(const ModuleId& parent_module);
+
+    /* This is a strong function which will remove all the io children 
+     * under a given parent module
+     * It is mainly used by other functions which want to force an I/O sequence
+     * Do NOT use unless you know what you are doing!!!
+     */
+    void clear_io_children(const ModuleId& parent_module);
+
   public: /* Public validators/invalidators */
     bool valid_module_id(const ModuleId& module) const;
     bool valid_module_port_id(const ModuleId& module, const ModulePortId& port) const;
@@ -370,6 +393,15 @@ class ModuleManager {
      */
     vtr::vector<ModuleId, vtr::vector<ConfigRegionId, ConfigRegionId>> config_region_ids_; 
     vtr::vector<ModuleId, vtr::vector<ConfigRegionId, std::vector<size_t>>> config_region_children_;
+
+    /* I/O child modules are used to record the position of I/O modules in GPIO indexing
+     * The sequence of children in the list denotes which one is indexed in the GPIO first, etc. 
+     * Note that the sequence can be totally different from the children_ list
+     * This is really dependent how the I/O indexing is organized which should be made by users/designers 
+     */
+    vtr::vector<ModuleId, std::vector<ModuleId>> io_children_;
+    vtr::vector<ModuleId, std::vector<size_t>> io_child_instances_;
+    vtr::vector<ModuleId, std::vector<vtr::Point<int>>> io_child_coordinates_;
 
     /* Port-level data */
     vtr::vector<ModuleId, vtr::vector<ModulePortId, ModulePortId>> port_ids_;    /* List of ports for each Module */ 

@@ -91,6 +91,29 @@ std::vector<vtr::Point<int>> ModuleManager::configurable_child_coordinates(const
   return configurable_child_coordinates_[parent_module];
 }
 
+/* Find all the configurable child modules under a parent module */
+std::vector<ModuleId> ModuleManager::io_children(const ModuleId& parent_module) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(parent_module));
+
+  return io_children_[parent_module];
+}
+
+/* Find all the instances of configurable child modules under a parent module */
+std::vector<size_t> ModuleManager::io_child_instances(const ModuleId& parent_module) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(parent_module));
+
+  return io_child_instances_[parent_module];
+}
+
+std::vector<vtr::Point<int>> ModuleManager::io_child_coordinates(const ModuleId& parent_module) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(parent_module));
+
+  return io_child_coordinates_[parent_module];
+}
+
 /* Find the source ids of modules */
 ModuleManager::module_net_src_range ModuleManager::module_net_sources(const ModuleId& module, const ModuleNetId& net) const {
   /* Validate the module_id */
@@ -562,6 +585,10 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   config_region_ids_.emplace_back(); 
   config_region_children_.emplace_back(); 
 
+  io_children_.emplace_back();
+  io_child_instances_.emplace_back();
+  io_child_coordinates_.emplace_back();
+
   port_ids_.emplace_back();
   ports_.emplace_back();
   port_types_.emplace_back();
@@ -680,7 +707,7 @@ void ModuleManager::set_port_preproc_flag(const ModuleId& module, const ModulePo
 }
 
 /* Add a child module to a parent module */
-void ModuleManager::add_child_module(const ModuleId& parent_module, const ModuleId& child_module) {
+void ModuleManager::add_child_module(const ModuleId& parent_module, const ModuleId& child_module, const bool& is_io_child) {
   /* Validate the id of both parent and child modules */
   VTR_ASSERT ( valid_module_id(parent_module) );
   VTR_ASSERT ( valid_module_id(child_module) );
@@ -693,17 +720,25 @@ void ModuleManager::add_child_module(const ModuleId& parent_module, const Module
   }
 
   std::vector<ModuleId>::iterator child_it = std::find(children_[parent_module].begin(), children_[parent_module].end(), child_module);
+  int child_instance_id = -1;
   if (child_it == children_[parent_module].end()) {
     /* Update the child module of parent module */
     children_[parent_module].push_back(child_module);
     num_child_instances_[parent_module].push_back(1); /* By default give one */
+    child_instance_id = 0;
     /* Update the instance name list */
     child_instance_names_[parent_module].emplace_back();
     child_instance_names_[parent_module].back().emplace_back();
   } else {
     /* Increase the counter of instances */
+    child_instance_id = num_child_instances_[parent_module][child_it - children_[parent_module].begin()];
     num_child_instances_[parent_module][child_it - children_[parent_module].begin()]++;
     child_instance_names_[parent_module][child_it - children_[parent_module].begin()].emplace_back();
+  }
+
+  /* Add to I/O child if needed */
+  if (is_io_child) {
+    add_io_child(parent_module, child_module, child_instance_id);
   }
 
   /* Update fast look-up for nets */
@@ -813,6 +848,36 @@ void ModuleManager::add_configurable_child_to_region(const ModuleId& parent_modu
 
   /* Passed all the checks, add the child to the region */
   config_region_children_[parent_module][config_region].push_back(config_child_id);
+}
+
+void ModuleManager::add_io_child(const ModuleId& parent_module, 
+                                 const ModuleId& child_module, 
+                                 const size_t& child_instance,
+                                 const vtr::Point<int> coord) {
+  /* Validate the id of both parent and child modules */
+  VTR_ASSERT ( valid_module_id(parent_module) );
+  VTR_ASSERT ( valid_module_id(child_module) );
+  /* Ensure that the instance id is in range */
+  VTR_ASSERT ( child_instance < num_instance(parent_module, child_module));
+
+  io_children_[parent_module].push_back(child_module);
+  io_child_instances_[parent_module].push_back(child_instance);
+  io_child_coordinates_[parent_module].push_back(coord);
+}
+
+void ModuleManager::reserve_io_child(const ModuleId& parent_module,
+                                     const size_t& num_children) {
+  VTR_ASSERT ( valid_module_id(parent_module) );
+  /* Do reserve when the number of children is larger than current size of lists */
+  if (num_children > io_children_[parent_module].size()) {
+    io_children_[parent_module].reserve(num_children);
+  }
+  if (num_children > io_child_instances_[parent_module].size()) {
+    io_child_instances_[parent_module].reserve(num_children);
+  }
+  if (num_children > io_child_coordinates_[parent_module].size()) {
+    io_child_coordinates_[parent_module].reserve(num_children);
+  }
 }
 
 void ModuleManager::reserve_module_nets(const ModuleId& module,
@@ -1018,6 +1083,14 @@ void ModuleManager::clear_config_region(const ModuleId& parent_module) {
 
   config_region_ids_[parent_module].clear();
   config_region_children_[parent_module].clear();
+}
+
+void ModuleManager::clear_io_children(const ModuleId& parent_module) {
+  VTR_ASSERT(valid_module_id(parent_module));
+
+  io_children_[parent_module].clear();
+  io_child_instances_[parent_module].clear();
+  io_child_coordinates_[parent_module].clear();
 }
 
 /******************************************************************************
