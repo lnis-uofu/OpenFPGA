@@ -51,7 +51,6 @@ size_t add_top_module_grid_instance(ModuleManager& module_manager,
   size_t grid_instance = module_manager.num_instance(top_module, grid_module);
   /* Add the module to top_module */ 
   module_manager.add_child_module(top_module, grid_module, false);
-  module_manager.add_io_child(top_module, grid_module, grid_instance, vtr::Point<int>(grid_coord.x(), grid_coord.y()));
   /* Set an unique name to the instance
    * Note: it is your risk to gurantee the name is unique!
    */
@@ -277,6 +276,118 @@ vtr::Matrix<size_t> add_top_module_connection_block_instances(ModuleManager& mod
 }
 
 /********************************************************************
+ * Add the I/O children to the top-level module, which impacts the I/O indexing
+ * This is the default function to build the I/O sequence/indexing
+ * The I/O children is added in a maze shape
+ * The function supports I/Os in the center of grids, starting from the bottom-left corner and ending at the center
+ * 
+ *    +----------------------+
+ *    |+--------------------+|
+ *    ||+------------------+||
+ *    |||+----------------+|||
+ *    ||||+-------------->||||
+ *    ||||+---------------+|||
+ *    |||+-----------------+||
+ *    ||+-------------------+|
+ *    |+---------------------+
+ *    ^
+ *  io[0]                   
+ *******************************************************************/
+static 
+void add_top_module_io_children(ModuleManager& module_manager,
+                                const ModuleId& top_module,
+                                const DeviceGrid& grids,
+                                const vtr::Matrix<size_t>& grid_instance_ids) {
+  /* Create the coordinate range for the perimeter I/Os of FPGA fabric */
+  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates = generate_perimeter_grid_coordinates( grids);
+
+  for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
+    for (const vtr::Point<size_t>& io_coord : io_coordinates[io_side]) {
+      /* Bypass EMPTY grid */
+      if (true == is_empty_type(grids[io_coord.x()][io_coord.y()].type)) {
+        continue;
+      } 
+      /* Skip width, height > 1 tiles (mostly heterogeneous blocks) */
+      if ( (0 < grids[io_coord.x()][io_coord.y()].width_offset)
+        || (0 < grids[io_coord.x()][io_coord.y()].height_offset)) {
+        continue;
+      }
+      /* Find the module name for this type of grid */
+      t_physical_tile_type_ptr grid_type = grids[io_coordinate.x()][io_coordinate.y()].type;
+      std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
+      std::string grid_module_name = generate_grid_block_module_name(grid_module_name_prefix, std::string(grid_type->name), is_io_type(grid_type), io_side);
+      ModuleId grid_module = module_manager.find_module(grid_module_name);
+      VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
+      /* Add a I/O children to top_module*/
+      module_manager.add_io_child(top_module, grid_module, grid_instance_ids[io_coord.x()][io_coord.y()], vtr::Point<int>(io_coord.x(), io_coord.y()));
+    }
+  }
+
+  /* Walk through the center grids */
+  size_t xmin = 1;
+  size_t xmax = grids.width() - 2;
+  size_t ymin = 1;
+  size_t ymax = grids.height() - 2;
+  std::vector<vtr::Point<size_t>> coords;
+  while (xmin < xmax && ymin < ymax) { 
+    for (size_t iy = ymin; iy < ymax + 1; iy++) {
+      coords.push_back(vtr::Point<size_t>(xmin, iy));
+    }
+    for (size_t ix = xmin + 1; ix < xmax + 1; ix++) {
+      coords.push_back(vtr::Point<size_t>(ix, ymax));
+    }
+    for (size_t iy = ymax - 1; iy > ymin; iy--) {
+      coords.push_back(vtr::Point<size_t>(xmax, iy));
+    }
+    for (size_t ix = xmax; ix > xmin; ix--) {
+      coords.push_back(vtr::Point<size_t>(ix, ymin));
+    }
+    xmin++;
+    ymin++;
+    xmax--;
+    ymax--;
+  }
+
+  /* If height is odd, add the missing horizental line */
+  if ((grids.height() - 2 % 2) == 1) {
+    if (ymin == ymax) {
+      for (size_t ix = xmin; ix < xmax + 1; ix++) {
+        coords.push_back(vtr::Point<size_t>(ix, ymin));
+      }
+    }
+  }
+  /* If width is odd, add the missing vertical line */
+  if ((grids.width() - 2 % 2) == 1) {
+    if (xmin == xmax) {
+      for (size_t iy = ymin; iy < ymax + 1; iy++) {
+        coords.push_back(vtr::Point<size_t>(xmin, iy));
+      }
+    }
+  }
+
+  /* Now walk through the coordinates */
+  for (vtr::Point<size_t> coord : coords) {
+    /* Bypass EMPTY grid */
+    if (true == is_empty_type(grids[coord.x()][coord.y()].type)) {
+      continue;
+    } 
+    /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
+    if ( (0 < grids[coord.x()][coord.y()].width_offset)
+      || (0 < grids[coord.x()][coord.y()].height_offset)) {
+      continue;
+    }
+    /* Find the module name for this type of grid */
+    t_physical_tile_type_ptr grid_type = grids[coord.x()][coord.y()].type;
+    std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
+    std::string grid_module_name = generate_grid_block_module_name(grid_module_name_prefix, std::string(grid_type->name), is_io_type(grid_type), NUM_SIDES);
+    ModuleId grid_module = module_manager.find_module(grid_module_name);
+    VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
+    /* Add a I/O children to top_module*/
+    module_manager.add_io_child(top_module, grid_module, grid_instance_ids[coord.x()][coord.y()], vtr::Point<int>(coord.x(), coord.y()));
+  }
+}
+
+/********************************************************************
  * Print the top-level module for the FPGA fabric in Verilog format
  * This function will 
  * 1. name the top-level module
@@ -327,6 +438,9 @@ int build_top_module(ModuleManager& module_manager,
   /* Add all the CBX and CBYs across the fabric */
   cb_instance_ids[CHANX] = add_top_module_connection_block_instances(module_manager, top_module, device_rr_gsb, CHANX, compact_routing_hierarchy);
   cb_instance_ids[CHANY] = add_top_module_connection_block_instances(module_manager, top_module, device_rr_gsb, CHANY, compact_routing_hierarchy);
+
+  /* Update I/O children list */
+  add_top_module_io_children(module_manager, top_module, grids, grid_instance_ids);
 
   /* Add nets when we need a complete fabric modeling,
    * which is required by downstream functions
