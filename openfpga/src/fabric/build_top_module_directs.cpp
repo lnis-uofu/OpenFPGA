@@ -131,7 +131,7 @@ void add_module_nets_tile_direct_connection(ModuleManager& module_manager,
 
   /* Add a submodule of direct connection module to the top-level module */
   size_t direct_instance_id = module_manager.num_instance(top_module, direct_module);
-  module_manager.add_child_module(top_module, direct_module);
+  module_manager.add_child_module(top_module, direct_module, false);
 
   /* Create the 1st module net */
   ModuleNetId net_direct_src = module_manager.create_module_net(top_module); 

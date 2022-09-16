@@ -22,6 +22,7 @@ Please reveal the following architecture features in the names to help quickly s
 - reduced\_io: If I/Os only appear a certain or multiple sides of FPGAs 
 - registerable\_io: If I/Os are registerable (can be either combinational or sequential)
 - CustomIoLoc: Use OpenFPGA's extended custom I/O location syntax
+- rstOnLut: The reset signal of CLB can feed LUT inputs through a local routing architecture
 - <feature\_size>: The technology node which the delay numbers are extracted from.
 - TileOrgz<Type>: How tile is organized. 
   * Top-left (Tl): the pins of a tile are placed on the top side and left side only

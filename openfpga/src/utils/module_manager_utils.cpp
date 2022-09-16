@@ -1326,7 +1326,7 @@ void add_module_nets_cmos_memory_frame_decoder_config_bus(ModuleManager& module_
 
   /* Instanciate the decoder module here */
   VTR_ASSERT(0 == module_manager.num_instance(parent_module, decoder_module));
-  module_manager.add_child_module(parent_module, decoder_module);
+  module_manager.add_child_module(parent_module, decoder_module, false);
 
   /* Connect the enable (EN) port of memory modules under the parent module
    * to the frame decoder inputs
@@ -1802,39 +1802,37 @@ void add_module_io_ports_from_child_modules(ModuleManager& module_manager,
   std::vector<BasicPort> gpio_ports_to_add;
   std::vector<bool> mappable_gpio_ports;
 
-  /* Iterate over the child modules */
-  for (const ModuleId& child : module_manager.child_modules(module_id)) {
-    /* Iterate over the child instances */
-    for (size_t i = 0; i < module_manager.num_instance(module_id, child); ++i) {
-      /* Find all the global ports, whose port type is special */
-      for (const ModulePortId& gpio_port_id : module_manager.module_port_ids_by_type(child, module_port_type)) {
-        const BasicPort& gpio_port = module_manager.module_port(child, gpio_port_id);
-        /* If this port is not mergeable, we update the list */
-        bool is_mergeable = false;
-        for (size_t i_gpio_port_to_add = 0; i_gpio_port_to_add < gpio_ports_to_add.size(); ++i_gpio_port_to_add) {
-          BasicPort& gpio_port_to_add = gpio_ports_to_add[i_gpio_port_to_add];
-          if (false == gpio_port_to_add.mergeable(gpio_port)) {
-            continue;
-          }
-          is_mergeable = true;
-          /* Mappable I/O property must match! Mismatch rarely happened
-           * but should error out avoid silent bugs!
-           */
-          VTR_ASSERT(module_manager.port_is_mappable_io(child, gpio_port_id) == mappable_gpio_ports[i_gpio_port_to_add]);
-          /* For mergeable ports, we combine the port
-           * Note: do NOT use the merge() method!
-           * the GPIO ports should be accumulated by the sizes of ports
-           * not by the LSB/MSB range !!! 
-           */
-          gpio_port_to_add.combine(gpio_port);
-          break;
+  /* Iterate over the child modules and instances */
+  for (size_t i = 0; i < module_manager.io_children(module_id).size(); ++i) {
+    ModuleId child = module_manager.io_children(module_id)[i];
+    /* Find all the global ports, whose port type is special */
+    for (const ModulePortId& gpio_port_id : module_manager.module_port_ids_by_type(child, module_port_type)) {
+      const BasicPort& gpio_port = module_manager.module_port(child, gpio_port_id);
+      /* If this port is not mergeable, we update the list */
+      bool is_mergeable = false;
+      for (size_t i_gpio_port_to_add = 0; i_gpio_port_to_add < gpio_ports_to_add.size(); ++i_gpio_port_to_add) {
+        BasicPort& gpio_port_to_add = gpio_ports_to_add[i_gpio_port_to_add];
+        if (false == gpio_port_to_add.mergeable(gpio_port)) {
+          continue;
         }
-        if (false == is_mergeable) {
-          /* Reach here, this is an unique gpio port, update the list */
-          gpio_ports_to_add.push_back(gpio_port);
-          /* If the gpio port is a mappable I/O, we should herit from the child module */
-          mappable_gpio_ports.push_back(module_manager.port_is_mappable_io(child, gpio_port_id));
-        }
+        is_mergeable = true;
+        /* Mappable I/O property must match! Mismatch rarely happened
+         * but should error out avoid silent bugs!
+         */
+        VTR_ASSERT(module_manager.port_is_mappable_io(child, gpio_port_id) == mappable_gpio_ports[i_gpio_port_to_add]);
+        /* For mergeable ports, we combine the port
+         * Note: do NOT use the merge() method!
+         * the GPIO ports should be accumulated by the sizes of ports
+         * not by the LSB/MSB range !!! 
+         */
+        gpio_port_to_add.combine(gpio_port);
+        break;
+      }
+      if (false == is_mergeable) {
+        /* Reach here, this is an unique gpio port, update the list */
+        gpio_ports_to_add.push_back(gpio_port);
+        /* If the gpio port is a mappable I/O, we should herit from the child module */
+        mappable_gpio_ports.push_back(module_manager.port_is_mappable_io(child, gpio_port_id));
       }
     }
   } 
@@ -1854,49 +1852,47 @@ void add_module_io_ports_from_child_modules(ModuleManager& module_manager,
   /* Set up a counter for each type of GPIO port */
   std::vector<size_t> gpio_port_lsb(gpio_ports_to_add.size(), 0);
   /* Add module nets to connect the GPIOs of the module to the GPIOs of the sub module */
-  for (const ModuleId& child : module_manager.child_modules(module_id)) {
-    /* Iterate over the child instances */
-    for (const size_t& child_instance : module_manager.child_module_instances(module_id, child)) {
-      /* Find all the global ports, whose port type is special */
-      for (ModulePortId child_gpio_port_id : module_manager.module_port_ids_by_type(child, module_port_type)) {
-        BasicPort child_gpio_port = module_manager.module_port(child, child_gpio_port_id);
-        /* Find the port with the same name! */
-        for (size_t iport = 0; iport < gpio_ports_to_add.size(); ++iport) {
-          if (false == gpio_ports_to_add[iport].mergeable(child_gpio_port)) {
-            continue;
-          }
-          /* For each pin of the child port, create a net and do wiring */
-          for (const size_t& pin_id : child_gpio_port.pins()) {
-            /* Reach here, it means this is the port we want, create a net and configure its source and sink */
-            /* - For GPIO and GPIN ports
-             *   the source of the net is the current module 
-             *   the sink of the net is the child module
-             * - For GPOUT ports
-             *   the source of the net is the child module
-             *   the sink of the net is the current module 
-             */
-            if ( (ModuleManager::MODULE_GPIO_PORT == module_port_type)
-              || (ModuleManager::MODULE_GPIN_PORT == module_port_type) ) {
-              ModuleNetId net = create_module_source_pin_net(module_manager, module_id, module_id, 0, gpio_port_ids[iport], gpio_port_lsb[iport]); 
-              module_manager.add_module_net_sink(module_id, net, child, child_instance, child_gpio_port_id, pin_id); 
-            } else {
-              VTR_ASSERT(ModuleManager::MODULE_GPOUT_PORT == module_port_type);
-              ModuleNetId net = create_module_source_pin_net(module_manager, module_id, child, child_instance, child_gpio_port_id, pin_id); 
-              module_manager.add_module_net_sink(module_id, net, module_id, 0, gpio_port_ids[iport], gpio_port_lsb[iport]); 
-            }
-            /* Update the LSB counter */
-            gpio_port_lsb[iport]++;
-          }
-          /* We finish for this child gpio port */
-          break;
+  for (size_t i = 0; i < module_manager.io_children(module_id).size(); ++i) {
+    ModuleId child = module_manager.io_children(module_id)[i];
+    size_t child_instance = module_manager.io_child_instances(module_id)[i];
+    /* Find all the global ports, whose port type is special */
+    for (ModulePortId child_gpio_port_id : module_manager.module_port_ids_by_type(child, module_port_type)) {
+      BasicPort child_gpio_port = module_manager.module_port(child, child_gpio_port_id);
+      /* Find the port with the same name! */
+      for (size_t iport = 0; iport < gpio_ports_to_add.size(); ++iport) {
+        if (false == gpio_ports_to_add[iport].mergeable(child_gpio_port)) {
+          continue;
         }
+        /* For each pin of the child port, create a net and do wiring */
+        for (const size_t& pin_id : child_gpio_port.pins()) {
+          /* Reach here, it means this is the port we want, create a net and configure its source and sink */
+          /* - For GPIO and GPIN ports
+           *   the source of the net is the current module 
+           *   the sink of the net is the child module
+           * - For GPOUT ports
+           *   the source of the net is the child module
+           *   the sink of the net is the current module 
+           */
+          if ( (ModuleManager::MODULE_GPIO_PORT == module_port_type)
+            || (ModuleManager::MODULE_GPIN_PORT == module_port_type) ) {
+            ModuleNetId net = create_module_source_pin_net(module_manager, module_id, module_id, 0, gpio_port_ids[iport], gpio_port_lsb[iport]); 
+            module_manager.add_module_net_sink(module_id, net, child, child_instance, child_gpio_port_id, pin_id); 
+          } else {
+            VTR_ASSERT(ModuleManager::MODULE_GPOUT_PORT == module_port_type);
+            ModuleNetId net = create_module_source_pin_net(module_manager, module_id, child, child_instance, child_gpio_port_id, pin_id); 
+            module_manager.add_module_net_sink(module_id, net, module_id, 0, gpio_port_ids[iport], gpio_port_lsb[iport]); 
+          }
+          /* Update the LSB counter */
+          gpio_port_lsb[iport]++;
+        }
+        /* We finish for this child gpio port */
+        break;
       }
     }
   }
 
   /* Check: all the lsb should now match the size of each GPIO port */
   for (size_t iport = 0; iport < gpio_ports_to_add.size(); ++iport) {
-    if (gpio_ports_to_add[iport].get_width() != gpio_port_lsb[iport]) 
     VTR_ASSERT(gpio_ports_to_add[iport].get_width() == gpio_port_lsb[iport]);
   }
 }
