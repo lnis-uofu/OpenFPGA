@@ -313,7 +313,7 @@ void add_top_module_io_children(ModuleManager& module_manager,
         continue;
       }
       /* Find the module name for this type of grid */
-      t_physical_tile_type_ptr grid_type = grids[io_coordinate.x()][io_coordinate.y()].type;
+      t_physical_tile_type_ptr grid_type = grids[io_coord.x()][io_coord.y()].type;
       std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
       std::string grid_module_name = generate_grid_block_module_name(grid_module_name_prefix, std::string(grid_type->name), is_io_type(grid_type), io_side);
       ModuleId grid_module = module_manager.find_module(grid_module_name);
