@@ -349,7 +349,7 @@ void add_top_module_io_children(ModuleManager& module_manager,
   }
 
   /* If height is odd, add the missing horizental line */
-  if ((grids.height() - 2 % 2) == 1) {
+  if ((grids.height() - 2) % 2 == 1) {
     if (ymin == ymax) {
       for (size_t ix = xmin; ix < xmax + 1; ix++) {
         coords.push_back(vtr::Point<size_t>(ix, ymin));
@@ -357,7 +357,7 @@ void add_top_module_io_children(ModuleManager& module_manager,
     }
   }
   /* If width is odd, add the missing vertical line */
-  if ((grids.width() - 2 % 2) == 1) {
+  if ((grids.width() - 2) % 2 == 1) {
     if (xmin == xmax) {
       for (size_t iy = ymin; iy < ymax + 1; iy++) {
         coords.push_back(vtr::Point<size_t>(xmin, iy));
