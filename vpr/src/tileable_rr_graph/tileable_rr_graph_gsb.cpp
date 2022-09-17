@@ -925,8 +925,9 @@ void build_edges_for_one_tileable_rr_gsb(RRGraph& rr_graph,
                                          const t_track2pin_map& track2ipin_map,
                                          const t_pin2track_map& opin2track_map,
                                          const t_track2track_map& track2track_map,
-                                         const vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches) {
-  
+                                         const vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches,
+                                         size_t& num_edges_to_create) {
+  size_t edge_count = 0; 
   /* Walk through each sides */ 
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
     SideManager side_manager(side);
@@ -940,6 +941,7 @@ void build_edges_for_one_tileable_rr_gsb(RRGraph& rr_graph,
       /* add edges to the opin_node */
       for (const RRNodeId& track_node : opin2track_map[gsb_side][inode]) {
         rr_graph.create_edge(opin_node, track_node, rr_node_driver_switches[track_node]);
+        edge_count++;
       }
     }
 
@@ -954,6 +956,7 @@ void build_edges_for_one_tileable_rr_gsb(RRGraph& rr_graph,
         const RRNodeId& chan_node = rr_gsb.get_chan_node(gsb_side, inode); 
         for (const RRNodeId& ipin_node : track2ipin_map[gsb_side][inode]) {
           rr_graph.create_edge(chan_node, ipin_node, rr_node_driver_switches[ipin_node]);
+          edge_count++;
         }
       }
     }
@@ -963,9 +966,12 @@ void build_edges_for_one_tileable_rr_gsb(RRGraph& rr_graph,
       const RRNodeId& chan_node = rr_gsb.get_chan_node(gsb_side, inode); 
       for (const RRNodeId& track_node : track2track_map[gsb_side][inode]) {
         rr_graph.create_edge(chan_node, track_node, rr_node_driver_switches[track_node]);
+        edge_count++;
       }
     }
   }
+  VTR_LOG("Number of edges to create for gsb[%ld][%ld]: %ld\n", rr_gsb.get_x(), rr_gsb.get_y(), edge_count);
+  num_edges_to_create += edge_count; 
 }
 
 /************************************************************************

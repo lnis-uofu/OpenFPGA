@@ -25,7 +25,9 @@ namespace openfpga {
 static 
 void build_rr_graph_edges_for_source_nodes(RRGraph& rr_graph,
                                            const vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches,
-                                           const DeviceGrid& grids) {
+                                           const DeviceGrid& grids, 
+                                           size_t& num_edges_to_create) {
+  size_t edge_count = 0;
   for (const RRNodeId& node : rr_graph.nodes()) {
     /* Bypass all the non OPIN nodes */
     if (OPIN != rr_graph.node_type(node)) {
@@ -45,7 +47,10 @@ void build_rr_graph_edges_for_source_nodes(RRGraph& rr_graph,
 
     /* add edges to the src_node */
     rr_graph.create_edge(src_node, node, rr_node_driver_switches[node]);
+    edge_count++;
   }
+  VTR_LOG("Number edges to create source nodes: %d\n", edge_count);
+  num_edges_to_create += edge_count;
 }
 
 /************************************************************************
@@ -55,7 +60,9 @@ void build_rr_graph_edges_for_source_nodes(RRGraph& rr_graph,
 static 
 void build_rr_graph_edges_for_sink_nodes(RRGraph& rr_graph,
                                          const vtr::vector<RRNodeId, RRSwitchId>& rr_node_driver_switches,
-                                         const DeviceGrid& grids) {
+                                         const DeviceGrid& grids,
+                                         size_t& num_edges_to_create) {
+  size_t edge_count = 0;
   for (const RRNodeId& node : rr_graph.nodes()) {
     /* Bypass all the non IPIN nodes */
     if (IPIN != rr_graph.node_type(node)) {
@@ -74,7 +81,10 @@ void build_rr_graph_edges_for_sink_nodes(RRGraph& rr_graph,
 
     /* add edges to connect the IPIN node to SINK nodes */
     rr_graph.create_edge(node, sink_node, rr_node_driver_switches[sink_node]);
+    edge_count++;
   }
+  VTR_LOG("Number edges to create sink nodes: %d\n", edge_count);
+  num_edges_to_create += edge_count;
 }
 
 /************************************************************************
@@ -97,10 +107,10 @@ void build_rr_graph_edges(RRGraph& rr_graph,
                           const e_switch_block_type& sb_type, const int& Fs,
                           const e_switch_block_type& sb_subtype, const int& subFs,
                           const bool& wire_opposite_side) {
-
+  size_t num_edges_to_create = 0;
   /* Create edges for SOURCE and SINK nodes for a tileable rr_graph */
-  build_rr_graph_edges_for_source_nodes(rr_graph, rr_node_driver_switches, grids);
-  build_rr_graph_edges_for_sink_nodes(rr_graph, rr_node_driver_switches, grids);
+  build_rr_graph_edges_for_source_nodes(rr_graph, rr_node_driver_switches, grids, num_edges_to_create);
+  build_rr_graph_edges_for_sink_nodes(rr_graph, rr_node_driver_switches, grids, num_edges_to_create);
 
   vtr::Point<size_t> gsb_range(grids.width() - 2, grids.height() - 2);
 
@@ -132,10 +142,11 @@ void build_rr_graph_edges(RRGraph& rr_graph,
       /* Build edges for a GSB */
       build_edges_for_one_tileable_rr_gsb(rr_graph, rr_gsb,
                                           track2ipin_map, opin2track_map, 
-                                          sb_conn, rr_node_driver_switches);
+                                          sb_conn, rr_node_driver_switches, num_edges_to_create);
       /* Finish this GSB, go to the next*/
     }
   }
+  VTR_LOG("Number of edges to create: %ld\n", num_edges_to_create);
 }
 
 /************************************************************************
