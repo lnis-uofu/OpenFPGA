@@ -282,9 +282,6 @@ bool is_cb_node_mirror(const RRGraphView& rr_graph,
                        const e_side& node_side, 
                        const size_t& node_id) {
   /* Ensure rr_nodes are either the output of short-connection or multiplexer  */
-  RRNodeId node = base.get_ipin_node(node_side, node_id);
-  RRNodeId cand_node = cand.get_ipin_node(node_side, node_id);
-
   std::vector<RREdgeId> node_in_edges = base.get_ipin_node_in_edges(rr_graph, node_side, node_id);
   std::vector<RREdgeId> cand_node_in_edges = cand.get_ipin_node_in_edges(rr_graph, node_side, node_id);
   if (node_in_edges.size() != cand_node_in_edges.size()) {
