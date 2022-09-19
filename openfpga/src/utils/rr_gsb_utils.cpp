@@ -285,20 +285,11 @@ bool is_cb_node_mirror(const RRGraphView& rr_graph,
   RRNodeId node = base.get_ipin_node(node_side, node_id);
   RRNodeId cand_node = cand.get_ipin_node(node_side, node_id);
 
-  if ( rr_graph.node_in_edges(node).size() != rr_graph.node_in_edges(cand_node).size() ) {
+  std::vector<RREdgeId> node_in_edges = base.get_ipin_node_in_edges(rr_graph, node_side, node_id);
+  std::vector<RREdgeId> cand_node_in_edges = cand.get_ipin_node_in_edges(rr_graph, node_side, node_id);
+  if (node_in_edges.size() != cand_node_in_edges.size()) {
     return false;
   }
-
-  std::vector<RREdgeId> node_in_edges;
-  for (const RREdgeId& edge : rr_graph.node_in_edges(node)) {
-    node_in_edges.push_back(edge);
-  }
-
-  std::vector<RREdgeId> cand_node_in_edges;
-  for (const RREdgeId& edge : rr_graph.node_in_edges(cand_node)) {
-    cand_node_in_edges.push_back(edge);
-  }
-  VTR_ASSERT(node_in_edges.size() == cand_node_in_edges.size());
 
   for (size_t iedge = 0; iedge < node_in_edges.size(); ++iedge) {
     RREdgeId src_edge = node_in_edges[iedge];

@@ -42,11 +42,13 @@ void write_rr_gsb_ipin_connection_to_xml(std::fstream& fp,
     if (include_rr_info) {
        fp << "\" node_id=\"" << size_t(cur_rr_node);
     }
-    fp << "\" mux_size=\"" << get_rr_graph_configurable_driver_nodes(rr_graph, cur_rr_node).size()
+    std::vector<RREdgeId> driver_rr_edges = rr_gsb.get_ipin_node_in_edges(rr_graph, gsb_side, inode);
+    fp << "\" mux_size=\"" << driver_rr_edges.size()
        << "\">" 
        << std::endl; 
     /* General information of each driving nodes */
-    for (const RRNodeId& driver_node : get_rr_graph_configurable_driver_nodes(rr_graph, cur_rr_node)) {
+    for (const RREdgeId& edge : driver_rr_edges) {
+      RRNodeId driver_node = rr_graph.edge_src_node(edge);
       /* Skip OPINs: they should be in direct connections */
       if (OPIN == rr_graph.node_type(driver_node)) {
         continue;

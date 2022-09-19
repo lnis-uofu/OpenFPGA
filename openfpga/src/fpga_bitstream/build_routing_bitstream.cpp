@@ -358,7 +358,11 @@ void build_connection_block_interc_bitstream(BitstreamManager& bitstream_manager
   RRNodeId src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
 
   /* Consider configurable edges only */
-  std::vector<RRNodeId> driver_rr_nodes = get_rr_graph_configurable_driver_nodes(rr_graph, src_rr_node);
+  std::vector<RREdgeId> driver_rr_edges = rr_gsb.get_ipin_node_in_edges(rr_graph, cb_ipin_side, ipin_index);
+  std::vector<RRNodeId> driver_rr_nodes;
+  for (const RREdgeId curr_edge : driver_rr_edges) {
+    driver_rr_nodes.push_back(rr_graph.edge_src_node(curr_edge));
+  }
 
   if (1 == driver_rr_nodes.size()) {
     /* No bitstream generation required by a special direct connection*/

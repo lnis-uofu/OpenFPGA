@@ -488,10 +488,16 @@ void build_connection_block_module_short_interc(ModuleManager& module_manager,
                                                 const RRGraphView& rr_graph,
                                                 const RRGSB& rr_gsb,
                                                 const t_rr_type& cb_type,
-                                                const RRNodeId& src_rr_node,
+                                                const e_side& cb_ipin_side,
+                                                const size_t& ipin_index,
                                                 const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
   /* Ensure we have only one 1 driver node */
-  std::vector<RRNodeId> driver_rr_nodes = get_rr_graph_configurable_driver_nodes(rr_graph, src_rr_node);
+  const RRNodeId& src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
+  std::vector<RREdgeId> driver_rr_edges = rr_gsb.get_ipin_node_in_edges(rr_graph, cb_ipin_side, ipin_index);
+  std::vector<RRNodeId> driver_rr_nodes;
+  for (const RREdgeId curr_edge : driver_rr_edges) {
+    driver_rr_nodes.push_back(rr_graph.edge_src_node(curr_edge));
+  }
 
   /* We have OPINs since we may have direct connections:
    * These connections should be handled by other functions in the compact_netlist.c 
@@ -558,7 +564,11 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
   VTR_ASSERT(IPIN == rr_graph.node_type(cur_rr_node));
 
   /* Build a vector of driver rr_nodes */
-  std::vector<RRNodeId> driver_rr_nodes = get_rr_graph_configurable_driver_nodes(rr_graph, cur_rr_node);
+  std::vector<RREdgeId> driver_rr_edges = rr_gsb.get_ipin_node_in_edges(rr_graph, cb_ipin_side, ipin_index);
+  std::vector<RRNodeId> driver_rr_nodes;
+  for (const RREdgeId curr_edge : driver_rr_edges) {
+    driver_rr_nodes.push_back(rr_graph.edge_src_node(curr_edge));
+  }
 
   std::vector<RRSwitchId> driver_switches = get_rr_graph_driver_switches(rr_graph, cur_rr_node);
   VTR_ASSERT(1 == driver_switches.size());
@@ -668,14 +678,15 @@ void build_connection_block_interc_modules(ModuleManager& module_manager,
                                            const size_t& ipin_index,
                                            const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
   const RRNodeId& src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
+  std::vector<RREdgeId> driver_rr_edges = rr_gsb.get_ipin_node_in_edges(rr_graph, cb_ipin_side, ipin_index);
 
-  if (1 > rr_graph.node_in_edges(src_rr_node).size()) {
+  if (1 > driver_rr_edges.size()) {
     return; /* This port has no driver, skip it */
-  } else if (1 == rr_graph.node_in_edges(src_rr_node).size()) {
+  } else if (1 == driver_rr_edges.size()) {
     /* Print a direct connection */
-    build_connection_block_module_short_interc(module_manager, cb_module, device_annotation, grids, rr_graph, rr_gsb, cb_type, src_rr_node, input_port_to_module_nets);
+    build_connection_block_module_short_interc(module_manager, cb_module, device_annotation, grids, rr_graph, rr_gsb, cb_type, cb_ipin_side, ipin_index, input_port_to_module_nets);
 
-  } else if (1 < rr_graph.node_in_edges(src_rr_node).size()) {
+  } else if (1 < driver_rr_edges.size()) {
     /* Print the multiplexer, fan_in >= 2 */
     build_connection_block_mux_module(module_manager, 
                                       cb_module, device_annotation,
