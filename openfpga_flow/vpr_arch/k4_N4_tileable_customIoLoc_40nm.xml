@@ -134,10 +134,7 @@
     </fixed_layout>
     <fixed_layout name="4x4_io_center" width="6" height="6">
       <!--Perimeter of 'clb' blocks, I/Os are placed in the center-->
-      <row type="clb" starty="H-2" priority="90"/>
-      <row type="clb" starty="1" priority="91"/>
-      <col type="clb" startx="W-2" priority="93"/>
-      <col type="clb" startx="1" priority="93"/>
+      <region type="io_top" startx="2" starty="2" endx="3" endy="3" repeatx="W-1" repeaty="H-1" priority="105"/>
       <row type="EMPTY" starty="H-1" priority="101"/>
       <row type="EMPTY" starty="0" priority="102"/>
       <col type="EMPTY" startx="0" priority="103"/>
@@ -148,20 +145,18 @@
     </fixed_layout>
     <fixed_layout name="4x3_io_center" width="6" height="5">
       <!--Perimeter of 'clb' blocks, I/Os are placed in the center-->
-      <row type="clb" starty="H-2" priority="90"/>
-      <row type="clb" starty="1" priority="91"/>
-      <col type="clb" startx="W-2" priority="93"/>
-      <col type="clb" startx="1" priority="93"/>
+      <region type="io_top" startx="2" starty="2" endx="3" endy="2" repeatx="W-1" repeaty="H-1" priority="105"/>
       <row type="EMPTY" starty="H-1" priority="101"/>
       <row type="EMPTY" starty="0" priority="102"/>
       <col type="EMPTY" startx="0" priority="103"/>
       <col type="EMPTY" startx="W-1" priority="104"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
-      <fill type="io_top" priority="10"/>
+      <fill type="clb" priority="10"/>
     </fixed_layout>
     <fixed_layout name="3x4_io_center" width="5" height="6">
       <!--Perimeter of 'clb' blocks, I/Os are placed in the center-->
+      <region type="io_top" startx="2" starty="2" endx="2" endy="3" repeatx="W-1" repeaty="H-1" priority="105"/>
       <row type="clb" starty="H-2" priority="90"/>
       <row type="clb" starty="1" priority="91"/>
       <col type="clb" startx="W-2" priority="93"/>
