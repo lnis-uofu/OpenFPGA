@@ -1,0 +1,6 @@
+#block name	x	y	subblk	block number
+#----------	--	--	------	------------
+c		2	2	0	#0
+out:c		3	2	6	#1
+a		3	2	0	#2
+b		3	2	4	#3
