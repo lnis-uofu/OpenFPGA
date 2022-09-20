@@ -205,8 +205,8 @@ cd ${OPENFPGA_PATH}
 pwd
 git config --global --add safe.directory ${OPENFPGA_PATH}
 git log
-git diff --name-status -- :${OPENFPGA_PATH}/openfpga_flow/tasks/basic_tests/no_time_stamp/*/golden_outputs_no_time_stamp/**
-if git diff --name-status --exit-code -- :${OPENFPGA_PATH}/openfpga_flow/tasks/basic_tests/no_time_stamp/*/golden_outputs_no_time_stamp/**; then
+git diff --name-status -- ':openfpga_flow/tasks/basic_tests/no_time_stamp/*/golden_outputs_no_time_stamp/**'
+if git diff --name-status --exit-code -- ':/openfpga_flow/tasks/basic_tests/no_time_stamp/*/golden_outputs_no_time_stamp/**'; then
   echo -e "Golden netlist remain unchanged"
 else
   echo -e "Detect changes in golden netlists"; exit 1;
