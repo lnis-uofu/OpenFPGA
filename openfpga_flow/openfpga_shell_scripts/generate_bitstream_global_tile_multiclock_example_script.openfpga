@@ -2,7 +2,7 @@
 # When the global clock is defined as a port of a tile, clock routing in VPR should be skipped
 # This is due to the Fc_in of clock port is set to 0 for global wiring
 #--write_rr_graph example_rr_graph.xml
-vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --skip_sync_clustering_and_routing_results off
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --skip_sync_clustering_and_routing_results on
 
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
