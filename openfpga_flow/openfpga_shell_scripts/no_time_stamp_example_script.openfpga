@@ -2,7 +2,7 @@
 # This script is designed to test the option --no_time_stamp in related commands
 # It can NOT be used an example script to achieve other objectives
 #--write_rr_graph example_rr_graph.xml
-vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --device ${OPENFPGA_VPR_DEVICE_LAYOUT} --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH} --clock_modeling route
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} --device ${OPENFPGA_VPR_DEVICE_LAYOUT} --route_chan_width ${OPENFPGA_VPR_ROUTE_CHAN_WIDTH} --clock_modeling route --skip_sync_clustering_and_routing_results off
 
 # Read OpenFPGA architecture definition
 read_openfpga_arch -f ${OPENFPGA_ARCH_FILE}
