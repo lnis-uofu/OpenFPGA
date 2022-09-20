@@ -141,7 +141,7 @@
       <col type="EMPTY" startx="W-1" priority="104"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
-      <fill type="io_top" priority="10"/>
+      <fill type="clb" priority="10"/>
     </fixed_layout>
     <fixed_layout name="4x3_io_center" width="6" height="5">
       <!--Perimeter of 'clb' blocks, I/Os are placed in the center-->
