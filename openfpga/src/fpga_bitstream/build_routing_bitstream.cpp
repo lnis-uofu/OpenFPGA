@@ -243,15 +243,20 @@ void build_connection_block_mux_bitstream(BitstreamManager& bitstream_manager,
                                           const VprDeviceAnnotation& device_annotation,
                                           const VprRoutingAnnotation& routing_annotation,
                                           const RRGraphView& rr_graph,
-                                          const RRNodeId& src_rr_node) {
+                                          const RRGSB& rr_gsb,
+                                          const e_side& cb_ipin_side, 
+                                          const size_t& ipin_index) {
 
+  RRNodeId src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
   /* Find drive_rr_nodes*/
   size_t datapath_mux_size = rr_graph.node_fan_in(src_rr_node);
+
+  std::vector<RREdgeId> driver_rr_edges = rr_gsb.get_ipin_node_in_edges(rr_graph, cb_ipin_side, ipin_index);
 
   /* Cache input and output nets */
   std::vector<ClusterNetId> input_nets;
   ClusterNetId output_net = routing_annotation.rr_node_net(src_rr_node);
-  for (const RREdgeId& edge : rr_graph.node_in_edges(src_rr_node)) {
+  for (const RREdgeId& edge : driver_rr_edges) {
     RRNodeId driver_node = rr_graph.edge_src_node(edge);
     input_nets.push_back(routing_annotation.rr_node_net(driver_node));
   }
@@ -266,7 +271,7 @@ void build_connection_block_mux_bitstream(BitstreamManager& bitstream_manager,
    * - There is a net mapped to src_rr_node: we find the path id
    */
   if (ClusterNetId::INVALID() != output_net) {
-    for (const RREdgeId& edge : rr_graph.node_in_edges(src_rr_node)) {
+    for (const RREdgeId& edge : driver_rr_edges) {
       RRNodeId driver_node = rr_graph.edge_src_node(edge);
       /* We must have a valid previous node that is supposed to drive the source node! */
       VTR_ASSERT(routing_annotation.rr_node_prev_node(src_rr_node));
@@ -375,7 +380,7 @@ void build_connection_block_interc_bitstream(BitstreamManager& bitstream_manager
     build_connection_block_mux_bitstream(bitstream_manager, mux_mem_block, 
                                          module_manager, circuit_lib, mux_lib, 
                                          atom_ctx, device_annotation, routing_annotation,
-                                         rr_graph, src_rr_node);
+                                         rr_graph, rr_gsb, cb_ipin_side, ipin_index);
   } /*Nothing should be done else*/ 
 }
 
