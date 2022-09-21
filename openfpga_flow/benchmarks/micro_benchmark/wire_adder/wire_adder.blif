@@ -1,0 +1,21 @@
+# An artificial benchmark created to test the mapping of LUT + adder pairs
+
+.model wire_adder
+.inputs a
+.outputs b
+
+.names $false
+.names $true
+1
+
+.name a a_inv
+0 1
+
+.subckt adder a=$true b=$false cout=a_cout
+.subckt adder a=a_inv b=$true sumout=b
+
+.end
+
+.model adder a b cin cout sumout
+.blackbox
+.end
