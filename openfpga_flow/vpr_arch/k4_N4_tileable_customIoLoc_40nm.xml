@@ -93,128 +93,123 @@
       <auto_layout aspect_ratio="1.0">   
          <!--Perimeter of 'EMPTY' blocks, I/Os are placed on the inner ring
         Intend to have no I/Os on the left side, it is to check the correctness of I/O indexing in OpenFPGA
-        -->   
-         <row type="io_top" starty="H-2" priority="90"/>   
-         <row type="io_bottom" starty="1" priority="91"/>   
-         <col type="io_right" startx="W-2" priority="93"/>   
-         <row type="EMPTY" starty="H-1" priority="101"/>   
-         <row type="EMPTY" starty="0" priority="102"/>   
-         <col type="EMPTY" startx="0" priority="103"/>   
-         <col type="EMPTY" startx="W-1" priority="104"/>   
-         <corners type="EMPTY" priority="101"/>   
-         <!--Fill with 'clb'-->   
-         <fill type="clb" priority="10"/>   
-      </auto_layout>  
-      <fixed_layout name="2x2" width="4" height="4">   
-         <!--Perimeter of 'EMPTY' blocks, I/Os are placed on the inner ring -->   
-         <row type="io_top" starty="H-2" priority="90"/>   
-         <row type="io_bottom" starty="1" priority="91"/>   
-         <col type="io_right" startx="W-2" priority="93"/>   
-         <row type="EMPTY" starty="H-1" priority="101"/>   
-         <row type="EMPTY" starty="0" priority="102"/>   
-         <col type="EMPTY" startx="0" priority="103"/>   
-         <col type="EMPTY" startx="W-1" priority="104"/>   
-         <corners type="EMPTY" priority="101"/>   
-         <!--Fill with 'clb'-->   
-         <fill type="clb" priority="10"/>   
-      </fixed_layout>  
-      <fixed_layout name="4x4" width="6" height="6">   
-         <!--Perimeter of 'EMPTY' blocks, I/Os are placed on the inner ring -->   
-         <row type="io_top" starty="H-2" priority="90"/>   
-         <row type="io_bottom" starty="1" priority="91"/>   
-         <col type="io_right" startx="W-2" priority="93"/>   
-         <row type="EMPTY" starty="H-1" priority="101"/>   
-         <row type="EMPTY" starty="0" priority="102"/>   
-         <col type="EMPTY" startx="0" priority="103"/>   
-         <col type="EMPTY" startx="W-1" priority="104"/>   
-         <corners type="EMPTY" priority="101"/>   
-         <!--Fill with 'clb'-->   
-         <fill type="clb" priority="10"/>   
-      </fixed_layout>  
-      <fixed_layout name="4x4_io_center" width="6" height="6">   
-         <!--Perimeter of 'clb' blocks, I/Os are placed in the center-->   
-         <row type="clb" starty="H-2" priority="90"/>   
-         <row type="clb" starty="1" priority="91"/>   
-         <col type="clb" startx="W-2" priority="93"/>   
-         <col type="clb" startx="1" priority="93"/>   
-         <row type="EMPTY" starty="H-1" priority="101"/>   
-         <row type="EMPTY" starty="0" priority="102"/>   
-         <col type="EMPTY" startx="0" priority="103"/>   
-         <col type="EMPTY" startx="W-1" priority="104"/>   
-         <corners type="EMPTY" priority="101"/>   
-         <!--Fill with 'clb'-->   
-         <fill type="io_top" priority="10"/>   
-      </fixed_layout>  
-      <fixed_layout name="4x3_io_center" width="6" height="5">   
-         <!--Perimeter of 'clb' blocks, I/Os are placed in the center-->   
-         <row type="clb" starty="H-2" priority="90"/>   
-         <row type="clb" starty="1" priority="91"/>   
-         <col type="clb" startx="W-2" priority="93"/>   
-         <col type="clb" startx="1" priority="93"/>   
-         <row type="EMPTY" starty="H-1" priority="101"/>   
-         <row type="EMPTY" starty="0" priority="102"/>   
-         <col type="EMPTY" startx="0" priority="103"/>   
-         <col type="EMPTY" startx="W-1" priority="104"/>   
-         <corners type="EMPTY" priority="101"/>   
-         <!--Fill with 'clb'-->   
-         <fill type="io_top" priority="10"/>   
-      </fixed_layout>  
-      <fixed_layout name="3x4_io_center" width="5" height="6">   
-         <!--Perimeter of 'clb' blocks, I/Os are placed in the center-->   
-         <row type="clb" starty="H-2" priority="90"/>   
-         <row type="clb" starty="1" priority="91"/>   
-         <col type="clb" startx="W-2" priority="93"/>   
-         <col type="clb" startx="1" priority="93"/>   
-         <row type="EMPTY" starty="H-1" priority="101"/>   
-         <row type="EMPTY" starty="0" priority="102"/>   
-         <col type="EMPTY" startx="0" priority="103"/>   
-         <col type="EMPTY" startx="W-1" priority="104"/>   
-         <corners type="EMPTY" priority="101"/>   
-         <!--Fill with 'clb'-->   
-         <fill type="io_top" priority="10"/>   
-      </fixed_layout>  
-      <fixed_layout name="48x48" width="50" height="50">   
-         <!--Perimeter of 'EMPTY' blocks, I/Os are placed on the inner ring -->   
-         <row type="io_top" starty="H-2" priority="90"/>   
-         <row type="io_bottom" starty="1" priority="91"/>   
-         <col type="io_right" startx="W-2" priority="93"/>   
-         <row type="EMPTY" starty="H-1" priority="101"/>   
-         <row type="EMPTY" starty="0" priority="102"/>   
-         <col type="EMPTY" startx="0" priority="103"/>   
-         <col type="EMPTY" startx="W-1" priority="104"/>   
-         <corners type="EMPTY" priority="101"/>   
-         <!--Fill with 'clb'-->   
-         <fill type="clb" priority="10"/>   
-      </fixed_layout>  
-      <fixed_layout name="72x72" width="74" height="74">   
-         <!--Perimeter of 'EMPTY' blocks, I/Os are placed on the inner ring -->   
-         <row type="io_top" starty="H-2" priority="90"/>   
-         <row type="io_bottom" starty="1" priority="91"/>   
-         <col type="io_right" startx="W-2" priority="93"/>   
-         <row type="EMPTY" starty="H-1" priority="101"/>   
-         <row type="EMPTY" starty="0" priority="102"/>   
-         <col type="EMPTY" startx="0" priority="103"/>   
-         <col type="EMPTY" startx="W-1" priority="104"/>   
-         <corners type="EMPTY" priority="101"/>   
-         <!--Fill with 'clb'-->   
-         <fill type="clb" priority="10"/>   
-      </fixed_layout>  
-      <fixed_layout name="96x96" width="98" height="98">   
-         <!--Perimeter of 'EMPTY' blocks, I/Os are placed on the inner ring -->   
-         <row type="io_top" starty="H-2" priority="90"/>   
-         <row type="io_bottom" starty="1" priority="91"/>   
-         <col type="io_right" startx="W-2" priority="93"/>   
-         <row type="EMPTY" starty="H-1" priority="101"/>   
-         <row type="EMPTY" starty="0" priority="102"/>   
-         <col type="EMPTY" startx="0" priority="103"/>   
-         <col type="EMPTY" startx="W-1" priority="104"/>   
-         <corners type="EMPTY" priority="101"/>   
-         <!--Fill with 'clb'-->   
-         <fill type="clb" priority="10"/>   
-      </fixed_layout>  
-   </layout> 
-   <device>  
-      <!-- VB & JL: Using Ian Kuon's transistor sizing and drive strength data for routing, at 40 nm. Ian used BPTM 
+        -->
+      <row type="io_top" starty="H-2" priority="90"/>
+      <row type="io_bottom" starty="1" priority="91"/>
+      <col type="io_right" startx="W-2" priority="93"/>
+      <row type="EMPTY" starty="H-1" priority="101"/>
+      <row type="EMPTY" starty="0" priority="102"/>
+      <col type="EMPTY" startx="0" priority="103"/>
+      <col type="EMPTY" startx="W-1" priority="104"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+    </auto_layout>
+    <fixed_layout name="2x2" width="4" height="4">
+      <!--Perimeter of 'EMPTY' blocks, I/Os are placed on the inner ring -->
+      <row type="io_top" starty="H-2" priority="90"/>
+      <row type="io_bottom" starty="1" priority="91"/>
+      <col type="io_right" startx="W-2" priority="93"/>
+      <row type="EMPTY" starty="H-1" priority="101"/>
+      <row type="EMPTY" starty="0" priority="102"/>
+      <col type="EMPTY" startx="0" priority="103"/>
+      <col type="EMPTY" startx="W-1" priority="104"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+    </fixed_layout>
+    <fixed_layout name="4x4" width="6" height="6">
+      <!--Perimeter of 'EMPTY' blocks, I/Os are placed on the inner ring -->
+      <row type="io_top" starty="H-2" priority="90"/>
+      <row type="io_bottom" starty="1" priority="91"/>
+      <col type="io_right" startx="W-2" priority="93"/>
+      <row type="EMPTY" starty="H-1" priority="101"/>
+      <row type="EMPTY" starty="0" priority="102"/>
+      <col type="EMPTY" startx="0" priority="103"/>
+      <col type="EMPTY" startx="W-1" priority="104"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+    </fixed_layout>
+    <fixed_layout name="4x4_io_center" width="6" height="6">
+      <!--Perimeter of 'clb' blocks, I/Os are placed in the center-->
+      <region type="io_top" startx="2" starty="2" endx="3" endy="3" repeatx="W-1" repeaty="H-1" priority="105"/>
+      <row type="EMPTY" starty="H-1" priority="101"/>
+      <row type="EMPTY" starty="0" priority="102"/>
+      <col type="EMPTY" startx="0" priority="103"/>
+      <col type="EMPTY" startx="W-1" priority="104"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+    </fixed_layout>
+    <fixed_layout name="4x3_io_center" width="6" height="5">
+      <!--Perimeter of 'clb' blocks, I/Os are placed in the center-->
+      <region type="io_top" startx="2" starty="2" endx="3" endy="2" repeatx="W-1" repeaty="H-1" priority="105"/>
+      <row type="EMPTY" starty="H-1" priority="101"/>
+      <row type="EMPTY" starty="0" priority="102"/>
+      <col type="EMPTY" startx="0" priority="103"/>
+      <col type="EMPTY" startx="W-1" priority="104"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+    </fixed_layout>
+    <fixed_layout name="3x4_io_center" width="5" height="6">
+      <!--Perimeter of 'clb' blocks, I/Os are placed in the center-->
+      <region type="io_top" startx="2" starty="2" endx="2" endy="3" repeatx="W-1" repeaty="H-1" priority="105"/>
+      <row type="clb" starty="H-2" priority="90"/>
+      <row type="clb" starty="1" priority="91"/>
+      <col type="clb" startx="W-2" priority="93"/>
+      <col type="clb" startx="1" priority="93"/>
+      <row type="EMPTY" starty="H-1" priority="101"/>
+      <row type="EMPTY" starty="0" priority="102"/>
+      <col type="EMPTY" startx="0" priority="103"/>
+      <col type="EMPTY" startx="W-1" priority="104"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="io_top" priority="10"/>
+    </fixed_layout>
+    <fixed_layout name="48x48" width="50" height="50">
+      <!--Perimeter of 'EMPTY' blocks, I/Os are placed on the inner ring -->
+      <row type="io_top" starty="H-2" priority="90"/>
+      <row type="io_bottom" starty="1" priority="91"/>
+      <col type="io_right" startx="W-2" priority="93"/>
+      <row type="EMPTY" starty="H-1" priority="101"/>
+      <row type="EMPTY" starty="0" priority="102"/>
+      <col type="EMPTY" startx="0" priority="103"/>
+      <col type="EMPTY" startx="W-1" priority="104"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+    </fixed_layout>
+    <fixed_layout name="72x72" width="74" height="74">
+      <!--Perimeter of 'EMPTY' blocks, I/Os are placed on the inner ring -->
+      <row type="io_top" starty="H-2" priority="90"/>
+      <row type="io_bottom" starty="1" priority="91"/>
+      <col type="io_right" startx="W-2" priority="93"/>
+      <row type="EMPTY" starty="H-1" priority="101"/>
+      <row type="EMPTY" starty="0" priority="102"/>
+      <col type="EMPTY" startx="0" priority="103"/>
+      <col type="EMPTY" startx="W-1" priority="104"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+    </fixed_layout>
+    <fixed_layout name="96x96" width="98" height="98">
+      <!--Perimeter of 'EMPTY' blocks, I/Os are placed on the inner ring -->
+      <row type="io_top" starty="H-2" priority="90"/>
+      <row type="io_bottom" starty="1" priority="91"/>
+      <col type="io_right" startx="W-2" priority="93"/>
+      <row type="EMPTY" starty="H-1" priority="101"/>
+      <row type="EMPTY" starty="0" priority="102"/>
+      <col type="EMPTY" startx="0" priority="103"/>
+      <col type="EMPTY" startx="W-1" priority="104"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+    </fixed_layout>
+  </layout>
+  <device>
+    <!-- VB & JL: Using Ian Kuon's transistor sizing and drive strength data for routing, at 40 nm. Ian used BPTM 
 			     models. We are modifying the delay values however, to include metal C and R, which allows more architecture
 			     experimentation. We are also modifying the relative resistance of PMOS to be 1.8x that of NMOS
 			     (vs. Ian's 3x) as 1.8x lines up with Jeff G's data from a 45 nm process (and is more typical of 

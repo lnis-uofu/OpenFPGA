@@ -154,29 +154,6 @@ wire [0:12] sb_1__1__0_chany_bottom_out;
 // ----- BEGIN Local output short connections -----
 // ----- END Local output short connections -----
 
-	grid_clb grid_clb_1__1_ (
-		.prog_clk(prog_clk),
-		.set(set),
-		.reset(reset),
-		.clk(clk),
-		.top_width_0_height_0_subtile_0__pin_I_0_(cbx_1__1__0_bottom_grid_top_width_0_height_0_subtile_0__pin_I_0_),
-		.top_width_0_height_0_subtile_0__pin_I_4_(cbx_1__1__0_bottom_grid_top_width_0_height_0_subtile_0__pin_I_4_),
-		.top_width_0_height_0_subtile_0__pin_I_8_(cbx_1__1__0_bottom_grid_top_width_0_height_0_subtile_0__pin_I_8_),
-		.right_width_0_height_0_subtile_0__pin_I_1_(cby_1__1__0_left_grid_right_width_0_height_0_subtile_0__pin_I_1_),
-		.right_width_0_height_0_subtile_0__pin_I_5_(cby_1__1__0_left_grid_right_width_0_height_0_subtile_0__pin_I_5_),
-		.right_width_0_height_0_subtile_0__pin_I_9_(cby_1__1__0_left_grid_right_width_0_height_0_subtile_0__pin_I_9_),
-		.bottom_width_0_height_0_subtile_0__pin_I_2_(cbx_1__0__0_top_grid_bottom_width_0_height_0_subtile_0__pin_I_2_),
-		.bottom_width_0_height_0_subtile_0__pin_I_6_(cbx_1__0__0_top_grid_bottom_width_0_height_0_subtile_0__pin_I_6_),
-		.bottom_width_0_height_0_subtile_0__pin_clk_0_(cbx_1__0__0_top_grid_bottom_width_0_height_0_subtile_0__pin_clk_0_),
-		.left_width_0_height_0_subtile_0__pin_I_3_(cby_0__1__0_right_grid_left_width_0_height_0_subtile_0__pin_I_3_),
-		.left_width_0_height_0_subtile_0__pin_I_7_(cby_0__1__0_right_grid_left_width_0_height_0_subtile_0__pin_I_7_),
-		.ccff_head(cby_1__1__0_ccff_tail),
-		.top_width_0_height_0_subtile_0__pin_O_2_(grid_clb_0_top_width_0_height_0_subtile_0__pin_O_2_),
-		.right_width_0_height_0_subtile_0__pin_O_3_(grid_clb_0_right_width_0_height_0_subtile_0__pin_O_3_),
-		.bottom_width_0_height_0_subtile_0__pin_O_0_(grid_clb_0_bottom_width_0_height_0_subtile_0__pin_O_0_),
-		.left_width_0_height_0_subtile_0__pin_O_1_(grid_clb_0_left_width_0_height_0_subtile_0__pin_O_1_),
-		.ccff_tail(ccff_tail));
-
 	grid_io_top grid_io_top_1__2_ (
 		.prog_clk(prog_clk),
 		.gfpga_pad_GPIO_PAD(gfpga_pad_GPIO_PAD[0:7]),
@@ -264,6 +241,29 @@ wire [0:12] sb_1__1__0_chany_bottom_out;
 		.right_width_0_height_0_subtile_6__pin_inpad_0_(grid_io_left_0_right_width_0_height_0_subtile_6__pin_inpad_0_),
 		.right_width_0_height_0_subtile_7__pin_inpad_0_(grid_io_left_0_right_width_0_height_0_subtile_7__pin_inpad_0_),
 		.ccff_tail(grid_io_left_0_ccff_tail));
+
+	grid_clb grid_clb_1__1_ (
+		.prog_clk(prog_clk),
+		.set(set),
+		.reset(reset),
+		.clk(clk),
+		.top_width_0_height_0_subtile_0__pin_I_0_(cbx_1__1__0_bottom_grid_top_width_0_height_0_subtile_0__pin_I_0_),
+		.top_width_0_height_0_subtile_0__pin_I_4_(cbx_1__1__0_bottom_grid_top_width_0_height_0_subtile_0__pin_I_4_),
+		.top_width_0_height_0_subtile_0__pin_I_8_(cbx_1__1__0_bottom_grid_top_width_0_height_0_subtile_0__pin_I_8_),
+		.right_width_0_height_0_subtile_0__pin_I_1_(cby_1__1__0_left_grid_right_width_0_height_0_subtile_0__pin_I_1_),
+		.right_width_0_height_0_subtile_0__pin_I_5_(cby_1__1__0_left_grid_right_width_0_height_0_subtile_0__pin_I_5_),
+		.right_width_0_height_0_subtile_0__pin_I_9_(cby_1__1__0_left_grid_right_width_0_height_0_subtile_0__pin_I_9_),
+		.bottom_width_0_height_0_subtile_0__pin_I_2_(cbx_1__0__0_top_grid_bottom_width_0_height_0_subtile_0__pin_I_2_),
+		.bottom_width_0_height_0_subtile_0__pin_I_6_(cbx_1__0__0_top_grid_bottom_width_0_height_0_subtile_0__pin_I_6_),
+		.bottom_width_0_height_0_subtile_0__pin_clk_0_(cbx_1__0__0_top_grid_bottom_width_0_height_0_subtile_0__pin_clk_0_),
+		.left_width_0_height_0_subtile_0__pin_I_3_(cby_0__1__0_right_grid_left_width_0_height_0_subtile_0__pin_I_3_),
+		.left_width_0_height_0_subtile_0__pin_I_7_(cby_0__1__0_right_grid_left_width_0_height_0_subtile_0__pin_I_7_),
+		.ccff_head(cby_1__1__0_ccff_tail),
+		.top_width_0_height_0_subtile_0__pin_O_2_(grid_clb_0_top_width_0_height_0_subtile_0__pin_O_2_),
+		.right_width_0_height_0_subtile_0__pin_O_3_(grid_clb_0_right_width_0_height_0_subtile_0__pin_O_3_),
+		.bottom_width_0_height_0_subtile_0__pin_O_0_(grid_clb_0_bottom_width_0_height_0_subtile_0__pin_O_0_),
+		.left_width_0_height_0_subtile_0__pin_O_1_(grid_clb_0_left_width_0_height_0_subtile_0__pin_O_1_),
+		.ccff_tail(ccff_tail));
 
 	sb_0__0_ sb_0__0_ (
 		.prog_clk(prog_clk),
