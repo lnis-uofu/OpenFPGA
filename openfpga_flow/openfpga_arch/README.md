@@ -34,5 +34,6 @@ Note that an OpenFPGA architecture can be applied to multiple VPR architecture f
 - GlobalTile<Int>Clk<Pin>: How many clocks are defined through global ports from physical tiles.
   * <Int> is the number of clocks 
   * <Pin> When specified, multiple clocks are in separated pins with different names
+- abspath: All the paths in the architecture file are absolute and hardcoded.
 
 Other features are used in naming should be listed here.
