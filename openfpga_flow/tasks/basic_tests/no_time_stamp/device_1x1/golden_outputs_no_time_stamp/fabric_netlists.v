@@ -11,8 +11,9 @@
 `include "fpga_defines.v"
 
 // ------ Include user-defined netlists -----
-`include "/home/tangxifan/test/OpenFPGA/openfpga_flow/openfpga_cell_library/verilog/dff.v"
-`include "/home/tangxifan/test/OpenFPGA/openfpga_flow/openfpga_cell_library/verilog/gpio.v"
+`include "openfpga_flow/openfpga_cell_library/verilog/dff.v"
+`include "/home/tangxifan/temp_to_remove/OpenFPGA/openfpga_flow/openfpga_cell_library/verilog/dff.v"
+`include "openfpga_flow/openfpga_cell_library/verilog/gpio.v"
 // ------ Include primitive module netlists -----
 `include "sub_module/inv_buf_passgate.v"
 `include "sub_module/arch_encoder.v"
