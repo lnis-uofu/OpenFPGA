@@ -119,68 +119,70 @@ int check_tile_annotation_conflicts_with_physical_tile(const TileAnnotation& til
         found_matched_physical_tile++;
 
         /* Must found a valid port where both port name and port size must match!!! */
-        for (const t_physical_tile_port& tile_port : physical_tile.ports) { 
-          if (std::string(tile_port.name) != required_tile_port.get_name()) {
-            continue;
+        for (const t_sub_tile& sub_tile : physical_tile.sub_tiles) {
+          for (const t_physical_tile_port& tile_port : sub_tile.ports) { 
+            if (std::string(tile_port.name) != required_tile_port.get_name()) {
+              continue;
+            }
+
+            BasicPort ref_tile_port(tile_port.name, sub_tile.capacity.total() * tile_port.num_pins);
+            /* Port size must be in range!!! */
+            if (false == ref_tile_port.contained(required_tile_port)) {
+              VTR_LOG_ERROR("Tile annotation port '%s[%lu:%lu]' is out of the range of physical tile port '%s[%lu:%lu]'!",
+                            required_tile_port.get_name().c_str(),
+                            required_tile_port.get_lsb(),
+                            required_tile_port.get_msb(),
+                            ref_tile_port.get_name().c_str(),
+                            ref_tile_port.get_lsb(),
+                            ref_tile_port.get_msb());
+              num_err++;
+              continue;
+            }
+
+
+            /* Check if port property matches */
+            int grid_pin_index = tile_port.absolute_first_pin_index;
+
+            if (tile_port.is_clock != tile_annotation.global_port_is_clock(tile_global_port)) {
+              VTR_LOGF_ERROR(__FILE__, __LINE__,
+                             "Tile port '%s.%s[%ld:%ld]' in tile annotation '%s' does not match physical tile port %s.%s in clock property (one is defined as clock while the other is not)!\n",
+                             required_tile_name.c_str(),
+                             required_tile_port.get_name().c_str(),
+                             required_tile_port.get_lsb(),
+                             required_tile_port.get_msb(),
+                             tile_annotation.global_port_name(tile_global_port).c_str(),
+                             physical_tile.name, tile_port.name);
+              num_err++;
+            }
+
+            if ((false == tile_port.is_clock)
+              && (false == tile_port.is_non_clock_global)) {
+              VTR_LOGF_ERROR(__FILE__, __LINE__,
+                             "Tile port '%s.%s[%ld:%ld]' in tile annotation '%s' match physical tile port %s.%s  but is not defined as a non-clock global port!\n",
+                             required_tile_name.c_str(),
+                             required_tile_port.get_name().c_str(),
+                             required_tile_port.get_lsb(),
+                             required_tile_port.get_msb(),
+                             tile_annotation.global_port_name(tile_global_port).c_str(),
+                             physical_tile.name, tile_port.name);
+              num_err++;
+            }
+
+            float pin_Fc = find_physical_tile_pin_Fc(&physical_tile, grid_pin_index);
+            if (0. != pin_Fc) { 
+              VTR_LOGF_ERROR(__FILE__, __LINE__,
+                             "Tile port '%s.%s[%ld:%ld]' in tile annotation '%s' match physical tile port %s.%s  but its Fc is not zero '%g' !\n",
+                             required_tile_name.c_str(),
+                             required_tile_port.get_name().c_str(),
+                             required_tile_port.get_lsb(),
+                             required_tile_port.get_msb(),
+                             tile_annotation.global_port_name(tile_global_port).c_str(),
+                             physical_tile.name, tile_port.name, pin_Fc);
+
+            }
+            
+            found_matched_physical_tile_port++; 
           }
-
-          BasicPort ref_tile_port(tile_port.name, tile_port.num_pins);
-          /* Port size must be in range!!! */
-          if (false == ref_tile_port.contained(required_tile_port)) {
-            VTR_LOG_ERROR("Tile annotation port '%s[%lu:%lu]' is out of the range of physical tile port '%s[%lu:%lu]'!",
-                          required_tile_port.get_name().c_str(),
-                          required_tile_port.get_lsb(),
-                          required_tile_port.get_msb(),
-                          ref_tile_port.get_name().c_str(),
-                          ref_tile_port.get_lsb(),
-                          ref_tile_port.get_msb());
-            num_err++;
-            continue;
-          }
-
-
-          /* Check if port property matches */
-          int grid_pin_index = tile_port.absolute_first_pin_index;
-
-          if (tile_port.is_clock != tile_annotation.global_port_is_clock(tile_global_port)) {
-            VTR_LOGF_ERROR(__FILE__, __LINE__,
-                           "Tile port '%s.%s[%ld:%ld]' in tile annotation '%s' does not match physical tile port %s.%s in clock property (one is defined as clock while the other is not)!\n",
-                           required_tile_name.c_str(),
-                           required_tile_port.get_name().c_str(),
-                           required_tile_port.get_lsb(),
-                           required_tile_port.get_msb(),
-                           tile_annotation.global_port_name(tile_global_port).c_str(),
-                           physical_tile.name, tile_port.name);
-            num_err++;
-          }
-
-          if ((false == tile_port.is_clock)
-            && (false == tile_port.is_non_clock_global)) {
-            VTR_LOGF_ERROR(__FILE__, __LINE__,
-                           "Tile port '%s.%s[%ld:%ld]' in tile annotation '%s' match physical tile port %s.%s  but is not defined as a non-clock global port!\n",
-                           required_tile_name.c_str(),
-                           required_tile_port.get_name().c_str(),
-                           required_tile_port.get_lsb(),
-                           required_tile_port.get_msb(),
-                           tile_annotation.global_port_name(tile_global_port).c_str(),
-                           physical_tile.name, tile_port.name);
-            num_err++;
-          }
-
-          float pin_Fc = find_physical_tile_pin_Fc(&physical_tile, grid_pin_index);
-          if (0. != pin_Fc) { 
-            VTR_LOGF_ERROR(__FILE__, __LINE__,
-                           "Tile port '%s.%s[%ld:%ld]' in tile annotation '%s' match physical tile port %s.%s  but its Fc is not zero '%g' !\n",
-                           required_tile_name.c_str(),
-                           required_tile_port.get_name().c_str(),
-                           required_tile_port.get_lsb(),
-                           required_tile_port.get_msb(),
-                           tile_annotation.global_port_name(tile_global_port).c_str(),
-                           physical_tile.name, tile_port.name, pin_Fc);
-
-          }
-          
-          found_matched_physical_tile_port++; 
         }
       }
 

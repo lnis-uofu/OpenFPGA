@@ -759,7 +759,7 @@ def run_openfpga_shell():
                args.top_module+"_run.openfpga"]
     run_command("OpenFPGA Shell Run", "openfpgashell.log", command)
     ExecTime["VPREnd"] = time.time()
-    extract_vpr_stats("vpr_stdout.log")
+    extract_vpr_stats("openfpgashell.log")
 
 
 def extract_vpr_stats(logfile, r_filename="vpr_stat", parse_section="vpr"):

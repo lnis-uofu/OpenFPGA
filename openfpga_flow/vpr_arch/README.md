@@ -31,3 +31,11 @@ Please reveal the following architecture features in the names to help quickly s
 - GlobalTile<Int>Clk: How many clocks are defined through global ports from physical tiles. <Int> is the number of clocks 
 
 Other features are used in naming should be listed here.
+
+# Update architecture files in batch
+
+## From v1.1 to v1.2
+
+```
+make v1p1_to_v1p2
+```

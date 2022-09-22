@@ -314,7 +314,7 @@ void print_verilog_testbench_connect_fpga_ios(std::fstream& fp,
       /* Find the index of the mapped GPIO in top-level FPGA fabric */
       size_t temp_io_index = io_location_map.io_index(place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
                                                       place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
-                                                      place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.z,
+                                                      place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.sub_tile,
                                                       module_io_port.get_name());
 
       /* Bypass invalid index (not mapped to this GPIO port) */

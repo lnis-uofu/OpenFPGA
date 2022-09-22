@@ -90,46 +90,50 @@ std::vector<size_t> find_physical_tile_pin_id(t_physical_tile_type_ptr physical_
   std::vector<size_t> pin_ids;
 
   /* Walk through the port of the tile */
-  for (const t_physical_tile_port& physical_tile_port : physical_tile->ports) {
-    if (std::string(physical_tile_port.name) != tile_port.get_name()) {
-      continue;
-    }
-    /* If the wanted port is invalid, it assumes that we want the full port */
-    if (false == tile_port.is_valid()) {
-      for (int ipin = 0; ipin < physical_tile_port.num_pins; ++ipin) {
-        int pin_id = physical_tile_port.absolute_first_pin_index + ipin;
+  for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
+    for (const t_physical_tile_port& physical_tile_port : sub_tile.ports) {
+      if (std::string(physical_tile_port.name) != tile_port.get_name()) {
+        continue;
+      }
+      /* If the wanted port is invalid, it assumes that we want the full port */
+      if (false == tile_port.is_valid()) {
+        for (int subtile_index = sub_tile.capacity.low; subtile_index <= sub_tile.capacity.high; subtile_index++) {
+          for (int ipin = 0; ipin < physical_tile_port.num_pins; ++ipin) {
+            int pin_id = (subtile_index - sub_tile.capacity.low) * sub_tile.num_phy_pins / sub_tile.capacity.total() + physical_tile_port.absolute_first_pin_index + ipin;
+            VTR_ASSERT(pin_id < physical_tile->num_pins);
+            /* Check if the pin is located on the wanted side */
+            if (true == is_pin_locate_at_physical_tile_side(physical_tile,
+                                                            pin_width_offset,
+                                                            pin_height_offset,
+                                                            pin_id, pin_side)) {
+              pin_ids.push_back(pin_id);
+            }
+          }
+        }
+        continue;
+      }
+      /* Find the LSB and MSB of the pin */
+      VTR_ASSERT_SAFE(true == tile_port.is_valid());
+      BasicPort ref_port(physical_tile_port.name, physical_tile_port.num_pins); 
+      if (false == ref_port.contained(tile_port)) {
+        VTR_LOG_ERROR("Defined direct port '%s[%lu:%lu]' is out of range for physical port '%s[%lu:%lu]'!\n",
+                      tile_port.get_name().c_str(),
+                      tile_port.get_lsb(), tile_port.get_msb(),
+                      ref_port.get_name().c_str(),
+                      ref_port.get_lsb(), ref_port.get_msb());
+        exit(1);
+      }
+      for (const size_t& ipin : tile_port.pins()) {
+        int pin_id = physical_tile_port.absolute_first_pin_index + ipin * sub_tile.num_phy_pins / sub_tile.capacity.total() + ipin;
         VTR_ASSERT(pin_id < physical_tile->num_pins);
         /* Check if the pin is located on the wanted side */
         if (true == is_pin_locate_at_physical_tile_side(physical_tile,
                                                         pin_width_offset,
                                                         pin_height_offset,
                                                         pin_id, pin_side)) {
+
           pin_ids.push_back(pin_id);
         }
-      }
-      continue;
-    }
-    /* Find the LSB and MSB of the pin */
-    VTR_ASSERT_SAFE(true == tile_port.is_valid());
-    BasicPort ref_port(physical_tile_port.name, physical_tile_port.num_pins); 
-    if (false == ref_port.contained(tile_port)) {
-      VTR_LOG_ERROR("Defined direct port '%s[%lu:%lu]' is out of range for physical port '%s[%lu:%lu]'!\n",
-                    tile_port.get_name().c_str(),
-                    tile_port.get_lsb(), tile_port.get_msb(),
-                    ref_port.get_name().c_str(),
-                    ref_port.get_lsb(), ref_port.get_msb());
-      exit(1);
-    }
-    for (const size_t& ipin : tile_port.pins()) {
-      int pin_id = physical_tile_port.absolute_first_pin_index + ipin;
-      VTR_ASSERT(pin_id < physical_tile->num_pins);
-      /* Check if the pin is located on the wanted side */
-      if (true == is_pin_locate_at_physical_tile_side(physical_tile,
-                                                      pin_width_offset,
-                                                      pin_height_offset,
-                                                      pin_id, pin_side)) {
-
-        pin_ids.push_back(pin_id);
       }
     }
   }

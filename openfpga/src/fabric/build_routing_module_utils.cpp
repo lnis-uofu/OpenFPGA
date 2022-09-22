@@ -12,6 +12,7 @@
 
 #include "openfpga_side_manager.h"
 #include "openfpga_naming.h"
+#include "openfpga_rr_graph_utils.h"
 
 #include "build_routing_module_utils.h"
 
@@ -64,7 +65,7 @@ std::string generate_sb_module_grid_port_name(const e_side& sb_side,
                                               const e_side& grid_side, 
                                               const DeviceGrid& vpr_device_grid,
                                               const VprDeviceAnnotation& vpr_device_annotation,
-                                              const RRGraph& rr_graph,
+                                              const RRGraphView& rr_graph,
                                               const RRNodeId& rr_node) {
   SideManager sb_side_manager(sb_side);
   SideManager grid_side_manager(grid_side);
@@ -74,7 +75,7 @@ std::string generate_sb_module_grid_port_name(const e_side& sb_side,
 
   /* Collect the attributes of the rr_node required to generate the port name */
   int pin_id = rr_graph.node_pin_num(rr_node);
-  e_side pin_side = rr_graph.node_side(rr_node);
+  e_side pin_side = get_rr_graph_single_node_side(rr_graph, rr_node);
   t_physical_tile_type_ptr physical_tile = vpr_device_grid[rr_graph.node_xlow(rr_node)][rr_graph.node_ylow(rr_node)].type;
   int pin_width_offset = physical_tile->pin_width_offset[pin_id]; 
   int pin_height_offset = physical_tile->pin_height_offset[pin_id]; 
@@ -95,7 +96,7 @@ std::string generate_sb_module_grid_port_name(const e_side& sb_side,
 std::string generate_cb_module_grid_port_name(const e_side& cb_side, 
                                               const DeviceGrid& vpr_device_grid,
                                               const VprDeviceAnnotation& vpr_device_annotation,
-                                              const RRGraph& rr_graph,
+                                              const RRGraphView& rr_graph,
                                               const RRNodeId& rr_node) {
 
   SideManager side_manager(cb_side);
@@ -103,7 +104,7 @@ std::string generate_cb_module_grid_port_name(const e_side& cb_side,
 
   /* Collect the attributes of the rr_node required to generate the port name */
   int pin_id = rr_graph.node_pin_num(rr_node);
-  e_side pin_side = rr_graph.node_side(rr_node);
+  e_side pin_side = get_rr_graph_single_node_side(rr_graph, rr_node);
   t_physical_tile_type_ptr physical_tile = vpr_device_grid[rr_graph.node_xlow(rr_node)][rr_graph.node_ylow(rr_node)].type;
   int pin_width_offset = physical_tile->pin_width_offset[pin_id]; 
   int pin_height_offset = physical_tile->pin_height_offset[pin_id]; 
@@ -122,7 +123,7 @@ std::string generate_cb_module_grid_port_name(const e_side& cb_side,
  ********************************************************************/
 ModulePinInfo find_switch_block_module_chan_port(const ModuleManager& module_manager, 
                                                  const ModuleId& sb_module,
-                                                 const RRGraph& rr_graph,
+                                                 const RRGraphView& rr_graph,
                                                  const RRGSB& rr_gsb, 
                                                  const e_side& chan_side,
                                                  const RRNodeId& cur_rr_node,
@@ -165,7 +166,7 @@ ModulePinInfo find_switch_block_module_input_port(const ModuleManager& module_ma
                                                   const ModuleId& sb_module, 
                                                   const DeviceGrid& grids,
                                                   const VprDeviceAnnotation& vpr_device_annotation,
-                                                  const RRGraph& rr_graph,
+                                                  const RRGraphView& rr_graph,
                                                   const RRGSB& rr_gsb, 
                                                   const e_side& input_side,
                                                   const RRNodeId& input_rr_node) {
@@ -180,7 +181,7 @@ ModulePinInfo find_switch_block_module_input_port(const ModuleManager& module_ma
                                         rr_graph.node_ylow(input_rr_node));
 
     /* Find the side where the grid pin locates in the grid */
-    enum e_side grid_pin_side = rr_graph.node_side(input_rr_node);
+    enum e_side grid_pin_side = get_rr_graph_single_node_side(rr_graph, input_rr_node);
     VTR_ASSERT(NUM_SIDES != grid_pin_side);
 
     std::string input_port_name = generate_sb_module_grid_port_name(input_side,
@@ -215,7 +216,7 @@ std::vector<ModulePinInfo> find_switch_block_module_input_ports(const ModuleMana
                                                                 const ModuleId& sb_module, 
                                                                 const DeviceGrid& grids,
                                                                 const VprDeviceAnnotation& vpr_device_annotation,
-                                                                const RRGraph& rr_graph,
+                                                                const RRGraphView& rr_graph,
                                                                 const RRGSB& rr_gsb, 
                                                                 const std::vector<RRNodeId>& input_rr_nodes) {
   std::vector<ModulePinInfo> input_ports;
@@ -241,7 +242,7 @@ std::vector<ModulePinInfo> find_switch_block_module_input_ports(const ModuleMana
  ********************************************************************/
 ModulePinInfo find_connection_block_module_chan_port(const ModuleManager& module_manager, 
                                                      const ModuleId& cb_module,
-                                                     const RRGraph& rr_graph,
+                                                     const RRGraphView& rr_graph,
                                                      const RRGSB& rr_gsb, 
                                                      const t_rr_type& cb_type,
                                                      const RRNodeId& chan_rr_node) {
@@ -277,7 +278,7 @@ ModulePortId find_connection_block_module_ipin_port(const ModuleManager& module_
                                                     const ModuleId& cb_module, 
                                                     const DeviceGrid& grids,
                                                     const VprDeviceAnnotation& vpr_device_annotation,
-                                                    const RRGraph& rr_graph,
+                                                    const RRGraphView& rr_graph,
                                                     const RRGSB& rr_gsb, 
                                                     const RRNodeId& src_rr_node) {
 
@@ -309,7 +310,7 @@ ModulePortId find_connection_block_module_ipin_port(const ModuleManager& module_
  ********************************************************************/
 std::vector<ModulePinInfo> find_connection_block_module_input_ports(const ModuleManager& module_manager,
                                                                     const ModuleId& cb_module,
-                                                                    const RRGraph& rr_graph,
+                                                                    const RRGraphView& rr_graph,
                                                                     const RRGSB& rr_gsb, 
                                                                     const t_rr_type& cb_type,
                                                                     const std::vector<RRNodeId>& input_rr_nodes) {

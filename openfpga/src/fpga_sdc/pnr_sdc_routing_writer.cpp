@@ -57,7 +57,7 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
                                            const ModuleId& sb_module, 
                                            const VprDeviceAnnotation& device_annotation,
                                            const DeviceGrid& grids,
-                                           const RRGraph& rr_graph,
+                                           const RRGraphView& rr_graph,
                                            const RRGSB& rr_gsb,
                                            const e_side& output_node_side,
                                            const RRNodeId& output_rr_node,
@@ -92,7 +92,7 @@ void print_pnr_sdc_constrain_sb_mux_timing(std::fstream& fp,
   for (const RREdgeId& edge : rr_graph.node_configurable_in_edges(output_rr_node)) {
     /* Get the switch delay */
     const RRSwitchId& driver_switch = rr_graph.edge_switch(edge);
-    switch_delays[module_input_ports[edge_counter]] = find_pnr_sdc_switch_tmax(rr_graph.get_switch(driver_switch));
+    switch_delays[module_input_ports[edge_counter]] = find_pnr_sdc_switch_tmax(rr_graph.rr_switch_inf(driver_switch));
     edge_counter++;
   }
 
@@ -147,7 +147,7 @@ void print_pnr_sdc_constrain_sb_timing(const PnrSdcOption& options,
                                        const ModuleManager& module_manager,
                                        const VprDeviceAnnotation& device_annotation,
                                        const DeviceGrid& grids,
-                                       const RRGraph& rr_graph,
+                                       const RRGraphView& rr_graph,
                                        const RRGSB& rr_gsb) {
   std::string sdc_dir = options.sdc_dir();
   float time_unit = options.time_unit();
@@ -219,7 +219,7 @@ void print_pnr_sdc_flatten_routing_constrain_sb_timing(const PnrSdcOption& optio
                                                        const ModuleId& top_module,
                                                        const VprDeviceAnnotation& device_annotation,
                                                        const DeviceGrid& grids,
-                                                       const RRGraph& rr_graph,
+                                                       const RRGraphView& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb) {
 
   /* Start time count */
@@ -265,7 +265,7 @@ void print_pnr_sdc_compact_routing_constrain_sb_timing(const PnrSdcOption& optio
                                                        const ModuleId& top_module,
                                                        const VprDeviceAnnotation& device_annotation,
                                                        const DeviceGrid& grids,
-                                                       const RRGraph& rr_graph,
+                                                       const RRGraphView& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb) {
 
   /* Start time count */
@@ -313,7 +313,7 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
                                            const ModuleId& cb_module, 
                                            const VprDeviceAnnotation& device_annotation,
                                            const DeviceGrid& grids,
-                                           const RRGraph& rr_graph,
+                                           const RRGraphView& rr_graph,
                                            const RRGSB& rr_gsb,
                                            const t_rr_type& cb_type,
                                            const RRNodeId& output_rr_node,
@@ -368,7 +368,7 @@ void print_pnr_sdc_constrain_cb_mux_timing(std::fstream& fp,
   for (const RREdgeId& edge : rr_graph.node_configurable_in_edges(output_rr_node)) {
     /* Get the switch delay */
     const RRSwitchId& driver_switch = rr_graph.edge_switch(edge);
-    switch_delays[module_input_ports[edge_counter]] = find_pnr_sdc_switch_tmax(rr_graph.get_switch(driver_switch));
+    switch_delays[module_input_ports[edge_counter]] = find_pnr_sdc_switch_tmax(rr_graph.rr_switch_inf(driver_switch));
     edge_counter++;
   }
 
@@ -417,7 +417,7 @@ void print_pnr_sdc_constrain_cb_timing(const PnrSdcOption& options,
                                        const ModuleManager& module_manager,
                                        const VprDeviceAnnotation& device_annotation,
                                        const DeviceGrid& grids,
-                                       const RRGraph& rr_graph,
+                                       const RRGraphView& rr_graph,
                                        const RRGSB& rr_gsb, 
                                        const t_rr_type& cb_type) {
   std::string sdc_dir = options.sdc_dir();
@@ -477,8 +477,8 @@ void print_pnr_sdc_constrain_cb_timing(const PnrSdcOption& options,
      * TODO: Should consider multi-level RC delay models
      *       where the number of levels are defined by users
      */
-    float routing_segment_delay = rr_graph.get_segment(segment_id).Rmetal
-                                * rr_graph.get_segment(segment_id).Cmetal;
+    float routing_segment_delay = rr_graph.rr_segments(segment_id).Rmetal
+                                * rr_graph.rr_segments(segment_id).Cmetal;
 
     /* If we have a zero-delay path to contrain, we will skip unless users want so */
     if ( (false == constrain_zero_delay_paths) 
@@ -540,7 +540,7 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const PnrSdcOption& optio
                                                        const ModuleId& top_module,
                                                        const VprDeviceAnnotation& device_annotation,
                                                        const DeviceGrid& grids,
-                                                       const RRGraph& rr_graph,
+                                                       const RRGraphView& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb,
                                                        const t_rr_type& cb_type) {
   /* Build unique X-direction connection block modules */
@@ -591,7 +591,7 @@ void print_pnr_sdc_flatten_routing_constrain_cb_timing(const PnrSdcOption& optio
                                                        const ModuleId& top_module,
                                                        const VprDeviceAnnotation& device_annotation,
                                                        const DeviceGrid& grids,
-                                                       const RRGraph& rr_graph,
+                                                       const RRGraphView& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb) {
 
   /* Start time count */
@@ -623,7 +623,7 @@ void print_pnr_sdc_compact_routing_constrain_cb_timing(const PnrSdcOption& optio
                                                        const ModuleId& top_module,
                                                        const VprDeviceAnnotation& device_annotation,
                                                        const DeviceGrid& grids,
-                                                       const RRGraph& rr_graph,
+                                                       const RRGraphView& rr_graph,
                                                        const DeviceRRGSB& device_rr_gsb) {
 
   /* Start time count */

@@ -430,13 +430,13 @@
 		</bit>
 		<bit id="3998" value="0" path="fpga_top.sb_1__3_.mem_top_track_0.mem_out[0]">
 		</bit>
-		<bit id="3997" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_3_in_3.mem_out[3]">
+		<bit id="3997" value="1" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_3_in_3.mem_out[3]">
 		</bit>
 		<bit id="3996" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_3_in_3.mem_out[2]">
 		</bit>
-		<bit id="3995" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_3_in_3.mem_out[1]">
+		<bit id="3995" value="1" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_3_in_3.mem_out[1]">
 		</bit>
-		<bit id="3994" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_3_in_3.mem_out[0]">
+		<bit id="3994" value="1" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_3_in_3.mem_out[0]">
 		</bit>
 		<bit id="3993" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_3_in_2.mem_out[3]">
 		</bit>
@@ -454,13 +454,13 @@
 		</bit>
 		<bit id="3986" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_3_in_1.mem_out[0]">
 		</bit>
-		<bit id="3985" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_3_in_0.mem_out[3]">
+		<bit id="3985" value="1" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_3_in_0.mem_out[3]">
 		</bit>
-		<bit id="3984" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_3_in_0.mem_out[2]">
+		<bit id="3984" value="1" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_3_in_0.mem_out[2]">
 		</bit>
-		<bit id="3983" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_3_in_0.mem_out[1]">
+		<bit id="3983" value="1" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_3_in_0.mem_out[1]">
 		</bit>
-		<bit id="3982" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_3_in_0.mem_out[0]">
+		<bit id="3982" value="1" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_3_in_0.mem_out[0]">
 		</bit>
 		<bit id="3981" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_2_in_3.mem_out[3]">
 		</bit>
@@ -558,7 +558,7 @@
 		</bit>
 		<bit id="3934" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.mem_fle_0_in_0.mem_out[0]">
 		</bit>
-		<bit id="3933" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.mem_ble4_out_0.mem_out[1]">
+		<bit id="3933" value="1" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.mem_ble4_out_0.mem_out[1]">
 		</bit>
 		<bit id="3932" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.mem_ble4_out_0.mem_out[0]">
 		</bit>
@@ -580,19 +580,19 @@
 		</bit>
 		<bit id="3923" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[7]">
 		</bit>
-		<bit id="3922" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[6]">
+		<bit id="3922" value="1" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[6]">
 		</bit>
 		<bit id="3921" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[5]">
 		</bit>
-		<bit id="3920" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[4]">
+		<bit id="3920" value="1" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[4]">
 		</bit>
 		<bit id="3919" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[3]">
 		</bit>
-		<bit id="3918" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[2]">
+		<bit id="3918" value="1" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[2]">
 		</bit>
 		<bit id="3917" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[1]">
 		</bit>
-		<bit id="3916" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[0]">
+		<bit id="3916" value="1" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[0]">
 		</bit>
 		<bit id="3915" value="0" path="fpga_top.grid_clb_2__4_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_2.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.mem_ble4_out_0.mem_out[1]">
 		</bit>
@@ -4226,11 +4226,11 @@
 		</bit>
 		<bit id="2100" value="0" path="fpga_top.sb_2__1_.mem_left_track_9.mem_out[0]">
 		</bit>
-		<bit id="2099" value="0" path="fpga_top.sb_2__1_.mem_left_track_1.mem_out[3]">
+		<bit id="2099" value="1" path="fpga_top.sb_2__1_.mem_left_track_1.mem_out[3]">
 		</bit>
-		<bit id="2098" value="0" path="fpga_top.sb_2__1_.mem_left_track_1.mem_out[2]">
+		<bit id="2098" value="1" path="fpga_top.sb_2__1_.mem_left_track_1.mem_out[2]">
 		</bit>
-		<bit id="2097" value="0" path="fpga_top.sb_2__1_.mem_left_track_1.mem_out[1]">
+		<bit id="2097" value="1" path="fpga_top.sb_2__1_.mem_left_track_1.mem_out[1]">
 		</bit>
 		<bit id="2096" value="0" path="fpga_top.sb_2__1_.mem_left_track_1.mem_out[0]">
 		</bit>
@@ -5184,9 +5184,9 @@
 		</bit>
 		<bit id="1621" value="0" path="fpga_top.sb_4__1_.mem_top_track_0.mem_out[0]">
 		</bit>
-		<bit id="1620" value="1" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_3.mem_out[3]">
+		<bit id="1620" value="0" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_3.mem_out[3]">
 		</bit>
-		<bit id="1619" value="1" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_3.mem_out[2]">
+		<bit id="1619" value="0" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_3.mem_out[2]">
 		</bit>
 		<bit id="1618" value="0" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_3.mem_out[1]">
 		</bit>
@@ -5208,7 +5208,7 @@
 		</bit>
 		<bit id="1609" value="0" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_1.mem_out[0]">
 		</bit>
-		<bit id="1608" value="1" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_0.mem_out[3]">
+		<bit id="1608" value="0" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_0.mem_out[3]">
 		</bit>
 		<bit id="1607" value="0" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_0.mem_out[2]">
 		</bit>
@@ -5312,7 +5312,7 @@
 		</bit>
 		<bit id="1557" value="0" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.mem_fle_0_in_0.mem_out[0]">
 		</bit>
-		<bit id="1556" value="1" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.mem_ble4_out_0.mem_out[1]">
+		<bit id="1556" value="0" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.mem_ble4_out_0.mem_out[1]">
 		</bit>
 		<bit id="1555" value="0" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.mem_ble4_out_0.mem_out[0]">
 		</bit>
@@ -5334,19 +5334,19 @@
 		</bit>
 		<bit id="1546" value="0" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[7]">
 		</bit>
-		<bit id="1545" value="1" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[6]">
+		<bit id="1545" value="0" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[6]">
 		</bit>
 		<bit id="1544" value="0" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[5]">
 		</bit>
-		<bit id="1543" value="1" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[4]">
+		<bit id="1543" value="0" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[4]">
 		</bit>
 		<bit id="1542" value="0" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[3]">
 		</bit>
-		<bit id="1541" value="1" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[2]">
+		<bit id="1541" value="0" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[2]">
 		</bit>
 		<bit id="1540" value="0" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[1]">
 		</bit>
-		<bit id="1539" value="1" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[0]">
+		<bit id="1539" value="0" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4_0.lut4_DFF_mem.mem_out[0]">
 		</bit>
 		<bit id="1538" value="0" path="fpga_top.grid_clb_4__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_2.logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_0.mem_ble4_out_0.mem_out[1]">
 		</bit>
@@ -5512,11 +5512,11 @@
 		</bit>
 		<bit id="1457" value="0" path="fpga_top.cby_4__1_.mem_left_ipin_1.mem_out[0]">
 		</bit>
-		<bit id="1456" value="1" path="fpga_top.cby_4__1_.mem_left_ipin_0.mem_out[2]">
+		<bit id="1456" value="0" path="fpga_top.cby_4__1_.mem_left_ipin_0.mem_out[2]">
 		</bit>
-		<bit id="1455" value="1" path="fpga_top.cby_4__1_.mem_left_ipin_0.mem_out[1]">
+		<bit id="1455" value="0" path="fpga_top.cby_4__1_.mem_left_ipin_0.mem_out[1]">
 		</bit>
-		<bit id="1454" value="1" path="fpga_top.cby_4__1_.mem_left_ipin_0.mem_out[0]">
+		<bit id="1454" value="0" path="fpga_top.cby_4__1_.mem_left_ipin_0.mem_out[0]">
 		</bit>
 		<bit id="1453" value="0" path="fpga_top.cbx_4__0_.mem_top_ipin_7.mem_out[2]">
 		</bit>
@@ -5582,7 +5582,7 @@
 		</bit>
 		<bit id="1422" value="0" path="fpga_top.cbx_4__0_.mem_bottom_ipin_0.mem_out[0]">
 		</bit>
-		<bit id="1421" value="1" path="fpga_top.sb_4__0_.mem_left_track_17.mem_out[1]">
+		<bit id="1421" value="0" path="fpga_top.sb_4__0_.mem_left_track_17.mem_out[1]">
 		</bit>
 		<bit id="1420" value="0" path="fpga_top.sb_4__0_.mem_left_track_17.mem_out[0]">
 		</bit>
@@ -5606,7 +5606,7 @@
 		</bit>
 		<bit id="1410" value="0" path="fpga_top.sb_4__0_.mem_left_track_7.mem_out[0]">
 		</bit>
-		<bit id="1409" value="1" path="fpga_top.sb_4__0_.mem_left_track_5.mem_out[1]">
+		<bit id="1409" value="0" path="fpga_top.sb_4__0_.mem_left_track_5.mem_out[1]">
 		</bit>
 		<bit id="1408" value="0" path="fpga_top.sb_4__0_.mem_left_track_5.mem_out[0]">
 		</bit>
@@ -5650,9 +5650,9 @@
 		</bit>
 		<bit id="1388" value="0" path="fpga_top.sb_4__0_.mem_top_track_2.mem_out[0]">
 		</bit>
-		<bit id="1387" value="1" path="fpga_top.sb_4__0_.mem_top_track_0.mem_out[1]">
+		<bit id="1387" value="0" path="fpga_top.sb_4__0_.mem_top_track_0.mem_out[1]">
 		</bit>
-		<bit id="1386" value="1" path="fpga_top.sb_4__0_.mem_top_track_0.mem_out[0]">
+		<bit id="1386" value="0" path="fpga_top.sb_4__0_.mem_top_track_0.mem_out[0]">
 		</bit>
 		<bit id="1385" value="0" path="fpga_top.grid_clb_3__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_3.mem_out[3]">
 		</bit>
@@ -5940,11 +5940,11 @@
 		</bit>
 		<bit id="1243" value="0" path="fpga_top.cby_3__1_.mem_right_ipin_0.mem_out[0]">
 		</bit>
-		<bit id="1242" value="1" path="fpga_top.cby_3__1_.mem_left_ipin_1.mem_out[1]">
+		<bit id="1242" value="0" path="fpga_top.cby_3__1_.mem_left_ipin_1.mem_out[1]">
 		</bit>
-		<bit id="1241" value="1" path="fpga_top.cby_3__1_.mem_left_ipin_1.mem_out[0]">
+		<bit id="1241" value="0" path="fpga_top.cby_3__1_.mem_left_ipin_1.mem_out[0]">
 		</bit>
-		<bit id="1240" value="1" path="fpga_top.cby_3__1_.mem_left_ipin_0.mem_out[2]">
+		<bit id="1240" value="0" path="fpga_top.cby_3__1_.mem_left_ipin_0.mem_out[2]">
 		</bit>
 		<bit id="1239" value="0" path="fpga_top.cby_3__1_.mem_left_ipin_0.mem_out[1]">
 		</bit>
@@ -6072,15 +6072,15 @@
 		</bit>
 		<bit id="1177" value="0" path="fpga_top.sb_3__0_.mem_top_track_16.mem_out[0]">
 		</bit>
-		<bit id="1176" value="1" path="fpga_top.sb_3__0_.mem_top_track_10.mem_out[1]">
+		<bit id="1176" value="0" path="fpga_top.sb_3__0_.mem_top_track_10.mem_out[1]">
 		</bit>
-		<bit id="1175" value="1" path="fpga_top.sb_3__0_.mem_top_track_10.mem_out[0]">
+		<bit id="1175" value="0" path="fpga_top.sb_3__0_.mem_top_track_10.mem_out[0]">
 		</bit>
 		<bit id="1174" value="0" path="fpga_top.sb_3__0_.mem_top_track_8.mem_out[1]">
 		</bit>
 		<bit id="1173" value="0" path="fpga_top.sb_3__0_.mem_top_track_8.mem_out[0]">
 		</bit>
-		<bit id="1172" value="1" path="fpga_top.sb_3__0_.mem_top_track_2.mem_out[1]">
+		<bit id="1172" value="0" path="fpga_top.sb_3__0_.mem_top_track_2.mem_out[1]">
 		</bit>
 		<bit id="1171" value="0" path="fpga_top.sb_3__0_.mem_top_track_2.mem_out[0]">
 		</bit>
@@ -7254,9 +7254,9 @@
 		</bit>
 		<bit id="586" value="0" path="fpga_top.sb_0__1_.mem_top_track_8.mem_out[0]">
 		</bit>
-		<bit id="585" value="0" path="fpga_top.sb_0__1_.mem_top_track_0.mem_out[3]">
+		<bit id="585" value="1" path="fpga_top.sb_0__1_.mem_top_track_0.mem_out[3]">
 		</bit>
-		<bit id="584" value="0" path="fpga_top.sb_0__1_.mem_top_track_0.mem_out[2]">
+		<bit id="584" value="1" path="fpga_top.sb_0__1_.mem_top_track_0.mem_out[2]">
 		</bit>
 		<bit id="583" value="0" path="fpga_top.sb_0__1_.mem_top_track_0.mem_out[1]">
 		</bit>
@@ -7614,7 +7614,7 @@
 		</bit>
 		<bit id="406" value="0" path="fpga_top.sb_0__4_.mem_right_track_14.mem_out[0]">
 		</bit>
-		<bit id="405" value="0" path="fpga_top.sb_0__4_.mem_right_track_12.mem_out[1]">
+		<bit id="405" value="1" path="fpga_top.sb_0__4_.mem_right_track_12.mem_out[1]">
 		</bit>
 		<bit id="404" value="0" path="fpga_top.sb_0__4_.mem_right_track_12.mem_out[0]">
 		</bit>
@@ -7820,7 +7820,7 @@
 		</bit>
 		<bit id="303" value="1" path="fpga_top.grid_io_top_2__5_.logical_tile_io_mode_io__3.logical_tile_io_mode_physical__iopad_0.GPIO_DFF_mem.mem_out[0]">
 		</bit>
-		<bit id="302" value="1" path="fpga_top.grid_io_top_2__5_.logical_tile_io_mode_io__2.logical_tile_io_mode_physical__iopad_0.GPIO_DFF_mem.mem_out[0]">
+		<bit id="302" value="0" path="fpga_top.grid_io_top_2__5_.logical_tile_io_mode_io__2.logical_tile_io_mode_physical__iopad_0.GPIO_DFF_mem.mem_out[0]">
 		</bit>
 		<bit id="301" value="1" path="fpga_top.grid_io_top_2__5_.logical_tile_io_mode_io__1.logical_tile_io_mode_physical__iopad_0.GPIO_DFF_mem.mem_out[0]">
 		</bit>
@@ -7830,15 +7830,15 @@
 		</bit>
 		<bit id="298" value="0" path="fpga_top.cbx_2__4_.mem_top_ipin_2.mem_out[0]">
 		</bit>
-		<bit id="297" value="0" path="fpga_top.cbx_2__4_.mem_top_ipin_1.mem_out[2]">
+		<bit id="297" value="1" path="fpga_top.cbx_2__4_.mem_top_ipin_1.mem_out[2]">
 		</bit>
-		<bit id="296" value="0" path="fpga_top.cbx_2__4_.mem_top_ipin_1.mem_out[1]">
+		<bit id="296" value="1" path="fpga_top.cbx_2__4_.mem_top_ipin_1.mem_out[1]">
 		</bit>
 		<bit id="295" value="0" path="fpga_top.cbx_2__4_.mem_top_ipin_1.mem_out[0]">
 		</bit>
 		<bit id="294" value="0" path="fpga_top.cbx_2__4_.mem_top_ipin_0.mem_out[2]">
 		</bit>
-		<bit id="293" value="0" path="fpga_top.cbx_2__4_.mem_top_ipin_0.mem_out[1]">
+		<bit id="293" value="1" path="fpga_top.cbx_2__4_.mem_top_ipin_0.mem_out[1]">
 		</bit>
 		<bit id="292" value="0" path="fpga_top.cbx_2__4_.mem_top_ipin_0.mem_out[0]">
 		</bit>
@@ -7872,7 +7872,7 @@
 		</bit>
 		<bit id="277" value="0" path="fpga_top.cbx_2__4_.mem_bottom_ipin_3.mem_out[0]">
 		</bit>
-		<bit id="276" value="0" path="fpga_top.cbx_2__4_.mem_bottom_ipin_2.mem_out[2]">
+		<bit id="276" value="1" path="fpga_top.cbx_2__4_.mem_bottom_ipin_2.mem_out[2]">
 		</bit>
 		<bit id="275" value="0" path="fpga_top.cbx_2__4_.mem_bottom_ipin_2.mem_out[1]">
 		</bit>
@@ -7892,7 +7892,7 @@
 		</bit>
 		<bit id="267" value="0" path="fpga_top.sb_2__4_.mem_left_track_17.mem_out[3]">
 		</bit>
-		<bit id="266" value="0" path="fpga_top.sb_2__4_.mem_left_track_17.mem_out[2]">
+		<bit id="266" value="1" path="fpga_top.sb_2__4_.mem_left_track_17.mem_out[2]">
 		</bit>
 		<bit id="265" value="0" path="fpga_top.sb_2__4_.mem_left_track_17.mem_out[1]">
 		</bit>
@@ -7900,7 +7900,7 @@
 		</bit>
 		<bit id="263" value="0" path="fpga_top.sb_2__4_.mem_left_track_9.mem_out[3]">
 		</bit>
-		<bit id="262" value="0" path="fpga_top.sb_2__4_.mem_left_track_9.mem_out[2]">
+		<bit id="262" value="1" path="fpga_top.sb_2__4_.mem_left_track_9.mem_out[2]">
 		</bit>
 		<bit id="261" value="0" path="fpga_top.sb_2__4_.mem_left_track_9.mem_out[1]">
 		</bit>
@@ -7946,9 +7946,9 @@
 		</bit>
 		<bit id="240" value="0" path="fpga_top.sb_2__4_.mem_bottom_track_5.mem_out[0]">
 		</bit>
-		<bit id="239" value="0" path="fpga_top.sb_2__4_.mem_bottom_track_3.mem_out[1]">
+		<bit id="239" value="1" path="fpga_top.sb_2__4_.mem_bottom_track_3.mem_out[1]">
 		</bit>
-		<bit id="238" value="0" path="fpga_top.sb_2__4_.mem_bottom_track_3.mem_out[0]">
+		<bit id="238" value="1" path="fpga_top.sb_2__4_.mem_bottom_track_3.mem_out[0]">
 		</bit>
 		<bit id="237" value="0" path="fpga_top.sb_2__4_.mem_bottom_track_1.mem_out[1]">
 		</bit>
@@ -8360,7 +8360,7 @@
 		</bit>
 		<bit id="33" value="1" path="fpga_top.grid_io_right_5__1_.logical_tile_io_mode_io__1.logical_tile_io_mode_physical__iopad_0.GPIO_DFF_mem.mem_out[0]">
 		</bit>
-		<bit id="32" value="0" path="fpga_top.grid_io_right_5__1_.logical_tile_io_mode_io__0.logical_tile_io_mode_physical__iopad_0.GPIO_DFF_mem.mem_out[0]">
+		<bit id="32" value="1" path="fpga_top.grid_io_right_5__1_.logical_tile_io_mode_io__0.logical_tile_io_mode_physical__iopad_0.GPIO_DFF_mem.mem_out[0]">
 		</bit>
 		<bit id="31" value="1" path="fpga_top.grid_io_bottom_4__0_.logical_tile_io_mode_io__7.logical_tile_io_mode_physical__iopad_0.GPIO_DFF_mem.mem_out[0]">
 		</bit>

@@ -33,7 +33,7 @@ RRNodeId VprRoutingAnnotation::rr_node_prev_node(const RRNodeId& rr_node) const 
 /************************************************************************
  * Public mutators
  ***********************************************************************/
-void VprRoutingAnnotation::init(const RRGraph& rr_graph) {
+void VprRoutingAnnotation::init(const RRGraphView& rr_graph) {
   rr_node_nets_.resize(rr_graph.nodes().size(), ClusterNetId::INVALID());
   rr_node_prev_nodes_.resize(rr_graph.nodes().size(), RRNodeId::INVALID());
 }
@@ -52,15 +52,18 @@ void VprRoutingAnnotation::set_rr_node_net(const RRNodeId& rr_node,
   rr_node_nets_[rr_node] = net_id;
 }
 
-void VprRoutingAnnotation::set_rr_node_prev_node(const RRNodeId& rr_node,
+void VprRoutingAnnotation::set_rr_node_prev_node(const RRGraphView& rr_graph,
+                                                 const RRNodeId& rr_node,
                                                  const RRNodeId& prev_node) {
   /* Ensure that the node_id is in the list */
   VTR_ASSERT(size_t(rr_node) < rr_node_nets_.size());
   /* Warn any override attempt */
   if ( (RRNodeId::INVALID() != rr_node_prev_nodes_[rr_node])
     && (prev_node != rr_node_prev_nodes_[rr_node])) {
-    VTR_LOG_WARN("Override the previous node '%ld' by previous node '%ld' for node '%ld' with in routing context annotation!\n",
-                 size_t(rr_node_prev_nodes_[rr_node]), size_t(prev_node), size_t(rr_node));
+    VTR_LOG_WARN("Override the previous node '%s' by previous node '%s' for node '%s' with in routing context annotation!\n",
+                 rr_graph.node_coordinate_to_string(rr_node_prev_nodes_[rr_node]).c_str(),
+                 rr_graph.node_coordinate_to_string(prev_node).c_str(), 
+                 rr_graph.node_coordinate_to_string(rr_node).c_str());
   }
 
   rr_node_prev_nodes_[rr_node] = prev_node;

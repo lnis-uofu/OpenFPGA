@@ -194,7 +194,7 @@ run-task template_tasks/vtr_benchmarks_template $@
 
 echo -e "Testing create tsk from template and run task"
 create-task _task_copy basic_tests/generate_fabric
-run-task _task_copy
+run-task _task_copy $@
 
 echo -e "Testing output files without time stamp";
 run-task basic_tests/no_time_stamp/device_1x1 $@

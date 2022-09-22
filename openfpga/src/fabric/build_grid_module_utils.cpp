@@ -62,13 +62,12 @@ void add_grid_module_net_connect_pb_graph_pin(ModuleManager& module_manager,
     grid_pin_sides = {TOP, RIGHT, BOTTOM, LEFT}; 
   }
 
-  /* num_pins/capacity = the number of pins that each type_descriptor has.
-   * Capacity defines the number of type_descriptors in each grid
-   * so the pin index at grid level = pin_index_in_type_descriptor 
-   *                                + type_descriptor_index_in_capacity * num_pins_per_type_descriptor
+  /* Note that each grid may contain a number of sub tiles, each type of which may a different capacity and number of pins
+   * We need to find the start pin index for a given z offset (instance id), denotes the index of the first pin regarding the current instance.
+   * The variable 'pin_count_in_cluster' represent the pin index in the context of current instance only.
+   * With the information above, we can then calculate the absolute pin index at grid-level (considering all the sub tiles).
    */
-  size_t grid_pin_index = pb_graph_pin->pin_count_in_cluster 
-                        + child_instance * grid_type_descriptor->num_pins / grid_type_descriptor->capacity;
+  size_t grid_pin_index = pb_graph_pin->pin_count_in_cluster + vpr_device_annotation.physical_tile_z_to_start_pin_index(grid_type_descriptor, child_instance); 
   int pin_height = grid_type_descriptor->pin_height_offset[grid_pin_index];
   int pin_width = grid_type_descriptor->pin_width_offset[grid_pin_index];
   for (const e_side& side : grid_pin_sides) {

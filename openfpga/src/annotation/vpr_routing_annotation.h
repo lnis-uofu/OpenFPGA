@@ -7,7 +7,9 @@
 #include <map> 
 
 /* Header from vpr library */
-#include "vpr_context.h"
+#include "vtr_vector.h"
+#include "clustered_netlist_fwd.h"
+#include "rr_graph_view.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -28,10 +30,11 @@ class VprRoutingAnnotation {
     ClusterNetId rr_node_net(const RRNodeId& rr_node) const;
     RRNodeId rr_node_prev_node(const RRNodeId& rr_node) const;
   public:  /* Public mutators */
-    void init(const RRGraph& rr_graph);
+    void init(const RRGraphView& rr_graph);
     void set_rr_node_net(const RRNodeId& rr_node,
                          const ClusterNetId& net_id);
-    void set_rr_node_prev_node(const RRNodeId& rr_node,
+    void set_rr_node_prev_node(const RRGraphView& rr_graph,
+                               const RRNodeId& rr_node,
                                const RRNodeId& prev_node);
   private: /* Internal data */
     /* Clustered net ids mapped to each rr_node */

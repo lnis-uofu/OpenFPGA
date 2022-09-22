@@ -15,7 +15,7 @@ if (${CMAKE_VERSION} VERSION_GREATER "3.8")
     # has no effect unless an Intel compiler is used
 endif()
 
-# Set the default build type if not specified
+## Set the default build type if not specified
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING
         "Choose the type of build: None, Debug, Release, RelWithDebInfo, MinSizeRel"
@@ -34,21 +34,15 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}" CACHE PATH "default install path" FORCE)
 endif()
 
+set(OPENFPGA_IPO_BUILD "auto" CACHE STRING "Should OpenFPGA be compiled with interprocedural compiler optimizations?")
+set_property(CACHE OPENFPGA_IPO_BUILD PROPERTY STRINGS auto on off)
+
 #Allow the user to configure how much assertion checking should occur
 set(VTR_ASSERT_LEVEL "2" CACHE STRING "VTR assertion checking level. 0: no assertions, 1: fast assertions, 2: regular assertions, 3: additional assertions with noticable run-time overhead, 4: all assertions (including those with significant run-time cost)")
 set_property(CACHE VTR_ASSERT_LEVEL PROPERTY STRINGS 0 1 2 3 4)
 
 #Create the project 
-project("OPENFPGA" C CXX)
-
-# Options
-# Option to enable/disable graphic in compilation
-option(ENABLE_VPR_GRAPHICS "Enables VPR graphics" ON)
-option(ENABLE_VPR_GRAPHICS "Enables build with librtlnumber" OFF)
-
-#Allow the user to decide weather to compile the graphics library
-set(VPR_USE_EZGL "auto" CACHE STRING "Specify whether vpr uses the graphics library")
-set_property(CACHE VPR_USE_EZGL PROPERTY STRINGS auto off on)
+project("OpenFPGA-tool-suites" C CXX)
 
 # Version number
 file (STRINGS "VERSION.md" VERSION_NUMBER)
@@ -75,6 +69,36 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF) #No compiler specific extensions
 
+#
+# Interprocedural optimization
+#
+#   Note that we manually clear the INTERPROCEDURAL_OPTIMIZATION flag on ABC later
+#   to avoid cmake warnings
+include(CheckIPOSupported)
+check_ipo_supported(RESULT IPO_SUPPORTED)
+if (OPENFPGA_IPO_BUILD STREQUAL "on")
+    if (IPO_SUPPORTED)
+        message(STATUS "Building with IPO: on")
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+    else()
+        message(ERROR "Building with IPO unsupported with this compiler!")
+    endif()
+elseif(OPENFPGA_IPO_BUILD STREQUAL "auto")
+    if (IPO_SUPPORTED AND NOT CMAKE_BUILD_TYPE STREQUAL "debug")
+        message(STATUS "Building with IPO: on (auto)")
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+    else()
+        message(STATUS "Building with IPO: off (auto)")
+    endif()
+else()
+    message(STATUS "Building with IPO: off")
+endif()
+
+if(NOT MSVC)
+    # for GCC and Clang
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g3")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
+endif()
 
 # Set WARN FLAGS
 set(WARN_FLAGS "")
@@ -88,13 +112,6 @@ if (MSVC)
 else ()
   set(WARN_FLAGS_TO_CHECK # the flags to check if the compiler supports
       #GCC-like
-      "-Wpointer-arith"
-      "-Wcast-qual"
-      "-D__USE_FIXED_PROTOTYPES__"
-      "-ansi"
-      "-Wshadow"
-      "-Wno-write-strings"
-      "-D_POSIX_SOURCE"
       "-Wall"                         #Most warnings, typically good
       "-Wextra"                       #Extra warning, usually good
       "-Wpedantic"                    #Ensure ISO compliance (i.e. no non-standard extensions)
@@ -123,7 +140,24 @@ else ()
       "-Wuninitialized"               #Warn about unitialized values
       "-Winit-self"                   #Warn about self-initialization
       "-Wcatch-value=3"               #Warn when catch statements don't catch by reference
-"-Wextra-semi" #Warn about redudnant semicolons
+      "-Wextra-semi"                  #Warn about redudnant semicolons
+      "-Wimplicit-fallthrough=3"      #Warn about case fallthroughs, but allow 'fallthrough' comments to suppress warnings
+      #GCC-like optional
+      #"-Wsuggest-final-types"         #Suggest where 'final' would help if specified on a type methods
+      #"-Wsuggest-final-methods"       #Suggest where 'final' would help if specified on methods
+      #"-Wsuggest-override"            #Suggest where 'override' should be specified
+      #"-Wold-style-cast"              #Warn about using c-style casts
+      #"-Wconversion"                  #Warn when type conversions may change value
+      #"-Wsign-conversion"             #Warn if a conversion may change the sign
+      #"-Wpadded"                      #Will warn if additional padding is introduced to a struct/class. Turn on if optimizing class memory layouts
+      #"-Wstrict-overflow=2"           #Warn if the compiler optimizes assuming signed overflow does not occur
+      #"-Wfloat-equal"                 #Warn about using direct floating point equality
+      #"-Wunsafe-loop-optimizations"   #Warn when loops can't be optimized
+      #"-Wswitch-enum"                 #Warn about uncovered enumeration values in a switch (even if there is a default)
+      #"-Wsign-promo"                  #Warn when overload resolution converts an unsigned type to signed when an unsigned overload exists
+      #"-Wdouble-promotion"            #Warn when float is implicitly propted to double
+      #"-Wuseless-cast"                #Warn about casts to the same type
+      #"-Wzero-as-null-pointer-constant" #Warn about using '0' instead of nullptr
       )
 endif()
 
@@ -136,10 +170,23 @@ foreach (flag ${WARN_FLAGS_TO_CHECK})
     set (WARN_FLAGS "${WARN_FLAGS} ${flag}")
   endif()
 endforeach()
+
+#Suppress IPO link warnings
+set(IPO_LINK_WARN_SUPRESS_FLAGS " ")
+set(IPO_LINK_WARN_SUPRESS_FLAGS_TO_CHECK
+    "-Wno-null-dereference"
+    )
+foreach(flag ${IPO_LINK_WARN_SUPRESS_FLAGS_TO_CHECK})
+    CHECK_CXX_COMPILER_FLAG(${flag} CXX_COMPILER_SUPPORTS_${flag})
+    if(CXX_COMPILER_SUPPORTS_${flag})
+        #Flag supported, so enable it
+        set(IPO_LINK_WARN_SUPRESS_FLAGS "${IPO_LINK_WARN_SUPRESS_FLAGS} ${flag}")
+    endif()
+endforeach()
+
 #
 # Sanitizer flags
 #
-
 set(SANITIZE_FLAGS "")
 if(OPENFPGA_ENABLE_SANITIZE)
     #Enable sanitizers
@@ -159,37 +206,11 @@ message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 #
 enable_testing()
 
-# set VPR_USE_EZGL in the root of VTR to decide whether to add
-# subdirectory of graphics library, which prevents users
-# without gtk/x11 libraries installed to build. VPR_USE_EZGL is
-# being used in both the vpr CMakeLists and libs/EXTERNAL CMakeLists.
-#
-# check if GTK and X11 are installed and turn on/off graphics
-if (VPR_USE_EZGL STREQUAL "auto")
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(GTK3 QUIET gtk+-3.0)
-    pkg_check_modules(X11 QUIET x11)
-
-    if(GTK3_FOUND AND X11_FOUND)
-        set(VPR_USE_EZGL "on")
-        message(STATUS "VPR Graphics: Enabled")
-    else()
-        set(VPR_USE_EZGL "off")
-        message(STATUS "VPR Graphics: Disabled (required libraries missing, on debia/ubuntu try: sudo apt install libgtk-3 libx11-dev")
-    endif()
-endif()
-
-
 # 
 # Sub-projects
 #
-#add_subdirectory(iverilog)
+add_subdirectory(vtr-verilog-to-routing)
 add_subdirectory(libs)
-add_subdirectory(libopenfpga)
-#add_subdirectory(yosys)
-add_subdirectory(abc)
-add_subdirectory(ace2)
-add_subdirectory(vpr)
 add_subdirectory(openfpga)
 
 # yosys compilation starts
@@ -266,40 +287,3 @@ endif()
 # Add extra compilation flags to suppress warnings from some libraries/tools
 # Note that target_compile_options() *appends* to the current compilation options of
 # the specified target
-
-#Since ABC is an externally developed tool, we suppress all compiler warnings
-CHECK_CXX_COMPILER_FLAG("-w" CXX_COMPILER_SUPPORTS_-w)
-if(CXX_COMPILER_SUPPORTS_-w)
-    target_compile_options(libabc PRIVATE "-w")
-    target_compile_options(abc PRIVATE "-w")
-endif()
-
-#Some ABC headers generate warnings, treat them as system headers to suppress warnings
-get_property(ABC_INCLUDE_DIRS TARGET libabc PROPERTY INCLUDE_DIRECTORIES)
-target_include_directories(libabc SYSTEM INTERFACE ${ABC_INCLUDE_DIRS})
-
-# We use Yosys and abc Makefile now, TODO: create CMakeLists.txt as well
-set_target_properties(libabc abc
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/abc"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/abc"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/abc")
-
-# Set output locations to be in the main source tree under the relevant folder
-set_target_properties(libace ace
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ace2"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ace2"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ace2")
-
-set_target_properties(libvpr vpr
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vpr")
-
-set_target_properties(libopenfpga openfpga
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/openfpga"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/openfpga"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/openfpga")

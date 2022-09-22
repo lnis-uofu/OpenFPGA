@@ -44,7 +44,7 @@ void build_switch_block_module_short_interc(ModuleManager& module_manager,
                                             const ModuleId& sb_module,
                                             const VprDeviceAnnotation& device_annotation,
                                             const DeviceGrid& grids,
-                                            const RRGraph& rr_graph,
+                                            const RRGraphView& rr_graph,
                                             const RRGSB& rr_gsb,
                                             const e_side& chan_side,
                                             const RRNodeId& cur_rr_node,
@@ -105,7 +105,7 @@ void build_switch_block_mux_module(ModuleManager& module_manager,
                                    const ModuleId& sb_module, 
                                    const VprDeviceAnnotation& device_annotation,
                                    const DeviceGrid& grids,
-                                   const RRGraph& rr_graph,
+                                   const RRGraphView& rr_graph,
                                    const RRGSB& rr_gsb, 
                                    const CircuitLibrary& circuit_lib,
                                    const e_side& chan_side,
@@ -215,7 +215,7 @@ void build_switch_block_interc_modules(ModuleManager& module_manager,
                                        const ModuleId& sb_module, 
                                        const VprDeviceAnnotation& device_annotation,
                                        const DeviceGrid& grids,
-                                       const RRGraph& rr_graph,
+                                       const RRGraphView& rr_graph,
                                        const RRGSB& rr_gsb,
                                        const CircuitLibrary& circuit_lib,
                                        const e_side& chan_side,
@@ -337,7 +337,7 @@ void build_switch_block_module(ModuleManager& module_manager,
                                DecoderLibrary& decoder_lib,
                                const VprDeviceAnnotation& device_annotation,
                                const DeviceGrid& grids,
-                               const RRGraph& rr_graph,
+                               const RRGraphView& rr_graph,
                                const CircuitLibrary& circuit_lib,
                                const e_config_protocol_type& sram_orgz_type,
                                const CircuitModelId& sram_model,
@@ -409,7 +409,7 @@ void build_switch_block_module(ModuleManager& module_manager,
       vtr::Point<size_t> port_coord(rr_graph.node_xlow(rr_gsb.get_opin_node(side_manager.get_side(), inode)),
                                     rr_graph.node_ylow(rr_gsb.get_opin_node(side_manager.get_side(), inode)));
       std::string port_name = generate_sb_module_grid_port_name(side_manager.get_side(),
-                                                                rr_graph.node_side(rr_gsb.get_opin_node(side_manager.get_side(), inode)),
+                                                                get_rr_graph_single_node_side(rr_graph, rr_gsb.get_opin_node(side_manager.get_side(), inode)),
                                                                 grids,
                                                                 device_annotation,
                                                                 rr_graph,
@@ -485,13 +485,19 @@ void build_connection_block_module_short_interc(ModuleManager& module_manager,
                                                 const ModuleId& cb_module,
                                                 const VprDeviceAnnotation& device_annotation,
                                                 const DeviceGrid& grids,
-                                                const RRGraph& rr_graph,
+                                                const RRGraphView& rr_graph,
                                                 const RRGSB& rr_gsb,
                                                 const t_rr_type& cb_type,
-                                                const RRNodeId& src_rr_node,
+                                                const e_side& cb_ipin_side,
+                                                const size_t& ipin_index,
                                                 const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
   /* Ensure we have only one 1 driver node */
-  std::vector<RRNodeId> driver_rr_nodes = get_rr_graph_configurable_driver_nodes(rr_graph, src_rr_node);
+  const RRNodeId& src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
+  std::vector<RREdgeId> driver_rr_edges = rr_gsb.get_ipin_node_in_edges(rr_graph, cb_ipin_side, ipin_index);
+  std::vector<RRNodeId> driver_rr_nodes;
+  for (const RREdgeId curr_edge : driver_rr_edges) {
+    driver_rr_nodes.push_back(rr_graph.edge_src_node(curr_edge));
+  }
 
   /* We have OPINs since we may have direct connections:
    * These connections should be handled by other functions in the compact_netlist.c 
@@ -546,7 +552,7 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
                                        const ModuleId& cb_module, 
                                        const VprDeviceAnnotation& device_annotation,
                                        const DeviceGrid& grids,
-                                       const RRGraph& rr_graph,
+                                       const RRGraphView& rr_graph,
                                        const RRGSB& rr_gsb, 
                                        const t_rr_type& cb_type, 
                                        const CircuitLibrary& circuit_lib,
@@ -558,7 +564,11 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
   VTR_ASSERT(IPIN == rr_graph.node_type(cur_rr_node));
 
   /* Build a vector of driver rr_nodes */
-  std::vector<RRNodeId> driver_rr_nodes = get_rr_graph_configurable_driver_nodes(rr_graph, cur_rr_node);
+  std::vector<RREdgeId> driver_rr_edges = rr_gsb.get_ipin_node_in_edges(rr_graph, cb_ipin_side, ipin_index);
+  std::vector<RRNodeId> driver_rr_nodes;
+  for (const RREdgeId curr_edge : driver_rr_edges) {
+    driver_rr_nodes.push_back(rr_graph.edge_src_node(curr_edge));
+  }
 
   std::vector<RRSwitchId> driver_switches = get_rr_graph_driver_switches(rr_graph, cur_rr_node);
   VTR_ASSERT(1 == driver_switches.size());
@@ -581,7 +591,7 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
   /* Give an instance name: this name should be consistent with the block name given in SDC manager,
    * If you want to bind the SDC generation to modules
    */
-  std::string mux_instance_name = generate_cb_mux_instance_name(CONNECTION_BLOCK_MUX_INSTANCE_PREFIX, rr_graph.node_side(rr_gsb.get_ipin_node(cb_ipin_side, ipin_index)), ipin_index, std::string(""));
+  std::string mux_instance_name = generate_cb_mux_instance_name(CONNECTION_BLOCK_MUX_INSTANCE_PREFIX, get_rr_graph_single_node_side(rr_graph, rr_gsb.get_ipin_node(cb_ipin_side, ipin_index)), ipin_index, std::string(""));
   module_manager.set_child_instance_name(cb_module, mux_module, mux_instance_id, mux_instance_name);
 
   /* TODO: Generate input ports that are wired to the input bus of the routing multiplexer */
@@ -636,7 +646,7 @@ void build_connection_block_mux_module(ModuleManager& module_manager,
   /* Give an instance name: this name should be consistent with the block name given in bitstream manager,
    * If you want to bind the bitstream generation to modules
    */
-  std::string mem_instance_name = generate_cb_memory_instance_name(CONNECTION_BLOCK_MEM_INSTANCE_PREFIX, rr_graph.node_side(rr_gsb.get_ipin_node(cb_ipin_side, ipin_index)), ipin_index, std::string(""));
+  std::string mem_instance_name = generate_cb_memory_instance_name(CONNECTION_BLOCK_MEM_INSTANCE_PREFIX, get_rr_graph_single_node_side(rr_graph, rr_gsb.get_ipin_node(cb_ipin_side, ipin_index)), ipin_index, std::string(""));
   module_manager.set_child_instance_name(cb_module, mem_module, mem_instance_id, mem_instance_name);
 
   /* Add nets to connect regular and mode-select SRAM ports to the SRAM port of memory module */
@@ -660,7 +670,7 @@ void build_connection_block_interc_modules(ModuleManager& module_manager,
                                            const ModuleId& cb_module, 
                                            const VprDeviceAnnotation& device_annotation,
                                            const DeviceGrid& grids,
-                                           const RRGraph& rr_graph,
+                                           const RRGraphView& rr_graph,
                                            const RRGSB& rr_gsb,
                                            const t_rr_type& cb_type,
                                            const CircuitLibrary& circuit_lib,
@@ -668,14 +678,15 @@ void build_connection_block_interc_modules(ModuleManager& module_manager,
                                            const size_t& ipin_index,
                                            const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
   const RRNodeId& src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
+  std::vector<RREdgeId> driver_rr_edges = rr_gsb.get_ipin_node_in_edges(rr_graph, cb_ipin_side, ipin_index);
 
-  if (1 > rr_graph.node_in_edges(src_rr_node).size()) {
+  if (1 > driver_rr_edges.size()) {
     return; /* This port has no driver, skip it */
-  } else if (1 == rr_graph.node_in_edges(src_rr_node).size()) {
+  } else if (1 == driver_rr_edges.size()) {
     /* Print a direct connection */
-    build_connection_block_module_short_interc(module_manager, cb_module, device_annotation, grids, rr_graph, rr_gsb, cb_type, src_rr_node, input_port_to_module_nets);
+    build_connection_block_module_short_interc(module_manager, cb_module, device_annotation, grids, rr_graph, rr_gsb, cb_type, cb_ipin_side, ipin_index, input_port_to_module_nets);
 
-  } else if (1 < rr_graph.node_in_edges(src_rr_node).size()) {
+  } else if (1 < driver_rr_edges.size()) {
     /* Print the multiplexer, fan_in >= 2 */
     build_connection_block_mux_module(module_manager, 
                                       cb_module, device_annotation,
@@ -745,7 +756,7 @@ void build_connection_block_module(ModuleManager& module_manager,
                                    DecoderLibrary& decoder_lib,
                                    const VprDeviceAnnotation& device_annotation,
                                    const DeviceGrid& grids,
-                                   const RRGraph& rr_graph,
+                                   const RRGraphView& rr_graph,
                                    const CircuitLibrary& circuit_lib, 
                                    const e_config_protocol_type& sram_orgz_type, 
                                    const CircuitModelId& sram_model, 

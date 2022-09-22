@@ -5,6 +5,7 @@
 #include <vector>
 #include "vtr_vector.h"
 #include "fabric_key.h"
+#include "openfpga_port.h"
 #include "module_manager.h"
 
 /* begin namespace openfpga */

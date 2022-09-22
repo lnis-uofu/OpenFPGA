@@ -19,7 +19,7 @@
 #include "annotate_physical_tiles.h"
 #include "annotate_pb_types.h"
 #include "annotate_pb_graph.h"
-#include "annotate_routing.h"
+#include "openfpga_annotate_routing.h"
 #include "annotate_rr_graph.h"
 #include "annotate_simulation_setting.h"
 #include "annotate_bitstream_setting.h"
@@ -41,16 +41,21 @@ namespace openfpga {
  *   It means every routing tracks must have a direction
  *******************************************************************/
 static 
-bool is_vpr_rr_graph_supported(const RRGraph& rr_graph) {
+bool is_vpr_rr_graph_supported(const RRGraphView& rr_graph) {
   /* Check if the rr_graph is uni-directional*/
   for (const RRNodeId& node : rr_graph.nodes()) {
     if (CHANX != rr_graph.node_type(node) && CHANY != rr_graph.node_type(node)) {
       continue;
     }
-    if (BI_DIRECTION == rr_graph.node_direction(node)) {
+    if (Direction::BIDIR == rr_graph.node_direction(node)) {
       VTR_LOG_ERROR("Routing resource graph is bi-directional. OpenFPGA currently supports uni-directional routing architecture only.\n");
       return false;
     }
+    if (Direction::NONE == rr_graph.node_direction(node)) {
+      VTR_LOG_ERROR("Routing resource graph contains routing tracks which has not specific direction. OpenFPGA currently supports uni-directional routing architecture only.\n");
+      return false;
+    }
+
   }
  
   return true;
@@ -107,9 +112,9 @@ int link_arch(OpenfpgaContext& openfpga_ctx,
    */
   openfpga_ctx.mutable_vpr_routing_annotation().init(g_vpr_ctx.device().rr_graph);
 
-  annotate_rr_node_nets(g_vpr_ctx.device(), g_vpr_ctx.clustering(), g_vpr_ctx.routing(), 
-                        openfpga_ctx.mutable_vpr_routing_annotation(),
-                        cmd_context.option_enable(cmd, opt_verbose));
+  annotate_vpr_rr_node_nets(g_vpr_ctx.device(), g_vpr_ctx.clustering(), g_vpr_ctx.routing(), 
+                            openfpga_ctx.mutable_vpr_routing_annotation(),
+                            cmd_context.option_enable(cmd, opt_verbose));
 
   annotate_rr_node_previous_nodes(g_vpr_ctx.device(), g_vpr_ctx.clustering(), g_vpr_ctx.routing(), 
                                   openfpga_ctx.mutable_vpr_routing_annotation(),
@@ -124,12 +129,19 @@ int link_arch(OpenfpgaContext& openfpga_ctx,
     return CMD_EXEC_FATAL_ERROR;
   }
 
+  /* Build incoming edges as VPR only builds fan-out edges for each node */
+  g_vpr_ctx.mutable_device().rr_graph_builder.build_in_edges();
+  VTR_LOG("Built %ld incoming edges for routing resource graph\n", g_vpr_ctx.device().rr_graph.in_edges_count());
+  VTR_ASSERT(g_vpr_ctx.device().rr_graph.validate_in_edges());
   annotate_device_rr_gsb(g_vpr_ctx.device(),
                          openfpga_ctx.mutable_device_rr_gsb(),
                          cmd_context.option_enable(cmd, opt_verbose));
 
   if (true == cmd_context.option_enable(cmd, opt_sort_edge)) {
     sort_device_rr_gsb_chan_node_in_edges(g_vpr_ctx.device().rr_graph,
+                                          openfpga_ctx.mutable_device_rr_gsb(),
+                                          cmd_context.option_enable(cmd, opt_verbose));
+    sort_device_rr_gsb_ipin_node_in_edges(g_vpr_ctx.device().rr_graph,
                                           openfpga_ctx.mutable_device_rr_gsb(),
                                           cmd_context.option_enable(cmd, opt_verbose));
   } 
@@ -169,6 +181,7 @@ int link_arch(OpenfpgaContext& openfpga_ctx,
    */
   //openfpga_ctx.mutable_simulation_setting() = openfpga_ctx.mutable_arch().sim_setting;
   if (CMD_EXEC_FATAL_ERROR == annotate_simulation_setting(g_vpr_ctx.atom(),
+                                                          g_vpr_ctx.clustering(),
                                                           net_activity,
                                                           openfpga_ctx.mutable_simulation_setting())) {
     return CMD_EXEC_FATAL_ERROR;

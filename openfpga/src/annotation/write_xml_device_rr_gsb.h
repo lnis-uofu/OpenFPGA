@@ -5,9 +5,9 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <string>
-#include "rr_graph_obj.h"
 #include "device_grid.h"
 #include "vpr_device_annotation.h"
+#include "rr_graph_view.h"
 #include "device_rr_gsb.h"
 #include "rr_gsb_writer_option.h"
 
@@ -20,7 +20,7 @@ namespace openfpga {
 
 void write_device_rr_gsb_to_xml(const DeviceGrid& vpr_device_grid,
                                 const VprDeviceAnnotation& vpr_device_annotation,
-                                const RRGraph& rr_graph,
+                                const RRGraphView& rr_graph,
                                 const DeviceRRGSB& device_rr_gsb,
                                 const RRGSBWriterOption& options);
 

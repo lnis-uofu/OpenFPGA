@@ -12,9 +12,6 @@
 /* Header from archfpga library */
 #include "physical_types.h"
 
-/* Header from vpr library */
-#include "rr_graph_obj.h"
-
 /* Header from openfpgautil library */
 #include "openfpga_port.h"
 #include "circuit_library.h"
@@ -90,6 +87,10 @@ class VprDeviceAnnotation {
                                           const int& pin_index) const;
     int physical_tile_pin_subtile_index(t_physical_tile_type_ptr physical_tile,
                                         const int& pin_index) const;
+    int physical_tile_z_to_subtile_index(t_physical_tile_type_ptr physical_tile,
+                                         const int& subtile_z) const;
+    int physical_tile_z_to_start_pin_index(t_physical_tile_type_ptr physical_tile,
+                                           const int& subtile_z) const;
   public:  /* Public mutators */
     void add_pb_type_physical_mode(t_pb_type* pb_type, t_mode* physical_mode);
     void add_physical_pb_type(t_pb_type* operating_pb_type, t_pb_type* physical_pb_type);
@@ -130,6 +131,12 @@ class VprDeviceAnnotation {
     void add_physical_tile_pin_subtile_index(t_physical_tile_type_ptr physical_tile,
                                              const int& pin_index,
                                              const int& subtile_index);
+    void add_physical_tile_z_to_subtile_index(t_physical_tile_type_ptr physical_tile,
+                                              const int& subtile_z,
+                                              const int& subtile_index);
+    void add_physical_tile_z_to_start_pin_index(t_physical_tile_type_ptr physical_tile,
+                                                const int& subtile_z,
+                                                const int& start_pin_index);
   private: /* Internal data */
     /* Pair a regular pb_type to its physical pb_type */
     std::map<t_pb_type*, t_pb_type*> physical_pb_types_;
@@ -225,6 +232,14 @@ class VprDeviceAnnotation {
     std::map<t_physical_tile_type_ptr, std::map<int, BasicPort>> physical_tile_pin2port_info_map_;
     /* A fast look-up from pin index in physical tile to sub tile index */
     std::map<t_physical_tile_type_ptr, std::map<int, int>> physical_tile_pin_subtile_indices_;
+    /* A fast look-up from z (a valid instance index considering all the sub tiles in a given physical tile) to the index in sub tile array 
+     * The instance index starts from 0 to the sum of the capacity of each sub tile
+     */
+    std::map<t_physical_tile_type_ptr, std::map<int, int>> physical_tile_z_to_subtile_indices_;
+    /* A fast look-up from z (a valid instance index considering all the sub tiles in a given physical tile) to the index of the first pin in a given physcial tile
+     * The instance index starts from 0 to the sum of the capacity of each sub tile
+     */
+    std::map<t_physical_tile_type_ptr, std::map<int, int>> physical_tile_z_to_start_pin_indices_;
 };
 
 } /* End namespace openfpga*/

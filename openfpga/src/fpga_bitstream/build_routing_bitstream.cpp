@@ -39,7 +39,7 @@ void build_switch_block_mux_bitstream(BitstreamManager& bitstream_manager,
                                       const ModuleManager& module_manager,
                                       const CircuitLibrary& circuit_lib,
                                       const MuxLibrary& mux_lib,
-                                      const RRGraph& rr_graph,
+                                      const RRGraphView& rr_graph,
                                       const RRNodeId& cur_rr_node,
                                       const std::vector<RRNodeId>& drive_rr_nodes,
                                       const AtomContext& atom_ctx,
@@ -145,7 +145,7 @@ void build_switch_block_interc_bitstream(BitstreamManager& bitstream_manager,
                                          const ModuleManager& module_manager,
                                          const CircuitLibrary& circuit_lib,
                                          const MuxLibrary& mux_lib,
-                                         const RRGraph& rr_graph,
+                                         const RRGraphView& rr_graph,
                                          const AtomContext& atom_ctx,
                                          const VprDeviceAnnotation& device_annotation,
                                          const VprRoutingAnnotation& routing_annotation,
@@ -204,7 +204,7 @@ void build_switch_block_bitstream(BitstreamManager& bitstream_manager,
                                   const AtomContext& atom_ctx,
                                   const VprDeviceAnnotation& device_annotation,
                                   const VprRoutingAnnotation& routing_annotation,
-                                  const RRGraph& rr_graph,
+                                  const RRGraphView& rr_graph,
                                   const RRGSB& rr_gsb) {
 
   /* Iterate over all the multiplexers */
@@ -242,16 +242,21 @@ void build_connection_block_mux_bitstream(BitstreamManager& bitstream_manager,
                                           const AtomContext& atom_ctx,
                                           const VprDeviceAnnotation& device_annotation,
                                           const VprRoutingAnnotation& routing_annotation,
-                                          const RRGraph& rr_graph,
-                                          const RRNodeId& src_rr_node) {
+                                          const RRGraphView& rr_graph,
+                                          const RRGSB& rr_gsb,
+                                          const e_side& cb_ipin_side, 
+                                          const size_t& ipin_index) {
 
+  RRNodeId src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
   /* Find drive_rr_nodes*/
   size_t datapath_mux_size = rr_graph.node_fan_in(src_rr_node);
+
+  std::vector<RREdgeId> driver_rr_edges = rr_gsb.get_ipin_node_in_edges(rr_graph, cb_ipin_side, ipin_index);
 
   /* Cache input and output nets */
   std::vector<ClusterNetId> input_nets;
   ClusterNetId output_net = routing_annotation.rr_node_net(src_rr_node);
-  for (const RREdgeId& edge : rr_graph.node_in_edges(src_rr_node)) {
+  for (const RREdgeId& edge : driver_rr_edges) {
     RRNodeId driver_node = rr_graph.edge_src_node(edge);
     input_nets.push_back(routing_annotation.rr_node_net(driver_node));
   }
@@ -266,7 +271,7 @@ void build_connection_block_mux_bitstream(BitstreamManager& bitstream_manager,
    * - There is a net mapped to src_rr_node: we find the path id
    */
   if (ClusterNetId::INVALID() != output_net) {
-    for (const RREdgeId& edge : rr_graph.node_in_edges(src_rr_node)) {
+    for (const RREdgeId& edge : driver_rr_edges) {
       RRNodeId driver_node = rr_graph.edge_src_node(edge);
       /* We must have a valid previous node that is supposed to drive the source node! */
       VTR_ASSERT(routing_annotation.rr_node_prev_node(src_rr_node));
@@ -350,7 +355,7 @@ void build_connection_block_interc_bitstream(BitstreamManager& bitstream_manager
                                          const AtomContext& atom_ctx,
                                          const VprDeviceAnnotation& device_annotation,
                                          const VprRoutingAnnotation& routing_annotation,
-                                         const RRGraph& rr_graph,
+                                         const RRGraphView& rr_graph,
                                          const RRGSB& rr_gsb,
                                          const e_side& cb_ipin_side, 
                                          const size_t& ipin_index) {
@@ -358,20 +363,24 @@ void build_connection_block_interc_bitstream(BitstreamManager& bitstream_manager
   RRNodeId src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
 
   /* Consider configurable edges only */
-  std::vector<RRNodeId> driver_rr_nodes = get_rr_graph_configurable_driver_nodes(rr_graph, src_rr_node);
+  std::vector<RREdgeId> driver_rr_edges = rr_gsb.get_ipin_node_in_edges(rr_graph, cb_ipin_side, ipin_index);
+  std::vector<RRNodeId> driver_rr_nodes;
+  for (const RREdgeId curr_edge : driver_rr_edges) {
+    driver_rr_nodes.push_back(rr_graph.edge_src_node(curr_edge));
+  }
 
   if (1 == driver_rr_nodes.size()) {
     /* No bitstream generation required by a special direct connection*/
   } else if (1 < driver_rr_nodes.size()) {
     /* Create the block denoting the memory instances that drives this node in Switch Block */
-    std::string mem_block_name = generate_cb_memory_instance_name(CONNECTION_BLOCK_MEM_INSTANCE_PREFIX, rr_graph.node_side(src_rr_node), ipin_index, std::string(""));
+    std::string mem_block_name = generate_cb_memory_instance_name(CONNECTION_BLOCK_MEM_INSTANCE_PREFIX, get_rr_graph_single_node_side(rr_graph, src_rr_node), ipin_index, std::string(""));
     ConfigBlockId mux_mem_block = bitstream_manager.add_block(mem_block_name);
     bitstream_manager.add_child_block(cb_configurable_block, mux_mem_block);
     /* This is a routing multiplexer! Generate bitstream */
     build_connection_block_mux_bitstream(bitstream_manager, mux_mem_block, 
                                          module_manager, circuit_lib, mux_lib, 
                                          atom_ctx, device_annotation, routing_annotation,
-                                         rr_graph, src_rr_node);
+                                         rr_graph, rr_gsb, cb_ipin_side, ipin_index);
   } /*Nothing should be done else*/ 
 }
 
@@ -395,7 +404,7 @@ void build_connection_block_bitstream(BitstreamManager& bitstream_manager,
                                       const AtomContext& atom_ctx,
                                       const VprDeviceAnnotation& device_annotation,
                                       const VprRoutingAnnotation& routing_annotation,
-                                      const RRGraph& rr_graph,
+                                      const RRGraphView& rr_graph,
                                       const RRGSB& rr_gsb,
                                       const t_rr_type& cb_type) {
    
@@ -427,7 +436,7 @@ void build_connection_block_bitstreams(BitstreamManager& bitstream_manager,
                                        const AtomContext& atom_ctx,
                                        const VprDeviceAnnotation& device_annotation,
                                        const VprRoutingAnnotation& routing_annotation,
-                                       const RRGraph& rr_graph,
+                                       const RRGraphView& rr_graph,
                                        const DeviceRRGSB& device_rr_gsb,
                                        const bool& compact_routing_hierarchy,
                                        const t_rr_type& cb_type) {
@@ -500,7 +509,7 @@ void build_routing_bitstream(BitstreamManager& bitstream_manager,
                              const AtomContext& atom_ctx,
                              const VprDeviceAnnotation& device_annotation,
                              const VprRoutingAnnotation& routing_annotation,
-                             const RRGraph& rr_graph,
+                             const RRGraphView& rr_graph,
                              const DeviceRRGSB& device_rr_gsb,
                              const bool& compact_routing_hierarchy) {
 

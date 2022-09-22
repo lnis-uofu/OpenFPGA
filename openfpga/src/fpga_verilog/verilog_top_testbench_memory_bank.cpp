@@ -40,18 +40,18 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-constexpr char* TOP_TB_BL_SHIFT_REGISTER_CLOCK_PORT_NAME = "bl_sr_clock";
-constexpr char* TOP_TB_WL_SHIFT_REGISTER_CLOCK_PORT_NAME = "wl_sr_clock";
-constexpr char* TOP_TB_VIRTUAL_BL_SHIFT_REGISTER_CLOCK_PORT_NAME = "virtual_bl_sr_clock";
-constexpr char* TOP_TB_VIRTUAL_WL_SHIFT_REGISTER_CLOCK_PORT_NAME = "virtual_wl_sr_clock";
-constexpr char* TOP_TB_START_BL_SHIFT_REGISTER_PORT_NAME = "start_bl_sr";
-constexpr char* TOP_TB_START_WL_SHIFT_REGISTER_PORT_NAME = "start_wl_sr";
-constexpr char* TOP_TB_BL_SHIFT_REGISTER_COUNT_PORT_NAME = "bl_sr_count";
-constexpr char* TOP_TB_WL_SHIFT_REGISTER_COUNT_PORT_NAME = "wl_sr_count";
-constexpr char* TOP_TB_BITSTREAM_BL_HEAD_WIDTH_VARIABLE = "BITSTREAM_BL_HEAD_WIDTH";
-constexpr char* TOP_TB_BITSTREAM_WL_HEAD_WIDTH_VARIABLE = "BITSTREAM_WL_HEAD_WIDTH";
-constexpr char* TOP_TB_BITSTREAM_BL_WORD_SIZE_VARIABLE = "BITSTREAM_BL_WORD_SIZE";
-constexpr char* TOP_TB_BITSTREAM_WL_WORD_SIZE_VARIABLE = "BITSTREAM_WL_WORD_SIZE";
+constexpr const char* TOP_TB_BL_SHIFT_REGISTER_CLOCK_PORT_NAME = "bl_sr_clock";
+constexpr const char* TOP_TB_WL_SHIFT_REGISTER_CLOCK_PORT_NAME = "wl_sr_clock";
+constexpr const char* TOP_TB_VIRTUAL_BL_SHIFT_REGISTER_CLOCK_PORT_NAME = "virtual_bl_sr_clock";
+constexpr const char* TOP_TB_VIRTUAL_WL_SHIFT_REGISTER_CLOCK_PORT_NAME = "virtual_wl_sr_clock";
+constexpr const char* TOP_TB_START_BL_SHIFT_REGISTER_PORT_NAME = "start_bl_sr";
+constexpr const char* TOP_TB_START_WL_SHIFT_REGISTER_PORT_NAME = "start_wl_sr";
+constexpr const char* TOP_TB_BL_SHIFT_REGISTER_COUNT_PORT_NAME = "bl_sr_count";
+constexpr const char* TOP_TB_WL_SHIFT_REGISTER_COUNT_PORT_NAME = "wl_sr_count";
+constexpr const char* TOP_TB_BITSTREAM_BL_HEAD_WIDTH_VARIABLE = "BITSTREAM_BL_HEAD_WIDTH";
+constexpr const char* TOP_TB_BITSTREAM_WL_HEAD_WIDTH_VARIABLE = "BITSTREAM_WL_HEAD_WIDTH";
+constexpr const char* TOP_TB_BITSTREAM_BL_WORD_SIZE_VARIABLE = "BITSTREAM_BL_WORD_SIZE";
+constexpr const char* TOP_TB_BITSTREAM_WL_WORD_SIZE_VARIABLE = "BITSTREAM_WL_WORD_SIZE";
 
 void print_verilog_top_testbench_ql_memory_bank_port(std::fstream& fp,
                                                      const ModuleManager& module_manager,

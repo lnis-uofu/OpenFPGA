@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 
-project("libopenfpga")
+project("openfpga")
 
 file(GLOB_RECURSE EXEC_SOURCE src/main.cpp)
 file(GLOB_RECURSE LIB_SOURCES src/*/*.cpp)
@@ -28,16 +28,17 @@ target_link_libraries(libopenfpga
                       libpcf
                       libvtrutil
                       libbusgroup
+                      libpugixml
                       libvpr)
 
 #Create the test executable
 add_executable(openfpga ${EXEC_SOURCE})
 target_link_libraries(openfpga libopenfpga)
 
-#Supress IPO link warnings if IPO is enabled
+#Suppress IPO link warnings if IPO is enabled
 get_target_property(OPENFPGA_USES_IPO openfpga INTERPROCEDURAL_OPTIMIZATION)
-if (OPENFPGS_USES_IPO)
-    set_target_properties(openfpga PROPERTIES LINK_FLAGS ${IPO_LINK_WARN_SUPRESS_FLAGS})
+if (OPENFPGA_USES_IPO)
+    set_property(TARGET openfpga APPEND PROPERTY LINK_FLAGS ${IPO_LINK_WARN_SUPRESS_FLAGS})
 endif()
 
 install(TARGETS libopenfpga openfpga DESTINATION bin)

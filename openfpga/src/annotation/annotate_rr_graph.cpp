@@ -11,15 +11,14 @@
 #include "openfpga_side_manager.h"
 
 /* Headers from vpr library */
-#include "rr_graph_obj_util.h"
+#include "physical_types.h"
+#include "rr_graph_view_util.h"
 #include "openfpga_rr_graph_utils.h"
 
 #include "annotate_rr_graph.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
-
-constexpr char* VPR_DELAYLESS_SWITCH_NAME = "__vpr_delayless_switch__";
 
 /* Build a RRChan Object with the given channel type and coorindators */
 static 
@@ -244,10 +243,10 @@ RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
       rr_chan_dir.resize(rr_chan.get_chan_width());
       for (size_t itrack = 0; itrack < rr_chan.get_chan_width(); ++itrack) {
         /* Identify the directionality, record it in rr_node_direction */
-        if (INC_DIRECTION == vpr_device_ctx.rr_graph.node_direction(rr_chan.get_node(itrack))) {
+        if (Direction::INC == vpr_device_ctx.rr_graph.node_direction(rr_chan.get_node(itrack))) {
           rr_chan_dir[itrack] = chan_dir_to_port_dir_mapping[0];
         } else {
-          VTR_ASSERT(DEC_DIRECTION == vpr_device_ctx.rr_graph.node_direction(rr_chan.get_node(itrack)));
+          VTR_ASSERT(Direction::DEC == vpr_device_ctx.rr_graph.node_direction(rr_chan.get_node(itrack)));
           rr_chan_dir[itrack] = chan_dir_to_port_dir_mapping[1];
         }
       }
@@ -445,7 +444,7 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
  * Sort all the incoming edges for each channel node which are
  * output ports of the GSB
  *******************************************************************/
-void sort_device_rr_gsb_chan_node_in_edges(const RRGraph& rr_graph,
+void sort_device_rr_gsb_chan_node_in_edges(const RRGraphView& rr_graph,
                                            DeviceRRGSB& device_rr_gsb,
                                            const bool& verbose_output) {
   vtr::ScopedStartFinishTimer timer("Sort incoming edges for each routing track output node of General Switch Block(GSB)");
@@ -469,16 +468,56 @@ void sort_device_rr_gsb_chan_node_in_edges(const RRGraph& rr_graph,
       gsb_cnt++; /* Update counter */
 
       /* Print info */
-      VTR_LOG("[%lu%] Sorted edges for GSB[%lu][%lu]\r",
+      VTR_LOG("[%lu%] Sorted incoming edges for each routing track output node of GSB[%lu][%lu]\r",
               100 * gsb_cnt / (gsb_range.x() * gsb_range.y()), 
               ix, iy);
     } 
   }
 
   /* Report number of unique mirrors */
-  VTR_LOG("Sorted edges for %d General Switch Blocks (GSBs).\n",
+  VTR_LOG("Sorted incoming edges for each routing track output node of %d General Switch Blocks (GSBs).\n",
           gsb_range.x() * gsb_range.y());
 }
+
+/********************************************************************
+ * Sort all the incoming edges for each input pin node which are
+ * output ports of the GSB
+ *******************************************************************/
+void sort_device_rr_gsb_ipin_node_in_edges(const RRGraphView& rr_graph,
+                                           DeviceRRGSB& device_rr_gsb,
+                                           const bool& verbose_output) {
+  vtr::ScopedStartFinishTimer timer("Sort incoming edges for each input pin node of General Switch Block(GSB)");
+
+  /* Note that the GSB array is smaller than the grids by 1 column and 1 row!!! */
+  vtr::Point<size_t> gsb_range = device_rr_gsb.get_gsb_range();
+
+  VTR_LOGV(verbose_output, 
+           "Start sorting edges for GSBs up to [%lu][%lu]\n",
+           gsb_range.x(), gsb_range.y());
+
+  size_t gsb_cnt = 0;
+
+  /* For each switch block, determine the size of array */
+  for (size_t ix = 0; ix < gsb_range.x(); ++ix) {
+    for (size_t iy = 0; iy < gsb_range.y(); ++iy) {
+      vtr::Point<size_t> gsb_coordinate(ix, iy);
+      RRGSB& rr_gsb = device_rr_gsb.get_mutable_gsb(gsb_coordinate);
+      rr_gsb.sort_ipin_node_in_edges(rr_graph);
+
+      gsb_cnt++; /* Update counter */
+
+      /* Print info */
+      VTR_LOG("[%lu%] Sorted incoming edges for each input pin node of GSB[%lu][%lu]\r",
+              100 * gsb_cnt / (gsb_range.x() * gsb_range.y()), 
+              ix, iy);
+    } 
+  }
+
+  /* Report number of unique mirrors */
+  VTR_LOG("Sorted incoming edges for each input pin node of %d General Switch Blocks (GSBs).\n",
+          gsb_range.x() * gsb_range.y());
+}
+
 
 /********************************************************************
  * Build the link between rr_graph switches to their physical circuit models 
@@ -492,8 +531,8 @@ void annotate_rr_switch_circuit_models(const DeviceContext& vpr_device_ctx,
                                        const bool& verbose_output) {
   size_t count = 0;
 
-  for (size_t iswitch = 0; iswitch < vpr_device_ctx.rr_switch_inf.size(); ++iswitch) {
-    std::string switch_name(vpr_device_ctx.rr_switch_inf[iswitch].name); 
+  for (size_t rr_switch_id = 0; rr_switch_id < vpr_device_ctx.rr_graph.rr_switch().size(); rr_switch_id++) {
+    std::string switch_name(vpr_device_ctx.rr_graph.rr_switch()[RRSwitchId(rr_switch_id)].name); 
     /* Skip the delayless switch, which is only used by the edges between
      * - SOURCE and OPIN
      * - IPIN and SINK  
@@ -535,7 +574,7 @@ void annotate_rr_switch_circuit_models(const DeviceContext& vpr_device_ctx,
     }
   
     /* Now update the device annotation */
-    vpr_device_annotation.add_rr_switch_circuit_model(RRSwitchId(iswitch), circuit_model);
+    vpr_device_annotation.add_rr_switch_circuit_model(RRSwitchId(rr_switch_id), circuit_model);
     VTR_LOGV(verbose_output, 
              "Binded a routing resource graph switch '%s' to circuit model '%s'\n",
              switch_name.c_str(),

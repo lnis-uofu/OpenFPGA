@@ -62,14 +62,7 @@ int vpr(int argc, char** argv) {
         }
 
         auto& timing_ctx = g_vpr_ctx.timing();
-        VTR_LOG("Timing analysis took %g seconds (%g STA, %g slack) (%zu full updates: %zu setup, %zu hold, %zu combined).\n",
-                timing_ctx.stats.timing_analysis_wallclock_time(),
-                timing_ctx.stats.sta_wallclock_time,
-                timing_ctx.stats.slack_wallclock_time,
-                timing_ctx.stats.num_full_updates(),
-                timing_ctx.stats.num_full_setup_updates,
-                timing_ctx.stats.num_full_hold_updates,
-                timing_ctx.stats.num_full_setup_hold_updates);
+        print_timing_stats("Flow", timing_ctx.stats);
 
         /* TODO: move this to the end of flow 
          * free data structures 

@@ -144,7 +144,7 @@ PhysicalPbId PhysicalPb::create_pb(const t_pb_graph_node* pb_graph_node) {
   wire_lut_outputs_.emplace_back();
 
   child_pbs_.emplace_back();
-  parent_pbs_.emplace_back();
+  parent_pbs_.push_back(PhysicalPbId::INVALID());
 
   truth_tables_.emplace_back();
   mode_bits_.emplace_back();

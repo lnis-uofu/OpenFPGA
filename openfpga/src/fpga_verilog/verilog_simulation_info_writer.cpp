@@ -136,7 +136,7 @@ void print_verilog_simulation_info(const std::string& ini_fname,
         /* Find the index of the mapped GPIO in top-level FPGA fabric */
         size_t io_index = io_location_map.io_index(place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
                                                    place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
-                                                   place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.z,
+                                                   place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.sub_tile,
                                                    module_io_port.get_name());
 
         if (size_t(-1) == io_index) {

@@ -536,31 +536,51 @@ void print_pnr_sdc_constrain_grid_timing(const PnrSdcOption& options,
       continue;
     }
 
-    VTR_ASSERT(1 == physical_tile.equivalent_sites.size());
-    t_pb_graph_node* pb_graph_head = physical_tile.equivalent_sites[0]->pb_graph_head;
-    if (nullptr == pb_graph_head) {
-      continue;
-    }
+    for (const t_sub_tile& sub_tile : physical_tile.sub_tiles) {
+      VTR_ASSERT(1 == sub_tile.equivalent_sites.size());
+      t_pb_graph_node* pb_graph_head = sub_tile.equivalent_sites[0]->pb_graph_head;
+      if (nullptr == pb_graph_head) {
+        continue;
+      }
 
-    if (true == is_io_type(&physical_tile)) {
-      /* Special for I/O block:
-       * We will search the grids and see where the I/O blocks are located:
-       * - If a I/O block locates on border sides of FPGA fabric:
-       *   i.e., one or more from {TOP, RIGHT, BOTTOM, LEFT},
-       *   we will generate one module for each border side 
-       * - If a I/O block locates in the center of FPGA fabric:
-       *   we will generate one module with NUM_SIDES (same treatment as regular grids) 
-       */
-      std::set<e_side> io_type_sides = find_physical_io_tile_located_sides(device_ctx.grid,
-                                                                           &physical_tile);
+      if (true == is_io_type(&physical_tile)) {
+        /* Special for I/O block:
+         * We will search the grids and see where the I/O blocks are located:
+         * - If a I/O block locates on border sides of FPGA fabric:
+         *   i.e., one or more from {TOP, RIGHT, BOTTOM, LEFT},
+         *   we will generate one module for each border side 
+         * - If a I/O block locates in the center of FPGA fabric:
+         *   we will generate one module with NUM_SIDES (same treatment as regular grids) 
+         */
+        std::set<e_side> io_type_sides = find_physical_io_tile_located_sides(device_ctx.grid,
+                                                                             &physical_tile);
 
 
-      /* Generate the grid module name */
-      for (const e_side& io_type_side : io_type_sides) {
+        /* Generate the grid module name */
+        for (const e_side& io_type_side : io_type_sides) {
+          std::string grid_module_name = generate_grid_block_module_name(std::string(GRID_MODULE_NAME_PREFIX), 
+                                                                         std::string(physical_tile.name),
+                                                                         is_io_type(&physical_tile),
+                                                                         io_type_side);
+          /* Find the module Id */
+          ModuleId grid_module = module_manager.find_module(grid_module_name);
+          VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
+
+          std::string module_path = format_dir_path(root_path + grid_module_name);
+          module_path = format_dir_path(module_path + generate_physical_block_instance_name(pb_graph_head->pb_type, pb_graph_head->placement_index));
+
+          rec_print_pnr_sdc_constrain_pb_graph_timing(options,
+                                                      module_path, 
+                                                      module_manager, 
+                                                      device_annotation,
+                                                      pb_graph_head);
+        }
+      } else {
+        /* For CLB and heterogenenous blocks */
         std::string grid_module_name = generate_grid_block_module_name(std::string(GRID_MODULE_NAME_PREFIX), 
                                                                        std::string(physical_tile.name),
                                                                        is_io_type(&physical_tile),
-                                                                       io_type_side);
+                                                                       NUM_SIDES);
         /* Find the module Id */
         ModuleId grid_module = module_manager.find_module(grid_module_name);
         VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
@@ -574,24 +594,6 @@ void print_pnr_sdc_constrain_grid_timing(const PnrSdcOption& options,
                                                     device_annotation,
                                                     pb_graph_head);
       }
-    } else {
-      /* For CLB and heterogenenous blocks */
-      std::string grid_module_name = generate_grid_block_module_name(std::string(GRID_MODULE_NAME_PREFIX), 
-                                                                     std::string(physical_tile.name),
-                                                                     is_io_type(&physical_tile),
-                                                                     NUM_SIDES);
-      /* Find the module Id */
-      ModuleId grid_module = module_manager.find_module(grid_module_name);
-      VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
-
-      std::string module_path = format_dir_path(root_path + grid_module_name);
-      module_path = format_dir_path(module_path + generate_physical_block_instance_name(pb_graph_head->pb_type, pb_graph_head->placement_index));
-
-      rec_print_pnr_sdc_constrain_pb_graph_timing(options,
-                                                  module_path, 
-                                                  module_manager, 
-                                                  device_annotation,
-                                                  pb_graph_head);
     }
   }
 }

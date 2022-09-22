@@ -79,7 +79,6 @@ IoLocationMap build_fabric_io_location_map(const ModuleManager& module_manager,
           if (false == module_manager.port_is_mappable_io(child, gpio_port_id)) {
             continue;
           }
-
           const BasicPort& gpio_port = module_manager.module_port(child, gpio_port_id);
 
           auto curr_io_index = io_counter.find(gpio_port.get_name());

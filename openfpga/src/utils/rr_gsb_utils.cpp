@@ -40,7 +40,7 @@ bool connection_block_contain_only_routing_tracks(const RRGSB& rr_gsb,
 /************************************************************************
  * Find the configurable driver nodes for a node in the rr_graph
  ***********************************************************************/
-std::vector<RRNodeId> get_rr_gsb_chan_node_configurable_driver_nodes(const RRGraph& rr_graph,
+std::vector<RRNodeId> get_rr_gsb_chan_node_configurable_driver_nodes(const RRGraphView& rr_graph,
                                                                      const RRGSB& rr_gsb,
                                                                      const e_side& chan_side,
                                                                      const size_t& track_id) {
@@ -58,7 +58,7 @@ std::vector<RRNodeId> get_rr_gsb_chan_node_configurable_driver_nodes(const RRGra
 
 /** @brief Evaluate if two routing channels are mirror to each other */
 static 
-bool is_chan_mirror(const RRGraph& rr_graph,
+bool is_chan_mirror(const RRGraphView& rr_graph,
                     const VprDeviceAnnotation& device_annotation,
                     const RRChan& base,
                     const RRChan& cand) {
@@ -97,7 +97,7 @@ bool is_chan_mirror(const RRGraph& rr_graph,
  * 3. each drive_rr_switch should be the same 
  */
 static 
-bool is_sb_node_mirror(const RRGraph& rr_graph,
+bool is_sb_node_mirror(const RRGraphView& rr_graph,
                        const VprDeviceAnnotation& device_annotation,
                        const RRGSB& base, 
                        const RRGSB& cand, 
@@ -159,7 +159,7 @@ bool is_sb_node_mirror(const RRGraph& rr_graph,
 
 /** @brief Check if all the routing segments of a side of candidate SB is a mirror of the current one */
 static 
-bool is_sb_side_segment_mirror(const RRGraph& rr_graph,
+bool is_sb_side_segment_mirror(const RRGraphView& rr_graph,
                                const VprDeviceAnnotation& device_annotation,
                                const RRGSB& base,
                                const RRGSB& cand, 
@@ -219,7 +219,7 @@ bool is_sb_side_segment_mirror(const RRGraph& rr_graph,
  * If all above are satisfied, the side of the two switch blocks are mirrors!
  */
 static 
-bool is_sb_side_mirror(const RRGraph& rr_graph,
+bool is_sb_side_mirror(const RRGraphView& rr_graph,
                        const VprDeviceAnnotation& device_annotation,
                        const RRGSB& base,
                        const RRGSB& cand,
@@ -249,7 +249,7 @@ bool is_sb_side_mirror(const RRGraph& rr_graph,
  * 5. check if pin class id and pin id are same 
  * If all above are satisfied, the two switch blocks are mirrors!
  */
-bool is_sb_mirror(const RRGraph& rr_graph,
+bool is_sb_mirror(const RRGraphView& rr_graph,
                   const VprDeviceAnnotation& device_annotation,
                   const RRGSB& base,
                   const RRGSB& cand) {
@@ -274,7 +274,7 @@ bool is_sb_mirror(const RRGraph& rr_graph,
  * 2. each drive_rr_switch should be the same 
  */
 static 
-bool is_cb_node_mirror(const RRGraph& rr_graph,
+bool is_cb_node_mirror(const RRGraphView& rr_graph,
                        const VprDeviceAnnotation& device_annotation,
                        const RRGSB& base, 
                        const RRGSB& cand, 
@@ -282,23 +282,11 @@ bool is_cb_node_mirror(const RRGraph& rr_graph,
                        const e_side& node_side, 
                        const size_t& node_id) {
   /* Ensure rr_nodes are either the output of short-connection or multiplexer  */
-  RRNodeId node = base.get_ipin_node(node_side, node_id);
-  RRNodeId cand_node = cand.get_ipin_node(node_side, node_id);
-
-  if ( rr_graph.node_in_edges(node).size() != rr_graph.node_in_edges(cand_node).size() ) {
+  std::vector<RREdgeId> node_in_edges = base.get_ipin_node_in_edges(rr_graph, node_side, node_id);
+  std::vector<RREdgeId> cand_node_in_edges = cand.get_ipin_node_in_edges(rr_graph, node_side, node_id);
+  if (node_in_edges.size() != cand_node_in_edges.size()) {
     return false;
   }
-
-  std::vector<RREdgeId> node_in_edges;
-  for (const RREdgeId& edge : rr_graph.node_in_edges(node)) {
-    node_in_edges.push_back(edge);
-  }
-
-  std::vector<RREdgeId> cand_node_in_edges;
-  for (const RREdgeId& edge : rr_graph.node_in_edges(cand_node)) {
-    cand_node_in_edges.push_back(edge);
-  }
-  VTR_ASSERT(node_in_edges.size() == cand_node_in_edges.size());
 
   for (size_t iedge = 0; iedge < node_in_edges.size(); ++iedge) {
     RREdgeId src_edge = node_in_edges[iedge];
@@ -344,7 +332,7 @@ bool is_cb_node_mirror(const RRGraph& rr_graph,
 } 
 
 /** @brief Check if the candidate CB is a mirror of the current baselien */
-bool is_cb_mirror(const RRGraph& rr_graph,
+bool is_cb_mirror(const RRGraphView& rr_graph,
                   const VprDeviceAnnotation& device_annotation,
                   const RRGSB& base,
                   const RRGSB& cand,
