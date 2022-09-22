@@ -5,7 +5,7 @@ on:
     - cron: '0 0 * * *'
 
 env:
-  TAG_COMMIT: d7fb6d9..
+  TAG_COMMIT: 8ee3fb8..
   VERSION_FILE: VERSION.md
   BRANCH_NAME: patch_update
 
