@@ -19,7 +19,7 @@ We also recommend potential users check out the summary of [**technical capabili
 **A tutorial **video about **how to compile** can be** found [here](https://youtu.be/F9sMRmDewM0)**
 
 Before starting, we strongly recommend you read the required dependencies at [**compilation guidelines**](https://openfpga.readthedocs.io/en/master/tutorials/getting_started/compile/).
-It also includes detailed information about the docker image. 
+It also includes detailed information about the docker image.
 
 ---
 
@@ -56,11 +56,37 @@ We currently target OpenFPGA for:
 ## Running with pre-built docker image
 
 ```bash
-# To get the docker image from the repository, 
+# To get the docker image from the repository,
 docker pull ghcr.io/lnis-uofu/openfpga-master:latest
 
 # To invoke openfpga_shell
 docker run -it ghcr.io/lnis-uofu/openfpga-master:latest openfpga/openfpga bash
+```
+
+## Backward compatibility with OpenFPGA v1.1
+
+OpenFPGA v1.2 is a major upgrade over v1.1, which upgrades the internal VPR engine.
+The (VPR) architecture files used with v1.1 may not be compatible with v1.2.
+
+You can upgrade your architecture files with script
+
+```bash
+python3 openfpga_flow/scripts/arch_file_updater.py \
+    --input_file ${v1.1_arch_file} \
+    --output_file ${v1.2_compatible_arch_file}
+```
+
+Or, If you want to stay with v1.1, the final build was (tag: [_OpenFPGA:Final1.1_](https://github.com/lnis-uofu/OpenFPGA/tree/Final1.1
+))
+
+```bash
+https://github.com/lnis-uofu/OpenFPGA/tree/Final1.1
+```
+
+or you can download the docker image
+
+```bash
+docker pull ghcr.io/lnis-uofu/openfpga-master:Final1.1
 ```
 
 ## Documentation
@@ -69,4 +95,4 @@ OpenFPGA's [full documentation](https://openfpga.readthedocs.io/en/master/) incl
 
 ## Tutorials
 
-You can find a set of [tutorials](https://openfpga.readthedocs.io/en/master/tutorials/), with which you get familiar with the tool and use OpenFPGA for various purposes. 
+You can find a set of [tutorials](https://openfpga.readthedocs.io/en/master/tutorials/), with which you get familiar with the tool and use OpenFPGA for various purposes.
