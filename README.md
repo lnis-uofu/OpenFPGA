@@ -76,17 +76,17 @@ python3 openfpga_flow/scripts/arch_file_updater.py \
     --output_file ${v1.2_compatible_arch_file}
 ```
 
-Or, If you want to stay with v1.1, the final build was (tag: [_OpenFPGA:Final1.1_](https://github.com/lnis-uofu/OpenFPGA/tree/Final1.1
+Or, If you want to stay with v1.1, the final build was (tag: [_OpenFPGA:v1.1.541](https://github.com/lnis-uofu/OpenFPGA/tree/v1.1.541
 ))
 
 ```bash
-https://github.com/lnis-uofu/OpenFPGA/tree/Final1.1
+https://github.com/lnis-uofu/OpenFPGA/tree/v1.1.541
 ```
 
 or you can download the docker image
 
 ```bash
-docker pull ghcr.io/lnis-uofu/openfpga-master:Final1.1
+docker pull ghcr.io/lnis-uofu/openfpga-master:v1.1.541
 ```
 
 ## Documentation
