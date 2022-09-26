@@ -171,15 +171,15 @@ jobs:
           - name: "Build w/o Yosys (Ubuntu 20.04)"
             cc: gcc-9
             cxx: g++-9
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS OFF"
+            cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF"
           - name: "Build w/o Yosys plugin (Ubuntu 20.04)"
             cc: gcc-9
             cxx: g++-9
-            cmake_flags: "-DOPENFPGA_WITH_YOSYS_PLUGIN OFF"
+            cmake_flags: "-DOPENFPGA_WITH_YOSYS_PLUGIN=OFF"
           - name: "Build w/o test (Ubuntu 20.04)"
             cc: gcc-9
             cxx: g++-9
-            cmake_flags: "-DOPENFPGA_WITH_TEST OFF"
+            cmake_flags: "-DOPENFPGA_WITH_TEST=OFF"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
