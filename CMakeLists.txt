@@ -62,6 +62,24 @@ add_definitions("-DVTR_ASSERT_LEVEL=${VTR_ASSERT_LEVEL}")
 # compiler flag configuration checks
 include(CheckCXXCompilerFlag)
 
+# Options
+## General options
+option(OPENFPGA_WITH_YOSYS "Enable building Yosys" ON)
+option(OPENFPGA_WITH_YOSYS_PLUGIN "Enable building Yosys plugin" ON)
+option(OPENFPGA_WITH_TEST "Enable testing build for codebase. Once enabled, make test can be run" ON)
+
+# Options pass on to VTR
+set(WITH_ABC OFF CACHE BOOL "Enable building ABC in Verilog-to-Routing")
+set(WITH_ODIN OFF CACHE BOOL "Enable building Odin in Verilog-to-Routing")
+set(ODIN_DEBUG OFF CACHE BOOL "Enable building odin with debug flags in Verilog-to-Routing")
+set(ODIN_WARN OFF CACHE BOOL "Enable building odin with extra warning flags in Verilog-to-Routing")
+set(ODIN_COVERAGE OFF CACHE BOOL "Enable building odin with coverage flags in Verilog-to-Routing")
+set(ODIN_TIDY OFF CACHE BOOL "Enable building odin with clang tidy in Verilog-to-Routing")
+set(ODIN_SANITIZE OFF CACHE BOOL "Enable building odin with sanitize flags in Verilog-to-Routing")
+set(WITH_YOSYS OFF CACHE BOOL "Enable building Yosys in Verilog-to-Routing")
+set(ODIN_YOSYS OFF CACHE BOOL "Enable building odin with yosys in Verilog-to-Routing")
+set(YOSYS_SV_UHDM_PLUGIN OFF CACHE BOOL "Enable building and installing Yosys SystemVerilog and UHDM plugins in Verilog-to-Routing")
+
 #
 # We require c++14 support
 #
@@ -204,7 +222,9 @@ message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
 # Unit Testing
 #
-enable_testing()
+if (OPENFPGA_WITH_TEST)
+    enable_testing()
+endif()
 
 # 
 # Sub-projects
@@ -251,30 +271,32 @@ include(CheckCXXCompilerFlag)
 #
 
 # we will check if yosys already exist. if not then build it
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install/bin/yosys)
-    message(STATUS "Yosys pre-build exist so skipping it")
-else ()
-# run makefile provided, we pass-on the options to the local make file 
-add_custom_target(
-    yosys ALL 
-    COMMAND $(MAKE) config-gcc
-    COMMAND $(MAKE) install PREFIX=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys
-    COMMENT "Compile Yosys with given Makefile"
-)
+if (OPENFPGA_WITH_YOSYS)
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install/bin/yosys)
+        message(STATUS "Yosys pre-build exist so skipping it")
+    else ()
+        # run makefile provided, we pass-on the options to the local make file 
+        add_custom_target(
+            yosys ALL 
+            COMMAND $(MAKE) config-gcc
+            COMMAND $(MAKE) install PREFIX=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys
+            COMMENT "Compile Yosys with given Makefile"
+        )
+        # yosys compilation ends
 
-# yosys compilation ends
-
-# yosys-plugins compilation starts
-add_custom_target(
-    yosys-plugins ALL
-    COMMAND $(MAKE) install_ql-qlf YOSYS_PATH=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install EXTRA_FLAGS="-DPASS_NAME=synth_ql"
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-plugins
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install/bin/yosys
-    COMMENT "Compile Yosys-plugins with given Makefile"
-)
-
-add_dependencies(yosys-plugins yosys)
+        # yosys-plugins compilation starts
+        if (OPENFPGA_WITH_YOSYS_PLUGIN)
+            add_custom_target(
+                yosys-plugins ALL
+                COMMAND $(MAKE) install_ql-qlf YOSYS_PATH=${CMAKE_CURRENT_SOURCE_DIR}/yosys/install EXTRA_FLAGS="-DPASS_NAME=synth_ql"
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys-plugins
+                DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/yosys/install/bin/yosys
+                COMMENT "Compile Yosys-plugins with given Makefile"
+            )
+            add_dependencies(yosys-plugins yosys)
+        endif()
+    endif()
 endif()
 
 # run make to extract compiler options, linker options and list of source files
