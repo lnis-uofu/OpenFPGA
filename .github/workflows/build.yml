@@ -209,7 +209,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS=${{ matrix.config.cmake_flags }}
+          make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
 
   docker_distribution:
     name: Build docker image for distribution
