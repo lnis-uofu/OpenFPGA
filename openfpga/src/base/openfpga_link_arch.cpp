@@ -25,6 +25,7 @@
 #include "annotate_bitstream_setting.h"
 #include "mux_library_builder.h"
 #include "build_tile_direct.h"
+#include "annotate_clustering.h"
 #include "annotate_placement.h"
 #include "openfpga_link_arch.h"
 
@@ -154,6 +155,11 @@ int link_arch(OpenfpgaContext& openfpga_ctx,
   openfpga_ctx.mutable_tile_direct() = build_device_tile_direct(g_vpr_ctx.device(),
                                                                 openfpga_ctx.arch().arch_direct,
                                                                 cmd_context.option_enable(cmd, opt_verbose));
+
+  /* Annotate clustering results */
+  annotate_post_routing_cluster_sync_results(g_vpr_ctx.device(),
+                                             g_vpr_ctx.clustering(),
+                                             openfpga_ctx.mutable_vpr_clustering_annotation());
 
   /* Annotate placement results */
   annotate_mapped_blocks(g_vpr_ctx.device(), 

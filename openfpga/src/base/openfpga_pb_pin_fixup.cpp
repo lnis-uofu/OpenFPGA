@@ -101,6 +101,7 @@ void update_cluster_pin_with_post_routing_results(const DeviceContext& device_ct
      * This is important because we cannot bypass when router forces a valid net to be mapped
      * and the net remapping has to be considered
      */
+    /*
     if ( (ClusterNetId::INVALID() != cluster_net_id)
       && (ClusterNetId::INVALID() == routing_net_id)
       && (true == clustering_ctx.clb_nlist.net_is_ignored(cluster_net_id))) {
@@ -114,6 +115,7 @@ void update_cluster_pin_with_post_routing_results(const DeviceContext& device_ct
                );
       continue;
     }
+    */
 
     /* Ignore used in local cluster only, reserved one CLB pin */
     if ( (ClusterNetId::INVALID() != cluster_net_id)
