@@ -38,6 +38,33 @@ To quickly verify the tool is well compiled, users can run the following command
 
   python3 openfpga_flow/scripts/run_fpga_task.py compilation_verification --debug --show_thread_logs
 
+.. _tutorial_compile_build_options:
+
+Build Options
+~~~~~~~~~~~~~
+
+General build targets are available in the top-level makefile. Call help desk to see details
+
+.. code-block:: shell
+
+  make help
+
+The following options are available for a custom build
+
+.. option:: BUILD_TYPE=<string>
+
+  Specify the type of build. Can be either ``release`` or ``debug``. By default, release mode is selected (full optimization on runtime)
+
+.. option:: CMAKE_FLAGS=<string>
+
+  Force build flags to CMake. The following flags are available
+
+  - ``DOPENFPGA_WITH_TEST=[ON|OFF]``: Enable/Disable the test build
+  - ``DOPENFPGA_WITH_YOSYS=[ON|OFF]``: Enable/Disable the build of yosys. Note that when disabled, the build of yosys-plugin is also disabled
+  - ``DOPENFPGA_WITH_YOSYS_PLUGIN=[ON|OFF]``: Enable/Disable the build of yosys-plugin.
+
+.. warning:: By default, only required modules in *Verilog-to-Routing* (VTR) is enabled. On other words, ``abc``, ``odin``, ``yosys`` and other add-ons inside VTR are not built. If you want to enable them, please look into the dedicated options of CMake scripts.  
+
 .. _tutorial_compile_dependencies:
 
 Dependencies
