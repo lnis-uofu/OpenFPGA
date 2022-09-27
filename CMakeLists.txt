@@ -69,7 +69,7 @@ option(OPENFPGA_WITH_YOSYS_PLUGIN "Enable building Yosys plugin" ON)
 option(OPENFPGA_WITH_TEST "Enable testing build for codebase. Once enabled, make test can be run" ON)
 
 # Options pass on to VTR
-set(WITH_ABC OFF CACHE BOOL "Enable building ABC in Verilog-to-Routing")
+set(WITH_ABC ON CACHE BOOL "Enable building ABC in Verilog-to-Routing")
 set(WITH_ODIN OFF CACHE BOOL "Enable building Odin in Verilog-to-Routing")
 set(ODIN_DEBUG OFF CACHE BOOL "Enable building odin with debug flags in Verilog-to-Routing")
 set(ODIN_WARN OFF CACHE BOOL "Enable building odin with extra warning flags in Verilog-to-Routing")
