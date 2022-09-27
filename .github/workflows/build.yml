@@ -154,6 +154,63 @@ jobs:
             yosys/install/bin
             openfpga_flow
             openfpga.sh
+
+  linux_build_opt:
+    needs: change_detect
+    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
+    name: ${{ matrix.config.name }}
+    runs-on: ubuntu-20.04
+    # Note: dependencies are installed in the container. See details about dependency list in docker/Dockerfile.master
+    # Comment the line out when base image is built again
+    #container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.config.cc}}
+    # Branch on different OS and settings
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: "Build w/o Yosys (Ubuntu 20.04)"
+            cc: gcc-9
+            cxx: g++-9
+            cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF"
+          - name: "Build w/o Yosys plugin (Ubuntu 20.04)"
+            cc: gcc-9
+            cxx: g++-9
+            cmake_flags: "-DOPENFPGA_WITH_YOSYS_PLUGIN=OFF"
+          - name: "Build w/o test (Ubuntu 20.04)"
+            cc: gcc-9
+            cxx: g++-9
+            cmake_flags: "-DOPENFPGA_WITH_TEST=OFF"
+    # Define the steps to run the build job
+    env:
+      CC: ${{ matrix.config.cc }}
+      CXX: ${{ matrix.config.cxx }}
+    steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+          
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Install dependencies
+        run: ./.github/workflows/install_dependencies_build.sh
+      
+      - name: Dump tool versions
+        run: |
+          cmake --version
+          ${CC} --version
+          ${CXX} --version
+
+      - uses: hendrikmuhs/ccache-action@v1
+
+      - name: Build
+        shell: bash
+        run: |
+          make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
+
   docker_distribution:
     name: Build docker image for distribution
     runs-on: ubuntu-latest
