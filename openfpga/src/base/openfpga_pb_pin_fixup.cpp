@@ -18,6 +18,7 @@
 
 #include "pb_type_utils.h"
 #include "openfpga_physical_tile_utils.h"
+#include "openfpga_device_grid_utils.h"
 #include "openfpga_pb_pin_fixup.h"
 
 /* Include global variables of VPR */
@@ -99,20 +100,12 @@ void update_cluster_pin_with_post_routing_results(const DeviceContext& device_ct
      * We always check the original clustering netlist first, if there is any remapping, check the remapping data
      */
     ClusterNetId cluster_net_id = clustering_ctx.clb_nlist.block_net(blk_id, j);
-    auto blk_search_result = clustering_ctx.post_routing_clb_pin_nets.find(blk_id);
-    if (blk_search_result != clustering_ctx.post_routing_clb_pin_nets.end()) {
-      auto pin_search_result = blk_search_result->second.find(j);
-      if (pin_search_result != blk_search_result->second.end()) {
-        cluster_net_id = pin_search_result->second;
-      }
-    }
 
     /* Ignore those net have never been routed: this check is valid only 
      * when both packer has mapped a net to the pin and the router leaves the pin to be unmapped
      * This is important because we cannot bypass when router forces a valid net to be mapped
      * and the net remapping has to be considered
      */
-    /*
     if ( (ClusterNetId::INVALID() != cluster_net_id)
       && (ClusterNetId::INVALID() == routing_net_id)
       && (true == clustering_ctx.clb_nlist.net_is_ignored(cluster_net_id))) {
@@ -126,7 +119,6 @@ void update_cluster_pin_with_post_routing_results(const DeviceContext& device_ct
                );
       continue;
     }
-    */
 
     /* Ignore used in local cluster only, reserved one CLB pin */
     if ( (ClusterNetId::INVALID() != cluster_net_id)
@@ -219,34 +211,12 @@ void update_pb_pin_with_post_routing_results(const DeviceContext& device_ctx,
       } 
     }
   }
+  
+  /* Create the coordinate range for each side of FPGA fabric */
+  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates = generate_perimeter_grid_coordinates(device_ctx.grid);
 
-  /* Update the periperal I/O blocks at fours sides of FPGA */
-  std::vector<e_side> io_sides{TOP, RIGHT, BOTTOM, LEFT};
-  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coords;
-
-  /* TOP side */
-  for (size_t x = 1; x < device_ctx.grid.width() - 1; ++x) {
-    io_coords[TOP].push_back(vtr::Point<size_t>(x, device_ctx.grid.height() -1));
-  } 
-
-  /* RIGHT side */
-  for (size_t y = 1; y < device_ctx.grid.height() - 1; ++y) {
-    io_coords[RIGHT].push_back(vtr::Point<size_t>(device_ctx.grid.width() -1, y));
-  } 
-
-  /* BOTTOM side */
-  for (size_t x = 1; x < device_ctx.grid.width() - 1; ++x) {
-    io_coords[BOTTOM].push_back(vtr::Point<size_t>(x, 0));
-  } 
-
-  /* LEFT side */
-  for (size_t y = 1; y < device_ctx.grid.height() - 1; ++y) {
-    io_coords[LEFT].push_back(vtr::Point<size_t>(0, y));
-  } 
-
-  /* Walk through io grid on by one */
-  for (const e_side& io_side : io_sides) {
-    for (const vtr::Point<size_t>& io_coord : io_coords[io_side]) {
+  for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
+    for (const vtr::Point<size_t>& io_coord : io_coordinates[io_side]) {
       /* Bypass EMPTY grid */
       if (true == is_empty_type(device_ctx.grid[io_coord.x()][io_coord.y()].type)) {
         continue;
