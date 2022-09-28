@@ -42,6 +42,8 @@ class VprClusteringAnnotation {
     void adapt_truth_table(t_pb* pb, const AtomNetlist::TruthTable& tt);
     void add_physical_pb(const ClusterBlockId& block_id, const PhysicalPb& physical_pb);
     PhysicalPb& mutable_physical_pb(const ClusterBlockId& block_id);
+  public:  /* Clean-up */
+    void clear_net_remapping();
   private: /* Internal data */
     /* Pair a regular pb_type to its physical pb_type */
     std::map<ClusterBlockId, std::map<int, ClusterNetId>> net_names_;

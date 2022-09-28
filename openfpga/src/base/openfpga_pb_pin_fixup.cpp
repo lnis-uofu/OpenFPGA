@@ -93,8 +93,19 @@ void update_cluster_pin_with_post_routing_results(const DeviceContext& device_ct
     /* Get the cluster net id which has been mapped to this net */
     ClusterNetId routing_net_id = vpr_routing_annotation.rr_node_net(rr_node);
 
-    /* Find the net mapped to this pin in clustering results*/
+    /* Find the net mapped to this pin in clustering results. There are two sources:
+     * - The original clustering netlist, where the pin mapping is based on pre-routing
+     * - The post-routing pin mapping, where the pin mapping is based on post-routing
+     * We always check the original clustering netlist first, if there is any remapping, check the remapping data
+     */
     ClusterNetId cluster_net_id = clustering_ctx.clb_nlist.block_net(blk_id, j);
+    auto blk_search_result = clustering_ctx.post_routing_clb_pin_nets.find(blk_id);
+    if (blk_search_result != clustering_ctx.post_routing_clb_pin_nets.end()) {
+      auto pin_search_result = blk_search_result->second.find(j);
+      if (pin_search_result != blk_search_result->second.end()) {
+        cluster_net_id = pin_search_result->second;
+      }
+    }
 
     /* Ignore those net have never been routed: this check is valid only 
      * when both packer has mapped a net to the pin and the router leaves the pin to be unmapped
@@ -181,6 +192,9 @@ void update_pb_pin_with_post_routing_results(const DeviceContext& device_ctx,
                                              const VprRoutingAnnotation& vpr_routing_annotation,
                                              VprClusteringAnnotation& vpr_clustering_annotation,
                                              const bool& verbose) {
+  /* Ensure a clean start: remove all the remapping results from VTR's post-routing clustering result sync-up */
+  vpr_clustering_annotation.clear_net_remapping();
+
   /* Update the core logic (center blocks of the FPGA) */
   for (size_t x = 1; x < device_ctx.grid.width() - 1; ++x) {
     for (size_t y = 1; y < device_ctx.grid.height() - 1; ++y) {

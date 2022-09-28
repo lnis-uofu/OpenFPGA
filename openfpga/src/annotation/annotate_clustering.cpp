@@ -29,14 +29,13 @@ bool annotate_post_routing_cluster_sync_results(const DeviceContext& device_ctx,
     }
     auto logical_block = clustering_ctx.clb_nlist.block_type(cluster_blk_id);
     for (int ipin = 0; ipin < logical_block->pb_type->num_pins; ++ipin) {
-      ClusterNetId pre_routing_net_id = clustering_ctx.clb_nlist.block_net(cluster_blk_id, ipin);
-      ClusterNetId post_routing_net_id = ClusterNetId::INVALID();
-      auto search_result = clustering_ctx.post_routing_clb_pin_nets.at(cluster_blk_id).find(ipin);
-      if (search_result != clustering_ctx.post_routing_clb_pin_nets.at(cluster_blk_id).end()) {
-        post_routing_net_id = search_result->second;
-      }
-      if (post_routing_net_id) {
-        clustering_annotation.rename_net(cluster_blk_id, ipin, post_routing_net_id);
+      /* Update pin remapping from vtr data storage */
+      auto blk_search_result = clustering_ctx.post_routing_clb_pin_nets.find(cluster_blk_id);
+      if (blk_search_result != clustering_ctx.post_routing_clb_pin_nets.end()) {
+        auto pin_search_result = blk_search_result->second.find(ipin);
+        if (pin_search_result != blk_search_result->second.end()) {
+          clustering_annotation.rename_net(cluster_blk_id, ipin, pin_search_result->second);
+        }
       }
     }
   } 

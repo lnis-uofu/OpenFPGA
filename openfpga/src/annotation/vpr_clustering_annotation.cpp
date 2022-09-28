@@ -92,4 +92,8 @@ PhysicalPb& VprClusteringAnnotation::mutable_physical_pb(const ClusterBlockId& b
   return physical_pbs_.at(block_id);
 }
 
+void VprClusteringAnnotation::clear_net_remapping() {
+  net_names_.clear();
+}
+
 } /* End namespace openfpga*/
