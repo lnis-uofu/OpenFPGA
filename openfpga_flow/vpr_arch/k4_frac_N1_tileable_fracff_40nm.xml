@@ -94,7 +94,7 @@
           <equivalent_sites>     
              <site pb_type="clb"/>     
           </equivalent_sites>    
-          <input name="I" num_pins="2" equivalent="full"/>    
+          <input name="I" num_pins="4" equivalent="full"/>    
           <input name="reset" num_pins="1" is_non_clock_global="true"/>    
           <output name="O" num_pins="2" equivalent="none"/>    
           <clock name="clk" num_pins="1"/>    
@@ -268,7 +268,7 @@
 	   routing area up significantly, we estimate into the ~70% range. 
 	   -->  
       <pb_type name="clb">   
-         <input name="I" num_pins="2" equivalent="full"/>   
+         <input name="I" num_pins="4" equivalent="full"/>   
          <input name="reset" num_pins="1"/>   
          <output name="O" num_pins="2" equivalent="none"/>   
          <clock name="clk" num_pins="1"/>   
