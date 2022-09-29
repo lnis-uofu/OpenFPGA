@@ -1,5 +1,5 @@
 # Makefile to batch process openfpga shell scripts
-SHELL = bash
+#SHELL = bash
 
 #foreach i (*.openfpga)
 #    sed -i 's/--include_timing --include_signal_init --support_icarus_simulator/--include_timing/g' $i
@@ -16,5 +16,5 @@ SHELL = bash
 
 
 for i in *.openfpga ; \
-	do sed -i 's/skip_sync_clustering_and_routing_results off/skip_sync_clustering_and_routing_results on/g' $i; \
+	do sed -i 's/skip_sync_clustering_and_routing_results on/skip_sync_clustering_and_routing_results off/g' $i; \
 done

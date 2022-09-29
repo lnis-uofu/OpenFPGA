@@ -122,6 +122,17 @@ void build_physical_pb_lut_truth_tables(PhysicalPb& physical_pb,
       AtomNetlist::TruthTable adapt_tt;
       if (true == physical_pb.is_wire_lut_output(lut_pb_id, output_pin)) {
         /* Double check: ensure that the output nets appear in the input net !!! */
+        if (!is_wired_lut(input_nets, output_net)) {
+          VTR_LOGV(verbose, "Pb id: \'%lu\', output pin: \'%s\'\n",
+                   size_t(lut_pb_id),
+                   output_pin->to_string().c_str());
+          VTR_LOGV(verbose, "Input nets:\n"); 
+          for (auto input_net : input_nets) {
+            VTR_LOGV(verbose, "\t%s\n", atom_ctx.nlist.net_name(input_net).c_str());
+          }
+          VTR_LOGV(verbose, "Output nets:\n"); 
+          VTR_LOGV(verbose, "\t%s\n", atom_ctx.nlist.net_name(output_net).c_str());
+        }
         VTR_ASSERT(true == is_wired_lut(input_nets, output_net));
         adapt_tt = build_wired_lut_truth_table(input_nets.size(), std::find(input_nets.begin(), input_nets.end(), output_net) - input_nets.begin()); 
       } else {
