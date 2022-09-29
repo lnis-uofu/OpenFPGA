@@ -13,6 +13,6 @@
 .names ff_o data_i data_o
 11 1
 
-.latch ff_i ff_o re clk_o 0 
+.latch ff_i ff_o re clk_i 0 
 
 .end
