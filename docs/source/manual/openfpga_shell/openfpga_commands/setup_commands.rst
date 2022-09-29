@@ -166,9 +166,12 @@ pb_pin_fixup
 ~~~~~~~~~~~~
 
   Apply fix-up to clustering nets based on routing results
-  This is strongly recommended. Otherwise, the bitstream generation may be wrong
 
-  .. warning:: This command may be deprecated in future when it is merged to VPR upstream
+  .. note:: Suggest to skip the similar fix-up applied by VPR through options ``--skip_sync_clustering_and_routing_results on`` when calling vpr in openfpga shell.
+
+  .. warning:: This feature has been integrated into VPR to provide accurate timing analysis results at post-routing stage. However, this command provides a light fix-up (not as thorough as the one in VPR) but bring more flexibility in support some architecture without local routing. Suggest to enable it when your architecture does not have local routing for *Look-Up Tables* (LUTs) but you want to enable logic equivalent for input pins of LUTs
+
+  .. warning:: This command may be deprecated in future
   
   .. option:: --verbose
 

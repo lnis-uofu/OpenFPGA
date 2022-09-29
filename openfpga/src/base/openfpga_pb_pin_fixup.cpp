@@ -18,6 +18,7 @@
 
 #include "pb_type_utils.h"
 #include "openfpga_physical_tile_utils.h"
+#include "openfpga_device_grid_utils.h"
 #include "openfpga_pb_pin_fixup.h"
 
 /* Include global variables of VPR */
@@ -93,7 +94,11 @@ void update_cluster_pin_with_post_routing_results(const DeviceContext& device_ct
     /* Get the cluster net id which has been mapped to this net */
     ClusterNetId routing_net_id = vpr_routing_annotation.rr_node_net(rr_node);
 
-    /* Find the net mapped to this pin in clustering results*/
+    /* Find the net mapped to this pin in clustering results. There are two sources:
+     * - The original clustering netlist, where the pin mapping is based on pre-routing
+     * - The post-routing pin mapping, where the pin mapping is based on post-routing
+     * We always check the original clustering netlist first, if there is any remapping, check the remapping data
+     */
     ClusterNetId cluster_net_id = clustering_ctx.clb_nlist.block_net(blk_id, j);
 
     /* Ignore those net have never been routed: this check is valid only 
@@ -179,6 +184,9 @@ void update_pb_pin_with_post_routing_results(const DeviceContext& device_ctx,
                                              const VprRoutingAnnotation& vpr_routing_annotation,
                                              VprClusteringAnnotation& vpr_clustering_annotation,
                                              const bool& verbose) {
+  /* Ensure a clean start: remove all the remapping results from VTR's post-routing clustering result sync-up */
+  vpr_clustering_annotation.clear_net_remapping();
+
   /* Update the core logic (center blocks of the FPGA) */
   for (size_t x = 1; x < device_ctx.grid.width() - 1; ++x) {
     for (size_t y = 1; y < device_ctx.grid.height() - 1; ++y) {
@@ -203,34 +211,12 @@ void update_pb_pin_with_post_routing_results(const DeviceContext& device_ctx,
       } 
     }
   }
+  
+  /* Create the coordinate range for each side of FPGA fabric */
+  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates = generate_perimeter_grid_coordinates(device_ctx.grid);
 
-  /* Update the periperal I/O blocks at fours sides of FPGA */
-  std::vector<e_side> io_sides{TOP, RIGHT, BOTTOM, LEFT};
-  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coords;
-
-  /* TOP side */
-  for (size_t x = 1; x < device_ctx.grid.width() - 1; ++x) {
-    io_coords[TOP].push_back(vtr::Point<size_t>(x, device_ctx.grid.height() -1));
-  } 
-
-  /* RIGHT side */
-  for (size_t y = 1; y < device_ctx.grid.height() - 1; ++y) {
-    io_coords[RIGHT].push_back(vtr::Point<size_t>(device_ctx.grid.width() -1, y));
-  } 
-
-  /* BOTTOM side */
-  for (size_t x = 1; x < device_ctx.grid.width() - 1; ++x) {
-    io_coords[BOTTOM].push_back(vtr::Point<size_t>(x, 0));
-  } 
-
-  /* LEFT side */
-  for (size_t y = 1; y < device_ctx.grid.height() - 1; ++y) {
-    io_coords[LEFT].push_back(vtr::Point<size_t>(0, y));
-  } 
-
-  /* Walk through io grid on by one */
-  for (const e_side& io_side : io_sides) {
-    for (const vtr::Point<size_t>& io_coord : io_coords[io_side]) {
+  for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
+    for (const vtr::Point<size_t>& io_coord : io_coordinates[io_side]) {
       /* Bypass EMPTY grid */
       if (true == is_empty_type(device_ctx.grid[io_coord.x()][io_coord.y()].type)) {
         continue;
