@@ -7,11 +7,7 @@
     with optionally registered outputs
   - Routing architecture: L = 4, fc_in = 0.15, Fc_out = 0.1
 
-  Details on Modelling:
-
-  Based on flagship k4_frac_N4_mem32K_40nm.xml architecture.
-
-  Authors: Jason Luu, Jeff Goeders, Vaughn Betz
+  Authors: Xifan Tang
 --><architecture> 
    <!-- 
        ODIN II specific config begins 
@@ -42,6 +38,38 @@
             <port name="lut4_out"/>    
          </output_ports>   
       </model>  
+      <!-- A virtual model for scan-chain flip-flop to be used in the physical mode of FF -->  
+      <model name="dff">   
+         <input_ports>    
+            <port name="D" clock="C"/>    
+            <port name="C" is_clock="1"/>    
+         </input_ports>   
+         <output_ports>    
+            <port name="Q" clock="C"/>    
+         </output_ports>   
+      </model>  
+      <!-- A virtual model for scan-chain flip-flop to be used in the physical mode of FF -->  
+      <model name="dffr">   
+         <input_ports>    
+            <port name="D" clock="C"/>    
+            <port name="R" clock="C"/>    
+            <port name="C" is_clock="1"/>    
+         </input_ports>   
+         <output_ports>    
+            <port name="Q" clock="C"/>    
+         </output_ports>   
+      </model>  
+     <!-- A virtual model for scan-chain flip-flop to be used in the physical mode of FF -->  
+      <model name="dffrn">   
+         <input_ports>    
+            <port name="D" clock="C"/>    
+            <port name="RN" clock="C"/>    
+            <port name="C" is_clock="1"/>    
+         </input_ports>   
+         <output_ports>    
+            <port name="Q" clock="C"/>    
+         </output_ports>   
+      </model>  
    </models> 
    <tiles>  
       <!-- Do NOT add clock pins to I/O here!!! VPR does not build clock network in the way that OpenFPGA can support
@@ -67,9 +95,13 @@
              <site pb_type="clb"/>     
           </equivalent_sites>    
           <input name="I" num_pins="4" equivalent="full"/>    
+          <input name="reset" num_pins="1" is_non_clock_global="true"/>    
           <output name="O" num_pins="2" equivalent="none"/>    
           <clock name="clk" num_pins="1"/>    
-          <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>    
+          <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">     
+             <fc_override port_name="clk" fc_type="frac" fc_val="0"/>     
+             <fc_override port_name="reset" fc_type="frac" fc_val="0"/>     
+          </fc>    
           <pinlocations pattern="spread"/>    
        </sub_tile>  </tile>  
    </tiles> 
@@ -91,6 +123,13 @@
          <fill type="clb" priority="10"/>   
       </fixed_layout>  
       <fixed_layout name="4x4" width="6" height="6">   
+         <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->   
+         <perimeter type="io" priority="100"/>   
+         <corners type="EMPTY" priority="101"/>   
+         <!--Fill with 'clb'-->   
+         <fill type="clb" priority="10"/>   
+      </fixed_layout>  
+      <fixed_layout name="48x48" width="50" height="50">   
          <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->   
          <perimeter type="io" priority="100"/>   
          <corners type="EMPTY" priority="101"/>   
@@ -230,6 +269,7 @@
 	   -->  
       <pb_type name="clb">   
          <input name="I" num_pins="4" equivalent="full"/>   
+         <input name="reset" num_pins="1"/>   
          <output name="O" num_pins="2" equivalent="none"/>   
          <clock name="clk" num_pins="1"/>   
          <!-- Describe fracturable logic element.  
@@ -238,12 +278,14 @@
         -->   
          <pb_type name="fle" num_pb="1">    
             <input name="in" num_pins="4"/>    
+            <input name="reset" num_pins="1"/>    
             <output name="out" num_pins="2"/>    
             <clock name="clk" num_pins="1"/>    
             <!-- Physical mode definition begin (physical implementation of the fle) -->    
             <mode name="physical" disable_packing="true">     
                <pb_type name="fabric" num_pb="1">      
                   <input name="in" num_pins="4"/>      
+                  <input name="reset" num_pins="1"/>      
                   <output name="out" num_pins="2"/>      
                   <clock name="clk" num_pins="1"/>      
                   <pb_type name="frac_logic" num_pb="1">       
@@ -263,17 +305,20 @@
                      </interconnect>       
                   </pb_type>      
                   <!-- Define flip-flop -->      
-                  <pb_type name="ff" blif_model=".latch" num_pb="2" class="flipflop">       
+                  <pb_type name="ff" blif_model=".subckt dffr" num_pb="2">       
                      <input name="D" num_pins="1" port_class="D"/>       
+                     <input name="R" num_pins="1"/>       
                      <output name="Q" num_pins="1" port_class="Q"/>       
-                     <clock name="clk" num_pins="1" port_class="clock"/>       
-                     <T_setup value="66e-12" port="ff.D" clock="clk"/>       
-                     <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>       
+                     <clock name="C" num_pins="1" port_class="clock"/>       
+                     <T_setup value="66e-12" port="ff.D" clock="C"/>       
+                     <T_setup value="66e-12" port="ff.R" clock="C"/>       
+                     <T_clock_to_Q max="124e-12" port="ff.Q" clock="C"/>       
                   </pb_type>      
                   <interconnect>       
                      <direct name="direct1" input="fabric.in" output="frac_logic.in"/>       
                      <direct name="direct2" input="frac_logic.out[1:0]" output="ff[1:0].D"/>       
-                     <complete name="direct3" input="fabric.clk" output="ff[1:0].clk"/>       
+                     <complete name="direct3" input="fabric.clk" output="ff[1:0].C"/>       
+                     <complete name="direct4" input="fabric.reset" output="ff[1:0].R"/>       
                      <mux name="mux1" input="ff[0].Q frac_logic.out[0]" output="fabric.out[0]">        
                         <!-- LUT to output is faster than FF to output on a Stratix IV -->        
                         <delay_constant max="25e-12" in_port="frac_logic.out[0]" out_port="fabric.out[0]"/>        
@@ -290,6 +335,7 @@
                   <direct name="direct1" input="fle.in" output="fabric.in"/>      
                   <direct name="direct2" input="fabric.out" output="fle.out"/>      
                   <direct name="direct3" input="fle.clk" output="fabric.clk"/>      
+                  <direct name="direct4" input="fle.reset" output="fabric.reset"/>      
                </interconnect>     
             </mode>    
             <!-- Physical mode definition end (physical implementation of the fle) -->    
@@ -297,10 +343,12 @@
             <mode name="n2_lut3">     
                <pb_type name="lut3inter" num_pb="1">      
                   <input name="in" num_pins="3"/>      
+                  <input name="reset" num_pins="1"/>      
                   <output name="out" num_pins="2"/>      
                   <clock name="clk" num_pins="1"/>      
                   <pb_type name="ble3" num_pb="2">       
                      <input name="in" num_pins="3"/>       
+                     <input name="reset" num_pins="1"/>       
                      <output name="out" num_pins="1"/>       
                      <clock name="clk" num_pins="1"/>       
                      <!-- Define the LUT -->       
@@ -323,20 +371,82 @@
                 </delay_matrix>        
                      </pb_type>       
                      <!-- Define the flip-flop -->       
-                     <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">        
-                        <input name="D" num_pins="1" port_class="D"/>        
-                        <output name="Q" num_pins="1" port_class="Q"/>        
-                        <clock name="clk" num_pins="1" port_class="clock"/>        
-                        <T_setup value="66e-12" port="ff.D" clock="clk"/>        
-                        <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>        
-                     </pb_type>       
+                     <pb_type name="ff" num_pb="1">        
+                        <input name="D" num_pins="1"/>        
+                        <input name="R" num_pins="1"/>        
+                        <output name="Q" num_pins="1"/>        
+                        <clock name="C" num_pins="1"/>        
+                        <mode name="latch">         
+                           <pb_type name="latch" blif_model=".latch" num_pb="1">          
+                              <input name="D" num_pins="1" port_class="D"/>          
+                              <output name="Q" num_pins="1" port_class="Q"/>          
+                              <clock name="clk" num_pins="1" port_class="clock"/>          
+                              <T_setup value="66e-12" port="latch.D" clock="clk"/>          
+                              <T_clock_to_Q max="124e-12" port="latch.Q" clock="clk"/>          
+                           </pb_type>          
+                           <interconnect>          
+                              <direct name="direct1" input="ff.D" output="latch.D"/>          
+                              <direct name="direct2" input="ff.C" output="latch.clk"/>          
+                              <direct name="direct3" input="latch.Q" output="ff.Q"/>          
+                           </interconnect>         
+                        </mode>        
+                        <mode name="dff">         
+                           <pb_type name="dff" blif_model=".subckt dff" num_pb="1">          
+                              <input name="D" num_pins="1" port_class="D"/>          
+                              <output name="Q" num_pins="1" port_class="Q"/>          
+                              <clock name="C" num_pins="1" port_class="clock"/>          
+                              <T_setup value="66e-12" port="dff.D" clock="C"/>          
+                              <T_clock_to_Q max="124e-12" port="dff.Q" clock="C"/>          
+                           </pb_type>          
+                           <interconnect>          
+                              <direct name="direct1" input="ff.D" output="dff.D"/>          
+                              <direct name="direct2" input="ff.C" output="dff.C"/>          
+                              <direct name="direct3" input="dff.Q" output="ff.Q"/>          
+                           </interconnect>         
+                        </mode>        
+                        <mode name="dffr">         
+                           <pb_type name="dffr" blif_model=".subckt dffr" num_pb="1">          
+                              <input name="D" num_pins="1" port_class="D"/>          
+                              <input name="R" num_pins="1"/>          
+                              <output name="Q" num_pins="1" port_class="Q"/>          
+                              <clock name="C" num_pins="1" port_class="clock"/>          
+                              <T_setup value="66e-12" port="dffr.D" clock="C"/>          
+                              <T_setup value="66e-12" port="dffr.R" clock="C"/>          
+                              <T_clock_to_Q max="124e-12" port="dffr.Q" clock="C"/>          
+                           </pb_type>          
+                           <interconnect>          
+                              <direct name="direct1" input="ff.D" output="dffr.D"/>          
+                              <direct name="direct2" input="ff.C" output="dffr.C"/>          
+                              <direct name="direct3" input="ff.R" output="dffr.R"/>          
+                              <direct name="direct4" input="dffr.Q" output="ff.Q"/>          
+                           </interconnect>         
+                        </mode>        
+                        <mode name="dffrn">         
+                           <pb_type name="dffrn" blif_model=".subckt dffrn" num_pb="1">          
+                              <input name="D" num_pins="1" port_class="D"/>          
+                              <input name="RN" num_pins="1"/>          
+                              <output name="Q" num_pins="1" port_class="Q"/>          
+                              <clock name="C" num_pins="1" port_class="clock"/>          
+                              <T_setup value="66e-12" port="dffrn.D" clock="C"/>          
+                              <T_setup value="66e-12" port="dffrn.RN" clock="C"/>          
+                              <T_clock_to_Q max="124e-12" port="dffrn.Q" clock="C"/>          
+                           </pb_type>          
+                           <interconnect>          
+                              <direct name="direct1" input="ff.D" output="dffrn.D"/>          
+                              <direct name="direct2" input="ff.C" output="dffrn.C"/>          
+                              <direct name="direct3" input="ff.R" output="dffrn.RN"/>          
+                              <direct name="direct4" input="dffrn.Q" output="ff.Q"/>          
+                           </interconnect>         
+                        </mode>        
+                     </pb_type>        
                      <interconnect>        
                         <direct name="direct1" input="ble3.in[2:0]" output="lut3[0:0].in[2:0]"/>        
                         <direct name="direct2" input="lut3[0:0].out" output="ff[0:0].D">         
                            <!-- Advanced user option that tells CAD tool to find LUT+FF pairs in netlist -->         
                            <pack_pattern name="ble3" in_port="lut3[0:0].out" out_port="ff[0:0].D"/>         
                         </direct>        
-                        <direct name="direct3" input="ble3.clk" output="ff[0:0].clk"/>        
+                        <direct name="direct3" input="ble3.clk" output="ff[0:0].C"/>        
+                        <direct name="direct4" input="ble3.reset" output="ff[0:0].R"/>        
                         <mux name="mux1" input="ff[0:0].Q lut3.out[0:0]" output="ble3.out[0:0]">         
                            <!-- LUT to output is faster than FF to output on a Stratix IV -->         
                            <delay_constant max="25e-12" in_port="lut3.out[0:0]" out_port="ble3.out[0:0]"/>         
@@ -349,12 +459,14 @@
                      <direct name="direct2" input="lut3inter.in" output="ble3[1:1].in"/>       
                      <direct name="direct3" input="ble3[1:0].out" output="lut3inter.out"/>       
                      <complete name="complete1" input="lut3inter.clk" output="ble3[1:0].clk"/>       
+                     <complete name="complete2" input="lut3inter.reset" output="ble3[1:0].reset"/>       
                   </interconnect>      
                </pb_type>     
                <interconnect>      
                   <direct name="direct1" input="fle.in[2:0]" output="lut3inter.in"/>      
                   <direct name="direct2" input="lut3inter.out" output="fle.out"/>      
                   <direct name="direct3" input="fle.clk" output="lut3inter.clk"/>      
+                  <direct name="direct4" input="fle.reset" output="lut3inter.reset"/>      
                </interconnect>     
             </mode>    
             <!-- Dual 3-LUT mode definition end -->    
@@ -363,6 +475,7 @@
                <!-- Define 4-LUT mode -->     
                <pb_type name="ble4" num_pb="1">      
                   <input name="in" num_pins="4"/>      
+                  <input name="reset" num_pins="1"/>      
                   <output name="out" num_pins="1"/>      
                   <clock name="clk" num_pins="1"/>      
                   <!-- Define LUT -->      
@@ -386,21 +499,83 @@
                 261e-12
               </delay_matrix>       
                   </pb_type>      
-                  <!-- Define flip-flop -->      
-                  <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">       
-                     <input name="D" num_pins="1" port_class="D"/>       
-                     <output name="Q" num_pins="1" port_class="Q"/>       
-                     <clock name="clk" num_pins="1" port_class="clock"/>       
-                     <T_setup value="66e-12" port="ff.D" clock="clk"/>       
-                     <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>       
-                  </pb_type>      
+                  <!-- Define the flip-flop -->      
+                  <pb_type name="ff" num_pb="1">       
+                     <input name="D" num_pins="1"/>       
+                     <input name="R" num_pins="1"/>       
+                     <output name="Q" num_pins="1"/>       
+                     <clock name="C" num_pins="1"/>       
+                     <mode name="latch">        
+                        <pb_type name="latch" blif_model=".latch" num_pb="1">         
+                           <input name="D" num_pins="1" port_class="D"/>         
+                           <output name="Q" num_pins="1" port_class="Q"/>         
+                           <clock name="clk" num_pins="1" port_class="clock"/>         
+                           <T_setup value="66e-12" port="latch.D" clock="clk"/>         
+                           <T_clock_to_Q max="124e-12" port="latch.Q" clock="clk"/>         
+                        </pb_type>         
+                        <interconnect>         
+                           <direct name="direct1" input="ff.D" output="latch.D"/>         
+                           <direct name="direct2" input="ff.C" output="latch.clk"/>         
+                           <direct name="direct3" input="latch.Q" output="ff.Q"/>         
+                        </interconnect>        
+                     </mode>       
+                     <mode name="dff">        
+                        <pb_type name="dff" blif_model=".subckt dff" num_pb="1">         
+                           <input name="D" num_pins="1" port_class="D"/>         
+                           <output name="Q" num_pins="1" port_class="Q"/>         
+                           <clock name="C" num_pins="1" port_class="clock"/>         
+                           <T_setup value="66e-12" port="dff.D" clock="C"/>         
+                           <T_clock_to_Q max="124e-12" port="dff.Q" clock="C"/>         
+                        </pb_type>         
+                        <interconnect>         
+                           <direct name="direct1" input="ff.D" output="dff.D"/>         
+                           <direct name="direct2" input="ff.C" output="dff.C"/>         
+                           <direct name="direct3" input="dff.Q" output="ff.Q"/>         
+                        </interconnect>        
+                     </mode>       
+                     <mode name="dffr">        
+                        <pb_type name="dffr" blif_model=".subckt dffr" num_pb="1">         
+                           <input name="D" num_pins="1" port_class="D"/>         
+                           <input name="R" num_pins="1"/>         
+                           <output name="Q" num_pins="1" port_class="Q"/>         
+                           <clock name="C" num_pins="1" port_class="clock"/>         
+                           <T_setup value="66e-12" port="dffr.D" clock="C"/>         
+                           <T_setup value="66e-12" port="dffr.R" clock="C"/>         
+                           <T_clock_to_Q max="124e-12" port="dffr.Q" clock="C"/>         
+                        </pb_type>         
+                        <interconnect>         
+                           <direct name="direct1" input="ff.D" output="dffr.D"/>         
+                           <direct name="direct2" input="ff.C" output="dffr.C"/>         
+                           <direct name="direct3" input="ff.R" output="dffr.R"/>         
+                           <direct name="direct4" input="dffr.Q" output="ff.Q"/>         
+                        </interconnect>        
+                     </mode>       
+                     <mode name="dffrn">        
+                        <pb_type name="dffrn" blif_model=".subckt dffrn" num_pb="1">         
+                           <input name="D" num_pins="1" port_class="D"/>         
+                           <input name="RN" num_pins="1"/>         
+                           <output name="Q" num_pins="1" port_class="Q"/>         
+                           <clock name="C" num_pins="1" port_class="clock"/>         
+                           <T_setup value="66e-12" port="dffrn.D" clock="C"/>         
+                           <T_setup value="66e-12" port="dffrn.RN" clock="C"/>         
+                           <T_clock_to_Q max="124e-12" port="dffrn.Q" clock="C"/>         
+                        </pb_type>         
+                        <interconnect>         
+                           <direct name="direct1" input="ff.D" output="dffrn.D"/>         
+                           <direct name="direct2" input="ff.C" output="dffrn.C"/>         
+                           <direct name="direct3" input="ff.R" output="dffrn.RN"/>         
+                           <direct name="direct4" input="dffrn.Q" output="ff.Q"/>         
+                        </interconnect>        
+                     </mode>       
+                  </pb_type>       
                   <interconnect>       
                      <direct name="direct1" input="ble4.in" output="lut4[0:0].in"/>       
                      <direct name="direct2" input="lut4.out" output="ff.D">        
                         <!-- Advanced user option that tells CAD tool to find LUT+FF pairs in netlist -->        
                         <pack_pattern name="ble4" in_port="lut4.out" out_port="ff.D"/>        
                      </direct>       
-                     <direct name="direct3" input="ble4.clk" output="ff.clk"/>       
+                     <direct name="direct3" input="ble4.clk" output="ff.C"/>       
+                     <direct name="direct4" input="ble4.reset" output="ff.R"/>       
                      <mux name="mux1" input="ff.Q lut4.out" output="ble4.out">        
                         <!-- LUT to output is faster than FF to output on a Stratix IV -->        
                         <delay_constant max="25e-12" in_port="lut4.out" out_port="ble4.out"/>        
@@ -412,6 +587,7 @@
                   <direct name="direct1" input="fle.in" output="ble4.in"/>      
                   <direct name="direct2" input="ble4.out" output="fle.out[0:0]"/>      
                   <direct name="direct3" input="fle.clk" output="ble4.clk"/>      
+                  <direct name="direct4" input="fle.reset" output="ble4.reset"/>      
                </interconnect>     
             </mode>    
             <!-- 6-LUT mode definition end -->    
@@ -431,6 +607,8 @@
                <delay_constant max="75e-12" in_port="fle[0:0].out" out_port="fle[0:0].in"/>     
             </complete>    
             <complete name="clks" input="clb.clk" output="fle[0:0].clk">
+        </complete>    
+            <complete name="resets" input="clb.reset" output="fle[0:0].reset">
         </complete>    
             <!-- This way of specifying direct connection to clb outputs is important because this architecture uses automatic spreading of opins.  
                By grouping to output pins in this fashion, if a logic block is completely filled by 6-LUTs, 

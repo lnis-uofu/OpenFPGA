@@ -6,17 +6,22 @@
 `timescale 1ns / 1ps
 
 module clk_gate(
+  rst_i,
   clk_i,
   data_i,
   data_o);
-
+input wire rst_i;
 input wire clk_i;
 input wire data_i;
 output wire data_o;
 reg q;
 
 always @(posedge clk_i) begin
-  q <= 1;
+  if (rst_i) begin
+    q <= 0;
+  end else begin
+    q <= 1;
+  end
 end
 assign data_o = data_i & q;
 

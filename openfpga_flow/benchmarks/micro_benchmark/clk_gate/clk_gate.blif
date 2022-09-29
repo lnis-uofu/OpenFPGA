@@ -1,7 +1,7 @@
 # Use a FF with constant input to connect a clock signal (frequency divided by 2) from a global network to datapath
 # Use an external signal to enable the clock signal
 .model clk_gate
-.inputs clk_i data_i
+.inputs rst_i clk_i data_i
 .outputs data_o
 
 .names $true
@@ -13,6 +13,6 @@
 .names ff_o data_i data_o
 11 1
 
-.latch ff_i ff_o re clk_i 0 
+.subckt dffr D=ff_i Q=ff_o C=clk_i R=rst_i
 
 .end
