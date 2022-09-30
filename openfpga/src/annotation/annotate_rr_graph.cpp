@@ -256,44 +256,24 @@ RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
 
     /* Fill opin_rr_nodes */
     /* Copy from temp_opin_rr_node to opin_rr_node */
-    for (const RRNodeId& inode : temp_opin_rr_nodes[0]) {
-      /* Skip those has no configurable outgoing, they should NOT appear in the GSB connection
-       * This is for those grid output pins used by direct connections
-       */
-      if (0 == std::distance(vpr_device_ctx.rr_graph.node_configurable_out_edges(inode).begin(),
-                             vpr_device_ctx.rr_graph.node_configurable_out_edges(inode).end())) {
-        continue;
+    for (size_t opin_array_id = 0; opin_array_id < temp_opin_rr_nodes.size(); ++opin_array_id) {
+      for (const RRNodeId& inode : temp_opin_rr_nodes[opin_array_id]) {
+        /* Skip those has no configurable outgoing, they should NOT appear in the GSB connection
+         * This is for those grid output pins used by direct connections
+         */
+        if (0 == vpr_device_ctx.rr_graph.num_configurable_edges(inode)) {
+          continue;
+        }
+        /* Do not consider OPINs that directly drive an IPIN
+         * they are supposed to be handled by direct connection
+         */
+        if (true == is_opin_direct_connected_ipin(vpr_device_ctx.rr_graph, inode)) { 
+          continue;
+        }
+
+        /* Grid[x+1][y+1] Bottom side outputs pins */
+        rr_gsb.add_opin_node(inode, side_manager.get_side());
       }
-
-      /* Do not consider OPINs that directly drive an IPIN
-       * they are supposed to be handled by direct connection
-       */
-      if (true == is_opin_direct_connected_ipin(vpr_device_ctx.rr_graph, inode)) { 
-        continue;
-      }
-
-      /* Grid[x+1][y+1] Bottom side outputs pins */
-      rr_gsb.add_opin_node(inode, side_manager.get_side());
-    }
-
-    for (const RRNodeId& inode : temp_opin_rr_nodes[1]) {
-      /* Skip those has no configurable outgoing, they should NOT appear in the GSB connection
-       * This is for those grid output pins used by direct connections
-       */
-      if (0 == std::distance(vpr_device_ctx.rr_graph.node_configurable_out_edges(inode).begin(),
-                             vpr_device_ctx.rr_graph.node_configurable_out_edges(inode).end())) {
-        continue;
-      }
-
-      /* Do not consider OPINs that directly drive an IPIN
-       * they are supposed to be handled by direct connection
-       */
-      if (true == is_opin_direct_connected_ipin(vpr_device_ctx.rr_graph, inode)) { 
-        continue;
-      }
-
-      /* Grid[x+1][y] TOP side outputs pins */
-      rr_gsb.add_opin_node(inode, side_manager.get_side());
     }
 
     /* Clean ipin_rr_nodes */
@@ -375,8 +355,7 @@ RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
       /* Skip those has no configurable outgoing, they should NOT appear in the GSB connection
        * This is for those grid output pins used by direct connections
        */
-      if (0 == std::distance(vpr_device_ctx.rr_graph.node_configurable_in_edges(inode).begin(),
-                             vpr_device_ctx.rr_graph.node_configurable_in_edges(inode).end())) {
+      if (0 == vpr_device_ctx.rr_graph.node_configurable_in_edges(inode).size()) {
         continue;
       }
 
