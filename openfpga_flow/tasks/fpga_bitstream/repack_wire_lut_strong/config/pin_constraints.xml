@@ -1,0 +1,5 @@
+<!-- A dummy pin constraint file, useful when no pin constraints are needed for a benchmark -->
+<pin_constraints>
+  <set_io pin="op_reset[0]" net="rst_i"/>
+</pin_constraints>
+
