@@ -180,6 +180,10 @@ jobs:
             cc: gcc-9
             cxx: g++-9
             cmake_flags: "-DOPENFPGA_WITH_TEST=OFF"
+          - name: "Build w/o version number (Ubuntu 20.04)"
+            cc: gcc-9
+            cxx: g++-9
+            cmake_flags: "-DOPENFPGA_WITH_VERSION=OFF"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}

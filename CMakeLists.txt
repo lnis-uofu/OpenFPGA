@@ -67,6 +67,7 @@ include(CheckCXXCompilerFlag)
 option(OPENFPGA_WITH_YOSYS "Enable building Yosys" ON)
 option(OPENFPGA_WITH_YOSYS_PLUGIN "Enable building Yosys plugin" ON)
 option(OPENFPGA_WITH_TEST "Enable testing build for codebase. Once enabled, make test can be run" ON)
+option(OPENFPGA_WITH_VERSION "Enable version always-up-to-date when building codebase. Disable only when you do not care an accurate version number" ON)
 
 # Options pass on to VTR
 set(WITH_ABC ON CACHE BOOL "Enable building ABC in Verilog-to-Routing")
@@ -79,6 +80,7 @@ set(ODIN_SANITIZE OFF CACHE BOOL "Enable building odin with sanitize flags in Ve
 set(WITH_YOSYS OFF CACHE BOOL "Enable building Yosys in Verilog-to-Routing")
 set(ODIN_YOSYS OFF CACHE BOOL "Enable building odin with yosys in Verilog-to-Routing")
 set(YOSYS_SV_UHDM_PLUGIN OFF CACHE BOOL "Enable building and installing Yosys SystemVerilog and UHDM plugins in Verilog-to-Routing")
+set(VTR_ENABLE_VERSION ${OPENFPGA_WITH_VERSION} CACHE BOOL "Enable version always-up-to-date when building codebase. Disable only when you do not care an accurate version number")
 
 #
 # We require c++14 support

@@ -37,23 +37,28 @@ set(OPENFPGA_BUILD_INFO "${OPENFPGA_BUILD_INFO} ASSERT_LEVEL=${VTR_ASSERT_LEVEL}
 # 2) The custom command depends on the touched version input file and generates the processed 
 #    version file, with updated values. The custom command uses the configure_version.cmake 
 #    script to generate the up-to-date openfpga_version.cpp
-add_custom_target(openfpga_version ALL
-    COMMAND ${CMAKE_COMMAND} -E touch ${OPENFPGA_VERSION_FILE_IN})
-
-add_custom_command(OUTPUT ${OPENFPGA_VERSION_FILE_OUT}
-    COMMAND ${CMAKE_COMMAND} 
-                    -D IN_FILE=${OPENFPGA_VERSION_FILE_IN}
-                    -D OUT_FILE=${OPENFPGA_VERSION_FILE_OUT}
-                    -D OPENFPGA_VERSION_MAJOR=${OPENFPGA_VERSION_MAJOR}
-                    -D OPENFPGA_VERSION_MINOR=${OPENFPGA_VERSION_MINOR}
-                    -D OPENFPGA_VERSION_PATCH=${OPENFPGA_VERSION_PATCH}
-                    -D OPENFPGA_VERSION_PRERELEASE=${OPENFPGA_VERSION_PRERELEASE}
-                    -D OPENFPGA_COMPILER_INFO=${OPENFPGA_COMPILER_INFO}
-                    -D OPENFPGA_BUILD_INFO=${OPENFPGA_BUILD_INFO}
-                    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/configure_version.cmake
-    MAIN_DEPENDENCY ${OPENFPGA_VERSION_FILE_IN}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-	VERBATIM)
+if (OPENFPGA_WITH_VERSION) 
+    add_custom_target(openfpga_version ALL
+        COMMAND ${CMAKE_COMMAND} -E touch ${OPENFPGA_VERSION_FILE_IN})
+    
+    add_custom_command(OUTPUT ${OPENFPGA_VERSION_FILE_OUT}
+        COMMAND ${CMAKE_COMMAND} 
+                        -D IN_FILE=${OPENFPGA_VERSION_FILE_IN}
+                        -D OUT_FILE=${OPENFPGA_VERSION_FILE_OUT}
+                        -D OPENFPGA_VERSION_MAJOR=${OPENFPGA_VERSION_MAJOR}
+                        -D OPENFPGA_VERSION_MINOR=${OPENFPGA_VERSION_MINOR}
+                        -D OPENFPGA_VERSION_PATCH=${OPENFPGA_VERSION_PATCH}
+                        -D OPENFPGA_VERSION_PRERELEASE=${OPENFPGA_VERSION_PRERELEASE}
+                        -D OPENFPGA_COMPILER_INFO=${OPENFPGA_COMPILER_INFO}
+                        -D OPENFPGA_BUILD_INFO=${OPENFPGA_BUILD_INFO}
+                        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/configure_version.cmake
+        MAIN_DEPENDENCY ${OPENFPGA_VERSION_FILE_IN}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    	VERBATIM)
+else()
+# Just copy the input file to output file with version number
+    configure_file(${OPENFPGA_VERSION_FILE_IN} ${OPENFPGA_VERSION_FILE_OUT})
+endif()
 
 #file(GLOB_RECURSE EXEC_SOURCES test/main.cpp)
 file(GLOB_RECURSE LIB_SOURCES src/*.cpp)
@@ -74,7 +79,9 @@ target_include_directories(libopenfpgautil PUBLIC ${LIB_INCLUDE_DIRS})
 set_target_properties(libopenfpgautil PROPERTIES PREFIX "") #Avoid extra 'lib' prefix
 
 #Ensure version is always up to date by requiring version to be run first
-add_dependencies(libopenfpgautil openfpga_version)
+if (OPENFPGA_WITH_VERSION) 
+    add_dependencies(libopenfpgautil openfpga_version)
+endif()
 
 #Specify link-time dependancies
 target_link_libraries(libopenfpgautil
