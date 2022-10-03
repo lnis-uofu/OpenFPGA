@@ -37,7 +37,7 @@ set(OPENFPGA_BUILD_INFO "${OPENFPGA_BUILD_INFO} ASSERT_LEVEL=${VTR_ASSERT_LEVEL}
 # 2) The custom command depends on the touched version input file and generates the processed 
 #    version file, with updated values. The custom command uses the configure_version.cmake 
 #    script to generate the up-to-date openfpga_version.cpp
-if (OPENFPGA_WITH_VERSION_UP_TO_DATE) 
+if (OPENFPGA_WITH_VERSION) 
     add_custom_target(openfpga_version ALL
         COMMAND ${CMAKE_COMMAND} -E touch ${OPENFPGA_VERSION_FILE_IN})
     
@@ -55,6 +55,9 @@ if (OPENFPGA_WITH_VERSION_UP_TO_DATE)
         MAIN_DEPENDENCY ${OPENFPGA_VERSION_FILE_IN}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     	VERBATIM)
+else()
+# Just copy the input file to output file with version number
+    configure_file(${OPENFPGA_VERSION_FILE_IN} ${OPENFPGA_VERSION_FILE_OUT})
 endif()
 
 #file(GLOB_RECURSE EXEC_SOURCES test/main.cpp)
@@ -76,7 +79,7 @@ target_include_directories(libopenfpgautil PUBLIC ${LIB_INCLUDE_DIRS})
 set_target_properties(libopenfpgautil PROPERTIES PREFIX "") #Avoid extra 'lib' prefix
 
 #Ensure version is always up to date by requiring version to be run first
-if (OPENFPGA_WITH_VERSION_UP_TO_DATE) 
+if (OPENFPGA_WITH_VERSION) 
     add_dependencies(libopenfpgautil openfpga_version)
 endif()
 
