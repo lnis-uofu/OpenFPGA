@@ -74,7 +74,9 @@ target_include_directories(libopenfpgautil PUBLIC ${LIB_INCLUDE_DIRS})
 set_target_properties(libopenfpgautil PROPERTIES PREFIX "") #Avoid extra 'lib' prefix
 
 #Ensure version is always up to date by requiring version to be run first
-add_dependencies(libopenfpgautil openfpga_version)
+if (OPENFPGA_WITH_VERSION_UP_TO_DATE) 
+    add_dependencies(libopenfpgautil openfpga_version)
+endif()
 
 #Specify link-time dependancies
 target_link_libraries(libopenfpgautil
