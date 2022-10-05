@@ -23,17 +23,17 @@ namespace openfpga {
  * Check if the tile annotation is valid without any conflict with
  * circuit library content.
  * Items to check:
- * - The global port defined in tile annotation has no conflicts with 
+ * - The global port defined in tile annotation has no conflicts with
  * the global ports which are defined in circuit library:
  *   - If a port has the same name, must ensure that its attributes are the same
  *     i.e., is_clock, is_reset, is_set
  *   - Otherwise, error out
  *******************************************************************/
-static 
+static
 int check_tile_annotation_conflicts_with_circuit_library(const TileAnnotation& tile_annotation,
                                                          const CircuitLibrary& circuit_lib) {
   int num_err = 0;
-  
+
   std::vector<CircuitPortId> ckt_global_ports = find_circuit_library_global_ports(circuit_lib);
   for (const TileGlobalPortId& tile_global_port : tile_annotation.global_ports()) {
     for (const CircuitPortId& ckt_global_port : ckt_global_ports) {
@@ -89,14 +89,14 @@ int check_tile_annotation_conflicts_with_circuit_library(const TileAnnotation& t
  * Check if the tile annotation is valid without any conflict with
  * physical tile definition.
  * Items to check:
- * - The global port defined in tile annotation is a valid port/pin in 
+ * - The global port defined in tile annotation is a valid port/pin in
  *   the physical tile definition.
  * - If the port properties match:
- *   - the port in physical tile should have Fc = 0 
+ *   - the port in physical tile should have Fc = 0
  *   - a clock port should be also a clock port in physical tile
  *   - a non-clock port should be defined as a non-clock global port in physical tile
  *******************************************************************/
-static 
+static
 int check_tile_annotation_conflicts_with_physical_tile(const TileAnnotation& tile_annotation,
                                                        const std::vector<t_physical_tile_type>& physical_tile_types) {
   int num_err = 0;
@@ -104,13 +104,29 @@ int check_tile_annotation_conflicts_with_physical_tile(const TileAnnotation& til
   for (const TileGlobalPortId& tile_global_port : tile_annotation.global_ports()) {
     for (size_t tile_info_id = 0; tile_info_id < tile_annotation.global_port_tile_names(tile_global_port).size(); ++tile_info_id) {
       /* Must find a valid physical tile in the same name */
-      size_t found_matched_physical_tile = 0; 
-      size_t found_matched_physical_tile_port = 0; 
+      size_t found_matched_physical_tile = 0;
+      size_t found_matched_physical_subtile = 0;
+      size_t found_matched_physical_tile_port = 0;
 
-      std::string required_tile_name = tile_annotation.global_port_tile_names(tile_global_port)[tile_info_id];
+      std::string required_name = tile_annotation.global_port_tile_names(tile_global_port)[tile_info_id];
       BasicPort required_tile_port = tile_annotation.global_port_tile_ports(tile_global_port)[tile_info_id];
 
-      for (const t_physical_tile_type& physical_tile : physical_tile_types) { 
+      std::string required_tile_name = required_name;
+      std::string required_subtile_name = required_name;
+
+      /* If contains delimiter split thetile and subtile name */
+      if (required_name.find(".") != std::string::npos)
+      {
+        required_tile_name = required_name.substr(0, required_name.find("."));
+        required_subtile_name = required_name.substr(required_name.find(".") + 1, required_name.length());
+      }
+
+      VTR_LOG("required_name %s | required_tile_name %s | required_subtile_name %s\n",
+              required_name.c_str(),
+              required_tile_name.c_str(),
+              required_subtile_name.c_str());
+
+      for (const t_physical_tile_type& physical_tile : physical_tile_types) {
         if (std::string(physical_tile.name) != required_tile_name) {
           continue;
         }
@@ -119,8 +135,11 @@ int check_tile_annotation_conflicts_with_physical_tile(const TileAnnotation& til
         found_matched_physical_tile++;
 
         /* Must found a valid port where both port name and port size must match!!! */
-        for (const t_sub_tile& sub_tile : physical_tile.sub_tiles) {
-          for (const t_physical_tile_port& tile_port : sub_tile.ports) { 
+        for (const t_sub_tile &sub_tile : physical_tile.sub_tiles) {
+          if (std::string(sub_tile.name) != required_subtile_name) {
+            continue;
+          }
+          for (const t_physical_tile_port& tile_port : sub_tile.ports) {
             if (std::string(tile_port.name) != required_tile_port.get_name()) {
               continue;
             }
@@ -169,7 +188,7 @@ int check_tile_annotation_conflicts_with_physical_tile(const TileAnnotation& til
             }
 
             float pin_Fc = find_physical_tile_pin_Fc(&physical_tile, grid_pin_index);
-            if (0. != pin_Fc) { 
+            if (0. != pin_Fc) {
               VTR_LOGF_ERROR(__FILE__, __LINE__,
                              "Tile port '%s.%s[%ld:%ld]' in tile annotation '%s' match physical tile port %s.%s  but its Fc is not zero '%g' !\n",
                              required_tile_name.c_str(),
@@ -180,8 +199,8 @@ int check_tile_annotation_conflicts_with_physical_tile(const TileAnnotation& til
                              physical_tile.name, tile_port.name, pin_Fc);
 
             }
-            
-            found_matched_physical_tile_port++; 
+
+            found_matched_physical_tile_port++;
           }
         }
       }
@@ -225,7 +244,7 @@ int check_tile_annotation_conflicts_with_physical_tile(const TileAnnotation& til
       }
     }
   }
-  
+
   return num_err;
 }
 
