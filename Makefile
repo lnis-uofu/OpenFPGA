@@ -39,8 +39,9 @@ else
 CMAKE_COMMAND := ${CMAKE_COMMAND}
 endif
 
-# Define python executable
+# Define executables
 PYTHON_EXEC ?= python3
+CLANG_FORMAT_EXEC ?= clang-format-10
 
 # Put it first so that "make" without argument is like "make help".
 export COMMENT_EXTRACT
@@ -66,6 +67,10 @@ compile:
 
 all: checkout compile
 # A shortcut command to run checkout and compile in serial
+
+format-cpp:
+# Format all the C/C++ files under this project, excluding submodules
+	find libs openfpga -iname *.cpp -iname *.hpp -iname *.c -iname *.h | xargs ${CLANG_FORMAT_EXEC} --style=file -i
 
 clean:
 # Remove current build results
