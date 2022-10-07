@@ -531,11 +531,10 @@ class ModuleManager {
   vtr::vector<ModuleId, vtr::vector<ModulePortId, bool>>
     port_is_wire_; /* If the port is a wire, use for Verilog port definition. If
                       enabled: <port_type> reg <port_name>  */
-  vtr::
-    vector<ModuleId, vtr::vector<ModulePortId, bool>>
-      port_is_register_; /* If the port is a register, use for Verilog port
-                            definition. If enabled: <port_type> reg <port_name>
-                          */
+  vtr::vector<ModuleId, vtr::vector<ModulePortId, bool>>
+    port_is_register_; /* If the port is a register, use for Verilog port
+                          definition. If enabled: <port_type> reg <port_name>
+                        */
   vtr::vector<ModuleId, vtr::vector<ModulePortId, std::string>>
     port_preproc_flags_; /* If a port is available only when a pre-processing
                             flag is enabled. This is to record the
