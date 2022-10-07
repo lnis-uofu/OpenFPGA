@@ -13,6 +13,7 @@
 #include "simulation_setting.h"
 #include "verilog_testbench_options.h"
 #include "vpr_context.h"
+#include "vpr_netlist_annotation.h"
 
 /********************************************************************
  * Function declaration

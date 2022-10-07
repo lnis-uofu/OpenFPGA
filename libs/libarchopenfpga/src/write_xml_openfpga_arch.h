@@ -6,7 +6,9 @@
  *******************************************************************/
 #include <string>
 
+#include "bitstream_setting.h"
 #include "openfpga_arch.h"
+#include "simulation_setting.h"
 
 /********************************************************************
  * Function declaration

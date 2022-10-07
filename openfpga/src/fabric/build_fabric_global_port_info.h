@@ -8,6 +8,7 @@
 #include <string>
 
 #include "circuit_library.h"
+#include "config_protocol.h"
 #include "fabric_global_port_info.h"
 #include "module_manager.h"
 #include "tile_annotation.h"

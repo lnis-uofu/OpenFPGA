@@ -738,7 +738,6 @@ static void build_connection_block_interc_modules(
   const CircuitLibrary& circuit_lib, const e_side& cb_ipin_side,
   const size_t& ipin_index,
   const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
-  const RRNodeId& src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
   std::vector<RREdgeId> driver_rr_edges =
     rr_gsb.get_ipin_node_in_edges(rr_graph, cb_ipin_side, ipin_index);
 

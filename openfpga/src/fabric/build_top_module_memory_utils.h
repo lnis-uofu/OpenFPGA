@@ -8,6 +8,7 @@
 #include <map>
 #include <vector>
 
+#include "module_manager_fwd.h"
 #include "vtr_vector.h"
 
 /********************************************************************
