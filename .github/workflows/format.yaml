@@ -1,0 +1,39 @@
+name: Code Format
+
+# Run CI on push, PR, and weekly.
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 0 * * 0 " # weekly
+
+# Multiple job to tests
+jobs:
+  change_detect:
+    name: "Check"
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: "C/C++"
+            code_type: "-cpp"
+    steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Install dependencies
+        run: ./.github/workflows/install_dependencies_build.sh
+          
+      - name: Dump tool versions
+        run: |
+          clang-format-10 --version
+
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v2
+
+      - name: Check format
+        run: ./dev/check-format.sh ${{ matrix.config.code_type }}
