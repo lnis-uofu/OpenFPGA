@@ -42,6 +42,7 @@ endif
 # Define executables
 PYTHON_EXEC ?= python3
 CLANG_FORMAT_EXEC ?= clang-format-10
+XML_FORMAT_EXEC ?= xmllint
 
 # Put it first so that "make" without argument is like "make help".
 export COMMENT_EXTRACT
@@ -73,6 +74,13 @@ format-cpp:
 	for f in `find libs openfpga -iname *.cpp -o -iname *.hpp -o -iname *.c -o -iname *.h`; \
 	do \
 	${CLANG_FORMAT_EXEC} --style=file -i $${f} || exit 1; \
+	done
+
+format-xml:
+# Format all the XML files under this project, excluding submodules
+	for f in `find openfpga_flow/vpr_arch openfpga_flow/openfpga_arch -iname *.xml`; \
+	do \
+	XMLLINT_INDENT="  " && ${XML_FORMAT_EXEC} --format $${f} --output $${f} || exit 1; \
 	done
 
 clean:
