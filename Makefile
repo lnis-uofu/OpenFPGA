@@ -80,7 +80,7 @@ format-xml:
 # Format all the XML files under this project, excluding submodules
 	for f in `find openfpga_flow/vpr_arch openfpga_flow/openfpga_arch -iname *.xml`; \
 	do \
-	${XML_FORMAT_EXEC} --format $${f} --output $${f} || exit 1; \
+	XMLLINT_INDENT="  " && ${XML_FORMAT_EXEC} --format $${f} --output $${f} || exit 1; \
 	done
 
 clean:
