@@ -70,7 +70,10 @@ all: checkout compile
 
 format-cpp:
 # Format all the C/C++ files under this project, excluding submodules
-	find libs openfpga -iname *.cpp -iname *.hpp -iname *.c -iname *.h | xargs ${CLANG_FORMAT_EXEC} --style=file -i
+	for f in `find libs openfpga -iname *.cpp -iname *.hpp -iname *.c -iname *.h`; \
+	do \
+	${CLANG_FORMAT_EXEC} --style=file -i $${f} || exit 1; \
+	done
 
 clean:
 # Remove current build results
