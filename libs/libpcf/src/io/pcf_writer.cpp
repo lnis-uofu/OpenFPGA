@@ -4,16 +4,15 @@
 #include <sstream>
 
 /* Headers from vtrutil library */
-#include "vtr_log.h"
 #include "vtr_assert.h"
+#include "vtr_log.h"
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
 /* Headers from arch openfpga library */
-#include "write_xml_utils.h" 
-
 #include "pcf_writer.h"
+#include "write_xml_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -30,8 +29,7 @@ constexpr const char* CMD_SET_IO = "set_io";
  * Return 1 if there are serious errors when parsing data
  * Return 2 if fail when opening files
  *******************************************************************/
-int write_pcf(const char* fname,
-              const PcfData& pcf_data) {
+int write_pcf(const char* fname, const PcfData& pcf_data) {
   vtr::ScopedStartFinishTimer timer("Write " + std::string(fname));
 
   /* Create a file handler */
@@ -41,9 +39,9 @@ int write_pcf(const char* fname,
 
   /* Write from data */
   for (const PcfIoConstraintId& io_id : pcf_data.io_constraints()) {
-    fp << CMD_SET_IO << " "; 
-    fp << pcf_data.io_net(io_id).c_str() << " "; 
-    fp << generate_xml_port_name(pcf_data.io_pin(io_id)).c_str() << "\n"; 
+    fp << CMD_SET_IO << " ";
+    fp << pcf_data.io_net(io_id).c_str() << " ";
+    fp << generate_xml_port_name(pcf_data.io_pin(io_id)).c_str() << "\n";
   }
 
   return 0;

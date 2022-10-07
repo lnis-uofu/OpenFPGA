@@ -5,9 +5,10 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <string>
+
+#include "fabric_verilog_options.h"
 #include "module_manager.h"
 #include "netlist_manager.h"
-#include "fabric_verilog_options.h"
 
 /********************************************************************
  * Function declaration

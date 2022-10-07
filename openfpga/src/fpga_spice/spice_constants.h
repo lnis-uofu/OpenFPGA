@@ -14,7 +14,8 @@ constexpr const char* MUX_PRIMITIVES_SPICE_FILE_NAME = "mux_primitives.sp";
 constexpr const char* MUXES_SPICE_FILE_NAME = "muxes.sp";
 constexpr const char* LUTS_SPICE_FILE_NAME = "luts.sp";
 constexpr const char* MEMORIES_SPICE_FILE_NAME = "memories.sp";
-constexpr const char* FABRIC_INCLUDE_SPICE_NETLIST_FILE_NAME = "fabric_netlists.sp";
+constexpr const char* FABRIC_INCLUDE_SPICE_NETLIST_FILE_NAME =
+  "fabric_netlists.sp";
 
 constexpr const char* SPICE_SUBCKT_VDD_PORT_NAME = "VDD";
 constexpr const char* SPICE_SUBCKT_GND_PORT_NAME = "VSS";

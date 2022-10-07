@@ -8,11 +8,11 @@
 #include <vector>
 
 #include "circuit_library.h"
+#include "fabric_verilog_options.h"
+#include "module_manager.h"
 #include "mux_graph.h"
 #include "mux_library.h"
-#include "module_manager.h"
 #include "netlist_manager.h"
-#include "fabric_verilog_options.h"
 
 /********************************************************************
  * Function declaration

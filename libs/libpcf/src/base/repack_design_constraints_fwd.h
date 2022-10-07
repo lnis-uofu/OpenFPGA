@@ -1,11 +1,11 @@
 /************************************************************************
- * A header file for RepackDesignConstraints class, including critical data declaration
- * Please include this file only for using any TechnologyLibrary data structure
- * Refer to repack_design_constraints.h for more details 
+ * A header file for RepackDesignConstraints class, including critical data
+ *declaration Please include this file only for using any TechnologyLibrary data
+ *structure Refer to repack_design_constraints.h for more details
  ***********************************************************************/
 
 /************************************************************************
- * Create strong id for RepackDesignConstraints to avoid illegal type casting 
+ * Create strong id for RepackDesignConstraints to avoid illegal type casting
  ***********************************************************************/
 #ifndef REPACK_DESIGN_CONSTRAINTS_FWD_H
 #define REPACK_DESIGN_CONSTRAINTS_FWD_H

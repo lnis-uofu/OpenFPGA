@@ -1,5 +1,5 @@
 /**************************************************
- * This file includes only declarations for 
+ * This file includes only declarations for
  * the data structures for module managers
  * Please refer to module_manager.h for more details
  *************************************************/
@@ -34,4 +34,4 @@ class ModuleManager;
 
 } /* end namespace openfpga */
 
-#endif 
+#endif

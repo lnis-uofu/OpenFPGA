@@ -12,18 +12,17 @@
 /* namespace openfpga begins */
 namespace openfpga {
 
-bool same_float_number(const float& a,
-                       const float& b,
-                       const float& epsilon);
+bool same_float_number(const float& a, const float& b, const float& epsilon);
 
 std::string unit_to_string(const float& unit);
 
-std::string time_unit_to_string(const float& unit, const std::string& postfix = "s");
+std::string time_unit_to_string(const float& unit,
+                                const std::string& postfix = "s");
 
 float string_to_unit(const std::string& scale);
 
-float string_to_time_unit(const std::string& scale); 
+float string_to_time_unit(const std::string& scale);
 
-} /* namespace openfpga ends */
+}  // namespace openfpga
 
 #endif

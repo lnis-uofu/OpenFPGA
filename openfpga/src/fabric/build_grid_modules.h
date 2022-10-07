@@ -4,11 +4,11 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "vpr_context.h"
-#include "vpr_device_annotation.h"
+#include "decoder_library.h"
 #include "module_manager.h"
 #include "mux_library.h"
-#include "decoder_library.h"
+#include "vpr_context.h"
+#include "vpr_device_annotation.h"
 
 /********************************************************************
  * Function declaration
@@ -25,8 +25,7 @@ void build_grid_modules(ModuleManager& module_manager,
                         const MuxLibrary& mux_lib,
                         const e_config_protocol_type& sram_orgz_type,
                         const CircuitModelId& sram_model,
-                        const bool& duplicate_grid_pin,
-                        const bool& verbose);
+                        const bool& duplicate_grid_pin, const bool& verbose);
 
 } /* end namespace openfpga */
 

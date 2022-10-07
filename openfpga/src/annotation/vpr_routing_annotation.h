@@ -4,12 +4,12 @@
 /********************************************************************
  * Include header files required by the data structure definition
  *******************************************************************/
-#include <map> 
+#include <map>
 
 /* Header from vpr library */
-#include "vtr_vector.h"
 #include "clustered_netlist_fwd.h"
 #include "rr_graph_view.h"
+#include "vtr_vector.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -24,24 +24,26 @@ namespace openfpga {
  * 4. what is the mode pointer that represents the physical mode for a pb_type
  *******************************************************************/
 class VprRoutingAnnotation {
-  public:  /* Constructor */
-    VprRoutingAnnotation();
-  public:  /* Public accessors */
-    ClusterNetId rr_node_net(const RRNodeId& rr_node) const;
-    RRNodeId rr_node_prev_node(const RRNodeId& rr_node) const;
-  public:  /* Public mutators */
-    void init(const RRGraphView& rr_graph);
-    void set_rr_node_net(const RRNodeId& rr_node,
-                         const ClusterNetId& net_id);
-    void set_rr_node_prev_node(const RRGraphView& rr_graph,
-                               const RRNodeId& rr_node,
-                               const RRNodeId& prev_node);
-  private: /* Internal data */
-    /* Clustered net ids mapped to each rr_node */
-    vtr::vector<RRNodeId, ClusterNetId> rr_node_nets_;
+ public: /* Constructor */
+  VprRoutingAnnotation();
 
-    /* Previous rr_node driving each rr_node */
-    vtr::vector<RRNodeId, RRNodeId> rr_node_prev_nodes_;
+ public: /* Public accessors */
+  ClusterNetId rr_node_net(const RRNodeId& rr_node) const;
+  RRNodeId rr_node_prev_node(const RRNodeId& rr_node) const;
+
+ public: /* Public mutators */
+  void init(const RRGraphView& rr_graph);
+  void set_rr_node_net(const RRNodeId& rr_node, const ClusterNetId& net_id);
+  void set_rr_node_prev_node(const RRGraphView& rr_graph,
+                             const RRNodeId& rr_node,
+                             const RRNodeId& prev_node);
+
+ private: /* Internal data */
+  /* Clustered net ids mapped to each rr_node */
+  vtr::vector<RRNodeId, ClusterNetId> rr_node_nets_;
+
+  /* Previous rr_node driving each rr_node */
+  vtr::vector<RRNodeId, RRNodeId> rr_node_prev_nodes_;
 };
 
 } /* End namespace openfpga*/

@@ -15,6 +15,6 @@ extern const char* VCS_REVISION;
 extern const char* COMPILER;
 extern const char* BUILD_TIMESTAMP;
 extern const char* BUILD_INFO;
-} // namespace openfpga
+}  // namespace openfpga
 
 #endif

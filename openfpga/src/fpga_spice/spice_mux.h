@@ -8,9 +8,9 @@
 #include <vector>
 
 #include "circuit_library.h"
+#include "module_manager.h"
 #include "mux_graph.h"
 #include "mux_library.h"
-#include "module_manager.h"
 #include "netlist_manager.h"
 
 /********************************************************************

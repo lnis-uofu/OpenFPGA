@@ -4,10 +4,10 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "vpr_context.h"
 #include "arch_direct.h"
-#include "tile_direct.h"
 #include "circuit_library.h"
+#include "tile_direct.h"
+#include "vpr_context.h"
 
 /********************************************************************
  * Function declaration

@@ -4,14 +4,14 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "pugixml_util.hpp"
 #include "pugixml.hpp"
+#include "pugixml_util.hpp"
 #include "tile_annotation.h"
 
 /********************************************************************
  * Function declaration
  *******************************************************************/
-openfpga::TileAnnotation read_xml_tile_annotations(pugi::xml_node& Node,
-                                                   const pugiutil::loc_data& loc_data);
+openfpga::TileAnnotation read_xml_tile_annotations(
+  pugi::xml_node& Node, const pugiutil::loc_data& loc_data);
 
 #endif

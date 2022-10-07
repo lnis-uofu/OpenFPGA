@@ -5,6 +5,7 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <fstream>
+
 #include "tile_annotation.h"
 
 /********************************************************************
@@ -13,10 +14,9 @@
 /* namespace openfpga begins */
 namespace openfpga {
 
-void write_xml_tile_annotations(std::fstream& fp,
-                                const char* fname,
+void write_xml_tile_annotations(std::fstream& fp, const char* fname,
                                 const TileAnnotation& tile_annotation);
 
-} /* namespace openfpga ends */
+}  // namespace openfpga
 
 #endif

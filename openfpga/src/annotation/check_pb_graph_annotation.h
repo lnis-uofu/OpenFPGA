@@ -4,8 +4,8 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "vpr_context.h"
 #include "openfpga_context.h"
+#include "vpr_context.h"
 #include "vpr_device_annotation.h"
 
 /********************************************************************
@@ -15,8 +15,9 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void check_physical_pb_graph_node_annotation(const DeviceContext& vpr_device_ctx, 
-                                             const VprDeviceAnnotation& vpr_device_annotation);
+void check_physical_pb_graph_node_annotation(
+  const DeviceContext& vpr_device_ctx,
+  const VprDeviceAnnotation& vpr_device_annotation);
 
 } /* end namespace openfpga */
 

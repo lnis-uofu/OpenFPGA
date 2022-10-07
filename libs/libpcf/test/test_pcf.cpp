@@ -1,5 +1,5 @@
 /********************************************************************
- * Unit test functions to validate the correctness of 
+ * Unit test functions to validate the correctness of
  * 1. parser of data structures
  * 2. writer of data structures
  *******************************************************************/
@@ -18,17 +18,13 @@ int main(int argc, const char** argv) {
   /* Parse the fabric key from an XML file */
   openfpga::PcfData pcf_data;
   openfpga::read_pcf(argv[1], pcf_data);
-  VTR_LOG("Read the design constraints from a pcf file: %s.\n",
-          argv[1]);
+  VTR_LOG("Read the design constraints from a pcf file: %s.\n", argv[1]);
 
   /* Output to an XML file
    * This is optional only used when there is a second argument
    */
-  if (3 <= argc) { 
+  if (3 <= argc) {
     write_pcf(argv[2], pcf_data);
-    VTR_LOG("Echo the design constraints to a pcf file: %s.\n",
-            argv[2]);
+    VTR_LOG("Echo the design constraints to a pcf file: %s.\n", argv[2]);
   }
 }
-
-

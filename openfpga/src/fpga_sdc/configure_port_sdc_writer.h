@@ -6,6 +6,7 @@
  *******************************************************************/
 #include <string>
 #include <vector>
+
 #include "module_manager.h"
 
 /********************************************************************
@@ -15,13 +16,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-int print_sdc_disable_timing_configure_ports(const std::string& sdc_fname,
-                                             const bool& flatten_names,
-                                             const MuxLibrary& mux_lib,
-                                             const CircuitLibrary& circuit_lib,
-                                             const ModuleManager& module_manager,
-                                             const bool& include_time_stamp,
-                                             const bool& verbose);
+int print_sdc_disable_timing_configure_ports(
+  const std::string& sdc_fname, const bool& flatten_names,
+  const MuxLibrary& mux_lib, const CircuitLibrary& circuit_lib,
+  const ModuleManager& module_manager, const bool& include_time_stamp,
+  const bool& verbose);
 
 } /* end namespace openfpga */
 

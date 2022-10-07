@@ -4,10 +4,11 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include <string>
 #include <map>
-#include "module_manager.h"
+#include <string>
+
 #include "circuit_library.h"
+#include "module_manager.h"
 
 /********************************************************************
  * Function declaration

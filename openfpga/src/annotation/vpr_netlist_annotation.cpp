@@ -1,9 +1,10 @@
 /************************************************************************
  * Member functions for class VprNetlistAnnotation
  ***********************************************************************/
-#include "vtr_log.h"
-#include "vtr_assert.h"
 #include "vpr_netlist_annotation.h"
+
+#include "vtr_assert.h"
+#include "vtr_log.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
@@ -11,16 +12,15 @@ namespace openfpga {
 /************************************************************************
  * Constructors
  ***********************************************************************/
-VprNetlistAnnotation::VprNetlistAnnotation() {
-  return;
-}
+VprNetlistAnnotation::VprNetlistAnnotation() { return; }
 
 /************************************************************************
  * Public accessors
  ***********************************************************************/
 bool VprNetlistAnnotation::is_block_renamed(const AtomBlockId& block) const {
   /* Ensure that the pb_type is in the list */
-  std::map<AtomBlockId, std::string>::const_iterator it = block_names_.find(block);
+  std::map<AtomBlockId, std::string>::const_iterator it =
+    block_names_.find(block);
   return it != block_names_.end();
 }
 
@@ -43,9 +43,11 @@ std::string VprNetlistAnnotation::net_name(const AtomNetId& net) const {
 /************************************************************************
  * Public mutators
  ***********************************************************************/
-void VprNetlistAnnotation::rename_block(const AtomBlockId& block, const std::string& name) {
+void VprNetlistAnnotation::rename_block(const AtomBlockId& block,
+                                        const std::string& name) {
   /* Warn any override attempt */
-  std::map<AtomBlockId, std::string>::const_iterator it = block_names_.find(block);
+  std::map<AtomBlockId, std::string>::const_iterator it =
+    block_names_.find(block);
   if (it != block_names_.end()) {
     VTR_LOG_WARN("Override the block with name '%s' in netlist annotation!\n",
                  name.c_str());
@@ -54,7 +56,8 @@ void VprNetlistAnnotation::rename_block(const AtomBlockId& block, const std::str
   block_names_[block] = name;
 }
 
-void VprNetlistAnnotation::rename_net(const AtomNetId& net, const std::string& name) {
+void VprNetlistAnnotation::rename_net(const AtomNetId& net,
+                                      const std::string& name) {
   /* Warn any override attempt */
   std::map<AtomNetId, std::string>::const_iterator it = net_names_.find(net);
   if (it != net_names_.end()) {

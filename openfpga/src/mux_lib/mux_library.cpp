@@ -1,11 +1,11 @@
 /**************************************************
- * This file includes member functions for the 
+ * This file includes member functions for the
  * data structures in mux_library.h
  *************************************************/
 
-#include "vtr_assert.h"
-
 #include "mux_library.h"
+
+#include "vtr_assert.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -25,7 +25,7 @@ MuxLibrary::mux_range MuxLibrary::muxes() const {
  * Public accessors: data query
  *************************************************/
 /* Get a MUX graph (read-only) */
-MuxId MuxLibrary::mux_graph(const CircuitModelId& circuit_model, 
+MuxId MuxLibrary::mux_graph(const CircuitModelId& circuit_model,
                             const size_t& mux_size) const {
   /* Make sure we have a valid mux look-up */
   VTR_ASSERT_SAFE(valid_mux_lookup());
@@ -60,7 +60,9 @@ size_t MuxLibrary::max_mux_size() const {
  * Private mutators:
  *************************************************/
 /* Add a mux to the library */
-void MuxLibrary::add_mux(const CircuitLibrary& circuit_lib, const CircuitModelId& circuit_model, const size_t& mux_size) {
+void MuxLibrary::add_mux(const CircuitLibrary& circuit_lib,
+                         const CircuitModelId& circuit_model,
+                         const size_t& mux_size) {
   /* First, check if there is already an existing graph */
   if (valid_mux_size(circuit_model, mux_size)) {
     return;
@@ -77,7 +79,7 @@ void MuxLibrary::add_mux(const CircuitLibrary& circuit_lib, const CircuitModelId
 
   /* update mux_lookup*/
   mux_lookup_[circuit_model][mux_size] = mux;
-} 
+}
 
 /**************************************************
  * Private accessors: validator and invalidators
@@ -86,20 +88,21 @@ bool MuxLibrary::valid_mux_id(const MuxId& mux) const {
   return size_t(mux) < mux_ids_.size() && mux_ids_[mux] == mux;
 }
 
-bool MuxLibrary::valid_mux_lookup() const {
-  return mux_lookup_.empty();
-}
+bool MuxLibrary::valid_mux_lookup() const { return mux_lookup_.empty(); }
 
-bool MuxLibrary::valid_mux_circuit_model_id(const CircuitModelId& circuit_model) const {
+bool MuxLibrary::valid_mux_circuit_model_id(
+  const CircuitModelId& circuit_model) const {
   MuxLookup::iterator it = mux_lookup_.find(circuit_model);
   return (it != mux_lookup_.end());
 }
 
-bool MuxLibrary::valid_mux_size(const CircuitModelId& circuit_model, const size_t& mux_size) const {
+bool MuxLibrary::valid_mux_size(const CircuitModelId& circuit_model,
+                                const size_t& mux_size) const {
   if (false == valid_mux_circuit_model_id(circuit_model)) {
     return false;
   }
-  std::map<size_t, MuxId>::iterator it = mux_lookup_[circuit_model].find(mux_size);
+  std::map<size_t, MuxId>::iterator it =
+    mux_lookup_[circuit_model].find(mux_size);
   return (it != mux_lookup_[circuit_model].end());
 }
 
@@ -114,8 +117,6 @@ void MuxLibrary::build_mux_lookup() {
 }
 
 /* Invalidate (empty) the mux fast lookup*/
-void MuxLibrary::invalidate_mux_lookup() {
-  mux_lookup_.clear();
-}
+void MuxLibrary::invalidate_mux_lookup() { mux_lookup_.clear(); }
 
 } /* end namespace openfpga */

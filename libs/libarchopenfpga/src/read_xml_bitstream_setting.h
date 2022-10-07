@@ -4,15 +4,15 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "pugixml_util.hpp"
-#include "pugixml.hpp"
 #include "bitstream_setting.h"
+#include "pugixml.hpp"
+#include "pugixml_util.hpp"
 
 /********************************************************************
  * Function declaration
  *******************************************************************/
 
-openfpga::BitstreamSetting read_xml_bitstream_setting(pugi::xml_node& Node,
-                                                      const pugiutil::loc_data& loc_data);
+openfpga::BitstreamSetting read_xml_bitstream_setting(
+  pugi::xml_node& Node, const pugiutil::loc_data& loc_data);
 
 #endif

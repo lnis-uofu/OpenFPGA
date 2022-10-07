@@ -9,26 +9,23 @@
 #include "vtr_log.h"
 
 /* Headers from openfpgautil library */
-#include "openfpga_scale.h" 
+#include "openfpga_scale.h"
 
 namespace openfpga {
 
-/* A small ratio for float number comparison 
- * If the float number B is in the range of the referance A +/- epsilon 
+/* A small ratio for float number comparison
+ * If the float number B is in the range of the referance A +/- epsilon
  * we regard A == B
- *   A - A * EPSILON <= B <= A + A * EPSILON 
+ *   A - A * EPSILON <= B <= A + A * EPSILON
  */
 #define EPSILON_RATIO 1e-3
 
-bool same_float_number(const float& a,
-                       const float& b,
-                       const float& epsilon) {
+bool same_float_number(const float& a, const float& b, const float& epsilon) {
   /* Always use a positive epsilon */
-  if ( (a - a * std::abs(epsilon) <= b) 
-    && (b <= a + a * std::abs(epsilon)) ) {
+  if ((a - a * std::abs(epsilon) <= b) && (b <= a + a * std::abs(epsilon))) {
     return true;
   }
- 
+
   return false;
 }
 
@@ -38,18 +35,18 @@ bool same_float_number(const float& a,
  *   - 1e9   -> B
  *   - 1e6   -> M
  *   - 1e3   -> k
- *   - 1.    ->  
+ *   - 1.    ->
  *   - 1e-3  -> m
- *   - 1e-6  -> u 
+ *   - 1e-6  -> u
  *   - 1e-9  -> n
  *   - 1e-12 -> p
- *   - 1e-15 -> f 
- *   - 1e-18 -> a 
+ *   - 1e-15 -> f
+ *   - 1e-18 -> a
  *******************************************************************/
 std::string unit_to_string(const float& unit) {
   if (true == same_float_number(unit, 1., EPSILON_RATIO)) {
     return std::string();
-  /* Larger than 1 unit */
+    /* Larger than 1 unit */
   } else if (true == same_float_number(unit, 1e3, EPSILON_RATIO)) {
     return std::string("k");
   } else if (true == same_float_number(unit, 1e6, EPSILON_RATIO)) {
@@ -58,7 +55,7 @@ std::string unit_to_string(const float& unit) {
     return std::string("B");
   } else if (true == same_float_number(unit, 1e12, EPSILON_RATIO)) {
     return std::string("T");
-  /* Less than 1 unit */
+    /* Less than 1 unit */
   } else if (true == same_float_number(unit, 1e-3, EPSILON_RATIO)) {
     return std::string("m");
   } else if (true == same_float_number(unit, 1e-6, EPSILON_RATIO)) {
@@ -75,8 +72,9 @@ std::string unit_to_string(const float& unit) {
 
   /* Invalid unit report error */
   VTR_LOGF_ERROR(__FILE__, __LINE__,
-                 "Invalid unit %g!\nAcceptable units are [1e12|1e9|1e6|1e3|1|1e-3|1e-6|1e-9|1e-12|1e-15|1e-18]\n",
-                 unit); 
+                 "Invalid unit %g!\nAcceptable units are "
+                 "[1e12|1e9|1e6|1e3|1|1e-3|1e-6|1e-9|1e-12|1e-15|1e-18]\n",
+                 unit);
   exit(1);
 }
 
@@ -88,8 +86,9 @@ std::string time_unit_to_string(const float& unit, const std::string& postfix) {
   /* For larger than 1 unit, we do not accept */
   if (1e6 < unit) {
     VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "Invalid time unit %g!\nAcceptable units are [1e6|1e3|1|1e-3|1e-6|1e-9|1e-12|1e-15|1e-18]\n",
-                   unit); 
+                   "Invalid time unit %g!\nAcceptable units are "
+                   "[1e6|1e3|1|1e-3|1e-6|1e-9|1e-12|1e-15|1e-18]\n",
+                   unit);
     exit(1);
   }
 
@@ -99,12 +98,12 @@ std::string time_unit_to_string(const float& unit, const std::string& postfix) {
 /********************************************************************
  * Convert string unit to numeric:
  *   - T  -> 1e12
- *   - B  -> 1e9 
+ *   - B  -> 1e9
  *   - M  -> 1e6
  *   - k  -> 1e3
- *   - "" -> 1.  
+ *   - "" -> 1.
  *   - m  -> 1e-3
- *   - u  -> 1e-6 
+ *   - u  -> 1e-6
  *   - n  -> 1e-9
  *   - p  -> 1e-12
  *   - f  -> 1e-15
@@ -113,7 +112,7 @@ std::string time_unit_to_string(const float& unit, const std::string& postfix) {
 float string_to_unit(const std::string& scale) {
   if (true == scale.empty()) {
     return 1.;
-  /* Larger than 1 unit */
+    /* Larger than 1 unit */
   } else if (std::string("T") == scale) {
     return 1e12;
   } else if (std::string("B") == scale) {
@@ -122,7 +121,7 @@ float string_to_unit(const std::string& scale) {
     return 1e6;
   } else if (std::string("k") == scale) {
     return 1e3;
-  /* Less than 1 unit */
+    /* Less than 1 unit */
   } else if (std::string("m") == scale) {
     return 1e-3;
   } else if (std::string("u") == scale) {
@@ -138,9 +137,10 @@ float string_to_unit(const std::string& scale) {
   }
 
   /* Invalid unit report error */
-  VTR_LOGF_ERROR(__FILE__, __LINE__,
-                 "Invalid unit %s!\nAcceptable units are [a|f|p|n|u|k|M|B|T] or empty\n",
-                 scale.c_str()); 
+  VTR_LOGF_ERROR(
+    __FILE__, __LINE__,
+    "Invalid unit %s!\nAcceptable units are [a|f|p|n|u|k|M|B|T] or empty\n",
+    scale.c_str());
   exit(1);
 }
 
@@ -149,22 +149,20 @@ float string_to_unit(const std::string& scale) {
  * e.g. ps -> 1e-12
  *******************************************************************/
 float string_to_time_unit(const std::string& scale) {
-  if ( (1 != scale.length())
-    && (2 != scale.length()) ) {
-    VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "Time unit (='%s') must contain only one or two characters!\n",
-                   scale.c_str());
-  } 
+  if ((1 != scale.length()) && (2 != scale.length())) {
+    VTR_LOGF_ERROR(
+      __FILE__, __LINE__,
+      "Time unit (='%s') must contain only one or two characters!\n",
+      scale.c_str());
+  }
   /* The last character must be 's' */
   if ('s' != scale.back()) {
-    VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "Time unit (='%s') must end with 's'!\n",
+    VTR_LOGF_ERROR(__FILE__, __LINE__, "Time unit (='%s') must end with 's'!\n",
                    scale.c_str());
   }
 
   float unit = 1.;
-  VTR_ASSERT ( (1 == scale.length())
-            || (2 == scale.length()) );
+  VTR_ASSERT((1 == scale.length()) || (2 == scale.length()));
   if (2 == scale.length()) {
     unit = string_to_unit(scale.substr(0, 1));
   }
@@ -172,12 +170,13 @@ float string_to_time_unit(const std::string& scale) {
   /* For larger than 1 unit, we do not accept */
   if (1e6 < unit) {
     VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "Invalid time unit %g!\nAcceptable units are [1e6|1e3|1|1e-3|1e-6|1e-9|1e-12|1e-15|1e-18]\n",
-                   unit); 
+                   "Invalid time unit %g!\nAcceptable units are "
+                   "[1e6|1e3|1|1e-3|1e-6|1e-9|1e-12|1e-15|1e-18]\n",
+                   unit);
     exit(1);
   }
 
   return unit;
 }
 
-} /* namespace openfpga ends */
+}  // namespace openfpga

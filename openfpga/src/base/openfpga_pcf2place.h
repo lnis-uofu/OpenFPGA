@@ -16,7 +16,7 @@
 namespace openfpga {
 
 int pcf2place_wrapper(const OpenfpgaContext& openfpga_context,
-                      const Command& cmd, const CommandContext& cmd_context); 
+                      const Command& cmd, const CommandContext& cmd_context);
 
 } /* end namespace openfpga */
 

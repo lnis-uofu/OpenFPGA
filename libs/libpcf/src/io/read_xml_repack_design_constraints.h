@@ -4,13 +4,14 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "pugixml_util.hpp"
 #include "pugixml.hpp"
+#include "pugixml_util.hpp"
 #include "repack_design_constraints.h"
 
 /********************************************************************
  * Function declaration
  *******************************************************************/
-RepackDesignConstraints read_xml_repack_design_constraints(const char* design_constraint_fname);
+RepackDesignConstraints read_xml_repack_design_constraints(
+  const char* design_constraint_fname);
 
 #endif

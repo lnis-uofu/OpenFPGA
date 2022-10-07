@@ -1,14 +1,15 @@
 /******************************************************************************
  * Memember functions for data structure RepackOption
  ******************************************************************************/
-#include <map>
+#include "repack_option.h"
+
 #include <array>
+#include <map>
+
+#include "openfpga_port_parser.h"
+#include "openfpga_tokenizer.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
-
-#include "repack_option.h"
-#include "openfpga_tokenizer.h"
-#include "openfpga_port_parser.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -22,13 +23,14 @@ RepackOption::RepackOption() {
 }
 
 /**************************************************
- * Public Accessors 
+ * Public Accessors
  *************************************************/
 RepackDesignConstraints RepackOption::design_constraints() const {
   return design_constraints_;
 }
 
-bool RepackOption::is_pin_ignore_global_nets(const std::string& pb_type_name, const BasicPort& pin) const {
+bool RepackOption::is_pin_ignore_global_nets(const std::string& pb_type_name,
+                                             const BasicPort& pin) const {
   auto result = ignore_global_nets_on_pins_.find(pb_type_name);
   if (result == ignore_global_nets_on_pins_.end()) {
     /* Not found, return false */
@@ -44,14 +46,13 @@ bool RepackOption::is_pin_ignore_global_nets(const std::string& pb_type_name, co
   return false;
 }
 
-bool RepackOption::verbose_output() const {
-  return verbose_output_;
-}
+bool RepackOption::verbose_output() const { return verbose_output_; }
 
 /******************************************************************************
  * Private Mutators
  ******************************************************************************/
-void RepackOption::set_design_constraints(const RepackDesignConstraints& design_constraints) {
+void RepackOption::set_design_constraints(
+  const RepackDesignConstraints& design_constraints) {
   design_constraints_ = design_constraints;
 }
 
@@ -68,29 +69,33 @@ void RepackOption::set_ignore_global_nets_on_pins(const std::string& content) {
     std::vector<std::string> pin_info = pin_tokenizer.split('.');
     /* Expect two contents, otherwise error out */
     if (pin_info.size() != 2) {
-      std::string err_msg = std::string("Invalid content '") + token + std::string("' to skip, expect <pb_type_name>.<pin>\n");
+      std::string err_msg =
+        std::string("Invalid content '") + token +
+        std::string("' to skip, expect <pb_type_name>.<pin>\n");
       VTR_LOG_ERROR(err_msg.c_str());
       num_parse_errors_++;
       continue;
     }
-    std::string pb_type_name = pin_info[0]; 
+    std::string pb_type_name = pin_info[0];
     PortParser port_parser(pin_info[1]);
     BasicPort curr_port = port_parser.port();
     if (!curr_port.is_valid()) {
-      std::string err_msg = std::string("Invalid pin definition '") + token + std::string("', expect <pb_type_name>.<pin_name>[int:int]\n");
+      std::string err_msg =
+        std::string("Invalid pin definition '") + token +
+        std::string("', expect <pb_type_name>.<pin_name>[int:int]\n");
       VTR_LOG_ERROR(err_msg.c_str());
       num_parse_errors_++;
       continue;
     }
-   
+
     /* Check if the existing port already in the ignore list or not */
     auto result = ignore_global_nets_on_pins_.find(pb_type_name);
     if (result == ignore_global_nets_on_pins_.end()) {
       /* Not found, push the port */
       ignore_global_nets_on_pins_[pb_type_name].push_back(curr_port);
     } else {
-      /* Already a list of ports. Check one by one. 
-       * - It already contained, do nothing but throw a warning. 
+      /* Already a list of ports. Check one by one.
+       * - It already contained, do nothing but throw a warning.
        * - If we can merge, merge it.
        * - Otherwise, create it */
       bool included_by_existing_port = false;
@@ -101,7 +106,9 @@ void RepackOption::set_ignore_global_nets_on_pins(const std::string& content) {
             included_by_existing_port = true;
             break;
           } else {
-            std::string warn_msg = std::string("Pin definition '") + token + std::string("' is already included by other pin\n");
+            std::string warn_msg =
+              std::string("Pin definition '") + token +
+              std::string("' is already included by other pin\n");
             VTR_LOG_WARN(warn_msg.c_str());
           }
         }

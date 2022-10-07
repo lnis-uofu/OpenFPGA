@@ -1,8 +1,9 @@
 /***************************************************************************************
  * This file includes memeber functions for data structure DecoderLibrary
  **************************************************************************************/
-#include "vtr_assert.h"
 #include "decoder_library.h"
+
+#include "vtr_assert.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -15,7 +16,7 @@ DecoderLibrary::decoder_range DecoderLibrary::decoders() const {
 }
 
 /***************************************************************************************
- * Public Accessors: Data query 
+ * Public Accessors: Data query
  **************************************************************************************/
 /* Get the size of address input of a decoder */
 size_t DecoderLibrary::addr_size(const DecoderId& decoder) const {
@@ -24,7 +25,7 @@ size_t DecoderLibrary::addr_size(const DecoderId& decoder) const {
 }
 
 /* Get the size of data output of a decoder */
-size_t DecoderLibrary::data_size(const DecoderId& decoder) const { 
+size_t DecoderLibrary::data_size(const DecoderId& decoder) const {
   VTR_ASSERT_SAFE(valid_decoder_id(decoder));
   return data_sizes_[decoder];
 }
@@ -41,7 +42,8 @@ bool DecoderLibrary::use_data_in(const DecoderId& decoder) const {
   return use_data_in_[decoder];
 }
 
-/* Get the flag if a decoder includes a data_inv port which is an inversion of the regular data output port */
+/* Get the flag if a decoder includes a data_inv port which is an inversion of
+ * the regular data output port */
 bool DecoderLibrary::use_data_inv_port(const DecoderId& decoder) const {
   VTR_ASSERT_SAFE(valid_decoder_id(decoder));
   return use_data_inv_port_[decoder];
@@ -55,26 +57,25 @@ bool DecoderLibrary::use_readback(const DecoderId& decoder) const {
 /* Find a decoder to the library, with the specification.
  * If found, return the id of decoder.
  * If not found, return an invalid id of decoder
- * To avoid duplicated decoders, this function should be used before adding a decoder 
- * Example: 
- *   DecoderId decoder_id == decoder_lib.find_decoder();
- *   if (DecoderId::INVALID() == decoder_id) {
+ * To avoid duplicated decoders, this function should be used before adding a
+ * decoder Example: DecoderId decoder_id == decoder_lib.find_decoder(); if
+ * (DecoderId::INVALID() == decoder_id) {
  *     // Add decoder
- *   } 
+ *   }
  */
-DecoderId DecoderLibrary::find_decoder(const size_t& addr_size, 
-                                       const size_t& data_size, 
-                                       const bool& use_enable, 
-                                       const bool& use_data_in, 
+DecoderId DecoderLibrary::find_decoder(const size_t& addr_size,
+                                       const size_t& data_size,
+                                       const bool& use_enable,
+                                       const bool& use_data_in,
                                        const bool& use_data_inv_port,
                                        const bool& use_readback) const {
   for (auto decoder : decoders()) {
-    if (  (addr_size == addr_sizes_[decoder])
-       && (data_size == data_sizes_[decoder])
-       && (use_enable == use_enable_[decoder])
-       && (use_data_in == use_data_in_[decoder])
-       && (use_data_inv_port == use_data_inv_port_[decoder])
-       && (use_readback == use_readback_[decoder]) ) {
+    if ((addr_size == addr_sizes_[decoder]) &&
+        (data_size == data_sizes_[decoder]) &&
+        (use_enable == use_enable_[decoder]) &&
+        (use_data_in == use_data_in_[decoder]) &&
+        (use_data_inv_port == use_data_inv_port_[decoder]) &&
+        (use_readback == use_readback_[decoder])) {
       return decoder;
     }
   }
@@ -88,17 +89,18 @@ DecoderId DecoderLibrary::find_decoder(const size_t& addr_size,
  **************************************************************************************/
 /* Validate ids */
 bool DecoderLibrary::valid_decoder_id(const DecoderId& decoder) const {
-  return size_t(decoder) < decoder_ids_.size() && decoder_ids_[decoder] == decoder;
+  return size_t(decoder) < decoder_ids_.size() &&
+         decoder_ids_[decoder] == decoder;
 }
 
 /***************************************************************************************
- * Public Mutators : Basic Operations 
+ * Public Mutators : Basic Operations
  **************************************************************************************/
 /* Add a decoder to the library */
-DecoderId DecoderLibrary::add_decoder(const size_t& addr_size, 
-                                      const size_t& data_size, 
-                                      const bool& use_enable, 
-                                      const bool& use_data_in, 
+DecoderId DecoderLibrary::add_decoder(const size_t& addr_size,
+                                      const size_t& data_size,
+                                      const bool& use_enable,
+                                      const bool& use_data_in,
                                       const bool& use_data_inv_port,
                                       const bool& use_readback) {
   DecoderId decoder = DecoderId(decoder_ids_.size());

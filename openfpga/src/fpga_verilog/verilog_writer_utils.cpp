@@ -1,12 +1,12 @@
 /************************************************
  * Include functions for most frequently
- * used Verilog writers 
+ * used Verilog writers
  ***********************************************/
 #include <chrono>
 #include <ctime>
-#include <string>
 #include <fstream>
 #include <iomanip>
+#include <string>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
@@ -16,10 +16,9 @@
 #include "circuit_types.h"
 
 /* Headers from openfpgautil library */
-#include "openfpga_digest.h"
-
-#include "openfpga_naming.h"
 #include "circuit_library_utils.h"
+#include "openfpga_digest.h"
+#include "openfpga_naming.h"
 #include "verilog_constants.h"
 #include "verilog_writer_utils.h"
 
@@ -29,24 +28,24 @@ namespace openfpga {
 /************************************************
  * Generate the declaration for default net type
  ***********************************************/
-void print_verilog_default_net_type_declaration(std::fstream& fp,
-                                                const e_verilog_default_net_type& default_net_type) {
+void print_verilog_default_net_type_declaration(
+  std::fstream& fp, const e_verilog_default_net_type& default_net_type) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
   fp << "//----- Default net type -----" << std::endl;
-  fp << "`default_nettype " << VERILOG_DEFAULT_NET_TYPE_STRING[default_net_type] << std::endl;
+  fp << "`default_nettype " << VERILOG_DEFAULT_NET_TYPE_STRING[default_net_type]
+     << std::endl;
   fp << std::endl;
 }
 
 /************************************************
  * Generate header comments for a Verilog netlist
- * include the description 
+ * include the description
  ***********************************************/
-void print_verilog_file_header(std::fstream& fp,
-                               const std::string& usage,
+void print_verilog_file_header(std::fstream& fp, const std::string& usage,
                                const bool& include_time_stamp) {
   VTR_ASSERT(true == valid_file_stream(fp));
- 
+
   fp << "//-------------------------------------------" << std::endl;
   fp << "//\tFPGA Synthesizable Verilog Netlist" << std::endl;
   fp << "//\tDescription: " << usage << std::endl;
@@ -54,9 +53,9 @@ void print_verilog_file_header(std::fstream& fp,
   fp << "//\tOrganization: University of Utah" << std::endl;
 
   if (include_time_stamp) {
-    auto end = std::chrono::system_clock::now(); 
+    auto end = std::chrono::system_clock::now();
     std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-    fp << "//\tDate: " << std::ctime(&end_time) ;
+    fp << "//\tDate: " << std::ctime(&end_time);
   }
 
   fp << "//-------------------------------------------" << std::endl;
@@ -67,44 +66,41 @@ void print_verilog_file_header(std::fstream& fp,
 }
 
 /********************************************************************
- * Print Verilog codes to include a netlist  
+ * Print Verilog codes to include a netlist
  *******************************************************************/
-void print_verilog_include_netlist(std::fstream& fp, 
+void print_verilog_include_netlist(std::fstream& fp,
                                    const std::string& netlist_name) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
-  fp << "`include \"" << netlist_name << "\"" << std::endl; 
+  fp << "`include \"" << netlist_name << "\"" << std::endl;
 }
 
 /********************************************************************
  * Print Verilog codes to define a preprocessing flag
  *******************************************************************/
-void print_verilog_define_flag(std::fstream& fp, 
-                               const std::string& flag_name,
+void print_verilog_define_flag(std::fstream& fp, const std::string& flag_name,
                                const int& flag_value) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
-  fp << "`define " << flag_name << " " << flag_value << std::endl; 
+  fp << "`define " << flag_name << " " << flag_value << std::endl;
 }
 
 /************************************************
  * Generate include files for a Verilog netlist
  ***********************************************/
-void print_verilog_include_defines_preproc_file(std::fstream& fp, 
-                                                const std::string& verilog_dir) {
-  
+void print_verilog_include_defines_preproc_file(
+  std::fstream& fp, const std::string& verilog_dir) {
   /* Generate the file name */
   std::string include_file_path = format_dir_path(verilog_dir);
   include_file_path += std::string(DEFINES_VERILOG_FILE_NAME);
 
-  print_verilog_include_netlist(fp, include_file_path); 
+  print_verilog_include_netlist(fp, include_file_path);
 }
 
 /************************************************
  * Print a Verilog comment line
  ***********************************************/
-void print_verilog_comment(std::fstream& fp, 
-                           const std::string& comment) {
+void print_verilog_comment(std::fstream& fp, const std::string& comment) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
   fp << "// " << comment << std::endl;
@@ -134,17 +130,22 @@ void print_verilog_endif(std::fstream& fp) {
  * We use the following format:
  * module <module_name> (<ports without directions>);
  ***********************************************/
-void print_verilog_module_definition(std::fstream& fp, 
-                                     const ModuleManager& module_manager, const ModuleId& module_id) {
+void print_verilog_module_definition(std::fstream& fp,
+                                     const ModuleManager& module_manager,
+                                     const ModuleId& module_id) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
-  print_verilog_comment(fp, std::string("----- Verilog module for " + module_manager.module_name(module_id) + " -----"));
+  print_verilog_comment(
+    fp, std::string("----- Verilog module for " +
+                    module_manager.module_name(module_id) + " -----"));
 
-  std::string module_head_line = "module " + module_manager.module_name(module_id) + "(";
+  std::string module_head_line =
+    "module " + module_manager.module_name(module_id) + "(";
   fp << module_head_line;
 
   /* port type2type mapping */
-  std::map<ModuleManager::e_module_port_type, enum e_dump_verilog_port_type> port_type2type_map;
+  std::map<ModuleManager::e_module_port_type, enum e_dump_verilog_port_type>
+    port_type2type_map;
   port_type2type_map[ModuleManager::MODULE_GLOBAL_PORT] = VERILOG_PORT_CONKT;
   port_type2type_map[ModuleManager::MODULE_GPIN_PORT] = VERILOG_PORT_CONKT;
   port_type2type_map[ModuleManager::MODULE_GPOUT_PORT] = VERILOG_PORT_CONKT;
@@ -156,12 +157,14 @@ void print_verilog_module_definition(std::fstream& fp,
 
   /* Port sequence: global, inout, input, output and clock ports, */
   size_t port_cnt = 0;
-  bool printed_ifdef = false; /* A flag to tell if an ifdef has been printed for the last port */
+  bool printed_ifdef =
+    false; /* A flag to tell if an ifdef has been printed for the last port */
   for (const auto& kv : port_type2type_map) {
-    for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
+    for (const auto& port :
+         module_manager.module_ports_by_type(module_id, kv.first)) {
       if (0 != port_cnt) {
         /* Do not dump a comma for the first port */
-        fp << "," << std::endl; 
+        fp << "," << std::endl;
       }
 
       if (true == printed_ifdef) {
@@ -171,10 +174,12 @@ void print_verilog_module_definition(std::fstream& fp,
         printed_ifdef = false;
       }
 
-      ModulePortId port_id = module_manager.find_module_port(module_id, port.get_name());
+      ModulePortId port_id =
+        module_manager.find_module_port(module_id, port.get_name());
       VTR_ASSERT(ModulePortId::INVALID() != port_id);
       /* Print pre-processing flag for a port, if defined */
-      std::string preproc_flag = module_manager.port_preproc_flag(module_id, port_id);
+      std::string preproc_flag =
+        module_manager.port_preproc_flag(module_id, port_id);
       if (false == preproc_flag.empty()) {
         /* Print an ifdef Verilog syntax */
         print_verilog_preprocessing_flag(fp, preproc_flag);
@@ -198,16 +203,17 @@ void print_verilog_module_definition(std::fstream& fp,
 }
 
 /************************************************
- * Print a Verilog module ports based on the module id 
+ * Print a Verilog module ports based on the module id
  ***********************************************/
-void print_verilog_module_ports(std::fstream& fp, 
-                                const ModuleManager& module_manager,
-                                const ModuleId& module_id,
-                                const e_verilog_default_net_type& default_net_type) {
+void print_verilog_module_ports(
+  std::fstream& fp, const ModuleManager& module_manager,
+  const ModuleId& module_id,
+  const e_verilog_default_net_type& default_net_type) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
   /* port type2type mapping */
-  std::map<ModuleManager::e_module_port_type, enum e_dump_verilog_port_type> port_type2type_map;
+  std::map<ModuleManager::e_module_port_type, enum e_dump_verilog_port_type>
+    port_type2type_map;
   port_type2type_map[ModuleManager::MODULE_GLOBAL_PORT] = VERILOG_PORT_INPUT;
   port_type2type_map[ModuleManager::MODULE_GPIN_PORT] = VERILOG_PORT_INPUT;
   port_type2type_map[ModuleManager::MODULE_GPOUT_PORT] = VERILOG_PORT_OUTPUT;
@@ -219,18 +225,22 @@ void print_verilog_module_ports(std::fstream& fp,
 
   /* Port sequence: global, inout, input, output and clock ports, */
   for (const auto& kv : port_type2type_map) {
-    for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
-      ModulePortId port_id = module_manager.find_module_port(module_id, port.get_name());
+    for (const auto& port :
+         module_manager.module_ports_by_type(module_id, kv.first)) {
+      ModulePortId port_id =
+        module_manager.find_module_port(module_id, port.get_name());
       VTR_ASSERT(ModulePortId::INVALID() != port_id);
       /* Print pre-processing flag for a port, if defined */
-      std::string preproc_flag = module_manager.port_preproc_flag(module_id, port_id);
+      std::string preproc_flag =
+        module_manager.port_preproc_flag(module_id, port_id);
       if (false == preproc_flag.empty()) {
         /* Print an ifdef Verilog syntax */
         print_verilog_preprocessing_flag(fp, preproc_flag);
       }
 
       /* Print port */
-      fp << "//----- " << module_manager.module_port_type_str(kv.first)  << " -----" << std::endl; 
+      fp << "//----- " << module_manager.module_port_type_str(kv.first)
+         << " -----" << std::endl;
       fp << generate_verilog_port(kv.second, port);
       fp << ";" << std::endl;
 
@@ -241,21 +251,25 @@ void print_verilog_module_ports(std::fstream& fp,
     }
   }
 
-  /* Output any port that is also wire connection when default net type is not wire! */
+  /* Output any port that is also wire connection when default net type is not
+   * wire! */
   if (VERILOG_DEFAULT_NET_TYPE_WIRE != default_net_type) {
     fp << std::endl;
-    fp << "//----- BEGIN wire-connection ports -----" << std::endl; 
+    fp << "//----- BEGIN wire-connection ports -----" << std::endl;
     for (const auto& kv : port_type2type_map) {
-      for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
+      for (const auto& port :
+           module_manager.module_ports_by_type(module_id, kv.first)) {
         /* Skip the ports that are not registered */
-        ModulePortId port_id = module_manager.find_module_port(module_id, port.get_name());
+        ModulePortId port_id =
+          module_manager.find_module_port(module_id, port.get_name());
         VTR_ASSERT(ModulePortId::INVALID() != port_id);
         if (false == module_manager.port_is_wire(module_id, port_id)) {
           continue;
         }
 
         /* Print pre-processing flag for a port, if defined */
-        std::string preproc_flag = module_manager.port_preproc_flag(module_id, port_id);
+        std::string preproc_flag =
+          module_manager.port_preproc_flag(module_id, port_id);
         if (false == preproc_flag.empty()) {
           /* Print an ifdef Verilog syntax */
           print_verilog_preprocessing_flag(fp, preproc_flag);
@@ -271,24 +285,27 @@ void print_verilog_module_ports(std::fstream& fp,
         }
       }
     }
-    fp << "//----- END wire-connection ports -----" << std::endl; 
+    fp << "//----- END wire-connection ports -----" << std::endl;
     fp << std::endl;
   }
- 
+
   /* Output any port that is registered */
   fp << std::endl;
-  fp << "//----- BEGIN Registered ports -----" << std::endl; 
+  fp << "//----- BEGIN Registered ports -----" << std::endl;
   for (const auto& kv : port_type2type_map) {
-    for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
+    for (const auto& port :
+         module_manager.module_ports_by_type(module_id, kv.first)) {
       /* Skip the ports that are not registered */
-      ModulePortId port_id = module_manager.find_module_port(module_id, port.get_name());
+      ModulePortId port_id =
+        module_manager.find_module_port(module_id, port.get_name());
       VTR_ASSERT(ModulePortId::INVALID() != port_id);
       if (false == module_manager.port_is_register(module_id, port_id)) {
         continue;
       }
 
       /* Print pre-processing flag for a port, if defined */
-      std::string preproc_flag = module_manager.port_preproc_flag(module_id, port_id);
+      std::string preproc_flag =
+        module_manager.port_preproc_flag(module_id, port_id);
       if (false == preproc_flag.empty()) {
         /* Print an ifdef Verilog syntax */
         print_verilog_preprocessing_flag(fp, preproc_flag);
@@ -304,7 +321,7 @@ void print_verilog_module_ports(std::fstream& fp,
       }
     }
   }
-  fp << "//----- END Registered ports -----" << std::endl; 
+  fp << "//----- END Registered ports -----" << std::endl;
   fp << std::endl;
 }
 
@@ -312,56 +329,54 @@ void print_verilog_module_ports(std::fstream& fp,
  * Print a Verilog module declaration (definition + port list
  * We use the following format:
  * module <module_name> (<ports without directions>);
- * <tab><port definition with direction> 
+ * <tab><port definition with direction>
  ***********************************************/
-void print_verilog_module_declaration(std::fstream& fp, 
-                                      const ModuleManager& module_manager,
-                                      const ModuleId& module_id,
-                                      const e_verilog_default_net_type& default_net_type) {
+void print_verilog_module_declaration(
+  std::fstream& fp, const ModuleManager& module_manager,
+  const ModuleId& module_id,
+  const e_verilog_default_net_type& default_net_type) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
   /* Apply default net type from user's option */
-  print_verilog_default_net_type_declaration(fp,
-                                             default_net_type); 
+  print_verilog_default_net_type_declaration(fp, default_net_type);
 
   print_verilog_module_definition(fp, module_manager, module_id);
 
   print_verilog_module_ports(fp, module_manager, module_id, default_net_type);
 }
 
-
 /********************************************************************
  * Print an instance in Verilog format (a generic version)
  * This function will require user to provide an instance name
  *
- * This function will output the port map by referring to a port-to-port 
+ * This function will output the port map by referring to a port-to-port
  * mapping:
  *   <module_port_name> -> <instance_port_name>
- * The key of the port-to-port mapping is the port name of the module: 
+ * The key of the port-to-port mapping is the port name of the module:
  * The value of the port-to-port mapping is the port information of the instance
- * With link between module and instance, the function can output a Verilog 
+ * With link between module and instance, the function can output a Verilog
  * instance easily, supporting both explicit port mapping:
  *   .<module_port_name>(<instance_port_name>)
  * and inexplicit port mapping
  *   <instance_port_name>
  *
- * Note that, it is not necessary that the port-to-port mapping 
+ * Note that, it is not necessary that the port-to-port mapping
  * covers all the module ports.
- * Any instance/module port which are not specified in the port-to-port 
+ * Any instance/module port which are not specified in the port-to-port
  * mapping will be output by the module port name.
  *******************************************************************/
-void print_verilog_module_instance(std::fstream& fp, 
-                                   const ModuleManager& module_manager, 
-                                   const ModuleId& module_id,
-                                   const std::string& instance_name,
-                                   const std::map<std::string, BasicPort>& port2port_name_map,
-                                   const bool& use_explicit_port_map) {
-
+void print_verilog_module_instance(
+  std::fstream& fp, const ModuleManager& module_manager,
+  const ModuleId& module_id, const std::string& instance_name,
+  const std::map<std::string, BasicPort>& port2port_name_map,
+  const bool& use_explicit_port_map) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
-  /* Check: all the key ports in the port2port_name_map does exist in the child module */
+  /* Check: all the key ports in the port2port_name_map does exist in the child
+   * module */
   for (const auto& kv : port2port_name_map) {
-    ModulePortId module_port_id = module_manager.find_module_port(module_id, kv.first);
+    ModulePortId module_port_id =
+      module_manager.find_module_port(module_id, kv.first);
     VTR_ASSERT(ModulePortId::INVALID() != module_port_id);
   }
 
@@ -369,10 +384,11 @@ void print_verilog_module_instance(std::fstream& fp,
   fp << "\t" << module_manager.module_name(module_id) << " ";
   /* Print instance name */
   fp << instance_name << " (" << std::endl;
-  
+
   /* Print each port with/without explicit port map */
   /* port type2type mapping */
-  std::map<ModuleManager::e_module_port_type, enum e_dump_verilog_port_type> port_type2type_map;
+  std::map<ModuleManager::e_module_port_type, enum e_dump_verilog_port_type>
+    port_type2type_map;
   port_type2type_map[ModuleManager::MODULE_GLOBAL_PORT] = VERILOG_PORT_CONKT;
   port_type2type_map[ModuleManager::MODULE_GPIN_PORT] = VERILOG_PORT_CONKT;
   port_type2type_map[ModuleManager::MODULE_GPOUT_PORT] = VERILOG_PORT_CONKT;
@@ -385,10 +401,11 @@ void print_verilog_module_instance(std::fstream& fp,
   /* Port sequence: global, inout, input, output and clock ports, */
   size_t port_cnt = 0;
   for (const auto& kv : port_type2type_map) {
-    for (const auto& port : module_manager.module_ports_by_type(module_id, kv.first)) {
+    for (const auto& port :
+         module_manager.module_ports_by_type(module_id, kv.first)) {
       if (0 != port_cnt) {
         /* Do not dump a comma for the first port */
-        fp << "," << std::endl; 
+        fp << "," << std::endl;
       }
       /* Print port */
       fp << "\t\t";
@@ -397,14 +414,19 @@ void print_verilog_module_instance(std::fstream& fp,
         fp << "." << port.get_name() << "(";
       }
       /* Try to find the instanced port name in the name map */
-      if (port2port_name_map.find(port.get_name()) != port2port_name_map.end()) {
-        /* Found it, we assign the port name */ 
+      if (port2port_name_map.find(port.get_name()) !=
+          port2port_name_map.end()) {
+        /* Found it, we assign the port name */
         /* TODO: make sure the port width matches! */
-        ModulePortId module_port_id = module_manager.find_module_port(module_id, port.get_name());
+        ModulePortId module_port_id =
+          module_manager.find_module_port(module_id, port.get_name());
         /* Get the port from module */
-        BasicPort module_port = module_manager.module_port(module_id, module_port_id);
-        VTR_ASSERT(module_port.get_width() == port2port_name_map.at(port.get_name()).get_width());
-        fp << generate_verilog_port(kv.second, port2port_name_map.at(port.get_name()));
+        BasicPort module_port =
+          module_manager.module_port(module_id, module_port_id);
+        VTR_ASSERT(module_port.get_width() ==
+                   port2port_name_map.at(port.get_name()).get_width());
+        fp << generate_verilog_port(kv.second,
+                                    port2port_name_map.at(port.get_name()));
       } else {
         /* Not found, we give the default port name */
         fp << generate_verilog_port(kv.second, port);
@@ -416,58 +438,58 @@ void print_verilog_module_instance(std::fstream& fp,
       port_cnt++;
     }
   }
-  
+
   /* Print an end to the instance */
   fp << ");" << std::endl;
 }
 
-
 /************************************************
  * Print an instance for a Verilog module
  * This function is a wrapper for the generic version of
- * print_verilog_module_instance() 
+ * print_verilog_module_instance()
  * This function create an instance name based on the index
  * of the child module in its parent module
  ***********************************************/
-void print_verilog_module_instance(std::fstream& fp, 
-                                   const ModuleManager& module_manager, 
-                                   const ModuleId& parent_module_id, const ModuleId& child_module_id,
-                                   const std::map<std::string, BasicPort>& port2port_name_map,
-                                   const bool& use_explicit_port_map) {
-
+void print_verilog_module_instance(
+  std::fstream& fp, const ModuleManager& module_manager,
+  const ModuleId& parent_module_id, const ModuleId& child_module_id,
+  const std::map<std::string, BasicPort>& port2port_name_map,
+  const bool& use_explicit_port_map) {
   /* Create instance name, <name>_<num_instance_in_parent_module> */
-  std::string instance_name = module_manager.module_name(child_module_id) 
-                            + "_" 
-                            + std::to_string(module_manager.num_instance(parent_module_id, child_module_id)) 
-                            + "_";
+  std::string instance_name = module_manager.module_name(child_module_id) +
+                              "_" +
+                              std::to_string(module_manager.num_instance(
+                                parent_module_id, child_module_id)) +
+                              "_";
 
-  print_verilog_module_instance(fp, module_manager, child_module_id, instance_name,
-                                port2port_name_map, use_explicit_port_map);
+  print_verilog_module_instance(fp, module_manager, child_module_id,
+                                instance_name, port2port_name_map,
+                                use_explicit_port_map);
 }
 
 /************************************************
  * Print an end line for a Verilog module
  ***********************************************/
-void print_verilog_module_end(std::fstream& fp, 
+void print_verilog_module_end(std::fstream& fp,
                               const std::string& module_name) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
   fp << "endmodule" << std::endl;
-  print_verilog_comment(fp, std::string("----- END Verilog module for " + module_name + " -----"));
+  print_verilog_comment(
+    fp, std::string("----- END Verilog module for " + module_name + " -----"));
   fp << std::endl;
 
   /* Reset default net type to be none */
-  print_verilog_default_net_type_declaration(fp,
-                                             VERILOG_DEFAULT_NET_TYPE_NONE); 
+  print_verilog_default_net_type_declaration(fp, VERILOG_DEFAULT_NET_TYPE_NONE);
 }
 
 /************************************************
- * Generate a string of a Verilog port  
+ * Generate a string of a Verilog port
  ***********************************************/
-std::string generate_verilog_port(const enum e_dump_verilog_port_type& verilog_port_type,
-                                  const BasicPort& port_info,
-                                  const bool& must_print_port_size,
-								  const bool& big_endian) {
+std::string generate_verilog_port(
+  const enum e_dump_verilog_port_type& verilog_port_type,
+  const BasicPort& port_info, const bool& must_print_port_size,
+  const bool& big_endian) {
   std::string verilog_line;
 
   /* Ensure the port type is valid */
@@ -475,36 +497,36 @@ std::string generate_verilog_port(const enum e_dump_verilog_port_type& verilog_p
 
   std::string size_str;
   if (big_endian) {
-    size_str = "[" + std::to_string(port_info.get_lsb()) + ":" + std::to_string(port_info.get_msb()) + "]";
+    size_str = "[" + std::to_string(port_info.get_lsb()) + ":" +
+               std::to_string(port_info.get_msb()) + "]";
   } else {
-    size_str = "[" + std::to_string(port_info.get_msb()) + ":" + std::to_string(port_info.get_lsb()) + "]";
+    size_str = "[" + std::to_string(port_info.get_msb()) + ":" +
+               std::to_string(port_info.get_lsb()) + "]";
   }
 
   /* Only connection require a format of <port_name>[<lsb>:<msb>]
-   * others require a format of <port_type> [<lsb>:<msb>] <port_name> 
+   * others require a format of <port_type> [<lsb>:<msb>] <port_name>
    */
   if (VERILOG_PORT_CONKT == verilog_port_type) {
     /* Simplication:
-     * - When LSB == MSB == 0, we do not need to specify size when the user option allows
-     *   Note that user option is essential, otherwise what could happen is that 
-     *   a multi-bit verilog port used in instance port mapping is printed as a single-bit net
-     *   For example,
-     *     input [1:0] in;
-     *     inv inv_inst (.A(in), .Y(out));
-     *   The original port width is the reference to backtrace the defintion of the port
+     * - When LSB == MSB == 0, we do not need to specify size when the user
+     * option allows Note that user option is essential, otherwise what could
+     * happen is that a multi-bit verilog port used in instance port mapping is
+     * printed as a single-bit net For example, input [1:0] in; inv inv_inst
+     * (.A(in), .Y(out)); The original port width is the reference to backtrace
+     * the defintion of the port
      * - When LSB == MSB, we can use a simplified format <port_type>[<lsb>]
      */
-    if ((false == must_print_port_size)
-     && (1 == port_info.get_width())
-     && (0 == port_info.get_lsb())
-     && (1 == port_info.get_origin_port_width())) {
+    if ((false == must_print_port_size) && (1 == port_info.get_width()) &&
+        (0 == port_info.get_lsb()) &&
+        (1 == port_info.get_origin_port_width())) {
       size_str.clear();
     } else if ((1 == port_info.get_width())) {
       size_str = "[" + std::to_string(port_info.get_lsb()) + "]";
     }
     verilog_line = port_info.get_name() + size_str;
-  } else { 
-    verilog_line = VERILOG_PORT_TYPE_STRING[verilog_port_type]; 
+  } else {
+    verilog_line = VERILOG_PORT_TYPE_STRING[verilog_port_type];
     verilog_line += " " + size_str + " " + port_info.get_name();
   }
 
@@ -513,7 +535,7 @@ std::string generate_verilog_port(const enum e_dump_verilog_port_type& verilog_p
 
 /********************************************************************
  * Evaluate if two Verilog ports can be merged:
- * If the port name is same, it can merged 
+ * If the port name is same, it can merged
  *******************************************************************/
 bool two_verilog_ports_mergeable(const BasicPort& portA,
                                  const BasicPort& portB) {
@@ -532,27 +554,30 @@ bool two_verilog_ports_mergeable(const BasicPort& portA,
 BasicPort merge_two_verilog_ports(const BasicPort& portA,
                                   const BasicPort& portB) {
   BasicPort merged_port;
-  
+
   VTR_ASSERT(true == two_verilog_ports_mergeable(portA, portB));
 
   merged_port.set_name(portA.get_name());
-  merged_port.set_lsb((size_t)std::min((int)portA.get_lsb(), (int)portB.get_lsb()));
-  merged_port.set_msb((size_t)std::max((int)portA.get_msb(), (int)portB.get_msb()));
+  merged_port.set_lsb(
+    (size_t)std::min((int)portA.get_lsb(), (int)portB.get_lsb()));
+  merged_port.set_msb(
+    (size_t)std::max((int)portA.get_msb(), (int)portB.get_msb()));
 
   return merged_port;
 }
 
 /************************************************
  * This function takes a list of ports and
- * combine the port string by comparing the name 
+ * combine the port string by comparing the name
  * and width of ports.
- * For example, two ports A and B share the same name is 
+ * For example, two ports A and B share the same name is
  * mergable as long as A's MSB + 1 == B's LSB
  * Note that the port sequence really matters!
  * This function will NOT change the sequence
  * of ports in the list port_info
  ***********************************************/
-std::vector<BasicPort> combine_verilog_ports(const std::vector<BasicPort>& ports) { 
+std::vector<BasicPort> combine_verilog_ports(
+  const std::vector<BasicPort>& ports) {
   std::vector<BasicPort> merged_ports;
 
   /* Directly return if there are no ports */
@@ -567,8 +592,8 @@ std::vector<BasicPort> combine_verilog_ports(const std::vector<BasicPort>& ports
     /* Bypass the first port, it is already in the list */
     if (&port == &ports[0]) {
       continue;
-    } 
-    /* Identify if the port name can be potentially merged: 
+    }
+    /* Identify if the port name can be potentially merged:
      * if the port can be merged to the last port in the list, it may be merged
      */
     if (false == port.mergeable(merged_ports.back())) {
@@ -581,11 +606,11 @@ std::vector<BasicPort> combine_verilog_ports(const std::vector<BasicPort>& ports
       /* Unable to merge, add the port to merged port list */
       merged_ports.push_back(port);
       continue;
-    } 
+    }
     /* Reach here, we should merge the ports,
      * LSB of merged_port remains the same,
-     * MSB of merged_port will be updated 
-     * to the MSB of port 
+     * MSB of merged_port will be updated
+     * to the MSB of port
      */
     BasicPort& port_to_merge = merged_ports.back();
     port_to_merge.set_msb(port.get_msb());
@@ -595,20 +620,20 @@ std::vector<BasicPort> combine_verilog_ports(const std::vector<BasicPort>& ports
 }
 
 /************************************************
- * Generate the string of a list of verilog ports 
+ * Generate the string of a list of verilog ports
  ***********************************************/
-std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports) {  
-
+std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports) {
   /* Output the string of ports:
    * If there is only one port in the merged_port list
    * we only output the port.
-   * If there are more than one port in the merged port list, we output an concatenated port:
-   *  {<port1>, <port2>, ... <last_port>}  
+   * If there are more than one port in the merged port list, we output an
+   * concatenated port:
+   *  {<port1>, <port2>, ... <last_port>}
    */
   VTR_ASSERT(0 < merged_ports.size());
-  if ( 1 == merged_ports.size()) {
+  if (1 == merged_ports.size()) {
     /* Use connection type of verilog port */
-    return generate_verilog_port(VERILOG_PORT_CONKT, merged_ports[0], false);  
+    return generate_verilog_port(VERILOG_PORT_CONKT, merged_ports[0], false);
   }
 
   std::string verilog_line = "{";
@@ -617,7 +642,7 @@ std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports) {
     if (&port != &merged_ports[0]) {
       verilog_line += ", ";
     }
-    verilog_line += generate_verilog_port(VERILOG_PORT_CONKT, port, false);  
+    verilog_line += generate_verilog_port(VERILOG_PORT_CONKT, port, false);
   }
   verilog_line += "}";
 
@@ -625,17 +650,18 @@ std::string generate_verilog_ports(const std::vector<BasicPort>& merged_ports) {
 }
 
 /********************************************************************
- * Generate a bus port (could be used to create a local wire) 
+ * Generate a bus port (could be used to create a local wire)
  * for a list of Verilog ports
- * The bus port will be created by aggregating the ports in the list 
- * A bus port name may be need only there are many ports with 
+ * The bus port will be created by aggregating the ports in the list
+ * A bus port name may be need only there are many ports with
  * different names. It is hard to name the bus port
  *******************************************************************/
-BasicPort generate_verilog_bus_port(const std::vector<BasicPort>& input_ports, 
+BasicPort generate_verilog_bus_port(const std::vector<BasicPort>& input_ports,
                                     const std::string& bus_port_name) {
   /* Try to combine the ports */
-  std::vector<BasicPort> combined_input_ports = combine_verilog_ports(input_ports);
-  
+  std::vector<BasicPort> combined_input_ports =
+    combine_verilog_ports(input_ports);
+
   /* Create a port data structure that is to be returned */
   BasicPort bus_port;
 
@@ -650,7 +676,7 @@ BasicPort generate_verilog_bus_port(const std::vector<BasicPort>& input_ports,
       bus_port.combine(port);
     }
   }
-  
+
   return bus_port;
 }
 
@@ -661,12 +687,13 @@ BasicPort generate_verilog_bus_port(const std::vector<BasicPort>& input_ports,
  * When there are more than two ports, a bus wiring will be created
  *     {<port0>, <port1>, ... <last_port>}
  *******************************************************************/
-std::string generate_verilog_local_wire(const BasicPort& output_port,
-                                        const std::vector<BasicPort>& input_ports) {
+std::string generate_verilog_local_wire(
+  const BasicPort& output_port, const std::vector<BasicPort>& input_ports) {
   /* Try to combine the ports */
-  std::vector<BasicPort> combined_input_ports = combine_verilog_ports(input_ports);
+  std::vector<BasicPort> combined_input_ports =
+    combine_verilog_ports(input_ports);
 
-  /* If we have more than 1 port in the combined ports , 
+  /* If we have more than 1 port in the combined ports ,
    * output a local wire */
   VTR_ASSERT(0 < combined_input_ports.size());
 
@@ -674,10 +701,10 @@ std::string generate_verilog_local_wire(const BasicPort& output_port,
   size_t input_ports_width = 0;
   for (const auto& port : combined_input_ports) {
     /* We must have valid ports! */
-    VTR_ASSERT( 0 < port.get_width() );
+    VTR_ASSERT(0 < port.get_width());
     input_ports_width += port.get_width();
   }
-  VTR_ASSERT( input_ports_width == output_port.get_width() );
+  VTR_ASSERT(input_ports_width == output_port.get_width());
 
   std::string wire_str;
   wire_str += generate_verilog_port(VERILOG_PORT_WIRE, output_port);
@@ -697,8 +724,8 @@ std::string generate_verilog_local_wire(const BasicPort& output_port,
  *   for all-zero/all-one vectors
  *   {<length>{1'b<zero/one>}}
  *******************************************************************/
-std::string generate_verilog_constant_values(const std::vector<size_t>& const_values,
-                                             const bool& short_constant) {
+std::string generate_verilog_constant_values(
+  const std::vector<size_t>& const_values, const bool& short_constant) {
   VTR_ASSERT(!const_values.empty());
 
   bool same_values = true;
@@ -718,9 +745,9 @@ std::string generate_verilog_constant_values(const std::vector<size_t>& const_va
 
   std::string str;
 
-  if ( (true == short_constant) 
-    && (true == same_values) ) {
-    str = "{" + std::to_string(const_values.size()) + "{1'b" + std::to_string(first_val) + "}}";
+  if ((true == short_constant) && (true == same_values)) {
+    str = "{" + std::to_string(const_values.size()) + "{1'b" +
+          std::to_string(first_val) + "}}";
   } else {
     str = std::to_string(const_values.size());
     str += "'b";
@@ -734,13 +761,13 @@ std::string generate_verilog_constant_values(const std::vector<size_t>& const_va
 /********************************************************************
  * Generate a verilog port with a deposit of constant values
  ********************************************************************/
-std::string generate_verilog_port_constant_values(const BasicPort& output_port,
-                                                  const std::vector<size_t>& const_values,
-                                                  const bool& is_register) {
+std::string generate_verilog_port_constant_values(
+  const BasicPort& output_port, const std::vector<size_t>& const_values,
+  const bool& is_register) {
   std::string port_str;
 
   /* Must check: the port width matches */
-  VTR_ASSERT( const_values.size() == output_port.get_width() );
+  VTR_ASSERT(const_values.size() == output_port.get_width());
 
   port_str = generate_verilog_port(VERILOG_PORT_CONKT, output_port);
   if (is_register) {
@@ -756,9 +783,9 @@ std::string generate_verilog_port_constant_values(const BasicPort& output_port,
 /********************************************************************
  * Generate a list of verilog ports with a deposit of constant values
  ********************************************************************/
-std::string generate_verilog_ports_constant_values(const std::vector<BasicPort>& output_ports,
-                                                   const std::vector<size_t>& const_values,
-                                                   const bool& is_register) {
+std::string generate_verilog_ports_constant_values(
+  const std::vector<BasicPort>& output_ports,
+  const std::vector<size_t>& const_values, const bool& is_register) {
   std::string port_str;
 
   /* Must check: the port width matches */
@@ -766,7 +793,7 @@ std::string generate_verilog_ports_constant_values(const std::vector<BasicPort>&
   for (const BasicPort& port : output_ports) {
     total_width += port.get_width();
   }
-  VTR_ASSERT( const_values.size() == total_width );
+  VTR_ASSERT(const_values.size() == total_width);
 
   port_str = generate_verilog_ports(output_ports);
   if (is_register) {
@@ -780,12 +807,12 @@ std::string generate_verilog_ports_constant_values(const std::vector<BasicPort>&
 }
 
 /********************************************************************
- * Generate a wire connection, that assigns constant values to a 
- * Verilog port 
+ * Generate a wire connection, that assigns constant values to a
+ * Verilog port
  *******************************************************************/
-void print_verilog_wire_constant_values(std::fstream& fp,
-                                        const BasicPort& output_port,
-                                        const std::vector<size_t>& const_values) {
+void print_verilog_wire_constant_values(
+  std::fstream& fp, const BasicPort& output_port,
+  const std::vector<size_t>& const_values) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -796,11 +823,11 @@ void print_verilog_wire_constant_values(std::fstream& fp,
 }
 
 /********************************************************************
- * Deposit constant values to a Verilog port 
+ * Deposit constant values to a Verilog port
  *******************************************************************/
-void print_verilog_deposit_wire_constant_values(std::fstream& fp,
-                                                const BasicPort& output_port,
-                                                const std::vector<size_t>& const_values) {
+void print_verilog_deposit_wire_constant_values(
+  std::fstream& fp, const BasicPort& output_port,
+  const std::vector<size_t>& const_values) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -813,12 +840,12 @@ void print_verilog_deposit_wire_constant_values(std::fstream& fp,
 }
 
 /********************************************************************
- * Generate a wire connection, that assigns constant values to a 
- * Verilog port 
+ * Generate a wire connection, that assigns constant values to a
+ * Verilog port
  *******************************************************************/
-void print_verilog_force_wire_constant_values(std::fstream& fp,
-                                              const BasicPort& output_port,
-                                              const std::vector<size_t>& const_values) {
+void print_verilog_force_wire_constant_values(
+  std::fstream& fp, const BasicPort& output_port,
+  const std::vector<size_t>& const_values) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
@@ -829,24 +856,24 @@ void print_verilog_force_wire_constant_values(std::fstream& fp,
 }
 
 /********************************************************************
- * Generate a wire connection for two Verilog ports 
- * using "assign" syntax  
+ * Generate a wire connection for two Verilog ports
+ * using "assign" syntax
  *******************************************************************/
 void print_verilog_wire_connection(std::fstream& fp,
                                    const BasicPort& output_port,
-                                   const BasicPort& input_port, 
+                                   const BasicPort& input_port,
                                    const bool& inverted) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
   /* Must check: the port width matches */
-  VTR_ASSERT( input_port.get_width() == output_port.get_width() );
+  VTR_ASSERT(input_port.get_width() == output_port.get_width());
 
   fp << "\t";
   fp << "assign ";
   fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port);
   fp << " = ";
-  
+
   if (true == inverted) {
     fp << "~";
   }
@@ -856,23 +883,23 @@ void print_verilog_wire_connection(std::fstream& fp,
 }
 
 /********************************************************************
- * Generate a wire connection for two Verilog ports 
- * using "assign" syntax  
+ * Generate a wire connection for two Verilog ports
+ * using "assign" syntax
  *******************************************************************/
 void print_verilog_register_connection(std::fstream& fp,
                                        const BasicPort& output_port,
-                                       const BasicPort& input_port, 
+                                       const BasicPort& input_port,
                                        const bool& inverted) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
   /* Must check: the port width matches */
-  VTR_ASSERT( input_port.get_width() == output_port.get_width() );
+  VTR_ASSERT(input_port.get_width() == output_port.get_width());
 
   fp << "\t";
   fp << generate_verilog_port(VERILOG_PORT_CONKT, output_port);
   fp << " <= ";
-  
+
   if (true == inverted) {
     fp << "~";
   }
@@ -881,69 +908,82 @@ void print_verilog_register_connection(std::fstream& fp,
   fp << ";" << std::endl;
 }
 
-
 /********************************************************************
- * Generate an instance of a buffer module  
+ * Generate an instance of a buffer module
  * with given information about the input and output ports of instance
  *
  *                                          Buffer instance
  *                             +----------------------------------------+
- *     instance_input_port --->| buffer_input_port    buffer_output_port|----> instance_output_port 
+ *     instance_input_port --->| buffer_input_port    buffer_output_port|---->
+ *instance_output_port
  *                             +----------------------------------------+
  *
  * Restrictions:
- *    Buffer must have only 1 input (non-global) port and 1 output (non-global) port
+ *    Buffer must have only 1 input (non-global) port and 1 output (non-global)
+ *port
  *******************************************************************/
 void print_verilog_buffer_instance(std::fstream& fp,
-                                   ModuleManager& module_manager, 
-                                   const CircuitLibrary& circuit_lib, 
-                                   const ModuleId& parent_module_id, 
-                                   const CircuitModelId& buffer_model, 
+                                   ModuleManager& module_manager,
+                                   const CircuitLibrary& circuit_lib,
+                                   const ModuleId& parent_module_id,
+                                   const CircuitModelId& buffer_model,
                                    const BasicPort& instance_input_port,
                                    const BasicPort& instance_output_port) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
-  /* To match the context, Buffer should have only 2 non-global ports: 1 input port and 1 output port */
-  std::vector<CircuitPortId> buffer_model_input_ports = circuit_lib.model_ports_by_type(buffer_model, CIRCUIT_MODEL_PORT_INPUT, true);
-  std::vector<CircuitPortId> buffer_model_output_ports = circuit_lib.model_ports_by_type(buffer_model, CIRCUIT_MODEL_PORT_OUTPUT, true);
+  /* To match the context, Buffer should have only 2 non-global ports: 1 input
+   * port and 1 output port */
+  std::vector<CircuitPortId> buffer_model_input_ports =
+    circuit_lib.model_ports_by_type(buffer_model, CIRCUIT_MODEL_PORT_INPUT,
+                                    true);
+  std::vector<CircuitPortId> buffer_model_output_ports =
+    circuit_lib.model_ports_by_type(buffer_model, CIRCUIT_MODEL_PORT_OUTPUT,
+                                    true);
   VTR_ASSERT(1 == buffer_model_input_ports.size());
   VTR_ASSERT(1 == buffer_model_output_ports.size());
 
   /* Get the moduleId for the buffer module */
-  ModuleId buffer_module_id = module_manager.find_module(circuit_lib.model_name(buffer_model));
+  ModuleId buffer_module_id =
+    module_manager.find_module(circuit_lib.model_name(buffer_model));
   /* We must have one */
   VTR_ASSERT(ModuleId::INVALID() != buffer_module_id);
 
   /* Create a port-to-port map */
   std::map<std::string, BasicPort> buffer_port2port_name_map;
 
-  /* Build the link between buffer_input_port[0] and output_node_pre_buffer 
+  /* Build the link between buffer_input_port[0] and output_node_pre_buffer
    * Build the link between buffer_output_port[0] and output_node_bufferred
    */
   { /* Create a code block to accommodate the local variables */
-    std::string module_input_port_name = circuit_lib.port_lib_name(buffer_model_input_ports[0]);
-    buffer_port2port_name_map[module_input_port_name] = instance_input_port; 
-    std::string module_output_port_name = circuit_lib.port_lib_name(buffer_model_output_ports[0]);
-    buffer_port2port_name_map[module_output_port_name] = instance_output_port; 
+    std::string module_input_port_name =
+      circuit_lib.port_lib_name(buffer_model_input_ports[0]);
+    buffer_port2port_name_map[module_input_port_name] = instance_input_port;
+    std::string module_output_port_name =
+      circuit_lib.port_lib_name(buffer_model_output_ports[0]);
+    buffer_port2port_name_map[module_output_port_name] = instance_output_port;
   }
 
   /* Output an instance of the module */
-  print_verilog_module_instance(fp, module_manager, parent_module_id, buffer_module_id, buffer_port2port_name_map, circuit_lib.dump_explicit_port_map(buffer_model));
+  print_verilog_module_instance(
+    fp, module_manager, parent_module_id, buffer_module_id,
+    buffer_port2port_name_map,
+    circuit_lib.dump_explicit_port_map(buffer_model));
 
   /* IMPORTANT: this update MUST be called after the instance outputting!!!!
-   * update the module manager with the relationship between the parent and child modules 
+   * update the module manager with the relationship between the parent and
+   * child modules
    */
   module_manager.add_child_module(parent_module_id, buffer_module_id);
 }
 
 /********************************************************************
- * Print local wires that are used for SRAM configuration 
+ * Print local wires that are used for SRAM configuration
  * The local wires are strongly dependent on the organization of SRAMs.
- * Standalone SRAMs: 
+ * Standalone SRAMs:
  * -----------------
  *    No need for local wires, their outputs are port of the module
- *        
+ *
  *              Module
  *             +------------------------------+
  *             |  Sub-module                  |
@@ -953,7 +993,7 @@ void print_verilog_buffer_instance(std::fstream& fp,
  *             |  |             sram_out|---->|---->sram_out
  *             |  |                     |     |
  *             |  +---------------------+     |
- *             +------------------------------+      
+ *             +------------------------------+
  *
  * Configuration chain-style
  * -------------------------
@@ -966,7 +1006,8 @@ void print_verilog_buffer_instance(std::fstream& fp,
  *          |     [0]           [1]           [2]              [N]         |
  *          |      |             |             |                |          |
  *          |      v             v             v                v          |
- * ccff_head| ----------+  +---------+   +------------+   +----------------|-> ccff_tail
+ * ccff_head| ----------+  +---------+   +------------+   +----------------|->
+ ccff_tail
  *          |           |  ^         |   ^            |   ^                |
  *          |      head v  |tail     v   |            v   |                |
  *          |       +----------+  +----------+     +----------+            |
@@ -986,8 +1027,8 @@ void print_verilog_buffer_instance(std::fstream& fp,
  *
  * Memory bank-style
  * -----------------
- *    two ports will be added, which are regular output and inverted output 
- *    Note that the outputs are the data outputs of SRAMs 
+ *    two ports will be added, which are regular output and inverted output
+ *    Note that the outputs are the data outputs of SRAMs
  *    BL/WLs of memory decoders are ports of module but not local wires
  *
  *             Module
@@ -1026,53 +1067,69 @@ void print_verilog_local_sram_wires(std::fstream& fp,
   }
 
   /* Depend on the configuraion style */
-  switch(sram_orgz_type) {
-  case CONFIG_MEM_STANDALONE:
-    /* Nothing to do here */
-    break;
-  case CONFIG_MEM_SCAN_CHAIN: {
-    /* Generate the name of local wire for the CCFF inputs, CCFF output and inverted output */
-    /* [0] => CCFF input */
-    BasicPort ccff_config_bus_port(generate_local_config_bus_port_name(), port_size);
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, ccff_config_bus_port) << ";" << std::endl; 
-    /* Connect first CCFF to the head */
-    /* Head is always a 1-bit port */
-    BasicPort ccff_head_port(generate_sram_port_name(sram_orgz_type, CIRCUIT_MODEL_PORT_INPUT), 1); 
-    BasicPort ccff_head_local_port(ccff_config_bus_port.get_name(), 1); 
-    print_verilog_wire_connection(fp, ccff_head_local_port, ccff_head_port, false); 
-    /* Connect last CCFF to the tail */
-    /* Tail is always a 1-bit port */
-    BasicPort ccff_tail_port(generate_sram_port_name(sram_orgz_type, CIRCUIT_MODEL_PORT_OUTPUT), 1); 
-    BasicPort ccff_tail_local_port(ccff_config_bus_port.get_name(), ccff_config_bus_port.get_msb(), ccff_config_bus_port.get_msb()); 
-    print_verilog_wire_connection(fp, ccff_tail_local_port, ccff_tail_port, false); 
-    break;
-  }
-  case CONFIG_MEM_QL_MEMORY_BANK:
-  case CONFIG_MEM_MEMORY_BANK: {
-    /* Generate the name of local wire for the SRAM output and inverted output */
-    std::vector<BasicPort> sram_ports;
-    /* [0] => SRAM output */
-    sram_ports.push_back(BasicPort(generate_sram_local_port_name(circuit_lib, sram_model, sram_orgz_type, CIRCUIT_MODEL_PORT_INPUT), port_size));
-    /* [1] => SRAM inverted output */
-    sram_ports.push_back(BasicPort(generate_sram_local_port_name(circuit_lib, sram_model, sram_orgz_type, CIRCUIT_MODEL_PORT_OUTPUT), port_size));
-    /* Print local wire definition */
-    for (const auto& sram_port : sram_ports) {
-      fp << generate_verilog_port(VERILOG_PORT_WIRE, sram_port) << ";" << std::endl; 
+  switch (sram_orgz_type) {
+    case CONFIG_MEM_STANDALONE:
+      /* Nothing to do here */
+      break;
+    case CONFIG_MEM_SCAN_CHAIN: {
+      /* Generate the name of local wire for the CCFF inputs, CCFF output and
+       * inverted output */
+      /* [0] => CCFF input */
+      BasicPort ccff_config_bus_port(generate_local_config_bus_port_name(),
+                                     port_size);
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, ccff_config_bus_port)
+         << ";" << std::endl;
+      /* Connect first CCFF to the head */
+      /* Head is always a 1-bit port */
+      BasicPort ccff_head_port(
+        generate_sram_port_name(sram_orgz_type, CIRCUIT_MODEL_PORT_INPUT), 1);
+      BasicPort ccff_head_local_port(ccff_config_bus_port.get_name(), 1);
+      print_verilog_wire_connection(fp, ccff_head_local_port, ccff_head_port,
+                                    false);
+      /* Connect last CCFF to the tail */
+      /* Tail is always a 1-bit port */
+      BasicPort ccff_tail_port(
+        generate_sram_port_name(sram_orgz_type, CIRCUIT_MODEL_PORT_OUTPUT), 1);
+      BasicPort ccff_tail_local_port(ccff_config_bus_port.get_name(),
+                                     ccff_config_bus_port.get_msb(),
+                                     ccff_config_bus_port.get_msb());
+      print_verilog_wire_connection(fp, ccff_tail_local_port, ccff_tail_port,
+                                    false);
+      break;
     }
+    case CONFIG_MEM_QL_MEMORY_BANK:
+    case CONFIG_MEM_MEMORY_BANK: {
+      /* Generate the name of local wire for the SRAM output and inverted output
+       */
+      std::vector<BasicPort> sram_ports;
+      /* [0] => SRAM output */
+      sram_ports.push_back(BasicPort(
+        generate_sram_local_port_name(circuit_lib, sram_model, sram_orgz_type,
+                                      CIRCUIT_MODEL_PORT_INPUT),
+        port_size));
+      /* [1] => SRAM inverted output */
+      sram_ports.push_back(BasicPort(
+        generate_sram_local_port_name(circuit_lib, sram_model, sram_orgz_type,
+                                      CIRCUIT_MODEL_PORT_OUTPUT),
+        port_size));
+      /* Print local wire definition */
+      for (const auto& sram_port : sram_ports) {
+        fp << generate_verilog_port(VERILOG_PORT_WIRE, sram_port) << ";"
+           << std::endl;
+      }
 
-    break;
-  }
-  default:
-    VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "Invalid SRAM organization!\n");
-    exit(1);
+      break;
+    }
+    default:
+      VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid SRAM organization!\n");
+      exit(1);
   }
 }
 
 /*********************************************************************
  * Print a number of bus ports which are wired to the configuration
  * ports of a CMOS (SRAM-based) routing multiplexer
- * This port is supposed to be used locally inside a Verilog/SPICE module 
+ * This port is supposed to be used locally inside a Verilog/SPICE module
  *
  * The following shows a few representative examples:
  *
@@ -1121,53 +1178,57 @@ void print_verilog_local_sram_wires(std::fstream& fp,
  *               |  Module  |  |  Module  | ... |  Module  |
  *               |   [0]    |  |   [1]    |     |    [N]   |
  *               +----------+  +----------+     +----------+
- *     
+ *
  *********************************************************************/
-void print_verilog_local_config_bus(std::fstream& fp, 
-                                    const std::string& prefix,
-                                    const e_config_protocol_type& sram_orgz_type,
-                                    const size_t& instance_id,
-                                    const size_t& num_conf_bits) { 
+void print_verilog_local_config_bus(
+  std::fstream& fp, const std::string& prefix,
+  const e_config_protocol_type& sram_orgz_type, const size_t& instance_id,
+  const size_t& num_conf_bits) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
-  switch(sram_orgz_type) {
-  case CONFIG_MEM_STANDALONE:
-    /* Not need for configuration bus
-     * The configuration ports of SRAM are directly wired to the ports of modules
-     */
-    break;
-  case CONFIG_MEM_SCAN_CHAIN: 
-  case CONFIG_MEM_QL_MEMORY_BANK:
-  case CONFIG_MEM_MEMORY_BANK: {
-    /* Two configuration buses should be outputted
-     * One for the regular SRAM ports of a routing multiplexer
-     * The other for the inverted SRAM ports of a routing multiplexer
-     */
-    BasicPort config_port(generate_local_sram_port_name(prefix, instance_id, CIRCUIT_MODEL_PORT_INPUT), 
-                          num_conf_bits);
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, config_port) << ";" << std::endl;
-    BasicPort inverted_config_port(generate_local_sram_port_name(prefix, instance_id, CIRCUIT_MODEL_PORT_OUTPUT), 
-                                   num_conf_bits); 
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, inverted_config_port) << ";" << std::endl;
-    break;
-  }
-  default:
-    VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "Invalid SRAM organization!\n");
-    exit(1);
+  switch (sram_orgz_type) {
+    case CONFIG_MEM_STANDALONE:
+      /* Not need for configuration bus
+       * The configuration ports of SRAM are directly wired to the ports of
+       * modules
+       */
+      break;
+    case CONFIG_MEM_SCAN_CHAIN:
+    case CONFIG_MEM_QL_MEMORY_BANK:
+    case CONFIG_MEM_MEMORY_BANK: {
+      /* Two configuration buses should be outputted
+       * One for the regular SRAM ports of a routing multiplexer
+       * The other for the inverted SRAM ports of a routing multiplexer
+       */
+      BasicPort config_port(generate_local_sram_port_name(
+                              prefix, instance_id, CIRCUIT_MODEL_PORT_INPUT),
+                            num_conf_bits);
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, config_port) << ";"
+         << std::endl;
+      BasicPort inverted_config_port(
+        generate_local_sram_port_name(prefix, instance_id,
+                                      CIRCUIT_MODEL_PORT_OUTPUT),
+        num_conf_bits);
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, inverted_config_port)
+         << ";" << std::endl;
+      break;
+    }
+    default:
+      VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid SRAM organization!\n");
+      exit(1);
   }
 }
 
 /*********************************************************************
  * Print a number of bus ports which are wired to the configuration
  * ports of a ReRAM-based routing multiplexer
- * This port is supposed to be used locally inside a Verilog/SPICE module 
+ * This port is supposed to be used locally inside a Verilog/SPICE module
  *
- * Currently support: 
+ * Currently support:
  * For memory-bank configuration style:
  * ------------------------------------
- * Different than CMOS routing multiplexers, ReRAM multiplexers require 
+ * Different than CMOS routing multiplexers, ReRAM multiplexers require
  * reserved BL/WLs to be grouped in buses
  *
  *            Module Port
@@ -1186,88 +1247,109 @@ void print_verilog_local_config_bus(std::fstream& fp,
  *                        |  Routing  |     |  Routing  |
  *                        |   MUX [0] |     |   MUX[1]  |    ...
  *                        +-----------+     +-----------+
- * 
+ *
  *********************************************************************/
-static 
-void print_verilog_rram_mux_config_bus(std::fstream& fp, 
-                                       const CircuitLibrary& circuit_lib,
-                                       const CircuitModelId& mux_model,
-                                       const e_config_protocol_type& sram_orgz_type,
-                                       const size_t& mux_size,
-                                       const size_t& mux_instance_id,
-                                       const size_t& num_reserved_conf_bits, 
-                                       const size_t& num_conf_bits) { 
+static void print_verilog_rram_mux_config_bus(
+  std::fstream& fp, const CircuitLibrary& circuit_lib,
+  const CircuitModelId& mux_model, const e_config_protocol_type& sram_orgz_type,
+  const size_t& mux_size, const size_t& mux_instance_id,
+  const size_t& num_reserved_conf_bits, const size_t& num_conf_bits) {
   /* Make sure we have a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
 
-  switch(sram_orgz_type) {
-  case CONFIG_MEM_STANDALONE:
-    /* Not need for configuration bus
-     * The configuration ports of SRAM are directly wired to the ports of modules
-     */
-    break;
-  case CONFIG_MEM_SCAN_CHAIN: {
-    /* Not supported yet. 
-     * Configuration chain may be only applied to ReRAM-based multiplexers with local decoders
-     */
-    break;
+  switch (sram_orgz_type) {
+    case CONFIG_MEM_STANDALONE:
+      /* Not need for configuration bus
+       * The configuration ports of SRAM are directly wired to the ports of
+       * modules
+       */
+      break;
+    case CONFIG_MEM_SCAN_CHAIN: {
+      /* Not supported yet.
+       * Configuration chain may be only applied to ReRAM-based multiplexers
+       * with local decoders
+       */
+      break;
+    }
+    case CONFIG_MEM_QL_MEMORY_BANK:
+    case CONFIG_MEM_MEMORY_BANK: {
+      /* This is currently most used in ReRAM FPGAs */
+      /* Print configuration bus to group reserved BL/WLs */
+      BasicPort reserved_bl_bus(
+        generate_reserved_sram_port_name(CIRCUIT_MODEL_PORT_BL),
+        num_reserved_conf_bits);
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, reserved_bl_bus) << ";"
+         << std::endl;
+      BasicPort reserved_wl_bus(
+        generate_reserved_sram_port_name(CIRCUIT_MODEL_PORT_WL),
+        num_reserved_conf_bits);
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, reserved_wl_bus) << ";"
+         << std::endl;
+
+      /* Print configuration bus to group BL/WLs */
+      BasicPort bl_bus(generate_mux_config_bus_port_name(circuit_lib, mux_model,
+                                                         mux_size, 0, false),
+                       num_conf_bits + num_reserved_conf_bits);
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, bl_bus) << ";"
+         << std::endl;
+      BasicPort wl_bus(generate_mux_config_bus_port_name(circuit_lib, mux_model,
+                                                         mux_size, 1, false),
+                       num_conf_bits + num_reserved_conf_bits);
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, wl_bus) << ";"
+         << std::endl;
+
+      /* Print bus to group SRAM outputs, this is to interface memory cells to
+       * routing multiplexers */
+      BasicPort sram_output_bus(
+        generate_mux_sram_port_name(circuit_lib, mux_model, mux_size,
+                                    mux_instance_id, CIRCUIT_MODEL_PORT_INPUT),
+        num_conf_bits);
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, sram_output_bus) << ";"
+         << std::endl;
+      BasicPort inverted_sram_output_bus(
+        generate_mux_sram_port_name(circuit_lib, mux_model, mux_size,
+                                    mux_instance_id, CIRCUIT_MODEL_PORT_OUTPUT),
+        num_conf_bits);
+      fp << generate_verilog_port(VERILOG_PORT_WIRE, inverted_sram_output_bus)
+         << ";" << std::endl;
+
+      /* Get the SRAM model of the mux_model */
+      std::vector<CircuitModelId> sram_models =
+        find_circuit_sram_models(circuit_lib, mux_model);
+      /* TODO: maybe later multiplexers may have mode select ports... This
+       * should be relaxed */
+      VTR_ASSERT(1 == sram_models.size());
+
+      /* Wire the reserved configuration bits to part of bl/wl buses */
+      BasicPort bl_bus_reserved_bits(bl_bus.get_name(), num_reserved_conf_bits);
+      print_verilog_wire_connection(fp, bl_bus_reserved_bits, reserved_bl_bus,
+                                    false);
+      BasicPort wl_bus_reserved_bits(wl_bus.get_name(), num_reserved_conf_bits);
+      print_verilog_wire_connection(fp, wl_bus_reserved_bits, reserved_wl_bus,
+                                    false);
+
+      /* Connect SRAM BL/WLs to bus */
+      BasicPort mux_bl_wire(
+        generate_sram_port_name(sram_orgz_type, CIRCUIT_MODEL_PORT_BL),
+        num_conf_bits);
+      BasicPort bl_bus_regular_bits(bl_bus.get_name(), num_reserved_conf_bits,
+                                    num_reserved_conf_bits + num_conf_bits - 1);
+      print_verilog_wire_connection(fp, bl_bus_regular_bits, mux_bl_wire,
+                                    false);
+      BasicPort mux_wl_wire(
+        generate_sram_port_name(sram_orgz_type, CIRCUIT_MODEL_PORT_WL),
+        num_conf_bits);
+      BasicPort wl_bus_regular_bits(wl_bus.get_name(), num_reserved_conf_bits,
+                                    num_reserved_conf_bits + num_conf_bits - 1);
+      print_verilog_wire_connection(fp, wl_bus_regular_bits, mux_wl_wire,
+                                    false);
+
+      break;
+    }
+    default:
+      VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid SRAM organization!\n");
+      exit(1);
   }
-  case CONFIG_MEM_QL_MEMORY_BANK:
-  case CONFIG_MEM_MEMORY_BANK: {
-    /* This is currently most used in ReRAM FPGAs */
-    /* Print configuration bus to group reserved BL/WLs */
-    BasicPort reserved_bl_bus(generate_reserved_sram_port_name(CIRCUIT_MODEL_PORT_BL), 
-                              num_reserved_conf_bits);
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, reserved_bl_bus) << ";" << std::endl;
-    BasicPort reserved_wl_bus(generate_reserved_sram_port_name(CIRCUIT_MODEL_PORT_WL), 
-                              num_reserved_conf_bits);
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, reserved_wl_bus) << ";" << std::endl;
-
-    /* Print configuration bus to group BL/WLs */
-    BasicPort bl_bus(generate_mux_config_bus_port_name(circuit_lib, mux_model, mux_size, 0, false), 
-                     num_conf_bits + num_reserved_conf_bits);
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, bl_bus) << ";" << std::endl;
-    BasicPort wl_bus(generate_mux_config_bus_port_name(circuit_lib, mux_model, mux_size, 1, false), 
-                     num_conf_bits + num_reserved_conf_bits);
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, wl_bus) << ";" << std::endl;
-
-    /* Print bus to group SRAM outputs, this is to interface memory cells to routing multiplexers */
-    BasicPort sram_output_bus(generate_mux_sram_port_name(circuit_lib, mux_model, mux_size, mux_instance_id, CIRCUIT_MODEL_PORT_INPUT), 
-                          num_conf_bits);
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, sram_output_bus) << ";" << std::endl;
-    BasicPort inverted_sram_output_bus(generate_mux_sram_port_name(circuit_lib, mux_model, mux_size, mux_instance_id, CIRCUIT_MODEL_PORT_OUTPUT), 
-                                       num_conf_bits); 
-    fp << generate_verilog_port(VERILOG_PORT_WIRE, inverted_sram_output_bus) << ";" << std::endl;
-
-    /* Get the SRAM model of the mux_model */
-    std::vector<CircuitModelId> sram_models = find_circuit_sram_models(circuit_lib, mux_model);
-    /* TODO: maybe later multiplexers may have mode select ports... This should be relaxed */
-    VTR_ASSERT( 1 == sram_models.size() );
-
-    /* Wire the reserved configuration bits to part of bl/wl buses */
-    BasicPort bl_bus_reserved_bits(bl_bus.get_name(), num_reserved_conf_bits);
-    print_verilog_wire_connection(fp, bl_bus_reserved_bits, reserved_bl_bus, false);
-    BasicPort wl_bus_reserved_bits(wl_bus.get_name(), num_reserved_conf_bits);
-    print_verilog_wire_connection(fp, wl_bus_reserved_bits, reserved_wl_bus, false);
-
-    /* Connect SRAM BL/WLs to bus */
-    BasicPort mux_bl_wire(generate_sram_port_name(sram_orgz_type, CIRCUIT_MODEL_PORT_BL), 
-                          num_conf_bits); 
-    BasicPort bl_bus_regular_bits(bl_bus.get_name(), num_reserved_conf_bits, num_reserved_conf_bits + num_conf_bits - 1);
-    print_verilog_wire_connection(fp, bl_bus_regular_bits, mux_bl_wire, false);
-    BasicPort mux_wl_wire(generate_sram_port_name(sram_orgz_type, CIRCUIT_MODEL_PORT_WL), 
-                          num_conf_bits); 
-    BasicPort wl_bus_regular_bits(wl_bus.get_name(), num_reserved_conf_bits, num_reserved_conf_bits + num_conf_bits - 1);
-    print_verilog_wire_connection(fp, wl_bus_regular_bits, mux_wl_wire, false);
-
-    break;
-  }
-  default:
-    VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "Invalid SRAM organization!\n");
-    exit(1);
-  }
-
 }
 
 /*********************************************************************
@@ -1278,65 +1360,70 @@ void print_verilog_rram_mux_config_bus(std::fstream& fp,
  * module, rather than the programming routing multiplexers, LUTs, IOs
  * etc. This helps us to keep clean and simple Verilog generation
  *********************************************************************/
-void print_verilog_mux_config_bus(std::fstream& fp, 
-                                  const CircuitLibrary& circuit_lib,
-                                  const CircuitModelId& mux_model,
-                                  const e_config_protocol_type& sram_orgz_type,
-                                  const size_t& mux_size,
-                                  const size_t& mux_instance_id,
-                                  const size_t& num_reserved_conf_bits, 
-                                  const size_t& num_conf_bits) { 
+void print_verilog_mux_config_bus(
+  std::fstream& fp, const CircuitLibrary& circuit_lib,
+  const CircuitModelId& mux_model, const e_config_protocol_type& sram_orgz_type,
+  const size_t& mux_size, const size_t& mux_instance_id,
+  const size_t& num_reserved_conf_bits, const size_t& num_conf_bits) {
   /* Depend on the design technology of this MUX:
    * bus connections are different
    * SRAM MUX: bus is connected to the output ports of SRAM
    * RRAM MUX: bus is connected to the BL/WL of MUX
-   * TODO: Maybe things will become even more complicated, 
+   * TODO: Maybe things will become even more complicated,
    * the bus connections may depend on the type of configuration circuit...
    * Currently, this is fine.
    */
   switch (circuit_lib.design_tech_type(mux_model)) {
-  case CIRCUIT_MODEL_DESIGN_CMOS: {
-    std::string prefix = generate_mux_subckt_name(circuit_lib, mux_model, mux_size, std::string());
-    print_verilog_local_config_bus(fp, prefix, sram_orgz_type, mux_instance_id, num_conf_bits);
-    break;
-  }
-  case CIRCUIT_MODEL_DESIGN_RRAM:
-    print_verilog_rram_mux_config_bus(fp, circuit_lib, mux_model, sram_orgz_type, mux_size, mux_instance_id, num_reserved_conf_bits, num_conf_bits);
-    break;
-  default:
-    VTR_LOGF_ERROR(__FILE__, __LINE__,
-                   "Invalid design technology for routing multiplexer!\n");
-    exit(1);
+    case CIRCUIT_MODEL_DESIGN_CMOS: {
+      std::string prefix = generate_mux_subckt_name(circuit_lib, mux_model,
+                                                    mux_size, std::string());
+      print_verilog_local_config_bus(fp, prefix, sram_orgz_type,
+                                     mux_instance_id, num_conf_bits);
+      break;
+    }
+    case CIRCUIT_MODEL_DESIGN_RRAM:
+      print_verilog_rram_mux_config_bus(
+        fp, circuit_lib, mux_model, sram_orgz_type, mux_size, mux_instance_id,
+        num_reserved_conf_bits, num_conf_bits);
+      break;
+    default:
+      VTR_LOGF_ERROR(__FILE__, __LINE__,
+                     "Invalid design technology for routing multiplexer!\n");
+      exit(1);
   }
 }
 
 /*********************************************************************
- * Print a wire to connect MUX configuration ports 
+ * Print a wire to connect MUX configuration ports
  * This function connects the sram ports to the ports of a Verilog module
  * used for formal verification
  *
- * Note: MSB and LSB of formal verification configuration bus MUST be updated 
+ * Note: MSB and LSB of formal verification configuration bus MUST be updated
  * before running this function !!!!
  *********************************************************************/
-void print_verilog_formal_verification_mux_sram_ports_wiring(std::fstream& fp, 
-                                                             const CircuitLibrary& circuit_lib,
-                                                             const CircuitModelId& mux_model,
-                                                             const size_t& mux_size,
-                                                             const size_t& mux_instance_id,
-                                                             const size_t& num_conf_bits, 
-                                                             const BasicPort& fm_config_bus) { 
-  BasicPort mux_sram_output(generate_mux_sram_port_name(circuit_lib, mux_model, mux_size, mux_instance_id, CIRCUIT_MODEL_PORT_INPUT),
-                            num_conf_bits);
+void print_verilog_formal_verification_mux_sram_ports_wiring(
+  std::fstream& fp, const CircuitLibrary& circuit_lib,
+  const CircuitModelId& mux_model, const size_t& mux_size,
+  const size_t& mux_instance_id, const size_t& num_conf_bits,
+  const BasicPort& fm_config_bus) {
+  BasicPort mux_sram_output(
+    generate_mux_sram_port_name(circuit_lib, mux_model, mux_size,
+                                mux_instance_id, CIRCUIT_MODEL_PORT_INPUT),
+    num_conf_bits);
   /* Get the SRAM model of the mux_model */
-  std::vector<CircuitModelId> sram_models = find_circuit_sram_models(circuit_lib, mux_model);
-  /* TODO: maybe later multiplexers may have mode select ports... This should be relaxed */
-  VTR_ASSERT( 1 == sram_models.size() );
+  std::vector<CircuitModelId> sram_models =
+    find_circuit_sram_models(circuit_lib, mux_model);
+  /* TODO: maybe later multiplexers may have mode select ports... This should be
+   * relaxed */
+  VTR_ASSERT(1 == sram_models.size());
   BasicPort formal_verification_port;
-  formal_verification_port.set_name(generate_formal_verification_sram_port_name(circuit_lib, sram_models[0]));
+  formal_verification_port.set_name(
+    generate_formal_verification_sram_port_name(circuit_lib, sram_models[0]));
   VTR_ASSERT(num_conf_bits == fm_config_bus.get_width());
   formal_verification_port.set_lsb(fm_config_bus.get_lsb());
   formal_verification_port.set_msb(fm_config_bus.get_msb());
-  print_verilog_wire_connection(fp, mux_sram_output, formal_verification_port, false);
+  print_verilog_wire_connection(fp, mux_sram_output, formal_verification_port,
+                                false);
 }
 
 /********************************************************************
@@ -1344,12 +1431,11 @@ void print_verilog_formal_verification_mux_sram_ports_wiring(std::fstream& fp,
  *
  *                |<--- pulse width --->|
  *                                      +------ flip_value
- *                                      |      
- *  initial_value ----------------------+       
+ *                                      |
+ *  initial_value ----------------------+
  *
  *******************************************************************/
-void print_verilog_pulse_stimuli(std::fstream& fp, 
-                                 const BasicPort& port,
+void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
                                  const size_t& initial_value,
                                  const float& pulse_width,
                                  const size_t& flip_value) {
@@ -1364,10 +1450,12 @@ void print_verilog_pulse_stimuli(std::fstream& fp,
   fp << "\t";
   fp << generate_verilog_port_constant_values(port, initial_values);
   fp << ";" << std::endl;
-  
-  /* if flip_value is the same as initial value, we do not need to flip the signal ! */
+
+  /* if flip_value is the same as initial value, we do not need to flip the
+   * signal ! */
   if (flip_value != initial_value) {
-    fp << "\t" << "#" << std::setprecision(10) << pulse_width;
+    fp << "\t"
+       << "#" << std::setprecision(10) << pulse_width;
     std::vector<size_t> port_flip_values(port.get_width(), flip_value);
     fp << "\t";
     fp << generate_verilog_port_constant_values(port, port_flip_values);
@@ -1380,18 +1468,17 @@ void print_verilog_pulse_stimuli(std::fstream& fp,
   fp << std::endl;
 }
 
-
 /********************************************************************
  * Print stimuli for a clock pulse generation
  * This function supports the delay at the beginning of the waveform
  *
  *                |<-- Initial delay -->|<--- pulse width --->|
  *                                                            +------ flip_value
- *                                                            |      
- *  initial_value --------------------------------------------+       
+ *                                                            |
+ *  initial_value --------------------------------------------+
  *
  *******************************************************************/
-void print_verilog_shifted_clock_stimuli(std::fstream& fp, 
+void print_verilog_shifted_clock_stimuli(std::fstream& fp,
                                          const BasicPort& port,
                                          const float& initial_delay,
                                          const float& pulse_width,
@@ -1417,13 +1504,13 @@ void print_verilog_shifted_clock_stimuli(std::fstream& fp,
   fp << ";" << std::endl;
 
   write_tab_to_file(fp, 2);
-  fp << "forever "; 
+  fp << "forever ";
   fp << generate_verilog_port(VERILOG_PORT_CONKT, port);
-  fp << " = "; 
+  fp << " = ";
   fp << "#" << std::setprecision(10) << pulse_width;
   fp << " ~" << generate_verilog_port(VERILOG_PORT_CONKT, port);
   fp << ";" << std::endl;
-  
+
   write_tab_to_file(fp, 1);
   fp << "end" << std::endl;
 
@@ -1437,13 +1524,13 @@ void print_verilog_shifted_clock_stimuli(std::fstream& fp,
  *
  *                 |<-- wait condition -->|
  *                                        |<--- pulse width --->|
- *                                                              +------ flip_values
- *                                                              |      
- *  initial_value -------  ...  --------------------------------+       
+ *                                                              +------
+ *flip_values
+ *                                                              |
+ *  initial_value -------  ...  --------------------------------+
  *
  *******************************************************************/
-void print_verilog_pulse_stimuli(std::fstream& fp, 
-                                 const BasicPort& port,
+void print_verilog_pulse_stimuli(std::fstream& fp, const BasicPort& port,
                                  const size_t& initial_value,
                                  const std::vector<float>& pulse_widths,
                                  const std::vector<size_t>& flip_values,
@@ -1464,11 +1551,12 @@ void print_verilog_pulse_stimuli(std::fstream& fp,
   if (false == wait_condition.empty()) {
     fp << "\twait(" << wait_condition << ")" << std::endl;
   }
-  
+
   /* Number of flip conditions and values should match */
   VTR_ASSERT(flip_values.size() == pulse_widths.size());
   for (size_t ipulse = 0; ipulse < pulse_widths.size(); ++ipulse) {
-    fp << "\t" << "#" << std::setprecision(10) << pulse_widths[ipulse];
+    fp << "\t"
+       << "#" << std::setprecision(10) << pulse_widths[ipulse];
     std::vector<size_t> port_flip_value(port.get_width(), flip_values[ipulse]);
     fp << "\t";
     fp << generate_verilog_port_constant_values(port, port_flip_value);
@@ -1484,7 +1572,7 @@ void print_verilog_pulse_stimuli(std::fstream& fp,
 /********************************************************************
  * Print stimuli for a clock signal
  * This function can support if the clock signal should wait for a period
- * of time and then start 
+ * of time and then start
  *                          pulse width
  *                           |<----->|
  *                           +-------+       +-------+
@@ -1493,8 +1581,7 @@ void print_verilog_pulse_stimuli(std::fstream& fp,
  *           |<--wait_condition-->|
  *
  *******************************************************************/
-void print_verilog_clock_stimuli(std::fstream& fp, 
-                                 const BasicPort& port,
+void print_verilog_clock_stimuli(std::fstream& fp, const BasicPort& port,
                                  const size_t& initial_value,
                                  const float& pulse_width,
                                  const std::string& wait_condition) {
@@ -1521,7 +1608,8 @@ void print_verilog_clock_stimuli(std::fstream& fp,
   }
 
   fp << "\tbegin" << std::endl;
-  fp << "\t\t" << "#" << std::setprecision(10) << pulse_width;
+  fp << "\t\t"
+     << "#" << std::setprecision(10) << pulse_width;
 
   fp << "\t";
   fp << generate_verilog_port(VERILOG_PORT_CONKT, port);
@@ -1540,12 +1628,12 @@ void print_verilog_clock_stimuli(std::fstream& fp,
  * Output a header file that includes a number of Verilog netlists
  * so that it can be easily included in a top-level netlist
  ********************************************************************/
-void print_verilog_netlist_include_header_file(const std::vector<std::string>& netlists_to_be_included,
-                                               const char* subckt_dir,
-                                               const char* header_file_name,
-                                               const bool& include_time_stamp) {
-
-  std::string verilog_fname(std::string(subckt_dir) + std::string(header_file_name));
+void print_verilog_netlist_include_header_file(
+  const std::vector<std::string>& netlists_to_be_included,
+  const char* subckt_dir, const char* header_file_name,
+  const bool& include_time_stamp) {
+  std::string verilog_fname(std::string(subckt_dir) +
+                            std::string(header_file_name));
 
   /* Create the file stream */
   std::fstream fp;
@@ -1554,7 +1642,8 @@ void print_verilog_netlist_include_header_file(const std::vector<std::string>& n
   VTR_ASSERT(true == valid_file_stream(fp));
 
   /* Generate the descriptions*/
-  print_verilog_file_header(fp, "Header file to include other Verilog netlists", include_time_stamp); 
+  print_verilog_file_header(fp, "Header file to include other Verilog netlists",
+                            include_time_stamp);
 
   /* Output file names */
   for (const std::string& netlist_name : netlists_to_be_included) {

@@ -4,17 +4,16 @@
 /********************************************************************
  * This file include the declaration of repack design constraints
  *******************************************************************/
-#include <string>
-#include <map>
 #include <array>
+#include <map>
+#include <string>
 
 /* Headers from vtrutil library */
-#include "vtr_vector.h"
 #include "vtr_geometry.h"
+#include "vtr_vector.h"
 
 /* Headers from openfpgautil library */
 #include "openfpga_port.h"
-
 #include "repack_design_constraints_fwd.h"
 
 /* Constants */
@@ -31,94 +30,109 @@ constexpr const char* REPACK_DESIGN_CONSTRAINT_OPEN_NET = "OPEN";
  *   // Create an object of design constraints
  *   RepackDesignConstraints repack_design_constraints;
  *   // Add a pin assignment
- *   RepackDesignConstraintId repack_dc_id = fabric_key.create_design_constraint(RepackDesignConstraints::PIN_ASSIGNMENT);
+ *   RepackDesignConstraintId repack_dc_id =
+ *fabric_key.create_design_constraint(RepackDesignConstraints::PIN_ASSIGNMENT);
  *
  *******************************************************************/
 class RepackDesignConstraints {
-  public: /* Type of design constraints */
-    enum e_design_constraint_type {
-      PIN_ASSIGNMENT,
-      NUM_DESIGN_CONSTRAINT_TYPES
-    };
-  public: /* Types */
-    typedef vtr::vector<RepackDesignConstraintId, RepackDesignConstraintId>::const_iterator repack_design_constraint_iterator;
-    /* Create range */
-    typedef vtr::Range<repack_design_constraint_iterator> repack_design_constraint_range;
-  public:  /* Constructors */
-    RepackDesignConstraints();
-  public: /* Accessors: aggregates */
-    repack_design_constraint_range design_constraints() const;
-  public: /* Public Accessors: Basic data query */
-    /* Get the type of constraint */
-    e_design_constraint_type type(const RepackDesignConstraintId& repack_design_constraint_id) const;
+ public: /* Type of design constraints */
+  enum e_design_constraint_type { PIN_ASSIGNMENT, NUM_DESIGN_CONSTRAINT_TYPES };
 
-    /* Get the pb_type name to be constrained */
-    std::string pb_type(const RepackDesignConstraintId& repack_design_constraint_id) const;
+ public: /* Types */
+  typedef vtr::vector<RepackDesignConstraintId,
+                      RepackDesignConstraintId>::const_iterator
+    repack_design_constraint_iterator;
+  /* Create range */
+  typedef vtr::Range<repack_design_constraint_iterator>
+    repack_design_constraint_range;
 
-    /* Get the pin to be constrained */
-    openfpga::BasicPort pin(const RepackDesignConstraintId& repack_design_constraint_id) const;
+ public: /* Constructors */
+  RepackDesignConstraints();
 
-    /* Get the net to be constrained */
-    std::string net(const RepackDesignConstraintId& repack_design_constraint_id) const;
+ public: /* Accessors: aggregates */
+  repack_design_constraint_range design_constraints() const;
 
-    /* Find a constrained net */
-    std::string find_constrained_pin_net(const std::string& pb_type,
-                                         const openfpga::BasicPort& pin) const;
+ public: /* Public Accessors: Basic data query */
+  /* Get the type of constraint */
+  e_design_constraint_type type(
+    const RepackDesignConstraintId& repack_design_constraint_id) const;
 
-    /* Check if there are any design constraints */
-    bool empty() const;
+  /* Get the pb_type name to be constrained */
+  std::string pb_type(
+    const RepackDesignConstraintId& repack_design_constraint_id) const;
 
-  public: /* Public Mutators */
+  /* Get the pin to be constrained */
+  openfpga::BasicPort pin(
+    const RepackDesignConstraintId& repack_design_constraint_id) const;
 
-    /* Reserve a number of design constraints to be memory efficent */
-    void reserve_design_constraints(const size_t& num_design_constraints);
+  /* Get the net to be constrained */
+  std::string net(
+    const RepackDesignConstraintId& repack_design_constraint_id) const;
 
-    /* Add a design constraint to storage */
-    RepackDesignConstraintId create_design_constraint(const e_design_constraint_type& repack_design_constraint_type);
+  /* Find a constrained net */
+  std::string find_constrained_pin_net(const std::string& pb_type,
+                                       const openfpga::BasicPort& pin) const;
 
-    /* Set the pb_type name to be constrained */
-    void set_pb_type(const RepackDesignConstraintId& repack_design_constraint_id,
-                     const std::string& pb_type);
+  /* Check if there are any design constraints */
+  bool empty() const;
 
-    /* Set the pin to be constrained */
-    void set_pin(const RepackDesignConstraintId& repack_design_constraint_id,
-                 const openfpga::BasicPort& pin);
+ public: /* Public Mutators */
+  /* Reserve a number of design constraints to be memory efficent */
+  void reserve_design_constraints(const size_t& num_design_constraints);
 
-    /* Set the net to be constrained */
-    void set_net(const RepackDesignConstraintId& repack_design_constraint_id,
-                 const std::string& net);
+  /* Add a design constraint to storage */
+  RepackDesignConstraintId create_design_constraint(
+    const e_design_constraint_type& repack_design_constraint_type);
 
-  public: /* Public invalidators/validators */
-    bool valid_design_constraint_id(const RepackDesignConstraintId& repack_design_constraint_id) const;
-    /* Show if the net has no constraints (free to map to any pin) 
-     * This function is used to identify the net name returned by APIs:
-     * - find_constrained_pin_net()
-     * - net()
-     */
-    bool unconstrained_net(const std::string& net) const;
+  /* Set the pb_type name to be constrained */
+  void set_pb_type(const RepackDesignConstraintId& repack_design_constraint_id,
+                   const std::string& pb_type);
 
-    /* Show if the net is defined specifically not to map to any pin 
-     * This function is used to identify the net name returned by APIs:
-     * - find_constrained_pin_net()
-     * - net()
-     */
-    bool unmapped_net(const std::string& net) const;
+  /* Set the pin to be constrained */
+  void set_pin(const RepackDesignConstraintId& repack_design_constraint_id,
+               const openfpga::BasicPort& pin);
 
-  private: /* Internal data */
-    /* Unique ids for each design constraint */
-    vtr::vector<RepackDesignConstraintId, RepackDesignConstraintId> repack_design_constraint_ids_;
+  /* Set the net to be constrained */
+  void set_net(const RepackDesignConstraintId& repack_design_constraint_id,
+               const std::string& net);
 
-    /* Type for each design constraint */
-    vtr::vector<RepackDesignConstraintId, e_design_constraint_type> repack_design_constraint_types_;
+ public: /* Public invalidators/validators */
+  bool valid_design_constraint_id(
+    const RepackDesignConstraintId& repack_design_constraint_id) const;
+  /* Show if the net has no constraints (free to map to any pin)
+   * This function is used to identify the net name returned by APIs:
+   * - find_constrained_pin_net()
+   * - net()
+   */
+  bool unconstrained_net(const std::string& net) const;
 
-    /* Tiles to constraint */
-    vtr::vector<RepackDesignConstraintId, std::string> repack_design_constraint_pb_types_;
+  /* Show if the net is defined specifically not to map to any pin
+   * This function is used to identify the net name returned by APIs:
+   * - find_constrained_pin_net()
+   * - net()
+   */
+  bool unmapped_net(const std::string& net) const;
 
-    /* Pins to constraint */
-    vtr::vector<RepackDesignConstraintId, openfpga::BasicPort> repack_design_constraint_pins_;
+ private: /* Internal data */
+  /* Unique ids for each design constraint */
+  vtr::vector<RepackDesignConstraintId, RepackDesignConstraintId>
+    repack_design_constraint_ids_;
 
-    /* Nets to constraint */
-    vtr::vector<RepackDesignConstraintId, std::string> repack_design_constraint_nets_;
+  /* Type for each design constraint */
+  vtr::vector<RepackDesignConstraintId, e_design_constraint_type>
+    repack_design_constraint_types_;
+
+  /* Tiles to constraint */
+  vtr::vector<RepackDesignConstraintId, std::string>
+    repack_design_constraint_pb_types_;
+
+  /* Pins to constraint */
+  vtr::vector<RepackDesignConstraintId, openfpga::BasicPort>
+    repack_design_constraint_pins_;
+
+  /* Nets to constraint */
+  vtr::vector<RepackDesignConstraintId, std::string>
+    repack_design_constraint_nets_;
 };
 
 #endif

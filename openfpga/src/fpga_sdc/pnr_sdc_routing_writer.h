@@ -6,12 +6,13 @@
  *******************************************************************/
 #include <string>
 #include <vector>
-#include "module_manager.h"
-#include "device_rr_gsb.h"
-#include "rr_graph_view.h"
+
 #include "device_grid.h"
-#include "vpr_device_annotation.h"
+#include "device_rr_gsb.h"
+#include "module_manager.h"
 #include "pnr_sdc_option.h"
+#include "rr_graph_view.h"
+#include "vpr_device_annotation.h"
 
 /********************************************************************
  * Function declaration
@@ -20,37 +21,29 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_pnr_sdc_flatten_routing_constrain_sb_timing(const PnrSdcOption& options,
-                                                       const ModuleManager& module_manager,
-                                                       const ModuleId& top_module,
-                                                       const VprDeviceAnnotation& device_annotation,
-                                                       const DeviceGrid& grids,
-                                                       const RRGraphView& rr_graph,
-                                                       const DeviceRRGSB& device_rr_gsb);
+void print_pnr_sdc_flatten_routing_constrain_sb_timing(
+  const PnrSdcOption& options, const ModuleManager& module_manager,
+  const ModuleId& top_module, const VprDeviceAnnotation& device_annotation,
+  const DeviceGrid& grids, const RRGraphView& rr_graph,
+  const DeviceRRGSB& device_rr_gsb);
 
-void print_pnr_sdc_compact_routing_constrain_sb_timing(const PnrSdcOption& options,
-                                                       const ModuleManager& module_manager,
-                                                       const ModuleId& top_module,
-                                                       const VprDeviceAnnotation& device_annotation,
-                                                       const DeviceGrid& grids,
-                                                       const RRGraphView& rr_graph,
-                                                       const DeviceRRGSB& device_rr_gsb);
+void print_pnr_sdc_compact_routing_constrain_sb_timing(
+  const PnrSdcOption& options, const ModuleManager& module_manager,
+  const ModuleId& top_module, const VprDeviceAnnotation& device_annotation,
+  const DeviceGrid& grids, const RRGraphView& rr_graph,
+  const DeviceRRGSB& device_rr_gsb);
 
-void print_pnr_sdc_flatten_routing_constrain_cb_timing(const PnrSdcOption& options,
-                                                       const ModuleManager& module_manager, 
-                                                       const ModuleId& top_module,
-                                                       const VprDeviceAnnotation& device_annotation,
-                                                       const DeviceGrid& grids,
-                                                       const RRGraphView& rr_graph,
-                                                       const DeviceRRGSB& device_rr_gsb);
+void print_pnr_sdc_flatten_routing_constrain_cb_timing(
+  const PnrSdcOption& options, const ModuleManager& module_manager,
+  const ModuleId& top_module, const VprDeviceAnnotation& device_annotation,
+  const DeviceGrid& grids, const RRGraphView& rr_graph,
+  const DeviceRRGSB& device_rr_gsb);
 
-void print_pnr_sdc_compact_routing_constrain_cb_timing(const PnrSdcOption& options,
-                                                       const ModuleManager& module_manager,
-                                                       const ModuleId& top_module,
-                                                       const VprDeviceAnnotation& device_annotation,
-                                                       const DeviceGrid& grids,
-                                                       const RRGraphView& rr_graph,
-                                                       const DeviceRRGSB& device_rr_gsb);
+void print_pnr_sdc_compact_routing_constrain_cb_timing(
+  const PnrSdcOption& options, const ModuleManager& module_manager,
+  const ModuleId& top_module, const VprDeviceAnnotation& device_annotation,
+  const DeviceGrid& grids, const RRGraphView& rr_graph,
+  const DeviceRRGSB& device_rr_gsb);
 
 } /* end namespace openfpga */
 

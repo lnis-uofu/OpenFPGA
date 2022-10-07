@@ -6,10 +6,10 @@
  *******************************************************************/
 #include <fstream>
 
+#include "fabric_verilog_options.h"
 #include "memory_bank_shift_register_banks.h"
 #include "module_manager.h"
 #include "netlist_manager.h"
-#include "fabric_verilog_options.h"
 
 /********************************************************************
  * Function declaration
@@ -18,12 +18,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_verilog_submodule_shift_register_banks(const ModuleManager& module_manager,
-                                                  NetlistManager& netlist_manager,
-                                                  const MemoryBankShiftRegisterBanks& blwl_sr_banks,
-                                                  const std::string& submodule_dir,
-                                                  const std::string& submodule_dir_name,
-                                                  const FabricVerilogOption& options);
+void print_verilog_submodule_shift_register_banks(
+  const ModuleManager& module_manager, NetlistManager& netlist_manager,
+  const MemoryBankShiftRegisterBanks& blwl_sr_banks,
+  const std::string& submodule_dir, const std::string& submodule_dir_name,
+  const FabricVerilogOption& options);
 
 } /* end namespace openfpga */
 
