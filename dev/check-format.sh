@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 clean=$(git status -s -uno | wc -l) #Short ignore untracked
+file_pattern="*.cpp *.c *.hpp *.h *.py *.xml"
 
 if [ $clean -ne 0 ]; then
     echo "Current working tree was not clean! This tool only works on clean checkouts"
@@ -10,7 +11,7 @@ else
     echo "====================="
     make format"$1" > /dev/null 2>&1
 
-    valid_format=$(git diff | wc -l)
+    valid_format=$(git diff ${file_pattern}| wc -l)
 
     if [ $valid_format -ne 0 ]; then
         echo "FAILED"
@@ -19,7 +20,7 @@ else
         echo "-------------------------------------------------------------------"
         echo ""
 
-        git diff
+        git diff ${file_pattern}
 
         echo ""
         echo "Run 'make format$1' to apply these changes"
