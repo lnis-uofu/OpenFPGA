@@ -19,6 +19,8 @@ jobs:
         config:
           - name: "C/C++"
             code_type: "-cpp"
+          - name: "XML"
+            code_type: "-xml"
     steps:
       - name: Cancel previous
         uses: styfle/cancel-workflow-action@0.9.1
