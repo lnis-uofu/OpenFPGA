@@ -2,9 +2,9 @@
  * This file includes functions that are used to print the top-level
  * module for the FPGA fabric in Verilog format
  *******************************************************************/
+#include <algorithm>
 #include <fstream>
 #include <map>
-#include <algorithm>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
@@ -12,22 +12,20 @@
 
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
-
 #include "openfpga_naming.h"
-
 #include "verilog_constants.h"
-#include "verilog_writer_utils.h"
 #include "verilog_module_writer.h"
 #include "verilog_top_module.h"
+#include "verilog_writer_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
 
 /********************************************************************
  * Print the top-level module for the FPGA fabric in Verilog format
- * This function will 
+ * This function will
  * 1. name the top-level module
- * 2. include dependent netlists 
+ * 2. include dependent netlists
  *    - User defined netlists
  *    - Auto-generated netlists
  * 3. Add the submodules to the top-level graph
@@ -38,14 +36,16 @@ void print_verilog_top_module(NetlistManager& netlist_manager,
                               const ModuleManager& module_manager,
                               const std::string& verilog_dir,
                               const FabricVerilogOption& options) {
-  /* Create a module as the top-level fabric, and add it to the module manager */
+  /* Create a module as the top-level fabric, and add it to the module manager
+   */
   std::string top_module_name = generate_fpga_top_module_name();
   ModuleId top_module = module_manager.find_module(top_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
 
   /* Start printing out Verilog netlists */
   /* Create the file name for Verilog netlist */
-  std::string verilog_fname(generate_fpga_top_netlist_name(std::string(VERILOG_NETLIST_FILE_POSTFIX)));
+  std::string verilog_fname(
+    generate_fpga_top_netlist_name(std::string(VERILOG_NETLIST_FILE_POSTFIX)));
   std::string verilog_fpath(verilog_dir + verilog_fname);
 
   VTR_LOG("Writing Verilog netlist for top-level module of FPGA fabric '%s'...",
@@ -57,14 +57,11 @@ void print_verilog_top_module(NetlistManager& netlist_manager,
 
   check_file_stream(verilog_fpath.c_str(), fp);
 
-  print_verilog_file_header(fp,
-                            std::string("Top-level Verilog module for FPGA"),
-                            options.time_stamp()); 
+  print_verilog_file_header(
+    fp, std::string("Top-level Verilog module for FPGA"), options.time_stamp());
 
   /* Write the module content in Verilog format */
-  write_verilog_module_to_file(fp,
-                               module_manager,
-                               top_module,
+  write_verilog_module_to_file(fp, module_manager, top_module,
                                options.explicit_port_mapping(),
                                options.default_net_type());
 
@@ -82,7 +79,8 @@ void print_verilog_top_module(NetlistManager& netlist_manager,
     nlist_id = netlist_manager.add_netlist(verilog_fpath);
   }
   VTR_ASSERT(nlist_id);
-  netlist_manager.set_netlist_type(nlist_id, NetlistManager::TOP_MODULE_NETLIST);
+  netlist_manager.set_netlist_type(nlist_id,
+                                   NetlistManager::TOP_MODULE_NETLIST);
 
   VTR_LOG("Done\n");
 }

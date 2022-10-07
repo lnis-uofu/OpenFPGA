@@ -6,6 +6,7 @@
  *******************************************************************/
 
 #include <string>
+
 #include "device_grid.h"
 #include "io_location_map.h"
 #include "module_manager.h"

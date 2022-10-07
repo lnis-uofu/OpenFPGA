@@ -14,9 +14,9 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void annotate_mapped_blocks(const DeviceContext& device_ctx, 
-                            const ClusteringContext& cluster_ctx, 
-                            const PlacementContext& place_ctx, 
+void annotate_mapped_blocks(const DeviceContext& device_ctx,
+                            const ClusteringContext& cluster_ctx,
+                            const PlacementContext& place_ctx,
                             VprPlacementAnnotation& place_annotation);
 
 } /* end namespace openfpga */

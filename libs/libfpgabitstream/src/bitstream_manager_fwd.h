@@ -1,5 +1,5 @@
 /**************************************************
- * This file includes only declarations for 
+ * This file includes only declarations for
  * the data structures for bitstream database
  * Please refer to bitstream_manager.h for more details
  *************************************************/
@@ -22,4 +22,4 @@ class BitstreamManager;
 
 } /* end namespace openfpga */
 
-#endif 
+#endif

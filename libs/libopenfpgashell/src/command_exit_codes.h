@@ -15,12 +15,13 @@ constexpr int CMD_EXEC_NONE = -1;
 /* Everything OK */
 constexpr int CMD_EXEC_SUCCESS = 0;
 
-/* Fatal error occurred, we have to abort and do not execute the rest of commands */
+/* Fatal error occurred, we have to abort and do not execute the rest of
+ * commands */
 constexpr int CMD_EXEC_FATAL_ERROR = 1;
 
-/* See minor errors but it will not impact the downsteam. We can continue to execute the rest of commands */
+/* See minor errors but it will not impact the downsteam. We can continue to
+ * execute the rest of commands */
 constexpr int CMD_EXEC_MINOR_ERROR = 2;
-
 
 } /* End namespace openfpga */
 

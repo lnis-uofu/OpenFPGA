@@ -4,10 +4,11 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include <string>
 #include <map>
-#include "module_manager.h"
+#include <string>
+
 #include "circuit_library.h"
+#include "module_manager.h"
 #include "technology_library.h"
 
 /********************************************************************
@@ -32,7 +33,6 @@ int print_spice_buffer_subckt(std::fstream& fp,
                               const CircuitModelId& circuit_model,
                               const TechnologyLibrary& tech_lib,
                               const TechnologyModelId& tech_model);
-
 
 } /* end namespace openfpga */
 

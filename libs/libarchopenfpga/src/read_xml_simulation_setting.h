@@ -4,15 +4,15 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "pugixml_util.hpp"
 #include "pugixml.hpp"
+#include "pugixml_util.hpp"
 #include "simulation_setting.h"
 
 /********************************************************************
  * Function declaration
  *******************************************************************/
 
-openfpga::SimulationSetting read_xml_simulation_setting(pugi::xml_node& Node,
-                                                        const pugiutil::loc_data& loc_data);
+openfpga::SimulationSetting read_xml_simulation_setting(
+  pugi::xml_node& Node, const pugiutil::loc_data& loc_data);
 
 #endif

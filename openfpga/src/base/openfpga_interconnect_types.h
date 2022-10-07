@@ -14,7 +14,7 @@ enum e_circuit_pb_port_type {
   CIRCUIT_PB_PORT_INPUT,
   CIRCUIT_PB_PORT_OUTPUT,
   CIRCUIT_PB_PORT_CLOCK,
-  NUM_CIRCUIT_PB_PORT_TYPES 
+  NUM_CIRCUIT_PB_PORT_TYPES
 };
 
 } /* end namespace openfpga */

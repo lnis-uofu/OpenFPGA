@@ -15,24 +15,27 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-int read_arch(OpenfpgaContext& openfpga_context,
-              const Command& cmd, const CommandContext& cmd_context); 
+int read_arch(OpenfpgaContext& openfpga_context, const Command& cmd,
+              const CommandContext& cmd_context);
 
-int write_arch(const OpenfpgaContext& openfpga_context,
-               const Command& cmd, const CommandContext& cmd_context);
+int write_arch(const OpenfpgaContext& openfpga_context, const Command& cmd,
+               const CommandContext& cmd_context);
 
 int read_simulation_setting(OpenfpgaContext& openfpga_context,
-                            const Command& cmd, const CommandContext& cmd_context); 
+                            const Command& cmd,
+                            const CommandContext& cmd_context);
 
 int write_simulation_setting(const OpenfpgaContext& openfpga_context,
-                             const Command& cmd, const CommandContext& cmd_context);
+                             const Command& cmd,
+                             const CommandContext& cmd_context);
 
 int read_bitstream_setting(OpenfpgaContext& openfpga_context,
-                           const Command& cmd, const CommandContext& cmd_context); 
+                           const Command& cmd,
+                           const CommandContext& cmd_context);
 
 int write_bitstream_setting(const OpenfpgaContext& openfpga_context,
-                            const Command& cmd, const CommandContext& cmd_context);
-
+                            const Command& cmd,
+                            const CommandContext& cmd_context);
 
 } /* end namespace openfpga */
 

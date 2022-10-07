@@ -1,13 +1,12 @@
 /************************************************************************
- * Member functions for WildCardString class 
+ * Member functions for WildCardString class
  ***********************************************************************/
 #include <cstring>
 
 /* Headers from vtrutil library */
+#include "openfpga_wildcard_string.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
-
-#include "openfpga_wildcard_string.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
@@ -15,16 +14,12 @@ namespace openfpga {
 /************************************************************************
  * Constructors
  ***********************************************************************/
-WildCardString::WildCardString(const std::string& data) {
-  set_data(data);
-}
+WildCardString::WildCardString(const std::string& data) { set_data(data); }
 
 /************************************************************************
  * Public Accessors
  ***********************************************************************/
-std::string WildCardString::data() const {
-  return data_;
-}
+std::string WildCardString::data() const { return data_; }
 
 /************************************************************************
  * Public Mutators
@@ -32,18 +27,16 @@ std::string WildCardString::data() const {
 void WildCardString::set_data(const std::string& data) {
   data_ = data;
 
-  set_default_wildcard_char(); 
-  set_default_sensitive_chars(); 
-  apply_wildcard_char(); 
+  set_default_wildcard_char();
+  set_default_sensitive_chars();
+  apply_wildcard_char();
   compress();
 }
 
 /************************************************************************
  * Internal Mutators
  ***********************************************************************/
-void WildCardString::set_default_wildcard_char() {
-  wildcard_char_ = '*';
-}
+void WildCardString::set_default_wildcard_char() { wildcard_char_ = '*'; }
 
 void WildCardString::set_default_sensitive_chars() {
   sensitive_chars_.clear();
@@ -68,7 +61,8 @@ void WildCardString::apply_wildcard_char() {
   for (const char& char_to_replace : sensitive_chars_) {
     size_t cur_pos = 0;
     std::string::size_type found;
-    while (std::string::npos != (found = data_.find_first_of(char_to_replace, cur_pos))) {
+    while (std::string::npos !=
+           (found = data_.find_first_of(char_to_replace, cur_pos))) {
       data_.replace(found, 1, 1, wildcard_char_);
       cur_pos = found + 1;
     }
@@ -87,7 +81,7 @@ void WildCardString::compress() {
       break;
     }
 
-    /* Try to find the next element and see if the same as wild card 
+    /* Try to find the next element and see if the same as wild card
      * Keep erase the next element until we have a non-wildcard character
      */
     while (data_[i] == data_[i + 1]) {
@@ -102,4 +96,4 @@ void WildCardString::compress() {
   }
 }
 
-} /* namespace openfpga ends */
+}  // namespace openfpga

@@ -1,9 +1,9 @@
 /******************************************************************************
  * Memember functions for data structure IoMap
  ******************************************************************************/
-#include "vtr_assert.h"
-
 #include "io_map.h"
+
+#include "vtr_assert.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -32,8 +32,7 @@ bool IoMap::is_io_input(IoMapId io_map_id) const {
   return IoMap::IO_MAP_DIR_INPUT == io_directionality_[io_map_id];
 }
 
-IoMapId IoMap::create_io_mapping(const BasicPort& port,
-                                 const BasicPort& net,
+IoMapId IoMap::create_io_mapping(const BasicPort& port, const BasicPort& net,
                                  IoMap::e_direction dir) {
   /* Create a new id */
   IoMapId io_map_id = IoMapId(io_map_ids_.size());
@@ -45,10 +44,11 @@ IoMapId IoMap::create_io_mapping(const BasicPort& port,
   io_directionality_.push_back(dir);
 
   return io_map_id;
-} 
+}
 
 bool IoMap::valid_io_map_id(IoMapId io_map_id) const {
-  return (size_t(io_map_id) < io_map_ids_.size()) && (io_map_id == io_map_ids_[io_map_id]);
+  return (size_t(io_map_id) < io_map_ids_.size()) &&
+         (io_map_id == io_map_ids_[io_map_id]);
 }
 
 } /* end namespace openfpga */

@@ -1,11 +1,11 @@
 /************************************************************************
  * A header file for CircuitLibrary class, including critical data declaration
  * Please include this file only for using any CircuitLibrary data structure
- * Refer to circuit_library.h for more details 
+ * Refer to circuit_library.h for more details
  ***********************************************************************/
 
 /************************************************************************
- * Create strong id for Circuit Models/Ports to avoid illegal type casting 
+ * Create strong id for Circuit Models/Ports to avoid illegal type casting
  ***********************************************************************/
 #ifndef CIRCUIT_LIBRARY_FWD_H
 #define CIRCUIT_LIBRARY_FWD_H

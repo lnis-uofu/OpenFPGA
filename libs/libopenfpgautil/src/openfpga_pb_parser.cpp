@@ -1,25 +1,24 @@
 /************************************************************************
  * Member functions for Pb parsers
  ***********************************************************************/
+#include "openfpga_pb_parser.h"
+
 #include <cstring>
 
-#include "vtr_assert.h"
-
 #include "openfpga_tokenizer.h"
-
-#include "openfpga_pb_parser.h"
+#include "vtr_assert.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
 
 /************************************************************************
- * Member functions for PbParser class 
+ * Member functions for PbParser class
  ***********************************************************************/
 
 /************************************************************************
  * Constructors
  ***********************************************************************/
-PbParser::PbParser (const std::string& data) {
+PbParser::PbParser(const std::string& data) {
   set_default_bracket();
   set_default_delim();
   set_data(data);
@@ -29,21 +28,13 @@ PbParser::PbParser (const std::string& data) {
  * Public Accessors
  ***********************************************************************/
 /* Get the data string */
-std::string PbParser::data() const {
-  return data_;
-}
+std::string PbParser::data() const { return data_; }
 
-std::string PbParser::leaf() const {
-  return leaf_;
-}
+std::string PbParser::leaf() const { return leaf_; }
 
-std::vector<std::string> PbParser::parents() const {
-  return parents_;
-}
+std::vector<std::string> PbParser::parents() const { return parents_; }
 
-std::vector<std::string> PbParser::modes() const {
-  return modes_;
-}
+std::vector<std::string> PbParser::modes() const { return modes_; }
 
 /************************************************************************
  * Public Mutators
@@ -65,7 +56,7 @@ void PbParser::parse() {
   std::vector<std::string> pb_tokens = tokenizer.split(delim_);
 
   /* The last pb is the leaf node.
-   * It should NOT be empty and should NOT contain any brackets!  
+   * It should NOT be empty and should NOT contain any brackets!
    */
   VTR_ASSERT(0 < pb_tokens.size());
   VTR_ASSERT(false == pb_tokens.back().empty());
@@ -80,7 +71,7 @@ void PbParser::parse() {
     StringToken pb_tokenizer(pb_tokens[itok]);
     std::vector<std::string> tokens = pb_tokenizer.split(bracket_.x());
     /* Make sure we have a port name! */
-    VTR_ASSERT_SAFE ((1 == tokens.size()) || (2 == tokens.size()));
+    VTR_ASSERT_SAFE((1 == tokens.size()) || (2 == tokens.size()));
     /* Store the pb_type name */
     parents_.push_back(tokens[0]);
 
@@ -92,9 +83,9 @@ void PbParser::parse() {
       modes_.push_back(std::string("default"));
       continue; /* We can finish here */
     }
-   
+
     /* If there is a mode name, extract it */
-    VTR_ASSERT_SAFE (2 == tokens.size());
+    VTR_ASSERT_SAFE(2 == tokens.size());
 
     /* Chomp the ']' */
     pb_tokenizer.set_data(tokens[1]);
@@ -111,8 +102,6 @@ void PbParser::set_default_bracket() {
   bracket_.set_y(']');
 }
 
-void PbParser::set_default_delim() {
-  delim_ = '.';
-}
+void PbParser::set_default_delim() { delim_ = '.'; }
 
-} /* namespace openfpga ends */
+}  // namespace openfpga

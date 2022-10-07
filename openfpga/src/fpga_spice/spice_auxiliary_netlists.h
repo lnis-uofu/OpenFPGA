@@ -5,6 +5,7 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <string>
+
 #include "circuit_library.h"
 #include "netlist_manager.h"
 
@@ -21,4 +22,4 @@ void print_spice_fabric_include_netlist(const NetlistManager& netlist_manager,
 
 } /* end namespace openfpga */
 
-#endif 
+#endif

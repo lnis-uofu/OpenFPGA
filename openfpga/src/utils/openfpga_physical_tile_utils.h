@@ -4,9 +4,10 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include <vector>
-#include <string>
 #include <set>
+#include <string>
+#include <vector>
+
 #include "device_grid.h"
 #include "physical_types.h"
 
@@ -17,15 +18,14 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-std::vector<e_side> find_physical_tile_pin_side(t_physical_tile_type_ptr physical_tile,
-                                                const int& physical_pin,
-                                                const e_side& border_side);
+std::vector<e_side> find_physical_tile_pin_side(
+  t_physical_tile_type_ptr physical_tile, const int& physical_pin,
+  const e_side& border_side);
 
-float find_physical_tile_pin_Fc(t_physical_tile_type_ptr type,
-                                const int& pin);
+float find_physical_tile_pin_Fc(t_physical_tile_type_ptr type, const int& pin);
 
-std::set<e_side> find_physical_io_tile_located_sides(const DeviceGrid& grids,
-                                                     t_physical_tile_type_ptr physical_tile);
+std::set<e_side> find_physical_io_tile_located_sides(
+  const DeviceGrid& grids, t_physical_tile_type_ptr physical_tile);
 
 } /* end namespace openfpga */
 

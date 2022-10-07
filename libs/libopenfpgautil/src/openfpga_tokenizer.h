@@ -17,28 +17,32 @@ namespace openfpga {
  ***********************************************************************/
 
 class StringToken {
-  public : /* Constructors*/
-    StringToken (const std::string& data);
-  public : /* Public Accessors */ 
-    std::string data() const;
-    std::vector<std::string> split(const std::string& delims) const;
-    std::vector<std::string> split(const char& delim) const;
-    std::vector<std::string> split(const char* delim) const;
-    std::vector<std::string> split(const std::vector<char>& delim) const;
-    std::vector<std::string> split();
-  public : /* Public Mutators */ 
-    void set_data(const std::string& data);
-    void add_delim(const char& delim);
-    void ltrim(const std::string& sensitive_word);
-    void rtrim(const std::string& sensitive_word);
-    void trim();
-  private : /* Private Mutators */ 
-    void add_default_delim();
-  private: /* Internal data */
-    std::string data_; /* Lines to be splited */
-    std::vector<char> delims_;
+ public: /* Constructors*/
+  StringToken(const std::string& data);
+
+ public: /* Public Accessors */
+  std::string data() const;
+  std::vector<std::string> split(const std::string& delims) const;
+  std::vector<std::string> split(const char& delim) const;
+  std::vector<std::string> split(const char* delim) const;
+  std::vector<std::string> split(const std::vector<char>& delim) const;
+  std::vector<std::string> split();
+
+ public: /* Public Mutators */
+  void set_data(const std::string& data);
+  void add_delim(const char& delim);
+  void ltrim(const std::string& sensitive_word);
+  void rtrim(const std::string& sensitive_word);
+  void trim();
+
+ private: /* Private Mutators */
+  void add_default_delim();
+
+ private:            /* Internal data */
+  std::string data_; /* Lines to be splited */
+  std::vector<char> delims_;
 };
 
-} /* namespace openfpga ends */
+}  // namespace openfpga
 
 #endif

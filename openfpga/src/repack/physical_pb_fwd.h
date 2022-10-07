@@ -1,5 +1,5 @@
 /**************************************************
- * This file includes only declarations for 
+ * This file includes only declarations for
  * the data structures for PhysicalPb
  * Please refer to physical_pb.h for more details
  *************************************************/
@@ -20,4 +20,4 @@ class PhysicalPb;
 
 } /* end namespace openfpga */
 
-#endif 
+#endif

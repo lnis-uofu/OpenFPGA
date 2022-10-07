@@ -12,12 +12,10 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
-#include "openfpga_digest.h"
-#include "openfpga_tokenizer.h"
-
-#include "openfpga_reserved_words.h"
-
 #include "bitstream_manager_utils.h"
+#include "openfpga_digest.h"
+#include "openfpga_reserved_words.h"
+#include "openfpga_tokenizer.h"
 #include "write_xml_arch_bitstream.h"
 
 /* begin namespace openfpga */
@@ -26,20 +24,19 @@ namespace openfpga {
 /********************************************************************
  * This function write header information to a bitstream file
  *******************************************************************/
-static 
-void write_bitstream_xml_file_head(std::fstream& fp,
-                                   const bool& include_time_stamp) {
+static void write_bitstream_xml_file_head(std::fstream& fp,
+                                          const bool& include_time_stamp) {
   valid_file_stream(fp);
- 
+
   fp << "<!--" << std::endl;
   fp << "\t- Architecture independent bitstream" << std::endl;
   fp << "\t- Author: Xifan TANG" << std::endl;
   fp << "\t- Organization: University of Utah" << std::endl;
 
   if (include_time_stamp) {
-    auto end = std::chrono::system_clock::now(); 
+    auto end = std::chrono::system_clock::now();
     std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-    fp << "\t- Date: " << std::ctime(&end_time) ;
+    fp << "\t- Date: " << std::ctime(&end_time);
   }
 
   fp << "-->" << std::endl;
@@ -49,38 +46,39 @@ void write_bitstream_xml_file_head(std::fstream& fp,
 /********************************************************************
  * Recursively write the bitstream of a block to a xml file
  * This function will use a Depth-First Search in outputting bitstream
- * for each block 
+ * for each block
  * 1. For block with bits as children, we will output the XML lines
- * 2. For block without bits/child blocks, we can return 
+ * 2. For block without bits/child blocks, we can return
  * 3. For block with child blocks, we visit each child recursively
  *******************************************************************/
-static 
-void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
-                                           const BitstreamManager& bitstream_manager, 
-                                           const ConfigBlockId& block,
-                                           const size_t& hierarchy_level) {
+static void rec_write_block_bitstream_to_xml_file(
+  std::fstream& fp, const BitstreamManager& bitstream_manager,
+  const ConfigBlockId& block, const size_t& hierarchy_level) {
   valid_file_stream(fp);
 
   /* Write the bits of this block */
   write_tab_to_file(fp, hierarchy_level);
   fp << "<bitstream_block";
-  fp << " name=\"" << bitstream_manager.block_name(block)<< "\"";
+  fp << " name=\"" << bitstream_manager.block_name(block) << "\"";
   fp << " hierarchy_level=\"" << hierarchy_level << "\"";
   fp << ">" << std::endl;
 
   /* Dive to child blocks if this block has any */
-  for (const ConfigBlockId& child_block : bitstream_manager.block_children(block)) {
-    rec_write_block_bitstream_to_xml_file(fp, bitstream_manager, child_block, hierarchy_level + 1);
+  for (const ConfigBlockId& child_block :
+       bitstream_manager.block_children(block)) {
+    rec_write_block_bitstream_to_xml_file(fp, bitstream_manager, child_block,
+                                          hierarchy_level + 1);
   }
-  
+
   if (0 == bitstream_manager.block_bits(block).size()) {
     write_tab_to_file(fp, hierarchy_level);
-    fp << "</bitstream_block>" <<std::endl;
+    fp << "</bitstream_block>" << std::endl;
     return;
   }
 
-  std::vector<ConfigBlockId> block_hierarchy = find_bitstream_manager_block_hierarchy(bitstream_manager, block); 
-  
+  std::vector<ConfigBlockId> block_hierarchy =
+    find_bitstream_manager_block_hierarchy(bitstream_manager, block);
+
   /* Output hierarchy of this parent*/
   write_tab_to_file(fp, hierarchy_level + 1);
   fp << "<hierarchy>" << std::endl;
@@ -101,7 +99,8 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
     fp << "<input_nets>\n";
     size_t path_counter = 0;
     /* Split with space */
-    StringToken input_net_tokenizer(bitstream_manager.block_input_net_ids(block));
+    StringToken input_net_tokenizer(
+      bitstream_manager.block_input_net_ids(block));
     for (const std::string& net : input_net_tokenizer.split(std::string(" "))) {
       write_tab_to_file(fp, hierarchy_level + 2);
       fp << "<path id=\"" << path_counter << "\"";
@@ -121,8 +120,10 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
     fp << "<output_nets>\n";
     size_t path_counter = 0;
     /* Split with space */
-    StringToken output_net_tokenizer(bitstream_manager.block_output_net_ids(block));
-    for (const std::string& net : output_net_tokenizer.split(std::string(" "))) {
+    StringToken output_net_tokenizer(
+      bitstream_manager.block_output_net_ids(block));
+    for (const std::string& net :
+         output_net_tokenizer.split(std::string(" "))) {
       write_tab_to_file(fp, hierarchy_level + 2);
       fp << "<path id=\"" << path_counter << "\"";
       fp << " net_name=\"";
@@ -149,7 +150,9 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
   for (const ConfigBitId& child_bit : bitstream_manager.block_bits(block)) {
     write_tab_to_file(fp, hierarchy_level + 2);
     fp << "<bit";
-    fp << " memory_port=\"" << CONFIGURABLE_MEMORY_DATA_OUT_NAME << "[" << bit_counter << "]" << "\"";
+    fp << " memory_port=\"" << CONFIGURABLE_MEMORY_DATA_OUT_NAME << "["
+       << bit_counter << "]"
+       << "\"";
     fp << " value=\"" << bitstream_manager.bit_value(child_bit) << "\"";
     fp << "/>" << std::endl;
     bit_counter++;
@@ -158,32 +161,37 @@ void rec_write_block_bitstream_to_xml_file(std::fstream& fp,
   fp << "</bitstream>" << std::endl;
 
   write_tab_to_file(fp, hierarchy_level);
-  fp << "</bitstream_block>" <<std::endl;
+  fp << "</bitstream_block>" << std::endl;
 }
 
 /********************************************************************
- * Write the bitstream to a file without binding to the configuration 
+ * Write the bitstream to a file without binding to the configuration
  * procotols of a given FPGA fabric in XML format
  *
- * Notes: 
+ * Notes:
  * This is a very generic representation for bitstream that are implemented
- * by VPR engine. It shows the bitstream for each blocks in the FPGA 
+ * by VPR engine. It shows the bitstream for each blocks in the FPGA
  * architecture that users are modeling.
- * This function can be used to: 
+ * This function can be used to:
  * 1. Debug the bitstream decoding to see if there is any bug
- * 2. Create an intermediate file to reorganize a bitstream for 
+ * 2. Create an intermediate file to reorganize a bitstream for
  *    specific FPGAs
- * 3. TODO: support FASM format 
+ * 3. TODO: support FASM format
  *******************************************************************/
 void write_xml_architecture_bitstream(const BitstreamManager& bitstream_manager,
                                       const std::string& fname,
                                       const bool& include_time_stamp) {
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
-    VTR_LOG_ERROR("Received empty file name to output bitstream!\n\tPlease specify a valid file name.\n");
+    VTR_LOG_ERROR(
+      "Received empty file name to output bitstream!\n\tPlease specify a valid "
+      "file name.\n");
   }
 
-  std::string timer_message = std::string("Write ") + std::to_string(bitstream_manager.bits().size()) + std::string(" architecture independent bitstream into XML file '") + fname + std::string("'");
+  std::string timer_message =
+    std::string("Write ") + std::to_string(bitstream_manager.bits().size()) +
+    std::string(" architecture independent bitstream into XML file '") + fname +
+    std::string("'");
   vtr::ScopedStartFinishTimer timer(timer_message);
 
   /* Create the file stream */
@@ -196,7 +204,8 @@ void write_xml_architecture_bitstream(const BitstreamManager& bitstream_manager,
   write_bitstream_xml_file_head(fp, include_time_stamp);
 
   /* Find the top block, which has not parents */
-  std::vector<ConfigBlockId> top_block = find_bitstream_manager_top_blocks(bitstream_manager);
+  std::vector<ConfigBlockId> top_block =
+    find_bitstream_manager_top_blocks(bitstream_manager);
   /* Make sure we have only 1 top block */
   VTR_ASSERT(1 == top_block.size());
 

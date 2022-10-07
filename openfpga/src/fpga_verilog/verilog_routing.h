@@ -5,11 +5,11 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 
-#include "mux_library.h"
-#include "module_manager.h"
-#include "netlist_manager.h"
 #include "device_rr_gsb.h"
 #include "fabric_verilog_options.h"
+#include "module_manager.h"
+#include "mux_library.h"
+#include "netlist_manager.h"
 
 /********************************************************************
  * Function declaration

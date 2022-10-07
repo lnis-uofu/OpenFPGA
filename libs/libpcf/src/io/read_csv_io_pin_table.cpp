@@ -7,14 +7,12 @@
 
 /* Headers from vtr util library */
 #include "vtr_assert.h"
-#include "vtr_time.h"
 #include "vtr_log.h"
+#include "vtr_time.h"
 
 /* Headers from libopenfpga util library */
 #include "openfpga_port_parser.h"
-
 #include "rapidcsv.h"
-
 #include "read_csv_io_pin_table.h"
 
 /* Begin namespace openfpga */
@@ -32,12 +30,13 @@ IoPinTable read_csv_io_pin_table(const char* fname) {
                          rapidcsv::SeparatorParams(','));
 
   /* TODO: Move this to constants */
-  std::map<std::string, e_side> side_str_map { {"TOP", TOP}, {"RIGHT", RIGHT}, {"LEFT", LEFT}, {"BOTTOM", BOTTOM} };
+  std::map<std::string, e_side> side_str_map{
+    {"TOP", TOP}, {"RIGHT", RIGHT}, {"LEFT", LEFT}, {"BOTTOM", BOTTOM}};
 
   int num_rows = doc.GetRowCount();
   io_pin_table.reserve_pins(num_rows);
 
-  for (int irow = 1; irow < num_rows; irow++) { 
+  for (int irow = 1; irow < num_rows; irow++) {
     std::vector<std::string> row_vec = doc.GetRow<std::string>(irow);
     IoPinTableId pin_id = io_pin_table.create_pin();
     /* Fill pin-level information */
@@ -49,19 +48,25 @@ IoPinTable read_csv_io_pin_table(const char* fname) {
 
     std::string pin_side_str = row_vec.at(0);
     if (side_str_map.end() == side_str_map.find(pin_side_str)) {
-      VTR_LOG("Invalid side defintion (='%s')! Expect [TOP|RIGHT|LEFT|BOTTOM]\n", pin_side_str.c_str());
+      VTR_LOG(
+        "Invalid side defintion (='%s')! Expect [TOP|RIGHT|LEFT|BOTTOM]\n",
+        pin_side_str.c_str());
       exit(1);
     } else {
       io_pin_table.set_pin_side(pin_id, side_str_map[pin_side_str]);
     }
 
-    /*This is not general purpose: we should have an explicit attribute in the csv file to decalare direction */
-    if (internal_pin_parser.port().get_name().find("A2F") != std::string::npos) {
+    /*This is not general purpose: we should have an explicit attribute in the
+     * csv file to decalare direction */
+    if (internal_pin_parser.port().get_name().find("A2F") !=
+        std::string::npos) {
       io_pin_table.set_pin_direction(pin_id, IoPinTable::INPUT);
-    } else if (internal_pin_parser.port().get_name().find("F2A") != std::string::npos) {
+    } else if (internal_pin_parser.port().get_name().find("F2A") !=
+               std::string::npos) {
       io_pin_table.set_pin_direction(pin_id, IoPinTable::OUTPUT);
     } else {
-      VTR_LOG("Invalid direction defintion! Expect [A2F|F2A] in the pin name\n");
+      VTR_LOG(
+        "Invalid direction defintion! Expect [A2F|F2A] in the pin name\n");
       exit(1);
     }
   }
@@ -70,6 +75,3 @@ IoPinTable read_csv_io_pin_table(const char* fname) {
 }
 
 } /* End namespace openfpga*/
-
-
-

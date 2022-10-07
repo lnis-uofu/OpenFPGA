@@ -1,9 +1,9 @@
 /******************************************************************************
  * Memember functions for data structure FabricSpiceOption
  ******************************************************************************/
-#include "vtr_assert.h"
-
 #include "fabric_spice_options.h"
+
+#include "vtr_assert.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -19,7 +19,7 @@ FabricSpiceOption::FabricSpiceOption() {
 }
 
 /**************************************************
- * Public Accessors 
+ * Public Accessors
  *************************************************/
 std::string FabricSpiceOption::output_directory() const {
   return output_directory_;
@@ -29,13 +29,9 @@ bool FabricSpiceOption::explicit_port_mapping() const {
   return explicit_port_mapping_;
 }
 
-bool FabricSpiceOption::compress_routing() const {
-  return compress_routing_;
-}
+bool FabricSpiceOption::compress_routing() const { return compress_routing_; }
 
-bool FabricSpiceOption::verbose_output() const {
-  return verbose_output_;
-}
+bool FabricSpiceOption::verbose_output() const { return verbose_output_; }
 
 /******************************************************************************
  * Private Mutators

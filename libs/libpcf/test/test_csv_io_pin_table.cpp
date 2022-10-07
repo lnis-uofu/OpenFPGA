@@ -1,5 +1,5 @@
 /********************************************************************
- * Unit test functions to validate the correctness of 
+ * Unit test functions to validate the correctness of
  * 1. parser of data structures
  * 2. writer of data structures
  *******************************************************************/
@@ -17,17 +17,13 @@ int main(int argc, const char** argv) {
 
   /* Parse the fabric key from an XML file */
   openfpga::IoPinTable io_pin_table = openfpga::read_csv_io_pin_table(argv[1]);
-  VTR_LOG("Read the I/O pin table from a csv file: %s.\n",
-          argv[1]);
+  VTR_LOG("Read the I/O pin table from a csv file: %s.\n", argv[1]);
 
   /* Output to an XML file
    * This is optional only used when there is a second argument
    */
-  if (3 <= argc) { 
+  if (3 <= argc) {
     write_csv_io_pin_table(argv[2], io_pin_table);
-    VTR_LOG("Echo the I/O pin table to a csv file: %s.\n",
-            argv[2]);
+    VTR_LOG("Echo the I/O pin table to a csv file: %s.\n", argv[2]);
   }
 }
-
-

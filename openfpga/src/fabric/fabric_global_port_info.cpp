@@ -1,9 +1,9 @@
 /************************************************************************
  * Member functions for class FabricGlobalPortInfo
  ***********************************************************************/
-#include "vtr_assert.h"
-
 #include "fabric_global_port_info.h"
+
+#include "vtr_assert.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
@@ -11,71 +11,81 @@ namespace openfpga {
 /************************************************************************
  * Constructors
  ***********************************************************************/
-FabricGlobalPortInfo::FabricGlobalPortInfo() {
-  return;
-}
+FabricGlobalPortInfo::FabricGlobalPortInfo() { return; }
 
 /************************************************************************
  * Public Accessors : aggregates
  ***********************************************************************/
-FabricGlobalPortInfo::global_port_range FabricGlobalPortInfo::global_ports() const {
+FabricGlobalPortInfo::global_port_range FabricGlobalPortInfo::global_ports()
+  const {
   return vtr::make_range(global_port_ids_.begin(), global_port_ids_.end());
 }
 
 /************************************************************************
  * Public Accessors
  ***********************************************************************/
-ModulePortId FabricGlobalPortInfo::global_module_port(const FabricGlobalPortId& global_port_id) const {
+ModulePortId FabricGlobalPortInfo::global_module_port(
+  const FabricGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_module_ports_[global_port_id];
 }
 
-bool FabricGlobalPortInfo::global_port_is_clock(const FabricGlobalPortId& global_port_id) const {
+bool FabricGlobalPortInfo::global_port_is_clock(
+  const FabricGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_is_clock_[global_port_id];
 }
 
-bool FabricGlobalPortInfo::global_port_is_set(const FabricGlobalPortId& global_port_id) const {
+bool FabricGlobalPortInfo::global_port_is_set(
+  const FabricGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_is_set_[global_port_id];
 }
 
-bool FabricGlobalPortInfo::global_port_is_reset(const FabricGlobalPortId& global_port_id) const {
+bool FabricGlobalPortInfo::global_port_is_reset(
+  const FabricGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_is_reset_[global_port_id];
 }
 
-bool FabricGlobalPortInfo::global_port_is_prog(const FabricGlobalPortId& global_port_id) const {
+bool FabricGlobalPortInfo::global_port_is_prog(
+  const FabricGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_is_prog_[global_port_id];
 }
 
-bool FabricGlobalPortInfo::global_port_is_shift_register(const FabricGlobalPortId& global_port_id) const {
+bool FabricGlobalPortInfo::global_port_is_shift_register(
+  const FabricGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_is_shift_register_[global_port_id];
 }
 
-bool FabricGlobalPortInfo::global_port_is_bl(const FabricGlobalPortId& global_port_id) const {
+bool FabricGlobalPortInfo::global_port_is_bl(
+  const FabricGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_is_bl_[global_port_id];
 }
 
-bool FabricGlobalPortInfo::global_port_is_wl(const FabricGlobalPortId& global_port_id) const {
+bool FabricGlobalPortInfo::global_port_is_wl(
+  const FabricGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_is_wl_[global_port_id];
 }
 
-bool FabricGlobalPortInfo::global_port_is_config_enable(const FabricGlobalPortId& global_port_id) const {
+bool FabricGlobalPortInfo::global_port_is_config_enable(
+  const FabricGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_is_config_enable_[global_port_id];
 }
 
-bool FabricGlobalPortInfo::global_port_is_io(const FabricGlobalPortId& global_port_id) const {
+bool FabricGlobalPortInfo::global_port_is_io(
+  const FabricGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_is_io_[global_port_id];
 }
 
-size_t FabricGlobalPortInfo::global_port_default_value(const FabricGlobalPortId& global_port_id) const {
+size_t FabricGlobalPortInfo::global_port_default_value(
+  const FabricGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_default_values_[global_port_id];
 }
@@ -83,7 +93,8 @@ size_t FabricGlobalPortInfo::global_port_default_value(const FabricGlobalPortId&
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
-FabricGlobalPortId FabricGlobalPortInfo::create_global_port(const ModulePortId& module_port) {
+FabricGlobalPortId FabricGlobalPortInfo::create_global_port(
+  const ModulePortId& module_port) {
   /* This is a legal name. we can create a new id */
   FabricGlobalPortId port_id = FabricGlobalPortId(global_port_ids_.size());
   global_port_ids_.push_back(port_id);
@@ -102,72 +113,74 @@ FabricGlobalPortId FabricGlobalPortInfo::create_global_port(const ModulePortId& 
   return port_id;
 }
 
-void FabricGlobalPortInfo::set_global_port_is_clock(const FabricGlobalPortId& global_port_id,
-                                                    const bool& is_clock) {
+void FabricGlobalPortInfo::set_global_port_is_clock(
+  const FabricGlobalPortId& global_port_id, const bool& is_clock) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_is_clock_[global_port_id] = is_clock;
 }
 
-void FabricGlobalPortInfo::set_global_port_is_set(const FabricGlobalPortId& global_port_id,
-                                                  const bool& is_set) {
+void FabricGlobalPortInfo::set_global_port_is_set(
+  const FabricGlobalPortId& global_port_id, const bool& is_set) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_is_set_[global_port_id] = is_set;
 }
 
-void FabricGlobalPortInfo::set_global_port_is_reset(const FabricGlobalPortId& global_port_id,
-                                                    const bool& is_reset) {
+void FabricGlobalPortInfo::set_global_port_is_reset(
+  const FabricGlobalPortId& global_port_id, const bool& is_reset) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_is_reset_[global_port_id] = is_reset;
 }
 
-void FabricGlobalPortInfo::set_global_port_is_prog(const FabricGlobalPortId& global_port_id,
-                                                   const bool& is_prog) {
+void FabricGlobalPortInfo::set_global_port_is_prog(
+  const FabricGlobalPortId& global_port_id, const bool& is_prog) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_is_prog_[global_port_id] = is_prog;
 }
 
-void FabricGlobalPortInfo::set_global_port_is_shift_register(const FabricGlobalPortId& global_port_id,
-                                                             const bool& is_shift_register) {
+void FabricGlobalPortInfo::set_global_port_is_shift_register(
+  const FabricGlobalPortId& global_port_id, const bool& is_shift_register) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_is_shift_register_[global_port_id] = is_shift_register;
 }
 
-void FabricGlobalPortInfo::set_global_port_is_bl(const FabricGlobalPortId& global_port_id,
-                                                 const bool& is_bl) {
+void FabricGlobalPortInfo::set_global_port_is_bl(
+  const FabricGlobalPortId& global_port_id, const bool& is_bl) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_is_bl_[global_port_id] = is_bl;
 }
 
-void FabricGlobalPortInfo::set_global_port_is_wl(const FabricGlobalPortId& global_port_id,
-                                                 const bool& is_wl) {
+void FabricGlobalPortInfo::set_global_port_is_wl(
+  const FabricGlobalPortId& global_port_id, const bool& is_wl) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_is_wl_[global_port_id] = is_wl;
 }
 
-void FabricGlobalPortInfo::set_global_port_is_config_enable(const FabricGlobalPortId& global_port_id,
-                                                            const bool& is_config_enable) {
+void FabricGlobalPortInfo::set_global_port_is_config_enable(
+  const FabricGlobalPortId& global_port_id, const bool& is_config_enable) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_is_config_enable_[global_port_id] = is_config_enable;
 }
 
-void FabricGlobalPortInfo::set_global_port_is_io(const FabricGlobalPortId& global_port_id,
-                                                 const bool& is_io) {
+void FabricGlobalPortInfo::set_global_port_is_io(
+  const FabricGlobalPortId& global_port_id, const bool& is_io) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_is_io_[global_port_id] = is_io;
 }
 
-void FabricGlobalPortInfo::set_global_port_default_value(const FabricGlobalPortId& global_port_id,
-                                                         const size_t& default_value) {
+void FabricGlobalPortInfo::set_global_port_default_value(
+  const FabricGlobalPortId& global_port_id, const size_t& default_value) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_default_values_[global_port_id] = default_value;
 }
 
 /************************************************************************
- * Internal invalidators/validators 
+ * Internal invalidators/validators
  ***********************************************************************/
 /* Validators */
-bool FabricGlobalPortInfo::valid_global_port_id(const FabricGlobalPortId& global_port_id) const {
-  return ( size_t(global_port_id) < global_port_ids_.size() ) && ( global_port_id == global_port_ids_[global_port_id] ); 
+bool FabricGlobalPortInfo::valid_global_port_id(
+  const FabricGlobalPortId& global_port_id) const {
+  return (size_t(global_port_id) < global_port_ids_.size()) &&
+         (global_port_id == global_port_ids_[global_port_id]);
 }
 
-} /* namespace openfpga ends */
+}  // namespace openfpga

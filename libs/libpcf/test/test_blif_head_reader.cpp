@@ -1,5 +1,5 @@
 /********************************************************************
- * Unit test functions to validate the correctness of 
+ * Unit test functions to validate the correctness of
  * 1. parser of data structures
  * 2. writer of data structures
  *******************************************************************/
@@ -17,12 +17,10 @@ int main(int argc, const char** argv) {
   /* Parse the blif */
   blifparse::BlifHeadReader callback;
   blifparse::blif_parse_filename(argv[1], callback);
-  VTR_LOG("Read the blif from a file: %s.\n",
-          argv[1]);
+  VTR_LOG("Read the blif from a file: %s.\n", argv[1]);
 
   if (callback.had_error()) {
-    VTR_LOG("Read the blif ends with errors\n",
-            argv[1]);
+    VTR_LOG("Read the blif ends with errors\n", argv[1]);
     return 1;
   }
 
@@ -38,5 +36,3 @@ int main(int argc, const char** argv) {
 
   return 0;
 }
-
-

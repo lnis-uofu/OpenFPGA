@@ -1,12 +1,11 @@
 /************************************************************************
- * Member functions for StringToken class 
+ * Member functions for StringToken class
  ***********************************************************************/
 #include <cstring>
 
 /* Headers from vtrutil library */
-#include "vtr_assert.h"
-
 #include "openfpga_tokenizer.h"
+#include "vtr_assert.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
@@ -14,17 +13,13 @@ namespace openfpga {
 /************************************************************************
  * Constructors
  ***********************************************************************/
-StringToken::StringToken (const std::string& data) {
-  set_data(data);
-}
+StringToken::StringToken(const std::string& data) { set_data(data); }
 
 /************************************************************************
  * Public Accessors
  ***********************************************************************/
 /* Get the data string */
-std::string StringToken::data() const {
-  return data_;
-}
+std::string StringToken::data() const { return data_; }
 
 /* Split the string using a given delim */
 std::vector<std::string> StringToken::split(const std::string& delims) const {
@@ -68,7 +63,8 @@ std::vector<std::string> StringToken::split(const char* delim) const {
 }
 
 /* Split the string using a given delim */
-std::vector<std::string> StringToken::split(const std::vector<char>& delims) const {
+std::vector<std::string> StringToken::split(
+  const std::vector<char>& delims) const {
   /* Create delims */
   std::string delims_str;
   for (const auto& delim : delims) {
@@ -78,10 +74,9 @@ std::vector<std::string> StringToken::split(const std::vector<char>& delims) con
   return split(delims_str);
 }
 
-
 /* Split the string */
 std::vector<std::string> StringToken::split() {
-  /* Add a default delim */ 
+  /* Add a default delim */
   if (true == delims_.empty()) {
     add_default_delim();
   }
@@ -103,9 +98,7 @@ void StringToken::set_data(const std::string& data) {
 }
 
 /* Add a delima to the list */
-void StringToken::add_delim(const char& delim) {
-  delims_.push_back(delim);
-}
+void StringToken::add_delim(const char& delim) { delims_.push_back(delim); }
 
 /* Remove the string repeated at the beginning of string */
 void StringToken::ltrim(const std::string& sensitive_word) {
@@ -136,4 +129,4 @@ void StringToken::add_default_delim() {
   return;
 }
 
-} /* namespace openfpga ends */
+}  // namespace openfpga

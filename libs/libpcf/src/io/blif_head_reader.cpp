@@ -1,16 +1,16 @@
-#include <cstdio>
-#include <cassert>
-
 #include "blif_head_reader.h"
+
+#include <cassert>
+#include <cstdio>
 
 namespace blifparse {
 
 void BlifHeadReader::start_parse() {
-  //Pass
+  // Pass
 }
 
 void BlifHeadReader::finish_parse() {
-  //Pass
+  // Pass
 }
 
 void BlifHeadReader::begin_model(std::string model_name) {
@@ -25,15 +25,19 @@ void BlifHeadReader::outputs(std::vector<std::string> output_conns) {
   output_pins_ = output_conns;
 }
 
-void BlifHeadReader::names(std::vector<std::string> nets, std::vector<std::vector<LogicValue>> so_cover) {
+void BlifHeadReader::names(std::vector<std::string> nets,
+                           std::vector<std::vector<LogicValue>> so_cover) {
   // Pass
 }
 
-void BlifHeadReader::latch(std::string input, std::string output, LatchType type, std::string control, LogicValue init) {
+void BlifHeadReader::latch(std::string input, std::string output,
+                           LatchType type, std::string control,
+                           LogicValue init) {
   // Pass
 }
 
-void BlifHeadReader::subckt(std::string model, std::vector<std::string> ports, std::vector<std::string> nets) {
+void BlifHeadReader::subckt(std::string model, std::vector<std::string> ports,
+                            std::vector<std::string> nets) {
   // Pass
 }
 
@@ -69,4 +73,4 @@ void BlifHeadReader::lineno(int line_num) {
   // Pass
 }
 
-}
+}  // namespace blifparse

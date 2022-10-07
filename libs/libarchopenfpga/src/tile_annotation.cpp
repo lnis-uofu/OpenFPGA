@@ -1,9 +1,9 @@
 /************************************************************************
  * Member functions for class TileAnnotation
  ***********************************************************************/
-#include "vtr_assert.h"
-
 #include "tile_annotation.h"
+
+#include "vtr_assert.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
@@ -11,9 +11,7 @@ namespace openfpga {
 /************************************************************************
  * Constructors
  ***********************************************************************/
-TileAnnotation::TileAnnotation() {
-  return;
-}
+TileAnnotation::TileAnnotation() { return; }
 
 /************************************************************************
  * Public Accessors : aggregates
@@ -25,42 +23,50 @@ TileAnnotation::global_port_range TileAnnotation::global_ports() const {
 /************************************************************************
  * Public Accessors
  ***********************************************************************/
-std::string TileAnnotation::global_port_name(const TileGlobalPortId& global_port_id) const {
+std::string TileAnnotation::global_port_name(
+  const TileGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_names_[global_port_id];
 }
 
-std::vector<std::string> TileAnnotation::global_port_tile_names(const TileGlobalPortId& global_port_id) const {
+std::vector<std::string> TileAnnotation::global_port_tile_names(
+  const TileGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_tile_names_[global_port_id];
 }
 
-std::vector<BasicPort> TileAnnotation::global_port_tile_ports(const TileGlobalPortId& global_port_id) const {
+std::vector<BasicPort> TileAnnotation::global_port_tile_ports(
+  const TileGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_tile_ports_[global_port_id];
 }
 
-std::vector<vtr::Point<size_t>> TileAnnotation::global_port_tile_coordinates(const TileGlobalPortId& global_port_id) const {
+std::vector<vtr::Point<size_t>> TileAnnotation::global_port_tile_coordinates(
+  const TileGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_tile_coordinates_[global_port_id];
 }
 
-bool TileAnnotation::global_port_is_clock(const TileGlobalPortId& global_port_id) const {
+bool TileAnnotation::global_port_is_clock(
+  const TileGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_is_clock_[global_port_id];
 }
 
-bool TileAnnotation::global_port_is_set(const TileGlobalPortId& global_port_id) const {
+bool TileAnnotation::global_port_is_set(
+  const TileGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_is_set_[global_port_id];
 }
 
-bool TileAnnotation::global_port_is_reset(const TileGlobalPortId& global_port_id) const {
+bool TileAnnotation::global_port_is_reset(
+  const TileGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_is_reset_[global_port_id];
 }
 
-size_t TileAnnotation::global_port_default_value(const TileGlobalPortId& global_port_id) const {
+size_t TileAnnotation::global_port_default_value(
+  const TileGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_default_values_[global_port_id];
 }
@@ -68,9 +74,11 @@ size_t TileAnnotation::global_port_default_value(const TileGlobalPortId& global_
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
-TileGlobalPortId TileAnnotation::create_global_port(const std::string& port_name) {
+TileGlobalPortId TileAnnotation::create_global_port(
+  const std::string& port_name) {
   /* Ensure that the name is unique */
-  std::map<std::string, TileGlobalPortId>::iterator it = global_port_name2ids_.find(port_name);
+  std::map<std::string, TileGlobalPortId>::iterator it =
+    global_port_name2ids_.find(port_name);
   if (it != global_port_name2ids_.end()) {
     return TileGlobalPortId::INVALID();
   }
@@ -93,49 +101,51 @@ TileGlobalPortId TileAnnotation::create_global_port(const std::string& port_name
   return port_id;
 }
 
-void TileAnnotation::add_global_port_tile_information(const TileGlobalPortId& global_port_id,
-                                                      const std::string& tile_name, 
-                                                      const BasicPort& tile_port,
-                                                      const vtr::Point<size_t>& tile_coord) {
+void TileAnnotation::add_global_port_tile_information(
+  const TileGlobalPortId& global_port_id, const std::string& tile_name,
+  const BasicPort& tile_port, const vtr::Point<size_t>& tile_coord) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_tile_names_[global_port_id].push_back(tile_name);
   global_port_tile_ports_[global_port_id].push_back(tile_port);
   global_port_tile_coordinates_[global_port_id].push_back(tile_coord);
 }
 
-void TileAnnotation::set_global_port_is_clock(const TileGlobalPortId& global_port_id,
-                                              const bool& is_clock) {
+void TileAnnotation::set_global_port_is_clock(
+  const TileGlobalPortId& global_port_id, const bool& is_clock) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_is_clock_[global_port_id] = is_clock;
 }
 
-void TileAnnotation::set_global_port_is_set(const TileGlobalPortId& global_port_id,
-                                            const bool& is_set) {
+void TileAnnotation::set_global_port_is_set(
+  const TileGlobalPortId& global_port_id, const bool& is_set) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_is_set_[global_port_id] = is_set;
 }
 
-void TileAnnotation::set_global_port_is_reset(const TileGlobalPortId& global_port_id,
-                                              const bool& is_reset) {
+void TileAnnotation::set_global_port_is_reset(
+  const TileGlobalPortId& global_port_id, const bool& is_reset) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_is_reset_[global_port_id] = is_reset;
 }
 
-void TileAnnotation::set_global_port_default_value(const TileGlobalPortId& global_port_id,
-                                                   const size_t& default_value) {
+void TileAnnotation::set_global_port_default_value(
+  const TileGlobalPortId& global_port_id, const size_t& default_value) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_default_values_[global_port_id] = default_value;
 }
 
 /************************************************************************
- * Internal invalidators/validators 
+ * Internal invalidators/validators
  ***********************************************************************/
 /* Validators */
-bool TileAnnotation::valid_global_port_id(const TileGlobalPortId& global_port_id) const {
-  return ( size_t(global_port_id) < global_port_ids_.size() ) && ( global_port_id == global_port_ids_[global_port_id] ); 
+bool TileAnnotation::valid_global_port_id(
+  const TileGlobalPortId& global_port_id) const {
+  return (size_t(global_port_id) < global_port_ids_.size()) &&
+         (global_port_id == global_port_ids_[global_port_id]);
 }
 
-bool TileAnnotation::valid_global_port_attributes(const TileGlobalPortId& global_port_id) const {
+bool TileAnnotation::valid_global_port_attributes(
+  const TileGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
 
   int attribute_counter = 0;
@@ -155,4 +165,4 @@ bool TileAnnotation::valid_global_port_attributes(const TileGlobalPortId& global
   return ((0 == attribute_counter) || (1 == attribute_counter));
 }
 
-} /* namespace openfpga ends */
+}  // namespace openfpga
