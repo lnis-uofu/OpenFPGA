@@ -25,15 +25,15 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v2
+
       - name: Install dependencies
         run: ./.github/workflows/install_dependencies_build.sh
           
       - name: Dump tool versions
         run: |
           clang-format-10 --version
-
-      - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v2
 
       - name: Check format
         run: ./dev/check-format.sh ${{ matrix.config.code_type }}
