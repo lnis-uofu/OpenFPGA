@@ -5,8 +5,9 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <vector>
-#include "vpr_context.h"
+
 #include "openfpga_context.h"
+#include "vpr_context.h"
 
 /********************************************************************
  * Function declaration

@@ -1,9 +1,9 @@
 /******************************************************************************
  * Memember functions for data structure FlowManager
  ******************************************************************************/
-#include "vtr_assert.h"
-
 #include "openfpga_flow_manager.h"
+
+#include "vtr_assert.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -17,11 +17,9 @@ FlowManager::FlowManager() {
 }
 
 /**************************************************
- * Public Accessors 
+ * Public Accessors
  *************************************************/
-bool FlowManager::compress_routing() const {
-  return compress_routing_;
-}
+bool FlowManager::compress_routing() const { return compress_routing_; }
 
 /******************************************************************************
  * Private Mutators
@@ -29,6 +27,5 @@ bool FlowManager::compress_routing() const {
 void FlowManager::set_compress_routing(const bool& enabled) {
   compress_routing_ = enabled;
 }
-
 
 } /* end namespace openfpga */

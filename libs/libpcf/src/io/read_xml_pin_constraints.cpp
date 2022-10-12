@@ -18,36 +18,41 @@
 
 /* Headers from libarchfpga */
 #include "arch_error.h"
-#include "read_xml_util.h"
-
 #include "read_xml_pin_constraints.h"
+#include "read_xml_util.h"
 
 /********************************************************************
  * Parse XML codes of a <set_io> to an object of PinConstraint
  *******************************************************************/
-static 
-void read_xml_pin_constraint(pugi::xml_node& xml_pin_constraint,
-                             const pugiutil::loc_data& loc_data,
-                             PinConstraints& pin_constraints) {
+static void read_xml_pin_constraint(pugi::xml_node& xml_pin_constraint,
+                                    const pugiutil::loc_data& loc_data,
+                                    PinConstraints& pin_constraints) {
+  openfpga::PortParser port_parser(
+    get_attribute(xml_pin_constraint, "pin", loc_data).as_string());
 
-  openfpga::PortParser port_parser(get_attribute(xml_pin_constraint, "pin", loc_data).as_string());
-
-  std::string net_name = get_attribute(xml_pin_constraint, "net", loc_data).as_string();
+  std::string net_name =
+    get_attribute(xml_pin_constraint, "net", loc_data).as_string();
 
   /* Create a new pin constraint in the storage */
-  PinConstraintId pin_constraint_id = pin_constraints.create_pin_constraint(port_parser.port(), net_name);
+  PinConstraintId pin_constraint_id =
+    pin_constraints.create_pin_constraint(port_parser.port(), net_name);
 
   if (false == pin_constraints.valid_pin_constraint_id(pin_constraint_id)) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_pin_constraint),
                    "Fail to create pin constraint!\n");
   }
-  
+
   /* Set default value if defined */
-  std::string default_value = get_attribute(xml_pin_constraint, "default_value", loc_data, pugiutil::ReqOpt::OPTIONAL).as_string();
+  std::string default_value =
+    get_attribute(xml_pin_constraint, "default_value", loc_data,
+                  pugiutil::ReqOpt::OPTIONAL)
+      .as_string();
   pin_constraints.set_net_default_value(pin_constraint_id, default_value);
-  if (!default_value.empty() && !pin_constraints.valid_net_default_value(pin_constraint_id)) {
-    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_pin_constraint),
-                   "Invalid default value for pin constraints. Expect [0|1]!\n");
+  if (!default_value.empty() &&
+      !pin_constraints.valid_net_default_value(pin_constraint_id)) {
+    archfpga_throw(
+      loc_data.filename_c_str(), loc_data.line(xml_pin_constraint),
+      "Invalid default value for pin constraints. Expect [0|1]!\n");
   }
 }
 
@@ -55,7 +60,6 @@ void read_xml_pin_constraint(pugi::xml_node& xml_pin_constraint,
  * Parse XML codes about <pin_constraints> to an object of PinConstraints
  *******************************************************************/
 PinConstraints read_xml_pin_constraints(const char* pin_constraint_fname) {
-
   vtr::ScopedStartFinishTimer timer("Read Pin Constraints");
 
   PinConstraints pin_constraints;
@@ -67,9 +71,11 @@ PinConstraints read_xml_pin_constraints(const char* pin_constraint_fname) {
   try {
     loc_data = pugiutil::load_xml(doc, pin_constraint_fname);
 
-    pugi::xml_node xml_root = get_single_child(doc, "pin_constraints", loc_data);
+    pugi::xml_node xml_root =
+      get_single_child(doc, "pin_constraints", loc_data);
 
-    size_t num_pin_constraints = std::distance(xml_root.children().begin(), xml_root.children().end());
+    size_t num_pin_constraints =
+      std::distance(xml_root.children().begin(), xml_root.children().end());
     /* Reserve memory space for the region */
     pin_constraints.reserve_pin_constraints(num_pin_constraints);
 
@@ -79,12 +85,10 @@ PinConstraints read_xml_pin_constraints(const char* pin_constraint_fname) {
         bad_tag(xml_pin_constraint, loc_data, xml_root, {"set_io"});
       }
       read_xml_pin_constraint(xml_pin_constraint, loc_data, pin_constraints);
-    } 
+    }
   } catch (pugiutil::XmlError& e) {
-    archfpga_throw(pin_constraint_fname, e.line(),
-                   "%s", e.what());
+    archfpga_throw(pin_constraint_fname, e.line(), "%s", e.what());
   }
 
-  return pin_constraints; 
+  return pin_constraints;
 }
-

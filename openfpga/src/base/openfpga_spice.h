@@ -15,8 +15,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-int write_fabric_spice(OpenfpgaContext& openfpga_ctx,
-                         const Command& cmd, const CommandContext& cmd_context); 
+int write_fabric_spice(OpenfpgaContext& openfpga_ctx, const Command& cmd,
+                       const CommandContext& cmd_context);
 
 } /* end namespace openfpga */
 

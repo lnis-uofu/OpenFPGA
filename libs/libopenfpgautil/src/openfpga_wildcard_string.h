@@ -11,8 +11,8 @@
 namespace openfpga {
 
 /************************************************************************
- * This file includes a object that can apply wildcard characters 
- * By default it will replace any digital numbers with a '*' character 
+ * This file includes a object that can apply wildcard characters
+ * By default it will replace any digital numbers with a '*' character
  * Users can set the wildcard character on their needs
  *
  * Example:
@@ -23,35 +23,35 @@ namespace openfpga {
  ***********************************************************************/
 
 class WildCardString {
-  public : /* Constructors*/
-    WildCardString (const std::string& data);
+ public: /* Constructors*/
+  WildCardString(const std::string& data);
 
-  public : /* Public Accessors */ 
-    std::string data() const;
+ public: /* Public Accessors */
+  std::string data() const;
 
-  public : /* Public Mutators */ 
-    /* Give a string to apply wildcards */
-    void set_data(const std::string& data);
+ public: /* Public Mutators */
+  /* Give a string to apply wildcards */
+  void set_data(const std::string& data);
 
-  private : /* Private Mutators */ 
-    /* Use default wildcard character '*' */
-    void set_default_wildcard_char();
+ private: /* Private Mutators */
+  /* Use default wildcard character '*' */
+  void set_default_wildcard_char();
 
-    /* Use default sensitive words which are numbers */
-    void set_default_sensitive_chars();
+  /* Use default sensitive words which are numbers */
+  void set_default_sensitive_chars();
 
-    /* Replace sensitive words with wildcard characters */
-    void apply_wildcard_char();
+  /* Replace sensitive words with wildcard characters */
+  void apply_wildcard_char();
 
-    /* Remove redundant wildcard chars (which are next to each other) */
-    void compress();
+  /* Remove redundant wildcard chars (which are next to each other) */
+  void compress();
 
-  private : /* Internal data */
-    std::string data_; /* Lines to be splited */
-    std::vector<char> sensitive_chars_;
-    char wildcard_char_;
+ private:            /* Internal data */
+  std::string data_; /* Lines to be splited */
+  std::vector<char> sensitive_chars_;
+  char wildcard_char_;
 };
 
-} /* namespace openfpga ends */
+}  // namespace openfpga
 
 #endif

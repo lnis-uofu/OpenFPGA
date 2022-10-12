@@ -16,7 +16,7 @@ namespace openfpga {
 
 void print_command_options(const Command& cmd);
 
-void print_command_context(const Command& cmd, 
+void print_command_context(const Command& cmd,
                            const CommandContext& cmd_context);
 
 } /* End namespace openfpga */

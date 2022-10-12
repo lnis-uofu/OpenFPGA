@@ -1,11 +1,11 @@
 /************************************************************************
- * A header file for TechnologyLibrary class, including critical data declaration
- * Please include this file only for using any TechnologyLibrary data structure
- * Refer to circuit_library.h for more details 
+ * A header file for TechnologyLibrary class, including critical data
+ *declaration Please include this file only for using any TechnologyLibrary data
+ *structure Refer to circuit_library.h for more details
  ***********************************************************************/
 
 /************************************************************************
- * Create strong id for TechnologyDevice to avoid illegal type casting 
+ * Create strong id for TechnologyDevice to avoid illegal type casting
  ***********************************************************************/
 #ifndef TECHNOLOGY_LIBRARY_FWD_H
 #define TECHNOLOGY_LIBRARY_FWD_H

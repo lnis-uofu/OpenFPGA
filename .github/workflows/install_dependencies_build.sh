@@ -58,4 +58,6 @@ sudo apt-get install -y \
     clang-6.0 \
     clang-7 \
     clang-8 \
-    clang-10
+    clang-10 \
+    clang-format-10 \
+    libxml2-utils

@@ -1,5 +1,5 @@
 /**************************************************
- * This file includes only declarations for 
+ * This file includes only declarations for
  * the data structures for TileDirect
  * Please refer to tile_direct.h for more details
  *************************************************/
@@ -20,4 +20,4 @@ class TileDirect;
 
 } /* end namespace openfpga */
 
-#endif 
+#endif

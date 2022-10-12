@@ -35,8 +35,8 @@ constexpr const char* TOP_TB_BITSTREAM_INDEX_REG_NAME = "bit_index";
 constexpr const char* TOP_TB_BITSTREAM_ITERATOR_REG_NAME = "ibit";
 constexpr const char* TOP_TB_BITSTREAM_SKIP_FLAG_REG_NAME = "skip_bits";
 
-constexpr const char* AUTOCHECK_TOP_TESTBENCH_VERILOG_MODULE_POSTFIX = "_autocheck_top_tb";
-
+constexpr const char* AUTOCHECK_TOP_TESTBENCH_VERILOG_MODULE_POSTFIX =
+  "_autocheck_top_tb";
 
 } /* end namespace openfpga */
 

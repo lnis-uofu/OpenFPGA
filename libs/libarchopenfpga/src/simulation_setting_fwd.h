@@ -1,11 +1,11 @@
 /************************************************************************
- * A header file for SimulationSetting class, including critical data declaration
- * Please include this file only for using any SimulationSetting data structure
- * Refer to simulation_setting.h for more details 
+ * A header file for SimulationSetting class, including critical data
+ *declaration Please include this file only for using any SimulationSetting data
+ *structure Refer to simulation_setting.h for more details
  ***********************************************************************/
 
 /************************************************************************
- * Create strong id for Simulation Clock to avoid illegal type casting 
+ * Create strong id for Simulation Clock to avoid illegal type casting
  ***********************************************************************/
 #ifndef SIMULATION_SETTING_FWD_H
 #define SIMULATION_SETTING_FWD_H

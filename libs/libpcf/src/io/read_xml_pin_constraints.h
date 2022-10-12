@@ -4,9 +4,9 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "pugixml_util.hpp"
-#include "pugixml.hpp"
 #include "pin_constraints.h"
+#include "pugixml.hpp"
+#include "pugixml_util.hpp"
 
 /********************************************************************
  * Function declaration

@@ -1,8 +1,8 @@
 /********************************************************************
  * This file includes functions to generate SPICE subcircuits for LUTs
  ********************************************************************/
-#include <string>
 #include <algorithm>
+#include <string>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
@@ -13,23 +13,20 @@
 
 /* Headers from openfpgashell library */
 #include "command_exit_codes.h"
-
-#include "mux_graph.h"
 #include "module_manager.h"
+#include "mux_graph.h"
 #include "mux_utils.h"
-
 #include "openfpga_naming.h"
-
 #include "spice_constants.h"
-#include "spice_writer_utils.h"
-#include "spice_subckt_writer.h"
 #include "spice_lut.h"
+#include "spice_subckt_writer.h"
+#include "spice_writer_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
 
-/******************************************************************** 
- * Print SPICE modules for the Look-Up Tables (LUTs) 
+/********************************************************************
+ * Print SPICE modules for the Look-Up Tables (LUTs)
  * in the circuit library
  ********************************************************************/
 int print_spice_submodule_luts(NetlistManager& netlist_manager,
@@ -45,23 +42,23 @@ int print_spice_submodule_luts(NetlistManager& netlist_manager,
   /* Create the file stream */
   fp.open(spice_fname, std::fstream::out | std::fstream::trunc);
   /* Check if the file stream if valid or not */
-  check_file_stream(spice_fname.c_str(), fp); 
+  check_file_stream(spice_fname.c_str(), fp);
 
   /* Create file */
-  VTR_LOG("Writing SPICE netlist for LUTs '%s'...",
-          spice_fname.c_str()); 
+  VTR_LOG("Writing SPICE netlist for LUTs '%s'...", spice_fname.c_str());
 
-  print_spice_file_header(fp, "Look-Up Tables"); 
+  print_spice_file_header(fp, "Look-Up Tables");
 
   /* Search for each LUT circuit model */
   for (const auto& lut_model : circuit_lib.models()) {
     /* Bypass user-defined and non-LUT modules */
-    if ( (!circuit_lib.model_spice_netlist(lut_model).empty()) 
-      || (CIRCUIT_MODEL_LUT != circuit_lib.model_type(lut_model)) ) {
+    if ((!circuit_lib.model_spice_netlist(lut_model).empty()) ||
+        (CIRCUIT_MODEL_LUT != circuit_lib.model_type(lut_model))) {
       continue;
     }
     /* Find the module id */
-    ModuleId lut_module = module_manager.find_module(circuit_lib.model_name(lut_model));
+    ModuleId lut_module =
+      module_manager.find_module(circuit_lib.model_name(lut_model));
     VTR_ASSERT(true == module_manager.valid_module_id(lut_module));
     write_spice_subckt_to_file(fp, module_manager, lut_module);
   }

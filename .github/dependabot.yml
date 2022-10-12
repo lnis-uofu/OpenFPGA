@@ -21,3 +21,5 @@ updates:
       - dependency-name: "yosys-plugins"
       # Enable for the yosys submodule
       - dependency-name: "yosys"
+      # Enable for the vtr submodule
+      - dependency-name: "vtr-verilog-to-routing"

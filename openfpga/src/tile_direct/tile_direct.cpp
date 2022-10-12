@@ -1,21 +1,22 @@
 /******************************************************************************
  * Memember functions for data structure TileDirect
  ******************************************************************************/
-#include "vtr_assert.h"
-
 #include "tile_direct.h"
+
+#include "vtr_assert.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
 
 /**************************************************
- * Public Accessors 
+ * Public Accessors
  *************************************************/
 TileDirect::tile_direct_range TileDirect::directs() const {
   return vtr::make_range(direct_ids_.begin(), direct_ids_.end());
 }
 
-vtr::Point<size_t> TileDirect::from_tile_coordinate(const TileDirectId& direct_id) const {
+vtr::Point<size_t> TileDirect::from_tile_coordinate(
+  const TileDirectId& direct_id) const {
   /* Validate the direct_id */
   VTR_ASSERT(valid_direct_id(direct_id));
   return from_tile_coords_[direct_id];
@@ -33,7 +34,8 @@ e_side TileDirect::from_tile_side(const TileDirectId& direct_id) const {
   return from_tile_sides_[direct_id];
 }
 
-vtr::Point<size_t> TileDirect::to_tile_coordinate(const TileDirectId& direct_id) const {
+vtr::Point<size_t> TileDirect::to_tile_coordinate(
+  const TileDirectId& direct_id) const {
   /* Validate the direct_id */
   VTR_ASSERT(valid_direct_id(direct_id));
   return to_tile_coords_[direct_id];
@@ -84,7 +86,7 @@ TileDirectId TileDirect::add_direct(const vtr::Point<size_t>& from_tile_coord,
   return direct;
 }
 
-void TileDirect::set_arch_direct_id(const TileDirectId& tile_direct_id, 
+void TileDirect::set_arch_direct_id(const TileDirectId& tile_direct_id,
                                     const ArchDirectId& arch_direct_id) {
   /* Validate the direct_id */
   VTR_ASSERT(valid_direct_id(tile_direct_id));
@@ -95,7 +97,8 @@ void TileDirect::set_arch_direct_id(const TileDirectId& tile_direct_id,
  * Private validators/invalidators
  ******************************************************************************/
 bool TileDirect::valid_direct_id(const TileDirectId& direct_id) const {
-  return ( size_t(direct_id) < direct_ids_.size() ) && ( direct_id == direct_ids_[direct_id] ); 
+  return (size_t(direct_id) < direct_ids_.size()) &&
+         (direct_id == direct_ids_[direct_id]);
 }
 
 } /* end namespace openfpga */

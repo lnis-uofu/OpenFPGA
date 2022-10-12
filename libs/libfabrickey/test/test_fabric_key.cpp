@@ -1,5 +1,5 @@
 /********************************************************************
- * Unit test functions to validate the correctness of 
+ * Unit test functions to validate the correctness of
  * 1. parser of data structures
  * 2. writer of data structures
  *******************************************************************/
@@ -15,20 +15,15 @@ int main(int argc, const char** argv) {
   /* Ensure we have only one or two argument */
   VTR_ASSERT((2 == argc) || (3 == argc));
 
-
   /* Parse the fabric key from an XML file */
   FabricKey test_key = read_xml_fabric_key(argv[1]);
-  VTR_LOG("Read the fabric key from an XML file: %s.\n",
-          argv[1]);
+  VTR_LOG("Read the fabric key from an XML file: %s.\n", argv[1]);
 
   /* Output the circuit library to an XML file
    * This is optional only used when there is a second argument
    */
-  if (3 <= argc) { 
+  if (3 <= argc) {
     write_xml_fabric_key(argv[2], test_key);
-    VTR_LOG("Echo the fabric key to an XML file: %s.\n",
-            argv[2]);
+    VTR_LOG("Echo the fabric key to an XML file: %s.\n", argv[2]);
   }
 }
-
-

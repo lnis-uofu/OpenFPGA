@@ -1,5 +1,5 @@
 /**************************************************
- * This file includes only declarations for 
+ * This file includes only declarations for
  * the data structures for IoMap
  * Please refer to io_map.h for more details
  *************************************************/
@@ -20,4 +20,4 @@ class IoMap;
 
 } /* end namespace openfpga */
 
-#endif 
+#endif

@@ -1,14 +1,15 @@
 /********************************************************************
- * This file includes parser(s) to convert user's input from 
+ * This file includes parser(s) to convert user's input from
  * shell interface to a data structure CommandContext
  *
  * TODO: a strong dependency is that we use VTR logging system
  *******************************************************************/
+#include "command_parser.h"
+
 #include <cstring>
 
 #include "vtr_assert.h"
 #include "vtr_log.h"
-#include "command_parser.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -16,15 +17,12 @@ namespace openfpga {
 /********************************************************************
  * Try to find an option in the command and update the CommandContext if needed
  *******************************************************************/
-static 
-CommandOptionId parse_option(const std::string& argv,
-                             const Command& cmd,
-                             CommandContext& cmd_context) {
+static CommandOptionId parse_option(const std::string& argv, const Command& cmd,
+                                    CommandContext& cmd_context) {
   CommandOptionId option_id = cmd.option(argv);
   /* Not found, error out */
   if (CommandOptionId::INVALID() == option_id) {
-    VTR_LOG("Detect unknown option '--%s'!\n",
-            argv.c_str());
+    VTR_LOG("Detect unknown option '--%s'!\n", argv.c_str());
     return CommandOptionId::INVALID();
   }
   /* Found, update the CommandContext */
@@ -37,15 +35,13 @@ CommandOptionId parse_option(const std::string& argv,
  * Try to find a short option in the command
  * Update the CommandContext if needed
  *******************************************************************/
-static 
-CommandOptionId parse_short_option(const std::string& argv,
-                                   const Command& cmd,
-                                   CommandContext& cmd_context) {
+static CommandOptionId parse_short_option(const std::string& argv,
+                                          const Command& cmd,
+                                          CommandContext& cmd_context) {
   CommandOptionId option_id = cmd.short_option(argv);
   /* Not found, error out */
   if (CommandOptionId::INVALID() == option_id) {
-    VTR_LOG("Detect unknown short option '-%s'!\n",
-            argv.c_str());
+    VTR_LOG("Detect unknown short option '-%s'!\n", argv.c_str());
     return CommandOptionId::INVALID();
   }
   /* Found, update the CommandContext */
@@ -55,19 +51,17 @@ CommandOptionId parse_short_option(const std::string& argv,
 }
 
 /********************************************************************
- * Main parser to convert user's input from 
+ * Main parser to convert user's input from
  * shell interface to a data structure CommandContext
  *******************************************************************/
-bool parse_command(const std::vector<std::string>& argv,
-                   const Command& cmd,
+bool parse_command(const std::vector<std::string>& argv, const Command& cmd,
                    CommandContext& cmd_context) {
   /* We at least expect 1 arguement, which is the command name itself */
   VTR_ASSERT(1 <= argv.size());
 
   /* Validate that the command name matches argv[0] */
-  if (argv[0] != cmd.name()) { 
-    VTR_LOG("Unexpected command name '%s'!\n",
-            argv[0].c_str());
+  if (argv[0] != cmd.name()) {
+    VTR_LOG("Unexpected command name '%s'!\n", argv[0].c_str());
     return false;
   }
 
@@ -75,18 +69,18 @@ bool parse_command(const std::vector<std::string>& argv,
   for (size_t iarg = 1; iarg < argv.size(); ++iarg) {
     /* Option must start with dash */
     if (0 != strncmp("-", argv[iarg].c_str(), 1)) {
-      VTR_LOG("Invalid option '%s'!\n",
-              argv[iarg].c_str());
+      VTR_LOG("Invalid option '%s'!\n", argv[iarg].c_str());
       return false;
     }
-    /* First try to process a full option 
+    /* First try to process a full option
      * which always starts with double dash '--'
      */
     if (0 == strncmp("--", argv[iarg].c_str(), 2)) {
       /* See if there is a option defined in the command object
-       * Note that the first two characters are skipped when searching the name  
+       * Note that the first two characters are skipped when searching the name
        */
-      CommandOptionId option_id = parse_option(argv[iarg].substr(2), cmd, cmd_context);
+      CommandOptionId option_id =
+        parse_option(argv[iarg].substr(2), cmd, cmd_context);
 
       if (CommandOptionId::INVALID() == option_id) {
         return false;
@@ -105,14 +99,15 @@ bool parse_command(const std::vector<std::string>& argv,
       continue;
     }
 
-    /* Second try to process a short option 
+    /* Second try to process a short option
      * which always starts with double dash '-'
      */
     if (0 == strncmp("-", argv[iarg].c_str(), 1)) {
       /* See if there is a option defined in the command object
-       * Note that the first two characters are skipped when searching the name  
+       * Note that the first two characters are skipped when searching the name
        */
-      CommandOptionId option_id = parse_short_option(argv[iarg].substr(1), cmd, cmd_context);
+      CommandOptionId option_id =
+        parse_short_option(argv[iarg].substr(1), cmd, cmd_context);
 
       if (CommandOptionId::INVALID() == option_id) {
         return false;
@@ -133,9 +128,10 @@ bool parse_command(const std::vector<std::string>& argv,
   }
 
   /* Ensure that all the required options have been satisfied
-   * If not, we echo the details about what are missing 
-   */ 
-  std::vector<CommandOptionId> missing_options = cmd_context.check_required_options(cmd);
+   * If not, we echo the details about what are missing
+   */
+  std::vector<CommandOptionId> missing_options =
+    cmd_context.check_required_options(cmd);
   if (!missing_options.empty()) {
     for (const CommandOptionId& missing_opt : missing_options) {
       VTR_LOG("Required option '%s' is missing!\n",
@@ -144,7 +140,8 @@ bool parse_command(const std::vector<std::string>& argv,
     return false;
   }
 
-  std::vector<CommandOptionId> missing_value_options = cmd_context.check_required_option_values(cmd);
+  std::vector<CommandOptionId> missing_value_options =
+    cmd_context.check_required_option_values(cmd);
   if (!missing_value_options.empty()) {
     bool parse_fail = false;
     for (const CommandOptionId& missing_opt : missing_value_options) {

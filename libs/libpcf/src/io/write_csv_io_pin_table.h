@@ -5,6 +5,7 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <string>
+
 #include "io_pin_table.h"
 
 /********************************************************************
@@ -13,8 +14,7 @@
 /* Begin namespace openfpga */
 namespace openfpga {
 
-int write_csv_io_pin_table(const char* fname,
-                           const IoPinTable& io_pin_table);
+int write_csv_io_pin_table(const char* fname, const IoPinTable& io_pin_table);
 
 } /* End namespace openfpga*/
 

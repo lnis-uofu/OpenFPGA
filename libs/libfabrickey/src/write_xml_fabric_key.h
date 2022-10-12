@@ -5,12 +5,12 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <fstream>
+
 #include "fabric_key.h"
 
 /********************************************************************
  * Function declaration
  *******************************************************************/
-int write_xml_fabric_key(const char* fname,
-                         const FabricKey& fabric_key);
+int write_xml_fabric_key(const char* fname, const FabricKey& fabric_key);
 
 #endif

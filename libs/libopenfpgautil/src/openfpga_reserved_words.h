@@ -31,13 +31,13 @@ constexpr const char* WL_SHIFT_REGISTER_CHAIN_WLR_OUT_NAME = "wl_sr_wlr_out";
 constexpr const char* GIO_INOUT_PREFIX = "gfpga_pad_";
 
 /* Grid naming constant strings */
-constexpr const char* GRID_MODULE_NAME_PREFIX = "grid_"; 
-constexpr const char* LOGICAL_MODULE_NAME_PREFIX = "logical_tile_"; 
+constexpr const char* GRID_MODULE_NAME_PREFIX = "grid_";
+constexpr const char* LOGICAL_MODULE_NAME_PREFIX = "logical_tile_";
 
 /* Memory naming constant strings */
-constexpr const char* GRID_MEM_INSTANCE_PREFIX = "mem_"; 
-constexpr const char* SWITCH_BLOCK_MEM_INSTANCE_PREFIX = "mem_"; 
-constexpr const char* CONNECTION_BLOCK_MEM_INSTANCE_PREFIX = "mem_"; 
+constexpr const char* GRID_MEM_INSTANCE_PREFIX = "mem_";
+constexpr const char* SWITCH_BLOCK_MEM_INSTANCE_PREFIX = "mem_";
+constexpr const char* CONNECTION_BLOCK_MEM_INSTANCE_PREFIX = "mem_";
 constexpr const char* MEMORY_MODULE_POSTFIX = "_mem";
 constexpr const char* MEMORY_BL_PORT_NAME = "bl";
 constexpr const char* MEMORY_WL_PORT_NAME = "wl";
@@ -45,9 +45,9 @@ constexpr const char* MEMORY_WLR_PORT_NAME = "wlr";
 
 /* Multiplexer naming constant strings */
 constexpr const char* MUX_BASIS_MODULE_POSTFIX = "_basis";
-constexpr const char* GRID_MUX_INSTANCE_PREFIX = "mux_"; 
-constexpr const char* SWITCH_BLOCK_MUX_INSTANCE_PREFIX = "mux_"; 
-constexpr const char* CONNECTION_BLOCK_MUX_INSTANCE_PREFIX = "mux_"; 
+constexpr const char* GRID_MUX_INSTANCE_PREFIX = "mux_";
+constexpr const char* SWITCH_BLOCK_MUX_INSTANCE_PREFIX = "mux_";
+constexpr const char* CONNECTION_BLOCK_MUX_INSTANCE_PREFIX = "mux_";
 
 /* Decoder naming constant strings */
 constexpr const char* DECODER_ENABLE_PORT_NAME = "enable";

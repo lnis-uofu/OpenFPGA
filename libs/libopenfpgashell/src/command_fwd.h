@@ -7,7 +7,7 @@
 namespace openfpga {
 
 /*********************************************************************
- * A strong id for the options used by a command 
+ * A strong id for the options used by a command
  ********************************************************************/
 struct command_option_id_tag;
 

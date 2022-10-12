@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!-- Architecture annotation for OpenFPGA framework
      This annotation supports the k4_frac_cc_sky130nm.xml
      - General purpose logic block
@@ -155,9 +156,9 @@
       <port type="input" prefix="D" size="1"/>
       <port type="input" prefix="DI" lib_name="SI" size="1"/>
       <port type="input" prefix="Test_en" lib_name="SE" size="1" is_global="true" default_val="0"/>
-      <port type="input" prefix="reset" lib_name="RST" size="1" default_val="0"/> 
+      <port type="input" prefix="reset" lib_name="RST" size="1" default_val="0"/>
       <port type="output" prefix="Q" size="1"/>
-      <port type="clock" prefix="clk" lib_name="CK" size="1" default_val="0" />
+      <port type="clock" prefix="clk" lib_name="CK" size="1" default_val="0"/>
     </circuit_model>
     <circuit_model type="lut" name="frac_lut4" prefix="frac_lut4" dump_structural_verilog="true">
       <design_technology type="cmos" fracturable_lut="true"/>
@@ -182,7 +183,7 @@
       <port type="input" prefix="D" size="1"/>
       <port type="output" prefix="Q" size="1"/>
       <port type="clock" prefix="prog_clk" lib_name="CK" size="1" is_global="true" default_val="0" is_prog="true"/>
-      <port type="input" prefix="pReset" lib_name="RST" size="1" is_global="true" default_val="0" is_prog="true" is_reset="true"/> 
+      <port type="input" prefix="pReset" lib_name="RST" size="1" is_global="true" default_val="0" is_prog="true" is_reset="true"/>
     </circuit_model>
     <circuit_model type="iopad" name="EMBEDDED_IO_ISOLN" prefix="EMBEDDED_IO_ISOLN" is_default="true" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/gpio.v">
       <design_technology type="cmos"/>
@@ -237,22 +238,21 @@
     <direct name="scan_chain" circuit_model_name="direct_interc" type="column" x_dir="positive" y_dir="positive"/>
   </direct_connection>
   <tile_annotations>
-      <global_port name="clk" is_clock="true" default_val="0">
-          <tile name="clb" port="clk" x="-1" y="-1"/>
-      </global_port>
-      <global_port name="Reset" is_reset="true" default_val="1">
-          <tile name="clb" port="reset" x="-1" y="-1"/>
-      </global_port>
+    <global_port name="clk" is_clock="true" default_val="0">
+      <tile name="clb" port="clk" x="-1" y="-1"/>
+    </global_port>
+    <global_port name="Reset" is_reset="true" default_val="1">
+      <tile name="clb" port="reset" x="-1" y="-1"/>
+    </global_port>
   </tile_annotations>
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
     <pb_type name="io" physical_mode_name="physical" idle_mode_name="inpad"/>
     <!-- IMPORTANT: must set unused I/Os to operating in INPUT mode !!! -->
-    <pb_type name="io[physical].iopad" circuit_model_name="EMBEDDED_IO_ISOLN" mode_bits="1"/> 
-    <pb_type name="io[inpad].inpad" physical_pb_type_name="io[physical].iopad" mode_bits="1"/> 
-    <pb_type name="io[outpad].outpad" physical_pb_type_name="io[physical].iopad" mode_bits="0"/> 
+    <pb_type name="io[physical].iopad" circuit_model_name="EMBEDDED_IO_ISOLN" mode_bits="1"/>
+    <pb_type name="io[inpad].inpad" physical_pb_type_name="io[physical].iopad" mode_bits="1"/>
+    <pb_type name="io[outpad].outpad" physical_pb_type_name="io[physical].iopad" mode_bits="0"/>
     <!-- End physical pb_type binding in complex block IO -->
-
     <!-- physical pb_type binding in complex block CLB -->
     <!-- physical mode will be the default mode if not specified -->
     <pb_type name="clb.fle" physical_mode_name="physical"/>
@@ -280,10 +280,9 @@
     <!-- Binding operating pb_types in mode 'shift_register' -->
     <pb_type name="clb.fle[shift_register].shift_reg.ff" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
     <!-- End physical pb_type binding in complex block IO -->
-
     <!-- physical pb_type binding in complex block dsp -->
     <pb_type name="mult_8" physical_mode_name="mult_8x8" idle_mode_name="mult_8x8"/>
-    <!-- Bind the primitive pb_type in the physical mode to a circuit model --> 
+    <!-- Bind the primitive pb_type in the physical mode to a circuit model -->
     <pb_type name="mult_8[mult_8x8].mult_8x8_slice.mult_8x8" circuit_model_name="mult_8x8"/>
   </pb_type_annotations>
 </openfpga_architecture>

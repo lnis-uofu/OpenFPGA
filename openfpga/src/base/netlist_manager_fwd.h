@@ -1,5 +1,5 @@
 /**************************************************
- * This file includes only declarations for 
+ * This file includes only declarations for
  * the data structures for netlist managers
  * Please refer to netlist_manager.h for more details
  *************************************************/
@@ -22,4 +22,4 @@ class NetlistManager;
 
 } /* end namespace openfpga */
 
-#endif 
+#endif

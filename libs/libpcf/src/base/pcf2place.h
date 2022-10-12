@@ -5,10 +5,11 @@
  *******************************************************************/
 #include <string>
 #include <vector>
-#include "pcf_data.h"
-#include "io_pin_table.h"
+
 #include "io_location_map.h"
 #include "io_net_place.h"
+#include "io_pin_table.h"
+#include "pcf_data.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -23,8 +24,7 @@ int pcf2place(const PcfData& pcf_data,
               const std::vector<std::string>& input_nets,
               const std::vector<std::string>& output_nets,
               const IoPinTable& io_pin_table,
-              const IoLocationMap& io_location_map,
-              IoNetPlace& io_net_place);
+              const IoLocationMap& io_location_map, IoNetPlace& io_net_place);
 
 } /* End namespace openfpga*/
 

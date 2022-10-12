@@ -5,6 +5,7 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <string>
+
 #include "fabric_bitstream.h"
 
 /********************************************************************

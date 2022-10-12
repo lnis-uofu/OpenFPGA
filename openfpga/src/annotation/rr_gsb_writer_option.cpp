@@ -1,13 +1,14 @@
 /******************************************************************************
  * Memember functions for data structure RRGSBWriterOption
  ******************************************************************************/
-#include <map>
+#include "rr_gsb_writer_option.h"
+
 #include <array>
+#include <map>
+
+#include "openfpga_tokenizer.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
-
-#include "rr_gsb_writer_option.h"
-#include "openfpga_tokenizer.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -25,7 +26,7 @@ RRGSBWriterOption::RRGSBWriterOption() {
 }
 
 /**************************************************
- * Public Accessors 
+ * Public Accessors
  *************************************************/
 std::string RRGSBWriterOption::output_directory() const {
   return output_directory_;
@@ -35,9 +36,7 @@ bool RRGSBWriterOption::unique_module_only() const {
   return unique_module_only_;
 }
 
-bool RRGSBWriterOption::include_rr_info() const {
-  return !exclude_content_[0];
-}
+bool RRGSBWriterOption::include_rr_info() const { return !exclude_content_[0]; }
 
 bool RRGSBWriterOption::include_cb_content(const t_rr_type& cb_type) const {
   if (cb_type == CHANX) {
@@ -55,9 +54,7 @@ std::vector<std::string> RRGSBWriterOption::include_gsb_names() const {
   return include_gsb_names_;
 }
 
-bool RRGSBWriterOption::verbose_output() const {
-  return verbose_output_;
-}
+bool RRGSBWriterOption::verbose_output() const { return verbose_output_; }
 
 /******************************************************************************
  * Private Mutators
@@ -80,7 +77,7 @@ void RRGSBWriterOption::set_exclude_content(const std::string& content) {
   StringToken tokenizer(content);
   std::vector<std::string> tokens = tokenizer.split(',');
   /* Parse each token */
-  std::map<std::string, int> token2index = { {"sb", 3}, {"cbx", 1}, {"cby", 2} };
+  std::map<std::string, int> token2index = {{"sb", 3}, {"cbx", 1}, {"cby", 2}};
   for (std::string token : tokens) {
     auto result = token2index.find(token);
     if (result == token2index.end()) {
@@ -90,7 +87,9 @@ void RRGSBWriterOption::set_exclude_content(const std::string& content) {
         keyword_list += pair.first + "|";
       }
       keyword_list.pop_back();
-      std::string err_msg = std::string("Invalid content '") + token + std::string("' to skip, expect [ ") + keyword_list + std::string(" ]");
+      std::string err_msg = std::string("Invalid content '") + token +
+                            std::string("' to skip, expect [ ") + keyword_list +
+                            std::string(" ]");
       VTR_LOG_ERROR(err_msg.c_str());
       num_parse_errors_++;
       continue;
@@ -113,7 +112,7 @@ void RRGSBWriterOption::set_verbose_output(const bool& enabled) {
 bool RRGSBWriterOption::valid() const {
   if (output_directory_.empty()) {
     return false;
-  } 
+  }
   if (num_parse_errors_) {
     return false;
   }

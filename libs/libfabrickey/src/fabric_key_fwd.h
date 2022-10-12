@@ -1,11 +1,11 @@
 /************************************************************************
  * A header file for FabricKey class, including critical data declaration
  * Please include this file only for using any TechnologyLibrary data structure
- * Refer to fabric_key.h for more details 
+ * Refer to fabric_key.h for more details
  ***********************************************************************/
 
 /************************************************************************
- * Create strong id for FabricKey to avoid illegal type casting 
+ * Create strong id for FabricKey to avoid illegal type casting
  ***********************************************************************/
 #ifndef FABRIC_KEY_FWD_H
 #define FABRIC_KEY_FWD_H

@@ -4,8 +4,8 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "shell.h"
 #include "openfpga_context.h"
+#include "shell.h"
 
 /********************************************************************
  * Function declaration
@@ -14,7 +14,7 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell); 
+void add_openfpga_setup_commands(openfpga::Shell<OpenfpgaContext>& shell);
 
 } /* end namespace openfpga */
 

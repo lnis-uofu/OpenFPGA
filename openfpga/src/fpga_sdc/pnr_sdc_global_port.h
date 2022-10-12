@@ -6,10 +6,11 @@
  *******************************************************************/
 #include <string>
 #include <vector>
-#include "module_manager.h"
+
 #include "fabric_global_port_info.h"
-#include "simulation_setting.h"
+#include "module_manager.h"
 #include "pnr_sdc_option.h"
+#include "simulation_setting.h"
 
 /********************************************************************
  * Function declaration

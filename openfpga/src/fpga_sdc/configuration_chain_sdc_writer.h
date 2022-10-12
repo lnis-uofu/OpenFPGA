@@ -6,6 +6,7 @@
  *******************************************************************/
 #include <string>
 #include <vector>
+
 #include "module_manager.h"
 
 /********************************************************************
@@ -15,12 +16,10 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_pnr_sdc_constrain_configurable_chain(const std::string& sdc_fname,
-                                                const float& time_unit,
-                                                const float& max_delay,
-                                                const float& min_delay,
-                                                const bool& include_time_stamp,
-                                                const ModuleManager& module_manager);
+void print_pnr_sdc_constrain_configurable_chain(
+  const std::string& sdc_fname, const float& time_unit, const float& max_delay,
+  const float& min_delay, const bool& include_time_stamp,
+  const ModuleManager& module_manager);
 
 } /* end namespace openfpga */
 

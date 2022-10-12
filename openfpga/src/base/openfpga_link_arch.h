@@ -15,8 +15,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-int link_arch(OpenfpgaContext& openfpga_context, 
-              const Command& cmd, const CommandContext& cmd_context); 
+int link_arch(OpenfpgaContext& openfpga_context, const Command& cmd,
+              const CommandContext& cmd_context);
 
 } /* end namespace openfpga */
 

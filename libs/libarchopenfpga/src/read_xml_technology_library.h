@@ -4,14 +4,14 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "pugixml_util.hpp"
 #include "pugixml.hpp"
+#include "pugixml_util.hpp"
 #include "technology_library.h"
 
 /********************************************************************
  * Function declaration
  *******************************************************************/
-TechnologyLibrary read_xml_technology_library(pugi::xml_node& Node,
-                                              const pugiutil::loc_data& loc_data);
+TechnologyLibrary read_xml_technology_library(
+  pugi::xml_node& Node, const pugiutil::loc_data& loc_data);
 
 #endif

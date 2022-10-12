@@ -1,8 +1,9 @@
 /*********************************************************************
- * Member functions for class CommandContext 
+ * Member functions for class CommandContext
  ********************************************************************/
-#include "vtr_assert.h"
 #include "command_context.h"
+
+#include "vtr_assert.h"
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -24,13 +25,14 @@ bool CommandContext::option_enable(const Command& command,
   return option_enabled_[option_id];
 }
 
-std::string CommandContext::option_value(const Command& command,
-                                         const CommandOptionId& option_id) const {
+std::string CommandContext::option_value(
+  const Command& command, const CommandOptionId& option_id) const {
   VTR_ASSERT(true == command.valid_option_id(option_id));
   return option_values_[option_id];
 }
 
-std::vector<CommandOptionId> CommandContext::check_required_options(const Command& command) const {
+std::vector<CommandOptionId> CommandContext::check_required_options(
+  const Command& command) const {
   std::vector<CommandOptionId> fail_options;
   for (const CommandOptionId& option_id : command.required_options()) {
     if (false == option_enabled_[option_id]) {
@@ -40,7 +42,8 @@ std::vector<CommandOptionId> CommandContext::check_required_options(const Comman
   return fail_options;
 }
 
-std::vector<CommandOptionId> CommandContext::check_required_option_values(const Command& command) const {
+std::vector<CommandOptionId> CommandContext::check_required_option_values(
+  const Command& command) const {
   std::vector<CommandOptionId> fail_options;
   for (const CommandOptionId& option_id : command.require_value_options()) {
     if (true == option_values_[option_id].empty()) {
@@ -50,18 +53,19 @@ std::vector<CommandOptionId> CommandContext::check_required_option_values(const 
   return fail_options;
 }
 
-
 /*********************************************************************
  * Public mutators
  ********************************************************************/
 void CommandContext::set_option(const Command& command,
-                                const CommandOptionId& option_id, const bool& status) {
+                                const CommandOptionId& option_id,
+                                const bool& status) {
   VTR_ASSERT(true == command.valid_option_id(option_id));
   option_enabled_[option_id] = status;
 }
 
 void CommandContext::set_option_value(const Command& command,
-                                      const CommandOptionId& option_id, const std::string& value) {
+                                      const CommandOptionId& option_id,
+                                      const std::string& value) {
   VTR_ASSERT(true == command.valid_option_id(option_id));
   option_values_[option_id] = value;
 }

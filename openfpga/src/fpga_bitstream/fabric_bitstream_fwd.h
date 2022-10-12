@@ -1,5 +1,5 @@
 /**************************************************
- * This file includes only declarations for 
+ * This file includes only declarations for
  * the data structures for fabric-dependent bitstream database
  * Please refer to fabric_bitstream.h for more details
  *************************************************/
@@ -22,4 +22,4 @@ class FabricBitstream;
 
 } /* end namespace openfpga */
 
-#endif 
+#endif

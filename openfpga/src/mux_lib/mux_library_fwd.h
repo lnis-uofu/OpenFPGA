@@ -1,5 +1,5 @@
 /**************************************************
- * This file includes only declarations for 
+ * This file includes only declarations for
  * the data structures to describe multiplexer structures
  * Please refer to mux_library.h for more details
  *************************************************/
@@ -22,4 +22,4 @@ class MuxLibrary;
 
 } /* end namespace openfpga */
 
-#endif 
+#endif

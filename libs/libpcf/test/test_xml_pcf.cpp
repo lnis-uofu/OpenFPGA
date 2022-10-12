@@ -1,5 +1,5 @@
 /********************************************************************
- * Unit test functions to validate the correctness of 
+ * Unit test functions to validate the correctness of
  * 1. parser of data structures
  * 2. writer of data structures
  *******************************************************************/
@@ -17,17 +17,13 @@ int main(int argc, const char** argv) {
 
   /* Parse the fabric key from an XML file */
   PinConstraints pin_constraints = read_xml_pin_constraints(argv[1]);
-  VTR_LOG("Read the pin constraints from an XML file: %s.\n",
-          argv[1]);
+  VTR_LOG("Read the pin constraints from an XML file: %s.\n", argv[1]);
 
   /* Output pin constraints to an XML file
    * This is optional only used when there is a second argument
    */
-  if (3 <= argc) { 
+  if (3 <= argc) {
     write_xml_pin_constraints(argv[2], pin_constraints);
-    VTR_LOG("Echo the pin constraints to an XML file: %s.\n",
-            argv[2]);
+    VTR_LOG("Echo the pin constraints to an XML file: %s.\n", argv[2]);
   }
 }
-
-

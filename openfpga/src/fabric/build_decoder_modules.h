@@ -4,10 +4,10 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "module_manager.h"
-#include "decoder_library.h"
-#include "mux_library.h"
 #include "circuit_library.h"
+#include "decoder_library.h"
+#include "module_manager.h"
+#include "mux_library.h"
 
 /********************************************************************
  * Function declaration

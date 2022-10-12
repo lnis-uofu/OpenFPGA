@@ -18,31 +18,31 @@
 
 /* Headers from libarchfpga */
 #include "arch_error.h"
-#include "read_xml_util.h"
-
 #include "bus_group_xml_constants.h"
 #include "read_xml_bus_group.h"
+#include "read_xml_util.h"
 
-namespace openfpga { // Begin namespace openfpga
+namespace openfpga {  // Begin namespace openfpga
 
 /********************************************************************
  * Parse XML codes of a <pin> to an object of BusGroup
  *******************************************************************/
-static 
-void read_xml_pin(pugi::xml_node& xml_pin,
-                  const pugiutil::loc_data& loc_data,
-                  BusGroup& bus_group,
-                  const BusGroupId& bus_id) {
+static void read_xml_pin(pugi::xml_node& xml_pin,
+                         const pugiutil::loc_data& loc_data,
+                         BusGroup& bus_group, const BusGroupId& bus_id) {
   if (false == bus_group.valid_bus_id(bus_id)) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_pin),
                    "Invalid id of a bus group!\n");
   }
 
-  int pin_index = get_attribute(xml_pin, XML_PIN_INDEX_ATTRIBUTE_NAME, loc_data).as_int();
-  std::string pin_name = get_attribute(xml_pin, XML_PIN_NAME_ATTRIBUTE_NAME, loc_data).as_string();
+  int pin_index =
+    get_attribute(xml_pin, XML_PIN_INDEX_ATTRIBUTE_NAME, loc_data).as_int();
+  std::string pin_name =
+    get_attribute(xml_pin, XML_PIN_NAME_ATTRIBUTE_NAME, loc_data).as_string();
 
   /* Before update storage, check if the pin index is in the range */
-  BasicPort pin_port(bus_group.bus_port(bus_id).get_name(), pin_index, pin_index);
+  BasicPort pin_port(bus_group.bus_port(bus_id).get_name(), pin_index,
+                     pin_index);
   if (!bus_group.bus_port(bus_id).contained(pin_port)) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_pin),
                    "Pin index is out of range of the bus port width!\n");
@@ -55,12 +55,11 @@ void read_xml_pin(pugi::xml_node& xml_pin,
 /********************************************************************
  * Parse XML codes of a <bus> to an object of BusGroup
  *******************************************************************/
-static 
-void read_xml_bus(pugi::xml_node& xml_bus,
-                  const pugiutil::loc_data& loc_data,
-                  BusGroup& bus_group) {
-
-  openfpga::PortParser port_parser(get_attribute(xml_bus, XML_BUS_PORT_ATTRIBUTE_NAME, loc_data).as_string());
+static void read_xml_bus(pugi::xml_node& xml_bus,
+                         const pugiutil::loc_data& loc_data,
+                         BusGroup& bus_group) {
+  openfpga::PortParser port_parser(
+    get_attribute(xml_bus, XML_BUS_PORT_ATTRIBUTE_NAME, loc_data).as_string());
 
   /* Create a new bus in the storage */
   BusGroupId bus_id = bus_group.create_bus(port_parser.port());
@@ -77,7 +76,10 @@ void read_xml_bus(pugi::xml_node& xml_bus,
   }
 
   /* Find big endian */
-  bus_group.set_bus_big_endian(bus_id, get_attribute(xml_bus, XML_BUS_BIG_ENDIAN_ATTRIBUTE_NAME, loc_data, pugiutil::OPTIONAL).as_bool(true));
+  bus_group.set_bus_big_endian(
+    bus_id, get_attribute(xml_bus, XML_BUS_BIG_ENDIAN_ATTRIBUTE_NAME, loc_data,
+                          pugiutil::OPTIONAL)
+              .as_bool(true));
 
   for (pugi::xml_node xml_pin : xml_bus.children()) {
     /* Error out if the XML child has an invalid name! */
@@ -85,14 +87,13 @@ void read_xml_bus(pugi::xml_node& xml_bus,
       bad_tag(xml_pin, loc_data, xml_bus, {XML_PIN_NODE_NAME});
     }
     read_xml_pin(xml_pin, loc_data, bus_group, bus_id);
-  } 
+  }
 }
 
 /********************************************************************
  * Parse XML codes about <bus_group> to an object of BusGroup
  *******************************************************************/
 BusGroup read_xml_bus_group(const char* fname) {
-
   vtr::ScopedStartFinishTimer timer("Read Bus Group");
 
   BusGroup bus_group;
@@ -104,16 +105,19 @@ BusGroup read_xml_bus_group(const char* fname) {
   try {
     loc_data = pugiutil::load_xml(doc, fname);
 
-    pugi::xml_node xml_root = get_single_child(doc, XML_BUS_GROUP_NODE_NAME, loc_data);
+    pugi::xml_node xml_root =
+      get_single_child(doc, XML_BUS_GROUP_NODE_NAME, loc_data);
 
-    size_t num_buses = std::distance(xml_root.children().begin(), xml_root.children().end());
+    size_t num_buses =
+      std::distance(xml_root.children().begin(), xml_root.children().end());
 
     /* Count the total number of pins */
     size_t num_pins = 0;
     for (pugi::xml_node xml_bus : xml_root.children()) {
-      num_pins += std::distance(xml_bus.children().begin(), xml_bus.children().end());
+      num_pins +=
+        std::distance(xml_bus.children().begin(), xml_bus.children().end());
     }
-  
+
     /* Reserve memory space for the buses */
     bus_group.reserve_buses(num_buses);
     /* Reserve memory space for the pins */
@@ -125,13 +129,12 @@ BusGroup read_xml_bus_group(const char* fname) {
         bad_tag(xml_bus, loc_data, xml_root, {XML_BUS_NODE_NAME});
       }
       read_xml_bus(xml_bus, loc_data, bus_group);
-    } 
+    }
   } catch (pugiutil::XmlError& e) {
-    archfpga_throw(fname, e.line(),
-                   "%s", e.what());
+    archfpga_throw(fname, e.line(), "%s", e.what());
   }
 
-  return bus_group; 
+  return bus_group;
 }
 
-} // End of namespace openfpga
+}  // End of namespace openfpga

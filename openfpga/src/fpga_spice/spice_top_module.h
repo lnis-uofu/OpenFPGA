@@ -5,6 +5,7 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include <string>
+
 #include "module_manager.h"
 #include "netlist_manager.h"
 
