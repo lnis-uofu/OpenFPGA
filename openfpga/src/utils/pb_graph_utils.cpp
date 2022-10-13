@@ -70,4 +70,28 @@ t_interconnect* pb_graph_pin_interc(t_pb_graph_pin* pb_graph_pin,
   return interc;
 }
 
+/********************************************************************
+ * This function identifies if two pb graph pins share at least one interconnect model
+ * The two pins should be in the same type of port, for example, both are inputs.
+ * Each pin may drive a number of outgoing edges while each edge represents different interconnect model
+ * By iterating over outgoing edges for each pin, common interconnect model may be found 
+ *******************************************************************/
+bool is_pb_graph_pins_share_interc(const t_pb_graph_pin* pinA, const t_pb_graph_pin* pinB) {
+  if (pinA->port->type != pinB->port->type) {
+    return false;
+  }
+  std::vector<t_interconnect*> pinA_interc_list;
+  for (auto out_edge : pinA->output_edges) {
+    if (pinA_interc_list.end() == std::find(pinA_interc_list.begin(), pinA_interc_list.end(), out_edge->interconnect)) {
+      pinA_interc_list.push_back(out_edge->interconnect);
+    }
+  } 
+  for (auto out_edge : pinB->output_edges) {
+    if (pinA_interc_list.end() != std::find(pinA_interc_list.begin(), pinA_interc_list.end(), out_edge->interconnect)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 } /* end namespace openfpga */

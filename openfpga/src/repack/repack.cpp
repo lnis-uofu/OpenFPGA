@@ -11,6 +11,7 @@
 #include "build_physical_lb_rr_graph.h"
 #include "lb_router.h"
 #include "lb_router_utils.h"
+#include "pb_graph_utils.h"
 #include "pb_type_utils.h"
 #include "physical_pb_utils.h"
 #include "repack.h"
@@ -290,7 +291,7 @@ static std::vector<int> find_pb_route_by_atom_net(
 
   if (pb_route_indices.empty()) {
     for (int pin : candidate_pool) {
-      if (pb->pb_route.at(pin).pb_graph_pin->parent_node->is_root() && source_pb_pin->port->type == pb->pb_route.at(pin).pb_graph_pin->port->type) {
+      if (pb->pb_route.at(pin).pb_graph_pin->parent_node->is_root() && is_pb_graph_pins_share_interc(source_pb_pin, pb->pb_route.at(pin).pb_graph_pin)) {
         pb_route_indices.push_back(pin);
       }
     }
