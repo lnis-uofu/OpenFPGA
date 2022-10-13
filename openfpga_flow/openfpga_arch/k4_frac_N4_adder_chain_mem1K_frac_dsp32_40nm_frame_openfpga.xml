@@ -286,18 +286,18 @@
          of the input/output of the 32x32 multiplier
       -->
     <pb_type name="mult_32[two_divisible_mult_16x16].divisible_mult_16x16[two_mult_8x8].mult_8x8_slice.mult_8x8" physical_pb_type_name="mult_32[mult_32x32].mult_32x32_slice.mult_32x32" mode_bits="01" physical_pb_type_index_factor="0">
-      <port name="a" physical_mode_port="a[0:7]" physical_mode_pin_rotate_offset="8"/>
-      <port name="b" physical_mode_port="b[0:7]" physical_mode_pin_rotate_offset="8"/>
-      <port name="out" physical_mode_port="out[0:15]" physical_mode_pin_rotate_offset="16"/>
+      <port name="a" physical_mode_port="a[0:7]" physical_mode_port_rotate_offset="8"/>
+      <port name="b" physical_mode_port="b[0:7]" physical_mode_port_rotate_offset="8"/>
+      <port name="out" physical_mode_port="out[0:15]" physical_mode_port_rotate_offset="16"/>
     </pb_type>
     <!-- Bind the 16x16 multiplier to the physical 32x32 multiplier
          There are two 16x16 multipliers, each of which occupies part
          of the input/output of the 32x32 multiplier
       -->
     <pb_type name="mult_32[two_divisible_mult_16x16].divisible_mult_16x16[mult_16x16].mult_16x16_slice.mult_16x16" physical_pb_type_name="mult_32[mult_32x32].mult_32x32_slice.mult_32x32" mode_bits="10" physical_pb_type_index_factor="0">
-      <port name="a" physical_mode_port="a[0:15]" physical_mode_pin_rotate_offset="16"/>
-      <port name="b" physical_mode_port="b[0:15]" physical_mode_pin_rotate_offset="16"/>
-      <port name="out" physical_mode_port="out[0:31]" physical_mode_pin_rotate_offset="32"/>
+      <port name="a" physical_mode_port="a[0:15]" physical_mode_port_rotate_offset="16"/>
+      <port name="b" physical_mode_port="b[0:15]" physical_mode_port_rotate_offset="16"/>
+      <port name="out" physical_mode_port="out[0:31]" physical_mode_port_rotate_offset="32"/>
     </pb_type>
     <!-- END physical pb_type binding in complex block dsp -->
   </pb_type_annotations>
