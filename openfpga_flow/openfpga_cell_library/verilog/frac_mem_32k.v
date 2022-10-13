@@ -161,13 +161,17 @@ module frac_mem_32k (
     end else if (4'b0111 == mode) begin 
       if (we_a) begin
         ram_a[addr_a[0:9]] <= data_a;
-        ram_b[addr_b[0:9]] <= data_b;
         q_a <= data_a;
-        q_b <= data_b;
       end else begin
         q_a <= ram_a[addr_a[0:9]];
+      end
+      
+      if (we_b) begin
+        ram_b[addr_b[0:9]] <= data_b;
+        q_b <= data_b;
+      end else begin
         q_b <= ram_b[addr_b[0:9]];
-      end 
+      end
     // Operating mode: dual port RAM 2048 x 16
     end else if (4'b1000 == mode) begin
       if (we_a) begin
