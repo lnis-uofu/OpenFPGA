@@ -223,7 +223,6 @@
     <pb_type name="io[outpad_registered].ff[dffrn].dffrn" physical_pb_type_name="io[physical].ff" mode_bits="1">
       <port name="RN" physical_mode_port="R"/>
     </pb_type>
-
     <!-- End physical pb_type binding in complex block IO -->
     <!-- physical pb_type binding in complex block CLB -->
     <!-- physical mode will be the default mode if not specified -->
