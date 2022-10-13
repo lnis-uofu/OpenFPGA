@@ -259,8 +259,10 @@ static std::vector<t_pb_graph_pin*> find_routed_pb_graph_pins_atom_net(
  * This function will find the actual routing traces of the demanded net
  * There is a specific search space applied when searching the routing traces:
  * - ONLY applicable to the pb_pin of top-level pb_graph_node
- * - First-tier candidates are in the same port of the source pin 
- * - If nothing is found in first-tier, we find expand the range by considering all the pins in the same type that are available at the top-level pb_graph_node
+ * - First-tier candidates are in the same port of the source pin
+ * - If nothing is found in first-tier, we find expand the range by considering
+ *all the pins in the same type that are available at the top-level
+ *pb_graph_node
  ***************************************************************************************/
 static std::vector<int> find_pb_route_by_atom_net(
   const t_pb* pb, const t_pb_graph_pin* source_pb_pin,
@@ -291,7 +293,9 @@ static std::vector<int> find_pb_route_by_atom_net(
 
   if (pb_route_indices.empty()) {
     for (int pin : candidate_pool) {
-      if (pb->pb_route.at(pin).pb_graph_pin->parent_node->is_root() && is_pb_graph_pins_share_interc(source_pb_pin, pb->pb_route.at(pin).pb_graph_pin)) {
+      if (pb->pb_route.at(pin).pb_graph_pin->parent_node->is_root() &&
+          is_pb_graph_pins_share_interc(source_pb_pin,
+                                        pb->pb_route.at(pin).pb_graph_pin)) {
         pb_route_indices.push_back(pin);
       }
     }
@@ -679,8 +683,12 @@ static void add_lb_router_nets(
     } else if (1 == pb_route_indices.size()) {
       pb_route_index = pb_route_indices[0];
     } else {
-      VTR_LOG_ERROR("Found %d routing traces for net \'%s\' in clustered block \'%s\'. Expect only 1.\n",
-                    pb_route_indices.size(), atom_ctx.nlist.net_name(atom_net_id_to_route).c_str(), clustering_ctx.clb_nlist.block_name(block_id).c_str());
+      VTR_LOG_ERROR(
+        "Found %d routing traces for net \'%s\' in clustered block \'%s\'. "
+        "Expect only 1.\n",
+        pb_route_indices.size(),
+        atom_ctx.nlist.net_name(atom_net_id_to_route).c_str(),
+        clustering_ctx.clb_nlist.block_name(block_id).c_str());
       VTR_ASSERT(1 == pb_route_indices.size());
     }
     t_pb_graph_pin* packing_source_pb_pin =
