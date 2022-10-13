@@ -238,9 +238,6 @@
         <interconnect>
           <direct name="clk" input="io.clk" output="ff.C"/>
           <direct name="reset" input="io.reset" output="ff.R"/>
-          <direct name="outpad" input="io.outpad" output="iopad.outpad">
-            <delay_constant max="1.394e-11" in_port="io.outpad" out_port="iopad.outpad"/>
-          </direct>
           <direct name="inpad" input="iopad.inpad" output="io.inpad">
             <delay_constant max="4.243e-11" in_port="iopad.inpad" out_port="io.inpad"/>
           </direct>
@@ -324,10 +321,14 @@
               <T_clock_to_Q max="124e-12" port="dffr.Q" clock="C"/>
             </pb_type>
             <interconnect>
-              <direct name="direct1" input="ff.D" output="dffr.D"/>
+              <direct name="direct1" input="ff.D" output="dffr.D">
+                <pack_pattern name="registered_io" in_port="ff.D" out_port="dffr.D"/>
+              </direct>
               <direct name="direct2" input="ff.C" output="dffr.C"/>
               <direct name="direct3" input="ff.R" output="dffr.R"/>
-              <direct name="direct4" input="dffr.Q" output="ff.Q"/>
+              <direct name="direct4" input="dffr.Q" output="ff.Q">
+                <pack_pattern name="registered_io" in_port="dffr.Q" out_port="ff.Q"/>
+              </direct>
             </interconnect>
           </mode>
           <mode name="dffrn">
@@ -354,7 +355,9 @@
           <direct name="outpad" input="io.outpad" output="ff.D">
             <pack_pattern name="registered_io" in_port="io.outpad" out_port="ff.D"/>
           </direct>
-          <direct name="ff2outpad" input="ff.Q" output="outpad.outpad"/>
+          <direct name="ff2outpad" input="ff.Q" output="outpad.outpad">
+            <pack_pattern name="registered_io" in_port="ff.Q" out_port="outpad.outpad"/>
+          </direct>
         </interconnect>
       </mode>
       <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 10% of the tracks in a channel -->
