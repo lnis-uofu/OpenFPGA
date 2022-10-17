@@ -80,6 +80,7 @@ IoPinTable read_csv_io_pin_table(
           "Invalid direction defintion! Expect [A2F|F2A] in the pin name\n");
         exit(1);
       }
+    }
 
     /* Parse pin direction from a specific column, this has a higher priority
      * than inferring from pin names */
