@@ -533,7 +533,7 @@ static ShellCommandId add_openfpga_pcf2place_command(
     shell_cmd.add_option("pin_table_direction_convention", false,
                          "the convention to follow when inferring pin "
                          "direction from the name of ports in pin table file");
-  shell_cmd.set_option_require_value(opt_fpga_fix_pins_file,
+  shell_cmd.set_option_require_value(opt_pin_table_dir_convention,
                                      openfpga::OPT_STRING);
 
   /* Add an option '--no_time_stamp' */
