@@ -185,8 +185,9 @@ run-task basic_tests/bus_group/full_testbench_explicit_mapping $@
 run-task basic_tests/bus_group/full_testbench_implicit_mapping $@
 
 echo -e "Testing fix pins features";
-run-task basic_tests/fix_pins $@
-run-task basic_tests/constrain_pin_location $@
+run-task basic_tests/io_constraints/fix_pins $@
+run-task basic_tests/io_constraints/example_pcf $@
+run-task basic_tests/io_constraints/empty_pcf $@
 
 echo -e "Testing project templates";
 run-task template_tasks/vpr_blif_template $@
