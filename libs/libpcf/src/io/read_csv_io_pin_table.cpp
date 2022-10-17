@@ -29,7 +29,7 @@ constexpr const char* DIRECTION_OUTPUT = "out";
 /********************************************************************
  * Parse XML codes about <pin_constraints> to an object of PinConstraints
  *******************************************************************/
-IoPinTable read_csv_io_pin_table(const char* fname) {
+IoPinTable read_csv_io_pin_table(const char* fname, const e_pin_table_direction_convention& pin_dir_convention) {
   vtr::ScopedStartFinishTimer timer("Read I/O Pin Table");
 
   IoPinTable io_pin_table;
@@ -66,16 +66,18 @@ IoPinTable read_csv_io_pin_table(const char* fname) {
 
     /*This is not general purpose: we should have an explicit attribute in the
      * csv file to decalare direction */
-    if (internal_pin_parser.port().get_name().find("A2F") !=
-        std::string::npos) {
-      io_pin_table.set_pin_direction(pin_id, IoPinTable::INPUT);
-    } else if (internal_pin_parser.port().get_name().find("F2A") !=
-               std::string::npos) {
-      io_pin_table.set_pin_direction(pin_id, IoPinTable::OUTPUT);
-    } else {
-      VTR_LOG(
-        "Invalid direction defintion! Expect [A2F|F2A] in the pin name\n");
-      exit(1);
+    if (pin_dir_convention == e_pin_table_direction_convention::QUICKLOGIC) {
+      if (internal_pin_parser.port().get_name().find("A2F") !=
+          std::string::npos) {
+        io_pin_table.set_pin_direction(pin_id, IoPinTable::INPUT);
+      } else if (internal_pin_parser.port().get_name().find("F2A") !=
+                 std::string::npos) {
+        io_pin_table.set_pin_direction(pin_id, IoPinTable::OUTPUT);
+      } else {
+        VTR_LOG(
+          "Invalid direction defintion! Expect [A2F|F2A] in the pin name\n");
+        exit(1);
+      }
     }
 
     /* Parse pin direction from a specific column, this has a higher priority than inferring from pin names */
