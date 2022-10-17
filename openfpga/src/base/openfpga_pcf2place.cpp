@@ -49,13 +49,13 @@ int pcf2place_wrapper(const OpenfpgaContext& openfpga_context,
   e_pin_table_direction_convention pin_table_dir_convention = e_pin_table_direction_convention::EXPLICIT;
   if (cmd_context.option_enable(cmd, opt_pin_table_dir_convention)) {
     std::string pin_table_dir_convention_str = cmd_context.option_value(cmd, opt_pin_table_dir_convention);
-    if (pin_table_dir_convention_str == std::string(PIN_TABLE_DIRECTION_CONVENTION_STRING[e_pin_table_direction_convention::EXPLICIT])) {
+    if (pin_table_dir_convention_str == std::string(PIN_TABLE_DIRECTION_CONVENTION_STRING.at(e_pin_table_direction_convention::EXPLICIT))) {
       pin_table_dir_convention = e_pin_table_direction_convention::EXPLICIT;
-    } else if (pin_table_dir_convention_str == std::string(PIN_TABLE_DIRECTION_CONVENTION_STRING[e_pin_table_direction_convention::QUICKLOGIC])) {
+    } else if (pin_table_dir_convention_str == std::string(PIN_TABLE_DIRECTION_CONVENTION_STRING.at(e_pin_table_direction_convention::QUICKLOGIC))) {
       pin_table_dir_convention = e_pin_table_direction_convention::QUICKLOGIC;
     } else {
       VTR_LOG_ERROR("Invalid pin naming convention ('%s') to identify port direction for pin table! Expect ['%s'|'%s'].\n",
-              pin_table_dir_convention_str.c_str(), PIN_TABLE_DIRECTION_CONVENTION_STRING[e_pin_table_direction_convention::EXPLICIT], PIN_TABLE_DIRECTION_CONVENTION_STRING[e_pin_table_direction_convention::QUICKLOGIC]);
+              pin_table_dir_convention_str.c_str(), PIN_TABLE_DIRECTION_CONVENTION_STRING.at(e_pin_table_direction_convention::EXPLICIT), PIN_TABLE_DIRECTION_CONVENTION_STRING.at(e_pin_table_direction_convention::QUICKLOGIC));
     }
   }
 
