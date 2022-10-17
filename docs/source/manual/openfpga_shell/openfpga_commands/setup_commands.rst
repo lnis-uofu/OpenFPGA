@@ -267,6 +267,8 @@ write_fabric_io_info
 
   .. note:: This file is designed for pin constraint file conversion.
 
+.. _openfpga_setup_commands_pcf2place:
+
 pcf2place
 ~~~~~~~~~
 
