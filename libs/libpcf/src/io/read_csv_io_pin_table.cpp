@@ -97,8 +97,9 @@ IoPinTable read_csv_io_pin_table(
         DIRECTION_INPUT, DIRECTION_OUTPUT);
       exit(1);
     }
-
-    return io_pin_table;
   }
+
+  return io_pin_table;
+}
 
 } /* End namespace openfpga*/
