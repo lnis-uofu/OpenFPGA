@@ -42,7 +42,8 @@ int main(int argc, const char** argv) {
     openfpga::read_xml_io_location_map(argv[3]);
   VTR_LOG("Read the I/O location map from an XML file: %s.\n", argv[3]);
 
-  openfpga::IoPinTable io_pin_table = openfpga::read_csv_io_pin_table(argv[4], openfpga::e_pin_table_direction_convention::QUICKLOGIC);
+  openfpga::IoPinTable io_pin_table = openfpga::read_csv_io_pin_table(
+    argv[4], openfpga::e_pin_table_direction_convention::QUICKLOGIC);
   VTR_LOG("Read the I/O pin table from a csv file: %s.\n", argv[4]);
 
   /* Convert */

@@ -20,12 +20,15 @@ enum class e_pin_table_direction_convention {
   QUICKLOGIC,
   NUM_TYPES
 };
-const std::map<e_pin_table_direction_convention, const char*> PIN_TABLE_DIRECTION_CONVENTION_STRING = {
-  {e_pin_table_direction_convention::EXPLICIT, "explicit"},
-  {e_pin_table_direction_convention::QUICKLOGIC, "quicklogic"}
-}; //String versions of side orientations
+const std::map<e_pin_table_direction_convention, const char*>
+  PIN_TABLE_DIRECTION_CONVENTION_STRING = {
+    {e_pin_table_direction_convention::EXPLICIT, "explicit"},
+    {e_pin_table_direction_convention::QUICKLOGIC,
+     "quicklogic"}};  // String versions of side orientations
 
-IoPinTable read_csv_io_pin_table(const char* fname, const e_pin_table_direction_convention& pin_dir_convention);
+IoPinTable read_csv_io_pin_table(
+  const char* fname,
+  const e_pin_table_direction_convention& pin_dir_convention);
 
 } /* End namespace openfpga*/
 

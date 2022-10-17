@@ -20,16 +20,18 @@ namespace openfpga {
 
 /* Constants for io pin table csv parser */
 constexpr const int ROW_INDEX_INTERNAL_PIN = 4;
-constexpr const int ROW_INDEX_EXTERNAL_PIN = 5; 
-constexpr const int ROW_INDEX_DIRECTION = 6; 
-constexpr const int ROW_INDEX_SIDE = 0; 
+constexpr const int ROW_INDEX_EXTERNAL_PIN = 5;
+constexpr const int ROW_INDEX_DIRECTION = 6;
+constexpr const int ROW_INDEX_SIDE = 0;
 constexpr const char* DIRECTION_INPUT = "in";
 constexpr const char* DIRECTION_OUTPUT = "out";
 
 /********************************************************************
  * Parse XML codes about <pin_constraints> to an object of PinConstraints
  *******************************************************************/
-IoPinTable read_csv_io_pin_table(const char* fname, const e_pin_table_direction_convention& pin_dir_convention) {
+IoPinTable read_csv_io_pin_table(
+  const char* fname,
+  const e_pin_table_direction_convention& pin_dir_convention) {
   vtr::ScopedStartFinishTimer timer("Read I/O Pin Table");
 
   IoPinTable io_pin_table;
@@ -80,7 +82,8 @@ IoPinTable read_csv_io_pin_table(const char* fname, const e_pin_table_direction_
       }
     }
 
-    /* Parse pin direction from a specific column, this has a higher priority than inferring from pin names */
+    /* Parse pin direction from a specific column, this has a higher priority
+     * than inferring from pin names */
     std::string port_dir_str = row_vec.at(ROW_INDEX_DIRECTION);
     if (port_dir_str == std::string(DIRECTION_INPUT)) {
       io_pin_table.set_pin_direction(pin_id, IoPinTable::INPUT);
@@ -88,7 +91,8 @@ IoPinTable read_csv_io_pin_table(const char* fname, const e_pin_table_direction_
       io_pin_table.set_pin_direction(pin_id, IoPinTable::OUTPUT);
     } else {
       VTR_LOG(
-        "Invalid direction defintion! Expect [%s|%s] in the GPIO direction\n", DIRECTION_INPUT, DIRECTION_OUTPUT);
+        "Invalid direction defintion! Expect [%s|%s] in the GPIO direction\n",
+        DIRECTION_INPUT, DIRECTION_OUTPUT);
       exit(1);
     }
   }
