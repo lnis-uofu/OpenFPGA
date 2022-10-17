@@ -82,6 +82,9 @@ set(ODIN_YOSYS OFF CACHE BOOL "Enable building odin with yosys in Verilog-to-Rou
 set(YOSYS_SV_UHDM_PLUGIN OFF CACHE BOOL "Enable building and installing Yosys SystemVerilog and UHDM plugins in Verilog-to-Routing")
 set(VTR_ENABLE_VERSION ${OPENFPGA_WITH_VERSION} CACHE BOOL "Enable version always-up-to-date when building codebase. Disable only when you do not care an accurate version number")
 
+#Compiler flag configuration checks
+include(CheckCXXCompilerFlag)
+
 #
 # We require c++14 support
 #
@@ -218,9 +221,21 @@ endif()
 
 # Set final flags
 #
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARN_FLAGS} ${SANITIZE_FLAGS}")
-message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+separate_arguments(
+    ADDITIONAL_FLAGS UNIX_COMMAND "${SANITIZE_FLAGS} ${PROFILING_FLAGS} ${COVERAGE_FLAGS} ${LOGGING_FLAGS} ${COLORED_COMPILE} ${EXTRA_FLAGS}"
+    )
+separate_arguments(
+    WARN_FLAGS UNIX_COMMAND "${WARN_FLAGS}"
+    )
 
+# 
+# Sub-projects with their own compiler settings
+#
+add_subdirectory(vtr-verilog-to-routing)
+
+add_compile_options(${WARN_FLAGS}) #Add warn flags for VTR tools
+add_compile_options(${ADDITIONAL_FLAGS})
+link_libraries(${ADDITIONAL_FLAGS})
 
 # Unit Testing
 #
@@ -229,9 +244,8 @@ if (OPENFPGA_WITH_TEST)
 endif()
 
 # 
-# Sub-projects
+# Sub-projects to apply current complier settings
 #
-add_subdirectory(vtr-verilog-to-routing)
 add_subdirectory(libs)
 add_subdirectory(openfpga)
 
@@ -260,17 +274,14 @@ if (YOSYS_ENABLE_READLINE)
   find_package(Readline REQUIRED)
 endif()
 
-#
-#########################
-##                      #
-## Compiler Flags Setup #
-##                      #
-#########################
-#
-## Compiler flag configuration checks
-include(CheckCCompilerFlag)
-include(CheckCXXCompilerFlag)
-#
+#PugiXml has some deliberate switch fallthrough cases (as indicated by comments), but they
+#are tagged as warnings with g++-7 (the comments don't match g++-7's suppression regexes).
+#Since we don't want to change PugiXml (it is developed externally), we relax the warning
+#level so no fallthrough warnings are generated
+CHECK_CXX_COMPILER_FLAG("-Wimplicit-fallthrough=0" CXX_COMPILER_SUPPORTS_-Wimplicit-fallthrough=0)
+if(CXX_COMPILER_SUPPORTS_-Wimplicit-fallthrough=0)
+    target_compile_options(libpugixml PRIVATE "-Wimplicit-fallthrough=0")
+endif()
 
 # we will check if yosys already exist. if not then build it
 if (OPENFPGA_WITH_YOSYS)
