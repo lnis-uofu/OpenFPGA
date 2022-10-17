@@ -81,21 +81,20 @@ IoPinTable read_csv_io_pin_table(
         exit(1);
       }
 
-      /* Parse pin direction from a specific column, this has a higher priority
-       * than inferring from pin names */
-      std::string port_dir_str = row_vec.at(ROW_INDEX_DIRECTION);
-      if (port_dir_str == std::string(DIRECTION_INPUT)) {
-        io_pin_table.set_pin_direction(pin_id, IoPinTable::INPUT);
-      } else if (port_dir_str == std::string(DIRECTION_OUTPUT)) {
-        io_pin_table.set_pin_direction(pin_id, IoPinTable::OUTPUT);
-      } else if (pin_dir_convention ==
-                 e_pin_table_direction_convention::EXPLICIT) {
-        /* Error out only when we need explicit port direction */
-        VTR_LOG(
-          "Invalid direction defintion! Expect [%s|%s] in the GPIO direction\n",
-          DIRECTION_INPUT, DIRECTION_OUTPUT);
-        exit(1);
-      }
+    /* Parse pin direction from a specific column, this has a higher priority
+     * than inferring from pin names */
+    std::string port_dir_str = row_vec.at(ROW_INDEX_DIRECTION);
+    if (port_dir_str == std::string(DIRECTION_INPUT)) {
+      io_pin_table.set_pin_direction(pin_id, IoPinTable::INPUT);
+    } else if (port_dir_str == std::string(DIRECTION_OUTPUT)) {
+      io_pin_table.set_pin_direction(pin_id, IoPinTable::OUTPUT);
+    } else if (pin_dir_convention ==
+               e_pin_table_direction_convention::EXPLICIT) {
+      /* Error out only when we need explicit port direction */
+      VTR_LOG(
+        "Invalid direction defintion! Expect [%s|%s] in the GPIO direction\n",
+        DIRECTION_INPUT, DIRECTION_OUTPUT);
+      exit(1);
     }
 
     return io_pin_table;
