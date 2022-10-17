@@ -16,7 +16,7 @@ int main(int argc, const char** argv) {
   VTR_ASSERT((2 == argc) || (3 == argc));
 
   /* Parse the fabric key from an XML file */
-  openfpga::IoPinTable io_pin_table = openfpga::read_csv_io_pin_table(argv[1]);
+  openfpga::IoPinTable io_pin_table = openfpga::read_csv_io_pin_table(argv[1], openfpga::e_pin_table_direction_convention::QUICKLOGIC);
   VTR_LOG("Read the I/O pin table from a csv file: %s.\n", argv[1]);
 
   /* Output to an XML file
