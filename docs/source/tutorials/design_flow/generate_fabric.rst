@@ -35,7 +35,7 @@ After finalizing your configuration file, you can run the task by calling the py
 
 .. code-block:: shell
 
-  python3 openfpga_flow/scripts/run_fpga_task.py basic_tests/generate_fabric 
+  python3 openfpga_flow/scripts/run_fpga_task.py openfpga_flow/tasks/basic_tests/generate_fabric 
 
 When the flow run is executed, you can visit the runtime directory and check the Verilog netlists.
 
