@@ -32,8 +32,8 @@ module frac_mem_32k (
   input clk,
   input [0:3] mode);
 
-  reg [0:9] ram_a [0:31];
-  reg [0:9] ram_b [0:31];
+  reg [0:31] ram_a [0:9];
+  reg [0:31] ram_b [0:9];
 
   always @(posedge clk) begin
     // Operating mode: single port RAM 512 x 64
@@ -153,7 +153,7 @@ module frac_mem_32k (
     // Operating mode: single port RAM 32768 x 1
     end else if (4'b0110 == mode) begin
       if (we_a) begin
-        ram_a[addr_a[0:9]][addr_a[10:14]] = data_a[0:0];
+        ram_a[addr_a[0:9]][addr_a[10:14]] <= data_a[0:0];
       end else begin
         q_a <= ram_a[addr_a[0:9]][addr_a[10:14]];
       end
@@ -361,12 +361,12 @@ module frac_mem_32k (
     // Operating mode: dual port RAM 32768 x 1
     end else if (4'b1101 == mode) begin
       if (we_a) begin
-        ram_a[addr_a[0:9]][addr_a[10:14]] = data_a[0:0];
+        ram_a[addr_a[0:9]][addr_a[10:14]] <= data_a[0:0];
       end else begin
         q_a <= ram_a[addr_a[0:9]][addr_a[10:14]];
       end
       if (we_b) begin
-        ram_b[addr_b[0:9]][addr_b[10:14]] = data_b[0:0];
+        ram_b[addr_b[0:9]][addr_b[10:14]] <= data_b[0:0];
       end else begin
         q_b <= ram_b[addr_b[0:9]][addr_b[10:14]];
       end
