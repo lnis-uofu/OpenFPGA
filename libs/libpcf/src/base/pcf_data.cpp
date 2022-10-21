@@ -70,6 +70,7 @@ bool PcfData::validate() const {
       VTR_LOG_ERROR("Pin '%s[%lu]' is assigned to two nets '%s' and '%s'!\n",
                     curr_pin.get_name().c_str(), curr_pin.get_lsb(),
                     result->second.c_str(), curr_net.c_str());
+      num_err++;
     }
     pin2net[curr_pin] = curr_net;
   }
