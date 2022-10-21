@@ -60,18 +60,21 @@ bool PcfData::validate() const {
     net2pin[curr_net] = curr_pin;
   }
   /* We should not have duplicated pins in assignment: 1 pin -> 2 nets */
-  std::map<BasicPort, std::string> pin2net;
+  /* Caution: must use constant pointer here, otherwise you may see duplicated
+   * key on BasicPort with different content! */
+  std::map<const BasicPort*, std::string> pin2net;
   for (const PcfIoConstraintId& io_id : io_constraints()) {
     std::string curr_net = io_constraint_nets_[io_id];
-    BasicPort curr_pin = io_constraint_pins_[io_id];
-    auto result = pin2net.find(curr_pin);
+    const BasicPort& curr_pin = io_constraint_pins_[io_id];
+    auto result = pin2net.find(&curr_pin);
     if (result != pin2net.end()) {
       /* Found one pin assigned to two nets, this is definitely an error  */
       VTR_LOG_ERROR("Pin '%s[%lu]' is assigned to two nets '%s' and '%s'!\n",
                     curr_pin.get_name().c_str(), curr_pin.get_lsb(),
                     result->second.c_str(), curr_net.c_str());
+      num_err++;
     }
-    pin2net[curr_pin] = curr_net;
+    pin2net[&curr_pin] = curr_net;
   }
   if (num_err) {
     return false;
