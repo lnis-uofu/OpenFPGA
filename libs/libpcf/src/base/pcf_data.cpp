@@ -60,7 +60,8 @@ bool PcfData::validate() const {
     net2pin[curr_net] = curr_pin;
   }
   /* We should not have duplicated pins in assignment: 1 pin -> 2 nets */
-  /* Caution: must use constant pointer here, otherwise you may see duplicated key on BasicPort with different content! */
+  /* Caution: must use constant pointer here, otherwise you may see duplicated
+   * key on BasicPort with different content! */
   std::map<const BasicPort*, std::string> pin2net;
   for (const PcfIoConstraintId& io_id : io_constraints()) {
     std::string curr_net = io_constraint_nets_[io_id];
