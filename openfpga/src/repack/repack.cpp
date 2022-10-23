@@ -11,6 +11,7 @@
 #include "build_physical_lb_rr_graph.h"
 #include "lb_router.h"
 #include "lb_router_utils.h"
+#include "pb_graph_utils.h"
 #include "pb_type_utils.h"
 #include "physical_pb_utils.h"
 #include "repack.h"
@@ -258,7 +259,10 @@ static std::vector<t_pb_graph_pin*> find_routed_pb_graph_pins_atom_net(
  * This function will find the actual routing traces of the demanded net
  * There is a specific search space applied when searching the routing traces:
  * - ONLY applicable to the pb_pin of top-level pb_graph_node
- * - candidate can be limited to a set of pb pins
+ * - First-tier candidates are in the same port of the source pin
+ * - If nothing is found in first-tier, we find expand the range by considering
+ *all the pins in the same type that are available at the top-level
+ *pb_graph_node
  ***************************************************************************************/
 static std::vector<int> find_pb_route_by_atom_net(
   const t_pb* pb, const t_pb_graph_pin* source_pb_pin,
@@ -267,6 +271,7 @@ static std::vector<int> find_pb_route_by_atom_net(
 
   std::vector<int> pb_route_indices;
 
+  std::vector<int> candidate_pool;
   for (int pin = 0; pin < pb->pb_graph_node->total_pb_pins; ++pin) {
     /* Bypass unused pins */
     if ((0 == pb->pb_route.count(pin)) ||
@@ -277,9 +282,22 @@ static std::vector<int> find_pb_route_by_atom_net(
     if (atom_net_id != pb->pb_route.at(pin).atom_net_id) {
       continue;
     }
+    candidate_pool.push_back(pin);
+  }
 
+  for (int pin : candidate_pool) {
     if (source_pb_pin->port == pb->pb_route.at(pin).pb_graph_pin->port) {
       pb_route_indices.push_back(pin);
+    }
+  }
+
+  if (pb_route_indices.empty()) {
+    for (int pin : candidate_pool) {
+      if (pb->pb_route.at(pin).pb_graph_pin->parent_node->is_root() &&
+          is_pb_graph_pins_share_interc(source_pb_pin,
+                                        pb->pb_route.at(pin).pb_graph_pin)) {
+        pb_route_indices.push_back(pin);
+      }
     }
   }
 
@@ -662,9 +680,16 @@ static void add_lb_router_nets(
     if (0 == pb_route_indices.size()) {
       VTR_LOGV(verbose, "Bypass routing due to no routing traces found\n");
       continue;
-    } else {
-      VTR_ASSERT(1 == pb_route_indices.size());
+    } else if (1 == pb_route_indices.size()) {
       pb_route_index = pb_route_indices[0];
+    } else {
+      VTR_LOG_ERROR(
+        "Found %d routing traces for net \'%s\' in clustered block \'%s\'. "
+        "Expect only 1.\n",
+        pb_route_indices.size(),
+        atom_ctx.nlist.net_name(atom_net_id_to_route).c_str(),
+        clustering_ctx.clb_nlist.block_name(block_id).c_str());
+      VTR_ASSERT(1 == pb_route_indices.size());
     }
     t_pb_graph_pin* packing_source_pb_pin =
       get_pb_graph_node_pin_from_block_pin(block_id, pb_route_index);

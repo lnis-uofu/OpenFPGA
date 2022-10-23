@@ -267,6 +267,8 @@ write_fabric_io_info
 
   .. note:: This file is designed for pin constraint file conversion.
 
+.. _openfpga_setup_commands_pcf2place:
+
 pcf2place
 ~~~~~~~~~
 
@@ -291,6 +293,10 @@ pcf2place
   .. option:: --fpga_fix_pins <string>
 
     Specify the path to the placement file which will be outputted by running this command 
+
+  .. option:: --pin_table_direction_convention <string>
+
+    Specify the naming convention for ports in pin table files from which pin direction can be inferred. Can be [``explicit``|``quicklogic``]. When ``explicit`` is selected, pin direction is inferred based on the explicit definition in a column of pin table file, e.g., GPIO direction (see details in :ref:`file_format_pin_table_file`). When ``quicklogic`` is selected, pin direction is inferred by port name: a port whose postfix is ``_A2F`` is an input, while a port whose postfix is ``_A2F`` is an output. By default, it is ``explicit``.
 
   .. option:: --no_time_stamp
 

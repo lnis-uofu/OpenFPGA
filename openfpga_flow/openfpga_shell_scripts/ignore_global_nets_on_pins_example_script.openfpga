@@ -30,7 +30,7 @@ write_fabric_hierarchy --file ./fabric_hierarchy.txt
 # Repack the netlist to physical pbs
 # This must be done before bitstream generator and testbench generation
 # Strongly recommend it is done after all the fix-up have been applied
-repack --ignore_global_nets_on_pins clb.I[0:11] #--verbose
+repack --ignore_global_nets_on_pins clb.I[0:11] --design_constraints ${OPENFPGA_REPACK_DESIGN_CONSTRAINT_FILE} #--verbose
 
 # Build the bitstream
 #  - Output the fabric-independent bitstream to a file
