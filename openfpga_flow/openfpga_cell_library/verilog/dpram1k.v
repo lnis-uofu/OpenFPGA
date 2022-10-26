@@ -14,7 +14,7 @@ module dpram_128x8 (
 	input[0:7] d_in,
 	output[0:7] d_out );
 
-		dual_port_sram memory_0 (
+		dpram_128x8_core memory_0 (
 			.wclk		(clk),
 			.wen		(wen),
 			.waddr		(waddr),
@@ -26,7 +26,7 @@ module dpram_128x8 (
 
 endmodule
 
-module dual_port_sram (
+module dpram_128x8_core (
 	input wclk,
 	input wen,
 	input[0:6] waddr,
