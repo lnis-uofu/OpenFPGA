@@ -14,7 +14,7 @@ module dpram_512x32 (
 	input[0:31] d_in,
 	output[0:31] d_out );
 
-		dual_port_sram memory_0 (
+		dpram_512x32_core memory_0 (
 			.wclk		(clk),
 			.wen		(wen),
 			.waddr		(waddr),
@@ -26,7 +26,7 @@ module dpram_512x32 (
 
 endmodule
 
-module dual_port_sram (
+module dpram_512x32_core (
 	input wclk,
 	input wen,
 	input[0:9] waddr,
