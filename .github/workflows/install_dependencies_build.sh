@@ -1,4 +1,8 @@
-apt-get update && apt-get install -y \
+#!/usr/bin/env bash
+
+# The package list is designed for Ubuntu 20.04 LTS
+sudo apt-get update
+sudo apt-get install -y \
     autoconf \
     automake \
     bison \
@@ -38,4 +42,22 @@ apt-get update && apt-get install -y \
     time \
     valgrind \
     wget \
-    zip
+    zip \
+    swig \
+    expect \
+    g++-7 \
+    gcc-7 \
+    g++-8 \
+    gcc-8 \
+    g++-9 \
+    gcc-9 \
+    g++-10 \
+    gcc-10 \
+    g++-11 \
+    gcc-11 \
+    clang-6.0 \
+    clang-7 \
+    clang-8 \
+    clang-10 \
+    clang-format-10 \
+    libxml2-utils

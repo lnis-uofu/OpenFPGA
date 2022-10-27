@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!-- 
   Architecture with no fracturable LUTs
 
@@ -47,47 +48,53 @@
     </model>
   </models>
   <tiles>
-    <tile name="io" capacity="8" area="0">
-      <equivalent_sites>
-        <site pb_type="io"/>
-      </equivalent_sites>
-      <input name="outpad" num_pins="1"/>
-      <output name="inpad" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="custom">
-        <loc side="left">io.outpad io.inpad</loc>
-        <loc side="top">io.outpad io.inpad</loc>
-        <loc side="right">io.outpad io.inpad</loc>
-        <loc side="bottom">io.outpad io.inpad</loc>
-      </pinlocations>
+    <tile name="io" area="0">
+      <sub_tile name="io" capacity="8">
+        <equivalent_sites>
+          <site pb_type="io"/>
+        </equivalent_sites>
+        <input name="outpad" num_pins="1"/>
+        <output name="inpad" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="custom">
+          <loc side="left">io.outpad io.inpad</loc>
+          <loc side="top">io.outpad io.inpad</loc>
+          <loc side="right">io.outpad io.inpad</loc>
+          <loc side="bottom">io.outpad io.inpad</loc>
+        </pinlocations>
+      </sub_tile>
     </tile>
     <tile name="clb" area="53894">
-      <equivalent_sites>
-        <site pb_type="clb"/>
-      </equivalent_sites>
-      <input name="I" num_pins="10" equivalent="full"/>
-      <output name="O" num_pins="4" equivalent="none"/>
-      <clock name="clk" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="spread"/>
+      <sub_tile name="clb">
+        <equivalent_sites>
+          <site pb_type="clb"/>
+        </equivalent_sites>
+        <input name="I" num_pins="10" equivalent="full"/>
+        <output name="O" num_pins="4" equivalent="none"/>
+        <clock name="clk" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="spread"/>
+      </sub_tile>
     </tile>
     <tile name="mult_8" height="2" area="396000">
-      <equivalent_sites>
-        <site pb_type="mult_8" pin_mapping="direct"/>
-      </equivalent_sites>
-      <input name="a" num_pins="8"/>
-      <input name="b" num_pins="8"/>
-      <output name="out" num_pins="16"/>
-      <clock name="clk" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <!--  Highly recommand to customize pin location when direct connection is used!!! -->
-      <!-- pinlocations are designed to spread pin on 4 sides evenly -->
-      <pinlocations pattern="custom">
-        <loc side="left">mult_8.a[0:3] mult_8.b[0:3] mult_8.out[0:7]</loc>
-        <loc side="top">mult_8.clk</loc>
-        <loc side="right">mult_8.a[4:7] mult_8.b[4:7] mult_8.out[8:15]</loc>
-        <loc side="bottom"></loc>
-      </pinlocations>
+      <sub_tile name="mult_8">
+        <equivalent_sites>
+          <site pb_type="mult_8" pin_mapping="direct"/>
+        </equivalent_sites>
+        <input name="a" num_pins="8"/>
+        <input name="b" num_pins="8"/>
+        <output name="out" num_pins="16"/>
+        <clock name="clk" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <!--  Highly recommand to customize pin location when direct connection is used!!! -->
+        <!-- pinlocations are designed to spread pin on 4 sides evenly -->
+        <pinlocations pattern="custom">
+          <loc side="left">mult_8.a[0:3] mult_8.b[0:3] mult_8.out[0:7]</loc>
+          <loc side="top">mult_8.clk</loc>
+          <loc side="right">mult_8.a[4:7] mult_8.b[4:7] mult_8.out[8:15]</loc>
+          <loc side="bottom"/>
+        </pinlocations>
+      </sub_tile>
     </tile>
   </tiles>
   <!-- ODIN II specific config ends -->
@@ -437,6 +444,5 @@
       <power method="sum-of-children"/>
     </pb_type>
     <!-- Define fracturable multiplier end -->
-
   </complexblocklist>
 </architecture>

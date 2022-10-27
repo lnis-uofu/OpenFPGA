@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!-- Architecture annotation for OpenFPGA framework
      This annotation supports the k4_frac_cc_sky130nm.xml
      - General purpose logic block
@@ -158,7 +159,7 @@
       <port type="input" prefix="reset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true"/>
       <port type="input" prefix="set" lib_name="SET" size="1" is_global="true" default_val="0" is_set="true"/>
       <port type="output" prefix="Q" size="1"/>
-      <port type="clock" prefix="clk" lib_name="CK" size="1" is_global="true" default_val="0" />
+      <port type="clock" prefix="clk" lib_name="CK" size="1" is_global="true" default_val="0"/>
     </circuit_model>
     <circuit_model type="lut" name="frac_lut4" prefix="frac_lut4" dump_structural_verilog="true">
       <design_technology type="cmos" fracturable_lut="true"/>
@@ -218,11 +219,10 @@
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
     <pb_type name="io" physical_mode_name="physical" idle_mode_name="inpad"/>
-    <pb_type name="io[physical].iopad" circuit_model_name="EMBEDDED_IO" mode_bits="1"/> 
-    <pb_type name="io[inpad].inpad" physical_pb_type_name="io[physical].iopad" mode_bits="1"/> 
-    <pb_type name="io[outpad].outpad" physical_pb_type_name="io[physical].iopad" mode_bits="0"/> 
+    <pb_type name="io[physical].iopad" circuit_model_name="EMBEDDED_IO" mode_bits="1"/>
+    <pb_type name="io[inpad].inpad" physical_pb_type_name="io[physical].iopad" mode_bits="1"/>
+    <pb_type name="io[outpad].outpad" physical_pb_type_name="io[physical].iopad" mode_bits="0"/>
     <!-- End physical pb_type binding in complex block IO -->
-
     <!-- physical pb_type binding in complex block CLB -->
     <!-- physical mode will be the default mode if not specified -->
     <pb_type name="clb.fle" physical_mode_name="physical"/>

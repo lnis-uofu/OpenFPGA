@@ -1,11 +1,11 @@
 /************************************************************************
- * A header file for FabricGlobalPortList class, including critical data declaration
- * Please include this file only for using any FabricGlobalPortList data structure
- * Refer to fabric_global_port_list.h for more details 
+ * A header file for FabricGlobalPortList class, including critical data
+ *declaration Please include this file only for using any FabricGlobalPortList
+ *data structure Refer to fabric_global_port_list.h for more details
  ***********************************************************************/
 
 /************************************************************************
- * Create strong id for fabric global ports to avoid illegal type casting 
+ * Create strong id for fabric global ports to avoid illegal type casting
  ***********************************************************************/
 #ifndef FABRIC_GLOBAL_PORT_INFO_FWD_H
 #define FABRIC_GLOBAL_PORT_INFO_FWD_H

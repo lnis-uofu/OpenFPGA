@@ -115,6 +115,31 @@ write_gsb_to_xml
 
     Only output unique GSBs to XML files
 
+  .. option:: --exclude_rr_info
+
+    Exclude routing resource graph information from output files, e.g., node id as well as other attributes. This is useful to check the connection inside GSBs purely.
+
+  .. option:: --exclude <string>
+
+    Exclude part of the GSB data to be outputted. Can be [``sb``|``cbx``|``cby``]. Users can exclude multiple parts by using a splitter ``,``.
+    For example, 
+
+      - ``--exclude sb``
+      - ``--exclude sb,cbx``
+
+  .. option:: --gsb_names <string>
+
+    Specify the name of GSB to be outputted. Users can specify multiple GSBs by using a splitter ``,``.
+    When specified, only the GSBs whose names match the list will be outputted to files.
+    If not specified, all the GSBs will be outputted.
+
+    .. note:: When option ``--unique`` is enable, the given name of GSBs should match the unique modules! 
+
+    For example,
+
+      - ``--gsb_names gsb_2__4_,gsb_3__2_``
+      - ``--gsb_names gsb_2__4_``
+
   .. option:: --verbose
 
     Show verbose log
@@ -141,9 +166,12 @@ pb_pin_fixup
 ~~~~~~~~~~~~
 
   Apply fix-up to clustering nets based on routing results
-  This is strongly recommended. Otherwise, the bitstream generation may be wrong
 
-  .. warning:: This command may be deprecated in future when it is merged to VPR upstream
+  .. note:: Suggest to skip the similar fix-up applied by VPR through options ``--skip_sync_clustering_and_routing_results on`` when calling vpr in openfpga shell.
+
+  .. warning:: This feature has been integrated into VPR to provide accurate timing analysis results at post-routing stage. However, this command provides a light fix-up (not as thorough as the one in VPR) but bring more flexibility in support some architecture without local routing. Suggest to enable it when your architecture does not have local routing for *Look-Up Tables* (LUTs) but you want to enable logic equivalent for input pins of LUTs
+
+  .. warning:: This command may be deprecated in future
   
   .. option:: --verbose
 
@@ -217,3 +245,63 @@ write_fabric_hierarchy
     Show verbose log
 
   .. note:: This file is designed for hierarchical PnR flow, which requires the tree of Multiple-Instanced-Blocks (MIBs).
+
+.. _openfpga_setup_commands_write_fabric_io_info:
+
+write_fabric_io_info
+~~~~~~~~~~~~~~~~~~~~
+
+  Write the I/O information of FPGA fabric to an XML file
+  
+  .. option:: --file <string> or -f <string>
+  
+    Specify the file name to write the I/O information
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in bitstream files
+
+  .. option:: --verbose
+
+    Show verbose log
+
+  .. note:: This file is designed for pin constraint file conversion.
+
+.. _openfpga_setup_commands_pcf2place:
+
+pcf2place
+~~~~~~~~~
+
+  Convert a Pin Constraint File (.pcf, see details in :ref:`file_format_pcf_file`) to a `placement file <https://docs.verilogtorouting.org/en/latest/vpr/file_formats/#placement-file-format-place>`_)
+  
+  .. option:: --pcf <string>
+  
+    Specify the path to the users' pin constraint file
+
+  .. option:: --blif <string>
+
+    Specify the path to the users' post-synthesis netlist
+
+  .. option:: --fpga_io_map <string>
+
+    Specify the path to the FPGA I/O location. Achieved by the command :ref:`openfpga_setup_commands_write_fabric_io_info`
+
+  .. option:: --pin_table <string>
+
+    Specify the path to the pin table file, which describes the pin mapping between chip I/Os and FPGA I/Os. See details in :ref:`file_format_pin_table_file`
+
+  .. option:: --fpga_fix_pins <string>
+
+    Specify the path to the placement file which will be outputted by running this command 
+
+  .. option:: --pin_table_direction_convention <string>
+
+    Specify the naming convention for ports in pin table files from which pin direction can be inferred. Can be [``explicit``|``quicklogic``]. When ``explicit`` is selected, pin direction is inferred based on the explicit definition in a column of pin table file, e.g., GPIO direction (see details in :ref:`file_format_pin_table_file`). When ``quicklogic`` is selected, pin direction is inferred by port name: a port whose postfix is ``_A2F`` is an input, while a port whose postfix is ``_A2F`` is an output. By default, it is ``explicit``.
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in bitstream files
+
+  .. option:: --verbose
+
+    Show verbose log

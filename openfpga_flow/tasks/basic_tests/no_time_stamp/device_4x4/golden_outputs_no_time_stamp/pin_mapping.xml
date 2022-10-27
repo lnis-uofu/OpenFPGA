@@ -1,0 +1,9 @@
+<!--
+	- I/O mapping
+-->
+
+<io_mapping>
+	<io name="gfpga_pad_GPIO_PAD[13:13]" net="a" dir="input"/>
+	<io name="gfpga_pad_GPIO_PAD[12:12]" net="b" dir="input"/>
+	<io name="gfpga_pad_GPIO_PAD[10:10]" net="c" dir="output"/>
+</io_mapping>

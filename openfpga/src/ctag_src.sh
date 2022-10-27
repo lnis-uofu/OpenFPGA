@@ -1,1 +1,2 @@
-ctags -R . ../../libopenfpga/*/src/* ../../libs/*/src/* ../../vpr/src/*/*
+ctags -R . ../../libs/*/src/* ../../vtr-verilog-to-routing/libs/*/src/* ../../vtr-verilog-to-routing/libs/*/src/*/* ../../vtr-verilog-to-routing/vpr/src/*/*
+

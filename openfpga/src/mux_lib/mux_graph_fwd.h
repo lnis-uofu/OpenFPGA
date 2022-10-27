@@ -1,5 +1,5 @@
 /**************************************************
- * This file includes only declarations for 
+ * This file includes only declarations for
  * the data structures to describe multiplexer structures
  * Please refer to mux_graph.h for more details
  *************************************************/
@@ -10,7 +10,6 @@
 
 /* begin namespace openfpga */
 namespace openfpga {
-
 
 /* Strong Ids for MUXes */
 struct mux_node_id_tag;
@@ -29,5 +28,4 @@ class MuxGraph;
 
 } /* end namespace openfpga */
 
-
-#endif 
+#endif

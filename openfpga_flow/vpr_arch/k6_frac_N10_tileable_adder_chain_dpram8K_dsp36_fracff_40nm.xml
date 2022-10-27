@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!-- 
   Flagship Heterogeneous Architecture with Carry Chains for VTR 7.0.
 
@@ -210,85 +211,93 @@
     </model>
   </models>
   <tiles>
-    <tile name="io" capacity="8" area="0">
-      <equivalent_sites>
-        <site pb_type="io"/>
-      </equivalent_sites>
-      <input name="outpad" num_pins="1"/>
-      <output name="inpad" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="custom">
-        <loc side="left">io.outpad io.inpad</loc>
-        <loc side="top">io.outpad io.inpad</loc>
-        <loc side="right">io.outpad io.inpad</loc>
-        <loc side="bottom">io.outpad io.inpad</loc>
-      </pinlocations>
+    <tile name="io" area="0">
+      <sub_tile name="io" capacity="8">
+        <equivalent_sites>
+          <site pb_type="io"/>
+        </equivalent_sites>
+        <input name="outpad" num_pins="1"/>
+        <output name="inpad" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="custom">
+          <loc side="left">io.outpad io.inpad</loc>
+          <loc side="top">io.outpad io.inpad</loc>
+          <loc side="right">io.outpad io.inpad</loc>
+          <loc side="bottom">io.outpad io.inpad</loc>
+        </pinlocations>
+      </sub_tile>
     </tile>
     <tile name="clb" area="53894">
-      <equivalent_sites>
-        <site pb_type="clb"/>
-      </equivalent_sites>
-      <input name="I" num_pins="40" equivalent="full"/>
-      <input name="cin" num_pins="1"/>
-      <input name="set" num_pins="1" is_non_clock_global="true"/>
-      <input name="reset" num_pins="1" is_non_clock_global="true"/>
-      <output name="O" num_pins="20" equivalent="none"/>
-      <output name="cout" num_pins="1"/>
-      <clock name="clk" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
-        <fc_override port_name="cin" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="cout" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="set" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="reset" fc_type="frac" fc_val="0"/>
-      </fc>
-      <!--  Highly recommand to customize pin location when direct connection is used!!! -->
-      <!--pinlocations pattern="spread"/-->
-      <pinlocations pattern="custom">
-        <loc side="left">clb.clk clb.reset clb.set</loc>
-        <loc side="top">clb.cin</loc>
-        <loc side="right">clb.O[9:0] clb.I[19:0]</loc>
-        <loc side="bottom">clb.cout clb.O[19:10] clb.I[39:20]</loc>
-      </pinlocations>
+      <sub_tile name="clb">
+        <equivalent_sites>
+          <site pb_type="clb"/>
+        </equivalent_sites>
+        <input name="I" num_pins="40" equivalent="full"/>
+        <input name="cin" num_pins="1"/>
+        <input name="set" num_pins="1" is_non_clock_global="true"/>
+        <input name="reset" num_pins="1" is_non_clock_global="true"/>
+        <output name="O" num_pins="20" equivalent="none"/>
+        <output name="cout" num_pins="1"/>
+        <clock name="clk" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+          <fc_override port_name="cin" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="cout" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="set" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="reset" fc_type="frac" fc_val="0"/>
+        </fc>
+        <!--  Highly recommand to customize pin location when direct connection is used!!! -->
+        <!--pinlocations pattern="spread"/-->
+        <pinlocations pattern="custom">
+          <loc side="left">clb.clk clb.reset clb.set</loc>
+          <loc side="top">clb.cin</loc>
+          <loc side="right">clb.O[9:0] clb.I[19:0]</loc>
+          <loc side="bottom">clb.cout clb.O[19:10] clb.I[39:20]</loc>
+        </pinlocations>
+      </sub_tile>
     </tile>
     <tile name="memory" height="2" area="548000">
-      <equivalent_sites>
-        <site pb_type="memory"/>
-      </equivalent_sites>
-      <input name="waddr" num_pins="10"/>
-      <input name="raddr" num_pins="10"/>
-      <input name="data_in" num_pins="8"/>
-      <input name="wen" num_pins="1"/>
-      <input name="ren" num_pins="1"/>
-      <output name="data_out" num_pins="8"/>
-      <clock name="clk" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
-        <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
-      </fc>
-      <!--pinlocations pattern="spread"/-->
-      <pinlocations pattern="custom">
-        <loc side="left">memory.clk</loc>
-        <loc side="top"></loc>
-        <loc side="right">memory.waddr[4:0] memory.raddr[4:0] memory.data_in[3:0] memory.wen memory.data_out[3:0]</loc>
-        <loc side="bottom">memory.waddr[9:5] memory.raddr[9:5] memory.data_in[7:4] memory.ren memory.data_out[7:4]</loc>
-      </pinlocations>
+      <sub_tile name="memory">
+        <equivalent_sites>
+          <site pb_type="memory"/>
+        </equivalent_sites>
+        <input name="waddr" num_pins="10"/>
+        <input name="raddr" num_pins="10"/>
+        <input name="data_in" num_pins="8"/>
+        <input name="wen" num_pins="1"/>
+        <input name="ren" num_pins="1"/>
+        <output name="data_out" num_pins="8"/>
+        <clock name="clk" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+          <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
+        </fc>
+        <!--pinlocations pattern="spread"/-->
+        <pinlocations pattern="custom">
+          <loc side="left">memory.clk</loc>
+          <loc side="top"/>
+          <loc side="right">memory.waddr[4:0] memory.raddr[4:0] memory.data_in[3:0] memory.wen memory.data_out[3:0]</loc>
+          <loc side="bottom">memory.waddr[9:5] memory.raddr[9:5] memory.data_in[7:4] memory.ren memory.data_out[7:4]</loc>
+        </pinlocations>
+      </sub_tile>
     </tile>
     <tile name="mult_36" height="6" area="396000">
-      <equivalent_sites>
-        <site pb_type="mult_36" pin_mapping="direct"/>
-      </equivalent_sites>
-      <input name="a" num_pins="36"/>
-      <input name="b" num_pins="36"/>
-      <output name="out" num_pins="72"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <!--  Highly recommand to customize pin location when direct connection is used!!! -->
-      <!-- pinlocations are designed to spread pin on 4 sides evenly -->
-      <pinlocations pattern="custom">
-        <loc side="left">mult_36.b[0:9] mult_36.b[10:35] mult_36.out[36:71]</loc>
-        <loc side="top"></loc>
-        <loc side="right">mult_36.a[0:9] mult_36.a[10:35] mult_36.out[0:35]</loc>
-        <loc side="bottom"></loc>
-      </pinlocations>
+      <sub_tile name="mult_36">
+        <equivalent_sites>
+          <site pb_type="mult_36" pin_mapping="direct"/>
+        </equivalent_sites>
+        <input name="a" num_pins="36"/>
+        <input name="b" num_pins="36"/>
+        <output name="out" num_pins="72"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <!--  Highly recommand to customize pin location when direct connection is used!!! -->
+        <!-- pinlocations are designed to spread pin on 4 sides evenly -->
+        <pinlocations pattern="custom">
+          <loc side="left">mult_36.b[0:9] mult_36.b[10:35] mult_36.out[36:71]</loc>
+          <loc side="top"/>
+          <loc side="right">mult_36.a[0:9] mult_36.a[10:35] mult_36.out[0:35]</loc>
+          <loc side="bottom"/>
+        </pinlocations>
+      </sub_tile>
     </tile>
   </tiles>
   <!-- ODIN II specific config ends -->
@@ -394,7 +403,6 @@
     <pb_type name="io">
       <input name="outpad" num_pins="1"/>
       <output name="inpad" num_pins="1"/>
-
       <!-- Do NOT add clock pins to I/O here!!! VPR does not build clock network in the way that OpenFPGA can support
            If you need to register the I/O, define clocks in the circuit models
            These clocks can be handled in back-end
@@ -416,7 +424,6 @@
           </direct>
         </interconnect>
       </mode>
-
       <!-- IOs can operate as either inputs or outputs.
 	     Delays below come from Ian Kuon. They are small, so they should be interpreted as
 	     the delays to and from registers in the I/O (and generally I/Os are registered 
@@ -521,7 +528,7 @@
               <T_setup value="66e-12" port="ff.R" clock="C"/>
               <T_setup value="66e-12" port="ff.S" clock="C"/>
               <T_clock_to_Q max="124e-12" port="ff.Q" clock="C"/>
-            </pb_type> 
+            </pb_type>
             <!-- Define adders -->
             <pb_type name="adder" blif_model=".subckt adder" num_pb="2">
               <input name="a" num_pins="1"/>
@@ -615,7 +622,7 @@
                   <clock name="clk" num_pins="1" port_class="clock"/>
                   <T_setup value="66e-12" port="latch.D" clock="clk"/>
                   <T_clock_to_Q max="124e-12" port="latch.Q" clock="clk"/>
-                </pb_type> 
+                </pb_type>
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="latch.D"/>
                   <direct name="direct2" input="ff.C" output="latch.clk"/>
@@ -629,7 +636,7 @@
                   <clock name="C" num_pins="1" port_class="clock"/>
                   <T_setup value="66e-12" port="dff.D" clock="C"/>
                   <T_clock_to_Q max="124e-12" port="dff.Q" clock="C"/>
-                </pb_type> 
+                </pb_type>
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="dff.D"/>
                   <direct name="direct2" input="ff.C" output="dff.C"/>
@@ -645,7 +652,7 @@
                   <T_setup value="66e-12" port="dffr.D" clock="C"/>
                   <T_setup value="66e-12" port="dffr.R" clock="C"/>
                   <T_clock_to_Q max="124e-12" port="dffr.Q" clock="C"/>
-                </pb_type> 
+                </pb_type>
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="dffr.D"/>
                   <direct name="direct2" input="ff.C" output="dffr.C"/>
@@ -662,7 +669,7 @@
                   <T_setup value="66e-12" port="dffrn.D" clock="C"/>
                   <T_setup value="66e-12" port="dffrn.RN" clock="C"/>
                   <T_clock_to_Q max="124e-12" port="dffrn.Q" clock="C"/>
-                </pb_type> 
+                </pb_type>
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="dffrn.D"/>
                   <direct name="direct2" input="ff.C" output="dffrn.C"/>
@@ -679,7 +686,7 @@
                   <T_setup value="66e-12" port="dffs.D" clock="C"/>
                   <T_setup value="66e-12" port="dffs.S" clock="C"/>
                   <T_clock_to_Q max="124e-12" port="dffs.Q" clock="C"/>
-                </pb_type> 
+                </pb_type>
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="dffs.D"/>
                   <direct name="direct2" input="ff.C" output="dffs.C"/>
@@ -696,7 +703,7 @@
                   <T_setup value="66e-12" port="dffsn.D" clock="C"/>
                   <T_setup value="66e-12" port="dffsn.SN" clock="C"/>
                   <T_clock_to_Q max="124e-12" port="dffsn.Q" clock="C"/>
-                </pb_type> 
+                </pb_type>
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="dffsn.D"/>
                   <direct name="direct2" input="ff.C" output="dffsn.C"/>
@@ -704,7 +711,7 @@
                   <direct name="direct4" input="dffsn.Q" output="ff.Q"/>
                 </interconnect>
               </mode>
-            </pb_type> 
+            </pb_type>
             <interconnect>
               <direct name="direct1" input="ble5.in" output="lut5.in"/>
               <direct name="direct2" input="lut5.out" output="ff.D">
@@ -785,7 +792,7 @@
                   <clock name="clk" num_pins="1" port_class="clock"/>
                   <T_setup value="66e-12" port="latch.D" clock="clk"/>
                   <T_clock_to_Q max="124e-12" port="latch.Q" clock="clk"/>
-                </pb_type> 
+                </pb_type>
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="latch.D"/>
                   <direct name="direct2" input="ff.C" output="latch.clk"/>
@@ -799,7 +806,7 @@
                   <clock name="C" num_pins="1" port_class="clock"/>
                   <T_setup value="66e-12" port="dff.D" clock="C"/>
                   <T_clock_to_Q max="124e-12" port="dff.Q" clock="C"/>
-                </pb_type> 
+                </pb_type>
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="dff.D"/>
                   <direct name="direct2" input="ff.C" output="dff.C"/>
@@ -815,7 +822,7 @@
                   <T_setup value="66e-12" port="dffr.D" clock="C"/>
                   <T_setup value="66e-12" port="dffr.R" clock="C"/>
                   <T_clock_to_Q max="124e-12" port="dffr.Q" clock="C"/>
-                </pb_type> 
+                </pb_type>
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="dffr.D"/>
                   <direct name="direct2" input="ff.C" output="dffr.C"/>
@@ -832,7 +839,7 @@
                   <T_setup value="66e-12" port="dffrn.D" clock="C"/>
                   <T_setup value="66e-12" port="dffrn.RN" clock="C"/>
                   <T_clock_to_Q max="124e-12" port="dffrn.Q" clock="C"/>
-                </pb_type> 
+                </pb_type>
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="dffrn.D"/>
                   <direct name="direct2" input="ff.C" output="dffrn.C"/>
@@ -849,7 +856,7 @@
                   <T_setup value="66e-12" port="dffs.D" clock="C"/>
                   <T_setup value="66e-12" port="dffs.S" clock="C"/>
                   <T_clock_to_Q max="124e-12" port="dffs.Q" clock="C"/>
-                </pb_type> 
+                </pb_type>
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="dffs.D"/>
                   <direct name="direct2" input="ff.C" output="dffs.C"/>
@@ -866,7 +873,7 @@
                   <T_setup value="66e-12" port="dffsn.D" clock="C"/>
                   <T_setup value="66e-12" port="dffsn.SN" clock="C"/>
                   <T_clock_to_Q max="124e-12" port="dffsn.Q" clock="C"/>
-                </pb_type> 
+                </pb_type>
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="dffsn.D"/>
                   <direct name="direct2" input="ff.C" output="dffsn.C"/>
@@ -874,7 +881,7 @@
                   <direct name="direct4" input="dffsn.Q" output="ff.Q"/>
                 </interconnect>
               </mode>
-            </pb_type> 
+            </pb_type>
             <interconnect>
               <direct name="clock" input="arithmetic.clk" output="ff.C"/>
               <direct name="set" input="arithmetic.set" output="ff.S"/>
@@ -962,7 +969,7 @@
                   <clock name="clk" num_pins="1" port_class="clock"/>
                   <T_setup value="66e-12" port="latch.D" clock="clk"/>
                   <T_clock_to_Q max="124e-12" port="latch.Q" clock="clk"/>
-                </pb_type> 
+                </pb_type>
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="latch.D"/>
                   <direct name="direct2" input="ff.C" output="latch.clk"/>
@@ -976,7 +983,7 @@
                   <clock name="C" num_pins="1" port_class="clock"/>
                   <T_setup value="66e-12" port="dff.D" clock="C"/>
                   <T_clock_to_Q max="124e-12" port="dff.Q" clock="C"/>
-                </pb_type> 
+                </pb_type>
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="dff.D"/>
                   <direct name="direct2" input="ff.C" output="dff.C"/>
@@ -992,7 +999,7 @@
                   <T_setup value="66e-12" port="dffr.D" clock="C"/>
                   <T_setup value="66e-12" port="dffr.R" clock="C"/>
                   <T_clock_to_Q max="124e-12" port="dffr.Q" clock="C"/>
-                </pb_type> 
+                </pb_type>
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="dffr.D"/>
                   <direct name="direct2" input="ff.C" output="dffr.C"/>
@@ -1009,7 +1016,7 @@
                   <T_setup value="66e-12" port="dffrn.D" clock="C"/>
                   <T_setup value="66e-12" port="dffrn.RN" clock="C"/>
                   <T_clock_to_Q max="124e-12" port="dffrn.Q" clock="C"/>
-                </pb_type> 
+                </pb_type>
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="dffrn.D"/>
                   <direct name="direct2" input="ff.C" output="dffrn.C"/>
@@ -1026,7 +1033,7 @@
                   <T_setup value="66e-12" port="dffs.D" clock="C"/>
                   <T_setup value="66e-12" port="dffs.S" clock="C"/>
                   <T_clock_to_Q max="124e-12" port="dffs.Q" clock="C"/>
-                </pb_type> 
+                </pb_type>
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="dffs.D"/>
                   <direct name="direct2" input="ff.C" output="dffs.C"/>
@@ -1043,7 +1050,7 @@
                   <T_setup value="66e-12" port="dffsn.D" clock="C"/>
                   <T_setup value="66e-12" port="dffsn.SN" clock="C"/>
                   <T_clock_to_Q max="124e-12" port="dffsn.Q" clock="C"/>
-                </pb_type> 
+                </pb_type>
                 <interconnect>
                   <direct name="direct1" input="ff.D" output="dffsn.D"/>
                   <direct name="direct2" input="ff.C" output="dffsn.C"/>
@@ -1051,7 +1058,7 @@
                   <direct name="direct4" input="dffsn.Q" output="ff.Q"/>
                 </interconnect>
               </mode>
-            </pb_type> 
+            </pb_type>
             <interconnect>
               <direct name="direct1" input="ble6.in" output="lut6[0:0].in"/>
               <direct name="direct2" input="lut6.out" output="ff.D">
@@ -1090,7 +1097,6 @@
           <delay_constant max="95e-12" in_port="clb.I" out_port="fle[9:0].in"/>
           <delay_constant max="75e-12" in_port="fle[9:0].out" out_port="fle[9:0].in"/>
         </complete>
-
         <complete name="clks" input="clb.clk" output="fle[9:0].clk">
         </complete>
         <complete name="resets" input="clb.reset" output="fle[9:0].reset">

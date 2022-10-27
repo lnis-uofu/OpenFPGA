@@ -206,6 +206,8 @@ Synthesis Parameter Sections
     In case of running ``blif_vpr_flow`` this option provides the activity files
     to be used to generate testbench for ``bench_label`` benchmark
 
+.. note:: This file is required only when the ``power_analysis`` option in the general section is enabled. Otherwise, it is optional
+
 .. option:: bench<bench_label>_verilog=<source_verilog_file_path>
 
     In case of running ``blif_vpr_flow`` with verification this option provides

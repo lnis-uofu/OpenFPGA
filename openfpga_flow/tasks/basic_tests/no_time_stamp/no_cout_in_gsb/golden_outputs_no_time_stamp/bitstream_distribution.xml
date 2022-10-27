@@ -1,0 +1,80 @@
+<!-- 
+	- Report Bitstream Distribution
+--> 
+
+<bitstream_distribution>
+	<regions>
+		<region id="0" number_of_bits="2372">
+		</region>
+	</regions>
+	<blocks>
+		<block name="fpga_top" number_of_bits="2372">
+			<block name="grid_clb_1__1_" number_of_bits="296">
+			</block>
+			<block name="grid_clb_1__2_" number_of_bits="296">
+			</block>
+			<block name="grid_clb_2__1_" number_of_bits="296">
+			</block>
+			<block name="grid_clb_2__2_" number_of_bits="296">
+			</block>
+			<block name="grid_io_top_1__3_" number_of_bits="8">
+			</block>
+			<block name="grid_io_top_2__3_" number_of_bits="8">
+			</block>
+			<block name="grid_io_right_3__2_" number_of_bits="8">
+			</block>
+			<block name="grid_io_right_3__1_" number_of_bits="8">
+			</block>
+			<block name="grid_io_bottom_2__0_" number_of_bits="8">
+			</block>
+			<block name="grid_io_bottom_1__0_" number_of_bits="8">
+			</block>
+			<block name="grid_io_left_0__1_" number_of_bits="8">
+			</block>
+			<block name="grid_io_left_0__2_" number_of_bits="8">
+			</block>
+			<block name="sb_0__0_" number_of_bits="36">
+			</block>
+			<block name="sb_0__1_" number_of_bits="68">
+			</block>
+			<block name="sb_0__2_" number_of_bits="32">
+			</block>
+			<block name="sb_1__0_" number_of_bits="72">
+			</block>
+			<block name="sb_1__1_" number_of_bits="96">
+			</block>
+			<block name="sb_1__2_" number_of_bits="66">
+			</block>
+			<block name="sb_2__0_" number_of_bits="40">
+			</block>
+			<block name="sb_2__1_" number_of_bits="78">
+			</block>
+			<block name="sb_2__2_" number_of_bits="36">
+			</block>
+			<block name="cbx_1__0_" number_of_bits="60">
+			</block>
+			<block name="cbx_1__1_" number_of_bits="12">
+			</block>
+			<block name="cbx_1__2_" number_of_bits="48">
+			</block>
+			<block name="cbx_2__0_" number_of_bits="60">
+			</block>
+			<block name="cbx_2__1_" number_of_bits="12">
+			</block>
+			<block name="cbx_2__2_" number_of_bits="48">
+			</block>
+			<block name="cby_0__1_" number_of_bits="54">
+			</block>
+			<block name="cby_0__2_" number_of_bits="54">
+			</block>
+			<block name="cby_1__1_" number_of_bits="42">
+			</block>
+			<block name="cby_1__2_" number_of_bits="42">
+			</block>
+			<block name="cby_2__1_" number_of_bits="84">
+			</block>
+			<block name="cby_2__2_" number_of_bits="84">
+			</block>
+		</block>
+	</blocks>
+</bitstream_distribution>

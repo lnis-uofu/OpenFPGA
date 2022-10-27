@@ -4,8 +4,8 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "vpr_context.h"
 #include "openfpga_context.h"
+#include "vpr_context.h"
 
 /********************************************************************
  * Function declaration
@@ -30,7 +30,6 @@ void print_pnr_sdc_grid_hierarchy(const std::string& sdc_dir,
                                   const VprDeviceAnnotation& device_annotation,
                                   const ModuleManager& module_manager,
                                   const ModuleId& top_module);
-
 
 } /* end namespace openfpga */
 

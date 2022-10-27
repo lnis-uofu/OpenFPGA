@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+clean=$(git status -s -uno | wc -l) #Short ignore untracked
+file_pattern="*.cpp *.c *.hpp *.h *.py *.xml"
+
+if [ $clean -ne 0 ]; then
+    echo "Current working tree was not clean! This tool only works on clean checkouts"
+    exit 2
+else
+    echo "Code Formatting Check"
+    echo "====================="
+    make format"$1" > /dev/null 2>&1
+
+    valid_format=$(git diff ${file_pattern}| wc -l)
+
+    if [ $valid_format -ne 0 ]; then
+        echo "FAILED"
+        echo ""
+        echo "You *must* make the following changes to match the formatting style"
+        echo "-------------------------------------------------------------------"
+        echo ""
+
+        git diff ${file_pattern}
+
+        echo ""
+        echo "Run 'make format$1' to apply these changes"
+
+        git reset --hard > /dev/null
+        exit 1
+    else
+        echo "OK"
+    fi
+fi
+exit 0

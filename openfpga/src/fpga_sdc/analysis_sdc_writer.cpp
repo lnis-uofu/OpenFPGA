@@ -1,6 +1,6 @@
 /********************************************************************
  * This file includes functions that are used to output a SDC file
- * that constrain a FPGA fabric (P&Red netlist) using a benchmark 
+ * that constrain a FPGA fabric (P&Red netlist) using a benchmark
  *******************************************************************/
 #include <ctime>
 #include <fstream>
@@ -11,21 +11,17 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
-#include "openfpga_digest.h"
-#include "openfpga_port.h"
-
-#include "mux_utils.h"
-
-#include "openfpga_naming.h"
-#include "openfpga_atom_netlist_utils.h"
-
-#include "sdc_writer_naming.h"
-#include "sdc_writer_utils.h"
-#include "sdc_memory_utils.h"
-
 #include "analysis_sdc_grid_writer.h"
 #include "analysis_sdc_routing_writer.h"
 #include "analysis_sdc_writer.h"
+#include "mux_utils.h"
+#include "openfpga_atom_netlist_utils.h"
+#include "openfpga_digest.h"
+#include "openfpga_naming.h"
+#include "openfpga_port.h"
+#include "sdc_memory_utils.h"
+#include "sdc_writer_naming.h"
+#include "sdc_writer_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -33,30 +29,28 @@ namespace openfpga {
 /********************************************************************
  * Generate SDC constaints for inputs and outputs
  * We consider the top module in formal verification purpose here
- * which is easier 
+ * which is easier
  *******************************************************************/
-static 
-void print_analysis_sdc_io_delays(std::fstream& fp,
-                                  const float& time_unit,
-                                  const AtomContext& atom_ctx,
-                                  const PlacementContext& place_ctx,
-                                  const VprNetlistAnnotation& netlist_annotation,
-                                  const IoLocationMap& io_location_map,
-                                  const ModuleManager& module_manager,
-                                  const ModuleId& top_module,
-                                  const FabricGlobalPortInfo& fabric_global_port_info,
-                                  const float& critical_path_delay) {
+static void print_analysis_sdc_io_delays(
+  std::fstream& fp, const float& time_unit, const AtomContext& atom_ctx,
+  const PlacementContext& place_ctx,
+  const VprNetlistAnnotation& netlist_annotation,
+  const IoLocationMap& io_location_map, const ModuleManager& module_manager,
+  const ModuleId& top_module,
+  const FabricGlobalPortInfo& fabric_global_port_info,
+  const float& critical_path_delay) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
   /* Print comments */
-  fp << "##################################################" << std::endl; 
+  fp << "##################################################" << std::endl;
   fp << "# Create clock                                    " << std::endl;
-  fp << "##################################################" << std::endl; 
+  fp << "##################################################" << std::endl;
 
   /* Get clock port from the global port */
   std::vector<BasicPort> operating_clock_ports;
-  for (const FabricGlobalPortId& clock_port : fabric_global_port_info.global_ports()) {
+  for (const FabricGlobalPortId& clock_port :
+       fabric_global_port_info.global_ports()) {
     if (false == fabric_global_port_info.global_port_is_clock(clock_port)) {
       continue;
     }
@@ -64,18 +58,22 @@ void print_analysis_sdc_io_delays(std::fstream& fp,
     if (true == fabric_global_port_info.global_port_is_prog(clock_port)) {
       continue;
     }
-   
+
     /* Find the module port and Update the operating port list */
-    ModulePortId module_port = fabric_global_port_info.global_module_port(clock_port); 
-    operating_clock_ports.push_back(module_manager.module_port(top_module, module_port));
+    ModulePortId module_port =
+      fabric_global_port_info.global_module_port(clock_port);
+    operating_clock_ports.push_back(
+      module_manager.module_port(top_module, module_port));
   }
 
   for (const BasicPort& operating_clock_port : operating_clock_ports) {
     /* Reach here, it means a clock port and we need print constraints */
     fp << "create_clock ";
     fp << generate_sdc_port(operating_clock_port);
-    fp << " -period " << std::setprecision(10) << critical_path_delay / time_unit;
-    fp << " -waveform {0 " << std::setprecision(10) << critical_path_delay / (2 * time_unit) << "}";
+    fp << " -period " << std::setprecision(10)
+       << critical_path_delay / time_unit;
+    fp << " -waveform {0 " << std::setprecision(10)
+       << critical_path_delay / (2 * time_unit) << "}";
     fp << std::endl;
 
     /* Add an empty line as a splitter */
@@ -88,58 +86,69 @@ void print_analysis_sdc_io_delays(std::fstream& fp,
   VTR_ASSERT(1 == operating_clock_ports.size());
 
   /* In this function, we support only 1 type of I/Os */
-  std::vector<BasicPort> module_io_ports = module_manager.module_ports_by_type(top_module, ModuleManager::MODULE_GPIO_PORT);
+  std::vector<BasicPort> module_io_ports = module_manager.module_ports_by_type(
+    top_module, ModuleManager::MODULE_GPIO_PORT);
 
   for (const BasicPort& module_io_port : module_io_ports) {
     /* Keep tracking which I/Os have been used */
     std::vector<bool> io_used(module_io_port.get_width(), false);
 
     /* Find clock ports in benchmark */
-    std::vector<std::string> benchmark_clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
+    std::vector<std::string> benchmark_clock_port_names =
+      find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
 
     /* Print comments */
-    fp << "##################################################" << std::endl; 
+    fp << "##################################################" << std::endl;
     fp << "# Create input and output delays for used I/Os    " << std::endl;
-    fp << "##################################################" << std::endl; 
+    fp << "##################################################" << std::endl;
 
     for (const AtomBlockId& atom_blk : atom_ctx.nlist.blocks()) {
       /* Bypass non-I/O atom blocks ! */
-      if ( (AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk))
-        && (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk)) ) {
+      if ((AtomBlockType::INPAD != atom_ctx.nlist.block_type(atom_blk)) &&
+          (AtomBlockType::OUTPAD != atom_ctx.nlist.block_type(atom_blk))) {
         continue;
       }
 
-      /* clock net or constant generator should be disabled in timing analysis */
-      if (benchmark_clock_port_names.end() != std::find(benchmark_clock_port_names.begin(), benchmark_clock_port_names.end(), atom_ctx.nlist.block_name(atom_blk))) {
+      /* clock net or constant generator should be disabled in timing analysis
+       */
+      if (benchmark_clock_port_names.end() !=
+          std::find(benchmark_clock_port_names.begin(),
+                    benchmark_clock_port_names.end(),
+                    atom_ctx.nlist.block_name(atom_blk))) {
         continue;
       }
 
       /* Find the index of the mapped GPIO in top-level FPGA fabric */
-      size_t io_index = io_location_map.io_index(place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
-                                                 place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
-                                                 place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.z,
-                                                 module_io_port.get_name());
+      size_t io_index = io_location_map.io_index(
+        place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.x,
+        place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.y,
+        place_ctx.block_locs[atom_ctx.lookup.atom_clb(atom_blk)].loc.sub_tile,
+        module_io_port.get_name());
 
       if (size_t(-1) == io_index) {
         continue;
       }
 
       /* Ensure that IO index is in range */
-      BasicPort module_mapped_io_port = module_io_port; 
-      /* Set the port pin index */ 
+      BasicPort module_mapped_io_port = module_io_port;
+      /* Set the port pin index */
       VTR_ASSERT(io_index < module_mapped_io_port.get_width());
       module_mapped_io_port.set_width(io_index, io_index);
 
-      /* For input I/O, we set an input delay constraint correlated to the operating clock
-       * For output I/O, we set an output delay constraint correlated to the operating clock
+      /* For input I/O, we set an input delay constraint correlated to the
+       * operating clock For output I/O, we set an output delay constraint
+       * correlated to the operating clock
        */
       if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
         print_sdc_set_port_input_delay(fp, module_mapped_io_port,
-                                       operating_clock_ports[0], critical_path_delay / time_unit);
+                                       operating_clock_ports[0],
+                                       critical_path_delay / time_unit);
       } else {
-        VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
+        VTR_ASSERT(AtomBlockType::OUTPAD ==
+                   atom_ctx.nlist.block_type(atom_blk));
         print_sdc_set_port_output_delay(fp, module_mapped_io_port,
-                                        operating_clock_ports[0], critical_path_delay / time_unit);
+                                        operating_clock_ports[0],
+                                        critical_path_delay / time_unit);
       }
 
       /* Mark this I/O has been used/wired */
@@ -150,9 +159,9 @@ void print_analysis_sdc_io_delays(std::fstream& fp,
     fp << std::endl;
 
     /* Print comments */
-    fp << "##################################################" << std::endl; 
+    fp << "##################################################" << std::endl;
     fp << "# Disable timing for unused I/Os    " << std::endl;
-    fp << "##################################################" << std::endl; 
+    fp << "##################################################" << std::endl;
 
     /* Wire the unused iopads to a constant */
     for (size_t io_index = 0; io_index < io_used.size(); ++io_index) {
@@ -162,8 +171,8 @@ void print_analysis_sdc_io_delays(std::fstream& fp,
       }
 
       /* Wire to a contant */
-      BasicPort module_unused_io_port = module_io_port; 
-      /* Set the port pin index */ 
+      BasicPort module_unused_io_port = module_io_port;
+      /* Set the port pin index */
       module_unused_io_port.set_width(io_index, io_index);
       print_sdc_disable_port_timing(fp, module_unused_io_port);
     }
@@ -176,23 +185,23 @@ void print_analysis_sdc_io_delays(std::fstream& fp,
 /********************************************************************
  * Disable the timing for all the global port except the operating clock ports
  *******************************************************************/
-static 
-void print_analysis_sdc_disable_global_ports(std::fstream& fp,
-                                             const ModuleManager& module_manager,
-                                             const ModuleId& top_module,
-                                             const FabricGlobalPortInfo& fabric_global_port_info) {
+static void print_analysis_sdc_disable_global_ports(
+  std::fstream& fp, const ModuleManager& module_manager,
+  const ModuleId& top_module,
+  const FabricGlobalPortInfo& fabric_global_port_info) {
   /* Validate file stream */
   valid_file_stream(fp);
 
   /* Print comments */
-  fp << "##################################################" << std::endl; 
+  fp << "##################################################" << std::endl;
   fp << "# Disable timing for global ports                 " << std::endl;
-  fp << "##################################################" << std::endl; 
+  fp << "##################################################" << std::endl;
 
-  for (const FabricGlobalPortId& global_port : fabric_global_port_info.global_ports()) {
+  for (const FabricGlobalPortId& global_port :
+       fabric_global_port_info.global_ports()) {
     /* Skip operating clock here! */
-    if ( (true == fabric_global_port_info.global_port_is_clock(global_port)) 
-      && (false == fabric_global_port_info.global_port_is_prog(global_port)) ) {
+    if ((true == fabric_global_port_info.global_port_is_clock(global_port)) &&
+        (false == fabric_global_port_info.global_port_is_prog(global_port))) {
       continue;
     }
 
@@ -201,8 +210,10 @@ void print_analysis_sdc_disable_global_ports(std::fstream& fp,
       continue;
     }
 
-    ModulePortId module_port = fabric_global_port_info.global_module_port(global_port); 
-    BasicPort port_to_disable = module_manager.module_port(top_module, module_port);
+    ModulePortId module_port =
+      fabric_global_port_info.global_module_port(global_port);
+    BasicPort port_to_disable =
+      module_manager.module_port(top_module, module_port);
 
     print_sdc_disable_port_timing(fp, port_to_disable);
   }
@@ -210,19 +221,23 @@ void print_analysis_sdc_disable_global_ports(std::fstream& fp,
 
 /********************************************************************
  * Top-level function outputs a SDC file
- * that constrain a FPGA fabric (P&Red netlist) using a benchmark 
+ * that constrain a FPGA fabric (P&Red netlist) using a benchmark
  *******************************************************************/
 void print_analysis_sdc(const AnalysisSdcOption& option,
                         const float& critical_path_delay,
-                        const VprContext& vpr_ctx, 
+                        const VprContext& vpr_ctx,
                         const OpenfpgaContext& openfpga_ctx,
                         const bool& compact_routing_hierarchy) {
   /* Create the file name for Verilog netlist */
-  std::string sdc_fname(option.sdc_dir() + generate_analysis_sdc_file_name(vpr_ctx.atom().nlist.netlist_name(), std::string(SDC_ANALYSIS_FILE_NAME)));
+  std::string sdc_fname(
+    option.sdc_dir() +
+    generate_analysis_sdc_file_name(vpr_ctx.atom().nlist.netlist_name(),
+                                    std::string(SDC_ANALYSIS_FILE_NAME)));
 
-  std::string timer_message = std::string("Generating SDC for Timing/Power analysis on the mapped FPGA '")
-                            + sdc_fname
-                            + std::string("'");
+  std::string timer_message =
+    std::string(
+      "Generating SDC for Timing/Power analysis on the mapped FPGA '") +
+    sdc_fname + std::string("'");
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer(timer_message);
@@ -235,65 +250,56 @@ void print_analysis_sdc(const AnalysisSdcOption& option,
   check_file_stream(sdc_fname.c_str(), fp);
 
   /* Generate the descriptions*/
-  print_sdc_file_header(fp,
-                        std::string("Constrain for Timing/Power analysis on the mapped FPGA"),
-                        option.time_stamp());
+  print_sdc_file_header(
+    fp, std::string("Constrain for Timing/Power analysis on the mapped FPGA"),
+    option.time_stamp());
 
   /* Find the top_module */
-  ModuleId top_module = openfpga_ctx.module_graph().find_module(generate_fpga_top_module_name());
+  ModuleId top_module =
+    openfpga_ctx.module_graph().find_module(generate_fpga_top_module_name());
   VTR_ASSERT(true == openfpga_ctx.module_graph().valid_module_id(top_module));
 
   /* Create clock and set I/O ports with input/output delays
-   * FIXME: Now different I/Os have different delays due to multiple clock frequency
-   *        We need to consider these impacts and constrain different I/Os with different delays!!!
+   * FIXME: Now different I/Os have different delays due to multiple clock
+   * frequency We need to consider these impacts and constrain different I/Os
+   * with different delays!!!
    */
-  print_analysis_sdc_io_delays(fp, option.time_unit(),
-                               vpr_ctx.atom(), vpr_ctx.placement(),
-                               openfpga_ctx.vpr_netlist_annotation(), openfpga_ctx.io_location_map(),
-                               openfpga_ctx.module_graph(), top_module, 
-                               openfpga_ctx.fabric_global_port_info(),
-                               critical_path_delay);
+  print_analysis_sdc_io_delays(
+    fp, option.time_unit(), vpr_ctx.atom(), vpr_ctx.placement(),
+    openfpga_ctx.vpr_netlist_annotation(), openfpga_ctx.io_location_map(),
+    openfpga_ctx.module_graph(), top_module,
+    openfpga_ctx.fabric_global_port_info(), critical_path_delay);
 
   /* Disable the timing for global ports */
-  print_analysis_sdc_disable_global_ports(fp,
-                                          openfpga_ctx.module_graph(), top_module,
-                                          openfpga_ctx.fabric_global_port_info());
+  print_analysis_sdc_disable_global_ports(
+    fp, openfpga_ctx.module_graph(), top_module,
+    openfpga_ctx.fabric_global_port_info());
 
-  /* Disable the timing for configuration cells */ 
-  rec_print_pnr_sdc_disable_configurable_memory_module_output(fp, option.flatten_names(), 
-                                                              openfpga_ctx.module_graph(), top_module, 
-                                                              format_dir_path(openfpga_ctx.module_graph().module_name(top_module)));
-
+  /* Disable the timing for configuration cells */
+  rec_print_pnr_sdc_disable_configurable_memory_module_output(
+    fp, option.flatten_names(), openfpga_ctx.module_graph(), top_module,
+    format_dir_path(openfpga_ctx.module_graph().module_name(top_module)));
 
   /* Disable timing for unused routing resources in connection blocks */
-  print_analysis_sdc_disable_unused_cbs(fp,
-                                        vpr_ctx.atom(), 
-                                        openfpga_ctx.module_graph(),
-                                        openfpga_ctx.vpr_device_annotation(),
-                                        vpr_ctx.device().grid,
-                                        vpr_ctx.device().rr_graph,
-                                        openfpga_ctx.vpr_routing_annotation(),
-                                        openfpga_ctx.device_rr_gsb(), 
-                                        compact_routing_hierarchy);
+  print_analysis_sdc_disable_unused_cbs(
+    fp, vpr_ctx.atom(), openfpga_ctx.module_graph(),
+    openfpga_ctx.vpr_device_annotation(), vpr_ctx.device().grid,
+    vpr_ctx.device().rr_graph, openfpga_ctx.vpr_routing_annotation(),
+    openfpga_ctx.device_rr_gsb(), compact_routing_hierarchy);
 
   /* Disable timing for unused routing resources in switch blocks */
-  print_analysis_sdc_disable_unused_sbs(fp,
-                                        vpr_ctx.atom(), 
-                                        openfpga_ctx.module_graph(),
-                                        openfpga_ctx.vpr_device_annotation(),
-                                        vpr_ctx.device().grid,
-                                        vpr_ctx.device().rr_graph,
-                                        openfpga_ctx.vpr_routing_annotation(),
-                                        openfpga_ctx.device_rr_gsb(), 
-                                        compact_routing_hierarchy);
+  print_analysis_sdc_disable_unused_sbs(
+    fp, vpr_ctx.atom(), openfpga_ctx.module_graph(),
+    openfpga_ctx.vpr_device_annotation(), vpr_ctx.device().grid,
+    vpr_ctx.device().rr_graph, openfpga_ctx.vpr_routing_annotation(),
+    openfpga_ctx.device_rr_gsb(), compact_routing_hierarchy);
 
-  /* Disable timing for unused routing resources in grids (programmable blocks) */
-  print_analysis_sdc_disable_unused_grids(fp,
-                                          vpr_ctx.device().grid,
-                                          openfpga_ctx.vpr_device_annotation(),
-                                          openfpga_ctx.vpr_clustering_annotation(),
-                                          openfpga_ctx.vpr_placement_annotation(),
-                                          openfpga_ctx.module_graph());
+  /* Disable timing for unused routing resources in grids (programmable blocks)
+   */
+  print_analysis_sdc_disable_unused_grids(
+    fp, vpr_ctx.device().grid, openfpga_ctx.vpr_device_annotation(),
+    openfpga_ctx.vpr_clustering_annotation(),
+    openfpga_ctx.vpr_placement_annotation(), openfpga_ctx.module_graph());
 
   /* Close file handler */
   fp.close();

@@ -15,14 +15,17 @@ namespace openfpga {
  *
  *******************************************************************/
 class FlowManager {
-  public: /* Public constructor */
-    FlowManager();
-  public: /* Public accessors */
-    bool compress_routing() const;
-  public: /* Public mutators */
-    void set_compress_routing(const bool& enabled);
-  private: /* Internal Data */
-    bool compress_routing_;
+ public: /* Public constructor */
+  FlowManager();
+
+ public: /* Public accessors */
+  bool compress_routing() const;
+
+ public: /* Public mutators */
+  void set_compress_routing(const bool& enabled);
+
+ private: /* Internal Data */
+  bool compress_routing_;
 };
 
 } /* End namespace openfpga*/

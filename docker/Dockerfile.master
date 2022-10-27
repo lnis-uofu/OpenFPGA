@@ -2,8 +2,27 @@ FROM ghcr.io/lnis-uofu/openfpga-env
 RUN mkdir -p /opt/openfpga
 WORKDIR /opt/openfpga
 COPY . /opt/openfpga
-RUN chmod +x abc/abc ace2/ace openfpga/openfpga vpr/vpr
+RUN chmod +x build/vtr-verilog-to-routing/abc/abc build/vtr-verilog-to-routing/ace2/ace build/openfpga/openfpga build/vtr-verilog-to-routing/vpr/vpr
 RUN chmod +x yosys/install/bin/yosys yosys/install/bin/yosys-abc yosys/install/bin/yosys-config yosys/install/bin/yosys-filterlib yosys/install/bin/yosys-smtbmc
-ENV PATH="/opt/openfpga/openfpga:/opt/openfpga/yosys/install/bin:${PATH}"
-ENV PATH="/opt/openfpga/ace2:/opt/openfpga/abc:/opt/openfpga/vpr:${PATH}"
+ENV PATH="/opt/openfpga/build/openfpga:/opt/openfpga/yosys/install/bin:${PATH}"
+ENV PATH="/opt/openfpga/build/vtr-verilog-to-routing/ace2:/opt/openfpga/build/vtr-verilog-to-routing/abc:/opt/openfpga/build/vtr-verilog-to-routing/vpr:${PATH}"
 ENV OPENFPGA_PATH="/opt/openfpga"
+
+ARG NB_USER=openfpga_user
+ARG NB_UID=1000
+ENV USER ${NB_USER}
+ENV NB_UID ${NB_UID}
+ENV HOME /home/${NB_USER}
+
+RUN adduser --disabled-password \
+    --gecos "Default user" \
+    --uid ${NB_UID} \
+    ${NB_USER}
+
+USER root
+RUN chown -R ${NB_UID} ${HOME}
+RUN chmod -R +r /opt/openfpga/
+RUN git config --global --add safe.directory .
+USER ${NB_USER}
+
+WORKDIR ${HOME}

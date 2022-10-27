@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!-- 
   Flagship Heterogeneous Architecture (No Carry Chains) for VTR 7.0.
 
@@ -61,35 +62,39 @@
          If you need to register the I/O, define clocks in the circuit models
          These clocks can be handled in back-end
      -->
-    <tile name="io" capacity="1" area="0">
-      <equivalent_sites>
-        <site pb_type="io"/>
-      </equivalent_sites>
-      <input name="outpad" num_pins="1"/>
-      <output name="inpad" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="custom">
-        <loc side="left">io.outpad io.inpad</loc>
-        <loc side="top">io.outpad io.inpad</loc>
-        <loc side="right">io.outpad io.inpad</loc>
-        <loc side="bottom">io.outpad io.inpad</loc>
-      </pinlocations>
+    <tile name="io" area="0">
+      <sub_tile name="io" capacity="1">
+        <equivalent_sites>
+          <site pb_type="io"/>
+        </equivalent_sites>
+        <input name="outpad" num_pins="1"/>
+        <output name="inpad" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="custom">
+          <loc side="left">io.outpad io.inpad</loc>
+          <loc side="top">io.outpad io.inpad</loc>
+          <loc side="right">io.outpad io.inpad</loc>
+          <loc side="bottom">io.outpad io.inpad</loc>
+        </pinlocations>
+      </sub_tile>
     </tile>
     <tile name="clb" area="53894">
-      <equivalent_sites>
-        <site pb_type="clb"/>
-      </equivalent_sites>
-      <input name="I" num_pins="12" equivalent="full"/>
-      <output name="O" num_pins="8" equivalent="none"/>
-      <clock name="clk" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <!--pinlocations pattern="spread"/-->
-      <pinlocations pattern="custom">
-        <loc side="left">clb.clk</loc>
-        <loc side="top"></loc>
-        <loc side="right">clb.O[3:0] clb.I[5:0]</loc>
-        <loc side="bottom">clb.O[7:4] clb.I[11:6]</loc>
-      </pinlocations>
+      <sub_tile name="clb">
+        <equivalent_sites>
+          <site pb_type="clb"/>
+        </equivalent_sites>
+        <input name="I" num_pins="12" equivalent="full"/>
+        <output name="O" num_pins="8" equivalent="none"/>
+        <clock name="clk" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <!--pinlocations pattern="spread"/-->
+        <pinlocations pattern="custom">
+          <loc side="left">clb.clk</loc>
+          <loc side="top"/>
+          <loc side="right">clb.O[3:0] clb.I[5:0]</loc>
+          <loc side="bottom">clb.O[7:4] clb.I[11:6]</loc>
+        </pinlocations>
+      </sub_tile>
     </tile>
   </tiles>
   <!-- ODIN II specific config ends -->
@@ -202,7 +207,6 @@
           </direct>
         </interconnect>
       </mode>
-
       <!-- IOs can operate as either inputs or outputs.
 	     Delays below come from Ian Kuon. They are small, so they should be interpreted as
 	     the delays to and from registers in the I/O (and generally I/Os are registered 
@@ -296,14 +300,14 @@
               <input name="d_in" num_pins="1"/>
               <output name="d_out" num_pins="1"/>
               <clock name="clk" num_pins="1" port_class="clock"/>
-          		<T_setup value="509e-12" port="spram_4x1.wr_en" clock="clk"/>
-          		<T_setup value="509e-12" port="spram_4x1.addr" clock="clk"/>
-         		<T_setup value="509e-12" port="spram_4x1.d_in" clock="clk"/>
-          		<T_clock_to_Q max="1.234e-9" port="spram_4x1.d_out" clock="clk"/>
-          	  <power method="pin-toggle">
-            	<port name="clk" energy_per_toggle="17.9e-12"/>
-            	<static_power power_per_instance="0.0"/>
-          	  </power>
+              <T_setup value="509e-12" port="spram_4x1.wr_en" clock="clk"/>
+              <T_setup value="509e-12" port="spram_4x1.addr" clock="clk"/>
+              <T_setup value="509e-12" port="spram_4x1.d_in" clock="clk"/>
+              <T_clock_to_Q max="1.234e-9" port="spram_4x1.d_out" clock="clk"/>
+              <power method="pin-toggle">
+                <port name="clk" energy_per_toggle="17.9e-12"/>
+                <static_power power_per_instance="0.0"/>
+              </power>
             </pb_type>
             <interconnect>
               <direct name="direct1" input="fabric.in" output="frac_logic.in"/>
@@ -413,11 +417,11 @@
               <input name="addr" num_pins="2"/>
               <input name="d_in" num_pins="1"/>
               <output name="d_out" num_pins="1"/>
-			  <clock name="clk" num_pins="1" port_class="clock"/>
-          		<T_setup value="509e-12" port="spram_4x1.wr_en" clock="clk"/>
-          		<T_setup value="509e-12" port="spram_4x1.addr" clock="clk"/>
-         		<T_setup value="509e-12" port="spram_4x1.d_in" clock="clk"/>
-          		<T_clock_to_Q max="1.234e-9" port="spram_4x1.d_out" clock="clk"/>
+              <clock name="clk" num_pins="1" port_class="clock"/>
+              <T_setup value="509e-12" port="spram_4x1.wr_en" clock="clk"/>
+              <T_setup value="509e-12" port="spram_4x1.addr" clock="clk"/>
+              <T_setup value="509e-12" port="spram_4x1.d_in" clock="clk"/>
+              <T_clock_to_Q max="1.234e-9" port="spram_4x1.d_out" clock="clk"/>
             </pb_type>
             <pb_type name="ff" blif_model=".latch" num_pb="2" class="flipflop">
               <input name="D" num_pins="1" port_class="D"/>

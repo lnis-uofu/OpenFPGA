@@ -1,11 +1,11 @@
 /********************************************************************
- * This file includes functions that are used to generate a Verilog 
+ * This file includes functions that are used to generate a Verilog
  * testbench for the top-level module (FPGA fabric), in purpose of
- * running formal verification with random input vectors 
+ * running formal verification with random input vectors
  *******************************************************************/
-#include <fstream>
-#include <cstring>
 #include <cmath>
+#include <cstring>
+#include <fstream>
 #include <iomanip>
 
 /* Headers from vtrutil library */
@@ -14,18 +14,16 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
-#include "openfpga_port.h"
-#include "openfpga_digest.h"
-#include "openfpga_reserved_words.h"
-
-#include "openfpga_atom_netlist_utils.h"
-#include "simulation_utils.h"
 #include "fabric_global_port_info_utils.h"
-
+#include "openfpga_atom_netlist_utils.h"
+#include "openfpga_digest.h"
+#include "openfpga_port.h"
+#include "openfpga_reserved_words.h"
+#include "simulation_utils.h"
 #include "verilog_constants.h"
-#include "verilog_writer_utils.h"
-#include "verilog_testbench_utils.h"
 #include "verilog_formal_random_top_testbench.h"
+#include "verilog_testbench_utils.h"
+#include "verilog_writer_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -33,64 +31,64 @@ namespace openfpga {
 /********************************************************************
  * Local variables used only in this file
  *******************************************************************/
-constexpr char* FPGA_PORT_POSTFIX = "_gfpga";
-constexpr char* BENCHMARK_PORT_POSTFIX = "_bench";
-constexpr char* CHECKFLAG_PORT_POSTFIX = "_flag";
-constexpr char* DEFAULT_CLOCK_NAME = "clk";
-constexpr char* BENCHMARK_INSTANCE_NAME = "REF_DUT";
-constexpr char* FPGA_INSTANCE_NAME = "FPGA_DUT";
-constexpr char* ERROR_COUNTER = "nb_error";
-constexpr char* FORMAL_TB_SIM_START_PORT_NAME = "sim_start";
+constexpr const char* FPGA_PORT_POSTFIX = "_gfpga";
+constexpr const char* BENCHMARK_PORT_POSTFIX = "_bench";
+constexpr const char* CHECKFLAG_PORT_POSTFIX = "_flag";
+constexpr const char* DEFAULT_CLOCK_NAME = "clk";
+constexpr const char* BENCHMARK_INSTANCE_NAME = "REF_DUT";
+constexpr const char* FPGA_INSTANCE_NAME = "FPGA_DUT";
+constexpr const char* ERROR_COUNTER = "nb_error";
+constexpr const char* FORMAL_TB_SIM_START_PORT_NAME = "sim_start";
 
 /********************************************************************
- * Print the module ports for the Verilog testbench 
- * using random vectors 
- * This function generates 
- * 1. the input ports to drive both input benchmark module and FPGA fabric module
+ * Print the module ports for the Verilog testbench
+ * using random vectors
+ * This function generates
+ * 1. the input ports to drive both input benchmark module and FPGA fabric
+ *module
  * 2. the output ports for input benchmark module
  * 3. the output ports for FPGA fabric module
- * 4. the error checking ports 
+ * 4. the error checking ports
  *******************************************************************/
-static 
-void print_verilog_top_random_testbench_ports(std::fstream& fp,
-                                              const ModuleManager& module_manager,
-                                              const std::string& circuit_name,
-                                              const std::vector<std::string>& clock_port_names,
-                                              const AtomContext& atom_ctx,
-                                              const VprNetlistAnnotation& netlist_annotation,
-                                              const VerilogTestbenchOption& options) {
+static void print_verilog_top_random_testbench_ports(
+  std::fstream& fp, const ModuleManager& module_manager,
+  const std::string& circuit_name,
+  const std::vector<std::string>& clock_port_names, const AtomContext& atom_ctx,
+  const VprNetlistAnnotation& netlist_annotation,
+  const VerilogTestbenchOption& options) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
-  print_verilog_default_net_type_declaration(fp,
-                                             options.default_net_type());
- 
-  /* Print the declaration for the module */
-  fp << "module " << circuit_name << FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX << ";" << std::endl;
+  print_verilog_default_net_type_declaration(fp, options.default_net_type());
 
-  /* Create a clock port if the benchmark does not have one! 
-   * The clock is used for counting and synchronizing input stimulus 
+  /* Print the declaration for the module */
+  fp << "module " << circuit_name << FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX << ";"
+     << std::endl;
+
+  /* Create a clock port if the benchmark does not have one!
+   * The clock is used for counting and synchronizing input stimulus
    */
-  std::vector<BasicPort> clock_ports = generate_verilog_testbench_clock_port(clock_port_names, std::string(DEFAULT_CLOCK_NAME));
-  print_verilog_comment(fp, std::string("----- Default clock port is added here since benchmark does not contain one -------"));
+  std::vector<BasicPort> clock_ports = generate_verilog_testbench_clock_port(
+    clock_port_names, std::string(DEFAULT_CLOCK_NAME));
+  print_verilog_comment(
+    fp, std::string("----- Default clock port is added here since benchmark "
+                    "does not contain one -------"));
   for (const BasicPort& clock_port : clock_ports) {
-    fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, clock_port) << ";" << std::endl;
+    fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, clock_port) << ";"
+       << std::endl;
   }
 
   /* Add an empty line as splitter */
   fp << std::endl;
 
-  print_verilog_testbench_shared_ports(fp, module_manager, FabricGlobalPortInfo(), PinConstraints(),
-                                       atom_ctx, netlist_annotation,
-                                       clock_port_names,
-                                       std::string(),
-                                       std::string(BENCHMARK_PORT_POSTFIX),
-                                       std::string(FPGA_PORT_POSTFIX),
-                                       std::string(CHECKFLAG_PORT_POSTFIX),
-                                       options.no_self_checking());
+  print_verilog_testbench_shared_ports(
+    fp, module_manager, FabricGlobalPortInfo(), PinConstraints(), atom_ctx,
+    netlist_annotation, clock_port_names, std::string(),
+    std::string(BENCHMARK_PORT_POSTFIX), std::string(FPGA_PORT_POSTFIX),
+    std::string(CHECKFLAG_PORT_POSTFIX), options.no_self_checking());
 
-  /* Instantiate an integer to count the number of error 
-   * and determine if the simulation succeed or failed 
+  /* Instantiate an integer to count the number of error
+   * and determine if the simulation succeed or failed
    */
   if (!options.no_self_checking()) {
     print_verilog_comment(fp, std::string("----- Error counter -------"));
@@ -103,33 +101,26 @@ void print_verilog_top_random_testbench_ports(std::fstream& fp,
 /********************************************************************
  * Instanciate the input benchmark module
  *******************************************************************/
-static
-void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp, 
-                                                           const std::string& reference_verilog_top_name,
-                                                           const AtomContext& atom_ctx,
-                                                           const VprNetlistAnnotation& netlist_annotation,
-                                                           const PinConstraints& pin_constraints,
-                                                           const BusGroup& bus_group,
-                                                           const bool& explicit_port_mapping) {
+static void print_verilog_top_random_testbench_benchmark_instance(
+  std::fstream& fp, const std::string& reference_verilog_top_name,
+  const AtomContext& atom_ctx, const VprNetlistAnnotation& netlist_annotation,
+  const PinConstraints& pin_constraints, const BusGroup& bus_group,
+  const bool& explicit_port_mapping) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
   /* Instanciate benchmark */
-  print_verilog_comment(fp, std::string("----- Reference Benchmark Instanication -------"));
+  print_verilog_comment(
+    fp, std::string("----- Reference Benchmark Instanication -------"));
 
-  print_verilog_testbench_benchmark_instance(fp, reference_verilog_top_name,
-                                             std::string(BENCHMARK_INSTANCE_NAME),
-                                             std::string(),
-                                             std::string(),
-                                             std::string(),
-                                             std::string(BENCHMARK_PORT_POSTFIX),
-                                             std::vector<std::string>(),
-                                             atom_ctx, netlist_annotation,
-                                             pin_constraints,
-                                             bus_group,
-                                             explicit_port_mapping);
+  print_verilog_testbench_benchmark_instance(
+    fp, reference_verilog_top_name, std::string(BENCHMARK_INSTANCE_NAME),
+    std::string(), std::string(), std::string(),
+    std::string(BENCHMARK_PORT_POSTFIX), std::vector<std::string>(), atom_ctx,
+    netlist_annotation, pin_constraints, bus_group, explicit_port_mapping);
 
-  print_verilog_comment(fp, std::string("----- End reference Benchmark Instanication -------"));
+  print_verilog_comment(
+    fp, std::string("----- End reference Benchmark Instanication -------"));
 
   /* Add an empty line as splitter */
   fp << std::endl;
@@ -138,33 +129,29 @@ void print_verilog_top_random_testbench_benchmark_instance(std::fstream& fp,
 /********************************************************************
  * Instanciate the FPGA fabric module
  *******************************************************************/
-static
-void print_verilog_random_testbench_fpga_instance(std::fstream& fp,
-                                                  const std::string& circuit_name,
-                                                  const AtomContext& atom_ctx,
-                                                  const VprNetlistAnnotation& netlist_annotation,
-                                                  const PinConstraints& pin_constraints,
-                                                  const BusGroup& bus_group,
-                                                  const bool& explicit_port_mapping) {
+static void print_verilog_random_testbench_fpga_instance(
+  std::fstream& fp, const std::string& circuit_name,
+  const AtomContext& atom_ctx, const VprNetlistAnnotation& netlist_annotation,
+  const PinConstraints& pin_constraints, const BusGroup& bus_group,
+  const bool& explicit_port_mapping) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
-  print_verilog_comment(fp, std::string("----- FPGA fabric instanciation -------"));
+  print_verilog_comment(fp,
+                        std::string("----- FPGA fabric instanciation -------"));
 
   /* Always use explicit port mapping */
-  print_verilog_testbench_benchmark_instance(fp, std::string(circuit_name + std::string(FORMAL_VERIFICATION_TOP_MODULE_POSTFIX)),
-                                             std::string(FPGA_INSTANCE_NAME),
-                                             std::string(),
-                                             std::string(),
-                                             std::string(),
-                                             std::string(FPGA_PORT_POSTFIX),
-                                             std::vector<std::string>(),
-                                             atom_ctx, netlist_annotation,
-                                             pin_constraints,
-                                             bus_group,
-                                             explicit_port_mapping);
+  print_verilog_testbench_benchmark_instance(
+    fp,
+    std::string(circuit_name +
+                std::string(FORMAL_VERIFICATION_TOP_MODULE_POSTFIX)),
+    std::string(FPGA_INSTANCE_NAME), std::string(), std::string(),
+    std::string(), std::string(FPGA_PORT_POSTFIX), std::vector<std::string>(),
+    atom_ctx, netlist_annotation, pin_constraints, bus_group,
+    explicit_port_mapping);
 
-  print_verilog_comment(fp, std::string("----- End FPGA Fabric Instanication -------"));
+  print_verilog_comment(
+    fp, std::string("----- End FPGA Fabric Instanication -------"));
 
   /* Add an empty line as splitter */
   fp << std::endl;
@@ -173,19 +160,17 @@ void print_verilog_random_testbench_fpga_instance(std::fstream& fp,
 /********************************************************************
  * Generate random stimulus for the reset port
  * This function is designed to drive the reset port of a benchmark module
- * The reset signal will be 
+ * The reset signal will be
  * - enabled in the 1st clock cycle
  * - disabled in the rest of clock cycles
  *******************************************************************/
-static 
-void print_verilog_random_testbench_reset_stimuli(std::fstream& fp,
-                                                  const AtomContext& atom_ctx,
-                                                  const VprNetlistAnnotation& netlist_annotation,
-                                                  const ModuleManager& module_manager,
-                                                  const FabricGlobalPortInfo& global_ports,
-                                                  const PinConstraints& pin_constraints,
-                                                  const std::vector<std::string>& clock_port_names,
-                                                  const BasicPort& clock_port) {
+static void print_verilog_random_testbench_reset_stimuli(
+  std::fstream& fp, const AtomContext& atom_ctx,
+  const VprNetlistAnnotation& netlist_annotation,
+  const ModuleManager& module_manager, const FabricGlobalPortInfo& global_ports,
+  const PinConstraints& pin_constraints,
+  const std::vector<std::string>& clock_port_names,
+  const BasicPort& clock_port) {
   valid_file_stream(fp);
 
   print_verilog_comment(fp, "----- Begin reset signal generation -----");
@@ -196,28 +181,35 @@ void print_verilog_random_testbench_reset_stimuli(std::fstream& fp,
       continue;
     }
 
-    /* The block may be renamed as it contains special characters which violate Verilog syntax */
+    /* The block may be renamed as it contains special characters which violate
+     * Verilog syntax */
     std::string block_name = atom_ctx.nlist.block_name(atom_blk);
     if (true == netlist_annotation.is_block_renamed(atom_blk)) {
       block_name = netlist_annotation.block_name(atom_blk);
-    } 
+    }
 
     /* Bypass clock ports because their stimulus cannot be random */
-    if (clock_port_names.end() != std::find(clock_port_names.begin(), clock_port_names.end(), block_name)) {
+    if (clock_port_names.end() != std::find(clock_port_names.begin(),
+                                            clock_port_names.end(),
+                                            block_name)) {
       continue;
     }
 
-    /* Bypass any constained net that are mapped to a global port of the FPGA fabric
-     * because their stimulus cannot be random
+    /* Bypass any constained net that are mapped to a global port of the FPGA
+     * fabric because their stimulus cannot be random
      */
-    if (false == port_is_fabric_global_reset_port(global_ports, module_manager, pin_constraints.net_pin(block_name))) { 
+    if (false ==
+        port_is_fabric_global_reset_port(global_ports, module_manager,
+                                         pin_constraints.net_pin(block_name))) {
       continue;
     }
 
     /* Generete stimuli for this net which is how reset signal works */
     BasicPort reset_port(block_name, 1);
     size_t initial_value = 1;
-    if (1 == global_ports.global_port_default_value(find_fabric_global_port(global_ports, module_manager,  pin_constraints.net_pin(block_name)))) {
+    if (1 ==
+        global_ports.global_port_default_value(find_fabric_global_port(
+          global_ports, module_manager, pin_constraints.net_pin(block_name)))) {
       initial_value = 0;
     }
 
@@ -230,13 +222,17 @@ void print_verilog_random_testbench_reset_stimuli(std::fstream& fp,
     fp << ";" << std::endl;
 
     /* Flip the reset at the second negative edge of the clock port
-     * So the generic reset stimuli is applicable to both synchronous reset and asynchronous reset
-     * This is because the reset is activated in a complete clock cycle 
-     * This gaurantees that even for synchronous reset, the reset can be sensed in the 1st rising/falling 
-     * edge of the clock signal
+     * So the generic reset stimuli is applicable to both synchronous reset and
+     * asynchronous reset This is because the reset is activated in a complete
+     * clock cycle This gaurantees that even for synchronous reset, the reset
+     * can be sensed in the 1st rising/falling edge of the clock signal
      */
-    fp << "\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << ");" << std::endl;
-    fp << "\t@(negedge " << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << ");" << std::endl;
+    fp << "\t@(negedge "
+       << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << ");"
+       << std::endl;
+    fp << "\t@(negedge "
+       << generate_verilog_port(VERILOG_PORT_CONKT, clock_port) << ");"
+       << std::endl;
     print_verilog_register_connection(fp, reset_port, reset_port, true);
     fp << "\tend" << std::endl;
   }
@@ -248,40 +244,39 @@ void print_verilog_random_testbench_reset_stimuli(std::fstream& fp,
 
 /*********************************************************************
  * Top-level function in this file:
- * Create a Verilog testbench using random input vectors 
+ * Create a Verilog testbench using random input vectors
  * The testbench consists of two modules, i.e., Design Under Test (DUT)
  * 1. top-level module of FPGA fabric
- * 2. top-level module of users' benchmark, 
+ * 2. top-level module of users' benchmark,
  *    i.e., the input benchmark of VPR flow
  *                                    +----------+
  *                                    |   FPGA   |       +------------+
  *                             +----->|  Fabric  |------>|            |
  *                             |      |          |       |            |
  *                             |      +----------+       |            |
- *                             |                         | Output     | 
- *   random_input_vectors -----+                         | Vector     |---->Functional correct?
- *                             |                         | Comparator |    
- *                             |      +-----------+      |            |
- *                             |      |  Input    |      |            |
+ *                             |                         | Output     |
+ *   random_input_vectors -----+                         | Vector
+ *|---->Functional correct? |                         | Comparator | |
+ *+-----------+      |            | |      |  Input    |      |            |
  *                             +----->| Benchmark |----->|            |
  *                                    +-----------+      +------------+
  *
  * Same input vectors are given to drive both DUTs.
  * The output vectors of the DUTs are compared to verify if they
  * have the same functionality.
- * A flag will be raised to indicate the result 
+ * A flag will be raised to indicate the result
  ********************************************************************/
-void print_verilog_random_top_testbench(const std::string& circuit_name,
-                                        const std::string& verilog_fname,
-                                        const AtomContext& atom_ctx,
-                                        const VprNetlistAnnotation& netlist_annotation,
-                                        const ModuleManager& module_manager,
-                                        const FabricGlobalPortInfo& global_ports,
-                                        const PinConstraints& pin_constraints,
-                                        const BusGroup& bus_group,
-                                        const SimulationSetting& simulation_parameters,
-                                        const VerilogTestbenchOption &options) {
-  std::string timer_message = std::string("Write configuration-skip testbench for FPGA top-level Verilog netlist implemented by '") + circuit_name.c_str() + std::string("'");
+void print_verilog_random_top_testbench(
+  const std::string& circuit_name, const std::string& verilog_fname,
+  const AtomContext& atom_ctx, const VprNetlistAnnotation& netlist_annotation,
+  const ModuleManager& module_manager, const FabricGlobalPortInfo& global_ports,
+  const PinConstraints& pin_constraints, const BusGroup& bus_group,
+  const SimulationSetting& simulation_parameters,
+  const VerilogTestbenchOption& options) {
+  std::string timer_message = std::string(
+                                "Write configuration-skip testbench for FPGA "
+                                "top-level Verilog netlist implemented by '") +
+                              circuit_name.c_str() + std::string("'");
 
   /* Start time count */
   vtr::ScopedStartFinishTimer timer(timer_message);
@@ -294,91 +289,81 @@ void print_verilog_random_top_testbench(const std::string& circuit_name,
   check_file_stream(verilog_fname.c_str(), fp);
 
   /* Generate a brief description on the Verilog file*/
-  std::string title = std::string("FPGA Verilog Testbench for Formal Top-level netlist of Design: ") + circuit_name;
-  print_verilog_file_header(fp, title, options.time_stamp()); 
+  std::string title =
+    std::string(
+      "FPGA Verilog Testbench for Formal Top-level netlist of Design: ") +
+    circuit_name;
+  print_verilog_file_header(fp, title, options.time_stamp());
 
   /* Preparation: find all the clock ports */
-  std::vector<std::string> clock_port_names = find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
+  std::vector<std::string> clock_port_names =
+    find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
 
   /* Start of testbench */
-  print_verilog_top_random_testbench_ports(fp, module_manager, circuit_name, clock_port_names, atom_ctx, netlist_annotation, options);
+  print_verilog_top_random_testbench_ports(fp, module_manager, circuit_name,
+                                           clock_port_names, atom_ctx,
+                                           netlist_annotation, options);
 
   /* Call defined top-level module */
-  print_verilog_random_testbench_fpga_instance(fp, circuit_name,
-                                               atom_ctx, netlist_annotation,
-                                               pin_constraints,
-                                               bus_group,
-                                               options.explicit_port_mapping());
+  print_verilog_random_testbench_fpga_instance(
+    fp, circuit_name, atom_ctx, netlist_annotation, pin_constraints, bus_group,
+    options.explicit_port_mapping());
 
   /* Call defined benchmark */
   if (!options.no_self_checking()) {
-    print_verilog_top_random_testbench_benchmark_instance(fp, circuit_name,
-                                                          atom_ctx, netlist_annotation,
-                                                          pin_constraints,
-                                                          bus_group,
-                                                          options.explicit_port_mapping());
+    print_verilog_top_random_testbench_benchmark_instance(
+      fp, circuit_name, atom_ctx, netlist_annotation, pin_constraints,
+      bus_group, options.explicit_port_mapping());
   }
 
   /* Find clock port to be used */
-  std::vector<BasicPort> clock_ports = generate_verilog_testbench_clock_port(clock_port_names, std::string(DEFAULT_CLOCK_NAME));
+  std::vector<BasicPort> clock_ports = generate_verilog_testbench_clock_port(
+    clock_port_names, std::string(DEFAULT_CLOCK_NAME));
 
   /* Add stimuli for reset, set, clock and iopad signals */
-  print_verilog_testbench_clock_stimuli(fp,
-                                        pin_constraints, 
-                                        simulation_parameters, 
-                                        clock_ports);
-  /* TODO: use the first clock now because we do not have information how the reset is 
-   * correlated to clock ports. Once we have such information, the limitation should be removed!
+  print_verilog_testbench_clock_stimuli(fp, pin_constraints,
+                                        simulation_parameters, clock_ports);
+  /* TODO: use the first clock now because we do not have information how the
+   * reset is correlated to clock ports. Once we have such information, the
+   * limitation should be removed!
    */
-  print_verilog_random_testbench_reset_stimuli(fp, 
-                                               atom_ctx,
-                                               netlist_annotation, 
-                                               module_manager,
-                                               global_ports, 
-                                               pin_constraints, 
-                                               clock_port_names, 
-                                               clock_ports[0]);
+  print_verilog_random_testbench_reset_stimuli(
+    fp, atom_ctx, netlist_annotation, module_manager, global_ports,
+    pin_constraints, clock_port_names, clock_ports[0]);
 
-  print_verilog_testbench_random_stimuli(fp, atom_ctx,
-                                         netlist_annotation, 
-                                         module_manager,
-                                         global_ports, 
-                                         pin_constraints, 
-                                         clock_port_names, 
-                                         std::string(),
-                                         std::string(CHECKFLAG_PORT_POSTFIX),
-                                         clock_ports,
-                                         options.no_self_checking());
+  print_verilog_testbench_random_stimuli(
+    fp, atom_ctx, netlist_annotation, module_manager, global_ports,
+    pin_constraints, clock_port_names, std::string(),
+    std::string(CHECKFLAG_PORT_POSTFIX), clock_ports,
+    options.no_self_checking());
 
   if (!options.no_self_checking()) {
-    print_verilog_testbench_check(fp, 
-                                  std::string(FORMAL_TB_SIM_START_PORT_NAME),
-                                  std::string(BENCHMARK_PORT_POSTFIX),
-                                  std::string(FPGA_PORT_POSTFIX),
-                                  std::string(CHECKFLAG_PORT_POSTFIX),
-                                  std::string(),
-                                  std::string(ERROR_COUNTER),
-                                  atom_ctx,
-                                  netlist_annotation, 
-                                  clock_port_names,
-                                  std::string(DEFAULT_CLOCK_NAME));
+    print_verilog_testbench_check(
+      fp, std::string(FORMAL_TB_SIM_START_PORT_NAME),
+      std::string(BENCHMARK_PORT_POSTFIX), std::string(FPGA_PORT_POSTFIX),
+      std::string(CHECKFLAG_PORT_POSTFIX), std::string(),
+      std::string(ERROR_COUNTER), atom_ctx, netlist_annotation,
+      clock_port_names, std::string(DEFAULT_CLOCK_NAME));
   }
 
-  float simulation_time = find_operating_phase_simulation_time(simulation_parameters.num_clock_cycles(),
-                                                               1./simulation_parameters.default_operating_clock_frequency(),
-                                                               VERILOG_SIM_TIMESCALE);
+  float simulation_time = find_operating_phase_simulation_time(
+    simulation_parameters.num_clock_cycles(),
+    1. / simulation_parameters.default_operating_clock_frequency(),
+    VERILOG_SIM_TIMESCALE);
 
   /* Add Icarus requirement */
-  print_verilog_timeout_and_vcd(fp, 
-                                std::string(circuit_name + std::string(FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX)),
-                                std::string(circuit_name + std::string("_formal.vcd")), 
-                                std::string(FORMAL_TB_SIM_START_PORT_NAME),
-                                std::string(ERROR_COUNTER),
-                                simulation_time,
-                                options.no_self_checking());
+  print_verilog_timeout_and_vcd(
+    fp,
+    std::string(circuit_name +
+                std::string(FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX)),
+    std::string(circuit_name + std::string("_formal.vcd")),
+    std::string(FORMAL_TB_SIM_START_PORT_NAME), std::string(ERROR_COUNTER),
+    simulation_time, options.no_self_checking());
 
   /* Testbench ends*/
-  print_verilog_module_end(fp, std::string(circuit_name) + std::string(FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX));
+  print_verilog_module_end(fp,
+                           std::string(circuit_name) +
+                             std::string(FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX));
 
   /* Close the file stream */
   fp.close();

@@ -6,6 +6,7 @@
  *******************************************************************/
 #include <string>
 #include <vector>
+
 #include "physical_types.h"
 
 /********************************************************************
@@ -15,11 +16,14 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-std::vector<t_pb_graph_pin*> pb_graph_pin_inputs(t_pb_graph_pin* pb_graph_pin,
-                                                 t_interconnect* selected_interconnect); 
+std::vector<t_pb_graph_pin*> pb_graph_pin_inputs(
+  t_pb_graph_pin* pb_graph_pin, t_interconnect* selected_interconnect);
 
-t_interconnect* pb_graph_pin_interc(t_pb_graph_pin* pb_graph_pin, 
-                                    t_mode* selected_mode); 
+t_interconnect* pb_graph_pin_interc(t_pb_graph_pin* pb_graph_pin,
+                                    t_mode* selected_mode);
+
+bool is_pb_graph_pins_share_interc(const t_pb_graph_pin* pinA,
+                                   const t_pb_graph_pin* pinB);
 
 } /* end namespace openfpga */
 

@@ -244,7 +244,7 @@ def generate_each_task_actions(taskname):
         clean_up_and_exit("Found duplicate architectures in config file")
 
     # Get Flow information
-    logger.info('Running "%s" flow' %
+    logger.info('Running "%s" flow',
                 GeneralSection.get("fpga_flow", fallback="yosys_vpr"))
 
     # Check if specified benchmark files exist
@@ -317,11 +317,18 @@ def generate_each_task_actions(taskname):
                 CurrBenchPara["benchVariable"] += [f"--{param}", value]
 
         if GeneralSection.get("fpga_flow") == "vpr_blif":
-            # Check if activity file exist
-            if not SynthSection.get(bech_name+"_act"):
-                clean_up_and_exit("Missing argument %s" % (bech_name+"_act") +
-                                  "for vpr_blif flow")
-            CurrBenchPara["activity_file"] = SynthSection.get(bech_name+"_act")
+            # Check if activity file exist only when power analysis is required
+            if (GeneralSection.getboolean("power_analysis")):
+                if not SynthSection.get(bech_name+"_act"):
+                    clean_up_and_exit("Missing argument %s" % (bech_name+"_act") +
+                                      "for vpr_blif flow")
+                CurrBenchPara["activity_file"] = SynthSection.get(bech_name+"_act")
+            else:
+                # If users defined an activity file, we use it otherwise create a dummy act
+                if not SynthSection.get(bech_name+"_act"):
+                  CurrBenchPara["activity_file"] = bech_name+"_act"
+                else:
+                  CurrBenchPara["activity_file"] = SynthSection.get(bech_name+"_act")
 
             # Check if base verilog file exists
             if not SynthSection.get(bech_name+"_verilog"):
@@ -513,7 +520,7 @@ def run_single_script(s, eachJob, job_list):
                     raise subprocess.CalledProcessError(0, " ".join(command))
                 eachJob["status"] = True
         except:
-            logger.exception("Failed to execute openfpga flow - " +
+            logger.exception("Failed to execute openfpga flow - %s", 
                              eachJob["name"])
             if not args.continue_on_fail:
                 os._exit(1)
@@ -521,11 +528,11 @@ def run_single_script(s, eachJob, job_list):
         timediff = timedelta(seconds=(eachJob["endtime"]-eachJob["starttime"]))
         timestr = humanize.naturaldelta(timediff) if "humanize" in sys.modules \
             else str(timediff)
-        logger.info("%s Finished with returncode %d, Time Taken %s " %
-                    (thread_name, process.returncode, timestr))
+        logger.info("%s Finished with returncode %d, Time Taken %s " ,
+                    thread_name, process.returncode, timestr)
         eachJob["finished"] = True
         no_of_finished_job = sum([not eachJ["finished"] for eachJ in job_list])
-        logger.info("***** %d runs pending *****" % (no_of_finished_job))
+        logger.info("***** %d runs pending *****" , no_of_finished_job)
 
 
 def run_actions(job_list):
@@ -566,7 +573,7 @@ def collect_results(job_run_list):
     if len(task_result):
         with open("task_result.csv", 'w', newline='') as csvfile:
             writer = csv.DictWriter(
-                csvfile, extrasaction='ignore', fieldnames=list(set(colnames)))
+                csvfile, extrasaction='ignore', fieldnames=list(colnames))
             writer.writeheader()
             for eachResult in task_result:
                 writer.writerow(eachResult)

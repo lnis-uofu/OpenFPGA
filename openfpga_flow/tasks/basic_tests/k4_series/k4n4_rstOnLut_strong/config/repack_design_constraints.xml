@@ -1,0 +1,5 @@
+<repack_design_constraints>
+  <pin_constraint pb_type="clb" pin="reset[0]" net="rst"/>
+  <pin_constraint pb_type="io" pin="reset[0]" net="rst"/>
+</repack_design_constraints>
+

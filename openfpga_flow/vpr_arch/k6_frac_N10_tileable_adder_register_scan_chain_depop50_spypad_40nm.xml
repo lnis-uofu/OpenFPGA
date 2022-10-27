@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!-- Homogeneous FPGA Architecture with Carry Chain for VPR8
 
   - The chip layout is organized with a 2x2 array of Configurable Logic Blocks (CLBs)
@@ -68,117 +69,123 @@
     </model>
   </models>
   <tiles>
-    <!-- Each I/O tile includes a GPIO --> 
+    <!-- Each I/O tile includes a GPIO -->
     <!-- IOs go on the periphery of the FPGA, for consistency, 
          make it physically equivalent on all sides so that only one definition of I/Os is needed.
          If I do not make a physically equivalent definition, then I need to define 4 different I/Os, one for each side of the FPGA
       -->
-    <tile name="io" capacity="1" area="0">
-      <equivalent_sites>
-        <site pb_type="io"/>
-      </equivalent_sites>
-      <input name="outpad" num_pins="1"/>
-      <output name="inpad" num_pins="1"/>
-      <!-- Each input of the tile can be driven by 15% of routing tracks
+    <tile name="io" area="0">
+      <sub_tile name="io" capacity="1">
+        <equivalent_sites>
+          <site pb_type="io"/>
+        </equivalent_sites>
+        <input name="outpad" num_pins="1"/>
+        <output name="inpad" num_pins="1"/>
+        <!-- Each input of the tile can be driven by 15% of routing tracks
            Each output of the tile can drive 10% of routing tracks
         -->
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="custom">
-        <loc side="left">io.outpad io.inpad</loc>
-        <loc side="top">io.outpad io.inpad</loc>
-        <loc side="right">io.outpad io.inpad</loc>
-        <loc side="bottom">io.outpad io.inpad</loc>
-      </pinlocations>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="custom">
+          <loc side="left">io.outpad io.inpad</loc>
+          <loc side="top">io.outpad io.inpad</loc>
+          <loc side="right">io.outpad io.inpad</loc>
+          <loc side="bottom">io.outpad io.inpad</loc>
+        </pinlocations>
+      </sub_tile>
     </tile>
     <!-- Each CLB tile includes a Configurable Logic Block (CLB)
          Each input of the tile can be driven by 15% of routing tracks
          Each output of the tile can drive 10% of routing tracks
       -->
     <tile name="clb" area="53894">
-      <equivalent_sites>
-        <site pb_type="clb"/>
-      </equivalent_sites>
-      <input name="I0" num_pins="10" equivalent="full"/>
-      <input name="I1" num_pins="10" equivalent="full"/>
-      <input name="I2" num_pins="10" equivalent="full"/>
-      <input name="I3" num_pins="10" equivalent="full"/>
-      <input name="sc_in" num_pins="1"/>
-      <input name="cin" num_pins="1"/>
-      <input name="cin_trick" num_pins="1"/>
-      <input name="regin" num_pins="1"/>
-      <output name="O" num_pins="20" equivalent="none"/>
-      <output name="sc_out" num_pins="1"/>
-      <output name="cout" num_pins="1"/>
-      <output name="cout_copy" num_pins="1"/>
-      <output name="regout" num_pins="1"/>
-      <clock name="clk" num_pins="1"/>
-      <!-- Each input of the tile can be driven by 15% of routing tracks
+      <sub_tile name="clb">
+        <equivalent_sites>
+          <site pb_type="clb"/>
+        </equivalent_sites>
+        <input name="I0" num_pins="10" equivalent="full"/>
+        <input name="I1" num_pins="10" equivalent="full"/>
+        <input name="I2" num_pins="10" equivalent="full"/>
+        <input name="I3" num_pins="10" equivalent="full"/>
+        <input name="sc_in" num_pins="1"/>
+        <input name="cin" num_pins="1"/>
+        <input name="cin_trick" num_pins="1"/>
+        <input name="regin" num_pins="1"/>
+        <output name="O" num_pins="20" equivalent="none"/>
+        <output name="sc_out" num_pins="1"/>
+        <output name="cout" num_pins="1"/>
+        <output name="cout_copy" num_pins="1"/>
+        <output name="regout" num_pins="1"/>
+        <clock name="clk" num_pins="1"/>
+        <!-- Each input of the tile can be driven by 15% of routing tracks
            Each output of the tile can drive 10% of routing tracks
            There are four pins (cin, cout, sc_in, sc_out) has not connection 
            to routing tracks. There are directed wired from/to adjacent CLBs
         -->
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
-        <fc_override port_name="cin" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="cout" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="sc_in" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="sc_out" fc_type="frac" fc_val="0"/>
-      </fc>
-      <!-- Highly recommand to customize pin location when direct connection is used!!! -->
-      <!-- To ensure best tileable routing architecture (minimize the number of unique SBs
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+          <fc_override port_name="cin" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="cout" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="sc_in" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="sc_out" fc_type="frac" fc_val="0"/>
+        </fc>
+        <!-- Highly recommand to customize pin location when direct connection is used!!! -->
+        <!-- To ensure best tileable routing architecture (minimize the number of unique SBs
            We keep all the pins that touch routing architecture on the right and bottom sides of the tile
            Top side pins are mainly for direct connections
         -->
-      <pinlocations pattern="custom">
-        <loc side="left"></loc>
-        <loc side="top">clb.sc_in clb.cin clb.cin_trick clb.regin clb.clk</loc>
-        <loc side="right">clb.I0[9:0] clb.I1[9:0] clb.O[9:0]</loc>
-        <loc side="bottom">clb.cout clb.cout_copy clb.sc_out clb.regout clb.I2[9:0] clb.I3[9:0] clb.O[19:10]</loc>
-      </pinlocations>
+        <pinlocations pattern="custom">
+          <loc side="left"/>
+          <loc side="top">clb.sc_in clb.cin clb.cin_trick clb.regin clb.clk</loc>
+          <loc side="right">clb.I0[9:0] clb.I1[9:0] clb.O[9:0]</loc>
+          <loc side="bottom">clb.cout clb.cout_copy clb.sc_out clb.regout clb.I2[9:0] clb.I3[9:0] clb.O[19:10]</loc>
+        </pinlocations>
+      </sub_tile>
     </tile>
     <!-- Each CLB tile with spypads includes a Configurable Logic Block (CLB) with spypads
          Each input of the tile can be driven by 15% of routing tracks
          Each output of the tile can drive 10% of routing tracks
       -->
     <tile name="clb_spypad" area="53894">
-      <equivalent_sites>
-        <site pb_type="clb_spypad"/>
-      </equivalent_sites>
-      <input name="I0" num_pins="10" equivalent="full"/>
-      <input name="I1" num_pins="10" equivalent="full"/>
-      <input name="I2" num_pins="10" equivalent="full"/>
-      <input name="I3" num_pins="10" equivalent="full"/>
-      <input name="sc_in" num_pins="1"/>
-      <input name="cin" num_pins="1"/>
-      <input name="cin_trick" num_pins="1"/>
-      <input name="regin" num_pins="1"/>
-      <output name="O" num_pins="20" equivalent="none"/>
-      <output name="sc_out" num_pins="1"/>
-      <output name="cout" num_pins="1"/>
-      <output name="cout_copy" num_pins="1"/>
-      <output name="regout" num_pins="1"/>
-      <clock name="clk" num_pins="1"/>
-      <!-- Each input of the tile can be driven by 15% of routing tracks
+      <sub_tile name="clb_spypad">
+        <equivalent_sites>
+          <site pb_type="clb_spypad"/>
+        </equivalent_sites>
+        <input name="I0" num_pins="10" equivalent="full"/>
+        <input name="I1" num_pins="10" equivalent="full"/>
+        <input name="I2" num_pins="10" equivalent="full"/>
+        <input name="I3" num_pins="10" equivalent="full"/>
+        <input name="sc_in" num_pins="1"/>
+        <input name="cin" num_pins="1"/>
+        <input name="cin_trick" num_pins="1"/>
+        <input name="regin" num_pins="1"/>
+        <output name="O" num_pins="20" equivalent="none"/>
+        <output name="sc_out" num_pins="1"/>
+        <output name="cout" num_pins="1"/>
+        <output name="cout_copy" num_pins="1"/>
+        <output name="regout" num_pins="1"/>
+        <clock name="clk" num_pins="1"/>
+        <!-- Each input of the tile can be driven by 15% of routing tracks
            Each output of the tile can drive 10% of routing tracks
            There are four pins (cin, cout, sc_in, sc_out) has not connection 
            to routing tracks. There are directed wired from/to adjacent CLBs
         -->
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
-        <fc_override port_name="cin" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="cout" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="sc_in" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="sc_out" fc_type="frac" fc_val="0"/>
-      </fc>
-      <!-- Highly recommand to customize pin location when direct connection is used!!! -->
-      <!-- To ensure best tileable routing architecture (minimize the number of unique SBs
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+          <fc_override port_name="cin" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="cout" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="sc_in" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="sc_out" fc_type="frac" fc_val="0"/>
+        </fc>
+        <!-- Highly recommand to customize pin location when direct connection is used!!! -->
+        <!-- To ensure best tileable routing architecture (minimize the number of unique SBs
            We keep all the pins that touch routing architecture on the right and bottom sides of the tile
            Top side pins are mainly for direct connections
         -->
-      <pinlocations pattern="custom">
-        <loc side="left"></loc>
-        <loc side="top">clb_spypad.sc_in clb_spypad.cin clb_spypad.cin_trick clb_spypad.regin clb_spypad.clk</loc>
-        <loc side="right">clb_spypad.I0[9:0] clb_spypad.I1[9:0] clb_spypad.O[9:0]</loc>
-        <loc side="bottom">clb_spypad.cout clb_spypad.cout_copy clb_spypad.sc_out clb_spypad.regout clb_spypad.I2[9:0] clb_spypad.I3[9:0] clb_spypad.O[19:10]</loc>
-      </pinlocations>
+        <pinlocations pattern="custom">
+          <loc side="left"/>
+          <loc side="top">clb_spypad.sc_in clb_spypad.cin clb_spypad.cin_trick clb_spypad.regin clb_spypad.clk</loc>
+          <loc side="right">clb_spypad.I0[9:0] clb_spypad.I1[9:0] clb_spypad.O[9:0]</loc>
+          <loc side="bottom">clb_spypad.cout clb_spypad.cout_copy clb_spypad.sc_out clb_spypad.regout clb_spypad.I2[9:0] clb_spypad.I3[9:0] clb_spypad.O[19:10]</loc>
+        </pinlocations>
+      </sub_tile>
     </tile>
   </tiles>
   <!-- ODIN II specific config ends -->
@@ -253,7 +260,6 @@
     <pb_type name="io">
       <input name="outpad" num_pins="1"/>
       <output name="inpad" num_pins="1"/>
-
       <!-- Do NOT add clock pins to I/O here!!! VPR does not build clock network in the way that OpenFPGA can support
            If you need to register the I/O, define clocks in the circuit models
            These clocks can be handled in back-end
@@ -275,7 +281,6 @@
           </direct>
         </interconnect>
       </mode>
-
       <!-- IOs can operate as either inputs or outputs.
        Delays below come from Ian Kuon. They are small, so they should be interpreted as
        the delays to and from registers in the I/O (and generally I/Os are registered 
@@ -335,7 +340,6 @@
       <output name="cout_copy" num_pins="1"/>
       <output name="regout" num_pins="1"/>
       <clock name="clk" num_pins="1"/>
-
       <!-- Describe fracturable logic element -->
       <pb_type name="fle" num_pb="10">
         <input name="in" num_pins="6"/>
@@ -347,7 +351,6 @@
         <output name="sc_out" num_pins="1"/>
         <output name="regout" num_pins="1"/>
         <clock name="clk" num_pins="1"/>
-
         <!-- Describe physical mode begins -->
         <mode name="physical" disable_packing="true">
           <pb_type name="frac_logic" num_pb="1">
@@ -452,7 +455,6 @@
                         202e-12
                     </delay_matrix>
                   </pb_type>
-
                   <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
                     <input name="D" num_pins="1" port_class="D"/>
                     <output name="Q" num_pins="1" port_class="Q"/>
@@ -467,8 +469,8 @@
                     </direct>
                     <direct name="direct3" input="flut5.clk" output="ff.clk"/>
                     <mux name="mux1" input="ff.Q lut5.out" output="flut5.out">
-                      <delay_constant max="25e-12" in_port="lut5.out" out_port="flut5.out" />
-                      <delay_constant max="45e-12" in_port="ff.Q" out_port="flut5.out" />
+                      <delay_constant max="25e-12" in_port="lut5.out" out_port="flut5.out"/>
+                      <delay_constant max="45e-12" in_port="ff.Q" out_port="flut5.out"/>
                     </mux>
                   </interconnect>
                 </pb_type>
@@ -536,11 +538,10 @@
                     </direct>
                     <mux name="sumout" input="ff.Q adder.sumout" output="arithmetic.out">
                       <delay_constant max="25e-12" in_port="adder.sumout" out_port="arithmetic.out"/>
-                      <delay_constant max="45e-12" in_port="ff.Q" out_port="arithmetic.out" />
+                      <delay_constant max="45e-12" in_port="ff.Q" out_port="arithmetic.out"/>
                     </mux>
                   </interconnect>
                 </pb_type>
-
                 <interconnect>
                   <direct name="direct1" input="ble5.in[3:0]" output="arithmetic.in"/>
                   <direct name="carry_in" input="ble5.cin" output="arithmetic.cin">
@@ -608,7 +609,6 @@
               <T_setup value="66e-12" port="ff.D" clock="clk"/>
               <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
             </pb_type>
-
             <interconnect>
               <direct name="direct1" input="ble6.in" output="lut6[0:0].in"/>
               <direct name="direct2" input="lut6.out" output="ff.D">
@@ -616,8 +616,8 @@
               </direct>
               <direct name="direct3" input="ble6.clk" output="ff.clk"/>
               <mux name="mux1" input="ff.Q lut6.out" output="ble6.out">
-                <delay_constant max="25e-12" in_port="lut6.out" out_port="ble6.out" />
-                <delay_constant max="45e-12" in_port="ff.Q" out_port="ble6.out" />
+                <delay_constant max="25e-12" in_port="lut6.out" out_port="ble6.out"/>
+                <delay_constant max="45e-12" in_port="ff.Q" out_port="ble6.out"/>
               </mux>
             </interconnect>
           </pb_type>
@@ -660,28 +660,28 @@
             <direct name="direct4" input="ble_shift.regout" output="fle.regout"/>
           </interconnect>
         </mode>
-       <!-- Define shift_register mode end -->
+        <!-- Define shift_register mode end -->
       </pb_type>
       <interconnect>
         <complete name="crossbar0" input="clb.I2 clb.I3 fle[9:0].out" output="fle[9:0].in[0]">
-          <delay_constant max="190e-12" in_port="clb.I2 clb.I3" out_port="fle[9:0].in[0]" />
-          <delay_constant max="190e-12" in_port="fle[9:0].out" out_port="fle[9:0].in[0]" />
+          <delay_constant max="190e-12" in_port="clb.I2 clb.I3" out_port="fle[9:0].in[0]"/>
+          <delay_constant max="190e-12" in_port="fle[9:0].out" out_port="fle[9:0].in[0]"/>
         </complete>
         <complete name="crossbar1" input="clb.I1 clb.I2 fle[9:0].out" output="fle[9:0].in[1]">
-          <delay_constant max="190e-12" in_port="clb.I1 clb.I2" out_port="fle[9:0].in[1]" />
-          <delay_constant max="190e-12" in_port="fle[9:0].out" out_port="fle[9:0].in[1]" />
+          <delay_constant max="190e-12" in_port="clb.I1 clb.I2" out_port="fle[9:0].in[1]"/>
+          <delay_constant max="190e-12" in_port="fle[9:0].out" out_port="fle[9:0].in[1]"/>
         </complete>
         <complete name="crossbar2" input="clb.I0 clb.I1 fle[9:0].out" output="fle[9:0].in[2]">
-          <delay_constant max="190e-12" in_port="clb.I0 clb.I1" out_port="fle[9:0].in[2]" />
-          <delay_constant max="190e-12" in_port="fle[9:0].out" out_port="fle[9:0].in[2]" />
+          <delay_constant max="190e-12" in_port="clb.I0 clb.I1" out_port="fle[9:0].in[2]"/>
+          <delay_constant max="190e-12" in_port="fle[9:0].out" out_port="fle[9:0].in[2]"/>
         </complete>
         <complete name="crossbar3" input="clb.I1 clb.I3 fle[9:0].out" output="fle[9:0].in[3]">
-          <delay_constant max="190e-12" in_port="clb.I1 clb.I3" out_port="fle[9:0].in[3]" />
-          <delay_constant max="190e-12" in_port="fle[9:0].out" out_port="fle[9:0].in[3]" />
+          <delay_constant max="190e-12" in_port="clb.I1 clb.I3" out_port="fle[9:0].in[3]"/>
+          <delay_constant max="190e-12" in_port="fle[9:0].out" out_port="fle[9:0].in[3]"/>
         </complete>
         <complete name="crossbar4" input="clb.I0 clb.I2 fle[9:0].out" output="fle[9:0].in[4]">
-          <delay_constant max="190e-12" in_port="clb.I0 clb.I2" out_port="fle[9:0].in[4]" />
-          <delay_constant max="190e-12" in_port="fle[9:0].out" out_port="fle[9:0].in[4]" />
+          <delay_constant max="190e-12" in_port="clb.I0 clb.I2" out_port="fle[9:0].in[4]"/>
+          <delay_constant max="190e-12" in_port="fle[9:0].out" out_port="fle[9:0].in[4]"/>
         </complete>
         <complete name="crossbar5" input="clb.I0 clb.I3 fle[9:0].out" output="fle[9:0].in[5]">
         </complete>
@@ -693,14 +693,12 @@
           <pack_pattern name="chain" in_port="clb.cin" out_port="fle[0:0].cin"/>
           <!--pack_pattern name="chain" in_port="clb.cin_trick" out_port="fle[0:0].cin"/-->
         </complete>
-
         <!--direct name="carry_in" input="clb.cin" output="fle[0:0].cin">
           <pack_pattern name="chain" in_port="clb.cin" out_port="fle[0:0].cin"/>
         </direct-->
         <direct name="clbouts1" input="fle[9:0].out[0:0]" output="clb.O[9:0]"/>
         <direct name="clbouts2" input="fle[9:0].out[1:1]" output="clb.O[19:10]"/>
         <direct name="cout_copy" input="fle[9:9].cout" output="clb.cout_copy"/>
-
         <!-- Shift register links -->
         <direct name="regin" input="clb.regin" output="fle[0:0].regin">
           <!-- Put all inter-block carry chain delay on this one edge -->
@@ -762,7 +760,6 @@
       <output name="cout_copy" num_pins="1"/>
       <output name="regout" num_pins="1"/>
       <clock name="clk" num_pins="1"/>
-
       <!-- Describe fracturable logic element -->
       <pb_type name="fle" num_pb="9">
         <input name="in" num_pins="6"/>
@@ -774,7 +771,6 @@
         <output name="sc_out" num_pins="1"/>
         <output name="regout" num_pins="1"/>
         <clock name="clk" num_pins="1"/>
-
         <!-- Describe physical mode begins -->
         <mode name="physical" disable_packing="true">
           <pb_type name="frac_logic" num_pb="1">
@@ -879,7 +875,6 @@
                         202e-12
                     </delay_matrix>
                   </pb_type>
-
                   <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
                     <input name="D" num_pins="1" port_class="D"/>
                     <output name="Q" num_pins="1" port_class="Q"/>
@@ -894,8 +889,8 @@
                     </direct>
                     <direct name="direct3" input="flut5.clk" output="ff.clk"/>
                     <mux name="mux1" input="ff.Q lut5.out" output="flut5.out">
-                      <delay_constant max="25e-12" in_port="lut5.out" out_port="flut5.out" />
-                      <delay_constant max="45e-12" in_port="ff.Q" out_port="flut5.out" />
+                      <delay_constant max="25e-12" in_port="lut5.out" out_port="flut5.out"/>
+                      <delay_constant max="45e-12" in_port="ff.Q" out_port="flut5.out"/>
                     </mux>
                   </interconnect>
                 </pb_type>
@@ -963,11 +958,10 @@
                     </direct>
                     <mux name="sumout" input="ff.Q adder.sumout" output="arithmetic.out">
                       <delay_constant max="25e-12" in_port="adder.sumout" out_port="arithmetic.out"/>
-                      <delay_constant max="45e-12" in_port="ff.Q" out_port="arithmetic.out" />
+                      <delay_constant max="45e-12" in_port="ff.Q" out_port="arithmetic.out"/>
                     </mux>
                   </interconnect>
                 </pb_type>
-
                 <interconnect>
                   <direct name="direct1" input="ble5.in[3:0]" output="arithmetic.in"/>
                   <direct name="carry_in" input="ble5.cin" output="arithmetic.cin">
@@ -1035,7 +1029,6 @@
               <T_setup value="66e-12" port="ff.D" clock="clk"/>
               <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
             </pb_type>
-
             <interconnect>
               <direct name="direct1" input="ble6.in" output="lut6[0:0].in"/>
               <direct name="direct2" input="lut6.out" output="ff.D">
@@ -1043,8 +1036,8 @@
               </direct>
               <direct name="direct3" input="ble6.clk" output="ff.clk"/>
               <mux name="mux1" input="ff.Q lut6.out" output="ble6.out">
-                <delay_constant max="25e-12" in_port="lut6.out" out_port="ble6.out" />
-                <delay_constant max="45e-12" in_port="ff.Q" out_port="ble6.out" />
+                <delay_constant max="25e-12" in_port="lut6.out" out_port="ble6.out"/>
+                <delay_constant max="45e-12" in_port="ff.Q" out_port="ble6.out"/>
               </mux>
             </interconnect>
           </pb_type>
@@ -1087,9 +1080,8 @@
             <direct name="direct4" input="ble_shift.regout" output="fle.regout"/>
           </interconnect>
         </mode>
-       <!-- Define shift_register mode end -->
+        <!-- Define shift_register mode end -->
       </pb_type>
-
       <!-- Describe fracturable logic element with spy outputs -->
       <pb_type name="fle_spypad" num_pb="1">
         <input name="in" num_pins="6"/>
@@ -1101,7 +1093,6 @@
         <output name="sc_out" num_pins="1"/>
         <output name="regout" num_pins="1"/>
         <clock name="clk" num_pins="1"/>
-
         <!-- Describe physical mode begins -->
         <mode name="physical" disable_packing="true">
           <pb_type name="frac_logic" num_pb="1">
@@ -1206,7 +1197,6 @@
                         202e-12
                     </delay_matrix>
                   </pb_type>
-
                   <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
                     <input name="D" num_pins="1" port_class="D"/>
                     <output name="Q" num_pins="1" port_class="Q"/>
@@ -1221,8 +1211,8 @@
                     </direct>
                     <direct name="direct3" input="flut5.clk" output="ff.clk"/>
                     <mux name="mux1" input="ff.Q lut5.out" output="flut5.out">
-                      <delay_constant max="25e-12" in_port="lut5.out" out_port="flut5.out" />
-                      <delay_constant max="45e-12" in_port="ff.Q" out_port="flut5.out" />
+                      <delay_constant max="25e-12" in_port="lut5.out" out_port="flut5.out"/>
+                      <delay_constant max="45e-12" in_port="ff.Q" out_port="flut5.out"/>
                     </mux>
                   </interconnect>
                 </pb_type>
@@ -1290,11 +1280,10 @@
                     </direct>
                     <mux name="sumout" input="ff.Q adder.sumout" output="arithmetic.out">
                       <delay_constant max="25e-12" in_port="adder.sumout" out_port="arithmetic.out"/>
-                      <delay_constant max="45e-12" in_port="ff.Q" out_port="arithmetic.out" />
+                      <delay_constant max="45e-12" in_port="ff.Q" out_port="arithmetic.out"/>
                     </mux>
                   </interconnect>
                 </pb_type>
-
                 <interconnect>
                   <direct name="direct1" input="ble5.in[3:0]" output="arithmetic.in"/>
                   <direct name="carry_in" input="ble5.cin" output="arithmetic.cin">
@@ -1362,7 +1351,6 @@
               <T_setup value="66e-12" port="ff.D" clock="clk"/>
               <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
             </pb_type>
-
             <interconnect>
               <direct name="direct1" input="ble6.in" output="lut6[0:0].in"/>
               <direct name="direct2" input="lut6.out" output="ff.D">
@@ -1370,8 +1358,8 @@
               </direct>
               <direct name="direct3" input="ble6.clk" output="ff.clk"/>
               <mux name="mux1" input="ff.Q lut6.out" output="ble6.out">
-                <delay_constant max="25e-12" in_port="lut6.out" out_port="ble6.out" />
-                <delay_constant max="45e-12" in_port="ff.Q" out_port="ble6.out" />
+                <delay_constant max="25e-12" in_port="lut6.out" out_port="ble6.out"/>
+                <delay_constant max="45e-12" in_port="ff.Q" out_port="ble6.out"/>
               </mux>
             </interconnect>
           </pb_type>
@@ -1414,76 +1402,69 @@
             <direct name="direct4" input="ble_shift.regout" output="fle_spypad.regout"/>
           </interconnect>
         </mode>
-       <!-- Define shift_register mode end -->
+        <!-- Define shift_register mode end -->
       </pb_type>
-
       <interconnect>
         <complete name="crossbar0" input="clb_spypad.I2 clb_spypad.I3 fle[8:0].out fle_spypad.out" output="fle[8:0].in[0]">
-          <delay_constant max="190e-12" in_port="clb_spypad.I2 clb_spypad.I3" out_port="fle[8:0].in[0]" />
-          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle[8:0].in[0]" />
-          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle[8:0].in[0]" />
+          <delay_constant max="190e-12" in_port="clb_spypad.I2 clb_spypad.I3" out_port="fle[8:0].in[0]"/>
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle[8:0].in[0]"/>
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle[8:0].in[0]"/>
         </complete>
         <complete name="crossbar0_spyfle" input="clb_spypad.I2 clb_spypad.I3 fle[8:0].out fle_spypad.out" output="fle_spypad.in[0]">
-          <delay_constant max="190e-12" in_port="clb_spypad.I2 clb_spypad.I3" out_port="fle_spypad.in[0]" />
-          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle_spypad.in[0]" />
-          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle_spypad.in[0]" />
+          <delay_constant max="190e-12" in_port="clb_spypad.I2 clb_spypad.I3" out_port="fle_spypad.in[0]"/>
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle_spypad.in[0]"/>
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle_spypad.in[0]"/>
         </complete>
-
         <complete name="crossbar1" input="clb_spypad.I1 clb_spypad.I2 fle[8:0].out fle_spypad.out" output="fle[8:0].in[1]">
-          <delay_constant max="190e-12" in_port="clb_spypad.I1 clb_spypad.I2" out_port="fle[8:0].in[1]" />
-          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle[8:0].in[1]" />
-          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle[8:0].in[1]" />
+          <delay_constant max="190e-12" in_port="clb_spypad.I1 clb_spypad.I2" out_port="fle[8:0].in[1]"/>
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle[8:0].in[1]"/>
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle[8:0].in[1]"/>
         </complete>
         <complete name="crossbar1_spyfle" input="clb_spypad.I1 clb_spypad.I2 fle[8:0].out fle_spypad.out" output="fle_spypad.in[1]">
-          <delay_constant max="190e-12" in_port="clb_spypad.I1 clb_spypad.I2" out_port="fle_spypad.in[1]" />
-          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle_spypad.in[1]" />
-          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle_spypad.in[1]" />
+          <delay_constant max="190e-12" in_port="clb_spypad.I1 clb_spypad.I2" out_port="fle_spypad.in[1]"/>
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle_spypad.in[1]"/>
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle_spypad.in[1]"/>
         </complete>
-
         <complete name="crossbar2" input="clb_spypad.I0 clb_spypad.I1 fle[8:0].out fle_spypad.out" output="fle[8:0].in[2]">
-          <delay_constant max="190e-12" in_port="clb_spypad.I0 clb_spypad.I1" out_port="fle[8:0].in[2]" />
-          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle[8:0].in[2]" />
-          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle[8:0].in[2]" />
+          <delay_constant max="190e-12" in_port="clb_spypad.I0 clb_spypad.I1" out_port="fle[8:0].in[2]"/>
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle[8:0].in[2]"/>
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle[8:0].in[2]"/>
         </complete>
         <complete name="crossbar2_spyfle" input="clb_spypad.I0 clb_spypad.I1 fle[8:0].out fle_spypad.out" output="fle_spypad.in[2]">
-          <delay_constant max="190e-12" in_port="clb_spypad.I0 clb_spypad.I1" out_port="fle_spypad.in[2]" />
-          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle_spypad.in[2]" />
-          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle_spypad.in[2]" />
+          <delay_constant max="190e-12" in_port="clb_spypad.I0 clb_spypad.I1" out_port="fle_spypad.in[2]"/>
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle_spypad.in[2]"/>
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle_spypad.in[2]"/>
         </complete>
-
         <complete name="crossbar3" input="clb_spypad.I1 clb_spypad.I3 fle[8:0].out fle_spypad.out" output="fle[8:0].in[3]">
-          <delay_constant max="190e-12" in_port="clb_spypad.I1 clb_spypad.I3" out_port="fle[8:0].in[3]" />
-          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle[8:0].in[3]" />
-          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle[8:0].in[3]" />
+          <delay_constant max="190e-12" in_port="clb_spypad.I1 clb_spypad.I3" out_port="fle[8:0].in[3]"/>
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle[8:0].in[3]"/>
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle[8:0].in[3]"/>
         </complete>
         <complete name="crossbar3_spyfle" input="clb_spypad.I1 clb_spypad.I3 fle[8:0].out fle_spypad.out" output="fle_spypad.in[3]">
-          <delay_constant max="190e-12" in_port="clb_spypad.I1 clb_spypad.I3" out_port="fle_spypad.in[3]" />
-          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle_spypad.in[3]" />
-          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle_spypad.in[3]" />
+          <delay_constant max="190e-12" in_port="clb_spypad.I1 clb_spypad.I3" out_port="fle_spypad.in[3]"/>
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle_spypad.in[3]"/>
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle_spypad.in[3]"/>
         </complete>
-
         <complete name="crossbar4" input="clb_spypad.I0 clb_spypad.I2 fle[8:0].out fle_spypad.out" output="fle[8:0].in[4]">
-          <delay_constant max="190e-12" in_port="clb_spypad.I0 clb_spypad.I2" out_port="fle[8:0].in[4]" />
-          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle[8:0].in[4]" />
-          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle[8:0].in[4]" />
+          <delay_constant max="190e-12" in_port="clb_spypad.I0 clb_spypad.I2" out_port="fle[8:0].in[4]"/>
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle[8:0].in[4]"/>
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle[8:0].in[4]"/>
         </complete>
         <complete name="crossbar4_spyfle" input="clb_spypad.I0 clb_spypad.I2 fle[8:0].out fle_spypad.out" output="fle_spypad.in[4]">
-          <delay_constant max="190e-12" in_port="clb_spypad.I0 clb_spypad.I2" out_port="fle_spypad.in[4]" />
-          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle_spypad.in[4]" />
-          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle_spypad.in[4]" />
+          <delay_constant max="190e-12" in_port="clb_spypad.I0 clb_spypad.I2" out_port="fle_spypad.in[4]"/>
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle_spypad.in[4]"/>
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle_spypad.in[4]"/>
         </complete>
-
         <complete name="crossbar5" input="clb_spypad.I0 clb_spypad.I3 fle[8:0].out fle_spypad.out" output="fle[8:0].in[5]">
-          <delay_constant max="190e-12" in_port="clb_spypad.I0 clb_spypad.I3" out_port="fle[8:0].in[5]" />
-          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle[8:0].in[5]" />
-          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle[8:0].in[5]" />
+          <delay_constant max="190e-12" in_port="clb_spypad.I0 clb_spypad.I3" out_port="fle[8:0].in[5]"/>
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle[8:0].in[5]"/>
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle[8:0].in[5]"/>
         </complete>
         <complete name="crossbar5_spyfle" input="clb_spypad.I0 clb_spypad.I3 fle[8:0].out fle_spypad.out" output="fle_spypad.in[5]">
-          <delay_constant max="190e-12" in_port="clb_spypad.I0 clb_spypad.I3" out_port="fle_spypad.in[5]" />
-          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle_spypad.in[5]" />
-          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle_spypad.in[5]" />
+          <delay_constant max="190e-12" in_port="clb_spypad.I0 clb_spypad.I3" out_port="fle_spypad.in[5]"/>
+          <delay_constant max="190e-12" in_port="fle[8:0].out" out_port="fle_spypad.in[5]"/>
+          <delay_constant max="190e-12" in_port="fle_spypad.out" out_port="fle_spypad.in[5]"/>
         </complete>
-
         <complete name="clks" input="clb_spypad.clk" output="fle[8:0].clk">
         </complete>
         <complete name="clks_spyfle" input="clb_spypad.clk" output="fle_spypad.clk">
@@ -1494,7 +1475,6 @@
           <pack_pattern name="chain" in_port="clb_spypad.cin" out_port="fle_spypad.cin"/>
           <!--pack_pattern name="chain" in_port="clb.cin_trick" out_port="fle[0:0].cin"/-->
         </complete>
-
         <!--direct name="carry_in" input="clb.cin" output="fle[0:0].cin">
           <pack_pattern name="chain" in_port="clb.cin" out_port="fle[0:0].cin"/>
         </direct-->
@@ -1503,7 +1483,6 @@
         <direct name="clbouts1" input="fle[8:0].out[0:0]" output="clb_spypad.O[9:1]"/>
         <direct name="clbouts2" input="fle[8:0].out[1:1]" output="clb_spypad.O[19:11]"/>
         <direct name="cout_copy" input="fle[8:8].cout" output="clb_spypad.cout_copy"/>
-
         <!-- Shift register links -->
         <direct name="regin" input="clb_spypad.regin" output="fle_spypad.regin">
           <!-- Put all inter-block carry chain delay on this one edge -->
@@ -1519,7 +1498,6 @@
         <direct name="reg_link" input="fle[7:0].regout" output="fle[8:1].regin">
           <pack_pattern name="chain" in_port="fle[7:0].regout" out_port="fle[8:1].regin"/>
         </direct>
-
         <!-- Carry chain links -->
         <direct name="carry_out" input="fle[8:8].cout" output="clb_spypad.cout">
           <pack_pattern name="chain" in_port="fle[8:8].cout" out_port="clb_spypad.cout"/>
@@ -1530,7 +1508,6 @@
         <direct name="carry_link" input="fle[7:0].cout" output="fle[8:1].cin">
           <pack_pattern name="chain" in_port="fle[7:0].cout" out_port="fle[8:1].cin"/>
         </direct>
-
         <!-- Scan chain links: Do NOT use pack patterns here.
                                They are testing elements and are NOT dealed by packers -->
         <direct name="sc_in" input="clb_spypad.sc_in" output="fle_spypad.sc_in">
@@ -1544,6 +1521,5 @@
       </interconnect>
     </pb_type>
     <!-- Define general purpose logic block (CLB) ends -->
-
   </complexblocklist>
 </architecture>

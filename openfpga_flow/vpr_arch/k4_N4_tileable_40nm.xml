@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!-- 
   Architecture with no fracturable LUTs
 
@@ -35,29 +36,33 @@
     </model>
   </models>
   <tiles>
-    <tile name="io" capacity="8" area="0">
-      <equivalent_sites>
-        <site pb_type="io"/>
-      </equivalent_sites>
-      <input name="outpad" num_pins="1"/>
-      <output name="inpad" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="custom">
-        <loc side="left">io.outpad io.inpad</loc>
-        <loc side="top">io.outpad io.inpad</loc>
-        <loc side="right">io.outpad io.inpad</loc>
-        <loc side="bottom">io.outpad io.inpad</loc>
-      </pinlocations>
+    <tile name="io" area="0">
+      <sub_tile name="io" capacity="8">
+        <equivalent_sites>
+          <site pb_type="io"/>
+        </equivalent_sites>
+        <input name="outpad" num_pins="1"/>
+        <output name="inpad" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="custom">
+          <loc side="left">io.outpad io.inpad</loc>
+          <loc side="top">io.outpad io.inpad</loc>
+          <loc side="right">io.outpad io.inpad</loc>
+          <loc side="bottom">io.outpad io.inpad</loc>
+        </pinlocations>
+      </sub_tile>
     </tile>
     <tile name="clb" area="53894">
-      <equivalent_sites>
-        <site pb_type="clb"/>
-      </equivalent_sites>
-      <input name="I" num_pins="10" equivalent="full"/>
-      <output name="O" num_pins="4" equivalent="none"/>
-      <clock name="clk" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="spread"/>
+      <sub_tile name="clb">
+        <equivalent_sites>
+          <site pb_type="clb"/>
+        </equivalent_sites>
+        <input name="I" num_pins="10" equivalent="full"/>
+        <output name="O" num_pins="4" equivalent="none"/>
+        <clock name="clk" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="spread"/>
+      </sub_tile>
     </tile>
   </tiles>
   <!-- ODIN II specific config ends -->
@@ -78,6 +83,27 @@
       <fill type="clb" priority="10"/>
     </fixed_layout>
     <fixed_layout name="4x4" width="6" height="6">
+      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
+      <perimeter type="io" priority="100"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+    </fixed_layout>
+    <fixed_layout name="48x48" width="50" height="50">
+      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
+      <perimeter type="io" priority="100"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+    </fixed_layout>
+    <fixed_layout name="72x72" width="74" height="74">
+      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
+      <perimeter type="io" priority="100"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+    </fixed_layout>
+    <fixed_layout name="96x96" width="98" height="98">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="100"/>
       <corners type="EMPTY" priority="101"/>

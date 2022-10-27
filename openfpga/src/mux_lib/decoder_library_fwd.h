@@ -1,5 +1,5 @@
 /**************************************************
- * This file includes only declarations for 
+ * This file includes only declarations for
  * the data structures to describe decoders
  * Please refer to decoder_library.h for more details
  *************************************************/
@@ -20,4 +20,4 @@ class DecoderLibrary;
 
 } /* End namespace openfpga*/
 
-#endif 
+#endif

@@ -48,3 +48,8 @@ message.txt
 deploy_key
 openfpga/openfpga
 vpr/vpr
+
+# Ignore temp directories
+node_modules
+package-lock.json
+/_*/ 

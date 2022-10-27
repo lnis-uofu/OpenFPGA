@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!-- 
   Flagship Heterogeneous Architecture (No Carry Chains) for VTR 7.0.
 
@@ -49,29 +50,33 @@
          If you need to register the I/O, define clocks in the circuit models
          These clocks can be handled in back-end
      -->
-    <tile name="io" capacity="8" area="0">
-      <equivalent_sites>
-        <site pb_type="io"/>
-      </equivalent_sites>
-      <input name="outpad" num_pins="1"/>
-      <output name="inpad" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="custom">
-        <loc side="left">io.outpad io.inpad</loc>
-        <loc side="top">io.outpad io.inpad</loc>
-        <loc side="right">io.outpad io.inpad</loc>
-        <loc side="bottom">io.outpad io.inpad</loc>
-      </pinlocations>
+    <tile name="io" area="0">
+      <sub_tile name="io" capacity="8">
+        <equivalent_sites>
+          <site pb_type="io"/>
+        </equivalent_sites>
+        <input name="outpad" num_pins="1"/>
+        <output name="inpad" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="custom">
+          <loc side="left">io.outpad io.inpad</loc>
+          <loc side="top">io.outpad io.inpad</loc>
+          <loc side="right">io.outpad io.inpad</loc>
+          <loc side="bottom">io.outpad io.inpad</loc>
+        </pinlocations>
+      </sub_tile>
     </tile>
     <tile name="clb" area="53894">
-      <equivalent_sites>
-        <site pb_type="clb"/>
-      </equivalent_sites>
-      <input name="I" num_pins="12" equivalent="full"/>
-      <output name="O" num_pins="8" equivalent="none"/>
-      <clock name="clk" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="spread"/>
+      <sub_tile name="clb">
+        <equivalent_sites>
+          <site pb_type="clb"/>
+        </equivalent_sites>
+        <input name="I" num_pins="12" equivalent="full"/>
+        <output name="O" num_pins="8" equivalent="none"/>
+        <clock name="clk" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="spread"/>
+      </sub_tile>
     </tile>
   </tiles>
   <!-- ODIN II specific config ends -->
@@ -184,7 +189,6 @@
           </direct>
         </interconnect>
       </mode>
-
       <!-- IOs can operate as either inputs or outputs.
 	     Delays below come from Ian Kuon. They are small, so they should be interpreted as
 	     the delays to and from registers in the I/O (and generally I/Os are registered 

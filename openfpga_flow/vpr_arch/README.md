@@ -7,7 +7,7 @@ Please reveal the following architecture features in the names to help quickly s
 - N<le\_size>: Number of logic elements for a CLB. If you have multiple CLB architectures, this should be largest number.
 - tileable<IO>: If the routing architecture is tileable or not. 
   * The keyword 'IO' specifies if the I/O tile is tileable or not
-- fracdff: Use multi-mode DFF model, where reset/set/clock polarity is configurable
+- fracff<2edge>: Use multi-mode flip-flop model, where reset/set polarity is configurable. When 2edge is specified, clock polarity can be switched between postive edge triggered and negative edge triggered
 - adder\_chain: If hard adder/carry chain is used inside CLBs
 - register\_chain: If shift register chain is used inside CLBs
 - scan\_chain: If scan chain testing infrastructure is used inside CLBs
@@ -21,6 +21,8 @@ Please reveal the following architecture features in the names to help quickly s
 - multi\_io\_capacity: If I/O capacity is different on each side of FPGAs.
 - reduced\_io: If I/Os only appear a certain or multiple sides of FPGAs 
 - registerable\_io: If I/Os are registerable (can be either combinational or sequential)
+- CustomIoLoc: Use OpenFPGA's extended custom I/O location syntax
+- rstOnLut: The reset signal of CLB can feed LUT inputs through a local routing architecture
 - <feature\_size>: The technology node which the delay numbers are extracted from.
 - TileOrgz<Type>: How tile is organized. 
   * Top-left (Tl): the pins of a tile are placed on the top side and left side only
@@ -29,3 +31,11 @@ Please reveal the following architecture features in the names to help quickly s
 - GlobalTile<Int>Clk: How many clocks are defined through global ports from physical tiles. <Int> is the number of clocks 
 
 Other features are used in naming should be listed here.
+
+# Update architecture files in batch
+
+## From v1.1 to v1.2
+
+```
+make v1p1_to_v1p2
+```

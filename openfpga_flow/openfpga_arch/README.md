@@ -6,7 +6,7 @@ Note that an OpenFPGA architecture can be applied to multiple VPR architecture f
   * The keyword 'frac' is to specify if fracturable LUT is used or not.
   * The keyword 'Native' is to specify if fracturable LUT design is a native one (without mode switch) or a standard one (with mode switch).
 - N<le\_size>: Number of logic elements for a CLB. If you have multiple CLB architectures, this should be largest number.
-- fracdff: Use multi-mode DFF model, where reset/set/clock polarity is configurable
+- fracff<2edge>: Use multi-mode flip-flop model, where reset/set polarity is configurable. When 2edge is specified, clock polarity can be switched between postive edge triggered and negative edge triggered
 - adder\_chain: If hard adder/carry chain is used inside CLBs
 - register\_chain: If shift register chain is used inside CLBs
 - scan\_chain: If scan chain testing infrastructure is used inside CLBs
@@ -31,6 +31,9 @@ Note that an OpenFPGA architecture can be applied to multiple VPR architecture f
 - tree\_mux: If routing multiplexers are built with a tree-like structure
 - <feature_size>: The technology node which the delay numbers are extracted from.
 - powergate : The FPGA has power-gating techniques applied. If not defined, there is no power-gating.
-- GlobalTile<Int>Clk: How many clocks are defined through global ports from physical tiles. <Int> is the number of clocks 
+- GlobalTile<Int>Clk<Pin>: How many clocks are defined through global ports from physical tiles.
+  * <Int> is the number of clocks 
+  * <Pin> When specified, multiple clocks are in separated pins with different names
+- abspath: All the paths in the architecture file are absolute and hardcoded.
 
 Other features are used in naming should be listed here.

@@ -1,0 +1,208 @@
+<!-- 
+	- Report Bitstream Distribution
+--> 
+
+<bitstream_distribution>
+	<regions>
+		<region id="0" number_of_bits="4210">
+		</region>
+	</regions>
+	<blocks>
+		<block name="fpga_top" number_of_bits="4210">
+			<block name="grid_clb_1__1_" number_of_bits="136">
+			</block>
+			<block name="grid_clb_1__2_" number_of_bits="136">
+			</block>
+			<block name="grid_clb_1__3_" number_of_bits="136">
+			</block>
+			<block name="grid_clb_1__4_" number_of_bits="136">
+			</block>
+			<block name="grid_clb_2__1_" number_of_bits="136">
+			</block>
+			<block name="grid_clb_2__2_" number_of_bits="136">
+			</block>
+			<block name="grid_clb_2__3_" number_of_bits="136">
+			</block>
+			<block name="grid_clb_2__4_" number_of_bits="136">
+			</block>
+			<block name="grid_clb_3__1_" number_of_bits="136">
+			</block>
+			<block name="grid_clb_3__2_" number_of_bits="136">
+			</block>
+			<block name="grid_clb_3__3_" number_of_bits="136">
+			</block>
+			<block name="grid_clb_3__4_" number_of_bits="136">
+			</block>
+			<block name="grid_clb_4__1_" number_of_bits="136">
+			</block>
+			<block name="grid_clb_4__2_" number_of_bits="136">
+			</block>
+			<block name="grid_clb_4__3_" number_of_bits="136">
+			</block>
+			<block name="grid_clb_4__4_" number_of_bits="136">
+			</block>
+			<block name="grid_io_top_1__5_" number_of_bits="8">
+			</block>
+			<block name="grid_io_top_2__5_" number_of_bits="8">
+			</block>
+			<block name="grid_io_top_3__5_" number_of_bits="8">
+			</block>
+			<block name="grid_io_top_4__5_" number_of_bits="8">
+			</block>
+			<block name="grid_io_right_5__4_" number_of_bits="8">
+			</block>
+			<block name="grid_io_right_5__3_" number_of_bits="8">
+			</block>
+			<block name="grid_io_right_5__2_" number_of_bits="8">
+			</block>
+			<block name="grid_io_right_5__1_" number_of_bits="8">
+			</block>
+			<block name="grid_io_bottom_4__0_" number_of_bits="8">
+			</block>
+			<block name="grid_io_bottom_3__0_" number_of_bits="8">
+			</block>
+			<block name="grid_io_bottom_2__0_" number_of_bits="8">
+			</block>
+			<block name="grid_io_bottom_1__0_" number_of_bits="8">
+			</block>
+			<block name="grid_io_left_0__1_" number_of_bits="8">
+			</block>
+			<block name="grid_io_left_0__2_" number_of_bits="8">
+			</block>
+			<block name="grid_io_left_0__3_" number_of_bits="8">
+			</block>
+			<block name="grid_io_left_0__4_" number_of_bits="8">
+			</block>
+			<block name="sb_0__0_" number_of_bits="36">
+			</block>
+			<block name="sb_0__1_" number_of_bits="40">
+			</block>
+			<block name="sb_0__2_" number_of_bits="40">
+			</block>
+			<block name="sb_0__3_" number_of_bits="40">
+			</block>
+			<block name="sb_0__4_" number_of_bits="36">
+			</block>
+			<block name="sb_1__0_" number_of_bits="38">
+			</block>
+			<block name="sb_1__1_" number_of_bits="48">
+			</block>
+			<block name="sb_1__2_" number_of_bits="48">
+			</block>
+			<block name="sb_1__3_" number_of_bits="48">
+			</block>
+			<block name="sb_1__4_" number_of_bits="44">
+			</block>
+			<block name="sb_2__0_" number_of_bits="38">
+			</block>
+			<block name="sb_2__1_" number_of_bits="48">
+			</block>
+			<block name="sb_2__2_" number_of_bits="48">
+			</block>
+			<block name="sb_2__3_" number_of_bits="48">
+			</block>
+			<block name="sb_2__4_" number_of_bits="44">
+			</block>
+			<block name="sb_3__0_" number_of_bits="38">
+			</block>
+			<block name="sb_3__1_" number_of_bits="48">
+			</block>
+			<block name="sb_3__2_" number_of_bits="48">
+			</block>
+			<block name="sb_3__3_" number_of_bits="48">
+			</block>
+			<block name="sb_3__4_" number_of_bits="44">
+			</block>
+			<block name="sb_4__0_" number_of_bits="36">
+			</block>
+			<block name="sb_4__1_" number_of_bits="44">
+			</block>
+			<block name="sb_4__2_" number_of_bits="44">
+			</block>
+			<block name="sb_4__3_" number_of_bits="44">
+			</block>
+			<block name="sb_4__4_" number_of_bits="36">
+			</block>
+			<block name="cbx_1__0_" number_of_bits="32">
+			</block>
+			<block name="cbx_1__1_" number_of_bits="16">
+			</block>
+			<block name="cbx_1__2_" number_of_bits="16">
+			</block>
+			<block name="cbx_1__3_" number_of_bits="16">
+			</block>
+			<block name="cbx_1__4_" number_of_bits="32">
+			</block>
+			<block name="cbx_2__0_" number_of_bits="32">
+			</block>
+			<block name="cbx_2__1_" number_of_bits="16">
+			</block>
+			<block name="cbx_2__2_" number_of_bits="16">
+			</block>
+			<block name="cbx_2__3_" number_of_bits="16">
+			</block>
+			<block name="cbx_2__4_" number_of_bits="32">
+			</block>
+			<block name="cbx_3__0_" number_of_bits="32">
+			</block>
+			<block name="cbx_3__1_" number_of_bits="16">
+			</block>
+			<block name="cbx_3__2_" number_of_bits="16">
+			</block>
+			<block name="cbx_3__3_" number_of_bits="16">
+			</block>
+			<block name="cbx_3__4_" number_of_bits="32">
+			</block>
+			<block name="cbx_4__0_" number_of_bits="32">
+			</block>
+			<block name="cbx_4__1_" number_of_bits="16">
+			</block>
+			<block name="cbx_4__2_" number_of_bits="16">
+			</block>
+			<block name="cbx_4__3_" number_of_bits="16">
+			</block>
+			<block name="cbx_4__4_" number_of_bits="32">
+			</block>
+			<block name="cby_0__1_" number_of_bits="29">
+			</block>
+			<block name="cby_0__2_" number_of_bits="29">
+			</block>
+			<block name="cby_0__3_" number_of_bits="29">
+			</block>
+			<block name="cby_0__4_" number_of_bits="29">
+			</block>
+			<block name="cby_1__1_" number_of_bits="12">
+			</block>
+			<block name="cby_1__2_" number_of_bits="12">
+			</block>
+			<block name="cby_1__3_" number_of_bits="12">
+			</block>
+			<block name="cby_1__4_" number_of_bits="12">
+			</block>
+			<block name="cby_2__1_" number_of_bits="12">
+			</block>
+			<block name="cby_2__2_" number_of_bits="12">
+			</block>
+			<block name="cby_2__3_" number_of_bits="12">
+			</block>
+			<block name="cby_2__4_" number_of_bits="12">
+			</block>
+			<block name="cby_3__1_" number_of_bits="12">
+			</block>
+			<block name="cby_3__2_" number_of_bits="12">
+			</block>
+			<block name="cby_3__3_" number_of_bits="12">
+			</block>
+			<block name="cby_3__4_" number_of_bits="12">
+			</block>
+			<block name="cby_4__1_" number_of_bits="31">
+			</block>
+			<block name="cby_4__2_" number_of_bits="31">
+			</block>
+			<block name="cby_4__3_" number_of_bits="31">
+			</block>
+			<block name="cby_4__4_" number_of_bits="31">
+			</block>
+		</block>
+	</blocks>
+</bitstream_distribution>

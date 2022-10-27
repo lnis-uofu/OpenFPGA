@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!-- 
   Flagship Heterogeneous Architecture with Carry Chains for VTR 7.0.
 
@@ -140,55 +141,61 @@
     </model>
   </models>
   <tiles>
-    <tile name="io" capacity="8" area="0">
-      <equivalent_sites>
-        <site pb_type="io"/>
-      </equivalent_sites>
-      <input name="outpad" num_pins="1"/>
-      <output name="inpad" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="custom">
-        <loc side="left">io.outpad io.inpad</loc>
-        <loc side="top">io.outpad io.inpad</loc>
-        <loc side="right">io.outpad io.inpad</loc>
-        <loc side="bottom">io.outpad io.inpad</loc>
-      </pinlocations>
+    <tile name="io" area="0">
+      <sub_tile name="io" capacity="8">
+        <equivalent_sites>
+          <site pb_type="io"/>
+        </equivalent_sites>
+        <input name="outpad" num_pins="1"/>
+        <output name="inpad" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="custom">
+          <loc side="left">io.outpad io.inpad</loc>
+          <loc side="top">io.outpad io.inpad</loc>
+          <loc side="right">io.outpad io.inpad</loc>
+          <loc side="bottom">io.outpad io.inpad</loc>
+        </pinlocations>
+      </sub_tile>
     </tile>
     <tile name="clb" area="53894">
-      <equivalent_sites>
-        <site pb_type="clb"/>
-      </equivalent_sites>
-      <input name="I" num_pins="40" equivalent="full"/>
-      <input name="cin" num_pins="1"/>
-      <output name="O" num_pins="20" equivalent="none"/>
-      <output name="cout" num_pins="1"/>
-      <clock name="clk" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
-        <fc_override port_name="cin" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="cout" fc_type="frac" fc_val="0"/>
-      </fc>
-      <!--  Highly recommand to customize pin location when direct connection is used!!! -->
-      <!--pinlocations pattern="spread"/-->
-      <pinlocations pattern="custom">
-        <loc side="left">clb.clk</loc>
-        <loc side="top">clb.cin</loc>
-        <loc side="right">clb.O[9:0] clb.I[19:0]</loc>
-        <loc side="bottom">clb.cout clb.O[19:10] clb.I[39:20]</loc>
-      </pinlocations>
+      <sub_tile name="clb">
+        <equivalent_sites>
+          <site pb_type="clb"/>
+        </equivalent_sites>
+        <input name="I" num_pins="40" equivalent="full"/>
+        <input name="cin" num_pins="1"/>
+        <output name="O" num_pins="20" equivalent="none"/>
+        <output name="cout" num_pins="1"/>
+        <clock name="clk" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+          <fc_override port_name="cin" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="cout" fc_type="frac" fc_val="0"/>
+        </fc>
+        <!--  Highly recommand to customize pin location when direct connection is used!!! -->
+        <!--pinlocations pattern="spread"/-->
+        <pinlocations pattern="custom">
+          <loc side="left">clb.clk</loc>
+          <loc side="top">clb.cin</loc>
+          <loc side="right">clb.O[9:0] clb.I[19:0]</loc>
+          <loc side="bottom">clb.cout clb.O[19:10] clb.I[39:20]</loc>
+        </pinlocations>
+      </sub_tile>
     </tile>
     <tile name="memory" width="2" height="2" area="548000">
-      <equivalent_sites>
-        <site pb_type="memory"/>
-      </equivalent_sites>
-      <input name="waddr" num_pins="10"/>
-      <input name="raddr" num_pins="10"/>
-      <input name="d_in" num_pins="32"/>
-      <input name="wen" num_pins="1"/>
-      <input name="ren" num_pins="1"/>
-      <output name="d_out" num_pins="32"/>
-      <clock name="clk" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="perimeter"/>
+      <sub_tile name="memory">
+        <equivalent_sites>
+          <site pb_type="memory"/>
+        </equivalent_sites>
+        <input name="waddr" num_pins="10"/>
+        <input name="raddr" num_pins="10"/>
+        <input name="d_in" num_pins="32"/>
+        <input name="wen" num_pins="1"/>
+        <input name="ren" num_pins="1"/>
+        <output name="d_out" num_pins="32"/>
+        <clock name="clk" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="perimeter"/>
+      </sub_tile>
     </tile>
   </tiles>
   <!-- ODIN II specific config ends -->
@@ -282,7 +289,6 @@
     <pb_type name="io">
       <input name="outpad" num_pins="1"/>
       <output name="inpad" num_pins="1"/>
-
       <!-- Do NOT add clock pins to I/O here!!! VPR does not build clock network in the way that OpenFPGA can support
            If you need to register the I/O, define clocks in the circuit models
            These clocks can be handled in back-end
@@ -304,7 +310,6 @@
           </direct>
         </interconnect>
       </mode>
-
       <!-- IOs can operate as either inputs or outputs.
 	     Delays below come from Ian Kuon. They are small, so they should be interpreted as
 	     the delays to and from registers in the I/O (and generally I/Os are registered 
@@ -399,7 +404,7 @@
               <clock name="clk" num_pins="1" port_class="clock"/>
               <T_setup value="66e-12" port="ff.D" clock="clk"/>
               <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
-            </pb_type>         
+            </pb_type>
             <!-- Define adders -->
             <pb_type name="adder" blif_model=".subckt adder" num_pb="2">
               <input name="a" num_pins="1"/>
@@ -655,7 +660,6 @@
           <delay_constant max="95e-12" in_port="clb.I" out_port="fle[9:0].in"/>
           <delay_constant max="75e-12" in_port="fle[9:0].out" out_port="fle[9:0].in"/>
         </complete>
-
         <complete name="clks" input="clb.clk" output="fle[9:0].clk">
         </complete>
         <!-- This way of specifying direct connection to clb outputs is important because this architecture uses automatic spreading of opins.  

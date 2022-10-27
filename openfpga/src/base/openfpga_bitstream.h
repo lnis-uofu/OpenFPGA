@@ -15,20 +15,22 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-int fpga_bitstream(OpenfpgaContext& openfpga_ctx,
-                   const Command& cmd, const CommandContext& cmd_context); 
+int fpga_bitstream(OpenfpgaContext& openfpga_ctx, const Command& cmd,
+                   const CommandContext& cmd_context);
 
-int build_fabric_bitstream(OpenfpgaContext& openfpga_ctx,
-                           const Command& cmd, const CommandContext& cmd_context);
+int build_fabric_bitstream(OpenfpgaContext& openfpga_ctx, const Command& cmd,
+                           const CommandContext& cmd_context);
 
 int write_fabric_bitstream(const OpenfpgaContext& openfpga_ctx,
-                           const Command& cmd, const CommandContext& cmd_context);
+                           const Command& cmd,
+                           const CommandContext& cmd_context);
 
-int write_io_mapping(const OpenfpgaContext& openfpga_ctx,
-                     const Command& cmd, const CommandContext& cmd_context);
+int write_io_mapping(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
+                     const CommandContext& cmd_context);
 
 int report_bitstream_distribution(const OpenfpgaContext& openfpga_ctx,
-                                  const Command& cmd, const CommandContext& cmd_context);
+                                  const Command& cmd,
+                                  const CommandContext& cmd_context);
 
 } /* end namespace openfpga */
 

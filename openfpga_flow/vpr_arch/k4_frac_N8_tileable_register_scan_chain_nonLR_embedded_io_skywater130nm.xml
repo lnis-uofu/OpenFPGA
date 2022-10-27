@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!-- 
   Low-cost homogeneous FPGA Architecture.
 
@@ -51,71 +52,77 @@
          If you need to register the I/O, define clocks in the circuit models
          These clocks can be handled in back-end
      -->
-    <tile name="gp_inpad" capacity="8" area="0">
-      <equivalent_sites>
-        <site pb_type="gp_inpad"/>
-      </equivalent_sites>
-      <output name="inpad" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="custom">
-        <loc side="left">gp_inpad.inpad</loc>
-        <loc side="top">gp_inpad.inpad</loc>
-        <loc side="right">gp_inpad.inpad</loc>
-        <loc side="bottom">gp_inpad.inpad</loc>
-      </pinlocations>
+    <tile name="gp_inpad" area="0">
+      <sub_tile name="gp_inpad" capacity="8">
+        <equivalent_sites>
+          <site pb_type="gp_inpad"/>
+        </equivalent_sites>
+        <output name="inpad" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="custom">
+          <loc side="left">gp_inpad.inpad</loc>
+          <loc side="top">gp_inpad.inpad</loc>
+          <loc side="right">gp_inpad.inpad</loc>
+          <loc side="bottom">gp_inpad.inpad</loc>
+        </pinlocations>
+      </sub_tile>
     </tile>
-    <tile name="gp_outpad" capacity="8" area="0">
-      <equivalent_sites>
-        <site pb_type="gp_outpad"/>
-      </equivalent_sites>
-      <input name="outpad" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-      <pinlocations pattern="custom">
-        <loc side="left">gp_outpad.outpad</loc>
-        <loc side="top">gp_outpad.outpad</loc>
-        <loc side="right">gp_outpad.outpad</loc>
-        <loc side="bottom">gp_outpad.outpad</loc>
-      </pinlocations>
+    <tile name="gp_outpad" area="0">
+      <sub_tile name="gp_outpad" capacity="8">
+        <equivalent_sites>
+          <site pb_type="gp_outpad"/>
+        </equivalent_sites>
+        <input name="outpad" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="custom">
+          <loc side="left">gp_outpad.outpad</loc>
+          <loc side="top">gp_outpad.outpad</loc>
+          <loc side="right">gp_outpad.outpad</loc>
+          <loc side="bottom">gp_outpad.outpad</loc>
+        </pinlocations>
+      </sub_tile>
     </tile>
     <tile name="clb" area="53894">
-      <equivalent_sites>
-        <site pb_type="clb"/>
-      </equivalent_sites>
-      <input name="I0" num_pins="3" equivalent="full"/>
-      <input name="I0i" num_pins="1" equivalent="none"/>
-      <input name="I1" num_pins="3" equivalent="full"/>
-      <input name="I1i" num_pins="1" equivalent="none"/>
-      <input name="I2" num_pins="3" equivalent="full"/>
-      <input name="I2i" num_pins="1" equivalent="none"/>
-      <input name="I3" num_pins="3" equivalent="full"/>
-      <input name="I3i" num_pins="1" equivalent="none"/>
-      <input name="I4" num_pins="3" equivalent="full"/>
-      <input name="I4i" num_pins="1" equivalent="none"/>
-      <input name="I5" num_pins="3" equivalent="full"/>
-      <input name="I5i" num_pins="1" equivalent="none"/>
-      <input name="I6" num_pins="3" equivalent="full"/>
-      <input name="I6i" num_pins="1" equivalent="none"/>
-      <input name="I7" num_pins="3" equivalent="full"/>
-      <input name="I7i" num_pins="1" equivalent="none"/>
-      <input name="regin" num_pins="1"/>
-      <input name="scin" num_pins="1"/>
-      <output name="O" num_pins="16" equivalent="none"/>
-      <output name="regout" num_pins="1"/>
-      <output name="scout" num_pins="1"/>
-      <clock name="clk" num_pins="1"/>
-      <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
-        <fc_override port_name="regin" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="regout" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="scin" fc_type="frac" fc_val="0"/>
-        <fc_override port_name="scout" fc_type="frac" fc_val="0"/>
-      </fc>
-      <!--pinlocations pattern="spread"/-->
-      <pinlocations pattern="custom">
-        <loc side="left">clb.clk</loc>
-        <loc side="top">clb.regin clb.scin</loc>
-        <loc side="right">clb.O[7:0] clb.I0 clb.I0i clb.I1 clb.I1i clb.I2 clb.I2i clb.I3 clb.I3i </loc>
-        <loc side="bottom">clb.regout clb.scout clb.O[15:8] clb.I4 clb.I4i clb.I5 clb.I5i clb.I6 clb.I6i clb.I7 clb.I7i</loc>
-      </pinlocations>
+      <sub_tile name="clb">
+        <equivalent_sites>
+          <site pb_type="clb"/>
+        </equivalent_sites>
+        <input name="I0" num_pins="3" equivalent="full"/>
+        <input name="I0i" num_pins="1" equivalent="none"/>
+        <input name="I1" num_pins="3" equivalent="full"/>
+        <input name="I1i" num_pins="1" equivalent="none"/>
+        <input name="I2" num_pins="3" equivalent="full"/>
+        <input name="I2i" num_pins="1" equivalent="none"/>
+        <input name="I3" num_pins="3" equivalent="full"/>
+        <input name="I3i" num_pins="1" equivalent="none"/>
+        <input name="I4" num_pins="3" equivalent="full"/>
+        <input name="I4i" num_pins="1" equivalent="none"/>
+        <input name="I5" num_pins="3" equivalent="full"/>
+        <input name="I5i" num_pins="1" equivalent="none"/>
+        <input name="I6" num_pins="3" equivalent="full"/>
+        <input name="I6i" num_pins="1" equivalent="none"/>
+        <input name="I7" num_pins="3" equivalent="full"/>
+        <input name="I7i" num_pins="1" equivalent="none"/>
+        <input name="regin" num_pins="1"/>
+        <input name="scin" num_pins="1"/>
+        <output name="O" num_pins="16" equivalent="none"/>
+        <output name="regout" num_pins="1"/>
+        <output name="scout" num_pins="1"/>
+        <clock name="clk" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+          <fc_override port_name="regin" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="regout" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="scin" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="scout" fc_type="frac" fc_val="0"/>
+        </fc>
+        <!--pinlocations pattern="spread"/-->
+        <pinlocations pattern="custom">
+          <loc side="left">clb.clk</loc>
+          <loc side="top">clb.regin clb.scin</loc>
+          <loc side="right">clb.O[7:0] clb.I0 clb.I0i clb.I1 clb.I1i clb.I2 clb.I2i clb.I3 clb.I3i </loc>
+          <loc side="bottom">clb.regout clb.scout clb.O[15:8] clb.I4 clb.I4i clb.I5 clb.I5i clb.I6 clb.I6i clb.I7 clb.I7i</loc>
+        </pinlocations>
+      </sub_tile>
     </tile>
   </tiles>
   <!-- ODIN II specific config ends -->
@@ -369,7 +376,7 @@
               <T_setup value="66e-12" port="ff.D" clock="clk"/>
               <T_setup value="66e-12" port="ff.DI" clock="clk"/>
               <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
-            </pb_type>         
+            </pb_type>
             <interconnect>
               <direct name="direct1" input="fabric.in" output="frac_logic.in"/>
               <direct name="direct2" input="fabric.scin" output="ff[0].DI"/>
@@ -553,7 +560,7 @@
             <direct name="direct3" input="fle.clk" output="shift_reg.clk"/>
           </interconnect>
         </mode>
-        <!-- Define shift register end --> 
+        <!-- Define shift register end -->
       </pb_type>
       <interconnect>
         <!-- We use direct connections to reduce the area to the most

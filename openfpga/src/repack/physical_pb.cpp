@@ -1,28 +1,28 @@
 /******************************************************************************
  * Memember functions for data structure PhysicalPb
  ******************************************************************************/
+#include "physical_pb.h"
+
 #include "vtr_assert.h"
 #include "vtr_log.h"
-
-#include "physical_pb.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
 
 /**************************************************
- * Public Accessors 
+ * Public Accessors
  *************************************************/
 PhysicalPb::physical_pb_range PhysicalPb::pbs() const {
   return vtr::make_range(pb_ids_.begin(), pb_ids_.end());
 }
 
 std::vector<PhysicalPbId> PhysicalPb::primitive_pbs() const {
-  std::vector<PhysicalPbId> results; 
+  std::vector<PhysicalPbId> results;
   /* The primitive pbs are those without any children */
   for (auto pb : pbs()) {
     if (true == child_pbs_[pb].empty()) {
       results.push_back(pb);
-    } 
+    }
   }
   return results;
 }
@@ -41,7 +41,7 @@ const t_pb_graph_node* PhysicalPb::pb_graph_node(const PhysicalPbId& pb) const {
 PhysicalPbId PhysicalPb::find_pb(const t_pb_graph_node* pb_graph_node) const {
   if (type2id_map_.find(pb_graph_node) != type2id_map_.end()) {
     /* Find it, return the id */
-    return type2id_map_.at(pb_graph_node); 
+    return type2id_map_.at(pb_graph_node);
   }
   /* Not found, return an invalid id */
   return PhysicalPbId::INVALID();
@@ -52,13 +52,12 @@ PhysicalPbId PhysicalPb::parent(const PhysicalPbId& pb) const {
   return parent_pbs_[pb];
 }
 
-PhysicalPbId PhysicalPb::child(const PhysicalPbId& pb,
-                               const t_pb_type* pb_type, 
+PhysicalPbId PhysicalPb::child(const PhysicalPbId& pb, const t_pb_type* pb_type,
                                const size_t& index) const {
   VTR_ASSERT(true == valid_pb_id(pb));
   if (0 < child_pbs_[pb].count(pb_type)) {
     if (index < child_pbs_[pb].at(pb_type).size()) {
-      return child_pbs_[pb].at(pb_type)[index]; 
+      return child_pbs_[pb].at(pb_type)[index];
     }
   }
   return PhysicalPbId::INVALID();
@@ -66,16 +65,16 @@ PhysicalPbId PhysicalPb::child(const PhysicalPbId& pb,
 
 std::vector<AtomBlockId> PhysicalPb::atom_blocks(const PhysicalPbId& pb) const {
   VTR_ASSERT(true == valid_pb_id(pb));
-  
+
   return atom_blocks_[pb];
 }
 
-AtomNetId PhysicalPb::pb_graph_pin_atom_net(const PhysicalPbId& pb,
-                                            const t_pb_graph_pin* pb_graph_pin) const {
+AtomNetId PhysicalPb::pb_graph_pin_atom_net(
+  const PhysicalPbId& pb, const t_pb_graph_pin* pb_graph_pin) const {
   VTR_ASSERT(true == valid_pb_id(pb));
   if (pin_atom_nets_[pb].find(pb_graph_pin) != pin_atom_nets_[pb].end()) {
     /* Find it, return the id */
-    return pin_atom_nets_[pb].at(pb_graph_pin); 
+    return pin_atom_nets_[pb].at(pb_graph_pin);
   }
   /* Not found, return an invalid id */
   return AtomNetId::INVALID();
@@ -86,13 +85,14 @@ bool PhysicalPb::is_wire_lut_output(const PhysicalPbId& pb,
   VTR_ASSERT(true == valid_pb_id(pb));
   if (wire_lut_outputs_[pb].find(pb_graph_pin) != wire_lut_outputs_[pb].end()) {
     /* Find it, return the status */
-    return wire_lut_outputs_[pb].at(pb_graph_pin); 
+    return wire_lut_outputs_[pb].at(pb_graph_pin);
   }
   /* Not found, return false */
   return false;
 }
 
-std::map<const t_pb_graph_pin*, AtomNetlist::TruthTable> PhysicalPb::truth_tables(const PhysicalPbId& pb) const {
+std::map<const t_pb_graph_pin*, AtomNetlist::TruthTable>
+PhysicalPb::truth_tables(const PhysicalPbId& pb) const {
   VTR_ASSERT(true == valid_pb_id(pb));
   return truth_tables_[pb];
 }
@@ -112,12 +112,14 @@ size_t PhysicalPb::fixed_bitstream_offset(const PhysicalPbId& pb) const {
   return fixed_bitstream_offsets_[pb];
 }
 
-std::string PhysicalPb::fixed_mode_select_bitstream(const PhysicalPbId& pb) const {
+std::string PhysicalPb::fixed_mode_select_bitstream(
+  const PhysicalPbId& pb) const {
   VTR_ASSERT(true == valid_pb_id(pb));
   return fixed_mode_select_bitstreams_[pb];
 }
 
-size_t PhysicalPb::fixed_mode_select_bitstream_offset(const PhysicalPbId& pb) const {
+size_t PhysicalPb::fixed_mode_select_bitstream_offset(
+  const PhysicalPbId& pb) const {
   VTR_ASSERT(true == valid_pb_id(pb));
   return fixed_mode_select_bitstream_offsets_[pb];
 }
@@ -126,8 +128,10 @@ size_t PhysicalPb::fixed_mode_select_bitstream_offset(const PhysicalPbId& pb) co
  * Private Mutators
  ******************************************************************************/
 PhysicalPbId PhysicalPb::create_pb(const t_pb_graph_node* pb_graph_node) {
-  /* Find if the name has been used. If used, return an invalid Id and report error! */
-  std::map<const t_pb_graph_node*, PhysicalPbId>::iterator it = type2id_map_.find(pb_graph_node);
+  /* Find if the name has been used. If used, return an invalid Id and report
+   * error! */
+  std::map<const t_pb_graph_node*, PhysicalPbId>::iterator it =
+    type2id_map_.find(pb_graph_node);
   if (it != type2id_map_.end()) {
     return PhysicalPbId::INVALID();
   }
@@ -144,7 +148,7 @@ PhysicalPbId PhysicalPb::create_pb(const t_pb_graph_node* pb_graph_node) {
   wire_lut_outputs_.emplace_back();
 
   child_pbs_.emplace_back();
-  parent_pbs_.emplace_back();
+  parent_pbs_.push_back(PhysicalPbId::INVALID());
 
   truth_tables_.emplace_back();
   mode_bits_.emplace_back();
@@ -163,17 +167,18 @@ PhysicalPbId PhysicalPb::create_pb(const t_pb_graph_node* pb_graph_node) {
 void PhysicalPb::add_child(const PhysicalPbId& parent,
                            const PhysicalPbId& child,
                            const t_pb_type* child_type) {
-  VTR_ASSERT(true == valid_pb_id(parent)); 
-  VTR_ASSERT(true == valid_pb_id(child)); 
+  VTR_ASSERT(true == valid_pb_id(parent));
+  VTR_ASSERT(true == valid_pb_id(child));
 
   child_pbs_[parent][child_type].push_back(child);
 
   if (PhysicalPbId::INVALID() != parent_pbs_[child]) {
-    VTR_LOGF_WARN(__FILE__, __LINE__,
-                  "Overwrite parent '%s' for physical pb '%s' with a new one '%s'!\n",
-                  pb_graph_nodes_[parent_pbs_[child]]->hierarchical_type_name().c_str(),
-                  pb_graph_nodes_[child]->hierarchical_type_name().c_str(),
-                  pb_graph_nodes_[parent]->hierarchical_type_name().c_str());
+    VTR_LOGF_WARN(
+      __FILE__, __LINE__,
+      "Overwrite parent '%s' for physical pb '%s' with a new one '%s'!\n",
+      pb_graph_nodes_[parent_pbs_[child]]->hierarchical_type_name().c_str(),
+      pb_graph_nodes_[child]->hierarchical_type_name().c_str(),
+      pb_graph_nodes_[parent]->hierarchical_type_name().c_str());
   }
   parent_pbs_[child] = parent;
 }
@@ -181,39 +186,38 @@ void PhysicalPb::add_child(const PhysicalPbId& parent,
 void PhysicalPb::set_truth_table(const PhysicalPbId& pb,
                                  const t_pb_graph_pin* pb_graph_pin,
                                  const AtomNetlist::TruthTable& truth_table) {
-  VTR_ASSERT(true == valid_pb_id(pb)); 
+  VTR_ASSERT(true == valid_pb_id(pb));
 
   if (0 < truth_tables_[pb].count(pb_graph_pin)) {
     VTR_LOG_WARN("Overwrite truth tables mapped to pb_graph_pin '%s[%ld]!\n",
-                  pb_graph_pin->port->name, pb_graph_pin->pin_number);
+                 pb_graph_pin->port->name, pb_graph_pin->pin_number);
   }
-   
+
   truth_tables_[pb][pb_graph_pin] = truth_table;
 }
 
 void PhysicalPb::set_mode_bits(const PhysicalPbId& pb,
                                const std::vector<size_t>& mode_bits) {
-  VTR_ASSERT(true == valid_pb_id(pb)); 
-   
+  VTR_ASSERT(true == valid_pb_id(pb));
+
   mode_bits_[pb] = mode_bits;
 }
 
 void PhysicalPb::add_atom_block(const PhysicalPbId& pb,
                                 const AtomBlockId& atom_block) {
-  VTR_ASSERT(true == valid_pb_id(pb)); 
-  
+  VTR_ASSERT(true == valid_pb_id(pb));
+
   atom_blocks_[pb].push_back(atom_block);
 }
 
 void PhysicalPb::set_pb_graph_pin_atom_net(const PhysicalPbId& pb,
                                            const t_pb_graph_pin* pb_graph_pin,
                                            const AtomNetId& atom_net) {
-  VTR_ASSERT(true == valid_pb_id(pb)); 
+  VTR_ASSERT(true == valid_pb_id(pb));
   if (pin_atom_nets_[pb].end() != pin_atom_nets_[pb].find(pb_graph_pin)) {
     VTR_LOG_WARN("Overwrite pb_graph_pin '%s[%d]' atom net '%lu' with '%lu'\n",
                  pb_graph_pin->port->name, pb_graph_pin->pin_number,
-                 size_t(pin_atom_nets_[pb][pb_graph_pin]),
-                 size_t(atom_net));
+                 size_t(pin_atom_nets_[pb][pb_graph_pin]), size_t(atom_net));
   }
 
   pin_atom_nets_[pb][pb_graph_pin] = atom_net;
@@ -222,7 +226,7 @@ void PhysicalPb::set_pb_graph_pin_atom_net(const PhysicalPbId& pb,
 void PhysicalPb::set_wire_lut_output(const PhysicalPbId& pb,
                                      const t_pb_graph_pin* pb_graph_pin,
                                      const bool& wire_lut_output) {
-  VTR_ASSERT(true == valid_pb_id(pb)); 
+  VTR_ASSERT(true == valid_pb_id(pb));
   if (wire_lut_outputs_[pb].end() != wire_lut_outputs_[pb].find(pb_graph_pin)) {
     VTR_LOG_WARN("Overwrite pb_graph_pin '%s[%d]' status on wire LUT output\n",
                  pb_graph_pin->port->name, pb_graph_pin->pin_number);
@@ -233,25 +237,25 @@ void PhysicalPb::set_wire_lut_output(const PhysicalPbId& pb,
 
 void PhysicalPb::set_fixed_bitstream(const PhysicalPbId& pb,
                                      const std::string& fixed_bitstream) {
-  VTR_ASSERT(true == valid_pb_id(pb)); 
+  VTR_ASSERT(true == valid_pb_id(pb));
   fixed_bitstreams_[pb] = fixed_bitstream;
 }
 
 void PhysicalPb::set_fixed_bitstream_offset(const PhysicalPbId& pb,
                                             const size_t& offset) {
-  VTR_ASSERT(true == valid_pb_id(pb)); 
+  VTR_ASSERT(true == valid_pb_id(pb));
   fixed_bitstream_offsets_[pb] = offset;
 }
 
-void PhysicalPb::set_fixed_mode_select_bitstream(const PhysicalPbId& pb,
-                                                 const std::string& fixed_bitstream) {
-  VTR_ASSERT(true == valid_pb_id(pb)); 
+void PhysicalPb::set_fixed_mode_select_bitstream(
+  const PhysicalPbId& pb, const std::string& fixed_bitstream) {
+  VTR_ASSERT(true == valid_pb_id(pb));
   fixed_mode_select_bitstreams_[pb] = fixed_bitstream;
 }
 
 void PhysicalPb::set_fixed_mode_select_bitstream_offset(const PhysicalPbId& pb,
                                                         const size_t& offset) {
-  VTR_ASSERT(true == valid_pb_id(pb)); 
+  VTR_ASSERT(true == valid_pb_id(pb));
   fixed_mode_select_bitstream_offsets_[pb] = offset;
 }
 
@@ -259,11 +263,9 @@ void PhysicalPb::set_fixed_mode_select_bitstream_offset(const PhysicalPbId& pb,
  * Private validators/invalidators
  ******************************************************************************/
 bool PhysicalPb::valid_pb_id(const PhysicalPbId& pb_id) const {
-  return ( size_t(pb_id) < pb_ids_.size() ) && ( pb_id == pb_ids_[pb_id] ); 
+  return (size_t(pb_id) < pb_ids_.size()) && (pb_id == pb_ids_[pb_id]);
 }
 
-bool PhysicalPb::empty() const {
-  return 0 == pb_ids_.size();
-}
+bool PhysicalPb::empty() const { return 0 == pb_ids_.size(); }
 
 } /* end namespace openfpga */

@@ -30,11 +30,42 @@ In general, please follow the steps to compile
 
 **Quick Compilation Verification**
 
+.. note:: Ensure that you install python dependences in :ref:`tutorial_compile_dependencies`.
+
 To quickly verify the tool is well compiled, users can run the following command from OpenFPGA root repository
 
 .. code-block:: shell
 
   python3 openfpga_flow/scripts/run_fpga_task.py compilation_verification --debug --show_thread_logs
+
+.. _tutorial_compile_build_options:
+
+Build Options
+~~~~~~~~~~~~~
+
+General build targets are available in the top-level makefile. Call help desk to see details
+
+.. code-block:: shell
+
+  make help
+
+The following options are available for a custom build
+
+.. option:: BUILD_TYPE=<string>
+
+  Specify the type of build. Can be either ``release`` or ``debug``. By default, release mode is selected (full optimization on runtime)
+
+.. option:: CMAKE_FLAGS=<string>
+
+  Force build flags to CMake. The following flags are available
+
+  - ``DOPENFPGA_WITH_TEST=[ON|OFF]``: Enable/Disable the test build
+  - ``DOPENFPGA_WITH_YOSYS=[ON|OFF]``: Enable/Disable the build of yosys. Note that when disabled, the build of yosys-plugin is also disabled
+  - ``DOPENFPGA_WITH_YOSYS_PLUGIN=[ON|OFF]``: Enable/Disable the build of yosys-plugin.
+
+.. warning:: By default, only required modules in *Verilog-to-Routing* (VTR) is enabled. On other words, ``abc``, ``odin``, ``yosys`` and other add-ons inside VTR are not built. If you want to enable them, please look into the dedicated options of CMake scripts.  
+
+.. _tutorial_compile_dependencies:
 
 Dependencies
 ~~~~~~~~~~~~
@@ -50,7 +81,10 @@ In particular, OpenFPGA requires specific versions for the following dependencie
 :python dependencies:
   python packages are also required:
   
+.. code-block::
+
   python3 -m pip install -r requirements.txt
+
 
 .. _install_dependencies_build: https://github.com/lnis-uofu/OpenFPGA/blob/master/.github/workflows/install_dependencies_build.sh
 
@@ -66,19 +100,21 @@ This image contains precompiled OpenFPGA binaries with all prerequisites install
 
 .. code-block:: bash
 
-   # To get the docker image from the repository, docker pull ghcr.io/lnis-uofu/openfpga-master:latest
+   # To get the docker image from the repository, 
+   docker pull ghcr.io/lnis-uofu/openfpga-master:latest
 
    # To invoke openfpga_shell
-   docker run -it ghcr.io/lnis-uofu/openfpga-master:latest openfpga/openfpga -i
+   docker run -it ghcr.io/lnis-uofu/openfpga-master:latest openfpga/openfpga bash
 
    # To run the task that already exists in the repository.
    docker run -it ghcr.io/lnis-uofu/openfpga-master:latest bash -c "source openfpga.sh && run-task compilation_verification"
 
-   # To run a task from a local machine
-   mkdir <<task_name>>/config
-   vi <<task_name>>/config/task.config # Create your task configuration
-   TASK_NAME=<<task_name>> docker run -it -v ${PWD}/${TASK_NAME}:/opt/openfpga/openfpga_flow/tasks/${TASK_NAME} ghcr.io/lnis-uofu/openfpga-master:latest bash -c "source openfpga.sh && run-task ${TASK_NAME}"
+   # To link the local directory wihth docker
+   mkdir work
 
-.. note::
-   While running local task using docker, make sure all the additional files
-   are maintained in the task_directory and reference using variable ${TASK_DIR}
+   docker run -it -v work:/opt/openfpga/ ghcr.io/lnis-uofu/openfpga-master:latest bash
+   # Inside container 
+   source openfpga.sh
+   cd work 
+   create_task _my_task yosys_vpr
+

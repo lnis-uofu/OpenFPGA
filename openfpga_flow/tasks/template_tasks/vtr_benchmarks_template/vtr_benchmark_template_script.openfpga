@@ -1,0 +1,7 @@
+# Execute VPR for architecture exploration
+
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} \
+    --route_chan_width ${VPR_ROUTE_CHAN_WIDTH} \
+    --constant_net_method route
+
+exit
