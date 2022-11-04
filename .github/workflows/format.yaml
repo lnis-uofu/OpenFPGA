@@ -31,7 +31,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install dependencies
-        run: bash ./.github/workflows/install_dependencies_build.sh
+        run: sudo bash ./.github/workflows/install_dependencies_build.sh
           
       - name: Dump tool versions
         run: |
