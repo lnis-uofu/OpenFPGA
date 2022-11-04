@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # The package list is designed for Ubuntu 20.04 LTS
+add-apt-repository -y ppa:ubuntu-toolchain-r/test
 apt-get update
 apt-get install -y \
     autoconf \
