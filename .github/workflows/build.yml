@@ -217,7 +217,7 @@ jobs:
 
   docker_distribution:
     name: Build docker image for distribution
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: [linux_build, change_detect]
     steps:
       - name: Cancel previous
