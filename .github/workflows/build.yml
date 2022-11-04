@@ -22,7 +22,7 @@ env:
 jobs:
   change_detect:
     name: "Detect code changes"
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     outputs:
       # this is output as string, see https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
       source_modified: ${{ steps.changes.outputs.status_code == '1' }}
@@ -67,7 +67,7 @@ jobs:
     needs: change_detect
     if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
     name: ${{ matrix.config.name }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     # Note: dependencies are installed in the container. See details about dependency list in docker/Dockerfile.master
     # Comment the line out when base image is built again
     #container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.config.cc}}
@@ -251,9 +251,10 @@ jobs:
           tags: |
             ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-master:latest
             ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-master:${{ needs.change_detect.outputs.sha_short }}
+
   linux_regression_tests:
     name: linux_regression_tests
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     needs: [linux_build, change_detect]
     container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-env
     strategy:
@@ -304,11 +305,12 @@ jobs:
           retention-days: 1
           path: |
             openfpga_flow/**/*.log
+
   docker_regression_tests:
     needs: change_detect
     if: ${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
     name: docker_regression_tests
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     container: 
       image: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-master:latest
       options: --user root --workdir /home/openfpga_user
