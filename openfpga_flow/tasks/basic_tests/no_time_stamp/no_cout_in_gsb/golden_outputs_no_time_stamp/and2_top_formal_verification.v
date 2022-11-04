@@ -45,14 +45,14 @@ wire [0:0] clk_fm;
 // ----- End Connect Global ports of FPGA top module -----
 
 // ----- Link BLIF Benchmark I/Os to FPGA I/Os -----
-// ----- Blif Benchmark input a is mapped to FPGA IOPAD gfpga_pad_GPIO_PAD_fm[12] -----
-	assign gfpga_pad_GPIO_PAD_fm[12] = a[0];
+// ----- Blif Benchmark input a is mapped to FPGA IOPAD gfpga_pad_GPIO_PAD_fm[39] -----
+	assign gfpga_pad_GPIO_PAD_fm[39] = a[0];
 
-// ----- Blif Benchmark input b is mapped to FPGA IOPAD gfpga_pad_GPIO_PAD_fm[9] -----
-	assign gfpga_pad_GPIO_PAD_fm[9] = b[0];
+// ----- Blif Benchmark input b is mapped to FPGA IOPAD gfpga_pad_GPIO_PAD_fm[48] -----
+	assign gfpga_pad_GPIO_PAD_fm[48] = b[0];
 
-// ----- Blif Benchmark output c is mapped to FPGA IOPAD gfpga_pad_GPIO_PAD_fm[11] -----
-	assign c[0] = gfpga_pad_GPIO_PAD_fm[11];
+// ----- Blif Benchmark output c is mapped to FPGA IOPAD gfpga_pad_GPIO_PAD_fm[34] -----
+	assign c[0] = gfpga_pad_GPIO_PAD_fm[34];
 
 // ----- Wire unused FPGA I/Os to constants -----
 	assign gfpga_pad_GPIO_PAD_fm[0] = 1'b0;
@@ -64,7 +64,10 @@ wire [0:0] clk_fm;
 	assign gfpga_pad_GPIO_PAD_fm[6] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[7] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[8] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[9] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[10] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[11] = 1'b0;
+	assign gfpga_pad_GPIO_PAD_fm[12] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[13] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[14] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[15] = 1'b0;
@@ -86,12 +89,10 @@ wire [0:0] clk_fm;
 	assign gfpga_pad_GPIO_PAD_fm[31] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[32] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[33] = 1'b0;
-	assign gfpga_pad_GPIO_PAD_fm[34] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[35] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[36] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[37] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[38] = 1'b0;
-	assign gfpga_pad_GPIO_PAD_fm[39] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[40] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[41] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[42] = 1'b0;
@@ -100,7 +101,6 @@ wire [0:0] clk_fm;
 	assign gfpga_pad_GPIO_PAD_fm[45] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[46] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[47] = 1'b0;
-	assign gfpga_pad_GPIO_PAD_fm[48] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[49] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[50] = 1'b0;
 	assign gfpga_pad_GPIO_PAD_fm[51] = 1'b0;
@@ -316,14 +316,14 @@ initial begin
 	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_2.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_ff_0_D_0.mem_outb[0:2] = 3'b110;
 	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_2.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_ff_1_D_0.mem_out[0:2] = 3'b001;
 	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_2.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_ff_1_D_0.mem_outb[0:2] = 3'b110;
-	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0.frac_lut4_DFFR_mem.mem_out[0:16] = {17{1'b0}};
-	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0.frac_lut4_DFFR_mem.mem_outb[0:16] = {17{1'b1}};
+	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0.frac_lut4_DFFR_mem.mem_out[0:16] = 17'b00000000110000001;
+	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0.frac_lut4_DFFR_mem.mem_outb[0:16] = 17'b11111111001111110;
 	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_0.mem_frac_logic_out_0.mem_out[0:2] = 3'b001;
 	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_0.mem_frac_logic_out_0.mem_outb[0:2] = 3'b110;
 	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_fabric_out_0.mem_out[0:3] = 4'b0001;
 	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_fabric_out_0.mem_outb[0:3] = 4'b1110;
-	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_fabric_out_1.mem_out[0:3] = 4'b0001;
-	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_fabric_out_1.mem_outb[0:3] = 4'b1110;
+	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_fabric_out_1.mem_out[0:3] = 4'b0010;
+	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_fabric_out_1.mem_outb[0:3] = 4'b1101;
 	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_ff_0_D_0.mem_out[0:2] = 3'b001;
 	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_ff_0_D_0.mem_outb[0:2] = 3'b110;
 	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_ff_1_D_0.mem_out[0:2] = 3'b001;
@@ -354,10 +354,10 @@ initial begin
 	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.mem_fle_2_in_3.mem_outb[0:9] = 10'b1111111110;
 	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_0.mem_out[0:9] = 10'b0000000001;
 	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_0.mem_outb[0:9] = 10'b1111111110;
-	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_1.mem_out[0:9] = 10'b0000000001;
-	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_1.mem_outb[0:9] = 10'b1111111110;
-	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_2.mem_out[0:9] = 10'b0000000001;
-	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_2.mem_outb[0:9] = 10'b1111111110;
+	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_1.mem_out[0:9] = 10'b0001001000;
+	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_1.mem_outb[0:9] = 10'b1110110111;
+	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_2.mem_out[0:9] = 10'b0010001000;
+	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_2.mem_outb[0:9] = 10'b1101110111;
 	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_3.mem_out[0:9] = 10'b0000000001;
 	force U0_formal_verification.grid_clb_2__1_.logical_tile_clb_mode_clb__0.mem_fle_3_in_3.mem_outb[0:9] = 10'b1111111110;
 	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0.frac_lut4_DFFR_mem.mem_out[0:16] = {17{1'b0}};
@@ -396,14 +396,14 @@ initial begin
 	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_2.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_ff_0_D_0.mem_outb[0:2] = 3'b110;
 	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_2.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_ff_1_D_0.mem_out[0:2] = 3'b001;
 	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_2.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_ff_1_D_0.mem_outb[0:2] = 3'b110;
-	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0.frac_lut4_DFFR_mem.mem_out[0:16] = 17'b00000000110000001;
-	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0.frac_lut4_DFFR_mem.mem_outb[0:16] = 17'b11111111001111110;
+	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0.frac_lut4_DFFR_mem.mem_out[0:16] = {17{1'b0}};
+	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_mode_default__frac_lut4_0.frac_lut4_DFFR_mem.mem_outb[0:16] = {17{1'b1}};
 	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_0.mem_frac_logic_out_0.mem_out[0:2] = 3'b001;
 	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.logical_tile_clb_mode_default__fle_mode_physical__fabric_mode_default__frac_logic_0.mem_frac_logic_out_0.mem_outb[0:2] = 3'b110;
 	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_fabric_out_0.mem_out[0:3] = 4'b0001;
 	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_fabric_out_0.mem_outb[0:3] = 4'b1110;
-	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_fabric_out_1.mem_out[0:3] = 4'b0010;
-	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_fabric_out_1.mem_outb[0:3] = 4'b1101;
+	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_fabric_out_1.mem_out[0:3] = 4'b0001;
+	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_fabric_out_1.mem_outb[0:3] = 4'b1110;
 	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_ff_0_D_0.mem_out[0:2] = 3'b001;
 	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_ff_0_D_0.mem_outb[0:2] = 3'b110;
 	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.logical_tile_clb_mode_default__fle_3.logical_tile_clb_mode_default__fle_mode_physical__fabric_0.mem_ff_1_D_0.mem_out[0:2] = 3'b001;
@@ -434,10 +434,10 @@ initial begin
 	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.mem_fle_2_in_3.mem_outb[0:9] = 10'b1111111110;
 	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.mem_fle_3_in_0.mem_out[0:9] = 10'b0000000001;
 	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.mem_fle_3_in_0.mem_outb[0:9] = 10'b1111111110;
-	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.mem_fle_3_in_1.mem_out[0:9] = 10'b1000010000;
-	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.mem_fle_3_in_1.mem_outb[0:9] = 10'b0111101111;
-	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.mem_fle_3_in_2.mem_out[0:9] = 10'b1000000100;
-	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.mem_fle_3_in_2.mem_outb[0:9] = 10'b0111111011;
+	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.mem_fle_3_in_1.mem_out[0:9] = 10'b0000000001;
+	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.mem_fle_3_in_1.mem_outb[0:9] = 10'b1111111110;
+	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.mem_fle_3_in_2.mem_out[0:9] = 10'b0000000001;
+	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.mem_fle_3_in_2.mem_outb[0:9] = 10'b1111111110;
 	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.mem_fle_3_in_3.mem_out[0:9] = 10'b0000000001;
 	force U0_formal_verification.grid_clb_2__2_.logical_tile_clb_mode_clb__0.mem_fle_3_in_3.mem_outb[0:9] = 10'b1111111110;
 	force U0_formal_verification.grid_io_top_1__3_.logical_tile_io_mode_io__0.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_out[0] = 1'b1;
@@ -462,8 +462,8 @@ initial begin
 	force U0_formal_verification.grid_io_top_2__3_.logical_tile_io_mode_io__1.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_outb[0] = 1'b0;
 	force U0_formal_verification.grid_io_top_2__3_.logical_tile_io_mode_io__2.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_out[0] = 1'b1;
 	force U0_formal_verification.grid_io_top_2__3_.logical_tile_io_mode_io__2.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_outb[0] = 1'b0;
-	force U0_formal_verification.grid_io_top_2__3_.logical_tile_io_mode_io__3.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_out[0] = 1'b0;
-	force U0_formal_verification.grid_io_top_2__3_.logical_tile_io_mode_io__3.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_outb[0] = 1'b1;
+	force U0_formal_verification.grid_io_top_2__3_.logical_tile_io_mode_io__3.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_out[0] = 1'b1;
+	force U0_formal_verification.grid_io_top_2__3_.logical_tile_io_mode_io__3.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_outb[0] = 1'b0;
 	force U0_formal_verification.grid_io_top_2__3_.logical_tile_io_mode_io__4.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_out[0] = 1'b1;
 	force U0_formal_verification.grid_io_top_2__3_.logical_tile_io_mode_io__4.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_outb[0] = 1'b0;
 	force U0_formal_verification.grid_io_top_2__3_.logical_tile_io_mode_io__5.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_out[0] = 1'b1;
@@ -508,8 +508,8 @@ initial begin
 	force U0_formal_verification.grid_io_bottom_2__0_.logical_tile_io_mode_io__0.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_outb[0] = 1'b0;
 	force U0_formal_verification.grid_io_bottom_2__0_.logical_tile_io_mode_io__1.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_out[0] = 1'b1;
 	force U0_formal_verification.grid_io_bottom_2__0_.logical_tile_io_mode_io__1.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_outb[0] = 1'b0;
-	force U0_formal_verification.grid_io_bottom_2__0_.logical_tile_io_mode_io__2.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_out[0] = 1'b1;
-	force U0_formal_verification.grid_io_bottom_2__0_.logical_tile_io_mode_io__2.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_outb[0] = 1'b0;
+	force U0_formal_verification.grid_io_bottom_2__0_.logical_tile_io_mode_io__2.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_out[0] = 1'b0;
+	force U0_formal_verification.grid_io_bottom_2__0_.logical_tile_io_mode_io__2.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_outb[0] = 1'b1;
 	force U0_formal_verification.grid_io_bottom_2__0_.logical_tile_io_mode_io__3.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_out[0] = 1'b1;
 	force U0_formal_verification.grid_io_bottom_2__0_.logical_tile_io_mode_io__3.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_outb[0] = 1'b0;
 	force U0_formal_verification.grid_io_bottom_2__0_.logical_tile_io_mode_io__4.logical_tile_io_mode_physical__iopad_0.GPIO_DFFR_mem.mem_out[0] = 1'b1;
@@ -586,8 +586,8 @@ initial begin
 	force U0_formal_verification.sb_0__0_.mem_top_track_14.mem_outb[0:1] = {2{1'b1}};
 	force U0_formal_verification.sb_0__0_.mem_right_track_0.mem_out[0:1] = {2{1'b0}};
 	force U0_formal_verification.sb_0__0_.mem_right_track_0.mem_outb[0:1] = {2{1'b1}};
-	force U0_formal_verification.sb_0__0_.mem_right_track_2.mem_out[0:1] = {2{1'b0}};
-	force U0_formal_verification.sb_0__0_.mem_right_track_2.mem_outb[0:1] = {2{1'b1}};
+	force U0_formal_verification.sb_0__0_.mem_right_track_2.mem_out[0:1] = {2{1'b1}};
+	force U0_formal_verification.sb_0__0_.mem_right_track_2.mem_outb[0:1] = {2{1'b0}};
 	force U0_formal_verification.sb_0__0_.mem_right_track_4.mem_out[0:1] = {2{1'b0}};
 	force U0_formal_verification.sb_0__0_.mem_right_track_4.mem_outb[0:1] = {2{1'b1}};
 	force U0_formal_verification.sb_0__0_.mem_right_track_6.mem_out[0:1] = {2{1'b0}};
@@ -624,8 +624,8 @@ initial begin
 	force U0_formal_verification.sb_0__1_.mem_right_track_10.mem_outb[0:1] = {2{1'b1}};
 	force U0_formal_verification.sb_0__1_.mem_right_track_12.mem_out[0:1] = {2{1'b0}};
 	force U0_formal_verification.sb_0__1_.mem_right_track_12.mem_outb[0:1] = {2{1'b1}};
-	force U0_formal_verification.sb_0__1_.mem_bottom_track_1.mem_out[0:7] = 8'b00000001;
-	force U0_formal_verification.sb_0__1_.mem_bottom_track_1.mem_outb[0:7] = 8'b11111110;
+	force U0_formal_verification.sb_0__1_.mem_bottom_track_1.mem_out[0:7] = 8'b00100100;
+	force U0_formal_verification.sb_0__1_.mem_bottom_track_1.mem_outb[0:7] = 8'b11011011;
 	force U0_formal_verification.sb_0__1_.mem_bottom_track_9.mem_out[0:7] = 8'b00000001;
 	force U0_formal_verification.sb_0__1_.mem_bottom_track_9.mem_outb[0:7] = 8'b11111110;
 	force U0_formal_verification.sb_0__1_.mem_bottom_track_17.mem_out[0:5] = 6'b010001;
@@ -694,12 +694,12 @@ initial begin
 	force U0_formal_verification.sb_1__1_.mem_top_track_0.mem_outb[0:7] = 8'b10111110;
 	force U0_formal_verification.sb_1__1_.mem_top_track_8.mem_out[0:7] = 8'b00000001;
 	force U0_formal_verification.sb_1__1_.mem_top_track_8.mem_outb[0:7] = 8'b11111110;
-	force U0_formal_verification.sb_1__1_.mem_top_track_16.mem_out[0:7] = 8'b00101000;
-	force U0_formal_verification.sb_1__1_.mem_top_track_16.mem_outb[0:7] = 8'b11010111;
+	force U0_formal_verification.sb_1__1_.mem_top_track_16.mem_out[0:7] = 8'b00000001;
+	force U0_formal_verification.sb_1__1_.mem_top_track_16.mem_outb[0:7] = 8'b11111110;
 	force U0_formal_verification.sb_1__1_.mem_right_track_0.mem_out[0:7] = 8'b01000001;
 	force U0_formal_verification.sb_1__1_.mem_right_track_0.mem_outb[0:7] = 8'b10111110;
-	force U0_formal_verification.sb_1__1_.mem_right_track_8.mem_out[0:7] = 8'b01001000;
-	force U0_formal_verification.sb_1__1_.mem_right_track_8.mem_outb[0:7] = 8'b10110111;
+	force U0_formal_verification.sb_1__1_.mem_right_track_8.mem_out[0:7] = 8'b00000001;
+	force U0_formal_verification.sb_1__1_.mem_right_track_8.mem_outb[0:7] = 8'b11111110;
 	force U0_formal_verification.sb_1__1_.mem_right_track_16.mem_out[0:7] = 8'b00000001;
 	force U0_formal_verification.sb_1__1_.mem_right_track_16.mem_outb[0:7] = 8'b11111110;
 	force U0_formal_verification.sb_1__1_.mem_bottom_track_1.mem_out[0:7] = 8'b01000001;
@@ -716,18 +716,18 @@ initial begin
 	force U0_formal_verification.sb_1__1_.mem_left_track_17.mem_outb[0:7] = 8'b11111110;
 	force U0_formal_verification.sb_1__2_.mem_right_track_0.mem_out[0:7] = 8'b00000001;
 	force U0_formal_verification.sb_1__2_.mem_right_track_0.mem_outb[0:7] = 8'b11111110;
-	force U0_formal_verification.sb_1__2_.mem_right_track_8.mem_out[0:7] = 8'b10001000;
-	force U0_formal_verification.sb_1__2_.mem_right_track_8.mem_outb[0:7] = 8'b01110111;
-	force U0_formal_verification.sb_1__2_.mem_right_track_16.mem_out[0:5] = 6'b010010;
-	force U0_formal_verification.sb_1__2_.mem_right_track_16.mem_outb[0:5] = 6'b101101;
+	force U0_formal_verification.sb_1__2_.mem_right_track_8.mem_out[0:7] = 8'b00000001;
+	force U0_formal_verification.sb_1__2_.mem_right_track_8.mem_outb[0:7] = 8'b11111110;
+	force U0_formal_verification.sb_1__2_.mem_right_track_16.mem_out[0:5] = 6'b010001;
+	force U0_formal_verification.sb_1__2_.mem_right_track_16.mem_outb[0:5] = 6'b101110;
 	force U0_formal_verification.sb_1__2_.mem_bottom_track_1.mem_out[0:5] = 6'b000001;
 	force U0_formal_verification.sb_1__2_.mem_bottom_track_1.mem_outb[0:5] = 6'b111110;
 	force U0_formal_verification.sb_1__2_.mem_bottom_track_3.mem_out[0:5] = 6'b000001;
 	force U0_formal_verification.sb_1__2_.mem_bottom_track_3.mem_outb[0:5] = 6'b111110;
 	force U0_formal_verification.sb_1__2_.mem_bottom_track_5.mem_out[0:1] = {2{1'b0}};
 	force U0_formal_verification.sb_1__2_.mem_bottom_track_5.mem_outb[0:1] = {2{1'b1}};
-	force U0_formal_verification.sb_1__2_.mem_bottom_track_7.mem_out[0:1] = {2{1'b1}};
-	force U0_formal_verification.sb_1__2_.mem_bottom_track_7.mem_outb[0:1] = {2{1'b0}};
+	force U0_formal_verification.sb_1__2_.mem_bottom_track_7.mem_out[0:1] = {2{1'b0}};
+	force U0_formal_verification.sb_1__2_.mem_bottom_track_7.mem_outb[0:1] = {2{1'b1}};
 	force U0_formal_verification.sb_1__2_.mem_bottom_track_9.mem_out[0:1] = {2{1'b0}};
 	force U0_formal_verification.sb_1__2_.mem_bottom_track_9.mem_outb[0:1] = {2{1'b1}};
 	force U0_formal_verification.sb_1__2_.mem_bottom_track_11.mem_out[0:1] = {2{1'b0}};
@@ -762,12 +762,12 @@ initial begin
 	force U0_formal_verification.sb_2__0_.mem_top_track_18.mem_outb[0:1] = {2{1'b1}};
 	force U0_formal_verification.sb_2__0_.mem_left_track_1.mem_out[0:1] = {2{1'b0}};
 	force U0_formal_verification.sb_2__0_.mem_left_track_1.mem_outb[0:1] = {2{1'b1}};
-	force U0_formal_verification.sb_2__0_.mem_left_track_3.mem_out[0:1] = {2{1'b0}};
-	force U0_formal_verification.sb_2__0_.mem_left_track_3.mem_outb[0:1] = {2{1'b1}};
+	force U0_formal_verification.sb_2__0_.mem_left_track_3.mem_out[0:1] = 2'b10;
+	force U0_formal_verification.sb_2__0_.mem_left_track_3.mem_outb[0:1] = 2'b01;
 	force U0_formal_verification.sb_2__0_.mem_left_track_5.mem_out[0:1] = {2{1'b0}};
 	force U0_formal_verification.sb_2__0_.mem_left_track_5.mem_outb[0:1] = {2{1'b1}};
-	force U0_formal_verification.sb_2__0_.mem_left_track_7.mem_out[0:1] = {2{1'b0}};
-	force U0_formal_verification.sb_2__0_.mem_left_track_7.mem_outb[0:1] = {2{1'b1}};
+	force U0_formal_verification.sb_2__0_.mem_left_track_7.mem_out[0:1] = 2'b01;
+	force U0_formal_verification.sb_2__0_.mem_left_track_7.mem_outb[0:1] = 2'b10;
 	force U0_formal_verification.sb_2__0_.mem_left_track_9.mem_out[0:1] = {2{1'b0}};
 	force U0_formal_verification.sb_2__0_.mem_left_track_9.mem_outb[0:1] = {2{1'b1}};
 	force U0_formal_verification.sb_2__0_.mem_left_track_11.mem_out[0:1] = {2{1'b0}};
@@ -798,8 +798,8 @@ initial begin
 	force U0_formal_verification.sb_2__1_.mem_left_track_3.mem_outb[0:5] = 6'b111110;
 	force U0_formal_verification.sb_2__1_.mem_left_track_5.mem_out[0:5] = 6'b000001;
 	force U0_formal_verification.sb_2__1_.mem_left_track_5.mem_outb[0:5] = 6'b111110;
-	force U0_formal_verification.sb_2__1_.mem_left_track_7.mem_out[0:5] = 6'b000010;
-	force U0_formal_verification.sb_2__1_.mem_left_track_7.mem_outb[0:5] = 6'b111101;
+	force U0_formal_verification.sb_2__1_.mem_left_track_7.mem_out[0:5] = 6'b000001;
+	force U0_formal_verification.sb_2__1_.mem_left_track_7.mem_outb[0:5] = 6'b111110;
 	force U0_formal_verification.sb_2__1_.mem_left_track_9.mem_out[0:1] = {2{1'b0}};
 	force U0_formal_verification.sb_2__1_.mem_left_track_9.mem_outb[0:1] = {2{1'b1}};
 	force U0_formal_verification.sb_2__1_.mem_left_track_11.mem_out[0:1] = {2{1'b0}};
@@ -812,8 +812,8 @@ initial begin
 	force U0_formal_verification.sb_2__2_.mem_bottom_track_3.mem_outb[0:1] = {2{1'b1}};
 	force U0_formal_verification.sb_2__2_.mem_bottom_track_5.mem_out[0:1] = {2{1'b0}};
 	force U0_formal_verification.sb_2__2_.mem_bottom_track_5.mem_outb[0:1] = {2{1'b1}};
-	force U0_formal_verification.sb_2__2_.mem_bottom_track_7.mem_out[0:1] = 2'b01;
-	force U0_formal_verification.sb_2__2_.mem_bottom_track_7.mem_outb[0:1] = 2'b10;
+	force U0_formal_verification.sb_2__2_.mem_bottom_track_7.mem_out[0:1] = {2{1'b0}};
+	force U0_formal_verification.sb_2__2_.mem_bottom_track_7.mem_outb[0:1] = {2{1'b1}};
 	force U0_formal_verification.sb_2__2_.mem_bottom_track_9.mem_out[0:1] = {2{1'b0}};
 	force U0_formal_verification.sb_2__2_.mem_bottom_track_9.mem_outb[0:1] = {2{1'b1}};
 	force U0_formal_verification.sb_2__2_.mem_bottom_track_11.mem_out[0:1] = {2{1'b0}};
@@ -834,8 +834,8 @@ initial begin
 	force U0_formal_verification.sb_2__2_.mem_left_track_5.mem_outb[0:1] = {2{1'b1}};
 	force U0_formal_verification.sb_2__2_.mem_left_track_7.mem_out[0:1] = {2{1'b0}};
 	force U0_formal_verification.sb_2__2_.mem_left_track_7.mem_outb[0:1] = {2{1'b1}};
-	force U0_formal_verification.sb_2__2_.mem_left_track_9.mem_out[0:1] = 2'b01;
-	force U0_formal_verification.sb_2__2_.mem_left_track_9.mem_outb[0:1] = 2'b10;
+	force U0_formal_verification.sb_2__2_.mem_left_track_9.mem_out[0:1] = {2{1'b0}};
+	force U0_formal_verification.sb_2__2_.mem_left_track_9.mem_outb[0:1] = {2{1'b1}};
 	force U0_formal_verification.sb_2__2_.mem_left_track_11.mem_out[0:1] = {2{1'b0}};
 	force U0_formal_verification.sb_2__2_.mem_left_track_11.mem_outb[0:1] = {2{1'b1}};
 	force U0_formal_verification.sb_2__2_.mem_left_track_13.mem_out[0:1] = {2{1'b0}};
@@ -900,10 +900,10 @@ initial begin
 	force U0_formal_verification.cbx_1__2_.mem_bottom_ipin_7.mem_outb[0:5] = 6'b111110;
 	force U0_formal_verification.cbx_2__0_.mem_bottom_ipin_0.mem_out[0:1] = {2{1'b0}};
 	force U0_formal_verification.cbx_2__0_.mem_bottom_ipin_0.mem_outb[0:1] = {2{1'b1}};
-	force U0_formal_verification.cbx_2__0_.mem_bottom_ipin_1.mem_out[0:1] = {2{1'b0}};
-	force U0_formal_verification.cbx_2__0_.mem_bottom_ipin_1.mem_outb[0:1] = {2{1'b1}};
-	force U0_formal_verification.cbx_2__0_.mem_bottom_ipin_2.mem_out[0:1] = {2{1'b0}};
-	force U0_formal_verification.cbx_2__0_.mem_bottom_ipin_2.mem_outb[0:1] = {2{1'b1}};
+	force U0_formal_verification.cbx_2__0_.mem_bottom_ipin_1.mem_out[0:1] = 2'b01;
+	force U0_formal_verification.cbx_2__0_.mem_bottom_ipin_1.mem_outb[0:1] = 2'b10;
+	force U0_formal_verification.cbx_2__0_.mem_bottom_ipin_2.mem_out[0:1] = {2{1'b1}};
+	force U0_formal_verification.cbx_2__0_.mem_bottom_ipin_2.mem_outb[0:1] = {2{1'b0}};
 	force U0_formal_verification.cbx_2__0_.mem_bottom_ipin_3.mem_out[0:1] = {2{1'b0}};
 	force U0_formal_verification.cbx_2__0_.mem_bottom_ipin_3.mem_outb[0:1] = {2{1'b1}};
 	force U0_formal_verification.cbx_2__0_.mem_bottom_ipin_4.mem_out[0:1] = {2{1'b0}};
@@ -914,8 +914,8 @@ initial begin
 	force U0_formal_verification.cbx_2__0_.mem_top_ipin_0.mem_outb[0:5] = 6'b111110;
 	force U0_formal_verification.cbx_2__0_.mem_top_ipin_1.mem_out[0:5] = 6'b000001;
 	force U0_formal_verification.cbx_2__0_.mem_top_ipin_1.mem_outb[0:5] = 6'b111110;
-	force U0_formal_verification.cbx_2__0_.mem_top_ipin_2.mem_out[0:5] = 6'b000001;
-	force U0_formal_verification.cbx_2__0_.mem_top_ipin_2.mem_outb[0:5] = 6'b111110;
+	force U0_formal_verification.cbx_2__0_.mem_top_ipin_2.mem_out[0:5] = 6'b010100;
+	force U0_formal_verification.cbx_2__0_.mem_top_ipin_2.mem_outb[0:5] = 6'b101011;
 	force U0_formal_verification.cbx_2__0_.mem_top_ipin_3.mem_out[0:5] = 6'b000001;
 	force U0_formal_verification.cbx_2__0_.mem_top_ipin_3.mem_outb[0:5] = 6'b111110;
 	force U0_formal_verification.cbx_2__0_.mem_top_ipin_4.mem_out[0:5] = 6'b000001;
@@ -934,8 +934,8 @@ initial begin
 	force U0_formal_verification.cbx_2__1_.mem_bottom_ipin_2.mem_outb[0:1] = {2{1'b1}};
 	force U0_formal_verification.cbx_2__1_.mem_bottom_ipin_3.mem_out[0:1] = {2{1'b0}};
 	force U0_formal_verification.cbx_2__1_.mem_bottom_ipin_3.mem_outb[0:1] = {2{1'b1}};
-	force U0_formal_verification.cbx_2__1_.mem_bottom_ipin_4.mem_out[0:1] = {2{1'b1}};
-	force U0_formal_verification.cbx_2__1_.mem_bottom_ipin_4.mem_outb[0:1] = {2{1'b0}};
+	force U0_formal_verification.cbx_2__1_.mem_bottom_ipin_4.mem_out[0:1] = {2{1'b0}};
+	force U0_formal_verification.cbx_2__1_.mem_bottom_ipin_4.mem_outb[0:1] = {2{1'b1}};
 	force U0_formal_verification.cbx_2__1_.mem_bottom_ipin_5.mem_out[0:1] = {2{1'b0}};
 	force U0_formal_verification.cbx_2__1_.mem_bottom_ipin_5.mem_outb[0:1] = {2{1'b1}};
 	force U0_formal_verification.cbx_2__2_.mem_bottom_ipin_0.mem_out[0:5] = 6'b000001;
@@ -944,8 +944,8 @@ initial begin
 	force U0_formal_verification.cbx_2__2_.mem_bottom_ipin_1.mem_outb[0:5] = 6'b111110;
 	force U0_formal_verification.cbx_2__2_.mem_bottom_ipin_2.mem_out[0:5] = 6'b000001;
 	force U0_formal_verification.cbx_2__2_.mem_bottom_ipin_2.mem_outb[0:5] = 6'b111110;
-	force U0_formal_verification.cbx_2__2_.mem_bottom_ipin_3.mem_out[0:5] = 6'b001100;
-	force U0_formal_verification.cbx_2__2_.mem_bottom_ipin_3.mem_outb[0:5] = 6'b110011;
+	force U0_formal_verification.cbx_2__2_.mem_bottom_ipin_3.mem_out[0:5] = 6'b000001;
+	force U0_formal_verification.cbx_2__2_.mem_bottom_ipin_3.mem_outb[0:5] = 6'b111110;
 	force U0_formal_verification.cbx_2__2_.mem_bottom_ipin_4.mem_out[0:5] = 6'b000001;
 	force U0_formal_verification.cbx_2__2_.mem_bottom_ipin_4.mem_outb[0:5] = 6'b111110;
 	force U0_formal_verification.cbx_2__2_.mem_bottom_ipin_5.mem_out[0:5] = 6'b000001;
@@ -1062,8 +1062,8 @@ initial begin
 	force U0_formal_verification.cby_2__2_.mem_left_ipin_6.mem_outb[0:5] = 6'b111110;
 	force U0_formal_verification.cby_2__2_.mem_left_ipin_7.mem_out[0:5] = 6'b000001;
 	force U0_formal_verification.cby_2__2_.mem_left_ipin_7.mem_outb[0:5] = 6'b111110;
-	force U0_formal_verification.cby_2__2_.mem_right_ipin_0.mem_out[0:5] = 6'b010100;
-	force U0_formal_verification.cby_2__2_.mem_right_ipin_0.mem_outb[0:5] = 6'b101011;
+	force U0_formal_verification.cby_2__2_.mem_right_ipin_0.mem_out[0:5] = 6'b000001;
+	force U0_formal_verification.cby_2__2_.mem_right_ipin_0.mem_outb[0:5] = 6'b111110;
 	force U0_formal_verification.cby_2__2_.mem_right_ipin_1.mem_out[0:5] = 6'b000001;
 	force U0_formal_verification.cby_2__2_.mem_right_ipin_1.mem_outb[0:5] = 6'b111110;
 	force U0_formal_verification.cby_2__2_.mem_right_ipin_2.mem_out[0:5] = 6'b000001;
