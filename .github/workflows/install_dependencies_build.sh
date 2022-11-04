@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # The package list is designed for Ubuntu 20.04 LTS
-sudo apt-get update
-sudo apt-get install -y \
+apt-get update
+apt-get install -y \
     autoconf \
     automake \
     bison \

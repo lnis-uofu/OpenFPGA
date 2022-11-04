@@ -119,7 +119,7 @@ jobs:
           submodules: true
 
       - name: Install dependencies
-        run: ./.github/workflows/install_dependencies_build.sh
+        run: bash ./.github/workflows/install_dependencies_build.sh
       
       - name: Dump tool versions
         run: |
@@ -200,7 +200,7 @@ jobs:
           submodules: true
 
       - name: Install dependencies
-        run: ./.github/workflows/install_dependencies_build.sh
+        run: bash ./.github/workflows/install_dependencies_build.sh
       
       - name: Dump tool versions
         run: |
