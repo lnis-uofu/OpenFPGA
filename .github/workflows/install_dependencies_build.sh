@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 # The package list is designed for Ubuntu 20.04 LTS
-sudo apt-get update
-sudo apt-get install -y \
+add-apt-repository -y ppa:ubuntu-toolchain-r/test
+apt-get update
+apt-get install -y \
     autoconf \
     automake \
     bison \
@@ -25,6 +26,7 @@ sudo apt-get install -y \
     liblist-moreutils-perl \
     libncurses5-dev \
     libreadline-dev \
+    libreadline8 \
     libx11-dev \
     libxft-dev \
     libxml++2.6-dev \
