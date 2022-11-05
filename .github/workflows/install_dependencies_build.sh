@@ -26,6 +26,7 @@ apt-get install -y \
     liblist-moreutils-perl \
     libncurses5-dev \
     libreadline-dev \
+    libreadline8 \
     libx11-dev \
     libxft-dev \
     libxml++2.6-dev \
