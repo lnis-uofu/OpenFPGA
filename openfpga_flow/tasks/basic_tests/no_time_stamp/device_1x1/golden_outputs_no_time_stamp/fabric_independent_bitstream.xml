@@ -431,14 +431,14 @@
 					<instance level="3" name="mem_fle_3_in_0"/>
 				</hierarchy>
 				<input_nets>
-					<path id="0" net_name="unmapped"/>
-					<path id="1" net_name="unmapped"/>
+					<path id="0" net_name="a"/>
+					<path id="1" net_name="b"/>
 					<path id="2" net_name="unmapped"/>
-					<path id="3" net_name="b"/>
+					<path id="3" net_name="unmapped"/>
 					<path id="4" net_name="unmapped"/>
 					<path id="5" net_name="unmapped"/>
 					<path id="6" net_name="unmapped"/>
-					<path id="7" net_name="a"/>
+					<path id="7" net_name="unmapped"/>
 					<path id="8" net_name="unmapped"/>
 					<path id="9" net_name="unmapped"/>
 					<path id="10" net_name="unmapped"/>
@@ -449,10 +449,10 @@
 				<output_nets>
 					<path id="0" net_name="a"/>
 				</output_nets>
-				<bitstream path_id="7">
-					<bit memory_port="mem_out[0]" value="0"/>
-					<bit memory_port="mem_out[1]" value="0"/>
-					<bit memory_port="mem_out[2]" value="0"/>
+				<bitstream path_id="0">
+					<bit memory_port="mem_out[0]" value="1"/>
+					<bit memory_port="mem_out[1]" value="1"/>
+					<bit memory_port="mem_out[2]" value="1"/>
 					<bit memory_port="mem_out[3]" value="1"/>
 				</bitstream>
 			</bitstream_block>
@@ -498,14 +498,14 @@
 					<instance level="3" name="mem_fle_3_in_3"/>
 				</hierarchy>
 				<input_nets>
-					<path id="0" net_name="unmapped"/>
-					<path id="1" net_name="unmapped"/>
+					<path id="0" net_name="a"/>
+					<path id="1" net_name="b"/>
 					<path id="2" net_name="unmapped"/>
-					<path id="3" net_name="b"/>
+					<path id="3" net_name="unmapped"/>
 					<path id="4" net_name="unmapped"/>
 					<path id="5" net_name="unmapped"/>
 					<path id="6" net_name="unmapped"/>
-					<path id="7" net_name="a"/>
+					<path id="7" net_name="unmapped"/>
 					<path id="8" net_name="unmapped"/>
 					<path id="9" net_name="unmapped"/>
 					<path id="10" net_name="unmapped"/>
@@ -516,9 +516,9 @@
 				<output_nets>
 					<path id="0" net_name="b"/>
 				</output_nets>
-				<bitstream path_id="3">
+				<bitstream path_id="1">
 					<bit memory_port="mem_out[0]" value="0"/>
-					<bit memory_port="mem_out[1]" value="0"/>
+					<bit memory_port="mem_out[1]" value="1"/>
 					<bit memory_port="mem_out[2]" value="1"/>
 					<bit memory_port="mem_out[3]" value="1"/>
 				</bitstream>
@@ -715,7 +715,7 @@
 						<instance level="4" name="GPIO_DFF_mem"/>
 					</hierarchy>
 					<bitstream>
-						<bit memory_port="mem_out[0]" value="0"/>
+						<bit memory_port="mem_out[0]" value="1"/>
 					</bitstream>
 				</bitstream_block>
 			</bitstream_block>
@@ -731,7 +731,7 @@
 						<instance level="4" name="GPIO_DFF_mem"/>
 					</hierarchy>
 					<bitstream>
-						<bit memory_port="mem_out[0]" value="1"/>
+						<bit memory_port="mem_out[0]" value="0"/>
 					</bitstream>
 				</bitstream_block>
 			</bitstream_block>
@@ -1054,17 +1054,17 @@
 			</hierarchy>
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
-				<path id="1" net_name="b"/>
+				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
 				<path id="3" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
-				<path id="0" net_name="b"/>
+				<path id="0" net_name="unmapped"/>
 			</output_nets>
-			<bitstream path_id="1">
+			<bitstream path_id="-1">
 				<bit memory_port="mem_out[0]" value="0"/>
-				<bit memory_port="mem_out[1]" value="1"/>
-				<bit memory_port="mem_out[2]" value="1"/>
+				<bit memory_port="mem_out[1]" value="0"/>
+				<bit memory_port="mem_out[2]" value="0"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_top_track_2" hierarchy_level="2">
@@ -1074,16 +1074,16 @@
 				<instance level="2" name="mem_top_track_2"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="b"/>
-				<path id="1" net_name="a"/>
+				<path id="0" net_name="unmapped"/>
+				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
-				<path id="0" net_name="a"/>
+				<path id="0" net_name="unmapped"/>
 			</output_nets>
-			<bitstream path_id="1">
+			<bitstream path_id="-1">
 				<bit memory_port="mem_out[0]" value="0"/>
-				<bit memory_port="mem_out[1]" value="1"/>
+				<bit memory_port="mem_out[1]" value="0"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_top_track_4" hierarchy_level="2">
@@ -1093,8 +1093,8 @@
 				<instance level="2" name="mem_top_track_4"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="a"/>
-				<path id="1" net_name="unmapped"/>
+				<path id="0" net_name="unmapped"/>
+				<path id="1" net_name="a"/>
 				<path id="2" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
@@ -1112,16 +1112,16 @@
 				<instance level="2" name="mem_top_track_6"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="a"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="a"/>
 			</output_nets>
-			<bitstream path_id="-1">
-				<bit memory_port="mem_out[0]" value="0"/>
-				<bit memory_port="mem_out[1]" value="0"/>
+			<bitstream path_id="0">
+				<bit memory_port="mem_out[0]" value="1"/>
+				<bit memory_port="mem_out[1]" value="1"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_top_track_8" hierarchy_level="2">
@@ -1190,7 +1190,7 @@
 				<instance level="2" name="mem_top_track_14"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="b"/>
+				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
 			</input_nets>
@@ -1209,7 +1209,7 @@
 				<instance level="2" name="mem_top_track_16"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="a"/>
+				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
 			</input_nets>
@@ -1228,7 +1228,7 @@
 				<instance level="2" name="mem_top_track_18"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="a"/>
 				<path id="1" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
@@ -1480,15 +1480,15 @@
 				<instance level="2" name="mem_right_track_18"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="c"/>
 				<path id="1" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="c"/>
 			</output_nets>
-			<bitstream path_id="-1">
-				<bit memory_port="mem_out[0]" value="0"/>
-				<bit memory_port="mem_out[1]" value="0"/>
+			<bitstream path_id="0">
+				<bit memory_port="mem_out[0]" value="1"/>
+				<bit memory_port="mem_out[1]" value="1"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_right_track_20" hierarchy_level="2">
@@ -1713,13 +1713,13 @@
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="unmapped"/>
+				<path id="2" net_name="a"/>
 			</input_nets>
 			<output_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="a"/>
 			</output_nets>
-			<bitstream path_id="-1">
-				<bit memory_port="mem_out[0]" value="0"/>
+			<bitstream path_id="2">
+				<bit memory_port="mem_out[0]" value="1"/>
 				<bit memory_port="mem_out[1]" value="0"/>
 			</bitstream>
 		</bitstream_block>
@@ -1749,7 +1749,7 @@
 			</hierarchy>
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
-				<path id="1" net_name="a"/>
+				<path id="1" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -1767,7 +1767,7 @@
 			</hierarchy>
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
-				<path id="1" net_name="b"/>
+				<path id="1" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -1826,7 +1826,7 @@
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="b"/>
+				<path id="2" net_name="unmapped"/>
 				<path id="3" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
@@ -1846,8 +1846,8 @@
 			</hierarchy>
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
-				<path id="1" net_name="b"/>
-				<path id="2" net_name="a"/>
+				<path id="1" net_name="unmapped"/>
+				<path id="2" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -1865,8 +1865,8 @@
 			</hierarchy>
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
-				<path id="1" net_name="a"/>
-				<path id="2" net_name="unmapped"/>
+				<path id="1" net_name="unmapped"/>
+				<path id="2" net_name="a"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -1884,7 +1884,7 @@
 			</hierarchy>
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
-				<path id="1" net_name="unmapped"/>
+				<path id="1" net_name="a"/>
 				<path id="2" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
@@ -1961,16 +1961,16 @@
 				<instance level="2" name="mem_bottom_track_17"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="unmapped"/>
-				<path id="1" net_name="b"/>
+				<path id="0" net_name="c"/>
+				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="c"/>
 			</output_nets>
-			<bitstream path_id="-1">
-				<bit memory_port="mem_out[0]" value="0"/>
-				<bit memory_port="mem_out[1]" value="0"/>
+			<bitstream path_id="0">
+				<bit memory_port="mem_out[0]" value="1"/>
+				<bit memory_port="mem_out[1]" value="1"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_bottom_track_19" hierarchy_level="2">
@@ -1981,7 +1981,7 @@
 			</hierarchy>
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
-				<path id="1" net_name="a"/>
+				<path id="1" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -1999,7 +1999,7 @@
 			</hierarchy>
 			<input_nets>
 				<path id="0" net_name="c"/>
-				<path id="1" net_name="unmapped"/>
+				<path id="1" net_name="a"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="c"/>
@@ -2077,16 +2077,16 @@
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="unmapped"/>
+				<path id="2" net_name="b"/>
 				<path id="3" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="b"/>
 			</output_nets>
-			<bitstream path_id="-1">
+			<bitstream path_id="2">
 				<bit memory_port="mem_out[0]" value="0"/>
 				<bit memory_port="mem_out[1]" value="0"/>
-				<bit memory_port="mem_out[2]" value="0"/>
+				<bit memory_port="mem_out[2]" value="1"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_top_track_4" hierarchy_level="2">
@@ -2136,13 +2136,13 @@
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="unmapped"/>
+				<path id="2" net_name="c"/>
 			</input_nets>
 			<output_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="c"/>
 			</output_nets>
-			<bitstream path_id="-1">
-				<bit memory_port="mem_out[0]" value="0"/>
+			<bitstream path_id="2">
+				<bit memory_port="mem_out[0]" value="1"/>
 				<bit memory_port="mem_out[1]" value="0"/>
 			</bitstream>
 		</bitstream_block>
@@ -2193,7 +2193,7 @@
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="unmapped"/>
+				<path id="2" net_name="b"/>
 				<path id="3" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
@@ -2213,7 +2213,7 @@
 			</hierarchy>
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
-				<path id="1" net_name="unmapped"/>
+				<path id="1" net_name="b"/>
 				<path id="2" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
@@ -2559,7 +2559,7 @@
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="unmapped"/>
+				<path id="2" net_name="b"/>
 				<path id="3" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
@@ -2675,7 +2675,7 @@
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="unmapped"/>
+				<path id="2" net_name="b"/>
 				<path id="3" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
@@ -2695,8 +2695,8 @@
 			</hierarchy>
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
-				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="unmapped"/>
+				<path id="1" net_name="b"/>
+				<path id="2" net_name="a"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -2845,7 +2845,7 @@
 				<instance level="2" name="mem_left_track_5"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="b"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
 			</input_nets>
@@ -2869,11 +2869,11 @@
 				<path id="2" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="c"/>
 			</output_nets>
-			<bitstream path_id="-1">
-				<bit memory_port="mem_out[0]" value="0"/>
-				<bit memory_port="mem_out[1]" value="0"/>
+			<bitstream path_id="0">
+				<bit memory_port="mem_out[0]" value="1"/>
+				<bit memory_port="mem_out[1]" value="1"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_left_track_9" hierarchy_level="2">
@@ -2902,7 +2902,7 @@
 				<instance level="2" name="mem_left_track_11"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="c"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
 			</input_nets>
@@ -3128,7 +3128,7 @@
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
 				<path id="3" net_name="unmapped"/>
-				<path id="4" net_name="unmapped"/>
+				<path id="4" net_name="c"/>
 				<path id="5" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
@@ -3266,7 +3266,7 @@
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
 				<path id="3" net_name="unmapped"/>
-				<path id="4" net_name="unmapped"/>
+				<path id="4" net_name="c"/>
 				<path id="5" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
@@ -3287,7 +3287,7 @@
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="unmapped"/>
+				<path id="2" net_name="c"/>
 				<path id="3" net_name="unmapped"/>
 				<path id="4" net_name="unmapped"/>
 				<path id="5" net_name="unmapped"/>
@@ -3360,7 +3360,7 @@
 				<path id="1" net_name="c"/>
 				<path id="2" net_name="unmapped"/>
 				<path id="3" net_name="unmapped"/>
-				<path id="4" net_name="unmapped"/>
+				<path id="4" net_name="a"/>
 				<path id="5" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
@@ -3382,7 +3382,7 @@
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
-				<path id="3" net_name="unmapped"/>
+				<path id="3" net_name="c"/>
 				<path id="4" net_name="unmapped"/>
 				<path id="5" net_name="unmapped"/>
 			</input_nets>
@@ -3403,7 +3403,7 @@
 			</hierarchy>
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
-				<path id="1" net_name="unmapped"/>
+				<path id="1" net_name="c"/>
 				<path id="2" net_name="unmapped"/>
 				<path id="3" net_name="unmapped"/>
 				<path id="4" net_name="unmapped"/>
@@ -3498,15 +3498,15 @@
 				<path id="1" net_name="c"/>
 				<path id="2" net_name="unmapped"/>
 				<path id="3" net_name="unmapped"/>
-				<path id="4" net_name="unmapped"/>
+				<path id="4" net_name="a"/>
 				<path id="5" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="a"/>
 			</output_nets>
-			<bitstream path_id="-1">
-				<bit memory_port="mem_out[0]" value="0"/>
-				<bit memory_port="mem_out[1]" value="0"/>
+			<bitstream path_id="4">
+				<bit memory_port="mem_out[0]" value="1"/>
+				<bit memory_port="mem_out[1]" value="1"/>
 				<bit memory_port="mem_out[2]" value="0"/>
 			</bitstream>
 		</bitstream_block>
@@ -3519,7 +3519,7 @@
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="unmapped"/>
+				<path id="2" net_name="a"/>
 				<path id="3" net_name="unmapped"/>
 				<path id="4" net_name="unmapped"/>
 				<path id="5" net_name="unmapped"/>
@@ -3541,7 +3541,7 @@
 			</hierarchy>
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
-				<path id="1" net_name="unmapped"/>
+				<path id="1" net_name="c"/>
 				<path id="2" net_name="unmapped"/>
 				<path id="3" net_name="unmapped"/>
 				<path id="4" net_name="unmapped"/>
@@ -3565,7 +3565,7 @@
 				<instance level="2" name="mem_left_ipin_0"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="b"/>
+				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
 				<path id="3" net_name="unmapped"/>
@@ -3573,12 +3573,12 @@
 				<path id="5" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
-				<path id="0" net_name="b"/>
+				<path id="0" net_name="unmapped"/>
 			</output_nets>
-			<bitstream path_id="0">
-				<bit memory_port="mem_out[0]" value="1"/>
-				<bit memory_port="mem_out[1]" value="1"/>
-				<bit memory_port="mem_out[2]" value="1"/>
+			<bitstream path_id="-1">
+				<bit memory_port="mem_out[0]" value="0"/>
+				<bit memory_port="mem_out[1]" value="0"/>
+				<bit memory_port="mem_out[2]" value="0"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_left_ipin_1" hierarchy_level="2">
@@ -3588,20 +3588,20 @@
 				<instance level="2" name="mem_left_ipin_1"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="b"/>
+				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="a"/>
+				<path id="2" net_name="unmapped"/>
 				<path id="3" net_name="unmapped"/>
 				<path id="4" net_name="unmapped"/>
 				<path id="5" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
-				<path id="0" net_name="a"/>
+				<path id="0" net_name="unmapped"/>
 			</output_nets>
-			<bitstream path_id="2">
-				<bit memory_port="mem_out[0]" value="1"/>
+			<bitstream path_id="-1">
+				<bit memory_port="mem_out[0]" value="0"/>
 				<bit memory_port="mem_out[1]" value="0"/>
-				<bit memory_port="mem_out[2]" value="1"/>
+				<bit memory_port="mem_out[2]" value="0"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_right_ipin_0" hierarchy_level="2">
@@ -3611,12 +3611,12 @@
 				<instance level="2" name="mem_right_ipin_0"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="a"/>
+				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
 				<path id="3" net_name="unmapped"/>
 				<path id="4" net_name="unmapped"/>
-				<path id="5" net_name="unmapped"/>
+				<path id="5" net_name="c"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -3636,7 +3636,7 @@
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="unmapped"/>
+				<path id="2" net_name="a"/>
 				<path id="3" net_name="unmapped"/>
 				<path id="4" net_name="unmapped"/>
 				<path id="5" net_name="unmapped"/>
@@ -3657,7 +3657,7 @@
 				<instance level="2" name="mem_right_ipin_2"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="a"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
 				<path id="3" net_name="unmapped"/>
@@ -3726,7 +3726,7 @@
 				<instance level="2" name="mem_right_ipin_5"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="b"/>
+				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
 				<path id="3" net_name="unmapped"/>
@@ -3749,12 +3749,12 @@
 				<instance level="2" name="mem_right_ipin_6"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="a"/>
+				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
 				<path id="3" net_name="unmapped"/>
 				<path id="4" net_name="unmapped"/>
-				<path id="5" net_name="unmapped"/>
+				<path id="5" net_name="c"/>
 			</input_nets>
 			<output_nets>
 				<path id="0" net_name="unmapped"/>
@@ -3775,7 +3775,7 @@
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
-				<path id="3" net_name="unmapped"/>
+				<path id="3" net_name="c"/>
 				<path id="4" net_name="unmapped"/>
 				<path id="5" net_name="unmapped"/>
 			</input_nets>
@@ -3822,7 +3822,7 @@
 			<input_nets>
 				<path id="0" net_name="c"/>
 				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="unmapped"/>
+				<path id="2" net_name="b"/>
 				<path id="3" net_name="unmapped"/>
 				<path id="4" net_name="unmapped"/>
 				<path id="5" net_name="unmapped"/>
@@ -3843,7 +3843,7 @@
 				<instance level="2" name="mem_left_ipin_2"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="b"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="c"/>
 				<path id="3" net_name="unmapped"/>
@@ -3874,12 +3874,12 @@
 				<path id="5" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
-				<path id="0" net_name="c"/>
+				<path id="0" net_name="unmapped"/>
 			</output_nets>
-			<bitstream path_id="0">
-				<bit memory_port="mem_out[0]" value="1"/>
-				<bit memory_port="mem_out[1]" value="1"/>
-				<bit memory_port="mem_out[2]" value="1"/>
+			<bitstream path_id="-1">
+				<bit memory_port="mem_out[0]" value="0"/>
+				<bit memory_port="mem_out[1]" value="0"/>
+				<bit memory_port="mem_out[2]" value="0"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_left_ipin_4" hierarchy_level="2">
@@ -3891,18 +3891,18 @@
 			<input_nets>
 				<path id="0" net_name="unmapped"/>
 				<path id="1" net_name="unmapped"/>
-				<path id="2" net_name="unmapped"/>
+				<path id="2" net_name="c"/>
 				<path id="3" net_name="unmapped"/>
 				<path id="4" net_name="unmapped"/>
 				<path id="5" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="c"/>
 			</output_nets>
-			<bitstream path_id="-1">
-				<bit memory_port="mem_out[0]" value="0"/>
+			<bitstream path_id="2">
+				<bit memory_port="mem_out[0]" value="1"/>
 				<bit memory_port="mem_out[1]" value="0"/>
-				<bit memory_port="mem_out[2]" value="0"/>
+				<bit memory_port="mem_out[2]" value="1"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_left_ipin_5" hierarchy_level="2">
@@ -3912,7 +3912,7 @@
 				<instance level="2" name="mem_left_ipin_5"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="c"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
 				<path id="3" net_name="unmapped"/>
@@ -3981,7 +3981,7 @@
 				<instance level="2" name="mem_right_ipin_0"/>
 			</hierarchy>
 			<input_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="b"/>
 				<path id="1" net_name="unmapped"/>
 				<path id="2" net_name="unmapped"/>
 				<path id="3" net_name="unmapped"/>
@@ -3989,12 +3989,12 @@
 				<path id="5" net_name="unmapped"/>
 			</input_nets>
 			<output_nets>
-				<path id="0" net_name="unmapped"/>
+				<path id="0" net_name="b"/>
 			</output_nets>
-			<bitstream path_id="-1">
-				<bit memory_port="mem_out[0]" value="0"/>
-				<bit memory_port="mem_out[1]" value="0"/>
-				<bit memory_port="mem_out[2]" value="0"/>
+			<bitstream path_id="0">
+				<bit memory_port="mem_out[0]" value="1"/>
+				<bit memory_port="mem_out[1]" value="1"/>
+				<bit memory_port="mem_out[2]" value="1"/>
 			</bitstream>
 		</bitstream_block>
 		<bitstream_block name="mem_right_ipin_1" hierarchy_level="2">
