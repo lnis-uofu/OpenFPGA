@@ -14,7 +14,7 @@ set_units -time s
 ##################################################
 # Create clock                                    
 ##################################################
-create_clock -name clk[0] -period 1.084572876e-09 -waveform {0 5.42286438e-10} [get_ports {clk[0]}]
+create_clock -name clk[0] -period 1.314636955e-09 -waveform {0 6.573184774e-10} [get_ports {clk[0]}]
 ##################################################
 # Create programmable clock                       
 ##################################################

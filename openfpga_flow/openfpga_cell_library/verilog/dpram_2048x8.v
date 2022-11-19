@@ -14,7 +14,7 @@ module dpram_2048x8 (
   input[0:7] data_in,
   output[0:7] data_out );
 
-    dual_port_sram memory_0 (
+    dpram_2048x8_core memory_0 (
       .wclk    (clk),
       .wen    (wen),
       .waddr    (waddr),
@@ -32,7 +32,7 @@ endmodule
 // Function    : Core module of dual port RAM 2048 addresses x 8 bit
 // Coder       : Xifan tang
 //-----------------------------------------------------
-module dual_port_sram (
+module dpram_2048x8_core (
   input wclk,
   input wen,
   input[0:10] waddr,
