@@ -91,6 +91,9 @@ format-py:
 	${PYTHON_FORMAT_EXEC} $${f} --line-length 100 || exit 1; \
 	done
 
+format-all: format-cpp format-xml format-py
+# Format all the C/C++, XML and Python codes
+
 clean:
 # Remove current build results
 	rm -rf ${BUILD_DIR} yosys/install
