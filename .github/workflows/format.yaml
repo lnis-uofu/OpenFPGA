@@ -21,6 +21,8 @@ jobs:
             code_type: "-cpp"
           - name: "XML"
             code_type: "-xml"
+          - name: "Python"
+            code_type: "-py"
     steps:
       - name: Cancel previous
         uses: styfle/cancel-workflow-action@0.9.1
@@ -31,11 +33,14 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install dependencies
-        run: sudo bash ./.github/workflows/install_dependencies_build.sh
+        run: |
+          sudo bash ./.github/workflows/install_dependencies_build.sh
+          sudo python3 -m pip install -r requirements.txt
           
       - name: Dump tool versions
         run: |
           clang-format-10 --version
+          black --version
 
       - name: Check format
         run: ./dev/check-format.sh ${{ matrix.config.code_type }}
