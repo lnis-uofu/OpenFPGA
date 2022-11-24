@@ -8,5 +8,5 @@
  *******************************************************************/
 int main(int argc, char** argv) {
   OpenfpgaShell openfpga_shell;
-  return openfpga_shell.run(argc, argv);
+  return openfpga_shell.start(argc, argv);
 }

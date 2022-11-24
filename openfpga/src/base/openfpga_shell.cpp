@@ -105,14 +105,14 @@ int OpenfpgaShell::start(int argc, char** argv) {
     }
     /* Start a shell */
     if (true == start_cmd_context.option_enable(start_cmd, opt_interactive)) {
-      shell_.run_interactive_mode(openfpga_context);
+      shell_.run_interactive_mode(openfpga_ctx_);
       return shell_.exit_code();
     }
 
     if (true == start_cmd_context.option_enable(start_cmd, opt_script_mode)) {
       shell_.run_script_mode(
         start_cmd_context.option_value(start_cmd, opt_script_mode).c_str(),
-        openfpga_context,
+        openfpga_ctx_,
         start_cmd_context.option_enable(start_cmd, opt_batch_exec));
       return shell_.exit_code();
     }

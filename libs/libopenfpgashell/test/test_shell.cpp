@@ -63,7 +63,8 @@ int main(int argc, char** argv) {
    * 1. help
    * 2. exit
    */
-  Shell<ShellContext> shell("test_shell");
+  Shell<ShellContext> shell;
+  shell.set_name("test_shell");
   std::string shell_title;
 
   shell_title += std::string("The MIT License\n");
