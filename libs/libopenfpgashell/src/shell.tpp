@@ -26,8 +26,8 @@ namespace openfpga {
  * Public constructors
  ********************************************************************/
 template<class T>
-Shell<T>::Shell(const char* name) {
-  name_ = std::string(name);
+Shell<T>::Shell() {
+  name_ = std::string("shell_no_name");
   time_start_ = 0;
 }
 
@@ -104,6 +104,11 @@ std::vector<ShellCommandId> Shell<T>::commands_by_class(const ShellCommandClassI
 /************************************************************************
  * Public mutators
  ***********************************************************************/
+template<class T>
+void Shell<T>::set_name(const char* name) {
+  name_ = std::string(name);
+}
+
 template<class T>
 void Shell<T>::add_title(const char* title) {
   title_ = std::string(title);

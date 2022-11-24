@@ -96,6 +96,7 @@ class Shell {
     const ShellCommandClassId& cmd_class_id) const;
 
  public: /* Public mutators */
+  void set_name(const char* name);
   void add_title(const char* title);
   ShellCommandId add_command(const Command& cmd, const char* descr);
   void set_command_class(const ShellCommandId& cmd_id,
