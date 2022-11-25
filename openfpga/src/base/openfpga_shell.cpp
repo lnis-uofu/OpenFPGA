@@ -1,7 +1,8 @@
+#include "openfpga_shell.h"
+
+#include "basic_command.h"
 #include "command_echo.h"
 #include "command_parser.h"
-#include "openfpga_shell.h"
-#include "basic_command.h"
 #include "openfpga_bitstream_command.h"
 #include "openfpga_context.h"
 #include "openfpga_sdc_command.h"
@@ -12,7 +13,7 @@
 #include "vpr_command.h"
 
 OpenfpgaShell::OpenfpgaShell() {
-  shell_.set_name("OpenFPGA"); 
+  shell_.set_name("OpenFPGA");
   shell_.add_title(create_openfpga_title().c_str());
 
   /* Add vpr commands */
