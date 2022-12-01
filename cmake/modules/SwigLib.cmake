@@ -72,9 +72,10 @@ function(SwigLib)
   set_property(SOURCE ${ARG_I_FILE}
                PROPERTY USE_TARGET_INCLUDE_DIRECTORIES true)
 
+  # Use shared library which can be loaded in tclsh runtime
   swig_add_library(${ARG_NAME}
     LANGUAGE ${ARG_LANGUAGE}
-    TYPE     STATIC
+    TYPE     SHARED
     SOURCES  ${ARG_I_FILE}
   )
 
@@ -90,9 +91,16 @@ function(SwigLib)
   endforeach()
 
   # These includes are always needed.
+  # FIXME: Should be made as a parameter or set a rule to put all the dependent headers in a directory, i.e., include/
   target_include_directories(${ARG_NAME}
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/base
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/mux_lib
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/annotation
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/repack
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/fpga_bitstream
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/fabric
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/tile_direct
   )
 
   if (${ARG_LANGUAGE} STREQUAL tcl)
