@@ -12,10 +12,11 @@ list(REMOVE_ITEM LIB_SOURCES ${EXEC_SOURCE})
 
 if (OPENFPGA_WITH_SWIG)
 # SWIG library
-  SwigLib(NAME      openfpga_swig
+  SwigLib(NAME      libopenfpga_swig
           NAMESPACE std
+          LANGUAGE  tcl
           I_FILE    src/openfpga.i)
-  target_link_libraries(openfpga_swig
+  target_link_libraries(libopenfpga_swig
                         PRIVATE
                         libarchopenfpga
                         libopenfpgashell
