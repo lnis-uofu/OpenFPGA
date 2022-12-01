@@ -19,8 +19,9 @@ if (OPENFPGA_WITH_SWIG)
   include(UseSWIG)
 
 # SWIG library
-  swig_lib(NAME      openfpga_swig
-           I_FILE    openfpga.i)
+  SwigLib(NAME      openfpga_swig
+          NAMESPACE openfpga
+          I_FILE    src/openfpga.i)
   target_link_libraries(openfpga_swig
                         PRIVATE
                         libarchopenfpga

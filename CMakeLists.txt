@@ -55,6 +55,7 @@ set(OPENFPGA_VERSION_PRERELEASE "dev")
 # Include user-defined functions
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 include(FilesToDirs)
+include(SwigLib)
 
 # Set the assertion level
 add_definitions("-DVTR_ASSERT_LEVEL=${VTR_ASSERT_LEVEL}")
