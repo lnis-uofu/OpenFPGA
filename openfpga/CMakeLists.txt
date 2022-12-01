@@ -18,18 +18,7 @@ if (OPENFPGA_WITH_SWIG)
           I_FILE    src/openfpga.i)
   target_include_directories(libopenfpga_swig PUBLIC ${LIB_INCLUDE_DIRS})
   target_link_libraries(libopenfpga_swig
-                        libopenfpga
-                        libarchopenfpga
-                        libopenfpgashell
-                        libopenfpgautil
-                        libfabrickey
-                        libfpgabitstream
-                        libini
-                        libpcf
-                        libvtrutil
-                        libbusgroup
-                        libpugixml
-                        libvpr)
+                        libopenfpga)
 endif()
 
 #Create the library
