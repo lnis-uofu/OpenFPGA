@@ -11,6 +11,7 @@ files_to_dirs(LIB_HEADERS LIB_INCLUDE_DIRS)
 list(REMOVE_ITEM LIB_SOURCES ${EXEC_SOURCE})
 
 #Create the library
+#Static linked library for other C++ libraries
 add_library(libopenfpga STATIC
             ${LIB_HEADERS}
             ${LIB_SOURCES})
@@ -30,6 +31,28 @@ target_link_libraries(libopenfpga
                       libbusgroup
                       libpugixml
                       libvpr)
+
+#Dynamic linked library for high-level interfaces, e.g., Tcl
+add_library(libopenfpga_shared SHARED
+            ${LIB_HEADERS}
+            ${LIB_SOURCES})
+target_include_directories(libopenfpga_shared PUBLIC ${LIB_INCLUDE_DIRS})
+set_target_properties(libopenfpga_shared PROPERTIES PREFIX "") #Avoid extra 'lib' prefix
+
+#Specify link-time dependancies
+target_link_libraries(libopenfpga_shared
+                      libarchopenfpga
+                      libopenfpgashell
+                      libopenfpgautil
+                      libfabrickey
+                      libfpgabitstream
+                      libini
+                      libpcf
+                      libvtrutil
+                      libbusgroup
+                      libpugixml
+                      libvpr)
+
 
 #Create the test executable
 add_executable(openfpga ${EXEC_SOURCE})

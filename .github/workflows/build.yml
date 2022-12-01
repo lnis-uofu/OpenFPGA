@@ -149,6 +149,7 @@ jobs:
             build/vtr-verilog-to-routing/vpr/libvpr.a
             build/vtr-verilog-to-routing/vpr/vpr
             build/openfpga/libopenfpga.a
+            build/openfpga/libopenfpga_shared.so
             build/openfpga/openfpga
             yosys/install/share
             yosys/install/bin
