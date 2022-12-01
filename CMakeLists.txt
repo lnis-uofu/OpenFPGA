@@ -84,6 +84,21 @@ set(ODIN_YOSYS OFF CACHE BOOL "Enable building odin with yosys in Verilog-to-Rou
 set(YOSYS_SV_UHDM_PLUGIN OFF CACHE BOOL "Enable building and installing Yosys SystemVerilog and UHDM plugins in Verilog-to-Routing")
 set(VTR_ENABLE_VERSION ${OPENFPGA_WITH_VERSION} CACHE BOOL "Enable version always-up-to-date when building codebase. Disable only when you do not care an accurate version number")
 
+# TCL file/lib required to link with SWIG generated wrapper
+if (OPENFPGA_WITH_SWIG)
+#Find Tcl
+  include(FindTCL)
+  message(STATUS "tcl.h path is : ${TCL_INCLUDE_PATH}")
+  message(STATUS "libtcl.so path is : ${TCL_LIBRARY}") 
+
+#Find SWIG
+  find_package(SWIG 3.0 REQUIRED)
+  if (SWIG_VERSION VERSION_GREATER_EQUAL "4.1.0")
+    message(WARNING "Using SWIG >= ${SWIG_VERSION} -flatstaticmethod flag for python")
+  endif()
+  include(UseSWIG)
+endif()
+
 #Compiler flag configuration checks
 include(CheckCXXCompilerFlag)
 

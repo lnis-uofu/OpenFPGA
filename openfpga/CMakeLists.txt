@@ -11,13 +11,6 @@ files_to_dirs(LIB_HEADERS LIB_INCLUDE_DIRS)
 list(REMOVE_ITEM LIB_SOURCES ${EXEC_SOURCE})
 
 if (OPENFPGA_WITH_SWIG)
-#Find SWIG
-  find_package(SWIG 3.0 REQUIRED)
-  if (SWIG_VERSION VERSION_GREATER_EQUAL "4.1.0")
-    message(WARNING "Using SWIG >= ${SWIG_VERSION} -flatstaticmethod flag for python")
-  endif()
-  include(UseSWIG)
-
 # SWIG library
   SwigLib(NAME      openfpga_swig
           NAMESPACE openfpga
