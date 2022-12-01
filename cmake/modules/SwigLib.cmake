@@ -92,7 +92,7 @@ function(SwigLib)
   # These includes are always needed.
   target_include_directories(${ARG_NAME}
     PRIVATE
-      ${OPENROAD_HOME}/include
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/base
   )
 
   if (${ARG_LANGUAGE} STREQUAL tcl)
