@@ -236,6 +236,11 @@ if(OPENFPGA_ENABLE_SANITIZE)
     link_libraries("-static-libasan") #Fixes 'ASan runtime does not come first in initial library list'
 endif()
 
+# Extra flags
+if (OPENFPGA_WITH_SWIG)
+    set(EXTRA_FLAGS "-fpic")
+endif()
+
 # Set final flags
 #
 separate_arguments(

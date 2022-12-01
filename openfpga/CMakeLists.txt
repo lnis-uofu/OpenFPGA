@@ -16,8 +16,9 @@ if (OPENFPGA_WITH_SWIG)
           NAMESPACE std
           LANGUAGE  tcl
           I_FILE    src/openfpga.i)
+  target_include_directories(libopenfpga_swig PUBLIC ${LIB_INCLUDE_DIRS})
   target_link_libraries(libopenfpga_swig
-                        PRIVATE
+                        libopenfpga
                         libarchopenfpga
                         libopenfpgashell
                         libopenfpgautil
