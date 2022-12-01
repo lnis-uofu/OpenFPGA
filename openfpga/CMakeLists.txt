@@ -13,7 +13,7 @@ list(REMOVE_ITEM LIB_SOURCES ${EXEC_SOURCE})
 if (OPENFPGA_WITH_SWIG)
 # SWIG library
   SwigLib(NAME      openfpga_swig
-          NAMESPACE openfpga
+          NAMESPACE std
           I_FILE    src/openfpga.i)
   target_link_libraries(openfpga_swig
                         PRIVATE
