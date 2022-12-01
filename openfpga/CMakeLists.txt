@@ -10,6 +10,32 @@ files_to_dirs(LIB_HEADERS LIB_INCLUDE_DIRS)
 #Remove test executable from library
 list(REMOVE_ITEM LIB_SOURCES ${EXEC_SOURCE})
 
+if (OPENFPGA_WITH_SWIG)
+#Find SWIG
+  find_package(SWIG 3.0 REQUIRED)
+  if (SWIG_VERSION VERSION_GREATER_EQUAL "4.1.0")
+    message(WARNING "Using SWIG >= ${SWIG_VERSION} -flatstaticmethod flag for python")
+  endif()
+  include(UseSWIG)
+
+# SWIG library
+  swig_lib(NAME      openfpga_swig
+           I_FILE    openfpga.i)
+  target_link_libraries(openfpga_swig
+                        PRIVATE
+                        libarchopenfpga
+                        libopenfpgashell
+                        libopenfpgautil
+                        libfabrickey
+                        libfpgabitstream
+                        libini
+                        libpcf
+                        libvtrutil
+                        libbusgroup
+                        libpugixml
+                        libvpr)
+endif()
+
 #Create the library
 #Static linked library for other C++ libraries
 add_library(libopenfpga STATIC
@@ -31,28 +57,6 @@ target_link_libraries(libopenfpga
                       libbusgroup
                       libpugixml
                       libvpr)
-
-#Dynamic linked library for high-level interfaces, e.g., Tcl
-add_library(libopenfpga_shared SHARED
-            ${LIB_HEADERS}
-            ${LIB_SOURCES})
-target_include_directories(libopenfpga_shared PUBLIC ${LIB_INCLUDE_DIRS})
-set_target_properties(libopenfpga_shared PROPERTIES PREFIX "") #Avoid extra 'lib' prefix
-
-#Specify link-time dependancies
-target_link_libraries(libopenfpga_shared
-                      libarchopenfpga
-                      libopenfpgashell
-                      libopenfpgautil
-                      libfabrickey
-                      libfpgabitstream
-                      libini
-                      libpcf
-                      libvtrutil
-                      libbusgroup
-                      libpugixml
-                      libvpr)
-
 
 #Create the test executable
 add_executable(openfpga ${EXEC_SOURCE})
