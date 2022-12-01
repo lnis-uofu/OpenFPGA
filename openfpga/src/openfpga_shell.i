@@ -1,5 +1,5 @@
 /* SWIG interface file for OpenFPGA shell APIs */
-%module openfpga
+%module openfpga_shell
 
 %{
 #include "openfpga_shell.h"
