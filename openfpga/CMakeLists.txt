@@ -10,7 +10,19 @@ files_to_dirs(LIB_HEADERS LIB_INCLUDE_DIRS)
 #Remove test executable from library
 list(REMOVE_ITEM LIB_SOURCES ${EXEC_SOURCE})
 
+if (OPENFPGA_WITH_SWIG)
+# SWIG library
+  SwigLib(NAME      openfpga_shell
+          NAMESPACE std
+          LANGUAGE  tcl
+          I_FILE    src/openfpga_shell.i)
+  target_include_directories(openfpga_shell PUBLIC ${LIB_INCLUDE_DIRS})
+  target_link_libraries(openfpga_shell
+                        libopenfpga)
+endif()
+
 #Create the library
+#Static linked library for other C++ libraries
 add_library(libopenfpga STATIC
             ${LIB_HEADERS}
             ${LIB_SOURCES})

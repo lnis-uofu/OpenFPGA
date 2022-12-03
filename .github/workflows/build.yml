@@ -149,6 +149,7 @@ jobs:
             build/vtr-verilog-to-routing/vpr/libvpr.a
             build/vtr-verilog-to-routing/vpr/vpr
             build/openfpga/libopenfpga.a
+            build/openfpga/openfpga_shell.so
             build/openfpga/openfpga
             yosys/install/share
             yosys/install/bin
@@ -184,6 +185,10 @@ jobs:
             cc: gcc-9
             cxx: g++-9
             cmake_flags: "-DOPENFPGA_WITH_VERSION=OFF"
+          - name: "Build w/o SWIG support (Ubuntu 20.04)"
+            cc: gcc-9
+            cxx: g++-9
+            cmake_flags: "-DOPENFPGA_WITH_SWIG=OFF"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
@@ -271,6 +276,7 @@ jobs:
           - name: quicklogic_reg_test
           - name: vtr_benchmark_reg_test
           - name: iwls_benchmark_reg_test
+          - name: tcl_reg_test
     steps:
       - name: Cancel previous
         uses: styfle/cancel-workflow-action@0.9.1
@@ -328,6 +334,7 @@ jobs:
           - name: quicklogic_reg_test
           - name: vtr_benchmark_reg_test
           - name: iwls_benchmark_reg_test
+          - name: tcl_reg_test
     steps:
       - name: Cancel previous
         uses: styfle/cancel-workflow-action@0.9.1

@@ -75,7 +75,7 @@ class Shell {
   };
 
  public: /* Constructor */
-  Shell<T>(const char* name);
+  Shell<T>();
 
  public: /* Public accessors */
   std::string name() const;
@@ -96,6 +96,7 @@ class Shell {
     const ShellCommandClassId& cmd_class_id) const;
 
  public: /* Public mutators */
+  void set_name(const char* name);
   void add_title(const char* title);
   ShellCommandId add_command(const Command& cmd, const char* descr);
   void set_command_class(const ShellCommandId& cmd_id,
@@ -177,8 +178,6 @@ class Shell {
   int execution_errors() const;
   /* Quit the shell */
   void exit(const int& init_err = 0) const;
-
- private: /* Private executors */
   /* Execute a command, the command line is the user's input to launch a command
    * The common_context is the data structure to exchange data between commands
    */
