@@ -11,7 +11,7 @@ The (VPR) architecture files used with v1.1 may not be compatible with v1.2.
 
 You can upgrade your architecture files with script
 
-..code-block:: bash
+.. code-block:: bash
 
   python3 openfpga_flow/scripts/arch_file_updater.py \
       --input_file ${v1.1_arch_file} \
