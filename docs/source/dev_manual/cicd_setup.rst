@@ -1,6 +1,7 @@
+.. dev_manual_cicd_setup::
 
 CI/CD setup
-------------
+-----------
 
 OpenFPGA implements CI/CD system using Github actions.
 The following figure shows the Actions implements flow.
@@ -70,13 +71,15 @@ in which case the docker image compiled for the latest master branch is used for
 
     The OpenFPGA soure is compiled with the following set of compilers.
 
-      #. gcc-5
-      #. gcc-6
       #. gcc-7
       #. gcc-8
       #. gcc-9
-      #. clang-6.0
+      #. gcc-10
+      #. gcc-11
+      #. clang-6
+      #. clang-7
       #. clang-8
+      #. clang-10
 
     The docker images for these build enviroment are available on `github packages <https://github.com/orgs/lnis-uofu/packages>`_.
 

@@ -12,7 +12,7 @@ OpenFPGA aims to be an open-source framework that enables rapid prototyping of c
 .. _fig_openfpga_motivation:
 
 .. figure:: ./figures/openfpga_motivation.png
-   :scale: 50%
+   :width: 100%
    :alt: OpenFPGA: a fast prototyping framework for customizable FPGAs
 
    Comparison on engineering time and effort to prototype an FPGA using OpenFPGA and conventional approaches [All the layout figures are publishable under the proper licenses]
@@ -28,7 +28,7 @@ The rest of this section will focus on detailed motivation for each of them, as 
 .. _fig_openfpga_framework:
 
 .. figure:: ./figures/openfpga_framework.svg
-   :scale: 50%
+   :width: 100%
    :alt: OpenFPGA framework
 
    OpenFPGA: a unified framework for chip designer and FPGA programmer
@@ -49,7 +49,7 @@ programmable fabric and the configuration peripheral.
 .. _fig_openfpga_arch_lang_coverage:
 
 .. figure:: ./figures/openfpga_arch_lang_coverage.png
-   :scale: 15%
+   :width: 100%
    :alt: OpenFPGA architecture description language enabling fully customizable FPGA architecture and circuit-level implementation
 
    OpenFPGA architecture description language enabling fully customizable FPGA architecture and circuit-level implementation
@@ -68,7 +68,7 @@ FPGA-Verilog is designed to output flexible and standard Verilog netlists, enabl
 .. _fig_fpga_verilog_motivation:
 
 .. figure:: ./figures/fpga_verilog_motivation.svg
-   :scale: 25%
+   :width: 100%
    :alt: Flexible netlist format support by FPGA-Verilog to enable various backend choices
 
    FPGA-Verilog enabling flexible backend flows
@@ -88,7 +88,7 @@ Our flow automatically generates two sets of SDC files.
 .. _fig_fpga_sdc_motivation:
 
 .. figure:: ./figures/fpga_sdc_motivation.png
-   :scale: 25%
+   :width: 100%
    :alt: FPGA-SDC enabling iterative timing constrained backend flow
 
    FPGA-SDC enabling iterative timing constrained backend flow
