@@ -54,6 +54,8 @@ Bibtex:
 @ARTICLE{9098028,  author={Tang, Xifan and Giacomin, Edouard and Chauviere, Baudouin and Alacchi, Aurélien and Gaillardon, Pierre-Emmanuel},  journal={IEEE Micro},   title={OpenFPGA: An Open-Source Framework for Agile Prototyping Customizable FPGAs},   year={2020},  volume={40},  number={4},  pages={41-48},  doi={10.1109/MM.2020.2995854}}
 ```
 
+A list of related publications can be found [here](https://openfpga.readthedocs.io/en/master/reference/).
+
 ## Contributing to OpenFPGA
 
 Please read the [contributor guidelines](https://openfpga.readthedocs.io/en/master/dev_manual/contributor_guide) if you would like to contribute to OpenFPGA.

@@ -54,7 +54,7 @@ programmable fabric and the configuration peripheral.
 
    OpenFPGA architecture description language enabling fully customizable FPGA architecture and circuit-level implementation
 
-The technical details can be found in our TVLSI'19 paper :cite:`XTang_TVLSI_2019` and FPL'19 paper :cite:`XTang_FPL_2019`.
+The technical details can be found in our papers :cite:`XTang_TVLSI_2019` :cite:`XTang_FPL_2019`.
 
 FPGA-Verilog
 ~~~~~~~~~~~~
@@ -73,7 +73,7 @@ FPGA-Verilog is designed to output flexible and standard Verilog netlists, enabl
 
    FPGA-Verilog enabling flexible backend flows
 
-The technical details can be found in our TVLSI'19 paper :cite:`XTang_TVLSI_2019` and FPL'19 paper :cite:`XTang_FPL_2019`.
+The technical details can be found in our papers :cite:`XTang_ieeemicro_2020` :cite:`XTang_woset_2020` :cite:`GGore_ispd_2021`
 
 FPGA-SDC
 ~~~~~~~~
@@ -94,7 +94,7 @@ Our flow automatically generates two sets of SDC files.
    FPGA-SDC enabling iterative timing constrained backend flow
 
 
-The technical details can be found in our FPL'19 paper :cite:`XTang_FPL_2019`.
+The technical details can be found in our papers :cite:`XTang_FPL_2019` :cite:`XTang_ieeemicro_2020` :cite:`XTang_woset_2020`.
 
 
 FPGA-Bitstream
@@ -102,7 +102,7 @@ FPGA-Bitstream
 
 EDA support is essential for end-users to implement designs on a customized FPGA. OpenFPGA provides a general-purpose bitstream generator FPGA-Bitstream for any architecture that can be described by VPR. As the native CAD tool for any customized FPGA that is produced by FPGA-Verilog, FPGA-Bitstream is ready to use once users finalize the XML-based architecture description file. This eliminates the huge engineering efforts spent on developing bitstream generators for customized FPGAs. Using FPGA-Bitstream, users can launch (1) Verilog-to-Bitstream flow, the typical implementation flow for end-users; (2) Verilog-to-Verification flow. OpenFPGA can output Verilog testbenches with self-testing features to validate users' implemetations on their customized FPGA fabrics.
 
-The technical details can be found in our TVLSI'19 paper :cite:`XTang_TVLSI_2019` and FPL'19 paper :cite:`XTang_FPL_2019`.
+The technical details can be found in our papers :cite:`XTang_TVLSI_2019` :cite:`XTang_FPL_2019`.
 
 FPGA-SPICE
 ~~~~~~~~~~
@@ -114,4 +114,4 @@ FPGA-SPICE aims at generating SPICE netlists and testbenches for the FPGA archit
 
 SPICE modeling for FPGA architectures requires detailed transistor-level modeling for all the circuit elements within the considered FPGA architecture. However, current VPR architectural description language :cite:`JLuu_FPGA_2011` does not offer enough transistor-level parameters to model the most common circuit modules, such as multiplexers and LUTs. Therefore, we are developing an extension on the VPR architectural description language to model the transistor-level circuit designs.
 
-The technical details can be found in our ICCD’15 paper :cite:`XTang_ICCD_2015` and TVLSI'19 paper :cite:`XTang_TVLSI_2019`.
+The technical details can be found in our papers :cite:`XTang_ICCD_2015` :cite:`XTang_TVLSI_2019`.
