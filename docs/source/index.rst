@@ -36,7 +36,6 @@ Welcome to OpenFPGA's documentation!
 
    contact
    reference
-   faq
 
 For more information on the VTR see vtr_doc_ or vtr_github_
 
