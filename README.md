@@ -1,5 +1,7 @@
 # Getting Started with OpenFPGA <img src="./docs/source/overview/figures/OpenFPGA_logo.png" width="200" align="right">
-[![linux build](https://github.com/LNIS-Projects/OpenFPGA/workflows/linux_build/badge.svg)](https://github.com/LNIS-Projects/OpenFPGA/actions?query=workflow%3Alinux_build)
+[![Test](https://github.com/lnis-uofu/OpenFPGA/actions/workflows/build.yml/badge.svg)](https://github.com/lnis-uofu/OpenFPGA/actions/workflows/build.yml)
+[![Cell Library Tests](https://github.com/lnis-uofu/OpenFPGA/actions/workflows/cell_lib_test.yml/badge.svg)](https://github.com/lnis-uofu/OpenFPGA/actions/workflows/cell_lib_test.yml)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Documentation Status](https://readthedocs.org/projects/openfpga/badge/?version=master)](https://openfpga.readthedocs.io/en/master/?badge=master)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/lnis-uofu/OpenFPGA/master?urlpath=vscode)
 
@@ -18,76 +20,9 @@ We also recommend potential users check out the summary of [**technical capabili
 
 **A tutorial **video about **how to compile** can be** found [here](https://youtu.be/F9sMRmDewM0)**
 
-Before starting, we strongly recommend you read the required dependencies at [**compilation guidelines**](https://openfpga.readthedocs.io/en/master/tutorials/getting_started/compile/).
+Detailed guidelines are available at [**compilation guidelines**](https://openfpga.readthedocs.io/en/master/tutorials/getting_started/compile/).
+Before starting, we strongly recommend you read the required dependencies and ensure that they are correctly installed.
 It also includes detailed information about the docker image.
-
----
-
-**Compilation Steps:**
-
-```bash
-# Clone the repository and go inside it
-git clone https://github.com/LNIS-Projects/OpenFPGA.git && cd OpenFPGA
-make all
-```
-
----
-
-**Quick Compilation Verification**
-
-To quickly verify the tool is well compiled, the user can run the following command from the OpenFPGA root directory.
-```bash
-source openfpga.sh
-run-task compilation_verification --debug --show_thread_logs
-```
-
-*Python3 and iVerilog v10.1+ are required. GUI will pop up if enabled during compilation.*
-
----
-
-**Supported Operating Systems**
-
-We currently target OpenFPGA for:
- 1. Ubuntu 18.04
- 2. Red Hat 7.5
-
-*The tool was tested with these operating systems. It might work with earlier versions and other distributions.*
-
-## Running with pre-built docker image
-
-```bash
-# To get the docker image from the repository,
-docker pull ghcr.io/lnis-uofu/openfpga-master:latest
-
-# To invoke openfpga_shell
-docker run -it ghcr.io/lnis-uofu/openfpga-master:latest openfpga/openfpga bash
-```
-
-## Backward compatibility with OpenFPGA v1.1
-
-OpenFPGA v1.2 is a major upgrade over v1.1, which upgrades the internal VPR engine.
-The (VPR) architecture files used with v1.1 may not be compatible with v1.2.
-
-You can upgrade your architecture files with script
-
-```bash
-python3 openfpga_flow/scripts/arch_file_updater.py \
-    --input_file ${v1.1_arch_file} \
-    --output_file ${v1.2_compatible_arch_file}
-```
-
-Or, If you want to stay with v1.1, the final build was (tag: [_OpenFPGA:v1.1.541](https://github.com/lnis-uofu/OpenFPGA/tree/v1.1.541
-))
-
-```bash
-https://github.com/lnis-uofu/OpenFPGA/tree/v1.1.541
-```
-
-or you can download the docker image
-
-```bash
-docker pull ghcr.io/lnis-uofu/openfpga-master:v1.1.541
-```
 
 ## Documentation
 
@@ -96,3 +31,7 @@ OpenFPGA's [full documentation](https://openfpga.readthedocs.io/en/master/) incl
 ## Tutorials
 
 You can find a set of [tutorials](https://openfpga.readthedocs.io/en/master/tutorials/), with which you get familiar with the tool and use OpenFPGA for various purposes.
+
+## Backward Compatibility
+
+If you were using an old version of OpenFPGA and are now interested to move to the latest version, please check out the [developer guidelines](https://openfpga.readthedocs.io/en/master/dev_manual/back_compatibile).
