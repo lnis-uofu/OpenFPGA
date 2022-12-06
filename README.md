@@ -9,12 +9,14 @@ Version: see [`VERSION.md`](VERSION.md)
 
 ## Introduction
 
-The award-winning OpenFPGA framework is the **first open-source FPGA IP generator** supporting highly-customizable homogeneous FPGA architectures. OpenFPGA provides complete EDA support for customized FPGAs, including Verilog-to-bitstream generation and self-testing verification. OpenFPGA opens the door to democratizing FPGA technology and EDA techniques with agile prototyping approaches and constantly evolving EDA tools for chip designers and researchers.
+The award-winning OpenFPGA framework is the **first open-source FPGA IP generator with silicon proofs** supporting highly-customizable FPGA architectures. OpenFPGA provides complete EDA support for customized FPGAs, including Verilog-to-bitstream generation and self-testing verification. OpenFPGA opens the door to democratizing FPGA technology and EDA techniques with agile prototyping approaches and constantly evolving EDA tools for chip designers and researchers.
 
 **If this is your first time working with OpenFPGA, we strongly **recommend you watch the** [introduction video about OpenFPGA](https://youtu.be/ocODUGcYGqo)**
 
 A quick overview of OpenFPGA tools can be found [**here**](https://openfpga.readthedocs.io/en/master/tutorials/getting_started/tools/).
 We also recommend potential users check out the summary of [**technical capabilities**](https://openfpga.readthedocs.io/en/master/overview/tech_highlights/#) before compiling.
+
+**Before asking for help, please checkout the** [Frequently Asked Questions](https://github.com/lnis-uofu/OpenFPGA/discussions/937)
 
 ## Compilation
 
@@ -35,3 +37,23 @@ You can find a set of [tutorials](https://openfpga.readthedocs.io/en/master/tuto
 ## Backward Compatibility
 
 If you were using an old version of OpenFPGA and are now interested to move to the latest version, please check out the [developer guidelines](https://openfpga.readthedocs.io/en/master/dev_manual/back_compatibile).
+
+## License
+
+All the codes are under MIT license, with the exception of submodules, e.g., VTR, Yosys and Yosys-plugin, which are distributed under its own (permissive) terms. See their full license for details.
+
+## How to Cite
+
+Please use the following paper as a general citation for OpenFPGA:
+
+X. Tang, E. Giacomin, B. Chauviere, A. Alacchi and P. -E. Gaillardon, "OpenFPGA: An Open-Source Framework for Agile Prototyping Customizable FPGAs," in IEEE Micro, vol. 40, no. 4, pp. 41-48, 1 July-Aug. 2020, doi: 10.1109/MM.2020.2995854.
+
+Bibtex:
+
+```
+@ARTICLE{9098028,  author={Tang, Xifan and Giacomin, Edouard and Chauviere, Baudouin and Alacchi, Aurélien and Gaillardon, Pierre-Emmanuel},  journal={IEEE Micro},   title={OpenFPGA: An Open-Source Framework for Agile Prototyping Customizable FPGAs},   year={2020},  volume={40},  number={4},  pages={41-48},  doi={10.1109/MM.2020.2995854}}
+```
+
+## Contributing to OpenFPGA
+
+Please read the [contributor guidelines](https://openfpga.readthedocs.io/en/master/dev_manual/contributor_guide) if you would like to contribute to OpenFPGA.
