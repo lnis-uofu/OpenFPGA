@@ -9,7 +9,7 @@ Prof. Pierre-Emmanuel Gaillardon
 
 pierre-emmanuel.gaillardon@utah.edu
 
-Technical Details about FPGA-SPICE/Verilog/Bitstream/SDC:
+Technical Details about EDA and Software:
 
 Dr. Xifan Tang
 
