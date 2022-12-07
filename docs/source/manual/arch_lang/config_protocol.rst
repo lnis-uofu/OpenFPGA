@@ -69,14 +69,14 @@ It will use the circuit model defined in :numref:`fig_ccff_config_chain`.
 .. _fig_ccff_fpga:
 
 .. figure:: figures/ccff_fpga.png
-   :scale: 60%
+   :width: 100%
    :alt: map to buried treasure
  
    Example of a configuration chain to program core logic of a FPGA 
 
 
 .. figure:: figures/multi_region_config_chains.png
-   :scale: 100%
+   :width: 100%
    :alt: map to buried treasure
  
    Examples of single- and multiple- region configuration chains
@@ -101,7 +101,7 @@ When the decoder of sub block, e.g., the LUT, is enabled, each memory cells can 
 .. _fig_frame_config_protocol_example:
 
 .. figure:: figures/frame_config_protocol_example.png
-   :scale: 25%
+   :width: 100%
    :alt: map to buried treasure
  
    Example of a frame-based memory organization inside a Logic Element
@@ -111,7 +111,7 @@ When the decoder of sub block, e.g., the LUT, is enabled, each memory cells can 
 .. _fig_frame_config_protocol:
 
 .. figure:: figures/frame_config_protocol.png
-   :scale: 60%
+   :width: 100%
    :alt: map to buried treasure
  
    Frame-based memory organization in a hierarchical view
@@ -141,7 +141,7 @@ Users can customized the number of memory banks to be used across the fabrics. B
 .. _fig_memory_bank:
 
 .. figure:: figures/memory_bank.png
-   :scale: 30%
+   :width: 100%
    :alt: map to buried treasure
  
    Example of (a) a memory organization using memory decoders; (b) single memory bank across the fabric; and (c) multiple memory banks across the fabric.
@@ -181,7 +181,7 @@ The BL and WL protocols can be customized through the XML syntax ``bl`` and ``wl
 .. _fig_memory_bank_decoder_based:
 
 .. figure:: figures/memory_bank_decoder.svg
-   :scale: 30%
+   :width: 100%
    :alt: map to buried treasure
  
    Example of (a) a memory organization using address decoders; (b) single memory bank across the fabric; and (c) multiple memory banks across the fabric.
@@ -190,7 +190,7 @@ The BL and WL protocols can be customized through the XML syntax ``bl`` and ``wl
 .. _fig_memory_bank_flatten:
 
 .. figure:: figures/memory_bank_flatten.svg
-   :scale: 30%
+   :width: 100%
    :alt: map to buried treasure
  
    Example of (a) a memory organization with direct access to BL/WL signals; (b) single memory bank across the fabric; and (c) multiple memory banks across the fabric.
@@ -198,7 +198,7 @@ The BL and WL protocols can be customized through the XML syntax ``bl`` and ``wl
 .. _fig_memory_bank_shift_register:
 
 .. figure:: figures/memory_bank_shift_register.svg
-   :scale: 30%
+   :width: 100%
    :alt: map to buried treasure
  
    Example of (a) a memory organization using shift register chains to control BL/WLs; (b) single memory bank across the fabric; and (c) multiple memory banks across the fabric.
@@ -230,7 +230,7 @@ In the standalone configuration protocol, every memory cell of the core logic of
 .. _fig_vanilla_config_protocol:
 
 .. figure:: figures/vanilla_config_protocol.png
-   :scale: 30%
+   :width: 100%
    :alt: map to buried treasure
  
    Vanilla (standalone) memory organization in a hierarchical view
