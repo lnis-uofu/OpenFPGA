@@ -12,3 +12,5 @@
 
    regression_tests
 
+   tcl_api
+
