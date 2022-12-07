@@ -2,8 +2,15 @@
 .. toctree::
    :maxdepth: 1
 
-   ci_cd_setup/index
-
    version_number
 
+   back_compatible
+
+   contributor_guidelines
+
+   cicd_setup
+
    regression_tests
+
+   tcl_api
+

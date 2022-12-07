@@ -33,11 +33,13 @@ To update the version number, please follow the rules:
 Version updates are made in the following scenario
 
 - When a minor milestone is achieved, the minor revision number can be increased by 1. The following condition is considered as a minor milestone:
+
   - a new feature has been developed.
   - a critical patch has been applied.
   - a sufficient number of small patches has been applied in the past quarter. In other words, the minor revision will be updated by the end of each quarter as long as there are patches.
 
 - When several minor milestones are achieved, the major revision number can be increased by 1. The following condition is considered as a major milestone:
+
   - significant improvements on Quality-of-Results (QoR).
   - significant changes on user interface.
   - a techical feature is developed and validated by the community, which can impact the complete design flow.

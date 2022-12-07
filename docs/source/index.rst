@@ -34,9 +34,7 @@ Welcome to OpenFPGA's documentation!
    :maxdepth: 2
    :caption: Appendix
 
-   contact
-   reference
-   faq
+   appendix/index
 
 For more information on the VTR see vtr_doc_ or vtr_github_
 
