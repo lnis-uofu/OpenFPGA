@@ -220,6 +220,49 @@ jobs:
         run: |
           make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
 
+  ubuntu_support:
+    needs: change_detect
+    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
+    name: ${{ matrix.config.name }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: "Build (Ubuntu 22.04)"
+            cc: gcc-11
+            cxx: g++-11
+    # Define the steps to run the build job
+    env:
+      CC: ${{ matrix.config.cc }}
+      CXX: ${{ matrix.config.cxx }}
+    steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+          
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Install dependencies
+        run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu22p04.sh
+      
+      - name: Dump tool versions
+        run: |
+          cmake --version
+          ${CC} --version
+          ${CXX} --version
+
+      - uses: hendrikmuhs/ccache-action@v1
+
+      - name: Build
+        shell: bash
+        run: |
+          make all BUILD_TYPE=$BUILD_TYPE 
+
   docker_distribution:
     name: Build docker image for distribution
     runs-on: ubuntu-20.04
