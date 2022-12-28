@@ -12,7 +12,7 @@ How to Compile
 Supported Operating Systems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-OpenFPGA is continously tested with Ubuntu 20.04. 
+OpenFPGA is continously tested with Ubuntu 20.04 and partially on Ubuntu 22.04 
 It might work with earlier versions and other distributions.
 
 In addition to continous integration, our community users have tested OpenFPGA on their local machines using the following operating systems:
@@ -21,6 +21,7 @@ In addition to continous integration, our community users have tested OpenFPGA o
 - CentOS 8
 - Ubuntu 18.04
 - Ubuntu 21.04
+- Ubuntu 22.04
 
 Build Steps
 ~~~~~~~~~~~
@@ -84,8 +85,9 @@ The following options are available for a custom build
 
 Dependencies
 ~~~~~~~~~~~~
-Full list of dependencies can be found at install_dependencies_build_.
-In particular, OpenFPGA requires specific versions for the following dependencies:
+
+Dependencies can be installed upon the use of OpenFPGA on different systems
+In general, OpenFPGA requires specific versions for the following dependencies:
 
 :cmake:
   version >3.12 for graphical interface
@@ -93,14 +95,55 @@ In particular, OpenFPGA requires specific versions for the following dependencie
 :iverilog:
   version 10.3+ is required to run Verilog-to-Verification flow
   
-:python dependencies:
-  python packages are also required:
+
+Ubuntu 20.04
+^^^^^^^^^^^^
+
+- Dependencies required to build the code base
+
+.. include:: ubuntu20p04_dependencies.sh
+  :code: shell
+
+- Dependencies required to run regression tests
+
+.. include:: regtest_dependencies.sh
+  :code: shell
+  
+  .. note:: python packages are also required
   
 .. code-block::
 
   python3 -m pip install -r requirements.txt
 
-.. _install_dependencies_build: https://github.com/lnis-uofu/OpenFPGA/blob/master/.github/workflows/install_dependencies_build.sh
+- Dependencies required to build documentation
+
+.. include:: doc_dependencies.sh
+  :code: shell
+
+Ubuntu 22.04
+^^^^^^^^^^^^
+
+- Dependencies required to build the code base
+
+.. include:: ubuntu22p04_dependencies.sh
+  :code: shell
+
+- Dependencies required to run regression tests
+
+.. include:: regtest_dependencies.sh
+  :code: shell
+  
+  .. note:: python packages are also required
+  
+.. code-block::
+
+  python3 -m pip install -r requirements.txt
+
+- Dependencies required to build documentation
+
+.. include:: doc_dependencies.sh
+  :code: shell
+
 
 Running with pre-built docker image
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
