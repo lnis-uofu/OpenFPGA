@@ -109,7 +109,7 @@ Ubuntu 20.04
 .. include:: regtest_dependencies.sh
   :code: shell
   
-  .. note:: python packages are also required
+.. note:: Python packages are also required
   
 .. code-block::
 
@@ -133,7 +133,7 @@ Ubuntu 22.04
 .. include:: regtest_dependencies.sh
   :code: shell
   
-  .. note:: python packages are also required
+.. note:: Python packages are also required
   
 .. code-block::
 
