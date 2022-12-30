@@ -81,6 +81,10 @@ The following options are available for a custom build
 
 .. warning:: By default, only required modules in *Verilog-to-Routing* (VTR) is enabled. On other words, ``abc``, ``odin``, ``yosys`` and other add-ons inside VTR are not built. If you want to enable them, please look into the dedicated options of CMake scripts.  
 
+.. option:: CMAKE_GOALS=<string>
+
+  Specify the build target for CMake system. For example, ``cmake_goals=openfpga`` indicates that only openfpga binary will be compiled. For a detailed list of targets, use ``make list_cmake_targets`` to show. By default, all the build targets will be included. 
+
 .. _tutorial_compile_dependencies:
 
 Dependencies
