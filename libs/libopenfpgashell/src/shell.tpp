@@ -369,7 +369,7 @@ void Shell<T>::run_script_mode(const char* script_file_name,
       if (CMD_EXEC_FATAL_ERROR == status) {
         VTR_LOG("Fatal error occurred!\n");
         /* If in the batch mode, we will exit with errors */ 
-        VTR_LOGV(batch_mode, "OpenFPGA Abort\n");
+        VTR_LOGV(batch_mode, "%s Abort\n", name_.c_str());
         if (batch_mode) {
           exit(CMD_EXEC_FATAL_ERROR);
         }
@@ -461,7 +461,8 @@ void Shell<T>::exit(const int& init_err) const {
   VTR_LOG("\nFinish execution with %d errors\n",
             num_err);
 
-  VTR_LOG("\nThe entire OpenFPGA flow took %g seconds\n",
+  VTR_LOG("\nThe entire %s flow took %g seconds\n",
+          name_.c_str(),
           (double)(std::clock() - time_start_) / (double)CLOCKS_PER_SEC);
 
   VTR_LOG("\nThank you for using %s!\n",
