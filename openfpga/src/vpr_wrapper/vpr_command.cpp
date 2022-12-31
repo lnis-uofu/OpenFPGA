@@ -28,7 +28,7 @@ void add_vpr_commands(openfpga::Shell<OpenfpgaContext>& shell) {
    */
   Command shell_cmd_vpr_stdalone("vpr_standalone");
   ShellCommandId shell_cmd_vpr_stdalone_id = shell.add_command(
-    shell_cmd_vpr,
+    shell_cmd_vpr_stdalone,
     "Start a standalone VPR core engine to pack, place and route a BLIF "
     "design on a FPGA architecture; Note that this command will NOT keep VPR "
     "results!");
