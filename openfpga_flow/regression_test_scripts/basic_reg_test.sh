@@ -8,6 +8,9 @@ PYTHON_EXEC=python3.8
 ##############################################
 echo -e "Basic regression tests";
 
+echo -e "Test multiple runs of vpr"
+run-task basic_tests/vpr_standalone $@
+
 echo -e "Testing configuration chain of a K4N4 FPGA";
 run-task basic_tests/full_testbench/configuration_chain $@
 run-task basic_tests/full_testbench/configuration_chain_no_time_stamp $@
