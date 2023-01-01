@@ -71,6 +71,7 @@ class Shell {
     SHORT,
     BUILTIN,
     MACRO,
+    WRAPPER,
     NUM_EXEC_FUNC_TYPES
   };
 
@@ -154,6 +155,10 @@ class Shell {
   void set_command_execute_function(const ShellCommandId& cmd_id,
                                     std::function<int(int, char**)> exec_func);
 
+  /* Wrapper function, which calls other command thru shell's APIs */
+  void set_command_execute_function(const ShellCommandId& cmd_id,
+                                    std::function<int(Shell<T>&, T&, const Command&, const CommandContext&)> exec_func);
+
   void set_command_dependency(
     const ShellCommandId& cmd_id,
     const std::vector<ShellCommandId>& cmd_dependency);
@@ -181,8 +186,7 @@ class Shell {
   /* Execute a command, the command line is the user's input to launch a command
    * The common_context is the data structure to exchange data between commands
    */
-  int execute_command(const char* cmd_line, T& common_context,
-                      const bool& batch_mode = false);
+  int execute_command(const char* cmd_line, T& common_context);
 
  private: /* Internal data */
   /* Name of the shell, this will appear in the interactive mode */
@@ -236,6 +240,8 @@ class Shell {
     command_builtin_execute_functions_;
   vtr::vector<ShellCommandId, std::function<int(int, char**)>>
     command_macro_execute_functions_;
+  vtr::vector<ShellCommandId, std::function<int(Shell<T>&, T&, const Command&, const CommandContext&)>>
+    command_wrapper_execute_functions_;
 
   /* Type of execute functions for each command.
    * This is supposed to be an internal data ONLY
@@ -260,10 +266,6 @@ class Shell {
 
   /* Timer */
   std::clock_t time_start_;
-
-  /* Constants */
-  std::string COMMAND_NAME_SOURCE_;
-  std::string COMMAND_NAME_EXEC_;
 };
 
 } /* End namespace openfpga */

@@ -29,8 +29,6 @@ template<class T>
 Shell<T>::Shell() {
   name_ = std::string("shell_no_name");
   time_start_ = 0;
-  COMMAND_NAME_SOURCE_ = "source";
-  COMMAND_NAME_EXEC_ = "exec";
 }
 
 /************************************************************************
@@ -119,16 +117,6 @@ void Shell<T>::add_title(const char* title) {
 /* Add a command with it description */
 template<class T>
 ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr) {
-  /* Not allow to add a command whose name conflicts with pre-defined ones */
-  if (cmd.name() == COMMAND_NAME_SOURCE_) {
-    VTR_LOG_WARN("Not allow to overwrite a built-in command: '%s'!\n", COMMAND_NAME_SOURCE_.c_str());
-    return ShellCommandId::INVALID();
-  }
-  if (cmd.name() == COMMAND_NAME_EXEC_) {
-    VTR_LOG_WARN("Not allow to overwrite a built-in command: '%s'!\n", COMMAND_NAME_EXEC_.c_str());
-    return ShellCommandId::INVALID();
-  }
-
   /* Ensure that the name is unique in the command list */
   std::map<std::string, ShellCommandId>::const_iterator name_it = command_name2ids_.find(std::string(cmd.name()));
   if (name_it != command_name2ids_.end()) {
@@ -148,6 +136,7 @@ ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr) {
   command_short_const_execute_functions_.emplace_back();
   command_short_execute_functions_.emplace_back();
   command_builtin_execute_functions_.emplace_back();
+  command_wrapper_execute_functions_.emplace_back();
   command_macro_execute_functions_.emplace_back();
   command_status_.push_back(CMD_EXEC_NONE); /* By default, the command should be marked as fatal error as it has been never executed */
   command_dependencies_.emplace_back();
@@ -217,6 +206,14 @@ void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = MACRO;
   command_macro_execute_functions_[cmd_id] = exec_func;
+}
+
+template<class T>
+void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
+                                            std::function<int(Shell<T>&, T&, const Command&, const CommandContext&)> exec_func) {
+  VTR_ASSERT(true == valid_command_id(cmd_id));
+  command_execute_function_types_[cmd_id] = WRAPPER;
+  command_wrapper_execute_functions_[cmd_id] = exec_func;
 }
 
 template<class T>
@@ -488,34 +485,10 @@ void Shell<T>::exit(const int& init_err) const {
  ***********************************************************************/
 template <class T>
 int Shell<T>::execute_command(const char* cmd_line,
-                               T& common_context,
-                               const bool& batch_mode) {
+                               T& common_context) {
   /* Tokenize the line */
   openfpga::StringToken tokenizer(cmd_line);  
   std::vector<std::string> tokens = tokenizer.split(" ");
-
-  /* "source" command has a higher priority than regular ones*/
-  if (tokens[0] == COMMAND_NAME_SOURCE_) {
-    /* Expect only two tokens, second is the script name */
-    if (2 != tokens.size()) {
-      VTR_LOG("'%s' command only accepts 1 argument!\n", COMMAND_NAME_SOURCE_.c_str());
-      return CMD_EXEC_FATAL_ERROR;
-    }
-    run_script_mode(tokens[1].c_str(), common_context, batch_mode);
-  }
-
-  /* "exec" command has a higher priority than regular ones */
-  if (tokens[0] == COMMAND_NAME_EXEC_) {
-    /* Expect only two tokens, second is the script name */
-    if (2 != tokens.size()) {
-      VTR_LOG("'%s' command only accepts 1 argument!\n", COMMAND_NAME_EXEC_.c_str());
-      return CMD_EXEC_FATAL_ERROR;
-    }
-    StringToken cmd_line_tokenizer(tokens[1]);
-    cmd_line_tokenizer.ltrim(std::string(" "));
-    std::string token_cmd_line = cmd_line_tokenizer.data();
-    execute_command(token_cmd_line.c_str(), common_context, batch_mode);
-  }
 
   /* Find if the command name is valid */
   ShellCommandId cmd_id = command(tokens[0]);
@@ -577,6 +550,9 @@ int Shell<T>::execute_command(const char* cmd_line,
 
   /* Execute the command depending on the type of function ! */ 
   switch (command_execute_function_types_[cmd_id]) {
+  case WRAPPER:
+    command_status_[cmd_id] = command_wrapper_execute_functions_[cmd_id](*this, common_context, commands_[cmd_id], command_contexts_[cmd_id]);
+    break;
   case CONST_STANDARD:
     command_status_[cmd_id] = command_const_execute_functions_[cmd_id](common_context, commands_[cmd_id], command_contexts_[cmd_id]);
     break;
