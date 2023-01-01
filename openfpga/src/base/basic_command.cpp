@@ -114,6 +114,10 @@ void add_basic_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   shell.set_command_execute_function(shell_cmd_version_id,
                                      print_openfpga_version_info);
 
+  /* Add 'source' command which can run a set of commands */
+  add_openfpga_source_command(shell, basic_cmd_class,
+                              std::vector<ShellCommandId>());
+
   /* Note:
    * help MUST be the last to add because the linking to execute function will
    * do a snapshot on the shell
@@ -125,9 +129,6 @@ void add_basic_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   shell.set_command_execute_function(shell_cmd_help_id,
                                      [shell]() { shell.print_commands(); });
 
-  /* Add 'source' command which can run a set of commands */
-  add_openfpga_source_command(shell, basic_cmd_class,
-                              std::vector<ShellCommandId>());
 }
 
 } /* end namespace openfpga */
