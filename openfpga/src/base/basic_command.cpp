@@ -12,7 +12,7 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-static int source_existing_command(Shell<OpenfpgaContext>& shell, OpenfpgaContext& openfpga_ctx, const Command& cmd, const CommandContext& cmd_context) {
+static int source_existing_command(openfpga::Shell<OpenfpgaContext>* shell, OpenfpgaContext& openfpga_ctx, const Command& cmd, const CommandContext& cmd_context) {
   CommandOptionId opt_file = cmd.option("from_file");
   CommandOptionId opt_batch_mode = cmd.option("batch_mode");
   CommandOptionId opt_ss = cmd.option("command_stream");
@@ -24,7 +24,7 @@ static int source_existing_command(Shell<OpenfpgaContext>& shell, OpenfpgaContex
 
   /* If a file is specified, run script mode of the shell, otherwise,  */
   if (is_cmd_file) {
-    shell.run_script_mode(cmd_ss.c_str(), openfpga_ctx, cmd_context.option_enable(cmd, opt_batch_mode));
+    shell->run_script_mode(cmd_ss.c_str(), openfpga_ctx, cmd_context.option_enable(cmd, opt_batch_mode));
   } else {
     /* Split the string with ';' and run each command */
         /* Remove the space at the end of the line
@@ -38,7 +38,7 @@ static int source_existing_command(Shell<OpenfpgaContext>& shell, OpenfpgaContex
       std::string single_cmd_line = cmd_part_tokenizer.data();
 
       if (!single_cmd_line.empty()) {
-        status = shell.execute_command(single_cmd_line.c_str(), openfpga_ctx);
+        status = shell->execute_command(single_cmd_line.c_str(), openfpga_ctx);
 
         /* Check the execution status of the command, 
          * if fatal error happened, we should abort immediately 

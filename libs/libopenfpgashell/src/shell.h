@@ -157,7 +157,7 @@ class Shell {
 
   /* Wrapper function, which calls other command thru shell's APIs */
   void set_command_execute_function(const ShellCommandId& cmd_id,
-                                    std::function<int(Shell<T>&, T&, const Command&, const CommandContext&)> exec_func);
+                                    std::function<int(Shell<T>*, T&, const Command&, const CommandContext&)> exec_func);
 
   void set_command_dependency(
     const ShellCommandId& cmd_id,
@@ -240,7 +240,7 @@ class Shell {
     command_builtin_execute_functions_;
   vtr::vector<ShellCommandId, std::function<int(int, char**)>>
     command_macro_execute_functions_;
-  vtr::vector<ShellCommandId, std::function<int(Shell<T>&, T&, const Command&, const CommandContext&)>>
+  vtr::vector<ShellCommandId, std::function<int(Shell<T>*, T&, const Command&, const CommandContext&)>>
     command_wrapper_execute_functions_;
 
   /* Type of execute functions for each command.

@@ -210,7 +210,7 @@ void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id,
 
 template<class T>
 void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
-                                            std::function<int(Shell<T>&, T&, const Command&, const CommandContext&)> exec_func) {
+                                            std::function<int(Shell<T>*, T&, const Command&, const CommandContext&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
   command_execute_function_types_[cmd_id] = WRAPPER;
   command_wrapper_execute_functions_[cmd_id] = exec_func;
@@ -551,7 +551,7 @@ int Shell<T>::execute_command(const char* cmd_line,
   /* Execute the command depending on the type of function ! */ 
   switch (command_execute_function_types_[cmd_id]) {
   case WRAPPER:
-    command_status_[cmd_id] = command_wrapper_execute_functions_[cmd_id](*this, common_context, commands_[cmd_id], command_contexts_[cmd_id]);
+    command_status_[cmd_id] = command_wrapper_execute_functions_[cmd_id](this, common_context, commands_[cmd_id], command_contexts_[cmd_id]);
     break;
   case CONST_STANDARD:
     command_status_[cmd_id] = command_const_execute_functions_[cmd_id](common_context, commands_[cmd_id], command_contexts_[cmd_id]);
