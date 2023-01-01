@@ -6,13 +6,16 @@
  *******************************************************************/
 #include "basic_command.h"
 
-#include "openfpga_title.h"
 #include "command_exit_codes.h"
+#include "openfpga_title.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
 
-static int source_existing_command(openfpga::Shell<OpenfpgaContext>* shell, OpenfpgaContext& openfpga_ctx, const Command& cmd, const CommandContext& cmd_context) {
+static int source_existing_command(openfpga::Shell<OpenfpgaContext>* shell,
+                                   OpenfpgaContext& openfpga_ctx,
+                                   const Command& cmd,
+                                   const CommandContext& cmd_context) {
   CommandOptionId opt_file = cmd.option("from_file");
   CommandOptionId opt_batch_mode = cmd.option("batch_mode");
   CommandOptionId opt_ss = cmd.option("command_stream");
@@ -24,11 +27,12 @@ static int source_existing_command(openfpga::Shell<OpenfpgaContext>* shell, Open
 
   /* If a file is specified, run script mode of the shell, otherwise,  */
   if (is_cmd_file) {
-    shell->run_script_mode(cmd_ss.c_str(), openfpga_ctx, cmd_context.option_enable(cmd, opt_batch_mode));
+    shell->run_script_mode(cmd_ss.c_str(), openfpga_ctx,
+                           cmd_context.option_enable(cmd, opt_batch_mode));
   } else {
     /* Split the string with ';' and run each command */
-        /* Remove the space at the end of the line
-     * So that we can check easily if there is a continued line in the end  
+    /* Remove the space at the end of the line
+     * So that we can check easily if there is a continued line in the end
      */
     StringToken cmd_ss_tokenizer(cmd_ss);
 
@@ -40,8 +44,8 @@ static int source_existing_command(openfpga::Shell<OpenfpgaContext>* shell, Open
       if (!single_cmd_line.empty()) {
         status = shell->execute_command(single_cmd_line.c_str(), openfpga_ctx);
 
-        /* Check the execution status of the command, 
-         * if fatal error happened, we should abort immediately 
+        /* Check the execution status of the command,
+         * if fatal error happened, we should abort immediately
          */
         if (CMD_EXEC_FATAL_ERROR == status) {
           return CMD_EXEC_FATAL_ERROR;
@@ -49,7 +53,7 @@ static int source_existing_command(openfpga::Shell<OpenfpgaContext>* shell, Open
       }
     }
   }
-  
+
   return CMD_EXEC_SUCCESS;
 }
 
@@ -66,28 +70,30 @@ static ShellCommandId add_openfpga_source_command(
 
   /* Add an option '--command_stream' */
   CommandOptionId opt_cmdstream = shell_cmd.add_option(
-    "command_stream", true, "A string/file stream which contains the commands to be executed");
+    "command_stream", true,
+    "A string/file stream which contains the commands to be executed");
   shell_cmd.set_option_require_value(opt_cmdstream, openfpga::OPT_STRING);
 
   /* Add an option '--from_file' */
-  shell_cmd.add_option("from_file", false, "Specify the command stream comes from a file");
+  shell_cmd.add_option("from_file", false,
+                       "Specify the command stream comes from a file");
 
   /* Add an option '--batch_mode' */
-  shell_cmd.add_option("batch_mode", false, "Enable batch mode when executing the script from a file (not a string)");
+  shell_cmd.add_option(
+    "batch_mode", false,
+    "Enable batch mode when executing the script from a file (not a string)");
 
   /* Add command 'repack' to the Shell */
-  ShellCommandId shell_cmd_id =
-    shell.add_command(shell_cmd, "Source a string of commands or execute a script from a file");
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "Source a string of commands or execute a script from a file");
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id,
-                                     source_existing_command);
+  shell.set_command_execute_function(shell_cmd_id, source_existing_command);
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
 
   return shell_cmd_id;
 }
-
 
 void add_basic_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /* Add a new class of commands */
@@ -122,7 +128,6 @@ void add_basic_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   /* Add 'source' command which can run a set of commands */
   add_openfpga_source_command(shell, basic_cmd_class,
                               std::vector<ShellCommandId>());
-
 }
 
 } /* end namespace openfpga */
