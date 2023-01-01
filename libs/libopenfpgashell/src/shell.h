@@ -262,6 +262,7 @@ class Shell {
 
   /* Constants */
   std::string COMMAND_NAME_SOURCE_;
+  std::string COMMAND_NAME_EXEC_;
 };
 
 } /* End namespace openfpga */

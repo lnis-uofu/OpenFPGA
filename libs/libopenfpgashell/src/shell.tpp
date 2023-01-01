@@ -30,6 +30,7 @@ Shell<T>::Shell() {
   name_ = std::string("shell_no_name");
   time_start_ = 0;
   COMMAND_NAME_SOURCE_ = "source";
+  COMMAND_NAME_EXEC_ = "exec";
 }
 
 /************************************************************************
@@ -118,12 +119,16 @@ void Shell<T>::add_title(const char* title) {
 /* Add a command with it description */
 template<class T>
 ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr) {
-  /* Not allow to add a command whose name conflicts with built-in ones */
+  /* Not allow to add a command whose name conflicts with pre-defined ones */
   if (cmd.name() == COMMAND_NAME_SOURCE_) {
     VTR_LOG_WARN("Not allow to overwrite a built-in command: '%s'!\n", COMMAND_NAME_SOURCE_.c_str());
     return ShellCommandId::INVALID();
   }
-  
+  if (cmd.name() == COMMAND_NAME_EXEC_) {
+    VTR_LOG_WARN("Not allow to overwrite a built-in command: '%s'!\n", COMMAND_NAME_EXEC_.c_str());
+    return ShellCommandId::INVALID();
+  }
+
   /* Ensure that the name is unique in the command list */
   std::map<std::string, ShellCommandId>::const_iterator name_it = command_name2ids_.find(std::string(cmd.name()));
   if (name_it != command_name2ids_.end()) {
@@ -489,14 +494,27 @@ int Shell<T>::execute_command(const char* cmd_line,
   openfpga::StringToken tokenizer(cmd_line);  
   std::vector<std::string> tokens = tokenizer.split(" ");
 
-  /* "source" command has the highest priority */
+  /* "source" command has a higher priority than regular ones*/
   if (tokens[0] == COMMAND_NAME_SOURCE_) {
     /* Expect only two tokens, second is the script name */
     if (2 != tokens.size()) {
-      VTR_LOG("source command only accepts 1 argument!\n");
+      VTR_LOG("'%s' command only accepts 1 argument!\n", COMMAND_NAME_SOURCE_.c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
     run_script_mode(tokens[1].c_str(), common_context, batch_mode);
+  }
+
+  /* "exec" command has a higher priority than regular ones */
+  if (tokens[0] == COMMAND_NAME_EXEC_) {
+    /* Expect only two tokens, second is the script name */
+    if (2 != tokens.size()) {
+      VTR_LOG("'%s' command only accepts 1 argument!\n", COMMAND_NAME_EXEC_.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    StringToken cmd_line_tokenizer(tokens[1]);
+    cmd_line_tokenizer.ltrim(std::string(" "));
+    std::string token_cmd_line = cmd_line_tokenizer.data();
+    execute_command(token_cmd_line.c_str(), common_context, batch_mode);
   }
 
   /* Find if the command name is valid */
