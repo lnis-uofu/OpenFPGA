@@ -29,6 +29,7 @@ template<class T>
 Shell<T>::Shell() {
   name_ = std::string("shell_no_name");
   time_start_ = 0;
+  COMMAND_NAME_SOURCE_ = "source";
 }
 
 /************************************************************************
@@ -117,6 +118,12 @@ void Shell<T>::add_title(const char* title) {
 /* Add a command with it description */
 template<class T>
 ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr) {
+  /* Not allow to add a command whose name conflicts with built-in ones */
+  if (cmd.name() == COMMAND_NAME_SOURCE_) {
+    VTR_LOG_WARN("Not allow to overwrite a built-in command: '%s'!\n", COMMAND_NAME_SOURCE_.c_str());
+    return ShellCommandId::INVALID();
+  }
+  
   /* Ensure that the name is unique in the command list */
   std::map<std::string, ShellCommandId>::const_iterator name_it = command_name2ids_.find(std::string(cmd.name()));
   if (name_it != command_name2ids_.end()) {
@@ -476,10 +483,21 @@ void Shell<T>::exit(const int& init_err) const {
  ***********************************************************************/
 template <class T>
 int Shell<T>::execute_command(const char* cmd_line,
-                               T& common_context) {
+                               T& common_context,
+                               const bool& batch_mode) {
   /* Tokenize the line */
   openfpga::StringToken tokenizer(cmd_line);  
   std::vector<std::string> tokens = tokenizer.split(" ");
+
+  /* "source" command has the highest priority */
+  if (tokens[0] == COMMAND_NAME_SOURCE_) {
+    /* Expect only two tokens, second is the script name */
+    if (2 != tokens.size()) {
+      VTR_LOG("source command only accepts 1 argument!\n");
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    run_script_mode(tokens[1].c_str(), common_context, batch_mode);
+  }
 
   /* Find if the command name is valid */
   ShellCommandId cmd_id = command(tokens[0]);

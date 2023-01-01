@@ -181,7 +181,7 @@ class Shell {
   /* Execute a command, the command line is the user's input to launch a command
    * The common_context is the data structure to exchange data between commands
    */
-  int execute_command(const char* cmd_line, T& common_context);
+  int execute_command(const char* cmd_line, T& common_context, const bool& batch_mode = false);
 
  private: /* Internal data */
   /* Name of the shell, this will appear in the interactive mode */
@@ -259,6 +259,9 @@ class Shell {
 
   /* Timer */
   std::clock_t time_start_;
+
+  /* Constants */
+  std::string COMMAND_NAME_SOURCE_;
 };
 
 } /* End namespace openfpga */
