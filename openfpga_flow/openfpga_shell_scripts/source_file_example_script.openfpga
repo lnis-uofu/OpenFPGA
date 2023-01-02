@@ -13,7 +13,7 @@ read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
 link_openfpga_arch --activity_file ${ACTIVITY_FILE} --sort_gsb_chan_node_in_edges
 
 # Call a file to run a few commands
-source --command_stream ${OPENFPGA_EXTERNAL_SHELL_SCRIPT_DIR}/external_file_for_source_example_script.openfpga --from_file
+source --command_stream ${OPENFPGA_EXTERNAL_SHELL_SCRIPT_DIR}/external_file_for_source_example_script.openfpga --from_file --batch_mode
 
 # Write fabric-dependent bitstream
 write_fabric_bitstream --file fabric_bitstream.bit --format plain_text
