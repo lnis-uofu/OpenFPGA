@@ -22,9 +22,9 @@ source
 
     A string/file stream which contains the commands to be executed. Use quote(``"``) to split between commands. For example,
 
-.. code-block::
+  .. code-block::
 
-   source --command_stream "help;exit;"
+     source --command_stream "help;exit;"
 
   .. option:: --from_file
 
