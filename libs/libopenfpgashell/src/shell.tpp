@@ -487,13 +487,9 @@ template <class T>
 int Shell<T>::execute_command(const char* cmd_line,
                                T& common_context) {
   openfpga::StringToken tokenizer(cmd_line);  
+  tokenizer.add_delim(' ');
   /* Do not split the string in each quote "", as they should be a piece */
-  std::vector<size_t> quote_anchors;
-  size_t quote_found = tokenizer.data().find("\"");
-  while (std::string::npos != quote_found) {
-    quote_anchors.push_back(quote_found);
-    quote_found = tokenizer.data().find("\"", quote_found+1);
-  }
+  std::vector<size_t> quote_anchors = tokenizer.find_positions('\"');
   /* Quote should be not be started with! */
   if (!quote_anchors.empty() && quote_anchors.front() == 0) {
     VTR_LOG("Quotes (\") should NOT be the first charactor in command line: '%s'\n", cmd_line);
@@ -509,21 +505,7 @@ int Shell<T>::execute_command(const char* cmd_line,
   if (quote_anchors.empty()) {
     tokens = tokenizer.split(" ");
   } else {
-    /* There are pairs of quotes, identify the chunk which should be split*/
-    std::vector<std::string> token_chunks = tokenizer.split("\"");
-    for (size_t ichunk = 0; ichunk < token_chunks.size(); ichunk++) {
-      /* Chunk with even index (including the first) is always out of two quote -> Split!
-       * Chunk with odd index is always between two quotes -> Do not split!
-       */
-      if (ichunk % 2 == 0) {
-        openfpga::StringToken chunk_tokenizer(token_chunks[ichunk]);  
-        for (std::string curr_token : chunk_tokenizer.split(" ")) {
-          tokens.push_back(curr_token);
-        }
-      } else {
-        tokens.push_back(token_chunks[ichunk]);
-      }
-    }
+    tokens = tokenizer.split_by_chunks('\"');
   } 
 
   /* Find if the command name is valid */

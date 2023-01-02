@@ -89,6 +89,40 @@ std::vector<std::string> StringToken::split() {
   return split(delims);
 }
 
+std::vector<size_t> StringToken::find_positions(const char& delim) const {
+  std::vector<size_t> anchors;
+  size_t found = data_.find(delim);
+  while (std::string::npos != found) {
+    anchors.push_back(found);
+    found = data_.find(delim, found + 1);
+  }
+  return anchors;
+}
+
+std::vector<std::string> StringToken::split_by_chunks(const char& chunk_delim, const bool& split_odd_chunk) const {
+  size_t chunk_idx_mod = 0;
+  if (split_odd_chunk) {
+    chunk_idx_mod = 1;
+  }
+  std::vector<std::string> tokens; 
+  /* There are pairs of quotes, identify the chunk which should be split*/
+  std::vector<std::string> token_chunks = split(chunk_delim);
+  for (size_t ichunk = 0; ichunk < token_chunks.size(); ichunk++) {
+    /* Chunk with even index (including the first) is always out of two quote -> Split!
+     * Chunk with odd index is always between two quotes -> Do not split!
+     */
+    if (ichunk % 2 == chunk_idx_mod) {
+      StringToken chunk_tokenizer(token_chunks[ichunk]);  
+      for (std::string curr_token : chunk_tokenizer.split()) {
+        tokens.push_back(curr_token);
+      }
+    } else {
+      tokens.push_back(token_chunks[ichunk]);
+    }
+  }
+  return tokens;
+}
+
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
