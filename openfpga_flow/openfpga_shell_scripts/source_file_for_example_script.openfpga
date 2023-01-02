@@ -12,20 +12,7 @@ read_openfpga_simulation_setting -f ${OPENFPGA_SIM_SETTING_FILE}
 # to debug use --verbose options
 link_openfpga_arch --activity_file ${ACTIVITY_FILE} --sort_gsb_chan_node_in_edges
 
-# Use a stream  to run a few commands
-# Check and correct any naming conflicts in the BLIF netlist
-# Apply fix-up to Look-Up Table truth tables based on packing results
-# Build the module graph
-#  - Enabled compression on routing architecture modules
-#  - Enable pin duplication on grid modules
-# Write the fabric hierarchy of module graph to a file
-# This is used by hierarchical PnR flows
-# Repack the netlist to physical pbs
-# This must be done before bitstream generator and testbench generation
-# Strongly recommend it is done after all the fix-up have been applied
-# Build the bitstream
-#  - Output the fabric-independent bitstream to a file
-# Build fabric-dependent bitstream
+# Call a file to run a few commands
 source --command_stream ${OPENFPGA_EXTERNAL_SHELL_SCRIPT_DIR}/external_file_for_source_example_script.openfpga --from_file
 
 # Write fabric-dependent bitstream
