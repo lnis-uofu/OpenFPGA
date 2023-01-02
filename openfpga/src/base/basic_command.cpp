@@ -128,7 +128,6 @@ void add_basic_commands(openfpga::Shell<OpenfpgaContext>& shell) {
   shell.set_command_class(shell_cmd_help_id, basic_cmd_class);
   shell.set_command_execute_function(shell_cmd_help_id,
                                      [shell]() { shell.print_commands(); });
-
 }
 
 } /* end namespace openfpga */
