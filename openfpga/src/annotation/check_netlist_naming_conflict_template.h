@@ -30,8 +30,8 @@ int check_netlist_naming_conflict_template(T& openfpga_context,
     "Check naming violations of netlist blocks and nets");
 
   /* By default, we replace all the illegal characters with '_' */
-  const std::string& sensitive_chars(".,:;\'\"+-<>()[]{}!@#$%^&*~`?/");
-  const std::string& fix_chars("____________________________");
+  std::string sensitive_chars(".,:;\'\"+-<>()[]{}!@#$%^&*~`?/");
+  std::string fix_chars("____________________________");
 
   CommandOptionId opt_fix = cmd.option("fix");
 
