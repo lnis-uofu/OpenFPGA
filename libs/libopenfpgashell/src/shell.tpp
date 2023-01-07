@@ -116,7 +116,7 @@ void Shell<T>::add_title(const char* title) {
 
 /* Add a command with it description */
 template<class T>
-ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr) {
+ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr, const bool& hidden) {
   /* Ensure that the name is unique in the command list */
   std::map<std::string, ShellCommandId>::const_iterator name_it = command_name2ids_.find(std::string(cmd.name()));
   if (name_it != command_name2ids_.end()) {
@@ -126,6 +126,7 @@ ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr) {
   /* This is a legal name. we can create a new id */
   ShellCommandId shell_cmd = ShellCommandId(command_ids_.size());
   command_ids_.push_back(shell_cmd);
+  command_hidden_.push_back(hidden);
   commands_.emplace_back(cmd);
   command_contexts_.push_back(CommandContext(cmd));
   command_description_.push_back(descr);
@@ -136,7 +137,8 @@ ShellCommandId Shell<T>::add_command(const Command& cmd, const char* descr) {
   command_short_const_execute_functions_.emplace_back();
   command_short_execute_functions_.emplace_back();
   command_builtin_execute_functions_.emplace_back();
-  command_wrapper_execute_functions_.emplace_back();
+  command_plugin_execute_functions_.emplace_back();
+  command_floating_execute_functions_.emplace_back();
   command_macro_execute_functions_.emplace_back();
   command_status_.push_back(CMD_EXEC_NONE); /* By default, the command should be marked as fatal error as it has been never executed */
   command_dependencies_.emplace_back();
@@ -212,8 +214,16 @@ template<class T>
 void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
                                             std::function<int(Shell<T>*, T&, const Command&, const CommandContext&)> exec_func) {
   VTR_ASSERT(true == valid_command_id(cmd_id));
-  command_execute_function_types_[cmd_id] = WRAPPER;
-  command_wrapper_execute_functions_[cmd_id] = exec_func;
+  command_execute_function_types_[cmd_id] = PLUGIN;
+  command_plugin_execute_functions_[cmd_id] = exec_func;
+}
+
+template<class T>
+void Shell<T>::set_command_execute_function(const ShellCommandId& cmd_id, 
+                                            std::function<int(const Command&, const CommandContext&)> exec_func) {
+  VTR_ASSERT(true == valid_command_id(cmd_id));
+  command_execute_function_types_[cmd_id] = FLOATING;
+  command_floating_execute_functions_[cmd_id] = exec_func;
 }
 
 template<class T>
@@ -397,16 +407,16 @@ void Shell<T>::run_script_mode(const char* script_file_name,
 }
 
 template <class T>
-void Shell<T>::print_commands() const {
+void Shell<T>::print_commands(const bool& show_hidden) const {
   /* Print the commands by their classes */
   for (const ShellCommandClassId& cmd_class : command_class_ids_) {
     /* Print the class name */
     VTR_LOG("%s:\n", command_class_names_[cmd_class].c_str());
 
     for (const ShellCommandId& cmd : commands_by_classes_[cmd_class]) {
-      /* Print the command names in this class
-       * but limited4 command per line for a clean layout
-       */
+      if (!show_hidden && command_hidden_[cmd]) {
+        continue;
+      }
       VTR_LOG("\t%s\n", commands_[cmd].name().c_str());
     }
 
@@ -568,14 +578,17 @@ int Shell<T>::execute_command(const char* cmd_line,
 
   /* Execute the command depending on the type of function ! */ 
   switch (command_execute_function_types_[cmd_id]) {
-  case WRAPPER:
-    command_status_[cmd_id] = command_wrapper_execute_functions_[cmd_id](this, common_context, commands_[cmd_id], command_contexts_[cmd_id]);
+  case PLUGIN:
+    command_status_[cmd_id] = command_plugin_execute_functions_[cmd_id](this, common_context, commands_[cmd_id], command_contexts_[cmd_id]);
     break;
   case CONST_STANDARD:
     command_status_[cmd_id] = command_const_execute_functions_[cmd_id](common_context, commands_[cmd_id], command_contexts_[cmd_id]);
     break;
   case STANDARD:
     command_status_[cmd_id] = command_standard_execute_functions_[cmd_id](common_context, commands_[cmd_id], command_contexts_[cmd_id]);
+    break;
+  case FLOATING:
+    command_status_[cmd_id] = command_floating_execute_functions_[cmd_id](commands_[cmd_id], command_contexts_[cmd_id]);
     break;
   case CONST_SHORT:
     command_status_[cmd_id] = command_short_const_execute_functions_[cmd_id](common_context);
