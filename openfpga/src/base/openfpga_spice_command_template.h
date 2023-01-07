@@ -68,7 +68,8 @@ ShellCommandId add_write_fabric_spice_command_template(
 }
 
 template <class T>
-void add_spice_command_templates(openfpga::Shell<T>& shell, const bool& hidden = false) {
+void add_spice_command_templates(openfpga::Shell<T>& shell,
+                                 const bool& hidden = false) {
   /* Get the unique id of 'build_fabric' command which is to be used in creating
    * the dependency graph */
   const ShellCommandId& build_fabric_cmd_id =
@@ -85,8 +86,8 @@ void add_spice_command_templates(openfpga::Shell<T>& shell, const bool& hidden =
    * 'build_fabric' */
   std::vector<ShellCommandId> fabric_spice_dependent_cmds;
   fabric_spice_dependent_cmds.push_back(build_fabric_cmd_id);
-  add_write_fabric_spice_command_template<T>(shell, openfpga_spice_cmd_class,
-                                             fabric_spice_dependent_cmds, hidden);
+  add_write_fabric_spice_command_template<T>(
+    shell, openfpga_spice_cmd_class, fabric_spice_dependent_cmds, hidden);
 
   /********************************
    * TODO: Command 'write_spice_top_testbench'

@@ -116,8 +116,8 @@ void add_basic_commands(openfpga::Shell<OpenfpgaContext>& shell) {
 
   /* Add a hidden command: internal_version */
   Command shell_cmd_internal_version("hidden_version");
-  ShellCommandId shell_cmd_internal_version_id =
-    shell.add_command(shell_cmd_internal_version, "Show internal version information", true);
+  ShellCommandId shell_cmd_internal_version_id = shell.add_command(
+    shell_cmd_internal_version, "Show internal version information", true);
   shell.set_command_class(shell_cmd_internal_version_id, basic_cmd_class);
   shell.set_command_execute_function(shell_cmd_internal_version_id,
                                      print_openfpga_version_info);

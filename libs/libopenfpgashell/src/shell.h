@@ -65,14 +65,23 @@ class Shell {
    * Built-in commands have their own execute functions inside the shell
    */
   enum e_exec_func_type {
-    CONST_STANDARD, /* A standard function requires to read data from the command context, need the shell to provide command parsing */
-    STANDARD, /* A standard function requires to write data to the command context, need the shell to provide command parsing */
-    CONST_SHORT, /* A short function requries to read data from the common context without any command-line options */
-    SHORT,    /* A short function requries to write data to the common context without any command-line options */
+    CONST_STANDARD, /* A standard function requires to read data from the
+                       command context, need the shell to provide command
+                       parsing */
+    STANDARD,       /* A standard function requires to write data to the command
+                       context, need the shell to provide command parsing */
+    CONST_SHORT,    /* A short function requries to read data from the common
+                       context without any command-line options */
+    SHORT,    /* A short function requries to write data to the common context
+                 without any command-line options */
     BUILTIN,  /* A built-in function which requires no input arguments at all */
-    FLOATING, /* A floating function which does not need to write/read any data from the common context. Need shell to provide command parsing */
-    MACRO,  /* A black-box function which has its own command-line parser/interface. No need for shell to provide command parsing */
-    PLUGIN, /* A plug-in function which is based on other commands, require shell methods */
+    FLOATING, /* A floating function which does not need to write/read any data
+                 from the common context. Need shell to provide command parsing
+               */
+    MACRO,    /* A black-box function which has its own command-line
+                 parser/interface. No need for shell to provide command parsing */
+    PLUGIN,   /* A plug-in function which is based on other commands, require
+                 shell methods */
     NUM_EXEC_FUNC_TYPES
   };
 
@@ -100,7 +109,8 @@ class Shell {
  public: /* Public mutators */
   void set_name(const char* name);
   void add_title(const char* title);
-  ShellCommandId add_command(const Command& cmd, const char* descr, const bool& hidden = false);
+  ShellCommandId add_command(const Command& cmd, const char* descr,
+                             const bool& hidden = false);
   void set_command_class(const ShellCommandId& cmd_id,
                          const ShellCommandClassId& cmd_class_id);
   /* Link the execute function to a command
@@ -152,7 +162,8 @@ class Shell {
                                     std::function<void()> exec_func);
 
   /* Floating function, including the only commands
-   * This is designed for implementing functions which is totally independent from <T>
+   * This is designed for implementing functions which is totally independent
+   * from <T>
    */
   void set_command_execute_function(
     const ShellCommandId& cmd_id,

@@ -42,8 +42,8 @@ ShellCommandId add_repack_command_template(
   shell_cmd.add_option("verbose", false, "Enable verbose output");
 
   /* Add command 'repack' to the Shell */
-  ShellCommandId shell_cmd_id =
-    shell.add_command(shell_cmd, "Pack physical programmable logic blocks", hidden);
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "Pack physical programmable logic blocks", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id, repack_template<T>);
 
@@ -82,8 +82,8 @@ ShellCommandId add_build_arch_bitstream_command_template(
   shell_cmd.add_option("verbose", false, "Enable verbose output");
 
   /* Add command 'build_architecture_bitstream' to the Shell */
-  ShellCommandId shell_cmd_id =
-    shell.add_command(shell_cmd, "Build fabric-independent bitstream database", hidden);
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "Build fabric-independent bitstream database", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id, fpga_bitstream_template<T>);
 
@@ -154,7 +154,8 @@ ShellCommandId add_build_fabric_bitstream_command_template(
   ShellCommandId shell_cmd_id =
     shell.add_command(shell_cmd,
                       "Reorganize the fabric-independent bitstream for the "
-                      "FPGA fabric created by FPGA-Verilog", hidden);
+                      "FPGA fabric created by FPGA-Verilog",
+                      hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      build_fabric_bitstream_template<T>);
@@ -244,8 +245,8 @@ ShellCommandId add_write_io_mapping_command_template(
   shell_cmd.add_option("verbose", false, "Enable verbose output");
 
   /* Add command 'fabric_bitstream' to the Shell */
-  ShellCommandId shell_cmd_id =
-    shell.add_command(shell_cmd, "Write the I/O mapping information to a file", hidden);
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "Write the I/O mapping information to a file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      write_io_mapping_template<T>);
@@ -260,7 +261,8 @@ ShellCommandId add_write_io_mapping_command_template(
  * Top-level function to add all the commands related to FPGA-Bitstream
  *******************************************************************/
 template <class T>
-void add_bitstream_command_templates(openfpga::Shell<T>& shell, const bool& hidden = false) {
+void add_bitstream_command_templates(openfpga::Shell<T>& shell,
+                                     const bool& hidden = false) {
   /* Get the unique id of 'build_fabric' command which is to be used in creating
    * the dependency graph */
   const ShellCommandId& shell_cmd_build_fabric_id =
@@ -288,7 +290,8 @@ void add_bitstream_command_templates(openfpga::Shell<T>& shell, const bool& hidd
   cmd_dependency_build_arch_bitstream.push_back(shell_cmd_repack_id);
   ShellCommandId shell_cmd_build_arch_bitstream_id =
     add_build_arch_bitstream_command_template(
-      shell, openfpga_bitstream_cmd_class, cmd_dependency_build_arch_bitstream, hidden);
+      shell, openfpga_bitstream_cmd_class, cmd_dependency_build_arch_bitstream,
+      hidden);
 
   /********************************
    * Command 'report_bitstream_distribution'
@@ -324,7 +327,8 @@ void add_bitstream_command_templates(openfpga::Shell<T>& shell, const bool& hidd
   cmd_dependency_write_fabric_bitstream.push_back(
     shell_cmd_build_fabric_bitstream_id);
   add_write_fabric_bitstream_command_template(
-    shell, openfpga_bitstream_cmd_class, cmd_dependency_write_fabric_bitstream, hidden);
+    shell, openfpga_bitstream_cmd_class, cmd_dependency_write_fabric_bitstream,
+    hidden);
 
   /********************************
    * Command 'write_io_mapping'
@@ -334,7 +338,8 @@ void add_bitstream_command_templates(openfpga::Shell<T>& shell, const bool& hidd
   std::vector<ShellCommandId> cmd_dependency_write_io_mapping;
   cmd_dependency_write_io_mapping.push_back(shell_cmd_build_fabric_id);
   add_write_io_mapping_command_template(shell, openfpga_bitstream_cmd_class,
-                                        cmd_dependency_write_io_mapping, hidden);
+                                        cmd_dependency_write_io_mapping,
+                                        hidden);
 }
 
 } /* end namespace openfpga */

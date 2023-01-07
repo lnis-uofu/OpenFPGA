@@ -380,7 +380,8 @@ ShellCommandId add_write_simulation_task_info_command_template(
 
   /* Add command to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
-    shell_cmd, "generate an interchangable simulation task configuration file", hidden);
+    shell_cmd, "generate an interchangable simulation task configuration file",
+    hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      write_simulation_task_info_template<T>);
@@ -392,7 +393,8 @@ ShellCommandId add_write_simulation_task_info_command_template(
 }
 
 template <class T>
-void add_verilog_command_templates(openfpga::Shell<T>& shell, const bool& hidden = false) {
+void add_verilog_command_templates(openfpga::Shell<T>& shell,
+                                   const bool& hidden = false) {
   /* Get the unique id of 'build_fabric' command which is to be used in creating
    * the dependency graph */
   const ShellCommandId& build_fabric_cmd_id =
@@ -430,7 +432,8 @@ void add_verilog_command_templates(openfpga::Shell<T>& shell, const bool& hidden
   std::vector<ShellCommandId> preconfig_wrapper_dependent_cmds;
   preconfig_wrapper_dependent_cmds.push_back(build_fabric_cmd_id);
   add_write_preconfigured_fabric_wrapper_command_template<T>(
-    shell, openfpga_verilog_cmd_class, preconfig_wrapper_dependent_cmds, hidden);
+    shell, openfpga_verilog_cmd_class, preconfig_wrapper_dependent_cmds,
+    hidden);
 
   /********************************
    * Command 'write_preconfigured_testbench'
@@ -440,7 +443,8 @@ void add_verilog_command_templates(openfpga::Shell<T>& shell, const bool& hidden
   std::vector<ShellCommandId> preconfig_testbench_dependent_cmds;
   preconfig_testbench_dependent_cmds.push_back(build_fabric_cmd_id);
   add_write_preconfigured_testbench_command_template<T>(
-    shell, openfpga_verilog_cmd_class, preconfig_testbench_dependent_cmds, hidden);
+    shell, openfpga_verilog_cmd_class, preconfig_testbench_dependent_cmds,
+    hidden);
 
   /********************************
    * Command 'write_simulation_task_info'

@@ -152,7 +152,8 @@ ShellCommandId add_write_configuration_chain_sdc_command_template(
   /* Add command 'write_configuration_chain_sdc' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd,
-    "generate SDC files to constrain the configuration chain for FPGA fabric", hidden);
+    "generate SDC files to constrain the configuration chain for FPGA fabric",
+    hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_const_execute_function(
     shell_cmd_id, write_configuration_chain_sdc_template<T>);
@@ -195,7 +196,8 @@ ShellCommandId add_write_sdc_disable_timing_configure_ports_command_template(
   ShellCommandId shell_cmd_id =
     shell.add_command(shell_cmd,
                       "generate SDC files to disable timing for configure "
-                      "ports across FPGA fabric", hidden);
+                      "ports across FPGA fabric",
+                      hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_const_execute_function(
     shell_cmd_id, write_sdc_disable_timing_configure_ports_template<T>);
@@ -244,7 +246,8 @@ ShellCommandId add_write_analysis_sdc_command_template(
   ShellCommandId shell_cmd_id =
     shell.add_command(shell_cmd,
                       "generate SDC files for timing analysis a PnRed FPGA "
-                      "fabric mapped by a benchmark", hidden);
+                      "fabric mapped by a benchmark",
+                      hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_const_execute_function(shell_cmd_id,
                                            write_analysis_sdc_template<T>);
@@ -256,7 +259,8 @@ ShellCommandId add_write_analysis_sdc_command_template(
 }
 
 template <class T>
-void add_openfpga_sdc_command_templates(openfpga::Shell<T>& shell, const bool& hidden = false) {
+void add_openfpga_sdc_command_templates(openfpga::Shell<T>& shell,
+                                        const bool& hidden = false) {
   /* Get the unique id of 'build_fabric' command which is to be used in creating
    * the dependency graph */
   const ShellCommandId& build_fabric_id =
@@ -302,8 +306,8 @@ void add_openfpga_sdc_command_templates(openfpga::Shell<T>& shell, const bool& h
    * 'build_fabric' */
   std::vector<ShellCommandId> analysis_sdc_cmd_dependency;
   analysis_sdc_cmd_dependency.push_back(build_fabric_id);
-  add_write_analysis_sdc_command_template<T>(shell, openfpga_sdc_cmd_class,
-                                             analysis_sdc_cmd_dependency, hidden);
+  add_write_analysis_sdc_command_template<T>(
+    shell, openfpga_sdc_cmd_class, analysis_sdc_cmd_dependency, hidden);
 }
 
 } /* end namespace openfpga */
