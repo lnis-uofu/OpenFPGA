@@ -4,16 +4,16 @@
 /********************************************************************
  * This file includes functions to compress the hierachy of routing architecture
  *******************************************************************/
-#include "vtr_log.h"
-#include "vtr_time.h"
-#include "command_exit_codes.h"
+#include "build_physical_truth_table.h"
 #include "command.h"
 #include "command_context.h"
-#include "build_physical_truth_table.h"
+#include "command_exit_codes.h"
+#include "globals.h"
 #include "read_xml_repack_design_constraints.h"
 #include "repack.h"
 #include "repack_design_constraints.h"
-#include "globals.h"
+#include "vtr_log.h"
+#include "vtr_time.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -21,9 +21,9 @@ namespace openfpga {
 /********************************************************************
  * A wrapper function to call the fabric_verilog function of FPGA-Verilog
  *******************************************************************/
-template<class T>
+template <class T>
 int repack_template(T& openfpga_ctx, const Command& cmd,
-           const CommandContext& cmd_context) {
+                    const CommandContext& cmd_context) {
   CommandOptionId opt_design_constraints = cmd.option("design_constraints");
   CommandOptionId opt_ignore_global_nets =
     cmd.option("ignore_global_nets_on_pins");

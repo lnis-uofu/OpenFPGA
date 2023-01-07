@@ -4,8 +4,9 @@
  * This is one of the core engine of openfpga, including:
  * - repack : create physical pbs and redo packing
  *******************************************************************/
-#include "openfpga_bitstream_command_template.h"
 #include "openfpga_bitstream_command.h"
+
+#include "openfpga_bitstream_command_template.h"
 
 /* begin namespace openfpga */
 namespace openfpga {

@@ -1,4 +1,5 @@
 #include "openfpga_rr_graph_utils.h"
+
 #include "vtr_log.h"
 
 namespace openfpga {

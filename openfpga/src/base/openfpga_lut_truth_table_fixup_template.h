@@ -4,12 +4,12 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "vtr_time.h"
 #include "command.h"
 #include "command_context.h"
-#include "openfpga_context.h"
 #include "command_exit_codes.h"
+#include "openfpga_context.h"
 #include "openfpga_lut_truth_table_fixup.h"
+#include "vtr_time.h"
 
 /********************************************************************
  * Function declaration
@@ -29,9 +29,9 @@ namespace openfpga {
  *done. This function aims to fix the mess after packing so that the truth table
  * can be synchronized
  *******************************************************************/
-template<class T>
+template <class T>
 int lut_truth_table_fixup_template(T& openfpga_context, const Command& cmd,
-                          const CommandContext& cmd_context) {
+                                   const CommandContext& cmd_context) {
   vtr::ScopedStartFinishTimer timer(
     "Fix up LUT truth tables after packing optimization");
 
@@ -46,7 +46,6 @@ int lut_truth_table_fixup_template(T& openfpga_context, const Command& cmd,
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;
 }
-
 
 } /* end namespace openfpga */
 

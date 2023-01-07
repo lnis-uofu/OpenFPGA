@@ -4,8 +4,9 @@
  * - write_pnr_sdc : generate SDC to constrain the back-end flow for FPGA fabric
  * - write_analysis_sdc: TODO: generate SDC based on users' implementations
  *******************************************************************/
-#include "openfpga_sdc_command_template.h"
 #include "openfpga_sdc_command.h"
+
+#include "openfpga_sdc_command_template.h"
 
 /* begin namespace openfpga */
 namespace openfpga {

@@ -4,6 +4,7 @@
  * - read_openfpga_arch : read OpenFPGA architecture file
  *******************************************************************/
 #include "openfpga_setup_command.h"
+
 #include "openfpga_setup_command_template.h"
 
 /* begin namespace openfpga */

@@ -80,8 +80,8 @@ static std::string fix_name_contain_sensitive_chars(
  * - Iterate over all the nets and see if any net name contain
  *   any sensitive character
  *******************************************************************/
-size_t detect_netlist_naming_conflict(
-  const AtomNetlist& atom_netlist, const std::string& sensitive_chars) {
+size_t detect_netlist_naming_conflict(const AtomNetlist& atom_netlist,
+                                      const std::string& sensitive_chars) {
   size_t num_conflicts = 0;
 
   /* Walk through blocks in the netlist */
@@ -119,9 +119,10 @@ size_t detect_netlist_naming_conflict(
  * - Iterate over all the nets and correct any net name that contains
  *   any sensitive character
  *******************************************************************/
-void fix_netlist_naming_conflict(
-  const AtomNetlist& atom_netlist, const std::string& sensitive_chars,
-  const std::string& fix_chars, VprNetlistAnnotation& vpr_netlist_annotation) {
+void fix_netlist_naming_conflict(const AtomNetlist& atom_netlist,
+                                 const std::string& sensitive_chars,
+                                 const std::string& fix_chars,
+                                 VprNetlistAnnotation& vpr_netlist_annotation) {
   size_t num_fixes = 0;
 
   /* Walk through blocks in the netlist */
@@ -228,6 +229,5 @@ void print_netlist_naming_fix_report(
   /* Close the file stream */
   fp.close();
 }
-
 
 } /* end namespace openfpga */

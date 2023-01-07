@@ -4,11 +4,11 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
+#include "check_netlist_naming_conflict.h"
 #include "command.h"
 #include "command_context.h"
 #include "command_exit_codes.h"
 #include "vtr_time.h"
-#include "check_netlist_naming_conflict.h"
 
 /********************************************************************
  * Function declaration
@@ -22,10 +22,10 @@ namespace openfpga {
  * in the users' BLIF netlist that violates the syntax of OpenFPGA
  * fabric generator, i.e., Verilog generator and SPICE generator
  *******************************************************************/
-template<class T>
+template <class T>
 int check_netlist_naming_conflict_template(T& openfpga_context,
-                                  const Command& cmd,
-                                  const CommandContext& cmd_context) {
+                                           const Command& cmd,
+                                           const CommandContext& cmd_context) {
   vtr::ScopedStartFinishTimer timer(
     "Check naming violations of netlist blocks and nets");
 
@@ -77,7 +77,6 @@ int check_netlist_naming_conflict_template(T& openfpga_context,
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;
 }
-
 
 } /* end namespace openfpga */
 

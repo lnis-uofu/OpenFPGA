@@ -4,16 +4,16 @@
  * This file includes functions to read an OpenFPGA architecture file
  * which are built on the libarchopenfpga library
  *******************************************************************/
-#include "vtr_log.h"
-#include "command_exit_codes.h"
 #include "check_circuit_library.h"
 #include "check_tile_annotation.h"
 #include "circuit_library_utils.h"
-#include "read_xml_openfpga_arch.h"
-#include "write_xml_openfpga_arch.h"
 #include "command.h"
 #include "command_context.h"
+#include "command_exit_codes.h"
 #include "globals.h"
+#include "read_xml_openfpga_arch.h"
+#include "vtr_log.h"
+#include "write_xml_openfpga_arch.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -25,9 +25,9 @@ namespace openfpga {
  * The command will accept an option '--file' which is the architecture
  * file provided by users
  *******************************************************************/
-template<class T>
+template <class T>
 int read_openfpga_arch_template(T& openfpga_context, const Command& cmd,
-              const CommandContext& cmd_context) {
+                                const CommandContext& cmd_context) {
   /* Check the option '--file' is enabled or not
    * Actually, it must be enabled as the shell interface will check
    * before reaching this fuction
@@ -74,9 +74,9 @@ int read_openfpga_arch_template(T& openfpga_context, const Command& cmd,
  * The command will accept an option '--file' which is the architecture
  * file provided by users
  *******************************************************************/
-template<class T>
+template <class T>
 int write_openfpga_arch_template(const T& openfpga_context, const Command& cmd,
-               const CommandContext& cmd_context) {
+                                 const CommandContext& cmd_context) {
   /* Check the option '--file' is enabled or not
    * Actually, it must be enabled as the shell interface will check
    * before reaching this fuction
@@ -101,10 +101,9 @@ int write_openfpga_arch_template(const T& openfpga_context, const Command& cmd,
  * The command will accept an option '--file' which is the simulation setting
  * file provided by users
  *******************************************************************/
-template<class T>
-int read_simulation_setting_template(T& openfpga_context,
-                            const Command& cmd,
-                            const CommandContext& cmd_context) {
+template <class T>
+int read_simulation_setting_template(T& openfpga_context, const Command& cmd,
+                                     const CommandContext& cmd_context) {
   /* Check the option '--file' is enabled or not
    * Actually, it must be enabled as the shell interface will check
    * before reaching this fuction
@@ -130,10 +129,10 @@ int read_simulation_setting_template(T& openfpga_context,
  * The command will accept an option '--file' which is the simulation setting
  * file provided by users
  *******************************************************************/
-template<class T>
+template <class T>
 int write_simulation_setting_template(const T& openfpga_context,
-                             const Command& cmd,
-                             const CommandContext& cmd_context) {
+                                      const Command& cmd,
+                                      const CommandContext& cmd_context) {
   /* Check the option '--file' is enabled or not
    * Actually, it must be enabled as the shell interface will check
    * before reaching this fuction
@@ -160,10 +159,9 @@ int write_simulation_setting_template(const T& openfpga_context,
  * The command will accept an option '--file' which is the bitstream setting
  * file provided by users
  *******************************************************************/
-template<class T>
-int read_bitstream_setting_template(T& openfpga_context,
-                           const Command& cmd,
-                           const CommandContext& cmd_context) {
+template <class T>
+int read_bitstream_setting_template(T& openfpga_context, const Command& cmd,
+                                    const CommandContext& cmd_context) {
   /* Check the option '--file' is enabled or not
    * Actually, it must be enabled as the shell interface will check
    * before reaching this fuction
@@ -189,10 +187,10 @@ int read_bitstream_setting_template(T& openfpga_context,
  * The command will accept an option '--file' which is the simulation setting
  * file provided by users
  *******************************************************************/
-template<class T>
+template <class T>
 int write_bitstream_setting_template(const T& openfpga_context,
-                            const Command& cmd,
-                            const CommandContext& cmd_context) {
+                                     const Command& cmd,
+                                     const CommandContext& cmd_context) {
   /* Check the option '--file' is enabled or not
    * Actually, it must be enabled as the shell interface will check
    * before reaching this fuction

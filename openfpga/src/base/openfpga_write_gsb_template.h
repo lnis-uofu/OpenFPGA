@@ -3,13 +3,13 @@
 /********************************************************************
  * This file includes functions to compress the hierachy of routing architecture
  *******************************************************************/
-#include "vtr_log.h"
-#include "vtr_time.h"
 #include "command.h"
 #include "command_context.h"
 #include "command_exit_codes.h"
-#include "write_xml_device_rr_gsb.h"
 #include "globals.h"
+#include "vtr_log.h"
+#include "vtr_time.h"
+#include "write_xml_device_rr_gsb.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -18,9 +18,9 @@ namespace openfpga {
  * Write internal structrure of all the General Switch Blocks (GSBs)
  * to an XML file
  *******************************************************************/
-template<class T>
+template <class T>
 int write_gsb_template(const T& openfpga_ctx, const Command& cmd,
-              const CommandContext& cmd_context) {
+                       const CommandContext& cmd_context) {
   /* Check the option '--file' is enabled or not
    * Actually, it must be enabled as the shell interface will check
    * before reaching this fuction

@@ -4,12 +4,12 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "vtr_time.h"
-#include "command_exit_codes.h"
 #include "command.h"
 #include "command_context.h"
-#include "openfpga_pb_pin_fixup.h"
+#include "command_exit_codes.h"
 #include "globals.h"
+#include "openfpga_pb_pin_fixup.h"
+#include "vtr_time.h"
 
 /********************************************************************
  * Function declaration
@@ -29,9 +29,9 @@ namespace openfpga {
  * This function aims to fix the mess after routing so that the net mapping
  * can be synchronized
  *******************************************************************/
-template<class T>
+template <class T>
 int pb_pin_fixup_template(T& openfpga_context, const Command& cmd,
-                 const CommandContext& cmd_context) {
+                          const CommandContext& cmd_context) {
   vtr::ScopedStartFinishTimer timer(
     "Fix up pb pin mapping results after routing optimization");
 
@@ -47,7 +47,6 @@ int pb_pin_fixup_template(T& openfpga_context, const Command& cmd,
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;
 }
-
 
 } /* end namespace openfpga */
 
