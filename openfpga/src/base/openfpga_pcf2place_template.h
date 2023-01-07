@@ -24,7 +24,7 @@ namespace openfpga {
  * which VPR can force I/O placement
  *******************************************************************/
 template <class T>
-int pcf2place_wrapper_template(const T& openfpga_context, const Command& cmd,
+int pcf2place_wrapper_template(const Command& cmd,
                                const CommandContext& cmd_context) {
   /* todo: create a factory to produce this in the future*/
   CommandOptionId opt_pcf = cmd.option("pcf");

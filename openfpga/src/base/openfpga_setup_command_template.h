@@ -25,7 +25,7 @@ namespace openfpga {
  *******************************************************************/
 template <class T>
 ShellCommandId add_read_openfpga_arch_command_template(
-  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id) {
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id, const bool& hidden) {
   Command shell_cmd("read_openfpga_arch");
 
   /* Add an option '--file' in short '-f'*/
@@ -36,7 +36,7 @@ ShellCommandId add_read_openfpga_arch_command_template(
 
   /* Add command 'read_openfpga_arch' to the Shell */
   ShellCommandId shell_cmd_id =
-    shell.add_command(shell_cmd, "read OpenFPGA architecture file");
+    shell.add_command(shell_cmd, "read OpenFPGA architecture file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      read_openfpga_arch_template<T>);
@@ -52,7 +52,7 @@ ShellCommandId add_read_openfpga_arch_command_template(
 template <class T>
 ShellCommandId add_write_openfpga_arch_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("write_openfpga_arch");
   /* Add an option '--file' in short '-f'*/
   CommandOptionId opt_file =
@@ -62,7 +62,7 @@ ShellCommandId add_write_openfpga_arch_command_template(
 
   /* Add command 'write_openfpga_arch' to the Shell */
   ShellCommandId shell_cmd_id =
-    shell.add_command(shell_cmd, "write OpenFPGA architecture file");
+    shell.add_command(shell_cmd, "write OpenFPGA architecture file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_const_execute_function(shell_cmd_id,
                                            write_openfpga_arch_template<T>);
@@ -80,7 +80,7 @@ ShellCommandId add_write_openfpga_arch_command_template(
  *******************************************************************/
 template <class T>
 ShellCommandId add_read_simulation_setting_command_template(
-  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id) {
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id, const bool& hidden) {
   Command shell_cmd("read_openfpga_simulation_setting");
 
   /* Add an option '--file' in short '-f'*/
@@ -91,7 +91,7 @@ ShellCommandId add_read_simulation_setting_command_template(
 
   /* Add command 'read_openfpga_arch' to the Shell */
   ShellCommandId shell_cmd_id =
-    shell.add_command(shell_cmd, "read OpenFPGA simulation setting file");
+    shell.add_command(shell_cmd, "read OpenFPGA simulation setting file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      read_simulation_setting_template<T>);
@@ -107,7 +107,7 @@ ShellCommandId add_read_simulation_setting_command_template(
 template <class T>
 ShellCommandId add_write_simulation_setting_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("write_openfpga_simulation_setting");
   /* Add an option '--file' in short '-f'*/
   CommandOptionId opt_file = shell_cmd.add_option(
@@ -117,7 +117,7 @@ ShellCommandId add_write_simulation_setting_command_template(
 
   /* Add command 'write_openfpga_arch' to the Shell */
   ShellCommandId shell_cmd_id =
-    shell.add_command(shell_cmd, "write OpenFPGA simulation setting file");
+    shell.add_command(shell_cmd, "write OpenFPGA simulation setting file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_const_execute_function(
     shell_cmd_id, write_simulation_setting_template<T>);
@@ -135,7 +135,7 @@ ShellCommandId add_write_simulation_setting_command_template(
  *******************************************************************/
 template <class T>
 ShellCommandId add_read_bitstream_setting_command_template(
-  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id) {
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id, const bool& hidden) {
   Command shell_cmd("read_openfpga_bitstream_setting");
 
   /* Add an option '--file' in short '-f'*/
@@ -146,7 +146,7 @@ ShellCommandId add_read_bitstream_setting_command_template(
 
   /* Add command 'read_openfpga_bitstream_setting' to the Shell */
   ShellCommandId shell_cmd_id =
-    shell.add_command(shell_cmd, "read OpenFPGA bitstream setting file");
+    shell.add_command(shell_cmd, "read OpenFPGA bitstream setting file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      read_bitstream_setting_template<T>);
@@ -162,7 +162,7 @@ ShellCommandId add_read_bitstream_setting_command_template(
 template <class T>
 ShellCommandId add_write_bitstream_setting_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("write_openfpga_bitstream_setting");
   /* Add an option '--file' in short '-f'*/
   CommandOptionId opt_file = shell_cmd.add_option(
@@ -172,7 +172,7 @@ ShellCommandId add_write_bitstream_setting_command_template(
 
   /* Add command 'write_openfpga_bitstream_setting' to the Shell */
   ShellCommandId shell_cmd_id =
-    shell.add_command(shell_cmd, "write OpenFPGA bitstream setting file");
+    shell.add_command(shell_cmd, "write OpenFPGA bitstream setting file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_const_execute_function(shell_cmd_id,
                                            write_bitstream_setting_template<T>);
@@ -191,7 +191,7 @@ ShellCommandId add_write_bitstream_setting_command_template(
 template <class T>
 ShellCommandId add_link_arch_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("link_openfpga_arch");
 
   /* Add an option '--activity_file'*/
@@ -209,7 +209,7 @@ ShellCommandId add_link_arch_command_template(
 
   /* Add command 'link_openfpga_arch' to the Shell */
   ShellCommandId shell_cmd_id =
-    shell.add_command(shell_cmd, "Bind OpenFPGA architecture to VPR");
+    shell.add_command(shell_cmd, "Bind OpenFPGA architecture to VPR", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id, link_arch_template<T>);
 
@@ -227,7 +227,7 @@ ShellCommandId add_link_arch_command_template(
 template <class T>
 ShellCommandId add_write_gsb_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("write_gsb_to_xml");
   /* Add an option '--file' in short '-f'*/
   CommandOptionId opt_file = shell_cmd.add_option(
@@ -265,7 +265,7 @@ ShellCommandId add_write_gsb_command_template(
   /* Add command 'write_openfpga_arch' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd,
-    "write internal structures of General Switch Blocks to XML file");
+    "write internal structures of General Switch Blocks to XML file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_const_execute_function(shell_cmd_id, write_gsb_template<T>);
 
@@ -283,7 +283,7 @@ ShellCommandId add_write_gsb_command_template(
 template <class T>
 ShellCommandId add_check_netlist_naming_conflict_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("check_netlist_naming_conflict");
 
   /* Add an option '--fix' */
@@ -298,7 +298,7 @@ ShellCommandId add_check_netlist_naming_conflict_command_template(
   ShellCommandId shell_cmd_id =
     shell.add_command(shell_cmd,
                       "Check any block/net naming in users' BLIF netlist "
-                      "violates the syntax of fabric generator");
+                      "violates the syntax of fabric generator", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      check_netlist_naming_conflict_template<T>);
@@ -317,7 +317,7 @@ ShellCommandId add_check_netlist_naming_conflict_command_template(
 template <class T>
 ShellCommandId add_pb_pin_fixup_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("pb_pin_fixup");
 
   /* Add an option '--verbose' */
@@ -326,7 +326,7 @@ ShellCommandId add_pb_pin_fixup_command_template(
   /* Add command 'pb_pin_fixup' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd,
-    "Fix up the packing results due to pin swapping during routing stage");
+    "Fix up the packing results due to pin swapping during routing stage", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id, pb_pin_fixup_template<T>);
 
@@ -344,7 +344,7 @@ ShellCommandId add_pb_pin_fixup_command_template(
 template <class T>
 ShellCommandId add_lut_truth_table_fixup_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("lut_truth_table_fixup");
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
@@ -353,7 +353,7 @@ ShellCommandId add_lut_truth_table_fixup_command_template(
   ShellCommandId shell_cmd_id =
     shell.add_command(shell_cmd,
                       "Fix up the truth table of Look-Up Tables due to pin "
-                      "swapping during packing stage");
+                      "swapping during packing stage", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      lut_truth_table_fixup_template<T>);
@@ -372,7 +372,7 @@ ShellCommandId add_lut_truth_table_fixup_command_template(
 template <class T>
 ShellCommandId add_build_fabric_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("build_fabric");
 
   /* Add an option '--frame_view' */
@@ -409,7 +409,7 @@ ShellCommandId add_build_fabric_command_template(
 
   /* Add command 'compact_routing_hierarchy' to the Shell */
   ShellCommandId shell_cmd_id =
-    shell.add_command(shell_cmd, "Build the FPGA fabric in a graph of modules");
+    shell.add_command(shell_cmd, "Build the FPGA fabric in a graph of modules", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id, build_fabric_template<T>);
 
@@ -427,7 +427,7 @@ ShellCommandId add_build_fabric_command_template(
 template <class T>
 ShellCommandId add_write_fabric_hierarchy_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("write_fabric_hierarchy");
 
   /* Add an option '--file' */
@@ -447,7 +447,7 @@ ShellCommandId add_write_fabric_hierarchy_command_template(
 
   /* Add command 'write_fabric_hierarchy' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
-    shell_cmd, "Write the hierarchy of FPGA fabric graph to a plain-text file");
+    shell_cmd, "Write the hierarchy of FPGA fabric graph to a plain-text file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_const_execute_function(shell_cmd_id,
                                            write_fabric_hierarchy_template<T>);
@@ -466,7 +466,7 @@ ShellCommandId add_write_fabric_hierarchy_command_template(
 template <class T>
 ShellCommandId add_write_fabric_io_info_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("write_fabric_io_info");
 
   /* Add an option '--file' in short '-f'*/
@@ -486,7 +486,7 @@ ShellCommandId add_write_fabric_io_info_command_template(
   ShellCommandId shell_cmd_id =
     shell.add_command(shell_cmd,
                       "Write the I/O information, e.g., locations and similar "
-                      "attributes, to a file");
+                      "attributes, to a file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      write_fabric_io_info_template<T>);
@@ -504,7 +504,7 @@ ShellCommandId add_write_fabric_io_info_command_template(
  *******************************************************************/
 template <class T>
 ShellCommandId add_pcf2place_command_template(
-  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id) {
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id, const bool& hidden) {
   Command shell_cmd("pcf2place");
 
   /* Add an option '--pcf'*/
@@ -552,7 +552,7 @@ ShellCommandId add_pcf2place_command_template(
 
   /* Add command to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
-    shell_cmd, "Convert user Pin Constraint File (.pcf) to an placement file");
+    shell_cmd, "Convert user Pin Constraint File (.pcf) to an placement file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      pcf2place_wrapper_template<T>);
@@ -561,7 +561,7 @@ ShellCommandId add_pcf2place_command_template(
 }
 
 template <class T>
-void add_setup_command_templates(openfpga::Shell<T>& shell) {
+void add_setup_command_templates(openfpga::Shell<T>& shell, const bool& hidden = false) {
   /* Get the unique id of 'vpr' command which is to be used in creating the
    * dependency graph */
   const ShellCommandId& vpr_cmd_id = shell.command(std::string("vpr"));
@@ -573,13 +573,13 @@ void add_setup_command_templates(openfpga::Shell<T>& shell) {
   /********************************
    * Command 'pcf2place'
    */
-  add_pcf2place_command_template<T>(shell, openfpga_setup_cmd_class);
+  add_pcf2place_command_template<T>(shell, openfpga_setup_cmd_class, hidden);
 
   /********************************
    * Command 'read_openfpga_arch'
    */
   ShellCommandId read_arch_cmd_id =
-    add_read_openfpga_arch_command_template<T>(shell, openfpga_setup_cmd_class);
+    add_read_openfpga_arch_command_template<T>(shell, openfpga_setup_cmd_class, hidden);
 
   /********************************
    * Command 'write_openfpga_arch'
@@ -588,14 +588,14 @@ void add_setup_command_templates(openfpga::Shell<T>& shell) {
    * 'read_openfpga_arch' */
   std::vector<ShellCommandId> write_arch_dependent_cmds(1, read_arch_cmd_id);
   add_write_openfpga_arch_command_template<T>(shell, openfpga_setup_cmd_class,
-                                              write_arch_dependent_cmds);
+                                              write_arch_dependent_cmds, hidden);
 
   /********************************
    * Command 'read_openfpga_simulation_setting'
    */
   ShellCommandId read_sim_setting_cmd_id =
     add_read_simulation_setting_command_template<T>(shell,
-                                                    openfpga_setup_cmd_class);
+                                                    openfpga_setup_cmd_class, hidden);
 
   /********************************
    * Command 'write_openfpga_simulation_setting'
@@ -605,14 +605,14 @@ void add_setup_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> write_sim_setting_dependent_cmds(
     1, read_sim_setting_cmd_id);
   add_write_simulation_setting_command_template<T>(
-    shell, openfpga_setup_cmd_class, write_sim_setting_dependent_cmds);
+    shell, openfpga_setup_cmd_class, write_sim_setting_dependent_cmds, hidden);
 
   /********************************
    * Command 'read_openfpga_bitstream_setting'
    */
   ShellCommandId read_bitstream_setting_cmd_id =
     add_read_bitstream_setting_command_template<T>(shell,
-                                                   openfpga_setup_cmd_class);
+                                                   openfpga_setup_cmd_class, hidden);
 
   /********************************
    * Command 'write_openfpga_bitstream_setting'
@@ -622,7 +622,7 @@ void add_setup_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> write_bitstream_setting_dependent_cmds(
     1, read_bitstream_setting_cmd_id);
   add_write_bitstream_setting_command_template<T>(
-    shell, openfpga_setup_cmd_class, write_bitstream_setting_dependent_cmds);
+    shell, openfpga_setup_cmd_class, write_bitstream_setting_dependent_cmds, hidden);
 
   /********************************
    * Command 'link_openfpga_arch'
@@ -635,7 +635,7 @@ void add_setup_command_templates(openfpga::Shell<T>& shell) {
   link_arch_dependent_cmds.push_back(read_sim_setting_cmd_id);
   link_arch_dependent_cmds.push_back(vpr_cmd_id);
   ShellCommandId link_arch_cmd_id = add_link_arch_command_template<T>(
-    shell, openfpga_setup_cmd_class, link_arch_dependent_cmds);
+    shell, openfpga_setup_cmd_class, link_arch_dependent_cmds, hidden);
 
   /********************************
    * Command 'write_gsb'
@@ -645,7 +645,7 @@ void add_setup_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> write_gsb_dependent_cmds;
   write_gsb_dependent_cmds.push_back(link_arch_cmd_id);
   add_write_gsb_command_template<T>(shell, openfpga_setup_cmd_class,
-                                    write_gsb_dependent_cmds);
+                                    write_gsb_dependent_cmds, hidden);
 
   /*******************************************
    * Command 'check_netlist_naming_conflict'
@@ -655,7 +655,7 @@ void add_setup_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> nlist_naming_dependent_cmds;
   nlist_naming_dependent_cmds.push_back(vpr_cmd_id);
   add_check_netlist_naming_conflict_command_template<T>(
-    shell, openfpga_setup_cmd_class, nlist_naming_dependent_cmds);
+    shell, openfpga_setup_cmd_class, nlist_naming_dependent_cmds, hidden);
 
   /********************************
    * Command 'pb_pin_fixup'
@@ -666,7 +666,7 @@ void add_setup_command_templates(openfpga::Shell<T>& shell) {
   pb_pin_fixup_dependent_cmds.push_back(read_arch_cmd_id);
   pb_pin_fixup_dependent_cmds.push_back(vpr_cmd_id);
   add_pb_pin_fixup_command_template<T>(shell, openfpga_setup_cmd_class,
-                                       pb_pin_fixup_dependent_cmds);
+                                       pb_pin_fixup_dependent_cmds, hidden);
 
   /********************************
    * Command 'lut_truth_table_fixup'
@@ -677,7 +677,7 @@ void add_setup_command_templates(openfpga::Shell<T>& shell) {
   lut_tt_fixup_dependent_cmds.push_back(read_arch_cmd_id);
   lut_tt_fixup_dependent_cmds.push_back(vpr_cmd_id);
   add_lut_truth_table_fixup_command_template<T>(shell, openfpga_setup_cmd_class,
-                                                lut_tt_fixup_dependent_cmds);
+                                                lut_tt_fixup_dependent_cmds, hidden);
   /********************************
    * Command 'build_fabric'
    */
@@ -686,7 +686,7 @@ void add_setup_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> build_fabric_dependent_cmds;
   build_fabric_dependent_cmds.push_back(link_arch_cmd_id);
   ShellCommandId build_fabric_cmd_id = add_build_fabric_command_template<T>(
-    shell, openfpga_setup_cmd_class, build_fabric_dependent_cmds);
+    shell, openfpga_setup_cmd_class, build_fabric_dependent_cmds, hidden);
 
   /********************************
    * Command 'write_fabric_hierarchy'
@@ -696,7 +696,7 @@ void add_setup_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> write_fabric_hie_dependent_cmds;
   write_fabric_hie_dependent_cmds.push_back(build_fabric_cmd_id);
   add_write_fabric_hierarchy_command_template<T>(
-    shell, openfpga_setup_cmd_class, write_fabric_hie_dependent_cmds);
+    shell, openfpga_setup_cmd_class, write_fabric_hie_dependent_cmds, hidden);
 
   /********************************
    * Command 'write_fabric_io_info'
@@ -706,7 +706,7 @@ void add_setup_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> cmd_dependency_write_fabric_io_info;
   cmd_dependency_write_fabric_io_info.push_back(build_fabric_cmd_id);
   add_write_fabric_io_info_command_template<T>(
-    shell, openfpga_setup_cmd_class, cmd_dependency_write_fabric_io_info);
+    shell, openfpga_setup_cmd_class, cmd_dependency_write_fabric_io_info, hidden);
 }
 
 } /* end namespace openfpga */
