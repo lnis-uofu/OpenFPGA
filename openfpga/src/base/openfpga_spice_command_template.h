@@ -24,8 +24,8 @@
  * - TODO: generate_spice_sb_routing_testbench : generate SPICE testbenches for
  *routing circuit inside switch blocks
  *******************************************************************/
-#include "shell.h"
 #include "openfpga_spice_template.h"
+#include "shell.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -37,8 +37,7 @@ namespace openfpga {
  *******************************************************************/
 template <class T>
 ShellCommandId add_write_fabric_spice_command_template(
-  openfpga::Shell<T>& shell,
-  const ShellCommandClassId& cmd_class_id,
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
   const std::vector<ShellCommandId>& dependent_cmds) {
   Command shell_cmd("write_fabric_spice");
 
@@ -59,7 +58,8 @@ ShellCommandId add_write_fabric_spice_command_template(
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd, "generate SPICE netlists modeling full FPGA fabric");
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id, write_fabric_spice_template<T>);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     write_fabric_spice_template<T>);
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
@@ -86,7 +86,7 @@ void add_spice_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> fabric_spice_dependent_cmds;
   fabric_spice_dependent_cmds.push_back(build_fabric_cmd_id);
   add_write_fabric_spice_command_template<T>(shell, openfpga_spice_cmd_class,
-                                          fabric_spice_dependent_cmds);
+                                             fabric_spice_dependent_cmds);
 
   /********************************
    * TODO: Command 'write_spice_top_testbench'

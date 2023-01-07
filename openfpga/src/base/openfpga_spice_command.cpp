@@ -1,5 +1,6 @@
-#include "openfpga_spice_command_template.h"
 #include "openfpga_spice_command.h"
+
+#include "openfpga_spice_command_template.h"
 
 /* begin namespace openfpga */
 namespace openfpga {

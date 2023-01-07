@@ -1,13 +1,13 @@
 #ifndef OPENFPGA_SPICE_TEMPLATE_H
 #define OPENFPGA_SPICE_TEMPLATE_H
 
-#include "vtr_log.h"
-#include "vtr_time.h"
-#include "command_exit_codes.h"
-#include "spice_api.h"
 #include "command.h"
 #include "command_context.h"
+#include "command_exit_codes.h"
 #include "globals.h"
+#include "spice_api.h"
+#include "vtr_log.h"
+#include "vtr_time.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
