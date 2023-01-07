@@ -1,16 +1,14 @@
+#ifndef OPENFPGA_WRITE_GSB_TEMPLATE_H
+#define OPENFPGA_WRITE_GSB_TEMPLATE_H
 /********************************************************************
  * This file includes functions to compress the hierachy of routing architecture
  *******************************************************************/
-/* Headers from vtrutil library */
 #include "vtr_log.h"
 #include "vtr_time.h"
-
-/* Headers from openfpgashell library */
+#include "command.h"
+#include "command_context.h"
 #include "command_exit_codes.h"
-#include "openfpga_write_gsb.h"
 #include "write_xml_device_rr_gsb.h"
-
-/* Include global variables of VPR */
 #include "globals.h"
 
 /* begin namespace openfpga */
@@ -20,7 +18,8 @@ namespace openfpga {
  * Write internal structrure of all the General Switch Blocks (GSBs)
  * to an XML file
  *******************************************************************/
-int write_gsb(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
+template<class T>
+int write_gsb_template(const T& openfpga_ctx, const Command& cmd,
               const CommandContext& cmd_context) {
   /* Check the option '--file' is enabled or not
    * Actually, it must be enabled as the shell interface will check
@@ -60,3 +59,5 @@ int write_gsb(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
 }
 
 } /* end namespace openfpga */
+
+#endif

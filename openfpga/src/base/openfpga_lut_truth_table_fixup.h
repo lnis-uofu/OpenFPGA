@@ -15,8 +15,9 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-int lut_truth_table_fixup(OpenfpgaContext& openfpga_context, const Command& cmd,
-                          const CommandContext& cmd_context);
+void update_lut_tt_with_post_packing_results(
+  const AtomContext& atom_ctx, const ClusteringContext& clustering_ctx,
+  VprClusteringAnnotation& vpr_clustering_annotation, const bool& verbose);
 
 } /* end namespace openfpga */
 
