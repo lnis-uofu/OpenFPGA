@@ -1,16 +1,12 @@
-/********************************************************************
- * This file includes functions to compress the hierachy of routing architecture
- *******************************************************************/
-/* Headers from vtrutil library */
+#ifndef OPENFPGA_SPICE_TEMPLATE_H
+#define OPENFPGA_SPICE_TEMPLATE_H
+
 #include "vtr_log.h"
 #include "vtr_time.h"
-
-/* Headers from openfpgashell library */
 #include "command_exit_codes.h"
-#include "openfpga_spice.h"
 #include "spice_api.h"
-
-/* Include global variables of VPR */
+#include "command.h"
+#include "command_context.h"
 #include "globals.h"
 
 /* begin namespace openfpga */
@@ -19,8 +15,9 @@ namespace openfpga {
 /********************************************************************
  * A wrapper function to call the fabric SPICE generator of FPGA-SPICE
  *******************************************************************/
-int write_fabric_spice(OpenfpgaContext& openfpga_ctx, const Command& cmd,
-                       const CommandContext& cmd_context) {
+template <class T>
+int write_fabric_spice_template(T& openfpga_ctx, const Command& cmd,
+                                const CommandContext& cmd_context) {
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_explicit_port_mapping =
     cmd.option("explicit_port_mapping");
@@ -47,3 +44,5 @@ int write_fabric_spice(OpenfpgaContext& openfpga_ctx, const Command& cmd,
 }
 
 } /* end namespace openfpga */
+
+#endif
