@@ -1,21 +1,18 @@
+#ifndef OPENFPGA_REPACK_TEMPLATE_H
+#define OPENFPGA_REPACK_TEMPLATE_H
+
 /********************************************************************
  * This file includes functions to compress the hierachy of routing architecture
  *******************************************************************/
-/* Headers from vtrutil library */
 #include "vtr_log.h"
 #include "vtr_time.h"
-
-/* Headers from openfpgashell library */
 #include "command_exit_codes.h"
-
-/* Headers from librepackdc library */
+#include "command.h"
+#include "command_context.h"
 #include "build_physical_truth_table.h"
-#include "openfpga_repack.h"
 #include "read_xml_repack_design_constraints.h"
 #include "repack.h"
 #include "repack_design_constraints.h"
-
-/* Include global variables of VPR */
 #include "globals.h"
 
 /* begin namespace openfpga */
@@ -24,7 +21,8 @@ namespace openfpga {
 /********************************************************************
  * A wrapper function to call the fabric_verilog function of FPGA-Verilog
  *******************************************************************/
-int repack(OpenfpgaContext& openfpga_ctx, const Command& cmd,
+template<class T>
+int repack_template(T& openfpga_ctx, const Command& cmd,
            const CommandContext& cmd_context) {
   CommandOptionId opt_design_constraints = cmd.option("design_constraints");
   CommandOptionId opt_ignore_global_nets =
@@ -70,3 +68,5 @@ int repack(OpenfpgaContext& openfpga_ctx, const Command& cmd,
 }
 
 } /* end namespace openfpga */
+
+#endif

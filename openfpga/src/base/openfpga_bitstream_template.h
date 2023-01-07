@@ -1,22 +1,19 @@
+#ifndef OPENFPGA_BITSTREAM_TEMPLATE_H
+#define OPENFPGA_BITSTREAM_TEMPLATE_H
+
 /********************************************************************
  * This file includes functions to build bitstream database
  *******************************************************************/
-/* Headers from vtrutil library */
 #include "vtr_log.h"
 #include "vtr_time.h"
-
-/* Headers from openfpgashell library */
 #include "command_exit_codes.h"
-
-/* Headers from openfpgautil library */
+#include "command.h"
+#include "command_context.h"
 #include "openfpga_digest.h"
 #include "openfpga_reserved_words.h"
-
-/* Headers from fpgabitstream library */
 #include "build_device_bitstream.h"
 #include "build_fabric_bitstream.h"
 #include "build_io_mapping_info.h"
-#include "openfpga_bitstream.h"
 #include "openfpga_naming.h"
 #include "read_xml_arch_bitstream.h"
 #include "report_bitstream_distribution.h"
@@ -24,8 +21,6 @@
 #include "write_xml_arch_bitstream.h"
 #include "write_xml_fabric_bitstream.h"
 #include "write_xml_io_mapping.h"
-
-/* Include global variables of VPR */
 #include "globals.h"
 
 /* begin namespace openfpga */
@@ -34,7 +29,8 @@ namespace openfpga {
 /********************************************************************
  * A wrapper function to call the build_device_bitstream() in FPGA bitstream
  *******************************************************************/
-int fpga_bitstream(OpenfpgaContext& openfpga_ctx, const Command& cmd,
+template<class T>
+int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
                    const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
@@ -69,7 +65,8 @@ int fpga_bitstream(OpenfpgaContext& openfpga_ctx, const Command& cmd,
 /********************************************************************
  * A wrapper function to call the build_fabric_bitstream() in FPGA bitstream
  *******************************************************************/
-int build_fabric_bitstream(OpenfpgaContext& openfpga_ctx, const Command& cmd,
+template<class T>
+int build_fabric_bitstream_template(T& openfpga_ctx, const Command& cmd,
                            const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
 
@@ -86,7 +83,8 @@ int build_fabric_bitstream(OpenfpgaContext& openfpga_ctx, const Command& cmd,
 /********************************************************************
  * A wrapper function to call the write_fabric_bitstream() in FPGA bitstream
  *******************************************************************/
-int write_fabric_bitstream(const OpenfpgaContext& openfpga_ctx,
+template<class T>
+int write_fabric_bitstream_template(const T& openfpga_ctx,
                            const Command& cmd,
                            const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
@@ -140,7 +138,8 @@ int write_fabric_bitstream(const OpenfpgaContext& openfpga_ctx,
 /********************************************************************
  * A wrapper function to call the write_io_mapping() in FPGA bitstream
  *******************************************************************/
-int write_io_mapping(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
+template<class T>
+int write_io_mapping_template(const T& openfpga_ctx, const Command& cmd,
                      const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
@@ -187,7 +186,8 @@ int write_io_mapping(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
  * A wrapper function to call the report_arch_bitstream_distribution() in FPGA
  *bitstream
  *******************************************************************/
-int report_bitstream_distribution(const OpenfpgaContext& openfpga_ctx,
+template<class T>
+int report_bitstream_distribution_template(const T& openfpga_ctx,
                                   const Command& cmd,
                                   const CommandContext& cmd_context) {
   CommandOptionId opt_file = cmd.option("file");
@@ -225,3 +225,5 @@ int report_bitstream_distribution(const OpenfpgaContext& openfpga_ctx,
 }
 
 } /* end namespace openfpga */
+
+#endif
