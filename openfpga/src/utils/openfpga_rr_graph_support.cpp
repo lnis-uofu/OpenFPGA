@@ -1,4 +1,4 @@
-#include "openfpga_rr_graph_utils.h"
+#include "openfpga_rr_graph_support.h"
 
 #include "vtr_log.h"
 

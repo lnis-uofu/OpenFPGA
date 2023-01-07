@@ -1,5 +1,5 @@
-#ifndef OPENFPGA_RR_GRAPH_UTILS_H
-#define OPENFPGA_RR_GRAPH_UTILS_H
+#ifndef OPENFPGA_RR_GRAPH_SUPPORT_H
+#define OPENFPGA_RR_GRAPH_SUPPORT_H
 
 #include "rr_graph_view.h"
 
