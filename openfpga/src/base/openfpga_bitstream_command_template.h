@@ -21,7 +21,7 @@ namespace openfpga {
 template <class T>
 ShellCommandId add_repack_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("repack");
 
   /* Add an option '--design_constraints' */
@@ -43,7 +43,7 @@ ShellCommandId add_repack_command_template(
 
   /* Add command 'repack' to the Shell */
   ShellCommandId shell_cmd_id =
-    shell.add_command(shell_cmd, "Pack physical programmable logic blocks");
+    shell.add_command(shell_cmd, "Pack physical programmable logic blocks", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id, repack_template<T>);
 
@@ -61,7 +61,7 @@ ShellCommandId add_repack_command_template(
 template <class T>
 ShellCommandId add_build_arch_bitstream_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("build_architecture_bitstream");
 
   /* Add an option '--write_file' */
@@ -83,7 +83,7 @@ ShellCommandId add_build_arch_bitstream_command_template(
 
   /* Add command 'build_architecture_bitstream' to the Shell */
   ShellCommandId shell_cmd_id =
-    shell.add_command(shell_cmd, "Build fabric-independent bitstream database");
+    shell.add_command(shell_cmd, "Build fabric-independent bitstream database", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id, fpga_bitstream_template<T>);
 
@@ -101,7 +101,7 @@ ShellCommandId add_build_arch_bitstream_command_template(
 template <class T>
 ShellCommandId add_report_bitstream_distribution_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("report_bitstream_distribution");
 
   /* Add an option '--file' */
@@ -125,7 +125,7 @@ ShellCommandId add_report_bitstream_distribution_command_template(
 
   /* Add command 'report_bitstream_distribution' to the Shell */
   ShellCommandId shell_cmd_id =
-    shell.add_command(shell_cmd, "Report bitstream distribution");
+    shell.add_command(shell_cmd, "Report bitstream distribution", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      report_bitstream_distribution_template<T>);
@@ -144,7 +144,7 @@ ShellCommandId add_report_bitstream_distribution_command_template(
 template <class T>
 ShellCommandId add_build_fabric_bitstream_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("build_fabric_bitstream");
 
   /* Add an option '--verbose' */
@@ -154,7 +154,7 @@ ShellCommandId add_build_fabric_bitstream_command_template(
   ShellCommandId shell_cmd_id =
     shell.add_command(shell_cmd,
                       "Reorganize the fabric-independent bitstream for the "
-                      "FPGA fabric created by FPGA-Verilog");
+                      "FPGA fabric created by FPGA-Verilog", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      build_fabric_bitstream_template<T>);
@@ -173,7 +173,7 @@ ShellCommandId add_build_fabric_bitstream_command_template(
 template <class T>
 ShellCommandId add_write_fabric_bitstream_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("write_fabric_bitstream");
 
   /* Add an option '--file' in short '-f'*/
@@ -208,7 +208,7 @@ ShellCommandId add_write_fabric_bitstream_command_template(
 
   /* Add command 'fabric_bitstream' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
-    shell_cmd, "Write the fabric-dependent bitstream to a file");
+    shell_cmd, "Write the fabric-dependent bitstream to a file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      write_fabric_bitstream_template<T>);
@@ -227,7 +227,7 @@ ShellCommandId add_write_fabric_bitstream_command_template(
 template <class T>
 ShellCommandId add_write_io_mapping_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("write_io_mapping");
 
   /* Add an option '--file' in short '-f'*/
@@ -245,7 +245,7 @@ ShellCommandId add_write_io_mapping_command_template(
 
   /* Add command 'fabric_bitstream' to the Shell */
   ShellCommandId shell_cmd_id =
-    shell.add_command(shell_cmd, "Write the I/O mapping information to a file");
+    shell.add_command(shell_cmd, "Write the I/O mapping information to a file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      write_io_mapping_template<T>);
@@ -260,7 +260,7 @@ ShellCommandId add_write_io_mapping_command_template(
  * Top-level function to add all the commands related to FPGA-Bitstream
  *******************************************************************/
 template <class T>
-void add_bitstream_command_templates(openfpga::Shell<T>& shell) {
+void add_bitstream_command_templates(openfpga::Shell<T>& shell, const bool& hidden = false) {
   /* Get the unique id of 'build_fabric' command which is to be used in creating
    * the dependency graph */
   const ShellCommandId& shell_cmd_build_fabric_id =
@@ -277,7 +277,7 @@ void add_bitstream_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> cmd_dependency_repack;
   cmd_dependency_repack.push_back(shell_cmd_build_fabric_id);
   ShellCommandId shell_cmd_repack_id = add_repack_command_template(
-    shell, openfpga_bitstream_cmd_class, cmd_dependency_repack);
+    shell, openfpga_bitstream_cmd_class, cmd_dependency_repack, hidden);
 
   /********************************
    * Command 'build_architecture_bitstream'
@@ -288,7 +288,7 @@ void add_bitstream_command_templates(openfpga::Shell<T>& shell) {
   cmd_dependency_build_arch_bitstream.push_back(shell_cmd_repack_id);
   ShellCommandId shell_cmd_build_arch_bitstream_id =
     add_build_arch_bitstream_command_template(
-      shell, openfpga_bitstream_cmd_class, cmd_dependency_build_arch_bitstream);
+      shell, openfpga_bitstream_cmd_class, cmd_dependency_build_arch_bitstream, hidden);
 
   /********************************
    * Command 'report_bitstream_distribution'
@@ -300,7 +300,7 @@ void add_bitstream_command_templates(openfpga::Shell<T>& shell) {
     shell_cmd_build_arch_bitstream_id);
   add_report_bitstream_distribution_command_template(
     shell, openfpga_bitstream_cmd_class,
-    cmd_dependency_report_bitstream_distribution);
+    cmd_dependency_report_bitstream_distribution, hidden);
 
   /********************************
    * Command 'build_fabric_bitstream'
@@ -313,7 +313,7 @@ void add_bitstream_command_templates(openfpga::Shell<T>& shell) {
   ShellCommandId shell_cmd_build_fabric_bitstream_id =
     add_build_fabric_bitstream_command_template(
       shell, openfpga_bitstream_cmd_class,
-      cmd_dependency_build_fabric_bitstream);
+      cmd_dependency_build_fabric_bitstream, hidden);
 
   /********************************
    * Command 'write_fabric_bitstream'
@@ -324,7 +324,7 @@ void add_bitstream_command_templates(openfpga::Shell<T>& shell) {
   cmd_dependency_write_fabric_bitstream.push_back(
     shell_cmd_build_fabric_bitstream_id);
   add_write_fabric_bitstream_command_template(
-    shell, openfpga_bitstream_cmd_class, cmd_dependency_write_fabric_bitstream);
+    shell, openfpga_bitstream_cmd_class, cmd_dependency_write_fabric_bitstream, hidden);
 
   /********************************
    * Command 'write_io_mapping'
@@ -334,7 +334,7 @@ void add_bitstream_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> cmd_dependency_write_io_mapping;
   cmd_dependency_write_io_mapping.push_back(shell_cmd_build_fabric_id);
   add_write_io_mapping_command_template(shell, openfpga_bitstream_cmd_class,
-                                        cmd_dependency_write_io_mapping);
+                                        cmd_dependency_write_io_mapping, hidden);
 }
 
 } /* end namespace openfpga */

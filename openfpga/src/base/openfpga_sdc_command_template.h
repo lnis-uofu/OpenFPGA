@@ -20,7 +20,7 @@ namespace openfpga {
 template <class T>
 ShellCommandId add_write_pnr_sdc_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("write_pnr_sdc");
 
   /* Add an option '--file' in short '-f'*/
@@ -100,7 +100,7 @@ ShellCommandId add_write_pnr_sdc_command_template(
   /* Add command 'write_fabric_verilog' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd,
-    "generate SDC files to constrain the backend flow for FPGA fabric");
+    "generate SDC files to constrain the backend flow for FPGA fabric", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_const_execute_function(shell_cmd_id,
                                            write_pnr_sdc_template<T>);
@@ -120,7 +120,7 @@ ShellCommandId add_write_pnr_sdc_command_template(
 template <class T>
 ShellCommandId add_write_configuration_chain_sdc_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("write_configuration_chain_sdc");
 
   /* Add an option '--file' in short '-f'*/
@@ -152,7 +152,7 @@ ShellCommandId add_write_configuration_chain_sdc_command_template(
   /* Add command 'write_configuration_chain_sdc' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd,
-    "generate SDC files to constrain the configuration chain for FPGA fabric");
+    "generate SDC files to constrain the configuration chain for FPGA fabric", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_const_execute_function(
     shell_cmd_id, write_configuration_chain_sdc_template<T>);
@@ -171,7 +171,7 @@ ShellCommandId add_write_configuration_chain_sdc_command_template(
 template <class T>
 ShellCommandId add_write_sdc_disable_timing_configure_ports_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("write_sdc_disable_timing_configure_ports");
 
   /* Add an option '--file' in short '-f'*/
@@ -195,7 +195,7 @@ ShellCommandId add_write_sdc_disable_timing_configure_ports_command_template(
   ShellCommandId shell_cmd_id =
     shell.add_command(shell_cmd,
                       "generate SDC files to disable timing for configure "
-                      "ports across FPGA fabric");
+                      "ports across FPGA fabric", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_const_execute_function(
     shell_cmd_id, write_sdc_disable_timing_configure_ports_template<T>);
@@ -214,7 +214,7 @@ ShellCommandId add_write_sdc_disable_timing_configure_ports_command_template(
 template <class T>
 ShellCommandId add_write_analysis_sdc_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("write_analysis_sdc");
 
   /* Add an option '--file' in short '-f'*/
@@ -244,7 +244,7 @@ ShellCommandId add_write_analysis_sdc_command_template(
   ShellCommandId shell_cmd_id =
     shell.add_command(shell_cmd,
                       "generate SDC files for timing analysis a PnRed FPGA "
-                      "fabric mapped by a benchmark");
+                      "fabric mapped by a benchmark", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_const_execute_function(shell_cmd_id,
                                            write_analysis_sdc_template<T>);
@@ -256,7 +256,7 @@ ShellCommandId add_write_analysis_sdc_command_template(
 }
 
 template <class T>
-void add_openfpga_sdc_command_templates(openfpga::Shell<T>& shell) {
+void add_openfpga_sdc_command_templates(openfpga::Shell<T>& shell, const bool& hidden = false) {
   /* Get the unique id of 'build_fabric' command which is to be used in creating
    * the dependency graph */
   const ShellCommandId& build_fabric_id =
@@ -273,7 +273,7 @@ void add_openfpga_sdc_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> pnr_sdc_cmd_dependency;
   pnr_sdc_cmd_dependency.push_back(build_fabric_id);
   add_write_pnr_sdc_command_template<T>(shell, openfpga_sdc_cmd_class,
-                                        pnr_sdc_cmd_dependency);
+                                        pnr_sdc_cmd_dependency, hidden);
 
   /********************************
    * Command 'write_configuration_chain_sdc'
@@ -283,7 +283,7 @@ void add_openfpga_sdc_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> cc_sdc_cmd_dependency;
   cc_sdc_cmd_dependency.push_back(build_fabric_id);
   add_write_configuration_chain_sdc_command_template<T>(
-    shell, openfpga_sdc_cmd_class, cc_sdc_cmd_dependency);
+    shell, openfpga_sdc_cmd_class, cc_sdc_cmd_dependency, hidden);
 
   /********************************
    * Command 'write_sdc_disable_timing_configure_ports'
@@ -293,7 +293,7 @@ void add_openfpga_sdc_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> config_port_sdc_cmd_dependency;
   config_port_sdc_cmd_dependency.push_back(build_fabric_id);
   add_write_sdc_disable_timing_configure_ports_command_template<T>(
-    shell, openfpga_sdc_cmd_class, config_port_sdc_cmd_dependency);
+    shell, openfpga_sdc_cmd_class, config_port_sdc_cmd_dependency, hidden);
 
   /********************************
    * Command 'write_analysis_sdc'
@@ -303,7 +303,7 @@ void add_openfpga_sdc_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> analysis_sdc_cmd_dependency;
   analysis_sdc_cmd_dependency.push_back(build_fabric_id);
   add_write_analysis_sdc_command_template<T>(shell, openfpga_sdc_cmd_class,
-                                             analysis_sdc_cmd_dependency);
+                                             analysis_sdc_cmd_dependency, hidden);
 }
 
 } /* end namespace openfpga */

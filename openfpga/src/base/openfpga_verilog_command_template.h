@@ -21,7 +21,7 @@ namespace openfpga {
 template <class T>
 ShellCommandId add_write_fabric_verilog_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("write_fabric_verilog");
 
   /* Add an option '--file' in short '-f'*/
@@ -64,7 +64,7 @@ ShellCommandId add_write_fabric_verilog_command_template(
 
   /* Add command 'write_fabric_verilog' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
-    shell_cmd, "generate Verilog netlists modeling full FPGA fabric");
+    shell_cmd, "generate Verilog netlists modeling full FPGA fabric", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      write_fabric_verilog_template<T>);
@@ -83,7 +83,7 @@ ShellCommandId add_write_fabric_verilog_command_template(
 template <class T>
 ShellCommandId add_write_full_testbench_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("write_full_testbench");
 
   /* add an option '--file' in short '-f'*/
@@ -162,7 +162,7 @@ ShellCommandId add_write_full_testbench_command_template(
 
   /* add command to the shell */
   ShellCommandId shell_cmd_id = shell.add_command(
-    shell_cmd, "generate full testbenches for an fpga fabric");
+    shell_cmd, "generate full testbenches for an fpga fabric", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      write_full_testbench_template<T>);
@@ -181,7 +181,7 @@ ShellCommandId add_write_full_testbench_command_template(
 template <class T>
 ShellCommandId add_write_preconfigured_fabric_wrapper_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("write_preconfigured_fabric_wrapper");
 
   /* add an option '--file' in short '-f'*/
@@ -240,7 +240,7 @@ ShellCommandId add_write_preconfigured_fabric_wrapper_command_template(
 
   /* add command to the shell */
   ShellCommandId shell_cmd_id = shell.add_command(
-    shell_cmd, "generate a wrapper for a pre-configured fpga fabric");
+    shell_cmd, "generate a wrapper for a pre-configured fpga fabric", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(
     shell_cmd_id, write_preconfigured_fabric_wrapper_template<T>);
@@ -259,7 +259,7 @@ ShellCommandId add_write_preconfigured_fabric_wrapper_command_template(
 template <class T>
 ShellCommandId add_write_preconfigured_testbench_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("write_preconfigured_testbench");
 
   /* Add an option '--file' in short '-f'*/
@@ -319,7 +319,7 @@ ShellCommandId add_write_preconfigured_testbench_command_template(
 
   /* Add command to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
-    shell_cmd, "generate testbenches for a preconfigured FPGA fabric");
+    shell_cmd, "generate testbenches for a preconfigured FPGA fabric", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      write_preconfigured_testbench_template<T>);
@@ -338,7 +338,7 @@ ShellCommandId add_write_preconfigured_testbench_command_template(
 template <class T>
 ShellCommandId add_write_simulation_task_info_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("write_simulation_task_info");
 
   /* Add an option '--file' in short '-f'*/
@@ -380,7 +380,7 @@ ShellCommandId add_write_simulation_task_info_command_template(
 
   /* Add command to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
-    shell_cmd, "generate an interchangable simulation task configuration file");
+    shell_cmd, "generate an interchangable simulation task configuration file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      write_simulation_task_info_template<T>);
@@ -392,7 +392,7 @@ ShellCommandId add_write_simulation_task_info_command_template(
 }
 
 template <class T>
-void add_verilog_command_templates(openfpga::Shell<T>& shell) {
+void add_verilog_command_templates(openfpga::Shell<T>& shell, const bool& hidden = false) {
   /* Get the unique id of 'build_fabric' command which is to be used in creating
    * the dependency graph */
   const ShellCommandId& build_fabric_cmd_id =
@@ -410,7 +410,7 @@ void add_verilog_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> fabric_verilog_dependent_cmds;
   fabric_verilog_dependent_cmds.push_back(build_fabric_cmd_id);
   add_write_fabric_verilog_command_template<T>(
-    shell, openfpga_verilog_cmd_class, fabric_verilog_dependent_cmds);
+    shell, openfpga_verilog_cmd_class, fabric_verilog_dependent_cmds, hidden);
 
   /********************************
    * Command 'write_full_testbench'
@@ -420,7 +420,7 @@ void add_verilog_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> full_testbench_dependent_cmds;
   full_testbench_dependent_cmds.push_back(build_fabric_cmd_id);
   add_write_full_testbench_command_template<T>(
-    shell, openfpga_verilog_cmd_class, full_testbench_dependent_cmds);
+    shell, openfpga_verilog_cmd_class, full_testbench_dependent_cmds, hidden);
 
   /********************************
    * Command 'write_preconfigured_fabric_wrapper'
@@ -430,7 +430,7 @@ void add_verilog_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> preconfig_wrapper_dependent_cmds;
   preconfig_wrapper_dependent_cmds.push_back(build_fabric_cmd_id);
   add_write_preconfigured_fabric_wrapper_command_template<T>(
-    shell, openfpga_verilog_cmd_class, preconfig_wrapper_dependent_cmds);
+    shell, openfpga_verilog_cmd_class, preconfig_wrapper_dependent_cmds, hidden);
 
   /********************************
    * Command 'write_preconfigured_testbench'
@@ -440,7 +440,7 @@ void add_verilog_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> preconfig_testbench_dependent_cmds;
   preconfig_testbench_dependent_cmds.push_back(build_fabric_cmd_id);
   add_write_preconfigured_testbench_command_template<T>(
-    shell, openfpga_verilog_cmd_class, preconfig_testbench_dependent_cmds);
+    shell, openfpga_verilog_cmd_class, preconfig_testbench_dependent_cmds, hidden);
 
   /********************************
    * Command 'write_simulation_task_info'
@@ -450,7 +450,7 @@ void add_verilog_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> sim_task_info_dependent_cmds;
   sim_task_info_dependent_cmds.push_back(build_fabric_cmd_id);
   add_write_simulation_task_info_command_template<T>(
-    shell, openfpga_verilog_cmd_class, sim_task_info_dependent_cmds);
+    shell, openfpga_verilog_cmd_class, sim_task_info_dependent_cmds, hidden);
 }
 
 } /* end namespace openfpga */

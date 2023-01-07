@@ -410,8 +410,19 @@ template <class T>
 void Shell<T>::print_commands(const bool& show_hidden) const {
   /* Print the commands by their classes */
   for (const ShellCommandClassId& cmd_class : command_class_ids_) {
+    /* If there are only hidden commands inside, do not even need to show the class name here */
+    bool hidden_class = true;
+    for (const ShellCommandId& cmd : commands_by_classes_[cmd_class]) {
+      if (!command_hidden_[cmd]) {
+        hidden_class = false;
+        break;
+      }
+    }
+    
     /* Print the class name */
-    VTR_LOG("%s:\n", command_class_names_[cmd_class].c_str());
+    if (!hidden_class && show_hidden) {
+      VTR_LOG("%s:\n", command_class_names_[cmd_class].c_str());
+    }
 
     for (const ShellCommandId& cmd : commands_by_classes_[cmd_class]) {
       if (!show_hidden && command_hidden_[cmd]) {

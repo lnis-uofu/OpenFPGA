@@ -38,7 +38,7 @@ namespace openfpga {
 template <class T>
 ShellCommandId add_write_fabric_spice_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
-  const std::vector<ShellCommandId>& dependent_cmds) {
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("write_fabric_spice");
 
   /* Add an option '--file' in short '-f'*/
@@ -56,7 +56,7 @@ ShellCommandId add_write_fabric_spice_command_template(
 
   /* Add command 'write_fabric_spice' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
-    shell_cmd, "generate SPICE netlists modeling full FPGA fabric");
+    shell_cmd, "generate SPICE netlists modeling full FPGA fabric", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_execute_function(shell_cmd_id,
                                      write_fabric_spice_template<T>);
@@ -68,7 +68,7 @@ ShellCommandId add_write_fabric_spice_command_template(
 }
 
 template <class T>
-void add_spice_command_templates(openfpga::Shell<T>& shell) {
+void add_spice_command_templates(openfpga::Shell<T>& shell, const bool& hidden = false) {
   /* Get the unique id of 'build_fabric' command which is to be used in creating
    * the dependency graph */
   const ShellCommandId& build_fabric_cmd_id =
@@ -86,7 +86,7 @@ void add_spice_command_templates(openfpga::Shell<T>& shell) {
   std::vector<ShellCommandId> fabric_spice_dependent_cmds;
   fabric_spice_dependent_cmds.push_back(build_fabric_cmd_id);
   add_write_fabric_spice_command_template<T>(shell, openfpga_spice_cmd_class,
-                                             fabric_spice_dependent_cmds);
+                                             fabric_spice_dependent_cmds, hidden);
 
   /********************************
    * TODO: Command 'write_spice_top_testbench'
