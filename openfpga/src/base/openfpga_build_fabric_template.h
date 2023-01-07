@@ -1,26 +1,22 @@
+#ifndef OPENFPGA_BUILD_FABRIC_TEMPLATE_H
+#define OPENFPGA_BUILD_FABRIC_TEMPLATE_H
 /********************************************************************
  * This file includes functions to compress the hierachy of routing architecture
  *******************************************************************/
-/* Headers from vtrutil library */
-#include "vtr_log.h"
-#include "vtr_time.h"
-
-/* Headers from openfpgashell library */
-#include "command_exit_codes.h"
-
-/* Headers from fabrickey library */
 #include "build_device_module.h"
 #include "build_fabric_global_port_info.h"
 #include "build_fabric_io_location_map.h"
+#include "command.h"
+#include "command_context.h"
+#include "command_exit_codes.h"
 #include "device_rr_gsb.h"
 #include "device_rr_gsb_utils.h"
 #include "fabric_hierarchy_writer.h"
 #include "fabric_key_writer.h"
-#include "openfpga_build_fabric.h"
-#include "read_xml_fabric_key.h"
-
-/* Include global variables of VPR */
 #include "globals.h"
+#include "read_xml_fabric_key.h"
+#include "vtr_log.h"
+#include "vtr_time.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -29,8 +25,9 @@ namespace openfpga {
  * Identify the unique GSBs from the Device RR GSB arrays
  * This function should only be called after the GSB builder is done
  *******************************************************************/
-static void compress_routing_hierarchy(OpenfpgaContext& openfpga_ctx,
-                                       const bool& verbose_output) {
+template <class T>
+void compress_routing_hierarchy_template(T& openfpga_ctx,
+                                         const bool& verbose_output) {
   vtr::ScopedStartFinishTimer timer(
     "Identify unique General Switch Blocks (GSBs)");
 
@@ -88,8 +85,9 @@ static void compress_routing_hierarchy(OpenfpgaContext& openfpga_ctx,
 /********************************************************************
  * Build the module graph for FPGA device
  *******************************************************************/
-int build_fabric(OpenfpgaContext& openfpga_ctx, const Command& cmd,
-                 const CommandContext& cmd_context) {
+template <class T>
+int build_fabric_template(T& openfpga_ctx, const Command& cmd,
+                          const CommandContext& cmd_context) {
   CommandOptionId opt_frame_view = cmd.option("frame_view");
   CommandOptionId opt_compress_routing = cmd.option("compress_routing");
   CommandOptionId opt_duplicate_grid_pin = cmd.option("duplicate_grid_pin");
@@ -100,8 +98,8 @@ int build_fabric(OpenfpgaContext& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   if (true == cmd_context.option_enable(cmd, opt_compress_routing)) {
-    compress_routing_hierarchy(openfpga_ctx,
-                               cmd_context.option_enable(cmd, opt_verbose));
+    compress_routing_hierarchy_template<T>(
+      openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
     /* Update flow manager to enable compress routing */
     openfpga_ctx.mutable_flow_manager().set_compress_routing(true);
   }
@@ -127,7 +125,7 @@ int build_fabric(OpenfpgaContext& openfpga_ctx, const Command& cmd,
   curr_status = build_device_module_graph(
     openfpga_ctx.mutable_module_graph(), openfpga_ctx.mutable_decoder_lib(),
     openfpga_ctx.mutable_blwl_shift_register_banks(),
-    const_cast<const OpenfpgaContext&>(openfpga_ctx), g_vpr_ctx.device(),
+    const_cast<const T&>(openfpga_ctx), g_vpr_ctx.device(),
     cmd_context.option_enable(cmd, opt_frame_view),
     cmd_context.option_enable(cmd, opt_compress_routing),
     cmd_context.option_enable(cmd, opt_duplicate_grid_pin),
@@ -174,9 +172,9 @@ int build_fabric(OpenfpgaContext& openfpga_ctx, const Command& cmd,
 /********************************************************************
  * Write hierarchy of the module graph for FPGA device to a file
  *******************************************************************/
-int write_fabric_hierarchy(const OpenfpgaContext& openfpga_ctx,
-                           const Command& cmd,
-                           const CommandContext& cmd_context) {
+template <class T>
+int write_fabric_hierarchy_template(const T& openfpga_ctx, const Command& cmd,
+                                    const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* Check the option '--file' is enabled or not
@@ -211,9 +209,9 @@ int write_fabric_hierarchy(const OpenfpgaContext& openfpga_ctx,
 /********************************************************************
  * Write the I/O information of module graph to a file
  *******************************************************************/
-int write_fabric_io_info(const OpenfpgaContext& openfpga_ctx,
-                         const Command& cmd,
-                         const CommandContext& cmd_context) {
+template <class T>
+int write_fabric_io_info_template(const T& openfpga_ctx, const Command& cmd,
+                                  const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
 
@@ -234,3 +232,5 @@ int write_fabric_io_info(const OpenfpgaContext& openfpga_ctx,
 }
 
 } /* end namespace openfpga */
+
+#endif

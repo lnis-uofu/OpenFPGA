@@ -1,24 +1,20 @@
+#ifndef OPENFPGA_PCF2PLACE_TEMPLATE_H
+#define OPENFPGA_PCF2PLACE_TEMPLATE_H
 /********************************************************************
  * This file includes functions to build bitstream database
  *******************************************************************/
-/* Headers from vtrutil library */
-#include "vtr_log.h"
-#include "vtr_time.h"
-
-/* Headers from openfpgashell library */
-#include "command_exit_codes.h"
-
-/* Headers from openfpgautil library */
-#include "openfpga_digest.h"
-
-/* Headers from pcf library */
 #include "blif_head_reader.h"
+#include "command.h"
+#include "command_context.h"
+#include "command_exit_codes.h"
 #include "io_net_place.h"
-#include "openfpga_pcf2place.h"
+#include "openfpga_digest.h"
 #include "pcf2place.h"
 #include "pcf_reader.h"
 #include "read_csv_io_pin_table.h"
 #include "read_xml_io_location_map.h"
+#include "vtr_log.h"
+#include "vtr_time.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -27,8 +23,9 @@ namespace openfpga {
  * Top-level function to convert a .pcf file to a .place file which
  * which VPR can force I/O placement
  *******************************************************************/
-int pcf2place_wrapper(const OpenfpgaContext& openfpga_context,
-                      const Command& cmd, const CommandContext& cmd_context) {
+template <class T>
+int pcf2place_wrapper_template(const Command& cmd,
+                               const CommandContext& cmd_context) {
   /* todo: create a factory to produce this in the future*/
   CommandOptionId opt_pcf = cmd.option("pcf");
   CommandOptionId opt_blif = cmd.option("blif");
@@ -118,3 +115,5 @@ int pcf2place_wrapper(const OpenfpgaContext& openfpga_context,
 }
 
 } /* end namespace openfpga */
+
+#endif

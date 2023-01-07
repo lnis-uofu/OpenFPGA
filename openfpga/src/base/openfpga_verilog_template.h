@@ -1,26 +1,19 @@
+#ifndef OPENFPGA_VERILOG_TEMPLATE_H
+#define OPENFPGA_VERILOG_TEMPLATE_H
+
 /********************************************************************
  * This file includes functions to compress the hierachy of routing architecture
  *******************************************************************/
-/* Headers from vtrutil library */
+#include "command.h"
+#include "command_context.h"
+#include "command_exit_codes.h"
+#include "globals.h"
+#include "openfpga_scale.h"
+#include "read_xml_bus_group.h"
+#include "read_xml_pin_constraints.h"
+#include "verilog_api.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
-
-/* Headers from openfpgashell library */
-#include "command_exit_codes.h"
-
-/* Headers from openfpgautil library */
-#include "openfpga_scale.h"
-#include "openfpga_verilog.h"
-#include "verilog_api.h"
-
-/* Headers from pcf library */
-#include "read_xml_pin_constraints.h"
-
-/* Headers from bgf library */
-#include "read_xml_bus_group.h"
-
-/* Include global variables of VPR */
-#include "globals.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -28,8 +21,9 @@ namespace openfpga {
 /********************************************************************
  * A wrapper function to call the fabric Verilog generator of FPGA-Verilog
  *******************************************************************/
-int write_fabric_verilog(OpenfpgaContext& openfpga_ctx, const Command& cmd,
-                         const CommandContext& cmd_context) {
+template <class T>
+int write_fabric_verilog_template(T& openfpga_ctx, const Command& cmd,
+                                  const CommandContext& cmd_context) {
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_explicit_port_mapping =
     cmd.option("explicit_port_mapping");
@@ -77,9 +71,9 @@ int write_fabric_verilog(OpenfpgaContext& openfpga_ctx, const Command& cmd,
 /********************************************************************
  * A wrapper function to call the full testbench generator of FPGA-Verilog
  *******************************************************************/
-int write_full_testbench(const OpenfpgaContext& openfpga_ctx,
-                         const Command& cmd,
-                         const CommandContext& cmd_context) {
+template <class T>
+int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
+                                  const CommandContext& cmd_context) {
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_bitstream = cmd.option("bitstream");
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
@@ -150,9 +144,10 @@ int write_full_testbench(const OpenfpgaContext& openfpga_ctx,
  * A wrapper function to call the preconfigured wrapper generator of
  *FPGA-Verilog
  *******************************************************************/
-int write_preconfigured_fabric_wrapper(const OpenfpgaContext& openfpga_ctx,
-                                       const Command& cmd,
-                                       const CommandContext& cmd_context) {
+template <class T>
+int write_preconfigured_fabric_wrapper_template(
+  const T& openfpga_ctx, const Command& cmd,
+  const CommandContext& cmd_context) {
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
@@ -216,9 +211,10 @@ int write_preconfigured_fabric_wrapper(const OpenfpgaContext& openfpga_ctx,
  * A wrapper function to call the preconfigured testbench generator of
  *FPGA-Verilog
  *******************************************************************/
-int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
-                                  const Command& cmd,
-                                  const CommandContext& cmd_context) {
+template <class T>
+int write_preconfigured_testbench_template(const T& openfpga_ctx,
+                                           const Command& cmd,
+                                           const CommandContext& cmd_context) {
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_bgf = cmd.option("bus_group_file");
@@ -278,9 +274,10 @@ int write_preconfigured_testbench(const OpenfpgaContext& openfpga_ctx,
  * A wrapper function to call the simulation task information generator of
  *FPGA-Verilog
  *******************************************************************/
-int write_simulation_task_info(const OpenfpgaContext& openfpga_ctx,
-                               const Command& cmd,
-                               const CommandContext& cmd_context) {
+template <class T>
+int write_simulation_task_info_template(const T& openfpga_ctx,
+                                        const Command& cmd,
+                                        const CommandContext& cmd_context) {
   CommandOptionId opt_file = cmd.option("file");
   CommandOptionId opt_hdl_dir = cmd.option("hdl_dir");
   CommandOptionId opt_reference_benchmark =
@@ -337,3 +334,5 @@ int write_simulation_task_info(const OpenfpgaContext& openfpga_ctx,
 }
 
 } /* end namespace openfpga */
+
+#endif

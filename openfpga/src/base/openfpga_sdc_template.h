@@ -1,25 +1,21 @@
+#ifndef OPENFPGA_SDC_TEMPLATE_H
+#define OPENFPGA_SDC_TEMPLATE_H
 /********************************************************************
  * This file includes functions to compress the hierachy of routing architecture
  *******************************************************************/
-/* Headers from vtrutil library */
-#include "vtr_log.h"
-#include "vtr_time.h"
-
-/* Headers from openfpgashell library */
-#include "command_exit_codes.h"
-
-/* Headers from openfpgautil library */
 #include "analysis_sdc_writer.h"
 #include "circuit_library_utils.h"
+#include "command.h"
+#include "command_context.h"
+#include "command_exit_codes.h"
 #include "configuration_chain_sdc_writer.h"
 #include "configure_port_sdc_writer.h"
+#include "globals.h"
 #include "openfpga_digest.h"
 #include "openfpga_scale.h"
-#include "openfpga_sdc.h"
 #include "pnr_sdc_writer.h"
-
-/* Include global variables of VPR */
-#include "globals.h"
+#include "vtr_log.h"
+#include "vtr_time.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -27,8 +23,9 @@ namespace openfpga {
 /********************************************************************
  * A wrapper function to call the PnR SDC generator of FPGA-SDC
  *******************************************************************/
-int write_pnr_sdc(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
-                  const CommandContext& cmd_context) {
+template <class T>
+int write_pnr_sdc_template(const T& openfpga_ctx, const Command& cmd,
+                           const CommandContext& cmd_context) {
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_flatten_names = cmd.option("flatten_names");
   CommandOptionId opt_hierarchical = cmd.option("hierarchical");
@@ -115,9 +112,10 @@ int write_pnr_sdc(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
  * A wrapper function to call the PnR SDC generator on configuration chain
  * of FPGA-SDC
  *******************************************************************/
-int write_configuration_chain_sdc(const OpenfpgaContext& openfpga_ctx,
-                                  const Command& cmd,
-                                  const CommandContext& cmd_context) {
+template <class T>
+int write_configuration_chain_sdc_template(const T& openfpga_ctx,
+                                           const Command& cmd,
+                                           const CommandContext& cmd_context) {
   /* If the configuration protocol is not a configuration chain, we will not
    * write anything */
   if (CONFIG_MEM_SCAN_CHAIN != openfpga_ctx.arch().config_protocol.type()) {
@@ -157,8 +155,9 @@ int write_configuration_chain_sdc(const OpenfpgaContext& openfpga_ctx,
  * A wrapper function to call the PnR SDC generator on routing multiplexers
  * of FPGA-SDC
  *******************************************************************/
-int write_sdc_disable_timing_configure_ports(
-  const OpenfpgaContext& openfpga_ctx, const Command& cmd,
+template <class T>
+int write_sdc_disable_timing_configure_ports_template(
+  const T& openfpga_ctx, const Command& cmd,
   const CommandContext& cmd_context) {
   /* Get command options */
   CommandOptionId opt_output_dir = cmd.option("file");
@@ -187,8 +186,9 @@ int write_sdc_disable_timing_configure_ports(
 /********************************************************************
  * A wrapper function to call the analysis SDC generator of FPGA-SDC
  *******************************************************************/
-int write_analysis_sdc(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
-                       const CommandContext& cmd_context) {
+template <class T>
+int write_analysis_sdc_template(const T& openfpga_ctx, const Command& cmd,
+                                const CommandContext& cmd_context) {
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_flatten_names = cmd.option("flatten_names");
   CommandOptionId opt_time_unit = cmd.option("time_unit");
@@ -226,3 +226,5 @@ int write_analysis_sdc(const OpenfpgaContext& openfpga_ctx, const Command& cmd,
 }
 
 } /* end namespace openfpga */
+
+#endif

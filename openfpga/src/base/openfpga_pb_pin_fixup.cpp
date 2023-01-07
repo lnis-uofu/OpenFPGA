@@ -20,9 +20,6 @@
 #include "openfpga_side_manager.h"
 #include "pb_type_utils.h"
 
-/* Include global variables of VPR */
-#include "globals.h"
-
 /* begin namespace openfpga */
 namespace openfpga {
 
@@ -185,7 +182,7 @@ static void update_cluster_pin_with_post_routing_results(
  * Main function to fix up the pb pin mapping results
  * This function will walk through each grid
  *******************************************************************/
-static void update_pb_pin_with_post_routing_results(
+void update_pb_pin_with_post_routing_results(
   const DeviceContext& device_ctx, const ClusteringContext& clustering_ctx,
   const PlacementContext& placement_ctx,
   const VprRoutingAnnotation& vpr_routing_annotation,
@@ -245,35 +242,6 @@ static void update_pb_pin_with_post_routing_results(
       }
     }
   }
-}
-
-/********************************************************************
- * Top-level function to fix up the pb pin mapping results
- * The problem comes from a mismatch between the packing and routing results
- * When there are equivalent input/output for any grids, router will try
- * to swap the net mapping among these pins so as to achieve best
- * routing optimization.
- * However, it will cause the packing results out-of-date as the net mapping
- * of each grid remain untouched once packing is done.
- * This function aims to fix the mess after routing so that the net mapping
- * can be synchronized
- *******************************************************************/
-int pb_pin_fixup(OpenfpgaContext& openfpga_context, const Command& cmd,
-                 const CommandContext& cmd_context) {
-  vtr::ScopedStartFinishTimer timer(
-    "Fix up pb pin mapping results after routing optimization");
-
-  CommandOptionId opt_verbose = cmd.option("verbose");
-
-  /* Apply fix-up to each grid */
-  update_pb_pin_with_post_routing_results(
-    g_vpr_ctx.device(), g_vpr_ctx.clustering(), g_vpr_ctx.placement(),
-    openfpga_context.vpr_routing_annotation(),
-    openfpga_context.mutable_vpr_clustering_annotation(),
-    cmd_context.option_enable(cmd, opt_verbose));
-
-  /* TODO: should identify the error code from internal function execution */
-  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */
