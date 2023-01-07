@@ -420,12 +420,13 @@ void Shell<T>::print_commands(const bool& show_hidden) const {
     }
     
     /* Print the class name */
-    if (!hidden_class && show_hidden) {
-      VTR_LOG("%s:\n", command_class_names_[cmd_class].c_str());
+    if (show_hidden && hidden_class) {
+      continue;
     }
+    VTR_LOG("%s:\n", command_class_names_[cmd_class].c_str());
 
     for (const ShellCommandId& cmd : commands_by_classes_[cmd_class]) {
-      if (!show_hidden && command_hidden_[cmd]) {
+      if (show_hidden && command_hidden_[cmd]) {
         continue;
       }
       VTR_LOG("\t%s\n", commands_[cmd].name().c_str());
