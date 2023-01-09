@@ -286,7 +286,8 @@ void Shell<T>::run_interactive_mode(T& context, const bool& quiet_mode) {
      * Add to history 
      */
     if (strlen(cmd_line) > 0) {
-      execute_command((const char*)cmd_line, context);
+      /* Do not allow any hidden command to be directly called by users */
+      execute_command((const char*)cmd_line, context, false);
       add_history(cmd_line);
     }
 
@@ -378,7 +379,8 @@ void Shell<T>::run_script_mode(const char* script_file_name,
     /* Process the command only when the full command line in ended */
     if (!cmd_line.empty()) {
       VTR_LOG("\nCommand line to execute: %s\n", cmd_line.c_str());
-      int status = execute_command(cmd_line.c_str(), context);
+      /* Do not allow any hidden command to be directly called by users */
+      int status = execute_command(cmd_line.c_str(), context, false);
       /* Empty the line ready to start a new line */
       cmd_line.clear();
 
@@ -420,13 +422,13 @@ void Shell<T>::print_commands(const bool& show_hidden) const {
     }
     
     /* Print the class name */
-    if (show_hidden && hidden_class) {
+    if (!show_hidden && hidden_class) {
       continue;
     }
     VTR_LOG("%s:\n", command_class_names_[cmd_class].c_str());
 
     for (const ShellCommandId& cmd : commands_by_classes_[cmd_class]) {
-      if (show_hidden && command_hidden_[cmd]) {
+      if (!show_hidden && command_hidden_[cmd]) {
         continue;
       }
       VTR_LOG("\t%s\n", commands_[cmd].name().c_str());
@@ -507,7 +509,7 @@ void Shell<T>::exit(const int& init_err) const {
  ***********************************************************************/
 template <class T>
 int Shell<T>::execute_command(const char* cmd_line,
-                               T& common_context) {
+                               T& common_context, const bool& allow_hidden_command) {
   openfpga::StringToken tokenizer(cmd_line);  
   tokenizer.add_delim(' ');
   /* Do not split the string in each quote "", as they should be a piece */
@@ -536,6 +538,14 @@ int Shell<T>::execute_command(const char* cmd_line,
     VTR_LOG("Try to call a command '%s' which is not defined!\n",
             tokens[0].c_str());
     return CMD_EXEC_FATAL_ERROR;
+  }
+  /* Do not allow hidden commands if specified */
+  if (!allow_hidden_command) {
+    if (command_hidden_[cmd_id]) {
+      VTR_LOG("Try to call a command '%s' which is not defined!\n",
+              tokens[0].c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
   }
 
   /* Check the dependency graph to see if all the prequistics have been met */
