@@ -206,9 +206,11 @@ class Shell {
   void exit(const int& init_err = 0) const;
   /* Execute a command, the command line is the user's input to launch a command
    * The common_context is the data structure to exchange data between commands
-   * Optionally, hidden commands may be forbidden to call. User can allow them to be called under different situations
+   * Optionally, hidden commands may be forbidden to call. User can allow them
+   * to be called under different situations
    */
-  int execute_command(const char* cmd_line, T& common_context, const bool& allow_hidden_command = true);
+  int execute_command(const char* cmd_line, T& common_context,
+                      const bool& allow_hidden_command = true);
 
  private: /* Internal data */
   /* Name of the shell, this will appear in the interactive mode */
