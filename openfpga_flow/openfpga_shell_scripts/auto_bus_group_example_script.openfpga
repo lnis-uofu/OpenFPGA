@@ -47,7 +47,7 @@ write_fabric_bitstream --file fabric_bitstream.bit --format plain_text
 write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --verbose
 
 # Generate a bus group file by calling an external python script
-ext_exec --command "python3 --task ../../../../config/counter8_bus_group_task.yaml"
+ext_exec --command "python3 ../../../../config/bus_group_gen.py --task ../../../../config/counter8_bus_group_task.yaml"
 
 # Write the Verilog testbench for FPGA fabric
 #  - We suggest the use of same output directory as fabric Verilog netlists
