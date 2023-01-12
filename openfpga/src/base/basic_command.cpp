@@ -18,11 +18,11 @@ namespace openfpga {
  * - Add associated options
  * - Add command dependency
  *******************************************************************/
-static ShellCommandId add_openfpga_exec_external_command(
+static ShellCommandId add_openfpga_ext_exec_command(
   openfpga::Shell<OpenfpgaContext>& shell,
   const ShellCommandClassId& cmd_class_id,
   const std::vector<ShellCommandId>& dependent_cmds) {
-  Command shell_cmd("exec_external");
+  Command shell_cmd("ext_exec");
 
   /* Add an option '--command_stream' */
   CommandOptionId opt_cmdstream = shell_cmd.add_option(
@@ -112,8 +112,8 @@ void add_basic_commands(openfpga::Shell<OpenfpgaContext>& shell) {
                               std::vector<ShellCommandId>());
 
   /* Add 'exec_external command which can run system call */
-  add_openfpga_exec_external_command(shell, basic_cmd_class,
-                                     std::vector<ShellCommandId>());
+  add_openfpga_ext_exec_command(shell, basic_cmd_class,
+                                std::vector<ShellCommandId>());
 
   /* Note:
    * help MUST be the last to add because the linking to execute function will

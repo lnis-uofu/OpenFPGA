@@ -4,18 +4,17 @@
  * - version
  * - help
  *******************************************************************/
-#include "basic_command.h"
-
 #include "command_exit_codes.h"
 #include "openfpga_title.h"
+#include "openfpga_basic.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
 
-static int source_existing_command(openfpga::Shell<OpenfpgaContext>* shell,
-                                   OpenfpgaContext& openfpga_ctx,
-                                   const Command& cmd,
-                                   const CommandContext& cmd_context) {
+int source_existing_command(openfpga::Shell<OpenfpgaContext>* shell,
+                            OpenfpgaContext& openfpga_ctx,
+                            const Command& cmd,
+                            const CommandContext& cmd_context) {
   CommandOptionId opt_file = cmd.option("from_file");
   CommandOptionId opt_batch_mode = cmd.option("batch_mode");
   CommandOptionId opt_ss = cmd.option("command_stream");
