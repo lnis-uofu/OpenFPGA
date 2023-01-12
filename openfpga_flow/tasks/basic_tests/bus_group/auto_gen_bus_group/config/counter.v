@@ -1,0 +1,1 @@
+../../../../../benchmarks/micro_benchmark/counters/counter_8bit_async_reset/counter.v
