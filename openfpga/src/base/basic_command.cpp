@@ -7,8 +7,8 @@
 #include "basic_command.h"
 
 #include "command_exit_codes.h"
-#include "openfpga_title.h"
 #include "openfpga_basic.h"
+#include "openfpga_title.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
