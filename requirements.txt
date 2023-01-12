@@ -1,6 +1,7 @@
 envyaml==1.0.201125
 humanize==3.1.0
 coloredlogs==9.1
+pyverilog
 
 # Python linter and formatter
 click==8.0.2 # Our version of black needs an older version of click (https://stackoverflow.com/questions/71673404/importerror-cannot-import-name-unicodefun-from-click)
