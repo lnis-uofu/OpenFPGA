@@ -101,6 +101,8 @@
         </equivalent_sites>
         <input name="I" num_pins="12" equivalent="full"/>
         <input name="reset" num_pins="1" is_non_clock_global="true"/>
+        <!-- A dedicated clock for locally generated clock signals -->
+        <input name="lclk" num_pins="1" equivalent="none"/>
         <output name="O" num_pins="8" equivalent="none"/>
         <clock name="clk" num_pins="1"/>
         <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
@@ -275,6 +277,7 @@
     <pb_type name="clb">
       <input name="I" num_pins="12" equivalent="full"/>
       <input name="reset" num_pins="1"/>
+      <input name="lclk" num_pins="1" equivalent="none"/>
       <output name="O" num_pins="8" equivalent="none"/>
       <clock name="clk" num_pins="1"/>
       <!-- Describe fracturable logic element.  
@@ -611,7 +614,7 @@
           <delay_constant max="95e-12" in_port="clb.I" out_port="fle[3:0].in"/>
           <delay_constant max="75e-12" in_port="fle[3:0].out" out_port="fle[3:0].in"/>
         </complete>
-        <complete name="clks" input="clb.clk clb.I" output="fle[3:0].clk">
+        <complete name="clks" input="clb.clk clb.lclk" output="fle[3:0].clk">
         </complete>
         <complete name="resets" input="clb.reset" output="fle[3:0].reset">
         </complete>
