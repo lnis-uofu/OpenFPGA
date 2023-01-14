@@ -142,6 +142,8 @@ run-task basic_tests/k4_series/k4n4_custom_io_loc_center_width_odd $@
 echo -e "Testing K4N4 with a local routing where reset can driven LUT inputs";
 run-task basic_tests/k4_series/k4n4_rstOnLut $@
 run-task basic_tests/k4_series/k4n4_rstOnLut_strong $@
+echo -e "Testing K4N4 support clock generation by internal resources";
+run-task basic_tests/k4_series/k4n4_clk_gen $@
 
 echo -e "Testing different tile organizations";
 echo -e "Testing tiles with pins only on top and left sides";
