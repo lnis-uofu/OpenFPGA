@@ -1,0 +1,5 @@
+<pin_constraints>
+  <!-- Intend to be dummy -->
+  <!-- set_io pin="op_clk[0]" net="clk_ni"/ -->
+</pin_constraints>
+
