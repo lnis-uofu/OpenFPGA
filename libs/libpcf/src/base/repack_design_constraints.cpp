@@ -69,9 +69,11 @@ std::string RepackDesignConstraints::find_constrained_pin_net(
   return constrained_net_name;
 }
 
-openfpga::BasicPort RepackDesignConstraints::net_pin(const std::string& net) const {
+openfpga::BasicPort RepackDesignConstraints::net_pin(
+  const std::string& net) const {
   openfpga::BasicPort constrained_pin;
-  for (const RepackDesignConstraintId& design_constraint : design_constraints()) {
+  for (const RepackDesignConstraintId& design_constraint :
+       design_constraints()) {
     if (net == repack_design_constraint_nets_[design_constraint]) {
       constrained_pin = pin(design_constraint);
       break;
