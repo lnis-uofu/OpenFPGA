@@ -200,8 +200,8 @@
     <segment name="L4" circuit_model_name="chan_segment"/>
   </routing_segment>
   <tile_annotations>
-    <global_port name="op_clk" tile_port="clb.clk[1]" is_clock="true" default_val="0">
-      <tile name="clb" port="clk[1]"/>
+    <global_port name="op_clk" tile_port="clb.clk" is_clock="true" default_val="0">
+      <tile name="clb" port="clk"/>
     </global_port>
     <global_port name="op_reset" is_reset="true" default_val="0">
       <tile name="clb" port="reset"/>

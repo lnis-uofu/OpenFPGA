@@ -102,9 +102,11 @@
         <input name="I" num_pins="12" equivalent="full"/>
         <input name="reset" num_pins="1" is_non_clock_global="true"/>
         <output name="O" num_pins="8" equivalent="none"/>
-        <clock name="clk" num_pins="2" equivalent="full"/>
+        <!-- Local clock -->
+        <input name="lclk" num_pins="1"/>
+        <clock name="clk" num_pins="1"/>
         <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
-          <fc_override port_name="clk[1]" fc_type="frac" fc_val="0"/>
+          <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
           <fc_override port_name="reset" fc_type="frac" fc_val="0"/>
         </fc>
         <pinlocations pattern="spread"/>
@@ -276,7 +278,9 @@
       <input name="I" num_pins="12" equivalent="full"/>
       <input name="reset" num_pins="1"/>
       <output name="O" num_pins="8" equivalent="none"/>
-      <clock name="clk" num_pins="2" equivalent="full"/>
+      <!-- Local clock -->
+      <input name="lclk" num_pins="1"/>
+      <clock name="clk" num_pins="1"/>
       <!-- Describe fracturable logic element.  
              Each fracturable logic element has a 6-LUT that can alternatively operate as two 5-LUTs with shared inputs. 
              The outputs of the fracturable logic element can be optionally registered
@@ -611,7 +615,7 @@
           <delay_constant max="95e-12" in_port="clb.I" out_port="fle[3:0].in"/>
           <delay_constant max="75e-12" in_port="fle[3:0].out" out_port="fle[3:0].in"/>
         </complete>
-        <complete name="clks" input="clb.clk" output="fle[3:0].clk">
+        <complete name="clks" input="clb.lclk clb.clk" output="fle[3:0].clk">
         </complete>
         <complete name="resets" input="clb.reset" output="fle[3:0].reset">
         </complete>
