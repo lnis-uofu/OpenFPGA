@@ -72,6 +72,8 @@ class RepackDesignConstraints {
   /* Find a constrained net */
   std::string find_constrained_pin_net(const std::string& pb_type,
                                        const openfpga::BasicPort& pin) const;
+  /* Find the port to which a net is constrained to */
+  openfpga::BasicPort net_pin(const std::string& net) const;
 
   /* Check if there are any design constraints */
   bool empty() const;

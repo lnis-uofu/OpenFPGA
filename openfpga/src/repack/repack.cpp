@@ -614,8 +614,8 @@ static void add_lb_router_nets(
     } else if (design_constraints.unconstrained_net(constrained_net_name)) {
       constrained_atom_net_id = atom_net_id;
       /* Skip for the net which has been constrained on other pins */
-      if (atom_net_id && !design_constraints.unconstrained_net(
-                           atom_ctx.nlist.net_name(atom_net_id))) {
+      if (atom_net_id && design_constraints.net_pin(
+                           atom_ctx.nlist.net_name(atom_net_id)).is_valid()) {
         VTR_LOGV(verbose,
                  "Skip net '%s' on pin '%s[%d]' during repacking since it has "
                  "been constrained to another pin\n",
