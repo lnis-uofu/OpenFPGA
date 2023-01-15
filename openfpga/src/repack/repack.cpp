@@ -614,17 +614,21 @@ static void add_lb_router_nets(
     } else if (design_constraints.unconstrained_net(constrained_net_name)) {
       constrained_atom_net_id = atom_net_id;
       /* Skip for the net which has been constrained on other pins */
-      if (atom_net_id && !design_constraints.unconstrained_net(atom_ctx.nlist.net_name(atom_net_id))) {
+      if (atom_net_id && !design_constraints.unconstrained_net(
+                           atom_ctx.nlist.net_name(atom_net_id))) {
         VTR_LOGV(verbose,
-                 "Skip net '%s' on pin '%s[%d]' during repacking since it has been constrained to another pin\n",
-                 atom_ctx.nlist.net_name(atom_net_id).c_str(), source_pb_pin->port->name,
-                 source_pb_pin->pin_number);
+                 "Skip net '%s' on pin '%s[%d]' during repacking since it has "
+                 "been constrained to another pin\n",
+                 atom_ctx.nlist.net_name(atom_net_id).c_str(),
+                 source_pb_pin->port->name, source_pb_pin->pin_number);
         continue;
       }
       VTR_LOGV(verbose,
-               "Follow the same mapping results for net '%s' on pin '%s[%d]' during repacking (constrained net name is %s)\n",
-               atom_ctx.nlist.net_name(atom_net_id).c_str(), source_pb_pin->port->name,
-               source_pb_pin->pin_number, constrained_net_name.c_str());
+               "Follow the same mapping results for net '%s' on pin '%s[%d]' "
+               "during repacking (constrained net name is %s)\n",
+               atom_ctx.nlist.net_name(atom_net_id).c_str(),
+               source_pb_pin->port->name, source_pb_pin->pin_number,
+               constrained_net_name.c_str());
     }
 
     /* Bypass unmapped pins. There are 4 conditions to consider
