@@ -1,0 +1,11 @@
+.model two_dff_inv_rst
+.inputs clk_i rst_i d_i
+.outputs d0_o d1_o
+
+.names rst_i int_rst
+0 1
+
+.subckt dffr D=d_i Q=d0_o C=clk_i R=rst_i
+.subckt dffr D=d_i Q=d1_o C=clk_i R=int_rst
+
+.end
