@@ -312,11 +312,14 @@ static std::vector<int> find_pb_route_by_atom_net(
  * - If nothing is found in first-tier, we find expand the range by considering
  *all the pins in the same type that are available at the top-level
  *pb_graph_node
- * - Exclude all the pb_route that is from a net on a pin which should be ignored 
+ * - Exclude all the pb_route that is from a net on a pin which should be
+ *ignored
  ***************************************************************************************/
 static std::vector<int> find_pb_route_by_atom_net_exclude_blacklist(
   const t_pb* pb, const t_pb_graph_pin* source_pb_pin,
-  const AtomNetId& atom_net_id, const std::map<AtomNetId, bool>& ignored_atom_nets, const RepackOption& options) {
+  const AtomNetId& atom_net_id,
+  const std::map<AtomNetId, bool>& ignored_atom_nets,
+  const RepackOption& options) {
   VTR_ASSERT(true == source_pb_pin->parent_node->is_root());
 
   std::vector<int> pb_route_indices;
@@ -334,10 +337,13 @@ static std::vector<int> find_pb_route_by_atom_net_exclude_blacklist(
     if (atom_net_id != pb->pb_route.at(pin).atom_net_id) {
       continue;
     }
-    BasicPort curr_pin(std::string(pb->pb_route.at(pin).pb_graph_pin->port->name),
-                       pb->pb_route.at(pin).pb_graph_pin->pin_number, pb->pb_route.at(pin).pb_graph_pin->pin_number);
-    if (result != ignored_atom_nets.end() && result->second && options.is_pin_ignore_global_nets(std::string(pb->pb_graph_node->pb_type->name),
-                                           curr_pin)) {
+    BasicPort curr_pin(
+      std::string(pb->pb_route.at(pin).pb_graph_pin->port->name),
+      pb->pb_route.at(pin).pb_graph_pin->pin_number,
+      pb->pb_route.at(pin).pb_graph_pin->pin_number);
+    if (result != ignored_atom_nets.end() && result->second &&
+        options.is_pin_ignore_global_nets(
+          std::string(pb->pb_graph_node->pb_type->name), curr_pin)) {
       continue;
     }
     candidate_pool.push_back(pin);
@@ -361,7 +367,6 @@ static std::vector<int> find_pb_route_by_atom_net_exclude_blacklist(
 
   return pb_route_indices;
 }
-
 
 /***************************************************************************************
  * This function will find the actual source_pb_pin that is mapped by packed in
@@ -740,14 +745,16 @@ static void add_lb_router_nets(
      */
     std::vector<int> pb_route_indices;
     if (design_constraints.unconstrained_net(constrained_net_name)) {
-      VTR_LOGV(verbose, "Search remapped routing traces for the unconstrained net\n");
+      VTR_LOGV(verbose,
+               "Search remapped routing traces for the unconstrained net\n");
       pb_route_indices = find_pb_route_remapped_source_pb_pin(
         pb, source_pb_pin, atom_net_id_to_route);
     } else {
-      /* If this is a constrained net but the source pin is not the pin that the net is constrained to, w*/
+      /* If this is a constrained net but the source pin is not the pin that the
+       * net is constrained to, w*/
       VTR_LOGV(verbose, "Search routing traces for the constrained net\n");
-      pb_route_indices =
-        find_pb_route_by_atom_net_exclude_blacklist(pb, source_pb_pin, atom_net_id_to_route, ignored_atom_nets, options);
+      pb_route_indices = find_pb_route_by_atom_net_exclude_blacklist(
+        pb, source_pb_pin, atom_net_id_to_route, ignored_atom_nets, options);
     }
     /* It could happen that the constrained net is NOT used in this clb, we just
      * skip it for routing For example, a clkB net is never mapped to any ports
