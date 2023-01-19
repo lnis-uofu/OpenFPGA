@@ -21,7 +21,7 @@ wire int_rst;
 
 assign int_rst = ~rst_i;
 
-always @(posedge clk_i and posedge rst_i) begin
+always @(posedge clk_i or posedge rst_i) begin
   if (rst_i) begin
     d0_o <= 0;
   end else begin
@@ -29,7 +29,7 @@ always @(posedge clk_i and posedge rst_i) begin
   end
 end
 
-always @(posedge clk_i and posedge int_rst) begin
+always @(posedge clk_i or posedge int_rst) begin
   if (int_rst) begin
     d1_o <= 0;
   end else begin
