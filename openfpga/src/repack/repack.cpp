@@ -321,6 +321,8 @@ static std::vector<int> find_pb_route_by_atom_net_exclude_blacklist(
 
   std::vector<int> pb_route_indices;
 
+  auto result = ignored_atom_nets.find(atom_net_id);
+
   std::vector<int> candidate_pool;
   for (int pin = 0; pin < pb->pb_graph_node->total_pb_pins; ++pin) {
     /* Bypass unused pins */
@@ -332,9 +334,8 @@ static std::vector<int> find_pb_route_by_atom_net_exclude_blacklist(
     if (atom_net_id != pb->pb_route.at(pin).atom_net_id) {
       continue;
     }
-    BasicPort curr_pin(std::string(source_pb_pin->port->name),
-                       source_pb_pin->pin_number, source_pb_pin->pin_number);
-    auto result = ignored_atom_nets.find(atom_net_id);
+    BasicPort curr_pin(std::string(pb->pb_route.at(pin).pb_graph_pin->port->name),
+                       pb->pb_route.at(pin).pb_graph_pin->pin_number, pb->pb_route.at(pin).pb_graph_pin->pin_number);
     if (result != ignored_atom_nets.end() && result->second && options.is_pin_ignore_global_nets(std::string(pb->pb_graph_node->pb_type->name),
                                            curr_pin)) {
       continue;
@@ -739,10 +740,12 @@ static void add_lb_router_nets(
      */
     std::vector<int> pb_route_indices;
     if (design_constraints.unconstrained_net(constrained_net_name)) {
+      VTR_LOGV(verbose, "Search remapped routing traces for the unconstrained net\n");
       pb_route_indices = find_pb_route_remapped_source_pb_pin(
         pb, source_pb_pin, atom_net_id_to_route);
     } else {
       /* If this is a constrained net but the source pin is not the pin that the net is constrained to, w*/
+      VTR_LOGV(verbose, "Search routing traces for the constrained net\n");
       pb_route_indices =
         find_pb_route_by_atom_net_exclude_blacklist(pb, source_pb_pin, atom_net_id_to_route, ignored_atom_nets, options);
     }
