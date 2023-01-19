@@ -305,6 +305,64 @@ static std::vector<int> find_pb_route_by_atom_net(
 }
 
 /***************************************************************************************
+ * This function will find the actual routing traces of the demanded net
+ * There is a specific search space applied when searching the routing traces:
+ * - ONLY applicable to the pb_pin of top-level pb_graph_node
+ * - First-tier candidates are in the same port of the source pin
+ * - If nothing is found in first-tier, we find expand the range by considering
+ *all the pins in the same type that are available at the top-level
+ *pb_graph_node
+ * - Exclude all the pb_route that is from a net on a pin which should be ignored 
+ ***************************************************************************************/
+static std::vector<int> find_pb_route_by_atom_net_exclude_blacklist(
+  const t_pb* pb, const t_pb_graph_pin* source_pb_pin,
+  const AtomNetId& atom_net_id, const std::map<AtomNetId, bool>& ignored_atom_nets, const RepackOption& options) {
+  VTR_ASSERT(true == source_pb_pin->parent_node->is_root());
+
+  std::vector<int> pb_route_indices;
+
+  std::vector<int> candidate_pool;
+  for (int pin = 0; pin < pb->pb_graph_node->total_pb_pins; ++pin) {
+    /* Bypass unused pins */
+    if ((0 == pb->pb_route.count(pin)) ||
+        (AtomNetId::INVALID() == pb->pb_route.at(pin).atom_net_id)) {
+      continue;
+    }
+    /* Get the driver pb pin id, it must be valid */
+    if (atom_net_id != pb->pb_route.at(pin).atom_net_id) {
+      continue;
+    }
+    BasicPort curr_pin(std::string(source_pb_pin->port->name),
+                       source_pb_pin->pin_number, source_pb_pin->pin_number);
+    auto result = ignored_atom_nets.find(atom_net_id);
+    if (result != ignored_atom_nets.end() && result->second && options.is_pin_ignore_global_nets(std::string(pb->pb_graph_node->pb_type->name),
+                                           curr_pin)) {
+      continue;
+    }
+    candidate_pool.push_back(pin);
+  }
+
+  for (int pin : candidate_pool) {
+    if (source_pb_pin->port == pb->pb_route.at(pin).pb_graph_pin->port) {
+      pb_route_indices.push_back(pin);
+    }
+  }
+
+  if (pb_route_indices.empty()) {
+    for (int pin : candidate_pool) {
+      if (pb->pb_route.at(pin).pb_graph_pin->parent_node->is_root() &&
+          is_pb_graph_pins_share_interc(source_pb_pin,
+                                        pb->pb_route.at(pin).pb_graph_pin)) {
+        pb_route_indices.push_back(pin);
+      }
+    }
+  }
+
+  return pb_route_indices;
+}
+
+
+/***************************************************************************************
  * This function will find the actual source_pb_pin that is mapped by packed in
  *the pb route As the inputs of clustered block may be renamed during routing,
  * our pb_route results may lose consistency.
@@ -684,10 +742,9 @@ static void add_lb_router_nets(
       pb_route_indices = find_pb_route_remapped_source_pb_pin(
         pb, source_pb_pin, atom_net_id_to_route);
     } else {
-      VTR_ASSERT_SAFE(
-        !design_constraints.unconstrained_net(constrained_net_name));
+      /* If this is a constrained net but the source pin is not the pin that the net is constrained to, w*/
       pb_route_indices =
-        find_pb_route_by_atom_net(pb, source_pb_pin, atom_net_id_to_route);
+        find_pb_route_by_atom_net_exclude_blacklist(pb, source_pb_pin, atom_net_id_to_route, ignored_atom_nets, options);
     }
     /* It could happen that the constrained net is NOT used in this clb, we just
      * skip it for routing For example, a clkB net is never mapped to any ports
