@@ -1,0 +1,6 @@
+<repack_design_constraints>
+  <pin_constraint pb_type="clb" pin="clk[0]" net="clk_i"/>
+  <pin_constraint pb_type="clb" pin="reset[0]" net="rst_i"/>
+  <!-- Leave lreset unconstrained as it may be mapped to any internal reset signals -->
+</repack_design_constraints>
+
