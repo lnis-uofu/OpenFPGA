@@ -766,7 +766,9 @@ static void add_lb_router_nets(
         VTR_LOGV(verbose, "Bypass routing due to no routing traces found\n");
         continue;
       } else {
-        VTR_LOGV(verbose, "No regular routing traces found but only invisible routing traces will be considered\n");
+        VTR_LOGV(verbose,
+                 "No regular routing traces found but only invisible routing "
+                 "traces will be considered\n");
       }
     } else if (1 == pb_route_indices.size()) {
       pb_route_index = pb_route_indices[0];
