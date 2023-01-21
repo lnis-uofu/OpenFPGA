@@ -762,8 +762,12 @@ static void add_lb_router_nets(
      * */
     int pb_route_index;
     if (0 == pb_route_indices.size()) {
-      VTR_LOGV(verbose, "Bypass routing due to no routing traces found\n");
-      continue;
+      if (ignored_global_net_sinks[atom_net_id_to_route].empty()) {
+        VTR_LOGV(verbose, "Bypass routing due to no routing traces found\n");
+        continue;
+      } else {
+        VTR_LOGV(verbose, "No regular routing traces found but only invisible routing traces will be considered\n");
+      }
     } else if (1 == pb_route_indices.size()) {
       pb_route_index = pb_route_indices[0];
     } else {
