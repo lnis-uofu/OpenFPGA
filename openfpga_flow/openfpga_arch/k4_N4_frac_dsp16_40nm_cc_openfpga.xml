@@ -199,6 +199,7 @@
     <!-- physical pb_type binding in complex block dsp -->
     <pb_type name="mult_16" physical_mode_name="mult_16x16"/>
     <!-- Bind the primitive pb_type in the physical mode to a circuit model -->
+    <!-- IMPORTANT: the mode bits are intended to be wrong. Designed to validate the correctness of bitstream setting files. See correct mode bits in the openfpga_flow/openfpga_yosys_techlib/k4_N4_tileable_frac_dsp16_dsp_map.v -->
     <pb_type name="mult_16[mult_16x16].mult_16x16_slice.mult_16x16" circuit_model_name="frac_mult_16x16" mode_bits="1"/>
     <pb_type name="mult_16[mult_8x8].mult_8x8_slice.mult_8x8" physical_pb_type_name="mult_16[mult_16x16].mult_16x16_slice.mult_16x16" mode_bits="0" physical_pb_type_index_factor="0">
       <port name="A" physical_mode_port="A[0:7]" physical_mode_port_rotate_offset="8"/>
