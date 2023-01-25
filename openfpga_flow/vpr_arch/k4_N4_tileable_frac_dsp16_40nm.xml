@@ -25,6 +25,24 @@
        that describe them.
   -->
   <models>
+    <model name="mult_8">
+      <input_ports>
+        <port name="A" combinational_sink_ports="Y"/>
+        <port name="B" combinational_sink_ports="Y"/>
+      </input_ports>
+      <output_ports>
+        <port name="Y"/>
+      </output_ports>
+    </model>
+    <model name="mult_16">
+      <input_ports>
+        <port name="A" combinational_sink_ports="Y"/>
+        <port name="B" combinational_sink_ports="Y"/>
+      </input_ports>
+      <output_ports>
+        <port name="Y"/>
+      </output_ports>
+    </model>
     <!-- A virtual model for I/O to be used in the physical mode of io block -->
     <model name="io">
       <input_ports>
