@@ -62,8 +62,8 @@ checkout:
 
 prebuild:
 # Run cmake to generate Makefile under the build directory, before compilation
-	@mkdir -p ${BUILD_DIR}
-	echo "cd ${BUILD_DIR} && ${CMAKE_COMMAND} ${CMAKE_FLAGS} ${SOURCE_DIR}"
+	@mkdir -p ${BUILD_DIR} && \
+	echo "cd ${BUILD_DIR} && ${CMAKE_COMMAND} ${CMAKE_FLAGS} ${SOURCE_DIR}" && \
 	cd ${BUILD_DIR} && ${CMAKE_COMMAND} ${CMAKE_FLAGS} ${SOURCE_DIR}
 
 compile: prebuild
