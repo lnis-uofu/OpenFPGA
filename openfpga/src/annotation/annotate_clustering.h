@@ -15,7 +15,7 @@
 namespace openfpga {
 
 bool annotate_post_routing_cluster_sync_results(
-  const DeviceContext& device_ctx, const ClusteringContext& clustering_ctx,
+  const ClusteringContext& clustering_ctx,
   VprClusteringAnnotation& clustering_annotation);
 
 } /* end namespace openfpga */

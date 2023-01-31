@@ -451,7 +451,7 @@ std::vector<bool> build_frac_lut_bitstream(
   std::vector<bool> lut_bitstream(lut_mux_graph.num_inputs(),
                                   default_sram_bit_value);
 
-  for (const std::pair<const t_pb_graph_pin*, AtomNetlist::TruthTable>&
+  for (std::pair<const t_pb_graph_pin*, AtomNetlist::TruthTable>
          element : truth_tables) {
     /* Find the corresponding circuit model output port and assoicated
      * lut_output_mask */
