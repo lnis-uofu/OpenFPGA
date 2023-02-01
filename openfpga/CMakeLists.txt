@@ -47,6 +47,24 @@ target_link_libraries(libopenfpga
 add_executable(openfpga ${EXEC_SOURCE})
 target_link_libraries(openfpga libopenfpga)
 
+if (OPENFPGA_ENABLE_STRICT_COMPILE)
+    message(STATUS "OpenFPGA: building with strict flags")
+
+    set(OPENFPGA_STRICT_COMPILE_FLAGS_TO_CHECK
+        #GCC-like
+        "-Werror"
+        # due to the pointer hackery in timing_driven_route_structs and BinaryHeap.heap_
+        "-Wno-error=free-nonheap-object"
+        )
+
+    foreach(flag ${OPENFPGA_STRICT_COMPILE_FLAGS_TO_CHECK})
+        message(STATUS "\tAdding CXX flag: ${flag}")
+        target_compile_options(libopenfpga PRIVATE ${flag})
+        target_compile_options(openfpga PRIVATE ${flag})
+        target_link_libraries(openfpga ${flag})
+    endforeach()
+endif()
+
 #Suppress IPO link warnings if IPO is enabled
 get_target_property(OPENFPGA_USES_IPO openfpga INTERPROCEDURAL_OPTIMIZATION)
 if (OPENFPGA_USES_IPO)

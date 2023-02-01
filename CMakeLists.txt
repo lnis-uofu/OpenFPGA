@@ -70,6 +70,7 @@ option(OPENFPGA_WITH_YOSYS_PLUGIN "Enable building Yosys plugin" ON)
 option(OPENFPGA_WITH_TEST "Enable testing build for codebase. Once enabled, make test can be run" ON)
 option(OPENFPGA_WITH_VERSION "Enable version always-up-to-date when building codebase. Disable only when you do not care an accurate version number" ON)
 option(OPENFPGA_WITH_SWIG "Enable SWIG interface when building codebase. Disable when you do not need high-level interfaces, such as Tcl/Python" ON)
+option(OPENFPGA_ENABLE_STRICT_COMPILE "Specifies whether compiler warnings should be treated as errors (e.g. -Werror)" OFF)
 
 # Options pass on to VTR
 set(WITH_ABC ON CACHE BOOL "Enable building ABC in Verilog-to-Routing")
@@ -83,6 +84,8 @@ set(WITH_YOSYS OFF CACHE BOOL "Enable building Yosys in Verilog-to-Routing")
 set(ODIN_YOSYS OFF CACHE BOOL "Enable building odin with yosys in Verilog-to-Routing")
 set(YOSYS_SV_UHDM_PLUGIN OFF CACHE BOOL "Enable building and installing Yosys SystemVerilog and UHDM plugins in Verilog-to-Routing")
 set(VTR_ENABLE_VERSION ${OPENFPGA_WITH_VERSION} CACHE BOOL "Enable version always-up-to-date when building codebase. Disable only when you do not care an accurate version number")
+# TODO: OpenFPGA and VPR has different requirements on no-warning build, e.g., on OS and compiler versions
+#set(VTR_ENABLE_STRICT_COMPILE ${OPENFPGA_ENABLE_STRICT_COMPILE} CACHE BOOL "Specifies whether compiler warnings should be treated as errors (e.g. -Werror)")
 
 # TCL file/lib required to link with SWIG generated wrapper
 if (OPENFPGA_WITH_SWIG)

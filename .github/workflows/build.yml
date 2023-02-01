@@ -263,6 +263,102 @@ jobs:
         run: |
           make all BUILD_TYPE=$BUILD_TYPE 
 
+  debug_build:
+    # Prevents from running on forks where no custom runners are available
+    needs: change_detect
+    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }} && ${{ github.repository_owner == 'lnis-uofu' }}
+    name: ${{ matrix.config.name }}
+    runs-on: [self-hosted, Linux, X64, eda_xt]
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: "Debug Build (Ubuntu 22.04)"
+            cc: gcc-11
+            cxx: g++-11
+            build_type: debug
+            cores: 4
+    # Define the steps to run the build job
+    env:
+      CC: ${{ matrix.config.cc }}
+      CXX: ${{ matrix.config.cxx }}
+    steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+          
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Dump tool versions
+        run: |
+          cmake --version
+          ${CC} --version
+          ${CXX} --version
+
+      - uses: hendrikmuhs/ccache-action@v1
+
+      - name: Build
+        shell: bash
+        run: |
+          make all BUILD_TYPE=${{ matrix.config.build_type }} -j ${{ matrix.config.cores }}
+
+      - name: Quick Test
+        shell: bash
+        run: |
+          source openfpga.sh && run-task compilation_verification --debug --show_thread_logs
+
+  no_warning_build:
+    # Prevents from running on forks where no custom runners are available
+    needs: change_detect
+    if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }} && ${{ github.repository_owner == 'lnis-uofu' }}
+    name: ${{ matrix.config.name }}
+    runs-on: [self-hosted, Linux, X64, eda_xt]
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: "No-warning Build (Ubuntu 22.04)"
+            cc: gcc-11
+            cxx: g++-11
+            build_type: release
+            cores: 4
+    # Define the steps to run the build job
+    env:
+      CC: ${{ matrix.config.cc }}
+      CXX: ${{ matrix.config.cxx }}
+    steps:
+      - name: Cancel previous
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+          
+      - name: Checkout OpenFPGA repo
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Dump tool versions
+        run: |
+          cmake --version
+          ${CC} --version
+          ${CXX} --version
+
+      - uses: hendrikmuhs/ccache-action@v1
+
+      - name: Build
+        shell: bash
+        run: |
+          make all BUILD_TYPE=${{ matrix.config.build_type }} -j ${{ matrix.config.cores }} CMAKE_FLAGS="-DOPENFPGA_ENABLE_STRICT_COMPILE=ON"
+
+      - name: Quick Test
+        shell: bash
+        run: |
+          source openfpga.sh && run-task compilation_verification --debug --show_thread_logs
+
   docker_distribution:
     name: Build docker image for distribution
     runs-on: ubuntu-20.04

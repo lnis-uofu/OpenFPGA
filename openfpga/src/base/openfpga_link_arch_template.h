@@ -131,7 +131,7 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   /* Annotate clustering results */
   if (CMD_EXEC_FATAL_ERROR ==
       annotate_post_routing_cluster_sync_results(
-        g_vpr_ctx.device(), g_vpr_ctx.clustering(),
+        g_vpr_ctx.clustering(),
         openfpga_ctx.mutable_vpr_clustering_annotation())) {
     return CMD_EXEC_FATAL_ERROR;
   }
