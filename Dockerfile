@@ -14,18 +14,13 @@ ENV USER ${NB_USER}
 ENV NB_UID ${NB_UID}
 ENV HOME /home/${NB_USER}
 
-RUN adduser --disabled-password \
-    --gecos "Default user" \
-    --uid ${NB_UID} \
-    ${NB_USER}
-
-USER root
 RUN chown -R ${NB_UID} ${HOME}
 RUN chown -R ${NB_UID} /opt/openfpga
 USER ${NB_USER}
 
 ENV PATH $PATH:/home/${NB_USER}/.local/bin
 
+RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install --user --no-cache-dir notebook
 RUN python3 -m pip install --user --no-cache-dir jupyterlab
 RUN python3 -m pip install --user --no-cache-dir jupyterhub
