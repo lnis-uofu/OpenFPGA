@@ -31,6 +31,7 @@ RUN npm install @jupyterlab/server-proxy
 RUN jupyter serverextension enable --py jupyter_server_proxy
 RUN jupyter labextension install @jupyterlab/server-proxy
 RUN jupyter lab build
+WORKDIR /opt/openfpga/
 RUN git reset --hard HEAD
 
 # Set up terminal
