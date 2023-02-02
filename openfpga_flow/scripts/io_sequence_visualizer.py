@@ -33,16 +33,10 @@ def draw_connections(width, height, connections):
     dwg.add(dwg_main)
 
     for w in range(1, width + 2):
-        dwg_main.add(
-            dwg.line(
-                (w * SCALE, SCALE), (w * SCALE, (height + 1) * SCALE), stroke="red"
-            )
-        )
+        dwg_main.add(dwg.line((w * SCALE, SCALE), (w * SCALE, (height + 1) * SCALE), stroke="red"))
 
     for h in range(1, height + 2):
-        dwg_main.add(
-            dwg.line((SCALE, h * SCALE), ((width + 1) * SCALE, h * SCALE), stroke="red")
-        )
+        dwg_main.add(dwg.line((SCALE, h * SCALE), ((width + 1) * SCALE, h * SCALE), stroke="red"))
 
     path = "M "
     for point in connections:

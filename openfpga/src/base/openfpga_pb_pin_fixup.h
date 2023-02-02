@@ -4,9 +4,8 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "command.h"
-#include "command_context.h"
 #include "openfpga_context.h"
+#include "vpr_context.h"
 
 /********************************************************************
  * Function declaration
@@ -15,8 +14,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-int pb_pin_fixup(OpenfpgaContext& openfpga_context, const Command& cmd,
-                 const CommandContext& cmd_context);
+void update_pb_pin_with_post_routing_results(
+  const DeviceContext& device_ctx, const ClusteringContext& clustering_ctx,
+  const PlacementContext& placement_ctx,
+  const VprRoutingAnnotation& vpr_routing_annotation,
+  VprClusteringAnnotation& vpr_clustering_annotation, const bool& verbose);
 
 } /* end namespace openfpga */
 

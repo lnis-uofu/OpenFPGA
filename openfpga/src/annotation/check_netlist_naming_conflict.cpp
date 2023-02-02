@@ -80,8 +80,8 @@ static std::string fix_name_contain_sensitive_chars(
  * - Iterate over all the nets and see if any net name contain
  *   any sensitive character
  *******************************************************************/
-static size_t detect_netlist_naming_conflict(
-  const AtomNetlist& atom_netlist, const std::string& sensitive_chars) {
+size_t detect_netlist_naming_conflict(const AtomNetlist& atom_netlist,
+                                      const std::string& sensitive_chars) {
   size_t num_conflicts = 0;
 
   /* Walk through blocks in the netlist */
@@ -119,9 +119,10 @@ static size_t detect_netlist_naming_conflict(
  * - Iterate over all the nets and correct any net name that contains
  *   any sensitive character
  *******************************************************************/
-static void fix_netlist_naming_conflict(
-  const AtomNetlist& atom_netlist, const std::string& sensitive_chars,
-  const std::string& fix_chars, VprNetlistAnnotation& vpr_netlist_annotation) {
+void fix_netlist_naming_conflict(const AtomNetlist& atom_netlist,
+                                 const std::string& sensitive_chars,
+                                 const std::string& fix_chars,
+                                 VprNetlistAnnotation& vpr_netlist_annotation) {
   size_t num_fixes = 0;
 
   /* Walk through blocks in the netlist */
@@ -162,7 +163,7 @@ static void fix_netlist_naming_conflict(
  * Report all the fix-up in the naming of netlist components,
  * i.e., blocks, nets
  *******************************************************************/
-static void print_netlist_naming_fix_report(
+void print_netlist_naming_fix_report(
   const std::string& fname, const AtomNetlist& atom_netlist,
   const VprNetlistAnnotation& vpr_netlist_annotation) {
   /* Create a file handler */
@@ -227,66 +228,6 @@ static void print_netlist_naming_fix_report(
 
   /* Close the file stream */
   fp.close();
-}
-
-/********************************************************************
- * Top-level function to detect and correct any naming
- * in the users' BLIF netlist that violates the syntax of OpenFPGA
- * fabric generator, i.e., Verilog generator and SPICE generator
- *******************************************************************/
-int check_netlist_naming_conflict(OpenfpgaContext& openfpga_context,
-                                  const Command& cmd,
-                                  const CommandContext& cmd_context) {
-  vtr::ScopedStartFinishTimer timer(
-    "Check naming violations of netlist blocks and nets");
-
-  /* By default, we replace all the illegal characters with '_' */
-  const std::string& sensitive_chars(".,:;\'\"+-<>()[]{}!@#$%^&*~`?/");
-  const std::string& fix_chars("____________________________");
-
-  CommandOptionId opt_fix = cmd.option("fix");
-
-  /* Do the main job first: detect any naming in the BLIF netlist that violates
-   * the syntax */
-  if (false == cmd_context.option_enable(cmd, opt_fix)) {
-    size_t num_conflicts =
-      detect_netlist_naming_conflict(g_vpr_ctx.atom().nlist, sensitive_chars);
-    VTR_LOGV_ERROR(
-      (0 < num_conflicts && (false == cmd_context.option_enable(cmd, opt_fix))),
-      "Found %ld naming conflicts in the netlist. Please correct so as to use "
-      "any fabric generators.\n",
-      num_conflicts);
-    VTR_LOGV(0 == num_conflicts,
-             "Check naming conflicts in the netlist passed.\n");
-
-    /* If we see conflicts, report minor error */
-    if (0 < num_conflicts) {
-      return CMD_EXEC_MINOR_ERROR;
-    }
-
-    /* Otherwise, we should see zero conflicts */
-    VTR_ASSERT(0 == num_conflicts);
-    return CMD_EXEC_SUCCESS;
-  }
-
-  /* If the auto correction is enabled, we apply a fix */
-  if (true == cmd_context.option_enable(cmd, opt_fix)) {
-    fix_netlist_naming_conflict(
-      g_vpr_ctx.atom().nlist, sensitive_chars, fix_chars,
-      openfpga_context.mutable_vpr_netlist_annotation());
-
-    CommandOptionId opt_report = cmd.option("report");
-    if (true == cmd_context.option_enable(cmd, opt_report)) {
-      print_netlist_naming_fix_report(
-        cmd_context.option_value(cmd, opt_report), g_vpr_ctx.atom().nlist,
-        openfpga_context.vpr_netlist_annotation());
-      VTR_LOG("Naming fix-up report is generated to file '%s'\n",
-              cmd_context.option_value(cmd, opt_report).c_str());
-    }
-  }
-
-  /* TODO: should identify the error code from internal function execution */
-  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */

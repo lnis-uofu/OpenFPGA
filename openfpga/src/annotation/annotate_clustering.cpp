@@ -18,7 +18,7 @@ namespace openfpga {
  * up-to-date
  */
 bool annotate_post_routing_cluster_sync_results(
-  const DeviceContext& device_ctx, const ClusteringContext& clustering_ctx,
+  const ClusteringContext& clustering_ctx,
   VprClusteringAnnotation& clustering_annotation) {
   VTR_LOG(
     "Building annotation for post-routing and clustering synchornization "

@@ -8,6 +8,13 @@ PYTHON_EXEC=python3.8
 ##############################################
 echo -e "Basic regression tests";
 
+echo -e "Test multiple runs of vpr"
+run-task basic_tests/vpr_standalone $@
+
+echo -e "Test source commands in openfpga shell"
+run-task basic_tests/source_command/source_string $@
+run-task basic_tests/source_command/source_file $@
+
 echo -e "Testing configuration chain of a K4N4 FPGA";
 run-task basic_tests/full_testbench/configuration_chain $@
 run-task basic_tests/full_testbench/configuration_chain_no_time_stamp $@
@@ -135,6 +142,10 @@ run-task basic_tests/k4_series/k4n4_custom_io_loc_center_width_odd $@
 echo -e "Testing K4N4 with a local routing where reset can driven LUT inputs";
 run-task basic_tests/k4_series/k4n4_rstOnLut $@
 run-task basic_tests/k4_series/k4n4_rstOnLut_strong $@
+echo -e "Testing K4N4 support clock generation by internal resources";
+run-task basic_tests/k4_series/k4n4_clk_gen $@
+echo -e "Testing K4N4 support reset generation by internal resources";
+run-task basic_tests/k4_series/k4n4_rst_gen $@
 
 echo -e "Testing different tile organizations";
 echo -e "Testing tiles with pins only on top and left sides";
@@ -183,6 +194,7 @@ run-task basic_tests/bus_group/preconfig_testbench_explicit_mapping $@
 run-task basic_tests/bus_group/preconfig_testbench_implicit_mapping $@
 run-task basic_tests/bus_group/full_testbench_explicit_mapping $@
 run-task basic_tests/bus_group/full_testbench_implicit_mapping $@
+run-task basic_tests/bus_group/auto_gen_bus_group $@
 
 echo -e "Testing fix pins features";
 run-task basic_tests/io_constraints/fix_pins $@

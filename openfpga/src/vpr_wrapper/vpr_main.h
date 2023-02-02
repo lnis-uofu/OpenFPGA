@@ -4,7 +4,9 @@
 /* Begin namespace vpr */
 namespace vpr {
 
-int vpr(int argc, char** argv);
+int vpr_wrapper(int argc, char** argv);
+
+int vpr_standalone_wrapper(int argc, char** argv);
 
 } /* End namespace vpr */
 

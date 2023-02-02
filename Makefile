@@ -31,6 +31,7 @@ MAKEFLAGS := -s
 # Directory to build the codes
 SOURCE_DIR :=${PWD}
 BUILD_DIR ?= build
+CMAKE_GOALS = all
 
 # Find CMake command from system variable, otherwise use a default one
 ifeq ($(origin CMAKE_COMMAND),undefined)
@@ -43,6 +44,7 @@ endif
 PYTHON_EXEC ?= python3
 CLANG_FORMAT_EXEC ?= clang-format-10
 XML_FORMAT_EXEC ?= xmllint
+PYTHON_FORMAT_EXEC ?= black
 
 # Put it first so that "make" without argument is like "make help".
 export COMMENT_EXTRACT
@@ -51,20 +53,31 @@ export COMMENT_EXTRACT
 help:
 	@${PYTHON_EXEC} -c "$$COMMENT_EXTRACT"
 
-.PHONY: all
+.PHONY: help
 
 checkout: 
 # Update all the submodules
 	git submodule init
 	git submodule update --init --recursive
 
-compile:
-# Compile the code base
-	@mkdir -p ${BUILD_DIR}
-	echo "cd ${BUILD_DIR} && ${CMAKE_COMMAND} ${CMAKE_FLAGS} ${SOURCE_DIR}"
+prebuild:
+# Run cmake to generate Makefile under the build directory, before compilation
+	@mkdir -p ${BUILD_DIR} && \
+	echo "cd ${BUILD_DIR} && ${CMAKE_COMMAND} ${CMAKE_FLAGS} ${SOURCE_DIR}" && \
 	cd ${BUILD_DIR} && ${CMAKE_COMMAND} ${CMAKE_FLAGS} ${SOURCE_DIR}
-	echo "Building target(s): ${MAKECMDGOALS}"
-	@+${MAKE} -C ${BUILD_DIR} ${MAKECMDGOALS}
+
+compile: prebuild
+# Compile the code base. By default, all the targets will be compiled
+# Following options are available
+# .. option:: CMAKE_GOALS
+#
+#   Define the target for cmake to compile. for example, ``cmake_goals=openfpga`` indicates that only openfpga binary will be compiled 
+	echo "Building target(s): ${CMAKE_GOALS}"
+	@+${MAKE} -C ${BUILD_DIR} ${CMAKE_GOALS}
+
+list_cmake_targets: prebuild
+# Show the targets available to be built, which can be specified through ``CMAKE_GOALS`` when compile
+	cd ${BUILD_DIR} && make help && cd -
 
 all: checkout compile
 # A shortcut command to run checkout and compile in serial
@@ -82,6 +95,16 @@ format-xml:
 	do \
 	XMLLINT_INDENT="  " && ${XML_FORMAT_EXEC} --format $${f} --output $${f} || exit 1; \
 	done
+
+format-py:
+# Format all the python scripts under this project, excluding submodules
+	for f in `find openfpga_flow/scripts -iname *.py`; \
+	do \
+	${PYTHON_FORMAT_EXEC} $${f} --line-length 100 || exit 1; \
+	done
+
+format-all: format-cpp format-xml format-py
+# Format all the C/C++, XML and Python codes
 
 clean:
 # Remove current build results

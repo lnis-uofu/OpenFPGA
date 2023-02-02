@@ -29,6 +29,8 @@ run-task fpga_bitstream/repack_wire_lut_strong $@
 
 echo -e "Testing overloading default paths for programmable interconnect when generating bitstream";
 run-task fpga_bitstream/overload_mux_default_path $@
+echo -e "Testing overloading mode bits for DSP blocks when generating bitstream";
+run-task fpga_bitstream/overload_dsp_mode_bit $@
 
 echo -e "Testing outputting I/O mapping result to file";
 run-task fpga_bitstream/write_io_mapping $@

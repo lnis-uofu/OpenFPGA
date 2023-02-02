@@ -7,9 +7,6 @@
 #include "vtr_log.h"
 #include "vtr_time.h"
 
-/* Headers from openfpgashell library */
-#include "command_exit_codes.h"
-
 /* Headers from vpr library */
 #include "lut_utils.h"
 #include "openfpga_lut_truth_table_fixup.h"
@@ -176,7 +173,7 @@ static void rec_adapt_lut_pb_tt(
  * Main function to fix up truth table for each LUT used in FPGA
  * This function will walk through each clustered block
  *******************************************************************/
-static void update_lut_tt_with_post_packing_results(
+void update_lut_tt_with_post_packing_results(
   const AtomContext& atom_ctx, const ClusteringContext& clustering_ctx,
   VprClusteringAnnotation& vpr_clustering_annotation, const bool& verbose) {
   for (auto blk_id : clustering_ctx.clb_nlist.blocks()) {
@@ -184,34 +181,6 @@ static void update_lut_tt_with_post_packing_results(
                         clustering_ctx.clb_nlist.block_pb(blk_id)->pb_route,
                         vpr_clustering_annotation, verbose);
   }
-}
-
-/********************************************************************
- * Top-level function to fix up the lut truth table results after packing is
- *done The problem comes from a mismatch between the packing results and
- * original truth tables in users' BLIF file
- * As LUT inputs are equivalent in nature, the router of packer will try
- * to swap the net mapping among these pins so as to achieve best
- * routing optimization.
- * However, it will cause the original truth table out-of-date when packing is
- *done. This function aims to fix the mess after packing so that the truth table
- * can be synchronized
- *******************************************************************/
-int lut_truth_table_fixup(OpenfpgaContext& openfpga_context, const Command& cmd,
-                          const CommandContext& cmd_context) {
-  vtr::ScopedStartFinishTimer timer(
-    "Fix up LUT truth tables after packing optimization");
-
-  CommandOptionId opt_verbose = cmd.option("verbose");
-
-  /* Apply fix-up to each packed block */
-  update_lut_tt_with_post_packing_results(
-    g_vpr_ctx.atom(), g_vpr_ctx.clustering(),
-    openfpga_context.mutable_vpr_clustering_annotation(),
-    cmd_context.option_enable(cmd, opt_verbose));
-
-  /* TODO: should identify the error code from internal function execution */
-  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */

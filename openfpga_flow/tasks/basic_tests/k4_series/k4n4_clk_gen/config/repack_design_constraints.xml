@@ -1,0 +1,5 @@
+<repack_design_constraints>
+  <pin_constraint pb_type="clb" pin="clk[0]" net="clk_i"/>
+  <!-- Leave lclk unconstrained as it may be mapped to any internal clock signals -->
+</repack_design_constraints>
+

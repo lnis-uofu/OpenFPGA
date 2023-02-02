@@ -696,7 +696,7 @@ static void print_verilog_top_testbench_benchmark_clock_ports(
   /* Create a clock port if the benchmark have one but not in the default name!
    * We will wire the clock directly to the operating clock directly
    */
-  for (const std::string clock_port_name : clock_port_names) {
+  for (std::string clock_port_name : clock_port_names) {
     if (0 == clock_port_name.compare(default_clock_port.get_name())) {
       continue;
     }

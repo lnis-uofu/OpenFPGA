@@ -65,17 +65,28 @@ class Shell {
    * Built-in commands have their own execute functions inside the shell
    */
   enum e_exec_func_type {
-    CONST_STANDARD,
-    STANDARD,
-    CONST_SHORT,
-    SHORT,
-    BUILTIN,
-    MACRO,
+    CONST_STANDARD, /* A standard function requires to read data from the
+                       command context, need the shell to provide command
+                       parsing */
+    STANDARD,       /* A standard function requires to write data to the command
+                       context, need the shell to provide command parsing */
+    CONST_SHORT,    /* A short function requries to read data from the common
+                       context without any command-line options */
+    SHORT,    /* A short function requries to write data to the common context
+                 without any command-line options */
+    BUILTIN,  /* A built-in function which requires no input arguments at all */
+    FLOATING, /* A floating function which does not need to write/read any data
+                 from the common context. Need shell to provide command parsing
+               */
+    MACRO,    /* A black-box function which has its own command-line
+                 parser/interface. No need for shell to provide command parsing */
+    PLUGIN,   /* A plug-in function which is based on other commands, require
+                 shell methods */
     NUM_EXEC_FUNC_TYPES
   };
 
  public: /* Constructor */
-  Shell<T>(const char* name);
+  Shell<T>();
 
  public: /* Public accessors */
   std::string name() const;
@@ -96,8 +107,10 @@ class Shell {
     const ShellCommandClassId& cmd_class_id) const;
 
  public: /* Public mutators */
+  void set_name(const char* name);
   void add_title(const char* title);
-  ShellCommandId add_command(const Command& cmd, const char* descr);
+  ShellCommandId add_command(const Command& cmd, const char* descr,
+                             const bool& hidden = false);
   void set_command_class(const ShellCommandId& cmd_id,
                          const ShellCommandClassId& cmd_class_id);
   /* Link the execute function to a command
@@ -148,10 +161,24 @@ class Shell {
   void set_command_execute_function(const ShellCommandId& cmd_id,
                                     std::function<void()> exec_func);
 
+  /* Floating function, including the only commands
+   * This is designed for implementing functions which is totally independent
+   * from <T>
+   */
+  void set_command_execute_function(
+    const ShellCommandId& cmd_id,
+    std::function<int(const Command&, const CommandContext&)> exec_func);
+
   /* Marco function, which directly call a macro function without command
    * parsing */
   void set_command_execute_function(const ShellCommandId& cmd_id,
                                     std::function<int(int, char**)> exec_func);
+
+  /* Plug-in function, which calls other command thru shell's APIs */
+  void set_command_execute_function(
+    const ShellCommandId& cmd_id,
+    std::function<int(Shell<T>*, T&, const Command&, const CommandContext&)>
+      exec_func);
 
   void set_command_dependency(
     const ShellCommandId& cmd_id,
@@ -170,19 +197,20 @@ class Shell {
   void run_script_mode(const char* script_file_name, T& context,
                        const bool& batch_mode = false);
   /* Print all the commands by their classes. This is actually the help desk */
-  void print_commands() const;
+  void print_commands(const bool& show_hidden = false) const;
   /* Find the exit code (assume quit shell now) */
   int exit_code() const;
   /* Show statistics of errors during command execution */
   int execution_errors() const;
   /* Quit the shell */
   void exit(const int& init_err = 0) const;
-
- private: /* Private executors */
   /* Execute a command, the command line is the user's input to launch a command
    * The common_context is the data structure to exchange data between commands
+   * Optionally, hidden commands may be forbidden to call. User can allow them
+   * to be called under different situations
    */
-  int execute_command(const char* cmd_line, T& common_context);
+  int execute_command(const char* cmd_line, T& common_context,
+                      const bool& allow_hidden_command = true);
 
  private: /* Internal data */
   /* Name of the shell, this will appear in the interactive mode */
@@ -200,6 +228,9 @@ class Shell {
 
   /* Unique ids for each command */
   vtr::vector<ShellCommandId, ShellCommandId> command_ids_;
+
+  /* If this is a hidden command which will not appear in help desk */
+  vtr::vector<ShellCommandId, bool> command_hidden_;
 
   /* Objects for each command */
   vtr::vector<ShellCommandId, Command> commands_;
@@ -232,10 +263,16 @@ class Shell {
     command_short_const_execute_functions_;
   vtr::vector<ShellCommandId, std::function<int(T&)>>
     command_short_execute_functions_;
+  vtr::vector<ShellCommandId,
+              std::function<int(const Command&, const CommandContext&)>>
+    command_floating_execute_functions_;
   vtr::vector<ShellCommandId, std::function<void()>>
     command_builtin_execute_functions_;
   vtr::vector<ShellCommandId, std::function<int(int, char**)>>
     command_macro_execute_functions_;
+  vtr::vector<ShellCommandId, std::function<int(Shell<T>*, T&, const Command&,
+                                                const CommandContext&)>>
+    command_plugin_execute_functions_;
 
   /* Type of execute functions for each command.
    * This is supposed to be an internal data ONLY

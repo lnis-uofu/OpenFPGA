@@ -9,8 +9,22 @@ How to Compile
 
   .. youtube:: F9sMRmDewM0
 
-General Guidelines
-~~~~~~~~~~~~~~~~~~
+Supported Operating Systems
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+OpenFPGA is continously tested with Ubuntu 20.04 and partially on Ubuntu 22.04 
+It might work with earlier versions and other distributions.
+
+In addition to continous integration, our community users have tested OpenFPGA on their local machines using the following operating systems:
+
+- CentOS 7.8
+- CentOS 8
+- Ubuntu 18.04
+- Ubuntu 21.04
+- Ubuntu 22.04
+
+Build Steps
+~~~~~~~~~~~
 OpenFPGA uses CMake to generate the Makefile scripts.
 In general, please follow the steps to compile
 
@@ -20,13 +34,13 @@ In general, please follow the steps to compile
   cd OpenFPGA
   make all
 
-.. note:: OpenFPGA requires gcc/g++ version >5
+.. note:: OpenFPGA requires gcc/g++ version > 7 and clang version > 6.
 
 .. note:: cmake3.12+ is recommended to compile OpenFPGA with GUI
 
 .. note:: Recommend using ``make -j<int>`` to accelerate the compilation, where ``<int>`` denotes the number of cores to be used in compilation.
 
-.. note:: VPR's GUI requires gtk-3, and can be enabled with ``cmake .. -DVPR_USE_EZGL=on``
+.. note:: VPR's GUI requires gtk-3, and can be enabled with ``make .. CMAKE_FLAGS="-DVPR_USE_EZGL=on"``
 
 **Quick Compilation Verification**
 
@@ -62,35 +76,82 @@ The following options are available for a custom build
   - ``DOPENFPGA_WITH_TEST=[ON|OFF]``: Enable/Disable the test build
   - ``DOPENFPGA_WITH_YOSYS=[ON|OFF]``: Enable/Disable the build of yosys. Note that when disabled, the build of yosys-plugin is also disabled
   - ``DOPENFPGA_WITH_YOSYS_PLUGIN=[ON|OFF]``: Enable/Disable the build of yosys-plugin.
+  - ``DOPENFPGA_WITH_VERSION=[ON|OFF]``: Enable/Disable the build of version number. When disabled, version number will be displayed as an empty string.
+  - ``DOPENFPGA_WITH_SWIG=[ON|OFF]``: Enable/Disable the build of SWIG, which is required for integrating to high-level interface.
+  - ``OPENFPGA_ENABLE_STRICT_COMPILE=[ON|OFF]``: Specifies whether compiler warnings should be treated as errors (e.g. -Werror)
 
 .. warning:: By default, only required modules in *Verilog-to-Routing* (VTR) is enabled. On other words, ``abc``, ``odin``, ``yosys`` and other add-ons inside VTR are not built. If you want to enable them, please look into the dedicated options of CMake scripts.  
+
+.. option:: CMAKE_GOALS=<string>
+
+  Specify the build target for CMake system. For example, ``cmake_goals=openfpga`` indicates that only openfpga binary will be compiled. For a detailed list of targets, use ``make list_cmake_targets`` to show. By default, all the build targets will be included. 
 
 .. _tutorial_compile_dependencies:
 
 Dependencies
 ~~~~~~~~~~~~
-Full list of dependencies can be found at install_dependencies_build_.
-In particular, OpenFPGA requires specific versions for the following dependencies:
+
+Dependencies can be installed upon the use of OpenFPGA on different systems
+In general, OpenFPGA requires specific versions for the following dependencies:
 
 :cmake:
   version >3.12 for graphical interface
 
 :iverilog:
-  version 10.1+ is required to run Verilog-to-Verification flow
+  version 10.3+ is required to run Verilog-to-Verification flow
   
-:python dependencies:
-  python packages are also required:
+
+Ubuntu 20.04
+^^^^^^^^^^^^
+
+- Dependencies required to build the code base
+
+.. include:: ubuntu20p04_dependencies.sh
+  :code: shell
+
+- Dependencies required to run regression tests
+
+.. include:: regtest_dependencies.sh
+  :code: shell
+  
+.. note:: Python packages are also required
   
 .. code-block::
 
   python3 -m pip install -r requirements.txt
 
+- Dependencies required to build documentation
 
-.. _install_dependencies_build: https://github.com/lnis-uofu/OpenFPGA/blob/master/.github/workflows/install_dependencies_build.sh
+.. include:: doc_dependencies.sh
+  :code: shell
+
+Ubuntu 22.04
+^^^^^^^^^^^^
+
+- Dependencies required to build the code base
+
+.. include:: ubuntu22p04_dependencies.sh
+  :code: shell
+
+- Dependencies required to run regression tests
+
+.. include:: regtest_dependencies.sh
+  :code: shell
+  
+.. note:: Python packages are also required
+  
+.. code-block::
+
+  python3 -m pip install -r requirements.txt
+
+- Dependencies required to build documentation
+
+.. include:: doc_dependencies.sh
+  :code: shell
 
 
-Running with the docker image
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Running with pre-built docker image
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Users can skip the traditional installation process by using the Dockerized version
 of the OpenFPGA tool. The OpenFPGA project maintains the docker image/Github package of

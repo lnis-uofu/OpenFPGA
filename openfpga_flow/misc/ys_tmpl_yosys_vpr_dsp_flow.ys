@@ -94,4 +94,4 @@ stat
 # Output netlists
 #########################
 opt_clean -purge
-write_blif ${OUTPUT_BLIF}
+write_blif -param ${OUTPUT_BLIF}

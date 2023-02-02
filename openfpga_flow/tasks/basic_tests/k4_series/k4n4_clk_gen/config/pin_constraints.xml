@@ -1,0 +1,4 @@
+<pin_constraints>
+  <set_io pin="op_clk[0]" net="clk_i"/>
+</pin_constraints>
+
