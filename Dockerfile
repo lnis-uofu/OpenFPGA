@@ -8,14 +8,24 @@ RUN apt-get install -y nodejs
 RUN apt-get install tree
 RUN code-server --install-extension ms-python.python
 
-ARG NB_USER=openfpga_user
+RUN usermod -u 2000 openfpga_user
+RUN groupmod -g 2000 openfpga_user
+
+ARG NB_USER=of_user
 ARG NB_UID=1000
 ENV USER ${NB_USER}
 ENV NB_UID ${NB_UID}
 ENV HOME /home/${NB_USER}
 
+RUN adduser --disabled-password \
+    --gecos "Default user" \
+    --uid ${NB_UID} \
+    ${NB_USER}
+
 RUN chown -R ${NB_UID} ${HOME}
 RUN chown -R ${NB_UID} /opt/openfpga
+
+WORKDIR ${HOME}
 USER ${NB_USER}
 
 ENV PATH $PATH:/home/${NB_USER}/.local/bin
