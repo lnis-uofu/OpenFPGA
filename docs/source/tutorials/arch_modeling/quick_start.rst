@@ -6,13 +6,13 @@ A Quick Start
 In this tutorial, we will consider a simple but representative FPGA architecture to show you how to
   - Adapt a VPR architecture XML file to OpenFPGA acceptable format
   - Create an OpenFPGA architecture XML file to customize the primitive circuits
-  - Create a simulation setting XML file to specify the simulation settings 
+  - Create a simulation setting XML file to specify the simulation settings
 
 Through this quick example, we will introduce the key steps to build your own FPGA based on a VPR architecture template.
 
 .. note:: These tips are generic and fundamental to build any architecture file for OpenFPGA.
 
-Adapt VPR Architecture 
+Adapt VPR Architecture
 ~~~~~~~~~~~~~~~~~~~~~~
 We start with the VPR architecture `template
 <https://github.com/verilog-to-routing/vtr-verilog-to-routing/blob/master/vtr_flow/arch/timing/k4_N4_90nm.xml>`_.
@@ -23,7 +23,7 @@ This file models a homogeneous FPGA, as illustrated in :numref:`fig_k4n4_arch`.
 .. figure:: ./figures/k4n4_arch.png
    :scale: 100%
 
-   K4N4 FPGA architecture 
+   K4N4 FPGA architecture
 
 A summary of the architectural features is as follows:
   - An array of tiles surrounded by a ring of I/O blocks
@@ -45,8 +45,8 @@ The ``<pb_type name="io">`` under the ``<complexblocklist>`` should be adapted t
      <input name="outpad" num_pins="1"/>
      <output name="inpad" num_pins="1"/>
 
-     <!-- A mode denotes the physical implementation of an I/O 
-           This mode will not be used by packer but is mainly used for fabric verilog generation   
+     <!-- A mode denotes the physical implementation of an I/O
+           This mode will not be used by packer but is mainly used for fabric verilog generation
        -->
      <mode name="physical" packable="false">
        <pb_type name="iopad" blif_model=".subckt io" num_pb="1">
@@ -92,10 +92,10 @@ Note that, there are several major changes in the above codes, when compared to 
   - We remove the ``clock`` port of I/O is actually a dangling port.
   - We specify that the phyical ``mode`` to be disabled for VPR packer by using ``packable=false``. This can help reduce packer's runtime.
 
-Since, we have added a new BLIF model ``subckt io`` to the architecture modeling, we should update the ``<models>`` XML node by adding a new I/O model. 
-  
+Since, we have added a new BLIF model ``subckt io`` to the architecture modeling, we should update the ``<models>`` XML node by adding a new I/O model.
+
 .. code-block:: xml
-   
+
   <models>
     <!-- A virtual model for I/O to be used in the physical mode of io block -->
     <model name="io">
@@ -154,7 +154,7 @@ These parts are organized as follows in the XML file.
       ...
     </circuit_library>
 
-    <!-- Configuration protocol definition --> 
+    <!-- Configuration protocol definition -->
     <configuration_protocol>
       ...
     </configuration_protocol>
@@ -409,7 +409,7 @@ For the routing architecture, we specify the ``circuit_model`` to be used as rou
     <segment name="L4" circuit_model_name="chan_segment"/>
   </routing_segment>
 
-.. note:: For a correct binding, the name of connection block, switch block and routing segment should match the name definition in your VPR architecture description! 
+.. note:: For a correct binding, the name of connection block, switch block and routing segment should match the name definition in your VPR architecture description!
 
 For each ``<pb_type>`` defined in the ``<complexblocklist>`` of VPR architecture, we need to specify
 
@@ -423,25 +423,25 @@ For each ``<pb_type>`` defined in the ``<complexblocklist>`` of VPR architecture
 
 .. code-block:: xml
 
-  <pb_type name="io[physical].iopad" circuit_model_name="iopad" mode_bits="1"/> 
+  <pb_type name="io[physical].iopad" circuit_model_name="iopad" mode_bits="1"/>
 
 .. note:: Mode-selection bits should be provided as the default configuration for a configurable resource. In this example, an I/O cell has a configuration bit, as defined in the ``<circuit_model name="iopad">``. We specify that by default, the configuration memory will be set to logic ``1``.
 
-- The physical ``<pb_type>`` for any ``<pb_type>`` in the operating modes (mode other than the physical mode). This is required to translate mapping results from operating modes to their physical modes, in order to generate bitstreams. It is required to provide full hierarchy of the ``pb_type``. For example, 
+- The physical ``<pb_type>`` for any ``<pb_type>`` in the operating modes (mode other than the physical mode). This is required to translate mapping results from operating modes to their physical modes, in order to generate bitstreams. It is required to provide full hierarchy of the ``pb_type``. For example,
 
 .. code-block:: xml
 
-  <pb_type name="io[inpad].inpad" physical_pb_type_name="io[physical].iopad" mode_bits="1"/> 
+  <pb_type name="io[inpad].inpad" physical_pb_type_name="io[physical].iopad" mode_bits="1"/>
 
 .. note:: Mode-selection bits should be provided so as to configure the circuits to be functional as required by the operating mode. In this example, an I/O cell will be configured with a logic ``1`` when operating as an input pad.
 
-- The circuit model used to implement interconnecting modules. The interconnect name should match the definition in the VPR architecture file. For example, 
+- The circuit model used to implement interconnecting modules. The interconnect name should match the definition in the VPR architecture file. For example,
 
 .. code-block:: xml
 
   <interconnect name="crossbar" circuit_model_name="mux_2level"/>
 
-.. note:: If not specified, each interconnect will be binded to its default ``circuit_model``. For example, the crossbar will be binded to the default multiplexer ``<circuit_model name="mux_1level_tapbuf">``, if not specified here. 
+.. note:: If not specified, each interconnect will be binded to its default ``circuit_model``. For example, the crossbar will be binded to the default multiplexer ``<circuit_model name="mux_1level_tapbuf">``, if not specified here.
 
 .. note:: OpenFPGA automatically infers the type of circuit model required by each interconnect.
 
@@ -452,9 +452,9 @@ The complete annotation is shown as follows:
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
     <pb_type name="io" physical_mode_name="physical"/>
-    <pb_type name="io[physical].iopad" circuit_model_name="iopad" mode_bits="1"/> 
-    <pb_type name="io[inpad].inpad" physical_pb_type_name="io[physical].iopad" mode_bits="1"/> 
-    <pb_type name="io[outpad].outpad" physical_pb_type_name="io[physical].iopad" mode_bits="0"/> 
+    <pb_type name="io[physical].iopad" circuit_model_name="iopad" mode_bits="1"/>
+    <pb_type name="io[inpad].inpad" physical_pb_type_name="io[physical].iopad" mode_bits="1"/>
+    <pb_type name="io[outpad].outpad" physical_pb_type_name="io[physical].iopad" mode_bits="0"/>
     <!-- End physical pb_type binding in complex block IO -->
 
     <!-- physical pb_type binding in complex block CLB -->
@@ -474,7 +474,7 @@ Simulation Settings
 ~~~~~~~~~~~~~~~~~~~
 
 OpenFPGA needs an XML file where detailed simulation settings are defined.
-The simulation settings contain critical parameters to build testbenches for verify the FPGA fabric. 
+The simulation settings contain critical parameters to build testbenches for verify the FPGA fabric.
 
 You may create an XML file `k4_n4_openfpga_simulation.xml` and then add contents shown as follows.
 
@@ -520,7 +520,7 @@ The ``<clock_setting>`` is crucial to create clock signals in testbenches.
 
 .. note:: FPGA has two types of clocks, one is the operating clock which controls applications that mapped to FPGA fabric, while the other is the programming clock which controls the configuration protocol.
 
-In this example, we specify 
+In this example, we specify
 
 - the operating clock will follow the maximum frequency achieved by VPR routing results
 - the number of operating clock cycles to be used will follow the average signal activities of the RTL design that is mapped to the FPGA fabric.
@@ -539,7 +539,7 @@ The ``<monte_carlo num_simulation_points="2"/>`` are the options for SPICE simul
 Here we specify that for each testbench, we will consider two Monte-Carlo simulations to evaluate the impact of process variations.
 
 The ``<measurement_setting>`` specify how the output signals will be measured for delay and power evaluation.
-Here we specify that 
+Here we specify that
 
 - for slew calculation (used in power estimation), we consider from the 5% of the ``VDD`` to the 95% of the ``VDD`` for both rising and falling edges.
 - for delay calculation, we consider from the 50% of the ``VDD`` of input signal to the 50% of the ``VDD`` of output signals for both rising and falling edges.

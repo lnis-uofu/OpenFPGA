@@ -185,7 +185,7 @@ texinfo_documents = [
 ]
 
 
-bibtex_bibfiles = ["z_reference.bib"]
+bibtex_bibfiles = ["./appendix/z_reference.bib"]
 
 # -- Options for Epub output -------------------------------------------------
 

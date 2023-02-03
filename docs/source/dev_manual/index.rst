@@ -6,8 +6,6 @@
 
    back_compatible
 
-   contributor_guidelines
-
    cicd_setup
 
    regression_tests

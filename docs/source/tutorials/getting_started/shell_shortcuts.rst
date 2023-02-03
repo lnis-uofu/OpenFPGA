@@ -1,17 +1,18 @@
-OpenFPGA shortcuts
-------------------
+OpenFPGA Shell Commands
+-----------------------
 
-OpenFPGA provides `bash`/`zsh` shell-based shortcuts to perform all essential functions and navigate through the directories. Go to the OpenFPGA directory and source ``openfpga.sh``
+OpenFPGA provides `bash`/`zsh` shell-based shortcuts to perform all essential functions and navigate through the directories. Go to the OpenFPGA directory and source ``openfpga.sh``,
 
 .. code-block:: bash
 
+   export OPENFPGA_PATH=<path-to-openfpga-repository-root>
    cd ${OPENFPGA_PATH} && source openfpga.sh
 
 .. note::
     The OpenFPGA shortcut works with only a bash-like shell. e.g., `bash`/`zsh`/`fish,` etc.
 
-Shortcut Commands
-^^^^^^^^^^^^^^^^^
+Commands
+^^^^^^^^
 
 Once the ``openfpga.sh`` script is sourced, you can run any following commands directly in the terminal.
 
@@ -38,12 +39,20 @@ Once the ``openfpga.sh`` script is sourced, you can run any following commands d
    for example  ``create-task _my_task_copy basic_tests/generate_fabric`` create a copy of the ``basic_tests/generate_fabric`` task in
    the current directory with  ``_my_task_copy`` name.
 
-.. option:: run-modelsim
+.. option:: goto_task <task_name> <run_num[default 0]>
+
+   This command navigate shell to specific run-directory of the given task.
+   For example `goto_task lab1 2` will change directory to `run002` runt directory of `lab2`
+
+.. option:: clear-task-run <task_name>
+
+   Clears all run diretories of the given task
+
+.. option:: run-modelsim <task_name>
 
    This command runs the verification using ModelSim.
    The test benches are generated during the OpenFPGA run.
    **Note**: users need to have ``VSIM`` installed and configured
-
 
 .. option:: run-regression-local
 

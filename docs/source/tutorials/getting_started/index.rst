@@ -3,11 +3,13 @@
 
 Getting Started
 ---------------
- 
+
 .. toctree::
    :maxdepth: 2
 
    compile
+
+   demo
 
    shell_shortcuts
 
