@@ -7,11 +7,12 @@ RUN curl -fsSL https://code-server.dev/install.sh | sh
 RUN apt-get install -y nodejs
 RUN apt-get install tree
 RUN code-server --install-extension ms-python.python
+RUN code-server --install-extension mechatroner
 
 RUN usermod -u 2000 openfpga_user
 RUN groupmod -g 2000 openfpga_user
 
-ARG NB_USER=of_user
+ARG NB_USER=user_openfpga
 ARG NB_UID=1000
 ENV USER ${NB_USER}
 ENV NB_UID ${NB_UID}
@@ -34,12 +35,12 @@ RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install --user --no-cache-dir notebook
 RUN python3 -m pip install --user --no-cache-dir jupyterlab
 RUN python3 -m pip install --user --no-cache-dir jupyterhub
+RUN python3 -m pip install --user --no-cache-dir "jupyter-server<2.0.0"
 RUN python3 -m pip install --user --no-cache-dir jupyter-server-proxy
 RUN python3 -m pip install --user --no-cache-dir jupyter-vscode-proxy
 
 RUN npm install @jupyterlab/server-proxy
 RUN jupyter serverextension enable --py jupyter_server_proxy
-RUN jupyter labextension install @jupyterlab/server-proxy
 RUN jupyter lab build
 WORKDIR /opt/openfpga/
 RUN git reset --hard HEAD
