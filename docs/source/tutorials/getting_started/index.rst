@@ -9,8 +9,6 @@ Getting Started
 
    compile
 
-   demo
-
    shell_shortcuts
 
    tools

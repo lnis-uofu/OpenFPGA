@@ -1,5 +1,9 @@
 .. _run_fpga_flow:
 
+
+.. warning:: This feature is deprecated and will be removed in future
+
+
 OpenFPGA Flow
 ---------------
 

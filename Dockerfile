@@ -7,7 +7,7 @@ RUN curl -fsSL https://code-server.dev/install.sh | sh
 RUN apt-get install -y nodejs
 RUN apt-get install tree
 RUN code-server --install-extension ms-python.python
-RUN code-server --install-extension mechatroner
+RUN code-server --install-extension mechatroner.rainbow-csv
 
 RUN usermod -u 2000 openfpga_user
 RUN groupmod -g 2000 openfpga_user

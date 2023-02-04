@@ -1,11 +1,13 @@
 .. _design_flow_tutorials:
    Design Flows
 
-Design Flows
-------------
- 
+Example Design Flows
+---------------------
+
 .. toctree::
    :maxdepth: 2
+
+   architecture-exploration
 
    generate_fabric
 
