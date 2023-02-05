@@ -3,8 +3,8 @@ RUN mkdir -p /opt/openfpga
 WORKDIR /opt/openfpga
 COPY . /opt/openfpga
 RUN chmod +x build/vtr-verilog-to-routing/abc/abc build/vtr-verilog-to-routing/ace2/ace build/openfpga/openfpga build/vtr-verilog-to-routing/vpr/vpr
-RUN chmod +x yosys/install/bin/yosys yosys/install/bin/yosys-abc yosys/install/bin/yosys-config yosys/install/bin/yosys-filterlib yosys/install/bin/yosys-smtbmc
-ENV PATH="/opt/openfpga/build/openfpga:/opt/openfpga/yosys/install/bin:${PATH}"
+RUN chmod +x build/yosys/bin/yosys build/yosys/bin/yosys-abc build/yosys/bin/yosys-config build/yosys/bin/yosys-filterlib build/yosys/bin/yosys-smtbmc
+ENV PATH="/opt/openfpga/build/openfpga:/opt/openfpga/build/yosys/bin:${PATH}"
 ENV PATH="/opt/openfpga/build/vtr-verilog-to-routing/ace2:/opt/openfpga/build/vtr-verilog-to-routing/abc:/opt/openfpga/build/vtr-verilog-to-routing/vpr:${PATH}"
 ENV OPENFPGA_PATH="/opt/openfpga"
 
