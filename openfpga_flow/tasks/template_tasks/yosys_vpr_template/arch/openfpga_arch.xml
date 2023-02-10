@@ -1,11 +1,3 @@
-<!-- Architecture annotation for OpenFPGA framework
-     This annotation supports the k6_N10_40nm.xml 
-     - General purpose logic block
-       - K = 6, N = 10, I = 40
-       - Single mode
-     - Routing architecture
-       - L = 4, fc_in = 0.15, fc_out = 0.1
-  -->
 <openfpga_architecture>
     <technology_library>
         <device_library>
@@ -157,21 +149,18 @@
         <segment name="L4" circuit_model_name="chan_segment"/>
     </routing_segment>
     <pb_type_annotations>
-        <!-- physical pb_type binding in complex block IO -->
+        <pb_type name="clb">
+            <interconnect name="crossbar" circuit_model_name="mux_2level"/>
+        </pb_type>
+        <pb_type name="clb.fle" physical_mode_name="physical"/>
+        <pb_type name="clb.fle[physical].ble6.lut6" circuit_model_name="lut6"/>
+        <pb_type name="clb.fle[physical].ble6.ff" circuit_model_name="DFFSRQ"/>
+        <pb_type name="clb.fle[n1_lut6].ble6.lut6" physical_pb_type_name="clb.fle[physical].ble6.lut6"/>
+        <pb_type name="clb.fle[n1_lut6].ble6.ff" physical_pb_type_name="clb.fle[physical].ble6.ff"/>
+
         <pb_type name="io" physical_mode_name="physical"/>
         <pb_type name="io[physical].iopad" circuit_model_name="GPIO" mode_bits="1"/>
         <pb_type name="io[inpad].inpad" physical_pb_type_name="io[physical].iopad" mode_bits="1"/>
         <pb_type name="io[outpad].outpad" physical_pb_type_name="io[physical].iopad" mode_bits="0"/>
-        <!-- End physical pb_type binding in complex block IO -->
-
-        <!-- physical pb_type binding in complex block CLB -->
-        <!-- physical mode will be the default mode if not specified -->
-        <pb_type name="clb">
-            <!-- Binding interconnect to circuit models as their physical implementation, if not defined, we use the default model -->
-            <interconnect name="crossbar" circuit_model_name="mux_2level"/>
-        </pb_type>
-        <pb_type name="clb.fle[n1_lut6].ble6.lut6" circuit_model_name="lut6"/>
-        <pb_type name="clb.fle[n1_lut6].ble6.ff" circuit_model_name="DFFSRQ"/>
-        <!-- End physical pb_type binding in complex block IO -->
     </pb_type_annotations>
 </openfpga_architecture>
