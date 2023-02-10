@@ -183,8 +183,8 @@
                </interconnect>
             </mode>
             <!-- end n1_lut6 -->
-            <!-- start n1_lut5 -->
-            <mode name="n1_lut5">
+            <!-- start n2_lut5 -->
+            <mode name="n2_lut5">
                <pb_type name="ble5" num_pb="2">
                   <input name="in" num_pins="5"/>
                   <output name="out" num_pins="1"/>
@@ -228,7 +228,7 @@
                   <direct name="direct6" input="fle.clk" output="ble5[1:1].clk"/>
                </interconnect>
             </mode>
-            <!-- end n1_lut5 -->
+            <!-- end n2_lut5 -->
          </pb_type>
          <interconnect>
             <complete name="crossbar" input="clb.I fle[9:0].out" output="fle[9:0].in">

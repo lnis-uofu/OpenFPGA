@@ -83,10 +83,11 @@ task_script_dir = os.path.dirname(os.path.abspath(__file__))
 script_env_vars = {
     "PATH": {
         "OPENFPGA_FLOW_PATH": task_script_dir,
-        "ARCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "arch"),
-        "OPENFPGA_SHELLSCRIPT_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "OpenFPGAShellScripts"),
-        "BENCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "benchmarks"),
-        "TECH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "tech"),
+        "VPR_ARCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "openfpga_flow", "vpr_arch"),
+        "OF_ARCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "openfpga_flow", "openfpga_arch"),
+        "OPENFPGA_SHELLSCRIPT_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "openfpga_flow", "OpenFPGAShellScripts"),
+        "BENCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "openfpga_flow", "benchmarks"),
+        "TECH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "openfpga_flow", "tech"),
         "SPICENETLIST_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "SpiceNetlists"),
         "VERILOG_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "VerilogNetlists"),
         "OPENFPGA_PATH": os.path.abspath(os.path.join(task_script_dir, os.pardir, os.pardir)),
