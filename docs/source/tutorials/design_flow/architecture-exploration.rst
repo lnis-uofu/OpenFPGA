@@ -75,6 +75,9 @@ task.conf
     arch0=${PATH:TASK_DIR}/k6_N10_tileable_dpram8K_dsp36_40nm.xml
     arch1=${PATH:TASK_DIR}/k6_frac_N10_tileable_adder_chain_dpram8K_dsp36_40nm.xml
 
+
+.. code-block:: bash
+
     [BENCHMARKS]
     bench1=${PATH:OPENFPGA_PATH}/openfpga_flow/benchmarks/vtr_benchmark/ch_intrinsics.v
     bench2=${PATH:OPENFPGA_PATH}/openfpga_flow/benchmarks/vtr_benchmark/diffeq1.v
@@ -85,6 +88,18 @@ task.conf
 OpenFPGA shell script
 ~~~~~~~~~~~~~~~~~~~~~
 
+``*.openfpgashell`` script is simialr to TCL script for traditional FPGA CAD tools
+If you notice content of ``vtr_benchmark_template_script.openfpga`` file,
+it simply excutes the VPR tool. More commands are avaialble :ref:`_openfpga_commands`
+
+
+.. code-block:: bash
+
+    # Execute VPR for architecture exploration
+    vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} \
+        --route_chan_width ${VPR_ROUTE_CHAN_WIDTH} \
+        --constant_net_method route
+    exit
 
 Architecture Files
 ~~~~~~~~~~~~~~~~~~
@@ -108,3 +123,16 @@ Analyze Results
 .. code-block:: bash
 
     column -t -s, lab1/latest/task_result.csv | less -S
+
+
+.. code-block:: csv
+
+   name                   ,TotalRunTime , clb_blocks ,total_wire_length
+   00_memset_             ,           1 ,         31 ,             2217
+   01_memset_             ,           6 ,         25 ,             2120
+   00_diffeq_paj_convert_ ,          16 ,        368 ,            43526
+   01_diffeq_paj_convert_ ,          45 ,        276 ,            38465
+   00_diffeq_f_systemC_   ,          16 ,        354 ,            37245
+   01_diffeq_f_systemC_   ,          42 ,        262 ,            32722
+   00_sha1_               ,           9 ,        168 ,            16099
+   01_sha1_               ,          14 ,        153 ,            15274

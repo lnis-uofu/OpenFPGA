@@ -398,8 +398,9 @@ def generate_each_task_actions(taskname):
                     archfile=arch,
                     benchmark_obj=bench,
                     param=param,
-                    task_conf=task_conf,
+                    task_conf=task_conf
                 )
+                command += ["--flow_config", curr_task_conf_file]
                 flow_run_cmd_list.append(
                     {
                         "arch": arch,
@@ -506,6 +507,7 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, param, task_conf):
 
     if args.debug:
         command += ["--debug"]
+
     return command
 
 
