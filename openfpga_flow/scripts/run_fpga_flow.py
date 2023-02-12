@@ -395,7 +395,7 @@ def main():
 
 
 def check_required_file():
-    """ Function ensure existace of all required files for the script """
+    """Function ensure existace of all required files for the script"""
     files_dict = {
         "CAD TOOL PATH": os.path.join(
             flow_script_dir, os.pardir, "misc", "fpgaflow_default_tool_path.conf"
@@ -407,7 +407,7 @@ def check_required_file():
 
 
 def read_script_config():
-    """ This fucntion reads default CAD tools path from configuration file """
+    """This fucntion reads default CAD tools path from configuration file"""
     global config, cad_tools
     config = ConfigParser(interpolation=ExtendedInterpolation())
     config.read_dict(script_env_vars)
