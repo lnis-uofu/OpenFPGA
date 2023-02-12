@@ -13,11 +13,14 @@ RUN code-server --install-extension ms-python.python
 # For CSV file alignment
 RUN code-server --install-extension mechatroner.rainbow-csv
 # For VCD Viewer
+RUN wget -O _wavetrace.gz https://marketplace.visualstudio.com/_apis/public/gallery/publishers/wavetrace/vsextensions/wavetrace/1.1.2/vspackage
 RUN code-server --install-extension wavetrace.wavetrace
 # For XML Linting
 RUN code-server --install-extension dotjoshjohnson.xml
 # For git graphs
 RUN code-server --install-extension mhutchie.git-graph
+# verilog-linter
+RUN code-server --install-extension mshr-h.veriloghdl
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 RUN usermod -u 2000 openfpga_user
