@@ -203,8 +203,9 @@ run-task basic_tests/io_constraints/empty_pcf $@
 run-task basic_tests/io_constraints/pcf_ql_style $@
 
 echo -e "Testing project templates";
-run-task template_tasks/vpr_blif_template $@
-run-task template_tasks/yosys_vpr_template $@
+run-task template_tasks/fabric_netlist_gen_template $@
+run-task template_tasks/fabric_verification_template $@
+run-task template_tasks/frac-lut-arch-explore_template $@
 run-task template_tasks/vtr_benchmarks_template $@
 
 echo -e "Testing create tsk from template and run task"

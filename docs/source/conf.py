@@ -185,7 +185,7 @@ texinfo_documents = [
 ]
 
 
-bibtex_bibfiles = ["z_reference.bib"]
+bibtex_bibfiles = ["./appendix/z_reference.bib"]
 
 # -- Options for Epub output -------------------------------------------------
 
@@ -203,3 +203,22 @@ epub_title = project
 
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
+
+# ========
+# Headings
+# ========
+#
+# Headings
+# ========
+#
+# Heading 3
+# ---------
+#
+# Heading 4
+# ^^^^^^^^^
+#
+# Heading 5
+# ~~~~~~~~~
+#
+# Heading 6
+# *********
