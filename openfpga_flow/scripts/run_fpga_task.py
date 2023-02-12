@@ -67,10 +67,14 @@ parser.add_argument(
 )
 parser.add_argument("--config", help="Override default configuration")
 parser.add_argument(
-    "--test_run", action="store_true", help="Dummy run shows final generated VPR commands"
+    "--test_run",
+    action="store_true",
+    help="Dummy run shows final generated VPR commands",
 )
 parser.add_argument("--debug", action="store_true", help="Run script in debug mode")
-parser.add_argument("--continue_on_fail", action="store_true", help="Exit script with return code")
+parser.add_argument(
+    "--continue_on_fail", action="store_true", help="Exit script with return code"
+)
 parser.add_argument(
     "--show_thread_logs", action="store_true", help="Skips logs from running thread"
 )
@@ -83,14 +87,24 @@ task_script_dir = os.path.dirname(os.path.abspath(__file__))
 script_env_vars = {
     "PATH": {
         "OPENFPGA_FLOW_PATH": task_script_dir,
-        "VPR_ARCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "openfpga_flow", "vpr_arch"),
-        "OF_ARCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "openfpga_flow", "openfpga_arch"),
-        "OPENFPGA_SHELLSCRIPT_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "openfpga_flow", "OpenFPGAShellScripts"),
-        "BENCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "openfpga_flow", "benchmarks"),
+        "VPR_ARCH_PATH": os.path.join(
+            "${PATH:OPENFPGA_PATH}", "openfpga_flow", "vpr_arch"
+        ),
+        "OF_ARCH_PATH": os.path.join(
+            "${PATH:OPENFPGA_PATH}", "openfpga_flow", "openfpga_arch"
+        ),
+        "OPENFPGA_SHELLSCRIPT_PATH": os.path.join(
+            "${PATH:OPENFPGA_PATH}", "openfpga_flow", "OpenFPGAShellScripts"
+        ),
+        "BENCH_PATH": os.path.join(
+            "${PATH:OPENFPGA_PATH}", "openfpga_flow", "benchmarks"
+        ),
         "TECH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "openfpga_flow", "tech"),
         "SPICENETLIST_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "SpiceNetlists"),
         "VERILOG_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "VerilogNetlists"),
-        "OPENFPGA_PATH": os.path.abspath(os.path.join(task_script_dir, os.pardir, os.pardir)),
+        "OPENFPGA_PATH": os.path.abspath(
+            os.path.join(task_script_dir, os.pardir, os.pardir)
+        ),
     }
 }
 config = ConfigParser(interpolation=ExtendedInterpolation())
@@ -238,7 +252,8 @@ def generate_each_task_actions(taskname):
     missing_section = list(set(required_sec) - set(task_conf.sections()))
     if missing_section:
         clean_up_and_exit(
-            "Missing sections %s" % " ".join(missing_section) + " in task configuration file"
+            "Missing sections %s" % " ".join(missing_section)
+            + " in task configuration file"
         )
 
     # Declare varibles to access sections
@@ -259,7 +274,9 @@ def generate_each_task_actions(taskname):
         clean_up_and_exit("Found duplicate architectures in config file")
 
     # Get Flow information
-    logger.info('Running "%s" flow', GeneralSection.get("fpga_flow", fallback="yosys_vpr"))
+    logger.info(
+        'Running "%s" flow', GeneralSection.get("fpga_flow", fallback="yosys_vpr")
+    )
 
     # Check if specified benchmark files exist
     benchmark_list = []
@@ -273,7 +290,8 @@ def generate_each_task_actions(taskname):
             files = glob.glob(eachpath)
             if not len(files):
                 clean_up_and_exit(
-                    ("No files added benchmark %s" % bech_name) + " with path %s " % (eachpath)
+                    ("No files added benchmark %s" % bech_name)
+                    + " with path %s " % (eachpath)
                 )
             bench_files += files
 
@@ -309,11 +327,15 @@ def generate_each_task_actions(taskname):
 
         yosys_params_common = {}
         for param in yosys_params:
-            yosys_params_common[param.upper()] = SynthSection.get("bench_" + param + "_common")
+            yosys_params_common[param.upper()] = SynthSection.get(
+                "bench_" + param + "_common"
+            )
 
         # Individual benchmark configuration
         CurrBenchPara["files"] = bench_files
-        CurrBenchPara["top_module"] = SynthSection.get(bech_name + "_top", fallback="top")
+        CurrBenchPara["top_module"] = SynthSection.get(
+            bech_name + "_top", fallback="top"
+        )
         CurrBenchPara["ys_script"] = SynthSection.get(
             bech_name + "_yosys", fallback=ys_for_task_common
         )
@@ -338,7 +360,8 @@ def generate_each_task_actions(taskname):
             if GeneralSection.getboolean("power_analysis"):
                 if not SynthSection.get(bech_name + "_act"):
                     clean_up_and_exit(
-                        "Missing argument %s" % (bech_name + "_act") + "for vpr_blif flow"
+                        "Missing argument %s" % (bech_name + "_act")
+                        + "for vpr_blif flow"
                     )
                 CurrBenchPara["activity_file"] = SynthSection.get(bech_name + "_act")
             else:
@@ -346,7 +369,9 @@ def generate_each_task_actions(taskname):
                 if not SynthSection.get(bech_name + "_act"):
                     CurrBenchPara["activity_file"] = bech_name + "_act"
                 else:
-                    CurrBenchPara["activity_file"] = SynthSection.get(bech_name + "_act")
+                    CurrBenchPara["activity_file"] = SynthSection.get(
+                        bech_name + "_act"
+                    )
 
             # Check if base verilog file exists
             if not SynthSection.get(bech_name + "_verilog"):
@@ -388,7 +413,10 @@ def generate_each_task_actions(taskname):
                 if benchmark_top_module_count.count(bench["top_module"]) > 1:
                     flow_run_dir = get_flow_rundir(
                         arch,
-                        "bench" + str(benchmark_list.index(bench)) + "_" + bench["top_module"],
+                        "bench"
+                        + str(benchmark_list.index(bench))
+                        + "_"
+                        + bench["top_module"],
                         lbl,
                     )
                 else:
@@ -399,7 +427,7 @@ def generate_each_task_actions(taskname):
                     archfile=arch,
                     benchmark_obj=bench,
                     param=param,
-                    task_conf=task_conf
+                    task_conf=task_conf,
                 )
                 command += ["--flow_config", curr_task_conf_file]
                 flow_run_cmd_list.append(
@@ -515,7 +543,14 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, param, task_conf):
 def strip_child_logger_info(line):
     try:
         logtype, message = line.split(" - ", 1)
-        lognumb = {"CRITICAL": 50, "ERROR": 40, "WARNING": 30, "INFO": 20, "DEBUG": 10, "NOTSET": 0}
+        lognumb = {
+            "CRITICAL": 50,
+            "ERROR": 40,
+            "WARNING": 30,
+            "INFO": 20,
+            "DEBUG": 10,
+            "NOTSET": 0,
+        }
         logger.log(lognumb[logtype.strip().upper()], message)
     except:
         logger.info(line)
@@ -558,7 +593,11 @@ def run_single_script(s, eachJob, job_list):
                 os._exit(1)
         eachJob["endtime"] = time.time()
         timediff = timedelta(seconds=(eachJob["endtime"] - eachJob["starttime"]))
-        timestr = humanize.naturaldelta(timediff) if "humanize" in sys.modules else str(timediff)
+        timestr = (
+            humanize.naturaldelta(timediff)
+            if "humanize" in sys.modules
+            else str(timediff)
+        )
         logger.info(
             "%s Finished with returncode %d, Time Taken %s ",
             thread_name,
@@ -575,7 +614,9 @@ def run_actions(job_list):
     thread_list = []
     for _, eachjob in enumerate(job_list):
         t = threading.Thread(
-            target=run_single_script, name=eachjob["name"], args=(thread_sema, eachjob, job_list)
+            target=run_single_script,
+            name=eachjob["name"],
+            args=(thread_sema, eachjob, job_list),
         )
         t.start()
         thread_list.append(t)
@@ -584,9 +625,9 @@ def run_actions(job_list):
 
 
 def collect_results(job_run_list):
-    '''
+    """
     Collect performance numbers from vpr_stat.result file
-    '''
+    """
     task_result = []
     for run in job_run_list:
         if not run["status"]:
@@ -598,7 +639,9 @@ def collect_results(job_run_list):
             continue
 
         # Read and merge result file
-        vpr_res = ConfigParser(allow_no_value=True, interpolation=ExtendedInterpolation())
+        vpr_res = ConfigParser(
+            allow_no_value=True, interpolation=ExtendedInterpolation()
+        )
         vpr_result_file = os.path.join(run["run_dir"], "vpr_stat.result")
         vpr_res.read_file(open(vpr_result_file, encoding="UTF-8"))
         result = OrderedDict()
@@ -610,12 +653,15 @@ def collect_results(job_run_list):
     colnames = []
     # Extract all column names
     for each_metric in task_result:
-        colnames.extend(set(each_metric.keys())-{"name", "TotalRunTime"})
+        colnames.extend(set(each_metric.keys()) - {"name", "TotalRunTime"})
         colnames = sorted(list(set(colnames)))
     if len(task_result) > 0:
         with open("task_result.csv", "w", encoding="UTF-8", newline="") as csvfile:
-            writer = csv.DictWriter(csvfile, extrasaction="ignore",
-                                    fieldnames=["name", "TotalRunTime"] + colnames)
+            writer = csv.DictWriter(
+                csvfile,
+                extrasaction="ignore",
+                fieldnames=["name", "TotalRunTime"] + colnames,
+            )
             writer.writeheader()
             for each in task_result:
                 writer.writerow(each)
