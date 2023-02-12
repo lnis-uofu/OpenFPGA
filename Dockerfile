@@ -1,4 +1,4 @@
-FROM ghcr.io/lnis-uofu/openfpga-master:9e4936f9
+FROM ghcr.io/lnis-uofu/openfpga-master:0678ee39
 
 # Install node js
 USER root
