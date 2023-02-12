@@ -1,7 +1,6 @@
 <?xml version="1.0" ?>
 <architecture>
    <models>
-      <!-- A virtual model for I/O to be used in the physical mode of io block -->
       <model name="io">
          <input_ports>
             <port name="outpad"/>
@@ -34,23 +33,38 @@
                <site pb_type="clb"/>
             </equivalent_sites>
             <input name="I" num_pins="40" equivalent="full"/>
-            <output name="O" num_pins="10" equivalent="none"/>
+            <input name="cin" num_pins="1"/>
+            <output name="O" num_pins="20" equivalent="none"/>
+            <output name="cout" num_pins="1"/>
             <clock name="clk" num_pins="1"/>
-            <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
-            <pinlocations pattern="spread"/>
+            <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+               <fc_override port_name="cin" fc_type="frac" fc_val="0"/>
+               <fc_override port_name="cout" fc_type="frac" fc_val="0" />
+            </fc>
+            <pinlocations pattern="custom">
+               <loc side="left">clb.clk</loc>
+               <loc side="top">clb.cin</loc>
+               <loc side="right">clb.O[9:0] clb.I[19:0]</loc>
+               <loc side="bottom">clb.cout clb.O[19:10] clb.I[39:20]</loc>
+            </pinlocations>
          </sub_tile>
       </tile>
    </tiles>
    <!-- ODIN II specific config ends -->
    <!-- Physical descriptions begin -->
-   <layout tileable="true">
+   <layout tileable="true" through_channel="false">
       <auto_layout aspect_ratio="1.0">
-         <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
          <perimeter type="io" priority="100"/>
          <corners type="EMPTY" priority="101"/>
-         <!--Fill with 'clb'-->
          <fill type="clb" priority="10"/>
+         <col type="EMPTY" startx="2" repeatx="8" starty="1" priority="19"/>
       </auto_layout>
+      <fixed_layout name="3x2" width="5" height="4">
+         <perimeter type="io" priority="100"/>
+         <corners type="EMPTY" priority="101"/>
+         <fill type="clb" priority="10"/>
+         <col type="EMPTY" startx="2" repeatx="8" starty="1" priority="19"/>
+      </fixed_layout>
    </layout>
    <device>
       <sizing R_minW_nmos="8926" R_minW_pmos="16067"/>
@@ -111,43 +125,38 @@
                </direct>
             </interconnect>
          </mode>
-         <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 10% of the tracks in a channel -->
-         <!-- IOs go on the periphery of the FPGA, for consistency,
-          make it physically equivalent on all sides so that only one definition of I/Os is needed.
-          If I do not make a physically equivalent definition, then I need to define 4 different I/Os, one for each side of the FPGA
-        -->
-         <!-- Place I/Os on the sides of the FPGA -->
          <power method="ignore"/>
       </pb_type>
       <pb_type name="clb">
          <input name="I" num_pins="40" equivalent="full"/>
-         <output name="O" num_pins="10" equivalent="none"/>
+         <input name="cin" num_pins="1"/>
+         <output name="O" num_pins="20" equivalent="none"/>
+         <output name="cout" num_pins="1"/>
          <clock name="clk" num_pins="1"/>
          <pb_type name="fle" num_pb="10">
             <input name="in" num_pins="6"/>
-            <output name="out" num_pins="1"/>
+            <input name="cin" num_pins="1"/>
+            <output name="out" num_pins="2"/>
+            <output name="cout" num_pins="1"/>
             <clock name="clk" num_pins="1"/>
-            <!-- 6-LUT mode definition begin -->
+            <!-- start n1_lut6 -->
             <mode name="n1_lut6">
-               <!-- Define 6-LUT mode -->
                <pb_type name="ble6" num_pb="1">
                   <input name="in" num_pins="6"/>
                   <output name="out" num_pins="1"/>
                   <clock name="clk" num_pins="1"/>
-                  <!-- Define LUT -->
                   <pb_type name="lut6" blif_model=".names" num_pb="1" class="lut">
                      <input name="in" num_pins="6" port_class="lut_in"/>
                      <output name="out" num_pins="1" port_class="lut_out"/>
                      <delay_matrix type="max" in_port="lut6.in" out_port="lut6.out">
-                        261e-12
-                        261e-12
-                        261e-12
-                        261e-12
-                        261e-12
-                        261e-12
+                  261e-12
+                  261e-12
+                  261e-12
+                  261e-12
+                  261e-12
+                  261e-12
                      </delay_matrix>
                   </pb_type>
-                  <!-- Define flip-flop -->
                   <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
                      <input name="D" num_pins="1" port_class="D"/>
                      <output name="Q" num_pins="1" port_class="Q"/>
@@ -158,12 +167,10 @@
                   <interconnect>
                      <direct name="direct1" input="ble6.in" output="lut6[0:0].in"/>
                      <direct name="direct2" input="lut6.out" output="ff.D">
-                        <!-- Advanced user option that tells CAD tool to find LUT+FF pairs in netlist -->
                         <pack_pattern name="ble6" in_port="lut6.out" out_port="ff.D"/>
                      </direct>
                      <direct name="direct3" input="ble6.clk" output="ff.clk"/>
                      <mux name="mux1" input="ff.Q lut6.out" output="ble6.out">
-                        <!-- LUT to output is faster than FF to output on a Stratix IV -->
                         <delay_constant max="25e-12" in_port="lut6.out" out_port="ble6.out"/>
                         <delay_constant max="45e-12" in_port="ff.Q" out_port="ble6.out"/>
                      </mux>
@@ -175,7 +182,53 @@
                   <direct name="direct3" input="fle.clk" output="ble6.clk"/>
                </interconnect>
             </mode>
-            <!-- 6-LUT mode definition end -->
+            <!-- end n1_lut6 -->
+            <!-- start n2_lut5 -->
+            <mode name="n2_lut5">
+               <pb_type name="ble5" num_pb="2">
+                  <input name="in" num_pins="5"/>
+                  <output name="out" num_pins="1"/>
+                  <clock name="clk" num_pins="1"/>
+                  <pb_type name="lut5" blif_model=".names" num_pb="1" class="lut">
+                     <input name="in" num_pins="5" port_class="lut_in"/>
+                     <output name="out" num_pins="1" port_class="lut_out"/>
+                     <delay_matrix type="max" in_port="lut5.in" out_port="lut5.out">
+                  261e-12
+                  261e-12
+                  261e-12
+                  261e-12
+                  261e-12
+                     </delay_matrix>
+                  </pb_type>
+                  <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
+                     <input name="D" num_pins="1" port_class="D"/>
+                     <output name="Q" num_pins="1" port_class="Q"/>
+                     <clock name="clk" num_pins="1" port_class="clock"/>
+                     <T_setup value="66e-12" port="ff.D" clock="clk"/>
+                     <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+                  </pb_type>
+                  <interconnect>
+                     <direct name="direct1" input="ble5.in" output="lut5[0:0].in"/>
+                     <direct name="direct2" input="lut5.out" output="ff.D">
+                        <pack_pattern name="ble5" in_port="lut5.out" out_port="ff.D"/>
+                     </direct>
+                     <direct name="direct3" input="ble5.clk" output="ff.clk"/>
+                     <mux name="mux1" input="ff.Q lut5.out" output="ble5.out">
+                        <delay_constant max="25e-12" in_port="lut5.out" out_port="ble5.out"/>
+                        <delay_constant max="45e-12" in_port="ff.Q" out_port="ble5.out"/>
+                     </mux>
+                  </interconnect>
+               </pb_type>
+               <interconnect>
+                  <direct name="direct1" input="fle.in[4:0]" output="ble5[0:0].in"/>
+                  <direct name="direct2" input="fle.in[4:0]" output="ble5[1:1].in"/>
+                  <direct name="direct3" input="ble5[0:0].out" output="fle.out[0:0]"/>
+                  <direct name="direct4" input="ble5[1:1].out" output="fle.out[1:1]"/>
+                  <direct name="direct5" input="fle.clk" output="ble5[0:0].clk"/>
+                  <direct name="direct6" input="fle.clk" output="ble5[1:1].clk"/>
+               </interconnect>
+            </mode>
+            <!-- end n2_lut5 -->
          </pb_type>
          <interconnect>
             <complete name="crossbar" input="clb.I fle[9:0].out" output="fle[9:0].in">
@@ -184,7 +237,8 @@
             </complete>
             <complete name="clks" input="clb.clk" output="fle[9:0].clk">
             </complete>
-            <direct name="clbouts1" input="fle[9:0].out" output="clb.O"/>
+            <direct name="clbouts1" input="fle[9:0].out[0:0]" output="clb.O[9:0]"/>
+            <direct name="clbouts2" input="fle[9:0].out[1:1]" output="clb.O[19:10]"/>
          </interconnect>
       </pb_type>
    </complexblocklist>
