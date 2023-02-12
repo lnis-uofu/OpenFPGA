@@ -1,4 +1,4 @@
-FROM ghcr.io/lnis-uofu/openfpga-master:10ffa828
+FROM ghcr.io/lnis-uofu/openfpga-master:9e4936f9
 
 # Install node js
 USER root
@@ -6,10 +6,19 @@ RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 RUN apt-get install -y nodejs
 RUN apt-get install tree
+
+# = = = = = = = VSCODE Extension installation = = = = = = =
+# Python support in vscode
 RUN code-server --install-extension ms-python.python
+# For CSV file alignment
 RUN code-server --install-extension mechatroner.rainbow-csv
+# For VCD Viewer
 RUN code-server --install-extension wavetrace.wavetrace
+# For XML Linting
 RUN code-server --install-extension dotjoshjohnson.xml
+# For git graphs
+RUN code-server --install-extension mhutchie.git-graph
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 RUN usermod -u 2000 openfpga_user
 RUN groupmod -g 2000 openfpga_user

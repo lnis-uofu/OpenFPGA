@@ -42,8 +42,9 @@ create-task () {
     fi
     template="template_tasks/yosys_vpr_template"
     if [ ${#2} -ge 1 ]; then
-        if   [[ "$2" == "vpr_blif" ]]; then template="template_tasks/${2}_template/";
-        elif [[ "$2" == "yosys_vpr" ]]; then template="template_tasks/${2}_template/";
+        if   [[ "$2" == "fabric_netlist_gen" ]]; then template="template_tasks/${2}_template/";
+        elif [[ "$2" == "fabric_verification" ]]; then template="template_tasks/${2}_template/";
+        elif [[ "$2" == "frac-lut-arch-explore" ]]; then template="template_tasks/${2}_template/";
         elif [[ "$2" == "vtr_benchmarks" ]]; then template="template_tasks/${2}_template/";
         else template="$2"
         fi
