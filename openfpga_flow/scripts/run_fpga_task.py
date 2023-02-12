@@ -67,7 +67,9 @@ parser.add_argument(
 )
 parser.add_argument("--config", help="Override default configuration")
 parser.add_argument(
-    "--test_run", action="store_true", help="Dummy run shows final generated VPR commands"
+    "--test_run",
+    action="store_true",
+    help="Dummy run shows final generated VPR commands",
 )
 parser.add_argument("--debug", action="store_true", help="Run script in debug mode")
 parser.add_argument("--continue_on_fail", action="store_true", help="Exit script with return code")
@@ -83,10 +85,13 @@ task_script_dir = os.path.dirname(os.path.abspath(__file__))
 script_env_vars = {
     "PATH": {
         "OPENFPGA_FLOW_PATH": task_script_dir,
-        "ARCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "arch"),
-        "OPENFPGA_SHELLSCRIPT_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "OpenFPGAShellScripts"),
-        "BENCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "benchmarks"),
-        "TECH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "tech"),
+        "VPR_ARCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "openfpga_flow", "vpr_arch"),
+        "OF_ARCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "openfpga_flow", "openfpga_arch"),
+        "OPENFPGA_SHELLSCRIPT_PATH": os.path.join(
+            "${PATH:OPENFPGA_PATH}", "openfpga_flow", "OpenFPGAShellScripts"
+        ),
+        "BENCH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "openfpga_flow", "benchmarks"),
+        "TECH_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "openfpga_flow", "tech"),
         "SPICENETLIST_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "SpiceNetlists"),
         "VERILOG_PATH": os.path.join("${PATH:OPENFPGA_PATH}", "VerilogNetlists"),
         "OPENFPGA_PATH": os.path.abspath(os.path.join(task_script_dir, os.pardir, os.pardir)),
@@ -381,8 +386,8 @@ def generate_each_task_actions(taskname):
     # architecture, benchmark and parameters
     # Create run_job object [arch, bench, run_dir, commnad]
     flow_run_cmd_list = []
-    for indx, arch in enumerate(archfile_list):
-        for bench in benchmark_list:
+    for bench in benchmark_list:
+        for indx, arch in enumerate(archfile_list):
             for lbl, param in bench["script_params"].items():
                 if benchmark_top_module_count.count(bench["top_module"]) > 1:
                     flow_run_dir = get_flow_rundir(
@@ -400,6 +405,7 @@ def generate_each_task_actions(taskname):
                     param=param,
                     task_conf=task_conf,
                 )
+                command += ["--flow_config", curr_task_conf_file]
                 flow_run_cmd_list.append(
                     {
                         "arch": arch,
@@ -506,13 +512,21 @@ def create_run_command(curr_job_dir, archfile, benchmark_obj, param, task_conf):
 
     if args.debug:
         command += ["--debug"]
+
     return command
 
 
 def strip_child_logger_info(line):
     try:
         logtype, message = line.split(" - ", 1)
-        lognumb = {"CRITICAL": 50, "ERROR": 40, "WARNING": 30, "INFO": 20, "DEBUG": 10, "NOTSET": 0}
+        lognumb = {
+            "CRITICAL": 50,
+            "ERROR": 40,
+            "WARNING": 30,
+            "INFO": 20,
+            "DEBUG": 10,
+            "NOTSET": 0,
+        }
         logger.log(lognumb[logtype.strip().upper()], message)
     except:
         logger.info(line)
@@ -572,7 +586,9 @@ def run_actions(job_list):
     thread_list = []
     for _, eachjob in enumerate(job_list):
         t = threading.Thread(
-            target=run_single_script, name=eachjob["name"], args=(thread_sema, eachjob, job_list)
+            target=run_single_script,
+            name=eachjob["name"],
+            args=(thread_sema, eachjob, job_list),
         )
         t.start()
         thread_list.append(t)
@@ -581,6 +597,9 @@ def run_actions(job_list):
 
 
 def collect_results(job_run_list):
+    """
+    Collect performance numbers from vpr_stat.result file
+    """
     task_result = []
     for run in job_run_list:
         if not run["status"]:
@@ -588,25 +607,34 @@ def collect_results(job_run_list):
             continue
         # Check if any result file exist
         if not glob.glob(os.path.join(run["run_dir"], "*.result")):
-            logger.info("No result files found for %s" % run["name"])
+            logger.info("No result files found for %s", run["name"])
+            continue
 
         # Read and merge result file
         vpr_res = ConfigParser(allow_no_value=True, interpolation=ExtendedInterpolation())
-        vpr_res.read_file(open(os.path.join(run["run_dir"], "vpr_stat.result")))
+        vpr_result_file = os.path.join(run["run_dir"], "vpr_stat.result")
+        vpr_res.read_file(open(vpr_result_file, encoding="UTF-8"))
         result = OrderedDict()
         result["name"] = run["name"]
         result["TotalRunTime"] = int(run["endtime"] - run["starttime"])
         result.update(vpr_res["RESULTS"])
         task_result.append(result)
-        colnames = []
-        for eachLbl in task_result:
-            colnames.extend(eachLbl.keys())
-    if len(task_result):
-        with open("task_result.csv", "w", newline="") as csvfile:
-            writer = csv.DictWriter(csvfile, extrasaction="ignore", fieldnames=list(colnames))
+
+    colnames = []
+    # Extract all column names
+    for each_metric in task_result:
+        colnames.extend(set(each_metric.keys()) - {"name", "TotalRunTime"})
+        colnames = sorted(list(set(colnames)))
+    if len(task_result) > 0:
+        with open("task_result.csv", "w", encoding="UTF-8", newline="") as csvfile:
+            writer = csv.DictWriter(
+                csvfile,
+                extrasaction="ignore",
+                fieldnames=["name", "TotalRunTime"] + colnames,
+            )
             writer.writeheader()
-            for eachResult in task_result:
-                writer.writerow(eachResult)
+            for each in task_result:
+                writer.writerow(each)
 
 
 if __name__ == "__main__":
