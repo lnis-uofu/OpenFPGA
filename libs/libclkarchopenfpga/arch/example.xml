@@ -1,0 +1,19 @@
+<clock_networks> 
+  <clock_network name="example_network" num_clocks="8"> 
+    <spine name="spine_lvl3" start_x="0" start_y="H/2" end_x="W/2" end_y="H/2"> 
+      <switch_point tap="spine_lvl2" x="W/2" y="H/2"/> 
+    </spine>  
+    <spine name="spine_lvl2_upper" start_x="W/2" start_y="H/2" end_x="W/2" end_y="H*0.75"> 
+      <switch_point tap="rib_lvl1_upper_left" x="W/2" y="H*0.75"/> 
+      <switch_point tap="rib_lvl1_upper_right" x="W/2" y="H*0.75"/> 
+    </spine> 
+    <spine name="spine_lvl2_lower" start_x="W/2" start_y="H/2" end_x="W/2" end_y="H*0.25"> 
+      <switch_point tap="rib_lvl1_lower_left" x="W/2" y="H*0.25"/> 
+      <switch_point tap="rib_lvl1_lower_left" x="W/2" y="H*0.25"/> 
+    </spine> 
+    <spine name="rib_lvl1_upper_left" start_x="W/2" start_y="H*0.75" end_x="W/4" end_y="H*0.75"/> 
+    <spine name="rib_lvl1_upper_right" start_x="W/2" start_y="H*0.75" end_x="W*0.75" end_y="H*0.75"/> 
+    <spine name="rib_lvl1_lower_left" start_x="W/2" start_y="H*0.25" end_x="W/4" end_y="H*0.25"/> 
+    <spine name="rib_lvl1_lower_right" start_x="W/2" start_y="H*0.25" end_x="W*0.75" end_y="H*0.25"/> 
+  </clock_network>  
+</clock_networks> 
