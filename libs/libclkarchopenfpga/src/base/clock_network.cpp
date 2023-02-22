@@ -28,6 +28,14 @@ ClockNetwork::clock_tree_range ClockNetwork::trees() const {
 /************************************************************************
  * Public Accessors : Basic data query
  ***********************************************************************/
+bool ClockNetwork::find_spine(const std::string& name) const {
+  auto result = spine_name2id_map_.find(name);
+  if (result == spine_name2id_map_.end()) {
+    return ClockSpineId::INVALID();
+  }
+  return result->second;
+}
+
 bool ClockNetwork::empty() const { return 0 == tree_ids_.size(); }
 
 /************************************************************************
@@ -100,6 +108,14 @@ ClockSpineId ClockNetwork::create_spine(const std::string& name) {
   /* Register to the lookup */
   spine_name2id_map_[name] = spine_id;
 
+  return spine_id;
+}
+
+ClockSpineId ClockNetwork::try_create_spine(const std::string& name) {
+  ClockSpineId spine_id = find_spine(name);
+  if (!spine_id) {
+    spine_id = create_spine(name);
+  }
   return spine_id;
 }
 

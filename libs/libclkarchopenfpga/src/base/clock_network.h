@@ -49,6 +49,9 @@ class ClockNetwork {
   clock_tree_range trees() const;
 
  public: /* Public Accessors: Basic data query */
+  /* Find a spine with a given name, if not found, return an valid id, otherwise return an invalid one */
+  ClockSpineId find_spine(const std::string& name) const;
+
   /* Check if there are clock tree */
   bool empty() const;
 
@@ -64,6 +67,8 @@ class ClockNetwork {
 
   /* Create a new spine, if the spine is already created, return an invalid id */
   ClockSpineId create_spine(const std::string& name);
+  /* Try to create a new spine, if the spine is already existing, return the id. If not, create a new spine and return its id */
+  ClockSpineId try_create_spine(const std::string& name);
 
   /* Set the parent tree for a given spine. It is illegal that a spine which does not belong to any tree */
   void set_spine_parent_tree(const ClockSpineId& spine_id, const ClockTreeId& tree_id);
