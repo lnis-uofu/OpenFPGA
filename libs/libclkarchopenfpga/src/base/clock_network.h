@@ -49,9 +49,6 @@ class ClockNetwork {
   clock_tree_range trees() const;
 
  public: /* Public Accessors: Basic data query */
-  /* Find a spine by name, return a valid id if found, otherwise return an invalid id */
-  ClockSpineId spine(const std::string& name) const;
-
   /* Check if there are clock tree */
   bool empty() const;
 
@@ -85,6 +82,7 @@ class ClockNetwork {
   /* Basic information of each tree */
   vtr::vector<ClockTreeId, ClockTreeId> tree_ids_;
   vtr::vector<ClockTreeId, std::string> tree_names_;
+  vtr::vector<ClockTreeId, size_t> tree_widths_;
   vtr::vector<ClockTreeId, std::vector<ClockSpineId>> tree_top_spines_;
 
   /* Basic information of each spine */
@@ -99,7 +97,8 @@ class ClockNetwork {
   vtr::vector<ClockSpineId, ClockTreeId> spine_parent_tree_;
 
   /* Fast lookup */
-  std::map<std::string, ClockSpineId> spine_name2ids_;
+  std::map<std::string, ClockTreeId> tree_name2id_map_;
+  std::map<std::string, ClockSpineId> spine_name2id_map_;
 
   /* Flags */
   bool is_dirty_;
