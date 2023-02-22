@@ -10,6 +10,7 @@
 
 /* Headers from vtrutil library */
 #include "vtr_vector.h"
+#include "vtr_geometry.h"
 
 /* Headers from openfpgautil library */
 #include "clock_network_fwd.h"
@@ -68,10 +69,10 @@ class ClockNetwork {
   ClockSpineId create_spine(const std::string& name);
 
   /* Set the parent tree for a given spine. It is illegal that a spine which does not belong to any tree */
-  void set_spine_parent_tree(const ClockSpineId& spine, const ClockTreeId& parent_tree);
-  void set_spine_start_point(const ClockSpineId& spine, const vtr::Point<int>& point);
-  void set_spine_end_point(const ClockSpineId& spine, const vtr::Point<int>& point);
-  void add_spine_switch_point(const ClockSpineId& spine, const ClockSpineId& drive_spine, const vtr::Point<int>& coord);
+  void set_spine_parent_tree(const ClockSpineId& spine_id, const ClockTreeId& tree_id);
+  void set_spine_start_point(const ClockSpineId& spine_id, const vtr::Point<int>& coord);
+  void set_spine_end_point(const ClockSpineId& spine_id, const vtr::Point<int>& coord);
+  void add_spine_switch_point(const ClockSpineId& spine_id, const ClockSpineId& drive_spine, const vtr::Point<int>& coord);
 
  public: /* Public invalidators/validators */
   /* Show if the tree id is a valid for data queries */
@@ -82,20 +83,20 @@ class ClockNetwork {
 
  private: /* Internal data */
   /* Basic information of each tree */
-  vtr::vector<ClockTreeId, ClockTreeId> clk_tree_ids_;
-  vtr::vector<ClockTreeId, std::string> clk_tree_names_;
-  vtr::vector<ClockTreeId, std::vector<ClockSpineId>> clk_tree_top_spines_;
+  vtr::vector<ClockTreeId, ClockTreeId> tree_ids_;
+  vtr::vector<ClockTreeId, std::string> tree_names_;
+  vtr::vector<ClockTreeId, std::vector<ClockSpineId>> tree_top_spines_;
 
   /* Basic information of each spine */
-  vtr::vector<ClockSpineId, ClockSpineId> clk_spines_;
-  vtr::vector<ClockSpineId, std::string> clk_spine_names_;
-  vtr::vector<ClockSpineId, size_t> clk_spine_levels_;
-  vtr::vector<ClockSpineId, vtr::Point<int>> clk_spine_start_points_;
-  vtr::vector<ClockSpineId, vtr::Point<int>> clk_spine_end_points_;
-  vtr::vector<ClockSpineId, std::vector<ClockSpineId>> clk_spine_switch_points_;
-  vtr::vector<ClockSpineId, std::vector<vtr::Point<int>>> clk_spine_switch_coords_;
-  vtr::vector<ClockSpineId, ClockSpineId> clk_spine_parent_;
-  vtr::vector<ClockSpineId, ClockTreeId> clk_spine_parent_tree_;
+  vtr::vector<ClockSpineId, ClockSpineId> spine_ids_;
+  vtr::vector<ClockSpineId, std::string> spine_names_;
+  vtr::vector<ClockSpineId, size_t> spine_levels_;
+  vtr::vector<ClockSpineId, vtr::Point<int>> spine_start_points_;
+  vtr::vector<ClockSpineId, vtr::Point<int>> spine_end_points_;
+  vtr::vector<ClockSpineId, std::vector<ClockSpineId>> spine_switch_points_;
+  vtr::vector<ClockSpineId, std::vector<vtr::Point<int>>> spine_switch_coords_;
+  vtr::vector<ClockSpineId, ClockSpineId> spine_parent_;
+  vtr::vector<ClockSpineId, ClockTreeId> spine_parent_tree_;
 
   /* Fast lookup */
   std::map<std::string, ClockSpineId> spine_name2ids_;
