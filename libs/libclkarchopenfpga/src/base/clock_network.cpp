@@ -170,7 +170,6 @@ ClockSpineId ClockNetwork::create_spine(const std::string& name) {
 
   /* Create a new id */
   ClockSpineId spine_id = ClockSpineId(spine_ids_.size());
-  VTR_ASSERT(valid_spine_id(spine_id));
 
   spine_ids_.push_back(spine_id);
   spine_names_.push_back(name);
@@ -184,6 +183,7 @@ ClockSpineId ClockNetwork::create_spine(const std::string& name) {
   spine_parent_trees_.emplace_back();
 
   /* Register to the lookup */
+  VTR_ASSERT(valid_spine_id(spine_id));
   spine_name2id_map_[name] = spine_id;
 
   return spine_id;
