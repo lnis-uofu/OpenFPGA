@@ -199,6 +199,27 @@ void ClockNetwork::add_spine_switch_point(const ClockSpineId& spine_id, const Cl
   spine_parent_[drive_spine_id] = spine_id;
 }
 
+bool ClockNetwork::link() {
+  for (ClockTreeId& tree_id : trees()) {
+    if (!link_tree(tree_id)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool ClockNetwork::link_tree(const ClockTreeId& tree_id) {
+  tree_top_spines_[tree_id].clear();
+  /* Sort the spines under a tree; assign levels and identify top-level spines */
+  for (ClockSpineId spine_id : spines(tree_id)) {
+    /* Spines that have no parent are the top-level spines*/
+    if (!spine_parent_[spine_id]) {
+      tree_top_spines_[tree_id].push_back(spine_id);
+    }
+  }
+  return true;
+}
+
 /************************************************************************
  * Internal invalidators/validators
  ***********************************************************************/

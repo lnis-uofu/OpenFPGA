@@ -81,6 +81,8 @@ class ClockNetwork {
   void set_spine_start_point(const ClockSpineId& spine_id, const vtr::Point<int>& coord);
   void set_spine_end_point(const ClockSpineId& spine_id, const vtr::Point<int>& coord);
   void add_spine_switch_point(const ClockSpineId& spine_id, const ClockSpineId& drive_spine_id, const vtr::Point<int>& coord);
+  /* Build internal links between clock tree, spines etc. This is also an validator to verify the correctness of the clock network. Must run before using the data! */
+  bool link();
 
  public: /* Public invalidators/validators */
   /* Show if the tree id is a valid for data queries */
@@ -88,6 +90,10 @@ class ClockNetwork {
   /* Show if the tree id is a valid for data queries */
   bool valid_spine_id(const ClockSpineId& spine_id) const;
   bool valid_spine_switch_point_id(const ClockSpineId& spine_id, const ClockSwitchPointId& switch_point_id) const;
+
+ private: /* Private mutators */
+  /* Build internal links between spines under a given tree */
+  bool link_tree(const ClockTreeId& tree_id);
 
  private: /* Internal data */
   /* Basic information of each tree */
