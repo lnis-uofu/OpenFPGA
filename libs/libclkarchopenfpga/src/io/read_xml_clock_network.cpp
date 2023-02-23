@@ -27,16 +27,18 @@ namespace openfpga {  // Begin namespace openfpga
 /********************************************************************
  * Parse XML codes of a <switch_point> to an object of ClockNetwork
  *******************************************************************/
-static void read_xml_clock_spine_switch_point(pugi::xml_node& xml_switch_point,
-                                              const pugiutil::loc_data& loc_data,
-                                              ClockNetwork& clk_ntwk, const ClockSpineId& spine_id) {
+static void read_xml_clock_spine_switch_point(
+  pugi::xml_node& xml_switch_point, const pugiutil::loc_data& loc_data,
+  ClockNetwork& clk_ntwk, const ClockSpineId& spine_id) {
   if (!clk_ntwk.valid_spine_id(spine_id)) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_switch_point),
                    "Invalid id of a clock spine!\n");
   }
 
-  std::string tap_spine_name = 
-    get_attribute(xml_switch_point, XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_TAP, loc_data).as_string();
+  std::string tap_spine_name =
+    get_attribute(xml_switch_point, XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_TAP,
+                  loc_data)
+      .as_string();
 
   /* Try to find an existing spine, if not, create one */
   ClockSpineId tap_spine_id = clk_ntwk.find_spine(tap_spine_name);
@@ -49,12 +51,15 @@ static void read_xml_clock_spine_switch_point(pugi::xml_node& xml_switch_point,
                    "Fail to create a clock spine!\n");
   }
 
-  int tap_x =
-    get_attribute(xml_switch_point, XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_X, loc_data).as_int();
-  int tap_y =
-    get_attribute(xml_switch_point, XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_Y, loc_data).as_int();
+  int tap_x = get_attribute(xml_switch_point,
+                            XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_X, loc_data)
+                .as_int();
+  int tap_y = get_attribute(xml_switch_point,
+                            XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_Y, loc_data)
+                .as_int();
 
-  clk_ntwk.add_spine_switch_point(spine_id, tap_spine_id, vtr::Point<int>(tap_x, tap_y));
+  clk_ntwk.add_spine_switch_point(spine_id, tap_spine_id,
+                                  vtr::Point<int>(tap_x, tap_y));
 }
 
 /********************************************************************
@@ -62,14 +67,16 @@ static void read_xml_clock_spine_switch_point(pugi::xml_node& xml_switch_point,
  *******************************************************************/
 static void read_xml_clock_spine(pugi::xml_node& xml_spine,
                                  const pugiutil::loc_data& loc_data,
-                                 ClockNetwork& clk_ntwk, const ClockTreeId& tree_id) {
+                                 ClockNetwork& clk_ntwk,
+                                 const ClockTreeId& tree_id) {
   if (!clk_ntwk.valid_tree_id(tree_id)) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_spine),
                    "Invalid id of a clock tree!\n");
   }
 
-  std::string clk_spine_name = 
-    get_attribute(xml_spine, XML_CLOCK_SPINE_ATTRIBUTE_NAME, loc_data).as_string();
+  std::string clk_spine_name =
+    get_attribute(xml_spine, XML_CLOCK_SPINE_ATTRIBUTE_NAME, loc_data)
+      .as_string();
 
   /* Try to find an existing spine, if not, create one */
   ClockSpineId spine_id = clk_ntwk.find_spine(clk_spine_name);
@@ -85,23 +92,30 @@ static void read_xml_clock_spine(pugi::xml_node& xml_spine,
   clk_ntwk.set_spine_parent_tree(spine_id, tree_id);
 
   int start_x =
-    get_attribute(xml_spine, XML_CLOCK_SPINE_ATTRIBUTE_START_X, loc_data).as_int();
+    get_attribute(xml_spine, XML_CLOCK_SPINE_ATTRIBUTE_START_X, loc_data)
+      .as_int();
   int start_y =
-    get_attribute(xml_spine, XML_CLOCK_SPINE_ATTRIBUTE_START_Y, loc_data).as_int();
+    get_attribute(xml_spine, XML_CLOCK_SPINE_ATTRIBUTE_START_Y, loc_data)
+      .as_int();
   clk_ntwk.set_spine_start_point(spine_id, vtr::Point<int>(start_x, start_y));
 
   int end_x =
-    get_attribute(xml_spine, XML_CLOCK_SPINE_ATTRIBUTE_END_X, loc_data).as_int();
+    get_attribute(xml_spine, XML_CLOCK_SPINE_ATTRIBUTE_END_X, loc_data)
+      .as_int();
   int end_y =
-    get_attribute(xml_spine, XML_CLOCK_SPINE_ATTRIBUTE_END_Y, loc_data).as_int();
+    get_attribute(xml_spine, XML_CLOCK_SPINE_ATTRIBUTE_END_Y, loc_data)
+      .as_int();
   clk_ntwk.set_spine_end_point(spine_id, vtr::Point<int>(end_x, end_y));
 
   for (pugi::xml_node xml_switch_point : xml_spine.children()) {
     /* Error out if the XML child has an invalid name! */
-    if (xml_switch_point.name() != std::string(XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME)) {
-      bad_tag(xml_switch_point, loc_data, xml_spine, {XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME});
+    if (xml_switch_point.name() !=
+        std::string(XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME)) {
+      bad_tag(xml_switch_point, loc_data, xml_spine,
+              {XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME});
     }
-    read_xml_clock_spine_switch_point(xml_switch_point, loc_data, clk_ntwk, spine_id);
+    read_xml_clock_spine_switch_point(xml_switch_point, loc_data, clk_ntwk,
+                                      spine_id);
   }
 }
 
@@ -111,10 +125,12 @@ static void read_xml_clock_spine(pugi::xml_node& xml_spine,
 static void read_xml_clock_tree(pugi::xml_node& xml_clk_tree,
                                 const pugiutil::loc_data& loc_data,
                                 ClockNetwork& clk_ntwk) {
-  std::string clk_tree_name = 
-    get_attribute(xml_clk_tree, XML_CLOCK_TREE_ATTRIBUTE_NAME, loc_data).as_string();
-  int clk_tree_width = 
-    get_attribute(xml_clk_tree, XML_CLOCK_TREE_ATTRIBUTE_WIDTH, loc_data).as_int();
+  std::string clk_tree_name =
+    get_attribute(xml_clk_tree, XML_CLOCK_TREE_ATTRIBUTE_NAME, loc_data)
+      .as_string();
+  int clk_tree_width =
+    get_attribute(xml_clk_tree, XML_CLOCK_TREE_ATTRIBUTE_WIDTH, loc_data)
+      .as_int();
 
   /* Create a new tree in the storage */
   ClockTreeId tree_id = clk_ntwk.create_tree(clk_tree_name, clk_tree_width);
