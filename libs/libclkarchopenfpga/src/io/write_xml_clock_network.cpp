@@ -28,8 +28,8 @@ static int write_xml_clock_spine_switch_point(std::fstream& fp, const ClockNetwo
   fp << "<" << XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME << "";
 
   write_xml_attribute(fp, XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_TAP,
-                      clk_ntwk.spine_switch_point_tap(spine_id, switch_point_id));
-  vtr::Point<int> coord = clk_ntwk.spine_switch_point(spine_id);
+                      clk_ntwk.spine_name(clk_ntwk.spine_switch_point_tap(spine_id, switch_point_id)).c_str());
+  vtr::Point<int> coord = clk_ntwk.spine_switch_point(spine_id, switch_point_id);
   write_xml_attribute(fp, XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_X,
                       coord.x());
   write_xml_attribute(fp, XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_Y,
@@ -47,7 +47,7 @@ static int write_xml_clock_spine(std::fstream& fp, const ClockNetwork& clk_ntwk,
   fp << "<" << XML_CLOCK_SPINE_NODE_NAME << "";
 
   write_xml_attribute(fp, XML_CLOCK_SPINE_ATTRIBUTE_NAME,
-                      clk_ntwk.spine_name(spine_id));
+                      clk_ntwk.spine_name(spine_id).c_str());
   vtr::Point<int> start_coord = clk_ntwk.spine_start_point(spine_id);
   write_xml_attribute(fp, XML_CLOCK_SPINE_ATTRIBUTE_START_X,
                       start_coord.x());

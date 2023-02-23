@@ -16,7 +16,7 @@ int main(int argc, const char** argv) {
   VTR_ASSERT((2 == argc) || (3 == argc));
 
   /* Parse the circuit library from an XML file */
-  const openfpga::ClockNetwork& clk_ntwk = openfpga::read_xml_clock_network(argv[1]);
+  openfpga::ClockNetwork clk_ntwk = openfpga::read_xml_clock_network(argv[1]);
   VTR_LOG("Parsed %lu clock tree(s) from XML into clock network.\n",
           clk_ntwk.trees().size());
 

@@ -20,8 +20,8 @@ set_target_properties(libclkarchopenfpga PROPERTIES PREFIX "") #Avoid extra 'lib
 #Specify link-time dependancies
 target_link_libraries(libclkarchopenfpga
                       libopenfpgautil
+                      libarchopenfpga
                       libvtrutil
-                      libarchfpga
                       libpugiutil)
 
 #Create the test executable

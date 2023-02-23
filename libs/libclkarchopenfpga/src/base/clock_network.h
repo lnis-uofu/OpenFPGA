@@ -73,7 +73,7 @@ class ClockNetwork {
   /* Reserve a number of trees to be memory efficent */
   void reserve_trees(const size_t& num_trees);
   /* Create a new tree, by default the tree can accomodate only 1 clock signal; use width to adjust the size */
-  ClockTreeId create_tree(const std::string& name, const size_t& width = 1);
+  ClockTreeId create_tree(const std::string& name, size_t width = 1);
   /* Create a new spine, if the spine is already created, return an invalid id */
   ClockSpineId create_spine(const std::string& name);
   /* Try to create a new spine, if the spine is already existing, return the id. If not, create a new spine and return its id */

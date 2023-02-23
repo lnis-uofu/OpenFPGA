@@ -167,8 +167,8 @@ ClockNetwork read_xml_clock_network(const char* fname) {
 
     for (pugi::xml_node xml_tree : xml_root.children()) {
       /* Error out if the XML child has an invalid name! */
-      if (xml_tree.name() != std::string(XML_CLOCK_NETWORK_NODE_NAME)) {
-        bad_tag(xml_tree, loc_data, xml_root, {XML_CLOCK_NETWORK_NODE_NAME});
+      if (xml_tree.name() != std::string(XML_CLOCK_TREE_NODE_NAME)) {
+        bad_tag(xml_tree, loc_data, xml_root, {XML_CLOCK_TREE_NODE_NAME});
       }
       read_xml_clock_tree(xml_tree, loc_data, clk_ntwk);
     }

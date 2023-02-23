@@ -93,7 +93,7 @@ vtr::Point<int> ClockNetwork::spine_switch_point(const ClockSpineId& spine_id, c
   return spine_switch_coords_[spine_id][size_t(switch_point_id)];
 }
 
-bool ClockNetwork::find_spine(const std::string& name) const {
+ClockSpineId ClockNetwork::find_spine(const std::string& name) const {
   auto result = spine_name2id_map_.find(name);
   if (result == spine_name2id_map_.end()) {
     return ClockSpineId::INVALID();
@@ -128,7 +128,7 @@ void ClockNetwork::reserve_trees(const size_t& num_trees) {
   tree_top_spines_.reserve(num_trees);
 }
 
-ClockTreeId ClockNetwork::create_tree(const std::string& name, const size_t& width = 1) {
+ClockTreeId ClockNetwork::create_tree(const std::string& name, size_t width) {
   /* Create a new id */
   ClockTreeId tree_id = ClockTreeId(tree_ids_.size());
 
@@ -208,7 +208,7 @@ void ClockNetwork::set_spine_end_point(const ClockSpineId& spine_id, const vtr::
 void ClockNetwork::add_spine_switch_point(const ClockSpineId& spine_id, const ClockSpineId& drive_spine_id, const vtr::Point<int>& coord) {
   VTR_ASSERT(valid_spine_id(spine_id));
   VTR_ASSERT(valid_spine_id(drive_spine_id));
-  spine_switch_points_[spine_id].push_back(drive_spine);
+  spine_switch_points_[spine_id].push_back(drive_spine_id);
   spine_switch_coords_[spine_id].push_back(coord);
   /* Do not allow any spine has different parents */
   if (spine_parents_[drive_spine_id]) {
@@ -225,7 +225,7 @@ void ClockNetwork::add_spine_switch_point(const ClockSpineId& spine_id, const Cl
 
 bool ClockNetwork::link() {
   is_dirty_ = true;
-  for (ClockTreeId& tree_id : trees()) {
+  for (ClockTreeId tree_id : trees()) {
     if (!link_tree(tree_id)) {
       return false;
     }
@@ -277,7 +277,7 @@ bool ClockNetwork::rec_update_spine_level(const ClockSpineId& spine_id) {
 
 bool ClockNetwork::update_tree_depth(const ClockTreeId& tree_id) {
   size_t depth = 0;
-  for (ClockSpineId spine_id : tree_spines_[tree_id]) {
+  for (ClockSpineId spine_id : spines(tree_id)) {
     depth = std::max(depth, spine_levels_[spine_id]);
   }
   tree_depths_[tree_id] = depth;
@@ -295,7 +295,7 @@ bool ClockNetwork::valid_spine_id(const ClockSpineId& spine_id) const {
   return (size_t(spine_id) < spine_ids_.size()) && (spine_id == spine_ids_[spine_id]);
 }
 
-bool valid_spine_switch_point_id(const ClockSpineId& spine_id, const ClockSwitchPointId& switch_point_id) const {
+bool ClockNetwork::valid_spine_switch_point_id(const ClockSpineId& spine_id, const ClockSwitchPointId& switch_point_id) const {
   if (!valid_spine_id(spine_id)) {
     return false;
   }
