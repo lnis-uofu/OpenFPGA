@@ -234,6 +234,8 @@ int read_openfpga_clock_arch_template(T& openfpga_context, const Command& cmd,
   VTR_LOG("Reading XML clock architecture '%s'...\n", arch_file_name.c_str());
   openfpga_context.mutable_clock_arch() =
     read_xml_clock_network(arch_file_name.c_str());
+  /* Build internal links */
+  openfpga_context.mutable_clock_arch().link();
 
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;
