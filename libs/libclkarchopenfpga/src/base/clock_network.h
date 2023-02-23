@@ -53,6 +53,7 @@ class ClockNetwork {
  public: /* Public Accessors: Basic data query */
   std::string tree_name(const ClockTreeId& tree_id) const;
   size_t tree_width(const ClockTreeId& tree_id) const;
+  size_t tree_depth(const ClockTreeId& tree_id) const;
   std::string spine_name(const ClockSpineId& spine_id) const;
   vtr::Point<int> spine_start_point(const ClockSpineId& spine_id) const;
   vtr::Point<int> spine_end_point(const ClockSpineId& spine_id) const;
@@ -64,6 +65,7 @@ class ClockNetwork {
   ClockSpineId find_spine(const std::string& name) const;
   /* Check if there are clock tree */
   bool empty() const;
+  bool is_valid() const;
 
  public: /* Public Mutators */
   /* Reserve a number of spines to be memory efficent */
@@ -98,12 +100,15 @@ class ClockNetwork {
   /* Require link_tree_top_spines() to called before! */
   bool sort_tree_spines(const ClockTreeId& tree_id);
   bool rec_update_spine_level(const ClockSpineId& spine_id);
+  /* Require sort_tree_spines() to called before! */
+  bool update_tree_depth(const ClockTreeId& tree_id);
 
  private: /* Internal data */
   /* Basic information of each tree */
   vtr::vector<ClockTreeId, ClockTreeId> tree_ids_;
   vtr::vector<ClockTreeId, std::string> tree_names_;
   vtr::vector<ClockTreeId, size_t> tree_widths_;
+  vtr::vector<ClockTreeId, size_t> tree_depths_;
   vtr::vector<ClockTreeId, std::vector<ClockSpineId>> tree_top_spines_;
 
   /* Basic information of each spine */
