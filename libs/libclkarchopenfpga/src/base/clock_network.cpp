@@ -41,7 +41,7 @@ size_t ClockNetwork::tree_width(const ClockTreeId& tree_id) const {
 std::vector<ClockSpineId> ClockNetwork::spines(const ClockTreeId& tree_id) const {
   std::vector<ClockSpineId> ret; 
   for (ClockSpineId spine_id : spine_ids_) {
-    if (spine_parent_tree_[spine_id] == tree_id) {
+    if (spine_parent_trees_[spine_id] == tree_id) {
       ret.push_back(spine_id);
     }
   }
@@ -105,8 +105,9 @@ void ClockNetwork::reserve_spines(const size_t& num_spines) {
   spine_end_points_.reserve(num_spines);
   spine_switch_points_.reserve(num_spines);
   spine_switch_coords_.reserve(num_spines);
-  spine_parent_.reserve(num_spines);
-  spine_parent_tree_.reserve(num_spines);
+  spine_parents_.reserve(num_spines);
+  spine_children_.reserve(num_spines);
+  spine_parent_trees_.reserve(num_spines);
 }
 
 void ClockNetwork::reserve_trees(const size_t& num_trees) {
@@ -153,13 +154,14 @@ ClockSpineId ClockNetwork::create_spine(const std::string& name) {
 
   spine_ids_.push_back(spine_id);
   spine_names_.push_back(name);
-  spine_levels_.emplace_back();
+  spine_levels_.emplace_back(0);
   spine_start_points_.emplace_back();
   spine_end_points_.emplace_back();
   spine_switch_points_.emplace_back();
   spine_switch_coords_.emplace_back();
-  spine_parent_.emplace_back();
-  spine_parent_tree_.emplace_back();
+  spine_parents_.emplace_back();
+  spine_children_.emplace_back();
+  spine_parent_trees_.emplace_back();
 
   /* Register to the lookup */
   spine_name2id_map_[name] = spine_id;
@@ -178,7 +180,7 @@ ClockSpineId ClockNetwork::try_create_spine(const std::string& name) {
 void ClockNetwork::set_spine_parent_tree(const ClockSpineId& spine_id, const ClockTreeId& tree_id) {
   VTR_ASSERT(valid_spine_id(spine_id));
   VTR_ASSERT(valid_tree_id(tree_id));
-  spine_parent_tree_[spine_id] = tree_id;
+  spine_parent_trees_[spine_id] = tree_id;
 }
 
 void ClockNetwork::set_spine_start_point(const ClockSpineId& spine_id, const vtr::Point<int>& coord) {
@@ -196,7 +198,17 @@ void ClockNetwork::add_spine_switch_point(const ClockSpineId& spine_id, const Cl
   VTR_ASSERT(valid_spine_id(drive_spine_id));
   spine_switch_points_[spine_id].push_back(drive_spine);
   spine_switch_coords_[spine_id].push_back(coord);
-  spine_parent_[drive_spine_id] = spine_id;
+  /* Do not allow any spine has different parents */
+  if (spine_parents_[drive_spine_id]) {
+    VTR_LOG_ERROR("Detect a spine %s' has two parents '%s' and '%s'. Not allowed in a clock tree!\n",
+                  spine_name(drive_spine_id).c_str(),
+                  spine_name(spine_parents_[drive_spine_id]).c_str(),
+                  spine_name(spine_id).c_str()
+                 );
+    exit(1);
+  }
+  spine_parents_[drive_spine_id] = spine_id;
+  spine_children_[spine_id].push_back(drive_spine_id);
 }
 
 bool ClockNetwork::link() {
@@ -209,15 +221,39 @@ bool ClockNetwork::link() {
 }
 
 bool ClockNetwork::link_tree(const ClockTreeId& tree_id) {
+  if (!link_tree_top_spines(tree_id)) {
+    return false;
+  }
+  if (!sort_tree_spines(tree_id)) {
+    return false;
+  }
+  return true;
+}
+
+bool ClockNetwork::link_tree_top_spines(const ClockTreeId& tree_id) {
   tree_top_spines_[tree_id].clear();
   /* Sort the spines under a tree; assign levels and identify top-level spines */
   for (ClockSpineId spine_id : spines(tree_id)) {
     /* Spines that have no parent are the top-level spines*/
-    if (!spine_parent_[spine_id]) {
+    if (!spine_parents_[spine_id]) {
       tree_top_spines_[tree_id].push_back(spine_id);
     }
   }
   return true;
+}
+
+bool ClockNetwork::sort_tree_spines(const ClockTreeId& tree_id) {
+  for (ClockSpineId spine_id : tree_top_spines_[tree_id]) {
+    spine_levels_[spine_id] = 0;
+    rec_update_spine_level(spine_id);
+  }
+}
+
+bool ClockNetwork::rec_update_spine_level(const ClockSpineId& spine_id) {
+  for (ClockSpineId child_spine_id : spine_children_[spine_id]) {
+    spine_levels_[child_spine_id] = spine_levels_[spine_id] + 1;
+    rec_update_spine_level(child_spine_id);
+  }
 }
 
 /************************************************************************

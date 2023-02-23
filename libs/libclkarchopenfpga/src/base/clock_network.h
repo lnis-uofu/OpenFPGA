@@ -94,6 +94,10 @@ class ClockNetwork {
  private: /* Private mutators */
   /* Build internal links between spines under a given tree */
   bool link_tree(const ClockTreeId& tree_id);
+  bool link_tree_top_spines(const ClockTreeId& tree_id);
+  /* Require link_tree_top_spines() to called before! */
+  bool sort_tree_spines(const ClockTreeId& tree_id);
+  bool rec_update_spine_level(const ClockSpineId& spine_id);
 
  private: /* Internal data */
   /* Basic information of each tree */
@@ -110,8 +114,9 @@ class ClockNetwork {
   vtr::vector<ClockSpineId, vtr::Point<int>> spine_end_points_;
   vtr::vector<ClockSpineId, std::vector<ClockSpineId>> spine_switch_points_;
   vtr::vector<ClockSpineId, std::vector<vtr::Point<int>>> spine_switch_coords_;
-  vtr::vector<ClockSpineId, ClockSpineId> spine_parent_;
-  vtr::vector<ClockSpineId, ClockTreeId> spine_parent_tree_;
+  vtr::vector<ClockSpineId, ClockSpineId> spine_parents_;
+  vtr::vector<ClockSpineId, std::vector<ClockSpineId>> spine_children_;
+  vtr::vector<ClockSpineId, ClockTreeId> spine_parent_trees_;
 
   /* Fast lookup */
   std::map<std::string, ClockTreeId> tree_name2id_map_;
