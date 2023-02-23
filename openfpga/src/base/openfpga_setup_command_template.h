@@ -570,6 +570,65 @@ ShellCommandId add_pcf2place_command_template(
   return shell_cmd_id;
 }
 
+/********************************************************************
+ * - Add a command to Shell environment: read_openfpga_clock_arch
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_read_openfpga_clock_arch_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("read_openfpga_clock_arch");
+
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file = shell_cmd.add_option(
+    "file", true, "file path to the clock architecture XML");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  /* Add command 'read_openfpga_clock_arch' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "read OpenFPGA clock architecture file", hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     read_openfpga_clock_arch_template<T>);
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
+ * - Add a command to Shell environment: write_openfpga_clock_arch
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_write_openfpga_clock_arch_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("write_openfpga_clock_arch");
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file = shell_cmd.add_option(
+    "file", true, "file path to the clock architecture XML");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  /* Add command 'write_openfpga_clock_arch' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "write OpenFPGA clock architecture file", hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_const_execute_function(shell_cmd_id,
+                                           write_openfpga_clock_arch_template<T>);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+
 template <class T>
 void add_setup_command_templates(openfpga::Shell<T>& shell,
                                  const bool& hidden = false) {
@@ -634,6 +693,27 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
     1, read_bitstream_setting_cmd_id);
   add_write_bitstream_setting_command_template<T>(
     shell, openfpga_setup_cmd_class, write_bitstream_setting_dependent_cmds,
+    hidden);
+
+  /********************************
+   * Command 'read_openfpga_clock_arch'
+   */
+  std::vector<ShellCommandId> read_openfpga_clock_arch_dependent_cmds;
+  read_openfpga_clock_arch_dependent_cmds.push_back(vpr_cmd_id);
+  read_openfpga_clock_arch_dependent_cmds.push_back(read_arch_cmd_id);
+  ShellCommandId read_openfpga_clock_arch_cmd_id =
+    add_read_openfpga_clock_arch_command_template<T>(
+      shell, openfpga_setup_cmd_class, read_openfpga_clock_arch_dependent_cmds, hidden);
+
+  /********************************
+   * Command 'write_openfpga_clock_arch'
+   */
+  /* The 'write_openfpga_clock_arch' command should NOT be executed
+   * before 'read_openfpga_clock_arch' */
+  std::vector<ShellCommandId> write_openfpga_clock_arch_dependent_cmds(
+    1, read_openfpga_clock_arch_cmd_id);
+  add_write_openfpga_clock_arch_command_template<T>(
+    shell, openfpga_setup_cmd_class, write_openfpga_clock_arch_dependent_cmds,
     hidden);
 
   /********************************

@@ -31,6 +31,7 @@ set_target_properties(libopenfpga PROPERTIES PREFIX "") #Avoid extra 'lib' prefi
 
 #Specify link-time dependancies
 target_link_libraries(libopenfpga
+                      libclkarchopenfpga
                       libarchopenfpga
                       libopenfpgashell
                       libopenfpgautil

@@ -25,6 +25,7 @@
 #include "vpr_netlist_annotation.h"
 #include "vpr_placement_annotation.h"
 #include "vpr_routing_annotation.h"
+#include "clock_network.h"
 
 /********************************************************************
  * This file includes the declaration of the date structure
@@ -60,6 +61,9 @@ class OpenfpgaContext : public Context {
   }
   const openfpga::BitstreamSetting& bitstream_setting() const {
     return bitstream_setting_;
+  }
+  const openfpga::ClockNetwork& clock_arch() const {
+    return clock_arch_;
   }
   const openfpga::VprDeviceAnnotation& vpr_device_annotation() const {
     return vpr_device_annotation_;
@@ -116,6 +120,9 @@ class OpenfpgaContext : public Context {
   openfpga::BitstreamSetting& mutable_bitstream_setting() {
     return bitstream_setting_;
   }
+  openfpga::ClockNetwork& mutable_clock_arch() {
+    return clock_arch_;
+  }
   openfpga::VprDeviceAnnotation& mutable_vpr_device_annotation() {
     return vpr_device_annotation_;
   }
@@ -165,6 +172,7 @@ class OpenfpgaContext : public Context {
   openfpga::Arch arch_;
   openfpga::SimulationSetting sim_setting_;
   openfpga::BitstreamSetting bitstream_setting_;
+  openfpga::ClockNetwork clock_arch_;
 
   /* Annotation to pb_type of VPR */
   openfpga::VprDeviceAnnotation vpr_device_annotation_;
