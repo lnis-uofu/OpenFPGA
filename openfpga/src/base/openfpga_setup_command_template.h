@@ -628,6 +628,34 @@ ShellCommandId add_write_openfpga_clock_arch_command_template(
   return shell_cmd_id;
 }
 
+/********************************************************************
+ * - Add a command to Shell environment: append_clock_rr_graph
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_append_clock_rr_graph_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("append_clock_rr_graph");
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Show verbose outputs");
+
+  /* Add command 'pb_pin_fixup' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd,
+    "Append clock network to the routing resource graph built by VPR.",
+    hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id, append_clock_rr_graph_template<T>);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
 template <class T>
 void add_setup_command_templates(openfpga::Shell<T>& shell,
                                  const bool& hidden = false) {
@@ -728,6 +756,16 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
   link_arch_dependent_cmds.push_back(vpr_cmd_id);
   ShellCommandId link_arch_cmd_id = add_link_arch_command_template<T>(
     shell, openfpga_setup_cmd_class, link_arch_dependent_cmds, hidden);
+
+  /********************************
+   * Command 'append_clock_rr_graph'
+   */
+  /* The 'append_clock_rr_graph' command should NOT be executed before
+   * 'read_openfpga_clock_arch' */
+  std::vector<ShellCommandId> append_clock_rr_graph_dependent_cmds;
+  append_clock_rr_graph_dependent_cmds.push_back(read_openfpga_clock_arch_cmd_id);
+  add_append_clock_rr_graph_command_template<T>(shell, openfpga_setup_cmd_class,
+                                                append_clock_rr_graph_dependent_cmds, hidden);
 
   /********************************
    * Command 'write_gsb'

@@ -182,6 +182,26 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   return CMD_EXEC_SUCCESS;
 }
 
+/********************************************************************
+ * Top-level function to append a clock network to VPR's routing resource graph, including:
+ * - Routing tracks dedicated to clock network
+ * - Programmable switches to enable reconfigurability of clock network
+ * - 
+ *******************************************************************/
+template <class T>
+int append_clock_rr_graph_template(T& openfpga_ctx, const Command& cmd,
+                                   const CommandContext& cmd_context) {
+  vtr::ScopedStartFinishTimer timer(
+    "Append clock network to routing resource graph");
+
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* TODO */
+
+  return CMD_EXEC_SUCCESS;
+}
+
+
 } /* end namespace openfpga */
 
 #endif
