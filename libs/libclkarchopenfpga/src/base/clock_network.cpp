@@ -42,7 +42,7 @@ size_t ClockNetwork::tree_depth(const ClockTreeId& tree_id) const {
     VTR_LOG_ERROR("Unable to identify tree depth when data is still dirty!\n");
     exit(1);
   }
-  return tree_depths_[tree_id];
+  return tree_depths_[tree_id] + 1;
 }
 
 std::vector<ClockSpineId> ClockNetwork::spines(

@@ -27,7 +27,7 @@ int main(int argc, const char** argv) {
   }
   VTR_ASSERT(clk_ntwk.is_valid());
   for (auto tree_id : clk_ntwk.trees()) {
-    VTR_LOG("Max. depth of the clock tree '%lu' is %d", size_t(tree_id),
+    VTR_LOG("Max. depth of the clock tree '%lu' is %d\n", size_t(tree_id),
             clk_ntwk.tree_depth(tree_id));
   }
 

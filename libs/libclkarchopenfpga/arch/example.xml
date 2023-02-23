@@ -1,7 +1,8 @@
 <clock_networks> 
   <clock_network name="example_network" width="8"> 
     <spine name="spine_lvl3" start_x="0" start_y="2" end_x="2" end_y="2"> 
-      <switch_point tap="spine_lvl2" x="2" y="2"/> 
+      <switch_point tap="spine_lvl2_upper" x="2" y="2"/> 
+      <switch_point tap="spine_lvl2_lower" x="2" y="2"/> 
     </spine>  
     <spine name="spine_lvl2_upper" start_x="2" start_y="2" end_x="2" end_y="3"> 
       <switch_point tap="rib_lvl1_upper_left" x="2" y="3"/> 
