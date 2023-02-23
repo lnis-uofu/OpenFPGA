@@ -16,9 +16,11 @@ namespace openfpga {  // Begin namespace openfpga
 
 struct clock_tree_id_tag;
 struct clock_spine_id_tag;
+struct clock_switch_point_id_tag;
 
 typedef vtr::StrongId<clock_tree_id_tag> ClockTreeId;
 typedef vtr::StrongId<clock_spine_id_tag> ClockSpineId;
+typedef vtr::StrongId<clock_switch_point_id_tag> ClockSwitchPointId;
 
 /* Short declaration of class */
 class ClockNetwork;

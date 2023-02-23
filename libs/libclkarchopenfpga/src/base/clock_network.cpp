@@ -28,6 +28,62 @@ ClockNetwork::clock_tree_range ClockNetwork::trees() const {
 /************************************************************************
  * Public Accessors : Basic data query
  ***********************************************************************/
+std::string ClockNetwork::tree_name(const ClockTreeId& tree_id) const {
+  VTR_ASSERT(valid_tree_id(tree_id));
+  return tree_names_[tree_id];
+}
+
+size_t ClockNetwork::tree_width(const ClockTreeId& tree_id) const {
+  VTR_ASSERT(valid_tree_id(tree_id));
+  return tree_widths_[tree_id];
+}
+
+std::vector<ClockSpineId> ClockNetwork::spines(const ClockTreeId& tree_id) const {
+  std::vector<ClockSpineId> ret; 
+  for (ClockSpineId spine_id : spine_ids_) {
+    if (spine_parent_tree_[spine_id] == tree_id) {
+      ret.push_back(spine_id);
+    }
+  }
+  return ret;
+}
+
+std::string ClockNetwork::spine_name(const ClockSpineId& spine_id) const {
+  VTR_ASSERT(valid_spine_id(spine_id));
+  return spine_names_[spine_id];
+}
+
+vtr::Point<int> ClockNetwork::spine_start_point(const ClockSpineId& spine_id) const {
+  VTR_ASSERT(valid_spine_id(spine_id));
+  return spine_start_points_[spine_id];
+}
+
+vtr::Point<int> ClockNetwork::spine_end_point(const ClockSpineId& spine_id) const {
+  VTR_ASSERT(valid_spine_id(spine_id));
+  return spine_end_points_[spine_id];
+}
+
+std::vector<ClockSwitchPointId> ClockNetwork::spine_switch_points(const ClockSpineId& spine_id) const {
+  VTR_ASSERT(valid_spine_id(spine_id));
+  std::vector<ClockSwitchPointId> ret;
+  ret.reserve(spine_switch_points_[spine_id].size());
+  for (size_t i = 0; i < spine_switch_points_[spine_id].size(); ++i) {
+    ret.push_back(ClockSwitchPointId(i));
+  }
+
+  return ret;
+}
+
+ClockSpineId ClockNetwork::spine_switch_point_tap(const ClockSpineId& spine_id, const ClockSwitchPointId& switch_point_id) const {
+  VTR_ASSERT(valid_spine_switch_point_id(spine_id, switch_point_id));
+  return spine_switch_points_[spine_id][size_t(switch_point_id)];
+}
+
+vtr::Point<int> ClockNetwork::spine_switch_point(const ClockSpineId& spine_id, const ClockSwitchPointId& switch_point_id) const {
+  VTR_ASSERT(valid_spine_switch_point_id(spine_id, switch_point_id));
+  return spine_switch_coords_[spine_id][size_t(switch_point_id)];
+}
+
 bool ClockNetwork::find_spine(const std::string& name) const {
   auto result = spine_name2id_map_.find(name);
   if (result == spine_name2id_map_.end()) {
@@ -135,10 +191,12 @@ void ClockNetwork::set_spine_end_point(const ClockSpineId& spine_id, const vtr::
   spine_end_points_[spine_id] = coord;
 }
 
-void ClockNetwork::add_spine_switch_point(const ClockSpineId& spine_id, const ClockSpineId& drive_spine, const vtr::Point<int>& coord) {
+void ClockNetwork::add_spine_switch_point(const ClockSpineId& spine_id, const ClockSpineId& drive_spine_id, const vtr::Point<int>& coord) {
   VTR_ASSERT(valid_spine_id(spine_id));
+  VTR_ASSERT(valid_spine_id(drive_spine_id));
   spine_switch_points_[spine_id].push_back(drive_spine);
   spine_switch_coords_[spine_id].push_back(coord);
+  spine_parent_[drive_spine_id] = spine_id;
 }
 
 /************************************************************************
@@ -150,6 +208,13 @@ bool ClockNetwork::valid_tree_id(const ClockTreeId& tree_id) const {
 
 bool ClockNetwork::valid_spine_id(const ClockSpineId& spine_id) const {
   return (size_t(spine_id) < spine_ids_.size()) && (spine_id == spine_ids_[spine_id]);
+}
+
+bool valid_spine_switch_point_id(const ClockSpineId& spine_id, const ClockSwitchPointId& switch_point_id) const {
+  if (!valid_spine_id(spine_id)) {
+    return false;
+  }
+  return size_t(switch_point_id) < spine_switch_points_[spine_id].size();
 }
 
 }  // End of namespace openfpga

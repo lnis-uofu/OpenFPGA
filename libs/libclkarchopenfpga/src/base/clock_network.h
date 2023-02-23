@@ -47,41 +47,47 @@ class ClockNetwork {
 
  public: /* Accessors: aggregates */
   clock_tree_range trees() const;
+  /* Return a list of spine id under a clock tree */
+  std::vector<ClockSpineId> spines(const ClockTreeId& tree_id) const;
 
  public: /* Public Accessors: Basic data query */
+  std::string tree_name(const ClockTreeId& tree_id) const;
+  size_t tree_width(const ClockTreeId& tree_id) const;
+  std::string spine_name(const ClockSpineId& spine_id) const;
+  vtr::Point<int> spine_start_point(const ClockSpineId& spine_id) const;
+  vtr::Point<int> spine_end_point(const ClockSpineId& spine_id) const;
+  /* Return the unique id of switch points under a clock spine*/
+  std::vector<ClockSwitchPointId> spine_switch_points(const ClockSpineId& spine_id) const;
+  ClockSpineId spine_switch_point_tap(const ClockSpineId& spine_id, const ClockSwitchPointId& switch_point_id) const;
+  vtr::Point<int> spine_switch_point(const ClockSpineId& spine_id, const ClockSwitchPointId& switch_point_id) const;
   /* Find a spine with a given name, if not found, return an valid id, otherwise return an invalid one */
   ClockSpineId find_spine(const std::string& name) const;
-
   /* Check if there are clock tree */
   bool empty() const;
 
  public: /* Public Mutators */
   /* Reserve a number of spines to be memory efficent */
   void reserve_spines(const size_t& num_spines);
-
   /* Reserve a number of trees to be memory efficent */
   void reserve_trees(const size_t& num_trees);
-
   /* Create a new tree, by default the tree can accomodate only 1 clock signal; use width to adjust the size */
   ClockTreeId create_tree(const std::string& name, const size_t& width = 1);
-
   /* Create a new spine, if the spine is already created, return an invalid id */
   ClockSpineId create_spine(const std::string& name);
   /* Try to create a new spine, if the spine is already existing, return the id. If not, create a new spine and return its id */
   ClockSpineId try_create_spine(const std::string& name);
-
   /* Set the parent tree for a given spine. It is illegal that a spine which does not belong to any tree */
   void set_spine_parent_tree(const ClockSpineId& spine_id, const ClockTreeId& tree_id);
   void set_spine_start_point(const ClockSpineId& spine_id, const vtr::Point<int>& coord);
   void set_spine_end_point(const ClockSpineId& spine_id, const vtr::Point<int>& coord);
-  void add_spine_switch_point(const ClockSpineId& spine_id, const ClockSpineId& drive_spine, const vtr::Point<int>& coord);
+  void add_spine_switch_point(const ClockSpineId& spine_id, const ClockSpineId& drive_spine_id, const vtr::Point<int>& coord);
 
  public: /* Public invalidators/validators */
   /* Show if the tree id is a valid for data queries */
   bool valid_tree_id(const ClockTreeId& tree_id) const;
-
   /* Show if the tree id is a valid for data queries */
   bool valid_spine_id(const ClockSpineId& spine_id) const;
+  bool valid_spine_switch_point_id(const ClockSpineId& spine_id, const ClockSwitchPointId& switch_point_id) const;
 
  private: /* Internal data */
   /* Basic information of each tree */
