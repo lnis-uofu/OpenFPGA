@@ -11,11 +11,11 @@
 #include "command_context.h"
 #include "command_exit_codes.h"
 #include "globals.h"
+#include "read_xml_clock_network.h"
 #include "read_xml_openfpga_arch.h"
 #include "vtr_log.h"
-#include "write_xml_openfpga_arch.h"
-#include "read_xml_clock_network.h"
 #include "write_xml_clock_network.h"
+#include "write_xml_openfpga_arch.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -260,7 +260,8 @@ int write_openfpga_clock_arch_template(const T& openfpga_context,
 
   std::string arch_file_name = cmd_context.option_value(cmd, opt_file);
 
-  VTR_LOG("Writing XML clock architecture to '%s'...\n", arch_file_name.c_str());
+  VTR_LOG("Writing XML clock architecture to '%s'...\n",
+          arch_file_name.c_str());
   write_xml_clock_network(arch_file_name.c_str(),
                           openfpga_context.clock_arch());
 

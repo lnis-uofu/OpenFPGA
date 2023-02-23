@@ -619,15 +619,14 @@ ShellCommandId add_write_openfpga_clock_arch_command_template(
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd, "write OpenFPGA clock architecture file", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_const_execute_function(shell_cmd_id,
-                                           write_openfpga_clock_arch_template<T>);
+  shell.set_command_const_execute_function(
+    shell_cmd_id, write_openfpga_clock_arch_template<T>);
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
 
   return shell_cmd_id;
 }
-
 
 template <class T>
 void add_setup_command_templates(openfpga::Shell<T>& shell,
@@ -703,7 +702,8 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
   read_openfpga_clock_arch_dependent_cmds.push_back(read_arch_cmd_id);
   ShellCommandId read_openfpga_clock_arch_cmd_id =
     add_read_openfpga_clock_arch_command_template<T>(
-      shell, openfpga_setup_cmd_class, read_openfpga_clock_arch_dependent_cmds, hidden);
+      shell, openfpga_setup_cmd_class, read_openfpga_clock_arch_dependent_cmds,
+      hidden);
 
   /********************************
    * Command 'write_openfpga_clock_arch'
