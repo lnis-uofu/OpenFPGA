@@ -26,6 +26,7 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
+#include "append_clock_rr_graph.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -186,7 +187,7 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
  * Top-level function to append a clock network to VPR's routing resource graph, including:
  * - Routing tracks dedicated to clock network
  * - Programmable switches to enable reconfigurability of clock network
- * - 
+ * - Adding virtual sources for clock signals 
  *******************************************************************/
 template <class T>
 int append_clock_rr_graph_template(T& openfpga_ctx, const Command& cmd,
@@ -196,9 +197,7 @@ int append_clock_rr_graph_template(T& openfpga_ctx, const Command& cmd,
 
   CommandOptionId opt_verbose = cmd.option("verbose");
 
-  /* TODO */
-
-  return CMD_EXEC_SUCCESS;
+  return append_clock_rr_graph(g_vpr_ctx.mutable_device(), openfpga_ctx.clock_arch());
 }
 
 
