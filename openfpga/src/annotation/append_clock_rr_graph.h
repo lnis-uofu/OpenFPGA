@@ -14,8 +14,9 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-int append_clock_rr_graph(DeviceContext& device_ctx,
-                          const ClockNetwork& clk_ntwk);
+int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
+                          const ClockNetwork& clk_ntwk,
+                          const bool& verbose);
 
 } /* end namespace openfpga */
 
