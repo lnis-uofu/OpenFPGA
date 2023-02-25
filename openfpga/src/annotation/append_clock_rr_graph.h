@@ -4,8 +4,8 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "vpr_context.h"
 #include "clock_network.h"
+#include "vpr_context.h"
 
 /********************************************************************
  * Function declaration
@@ -15,8 +15,7 @@
 namespace openfpga {
 
 int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
-                          const ClockNetwork& clk_ntwk,
-                          const bool& verbose);
+                          const ClockNetwork& clk_ntwk, const bool& verbose);
 
 } /* end namespace openfpga */
 

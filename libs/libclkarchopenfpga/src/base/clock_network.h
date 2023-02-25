@@ -14,7 +14,7 @@
 
 /* Headers from openfpgautil library */
 #include "clock_network_fwd.h"
-#include "openfpga_port.h"
+#include "rr_graph_fwd.h"
 
 namespace openfpga {  // Begin namespace openfpga
 
@@ -46,11 +46,14 @@ class ClockNetwork {
   ClockNetwork();
 
  public: /* Accessors: aggregates */
+  size_t num_trees() const;
   clock_tree_range trees() const;
   /* Return a list of spine id under a clock tree */
   std::vector<ClockSpineId> spines(const ClockTreeId& tree_id) const;
 
  public: /* Public Accessors: Basic data query */
+  std::string default_segment_name() const;
+  std::string default_switch_name() const;
   std::string tree_name(const ClockTreeId& tree_id) const;
   size_t tree_width(const ClockTreeId& tree_id) const;
   size_t tree_depth(const ClockTreeId& tree_id) const;
@@ -78,6 +81,8 @@ class ClockNetwork {
   void reserve_spines(const size_t& num_spines);
   /* Reserve a number of trees to be memory efficent */
   void reserve_trees(const size_t& num_trees);
+  void set_default_segment_name(const std::string& name);
+  void set_default_switch_name(const std::string& name);
   /* Create a new tree, by default the tree can accomodate only 1 clock signal;
    * use width to adjust the size */
   ClockTreeId create_tree(const std::string& name, size_t width = 1);
@@ -141,6 +146,14 @@ class ClockNetwork {
   vtr::vector<ClockSpineId, ClockSpineId> spine_parents_;
   vtr::vector<ClockSpineId, std::vector<ClockSpineId>> spine_children_;
   vtr::vector<ClockSpineId, ClockTreeId> spine_parent_trees_;
+
+  /* Default routing resource */
+  std::string default_segment_name_; /* The routing segment representing the
+                                        clock wires */
+  RRSegmentId default_segment_id_;
+  std::string
+    default_switch_name_; /* The routing switch interconnecting clock wire */
+  RRSwitchId default_switch_id_;
 
   /* Fast lookup */
   std::map<std::string, ClockTreeId> tree_name2id_map_;

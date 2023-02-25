@@ -21,6 +21,7 @@ set_target_properties(libclkarchopenfpga PROPERTIES PREFIX "") #Avoid extra 'lib
 target_link_libraries(libclkarchopenfpga
                       libopenfpgautil
                       libarchopenfpga
+                      librrgraph
                       libvtrutil
                       libpugiutil)
 

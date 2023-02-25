@@ -19,6 +19,8 @@ ClockNetwork::ClockNetwork() { is_dirty_ = true; }
 /************************************************************************
  * Public Accessors : aggregates
  ***********************************************************************/
+size_t ClockNetwork::num_trees() const { return trees().size(); }
+
 ClockNetwork::clock_tree_range ClockNetwork::trees() const {
   return vtr::make_range(tree_ids_.begin(), tree_ids_.end());
 }
@@ -26,6 +28,14 @@ ClockNetwork::clock_tree_range ClockNetwork::trees() const {
 /************************************************************************
  * Public Accessors : Basic data query
  ***********************************************************************/
+std::string ClockNetwork::default_segment_name() const {
+  return default_segment_name_;
+}
+
+std::string ClockNetwork::default_switch_name() const {
+  return default_switch_name_;
+}
+
 std::string ClockNetwork::tree_name(const ClockTreeId& tree_id) const {
   VTR_ASSERT(valid_tree_id(tree_id));
   return tree_names_[tree_id];
@@ -132,6 +142,14 @@ void ClockNetwork::reserve_trees(const size_t& num_trees) {
   tree_names_.reserve(num_trees);
   tree_widths_.reserve(num_trees);
   tree_top_spines_.reserve(num_trees);
+}
+
+void ClockNetwork::set_default_segment_name(const std::string& name) {
+  default_segment_name_ = name;
+}
+
+void ClockNetwork::set_default_switch_name(const std::string& name) {
+  default_switch_name_ = name;
 }
 
 ClockTreeId ClockNetwork::create_tree(const std::string& name, size_t width) {

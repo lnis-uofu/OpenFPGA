@@ -645,10 +645,10 @@ ShellCommandId add_append_clock_rr_graph_command_template(
   /* Add command 'pb_pin_fixup' to the Shell */
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd,
-    "Append clock network to the routing resource graph built by VPR.",
-    hidden);
+    "Append clock network to the routing resource graph built by VPR.", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id, append_clock_rr_graph_template<T>);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     append_clock_rr_graph_template<T>);
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
@@ -763,9 +763,11 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
   /* The 'append_clock_rr_graph' command should NOT be executed before
    * 'read_openfpga_clock_arch' */
   std::vector<ShellCommandId> append_clock_rr_graph_dependent_cmds;
-  append_clock_rr_graph_dependent_cmds.push_back(read_openfpga_clock_arch_cmd_id);
-  add_append_clock_rr_graph_command_template<T>(shell, openfpga_setup_cmd_class,
-                                                append_clock_rr_graph_dependent_cmds, hidden);
+  append_clock_rr_graph_dependent_cmds.push_back(
+    read_openfpga_clock_arch_cmd_id);
+  add_append_clock_rr_graph_command_template<T>(
+    shell, openfpga_setup_cmd_class, append_clock_rr_graph_dependent_cmds,
+    hidden);
 
   /********************************
    * Command 'write_gsb'

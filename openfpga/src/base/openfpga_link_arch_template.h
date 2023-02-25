@@ -12,6 +12,7 @@
 #include "annotate_placement.h"
 #include "annotate_rr_graph.h"
 #include "annotate_simulation_setting.h"
+#include "append_clock_rr_graph.h"
 #include "build_tile_direct.h"
 #include "command.h"
 #include "command_context.h"
@@ -26,7 +27,6 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
-#include "append_clock_rr_graph.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -184,10 +184,11 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
 }
 
 /********************************************************************
- * Top-level function to append a clock network to VPR's routing resource graph, including:
+ * Top-level function to append a clock network to VPR's routing resource graph,
+ *including:
  * - Routing tracks dedicated to clock network
  * - Programmable switches to enable reconfigurability of clock network
- * - Adding virtual sources for clock signals 
+ * - Adding virtual sources for clock signals
  *******************************************************************/
 template <class T>
 int append_clock_rr_graph_template(T& openfpga_ctx, const Command& cmd,
@@ -197,9 +198,10 @@ int append_clock_rr_graph_template(T& openfpga_ctx, const Command& cmd,
 
   CommandOptionId opt_verbose = cmd.option("verbose");
 
-  return append_clock_rr_graph(g_vpr_ctx.mutable_device(), openfpga_ctx.clock_arch(), cmd_context.option_enable(cmd, opt_verbose));
+  return append_clock_rr_graph(g_vpr_ctx.mutable_device(),
+                               openfpga_ctx.clock_arch(),
+                               cmd_context.option_enable(cmd, opt_verbose));
 }
-
 
 } /* end namespace openfpga */
 

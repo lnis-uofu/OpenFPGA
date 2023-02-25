@@ -4,6 +4,10 @@
 /* Constants required by XML parser */
 
 constexpr const char* XML_CLOCK_NETWORK_ROOT_NAME = "clock_networks";
+constexpr const char* XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_SEGMENT =
+  "default_segment";
+constexpr const char* XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_SWITCH =
+  "default_switch";
 constexpr const char* XML_CLOCK_TREE_NODE_NAME = "clock_network";
 constexpr const char* XML_CLOCK_TREE_ATTRIBUTE_NAME = "name";
 constexpr const char* XML_CLOCK_TREE_ATTRIBUTE_WIDTH = "width";

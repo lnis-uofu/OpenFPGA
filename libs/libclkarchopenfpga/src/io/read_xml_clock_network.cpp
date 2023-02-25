@@ -167,6 +167,18 @@ ClockNetwork read_xml_clock_network(const char* fname) {
     pugi::xml_node xml_root =
       get_single_child(doc, XML_CLOCK_NETWORK_ROOT_NAME, loc_data);
 
+    std::string default_segment_name =
+      get_attribute(xml_root, XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_SEGMENT,
+                    loc_data)
+        .as_string();
+    clk_ntwk.set_default_segment_name(default_segment_name);
+
+    std::string default_switch_name =
+      get_attribute(xml_root, XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_SWITCH,
+                    loc_data)
+        .as_string();
+    clk_ntwk.set_default_switch_name(default_switch_name);
+
     size_t num_trees =
       std::distance(xml_root.children().begin(), xml_root.children().end());
 
