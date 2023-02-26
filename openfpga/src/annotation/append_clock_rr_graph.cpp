@@ -82,7 +82,7 @@ static size_t estimate_clock_rr_graph_num_nodes(const DeviceGrid& grids,
  * For each tree and level of the tree, add a number of clock nodes
  * with direction, ptc and coordinates etc.
  *******************************************************************/
-static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
+static void add_rr_graph_block_clock_nodes(RRGraphBuilder& rr_graph_builder,
                                      const RRGraphView& rr_graph_view,
                                      const ClockNetwork& clk_ntwk,
                                      const vtr::Point<size_t> chan_coord,
@@ -103,6 +103,7 @@ static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
             chan_coord.x(), chan_coord.y(), chan_type, curr_node_ptc);
           rr_graph_builder.set_node_direction(clk_node, node_dir);
           rr_graph_builder.set_node_capacity(clk_node, 1);
+          /* TODO: need to set cost_index using segment id */
           /* FIXME: need to set rc_index and cost_index when building the graph
            * in VTR */
           /* TODO: register the node to a dedicated lookup for clock nodes only
@@ -114,6 +115,7 @@ static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
     }
   }
 }
+
 
 /********************************************************************
  * Add clock nodes one by one to the routing resource graph.
@@ -136,7 +138,7 @@ static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
           (false == is_chanx_exist(grids, chanx_coord))) {
         continue;
       }
-      add_rr_graph_clock_nodes(rr_graph_builder, rr_graph_view, clk_ntwk,
+      add_rr_graph_block_clock_nodes(rr_graph_builder, rr_graph_view, clk_ntwk,
                                chanx_coord, CHANX);
     }
   }
@@ -151,10 +153,89 @@ static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
           (false == is_chany_exist(grids, chany_coord))) {
         continue;
       }
-      add_rr_graph_clock_nodes(rr_graph_builder, rr_graph_view, clk_ntwk,
+      add_rr_graph_block_clock_nodes(rr_graph_builder, rr_graph_view, clk_ntwk,
                                chany_coord, CHANY);
     }
   }
+}
+
+/********************************************************************
+ * Add edges for the clock nodes in a given connection block
+ *******************************************************************/
+void add_rr_graph_block_clock_edges(RRGraphBuilder& rr_graph_builder,
+                              const RRGraphView& rr_graph_view,
+                              const ClockNetwork& clk_ntwk,
+                              const vtr::Point<size_t> chan_coord,
+                              const t_rr_type& chan_type) {
+  for (auto itree : clk_ntwk.trees()) {
+    for (auto ilvl : clk_ntwk.levels(itree)) {
+      for (auto node_dir : {Direction::INC, Direction::DEC}) {
+        for (size_t itrack = 0;
+             itrack < clk_ntwk.num_tracks(itree, ilvl, chan_type, node_dir);
+             ++itrack) {
+          /* TODO: find the driver clock node through lookup */
+          /* TODO: find the fan-out clock node through lookup */
+          /* TODO: Create edges */
+        }
+      }
+    }
+  }
+}
+
+
+/********************************************************************
+ * Add edges to interconnect clock nodes
+ * Walk through the routing tracks in each connection block (driver nodes)
+ * and add edge to their fan-out clock nodes
+ * Note that 
+ * - clock nodes at the same level of a clock tree can only go straight
+ * - clock nodes can only drive clock nodes belong to the same clock index (a clock tree may contain multiple clocks) 
+ * - clock nodes can only drive clock nodes (by making a turn, straight connection is not allowed) which are 1 level lower in the same clock tree with the same clock index
+ * For example
+ *
+ *                            clk0_lvl1_chany[1][2]
+ *                                     ^
+ *                                     |
+ *   clk0_lvl0_chanx[1][1] -->---------+--->---> clk0_lvl0_chanx[2][1]
+ *                                     |
+ *                                     v
+ *                            clk0_lvl1_chany[1][1]
+ *******************************************************************/
+void add_rr_graph_clock_edges(RRGraphBuilder& rr_graph_builder,
+                              const RRGraphView& rr_graph_view,
+                              const DeviceGrid& grids,
+                              const bool& through_channel,
+                              const ClockNetwork& clk_ntwk) {
+  /* Add edges which is driven by X-direction clock routing tracks */
+  for (size_t iy = 0; iy < grids.height() - 1; ++iy) {
+    for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
+      vtr::Point<size_t> chanx_coord(ix, iy);
+      /* Bypass if the routing channel does not exist when through channels are
+       * not allowed */
+      if ((false == through_channel) &&
+          (false == is_chanx_exist(grids, chanx_coord))) {
+        continue;
+      }
+      add_rr_graph_block_clock_edges(rr_graph_builder, rr_graph_view, clk_ntwk,
+                                     chanx_coord, CHANX);
+    }
+  }
+
+  /* Add edges which is driven by Y-direction clock routing tracks */
+  for (size_t ix = 0; ix < grids.width() - 1; ++ix) {
+    for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
+      vtr::Point<size_t> chany_coord(ix, iy);
+      /* Bypass if the routing channel does not exist when through channel are
+       * not allowed */
+      if ((false == through_channel) &&
+          (false == is_chany_exist(grids, chany_coord))) {
+        continue;
+      }
+      add_rr_graph_block_clock_edges(rr_graph_builder, rr_graph_view, clk_ntwk,
+                                     chany_coord, CHANY);
+    }
+  }
+
 }
 
 /********************************************************************
@@ -178,7 +259,12 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
     return CMD_EXEC_SUCCESS;
   }
 
-  /* TODO: report any clock structure we do not support yet! */
+  /* Report any clock structure we do not support yet! */
+  if (clk_ntwk.num_trees() > 1) {
+    VTR_LOG(
+      "Currently only support 1 clock tree in programmable clock architecture\nPlease update your clock architecture definition\n");
+    return CMD_EXEC_FATAL_ERROR;
+  }
 
   /* Estimate the number of nodes and pre-allocate */
   size_t orig_num_nodes = vpr_device_ctx.rr_graph.num_nodes();
@@ -187,7 +273,7 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
   vpr_device_ctx.rr_graph_builder.reserve_nodes(num_clock_nodes +
                                                 orig_num_nodes);
 
-  /* TODO: Add clock nodes */
+  /* Add clock nodes */
   add_rr_graph_clock_nodes(vpr_device_ctx.rr_graph_builder,
                            vpr_device_ctx.rr_graph, vpr_device_ctx.grid,
                            vpr_device_ctx.arch->through_channel, clk_ntwk);
@@ -196,6 +282,9 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
 
   /* TODO: Add edges between clock nodes*/
   size_t num_clock_edges = 0;
+  add_rr_graph_clock_edges(vpr_device_ctx.rr_graph_builder,
+                           vpr_device_ctx.rr_graph, vpr_device_ctx.grid,
+                           vpr_device_ctx.arch->through_channel, clk_ntwk);
 
   /* TODO: Sanity checks */
 
