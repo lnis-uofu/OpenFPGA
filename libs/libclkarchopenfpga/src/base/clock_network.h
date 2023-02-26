@@ -15,6 +15,7 @@
 /* Headers from openfpgautil library */
 #include "clock_network_fwd.h"
 #include "rr_graph_fwd.h"
+#include "rr_node_types.h"
 
 namespace openfpga {  // Begin namespace openfpga
 
@@ -48,10 +49,14 @@ class ClockNetwork {
  public: /* Accessors: aggregates */
   size_t num_trees() const;
   clock_tree_range trees() const;
+  /* Return the range of clock levels */
+  std::vector<ClockLevelId> levels(const ClockTreeId& tree_id) const;
   /* Return a list of spine id under a clock tree */
   std::vector<ClockSpineId> spines(const ClockTreeId& tree_id) const;
 
  public: /* Public Accessors: Basic data query */
+  /* Return the number of routing tracks required by a selected clock tree at a given level and direction */
+  size_t num_tracks(const ClockTreeId& tree_id, const ClockLevelId& level, const t_rr_type& direction) const;
   std::string default_segment_name() const;
   std::string default_switch_name() const;
   std::string tree_name(const ClockTreeId& tree_id) const;
@@ -60,6 +65,20 @@ class ClockNetwork {
   std::string spine_name(const ClockSpineId& spine_id) const;
   vtr::Point<int> spine_start_point(const ClockSpineId& spine_id) const;
   vtr::Point<int> spine_end_point(const ClockSpineId& spine_id) const;
+  /* Identify the direction of a spine, depending on its starting and ending points
+   * - CHANX represents a horizental routing track
+   * - CHANY represents a vertical routing track
+   */
+  t_rr_type spine_track_type(const ClockSpineId& spine_id) const;
+  /* Identify the direction of a spine, depending on its starting and ending points
+   * INC represents
+   *  - a CHANX track goes from left to right, or
+   *  - a CHANY track goes from bottom to top
+   * DEC represents
+   *  - a CHANX track goes from right to left, or
+   *  - a CHANY track goes from top to bottom
+   */
+  Direction spine_direction(const ClockSpineId& spine_id) const;
   /* Return the unique id of switch points under a clock spine*/
   std::vector<ClockSwitchPointId> spine_switch_points(
     const ClockSpineId& spine_id) const;
@@ -116,6 +135,8 @@ class ClockNetwork {
   bool valid_spine_switch_point_id(
     const ClockSpineId& spine_id,
     const ClockSwitchPointId& switch_point_id) const;
+  /* Valid starting and ending point should indicate either this is a X-direction spine or a Y-direction spine. Diagonal spine is not supported! */
+  bool valid_spine_start_end_points(const ClockSpineId& spine_id) const;
 
  private: /* Private mutators */
   /* Build internal links between spines under a given tree */

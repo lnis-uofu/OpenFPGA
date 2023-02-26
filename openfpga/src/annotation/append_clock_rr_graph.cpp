@@ -21,11 +21,15 @@ namespace openfpga {
  *   - Layer 2: CHANX
  *******************************************************************/
 static 
-size_t estimate_clock_rr_graph_num_nodes(const ClockNetwork& clk_ntwk,
+size_t estimate_clock_rr_graph_num_chan_nodes(const ClockNetwork& clk_ntwk,
                                          const t_rr_type& chan_type) {
   size_t num_nodes = 0;
 
-  
+  for (auto itree : clk_ntwk.trees()) {
+    for (auto ilvl : clk_ntwk.levels(itree)) {
+      num_nodes += clk_ntwk.num_tracks(itree, ilvl, chan_type); 
+    }
+  } 
 
   return num_nodes;
 }
@@ -109,7 +113,7 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
   /* Report number of added clock nodes and edges */
   VTR_LOGV(
     verbose,
-    "Appended %lu clock nodes (+%.2f\%) and %lu clock edges to routing resource graph.\n",
+    "Appended %lu clock nodes (+%.2f%) and %lu clock edges to routing resource graph.\n",
     num_clock_nodes, (float)(num_clock_nodes / orig_num_nodes), num_clock_edges);
 
   return CMD_EXEC_SUCCESS;
