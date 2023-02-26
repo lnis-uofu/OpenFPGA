@@ -78,12 +78,44 @@ static size_t estimate_clock_rr_graph_num_nodes(const DeviceGrid& grids,
 }
 
 /********************************************************************
+ * Add clock nodes to a routing resource graph 
+ * For each tree and level of the tree, add a number of clock nodes
+ * with direction, ptc and coordinates etc.
+ *******************************************************************/
+static size_t add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
+                                       const RRGraphView& rr_graph_view,
+                                       const ClockNetwork& clk_ntwk,
+                                       const vtr::Point<size_t> chan_coord,
+                                       const t_rr_type& chan_type) {
+  size_t orig_chan_width = rr_graph_view.node_lookup().find_channel_nodes(chan_coord.x(), chan_coord.y(), chan_type).size();
+  size_t curr_node_ptc = orig_chan_width;
+
+  for (auto itree : clk_ntwk.trees()) {
+    for (auto ilvl : clk_ntwk.levels(itree)) {
+      for (auto node_dir : {Direction::INC, Direction::DEC}) {
+        for (size_t itrack = 0; itrack < clk_ntwk.num_tracks(itree, ilvl, chan_type, node_dir); ++itrack) {
+          RRNodeId clk_node = rr_graph_builder.create_node(chan_coord.x(), chan_coord.y(), chan_type, curr_node_ptc);
+          rr_graph_builder.set_node_direction(clk_node, node_dir);
+          rr_graph_builder.set_node_capacity(clk_node, 1);
+          /* FIXME: need to set rc_index and cost_index when building the graph in VTR */
+          /* TODO: register the node to a dedicated lookup for clock nodes only */
+          /* Update ptc count and go to next */
+          curr_node_ptc++;
+        }
+      }
+    }
+  }
+}
+
+/********************************************************************
  * Add clock nodes one by one to the routing resource graph.
  * Assign node-level attributes properly
  * TODO: consider to have a fast lookup for clock nodes. For example,
  *find_clock_node(tree_id, level_id, clock_id)
  *******************************************************************/
-static void add_rr_graph_clock_nodes(const DeviceGrid& grids,
+static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
+                                     const RRGraphView& rr_graph_view,
+                                     const DeviceGrid& grids,
                                      const bool& through_channel,
                                      const ClockNetwork& clk_ntwk) {
   /* Add X-direction clock nodes */
@@ -96,6 +128,7 @@ static void add_rr_graph_clock_nodes(const DeviceGrid& grids,
           (false == is_chanx_exist(grids, chanx_coord))) {
         continue;
       }
+      add_rr_graph_clock_nodes(rr_graph_builder, rr_graph_view, clk_ntwk, chanx_coord, CHANX);
     }
   }
 
@@ -109,6 +142,7 @@ static void add_rr_graph_clock_nodes(const DeviceGrid& grids,
           (false == is_chany_exist(grids, chany_coord))) {
         continue;
       }
+      add_rr_graph_clock_nodes(rr_graph_builder, rr_graph_view, clk_ntwk, chany_coord, CHANY);
     }
   }
 }
@@ -144,7 +178,7 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
                                                 orig_num_nodes);
 
   /* TODO: Add clock nodes */
-  add_rr_graph_clock_nodes(vpr_device_ctx.grid,
+  add_rr_graph_clock_nodes(vpr_device_ctx.rr_graph_builder, vpr_device_ctx.rr_graph, vpr_device_ctx.grid,
                            vpr_device_ctx.arch->through_channel, clk_ntwk);
   VTR_ASSERT(num_clock_nodes + orig_num_nodes ==
              vpr_device_ctx.rr_graph.num_nodes());

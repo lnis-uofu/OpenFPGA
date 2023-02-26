@@ -58,7 +58,9 @@ class ClockNetwork {
   /* Return the number of routing tracks required by a selected clock tree at a
    * given level and direction */
   size_t num_tracks(const ClockTreeId& tree_id, const ClockLevelId& level,
-                    const t_rr_type& direction) const;
+                    const t_rr_type& track_type) const;
+  size_t num_tracks(const ClockTreeId& tree_id, const ClockLevelId& level,
+                    const t_rr_type& track_type, const Direction& direction) const;
   std::string default_segment_name() const;
   std::string default_switch_name() const;
   std::string tree_name(const ClockTreeId& tree_id) const;

@@ -62,18 +62,53 @@ Direction ClockNetwork::spine_direction(const ClockSpineId& spine_id) const {
 
 size_t ClockNetwork::num_tracks(const ClockTreeId& tree_id,
                                 const ClockLevelId& level,
-                                const t_rr_type& direction) const {
+                                const t_rr_type& track_type) const {
   size_t num_tracks = 0;
+  /* Avoid to repeatedly count the tracks which can be shared by spines
+   * For two or more spines that locate in different coordinates, they can share the same
+   * routing tracks. Therefore, we only ensure that routing tracks in their demanding direction (INC and DEC) are satisfied
+   */
+  std::map<Direction, bool> dir_flags;
+  dir_flags[Direction::INC] = false;
+  dir_flags[Direction::DEC] = false;
   for (ClockSpineId curr_spine : spines(tree_id)) {
     if (spine_levels_[curr_spine] != size_t(level)) {
       continue;
     }
-    if (spine_track_type(curr_spine) == direction) {
-      num_tracks++;
+    if (spine_track_type(curr_spine) == track_type) {
+      if (!dir_flags[spine_direction(curr_spine)]) {
+        num_tracks += tree_width(spine_parent_trees_[curr_spine]);
+        dir_flags[spine_direction(curr_spine)] = true;
+      }
     }
   }
   return num_tracks;
 }
+
+size_t ClockNetwork::num_tracks(const ClockTreeId& tree_id,
+                                const ClockLevelId& level,
+                                const t_rr_type& track_type,
+                                const Direction& direction) const {
+  size_t num_tracks = 0;
+  /* Avoid to repeatedly count the tracks which can be shared by spines
+   * For two or more spines that locate in different coordinates, they can share the same
+   * routing tracks. Therefore, we only ensure that routing tracks in their demanding direction (INC and DEC) are satisfied
+   */
+  bool dir_flags = false;
+  for (ClockSpineId curr_spine : spines(tree_id)) {
+    if (spine_levels_[curr_spine] != size_t(level)) {
+      continue;
+    }
+    if (spine_track_type(curr_spine) == track_type) {
+      if (!dir_flags && spine_direction(curr_spine) == direction) {
+        num_tracks += tree_width(spine_parent_trees_[curr_spine]);
+        dir_flags = true;
+      }
+    }
+  }
+  return num_tracks;
+}
+
 
 std::string ClockNetwork::default_segment_name() const {
   return default_segment_name_;
