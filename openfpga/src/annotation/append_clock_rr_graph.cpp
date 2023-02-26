@@ -78,6 +78,42 @@ static size_t estimate_clock_rr_graph_num_nodes(const DeviceGrid& grids,
 }
 
 /********************************************************************
+ * Add clock nodes one by one to the routing resource graph.
+ * Assign node-level attributes properly
+ * TODO: consider to have a fast lookup for clock nodes. For example,
+ *find_clock_node(tree_id, level_id, clock_id)
+ *******************************************************************/
+static void add_rr_graph_clock_nodes(const DeviceGrid& grids,
+                                     const bool& through_channel,
+                                     const ClockNetwork& clk_ntwk) {
+  /* Add X-direction clock nodes */
+  for (size_t iy = 0; iy < grids.height() - 1; ++iy) {
+    for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
+      vtr::Point<size_t> chanx_coord(ix, iy);
+      /* Bypass if the routing channel does not exist when through channels are
+       * not allowed */
+      if ((false == through_channel) &&
+          (false == is_chanx_exist(grids, chanx_coord))) {
+        continue;
+      }
+    }
+  }
+
+  /* Add Y-direction clock nodes */
+  for (size_t ix = 0; ix < grids.width() - 1; ++ix) {
+    for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
+      vtr::Point<size_t> chany_coord(ix, iy);
+      /* Bypass if the routing channel does not exist when through channel are
+       * not allowed */
+      if ((false == through_channel) &&
+          (false == is_chany_exist(grids, chany_coord))) {
+        continue;
+      }
+    }
+  }
+}
+
+/********************************************************************
  * Append a programmable clock network to an existing routing resource graph
  * This function will do the following jobs:
  * - Estimate the number of clock nodes and pre-allocate memory
@@ -108,6 +144,10 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
                                                 orig_num_nodes);
 
   /* TODO: Add clock nodes */
+  add_rr_graph_clock_nodes(vpr_device_ctx.grid,
+                           vpr_device_ctx.arch->through_channel, clk_ntwk);
+  VTR_ASSERT(num_clock_nodes + orig_num_nodes ==
+             vpr_device_ctx.rr_graph.num_nodes());
 
   /* TODO: Add edges between clock nodes*/
   size_t num_clock_edges = 0;
