@@ -25,7 +25,8 @@ ClockNetwork::clock_tree_range ClockNetwork::trees() const {
   return vtr::make_range(tree_ids_.begin(), tree_ids_.end());
 }
 
-std::vector<ClockLevelId> ClockNetwork::levels(const ClockTreeId& tree_id) const {
+std::vector<ClockLevelId> ClockNetwork::levels(
+  const ClockTreeId& tree_id) const {
   std::vector<ClockLevelId> ret;
   for (size_t ilvl = 0; ilvl < tree_depth(tree_id); ++ilvl) {
     ret.push_back(ClockLevelId(ilvl));
@@ -55,11 +56,13 @@ Direction ClockNetwork::spine_direction(const ClockSpineId& spine_id) const {
     if (spine_start_point(spine_id).y() < spine_end_point(spine_id).y()) {
       return Direction::INC;
     }
-  } 
+  }
   return Direction::DEC;
 }
 
-size_t ClockNetwork::num_tracks(const ClockTreeId& tree_id, const ClockLevelId& level, const t_rr_type& direction) const {
+size_t ClockNetwork::num_tracks(const ClockTreeId& tree_id,
+                                const ClockLevelId& level,
+                                const t_rr_type& direction) const {
   size_t num_tracks = 0;
   for (ClockSpineId curr_spine : spines(tree_id)) {
     if (spine_levels_[curr_spine] != size_t(level)) {
@@ -383,9 +386,11 @@ bool ClockNetwork::valid_spine_switch_point_id(
   return size_t(switch_point_id) < spine_switch_points_[spine_id].size();
 }
 
-bool ClockNetwork::valid_spine_start_end_points(const ClockSpineId& spine_id) const {
+bool ClockNetwork::valid_spine_start_end_points(
+  const ClockSpineId& spine_id) const {
   VTR_ASSERT(valid_spine_id(spine_id));
-  if ((spine_start_point(spine_id).x() != spine_end_point(spine_id).x()) && (spine_start_point(spine_id).y() != spine_end_point(spine_id).y())) {
+  if ((spine_start_point(spine_id).x() != spine_end_point(spine_id).x()) &&
+      (spine_start_point(spine_id).y() != spine_end_point(spine_id).y())) {
     return false;
   }
   return true;
