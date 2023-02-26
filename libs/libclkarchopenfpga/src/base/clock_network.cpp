@@ -65,8 +65,9 @@ size_t ClockNetwork::num_tracks(const ClockTreeId& tree_id,
                                 const t_rr_type& track_type) const {
   size_t num_tracks = 0;
   /* Avoid to repeatedly count the tracks which can be shared by spines
-   * For two or more spines that locate in different coordinates, they can share the same
-   * routing tracks. Therefore, we only ensure that routing tracks in their demanding direction (INC and DEC) are satisfied
+   * For two or more spines that locate in different coordinates, they can share
+   * the same routing tracks. Therefore, we only ensure that routing tracks in
+   * their demanding direction (INC and DEC) are satisfied
    */
   std::map<Direction, bool> dir_flags;
   dir_flags[Direction::INC] = false;
@@ -91,8 +92,9 @@ size_t ClockNetwork::num_tracks(const ClockTreeId& tree_id,
                                 const Direction& direction) const {
   size_t num_tracks = 0;
   /* Avoid to repeatedly count the tracks which can be shared by spines
-   * For two or more spines that locate in different coordinates, they can share the same
-   * routing tracks. Therefore, we only ensure that routing tracks in their demanding direction (INC and DEC) are satisfied
+   * For two or more spines that locate in different coordinates, they can share
+   * the same routing tracks. Therefore, we only ensure that routing tracks in
+   * their demanding direction (INC and DEC) are satisfied
    */
   bool dir_flags = false;
   for (ClockSpineId curr_spine : spines(tree_id)) {
@@ -108,7 +110,6 @@ size_t ClockNetwork::num_tracks(const ClockTreeId& tree_id,
   }
   return num_tracks;
 }
-
 
 std::string ClockNetwork::default_segment_name() const {
   return default_segment_name_;
