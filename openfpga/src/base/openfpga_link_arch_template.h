@@ -199,6 +199,7 @@ int append_clock_rr_graph_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   return append_clock_rr_graph(g_vpr_ctx.mutable_device(),
+                               openfpga_ctx.mutable_clock_rr_lookup(),
                                openfpga_ctx.clock_arch(),
                                cmd_context.option_enable(cmd, opt_verbose));
 }

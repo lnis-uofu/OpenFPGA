@@ -38,6 +38,36 @@ std::vector<ClockLevelId> ClockNetwork::levels(
   return ret;
 }
 
+std::vector<ClockTreePinId> ClockNetwork::pins(const ClockTreeId& tree_id,
+                                const ClockLevelId& level,
+                                const t_rr_type& track_type,
+                                const Direction& direction) const {
+  std::vector<ClockTreePinId> ret;
+  /* Avoid to repeatedly count the tracks which can be shared by spines
+   * For two or more spines that locate in different coordinates, they can share
+   * the same routing tracks. Therefore, we only ensure that routing tracks in
+   * their demanding direction (INC and DEC) are satisfied
+   */
+  bool dir_flags = false;
+  for (ClockSpineId curr_spine : spines(tree_id)) {
+    if (spine_levels_[curr_spine] != size_t(level)) {
+      continue;
+    }
+    if (spine_track_type(curr_spine) == track_type) {
+      if (!dir_flags && spine_direction(curr_spine) == direction) {
+        ret.reserve(ret.size() + tree_width(spine_parent_trees_[curr_spine]));
+        for (size_t i = 0; i < tree_width(spine_parent_trees_[curr_spine]); ++i) {
+          ret.push_back(ClockTreePinId(i));
+        }
+        dir_flags = true;
+      }
+    }
+  }
+  return ret;
+}
+
+
+
 /************************************************************************
  * Public Accessors : Basic data query
  ***********************************************************************/

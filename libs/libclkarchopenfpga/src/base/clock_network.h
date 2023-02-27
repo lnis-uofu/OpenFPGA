@@ -53,6 +53,10 @@ class ClockNetwork {
   std::vector<ClockLevelId> levels(const ClockTreeId& tree_id) const;
   /* Return a list of spine id under a clock tree */
   std::vector<ClockSpineId> spines(const ClockTreeId& tree_id) const;
+  /* Return a list of clock pins in a bus of clock tree at a given level and direction */
+  std::vector<ClockTreePinId> pins(const ClockTreeId& tree_id, const ClockLevelId& level,
+                    const t_rr_type& track_type,
+                    const Direction& direction) const;
 
  public: /* Public Accessors: Basic data query */
   /* Return the number of routing tracks required by a selected clock tree at a
