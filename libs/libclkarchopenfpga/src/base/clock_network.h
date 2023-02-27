@@ -110,6 +110,11 @@ class ClockNetwork {
   /* Check if there are clock tree */
   bool empty() const;
   bool is_valid() const;
+  /* Get the level id which is next to the current level 
+   * Note that this follows the same rule in computing levels in update_tree_depth()
+   * If the rule has been changed, this API should be changed as well
+   */
+  ClockLevelId next_level(const ClockLevelId& lvl) const;
 
  public: /* Public Mutators */
   /* Reserve a number of spines to be memory efficent */
@@ -148,6 +153,8 @@ class ClockNetwork {
  public: /* Public invalidators/validators */
   /* Show if the tree id is a valid for data queries */
   bool valid_tree_id(const ClockTreeId& tree_id) const;
+  /* Show if the level id is a valid for a given tree */
+  bool valid_level_id(const ClockTreeId& tree_id, const ClockLevelId& lvl_id) const;
   /* Show if the tree id is a valid for data queries */
   bool valid_spine_id(const ClockSpineId& spine_id) const;
   bool valid_spine_switch_point_id(

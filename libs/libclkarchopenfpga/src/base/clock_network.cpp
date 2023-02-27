@@ -244,6 +244,10 @@ bool ClockNetwork::empty() const { return 0 == tree_ids_.size(); }
 
 bool ClockNetwork::is_valid() const { return !is_dirty_; }
 
+ClockLevelId ClockNetwork::next_level(const ClockLevelId& lvl) const {
+  return ClockLevelId(size_t(lvl) + 1);
+}
+
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
@@ -501,6 +505,12 @@ bool ClockNetwork::valid_tree_id(const ClockTreeId& tree_id) const {
   return (size_t(tree_id) < tree_ids_.size()) &&
          (tree_id == tree_ids_[tree_id]);
 }
+
+bool ClockNetwork::valid_level_id(const ClockTreeId& tree_id, const ClockLevelId& lvl_id) const {
+  return valid_tree_id(tree_id) &&
+         (size_t(lvl_id) < tree_depth(tree_id));
+}
+
 
 bool ClockNetwork::valid_spine_id(const ClockSpineId& spine_id) const {
   return (size_t(spine_id) < spine_ids_.size()) &&

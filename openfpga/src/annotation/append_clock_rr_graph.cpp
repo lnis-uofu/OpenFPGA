@@ -165,26 +165,183 @@ static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
 }
 
 /********************************************************************
- * Add edges for the clock nodes in a given connection block
+ * Find the destination nodes for a driver clock node in a given connection block
+ * There are two types of destination nodes:
+ * - Straight connection where the driver clock node connects to another clock node 
+ *   in the same direction and at the same level as well as clock index
  * For example
+ *
+ *   clk0_lvl0_chanx[1][1] -->------------->---> clk0_lvl0_chanx[2][1]
+ *
+ * - Turning connections where the driver clock node makes turns to connect other clock nodes
+ *   at 1-level up and in the same clock index                                     
+ *
  *
  *                            clk0_lvl1_chany[1][2]
  *                                     ^
  *                                     |
- *   clk0_lvl0_chanx[1][1] -->---------+--->---> clk0_lvl0_chanx[2][1]
+ *   clk0_lvl0_chanx[1][1] -->---------+
  *                                     |
  *                                     v
  *                            clk0_lvl1_chany[1][1]
+ *
+ * Coordindate system:
+ * 
+ *        +----------+----------+------------+
+ *        |   Grid   |    CBy   |   Grid     |
+ *        | [x][y+1] | [x][y+1] | [x+1][y+1] |
+ *        +----------+----------+------------+
+ *        |   CBx    |   SB     |   CBx      |
+ *        | [x][y]   |  [x][y]  | [x+1][y]   |
+ *        +----------+----------+------------+
+ *        |   Grid   |    CBy   |   Grid     |
+ *        | [x][y]   | [x][y]   | [x+1][y]   |
+ *        +----------+----------+------------+
+ *       
  *******************************************************************/
 static 
-std::vector<RRNodeId> find_clock_track2track_node(const vtr::Point<size_t>& chan_coord,
+std::vector<RRNodeId> find_clock_track2track_node(const RRGraphView& rr_graph_view,
+                                                  const ClockNetwork& clk_ntwk,
+                                                  const RRClockSpatialLookup& clk_rr_lookup,
+                                                  const t_rr_type& chan_type,
+                                                  const vtr::Point<size_t>& chan_coord,
                                                   const ClockTreeId& clk_tree,
                                                   const ClockLevelId& clk_lvl,
                                                   const ClockTreePinId& clk_pin,
                                                   const Direction& direction) {
   std::vector<RRNodeId> des_nodes;
 
-  return des_nodes
+  /* Straight connection */
+  vtr::Point<size_t> straight_des_coord = chan_coord; 
+  if (chan_type == CHANX) {
+    if (direction == Direction::INC) {
+      straight_des_coord.set_x(straight_des_coord.x() + 1);
+    } else {
+      VTR_ASSERT(direction == Direction::DEC);
+      straight_des_coord.set_x(straight_des_coord.x() - 1);
+    } 
+  } else {
+    VTR_ASSERT(chan_type == CHANY);
+    if (direction == Direction::INC) {
+      straight_des_coord.set_y(straight_des_coord.y() + 1);
+    } else {
+      VTR_ASSERT(direction == Direction::DEC);
+      straight_des_coord.set_y(straight_des_coord.y() - 1);
+    } 
+  }
+  RRNodeId straight_des_node = clk_rr_lookup.find_node(straight_des_coord.x(), straight_des_coord.y(), clk_tree, clk_lvl, clk_pin, direction);
+  if (rr_graph_view.valid_node(straight_des_node)) {
+    VTR_ASSERT(chan_type == rr_graph_view.node_type(straight_des_node));
+    des_nodes.push_back(straight_des_node);
+  }
+
+  /* Check the next level if this is the last level, there are no turns available */
+  ClockLevelId next_clk_lvl = clk_ntwk.next_level(clk_lvl);
+  if (!clk_ntwk.valid_level_id(clk_tree, next_clk_lvl)) {
+    return des_nodes;
+  }
+
+  /* left turn connection */
+  vtr::Point<size_t> left_des_coord = chan_coord; 
+  Direction left_direction = direction;
+  t_rr_type left_des_chan_type = chan_type;
+  if (chan_type == CHANX) {
+    left_des_chan_type = CHANY;
+    if (direction == Direction::INC) {
+      /*
+       *      ^
+       *      |
+       *   -->+
+       */
+      left_des_coord.set_y(left_des_coord.y() + 1);
+    } else {
+      /*
+       *      +<--
+       *      |
+       *      v
+       */
+      VTR_ASSERT(direction == Direction::DEC);
+      left_des_coord.set_x(left_des_coord.x() - 1);
+    } 
+  } else {
+    VTR_ASSERT(chan_type == CHANY);
+    left_des_chan_type = CHANX;
+    if (direction == Direction::INC) {
+      /*
+       *   <--+
+       *      ^
+       *      |
+       */
+      left_direction = Direction::DEC;
+    } else {
+      VTR_ASSERT(direction == Direction::DEC);
+      /*
+       *      |
+       *      v
+       *      +-->
+       */
+      left_direction = Direction::INC;
+      left_des_coord.set_x(left_des_coord.x() + 1);
+      left_des_coord.set_y(left_des_coord.y() - 1);
+    } 
+  }
+  RRNodeId left_des_node = clk_rr_lookup.find_node(left_des_coord.x(), left_des_coord.y(), clk_tree, next_clk_lvl, clk_pin, left_direction);
+  if (rr_graph_view.valid_node(left_des_node)) {
+    VTR_ASSERT(left_des_chan_type == rr_graph_view.node_type(left_des_node));
+    des_nodes.push_back(left_des_node);
+  }
+
+  /* right turn connection */
+  vtr::Point<size_t> right_des_coord = chan_coord; 
+  Direction right_direction = direction;
+  t_rr_type right_des_chan_type = chan_type;
+  if (chan_type == CHANX) {
+    right_des_chan_type = CHANY;
+    if (direction == Direction::INC) {
+      /*
+       *   -->+
+       *      |
+       *      v
+       */
+      right_direction = Direction::DEC;
+    } else {
+      /*
+       *      ^
+       *      |
+       *      +<--
+       */
+      VTR_ASSERT(direction == Direction::DEC);
+      right_direction = Direction::INC;
+      right_des_coord.set_x(right_des_coord.x() - 1);
+      right_des_coord.set_y(right_des_coord.y() + 1);
+    } 
+  } else {
+    VTR_ASSERT(chan_type == CHANY);
+    right_des_chan_type = CHANX;
+    if (direction == Direction::INC) {
+      /*
+       *      +-->
+       *      ^
+       *      |
+       */
+      right_des_coord.set_x(right_des_coord.x() + 1);
+    } else {
+      VTR_ASSERT(direction == Direction::DEC);
+      /*
+       *      |
+       *      v
+       *   <--+
+       */
+      right_des_coord.set_y(right_des_coord.y() - 1);
+    } 
+  }
+  RRNodeId right_des_node = clk_rr_lookup.find_node(right_des_coord.x(), right_des_coord.y(), clk_tree, next_clk_lvl, clk_pin, right_direction);
+  if (rr_graph_view.valid_node(right_des_node)) {
+    VTR_ASSERT(right_des_chan_type == rr_graph_view.node_type(right_des_node));
+    des_nodes.push_back(right_des_node);
+  }
+
+  return des_nodes;
 }
 
 /********************************************************************
@@ -202,11 +359,11 @@ static void add_rr_graph_block_clock_edges(
           /* find the driver clock node through lookup */
           RRNodeId src_node = clk_rr_lookup.find_node(
             chan_coord.x(), chan_coord.y(), itree, ilvl, ipin, node_dir);
-          VTR_ASSERT(src_node);
-          /* TODO: find the fan-out clock node through lookup */
-          for (RRNodeId des_node : find_clock_track2track_node(chan_coord, itree, ilvl, ipin, node_dir)) {
+          VTR_ASSERT(rr_graph_view.valid_node(src_node));
+          /* find the fan-out clock node through lookup */
+          for (RRNodeId des_node : find_clock_track2track_node(rr_graph_view, clk_ntwk, clk_rr_lookup, chan_type, chan_coord, itree, ilvl, ipin, node_dir)) {
             /* Create edges */
-            VTR_ASSERT(des_node);
+            VTR_ASSERT(rr_graph_view.valid_node(des_node));
             rr_graph_builder.create_edge(src_node, des_node, clk_ntwk.default_switch());
             edge_count++;
           }
