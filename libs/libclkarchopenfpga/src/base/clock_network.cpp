@@ -155,9 +155,7 @@ std::string ClockNetwork::default_switch_name() const {
   return default_switch_name_;
 }
 
-RRSwitchId ClockNetwork::default_switch() const {
-  return default_switch_id_;
-}
+RRSwitchId ClockNetwork::default_switch() const { return default_switch_id_; }
 
 std::string ClockNetwork::tree_name(const ClockTreeId& tree_id) const {
   VTR_ASSERT(valid_tree_id(tree_id));
@@ -278,7 +276,6 @@ void ClockNetwork::set_default_segment(const RRSegmentId& seg_id) {
 void ClockNetwork::set_default_switch(const RRSwitchId& switch_id) {
   default_switch_id_ = switch_id;
 }
-
 
 void ClockNetwork::set_default_segment_name(const std::string& name) {
   default_segment_name_ = name;
@@ -506,11 +503,10 @@ bool ClockNetwork::valid_tree_id(const ClockTreeId& tree_id) const {
          (tree_id == tree_ids_[tree_id]);
 }
 
-bool ClockNetwork::valid_level_id(const ClockTreeId& tree_id, const ClockLevelId& lvl_id) const {
-  return valid_tree_id(tree_id) &&
-         (size_t(lvl_id) < tree_depth(tree_id));
+bool ClockNetwork::valid_level_id(const ClockTreeId& tree_id,
+                                  const ClockLevelId& lvl_id) const {
+  return valid_tree_id(tree_id) && (size_t(lvl_id) < tree_depth(tree_id));
 }
-
 
 bool ClockNetwork::valid_spine_id(const ClockSpineId& spine_id) const {
   return (size_t(spine_id) < spine_ids_.size()) &&

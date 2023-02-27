@@ -10,9 +10,8 @@ namespace openfpga {  // Begin namespace openfpga
  * Link all the segments that are defined in a routing resource graph to a given
  *clock network
  *******************************************************************/
-static 
-int link_clock_network_rr_segments(ClockNetwork& clk_ntwk,
-                                   const RRGraphView& rr_graph) {
+static int link_clock_network_rr_segments(ClockNetwork& clk_ntwk,
+                                          const RRGraphView& rr_graph) {
   /* default segment id */
   std::string default_segment_name = clk_ntwk.default_segment_name();
   for (size_t rr_seg_id = 0; rr_seg_id < rr_graph.num_rr_segments();
@@ -31,9 +30,8 @@ int link_clock_network_rr_segments(ClockNetwork& clk_ntwk,
  * Link all the switches that are defined in a routing resource graph to a given
  *clock network
  *******************************************************************/
-static 
-int link_clock_network_rr_switches(ClockNetwork& clk_ntwk,
-                                   const RRGraphView& rr_graph) {
+static int link_clock_network_rr_switches(ClockNetwork& clk_ntwk,
+                                          const RRGraphView& rr_graph) {
   /* default switch id */
   std::string default_switch_name = clk_ntwk.default_switch_name();
   for (size_t rr_switch_id = 0; rr_switch_id < rr_graph.num_rr_switches();
@@ -61,8 +59,7 @@ int link_clock_network_rr_graph(ClockNetwork& clk_ntwk,
     return status;
   }
 
-  return status; 
+  return status;
 }
-
 
 }  // End of namespace openfpga

@@ -238,7 +238,7 @@ int read_openfpga_clock_arch_template(T& openfpga_context, const Command& cmd,
   /* Build internal links */
   openfpga_context.mutable_clock_arch().link();
   link_clock_network_rr_graph(openfpga_context.mutable_clock_arch(),
-                                 g_vpr_ctx.device().rr_graph);
+                              g_vpr_ctx.device().rr_graph);
   /* Ensure clean data */
   openfpga_context.clock_arch().validate();
   if (!openfpga_context.clock_arch().is_valid()) {
