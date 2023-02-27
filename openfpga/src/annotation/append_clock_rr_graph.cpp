@@ -106,7 +106,9 @@ static void add_rr_graph_block_clock_nodes(RRGraphBuilder& rr_graph_builder,
           rr_graph_builder.set_node_direction(clk_node, node_dir);
           rr_graph_builder.set_node_capacity(clk_node, 1);
           /* set cost_index using segment id */
-          rr_graph_builder.set_node_cost_index(clk_node, RRIndexedDataId(cost_index_offset + size_t(clk_ntwk.default_segment())));
+          rr_graph_builder.set_node_cost_index(
+            clk_node, RRIndexedDataId(cost_index_offset +
+                                      size_t(clk_ntwk.default_segment())));
           /* FIXME: need to set rc_index and cost_index when building the graph
            * in VTR */
           /* TODO: register the node to a dedicated lookup for clock nodes only
@@ -141,7 +143,8 @@ static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
         continue;
       }
       add_rr_graph_block_clock_nodes(rr_graph_builder, rr_graph_view, clk_ntwk,
-                                     chanx_coord, CHANX, CHANX_COST_INDEX_START);
+                                     chanx_coord, CHANX,
+                                     CHANX_COST_INDEX_START);
     }
   }
 
@@ -155,8 +158,9 @@ static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
           (false == is_chany_exist(grids, chany_coord))) {
         continue;
       }
-      add_rr_graph_block_clock_nodes(rr_graph_builder, rr_graph_view, clk_ntwk,
-                                     chany_coord, CHANY, CHANX_COST_INDEX_START + rr_graph_view.num_rr_segments());
+      add_rr_graph_block_clock_nodes(
+        rr_graph_builder, rr_graph_view, clk_ntwk, chany_coord, CHANY,
+        CHANX_COST_INDEX_START + rr_graph_view.num_rr_segments());
     }
   }
 }

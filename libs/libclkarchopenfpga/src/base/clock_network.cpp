@@ -381,6 +381,18 @@ bool ClockNetwork::validate_tree() const {
           spine_end_point(spine_id).y());
         return false;
       }
+      /* parent spine and child spine should be in different track type */
+      ClockSpineId parent_spine = spine_parents_[spine_id];
+      if (valid_spine_id(parent_spine)) {
+        if (spine_track_type(spine_id) == spine_track_type(parent_spine)) {
+          VTR_LOG_ERROR(
+            "Spine '%s' and its parent '%s' are in the same track type (both "
+            "horizental or vertical). Expect they are othorgonal (one "
+            "horizental and one vertical)!\n",
+            spine_name(spine_id).c_str(), spine_name(parent_spine).c_str());
+          return false;
+        }
+      }
     }
   }
   return true;
