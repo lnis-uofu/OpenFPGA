@@ -13,8 +13,8 @@
 
 namespace openfpga {  // Begin namespace openfpga
 
-int link_clock_network_rr_segments(ClockNetwork& clk_ntwk,
-                                   const RRGraphView& rr_graph);
+int link_clock_network_rr_graph(ClockNetwork& clk_ntwk,
+                                const RRGraphView& rr_graph);
 
 }  // End of namespace openfpga
 

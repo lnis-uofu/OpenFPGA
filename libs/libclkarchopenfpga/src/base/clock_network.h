@@ -72,6 +72,7 @@ class ClockNetwork {
    * information from RRGraph */
   RRSegmentId default_segment() const;
   std::string default_segment_name() const;
+  RRSwitchId default_switch() const;
   std::string default_switch_name() const;
   std::string tree_name(const ClockTreeId& tree_id) const;
   size_t tree_width(const ClockTreeId& tree_id) const;
@@ -116,6 +117,7 @@ class ClockNetwork {
   /* Reserve a number of trees to be memory efficent */
   void reserve_trees(const size_t& num_trees);
   void set_default_segment(const RRSegmentId& seg_id);
+  void set_default_switch(const RRSwitchId& switch_id);
   void set_default_segment_name(const std::string& name);
   void set_default_switch_name(const std::string& name);
   /* Create a new tree, by default the tree can accomodate only 1 clock signal;

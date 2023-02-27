@@ -166,6 +166,29 @@ static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
 
 /********************************************************************
  * Add edges for the clock nodes in a given connection block
+ * For example
+ *
+ *                            clk0_lvl1_chany[1][2]
+ *                                     ^
+ *                                     |
+ *   clk0_lvl0_chanx[1][1] -->---------+--->---> clk0_lvl0_chanx[2][1]
+ *                                     |
+ *                                     v
+ *                            clk0_lvl1_chany[1][1]
+ *******************************************************************/
+static 
+std::vector<RRNodeId> find_clock_track2track_node(const vtr::Point<size_t>& chan_coord,
+                                                  const ClockTreeId& clk_tree,
+                                                  const ClockLevelId& clk_lvl,
+                                                  const ClockTreePinId& clk_pin,
+                                                  const Direction& direction) {
+  std::vector<RRNodeId> des_nodes;
+
+  return des_nodes
+}
+
+/********************************************************************
+ * Add edges for the clock nodes in a given connection block
  *******************************************************************/
 static void add_rr_graph_block_clock_edges(
   RRGraphBuilder& rr_graph_builder, size_t& num_edges_to_create, const RRClockSpatialLookup& clk_rr_lookup,
@@ -179,10 +202,10 @@ static void add_rr_graph_block_clock_edges(
           /* find the driver clock node through lookup */
           RRNodeId src_node = clk_rr_lookup.find_node(
             chan_coord.x(), chan_coord.y(), itree, ilvl, ipin, node_dir);
-          VTR_ASSERT(driver_node);
+          VTR_ASSERT(src_node);
           /* TODO: find the fan-out clock node through lookup */
           for (RRNodeId des_node : find_clock_track2track_node(chan_coord, itree, ilvl, ipin, node_dir)) {
-          /* TODO: Create edges */
+            /* Create edges */
             VTR_ASSERT(des_node);
             rr_graph_builder.create_edge(src_node, des_node, clk_ntwk.default_switch());
             edge_count++;
@@ -207,7 +230,8 @@ static void add_rr_graph_block_clock_edges(
  *clock tree may contain multiple clocks)
  * - clock nodes can only drive clock nodes (by making a turn, straight
  *connection is not allowed) which are 1 level lower in the same clock tree with
- *the same clock index For example
+ *the same clock index
+ * For example
  *
  *                            clk0_lvl1_chany[1][2]
  *                                     ^

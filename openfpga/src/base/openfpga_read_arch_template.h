@@ -237,7 +237,7 @@ int read_openfpga_clock_arch_template(T& openfpga_context, const Command& cmd,
     read_xml_clock_network(arch_file_name.c_str());
   /* Build internal links */
   openfpga_context.mutable_clock_arch().link();
-  link_clock_network_rr_segments(openfpga_context.mutable_clock_arch(),
+  link_clock_network_rr_graph(openfpga_context.mutable_clock_arch(),
                                  g_vpr_ctx.device().rr_graph);
   /* Ensure clean data */
   openfpga_context.clock_arch().validate();

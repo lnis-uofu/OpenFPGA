@@ -155,6 +155,10 @@ std::string ClockNetwork::default_switch_name() const {
   return default_switch_name_;
 }
 
+RRSwitchId ClockNetwork::default_switch() const {
+  return default_switch_id_;
+}
+
 std::string ClockNetwork::tree_name(const ClockTreeId& tree_id) const {
   VTR_ASSERT(valid_tree_id(tree_id));
   return tree_names_[tree_id];
@@ -266,6 +270,11 @@ void ClockNetwork::reserve_trees(const size_t& num_trees) {
 void ClockNetwork::set_default_segment(const RRSegmentId& seg_id) {
   default_segment_id_ = seg_id;
 }
+
+void ClockNetwork::set_default_switch(const RRSwitchId& switch_id) {
+  default_switch_id_ = switch_id;
+}
+
 
 void ClockNetwork::set_default_segment_name(const std::string& name) {
   default_segment_name_ = name;
