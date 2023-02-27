@@ -62,6 +62,9 @@ class ClockNetwork {
   size_t num_tracks(const ClockTreeId& tree_id, const ClockLevelId& level,
                     const t_rr_type& track_type,
                     const Direction& direction) const;
+  /* Return the id of default routing segment, use this to find detailed segment
+   * information from RRGraph */
+  RRSegmentId default_segment() const;
   std::string default_segment_name() const;
   std::string default_switch_name() const;
   std::string tree_name(const ClockTreeId& tree_id) const;
@@ -106,6 +109,7 @@ class ClockNetwork {
   void reserve_spines(const size_t& num_spines);
   /* Reserve a number of trees to be memory efficent */
   void reserve_trees(const size_t& num_trees);
+  void set_default_segment(const RRSegmentId& seg_id);
   void set_default_segment_name(const std::string& name);
   void set_default_switch_name(const std::string& name);
   /* Create a new tree, by default the tree can accomodate only 1 clock signal;
@@ -145,6 +149,14 @@ class ClockNetwork {
    * X-direction spine or a Y-direction spine. Diagonal spine is not supported!
    */
   bool valid_spine_start_end_points(const ClockSpineId& spine_id) const;
+  /* Validate the internal data. Required to ensure clean data before usage. If
+   * validation is successful, is_valid() will return true */
+  bool validate() const;
+
+ private: /* Public invalidators/validators */
+  /* Ensure tree data is clean. All the spines are valid, and switch points are
+   * valid */
+  bool validate_tree() const;
 
  private: /* Private mutators */
   /* Build internal links between spines under a given tree */
@@ -189,7 +201,7 @@ class ClockNetwork {
   std::map<std::string, ClockSpineId> spine_name2id_map_;
 
   /* Flags */
-  bool is_dirty_;
+  mutable bool is_dirty_;
 };
 
 }  // End of namespace openfpga

@@ -14,7 +14,11 @@ namespace openfpga {  // Begin namespace openfpga
 /************************************************************************
  * Constructors
  ***********************************************************************/
-ClockNetwork::ClockNetwork() { is_dirty_ = true; }
+ClockNetwork::ClockNetwork() {
+  default_segment_id_ = RRSegmentId::INVALID();
+  default_switch_id_ = RRSwitchId::INVALID();
+  is_dirty_ = true;
+}
 
 /************************************************************************
  * Public Accessors : aggregates
@@ -113,6 +117,10 @@ size_t ClockNetwork::num_tracks(const ClockTreeId& tree_id,
 
 std::string ClockNetwork::default_segment_name() const {
   return default_segment_name_;
+}
+
+RRSegmentId ClockNetwork::default_segment() const {
+  return default_segment_id_;
 }
 
 std::string ClockNetwork::default_switch_name() const {
@@ -227,6 +235,10 @@ void ClockNetwork::reserve_trees(const size_t& num_trees) {
   tree_top_spines_.reserve(num_trees);
 }
 
+void ClockNetwork::set_default_segment(const RRSegmentId& seg_id) {
+  default_segment_id_ = seg_id;
+}
+
 void ClockNetwork::set_default_segment_name(const std::string& name) {
   default_segment_name_ = name;
 }
@@ -339,13 +351,46 @@ void ClockNetwork::add_spine_switch_point(const ClockSpineId& spine_id,
 }
 
 bool ClockNetwork::link() {
-  is_dirty_ = true;
   for (ClockTreeId tree_id : trees()) {
     if (!link_tree(tree_id)) {
       return false;
     }
   }
-  is_dirty_ = false;
+  return true;
+}
+
+bool ClockNetwork::validate_tree() const {
+  for (ClockTreeId tree_id : trees()) {
+    for (ClockSpineId spine_id : spines(tree_id)) {
+      for (ClockSwitchPointId switch_point_id : spine_switch_points(spine_id)) {
+        if (!valid_spine_switch_point_id(spine_id, switch_point_id)) {
+          VTR_LOG_ERROR(
+            "Spine '%s' contains invalid switching point (%lu, %lu)\n",
+            spine_name(spine_id).c_str(),
+            spine_switch_point(spine_id, switch_point_id).x(),
+            spine_switch_point(spine_id, switch_point_id).y());
+          return false;
+        }
+      }
+      if (!valid_spine_start_end_points(spine_id)) {
+        VTR_LOG_ERROR(
+          "Spine '%s' contains invalid starting point (%lu, %lu) or ending "
+          "point (%lu, %lu)\n",
+          spine_name(spine_id).c_str(), spine_start_point(spine_id).x(),
+          spine_start_point(spine_id).y(), spine_end_point(spine_id).x(),
+          spine_end_point(spine_id).y());
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+bool ClockNetwork::validate() const {
+  is_dirty_ = true;
+  if (default_segment_id_ && default_switch_id_ && validate_tree()) {
+    is_dirty_ = false;
+  }
   return true;
 }
 

@@ -7,6 +7,7 @@
 #include "check_circuit_library.h"
 #include "check_tile_annotation.h"
 #include "circuit_library_utils.h"
+#include "clock_network_utils.h"
 #include "command.h"
 #include "command_context.h"
 #include "command_exit_codes.h"
@@ -236,6 +237,14 @@ int read_openfpga_clock_arch_template(T& openfpga_context, const Command& cmd,
     read_xml_clock_network(arch_file_name.c_str());
   /* Build internal links */
   openfpga_context.mutable_clock_arch().link();
+  link_clock_network_rr_segments(openfpga_context.mutable_clock_arch(),
+                                 g_vpr_ctx.device().rr_graph);
+  /* Ensure clean data */
+  openfpga_context.clock_arch().validate();
+  if (!openfpga_context.clock_arch().is_valid()) {
+    VTR_LOG_ERROR("Pre-checking clock architecture failed!");
+    return CMD_EXEC_FATAL_ERROR;
+  }
 
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;
