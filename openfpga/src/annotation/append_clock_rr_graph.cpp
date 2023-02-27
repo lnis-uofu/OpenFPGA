@@ -111,7 +111,8 @@ static void add_rr_graph_block_clock_nodes(RRGraphBuilder& rr_graph_builder,
           /* FIXME: need to set rc_index and cost_index when building the graph
            * in VTR */
           /* register the node to a dedicated lookup */
-          clk_rr_lookup.add_node(clk_node, chan_coord.x(), chan_coord.y(), itree, ilvl, ipin, node_dir);
+          clk_rr_lookup.add_node(clk_node, chan_coord.x(), chan_coord.y(),
+                                 itree, ilvl, ipin, node_dir);
           /* Update ptc count and go to next */
           curr_node_ptc++;
         }
@@ -140,9 +141,9 @@ static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
           (false == is_chanx_exist(grids, chanx_coord))) {
         continue;
       }
-      add_rr_graph_block_clock_nodes(rr_graph_builder, clk_rr_lookup, rr_graph_view, clk_ntwk,
-                                     chanx_coord, CHANX,
-                                     CHANX_COST_INDEX_START);
+      add_rr_graph_block_clock_nodes(rr_graph_builder, clk_rr_lookup,
+                                     rr_graph_view, clk_ntwk, chanx_coord,
+                                     CHANX, CHANX_COST_INDEX_START);
     }
   }
 
@@ -157,8 +158,8 @@ static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
         continue;
       }
       add_rr_graph_block_clock_nodes(
-        rr_graph_builder, clk_rr_lookup, rr_graph_view, clk_ntwk, chany_coord, CHANY,
-        CHANX_COST_INDEX_START + rr_graph_view.num_rr_segments());
+        rr_graph_builder, clk_rr_lookup, rr_graph_view, clk_ntwk, chany_coord,
+        CHANY, CHANX_COST_INDEX_START + rr_graph_view.num_rr_segments());
     }
   }
 }
@@ -166,19 +167,17 @@ static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
 /********************************************************************
  * Add edges for the clock nodes in a given connection block
  *******************************************************************/
-static 
-void add_rr_graph_block_clock_edges(RRGraphBuilder& rr_graph_builder,
-                                    const RRClockSpatialLookup& clk_rr_lookup,
-                                    const RRGraphView& rr_graph_view,
-                                    const ClockNetwork& clk_ntwk,
-                                    const vtr::Point<size_t> chan_coord,
-                                    const t_rr_type& chan_type) {
+static void add_rr_graph_block_clock_edges(
+  RRGraphBuilder& rr_graph_builder, const RRClockSpatialLookup& clk_rr_lookup,
+  const RRGraphView& rr_graph_view, const ClockNetwork& clk_ntwk,
+  const vtr::Point<size_t> chan_coord, const t_rr_type& chan_type) {
   for (auto itree : clk_ntwk.trees()) {
     for (auto ilvl : clk_ntwk.levels(itree)) {
       for (auto node_dir : {Direction::INC, Direction::DEC}) {
         for (auto ipin : clk_ntwk.pins(itree, ilvl, chan_type, node_dir)) {
           /* find the driver clock node through lookup */
-          RRNodeId driver_node = clk_rr_lookup.find_node(chan_coord.x(), chan_coord.y(), itree, ilvl, ipin, node_dir);
+          RRNodeId driver_node = clk_rr_lookup.find_node(
+            chan_coord.x(), chan_coord.y(), itree, ilvl, ipin, node_dir);
           VTR_ASSERT(driver_node);
           /* TODO: find the fan-out clock node through lookup */
           /* TODO: Create edges */
@@ -208,13 +207,12 @@ void add_rr_graph_block_clock_edges(RRGraphBuilder& rr_graph_builder,
  *                                     v
  *                            clk0_lvl1_chany[1][1]
  *******************************************************************/
-static 
-void add_rr_graph_clock_edges(RRGraphBuilder& rr_graph_builder,
-                              const RRClockSpatialLookup& clk_rr_lookup,
-                              const RRGraphView& rr_graph_view,
-                              const DeviceGrid& grids,
-                              const bool& through_channel,
-                              const ClockNetwork& clk_ntwk) {
+static void add_rr_graph_clock_edges(RRGraphBuilder& rr_graph_builder,
+                                     const RRClockSpatialLookup& clk_rr_lookup,
+                                     const RRGraphView& rr_graph_view,
+                                     const DeviceGrid& grids,
+                                     const bool& through_channel,
+                                     const ClockNetwork& clk_ntwk) {
   /* Add edges which is driven by X-direction clock routing tracks */
   for (size_t iy = 0; iy < grids.height() - 1; ++iy) {
     for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
@@ -225,8 +223,9 @@ void add_rr_graph_clock_edges(RRGraphBuilder& rr_graph_builder,
           (false == is_chanx_exist(grids, chanx_coord))) {
         continue;
       }
-      add_rr_graph_block_clock_edges(rr_graph_builder, clk_rr_lookup, rr_graph_view, clk_ntwk,
-                                     chanx_coord, CHANX);
+      add_rr_graph_block_clock_edges(rr_graph_builder, clk_rr_lookup,
+                                     rr_graph_view, clk_ntwk, chanx_coord,
+                                     CHANX);
     }
   }
 
@@ -240,8 +239,9 @@ void add_rr_graph_clock_edges(RRGraphBuilder& rr_graph_builder,
           (false == is_chany_exist(grids, chany_coord))) {
         continue;
       }
-      add_rr_graph_block_clock_edges(rr_graph_builder, clk_rr_lookup, rr_graph_view, clk_ntwk,
-                                     chany_coord, CHANY);
+      add_rr_graph_block_clock_edges(rr_graph_builder, clk_rr_lookup,
+                                     rr_graph_view, clk_ntwk, chany_coord,
+                                     CHANY);
     }
   }
 }
@@ -256,8 +256,7 @@ void add_rr_graph_clock_edges(RRGraphBuilder& rr_graph_builder,
  *******************************************************************/
 int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
                           RRClockSpatialLookup& clk_rr_lookup,
-                          const ClockNetwork& clk_ntwk,
-                          const bool& verbose) {
+                          const ClockNetwork& clk_ntwk, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer(
     "Appending programmable clock network to routing resource graph");
 
@@ -285,8 +284,7 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
                                                 orig_num_nodes);
 
   /* Add clock nodes */
-  add_rr_graph_clock_nodes(vpr_device_ctx.rr_graph_builder,
-                           clk_rr_lookup,
+  add_rr_graph_clock_nodes(vpr_device_ctx.rr_graph_builder, clk_rr_lookup,
                            vpr_device_ctx.rr_graph, vpr_device_ctx.grid,
                            vpr_device_ctx.arch->through_channel, clk_ntwk);
   VTR_ASSERT(num_clock_nodes + orig_num_nodes ==
@@ -294,10 +292,11 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
 
   /* TODO: Add edges between clock nodes*/
   size_t num_clock_edges = 0;
-  add_rr_graph_clock_edges(vpr_device_ctx.rr_graph_builder,
-                           static_cast<const RRClockSpatialLookup&>(clk_rr_lookup),
-                           vpr_device_ctx.rr_graph, vpr_device_ctx.grid,
-                           vpr_device_ctx.arch->through_channel, clk_ntwk);
+  add_rr_graph_clock_edges(
+    vpr_device_ctx.rr_graph_builder,
+    static_cast<const RRClockSpatialLookup&>(clk_rr_lookup),
+    vpr_device_ctx.rr_graph, vpr_device_ctx.grid,
+    vpr_device_ctx.arch->through_channel, clk_ntwk);
 
   /* TODO: Sanity checks */
 
