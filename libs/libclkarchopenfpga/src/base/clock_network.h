@@ -157,6 +157,8 @@ class ClockNetwork {
   /* Show if the level id is a valid for a given tree */
   bool valid_level_id(const ClockTreeId& tree_id,
                       const ClockLevelId& lvl_id) const;
+  /* Identify if the level is the last level of the given tree */
+  bool is_last_level(const ClockTreeId& tree_id, const ClockLevelId& lvl) const;
   /* Show if the tree id is a valid for data queries */
   bool valid_spine_id(const ClockSpineId& spine_id) const;
   bool valid_spine_switch_point_id(

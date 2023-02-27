@@ -508,6 +508,11 @@ bool ClockNetwork::valid_level_id(const ClockTreeId& tree_id,
   return valid_tree_id(tree_id) && (size_t(lvl_id) < tree_depth(tree_id));
 }
 
+bool ClockNetwork::is_last_level(const ClockTreeId& tree_id,
+                                 const ClockLevelId& lvl_id) const {
+  return valid_tree_id(tree_id) && (size_t(lvl_id) == tree_depth(tree_id) - 1);
+}
+
 bool ClockNetwork::valid_spine_id(const ClockSpineId& spine_id) const {
   return (size_t(spine_id) < spine_ids_.size()) &&
          (spine_id == spine_ids_[spine_id]);
