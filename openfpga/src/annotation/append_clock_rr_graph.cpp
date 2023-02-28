@@ -467,7 +467,7 @@ static void add_rr_graph_block_clock_edges(
               edge_count++;
             }
           }
-          /* TODO: If this is the clock node at the last level of the tree,
+          /* If this is the clock node at the last level of the tree,
            * should drive some grid IPINs which are clocks */
           if (clk_ntwk.is_last_level(itree, ilvl)) {
             for (RRNodeId des_node : find_clock_track2ipin_node(
@@ -594,7 +594,7 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
   VTR_ASSERT(num_clock_nodes + orig_num_nodes ==
              vpr_device_ctx.rr_graph.num_nodes());
 
-  /* TODO: Add edges between clock nodes*/
+  /* Add edges between clock nodes*/
   size_t num_clock_edges = 0;
   add_rr_graph_clock_edges(
     vpr_device_ctx.rr_graph_builder, num_clock_edges,

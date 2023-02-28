@@ -23,6 +23,7 @@
 #include "openfpga_rr_graph_support.h"
 #include "pb_type_utils.h"
 #include "read_activity.h"
+#include "route_clock_rr_graph.h"
 #include "vpr_device_annotation.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -201,6 +202,23 @@ int append_clock_rr_graph_template(T& openfpga_ctx, const Command& cmd,
   return append_clock_rr_graph(
     g_vpr_ctx.mutable_device(), openfpga_ctx.mutable_clock_rr_lookup(),
     openfpga_ctx.clock_arch(), cmd_context.option_enable(cmd, opt_verbose));
+}
+
+/********************************************************************
+ * Top-level function to route a clock network based on the clock spines
+ * defined in clock architecture
+ *******************************************************************/
+template <class T>
+int route_clock_rr_graph_template(T& openfpga_ctx, const Command& cmd,
+                                  const CommandContext& cmd_context) {
+  vtr::ScopedStartFinishTimer timer("Route clock routing resource graph");
+
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  return route_clock_rr_graph(
+    openfpga_ctx.mutable_vpr_routing_annotation(), g_vpr_ctx.device(),
+    openfpga_ctx.clock_rr_lookup(), openfpga_ctx.clock_arch(),
+    cmd_context.option_enable(cmd, opt_verbose));
 }
 
 } /* end namespace openfpga */
