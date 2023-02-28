@@ -7,6 +7,7 @@
 #include "vtr_geometry.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
+#include "openfpga_physical_tile_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -165,7 +166,7 @@ static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
 }
 
 /********************************************************************
- * Find the destination nodes for a driver clock node in a given connection
+ * Find the destination CHANX|CHANY nodes for a driver clock node in a given connection
  *block There are two types of destination nodes:
  * - Straight connection where the driver clock node connects to another clock
  *node in the same direction and at the same level as well as clock index For
@@ -185,7 +186,7 @@ static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
  *                                     v
  *                            clk0_lvl1_chany[1][1]
  *
- * Coordindate system:
+ * Coordinate system:
  *
  *        +----------+----------+------------+
  *        |   Grid   |    CBy   |   Grid     |
@@ -348,13 +349,100 @@ static std::vector<RRNodeId> find_clock_track2track_node(
 }
 
 /********************************************************************
+ * Try to find an IPIN of a grid which satisfy the requirement of clock pins
+ * that has been defined in clock network. If the IPIN does exist in a 
+ * routing resource graph, add it to the node list
+ *******************************************************************/
+static 
+void try_find_and_add_clock_track2ipin_node(std::vector<RRNodeId>& des_nodes,
+                                            const DeviceGrid& grids,
+                                            const RRGraphView& rr_graph_view,
+                                            const vtr::Point<size_t>& grid_coord,
+                                            const e_side& pin_side,
+                                            const ClockNetwork& clk_ntwk,
+                                            const ClockTreeId& clk_tree,
+                                            const ClockTreePinId& clk_pin) {
+  t_physical_tile_type_ptr grid_type = grids[grid_coord.x()][grid_coord.y()].type;
+  for (std::string tap_pin_name : clk_ntwk.tap_pin_name(clk_tree, clk_pin)) {
+    /* tap pin name could be 'io[5:5].a2f[0]' */
+    int grid_pin_idx = find_physical_tile_pin_index(grid_type, tap_pin_name);
+    RRNodeId des_node = rr_graph_view.node_lookup().find_node(grid_coord.x(), grid_coord.y(), IPIN, grid_pin_idx, pin_side); 
+    if (rr_graph_view.valid_node(des_node)) {
+      des_nodes.push_back(des_node);
+    }
+  }
+}
+
+/********************************************************************
+ * Find the destination IPIN nodes for a driver clock node in a given connection
+ *block. 
+ * For CHANX, the IPIN nodes are typically on the BOTTOM and TOP sides of adjacent grids
+ * For CHANY, the IPIN nodes are typically on the LEFT and RIGHT sides of adjacent grids
+ * For example
+ *                                  Grid[1][2]
+ *                                     ^
+ *                                     |
+ *   clk0_lvl2_chanx[1][1] -->---------+
+ *                                     |
+ *                                     v
+ *                                  Grid[1][1]
+ *
+ * Coordinate system:
+ *
+ *        +----------+----------+------------+
+ *        |   Grid   |    CBy   |   Grid     |
+ *        | [x][y+1] | [x][y+1] | [x+1][y+1] |
+ *        +----------+----------+------------+
+ *        |   CBx    |   SB     |   CBx      |
+ *        | [x][y]   |  [x][y]  | [x+1][y]   |
+ *        +----------+----------+------------+
+ *        |   Grid   |    CBy   |   Grid     |
+ *        | [x][y]   | [x][y]   | [x+1][y]   |
+ *        +----------+----------+------------+
+ *******************************************************************/
+static std::vector<RRNodeId> find_clock_track2ipin_node(const DeviceGrid& grids,
+                                                        const RRGraphView& rr_graph_view,
+                                                        const t_rr_type& chan_type,
+                                                        const vtr::Point<size_t>& chan_coord, 
+                                                        const ClockNetwork& clk_ntwk,
+                                                        const ClockTreeId& clk_tree,
+                                                        const ClockTreePinId& clk_pin) {
+  std::vector<RRNodeId> des_nodes;
+
+  if (chan_type == CHANX) {
+    /* Get the clock IPINs at the BOTTOM side of adjacent grids [x][y+1] */
+    vtr::Point<size_t> bot_grid_coord(chan_coord.x(), chan_coord.y() + 1);
+    try_find_and_add_clock_track2ipin_node(des_nodes, rr_graph_view, bot_grid_coord, BOTTOM, clk_ntwk, clk_tree, clk_pin);
+    }
+    /* Get the clock IPINs at the TOP side of adjacent grids [x][y] */
+    vtr::Point<size_t> top_grid_coord(chan_coord.x(), chan_coord.y());
+    try_find_and_add_clock_track2ipin_node(des_nodes, rr_graph_view, top_grid_coord, TOP, clk_ntwk, clk_tree, clk_pin);
+
+  } else {
+    VTR_ASSERT(chan_type == CHANY);
+    /* Get the clock IPINs at the LEFT side of adjacent grids [x][y+1] */
+    vtr::Point<size_t> left_grid_coord(chan_coord.x() + 1, chan_coord.y());
+    try_find_and_add_clock_track2ipin_node(des_nodes, rr_graph_view, left_grid_coord, LEFT, clk_ntwk, clk_tree, clk_pin);
+
+    /* Get the clock IPINs at the RIGHT side of adjacent grids [x][y] */
+    vtr::Point<size_t> right_grid_coord(chan_coord.x(), chan_coord.y());
+    try_find_and_add_clock_track2ipin_node(des_nodes, rr_graph_view, right_grid_coord, RIGHT, clk_ntwk, clk_tree, clk_pin);
+  }
+
+  return des_nodes;
+}
+
+/********************************************************************
  * Add edges for the clock nodes in a given connection block
  *******************************************************************/
-static void add_rr_graph_block_clock_edges(
-  RRGraphBuilder& rr_graph_builder, size_t& num_edges_to_create,
-  const RRClockSpatialLookup& clk_rr_lookup, const RRGraphView& rr_graph_view,
-  const ClockNetwork& clk_ntwk, const vtr::Point<size_t> chan_coord,
-  const t_rr_type& chan_type) {
+static void add_rr_graph_block_clock_edges(RRGraphBuilder& rr_graph_builder,
+                                           size_t& num_edges_to_create,
+                                           const RRClockSpatialLookup& clk_rr_lookup,
+                                           const RRGraphView& rr_graph_view,
+                                           const DeviceGrid& grids,
+                                           const ClockNetwork& clk_ntwk,
+                                           const vtr::Point<size_t> chan_coord,
+                                           const t_rr_type& chan_type) {
   size_t edge_count = 0;
   for (auto itree : clk_ntwk.trees()) {
     for (auto ilvl : clk_ntwk.levels(itree)) {
@@ -364,18 +452,30 @@ static void add_rr_graph_block_clock_edges(
           RRNodeId src_node = clk_rr_lookup.find_node(
             chan_coord.x(), chan_coord.y(), itree, ilvl, ipin, node_dir);
           VTR_ASSERT(rr_graph_view.valid_node(src_node));
-          /* find the fan-out clock node through lookup */
-          for (RRNodeId des_node : find_clock_track2track_node(
-                 rr_graph_view, clk_ntwk, clk_rr_lookup, chan_type, chan_coord,
-                 itree, ilvl, ipin, node_dir)) {
-            /* Create edges */
-            VTR_ASSERT(rr_graph_view.valid_node(des_node));
-            rr_graph_builder.create_edge(src_node, des_node,
-                                         clk_ntwk.default_switch());
-            edge_count++;
+          if (!clk_ntwk.is_last_level(itree, ilvl)) {
+            /* find the fan-out clock node through lookup */
+            for (RRNodeId des_node : find_clock_track2track_node(
+                   rr_graph_view, clk_ntwk, clk_rr_lookup, chan_type, chan_coord,
+                   itree, ilvl, ipin, node_dir)) {
+              /* Create edges */
+              VTR_ASSERT(rr_graph_view.valid_node(des_node));
+              rr_graph_builder.create_edge(src_node, des_node,
+                                           clk_ntwk.default_switch());
+              edge_count++;
+            }
           }
           /* TODO: If this is the clock node at the last level of the tree,
            * should drive some grid IPINs which are clocks */
+          if (clk_ntwk.is_last_level(itree, ilvl)) {
+            for (RRNodeId des_node : find_clock_track2ipin_node(
+                   grids, rr_graph_view, chan_type, chan_coord, clk_ntwk, itree, ipin)) {
+              /* Create edges */
+              VTR_ASSERT(rr_graph_view.valid_node(des_node));
+              rr_graph_builder.create_edge(src_node, des_node,
+                                           clk_ntwk.default_switch());
+              edge_count++;
+            }
+          }
         }
       }
     }
