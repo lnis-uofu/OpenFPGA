@@ -125,7 +125,8 @@ std::set<e_side> find_physical_io_tile_located_sides(
  * which corresponds to the pin 'a2f[1]' of the 5th subtile 'io' in the physical tile
  *******************************************************************/
 int find_physical_tile_pin_index(t_physical_tile_type_ptr physical_tile, std::string pin_name) {
-  int pin_idx = -1;
+  /* Deposit an invalid value */
+  int pin_idx = physical_tile->num_pins;
   /* precheck: return unfound pin if the tile name does not match */
   StringToken tokenizer(pin_name);
   std::vector<std::string> pin_tokens = tokenizer.split(".");

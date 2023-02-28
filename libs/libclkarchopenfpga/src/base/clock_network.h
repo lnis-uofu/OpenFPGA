@@ -104,7 +104,13 @@ class ClockNetwork {
   vtr::Point<int> spine_switch_point(
     const ClockSpineId& spine_id,
     const ClockSwitchPointId& switch_point_id) const;
+  /* Return the original list of tap pins that is in storage; useful for parsers */
   std::vector<std::string> spine_taps(const ClockSpineId& spine_id) const;
+  /* Return the list of flatten tap pins. For example: clb[0:1].clk[2:3] is flatten to
+   * { clb[0].clk[2], clb[1].clk[2], clb[0].clk[3], clb[1].clk[3] }
+   * Useful to build clock routing resource graph
+   */
+  std::vector<std::string> spine_flatten_taps(const ClockSpineId& spine_id) const;
   /* Find a spine with a given name, if not found, return an valid id, otherwise
    * return an invalid one */
   ClockSpineId find_spine(const std::string& name) const;
