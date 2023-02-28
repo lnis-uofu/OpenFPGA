@@ -12,6 +12,8 @@
 #include "openfpga_device_grid_utils.h"
 #include "openfpga_physical_tile_utils.h"
 #include "openfpga_side_manager.h"
+#include "openfpga_tokenizer.h"
+#include "openfpga_port_parser.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -123,7 +125,65 @@ std::set<e_side> find_physical_io_tile_located_sides(
  * which corresponds to the pin 'a2f[1]' of the 5th subtile 'io' in the physical tile
  *******************************************************************/
 int find_physical_tile_pin_index(t_physical_tile_type_ptr physical_tile, std::string pin_name) {
-  /* TODO: precheck: return unfound pin if subtile does not exist */
+  int pin_idx = -1;
+  /* precheck: return unfound pin if the tile name does not match */
+  StringToken tokenizer(pin_name);
+  std::vector<std::string> pin_tokens = tokenizer.split(".");
+  if (pin_tokens.size() != 2) {
+    VTR_LOG_ERROR("Invalid pin name '%s'. Expect <tile>.<port>\n", pin_name.c_str());
+    exit(1);
+  }
+  PortParser tile_parser(pin_tokens[0]);
+  BasicPort tile_info = tile_parser.port();
+  if (tile_info.get_name() != std::string(physical_tile->name)) {
+    return pin_idx;
+  }
+  if (!tile_info.is_valid()) {
+    VTR_LOG_ERROR("Invalid pin name '%s' whose subtile index is not valid, expect [0, %lu]\n", pin_name.c_str(), physical_tile->capacity - 1);
+    exit(1);
+  }
+  /* precheck: return unfound pin if the subtile index does not match */
+  if (tile_info.get_width() != 1) {
+    VTR_LOG_ERROR("Invalid pin name '%s' whose subtile index range should be 1. For example, clb[1:1]\n", pin_name.c_str());
+    exit(1);
+  }
+  if (tile_info.get_lsb() < 0 || tile_info.get_msb() > physical_tile->capacity - 1) {
+    VTR_LOG_ERROR("Invalid pin name '%s' whose subtile index is out of range, expect [0, %lu]\n", pin_name.c_str(), physical_tile->capacity - 1);
+    exit(1);
+  }
+  /* precheck: return unfound pin if the pin index does not match */
+  PortParser pin_parser(pin_tokens[1]);
+  BasicPort pin_info = pin_parser.port();
+  /* precheck: return unfound pin if the subtile index does not match */
+  if (pin_info.get_width() != 1) {
+    VTR_LOG_ERROR("Invalid pin name '%s' whose pin index range should be 1. For example, clb[1:1].I[2:2]\n", pin_name.c_str());
+    exit(1);
+  }
+
+  /* Spot the subtile by using the index */
+  for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
+    if (!sub_tile.capacity.is_in_range(tile_info.get_lsb())) {
+      continue;
+    }
+    for (const t_physical_tile_port& sub_tile_port : sub_tile.ports) {
+      if (std::string(sub_tile_port.name) != pin_info.get_name()) {
+        continue;
+      }
+      if (!pin_info.is_valid()) {
+        VTR_LOG_ERROR("Invalid pin name '%s' whose pin index is not valid, expect [0, %lu]\n", pin_name.c_str(), sub_tile_port.num_pins - 1);
+        exit(1);
+      }
+      if (pin_info.get_lsb() < 0 || pin_info.get_msb() > sub_tile_port.num_pins - 1) {
+        VTR_LOG_ERROR("Invalid pin name '%s' whose pin index is out of range, expect [0, %lu]\n", pin_name.c_str(), sub_tile_port.num_pins - 1);
+        exit(1);
+      }
+      /* Reach here, we get the port we want, return the accumulated index */
+      size_t accumulated_pin_idx = sub_tile_port.absolute_first_pin_index + sub_tile.num_phy_pins * (tile_info.get_lsb() - sub_tile.capacity.low) + pin_info.get_lsb();
+      return accumulated_pin_idx;
+    }
+  }
+
+  return pin_idx;
 }
 
 
