@@ -105,12 +105,13 @@ class ClockNetwork {
     const ClockSpineId& spine_id,
     const ClockSwitchPointId& switch_point_id) const;
   /* Return the original list of tap pins that is in storage; useful for parsers */
-  std::vector<std::string> spine_taps(const ClockSpineId& spine_id) const;
-  /* Return the list of flatten tap pins. For example: clb[0:1].clk[2:3] is flatten to
-   * { clb[0].clk[2], clb[1].clk[2], clb[0].clk[3], clb[1].clk[3] }
+  std::vector<std::string> tree_taps(const ClockTreeId& tree_id) const;
+  /* Return the list of flatten tap pins. For example: clb[0:1].clk[2:2] is flatten to
+   * { clb[0].clk[2], clb[1].clk[2] }
    * Useful to build clock routing resource graph
+   * Note that the clk_pin_id limits only 1 clock to be accessed
    */
-  std::vector<std::string> spine_flatten_taps(const ClockSpineId& spine_id) const;
+  std::vector<std::string> tree_flatten_taps(const ClockTreeId& tree_id, const ClockTreePinId& clk_pin_id) const;
   /* Find a spine with a given name, if not found, return an valid id, otherwise
    * return an invalid one */
   ClockSpineId find_spine(const std::string& name) const;
@@ -153,7 +154,7 @@ class ClockNetwork {
   void add_spine_switch_point(const ClockSpineId& spine_id,
                               const ClockSpineId& drive_spine_id,
                               const vtr::Point<int>& coord);
-  void add_spine_tap(const ClockSpineId& spine_id, const std::string& pin_name);
+  void add_tree_tap(const ClockTreeId& tree_id, const std::string& pin_name);
   /* Build internal links between clock tree, spines etc. This is also an
    * validator to verify the correctness of the clock network. Must run before
    * using the data! */
@@ -202,6 +203,7 @@ class ClockNetwork {
   vtr::vector<ClockTreeId, size_t> tree_widths_;
   vtr::vector<ClockTreeId, size_t> tree_depths_;
   vtr::vector<ClockTreeId, std::vector<ClockSpineId>> tree_top_spines_;
+  vtr::vector<ClockTreeId, std::vector<std::string>> tree_taps_;
 
   /* Basic information of each spine */
   vtr::vector<ClockSpineId, ClockSpineId> spine_ids_;
@@ -209,7 +211,6 @@ class ClockNetwork {
   vtr::vector<ClockSpineId, size_t> spine_levels_;
   vtr::vector<ClockSpineId, vtr::Point<int>> spine_start_points_;
   vtr::vector<ClockSpineId, vtr::Point<int>> spine_end_points_;
-  vtr::vector<ClockSpineId, std::vector<std::string>> spine_taps_;
   vtr::vector<ClockSpineId, std::vector<ClockSpineId>> spine_switch_points_;
   vtr::vector<ClockSpineId, std::vector<vtr::Point<int>>> spine_switch_coords_;
   vtr::vector<ClockSpineId, ClockSpineId> spine_parents_;

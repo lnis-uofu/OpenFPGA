@@ -363,7 +363,7 @@ void try_find_and_add_clock_track2ipin_node(std::vector<RRNodeId>& des_nodes,
                                             const ClockTreeId& clk_tree,
                                             const ClockTreePinId& clk_pin) {
   t_physical_tile_type_ptr grid_type = grids[grid_coord.x()][grid_coord.y()].type;
-  for (std::string tap_pin_name : clk_ntwk.spine_flatten_taps(clk_tree, clk_pin)) {
+  for (std::string tap_pin_name : clk_ntwk.tree_flatten_taps(clk_tree, clk_pin)) {
     /* tap pin name could be 'io[5:5].a2f[0]' */
     int grid_pin_idx = find_physical_tile_pin_index(grid_type, tap_pin_name);
     if (grid_pin_idx == grid_type->num_pins) {

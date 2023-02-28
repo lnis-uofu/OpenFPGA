@@ -232,15 +232,15 @@ vtr::Point<int> ClockNetwork::spine_switch_point(
   return spine_switch_coords_[spine_id][size_t(switch_point_id)];
 }
 
-std::vector<std::string> ClockNetwork::spine_taps(const ClockSpineId& spine_id) const {
-  VTR_ASSERT(valid_spine_id(spine_id));
-  return spine_taps_[spine_id];
+std::vector<std::string> ClockNetwork::tree_taps(const ClockTreeId& tree_id) const {
+  VTR_ASSERT(valid_tree_id(tree_id));
+  return tree_taps_[tree_id];
 }
 
-std::vector<std::string> ClockNetwork::spine_flatten_taps(const ClockSpineId& spine_id) const {
-  VTR_ASSERT(valid_spine_id(spine_id));
+std::vector<std::string> ClockNetwork::tree_flatten_taps(const ClockTreeId& tree_id, const ClockTreePinId& clk_pin_id) const {
+  VTR_ASSERT(valid_tree_id(tree_id));
   std::vector<std::string> flatten_taps;
-  for (const std::string& tap_name : spine_taps_[spine_id]) {
+  for (const std::string& tap_name : tree_taps_[tree_id]) {
     StringToken tokenizer(tap_name);
     std::vector<std::string> pin_tokens = tokenizer.split(".");
     if (pin_tokens.size() != 2) {
@@ -262,6 +262,9 @@ std::vector<std::string> ClockNetwork::spine_flatten_taps(const ClockSpineId& sp
     for (size_t& tile_idx : tile_info.pins()) {
       std::string flatten_tile_str = tile_info.get_name() + "[" + std::to_string(tile_idx) + "]";
       for (size_t& pin_idx : pin_info.pins()) {
+        if (pin_idx != size_t(clk_pin_id)) {
+          continue;
+        }
         std::string flatten_pin_str = pin_info.get_name() + "[" + std::to_string(pin_idx) + "]";
         flatten_taps.push_back(flatten_tile_str + "." + flatten_pin_str);
       }
@@ -307,6 +310,7 @@ void ClockNetwork::reserve_trees(const size_t& num_trees) {
   tree_names_.reserve(num_trees);
   tree_widths_.reserve(num_trees);
   tree_top_spines_.reserve(num_trees);
+  tree_taps_.reserve(num_trees);
 }
 
 void ClockNetwork::set_default_segment(const RRSegmentId& seg_id) {
@@ -333,6 +337,7 @@ ClockTreeId ClockNetwork::create_tree(const std::string& name, size_t width) {
   tree_names_.push_back(name);
   tree_widths_.push_back(width);
   tree_depths_.emplace_back();
+  tree_taps_.emplace_back();
   tree_top_spines_.emplace_back();
 
   /* Register to fast look-up */
@@ -372,7 +377,6 @@ ClockSpineId ClockNetwork::create_spine(const std::string& name) {
   spine_parents_.emplace_back();
   spine_children_.emplace_back();
   spine_parent_trees_.emplace_back();
-  spine_taps_.emplace_back();
 
   /* Register to the lookup */
   VTR_ASSERT(valid_spine_id(spine_id));
@@ -429,9 +433,9 @@ void ClockNetwork::add_spine_switch_point(const ClockSpineId& spine_id,
   spine_children_[spine_id].push_back(drive_spine_id);
 }
 
-void ClockNetwork::add_spine_tap(const ClockSpineId& spine_id, const std::string& pin_name) {
-  VTR_ASSERT(valid_spine_id(spine_id));
-  spine_taps_[spine_id].push_back(pin_name);
+void ClockNetwork::add_tree_tap(const ClockTreeId& tree_id, const std::string& pin_name) {
+  VTR_ASSERT(valid_tree_id(tree_id));
+  tree_taps_[tree_id].push_back(pin_name);
 }
 
 bool ClockNetwork::link() {

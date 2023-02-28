@@ -27,19 +27,36 @@ namespace openfpga {  // Begin namespace openfpga
 /********************************************************************
  * Parse XML codes of a <tap> to an object of ClockNetwork
  *******************************************************************/
-static void read_xml_clock_spine_tap(
-  pugi::xml_node& xml_switch_point, const pugiutil::loc_data& loc_data,
-  ClockNetwork& clk_ntwk, const ClockSpineId& spine_id) {
-  if (!clk_ntwk.valid_spine_id(spine_id)) {
-    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_switch_point),
-                   "Invalid id of a clock spine!\n");
+static void read_xml_clock_tree_tap(
+  pugi::xml_node& xml_tap, const pugiutil::loc_data& loc_data,
+  ClockNetwork& clk_ntwk, const ClockTreeId& tree_id) {
+  if (!clk_ntwk.valid_tree_id(tree_id)) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_tap),
+                   "Invalid id of a clock tree!\n");
   }
 
   std::string tile_pin_name =
-    get_attribute(xml_switch_point, XML_CLOCK_SPINE_TAP_ATTRIBUTE_TILE_PIN,
+    get_attribute(xml_tap, XML_CLOCK_TREE_TAP_ATTRIBUTE_TILE_PIN,
                   loc_data)
       .as_string();
-  clk_ntwk.add_spine_tap(spine_id, tile_pin_name);
+  clk_ntwk.add_tree_tap(tree_id, tile_pin_name);
+}
+
+
+static void read_xml_clock_tree_taps(
+  pugi::xml_node& xml_taps, const pugiutil::loc_data& loc_data,
+  ClockNetwork& clk_ntwk, const ClockTreeId& tree_id) {
+  for (pugi::xml_node xml_tap : xml_taps.children()) {
+    /* Error out if the XML child has an invalid name! */
+    if (xml_tap.name() ==
+        std::string(XML_CLOCK_TREE_TAP_NODE_NAME)) {
+      read_xml_clock_tree_tap(xml_tap, loc_data, clk_ntwk,
+                                        tree_id);
+    } else {
+      bad_tag(xml_taps, loc_data, xml_tap,
+              {XML_CLOCK_TREE_TAP_NODE_NAME});
+    }
+  }
 }
 
 /********************************************************************
@@ -131,12 +148,9 @@ static void read_xml_clock_spine(pugi::xml_node& xml_spine,
         std::string(XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME)) {
       read_xml_clock_spine_switch_point(xml_switch_point, loc_data, clk_ntwk,
                                         spine_id);
-    } else if (xml_switch_point.name() ==
-        std::string(XML_CLOCK_SPINE_TAP_NODE_NAME)) {
-      read_xml_clock_spine_tap(xml_switch_point, loc_data, clk_ntwk, spine_id);
     } else {
       bad_tag(xml_switch_point, loc_data, xml_spine,
-              {XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME, XML_CLOCK_SPINE_TAP_NODE_NAME});
+              {XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME});
     }
   }
 }
@@ -164,10 +178,14 @@ static void read_xml_clock_tree(pugi::xml_node& xml_clk_tree,
 
   for (pugi::xml_node xml_spine : xml_clk_tree.children()) {
     /* Error out if the XML child has an invalid name! */
-    if (xml_spine.name() != std::string(XML_CLOCK_SPINE_NODE_NAME)) {
-      bad_tag(xml_spine, loc_data, xml_clk_tree, {XML_CLOCK_SPINE_NODE_NAME});
+    if (xml_spine.name() == std::string(XML_CLOCK_SPINE_NODE_NAME)) {
+      read_xml_clock_spine(xml_spine, loc_data, clk_ntwk, tree_id);
+    } else if (xml_spine.name() ==
+        std::string(XML_CLOCK_TREE_TAPS_NODE_NAME)) {
+      read_xml_clock_tree_taps(xml_spine, loc_data, clk_ntwk, tree_id);
+    } else {
+      bad_tag(xml_spine, loc_data, xml_clk_tree, {XML_CLOCK_SPINE_NODE_NAME, XML_CLOCK_TREE_TAPS_NODE_NAME});
     }
-    read_xml_clock_spine(xml_spine, loc_data, clk_ntwk, tree_id);
   }
 }
 

@@ -23,18 +23,23 @@
 
 namespace openfpga {  // Begin namespace openfpga
 
-static int write_xml_clock_spine_taps(
-  std::fstream& fp, const ClockNetwork& clk_ntwk, const ClockSpineId& spine_id) {
-  for (const std::string& tile_pin_name : clk_ntwk.spine_taps(spine_id)) {
-    openfpga::write_tab_to_file(fp, 3);
-    fp << "<" << XML_CLOCK_SPINE_TAP_NODE_NAME << "";
+static int write_xml_clock_tree_taps(
+  std::fstream& fp, const ClockNetwork& clk_ntwk, const ClockTreeId& tree_id) {
+  openfpga::write_tab_to_file(fp, 3);
+  fp << "<" << XML_CLOCK_TREE_TAPS_NODE_NAME << ">\n";
+  for (const std::string& tile_pin_name : clk_ntwk.tree_taps(tree_id)) {
+    openfpga::write_tab_to_file(fp, 4);
+    fp << "<" << XML_CLOCK_TREE_TAP_NODE_NAME << "";
 
     write_xml_attribute(
-      fp, XML_CLOCK_SPINE_TAP_ATTRIBUTE_TILE_PIN,
+      fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_TILE_PIN,
       tile_pin_name.c_str());
     fp << "/>"
        << "\n";
   }
+
+  openfpga::write_tab_to_file(fp, 3);
+  fp << "</" << XML_CLOCK_TREE_TAPS_NODE_NAME << ">\n";
 
   return 0;
 }
@@ -82,7 +87,6 @@ static int write_xml_clock_spine(std::fstream& fp, const ClockNetwork& clk_ntwk,
        clk_ntwk.spine_switch_points(spine_id)) {
     write_xml_clock_spine_switch_point(fp, clk_ntwk, spine_id, switch_point_id);
   }
-  write_xml_clock_spine_taps(fp, clk_ntwk, spine_id);
 
   openfpga::write_tab_to_file(fp, 2);
   fp << "</" << XML_CLOCK_SPINE_NODE_NAME << "";
@@ -124,6 +128,8 @@ static int write_xml_clock_tree(std::fstream& fp, const ClockNetwork& clk_ntwk,
   for (const ClockSpineId& spine_id : clk_ntwk.spines(tree_id)) {
     write_xml_clock_spine(fp, clk_ntwk, spine_id);
   }
+
+  write_xml_clock_tree_taps(fp, clk_ntwk, tree_id);
 
   openfpga::write_tab_to_file(fp, 1);
   fp << "</" << XML_CLOCK_TREE_NODE_NAME << "";
