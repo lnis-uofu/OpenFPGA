@@ -12,9 +12,29 @@
       <switch_point tap="rib_lvl1_lower_left" x="2" y="1"/> 
       <switch_point tap="rib_lvl1_lower_right" x="2" y="1"/> 
     </spine> 
-    <spine name="rib_lvl1_upper_left" start_x="2" start_y="3" end_x="1" end_y="3"/> 
-    <spine name="rib_lvl1_upper_right" start_x="2" start_y="3" end_x="3" end_y="3"/> 
-    <spine name="rib_lvl1_lower_left" start_x="2" start_y="1" end_x="1" end_y="1"/> 
-    <spine name="rib_lvl1_lower_right" start_x="2" start_y="1" end_x="3" end_y="1"/> 
+    <spine name="rib_lvl1_upper_left" start_x="2" start_y="3" end_x="1" end_y="3"> 
+      <tap tile_pin="io[0:23].clk[0:7]"/>
+      <tap tile_pin="clb[0:0].clk[0:7]"/>
+      <tap tile_pin="dsp[0:0].clk[0:7]"/>
+      <tap tile_pin="bram[0:0].clk[0:7]"/>
+    </spine>
+    <spine name="rib_lvl1_upper_right" start_x="2" start_y="3" end_x="3" end_y="3"> 
+      <tap tile_pin="io[0:23].clk[0:7]"/>
+      <tap tile_pin="clb[0:0].clk[0:7]"/>
+      <tap tile_pin="dsp[0:0].clk[0:7]"/>
+      <tap tile_pin="bram[0:0].clk[0:7]"/>
+    </spine>
+    <spine name="rib_lvl1_lower_left" start_x="2" start_y="1" end_x="1" end_y="1"> 
+      <tap tile_pin="io[0:23].clk[0:7]"/>
+      <tap tile_pin="clb[0:0].clk[0:7]"/>
+      <tap tile_pin="dsp[0:0].clk[0:7]"/>
+      <tap tile_pin="bram[0:0].clk[0:7]"/>
+    </spine>
+    <spine name="rib_lvl1_lower_right" start_x="2" start_y="1" end_x="3" end_y="1"> 
+      <tap tile_pin="io[0:23].clk[0:7]"/>
+      <tap tile_pin="clb[0:0].clk[0:7]"/>
+      <tap tile_pin="dsp[0:0].clk[0:7]"/>
+      <tap tile_pin="bram[0:0].clk[0:7]"/>
+    </spine>
   </clock_network>  
 </clock_networks> 
