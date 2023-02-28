@@ -363,7 +363,7 @@ void try_find_and_add_clock_track2ipin_node(std::vector<RRNodeId>& des_nodes,
                                             const ClockTreeId& clk_tree,
                                             const ClockTreePinId& clk_pin) {
   t_physical_tile_type_ptr grid_type = grids[grid_coord.x()][grid_coord.y()].type;
-  for (std::string tap_pin_name : clk_ntwk.tap_pin_names(clk_tree, clk_pin)) {
+  for (std::string tap_pin_name : clk_ntwk.spine_flatten_taps(clk_tree, clk_pin)) {
     /* tap pin name could be 'io[5:5].a2f[0]' */
     int grid_pin_idx = find_physical_tile_pin_index(grid_type, tap_pin_name);
     if (grid_pin_idx == grid_type->num_pins) {
@@ -415,21 +415,20 @@ static std::vector<RRNodeId> find_clock_track2ipin_node(const DeviceGrid& grids,
   if (chan_type == CHANX) {
     /* Get the clock IPINs at the BOTTOM side of adjacent grids [x][y+1] */
     vtr::Point<size_t> bot_grid_coord(chan_coord.x(), chan_coord.y() + 1);
-    try_find_and_add_clock_track2ipin_node(des_nodes, rr_graph_view, bot_grid_coord, BOTTOM, clk_ntwk, clk_tree, clk_pin);
-    }
+    try_find_and_add_clock_track2ipin_node(des_nodes, grids, rr_graph_view, bot_grid_coord, BOTTOM, clk_ntwk, clk_tree, clk_pin);
+
     /* Get the clock IPINs at the TOP side of adjacent grids [x][y] */
     vtr::Point<size_t> top_grid_coord(chan_coord.x(), chan_coord.y());
-    try_find_and_add_clock_track2ipin_node(des_nodes, rr_graph_view, top_grid_coord, TOP, clk_ntwk, clk_tree, clk_pin);
-
+    try_find_and_add_clock_track2ipin_node(des_nodes, grids, rr_graph_view, top_grid_coord, TOP, clk_ntwk, clk_tree, clk_pin);
   } else {
     VTR_ASSERT(chan_type == CHANY);
     /* Get the clock IPINs at the LEFT side of adjacent grids [x][y+1] */
     vtr::Point<size_t> left_grid_coord(chan_coord.x() + 1, chan_coord.y());
-    try_find_and_add_clock_track2ipin_node(des_nodes, rr_graph_view, left_grid_coord, LEFT, clk_ntwk, clk_tree, clk_pin);
+    try_find_and_add_clock_track2ipin_node(des_nodes, grids, rr_graph_view, left_grid_coord, LEFT, clk_ntwk, clk_tree, clk_pin);
 
     /* Get the clock IPINs at the RIGHT side of adjacent grids [x][y] */
     vtr::Point<size_t> right_grid_coord(chan_coord.x(), chan_coord.y());
-    try_find_and_add_clock_track2ipin_node(des_nodes, rr_graph_view, right_grid_coord, RIGHT, clk_ntwk, clk_tree, clk_pin);
+    try_find_and_add_clock_track2ipin_node(des_nodes, grids, rr_graph_view, right_grid_coord, RIGHT, clk_ntwk, clk_tree, clk_pin);
   }
 
   return des_nodes;
@@ -527,7 +526,7 @@ static void add_rr_graph_clock_edges(RRGraphBuilder& rr_graph_builder,
         continue;
       }
       add_rr_graph_block_clock_edges(rr_graph_builder, num_edges_to_create,
-                                     clk_rr_lookup, rr_graph_view, clk_ntwk,
+                                     clk_rr_lookup, rr_graph_view, grids, clk_ntwk,
                                      chanx_coord, CHANX);
     }
   }
@@ -543,7 +542,7 @@ static void add_rr_graph_clock_edges(RRGraphBuilder& rr_graph_builder,
         continue;
       }
       add_rr_graph_block_clock_edges(rr_graph_builder, num_edges_to_create,
-                                     clk_rr_lookup, rr_graph_view, clk_ntwk,
+                                     clk_rr_lookup, rr_graph_view, grids, clk_ntwk,
                                      chany_coord, CHANY);
     }
   }

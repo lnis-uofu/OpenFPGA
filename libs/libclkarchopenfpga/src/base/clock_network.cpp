@@ -244,7 +244,7 @@ std::vector<std::string> ClockNetwork::spine_flatten_taps(const ClockSpineId& sp
     StringToken tokenizer(tap_name);
     std::vector<std::string> pin_tokens = tokenizer.split(".");
     if (pin_tokens.size() != 2) {
-      VTR_LOG_ERROR("Invalid pin name '%s'. Expect <tile>.<port>\n", pin_name.c_str());
+      VTR_LOG_ERROR("Invalid pin name '%s'. Expect <tile>.<port>\n", tap_name.c_str());
       exit(1);
     }
     PortParser tile_parser(pin_tokens[0]);
@@ -252,11 +252,11 @@ std::vector<std::string> ClockNetwork::spine_flatten_taps(const ClockSpineId& sp
     PortParser pin_parser(pin_tokens[1]);
     BasicPort pin_info = pin_parser.port();
     if (!tile_info.is_valid()) {
-      VTR_LOG_ERROR("Invalid pin name '%s' whose subtile index is not valid\n", pin_name.c_str());
+      VTR_LOG_ERROR("Invalid pin name '%s' whose subtile index is not valid\n", tap_name.c_str());
       exit(1);
     }
     if (!pin_info.is_valid()) {
-      VTR_LOG_ERROR("Invalid pin name '%s' whose pin index is not valid\n", pin_name.c_str());
+      VTR_LOG_ERROR("Invalid pin name '%s' whose pin index is not valid\n", tap_name.c_str());
       exit(1);
     }
     for (size_t& tile_idx : tile_info.pins()) {
@@ -431,7 +431,7 @@ void ClockNetwork::add_spine_switch_point(const ClockSpineId& spine_id,
 
 void ClockNetwork::add_spine_tap(const ClockSpineId& spine_id, const std::string& pin_name) {
   VTR_ASSERT(valid_spine_id(spine_id));
-  spine_taps_.push_back(pin_name);
+  spine_taps_[spine_id].push_back(pin_name);
 }
 
 bool ClockNetwork::link() {
