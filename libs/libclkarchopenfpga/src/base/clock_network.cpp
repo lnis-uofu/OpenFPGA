@@ -2,10 +2,10 @@
 
 #include <algorithm>
 
+#include "openfpga_port_parser.h"
+#include "openfpga_tokenizer.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
-#include "openfpga_tokenizer.h"
-#include "openfpga_port_parser.h"
 
 namespace openfpga {  // Begin namespace openfpga
 
@@ -232,19 +232,22 @@ vtr::Point<int> ClockNetwork::spine_switch_point(
   return spine_switch_coords_[spine_id][size_t(switch_point_id)];
 }
 
-std::vector<std::string> ClockNetwork::tree_taps(const ClockTreeId& tree_id) const {
+std::vector<std::string> ClockNetwork::tree_taps(
+  const ClockTreeId& tree_id) const {
   VTR_ASSERT(valid_tree_id(tree_id));
   return tree_taps_[tree_id];
 }
 
-std::vector<std::string> ClockNetwork::tree_flatten_taps(const ClockTreeId& tree_id, const ClockTreePinId& clk_pin_id) const {
+std::vector<std::string> ClockNetwork::tree_flatten_taps(
+  const ClockTreeId& tree_id, const ClockTreePinId& clk_pin_id) const {
   VTR_ASSERT(valid_tree_id(tree_id));
   std::vector<std::string> flatten_taps;
   for (const std::string& tap_name : tree_taps_[tree_id]) {
     StringToken tokenizer(tap_name);
     std::vector<std::string> pin_tokens = tokenizer.split(".");
     if (pin_tokens.size() != 2) {
-      VTR_LOG_ERROR("Invalid pin name '%s'. Expect <tile>.<port>\n", tap_name.c_str());
+      VTR_LOG_ERROR("Invalid pin name '%s'. Expect <tile>.<port>\n",
+                    tap_name.c_str());
       exit(1);
     }
     PortParser tile_parser(pin_tokens[0]);
@@ -252,23 +255,27 @@ std::vector<std::string> ClockNetwork::tree_flatten_taps(const ClockTreeId& tree
     PortParser pin_parser(pin_tokens[1]);
     BasicPort pin_info = pin_parser.port();
     if (!tile_info.is_valid()) {
-      VTR_LOG_ERROR("Invalid pin name '%s' whose subtile index is not valid\n", tap_name.c_str());
+      VTR_LOG_ERROR("Invalid pin name '%s' whose subtile index is not valid\n",
+                    tap_name.c_str());
       exit(1);
     }
     if (!pin_info.is_valid()) {
-      VTR_LOG_ERROR("Invalid pin name '%s' whose pin index is not valid\n", tap_name.c_str());
+      VTR_LOG_ERROR("Invalid pin name '%s' whose pin index is not valid\n",
+                    tap_name.c_str());
       exit(1);
     }
     for (size_t& tile_idx : tile_info.pins()) {
-      std::string flatten_tile_str = tile_info.get_name() + "[" + std::to_string(tile_idx) + "]";
+      std::string flatten_tile_str =
+        tile_info.get_name() + "[" + std::to_string(tile_idx) + "]";
       for (size_t& pin_idx : pin_info.pins()) {
         if (pin_idx != size_t(clk_pin_id)) {
           continue;
         }
-        std::string flatten_pin_str = pin_info.get_name() + "[" + std::to_string(pin_idx) + "]";
+        std::string flatten_pin_str =
+          pin_info.get_name() + "[" + std::to_string(pin_idx) + "]";
         flatten_taps.push_back(flatten_tile_str + "." + flatten_pin_str);
       }
-    } 
+    }
   }
   return flatten_taps;
 }
@@ -433,7 +440,8 @@ void ClockNetwork::add_spine_switch_point(const ClockSpineId& spine_id,
   spine_children_[spine_id].push_back(drive_spine_id);
 }
 
-void ClockNetwork::add_tree_tap(const ClockTreeId& tree_id, const std::string& pin_name) {
+void ClockNetwork::add_tree_tap(const ClockTreeId& tree_id,
+                                const std::string& pin_name) {
   VTR_ASSERT(valid_tree_id(tree_id));
   tree_taps_[tree_id].push_back(pin_name);
 }

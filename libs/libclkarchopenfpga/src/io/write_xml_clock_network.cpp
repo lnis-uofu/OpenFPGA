@@ -23,17 +23,17 @@
 
 namespace openfpga {  // Begin namespace openfpga
 
-static int write_xml_clock_tree_taps(
-  std::fstream& fp, const ClockNetwork& clk_ntwk, const ClockTreeId& tree_id) {
+static int write_xml_clock_tree_taps(std::fstream& fp,
+                                     const ClockNetwork& clk_ntwk,
+                                     const ClockTreeId& tree_id) {
   openfpga::write_tab_to_file(fp, 3);
   fp << "<" << XML_CLOCK_TREE_TAPS_NODE_NAME << ">\n";
   for (const std::string& tile_pin_name : clk_ntwk.tree_taps(tree_id)) {
     openfpga::write_tab_to_file(fp, 4);
     fp << "<" << XML_CLOCK_TREE_TAP_NODE_NAME << "";
 
-    write_xml_attribute(
-      fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_TILE_PIN,
-      tile_pin_name.c_str());
+    write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_TILE_PIN,
+                        tile_pin_name.c_str());
     fp << "/>"
        << "\n";
   }
