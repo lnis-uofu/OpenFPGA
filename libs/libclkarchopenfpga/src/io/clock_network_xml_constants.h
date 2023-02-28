@@ -21,5 +21,7 @@ constexpr const char* XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME = "switch_point";
 constexpr const char* XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_TAP = "tap";
 constexpr const char* XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_X = "x";
 constexpr const char* XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_Y = "y";
+constexpr const char* XML_CLOCK_SPINE_TAP_NODE_NAME = "tap";
+constexpr const char* XML_CLOCK_SPINE_TAP_ATTRIBUTE_TILE_PIN = "tile_pin";
 
 #endif

@@ -25,6 +25,24 @@
 namespace openfpga {  // Begin namespace openfpga
 
 /********************************************************************
+ * Parse XML codes of a <tap> to an object of ClockNetwork
+ *******************************************************************/
+static void read_xml_clock_spine_tap(
+  pugi::xml_node& xml_switch_point, const pugiutil::loc_data& loc_data,
+  ClockNetwork& clk_ntwk, const ClockSpineId& spine_id) {
+  if (!clk_ntwk.valid_spine_id(spine_id)) {
+    archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_switch_point),
+                   "Invalid id of a clock spine!\n");
+  }
+
+  std::string tile_pin_name =
+    get_attribute(xml_switch_point, XML_CLOCK_SPINE_TAP_ATTRIBUTE_TILE_PIN,
+                  loc_data)
+      .as_string();
+  clk_ntwk.add_spine_tap(spine_id, tile_pin_name);
+}
+
+/********************************************************************
  * Parse XML codes of a <switch_point> to an object of ClockNetwork
  *******************************************************************/
 static void read_xml_clock_spine_switch_point(
@@ -109,13 +127,17 @@ static void read_xml_clock_spine(pugi::xml_node& xml_spine,
 
   for (pugi::xml_node xml_switch_point : xml_spine.children()) {
     /* Error out if the XML child has an invalid name! */
-    if (xml_switch_point.name() !=
+    if (xml_switch_point.name() ==
         std::string(XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME)) {
+      read_xml_clock_spine_switch_point(xml_switch_point, loc_data, clk_ntwk,
+                                        spine_id);
+    } else if (xml_switch_point.name() ==
+        std::string(XML_CLOCK_SPINE_TAP_NODE_NAME)) {
+      read_xml_clock_spine_tap(xml_switch_point, loc_data, clk_ntwk, spine_id);
+    } else {
       bad_tag(xml_switch_point, loc_data, xml_spine,
-              {XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME});
+              {XML_CLOCK_SPINE_SWITCH_POINT_NODE_NAME, XML_CLOCK_SPINE_TAP_NODE_NAME});
     }
-    read_xml_clock_spine_switch_point(xml_switch_point, loc_data, clk_ntwk,
-                                      spine_id);
   }
 }
 

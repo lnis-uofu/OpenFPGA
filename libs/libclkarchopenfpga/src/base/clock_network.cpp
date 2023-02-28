@@ -230,6 +230,11 @@ vtr::Point<int> ClockNetwork::spine_switch_point(
   return spine_switch_coords_[spine_id][size_t(switch_point_id)];
 }
 
+std::vector<std::string> ClockNetwork::spine_taps(const ClockSpineId& spine_id) const {
+  VTR_ASSERT(valid_spine_id(spine_id));
+  return spine_taps_[spine_id];
+}
+
 ClockSpineId ClockNetwork::find_spine(const std::string& name) const {
   auto result = spine_name2id_map_.find(name);
   if (result == spine_name2id_map_.end()) {
@@ -332,6 +337,7 @@ ClockSpineId ClockNetwork::create_spine(const std::string& name) {
   spine_parents_.emplace_back();
   spine_children_.emplace_back();
   spine_parent_trees_.emplace_back();
+  spine_taps_.emplace_back();
 
   /* Register to the lookup */
   VTR_ASSERT(valid_spine_id(spine_id));
@@ -386,6 +392,11 @@ void ClockNetwork::add_spine_switch_point(const ClockSpineId& spine_id,
   }
   spine_parents_[drive_spine_id] = spine_id;
   spine_children_[spine_id].push_back(drive_spine_id);
+}
+
+void ClockNetwork::add_spine_tap(const ClockSpineId& spine_id, const std::string& pin_name) {
+  VTR_ASSERT(valid_spine_id(spine_id));
+  spine_taps_.push_back(pin_name);
 }
 
 bool ClockNetwork::link() {
