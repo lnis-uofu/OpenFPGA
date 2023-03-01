@@ -157,8 +157,7 @@ int find_physical_tile_pin_index(t_physical_tile_type_ptr physical_tile,
       pin_name.c_str());
     exit(1);
   }
-  if (tile_info.get_lsb() < 0 ||
-      tile_info.get_msb() > physical_tile->capacity - 1) {
+  if (tile_info.get_msb() > size_t(physical_tile->capacity) - 1) {
     VTR_LOG_ERROR(
       "Invalid pin name '%s' whose subtile index is out of range, expect [0, "
       "%lu]\n",
@@ -193,8 +192,7 @@ int find_physical_tile_pin_index(t_physical_tile_type_ptr physical_tile,
           pin_name.c_str(), sub_tile_port.num_pins - 1);
         exit(1);
       }
-      if (pin_info.get_lsb() < 0 ||
-          pin_info.get_msb() > sub_tile_port.num_pins - 1) {
+      if (pin_info.get_msb() > size_t(sub_tile_port.num_pins) - 1) {
         VTR_LOG_ERROR(
           "Invalid pin name '%s' whose pin index is out of range, expect [0, "
           "%lu]\n",
