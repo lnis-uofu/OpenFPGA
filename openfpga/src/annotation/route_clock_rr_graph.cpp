@@ -19,12 +19,16 @@ namespace openfpga {
 static int route_clock_tree_rr_graph(
   VprRoutingAnnotation& vpr_routing_annotation, const RRGraphView& rr_graph,
   const RRClockSpatialLookup& clk_rr_lookup, const ClockNetwork& clk_ntwk,
-  const ClockTreeId clk_tree) {
+  const ClockTreeId clk_tree, const bool& verbose) {
   for (auto ispine : clk_ntwk.spines(clk_tree)) {
+    VTR_LOGV(verbose, "Routing spine '%s'...\n",
+             clk_ntwk.spine_name(ispine).c_str());
     for (auto ipin : clk_ntwk.pins(clk_tree)) {
       /* Route the spine from starting point to ending point */
       std::vector<vtr::Point<int>> spine_coords =
         clk_ntwk.spine_coordinates(ispine);
+      VTR_LOGV(verbose, "Routing backbone of spine '%s'...\n",
+               clk_ntwk.spine_name(ispine).c_str());
       for (size_t icoord = 0; icoord < spine_coords.size() - 1; ++icoord) {
         vtr::Point<int> src_coord = spine_coords[icoord];
         vtr::Point<int> des_coord = spine_coords[icoord + 1];
@@ -44,6 +48,8 @@ static int route_clock_tree_rr_graph(
                                                      src_node);
       }
       /* Route the spine-to-spine switching points */
+      VTR_LOGV(verbose, "Routing switch points of spine '%s'...\n",
+               clk_ntwk.spine_name(ispine).c_str());
       for (ClockSwitchPointId switch_point_id :
            clk_ntwk.spine_switch_points(ispine)) {
         vtr::Point<int> src_coord =
@@ -68,6 +74,8 @@ static int route_clock_tree_rr_graph(
       }
       /* Route the spine-to-IPIN connections (only for the last level) */
       if (clk_ntwk.is_last_level(ispine)) {
+        VTR_LOGV(verbose, "Routing clock taps of spine '%s'...\n",
+                 clk_ntwk.spine_name(ispine).c_str());
         /* Connect to any fan-out node which is IPIN */
         for (size_t icoord = 0; icoord < spine_coords.size(); ++icoord) {
           vtr::Point<int> src_coord = spine_coords[icoord];
@@ -123,12 +131,15 @@ int route_clock_rr_graph(VprRoutingAnnotation& vpr_routing_annotation,
 
   /* Route spines one by one */
   for (auto itree : clk_ntwk.trees()) {
+    VTR_LOGV(verbose, "Routing clock tree '%s'...\n",
+             clk_ntwk.tree_name(itree).c_str());
     int status =
       route_clock_tree_rr_graph(vpr_routing_annotation, vpr_device_ctx.rr_graph,
-                                clk_rr_lookup, clk_ntwk, itree);
+                                clk_rr_lookup, clk_ntwk, itree, verbose);
     if (status == CMD_EXEC_FATAL_ERROR) {
       return status;
     }
+    VTR_LOGV(verbose, "Done\n");
   }
 
   /* TODO: Sanity checks */
