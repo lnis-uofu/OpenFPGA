@@ -59,6 +59,7 @@ class ClockNetwork {
                                    const ClockLevelId& level,
                                    const t_rr_type& track_type,
                                    const Direction& direction) const;
+  std::vector<ClockTreePinId> pins(const ClockTreeId& tree_id) const;
 
  public: /* Public Accessors: Basic data query */
   /* Return the number of routing tracks required by a selected clock tree at a
@@ -80,6 +81,12 @@ class ClockNetwork {
   std::string spine_name(const ClockSpineId& spine_id) const;
   vtr::Point<int> spine_start_point(const ClockSpineId& spine_id) const;
   vtr::Point<int> spine_end_point(const ClockSpineId& spine_id) const;
+  /* Return the level where the spine locates in the multi-layer clock tree
+   * structure */
+  ClockLevelId spine_level(const ClockSpineId& spine_id) const;
+  /* Return the list of coordinates that a spine will go across */
+  std::vector<vtr::Point<int>> spine_coordinates(
+    const ClockSpineId& spine_id) const;
   /* Identify the direction of a spine, depending on its starting and ending
    * points
    * - CHANX represents a horizental routing track
@@ -169,6 +176,8 @@ class ClockNetwork {
                       const ClockLevelId& lvl_id) const;
   /* Identify if the level is the last level of the given tree */
   bool is_last_level(const ClockTreeId& tree_id, const ClockLevelId& lvl) const;
+  /* Identify if the spine is at the last level of its tree */
+  bool is_last_level(const ClockSpineId& spine_id) const;
   /* Show if the tree id is a valid for data queries */
   bool valid_spine_id(const ClockSpineId& spine_id) const;
   bool valid_spine_switch_point_id(
