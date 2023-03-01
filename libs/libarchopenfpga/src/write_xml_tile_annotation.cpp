@@ -36,6 +36,14 @@ static void write_xml_tile_annotation_global_port(
   write_xml_attribute(fp, "is_clock",
                       tile_annotation.global_port_is_clock(global_port_id));
 
+  if (tile_annotation.global_port_is_clock(global_port_id) &&
+      !tile_annotation.global_port_clock_arch_tree_name(global_port_id)
+         .empty()) {
+    write_xml_attribute(
+      fp, "clock_arch_tree_name",
+      tile_annotation.global_port_clock_arch_tree_name(global_port_id).c_str());
+  }
+
   write_xml_attribute(fp, "is_set",
                       tile_annotation.global_port_is_set(global_port_id));
 
