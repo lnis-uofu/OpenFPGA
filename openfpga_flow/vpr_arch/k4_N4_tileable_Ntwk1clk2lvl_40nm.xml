@@ -67,7 +67,7 @@
           <loc side="left">clb.clk</loc>
           <loc side="top">clb.I[0:4] clb.O[0:1]</loc>
           <loc side="right">clb.I[5:9] clb.O[2:3]</loc>
-          <loc side="bottom"></loc>
+          <loc side="bottom"/>
         </pinlocations>
       </sub_tile>
     </tile>
