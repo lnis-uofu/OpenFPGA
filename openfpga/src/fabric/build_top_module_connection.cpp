@@ -1116,6 +1116,7 @@ int build_top_module_global_net_from_grid_modules(
  *******************************************************************/
 int build_top_module_global_net_from_clock_arch_tree(
   ModuleManager& module_manager, const ModuleId& top_module, const ModulePortId& top_module_port,
+  const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
   const ClockNetwork& clk_ntwk, const std::string& clk_tree_name, const RRClockSpatialLookup& rr_clock_lookup) {
   int status = CMD_EXEC_SUCCESS;
 
@@ -1133,11 +1134,13 @@ int build_top_module_global_net_from_clock_arch_tree(
   }
 
   for (ClockTreePinId pin : clk_ntwk.pins(clk_tree)) {
-    /* TODO: Find the routing resource node of the entry point */
+    for (ClockSpineId spine : clk_ntwk.tree_top_spines(clk_tree)) {
+      /* TODO: Find the routing resource node of the entry point, the rr_clock_lookup needs an API to find the ptc of a node */
   
-    /* TODO: Get the connection block module and instance at the entry point */
+      /* TODO: Get the connection block module and instance at the entry point */
   
-    /* TODO: Add the module net */
+      /* TODO: Add the module net */
+    }
   }
 
   return status;
