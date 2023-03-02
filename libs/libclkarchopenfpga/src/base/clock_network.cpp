@@ -331,6 +331,14 @@ std::vector<std::string> ClockNetwork::tree_flatten_taps(
   return flatten_taps;
 }
 
+ClockTreeId ClockNetwork::find_tree(const std::string& name) const {
+  auto result = tree_name2id_map_.find(name);
+  if (result == tree_name2id_map_.end()) {
+    return ClockTreeId::INVALID();
+  }
+  return result->second;
+}
+
 ClockSpineId ClockNetwork::find_spine(const std::string& name) const {
   auto result = spine_name2id_map_.find(name);
   if (result == spine_name2id_map_.end()) {
