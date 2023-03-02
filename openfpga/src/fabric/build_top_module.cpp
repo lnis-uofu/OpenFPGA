@@ -431,7 +431,8 @@ static void add_top_module_io_children(
 int build_top_module(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   MemoryBankShiftRegisterBanks& blwl_sr_banks,
-  const CircuitLibrary& circuit_lib,
+  const CircuitLibrary& circuit_lib, const ClockNetwork& clk_ntwk,
+  const RRClockSpatialLookup& rr_clock_lookup,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
   const TileAnnotation& tile_annotation, const RRGraphView& rr_graph,
   const DeviceRRGSB& device_rr_gsb, const TileDirect& tile_direct,
@@ -494,7 +495,8 @@ int build_top_module(
    * annotation */
   status = add_top_module_global_ports_from_grid_modules(
     module_manager, top_module, tile_annotation, vpr_device_annotation, grids,
-    grid_instance_ids);
+    rr_graph, device_rr_gsb, cb_instance_ids, grid_instance_ids, clk_ntwk,
+    rr_clock_lookup);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }

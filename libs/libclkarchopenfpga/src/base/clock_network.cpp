@@ -187,6 +187,12 @@ size_t ClockNetwork::tree_depth(const ClockTreeId& tree_id) const {
   return tree_depths_[tree_id] + 1;
 }
 
+std::vector<ClockSpineId> ClockNetwork::tree_top_spines(
+  const ClockTreeId& tree_id) const {
+  VTR_ASSERT(valid_tree_id(tree_id));
+  return tree_top_spines_[tree_id];
+}
+
 std::vector<ClockSpineId> ClockNetwork::spines(
   const ClockTreeId& tree_id) const {
   std::vector<ClockSpineId> ret;

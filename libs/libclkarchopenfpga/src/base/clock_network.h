@@ -78,6 +78,7 @@ class ClockNetwork {
   std::string tree_name(const ClockTreeId& tree_id) const;
   size_t tree_width(const ClockTreeId& tree_id) const;
   size_t tree_depth(const ClockTreeId& tree_id) const;
+  std::vector<ClockSpineId> tree_top_spines(const ClockTreeId& tree_id) const;
   std::string spine_name(const ClockSpineId& spine_id) const;
   vtr::Point<int> spine_start_point(const ClockSpineId& spine_id) const;
   vtr::Point<int> spine_end_point(const ClockSpineId& spine_id) const;
@@ -123,6 +124,9 @@ class ClockNetwork {
   /* Find a spine with a given name, if not found, return an valid id, otherwise
    * return an invalid one */
   ClockSpineId find_spine(const std::string& name) const;
+  /* Find a tree with a given name, if not found, return an valid id, otherwise
+   * return an invalid one */
+  ClockTreeId find_tree(const std::string& name) const;
   /* Check if there are clock tree */
   bool empty() const;
   bool is_valid() const;

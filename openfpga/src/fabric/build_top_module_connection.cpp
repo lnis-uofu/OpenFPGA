@@ -977,13 +977,17 @@ static int build_top_module_global_net_for_given_grid_module(
 /********************************************************************
  * Add nets between a global port and its sinks at each grid modules
  *******************************************************************/
-static 
-int build_top_module_global_net_from_grid_modules(
-  ModuleManager& module_manager, const ModuleId& top_module, const ModulePortId& top_module_port,
-  const TileAnnotation& tile_annotation, const TileGlobalPortId& tile_global_port,
+static int build_top_module_global_net_from_grid_modules(
+  ModuleManager& module_manager, const ModuleId& top_module,
+  const ModulePortId& top_module_port, const TileAnnotation& tile_annotation,
+  const TileGlobalPortId& tile_global_port,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
   const vtr::Matrix<size_t>& grid_instance_ids) {
   int status = CMD_EXEC_SUCCESS;
+
+  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates =
+    generate_perimeter_grid_coordinates(grids);
+
   for (size_t tile_info_id = 0;
        tile_info_id <
        tile_annotation.global_port_tile_names(tile_global_port).size();
@@ -1026,8 +1030,8 @@ int build_top_module_global_net_from_grid_modules(
       VTR_LOG_ERROR(
         "Coordinate (%lu, %lu) in tile annotation for tile '%s' is out of "
         "range (%lu:%lu, %lu:%lu)!",
-        range.x(), range.y(), tile_name.c_str(), start_coord.x(),
-        end_coord.x(), start_coord.y(), end_coord.y());
+        range.x(), range.y(), tile_name.c_str(), start_coord.x(), end_coord.x(),
+        start_coord.y(), end_coord.y());
       return CMD_EXEC_FATAL_ERROR;
     }
 
@@ -1062,8 +1066,7 @@ int build_top_module_global_net_from_grid_modules(
 
     /* Walk through all the grids on the perimeter, which are I/O grids */
     for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
-      for (const vtr::Point<size_t>& io_coordinate :
-           io_coordinates[io_side]) {
+      for (const vtr::Point<size_t>& io_coordinate : io_coordinates[io_side]) {
         /* Bypass EMPTY grid */
         if (true ==
             is_empty_type(grids[io_coordinate.x()][io_coordinate.y()].type)) {
@@ -1114,32 +1117,75 @@ int build_top_module_global_net_from_grid_modules(
 /********************************************************************
  * Add nets between a global port and its sinks at an entry point of clock tree
  *******************************************************************/
-int build_top_module_global_net_from_clock_arch_tree(
-  ModuleManager& module_manager, const ModuleId& top_module, const ModulePortId& top_module_port,
+static int build_top_module_global_net_from_clock_arch_tree(
+  ModuleManager& module_manager, const ModuleId& top_module,
+  const ModulePortId& top_module_port, const RRGraphView& rr_graph,
+  const DeviceRRGSB& device_rr_gsb,
   const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
-  const ClockNetwork& clk_ntwk, const std::string& clk_tree_name, const RRClockSpatialLookup& rr_clock_lookup) {
+  const ClockNetwork& clk_ntwk, const std::string& clk_tree_name,
+  const RRClockSpatialLookup& rr_clock_lookup) {
   int status = CMD_EXEC_SUCCESS;
 
   /* Ensure the clock arch tree name is valid */
   ClockTreeId clk_tree = clk_ntwk.find_tree(clk_tree_name);
   if (!clk_ntwk.valid_tree_id(clk_tree)) {
-    VTR_LOG("Fail to find a matched clock tree '%s' in the clock architecture definition", clk_tree_name.c_str());
+    VTR_LOG(
+      "Fail to find a matched clock tree '%s' in the clock architecture "
+      "definition",
+      clk_tree_name.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
 
   /* Ensure the clock tree width matches the global port size */
-  if (clk_ntwk.tree_width(clk_tree) != module_manager.module_port(top_module, top_module_port).get_width()) {
-    VTR_LOG("Clock tree '%s' does not have the same width '%lu' as the port '%'s of FPGA top module", clk_tree_name.c_str(), clk_ntwk.tree_width(clk_tree), module_manager.module_port(top_module, top_module_port).get_name().c_str());
+  if (clk_ntwk.tree_width(clk_tree) !=
+      module_manager.module_port(top_module, top_module_port).get_width()) {
+    VTR_LOG(
+      "Clock tree '%s' does not have the same width '%lu' as the port '%'s of "
+      "FPGA top module",
+      clk_tree_name.c_str(), clk_ntwk.tree_width(clk_tree),
+      module_manager.module_port(top_module, top_module_port)
+        .get_name()
+        .c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
 
   for (ClockTreePinId pin : clk_ntwk.pins(clk_tree)) {
+    BasicPort src_port =
+      module_manager.module_port(top_module, top_module_port);
+    /* Add the module net */
+    ModuleNetId net = create_module_source_pin_net(
+      module_manager, top_module, top_module, 0, top_module_port,
+      src_port.pins()[size_t(pin)]);
+    VTR_ASSERT(ModuleNetId::INVALID() != net);
+
     for (ClockSpineId spine : clk_ntwk.tree_top_spines(clk_tree)) {
-      /* TODO: Find the routing resource node of the entry point, the rr_clock_lookup needs an API to find the ptc of a node */
-  
-      /* TODO: Get the connection block module and instance at the entry point */
-  
-      /* TODO: Add the module net */
+      vtr::Point<int> entry_point = clk_ntwk.spine_start_point(spine);
+      Direction entry_dir = clk_ntwk.spine_direction(spine);
+      t_rr_type entry_track_type = clk_ntwk.spine_track_type(spine);
+      /* Find the routing resource node of the entry point */
+      RRNodeId entry_rr_node =
+        rr_clock_lookup.find_node(entry_point.x(), entry_point.y(), clk_tree,
+                                  clk_ntwk.spine_level(spine), pin, entry_dir);
+
+      /* Get the connection block module and instance at the entry point */
+      const RRGSB& rr_gsb = device_rr_gsb.get_gsb_by_cb_coordinate(
+        entry_track_type, vtr::Point<size_t>(entry_point.x(), entry_point.y()));
+      ModuleId cb_module =
+        module_manager.find_module(generate_connection_block_module_name(
+          entry_track_type,
+          vtr::Point<size_t>(entry_point.x(), entry_point.y())));
+      size_t cb_instance =
+        cb_instance_ids.at(entry_track_type)[entry_point.x()][entry_point.y()];
+      ModulePinInfo des_pin_info = find_connection_block_module_chan_port(
+        module_manager, cb_module, rr_graph, rr_gsb, entry_track_type,
+        entry_rr_node);
+
+      /* Configure the net sink */
+      BasicPort sink_port =
+        module_manager.module_port(cb_module, des_pin_info.first);
+      module_manager.add_module_net_sink(top_module, net, cb_module,
+                                         cb_instance, des_pin_info.first,
+                                         sink_port.pins()[des_pin_info.second]);
     }
   }
 
@@ -1154,7 +1200,10 @@ int add_top_module_global_ports_from_grid_modules(
   ModuleManager& module_manager, const ModuleId& top_module,
   const TileAnnotation& tile_annotation,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const vtr::Matrix<size_t>& grid_instance_ids) {
+  const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
+  const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
+  const vtr::Matrix<size_t>& grid_instance_ids, const ClockNetwork& clk_ntwk,
+  const RRClockSpatialLookup& rr_clock_lookup) {
   int status = CMD_EXEC_SUCCESS;
 
   /* Add the global ports which are NOT yet added to the top-level module
@@ -1187,9 +1236,6 @@ int add_top_module_global_ports_from_grid_modules(
   }
 
   /* Add module nets */
-  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates =
-    generate_perimeter_grid_coordinates(grids);
-
   for (const TileGlobalPortId& tile_global_port :
        tile_annotation.global_ports()) {
     /* Must found one valid port! */
@@ -1198,13 +1244,22 @@ int add_top_module_global_ports_from_grid_modules(
     VTR_ASSERT(ModulePortId::INVALID() != top_module_port);
 
     /* There are two cases when building the nets:
-     * - If the net will go through a dedicated clock tree network, the net will drive an input of a routing block
-     * - If the net will be directly wired to tiles, the net will drive an input of a tile
+     * - If the net will go through a dedicated clock tree network, the net will
+     * drive an input of a routing block
+     * - If the net will be directly wired to tiles, the net will drive an input
+     * of a tile
      */
-    if (!tile_annotation.global_port_clock_arch_tree_name(tile_global_port).empty()) {
-      status = build_top_module_global_net_from_clock_arch_tree(module_manager, top_module, top_module_port);
+    if (!tile_annotation.global_port_clock_arch_tree_name(tile_global_port)
+           .empty()) {
+      status = build_top_module_global_net_from_clock_arch_tree(
+        module_manager, top_module, top_module_port, rr_graph, device_rr_gsb,
+        cb_instance_ids, clk_ntwk,
+        tile_annotation.global_port_clock_arch_tree_name(tile_global_port),
+        rr_clock_lookup);
     } else {
-      status = build_top_module_global_net_from_grid_modules(module_manager, top_module, top_module_port, tile_annotation, tile_global_port, vpr_device_annotation, grids, grid_instance_ids);
+      status = build_top_module_global_net_from_grid_modules(
+        module_manager, top_module, top_module_port, tile_annotation,
+        tile_global_port, vpr_device_annotation, grids, grid_instance_ids);
     }
     if (status == CMD_EXEC_FATAL_ERROR) {
       return status;
