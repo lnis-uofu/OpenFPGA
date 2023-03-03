@@ -163,6 +163,10 @@ class ClockNetwork {
                              const vtr::Point<int>& coord);
   void set_spine_end_point(const ClockSpineId& spine_id,
                            const vtr::Point<int>& coord);
+  void set_spine_direction(const ClockSpineId& spine_id,
+                           const Direction& dir);
+  void set_spine_track_type(const ClockSpineId& spine_id,
+                            const t_rr_type& type);
   void add_spine_switch_point(const ClockSpineId& spine_id,
                               const ClockSpineId& drive_spine_id,
                               const vtr::Point<int>& coord);
@@ -191,6 +195,10 @@ class ClockNetwork {
    * X-direction spine or a Y-direction spine. Diagonal spine is not supported!
    */
   bool valid_spine_start_end_points(const ClockSpineId& spine_id) const;
+  /* Definition of a vague coordinate is that start_x == end_x && start_y == end_y 
+   * In such situation, we need specific track type and direction to be provided by user
+   */
+  bool is_vague_coordinate(const ClockSpineId& spine_id) const;
   /* Validate the internal data. Required to ensure clean data before usage. If
    * validation is successful, is_valid() will return true */
   bool validate() const;
@@ -209,6 +217,8 @@ class ClockNetwork {
   bool rec_update_spine_level(const ClockSpineId& spine_id);
   /* Require sort_tree_spines() to called before! */
   bool update_tree_depth(const ClockTreeId& tree_id);
+  /* Infer track type and directions for each spine by their coordinates */
+  bool update_spine_attributes(const ClockTreeId& tree_id);
 
  private: /* Internal data */
   /* Basic information of each tree */
@@ -225,6 +235,8 @@ class ClockNetwork {
   vtr::vector<ClockSpineId, size_t> spine_levels_;
   vtr::vector<ClockSpineId, vtr::Point<int>> spine_start_points_;
   vtr::vector<ClockSpineId, vtr::Point<int>> spine_end_points_;
+  vtr::vector<ClockSpineId, Direction> spine_directions_;
+  vtr::vector<ClockSpineId, t_rr_type> spine_track_types_;
   vtr::vector<ClockSpineId, std::vector<ClockSpineId>> spine_switch_points_;
   vtr::vector<ClockSpineId, std::vector<vtr::Point<int>>> spine_switch_coords_;
   vtr::vector<ClockSpineId, ClockSpineId> spine_parents_;

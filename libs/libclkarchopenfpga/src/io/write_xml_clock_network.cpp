@@ -79,6 +79,10 @@ static int write_xml_clock_spine(std::fstream& fp, const ClockNetwork& clk_ntwk,
   vtr::Point<int> end_coord = clk_ntwk.spine_end_point(spine_id);
   write_xml_attribute(fp, XML_CLOCK_SPINE_ATTRIBUTE_END_X, end_coord.x());
   write_xml_attribute(fp, XML_CLOCK_SPINE_ATTRIBUTE_END_Y, end_coord.y());
+  if (clk_ntwk.is_vague_coordinate(spine_id)) {
+    write_xml_attribute(fp, XML_CLOCK_SPINE_ATTRIBUTE_TYPE, rr_node_typename[clk_ntwk.spine_track_type(spine_id)]);
+    write_xml_attribute(fp, XML_CLOCK_SPINE_ATTRIBUTE_DIRECTION, DIRECTION_STRING[size_t(clk_ntwk.spine_direction(spine_id))]);
+  }
 
   fp << ">"
      << "\n";

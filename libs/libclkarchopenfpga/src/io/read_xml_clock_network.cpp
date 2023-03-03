@@ -95,6 +95,37 @@ static void read_xml_clock_spine_switch_point(
 }
 
 /********************************************************************
+ * Convert string to the enumerate of model type
+ *******************************************************************/
+static t_rr_type string_to_track_type(
+  const std::string& type_string) {
+  for (size_t itype = 0; itype < NUM_RR_TYPES; ++itype) {
+    if (std::string(rr_node_typename[itype]) == type_string) {
+      return static_cast<t_rr_type>(itype);
+    }
+  }
+
+  /* Reach here, we have an invalid value, error out */
+  return NUM_RR_TYPES;
+}
+
+/********************************************************************
+ * Convert string to the enumerate of model type
+ *******************************************************************/
+static Direction string_to_direction(
+  const std::string& type_string) {
+  for (size_t itype = 0; itype < size_t(Direction::NUM_DIRECTIONS); ++itype) {
+    if (std::string(DIRECTION_STRING[itype]) == type_string) {
+      return static_cast<Direction>(itype);
+    }
+  }
+
+  /* Reach here, we have an invalid value, error out */
+  return Direction::NUM_DIRECTIONS;
+}
+
+
+/********************************************************************
  * Parse XML codes of a <spine> to an object of ClockNetwork
  *******************************************************************/
 static void read_xml_clock_spine(pugi::xml_node& xml_spine,
@@ -138,6 +169,28 @@ static void read_xml_clock_spine(pugi::xml_node& xml_spine,
     get_attribute(xml_spine, XML_CLOCK_SPINE_ATTRIBUTE_END_Y, loc_data)
       .as_int();
   clk_ntwk.set_spine_end_point(spine_id, vtr::Point<int>(end_x, end_y));
+
+  if (clk_ntwk.is_vague_coordinate(spine_id)) {
+    std::string track_type_name =
+      get_attribute(xml_spine, XML_CLOCK_SPINE_ATTRIBUTE_TYPE, loc_data)
+        .as_string();
+    t_rr_type track_type = string_to_track_type(track_type_name);
+    if (CHANX != track_type && CHANY != track_type) {
+      archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_spine),
+                     "Invalid track type! Expect '%s' or '%s'!\n", rr_node_typename[CHANX], rr_node_typename[CHANY]);
+    }
+    clk_ntwk.set_spine_track_type(spine_id, track_type);
+  
+    std::string direction_name =
+      get_attribute(xml_spine, XML_CLOCK_SPINE_ATTRIBUTE_DIRECTION, loc_data)
+        .as_string();
+    Direction direction_type = string_to_direction(direction_name);
+    if (Direction::INC != direction_type && Direction::DEC != direction_type) {
+      archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_spine),
+                     "Invalid direction type! Expect '%s' or '%s'!\n", DIRECTION_STRING[size_t(Direction::INC)], DIRECTION_STRING[size_t(Direction::DEC)]);
+    }
+    clk_ntwk.set_spine_direction(spine_id, direction_type);
+  }
 
   for (pugi::xml_node xml_switch_point : xml_spine.children()) {
     /* Error out if the XML child has an invalid name! */

@@ -82,7 +82,10 @@ std::vector<ClockTreePinId> ClockNetwork::pins(
  ***********************************************************************/
 t_rr_type ClockNetwork::spine_track_type(const ClockSpineId& spine_id) const {
   VTR_ASSERT(valid_spine_start_end_points(spine_id));
-  if (spine_start_point(spine_id).y() == spine_end_point(spine_id).y()) {
+  if ((spine_start_point(spine_id).x() == spine_end_point(spine_id).x())
+    && (spine_start_point(spine_id).y() == spine_end_point(spine_id).y())) {
+    return spine_track_types_[spine_id];
+  } else if (spine_start_point(spine_id).y() == spine_end_point(spine_id).y()) {
     return CHANX;
   }
   return CHANY;
@@ -91,12 +94,16 @@ t_rr_type ClockNetwork::spine_track_type(const ClockSpineId& spine_id) const {
 Direction ClockNetwork::spine_direction(const ClockSpineId& spine_id) const {
   VTR_ASSERT(valid_spine_start_end_points(spine_id));
   if (spine_track_type(spine_id) == CHANX) {
-    if (spine_start_point(spine_id).x() < spine_end_point(spine_id).x()) {
+    if (spine_start_point(spine_id).x() == spine_end_point(spine_id).x()) {
+      return spine_directions_[spine_id];
+    } else if (spine_start_point(spine_id).x() < spine_end_point(spine_id).x()) {
       return Direction::INC;
     }
   } else {
     VTR_ASSERT(spine_track_type(spine_id) == CHANY);
-    if (spine_start_point(spine_id).y() < spine_end_point(spine_id).y()) {
+    if (spine_start_point(spine_id).y() == spine_end_point(spine_id).y()) {
+      return spine_directions_[spine_id];
+    } else if (spine_start_point(spine_id).y() < spine_end_point(spine_id).y()) {
       return Direction::INC;
     }
   }
@@ -370,6 +377,8 @@ void ClockNetwork::reserve_spines(const size_t& num_spines) {
   spine_levels_.reserve(num_spines);
   spine_start_points_.reserve(num_spines);
   spine_end_points_.reserve(num_spines);
+  spine_directions_.reserve(num_spines);
+  spine_track_types_.reserve(num_spines);
   spine_switch_points_.reserve(num_spines);
   spine_switch_coords_.reserve(num_spines);
   spine_parents_.reserve(num_spines);
@@ -444,6 +453,8 @@ ClockSpineId ClockNetwork::create_spine(const std::string& name) {
   spine_levels_.emplace_back(0);
   spine_start_points_.emplace_back();
   spine_end_points_.emplace_back();
+  spine_directions_.emplace_back(Direction::NUM_DIRECTIONS);
+  spine_track_types_.emplace_back(NUM_RR_TYPES);
   spine_switch_points_.emplace_back();
   spine_switch_coords_.emplace_back();
   spine_parents_.emplace_back();
@@ -483,6 +494,19 @@ void ClockNetwork::set_spine_end_point(const ClockSpineId& spine_id,
   VTR_ASSERT(valid_spine_id(spine_id));
   spine_end_points_[spine_id] = coord;
 }
+
+void ClockNetwork::set_spine_direction(const ClockSpineId& spine_id,
+                                       const Direction& dir) {
+  VTR_ASSERT(valid_spine_id(spine_id));
+  spine_directions_[spine_id] = dir;
+}
+
+void ClockNetwork::set_spine_track_type(const ClockSpineId& spine_id,
+                                        const t_rr_type& type) {
+  VTR_ASSERT(valid_spine_id(spine_id));
+  spine_track_types_[spine_id] = type;
+}
+
 
 void ClockNetwork::add_spine_switch_point(const ClockSpineId& spine_id,
                                           const ClockSpineId& drive_spine_id,
@@ -542,6 +566,19 @@ bool ClockNetwork::validate_tree() const {
           spine_end_point(spine_id).y());
         return false;
       }
+      /* Ensure valid track types */
+      if (spine_track_type(spine_id) != spine_track_types_[spine_id]) {
+        VTR_LOG_ERROR(
+          "Spine '%s' has a mismatch between inferred track type '%s' against user-defined track type '%s'\n",
+          spine_name(spine_id).c_str(), rr_node_typename[spine_track_type(spine_id)], rr_node_typename[spine_track_types_[spine_id]]);
+        return false;
+      }
+      if (spine_direction(spine_id) != spine_directions_[spine_id]) {
+        VTR_LOG_ERROR(
+          "Spine '%s' has a mismatch between inferred direction '%s' against user-defined direction '%s'\n",
+          spine_name(spine_id).c_str(), DIRECTION_STRING[size_t(spine_direction(spine_id))], DIRECTION_STRING[size_t(spine_directions_[spine_id])]);
+        return false;
+      }
       /* parent spine and child spine should be in different track type */
       ClockSpineId parent_spine = spine_parents_[spine_id];
       if (valid_spine_id(parent_spine)) {
@@ -575,6 +612,9 @@ bool ClockNetwork::link_tree(const ClockTreeId& tree_id) {
     return false;
   }
   if (!update_tree_depth(tree_id)) {
+    return false;
+  }
+  if (!update_spine_attributes(tree_id)) {
     return false;
   }
   return true;
@@ -617,6 +657,16 @@ bool ClockNetwork::update_tree_depth(const ClockTreeId& tree_id) {
   tree_depths_[tree_id] = depth;
   return true;
 }
+
+bool ClockNetwork::update_spine_attributes(const ClockTreeId& tree_id) {
+  size_t depth = 0;
+  for (ClockSpineId spine_id : spines(tree_id)) {
+    spine_track_types_[spine_id] = spine_track_type(spine_id);
+    spine_directions_[spine_id] = spine_direction(spine_id);
+  }
+  return true;
+}
+
 
 /************************************************************************
  * Internal invalidators/validators
@@ -663,6 +713,11 @@ bool ClockNetwork::valid_spine_start_end_points(
     return false;
   }
   return true;
+}
+
+bool ClockNetwork::is_vague_coordinate(const ClockSpineId& spine_id) const {
+  return ((spine_start_point(spine_id).x() == spine_end_point(spine_id).x()) &&
+      (spine_start_point(spine_id).y() == spine_end_point(spine_id).y()));
 }
 
 }  // End of namespace openfpga
