@@ -163,8 +163,7 @@ class ClockNetwork {
                              const vtr::Point<int>& coord);
   void set_spine_end_point(const ClockSpineId& spine_id,
                            const vtr::Point<int>& coord);
-  void set_spine_direction(const ClockSpineId& spine_id,
-                           const Direction& dir);
+  void set_spine_direction(const ClockSpineId& spine_id, const Direction& dir);
   void set_spine_track_type(const ClockSpineId& spine_id,
                             const t_rr_type& type);
   void add_spine_switch_point(const ClockSpineId& spine_id,
@@ -195,8 +194,9 @@ class ClockNetwork {
    * X-direction spine or a Y-direction spine. Diagonal spine is not supported!
    */
   bool valid_spine_start_end_points(const ClockSpineId& spine_id) const;
-  /* Definition of a vague coordinate is that start_x == end_x && start_y == end_y 
-   * In such situation, we need specific track type and direction to be provided by user
+  /* Definition of a vague coordinate is that start_x == end_x && start_y ==
+   * end_y In such situation, we need specific track type and direction to be
+   * provided by user
    */
   bool is_vague_coordinate(const ClockSpineId& spine_id) const;
   /* Validate the internal data. Required to ensure clean data before usage. If
