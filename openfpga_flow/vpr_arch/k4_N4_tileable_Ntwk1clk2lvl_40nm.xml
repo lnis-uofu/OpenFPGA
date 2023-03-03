@@ -170,8 +170,8 @@
 			     reasonable. Using a tile length of 90 nm, corresponding to the length of a Stratix IV tile if it were square. -->
     <segment name="L1" freq="0.2" length="1" type="unidir" Rmetal="101" Cmetal="22.5e-15">
       <mux name="0"/>
-      <sb type="pattern">1 1 1 1 1</sb>
-      <cb type="pattern">1 1 1 1</cb>
+      <sb type="pattern">1 1</sb>
+      <cb type="pattern">1</cb>
     </segment>
     <segment name="L4" freq="0.8" length="4" type="unidir" Rmetal="101" Cmetal="22.5e-15">
       <mux name="0"/>
