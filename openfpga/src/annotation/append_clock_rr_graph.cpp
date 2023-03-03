@@ -565,7 +565,7 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
     "Appending programmable clock network to routing resource graph");
 
   /* Skip if there is no clock tree */
-  if (clk_ntwk.num_trees()) {
+  if (clk_ntwk.num_trees() == 0) {
     VTR_LOG(
       "Skip due to 0 clock trees.\nDouble check your clock architecture "
       "definition if this is unexpected\n");
