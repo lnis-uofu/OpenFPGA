@@ -49,19 +49,19 @@ std::vector<ClockTreePinId> ClockNetwork::pins(
    * the same routing tracks. Therefore, we only ensure that routing tracks in
    * their demanding direction (INC and DEC) are satisfied
    */
-  bool dir_flags = false;
+  bool dir_flag = false;
   for (ClockSpineId curr_spine : spines(tree_id)) {
     if (spine_levels_[curr_spine] != size_t(level)) {
       continue;
     }
     if (spine_track_type(curr_spine) == track_type) {
-      if (!dir_flags && spine_direction(curr_spine) == direction) {
+      if (!dir_flag && spine_direction(curr_spine) == direction) {
         ret.reserve(ret.size() + tree_width(spine_parent_trees_[curr_spine]));
         for (size_t i = 0; i < tree_width(spine_parent_trees_[curr_spine]);
              ++i) {
           ret.push_back(ClockTreePinId(i));
         }
-        dir_flags = true;
+        dir_flag = true;
       }
     }
   }
@@ -129,10 +129,8 @@ size_t ClockNetwork::num_tracks(const ClockTreeId& tree_id,
       continue;
     }
     if (spine_track_type(curr_spine) == track_type) {
-      if (!dir_flags[spine_direction(curr_spine)]) {
-        num_tracks += tree_width(spine_parent_trees_[curr_spine]);
-        dir_flags[spine_direction(curr_spine)] = true;
-      }
+      /* TODO: Deposit routing tracks in both INC and DEC direction, currently this is limited by the connection block build-up algorithm in fabric generator */
+      return 2 * tree_width(spine_parent_trees_[curr_spine]);
     }
   }
   return num_tracks;
@@ -148,15 +146,14 @@ size_t ClockNetwork::num_tracks(const ClockTreeId& tree_id,
    * the same routing tracks. Therefore, we only ensure that routing tracks in
    * their demanding direction (INC and DEC) are satisfied
    */
-  bool dir_flags = false;
   for (ClockSpineId curr_spine : spines(tree_id)) {
     if (spine_levels_[curr_spine] != size_t(level)) {
       continue;
     }
     if (spine_track_type(curr_spine) == track_type) {
-      if (!dir_flags && spine_direction(curr_spine) == direction) {
-        num_tracks += tree_width(spine_parent_trees_[curr_spine]);
-        dir_flags = true;
+      if (spine_direction(curr_spine) == direction) {
+        /* TODO: Deposit routing tracks in both INC and DEC direction, currently this is limited by the connection block build-up algorithm in fabric generator */
+        return tree_width(spine_parent_trees_[curr_spine]);
       }
     }
   }

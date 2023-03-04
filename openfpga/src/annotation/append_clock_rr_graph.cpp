@@ -99,8 +99,22 @@ static void add_rr_graph_block_clock_nodes(RRGraphBuilder& rr_graph_builder,
 
   for (auto itree : clk_ntwk.trees()) {
     for (auto ilvl : clk_ntwk.levels(itree)) {
+      /* As we want to keep uni-directional wires, clock routing tracks have to be in pairs.
+       * Therefore, always add clock routing tracks in pair, even one of them is not required
+       */
+      size_t num_pins = 0;
+      bool require_complementary_pins = false;
       for (auto node_dir : {Direction::INC, Direction::DEC}) {
-        for (auto ipin : clk_ntwk.pins(itree, ilvl, chan_type, node_dir)) {
+        if (0 == clk_ntwk.pins(itree, ilvl, chan_type, node_dir).size()) {
+          require_complementary_pins = true;
+        }
+        num_pins += clk_ntwk.pins(itree, ilvl, chan_type, node_dir).size();
+      }
+      if (require_complementary_pins) {
+        num_pins = 2 * num_pins;
+      }
+      for (size_t ipin = 0; ipin < num_pins / 2; ++ipin) {
+        for (auto node_dir : {Direction::INC, Direction::DEC}) {
           RRNodeId clk_node = rr_graph_builder.create_node(
             chan_coord.x(), chan_coord.y(), chan_type, curr_node_ptc);
           rr_graph_builder.set_node_direction(clk_node, node_dir);
@@ -113,7 +127,7 @@ static void add_rr_graph_block_clock_nodes(RRGraphBuilder& rr_graph_builder,
            * in VTR */
           /* register the node to a dedicated lookup */
           clk_rr_lookup.add_node(clk_node, chan_coord.x(), chan_coord.y(),
-                                 itree, ilvl, ipin, node_dir);
+                                 itree, ilvl, ClockTreePinId(ipin), node_dir);
           /* Update ptc count and go to next */
           curr_node_ptc++;
         }
@@ -587,11 +601,19 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
   vpr_device_ctx.rr_graph_builder.unlock_storage();
   vpr_device_ctx.rr_graph_builder.reserve_nodes(num_clock_nodes +
                                                 orig_num_nodes);
+  VTR_LOGV(verbose,
+          "Estimate %lu clock nodes (+%.5f%) to be added to routing "
+          "resource graph.\n",
+          num_clock_nodes, (float)(num_clock_nodes / orig_num_nodes));
 
   /* Add clock nodes */
   add_rr_graph_clock_nodes(vpr_device_ctx.rr_graph_builder, clk_rr_lookup,
                            vpr_device_ctx.rr_graph, vpr_device_ctx.grid,
                            vpr_device_ctx.arch->through_channel, clk_ntwk);
+  VTR_LOGV(verbose,
+          "Added %lu clock nodes to routing "
+          "resource graph.\n",
+          vpr_device_ctx.rr_graph.num_nodes() - orig_num_nodes);
   VTR_ASSERT(num_clock_nodes + orig_num_nodes ==
              vpr_device_ctx.rr_graph.num_nodes());
 
@@ -609,11 +631,10 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
   vpr_device_ctx.rr_graph_builder.build_in_edges();
 
   /* Report number of added clock nodes and edges */
-  VTR_LOGV(verbose,
-           "Appended %lu clock nodes (+%.2f%) and %lu clock edges to routing "
-           "resource graph.\n",
-           num_clock_nodes, (float)(num_clock_nodes / orig_num_nodes),
-           num_clock_edges);
+  VTR_LOG("Appended %lu clock nodes (+%.2f%) and %lu clock edges to routing "
+          "resource graph.\n",
+          num_clock_nodes, (float)(num_clock_nodes / orig_num_nodes),
+          num_clock_edges);
 
   return CMD_EXEC_SUCCESS;
 }
