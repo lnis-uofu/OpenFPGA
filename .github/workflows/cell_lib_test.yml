@@ -22,8 +22,6 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
-        with:
-          submodules: true
 
       - name: Install Dependencies
         run: |

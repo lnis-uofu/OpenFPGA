@@ -37,9 +37,7 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          submodules: true
+
       - name: Check for source code changes
         id: changes
         run: |
@@ -115,8 +113,6 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
-        with:
-          submodules: true
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build.sh
@@ -201,8 +197,6 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
-        with:
-          submodules: true
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build.sh
@@ -244,8 +238,6 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
-        with:
-          submodules: true
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu22p04.sh
@@ -291,8 +283,6 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
-        with:
-          submodules: true
 
       - name: Install dependencies
         run: |
@@ -344,8 +334,6 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
-        with:
-          submodules: true
 
       - name: Install dependencies
         run: |
@@ -494,8 +482,6 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
-        with:
-          submodules: true
       - name: ${{matrix.config.name}}_GCC-8_(Ubuntu 20.04)
         shell: bash
         run: |
