@@ -25,29 +25,35 @@ RRNodeId RRClockSpatialLookup::find_node(int x, int y, const ClockTreeId& tree,
    * - Return an invalid id if any out-of-range is detected
    */
   if (size_t(dir) >= rr_node_indices_.size()) {
+    VTR_LOG("Direction out of range");
     return RRNodeId::INVALID();
   }
 
   if (size_t(x) >= rr_node_indices_[dir].dim_size(0)) {
+    VTR_LOG("X out of range");
     return RRNodeId::INVALID();
   }
 
   if (size_t(y) >= rr_node_indices_[dir].dim_size(1)) {
+    VTR_LOG("Y out of range");
     return RRNodeId::INVALID();
   }
 
   auto result_tree = rr_node_indices_[dir][x][y].find(tree);
   if (result_tree == rr_node_indices_[dir][x][y].end()) {
+    VTR_LOG("Tree id out of range");
     return RRNodeId::INVALID();
   }
 
   auto result_lvl = result_tree->second.find(lvl);
   if (result_lvl == result_tree->second.end()) {
+    VTR_LOG("Level id out of range");
     return RRNodeId::INVALID();
   }
 
   auto result_pin = result_lvl->second.find(pin);
   if (result_pin == result_lvl->second.end()) {
+    VTR_LOG("Pin id out of range");
     return RRNodeId::INVALID();
   }
 
