@@ -99,8 +99,7 @@ class RRClockSpatialLookup {
    */
   std::array<
     vtr::NdMatrix<
-      std::map<ClockTreeId,
-               std::map<ClockLevelId, std::map<ClockTreePinId, RRNodeId>>>,
+      std::vector<std::vector<std::vector<RRNodeId>>>,
       2>,
     2>
     rr_node_indices_;
