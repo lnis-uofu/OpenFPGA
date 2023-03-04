@@ -584,6 +584,7 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
   size_t orig_num_nodes = vpr_device_ctx.rr_graph.num_nodes();
   size_t num_clock_nodes = estimate_clock_rr_graph_num_nodes(
     vpr_device_ctx.grid, vpr_device_ctx.arch->through_channel, clk_ntwk);
+  vpr_device_ctx.rr_graph_builder.unlock_storage();
   vpr_device_ctx.rr_graph_builder.reserve_nodes(num_clock_nodes +
                                                 orig_num_nodes);
 
@@ -603,6 +604,9 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
     vpr_device_ctx.arch->through_channel, clk_ntwk);
 
   /* TODO: Sanity checks */
+  vpr_device_ctx.rr_graph_builder.init_fan_in();
+  vpr_device_ctx.rr_graph_builder.partition_edges();
+  vpr_device_ctx.rr_graph_builder.build_in_edges();
 
   /* Report number of added clock nodes and edges */
   VTR_LOGV(verbose,
