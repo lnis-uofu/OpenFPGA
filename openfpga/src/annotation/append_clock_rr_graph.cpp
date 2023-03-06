@@ -682,8 +682,8 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
   vpr_device_ctx.rr_graph_builder.init_fan_in();
   VTR_LOGV(verbose, "Apply edge partitioning\n");
   vpr_device_ctx.rr_graph_builder.partition_edges();
-  //VTR_LOGV(verbose, "Building incoming edges\n");
-  //vpr_device_ctx.rr_graph_builder.build_in_edges();
+  VTR_LOGV(verbose, "Building incoming edges\n");
+  vpr_device_ctx.rr_graph_builder.build_in_edges();
 
   /* Report number of added clock nodes and edges */
   VTR_LOG(
