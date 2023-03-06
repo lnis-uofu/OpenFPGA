@@ -487,11 +487,26 @@ static void add_rr_graph_block_clock_edges(
   size_t edge_count = 0;
   for (auto itree : clk_ntwk.trees()) {
     for (auto ilvl : clk_ntwk.levels(itree)) {
+      /* As we want to keep uni-directional wires, clock routing tracks have to
+       * be in pairs. Therefore, always add clock routing tracks in pair, even
+       * one of them is not required
+       */
+      size_t num_pins = 0;
+      bool require_complementary_pins = false;
       for (auto node_dir : {Direction::INC, Direction::DEC}) {
-        for (auto ipin : clk_ntwk.pins(itree, ilvl, chan_type, node_dir)) {
+        if (0 == clk_ntwk.pins(itree, ilvl, chan_type, node_dir).size()) {
+          require_complementary_pins = true;
+        }
+        num_pins += clk_ntwk.pins(itree, ilvl, chan_type, node_dir).size();
+      }
+      if (require_complementary_pins) {
+        num_pins = 2 * num_pins;
+      }
+      for (size_t ipin = 0; ipin < num_pins / 2; ++ipin) {
+        for (auto node_dir : {Direction::INC, Direction::DEC}) {
           /* find the driver clock node through lookup */
           RRNodeId src_node = clk_rr_lookup.find_node(
-            chan_coord.x(), chan_coord.y(), itree, ilvl, ipin, node_dir);
+            chan_coord.x(), chan_coord.y(), itree, ilvl, ClockTreePinId(ipin), node_dir);
           VTR_LOGV(verbose,
                    "Try to find node '%lu' from clock node lookup (x='%lu' "
                    "y='%lu' tree='%lu' level='%lu' pin='%lu' direction='%s')\n",
@@ -501,28 +516,32 @@ static void add_rr_graph_block_clock_edges(
           VTR_ASSERT(rr_graph_view.valid_node(src_node));
           if (!clk_ntwk.is_last_level(itree, ilvl)) {
             /* find the fan-out clock node through lookup */
+            size_t curr_edge_count = edge_count;
             for (RRNodeId des_node : find_clock_track2track_node(
                    rr_graph_view, clk_ntwk, clk_rr_lookup, chan_type,
-                   chan_coord, itree, ilvl, ipin, node_dir)) {
+                   chan_coord, itree, ilvl, ClockTreePinId(ipin), node_dir)) {
               /* Create edges */
               VTR_ASSERT(rr_graph_view.valid_node(des_node));
               rr_graph_builder.create_edge(src_node, des_node,
                                            clk_ntwk.default_switch());
               edge_count++;
             }
+            VTR_LOGV(verbose, "\tWill add %lu edges to other clock nodes\n", edge_count - curr_edge_count);
           }
           /* If this is the clock node at the last level of the tree,
            * should drive some grid IPINs which are clocks */
           if (clk_ntwk.is_last_level(itree, ilvl)) {
+            size_t curr_edge_count = edge_count;
             for (RRNodeId des_node : find_clock_track2ipin_node(
                    grids, rr_graph_view, chan_type, chan_coord, clk_ntwk, itree,
-                   ipin)) {
+                   ClockTreePinId(ipin))) {
               /* Create edges */
               VTR_ASSERT(rr_graph_view.valid_node(des_node));
               rr_graph_builder.create_edge(src_node, des_node,
                                            clk_ntwk.default_switch());
               edge_count++;
             }
+            VTR_LOGV(verbose, "\tWill add %lu edges to other IPIN\n", edge_count - curr_edge_count);
           }
         }
       }
@@ -663,8 +682,8 @@ int append_clock_rr_graph(DeviceContext& vpr_device_ctx,
   vpr_device_ctx.rr_graph_builder.init_fan_in();
   VTR_LOGV(verbose, "Apply edge partitioning\n");
   vpr_device_ctx.rr_graph_builder.partition_edges();
-  VTR_LOGV(verbose, "Building incoming edges\n");
-  vpr_device_ctx.rr_graph_builder.build_in_edges();
+  //VTR_LOGV(verbose, "Building incoming edges\n");
+  //vpr_device_ctx.rr_graph_builder.build_in_edges();
 
   /* Report number of added clock nodes and edges */
   VTR_LOG(
