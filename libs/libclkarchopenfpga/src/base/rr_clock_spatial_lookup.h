@@ -85,6 +85,15 @@ class RRClockSpatialLookup {
                 const ClockLevelId& clk_lvl, const ClockTreePinId& clk_pin,
                 const Direction& direction);
 
+  /**
+   * @brief Allocate memory for the lookup with maximum sizes on each dimension
+   * .. note:: Must run before any other API!
+   */
+  void reserve_nodes(int x, int y,
+                     int tree,
+                     int lvl,
+                     int pin);
+
   /** @brief Clear all the data inside */
   void clear();
 

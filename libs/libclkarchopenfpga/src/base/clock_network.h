@@ -78,6 +78,8 @@ class ClockNetwork {
   std::string tree_name(const ClockTreeId& tree_id) const;
   size_t tree_width(const ClockTreeId& tree_id) const;
   size_t tree_depth(const ClockTreeId& tree_id) const;
+  size_t max_tree_width() const;
+  size_t max_tree_depth() const;
   std::vector<ClockSpineId> tree_top_spines(const ClockTreeId& tree_id) const;
   std::string spine_name(const ClockSpineId& spine_id) const;
   vtr::Point<int> spine_start_point(const ClockSpineId& spine_id) const;

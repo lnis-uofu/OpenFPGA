@@ -84,6 +84,27 @@ void RRClockSpatialLookup::add_node(RRNodeId node, int x, int y,
   rr_node_indices_[dir][x][y][size_t(tree)][size_t(lvl)][size_t(pin)] = node;
 }
 
+void RRClockSpatialLookup::reserve_nodes(int x, int y,
+                                         int tree,
+                                         int lvl,
+                                         int pin) {
+  for (Direction dir : {Direction::INC, Direction::DEC}) {
+    resize_nodes(x, y, dir);
+    for (int ix = 0; ix < x; ++ix) {
+      for (int iy = 0; iy < y; ++iy) {
+        rr_node_indices_[size_t(dir)][ix][iy].resize(tree);
+        for (int itree = 0; itree < tree; ++itree) {
+          rr_node_indices_[size_t(dir)][ix][iy][itree].resize(lvl);
+          for (int ilvl = 0; ilvl < lvl; ++ilvl) {
+            rr_node_indices_[size_t(dir)][ix][iy][itree][ilvl].resize(pin);
+          }
+        }
+      }
+    }
+  }
+}
+
+
 void RRClockSpatialLookup::resize_nodes(int x, int y,
                                         const Direction& direction) {
   /* Expand the fast look-up if the new node is out-of-range

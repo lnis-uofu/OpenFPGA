@@ -179,6 +179,22 @@ std::string ClockNetwork::tree_name(const ClockTreeId& tree_id) const {
   return tree_names_[tree_id];
 }
 
+size_t ClockNetwork::max_tree_width() const {
+  size_t max_size = 0;
+  for (auto itree : trees()) {
+    max_size = std::max(tree_width(itree), max_size);
+  }
+  return max_size;
+}
+
+size_t ClockNetwork::max_tree_depth() const {
+  size_t max_size = 0;
+  for (auto itree : trees()) {
+    max_size = std::max(tree_depth(itree), max_size);
+  }
+  return max_size;
+}
+
 size_t ClockNetwork::tree_width(const ClockTreeId& tree_id) const {
   VTR_ASSERT(valid_tree_id(tree_id));
   return tree_widths_[tree_id];
@@ -663,7 +679,6 @@ bool ClockNetwork::update_tree_depth(const ClockTreeId& tree_id) {
 }
 
 bool ClockNetwork::update_spine_attributes(const ClockTreeId& tree_id) {
-  size_t depth = 0;
   for (ClockSpineId spine_id : spines(tree_id)) {
     spine_track_types_[spine_id] = spine_track_type(spine_id);
     spine_directions_[spine_id] = spine_direction(spine_id);

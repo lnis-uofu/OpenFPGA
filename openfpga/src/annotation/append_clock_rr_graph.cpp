@@ -150,6 +150,9 @@ static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
                                      const bool& through_channel,
                                      const ClockNetwork& clk_ntwk,
                                      const bool& verbose) {
+  /* Pre-allocate memory: Must do otherwise data will be messed up! */
+  clk_rr_lookup.reserve_nodes(grids.width(), grids.height(), clk_ntwk.num_trees(), clk_ntwk.max_tree_depth(), clk_ntwk.max_tree_width());
+
   /* Add X-direction clock nodes */
   for (size_t iy = 0; iy < grids.height() - 1; ++iy) {
     for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
