@@ -129,7 +129,9 @@ size_t ClockNetwork::num_tracks(const ClockTreeId& tree_id,
       continue;
     }
     if (spine_track_type(curr_spine) == track_type) {
-      /* TODO: Deposit routing tracks in both INC and DEC direction, currently this is limited by the connection block build-up algorithm in fabric generator */
+      /* TODO: Deposit routing tracks in both INC and DEC direction, currently
+       * this is limited by the connection block build-up algorithm in fabric
+       * generator */
       return 2 * tree_width(spine_parent_trees_[curr_spine]);
     }
   }
@@ -152,7 +154,9 @@ size_t ClockNetwork::num_tracks(const ClockTreeId& tree_id,
     }
     if (spine_track_type(curr_spine) == track_type) {
       if (spine_direction(curr_spine) == direction) {
-        /* TODO: Deposit routing tracks in both INC and DEC direction, currently this is limited by the connection block build-up algorithm in fabric generator */
+        /* TODO: Deposit routing tracks in both INC and DEC direction, currently
+         * this is limited by the connection block build-up algorithm in fabric
+         * generator */
         return tree_width(spine_parent_trees_[curr_spine]);
       }
     }

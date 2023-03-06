@@ -49,7 +49,8 @@ RRNodeId RRClockSpatialLookup::find_node(int x, int y, const ClockTreeId& tree,
     return RRNodeId::INVALID();
   }
 
-  if (size_t(pin) == rr_node_indices_[dir][x][y][size_t(tree)][size_t(lvl)].size()) {
+  if (size_t(pin) ==
+      rr_node_indices_[dir][x][y][size_t(tree)][size_t(lvl)].size()) {
     VTR_LOG("Pin id out of range");
     return RRNodeId::INVALID();
   }
@@ -67,7 +68,7 @@ void RRClockSpatialLookup::add_node(RRNodeId node, int x, int y,
   VTR_ASSERT_SAFE(2 == rr_node_indices_[dir].ndims());
 
   resize_nodes(x, y, direction);
-  
+
   if (size_t(tree) >= rr_node_indices_[dir][x][y].size()) {
     rr_node_indices_[dir][x][y].resize(size_t(tree) + 1);
   }
@@ -76,17 +77,17 @@ void RRClockSpatialLookup::add_node(RRNodeId node, int x, int y,
     rr_node_indices_[dir][x][y][size_t(tree)].resize(size_t(lvl) + 1);
   }
 
-  if (size_t(pin) >= rr_node_indices_[dir][x][y][size_t(tree)][size_t(lvl)].size()) {
-    rr_node_indices_[dir][x][y][size_t(tree)][size_t(lvl)].resize(size_t(pin) + 1);
+  if (size_t(pin) >=
+      rr_node_indices_[dir][x][y][size_t(tree)][size_t(lvl)].size()) {
+    rr_node_indices_[dir][x][y][size_t(tree)][size_t(lvl)].resize(size_t(pin) +
+                                                                  1);
   }
 
   /* Resize on demand finished; Register the node */
   rr_node_indices_[dir][x][y][size_t(tree)][size_t(lvl)][size_t(pin)] = node;
 }
 
-void RRClockSpatialLookup::reserve_nodes(int x, int y,
-                                         int tree,
-                                         int lvl,
+void RRClockSpatialLookup::reserve_nodes(int x, int y, int tree, int lvl,
                                          int pin) {
   for (Direction dir : {Direction::INC, Direction::DEC}) {
     resize_nodes(x, y, dir);
@@ -103,7 +104,6 @@ void RRClockSpatialLookup::reserve_nodes(int x, int y,
     }
   }
 }
-
 
 void RRClockSpatialLookup::resize_nodes(int x, int y,
                                         const Direction& direction) {

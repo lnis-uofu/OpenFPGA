@@ -89,10 +89,7 @@ class RRClockSpatialLookup {
    * @brief Allocate memory for the lookup with maximum sizes on each dimension
    * .. note:: Must run before any other API!
    */
-  void reserve_nodes(int x, int y,
-                     int tree,
-                     int lvl,
-                     int pin);
+  void reserve_nodes(int x, int y, int tree, int lvl, int pin);
 
   /** @brief Clear all the data inside */
   void clear();
@@ -106,11 +103,8 @@ class RRClockSpatialLookup {
   /* Fast look-up:
    * [INC|DEC][0..grid_width][0..grid_height][tree_id][level_id][clock_pin_id]
    */
-  std::array<
-    vtr::NdMatrix<
-      std::vector<std::vector<std::vector<RRNodeId>>>,
-      2>,
-    2>
+  std::array<vtr::NdMatrix<std::vector<std::vector<std::vector<RRNodeId>>>, 2>,
+             2>
     rr_node_indices_;
 };
 
