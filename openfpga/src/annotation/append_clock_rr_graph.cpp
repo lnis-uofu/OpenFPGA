@@ -515,8 +515,8 @@ static void add_rr_graph_block_clock_edges(
                    size_t(itree), size_t(ilvl), size_t(ipin),
                    DIRECTION_STRING[size_t(node_dir)]);
           VTR_ASSERT(rr_graph_view.valid_node(src_node));
-          if (!clk_ntwk.is_last_level(itree, ilvl)) {
-            /* find the fan-out clock node through lookup */
+          /* find the fan-out clock node through lookup */
+          {
             size_t curr_edge_count = edge_count;
             for (RRNodeId des_node : find_clock_track2track_node(
                    rr_graph_view, clk_ntwk, clk_rr_lookup, chan_type,
