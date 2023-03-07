@@ -505,8 +505,9 @@ static void add_rr_graph_block_clock_edges(
       for (size_t ipin = 0; ipin < num_pins / 2; ++ipin) {
         for (auto node_dir : {Direction::INC, Direction::DEC}) {
           /* find the driver clock node through lookup */
-          RRNodeId src_node = clk_rr_lookup.find_node(
-            chan_coord.x(), chan_coord.y(), itree, ilvl, ClockTreePinId(ipin), node_dir);
+          RRNodeId src_node =
+            clk_rr_lookup.find_node(chan_coord.x(), chan_coord.y(), itree, ilvl,
+                                    ClockTreePinId(ipin), node_dir);
           VTR_LOGV(verbose,
                    "Try to find node '%lu' from clock node lookup (x='%lu' "
                    "y='%lu' tree='%lu' level='%lu' pin='%lu' direction='%s')\n",
@@ -526,7 +527,8 @@ static void add_rr_graph_block_clock_edges(
                                            clk_ntwk.default_switch());
               edge_count++;
             }
-            VTR_LOGV(verbose, "\tWill add %lu edges to other clock nodes\n", edge_count - curr_edge_count);
+            VTR_LOGV(verbose, "\tWill add %lu edges to other clock nodes\n",
+                     edge_count - curr_edge_count);
           }
           /* If this is the clock node at the last level of the tree,
            * should drive some grid IPINs which are clocks */
@@ -541,7 +543,8 @@ static void add_rr_graph_block_clock_edges(
                                            clk_ntwk.default_switch());
               edge_count++;
             }
-            VTR_LOGV(verbose, "\tWill add %lu edges to other IPIN\n", edge_count - curr_edge_count);
+            VTR_LOGV(verbose, "\tWill add %lu edges to other IPIN\n",
+                     edge_count - curr_edge_count);
           }
         }
       }
