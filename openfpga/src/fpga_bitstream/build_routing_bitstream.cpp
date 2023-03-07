@@ -243,10 +243,9 @@ static void build_connection_block_mux_bitstream(
   const RRGSB& rr_gsb, const e_side& cb_ipin_side, const size_t& ipin_index) {
   RRNodeId src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
   /* Find drive_rr_nodes*/
-  size_t datapath_mux_size = rr_graph.node_fan_in(src_rr_node);
-
   std::vector<RREdgeId> driver_rr_edges =
     rr_gsb.get_ipin_node_in_edges(rr_graph, cb_ipin_side, ipin_index);
+  size_t datapath_mux_size = driver_rr_edges.size();
 
   /* Cache input and output nets */
   std::vector<ClusterNetId> input_nets;
@@ -357,8 +356,11 @@ static void build_connection_block_interc_bitstream(
   const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
-  const RRGSB& rr_gsb, const e_side& cb_ipin_side, const size_t& ipin_index) {
+  const RRGSB& rr_gsb, const e_side& cb_ipin_side, const size_t& ipin_index,
+  const bool& verbose) {
   RRNodeId src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
+
+  VTR_LOGV(verbose, "\tGenerating bitstream for IPIN '%lu'\n", ipin_index);
 
   /* Consider configurable edges only */
   std::vector<RREdgeId> driver_rr_edges =
@@ -405,7 +407,7 @@ static void build_connection_block_bitstream(
   const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
-  const RRGSB& rr_gsb, const t_rr_type& cb_type) {
+  const RRGSB& rr_gsb, const t_rr_type& cb_type, const bool& verbose) {
   /* Find routing multiplexers on the sides of a Connection block where IPIN
    * nodes locate */
   std::vector<enum e_side> cb_sides = rr_gsb.get_cb_ipin_sides(cb_type);
@@ -415,10 +417,12 @@ static void build_connection_block_bitstream(
     SideManager side_manager(cb_ipin_side);
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side);
          ++inode) {
+      VTR_LOGV(verbose, "\tGenerating bitstream for IPIN at '%s' side\n",
+               side_manager.to_string().c_str());
       build_connection_block_interc_bitstream(
         bitstream_manager, cb_configurable_block, module_manager, circuit_lib,
         mux_lib, atom_ctx, device_annotation, routing_annotation, rr_graph,
-        rr_gsb, cb_ipin_side, inode);
+        rr_gsb, cb_ipin_side, inode, verbose);
     }
   }
 }
@@ -434,7 +438,7 @@ static void build_connection_block_bitstreams(
   const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
   const DeviceRRGSB& device_rr_gsb, const bool& compact_routing_hierarchy,
-  const t_rr_type& cb_type) {
+  const t_rr_type& cb_type, const bool& verbose) {
   vtr::Point<size_t> cb_range = device_rr_gsb.get_gsb_range();
 
   for (size_t ix = 0; ix < cb_range.x(); ++ix) {
@@ -450,8 +454,18 @@ static void build_connection_block_bitstreams(
       /* Skip if the cb does not contain any configuration bits! */
       if (true ==
           connection_block_contain_only_routing_tracks(rr_gsb, cb_type)) {
+        VTR_LOGV(verbose,
+                 "\n\tSkipped %s Connection Block [%lu][%lu] as it contains "
+                 "only routing tracks\n",
+                 cb_type == CHANX ? "X-direction" : "Y-direction",
+                 rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
         continue;
       }
+
+      VTR_LOGV(verbose,
+               "\n\tGenerating bitstream for %s Connection Block [%lu][%lu]\n",
+               cb_type == CHANX ? "X-direction" : "Y-direction",
+               rr_gsb.get_cb_x(cb_type), rr_gsb.get_cb_y(cb_type));
 
       /* Find the cb module so that we can precisely reserve child blocks */
       vtr::Point<size_t> cb_coord(rr_gsb.get_cb_x(cb_type),
@@ -494,7 +508,9 @@ static void build_connection_block_bitstreams(
       build_connection_block_bitstream(
         bitstream_manager, cb_configurable_block, module_manager, circuit_lib,
         mux_lib, atom_ctx, device_annotation, routing_annotation, rr_graph,
-        rr_gsb, cb_type);
+        rr_gsb, cb_type, verbose);
+
+      VTR_LOGV(verbose, "\tDone\n");
     }
   }
 }
@@ -512,7 +528,8 @@ void build_routing_bitstream(
   const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
-  const DeviceRRGSB& device_rr_gsb, const bool& compact_routing_hierarchy) {
+  const DeviceRRGSB& device_rr_gsb, const bool& compact_routing_hierarchy,
+  const bool& verbose) {
   /* Generate bitstream for each switch blocks
    * To organize the bitstream in blocks, we create a block for each switch
    * block and give names which are same as they are in top-level module
@@ -530,6 +547,10 @@ void build_routing_bitstream(
       if (false == rr_gsb.is_sb_exist()) {
         continue;
       }
+
+      VTR_LOGV(verbose,
+               "\n\tGenerating bitstream for Switch blocks[%lu][%lu]...\n", ix,
+               iy);
 
       vtr::Point<size_t> sb_coord(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
 
@@ -570,6 +591,8 @@ void build_routing_bitstream(
                                    module_manager, circuit_lib, mux_lib,
                                    atom_ctx, device_annotation,
                                    routing_annotation, rr_graph, rr_gsb);
+
+      VTR_LOGV(verbose, "\tDone\n");
     }
   }
   VTR_LOG("Done\n");
@@ -584,7 +607,7 @@ void build_routing_bitstream(
   build_connection_block_bitstreams(
     bitstream_manager, top_configurable_block, module_manager, circuit_lib,
     mux_lib, atom_ctx, device_annotation, routing_annotation, rr_graph,
-    device_rr_gsb, compact_routing_hierarchy, CHANX);
+    device_rr_gsb, compact_routing_hierarchy, CHANX, verbose);
   VTR_LOG("Done\n");
 
   VTR_LOG("Generating bitstream for Y-direction Connection blocks ...");
@@ -592,7 +615,7 @@ void build_routing_bitstream(
   build_connection_block_bitstreams(
     bitstream_manager, top_configurable_block, module_manager, circuit_lib,
     mux_lib, atom_ctx, device_annotation, routing_annotation, rr_graph,
-    device_rr_gsb, compact_routing_hierarchy, CHANY);
+    device_rr_gsb, compact_routing_hierarchy, CHANY, verbose);
   VTR_LOG("Done\n");
 }
 
