@@ -667,6 +667,13 @@ ShellCommandId add_route_clock_rr_graph_command_template(
   const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("route_clock_rr_graph");
 
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file =
+    shell_cmd.add_option("pin_constraints_file", false,
+                         "specify the file path to the pin constraints");
+  shell_cmd.set_option_short_name(opt_file, "pcf");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
 

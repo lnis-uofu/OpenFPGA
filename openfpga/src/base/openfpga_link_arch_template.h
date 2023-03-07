@@ -23,6 +23,7 @@
 #include "openfpga_rr_graph_support.h"
 #include "pb_type_utils.h"
 #include "read_activity.h"
+#include "read_xml_pin_constraints.h"
 #include "route_clock_rr_graph.h"
 #include "vpr_device_annotation.h"
 #include "vtr_assert.h"
@@ -214,11 +215,22 @@ int route_clock_rr_graph_template(T& openfpga_ctx, const Command& cmd,
                                   const CommandContext& cmd_context) {
   vtr::ScopedStartFinishTimer timer("Route clock routing resource graph");
 
+  /* add an option '--pin_constraints_file in short '-pcf' */
+  CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* If pin constraints are enabled by command options, read the file */
+  PinConstraints pin_constraints;
+  if (true == cmd_context.option_enable(cmd, opt_pcf)) {
+    pin_constraints =
+      read_xml_pin_constraints(cmd_context.option_value(cmd, opt_pcf).c_str());
+  }
 
   return route_clock_rr_graph(
     openfpga_ctx.mutable_vpr_routing_annotation(), g_vpr_ctx.device(),
-    openfpga_ctx.clock_rr_lookup(), openfpga_ctx.clock_arch(),
+    g_vpr_ctx.atom(), g_vpr_ctx.clustering().clb_nlist,
+    openfpga_ctx.vpr_netlist_annotation(), openfpga_ctx.clock_rr_lookup(),
+    openfpga_ctx.clock_arch(), pin_constraints,
     cmd_context.option_enable(cmd, opt_verbose));
 }
 
