@@ -114,7 +114,7 @@ int route_clock_rr_graph(VprRoutingAnnotation& vpr_routing_annotation,
     "Route programmable clock network based on routing resource graph");
 
   /* Skip if there is no clock tree */
-  if (clk_ntwk.num_trees()) {
+  if (0 == clk_ntwk.num_trees()) {
     VTR_LOG(
       "Skip due to 0 clock trees.\nDouble check your clock architecture "
       "definition if this is unexpected\n");
