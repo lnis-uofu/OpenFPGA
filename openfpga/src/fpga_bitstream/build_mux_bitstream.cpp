@@ -68,6 +68,9 @@ static std::vector<bool> build_cmos_mux_bitstream(
     find_mux_implementation_num_inputs(circuit_lib, mux_model, mux_size);
   /* Note that the mux graph is indexed using datapath MUX size!!!! */
   MuxId mux_graph_id = mux_lib.mux_graph(mux_model, mux_size);
+  if (!mux_lib.valid_mux_id(mux_graph_id)) {
+    VTR_ASSERT(mux_lib.valid_mux_id(mux_graph_id));
+  }
   const MuxGraph mux_graph = mux_lib.mux_graph(mux_graph_id);
 
   size_t datapath_id = path_id;

@@ -17,6 +17,7 @@ namespace openfpga {
 
 void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
                             DeviceRRGSB& device_rr_gsb,
+                            const bool& include_clock,
                             const bool& verbose_output);
 
 void sort_device_rr_gsb_chan_node_in_edges(const RRGraphView& rr_graph,

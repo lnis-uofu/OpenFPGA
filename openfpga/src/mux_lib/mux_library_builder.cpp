@@ -231,6 +231,9 @@ MuxLibrary build_device_mux_library(const DeviceContext& vpr_device_ctx,
   VTR_LOG("Built a multiplexer library of %lu physical multiplexers.\n",
           mux_lib.muxes().size());
   VTR_LOG("Maximum multiplexer size is %lu.\n", mux_lib.max_mux_size());
+  for (auto mux_id : mux_lib.muxes()) {
+    VTR_LOG("\tmodel '%s', input_size='%lu'\n", openfpga_ctx.arch().circuit_lib.model_name(mux_lib.mux_circuit_model(mux_id)).c_str(), mux_lib.mux_graph(mux_id).num_inputs());
+  }
 
   return mux_lib;
 }
