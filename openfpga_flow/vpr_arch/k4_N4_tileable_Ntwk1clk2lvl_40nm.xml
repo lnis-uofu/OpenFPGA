@@ -64,9 +64,9 @@
           <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
         </fc>
         <pinlocations pattern="custom">
-          <loc side="left">clb.clk</loc>
+          <loc side="left"></loc>
           <loc side="top">clb.I[0:4] clb.O[0:1]</loc>
-          <loc side="right">clb.I[5:9] clb.O[2:3]</loc>
+          <loc side="right">clb.I[5:9] clb.O[2:3] clb.clk</loc>
           <loc side="bottom"/>
         </pinlocations>
       </sub_tile>
