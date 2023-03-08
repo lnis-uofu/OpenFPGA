@@ -37,6 +37,8 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Check for source code changes
         id: changes
