@@ -41,20 +41,26 @@ create-task () {
         return
     fi
     template="template_tasks/yosys_vpr_template"
-    if [ ${#2} -ge 1 ]; then 
-        if   [[ "$2" == "vpr_blif" ]]; then template="template_tasks/${2}_template/";
-        elif [[ "$2" == "yosys_vpr" ]]; then template="template_tasks/${2}_template/"; 
-        elif [[ "$2" == "vtr_benchmarks" ]]; then template="template_tasks/${2}_template/"; 
-        else template="$2" 
+    if [ ${#2} -ge 1 ]; then
+        if   [[ "$2" == "fabric_netlist_gen" ]]; then template="template_tasks/${2}_template/";
+        elif [[ "$2" == "fabric_verification" ]]; then template="template_tasks/${2}_template/";
+        elif [[ "$2" == "frac-lut-arch-explore" ]]; then template="template_tasks/${2}_template/";
+        elif [[ "$2" == "vtr_benchmarks" ]]; then template="template_tasks/${2}_template/";
+        else template="$2"
         fi
     fi
-    if [ ! -f $OPENFPGA_PATH/openfpga_flow/tasks/${template}/config/task.conf ]; then 
-        echo "Template project [${template}] does not exist" ; return; 
+    if [ ! -f $OPENFPGA_PATH/openfpga_flow/tasks/${template}/config/task.conf ]; then
+        echo "Template project [${template}] does not exist" ; return;
     fi
     echo "Creating task     $1"
     echo "Template project  ${template}"
     mkdir -p $1
     cp -r $OPENFPGA_PATH/openfpga_flow/tasks/${template}/* $1/
+}
+
+rerun-task () {
+    $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_fpga_task.py "$@" --remove_run_dir all
+    $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_fpga_task.py "$@"
 }
 
 run-task () {
@@ -66,7 +72,7 @@ clean-run () {
 }
 
 clear-task-run () {
-    $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_fpga_task.py "$@" --remove_run_dir all 
+    $PYTHON_EXEC $OPENFPGA_SCRIPT_PATH/run_fpga_task.py "$@" --remove_run_dir all
 }
 
 run-modelsim () {

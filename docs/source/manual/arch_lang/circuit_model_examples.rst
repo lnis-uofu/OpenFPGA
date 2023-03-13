@@ -523,9 +523,9 @@ Template
 
 .. option:: <design_technology type="<string>" structure="<string>" num_level="<int>" add_const_input="<bool>" const_input_val="<int>" local_encoder="<bool>"/>
 
-  - ``structure="tree|multi-level|one-level"`` Specify the multiplexer structure for a multiplexer. The structure option is only valid for SRAM-based multiplexers. For RRAM-based multiplexers, currently we only support the one-level structure
+  - ``structure="tree|multi_level|one_level"`` Specify the multiplexer structure for a multiplexer. The structure option is only valid for SRAM-based multiplexers. For RRAM-based multiplexers, currently we only support the one_level structure
 
-  - ``num_level="<int>"`` Specify the number of levels when ``multi-level`` structure is selected.
+  - ``num_level="<int>"`` Specify the number of levels when ``multi_level`` structure is selected.
     
   - ``add_const_input="true|false"`` Specify if an extra input should be added to the multiplexer circuits. For example, an 4-input multiplexer will be turned to a 5-input multiplexer. The extra input will be wired to a constant value, which can be specified through the XML syntax ``const_input_val``.
 
@@ -563,7 +563,7 @@ The code describing this Multiplexer is:
 .. code-block:: xml
 
   <circuit_model type="mux" name="mux_1level" prefix="mux_1level">
-    <design_technology type="cmos" structure="one-level"/>
+    <design_technology type="cmos" structure="one_level"/>
     <input_buffer exist="on" circuit_model_name="inv1x"/> 
     <output_buffer exist="on" circuit_model_name="tapbuf4"/> 
     <pass_gate_logic circuit_model_name="tgate"/>
