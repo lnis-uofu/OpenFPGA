@@ -360,20 +360,18 @@ def generate_each_task_actions(taskname):
             for key, values in task_conf[eachset].items():
                 command += ["--" + key, values] if values else ["--" + key]
 
-
             if "end_flow_with_test" in command:
                 # Verilog script is only required when end_flow_with_test defined
                 # Check if base verilog file exists
                 if not SynthSection.get(bech_name + "_verilog"):
                     clean_up_and_exit(
                         "Missing argument %s for vpr_blif flow" % (bech_name + "_verilog")
-                )
+                    )
 
             # Set label for Sript Parameters
             set_lbl = eachset.replace("SCRIPT_PARAM", "")
             set_lbl = set_lbl[1:] if set_lbl else "Common"
             script_para_list[set_lbl] = command
-
 
             CurrBenchPara["verilog_file"] = SynthSection.get(bech_name + "_verilog")
 
