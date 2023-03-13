@@ -867,8 +867,8 @@ def collect_files_for_vpr():
 
     # Sanitize provided Benchmark option
     if not os.path.isfile(args.base_verilog or ""):
-        logger.error("Base Verilog File - %s" % args.base_verilog)
-        clean_up_and_exit("Provided base_verilog file not found")
+        logger.warning("Base Verilog File - %s", args.base_verilog)
+        return
     shutil.copy(args.base_verilog, args.top_module + "_output_verilog.v")
 
 
