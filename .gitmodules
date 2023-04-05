@@ -8,3 +8,6 @@
 	path = vtr-verilog-to-routing
 	url = https://github.com/verilog-to-routing/vtr-verilog-to-routing.git
     branch = openfpga
+[submodule "RTL-eFPGA-redaction"]
+	path = RTL-eFPGA-redaction
+	url = git@github.com:Lucaz97/RTL-eFPGA-redaction.git
