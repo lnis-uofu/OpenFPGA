@@ -10,4 +10,4 @@
     branch = openfpga
 [submodule "RTL-eFPGA-redaction"]
 	path = RTL-eFPGA-redaction
-	url = git@github.com:Lucaz97/RTL-eFPGA-redaction.git
+	url = https://github.com/Lucaz97/RTL-eFPGA-redaction.git
