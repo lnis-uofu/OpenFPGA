@@ -3,7 +3,7 @@
 [![Cell Library Tests](https://github.com/lnis-uofu/OpenFPGA/actions/workflows/cell_lib_test.yml/badge.svg)](https://github.com/lnis-uofu/OpenFPGA/actions/workflows/cell_lib_test.yml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Documentation Status](https://readthedocs.org/projects/openfpga/badge/?version=master)](https://openfpga.readthedocs.io/en/master/?badge=master)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/lnis-uofu/OpenFPGA/master?urlpath=vscode)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Lucaz97/OpenFPGA/efpga_redaction?urlpath=vscode)
 
 Version: see [`VERSION.md`](VERSION.md)
 
