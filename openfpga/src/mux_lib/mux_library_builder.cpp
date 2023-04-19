@@ -56,7 +56,7 @@ static void build_routing_arch_mux_library(
         if (CircuitModelId::INVALID() == rr_switch_circuit_model) {
           VTR_LOG_ERROR(
             "Unable to find the circuit model for rr_switch '%s'!\n",
-            rr_graph.rr_switch_inf(driver_switches[0]).name);
+            rr_graph.rr_switch_inf(driver_switches[0]).name.c_str());
           VTR_LOG("Node type: %s\n", rr_graph.node_type_string(node));
           VTR_LOG("Node coordinate: %s\n",
                   rr_graph.node_coordinate_to_string(node).c_str());
