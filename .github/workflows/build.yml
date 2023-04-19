@@ -36,10 +36,10 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          submodules: true
+
       - name: Check for source code changes
         id: changes
         run: |
@@ -114,9 +114,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v2
-        with:
-          submodules: true
+        uses: actions/checkout@v3
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build.sh
@@ -129,10 +127,15 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1
 
+      - name: checkout submodules
+        shell: bash
+        run: |
+          make checkout
+
       - name: Build
         shell: bash
         run: |
-          make all BUILD_TYPE=$BUILD_TYPE
+          make compile BUILD_TYPE=$BUILD_TYPE
 
       # Check the cache size and see if it is over the limit
       - name: Check ccache size
@@ -200,9 +203,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v2
-        with:
-          submodules: true
+        uses: actions/checkout@v3
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build.sh
@@ -215,10 +216,15 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1
 
+      - name: checkout submodules
+        shell: bash
+        run: |
+          make checkout
+
       - name: Build
         shell: bash
         run: |
-          make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
+          make compile BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
 
   ubuntu_support:
     needs: change_detect
@@ -243,9 +249,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v2
-        with:
-          submodules: true
+        uses: actions/checkout@v3
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu22p04.sh
@@ -258,10 +262,15 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1
 
+      - name: checkout submodules
+        shell: bash
+        run: |
+          make checkout
+
       - name: Build
         shell: bash
         run: |
-          make all BUILD_TYPE=$BUILD_TYPE 
+          make compile BUILD_TYPE=$BUILD_TYPE 
 
   debug_build:
     needs: change_detect
@@ -290,9 +299,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v2
-        with:
-          submodules: true
+        uses: actions/checkout@v3
 
       - name: Install dependencies
         run: |
@@ -308,10 +315,15 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1
 
+      - name: checkout submodules
+        shell: bash
+        run: |
+          make checkout
+
       - name: Build
         shell: bash
         run: |
-          make all BUILD_TYPE=${{ matrix.config.build_type }} -j ${{ matrix.config.cores }}
+          make compile BUILD_TYPE=${{ matrix.config.build_type }} -j ${{ matrix.config.cores }}
 
       - name: Quick Test
         shell: bash
@@ -343,9 +355,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v2
-        with:
-          submodules: true
+        uses: actions/checkout@v3
 
       - name: Install dependencies
         run: |
@@ -361,10 +371,15 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1
 
+      - name: checkout submodules
+        shell: bash
+        run: |
+          make checkout
+
       - name: Build
         shell: bash
         run: |
-          make all BUILD_TYPE=${{ matrix.config.build_type }} -j ${{ matrix.config.cores }} CMAKE_FLAGS="-DOPENFPGA_ENABLE_STRICT_COMPILE=ON"
+          make compile BUILD_TYPE=${{ matrix.config.build_type }} -j ${{ matrix.config.cores }} CMAKE_FLAGS="-DOPENFPGA_ENABLE_STRICT_COMPILE=ON"
 
       - name: Quick Test
         shell: bash
@@ -382,7 +397,7 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Download a built artifacts
         uses: actions/download-artifact@v2
         with:
@@ -435,7 +450,7 @@ jobs:
           access_token: ${{ github.token }}
     
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Download a built artifacts
         uses: actions/download-artifact@v2
         with:
@@ -493,9 +508,8 @@ jobs:
           access_token: ${{ github.token }}
           
       - name: Checkout OpenFPGA repo
-        uses: actions/checkout@v2
-        with:
-          submodules: true
+        uses: actions/checkout@v3
+
       - name: ${{matrix.config.name}}_GCC-8_(Ubuntu 20.04)
         shell: bash
         run: |
