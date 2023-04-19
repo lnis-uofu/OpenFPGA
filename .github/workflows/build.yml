@@ -127,10 +127,15 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1
 
+      - name: checkout submodules
+        shell: bash
+        run: |
+          make checkout
+
       - name: Build
         shell: bash
         run: |
-          make all BUILD_TYPE=$BUILD_TYPE
+          make compile BUILD_TYPE=$BUILD_TYPE
 
       # Check the cache size and see if it is over the limit
       - name: Check ccache size
@@ -211,10 +216,15 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1
 
+      - name: checkout submodules
+        shell: bash
+        run: |
+          make checkout
+
       - name: Build
         shell: bash
         run: |
-          make all BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
+          make compile BUILD_TYPE=$BUILD_TYPE CMAKE_FLAGS="${{ matrix.config.cmake_flags }}"
 
   ubuntu_support:
     needs: change_detect
@@ -252,10 +262,15 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1
 
+      - name: checkout submodules
+        shell: bash
+        run: |
+          make checkout
+
       - name: Build
         shell: bash
         run: |
-          make all BUILD_TYPE=$BUILD_TYPE 
+          make compile BUILD_TYPE=$BUILD_TYPE 
 
   debug_build:
     needs: change_detect
@@ -300,10 +315,15 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1
 
+      - name: checkout submodules
+        shell: bash
+        run: |
+          make checkout
+
       - name: Build
         shell: bash
         run: |
-          make all BUILD_TYPE=${{ matrix.config.build_type }} -j ${{ matrix.config.cores }}
+          make compile BUILD_TYPE=${{ matrix.config.build_type }} -j ${{ matrix.config.cores }}
 
       - name: Quick Test
         shell: bash
@@ -351,10 +371,15 @@ jobs:
 
       - uses: hendrikmuhs/ccache-action@v1
 
+      - name: checkout submodules
+        shell: bash
+        run: |
+          make checkout
+
       - name: Build
         shell: bash
         run: |
-          make all BUILD_TYPE=${{ matrix.config.build_type }} -j ${{ matrix.config.cores }} CMAKE_FLAGS="-DOPENFPGA_ENABLE_STRICT_COMPILE=ON"
+          make compile BUILD_TYPE=${{ matrix.config.build_type }} -j ${{ matrix.config.cores }} CMAKE_FLAGS="-DOPENFPGA_ENABLE_STRICT_COMPILE=ON"
 
       - name: Quick Test
         shell: bash
