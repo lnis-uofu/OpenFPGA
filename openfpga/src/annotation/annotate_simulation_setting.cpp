@@ -208,14 +208,15 @@ int annotate_simulation_setting(
      *   - MUST mention in documentation that VPR should be run in timing
      * enabled mode
      */
-    ClbNetPinsMatrix<float> net_delay =
-      make_net_pins_matrix<float>(cluster_ctx.clb_nlist);
+    NetPinsMatrix<float> net_delay =
+      make_net_pins_matrix<float>((const Netlist<>&)cluster_ctx.clb_nlist);
     /* Load the net delays */
-    load_net_delay_from_routing(net_delay);
+    load_net_delay_from_routing((const Netlist<>&)cluster_ctx.clb_nlist,
+                                net_delay, false);
 
     /* Do final timing analysis */
     auto analysis_delay_calc = std::make_shared<AnalysisDelayCalculator>(
-      atom_ctx.nlist, atom_ctx.lookup, net_delay);
+      atom_ctx.nlist, atom_ctx.lookup, net_delay, false);
     auto timing_info = make_setup_hold_timing_info(analysis_delay_calc,
                                                    e_timing_update_type::FULL);
     timing_info->update();
