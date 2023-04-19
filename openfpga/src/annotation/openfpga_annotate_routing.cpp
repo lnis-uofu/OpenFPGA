@@ -22,12 +22,12 @@ void annotate_vpr_rr_node_nets(const DeviceContext& device_ctx,
                                const RoutingContext& routing_ctx,
                                VprRoutingAnnotation& vpr_routing_annotation,
                                const bool& verbose) {
-  vtr::vector<RRNodeId, ClusterNetId> node2net = annotate_rr_node_nets(
-    device_ctx, clustering_ctx, routing_ctx, verbose, false);
+  vtr::vector<RRNodeId, ParentNetId> node2net = annotate_rr_node_nets(
+    (const Netlist<>&)clustering_ctx.clb_nlist, device_ctx, routing_ctx, verbose, false);
   for (size_t node_id = 0; node_id < device_ctx.rr_graph.num_nodes();
        ++node_id) {
     vpr_routing_annotation.set_rr_node_net(RRNodeId(node_id),
-                                           node2net[RRNodeId(node_id)]);
+                                           convert_to_cluster_net_id(node2net[RRNodeId(node_id)]));
   }
   VTR_LOG("Loaded node-to-net mapping\n");
 }
