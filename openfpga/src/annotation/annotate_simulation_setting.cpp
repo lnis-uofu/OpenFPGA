@@ -211,7 +211,8 @@ int annotate_simulation_setting(
     NetPinsMatrix<float> net_delay =
       make_net_pins_matrix<float>((const Netlist<>&)cluster_ctx.clb_nlist);
     /* Load the net delays */
-    load_net_delay_from_routing((const Netlist<>&)cluster_ctx.clb_nlist, net_delay, false);
+    load_net_delay_from_routing((const Netlist<>&)cluster_ctx.clb_nlist,
+                                net_delay, false);
 
     /* Do final timing analysis */
     auto analysis_delay_calc = std::make_shared<AnalysisDelayCalculator>(
