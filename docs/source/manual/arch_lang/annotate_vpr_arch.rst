@@ -62,7 +62,7 @@ Here is an example:
 .. code-block:: xml
 
   <tile_annotations>
-    <global_port name="<string>" is_clock="<bool>" is_reset="<bool>" is_set="<bool>" default_val="<int>">
+    <global_port name="<string>" is_clock="<bool>" clock_arch_tree_name="<string>" is_reset="<bool>" is_set="<bool>" default_val="<int>">
       <tile name="<string>" port="<string>" x="<int>" y="<int>"/>
       ...
     </global_port>
@@ -71,6 +71,8 @@ Here is an example:
 - ``name="<string>"`` is the port name to appear in the top-level FPGA fabric.
 
 - ``is_clock="<bool>"`` define if the global port is a clock port at the top-level FPGA fabric. An operating clock port will be driven by proper signals in auto-generated testbenches.
+
+- ``clock_arch_tree_name="<string>"`` defines the name of the programmable clock network, which the global port will drive. The name of the programmable clock network must be a valid name (See details in :ref:`file_formats_clock_network`)
 
 - ``is_reset="<bool>"`` define if the global port is a reset port at the top-level FPGA fabric. An operating reset port will be driven by proper signals in testbenches.
 
