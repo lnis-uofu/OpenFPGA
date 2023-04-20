@@ -42,7 +42,7 @@ write_fabric_hierarchy --file ./fabric_hierarchy.txt
 # Repack the netlist to physical pbs
 # This must be done before bitstream generator and testbench generation
 # Strongly recommend it is done after all the fix-up have been applied
-repack #--verbose
+repack --design_constraints ${OPENFPGA_REPACK_CONSTRAINTS_FILE} #--verbose
 
 # Build the bitstream
 #  - Output the fabric-independent bitstream to a file
@@ -66,7 +66,7 @@ write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --pri
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
 write_full_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --explicit_port_mapping --include_signal_init --bitstream fabric_bitstream.bit 
 write_preconfigured_fabric_wrapper --embed_bitstream iverilog --file ./SRC  --explicit_port_mapping
-write_preconfigured_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --explicit_port_mapping 
+write_preconfigured_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --explicit_port_mapping --pin_constraints_file ${OPENFPGA_PIN_CONSTRAINTS_FILE} 
 
 # Finish and exit OpenFPGA
 exit
