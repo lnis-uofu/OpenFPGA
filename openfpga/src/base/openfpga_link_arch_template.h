@@ -12,6 +12,7 @@
 #include "annotate_placement.h"
 #include "annotate_rr_graph.h"
 #include "annotate_simulation_setting.h"
+#include "append_clock_rr_graph.h"
 #include "build_tile_direct.h"
 #include "command.h"
 #include "command_context.h"
@@ -22,6 +23,8 @@
 #include "openfpga_rr_graph_support.h"
 #include "pb_type_utils.h"
 #include "read_activity.h"
+#include "read_xml_pin_constraints.h"
+#include "route_clock_rr_graph.h"
 #include "vpr_device_annotation.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
@@ -106,9 +109,10 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   VTR_LOG("Built %ld incoming edges for routing resource graph\n",
           g_vpr_ctx.device().rr_graph.in_edges_count());
   VTR_ASSERT(g_vpr_ctx.device().rr_graph.validate_in_edges());
-  annotate_device_rr_gsb(g_vpr_ctx.device(),
-                         openfpga_ctx.mutable_device_rr_gsb(),
-                         cmd_context.option_enable(cmd, opt_verbose));
+  annotate_device_rr_gsb(
+    g_vpr_ctx.device(), openfpga_ctx.mutable_device_rr_gsb(),
+    !openfpga_ctx.clock_arch().empty(), /* FIXME: consider to be more robust! */
+    cmd_context.option_enable(cmd, opt_verbose));
 
   if (true == cmd_context.option_enable(cmd, opt_sort_edge)) {
     sort_device_rr_gsb_chan_node_in_edges(
@@ -180,6 +184,54 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
 
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
+ * Top-level function to append a clock network to VPR's routing resource graph,
+ *including:
+ * - Routing tracks dedicated to clock network
+ * - Programmable switches to enable reconfigurability of clock network
+ * - Adding virtual sources for clock signals
+ *******************************************************************/
+template <class T>
+int append_clock_rr_graph_template(T& openfpga_ctx, const Command& cmd,
+                                   const CommandContext& cmd_context) {
+  vtr::ScopedStartFinishTimer timer(
+    "Append clock network to routing resource graph");
+
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  return append_clock_rr_graph(
+    g_vpr_ctx.mutable_device(), openfpga_ctx.mutable_clock_rr_lookup(),
+    openfpga_ctx.clock_arch(), cmd_context.option_enable(cmd, opt_verbose));
+}
+
+/********************************************************************
+ * Top-level function to route a clock network based on the clock spines
+ * defined in clock architecture
+ *******************************************************************/
+template <class T>
+int route_clock_rr_graph_template(T& openfpga_ctx, const Command& cmd,
+                                  const CommandContext& cmd_context) {
+  vtr::ScopedStartFinishTimer timer("Route clock routing resource graph");
+
+  /* add an option '--pin_constraints_file in short '-pcf' */
+  CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* If pin constraints are enabled by command options, read the file */
+  PinConstraints pin_constraints;
+  if (true == cmd_context.option_enable(cmd, opt_pcf)) {
+    pin_constraints =
+      read_xml_pin_constraints(cmd_context.option_value(cmd, opt_pcf).c_str());
+  }
+
+  return route_clock_rr_graph(
+    openfpga_ctx.mutable_vpr_routing_annotation(), g_vpr_ctx.device(),
+    g_vpr_ctx.atom(), g_vpr_ctx.clustering().clb_nlist,
+    openfpga_ctx.vpr_netlist_annotation(), openfpga_ctx.clock_rr_lookup(),
+    openfpga_ctx.clock_arch(), pin_constraints,
+    cmd_context.option_enable(cmd, opt_verbose));
 }
 
 } /* end namespace openfpga */

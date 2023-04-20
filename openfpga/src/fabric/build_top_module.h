@@ -9,6 +9,7 @@
 
 #include "arch_direct.h"
 #include "circuit_library.h"
+#include "clock_network.h"
 #include "config_protocol.h"
 #include "decoder_library.h"
 #include "device_grid.h"
@@ -16,6 +17,7 @@
 #include "fabric_key.h"
 #include "memory_bank_shift_register_banks.h"
 #include "module_manager.h"
+#include "rr_clock_spatial_lookup.h"
 #include "rr_graph_view.h"
 #include "tile_annotation.h"
 #include "tile_direct.h"
@@ -32,7 +34,8 @@ namespace openfpga {
 int build_top_module(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   MemoryBankShiftRegisterBanks& blwl_sr_banks,
-  const CircuitLibrary& circuit_lib,
+  const CircuitLibrary& circuit_lib, const ClockNetwork& clk_ntwk,
+  const RRClockSpatialLookup& rr_clock_lookup,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
   const TileAnnotation& tile_annotation, const RRGraphView& rr_graph,
   const DeviceRRGSB& device_rr_gsb, const TileDirect& tile_direct,

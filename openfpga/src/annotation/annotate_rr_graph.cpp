@@ -96,7 +96,8 @@ static RRChan build_one_rr_chan(const DeviceContext& vpr_device_ctx,
  */
 static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
                           const vtr::Point<size_t>& gsb_range,
-                          const vtr::Point<size_t>& gsb_coord) {
+                          const vtr::Point<size_t>& gsb_coord,
+                          const bool& include_clock) {
   /* Create an object to return */
   RRGSB rr_gsb;
 
@@ -370,7 +371,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
     /* Collect IPIN rr_nodes*/
     temp_ipin_rr_nodes =
       find_rr_graph_grid_nodes(vpr_device_ctx.rr_graph, vpr_device_ctx.grid, ix,
-                               iy, IPIN, ipin_rr_node_grid_side);
+                               iy, IPIN, ipin_rr_node_grid_side, include_clock);
     /* Fill the ipin nodes of RRGSB */
     for (const RRNodeId& inode : temp_ipin_rr_nodes) {
       /* Skip those has no configurable outgoing, they should NOT appear in the
@@ -405,6 +406,7 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
  *******************************************************************/
 void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
                             DeviceRRGSB& device_rr_gsb,
+                            const bool& include_clock,
                             const bool& verbose_output) {
   vtr::ScopedStartFinishTimer timer(
     "Build General Switch Block(GSB) annotation on top of routing resource "
@@ -431,7 +433,7 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
         build_rr_gsb(vpr_device_ctx,
                      vtr::Point<size_t>(vpr_device_ctx.grid.width() - 2,
                                         vpr_device_ctx.grid.height() - 2),
-                     vtr::Point<size_t>(ix, iy));
+                     vtr::Point<size_t>(ix, iy), include_clock);
 
       /* Add to device_rr_gsb */
       vtr::Point<size_t> gsb_coordinate = rr_gsb.get_sb_coordinate();

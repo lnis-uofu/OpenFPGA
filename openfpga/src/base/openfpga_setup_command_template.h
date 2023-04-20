@@ -570,6 +570,128 @@ ShellCommandId add_pcf2place_command_template(
   return shell_cmd_id;
 }
 
+/********************************************************************
+ * - Add a command to Shell environment: read_openfpga_clock_arch
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_read_openfpga_clock_arch_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("read_openfpga_clock_arch");
+
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file = shell_cmd.add_option(
+    "file", true, "file path to the clock architecture XML");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  /* Add command 'read_openfpga_clock_arch' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "read OpenFPGA clock architecture file", hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     read_openfpga_clock_arch_template<T>);
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
+ * - Add a command to Shell environment: write_openfpga_clock_arch
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_write_openfpga_clock_arch_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("write_openfpga_clock_arch");
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file = shell_cmd.add_option(
+    "file", true, "file path to the clock architecture XML");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  /* Add command 'write_openfpga_clock_arch' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "write OpenFPGA clock architecture file", hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_const_execute_function(
+    shell_cmd_id, write_openfpga_clock_arch_template<T>);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
+ * - Add a command to Shell environment: append_clock_rr_graph
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_append_clock_rr_graph_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("append_clock_rr_graph");
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Show verbose outputs");
+
+  /* Add command 'pb_pin_fixup' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd,
+    "Append clock network to the routing resource graph built by VPR.", hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     append_clock_rr_graph_template<T>);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
+ * - Add a command to Shell environment: route_clock_rr_graph
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_route_clock_rr_graph_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("route_clock_rr_graph");
+
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file =
+    shell_cmd.add_option("pin_constraints_file", false,
+                         "specify the file path to the pin constraints");
+  shell_cmd.set_option_short_name(opt_file, "pcf");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Show verbose outputs");
+
+  /* Add command 'pb_pin_fixup' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd,
+    "Route clock network based on routing resource graph built by VPR.",
+    hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     route_clock_rr_graph_template<T>);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
 template <class T>
 void add_setup_command_templates(openfpga::Shell<T>& shell,
                                  const bool& hidden = false) {
@@ -637,6 +759,28 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
     hidden);
 
   /********************************
+   * Command 'read_openfpga_clock_arch'
+   */
+  std::vector<ShellCommandId> read_openfpga_clock_arch_dependent_cmds;
+  read_openfpga_clock_arch_dependent_cmds.push_back(vpr_cmd_id);
+  read_openfpga_clock_arch_dependent_cmds.push_back(read_arch_cmd_id);
+  ShellCommandId read_openfpga_clock_arch_cmd_id =
+    add_read_openfpga_clock_arch_command_template<T>(
+      shell, openfpga_setup_cmd_class, read_openfpga_clock_arch_dependent_cmds,
+      hidden);
+
+  /********************************
+   * Command 'write_openfpga_clock_arch'
+   */
+  /* The 'write_openfpga_clock_arch' command should NOT be executed
+   * before 'read_openfpga_clock_arch' */
+  std::vector<ShellCommandId> write_openfpga_clock_arch_dependent_cmds(
+    1, read_openfpga_clock_arch_cmd_id);
+  add_write_openfpga_clock_arch_command_template<T>(
+    shell, openfpga_setup_cmd_class, write_openfpga_clock_arch_dependent_cmds,
+    hidden);
+
+  /********************************
    * Command 'link_openfpga_arch'
    */
   /* The 'link_openfpga_arch' command should NOT be executed before 'vpr' */
@@ -648,6 +792,31 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
   link_arch_dependent_cmds.push_back(vpr_cmd_id);
   ShellCommandId link_arch_cmd_id = add_link_arch_command_template<T>(
     shell, openfpga_setup_cmd_class, link_arch_dependent_cmds, hidden);
+
+  /********************************
+   * Command 'append_clock_rr_graph'
+   */
+  /* The 'append_clock_rr_graph' command should NOT be executed before
+   * 'read_openfpga_clock_arch' */
+  std::vector<ShellCommandId> append_clock_rr_graph_dependent_cmds;
+  append_clock_rr_graph_dependent_cmds.push_back(
+    read_openfpga_clock_arch_cmd_id);
+  add_append_clock_rr_graph_command_template<T>(
+    shell, openfpga_setup_cmd_class, append_clock_rr_graph_dependent_cmds,
+    hidden);
+
+  /********************************
+   * Command 'route_clock_rr_graph'
+   */
+  /* The 'route_clock_rr_graph' command should NOT be executed before
+   * 'read_openfpga_clock_arch' and 'link_arch' */
+  std::vector<ShellCommandId> route_clock_rr_graph_dependent_cmds;
+  route_clock_rr_graph_dependent_cmds.push_back(
+    read_openfpga_clock_arch_cmd_id);
+  route_clock_rr_graph_dependent_cmds.push_back(link_arch_cmd_id);
+  add_route_clock_rr_graph_command_template<T>(
+    shell, openfpga_setup_cmd_class, route_clock_rr_graph_dependent_cmds,
+    hidden);
 
   /********************************
    * Command 'write_gsb'

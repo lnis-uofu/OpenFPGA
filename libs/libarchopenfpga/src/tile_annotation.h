@@ -51,6 +51,8 @@ class TileAnnotation {
   bool global_port_is_clock(const TileGlobalPortId& global_port_id) const;
   bool global_port_is_set(const TileGlobalPortId& global_port_id) const;
   bool global_port_is_reset(const TileGlobalPortId& global_port_id) const;
+  std::string global_port_clock_arch_tree_name(
+    const TileGlobalPortId& global_port_id) const;
   size_t global_port_default_value(
     const TileGlobalPortId& global_port_id) const;
 
@@ -66,6 +68,8 @@ class TileAnnotation {
                                         const vtr::Point<size_t>& tile_coord);
   void set_global_port_is_clock(const TileGlobalPortId& global_port_id,
                                 const bool& is_clock);
+  void set_global_port_clock_arch_tree_name(
+    const TileGlobalPortId& global_port_id, const std::string& clock_tree_name);
   void set_global_port_is_set(const TileGlobalPortId& global_port_id,
                               const bool& is_set);
   void set_global_port_is_reset(const TileGlobalPortId& global_port_id,
@@ -91,6 +95,7 @@ class TileAnnotation {
     global_port_tile_coordinates_;
   vtr::vector<TileGlobalPortId, std::vector<BasicPort>> global_port_tile_ports_;
   vtr::vector<TileGlobalPortId, bool> global_port_is_clock_;
+  vtr::vector<TileGlobalPortId, std::string> global_port_clock_arch_tree_names_;
   vtr::vector<TileGlobalPortId, bool> global_port_is_reset_;
   vtr::vector<TileGlobalPortId, bool> global_port_is_set_;
   vtr::vector<TileGlobalPortId, size_t> global_port_default_values_;

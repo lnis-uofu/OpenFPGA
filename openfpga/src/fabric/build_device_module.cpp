@@ -101,6 +101,7 @@ int build_device_module_graph(
   /* Build FPGA fabric top-level module */
   status = build_top_module(
     module_manager, decoder_lib, blwl_sr_banks, openfpga_ctx.arch().circuit_lib,
+    openfpga_ctx.clock_arch(), openfpga_ctx.clock_rr_lookup(),
     openfpga_ctx.vpr_device_annotation(), vpr_device_ctx.grid,
     openfpga_ctx.arch().tile_annotations, vpr_device_ctx.rr_graph,
     openfpga_ctx.device_rr_gsb(), openfpga_ctx.tile_direct(),
