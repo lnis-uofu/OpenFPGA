@@ -141,7 +141,8 @@ static int route_clock_tree_rr_graph(
         VTR_ASSERT(rr_graph.valid_node(des_node));
         vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node,
                                                      src_node);
-        /* It could happen that there is no net mapped some clock pin, skip the net mapping */
+        /* It could happen that there is no net mapped some clock pin, skip the
+         * net mapping */
         if (tree2clk_pin_map.find(ipin) != tree2clk_pin_map.end()) {
           vpr_routing_annotation.set_rr_node_net(src_node,
                                                  tree2clk_pin_map.at(ipin));
@@ -169,10 +170,10 @@ static int route_clock_tree_rr_graph(
               vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node,
                                                            src_node);
               if (tree2clk_pin_map.find(ipin) != tree2clk_pin_map.end()) {
-                vpr_routing_annotation.set_rr_node_net(src_node,
-                                                       tree2clk_pin_map.at(ipin));
-                vpr_routing_annotation.set_rr_node_net(des_node,
-                                                       tree2clk_pin_map.at(ipin));
+                vpr_routing_annotation.set_rr_node_net(
+                  src_node, tree2clk_pin_map.at(ipin));
+                vpr_routing_annotation.set_rr_node_net(
+                  des_node, tree2clk_pin_map.at(ipin));
               }
             }
           }
