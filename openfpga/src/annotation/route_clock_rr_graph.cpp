@@ -141,10 +141,13 @@ static int route_clock_tree_rr_graph(
         VTR_ASSERT(rr_graph.valid_node(des_node));
         vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node,
                                                      src_node);
-        vpr_routing_annotation.set_rr_node_net(src_node,
-                                               tree2clk_pin_map.at(ipin));
-        vpr_routing_annotation.set_rr_node_net(des_node,
-                                               tree2clk_pin_map.at(ipin));
+        /* It could happen that there is no net mapped some clock pin, skip the net mapping */
+        if (tree2clk_pin_map.find(ipin) != tree2clk_pin_map.end()) {
+          vpr_routing_annotation.set_rr_node_net(src_node,
+                                                 tree2clk_pin_map.at(ipin));
+          vpr_routing_annotation.set_rr_node_net(des_node,
+                                                 tree2clk_pin_map.at(ipin));
+        }
       }
       /* Route the spine-to-IPIN connections (only for the last level) */
       if (clk_ntwk.is_last_level(ispine)) {
@@ -165,10 +168,12 @@ static int route_clock_tree_rr_graph(
               VTR_ASSERT(rr_graph.valid_node(des_node));
               vpr_routing_annotation.set_rr_node_prev_node(rr_graph, des_node,
                                                            src_node);
-              vpr_routing_annotation.set_rr_node_net(src_node,
-                                                     tree2clk_pin_map.at(ipin));
-              vpr_routing_annotation.set_rr_node_net(des_node,
-                                                     tree2clk_pin_map.at(ipin));
+              if (tree2clk_pin_map.find(ipin) != tree2clk_pin_map.end()) {
+                vpr_routing_annotation.set_rr_node_net(src_node,
+                                                       tree2clk_pin_map.at(ipin));
+                vpr_routing_annotation.set_rr_node_net(des_node,
+                                                       tree2clk_pin_map.at(ipin));
+              }
             }
           }
         }
