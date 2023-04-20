@@ -250,7 +250,7 @@
     <pb_type name="clb">
       <input name="I" num_pins="10" equivalent="full"/>
       <output name="O" num_pins="4" equivalent="none"/>
-      <clock name="clk" num_pins="1"/>
+      <clock name="clk" num_pins="2"/>
       <!-- Describe basic logic element.  
              Each basic logic element has a 4-LUT that can be optionally registered
         -->
