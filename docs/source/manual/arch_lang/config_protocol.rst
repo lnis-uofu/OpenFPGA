@@ -77,6 +77,8 @@ It will use the circuit model defined in :numref:`fig_ccff_config_chain`.
    Example of a configuration chain to program core logic of a FPGA 
 
 
+.. _fig_multi_region_config_chains:
+
 .. figure:: figures/multi_region_config_chains.png
    :width: 100%
    :alt: map to buried treasure
@@ -95,7 +97,7 @@ Note that for each configuration chain, its programming clock can be separated o
 
   Define the indices of the configuration chains which will be controlled by the programming clock defined using XML syntax ``port``. The indices should consist of valid indices  within the range of number of regions.
 
-In the following example, a 6-head configuration protocol is defined where the first three chains share a common clock ``CK[0]``, where the forth chain is driven by an individual clock ``CK[1]`` and the other two chains are driven by a common clock ``CK[2]``.
+In the following example, a 6-head configuration protocol (corresponding to :numref:`fig_multi_region_config_chains`) is defined where the first three chains share a common clock ``CK[0]``, where the forth chain is driven by an individual clock ``CK[1]`` and the other two chains are driven by a common clock ``CK[2]``.
 
 .. code-block:: xml
 
