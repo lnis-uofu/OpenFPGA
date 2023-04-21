@@ -10,9 +10,9 @@ The XML-based clock network description language is used to describe
 
 Using the clock network description language, users can define multiple clock networks, each of which consists:
 
-- A number of clock spines which can propagate clock signals from one point to another. See details in :ref:`_file_formats_clock_network_clock_spine`.
-- A number of switch points which interconnects clock spines using programmable routing switches. See details in :ref:`_file_formats_clock_network_switch_point`.
-- A number of tap points which connect the clock spines to programmable blocks, e.g., CLBs. See details in :ref:`_file_formats_clock_network_tap_point`.
+- A number of clock spines which can propagate clock signals from one point to another. See details in :ref:`file_formats_clock_network_clock_spine`.
+- A number of switch points which interconnects clock spines using programmable routing switches. See details in :ref:`file_formats_clock_network_switch_point`.
+- A number of tap points which connect the clock spines to programmable blocks, e.g., CLBs. See details in :ref:`file_formats_clock_network_tap_point`.
 
 .. note:: Please note that the levels of a clock network will be automatically inferred from the clock spines and switch points. Clock network will be **only** built based on the width and the number of levels, as well as the tap points.
 
