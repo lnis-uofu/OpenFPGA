@@ -14,7 +14,9 @@
 
 /* Headers from libarchfpga */
 #include "arch_error.h"
+#include "config_protocol_xml_constants.h"
 #include "read_xml_config_protocol.h"
+#include "openfpga_port_parser.h"
 #include "read_xml_util.h"
 
 /********************************************************************
@@ -52,9 +54,15 @@ static void read_xml_ccff_prog_clock(pugi::xml_node& xml_progclk,
                                      const pugiutil::loc_data& loc_data,
                                      ConfigProtocol& config_protocol) {
   /* Find the type of configuration protocol */
-  const char* port_attr =
-    get_attribute(xml_progclk, "port", loc_data).value();
+  std::string port_attr =
+    get_attribute(xml_progclk, XML_CONFIG_PROTOCOL_CCFF_PROG_CLOCK_PORT_ATTR, loc_data).as_string();
 
+  std::string indices_attr =
+    get_attribute(xml_progclk, XML_CONFIG_PROTOCOL_CCFF_PROG_CLOCK_INDICES_ATTR, loc_data).as_string();
+
+  BasicPort port = openfpga::PortParser(port_attr).port(); 
+
+  config_protocol.set_prog_clock_port_ccff_head_indices_pair(port, indices_attr);
 }
 
 /********************************************************************
@@ -154,7 +162,7 @@ static void read_xml_config_organization(pugi::xml_node& xml_config_orgz,
   /* Parse the number of configurable regions
    * At least 1 region should be defined, otherwise error out
    */
-  config_protocol.set_num_regions(get_attribute(xml_config_orgz, "num_regions",
+  config_protocol.set_num_regions(get_attribute(xml_config_orgz, XML_CONFIG_PROTOCOL_NUM_REGIONS_ATTR,
                                                 loc_data,
                                                 pugiutil::ReqOpt::OPTIONAL)
                                     .as_int(1));
@@ -169,7 +177,7 @@ static void read_xml_config_organization(pugi::xml_node& xml_config_orgz,
   if (config_protocol.type() == CONFIG_MEM_SCAN_CHAIN) {
     for (pugi::xml_node xml_progclk : xml_config_orgz.children()) {
       /* Error out if the XML child has an invalid name! */
-      if (xml_progclk.name() != std::string("programming_clock")) {
+      if (xml_progclk.name() != std::string(XML_CONFIG_PROTOCOL_CCFF_PROG_CLOCK_NODE_NAME)) {
         bad_tag(xml_progclk, loc_data, xml_config_orgz, {"programming_clock"});
       }
       read_xml_ccff_prog_clock(xml_progclk, loc_data, config_protocol);
