@@ -46,6 +46,18 @@ static e_blwl_protocol_type string_to_blwl_protocol_type(
 }
 
 /********************************************************************
+ * Parse XML codes of a <programming_clock> to an object of configuration protocol
+ *******************************************************************/
+static void read_xml_ccff_prog_clock(pugi::xml_node& xml_progclk,
+                                     const pugiutil::loc_data& loc_data,
+                                     ConfigProtocol& config_protocol) {
+  /* Find the type of configuration protocol */
+  const char* port_attr =
+    get_attribute(xml_progclk, "port", loc_data).value();
+
+}
+
+/********************************************************************
  * Parse XML codes of a <bl> to an object of configuration protocol
  *******************************************************************/
 static void read_xml_bl_protocol(pugi::xml_node& xml_bl_protocol,
@@ -151,6 +163,17 @@ static void read_xml_config_organization(pugi::xml_node& xml_config_orgz,
                    "Invalid 'num_region=%d' definition. At least 1 region "
                    "should be defined!\n",
                    config_protocol.num_regions());
+  }
+
+  /* Parse Configuration chain protocols */
+  if (config_protocol.type() == CONFIG_MEM_SCAN_CHAIN) {
+    for (pugi::xml_node xml_progclk : xml_config_orgz.children()) {
+      /* Error out if the XML child has an invalid name! */
+      if (xml_progclk.name() != std::string("programming_clock")) {
+        bad_tag(xml_progclk, loc_data, xml_config_orgz, {"programming_clock"});
+      }
+      read_xml_ccff_prog_clock(xml_progclk, loc_data, config_protocol);
+    }
   }
 
   /* Parse BL & WL protocols */

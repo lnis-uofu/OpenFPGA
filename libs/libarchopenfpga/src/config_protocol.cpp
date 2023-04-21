@@ -10,7 +10,9 @@
 /************************************************************************
  * Constructors
  ***********************************************************************/
-ConfigProtocol::ConfigProtocol() { return; }
+ConfigProtocol::ConfigProtocol() {
+  INDICE_STRING_DELIM_ = ',';
+}
 
 /************************************************************************
  * Public Accessors
@@ -24,6 +26,28 @@ std::string ConfigProtocol::memory_model_name() const {
 CircuitModelId ConfigProtocol::memory_model() const { return memory_model_; }
 
 int ConfigProtocol::num_regions() const { return num_regions_; }
+
+std::vector<BasicPort> ConfigProtocol::prog_clock_ports() const {
+  std::vector<BasicPort> keys;
+  for (const auto& [k, v] : prog_clk_ccff_head_indices_) {
+    keys.push_back(k);
+  }
+  return keys;
+}
+
+std::string ConfigProtocol::prog_clock_port_ccff_head_indices(const BasicPort& port) const {
+  std::string ret("");
+  auto result = prog_clk_ccff_head_indices.find(port);
+  if (result != prog_clk_ccff_head_indices.end()) {
+    for (size_t idx : result->second) {
+      /* TODO: We need a join function */
+      ret += std::to_string(idx) + std::string(INDICE_STRING_DELIM);
+    }
+    /* Remove the last comma */
+    ret.pop();
+  }
+  return ret;
+}
 
 e_blwl_protocol_type ConfigProtocol::bl_protocol_type() const {
   return bl_protocol_type_;
@@ -71,6 +95,20 @@ void ConfigProtocol::set_memory_model(const CircuitModelId& memory_model) {
 
 void ConfigProtocol::set_num_regions(const int& num_regions) {
   num_regions_ = num_regions;
+}
+
+void ConfigProtocol::set_prog_clock_port_ccff_head_indices_pair(const BasicPort& port, const std::string& indices_str) {
+  openfpga::StringToken tokenizer(indices_str);
+  std::vector<int> token_int;
+  token_int.reserve(tokenizer.split(INDICE_STRING_DELIM_).size());
+  for (std::string token : tokenizer.split(INDICE_STRING_DELIM_)) {
+    token_int.push_back(std::atoi(token));
+  }
+  auto result = prog_clk_ccff_head_indices.find(port);
+  if (result != prog_clk_ccff_head_indices.end()) {
+    VTR_LOG_WARN("Overwrite the pair between programming clock port '%s[%d:%d]' and ccff head indices (previous: '%s', current: '%s')!\n", port.get_name().c_str(), port.get_lsb(), port.get_msb(), prog_clock_port_ccff_head_indices(port).c_str(), indices_str.c_str());
+  }
+  prog_clk_ccff_head_indices_[port] = token_int;
 }
 
 void ConfigProtocol::set_bl_protocol_type(const e_blwl_protocol_type& type) {
