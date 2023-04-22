@@ -4,8 +4,8 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "config_protocol.h"
 #include "circuit_library.h"
+#include "config_protocol.h"
 
 /********************************************************************
  * Function declaration
@@ -14,8 +14,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-bool check_config_protocol(
-  const ConfigProtocol& config_protocol, const CircuitLibrary& circuit_lib);
+bool check_config_protocol(const ConfigProtocol& config_protocol,
+                           const CircuitLibrary& circuit_lib);
 
 } /* end namespace openfpga */
 

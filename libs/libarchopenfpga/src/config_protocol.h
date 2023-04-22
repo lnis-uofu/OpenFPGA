@@ -1,8 +1,8 @@
 #ifndef CONFIG_PROTOCOL_H
 #define CONFIG_PROTOCOL_H
 
-#include <string>
 #include <map>
+#include <string>
 
 #include "circuit_library_fwd.h"
 #include "circuit_types.h"
@@ -30,12 +30,14 @@ class ConfigProtocol {
   std::string memory_model_name() const;
   CircuitModelId memory_model() const;
   int num_regions() const;
-  
+
   /* Get a list of programming clock ports */
   std::vector<openfpga::BasicPort> prog_clock_ports() const;
   /* Get a list of programming clock ports */
-  std::string prog_clock_port_ccff_head_indices_str(const openfpga::BasicPort& port) const;
-  std::vector<size_t> prog_clock_port_ccff_head_indices(const openfpga::BasicPort& port) const;
+  std::string prog_clock_port_ccff_head_indices_str(
+    const openfpga::BasicPort& port) const;
+  std::vector<size_t> prog_clock_port_ccff_head_indices(
+    const openfpga::BasicPort& port) const;
 
   e_blwl_protocol_type bl_protocol_type() const;
   std::string bl_memory_model_name() const;
@@ -45,14 +47,17 @@ class ConfigProtocol {
   std::string wl_memory_model_name() const;
   CircuitModelId wl_memory_model() const;
   size_t wl_num_banks() const;
+
  public: /* Public Mutators */
   void set_type(const e_config_protocol_type& type);
   void set_memory_model_name(const std::string& memory_model_name);
   void set_memory_model(const CircuitModelId& memory_model);
   void set_num_regions(const int& num_regions);
 
-  /* Add a pair of programming clock port and ccff head indices. This API will parse the index list, e.g., "0,1" to a vector of integers [0 1] */
-  void set_prog_clock_port_ccff_head_indices_pair(const openfpga::BasicPort& port, const std::string& indices_str);
+  /* Add a pair of programming clock port and ccff head indices. This API will
+   * parse the index list, e.g., "0,1" to a vector of integers [0 1] */
+  void set_prog_clock_port_ccff_head_indices_pair(
+    const openfpga::BasicPort& port, const std::string& indices_str);
 
   void set_bl_protocol_type(const e_blwl_protocol_type& type);
   void set_bl_memory_model_name(const std::string& memory_model_name);
@@ -64,13 +69,15 @@ class ConfigProtocol {
   void set_wl_num_banks(const size_t& num_banks);
 
  public: /* Public validators */
-  /* Check if internal data has any conflicts to each other. Return number of errors detected */
+  /* Check if internal data has any conflicts to each other. Return number of
+   * errors detected */
   int validate() const;
 
  private: /* Private validators */
-  /* For configuration chains, to validate if 
+  /* For configuration chains, to validate if
    * - programming clocks is smaller than the number of regions
-   * - programming clocks does not have any conflicts in controlling regions (no overlaps)
+   * - programming clocks does not have any conflicts in controlling regions (no
+   * overlaps)
    * - each region has been assigned to a programming clock
    * Return number of errors detected
    */
@@ -90,8 +97,10 @@ class ConfigProtocol {
   /* Number of configurable regions */
   int num_regions_;
 
-  /* Programming clock managment: This is only applicable to configuration chain protocols */
-  std::map<openfpga::BasicPort, std::vector<size_t>> prog_clk_ccff_head_indices_;
+  /* Programming clock managment: This is only applicable to configuration chain
+   * protocols */
+  std::map<openfpga::BasicPort, std::vector<size_t>>
+    prog_clk_ccff_head_indices_;
   char INDICE_STRING_DELIM_;
 
   /* BL & WL protocol: This is only applicable to memory-bank configuration
