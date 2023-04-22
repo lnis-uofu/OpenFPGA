@@ -18,7 +18,7 @@ Note that an OpenFPGA architecture can be applied to multiple VPR architecture f
 - aib: If the Advanced Interface Bus (AIB) is used in place of some I/Os.
 - <bank\|cc\|frame\|standalone>: specify the type of configuration protocol used in the architecture.
   - `bank` refers to the memory bank
-  - `cc` refers to the configuration chain
+  - `cc` refers to the configuration chain. Note that a postfix `<int>clk` may be applied when the configuration chain is controlled by more than 1 clocks
   - `frame` refers to the frame-based organization
   - `standalone` referes to the vanilla organization
 - fixed\_sim: fixed clock frequencies in simulation settings. If auto clock frequencies are used, there is no need to appear in the naming
