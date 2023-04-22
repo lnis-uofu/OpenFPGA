@@ -48,7 +48,7 @@ static void write_xml_config_organization(std::fstream& fp, const char* fname,
         port.to_verilog_string().c_str());
       write_xml_attribute(
         fp, XML_CONFIG_PROTOCOL_CCFF_PROG_CLOCK_INDICES_ATTR,
-        config_protocol.prog_clock_port_ccff_head_indices(port).c_str());
+        config_protocol.prog_clock_port_ccff_head_indices_str(port).c_str());
       fp << "/>"
          << "\n";
     }

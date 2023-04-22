@@ -1,3 +1,4 @@
+#include "openfpga_tokenizer.h"
 #include "config_protocol.h"
 
 #include "vtr_assert.h"
@@ -27,32 +28,32 @@ CircuitModelId ConfigProtocol::memory_model() const { return memory_model_; }
 
 int ConfigProtocol::num_regions() const { return num_regions_; }
 
-std::vector<BasicPort> ConfigProtocol::prog_clock_ports() const {
-  std::vector<BasicPort> keys;
+std::vector<openfpga::BasicPort> ConfigProtocol::prog_clock_ports() const {
+  std::vector<openfpga::BasicPort> keys;
   for (const auto& [k, v] : prog_clk_ccff_head_indices_) {
     keys.push_back(k);
   }
   return keys;
 }
 
-std::string ConfigProtocol::prog_clock_port_ccff_head_indices(const BasicPort& port) const {
+std::string ConfigProtocol::prog_clock_port_ccff_head_indices_str(const openfpga::BasicPort& port) const {
   std::string ret("");
   std::vector<size_t> raw = prog_clock_port_ccff_head_indices(port);
   if (!raw.empty()) {
     for (size_t idx : raw) {
       /* TODO: We need a join function */
-      ret += std::to_string(idx) + std::string(INDICE_STRING_DELIM);
+      ret += std::to_string(idx) + std::to_string(INDICE_STRING_DELIM_);
     }
     /* Remove the last comma */
-    ret.pop();
+    ret.pop_back();
   }
   return ret;
 }
 
-std::vector<size_t> ConfigProtocol::prog_clock_port_ccff_head_indices(const BasicPort& port) const {
+std::vector<size_t> ConfigProtocol::prog_clock_port_ccff_head_indices(const openfpga::BasicPort& port) const {
   std::vector<size_t> ret;
-  auto result = prog_clk_ccff_head_indices.find(port);
-  if (result != prog_clk_ccff_head_indices.end()) {
+  auto result = prog_clk_ccff_head_indices_.find(port);
+  if (result != prog_clk_ccff_head_indices_.end()) {
     return result->second;
   }
   return ret;
@@ -106,16 +107,16 @@ void ConfigProtocol::set_num_regions(const int& num_regions) {
   num_regions_ = num_regions;
 }
 
-void ConfigProtocol::set_prog_clock_port_ccff_head_indices_pair(const BasicPort& port, const std::string& indices_str) {
+void ConfigProtocol::set_prog_clock_port_ccff_head_indices_pair(const openfpga::BasicPort& port, const std::string& indices_str) {
   openfpga::StringToken tokenizer(indices_str);
-  std::vector<int> token_int;
+  std::vector<size_t> token_int;
   token_int.reserve(tokenizer.split(INDICE_STRING_DELIM_).size());
   for (std::string token : tokenizer.split(INDICE_STRING_DELIM_)) {
-    token_int.push_back(std::atoi(token));
+    token_int.push_back(std::stoi(token));
   }
-  auto result = prog_clk_ccff_head_indices.find(port);
-  if (result != prog_clk_ccff_head_indices.end()) {
-    VTR_LOG_WARN("Overwrite the pair between programming clock port '%s[%d:%d]' and ccff head indices (previous: '%s', current: '%s')!\n", port.get_name().c_str(), port.get_lsb(), port.get_msb(), prog_clock_port_ccff_head_indices(port).c_str(), indices_str.c_str());
+  auto result = prog_clk_ccff_head_indices_.find(port);
+  if (result != prog_clk_ccff_head_indices_.end()) {
+    VTR_LOG_WARN("Overwrite the pair between programming clock port '%s[%d:%d]' and ccff head indices (previous: '%s', current: '%s')!\n", port.get_name().c_str(), port.get_lsb(), port.get_msb(), prog_clock_port_ccff_head_indices_str(port).c_str(), indices_str.c_str());
   }
   prog_clk_ccff_head_indices_[port] = token_int;
 }
@@ -205,11 +206,11 @@ void ConfigProtocol::set_wl_num_banks(const size_t& num_banks) {
 /************************************************************************
  * Private Validators
  ***********************************************************************/
-int ConfigProtocol::validate_ccff_prog_clocks() {
+int ConfigProtocol::validate_ccff_prog_clocks() const {
   int num_err = 0;
   /* Initialize scoreboard */
   std::vector<int> ccff_head_scoreboard(num_regions(), 0);
-  for (BasicPort port : prog_clock_ports()) {
+  for (openfpga::BasicPort port : prog_clock_ports()) {
     /* Must be valid first */ 
     if (port.is_valid()) {
       VTR_LOG_ERROR("Programming clock '%s[%d:%d]' is not a valid port!\n", port.get_name().c_str(), port.get_lsb(), port.get_msb());
@@ -222,14 +223,14 @@ int ConfigProtocol::validate_ccff_prog_clocks() {
     }
     /* Fill scoreboard */
     for (size_t ccff_head_idx : prog_clock_port_ccff_head_indices(port)) {
-      if (ccff_head_idx => ccff_head_scoreboard.size()) {
+      if (ccff_head_idx >= ccff_head_scoreboard.size()) {
         VTR_LOG_ERROR("Programming clock '%s[%d:%d]' controlls an invalid ccff head '%ld' (Expect [0, '%ld'])!\n", port.get_name().c_str(), port.get_lsb(), port.get_msb(), ccff_head_idx, ccff_head_scoreboard.size() - 1);
         num_err++;
       }
       ccff_head_scoreboard[ccff_head_idx]++;
     }
   }
-  if (prog_clock_ports().size() != num_regions()) {
+  if (prog_clock_ports().size() != (size_t)num_regions()) {
     VTR_LOG_ERROR("Number of programming clocks '%ld' does not match the number of configuration regions '%ld'!\n", prog_clock_ports().size(), num_regions());
     num_err++;
   }
@@ -249,7 +250,7 @@ int ConfigProtocol::validate_ccff_prog_clocks() {
 /************************************************************************
  * Public Validators
  ***********************************************************************/
-int ConfigProtocol::validate() {
+int ConfigProtocol::validate() const {
   int num_err = 0;
   if (type() == CONFIG_MEM_SCAN_CHAIN) {
     num_err += validate_ccff_prog_clocks();

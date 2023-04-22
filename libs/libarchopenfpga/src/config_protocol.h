@@ -2,6 +2,7 @@
 #define CONFIG_PROTOCOL_H
 
 #include <string>
+#include <map>
 
 #include "circuit_library_fwd.h"
 #include "circuit_types.h"
@@ -31,10 +32,10 @@ class ConfigProtocol {
   int num_regions() const;
   
   /* Get a list of programming clock ports */
-  std::vector<BasicPort> prog_clock_ports() const;
+  std::vector<openfpga::BasicPort> prog_clock_ports() const;
   /* Get a list of programming clock ports */
-  std::string prog_clock_port_ccff_head_indices(const BasicPort& port) const;
-  std::vector<size_t> prog_clock_port_ccff_head_indices(const BasicPort& port) const;
+  std::string prog_clock_port_ccff_head_indices_str(const openfpga::BasicPort& port) const;
+  std::vector<size_t> prog_clock_port_ccff_head_indices(const openfpga::BasicPort& port) const;
 
   e_blwl_protocol_type bl_protocol_type() const;
   std::string bl_memory_model_name() const;
@@ -51,7 +52,7 @@ class ConfigProtocol {
   void set_num_regions(const int& num_regions);
 
   /* Add a pair of programming clock port and ccff head indices. This API will parse the index list, e.g., "0,1" to a vector of integers [0 1] */
-  void set_prog_clock_port_ccff_head_indices_pair(const BasicPort& port, const std::string& indices_str);
+  void set_prog_clock_port_ccff_head_indices_pair(const openfpga::BasicPort& port, const std::string& indices_str);
 
   void set_bl_protocol_type(const e_blwl_protocol_type& type);
   void set_bl_memory_model_name(const std::string& memory_model_name);
@@ -90,7 +91,7 @@ class ConfigProtocol {
   int num_regions_;
 
   /* Programming clock managment: This is only applicable to configuration chain protocols */
-  std::map<BasicPort, std::vector<size_t>> prog_clk_ccff_head_indices_;
+  std::map<openfpga::BasicPort, std::vector<size_t>> prog_clk_ccff_head_indices_;
   char INDICE_STRING_DELIM_;
 
   /* BL & WL protocol: This is only applicable to memory-bank configuration

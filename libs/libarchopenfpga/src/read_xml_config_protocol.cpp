@@ -60,7 +60,7 @@ static void read_xml_ccff_prog_clock(pugi::xml_node& xml_progclk,
   std::string indices_attr =
     get_attribute(xml_progclk, XML_CONFIG_PROTOCOL_CCFF_PROG_CLOCK_INDICES_ATTR, loc_data).as_string();
 
-  BasicPort port = openfpga::PortParser(port_attr).port(); 
+  openfpga::BasicPort port = openfpga::PortParser(port_attr).port(); 
 
   config_protocol.set_prog_clock_port_ccff_head_indices_pair(port, indices_attr);
 }

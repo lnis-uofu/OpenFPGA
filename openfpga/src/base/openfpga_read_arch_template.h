@@ -4,6 +4,7 @@
  * This file includes functions to read an OpenFPGA architecture file
  * which are built on the libarchopenfpga library
  *******************************************************************/
+#include "check_config_protocol.h"
 #include "check_circuit_library.h"
 #include "check_tile_annotation.h"
 #include "circuit_library_utils.h"
