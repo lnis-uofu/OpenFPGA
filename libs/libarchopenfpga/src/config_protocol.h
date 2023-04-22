@@ -31,12 +31,14 @@ class ConfigProtocol {
   CircuitModelId memory_model() const;
   int num_regions() const;
 
+  /* Get information of the programming clock port: name and width */
+  openfpga::BasicPort prog_clock_port_info() const;
+  /* Get a list of programming clock pins, flatten from the programming clock port */
+  std::vector<openfpga::BasicPort> prog_clock_pins() const;
   /* Get a list of programming clock ports */
-  std::vector<openfpga::BasicPort> prog_clock_ports() const;
-  /* Get a list of programming clock ports */
-  std::string prog_clock_port_ccff_head_indices_str(
+  std::string prog_clock_pin_ccff_head_indices_str(
     const openfpga::BasicPort& port) const;
-  std::vector<size_t> prog_clock_port_ccff_head_indices(
+  std::vector<size_t> prog_clock_pin_ccff_head_indices(
     const openfpga::BasicPort& port) const;
 
   e_blwl_protocol_type bl_protocol_type() const;
@@ -54,10 +56,12 @@ class ConfigProtocol {
   void set_memory_model(const CircuitModelId& memory_model);
   void set_num_regions(const int& num_regions);
 
-  /* Add a pair of programming clock port and ccff head indices. This API will
+  /* Add the programming clock port */
+  void set_prog_clock_port(const openfpga::BasicPort& port);
+  /* Add a pair of programming clock pin and ccff head indices. This API will
    * parse the index list, e.g., "0,1" to a vector of integers [0 1] */
-  void set_prog_clock_port_ccff_head_indices_pair(
-    const openfpga::BasicPort& port, const std::string& indices_str);
+  void set_prog_clock_pin_ccff_head_indices_pair(
+    const openfpga::BasicPort& pin, const std::string& indices_str);
 
   void set_bl_protocol_type(const e_blwl_protocol_type& type);
   void set_bl_memory_model_name(const std::string& memory_model_name);
@@ -99,8 +103,8 @@ class ConfigProtocol {
 
   /* Programming clock managment: This is only applicable to configuration chain
    * protocols */
-  std::map<openfpga::BasicPort, std::vector<size_t>>
-    prog_clk_ccff_head_indices_;
+  BasicPort prog_clk_port_;
+  std::vector<std::vector<size_t>> prog_clk_ccff_head_indices_;
   char INDICE_STRING_DELIM_;
 
   /* BL & WL protocol: This is only applicable to memory-bank configuration
