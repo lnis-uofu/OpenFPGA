@@ -37,14 +37,23 @@ std::vector<BasicPort> ConfigProtocol::prog_clock_ports() const {
 
 std::string ConfigProtocol::prog_clock_port_ccff_head_indices(const BasicPort& port) const {
   std::string ret("");
-  auto result = prog_clk_ccff_head_indices.find(port);
-  if (result != prog_clk_ccff_head_indices.end()) {
-    for (size_t idx : result->second) {
+  std::vector<size_t> raw = prog_clock_port_ccff_head_indices(port);
+  if (!raw.empty()) {
+    for (size_t idx : raw) {
       /* TODO: We need a join function */
       ret += std::to_string(idx) + std::string(INDICE_STRING_DELIM);
     }
     /* Remove the last comma */
     ret.pop();
+  }
+  return ret;
+}
+
+std::vector<size_t> ConfigProtocol::prog_clock_port_ccff_head_indices(const BasicPort& port) const {
+  std::vector<size_t> ret;
+  auto result = prog_clk_ccff_head_indices.find(port);
+  if (result != prog_clk_ccff_head_indices.end()) {
+    return result->second;
   }
   return ret;
 }
@@ -192,3 +201,59 @@ void ConfigProtocol::set_wl_num_banks(const size_t& num_banks) {
   }
   wl_num_banks_ = num_banks;
 }
+
+/************************************************************************
+ * Private Validators
+ ***********************************************************************/
+int ConfigProtocol::validate_ccff_prog_clocks() {
+  int num_err = 0;
+  /* Initialize scoreboard */
+  std::vector<int> ccff_head_scoreboard(num_regions(), 0);
+  for (BasicPort port : prog_clock_ports()) {
+    /* Must be valid first */ 
+    if (port.is_valid()) {
+      VTR_LOG_ERROR("Programming clock '%s[%d:%d]' is not a valid port!\n", port.get_name().c_str(), port.get_lsb(), port.get_msb());
+      num_err++;
+    }
+    /* Each port should have a width of 1 */ 
+    if (port.get_width() != 1) {
+      VTR_LOG_ERROR("Expect each programming clock has a size of 1 in the definition. '%s[%d:%d]' violates the rule!\n", port.get_name().c_str(), port.get_lsb(), port.get_msb());
+      num_err++;
+    }
+    /* Fill scoreboard */
+    for (size_t ccff_head_idx : prog_clock_port_ccff_head_indices(port)) {
+      if (ccff_head_idx => ccff_head_scoreboard.size()) {
+        VTR_LOG_ERROR("Programming clock '%s[%d:%d]' controlls an invalid ccff head '%ld' (Expect [0, '%ld'])!\n", port.get_name().c_str(), port.get_lsb(), port.get_msb(), ccff_head_idx, ccff_head_scoreboard.size() - 1);
+        num_err++;
+      }
+      ccff_head_scoreboard[ccff_head_idx]++;
+    }
+  }
+  if (prog_clock_ports().size() != num_regions()) {
+    VTR_LOG_ERROR("Number of programming clocks '%ld' does not match the number of configuration regions '%ld'!\n", prog_clock_ports().size(), num_regions());
+    num_err++;
+  }
+  for (size_t iregion = 0; iregion < ccff_head_scoreboard.size(); iregion++) {
+    if (ccff_head_scoreboard[iregion] == 0) {
+      VTR_LOG_ERROR("Configuration chain '%ld' is not driven by any programming clock!\n", iregion);
+      num_err++;
+    }
+    if (ccff_head_scoreboard[iregion] > 1) {
+      VTR_LOG_ERROR("Configuration chain '%ld' is driven by %ld programming clock!\n", iregion, ccff_head_scoreboard[iregion]);
+      num_err++;
+    }
+  }
+  return num_err; 
+}
+
+/************************************************************************
+ * Public Validators
+ ***********************************************************************/
+int ConfigProtocol::validate() {
+  int num_err = 0;
+  if (type() == CONFIG_MEM_SCAN_CHAIN) {
+    num_err += validate_ccff_prog_clocks();
+  }
+  return num_err; 
+}
+

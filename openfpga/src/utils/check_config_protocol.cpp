@@ -67,7 +67,12 @@ int check_config_protocol_programming_clock(
 bool check_config_protocol(
   const ConfigProtocol& config_protocol, const CircuitLibrary& circuit_lib) {
   int num_err = 0;
-  if (false == check_configurable_memory_circuit_model(
+
+  if (!config_protocol.validate()) {
+    num_err++;
+  }
+
+  if (!check_configurable_memory_circuit_model(
                  config_protocol,
                  circuit_lib)) {
     num_err++;

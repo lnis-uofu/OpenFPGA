@@ -34,6 +34,7 @@ class ConfigProtocol {
   std::vector<BasicPort> prog_clock_ports() const;
   /* Get a list of programming clock ports */
   std::string prog_clock_port_ccff_head_indices(const BasicPort& port) const;
+  std::vector<size_t> prog_clock_port_ccff_head_indices(const BasicPort& port) const;
 
   e_blwl_protocol_type bl_protocol_type() const;
   std::string bl_memory_model_name() const;
@@ -43,7 +44,6 @@ class ConfigProtocol {
   std::string wl_memory_model_name() const;
   CircuitModelId wl_memory_model() const;
   size_t wl_num_banks() const;
-
  public: /* Public Mutators */
   void set_type(const e_config_protocol_type& type);
   void set_memory_model_name(const std::string& memory_model_name);
@@ -61,6 +61,19 @@ class ConfigProtocol {
   void set_wl_memory_model_name(const std::string& memory_model_name);
   void set_wl_memory_model(const CircuitModelId& memory_model);
   void set_wl_num_banks(const size_t& num_banks);
+
+ public: /* Public validators */
+  /* Check if internal data has any conflicts to each other. Return number of errors detected */
+  int validate() const;
+
+ private: /* Private validators */
+  /* For configuration chains, to validate if 
+   * - programming clocks is smaller than the number of regions
+   * - programming clocks does not have any conflicts in controlling regions (no overlaps)
+   * - each region has been assigned to a programming clock
+   * Return number of errors detected
+   */
+  int validate_ccff_prog_clocks() const;
 
  private: /* Internal data */
   /* The type of configuration protocol.
