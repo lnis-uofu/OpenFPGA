@@ -602,7 +602,7 @@ int build_top_module(
     global_port_blacklist.push_back(prog_clk_port.get_name());
     /* Add port */
     ModulePortId port_id = module_manager.add_port(
-      module_id, prog_clk_port, ModuleManager::MODULE_GLOBAL_PORT);
+      top_module, prog_clk_port, ModuleManager::MODULE_GLOBAL_PORT);
     /* Add nets by following configurable children under different regions */
     add_top_module_nets_prog_clock(module_manager, top_module, port_id, config_protocol);
   }

@@ -67,7 +67,7 @@ static void read_xml_ccff_prog_clock(pugi::xml_node& xml_progclk,
 
   openfpga::BasicPort port = openfpga::PortParser(port_attr).port();
 
-  config_protocol.set_prog_clock_port_ccff_head_indices_pair(port,
+  config_protocol.set_prog_clock_pin_ccff_head_indices_pair(port,
                                                              indices_attr);
 }
 
@@ -207,6 +207,7 @@ static void read_xml_config_organization(pugi::xml_node& xml_config_orgz,
         }
       }
     }
+    config_protocol.set_prog_clock_port(prog_clk_port);
 
     /* Second pass: fill the clock detailed connections */
     for (pugi::xml_node xml_progclk : xml_config_orgz.children()) {

@@ -1281,13 +1281,13 @@ void add_top_module_nets_prog_clock(ModuleManager& module_manager,
                                     const ModulePortId& src_port,
                                     const ConfigProtocol& config_protocol) {
   BasicPort src_port_info = module_manager.module_port(top_module, src_port);
-  for (size_t pin : src_port_info.pins()) {
+  for (size_t net_src_pin_id : src_port_info.pins()) {
     /* Create the net */
     ModuleNetId net = create_module_source_pin_net(
       module_manager, top_module, top_module, 0,
-      src_port, src_port_info.pins()[pin_id]);
+      src_port, src_port_info.pins()[net_src_pin_id]);
     /* Find all the sink nodes and build the connection one by one */
-    for (size_t iregion : config_protocol.prog_clock_port_ccff_head_indices(BasicPort(src_port_info.get_name(), pin, pin))) {
+    for (size_t iregion : config_protocol.prog_clock_pin_ccff_head_indices(BasicPort(src_port_info.get_name(), net_src_pin_id, net_src_pin_id))) {
       ConfigRegionId config_region = ConfigRegionId(iregion);
       for (size_t mem_index = 0; mem_index < module_manager
                                                .region_configurable_children(
@@ -1308,7 +1308,7 @@ void add_top_module_nets_prog_clock(ModuleManager& module_manager,
           /* Add net sink */
           module_manager.add_module_net_sink(top_module, net, net_sink_module_id,
                                              net_sink_instance_id, net_sink_port_id,
-                                             net_sink_port.pins()[net_sink_pin_id])
+                                             net_sink_port.pins()[net_sink_pin_id]);
         }
       }
     }

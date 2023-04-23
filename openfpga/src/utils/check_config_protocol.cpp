@@ -34,7 +34,7 @@ static int check_config_protocol_programming_clock(
     num_err++;
   }
   /* Try to match the programming clock port name with the CCFF port name */
-  for (BasicPort prog_clk_port : config_protocol.prog_clock_ports()) {
+  for (BasicPort prog_clk_port : config_protocol.prog_clock_pins()) {
     bool port_match = false;
     for (CircuitModelId ccff_model : ccff_models) {
       CircuitPortId circuit_port =
