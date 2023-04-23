@@ -6,8 +6,8 @@
  *******************************************************************/
 #include <vector>
 
-#include "config_protocol.h"
 #include "clock_network.h"
+#include "config_protocol.h"
 #include "device_grid.h"
 #include "device_rr_gsb.h"
 #include "module_manager.h"

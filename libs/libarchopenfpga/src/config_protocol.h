@@ -31,11 +31,13 @@ class ConfigProtocol {
   CircuitModelId memory_model() const;
   int num_regions() const;
 
-  /* Find the number of programming clocks, only valid for configuration chain type! */
+  /* Find the number of programming clocks, only valid for configuration chain
+   * type! */
   size_t num_prog_clocks() const;
   /* Get information of the programming clock port: name and width */
   openfpga::BasicPort prog_clock_port_info() const;
-  /* Get a list of programming clock pins, flatten from the programming clock port */
+  /* Get a list of programming clock pins, flatten from the programming clock
+   * port */
   std::vector<openfpga::BasicPort> prog_clock_pins() const;
   /* Get a list of programming clock ports */
   std::string prog_clock_pin_ccff_head_indices_str(

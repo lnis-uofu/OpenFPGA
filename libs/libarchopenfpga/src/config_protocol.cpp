@@ -66,11 +66,18 @@ std::vector<size_t> ConfigProtocol::prog_clock_pin_ccff_head_indices(
   VTR_ASSERT(type_ == CONFIG_MEM_SCAN_CHAIN);
   std::vector<size_t> ret;
   if (port.get_width() != 1) {
-    VTR_LOG_ERROR("The programming clock pin must have a width of 1 while the width specified is %ld!\n", port.get_width());
+    VTR_LOG_ERROR(
+      "The programming clock pin must have a width of 1 while the width "
+      "specified is %ld!\n",
+      port.get_width());
   }
   VTR_ASSERT(port.get_width() == 1);
   if (!prog_clk_port_.contained(port)) {
-    VTR_LOG_ERROR("The programming clock pin '%s[%ld]' is not out of the range [%ld, %ld]!\n", port.get_name().c_str(), port.get_lsb(), prog_clk_port_.get_lsb(), prog_clk_port_.get_msb());
+    VTR_LOG_ERROR(
+      "The programming clock pin '%s[%ld]' is not out of the range [%ld, "
+      "%ld]!\n",
+      port.get_name().c_str(), port.get_lsb(), prog_clk_port_.get_lsb(),
+      prog_clk_port_.get_msb());
   }
   VTR_ASSERT(prog_clk_port_.contained(port));
   return prog_clk_ccff_head_indices_[port.get_lsb()];
@@ -138,11 +145,18 @@ void ConfigProtocol::set_prog_clock_pin_ccff_head_indices_pair(
     token_int.push_back(std::stoi(token));
   }
   if (port.get_width() != 1) {
-    VTR_LOG_ERROR("The programming clock pin must have a width of 1 while the width specified is %ld!\n", port.get_width());
+    VTR_LOG_ERROR(
+      "The programming clock pin must have a width of 1 while the width "
+      "specified is %ld!\n",
+      port.get_width());
   }
   VTR_ASSERT(port.get_width() == 1);
   if (!prog_clk_port_.contained(port)) {
-    VTR_LOG_ERROR("The programming clock pin '%s[%ld]' is not out of the range [%ld, %ld]!\n", port.get_name().c_str(), port.get_lsb(), prog_clk_port_.get_lsb(), prog_clk_port_.get_msb());
+    VTR_LOG_ERROR(
+      "The programming clock pin '%s[%ld]' is not out of the range [%ld, "
+      "%ld]!\n",
+      port.get_name().c_str(), port.get_lsb(), prog_clk_port_.get_lsb(),
+      prog_clk_port_.get_msb());
   }
   VTR_ASSERT(prog_clk_port_.contained(port));
   if (!prog_clk_ccff_head_indices_[port.get_lsb()].empty()) {

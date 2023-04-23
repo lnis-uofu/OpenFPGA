@@ -148,14 +148,16 @@ size_t find_module_num_config_bits(
 
 void add_module_global_input_ports_from_child_modules(
   ModuleManager& module_manager, const ModuleId& module_id,
-  const std::vector<std::string>& port_name_to_ignore = std::vector<std::string>());
+  const std::vector<std::string>& port_name_to_ignore =
+    std::vector<std::string>());
 
 void add_module_global_output_ports_from_child_modules(
   ModuleManager& module_manager, const ModuleId& module_id);
 
-void add_module_global_ports_from_child_modules(ModuleManager& module_manager,
-                                                const ModuleId& module_id,
-                                                const std::vector<std::string>& port_name_to_ignore = std::vector<std::string>());
+void add_module_global_ports_from_child_modules(
+  ModuleManager& module_manager, const ModuleId& module_id,
+  const std::vector<std::string>& port_name_to_ignore =
+    std::vector<std::string>());
 
 void add_module_gpio_ports_from_child_modules(ModuleManager& module_manager,
                                               const ModuleId& module_id);

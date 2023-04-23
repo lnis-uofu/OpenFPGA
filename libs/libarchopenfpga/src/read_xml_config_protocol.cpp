@@ -67,8 +67,7 @@ static void read_xml_ccff_prog_clock(pugi::xml_node& xml_progclk,
 
   openfpga::BasicPort port = openfpga::PortParser(port_attr).port();
 
-  config_protocol.set_prog_clock_pin_ccff_head_indices_pair(port,
-                                                             indices_attr);
+  config_protocol.set_prog_clock_pin_ccff_head_indices_pair(port, indices_attr);
 }
 
 /********************************************************************
@@ -187,11 +186,12 @@ static void read_xml_config_organization(pugi::xml_node& xml_config_orgz,
       /* Error out if the XML child has an invalid name! */
       if (xml_progclk.name() !=
           std::string(XML_CONFIG_PROTOCOL_CCFF_PROG_CLOCK_NODE_NAME)) {
-        bad_tag(xml_progclk, loc_data, xml_config_orgz, {XML_CONFIG_PROTOCOL_CCFF_PROG_CLOCK_NODE_NAME});
+        bad_tag(xml_progclk, loc_data, xml_config_orgz,
+                {XML_CONFIG_PROTOCOL_CCFF_PROG_CLOCK_NODE_NAME});
       }
       std::string port_attr =
-        get_attribute(xml_progclk, XML_CONFIG_PROTOCOL_CCFF_PROG_CLOCK_PORT_ATTR,
-                      loc_data)
+        get_attribute(xml_progclk,
+                      XML_CONFIG_PROTOCOL_CCFF_PROG_CLOCK_PORT_ATTR, loc_data)
           .as_string();
       openfpga::BasicPort port = openfpga::PortParser(port_attr).port();
       if (prog_clk_port.get_name().empty()) {
@@ -200,7 +200,10 @@ static void read_xml_config_organization(pugi::xml_node& xml_config_orgz,
       } else {
         if (prog_clk_port.get_name() != port.get_name()) {
           archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_progclk),
-                         "Expect same name for all the programming clocks (This: %s, Others: %s)!\n", port.get_name().c_str(), prog_clk_port.get_name().c_str());
+                         "Expect same name for all the programming clocks "
+                         "(This: %s, Others: %s)!\n",
+                         port.get_name().c_str(),
+                         prog_clk_port.get_name().c_str());
         }
         if (prog_clk_port.get_msb() < port.get_msb()) {
           prog_clk_port.set_msb(port.get_msb());
@@ -214,7 +217,8 @@ static void read_xml_config_organization(pugi::xml_node& xml_config_orgz,
       /* Error out if the XML child has an invalid name! */
       if (xml_progclk.name() !=
           std::string(XML_CONFIG_PROTOCOL_CCFF_PROG_CLOCK_NODE_NAME)) {
-        bad_tag(xml_progclk, loc_data, xml_config_orgz, {XML_CONFIG_PROTOCOL_CCFF_PROG_CLOCK_NODE_NAME});
+        bad_tag(xml_progclk, loc_data, xml_config_orgz,
+                {XML_CONFIG_PROTOCOL_CCFF_PROG_CLOCK_NODE_NAME});
       }
       read_xml_ccff_prog_clock(xml_progclk, loc_data, config_protocol);
     }

@@ -2185,7 +2185,8 @@ void add_module_gpio_ports_from_child_modules(ModuleManager& module_manager,
  * Otherwise, some global ports of the sub modules may be missed!
  *******************************************************************/
 void add_module_global_input_ports_from_child_modules(
-  ModuleManager& module_manager, const ModuleId& module_id, const std::vector<std::string>& port_name_to_ignore) {
+  ModuleManager& module_manager, const ModuleId& module_id,
+  const std::vector<std::string>& port_name_to_ignore) {
   std::vector<BasicPort> global_ports_to_add;
 
   /* Iterate over the child modules */
@@ -2205,7 +2206,8 @@ void add_module_global_input_ports_from_child_modules(
         /* Reach here, this is an unique global port, update the list
          * Final check: ignore those in the blacklist
          */
-        if (std::find(port_name_to_ignore.begin(), port_name_to_ignore.end(), global_port.get_name()) == port_name_to_ignore.end()) {
+        if (std::find(port_name_to_ignore.begin(), port_name_to_ignore.end(),
+                      global_port.get_name()) == port_name_to_ignore.end()) {
           global_ports_to_add.push_back(global_port);
         }
       }
@@ -2307,11 +2309,12 @@ void add_module_global_input_ports_from_child_modules(
  * have been added to the pb_module!
  * Otherwise, some global ports of the sub modules may be missed!
  *******************************************************************/
-void add_module_global_ports_from_child_modules(ModuleManager& module_manager,
-                                                const ModuleId& module_id,
-                                                const std::vector<std::string>& port_name_to_ignore) {
+void add_module_global_ports_from_child_modules(
+  ModuleManager& module_manager, const ModuleId& module_id,
+  const std::vector<std::string>& port_name_to_ignore) {
   /* Input ports */
-  add_module_global_input_ports_from_child_modules(module_manager, module_id, port_name_to_ignore);
+  add_module_global_input_ports_from_child_modules(module_manager, module_id,
+                                                   port_name_to_ignore);
 }
 
 /********************************************************************

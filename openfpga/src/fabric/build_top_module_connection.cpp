@@ -1270,9 +1270,9 @@ int add_top_module_global_ports_from_grid_modules(
 }
 
 /********************************************************************
- * Build the connection between the programming clock port at the top module and each configurable children
- * Note that each programming clock pin drive one or more configuration regions
- * For example:
+ * Build the connection between the programming clock port at the top module and
+ *each configurable children Note that each programming clock pin drive one or
+ *more configuration regions For example:
  * - pin[0] -> region 0, 1
  * - pin[1] -> region 2, 3
  *******************************************************************/
@@ -1284,31 +1284,34 @@ void add_top_module_nets_prog_clock(ModuleManager& module_manager,
   for (size_t net_src_pin_id : src_port_info.pins()) {
     /* Create the net */
     ModuleNetId net = create_module_source_pin_net(
-      module_manager, top_module, top_module, 0,
-      src_port, src_port_info.pins()[net_src_pin_id]);
+      module_manager, top_module, top_module, 0, src_port,
+      src_port_info.pins()[net_src_pin_id]);
     /* Find all the sink nodes and build the connection one by one */
-    for (size_t iregion : config_protocol.prog_clock_pin_ccff_head_indices(BasicPort(src_port_info.get_name(), net_src_pin_id, net_src_pin_id))) {
+    for (size_t iregion :
+         config_protocol.prog_clock_pin_ccff_head_indices(BasicPort(
+           src_port_info.get_name(), net_src_pin_id, net_src_pin_id))) {
       ConfigRegionId config_region = ConfigRegionId(iregion);
       for (size_t mem_index = 0; mem_index < module_manager
                                                .region_configurable_children(
                                                  top_module, config_region)
                                                .size();
            ++mem_index) {
-        ModuleId net_sink_module_id = module_manager.region_configurable_children(
-          top_module, config_region)[mem_index];
+        ModuleId net_sink_module_id =
+          module_manager.region_configurable_children(top_module,
+                                                      config_region)[mem_index];
         size_t net_sink_instance_id =
           module_manager.region_configurable_child_instances(
             top_module, config_region)[mem_index];
-        ModulePortId net_sink_port_id =
-          module_manager.find_module_port(net_sink_module_id, src_port_info.get_name());
+        ModulePortId net_sink_port_id = module_manager.find_module_port(
+          net_sink_module_id, src_port_info.get_name());
         BasicPort net_sink_port =
           module_manager.module_port(net_sink_module_id, net_sink_port_id);
         VTR_ASSERT(1 == net_sink_port.get_width());
         for (size_t net_sink_pin_id : net_sink_port.pins()) {
           /* Add net sink */
-          module_manager.add_module_net_sink(top_module, net, net_sink_module_id,
-                                             net_sink_instance_id, net_sink_port_id,
-                                             net_sink_port.pins()[net_sink_pin_id]);
+          module_manager.add_module_net_sink(
+            top_module, net, net_sink_module_id, net_sink_instance_id,
+            net_sink_port_id, net_sink_port.pins()[net_sink_pin_id]);
         }
       }
     }
