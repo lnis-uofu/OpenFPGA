@@ -26,10 +26,14 @@ CircuitModelId ConfigProtocol::memory_model() const { return memory_model_; }
 
 int ConfigProtocol::num_regions() const { return num_regions_; }
 
-std::vector<openfpga::BasicPort> ConfigProtocol::prog_clock_ports() const {
+std::vector<openfpga::BasicPort> ConfigProtocol::prog_clock_port_info() const {
+  return prog_clk_port_;
+}
+
+std::vector<openfpga::BasicPort> ConfigProtocol::prog_clock_pins() const {
   std::vector<openfpga::BasicPort> keys;
-  for (const auto& [k, v] : prog_clk_ccff_head_indices_) {
-    keys.push_back(k);
+  for (auto pin : prog_clk_port_.pins()) {
+    keys.push_back(openfpga::BasicPort(prog_clk_port_.get_name(), pin, pin));
   }
   return keys;
 }
@@ -52,11 +56,15 @@ std::string ConfigProtocol::prog_clock_port_ccff_head_indices_str(
 std::vector<size_t> ConfigProtocol::prog_clock_port_ccff_head_indices(
   const openfpga::BasicPort& port) const {
   std::vector<size_t> ret;
-  auto result = prog_clk_ccff_head_indices_.find(port);
-  if (result != prog_clk_ccff_head_indices_.end()) {
-    return result->second;
+  if (port.get_width() != 1) {
+    VTR_LOG_ERROR("The programming clock pin must have a width of 1 while the width specified is %ld!\n", port.get_width());
   }
-  return ret;
+  VTR_ASSERT(port.get_width == 1);
+  if (!prog_clk_port_.contained(port)) {
+    VTR_LOG_ERROR("The programming clock pin '%s[%ld]' is not out of the range [%ld, %ld]!\n", port.get_name().c_str(), port.get_lsb(), prog_clk_port_.get_lsb(), prog_clk_port_.get_msb());
+  }
+  VTR_ASSERT(prog_clk_port_.contained(port));
+  return prog_clk_ccff_head_indices_[port.get_lsb()];
 }
 
 e_blwl_protocol_type ConfigProtocol::bl_protocol_type() const {
@@ -107,6 +115,11 @@ void ConfigProtocol::set_num_regions(const int& num_regions) {
   num_regions_ = num_regions;
 }
 
+void ConfigProtocol::set_prog_clock(const openfpga::BasicPort& port) {
+  prog_clk_port_ = port;
+  prog_clk_ccff_head_indices_.resize(prog_clk_port_.get_width());
+}
+
 void ConfigProtocol::set_prog_clock_port_ccff_head_indices_pair(
   const openfpga::BasicPort& port, const std::string& indices_str) {
   openfpga::StringToken tokenizer(indices_str);
@@ -115,15 +128,22 @@ void ConfigProtocol::set_prog_clock_port_ccff_head_indices_pair(
   for (std::string token : tokenizer.split(INDICE_STRING_DELIM_)) {
     token_int.push_back(std::stoi(token));
   }
-  auto result = prog_clk_ccff_head_indices_.find(port);
-  if (result != prog_clk_ccff_head_indices_.end()) {
+  if (port.get_width() != 1) {
+    VTR_LOG_ERROR("The programming clock pin must have a width of 1 while the width specified is %ld!\n", port.get_width());
+  }
+  VTR_ASSERT(port.get_width == 1);
+  if (!prog_clk_port_.contained(port)) {
+    VTR_LOG_ERROR("The programming clock pin '%s[%ld]' is not out of the range [%ld, %ld]!\n", port.get_name().c_str(), port.get_lsb(), prog_clk_port_.get_lsb(), prog_clk_port_.get_msb());
+  }
+  VTR_ASSERT(prog_clk_port_.contained(port));
+  if (!prog_clk_ccff_head_indices_[port.get_lsb()].empty()) {
     VTR_LOG_WARN(
       "Overwrite the pair between programming clock port '%s[%d:%d]' and ccff "
       "head indices (previous: '%s', current: '%s')!\n",
       port.get_name().c_str(), port.get_lsb(), port.get_msb(),
       prog_clock_port_ccff_head_indices_str(port).c_str(), indices_str.c_str());
   }
-  prog_clk_ccff_head_indices_[port] = token_int;
+  prog_clk_ccff_head_indices_[port.get_lsb()] = token_int;
 }
 
 void ConfigProtocol::set_bl_protocol_type(const e_blwl_protocol_type& type) {

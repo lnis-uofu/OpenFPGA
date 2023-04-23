@@ -41,6 +41,8 @@ int add_top_module_global_ports_from_grid_modules(
   const vtr::Matrix<size_t>& grid_instance_ids, const ClockNetwork& clk_ntwk,
   const RRClockSpatialLookup& rr_clock_lookup);
 
+void add_top_module_nets_prog_clock(ModuleManager& module_manager, const ModuleId& top_module, const ModulePortId& src_port, const ConfigProtocol& config_protocol);
+
 } /* end namespace openfpga */
 
 #endif
