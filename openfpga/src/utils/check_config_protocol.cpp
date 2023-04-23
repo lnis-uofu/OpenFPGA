@@ -83,7 +83,7 @@ bool check_config_protocol(const ConfigProtocol& config_protocol,
                            const CircuitLibrary& circuit_lib) {
   int num_err = 0;
 
-  if (!config_protocol.validate()) {
+  if (0 < config_protocol.validate()) {
     num_err++;
   }
 

@@ -260,7 +260,7 @@ int ConfigProtocol::validate_ccff_prog_clocks() const {
   std::vector<int> ccff_head_scoreboard(num_regions(), 0);
   for (openfpga::BasicPort port : prog_clock_pins()) {
     /* Must be valid first */
-    if (port.is_valid()) {
+    if (!port.is_valid()) {
       VTR_LOG_ERROR("Programming clock '%s[%d:%d]' is not a valid port!\n",
                     port.get_name().c_str(), port.get_lsb(), port.get_msb());
       num_err++;
@@ -286,9 +286,9 @@ int ConfigProtocol::validate_ccff_prog_clocks() const {
       ccff_head_scoreboard[ccff_head_idx]++;
     }
   }
-  if (prog_clock_pins().size() != (size_t)num_regions()) {
+  if (prog_clock_pins().size() > (size_t)num_regions()) {
     VTR_LOG_ERROR(
-      "Number of programming clocks '%ld' does not match the number of "
+      "Number of programming clocks '%ld' is more than the number of "
       "configuration regions '%ld'!\n",
       prog_clock_pins().size(), num_regions());
     num_err++;
