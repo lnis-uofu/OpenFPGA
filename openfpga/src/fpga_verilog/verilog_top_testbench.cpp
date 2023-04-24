@@ -989,13 +989,9 @@ static size_t calculate_num_config_clock_cycles(
    * different calculation */
   if (config_protocol.type() == CONFIG_MEM_SCAN_CHAIN) {
     if (config_protocol.num_prog_clocks() > 1) {
-      regional_bitstream_max_size = 0;
-      for (BasicPort prog_clk_pin : config_protocol.prog_clock_pins()) {
-        std::vector<size_t> ccff_head_indices =
-          config_protocol.prog_clock_pin_ccff_head_indices(prog_clk_pin);
-        regional_bitstream_max_size += find_fabric_regional_bitstream_max_size(
-          fabric_bitstream, ccff_head_indices);
-      }
+      regional_bitstream_max_size =
+        config_protocol.num_prog_clocks() *
+        find_fabric_regional_bitstream_max_size(fabric_bitstream);
     }
   }
 
@@ -1026,15 +1022,10 @@ static size_t calculate_num_config_clock_cycles(
             fabric_bitstream, bitstream_manager, bit_value_to_skip);
 
         if (config_protocol.num_prog_clocks() > 1) {
-          num_bits_to_skip = 0;
-          for (BasicPort prog_clk_pin : config_protocol.prog_clock_pins()) {
-            std::vector<size_t> ccff_head_indices =
-              config_protocol.prog_clock_pin_ccff_head_indices(prog_clk_pin);
-            num_bits_to_skip +=
-              find_configuration_chain_fabric_bitstream_size_to_be_skipped(
-                fabric_bitstream, bitstream_manager, bit_value_to_skip,
-                ccff_head_indices);
-          }
+          num_bits_to_skip =
+            config_protocol.num_prog_clocks() *
+            find_configuration_chain_fabric_bitstream_size_to_be_skipped(
+              fabric_bitstream, bitstream_manager, bit_value_to_skip);
         }
 
         num_config_clock_cycles =
@@ -1619,21 +1610,10 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
   /* Additional constants for multiple programming clock */
   if (num_prog_clocks > 1) {
     for (size_t iclk = 0; iclk < num_prog_clocks; ++iclk) {
-      std::vector<size_t> ccff_head_indices =
-        config_protocol.prog_clock_pin_ccff_head_indices(
-          config_protocol.prog_clock_pins()[iclk]);
-      size_t curr_regional_bitstream_max_size =
-        find_fabric_regional_bitstream_max_size(fabric_bitstream,
-                                                ccff_head_indices);
-      size_t curr_num_bits_to_skip =
-        find_configuration_chain_fabric_bitstream_size_to_be_skipped(
-          fabric_bitstream, bitstream_manager, bit_value_to_skip,
-          ccff_head_indices);
-
       print_verilog_define_flag(
         fp,
         std::string(TOP_TB_BITSTREAM_LENGTH_VARIABLE) + std::to_string(iclk),
-        curr_regional_bitstream_max_size - curr_num_bits_to_skip);
+        regional_bitstream_max_size - num_bits_to_skip);
     }
   }
 
