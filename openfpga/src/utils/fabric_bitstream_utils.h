@@ -30,8 +30,8 @@ size_t find_fabric_regional_bitstream_max_size(
 
 size_t find_configuration_chain_fabric_bitstream_size_to_be_skipped(
   const FabricBitstream& fabric_bitstream,
-  const std::vector<size_t>& region_whitelist = std::vector<size_t>{},
-  const BitstreamManager& bitstream_manager, const bool& bit_value_to_skip);
+  const BitstreamManager& bitstream_manager, const bool& bit_value_to_skip,
+  const std::vector<size_t>& region_whitelist = std::vector<size_t>{});
 
 /* Alias to a specific organization of bitstreams for frame-based configuration
  * protocol */
