@@ -27,7 +27,9 @@ CircuitModelId ConfigProtocol::memory_model() const { return memory_model_; }
 int ConfigProtocol::num_regions() const { return num_regions_; }
 
 size_t ConfigProtocol::num_prog_clocks() const {
-  VTR_ASSERT(type_ == CONFIG_MEM_SCAN_CHAIN);
+  if (type_ != CONFIG_MEM_SCAN_CHAIN) {
+    return 1;
+  }
   if (prog_clk_port_.is_valid()) {
     return prog_clk_port_.get_width();
   }
