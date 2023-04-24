@@ -877,7 +877,7 @@ static void print_verilog_top_testbench_ports(
    * pulled up */
   BasicPort config_all_done_port(std::string(TOP_TB_CONFIG_ALL_DONE_PORT_NAME),
                                  1);
-  fp << generate_verilog_port(VERILOG_PORT_REG, config_all_done_port) << ";"
+  fp << generate_verilog_port(VERILOG_PORT_WIRE, config_all_done_port) << ";"
      << std::endl;
 
   /* Programming clock: same rule applied as the configuration done ports */
@@ -1277,12 +1277,12 @@ static void print_verilog_top_testbench_generic_stimulus(
     BasicPort curr_cfg_pin(config_done_port.get_name(),
                            config_done_port.pins()[pin],
                            config_done_port.pins()[pin]);
-    if (pin > 1) {
+    if (pin > 0) {
       fp << " & ";
     }
     fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_cfg_pin);
   }
-  fp << ";";
+  fp << ";" << std::endl;
 
   /* Generate stimuli waveform for multiple user-defined operating clock signals
    */
@@ -1692,10 +1692,20 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
   fp << ";";
   fp << std::endl;
 
-  fp << "\t";
-  fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << " <= 0";
-  fp << ";";
-  fp << std::endl;
+  if (num_prog_clocks == 1) {
+    fp << "\t";
+    fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << " <= 0";
+    fp << ";";
+    fp << std::endl;
+  } else {
+    VTR_ASSERT(num_prog_clocks > 1);
+    for (size_t iclk = 0; iclk < num_prog_clocks; ++iclk) {
+      fp << "\t";
+      fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << iclk << " <= 0";
+      fp << ";";
+      fp << std::endl;
+    }
+  }
 
   std::vector<size_t> bit_skip_values(bit_skip_reg.get_width(),
                                       fast_configuration ? 1 : 0);
@@ -1761,9 +1771,6 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
     fp << "\t";
     fp << "end";
     fp << std::endl;
-
-    fp << "end";
-    fp << std::endl;
   } else {
     VTR_ASSERT(num_prog_clocks > 1);
     for (size_t iclk = 0; iclk < num_prog_clocks; ++iclk) {
@@ -1781,10 +1788,10 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
           config_protocol.prog_clock_pins()[iclk]);
       fp << "\t\t";
       fp << "if (";
-      bool first_pin = false;
+      bool first_pin = true;
       for (size_t ccff_head_idx : ccff_head_indices) {
         if (!first_pin) {
-          fp << " & ";
+          fp << " && ";
         }
         fp << generate_verilog_constant_values(
           std::vector<size_t>(1, bit_value_to_skip));
@@ -1792,6 +1799,7 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
         fp << TOP_TB_BITSTREAM_MEM_REG_NAME << "["
            << TOP_TB_BITSTREAM_ITERATOR_REG_NAME << "][" << ccff_head_idx
            << "]";
+        first_pin = false;
       }
       fp << ")";
       fp << " begin";
@@ -1835,11 +1843,10 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
       fp << "\t";
       fp << "end";
       fp << std::endl;
-
-      fp << "end";
-      fp << std::endl;
     }
   }
+  fp << "end";
+  fp << std::endl;
 
   BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME) +
                               std::string(TOP_TB_CLOCK_REG_POSTFIX),
