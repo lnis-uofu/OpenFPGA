@@ -22,7 +22,7 @@ static int check_config_protocol_programming_clock(
   const ConfigProtocol& config_protocol, const CircuitLibrary& circuit_lib) {
   int num_err = 0;
   /* Programming clock is only available for CCFF */
-  if (config_protocol.type() == CONFIG_MEM_SCAN_CHAIN) {
+  if (config_protocol.type() != CONFIG_MEM_SCAN_CHAIN) {
     return num_err;
   }
   /* Must find a CCFF model */

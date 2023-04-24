@@ -259,6 +259,9 @@ void ConfigProtocol::set_wl_num_banks(const size_t& num_banks) {
  ***********************************************************************/
 int ConfigProtocol::validate_ccff_prog_clocks() const {
   int num_err = 0;
+  if (prog_clock_pins().empty()) {
+    return num_err;
+  }
   /* Initialize scoreboard */
   std::vector<int> ccff_head_scoreboard(num_regions(), 0);
   for (openfpga::BasicPort port : prog_clock_pins()) {
