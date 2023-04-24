@@ -22,7 +22,8 @@ namespace openfpga {
 
 /********************************************************************
  * Find the longest bitstream size of a fabric bitstream
- * Only care the region in whitelist. If the whitelist is empty, consider all the regions
+ * Only care the region in whitelist. If the whitelist is empty, consider all
+ *the regions
  *******************************************************************/
 size_t find_fabric_regional_bitstream_max_size(
   const FabricBitstream& fabric_bitstream,
@@ -30,7 +31,9 @@ size_t find_fabric_regional_bitstream_max_size(
   size_t regional_bitstream_max_size = 0;
   /* Find the longest regional bitstream */
   for (const auto& region : fabric_bitstream.regions()) {
-    if (!region_whitelist.empty() && (std::find(region_whitelist.begin(), region_whitelist.end(), size_t(region)) != region_whitelist.end())) {
+    if (!region_whitelist.empty() &&
+        (std::find(region_whitelist.begin(), region_whitelist.end(),
+                   size_t(region)) != region_whitelist.end())) {
       continue;
     }
     if (regional_bitstream_max_size <
@@ -60,7 +63,9 @@ size_t find_configuration_chain_fabric_bitstream_size_to_be_skipped(
 
   size_t num_bits_to_skip = size_t(-1);
   for (const auto& region : fabric_bitstream.regions()) {
-    if (!region_whitelist.empty() && (std::find(region_whitelist.begin(), region_whitelist.end(), size_t(region)) != region_whitelist.end())) {
+    if (!region_whitelist.empty() &&
+        (std::find(region_whitelist.begin(), region_whitelist.end(),
+                   size_t(region)) != region_whitelist.end())) {
       continue;
     }
     size_t curr_region_num_bits_to_skip = 0;
