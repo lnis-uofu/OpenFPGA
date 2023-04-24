@@ -989,6 +989,8 @@ static size_t calculate_num_config_clock_cycles(
    * different calculation */
   if (config_protocol.type() == CONFIG_MEM_SCAN_CHAIN) {
     if (config_protocol.num_prog_clocks() > 1) {
+      /* TODO: Try to apply different length as the bitstream size for ccffs are
+       * different driven by differnt clocks! Tried but no luck yet. */
       regional_bitstream_max_size =
         config_protocol.num_prog_clocks() *
         find_fabric_regional_bitstream_max_size(fabric_bitstream);
@@ -1610,6 +1612,8 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
   /* Additional constants for multiple programming clock */
   if (num_prog_clocks > 1) {
     for (size_t iclk = 0; iclk < num_prog_clocks; ++iclk) {
+      /* TODO: Try to apply different length as the bitstream size for ccffs are
+       * different driven by differnt clocks! Tried but no luck yet. */
       print_verilog_define_flag(
         fp,
         std::string(TOP_TB_BITSTREAM_LENGTH_VARIABLE) + std::to_string(iclk),
