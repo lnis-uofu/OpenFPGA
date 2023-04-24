@@ -45,6 +45,20 @@ static std::string generate_top_testbench_clock_name(
 }
 
 /********************************************************************
+ * In most cases we should have only one programming clock and hence a config done signals
+ * But there is one exception:
+ * When there are more than 1 programming clocks defined in CCFF chains, the port width of 
+ * config done port should be the same as the programming clocks
+ *******************************************************************/
+static size_t find_config_protocol_num_prog_clocks(const ConfigProtocol& config_protocol) {
+  size_t num_config_done_signals = 1;
+  if (config_protocol.type() == CONFIG_MEM_SCAN_CHAIN) {
+    num_config_done_signals = config_protocol.num_prog_clocks();
+  }
+  return num_config_done_signals;
+}
+
+/********************************************************************
  * Print local wires for flatten memory (standalone) configuration protocols
  *******************************************************************/
 static void print_verilog_top_testbench_flatten_memory_port(
@@ -270,6 +284,7 @@ static void print_verilog_top_testbench_config_protocol_port(
 static void print_verilog_top_testbench_global_clock_ports_stimuli(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module,
+  const ConfigProtocol& config_protocol,
   const FabricGlobalPortInfo& fabric_global_port_info,
   const SimulationSetting& simulation_parameters) {
   /* Validate the file stream */
@@ -304,7 +319,8 @@ static void print_verilog_top_testbench_global_clock_ports_stimuli(
     if (true ==
         fabric_global_port_info.global_port_is_prog(fabric_global_port)) {
       stimuli_clock_port.set_name(std::string(TOP_TB_PROG_CLOCK_PORT_NAME));
-      stimuli_clock_port.set_width(1);
+      size_t num_prog_clocks = find_config_protocol_num_prog_clocks(config_protocol);
+      stimuli_clock_port.set_width(num_prog_clocks);
     } else {
       VTR_ASSERT_SAFE(false == fabric_global_port_info.global_port_is_prog(
                                  fabric_global_port));
@@ -332,9 +348,17 @@ static void print_verilog_top_testbench_global_clock_ports_stimuli(
             simulation_parameters.clock_name(sim_clock)));
         }
       }
+      /* For programming clocks, they are connected pin by pin. For example,
+       * prog_clock[0] <= __prog_clock__[0]
+       * prog_clock[1] <= __prog_clock__[1]
+       */
+      BasicPort stimuli_clock_pin(stimuli_clock_port);
+      if (stimuli_clock_port.get_name() == std::string(TOP_TB_PROG_CLOCK_PORT_NAME)) {
+        stimuli_clock_pin.set_width(stimuli_clock_pin.pins()[pin], stimuli_clock_pin.pins()[pin]);
+      }
 
       print_verilog_wire_connection(
-        fp, global_port_to_connect, stimuli_clock_port,
+        fp, global_port_to_connect, stimuli_clock_pin,
         1 == fabric_global_port_info.global_port_default_value(
                fabric_global_port));
     }
@@ -641,6 +665,7 @@ static void print_verilog_top_testbench_regular_global_ports_stimuli(
 static void print_verilog_top_testbench_global_ports_stimuli(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const PinConstraints& pin_constraints,
+  const ConfigProtocol& config_protocol,
   const FabricGlobalPortInfo& fabric_global_port_info,
   const SimulationSetting& simulation_parameters,
   const bool& active_global_prog_reset, const bool& active_global_prog_set) {
@@ -653,7 +678,7 @@ static void print_verilog_top_testbench_global_ports_stimuli(
       "----- Begin connecting global ports of FPGA fabric to stimuli -----"));
 
   print_verilog_top_testbench_global_clock_ports_stimuli(
-    fp, module_manager, top_module, fabric_global_port_info,
+    fp, module_manager, top_module, config_protocol, fabric_global_port_info,
     simulation_parameters);
 
   print_verilog_top_testbench_global_shift_register_clock_ports_stimuli(
@@ -838,12 +863,18 @@ static void print_verilog_top_testbench_ports(
    * and then wire them to the ports of FPGA fabric depending on their usage
    */
   /* Configuration done port */
-  BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
+  size_t num_config_done_signals = find_config_protocol_num_prog_clocks(config_protocol);
+  BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), num_config_done_signals);
   fp << generate_verilog_port(VERILOG_PORT_REG, config_done_port) << ";"
      << std::endl;
 
-  /* Programming clock */
-  BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
+  /* Configuration all done port: pull up when all the config done ports are pulled up */
+  BasicPort config_all_done_port(std::string(TOP_TB_CONFIG_ALL_DONE_PORT_NAME), 1);
+  fp << generate_verilog_port(VERILOG_PORT_REG, config_all_done_port) << ";"
+     << std::endl;
+
+  /* Programming clock: same rule applied as the configuration done ports */
+  BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), num_config_done_signals);
   fp << generate_verilog_port(VERILOG_PORT_WIRE, prog_clock_port) << ";"
      << std::endl;
   BasicPort prog_clock_register_port(
@@ -945,6 +976,17 @@ static size_t calculate_num_config_clock_cycles(
   /* Find the longest regional bitstream */
   size_t regional_bitstream_max_size =
     find_fabric_regional_bitstream_max_size(fabric_bitstream);
+
+  /* For configuration chain that require multiple programming clocks. Need a different calculation */
+  if (config_protocol.type() == CONFIG_MEM_SCAN_CHAIN) {
+    if (config_protocol.num_prog_clocks() > 1) {
+      regional_bitstream_max_size = 0;
+      for (BasicPort prog_clk_pin : config_protocol.prog_clock_pins()) {
+        std::vector<size_t> ccff_head_indices = config_protocol.prog_clock_pin_ccff_head_indices(prog_clk_pin);
+        regional_bitstream_max_size += find_fabric_regional_bitstream_max_size(fabric_bitstream, ccff_head_indices);
+      } 
+    }     
+  }
 
   size_t num_config_clock_cycles = 1 + regional_bitstream_max_size;
 
@@ -1120,7 +1162,9 @@ static void print_verilog_top_testbench_generic_stimulus(
     fp, std::string("----- Number of clock cycles in configuration phase: " +
                     std::to_string(num_config_clock_cycles) + " -----"));
 
-  BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
+  size_t num_config_done_signals = find_config_protocol_num_prog_clocks(config_protocol);
+  BasicPort config_done_port(std::string(TOP_TB_CONFIG_DONE_PORT_NAME), num_config_done_signals);
+  BasicPort config_all_done_port(std::string(TOP_TB_CONFIG_ALL_DONE_PORT_NAME), 1);
 
   BasicPort op_clock_port(std::string(TOP_TB_OP_CLOCK_PORT_NAME), 1);
   BasicPort op_clock_register_port(
@@ -1128,7 +1172,7 @@ static void print_verilog_top_testbench_generic_stimulus(
                 std::string(TOP_TB_CLOCK_REG_POSTFIX)),
     1);
 
-  BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), 1);
+  BasicPort prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME), num_config_done_signals);
   BasicPort prog_clock_register_port(
     std::string(std::string(TOP_TB_PROG_CLOCK_PORT_NAME) +
                 std::string(TOP_TB_CLOCK_REG_POSTFIX)),
@@ -1168,17 +1212,40 @@ static void print_verilog_top_testbench_generic_stimulus(
     fp, std::string("----- Actual programming clock is triggered only when " +
                     config_done_port.get_name() + " and " +
                     prog_reset_port.get_name() + " are disabled -----"));
-  fp << "\tassign "
-     << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port);
-  fp << " = "
-     << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_register_port);
-  fp << " & (~" << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port)
-     << ")";
-  fp << " & (~" << generate_verilog_port(VERILOG_PORT_CONKT, prog_reset_port)
-     << ")";
-  fp << ";" << std::endl;
+  VTR_ASSERT(prog_clock_port.get_width() == config_done_port.get_width());
+  for (size_t pin : prog_clock_port.pins()) {
+    BasicPort curr_clk_pin(prog_clock_port.get_name(), prog_clock_port.pins()[pin], prog_clock_port.pins()[pin]);
+    BasicPort curr_cfg_pin(config_done_port.get_name(), config_done_port.pins()[pin], config_done_port.pins()[pin]);
+    fp << "\tassign "
+       << generate_verilog_port(VERILOG_PORT_CONKT, curr_clk_pin);
+    fp << " = "
+       << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_register_port);
+    if (pin > 0) {
+      BasicPort prev_cfg_pin(config_done_port.get_name(), config_done_port.pins()[pin - 1], config_done_port.pins()[pin - 1]);
+      fp << " & (" << generate_verilog_port(VERILOG_PORT_CONKT, prev_cfg_pin)
+         << ")";
+    }
+    fp << " & (~" << generate_verilog_port(VERILOG_PORT_CONKT, curr_cfg_pin)
+       << ")";
+    fp << " & (~" << generate_verilog_port(VERILOG_PORT_CONKT, prog_reset_port)
+       << ")";
+    fp << ";" << std::endl;
+  }
 
   fp << std::endl;
+
+  /* Config all done signal is triggered when all the config done signals are pulled up */
+  fp << "\tassign "
+     << generate_verilog_port(VERILOG_PORT_CONKT, config_all_done_port);
+     << " = ";
+  for (size_t pin : config_done_port.pins()) {
+    BasicPort curr_cfg_pin(config_done_port.get_name(), config_done_port.pins()[pin], config_done_port.pins()[pin]);
+    if (pin > 1) {
+      fp << " & ";
+    }
+    fp << generate_verilog_port(VERILOG_PORT_CONKT, curr_cfg_pin);
+  }
+  fp << ";";
 
   /* Generate stimuli waveform for multiple user-defined operating clock signals
    */
@@ -1210,12 +1277,12 @@ static void print_verilog_top_testbench_generic_stimulus(
      */
     print_verilog_comment(
       fp, std::string("----- Actual operating clock is triggered only when " +
-                      config_done_port.get_name() + " is enabled -----"));
+                      config_all_done_port.get_name() + " is enabled -----"));
     fp << "\tassign "
        << generate_verilog_port(VERILOG_PORT_CONKT, sim_clock_port);
     fp << " = "
        << generate_verilog_port(VERILOG_PORT_CONKT, sim_clock_register_port);
-    fp << " & " << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port);
+    fp << " & " << generate_verilog_port(VERILOG_PORT_CONKT, config_all_done_port);
     fp << ";" << std::endl;
 
     fp << std::endl;
@@ -1231,16 +1298,16 @@ static void print_verilog_top_testbench_generic_stimulus(
     fp, "----- End raw operating clock signal generation -----");
 
   /* Operation clock should be enabled after programming phase finishes.
-   * Before configuration is done (config_done is enabled), operation clock
+   * Before configuration is done (config_all_done is enabled), operation clock
    * should be always zero.
    */
   print_verilog_comment(
     fp, std::string("----- Actual operating clock is triggered only when " +
-                    config_done_port.get_name() + " is enabled -----"));
+                    config_all_done_port.get_name() + " is enabled -----"));
   fp << "\tassign " << generate_verilog_port(VERILOG_PORT_CONKT, op_clock_port);
   fp << " = "
      << generate_verilog_port(VERILOG_PORT_CONKT, op_clock_register_port);
-  fp << " & " << generate_verilog_port(VERILOG_PORT_CONKT, config_done_port);
+  fp << " & " << generate_verilog_port(VERILOG_PORT_CONKT, config_all_done_port);
   fp << ";" << std::endl;
 
   fp << std::endl;
@@ -1283,7 +1350,7 @@ static void print_verilog_top_testbench_generic_stimulus(
                         "----- Reset signal is enabled until the first clock "
                         "cycle in operation phase -----");
   print_verilog_pulse_stimuli(fp, reset_port, 1, reset_pulse_widths,
-                              reset_flip_values, config_done_port.get_name());
+                              reset_flip_values, config_all_done_port.get_name());
   print_verilog_comment(fp,
                         "----- End operating reset signal generation -----");
 
@@ -2276,7 +2343,7 @@ int print_verilog_full_testbench(
 
   /* Generate stimuli for global ports or connect them to existed signals */
   print_verilog_top_testbench_global_ports_stimuli(
-    fp, module_manager, top_module, pin_constraints, global_ports,
+    fp, module_manager, top_module, pin_constraints, config_protocol, global_ports,
     simulation_parameters, active_global_prog_reset, active_global_prog_set);
 
   /* Instanciate FPGA top-level module */
@@ -2337,13 +2404,13 @@ int print_verilog_full_testbench(
       std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
       std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
       std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
-      std::string(TOP_TB_CONFIG_DONE_PORT_NAME),
+      std::string(TOP_TB_CONFIG_ALL_DONE_PORT_NAME),
       std::string(TOP_TESTBENCH_ERROR_COUNTER), atom_ctx, netlist_annotation,
       clock_port_names, std::string(TOP_TB_OP_CLOCK_PORT_NAME));
 
     /* Add autocheck for configuration phase */
     print_verilog_top_testbench_check(fp,
-                                      std::string(TOP_TB_CONFIG_DONE_PORT_NAME),
+                                      std::string(TOP_TB_CONFIG_ALL_DONE_PORT_NAME),
                                       std::string(TOP_TESTBENCH_ERROR_COUNTER));
   }
 

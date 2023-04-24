@@ -619,7 +619,7 @@ void print_verilog_testbench_check(
   /* If there is a config done signal specified, consider it as a trigger on
    * checking */
   if (!config_done_name.empty()) {
-    fp << "if (1'b1 == " << config_done_name << ") ";
+    fp << "\t\t\tif (1'b1 == " << config_done_name << ") ";
   }
   fp << "begin" << std::endl;
 

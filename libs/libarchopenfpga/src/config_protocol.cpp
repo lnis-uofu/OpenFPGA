@@ -28,7 +28,10 @@ int ConfigProtocol::num_regions() const { return num_regions_; }
 
 size_t ConfigProtocol::num_prog_clocks() const {
   VTR_ASSERT(type_ == CONFIG_MEM_SCAN_CHAIN);
-  return prog_clk_port_.get_width();
+  if (prog_clk_port_.is_valid()) {
+    return prog_clk_port_.get_width();
+  }
+  return 1;
 }
 
 openfpga::BasicPort ConfigProtocol::prog_clock_port_info() const {
