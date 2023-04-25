@@ -25,6 +25,8 @@ run-task basic_tests/full_testbench/configuration_chain_use_setb $@
 run-task basic_tests/full_testbench/configuration_chain_use_set_reset $@
 run-task basic_tests/full_testbench/configuration_chain_config_enable_scff $@
 run-task basic_tests/full_testbench/multi_region_configuration_chain $@
+run-task basic_tests/full_testbench/multi_region_configuration_chain_2clk $@
+run-task basic_tests/full_testbench/multi_region_configuration_chain_3clk $@
 run-task basic_tests/full_testbench/fast_configuration_chain $@
 run-task basic_tests/full_testbench/fast_configuration_chain_use_set $@
 run-task basic_tests/full_testbench/smart_fast_configuration_chain $@

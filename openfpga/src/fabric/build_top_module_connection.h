@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "clock_network.h"
+#include "config_protocol.h"
 #include "device_grid.h"
 #include "device_rr_gsb.h"
 #include "module_manager.h"
@@ -40,6 +41,11 @@ int add_top_module_global_ports_from_grid_modules(
   const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
   const vtr::Matrix<size_t>& grid_instance_ids, const ClockNetwork& clk_ntwk,
   const RRClockSpatialLookup& rr_clock_lookup);
+
+void add_top_module_nets_prog_clock(ModuleManager& module_manager,
+                                    const ModuleId& top_module,
+                                    const ModulePortId& src_port,
+                                    const ConfigProtocol& config_protocol);
 
 } /* end namespace openfpga */
 

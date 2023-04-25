@@ -595,6 +595,20 @@ int build_top_module(
     }
   }
 
+  /* For configuration chains, we avoid adding nets for programmable clocks if
+   * there are a few */
+  std::vector<std::string> global_port_blacklist;
+  if (config_protocol.num_prog_clocks() > 1) {
+    BasicPort prog_clk_port = config_protocol.prog_clock_port_info();
+    global_port_blacklist.push_back(prog_clk_port.get_name());
+    /* Add port */
+    ModulePortId port_id = module_manager.add_port(
+      top_module, prog_clk_port, ModuleManager::MODULE_GLOBAL_PORT);
+    /* Add nets by following configurable children under different regions */
+    add_top_module_nets_prog_clock(module_manager, top_module, port_id,
+                                   config_protocol);
+  }
+
   /* Add global ports to the top module:
    * This is a much easier job after adding sub modules (instances),
    * we just need to find all the global ports from the child modules and build
@@ -602,7 +616,8 @@ int build_top_module(
    * @note This function is called after the
    * add_top_module_nets_memory_config_bus() because it may add some sub modules
    */
-  add_module_global_ports_from_child_modules(module_manager, top_module);
+  add_module_global_ports_from_child_modules(module_manager, top_module,
+                                             global_port_blacklist);
 
   return status;
 }

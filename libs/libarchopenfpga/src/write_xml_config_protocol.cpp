@@ -12,6 +12,7 @@
 #include "vtr_log.h"
 
 /* Headers from readarchopenfpga library */
+#include "config_protocol_xml_constants.h"
 #include "write_xml_config_protocol.h"
 #include "write_xml_utils.h"
 
@@ -31,33 +32,52 @@ static void write_xml_config_organization(std::fstream& fp, const char* fname,
   write_xml_attribute(
     fp, "circuit_model_name",
     circuit_lib.model_name(config_protocol.memory_model()).c_str());
+  write_xml_attribute(fp, XML_CONFIG_PROTOCOL_NUM_REGIONS_ATTR,
+                      config_protocol.num_regions());
   fp << "/>"
      << "\n";
 
-  /* Output BL/WL protocols */
-  fp << "\t\t\t"
-     << "<bl";
-  write_xml_attribute(
-    fp, "protocol",
-    BLWL_PROTOCOL_TYPE_STRING[config_protocol.bl_protocol_type()]);
-  write_xml_attribute(
-    fp, "circuit_model_name",
-    circuit_lib.model_name(config_protocol.bl_memory_model()).c_str());
-  write_xml_attribute(fp, "num_banks", config_protocol.bl_num_banks());
-  fp << "/>"
-     << "\n";
+  /* CCFF protocol details */
+  if (config_protocol.type() == CONFIG_MEM_SCAN_CHAIN) {
+    for (openfpga::BasicPort port : config_protocol.prog_clock_pins()) {
+      fp << "\t\t\t"
+         << "<" << XML_CONFIG_PROTOCOL_CCFF_PROG_CLOCK_NODE_NAME;
+      write_xml_attribute(fp, XML_CONFIG_PROTOCOL_CCFF_PROG_CLOCK_PORT_ATTR,
+                          port.to_verilog_string().c_str());
+      write_xml_attribute(
+        fp, XML_CONFIG_PROTOCOL_CCFF_PROG_CLOCK_INDICES_ATTR,
+        config_protocol.prog_clock_pin_ccff_head_indices_str(port).c_str());
+      fp << "/>"
+         << "\n";
+    }
+  }
 
-  fp << "\t\t\t"
-     << "<wl";
-  write_xml_attribute(
-    fp, "protocol",
-    BLWL_PROTOCOL_TYPE_STRING[config_protocol.wl_protocol_type()]);
-  write_xml_attribute(
-    fp, "circuit_model_name",
-    circuit_lib.model_name(config_protocol.wl_memory_model()).c_str());
-  write_xml_attribute(fp, "num_banks", config_protocol.wl_num_banks());
-  fp << "/>"
-     << "\n";
+  /* BL/WL protocol details */
+  if (config_protocol.type() == CONFIG_MEM_QL_MEMORY_BANK) {
+    fp << "\t\t\t"
+       << "<bl";
+    write_xml_attribute(
+      fp, "protocol",
+      BLWL_PROTOCOL_TYPE_STRING[config_protocol.bl_protocol_type()]);
+    write_xml_attribute(
+      fp, "circuit_model_name",
+      circuit_lib.model_name(config_protocol.bl_memory_model()).c_str());
+    write_xml_attribute(fp, "num_banks", config_protocol.bl_num_banks());
+    fp << "/>"
+       << "\n";
+
+    fp << "\t\t\t"
+       << "<wl";
+    write_xml_attribute(
+      fp, "protocol",
+      BLWL_PROTOCOL_TYPE_STRING[config_protocol.wl_protocol_type()]);
+    write_xml_attribute(
+      fp, "circuit_model_name",
+      circuit_lib.model_name(config_protocol.wl_memory_model()).c_str());
+    write_xml_attribute(fp, "num_banks", config_protocol.wl_num_banks());
+    fp << "/>"
+       << "\n";
+  }
 
   fp << "\t"
      << "</organization>"

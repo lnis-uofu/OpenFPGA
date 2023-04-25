@@ -5,6 +5,7 @@
  * which are built on the libarchopenfpga library
  *******************************************************************/
 #include "check_circuit_library.h"
+#include "check_config_protocol.h"
 #include "check_tile_annotation.h"
 #include "circuit_library_utils.h"
 #include "clock_network_utils.h"
@@ -55,9 +56,8 @@ int read_openfpga_arch_template(T& openfpga_context, const Command& cmd,
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  if (false == check_configurable_memory_circuit_model(
-                 openfpga_context.arch().config_protocol,
-                 openfpga_context.arch().circuit_lib)) {
+  if (false == check_config_protocol(openfpga_context.arch().config_protocol,
+                                     openfpga_context.arch().circuit_lib)) {
     return CMD_EXEC_FATAL_ERROR;
   }
 

@@ -35,6 +35,8 @@ class BasicPort {
   bool contained(const BasicPort& portA)
     const; /* Check if a port is contained by this port */
   size_t get_origin_port_width() const;
+  std::string to_verilog_string()
+    const; /* Generate verilog-style string, e.g., a[0:1] */
 
  public:                                  /* Mutators */
   void set(const BasicPort& basic_port);  /* copy */
