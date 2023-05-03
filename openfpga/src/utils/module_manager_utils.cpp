@@ -2185,7 +2185,8 @@ void add_module_gpio_ports_from_child_modules(ModuleManager& module_manager,
  * Otherwise, some global ports of the sub modules may be missed!
  *******************************************************************/
 void add_module_global_input_ports_from_child_modules(
-  ModuleManager& module_manager, const ModuleId& module_id) {
+  ModuleManager& module_manager, const ModuleId& module_id,
+  const std::vector<std::string>& port_name_to_ignore) {
   std::vector<BasicPort> global_ports_to_add;
 
   /* Iterate over the child modules */
@@ -2202,8 +2203,13 @@ void add_module_global_input_ports_from_child_modules(
         if (it != global_ports_to_add.end()) {
           continue;
         }
-        /* Reach here, this is an unique global port, update the list */
-        global_ports_to_add.push_back(global_port);
+        /* Reach here, this is an unique global port, update the list
+         * Final check: ignore those in the blacklist
+         */
+        if (std::find(port_name_to_ignore.begin(), port_name_to_ignore.end(),
+                      global_port.get_name()) == port_name_to_ignore.end()) {
+          global_ports_to_add.push_back(global_port);
+        }
       }
     }
   }
@@ -2226,8 +2232,14 @@ void add_module_global_input_ports_from_child_modules(
            child, ModuleManager::MODULE_GLOBAL_PORT)) {
       BasicPort child_global_port =
         module_manager.module_port(child, child_global_port_id);
-      /* Search in the global port list to be added, find the port id */
+      /* Skip if it is in the ignore list */
+      if (std::find(port_name_to_ignore.begin(), port_name_to_ignore.end(),
+                    child_global_port.get_name()) !=
+          port_name_to_ignore.end()) {
+        continue;
+      }
 
+      /* Search in the global port list to be added, find the port id */
       std::vector<BasicPort>::iterator it =
         std::find(global_ports_to_add.begin(), global_ports_to_add.end(),
                   child_global_port);
@@ -2253,6 +2265,13 @@ void add_module_global_input_ports_from_child_modules(
              child, ModuleManager::MODULE_GLOBAL_PORT)) {
         BasicPort child_global_port =
           module_manager.module_port(child, child_global_port_id);
+        /* Skip if it is in the ignore list */
+        if (std::find(port_name_to_ignore.begin(), port_name_to_ignore.end(),
+                      child_global_port.get_name()) !=
+            port_name_to_ignore.end()) {
+          continue;
+        }
+
         /* Search in the global port list to be added, find the port id */
         std::vector<BasicPort>::iterator it =
           std::find(global_ports_to_add.begin(), global_ports_to_add.end(),
@@ -2303,10 +2322,12 @@ void add_module_global_input_ports_from_child_modules(
  * have been added to the pb_module!
  * Otherwise, some global ports of the sub modules may be missed!
  *******************************************************************/
-void add_module_global_ports_from_child_modules(ModuleManager& module_manager,
-                                                const ModuleId& module_id) {
+void add_module_global_ports_from_child_modules(
+  ModuleManager& module_manager, const ModuleId& module_id,
+  const std::vector<std::string>& port_name_to_ignore) {
   /* Input ports */
-  add_module_global_input_ports_from_child_modules(module_manager, module_id);
+  add_module_global_input_ports_from_child_modules(module_manager, module_id,
+                                                   port_name_to_ignore);
 }
 
 /********************************************************************

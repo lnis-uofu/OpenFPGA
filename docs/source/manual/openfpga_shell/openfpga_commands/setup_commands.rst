@@ -83,6 +83,60 @@ write_openfpga_bitstream_setting
 
     Show verbose log
 
+.. _openfpga_setup_command_read_openfpga_clock_arch:
+
+read_openfpga_clock_arch
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Read the XML file about programmable clock network (see details in :ref:`file_formats_clock_network`)
+
+  .. option:: --file <string> or -f <string>
+     
+    Specify the file name. For example, ``--file clock_network.xml`` 
+
+  .. option:: --verbose
+
+    Show verbose log
+
+write_openfpga_clock_arch
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Write the OpenFPGA programmable clock network to an XML file
+
+  .. option:: --file <string> or -f <string>
+     
+    Specify the file name. For example, ``--file clock_network_echo.xml``.
+    See details about file format at :ref:`file_formats_clock_network`.
+
+  .. option:: --verbose
+
+    Show verbose log
+
+append_clock_rr_graph
+~~~~~~~~~~~~~~~~~~~~~
+
+Build the routing resource graph based on an defined programmable clock network, and append it to the existing routing resource graph built by VPR.
+Use command :ref:`openfpga_setup_command_read_openfpga_clock_arch`` to load the clock network.
+
+  .. option:: --verbose
+
+    Show verbose log
+
+route_clock_rr_graph
+~~~~~~~~~~~~~~~~~~~~
+
+Route clock signals on the built routing resource graph which contains a programmable clock network.
+Clock signals will be auto-detected and routed based on pin constraints which are provided by users.
+
+  .. option:: --pin_constraints_file <string> or -pcf <string>
+
+    Specify the *Pin Constraints File* (PCF) when the clock network contains multiple clock pins. For example, ``-pin_constraints_file pin_constraints.xml``
+    Strongly recommend for multi-clock network. See detailed file format about :ref:`file_format_pin_constraints_file`.
+
+  .. option:: --verbose
+
+    Show verbose log
+
 link_openfpga_arch
 ~~~~~~~~~~~~~~~~~~
 

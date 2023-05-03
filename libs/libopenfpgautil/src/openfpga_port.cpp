@@ -106,6 +106,11 @@ bool BasicPort::contained(const BasicPort& portA) const {
 /* Set original port width */
 size_t BasicPort::get_origin_port_width() const { return origin_port_width_; }
 
+std::string BasicPort::to_verilog_string() const {
+  return get_name() + "[" + std::to_string(get_lsb()) + ":" +
+         std::to_string(get_msb()) + "]";
+}
+
 /************************************************************************
  * Overloaded operators
  ***********************************************************************/

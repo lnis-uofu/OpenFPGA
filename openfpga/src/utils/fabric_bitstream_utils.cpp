@@ -22,12 +22,20 @@ namespace openfpga {
 
 /********************************************************************
  * Find the longest bitstream size of a fabric bitstream
+ * Only care the region in whitelist. If the whitelist is empty, consider all
+ *the regions
  *******************************************************************/
 size_t find_fabric_regional_bitstream_max_size(
-  const FabricBitstream& fabric_bitstream) {
+  const FabricBitstream& fabric_bitstream,
+  const std::vector<size_t>& region_whitelist) {
   size_t regional_bitstream_max_size = 0;
   /* Find the longest regional bitstream */
   for (const auto& region : fabric_bitstream.regions()) {
+    if (!region_whitelist.empty() &&
+        (std::find(region_whitelist.begin(), region_whitelist.end(),
+                   size_t(region)) != region_whitelist.end())) {
+      continue;
+    }
     if (regional_bitstream_max_size <
         fabric_bitstream.region_bits(region).size()) {
       regional_bitstream_max_size = fabric_bitstream.region_bits(region).size();
@@ -48,12 +56,18 @@ size_t find_fabric_regional_bitstream_max_size(
  *******************************************************************/
 size_t find_configuration_chain_fabric_bitstream_size_to_be_skipped(
   const FabricBitstream& fabric_bitstream,
-  const BitstreamManager& bitstream_manager, const bool& bit_value_to_skip) {
+  const BitstreamManager& bitstream_manager, const bool& bit_value_to_skip,
+  const std::vector<size_t>& region_whitelist) {
   size_t regional_bitstream_max_size =
-    find_fabric_regional_bitstream_max_size(fabric_bitstream);
+    find_fabric_regional_bitstream_max_size(fabric_bitstream, region_whitelist);
 
   size_t num_bits_to_skip = size_t(-1);
   for (const auto& region : fabric_bitstream.regions()) {
+    if (!region_whitelist.empty() &&
+        (std::find(region_whitelist.begin(), region_whitelist.end(),
+                   size_t(region)) != region_whitelist.end())) {
+      continue;
+    }
     size_t curr_region_num_bits_to_skip = 0;
     for (const FabricBitId& bit_id : fabric_bitstream.region_bits(region)) {
       if (bit_value_to_skip !=

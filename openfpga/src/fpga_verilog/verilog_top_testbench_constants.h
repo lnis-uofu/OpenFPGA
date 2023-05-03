@@ -23,6 +23,7 @@ constexpr const char* TOP_TB_SET_PORT_NAME = "__gset__";
 constexpr const char* TOP_TB_PROG_RESET_PORT_NAME = "__prog_reset__";
 constexpr const char* TOP_TB_PROG_SET_PORT_NAME = "__prog_set_";
 constexpr const char* TOP_TB_CONFIG_DONE_PORT_NAME = "__config_done__";
+constexpr const char* TOP_TB_CONFIG_ALL_DONE_PORT_NAME = "__config_all_done__";
 constexpr const char* TOP_TB_OP_CLOCK_PORT_NAME = "__op_clock__";
 constexpr const char* TOP_TB_OP_CLOCK_PORT_PREFIX = "__operating_clk_";
 constexpr const char* TOP_TB_PROG_CLOCK_PORT_NAME = "__prog_clock__";

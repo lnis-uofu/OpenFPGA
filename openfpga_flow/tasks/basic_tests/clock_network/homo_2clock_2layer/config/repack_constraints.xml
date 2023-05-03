@@ -1,0 +1,5 @@
+<repack_design_constraints>
+  <pin_constraint pb_type="clb" pin="clk[0:0]" net="clk"/>
+  <pin_constraint pb_type="clb" pin="clk[1:1]" net="OPEN"/>
+</repack_design_constraints>
+

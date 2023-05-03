@@ -63,7 +63,9 @@ It will use the circuit model defined in :numref:`fig_ccff_config_chain`.
 .. code-block:: xml
 
   <configuration_protocol>
-    <organization type="scan_chain" circuit_model_name="ccff" num_regions="<int>"/>
+    <organization type="scan_chain" circuit_model_name="ccff" num_regions="<int>">
+      <programming_clock port="<string>" ccff_head_indices="<string>"/>
+    </organization>
   </configuration_protocol>
 
 .. _fig_ccff_fpga:
@@ -75,11 +77,43 @@ It will use the circuit model defined in :numref:`fig_ccff_config_chain`.
    Example of a configuration chain to program core logic of a FPGA 
 
 
+.. _fig_multi_region_config_chains:
+
 .. figure:: figures/multi_region_config_chains.png
    :width: 100%
    :alt: map to buried treasure
  
    Examples of single- and multiple- region configuration chains
+
+Note that for each configuration chain, its programming clock can be separated or grouped by using the syntax ``programming_clock``.
+
+.. note:: Only applicable to multi-head configuration chains (number of regions is greater than 1). If not specified, all the chains share the same clock.
+
+.. option:: port="<string>"
+
+  Define the port name of a programming clock. This should be a valid global clock port defined in the circuit models whose type is ``ccff``. See details in :ref:`circuit_model_ccff_example`. 
+
+.. option:: ccff_head_indices="<string>"
+
+  Define the indices of the configuration chains which will be controlled by the programming clock defined using XML syntax ``port``. The indices should consist of valid indices  within the range of number of regions.
+
+In the following example, a 6-head configuration protocol (corresponding to :numref:`fig_multi_region_config_chains`) is defined where the first three chains share a common clock ``CK[0]``, where the forth chain is driven by an individual clock ``CK[1]`` and the other two chains are driven by a common clock ``CK[2]``.
+
+.. code-block:: xml
+
+  <circuit_model type="ccff" name="ccff" prefix="ccff" verilog_netlist="ccff.v" spice_netlist="ccff.sp">
+    <port type="input" prefix="D" size="1"/>
+    <port type="output" prefix="Q" size="1"/>
+    <port type="output" prefix="QN" size="1"/>
+    <port type="clock" prefix="CK" size="1" is_global="true" is_prog="true" is_clock="true"/>
+  </circuit_model>
+  <configuration_protocol>
+    <organization type="scan_chain" circuit_model_name="ccff" num_regions="6">
+      <programming_clock port="CK[0]" ccff_head_indices="0,1,2"/>
+      <programming_clock port="CK[1]" ccff_head_indices="3"/>
+      <programming_clock port="CK[2]" ccff_head_indices="4,5"/>
+    </organization>
+  </configuration_protocol>
 
 
 Frame-based Example

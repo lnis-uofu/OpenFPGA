@@ -56,7 +56,7 @@ static void build_routing_arch_mux_library(
         if (CircuitModelId::INVALID() == rr_switch_circuit_model) {
           VTR_LOG_ERROR(
             "Unable to find the circuit model for rr_switch '%s'!\n",
-            rr_graph.rr_switch_inf(driver_switches[0]).name);
+            rr_graph.rr_switch_inf(driver_switches[0]).name.c_str());
           VTR_LOG("Node type: %s\n", rr_graph.node_type_string(node));
           VTR_LOG("Node coordinate: %s\n",
                   rr_graph.node_coordinate_to_string(node).c_str());
@@ -231,6 +231,13 @@ MuxLibrary build_device_mux_library(const DeviceContext& vpr_device_ctx,
   VTR_LOG("Built a multiplexer library of %lu physical multiplexers.\n",
           mux_lib.muxes().size());
   VTR_LOG("Maximum multiplexer size is %lu.\n", mux_lib.max_mux_size());
+  for (auto mux_id : mux_lib.muxes()) {
+    VTR_LOG("\tmodel '%s', input_size='%lu'\n",
+            openfpga_ctx.arch()
+              .circuit_lib.model_name(mux_lib.mux_circuit_model(mux_id))
+              .c_str(),
+            mux_lib.mux_graph(mux_id).num_inputs());
+  }
 
   return mux_lib;
 }

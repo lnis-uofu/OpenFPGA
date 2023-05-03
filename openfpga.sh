@@ -41,7 +41,7 @@ create-task () {
         echo "Task $1 already exists"
         return
     fi
-    template="template_tasks/yosys_vpr_template"
+    template="template_tasks/fabric_netlist_gen_template"
     if [ ${#2} -ge 1 ]; then
         if   [[ "$2" == "fabric_netlist_gen" ]]; then template="template_tasks/${2}_template/";
         elif [[ "$2" == "fabric_verification" ]]; then template="template_tasks/${2}_template/";

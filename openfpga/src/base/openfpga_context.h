@@ -5,6 +5,7 @@
 
 #include "bitstream_manager.h"
 #include "bitstream_setting.h"
+#include "clock_network.h"
 #include "decoder_library.h"
 #include "device_rr_gsb.h"
 #include "fabric_bitstream.h"
@@ -16,6 +17,7 @@
 #include "netlist_manager.h"
 #include "openfpga_arch.h"
 #include "openfpga_flow_manager.h"
+#include "rr_clock_spatial_lookup.h"
 #include "simulation_setting.h"
 #include "tile_direct.h"
 #include "vpr_bitstream_annotation.h"
@@ -60,6 +62,10 @@ class OpenfpgaContext : public Context {
   }
   const openfpga::BitstreamSetting& bitstream_setting() const {
     return bitstream_setting_;
+  }
+  const openfpga::ClockNetwork& clock_arch() const { return clock_arch_; }
+  const openfpga::RRClockSpatialLookup& clock_rr_lookup() const {
+    return clock_rr_lookup_;
   }
   const openfpga::VprDeviceAnnotation& vpr_device_annotation() const {
     return vpr_device_annotation_;
@@ -116,6 +122,10 @@ class OpenfpgaContext : public Context {
   openfpga::BitstreamSetting& mutable_bitstream_setting() {
     return bitstream_setting_;
   }
+  openfpga::ClockNetwork& mutable_clock_arch() { return clock_arch_; }
+  openfpga::RRClockSpatialLookup& mutable_clock_rr_lookup() {
+    return clock_rr_lookup_;
+  }
   openfpga::VprDeviceAnnotation& mutable_vpr_device_annotation() {
     return vpr_device_annotation_;
   }
@@ -165,6 +175,8 @@ class OpenfpgaContext : public Context {
   openfpga::Arch arch_;
   openfpga::SimulationSetting sim_setting_;
   openfpga::BitstreamSetting bitstream_setting_;
+  openfpga::ClockNetwork clock_arch_;
+  openfpga::RRClockSpatialLookup clock_rr_lookup_;
 
   /* Annotation to pb_type of VPR */
   openfpga::VprDeviceAnnotation vpr_device_annotation_;

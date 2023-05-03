@@ -71,6 +71,12 @@ size_t TileAnnotation::global_port_default_value(
   return global_port_default_values_[global_port_id];
 }
 
+std::string TileAnnotation::global_port_clock_arch_tree_name(
+  const TileGlobalPortId& global_port_id) const {
+  VTR_ASSERT(valid_global_port_id(global_port_id));
+  return global_port_clock_arch_tree_names_[global_port_id];
+}
+
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
@@ -91,6 +97,7 @@ TileGlobalPortId TileAnnotation::create_global_port(
   global_port_tile_ports_.emplace_back();
   global_port_tile_coordinates_.emplace_back();
   global_port_is_clock_.push_back(false);
+  global_port_clock_arch_tree_names_.emplace_back();
   global_port_is_set_.push_back(false);
   global_port_is_reset_.push_back(false);
   global_port_default_values_.push_back(0);
@@ -114,6 +121,12 @@ void TileAnnotation::set_global_port_is_clock(
   const TileGlobalPortId& global_port_id, const bool& is_clock) {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   global_port_is_clock_[global_port_id] = is_clock;
+}
+
+void TileAnnotation::set_global_port_clock_arch_tree_name(
+  const TileGlobalPortId& global_port_id, const std::string& clock_tree_name) {
+  VTR_ASSERT(valid_global_port_id(global_port_id));
+  global_port_clock_arch_tree_names_[global_port_id] = clock_tree_name;
 }
 
 void TileAnnotation::set_global_port_is_set(

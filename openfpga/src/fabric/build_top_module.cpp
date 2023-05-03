@@ -431,7 +431,8 @@ static void add_top_module_io_children(
 int build_top_module(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   MemoryBankShiftRegisterBanks& blwl_sr_banks,
-  const CircuitLibrary& circuit_lib,
+  const CircuitLibrary& circuit_lib, const ClockNetwork& clk_ntwk,
+  const RRClockSpatialLookup& rr_clock_lookup,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
   const TileAnnotation& tile_annotation, const RRGraphView& rr_graph,
   const DeviceRRGSB& device_rr_gsb, const TileDirect& tile_direct,
@@ -494,7 +495,8 @@ int build_top_module(
    * annotation */
   status = add_top_module_global_ports_from_grid_modules(
     module_manager, top_module, tile_annotation, vpr_device_annotation, grids,
-    grid_instance_ids);
+    rr_graph, device_rr_gsb, cb_instance_ids, grid_instance_ids, clk_ntwk,
+    rr_clock_lookup);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }
@@ -593,6 +595,20 @@ int build_top_module(
     }
   }
 
+  /* For configuration chains, we avoid adding nets for programmable clocks if
+   * there are a few */
+  std::vector<std::string> global_port_blacklist;
+  if (config_protocol.num_prog_clocks() > 1) {
+    BasicPort prog_clk_port = config_protocol.prog_clock_port_info();
+    global_port_blacklist.push_back(prog_clk_port.get_name());
+    /* Add port */
+    ModulePortId port_id = module_manager.add_port(
+      top_module, prog_clk_port, ModuleManager::MODULE_GLOBAL_PORT);
+    /* Add nets by following configurable children under different regions */
+    add_top_module_nets_prog_clock(module_manager, top_module, port_id,
+                                   config_protocol);
+  }
+
   /* Add global ports to the top module:
    * This is a much easier job after adding sub modules (instances),
    * we just need to find all the global ports from the child modules and build
@@ -600,7 +616,8 @@ int build_top_module(
    * @note This function is called after the
    * add_top_module_nets_memory_config_bus() because it may add some sub modules
    */
-  add_module_global_ports_from_child_modules(module_manager, top_module);
+  add_module_global_ports_from_child_modules(module_manager, top_module,
+                                             global_port_blacklist);
 
   return status;
 }
