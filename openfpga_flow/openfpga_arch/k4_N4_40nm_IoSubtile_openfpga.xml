@@ -185,13 +185,10 @@
     <!-- fpga_input pb_type annoptation  -->
     <pb_type name="fpga_input" physical_mode_name="physical"/>
     <pb_type name="fpga_output" physical_mode_name="physical"/>
-
     <pb_type name="fpga_input[physical].iopad" circuit_model_name="GPIN"/>
     <pb_type name="fpga_output[physical].iopad" circuit_model_name="GPOUT"/>
-
     <pb_type name="fpga_input[inpad].inpad" physical_pb_type_name="fpga_input[physical].iopad"/>
     <pb_type name="fpga_output[outpad].outpad" physical_pb_type_name="fpga_output[physical].iopad"/>
-
     <!-- End physical pb_type binding in complex block IO -->
     <!-- physical pb_type binding in complex block CLB -->
     <!-- physical mode will be the default mode if not specified -->
