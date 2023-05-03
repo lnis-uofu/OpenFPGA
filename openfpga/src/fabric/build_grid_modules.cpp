@@ -1094,7 +1094,7 @@ static void build_physical_tile_module(
    * it as a mode under a <pb_type>
    */
   for (const t_sub_tile& sub_tile : phy_block_type->sub_tiles) {
-    for (int iz = 0; iz < sub_tile.capacity.total(); ++iz) {
+    for (int iz = sub_tile.capacity.low; iz < sub_tile.capacity.high; ++iz) {
       VTR_ASSERT(1 == sub_tile.equivalent_sites.size());
       t_logical_block_type_ptr lb_type = sub_tile.equivalent_sites[0];
       /* Bypass empty pb_graph */
