@@ -158,6 +158,8 @@ echo -e "Testing tiles with pins only on bottom and right sides";
 run-task basic_tests/tile_organization/bottom_right_custom_pins $@
 echo -e "Testing tiles with I/O in center grid";
 run-task basic_tests/tile_organization/tileable_io $@
+echo -e "Testing tiles with I/O consisting of subtiles";
+run-task basic_tests/tile_organization/io_subtile $@
 
 echo -e "Testing global port definition from tiles";
 run-task basic_tests/global_tile_ports/global_tile_clock $@
