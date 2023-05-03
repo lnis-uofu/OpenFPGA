@@ -23,6 +23,7 @@ std::vector<e_side> find_grid_module_pin_sides(
 void add_grid_module_net_connect_pb_graph_pin(
   ModuleManager& module_manager, const ModuleId& grid_module,
   const ModuleId& child_module, const size_t& child_instance,
+  const size_t& child_inst_subtile_index,
   const VprDeviceAnnotation& vpr_device_annotation,
   t_physical_tile_type_ptr grid_type_descriptor, t_pb_graph_pin* pb_graph_pin,
   const e_side& border_side,
