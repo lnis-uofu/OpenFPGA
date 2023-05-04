@@ -108,50 +108,49 @@ static void add_grid_module_pb_type_ports(
 static void add_grid_module_nets_connect_pb_type_ports(
   ModuleManager& module_manager, const ModuleId& grid_module,
   const ModuleId& child_module, const size_t& child_instance,
-  const VprDeviceAnnotation& vpr_device_annotation,
+  const t_sub_tile& sub_tile, const VprDeviceAnnotation& vpr_device_annotation,
   t_physical_tile_type_ptr grid_type_descriptor, const e_side& border_side) {
   /* Ensure that we have a valid grid_type_descriptor */
   VTR_ASSERT(nullptr != grid_type_descriptor);
 
   /* FIXME: Currently support only 1 equivalent site! Should clarify this
    * limitation in documentation! */
-  for (const t_sub_tile& sub_tile : grid_type_descriptor->sub_tiles) {
-    VTR_ASSERT(sub_tile.equivalent_sites.size() == 1);
-    t_logical_block_type_ptr lb_type = sub_tile.equivalent_sites[0];
-    t_pb_graph_node* top_pb_graph_node = lb_type->pb_graph_head;
-    VTR_ASSERT(nullptr != top_pb_graph_node);
+  VTR_ASSERT(sub_tile.equivalent_sites.size() == 1);
+  t_logical_block_type_ptr lb_type = sub_tile.equivalent_sites[0];
+  t_pb_graph_node* top_pb_graph_node = lb_type->pb_graph_head;
+  VTR_ASSERT(nullptr != top_pb_graph_node);
+  size_t child_inst_subtile_index = sub_tile.capacity.low + child_instance;
 
-    for (int iport = 0; iport < top_pb_graph_node->num_input_ports; ++iport) {
-      for (int ipin = 0; ipin < top_pb_graph_node->num_input_pins[iport];
-           ++ipin) {
-        add_grid_module_net_connect_pb_graph_pin(
-          module_manager, grid_module, child_module, child_instance,
-          vpr_device_annotation, grid_type_descriptor,
-          &(top_pb_graph_node->input_pins[iport][ipin]), border_side,
-          INPUT2INPUT_INTERC);
-      }
+  for (int iport = 0; iport < top_pb_graph_node->num_input_ports; ++iport) {
+    for (int ipin = 0; ipin < top_pb_graph_node->num_input_pins[iport];
+         ++ipin) {
+      add_grid_module_net_connect_pb_graph_pin(
+        module_manager, grid_module, child_module, child_instance,
+        child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
+        &(top_pb_graph_node->input_pins[iport][ipin]), border_side,
+        INPUT2INPUT_INTERC);
     }
+  }
 
-    for (int iport = 0; iport < top_pb_graph_node->num_output_ports; ++iport) {
-      for (int ipin = 0; ipin < top_pb_graph_node->num_output_pins[iport];
-           ++ipin) {
-        add_grid_module_net_connect_pb_graph_pin(
-          module_manager, grid_module, child_module, child_instance,
-          vpr_device_annotation, grid_type_descriptor,
-          &(top_pb_graph_node->output_pins[iport][ipin]), border_side,
-          OUTPUT2OUTPUT_INTERC);
-      }
+  for (int iport = 0; iport < top_pb_graph_node->num_output_ports; ++iport) {
+    for (int ipin = 0; ipin < top_pb_graph_node->num_output_pins[iport];
+         ++ipin) {
+      add_grid_module_net_connect_pb_graph_pin(
+        module_manager, grid_module, child_module, child_instance,
+        child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
+        &(top_pb_graph_node->output_pins[iport][ipin]), border_side,
+        OUTPUT2OUTPUT_INTERC);
     }
+  }
 
-    for (int iport = 0; iport < top_pb_graph_node->num_clock_ports; ++iport) {
-      for (int ipin = 0; ipin < top_pb_graph_node->num_clock_pins[iport];
-           ++ipin) {
-        add_grid_module_net_connect_pb_graph_pin(
-          module_manager, grid_module, child_module, child_instance,
-          vpr_device_annotation, grid_type_descriptor,
-          &(top_pb_graph_node->clock_pins[iport][ipin]), border_side,
-          INPUT2INPUT_INTERC);
-      }
+  for (int iport = 0; iport < top_pb_graph_node->num_clock_ports; ++iport) {
+    for (int ipin = 0; ipin < top_pb_graph_node->num_clock_pins[iport];
+         ++ipin) {
+      add_grid_module_net_connect_pb_graph_pin(
+        module_manager, grid_module, child_module, child_instance,
+        child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
+        &(top_pb_graph_node->clock_pins[iport][ipin]), border_side,
+        INPUT2INPUT_INTERC);
     }
   }
 }
@@ -1094,7 +1093,8 @@ static void build_physical_tile_module(
    * it as a mode under a <pb_type>
    */
   for (const t_sub_tile& sub_tile : phy_block_type->sub_tiles) {
-    for (int iz = 0; iz < sub_tile.capacity.total(); ++iz) {
+    for (int iz = sub_tile.capacity.low; iz < sub_tile.capacity.high + 1;
+         ++iz) {
       VTR_ASSERT(1 == sub_tile.equivalent_sites.size());
       t_logical_block_type_ptr lb_type = sub_tile.equivalent_sites[0];
       /* Bypass empty pb_graph */
@@ -1154,7 +1154,7 @@ static void build_physical_tile_module(
       for (const size_t& child_instance :
            module_manager.child_module_instances(grid_module, pb_module)) {
         add_grid_module_nets_connect_pb_type_ports(
-          module_manager, grid_module, pb_module, child_instance,
+          module_manager, grid_module, pb_module, child_instance, sub_tile,
           vpr_device_annotation, phy_block_type, border_side);
       }
     }
@@ -1180,7 +1180,7 @@ static void build_physical_tile_module(
       for (const size_t& child_instance :
            module_manager.child_module_instances(grid_module, pb_module)) {
         add_grid_module_nets_connect_duplicated_pb_type_ports(
-          module_manager, grid_module, pb_module, child_instance,
+          module_manager, grid_module, pb_module, child_instance, sub_tile,
           vpr_device_annotation, phy_block_type, border_side);
       }
     }

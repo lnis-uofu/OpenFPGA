@@ -80,21 +80,32 @@ IoLocationMap build_fabric_io_location_map(const ModuleManager& module_manager,
                module_manager.io_children(child).size());
     for (size_t isubchild = 0;
          isubchild < module_manager.io_children(child).size(); ++isubchild) {
+      /* Note that we should use the subchild module when checking the GPIO
+       * ports. The child module is actually the grid-level I/O module, while
+       * the subchild module is the subtile inside grid-level I/O modules. Note
+       * that grid-level I/O module contains all the GPIO ports while the
+       * subtile may have part of it. For example, a grid I/O module may have 24
+       * GPINs and 12 GPOUTs, while the first subtile only have 4 GPINs, and the
+       * second subtile only have 3 GPOUTs. Therefore, to accurately build the
+       * I/O location map downto subtile level, we need to check the subchild
+       * module here.
+       */
+      ModuleId subchild = module_manager.io_children(child)[isubchild];
       vtr::Point<int> subchild_coord =
         module_manager.io_child_coordinates(child)[isubchild];
 
       for (const ModuleManager::e_module_port_type& module_io_port_type :
            MODULE_IO_PORT_TYPES) {
         for (const ModulePortId& gpio_port_id :
-             module_manager.module_port_ids_by_type(child,
+             module_manager.module_port_ids_by_type(subchild,
                                                     module_io_port_type)) {
           /* Only care mappable I/O */
           if (false ==
-              module_manager.port_is_mappable_io(child, gpio_port_id)) {
+              module_manager.port_is_mappable_io(subchild, gpio_port_id)) {
             continue;
           }
           const BasicPort& gpio_port =
-            module_manager.module_port(child, gpio_port_id);
+            module_manager.module_port(subchild, gpio_port_id);
 
           auto curr_io_index = io_counter.find(gpio_port.get_name());
           /* Index always start from zero */
