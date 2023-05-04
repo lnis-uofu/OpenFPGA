@@ -9,7 +9,7 @@
 sphinxcontrib-bibtex<2.0.0
 
 # Package required to embed youtube video
-sphinxcontrib-yt
+sphinxcontrib-youtube
 
 # Package required to convert SVG for latex building
 sphinxcontrib-svg2pdfconverter
