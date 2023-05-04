@@ -6,7 +6,7 @@
 #recommonmark
 
 #Handle references in bibtex format
-sphinxcontrib-bibtex<2.0.0
+sphinxcontrib-bibtex
 
 # Package required to embed youtube video
 sphinxcontrib-youtube
