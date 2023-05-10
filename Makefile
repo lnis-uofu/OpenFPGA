@@ -66,7 +66,7 @@ prebuild:
 	echo "cd ${BUILD_DIR} && ${CMAKE_COMMAND} ${CMAKE_FLAGS} ${SOURCE_DIR}" && \
 	cd ${BUILD_DIR} && ${CMAKE_COMMAND} ${CMAKE_FLAGS} ${SOURCE_DIR}
 
-compile: prebuild
+compile: | prebuild
 # Compile the code base. By default, all the targets will be compiled
 # Following options are available
 # .. option:: CMAKE_GOALS
@@ -75,11 +75,11 @@ compile: prebuild
 	echo "Building target(s): ${CMAKE_GOALS}"
 	@+${MAKE} -C ${BUILD_DIR} ${CMAKE_GOALS}
 
-list_cmake_targets: prebuild
+list_cmake_targets: | prebuild
 # Show the targets available to be built, which can be specified through ``CMAKE_GOALS`` when compile
 	cd ${BUILD_DIR} && make help && cd -
 
-all: checkout | compile
+all: | checkout compile
 # A shortcut command to run checkout and compile in serial
 
 format-cpp:
