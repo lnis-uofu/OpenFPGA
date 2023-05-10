@@ -78,9 +78,9 @@ std::vector<char> FabricBitstream::bit_address(
   addr_bits.reserve(address_length_);
   for (size_t curr_idx = 0; curr_idx < bit_address_1bits_[bit_id].size();
        curr_idx++) {
-    //workaround for bug during ql_memory_bank bitstream generation
+    // workaround for bug during ql_memory_bank bitstream generation
     size_t curr_addr_len = size_t(64);
-//      std::min(size_t(64), address_length_ - curr_idx * 64);
+    //      std::min(size_t(64), address_length_ - curr_idx * 64);
     std::vector<char> curr_addr_vec =
       decode_address_bits(bit_address_1bits_[bit_id][curr_idx],
                           bit_address_xbits_[bit_id][curr_idx], curr_addr_len);
@@ -108,7 +108,7 @@ std::vector<char> FabricBitstream::bit_wl_address(
   for (size_t curr_idx = 0; curr_idx < bit_wl_address_1bits_[bit_id].size();
        curr_idx++) {
     size_t curr_addr_len = size_t(64);
-//      std::min(size_t(64), wl_address_length_ - curr_idx * 64);
+    //      std::min(size_t(64), wl_address_length_ - curr_idx * 64);
     std::vector<char> curr_addr_vec = decode_address_bits(
       bit_wl_address_1bits_[bit_id][curr_idx],
       bit_wl_address_xbits_[bit_id][curr_idx], curr_addr_len);
