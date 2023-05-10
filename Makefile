@@ -79,8 +79,9 @@ list_cmake_targets: | prebuild
 # Show the targets available to be built, which can be specified through ``CMAKE_GOALS`` when compile
 	cd ${BUILD_DIR} && make help && cd -
 
-all: | checkout compile
+all: checkout
 # A shortcut command to run checkout and compile in serial
+	@+${MAKE} compile
 
 format-cpp:
 # Format all the C/C++ files under this project, excluding submodules
