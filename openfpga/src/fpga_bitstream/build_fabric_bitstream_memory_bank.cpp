@@ -20,6 +20,12 @@
 #include "openfpga_decode.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
+#include "fabric_bitstream_schema.capnp.h"
+#include <capnp/message.h>
+#include <capnp/serialize-packed.h>
+#include <iostream>
+#include <stdio.h>
+
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -432,5 +438,64 @@ void build_module_fabric_dependent_bitstream_ql_memory_bank(
       temp_coord, cur_mem_index, fabric_bitstream, fabric_bitstream_region);
   }
 }
+
+void load_module_fabric_dependent_bitstream_ql_memory_bank(
+  const ConfigProtocol& config_protocol, const CircuitLibrary& circuit_lib,
+  const BitstreamManager& bitstream_manager, const ConfigBlockId& top_block,
+  const ModuleManager& module_manager, const ModuleId& top_module,
+  FabricBitstream& fabric_bitstream, const std::string& infile) {
+  /* Ensure we are in the correct type of configuration protocol*/
+    VTR_LOG("in load function\n");
+
+  VTR_ASSERT(config_protocol.type() == CONFIG_MEM_QL_MEMORY_BANK);
+
+//only flatten is supported
+
+  ModulePortId bl_addr_port;
+  BasicPort bl_addr_port_info;
+  VTR_ASSERT(BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type());
+    for (const ConfigRegionId& config_region :
+         module_manager.regions(top_module)) {
+      ModulePortId temp_bl_addr_port = module_manager.find_module_port(
+        top_module, generate_regional_blwl_port_name(
+                      std::string(MEMORY_BL_PORT_NAME), config_region));
+      BasicPort temp_bl_addr_port_info =
+        module_manager.module_port(top_module, temp_bl_addr_port);
+      if (!bl_addr_port || (temp_bl_addr_port_info.get_width() >
+                            bl_addr_port_info.get_width())) {
+        bl_addr_port = temp_bl_addr_port;
+        bl_addr_port_info = temp_bl_addr_port_info;
+      }
+    }
+
+  ModulePortId wl_addr_port;
+  BasicPort wl_addr_port_info;
+  for (const ConfigRegionId& config_region :
+         module_manager.regions(top_module)) {
+      ModulePortId temp_wl_addr_port = module_manager.find_module_port(
+        top_module, generate_regional_blwl_port_name(
+                      std::string(MEMORY_WL_PORT_NAME), config_region));
+      BasicPort temp_wl_addr_port_info =
+        module_manager.module_port(top_module, temp_wl_addr_port);
+      if (!wl_addr_port || (temp_wl_addr_port_info.get_width() >
+                            wl_addr_port_info.get_width())) {
+        wl_addr_port = temp_wl_addr_port;
+        wl_addr_port_info = temp_wl_addr_port_info;
+      }
+    }
+    VTR_LOG("reserve bits\n");
+
+  /* Reserve bits before build-up */
+  fabric_bitstream.set_use_address(true);
+  fabric_bitstream.set_use_wl_address(true);
+  fabric_bitstream.set_bl_address_length(bl_addr_port_info.get_width());
+  fabric_bitstream.set_wl_address_length(wl_addr_port_info.get_width());
+  fabric_bitstream.reserve_bits(bitstream_manager.num_bits());
+  //copy bit IDs & addresses from DB
+  VTR_LOG("calling read_fabric_bitstream_db\n");
+
+  int status = fabric_bitstream.read_fabric_bitstream_db(infile);
+  
+  }
 
 } /* end namespace openfpga */

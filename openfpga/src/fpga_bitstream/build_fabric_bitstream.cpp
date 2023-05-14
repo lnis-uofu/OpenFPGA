@@ -786,4 +786,42 @@ FabricBitstream build_fabric_dependent_bitstream(
   return fabric_bitstream;
 }
 
+/* A version of the above function with caching of some of the larger data structures to allow faster bitstream generation for a fixed fpga fabric.
+*  Currently only works with ql_memory_bank flattened configuration
+*/
+
+FabricBitstream load_fabric_dependent_bitstream(
+  const BitstreamManager& bitstream_manager,
+  const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
+  const ConfigProtocol& config_protocol, const bool& verbose, const std::string& infile) {
+  VTR_ASSERT(config_protocol.type() == CONFIG_MEM_QL_MEMORY_BANK);
+
+  FabricBitstream fabric_bitstream;
+
+  vtr::ScopedStartFinishTimer timer("\n Load fabric dependent bitstream\n");
+
+  /* Get the top module name in module manager, which is our starting point */
+  std::string top_module_name = generate_fpga_top_module_name();
+  ModuleId top_module = module_manager.find_module(top_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(top_module));
+
+  /* Find the top block in bitstream manager, which has not parents */
+  std::vector<ConfigBlockId> top_block =
+    find_bitstream_manager_top_blocks(bitstream_manager);
+  /* Make sure we have only 1 top block and its name matches the top module */
+  VTR_ASSERT(1 == top_block.size());
+  VTR_ASSERT(
+    0 == top_module_name.compare(bitstream_manager.block_name(top_block[0])));
+
+  /* Start build-up formally */
+  load_module_fabric_dependent_bitstream_ql_memory_bank(
+    config_protocol, circuit_lib, bitstream_manager, top_block[0],
+    module_manager, top_module, fabric_bitstream, infile);
+
+  VTR_LOGV(verbose, "Built %lu configuration bits for fabric\n",
+           fabric_bitstream.num_bits());
+
+  return fabric_bitstream;
+}
+
 } /* end namespace openfpga */

@@ -149,6 +149,16 @@ ShellCommandId add_build_fabric_bitstream_command_template(
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Enable verbose output");
+  
+  /* Add an option '--write_file' */
+  CommandOptionId opt_write_file = shell_cmd.add_option(
+    "write_file", false, "file path to output the fabric dependent bitstream mapping database");
+  shell_cmd.set_option_require_value(opt_write_file, openfpga::OPT_STRING);
+
+  /* Add an option '--read_file' */
+  CommandOptionId opt_read_file = shell_cmd.add_option(
+    "read_file", false, "file path to read the fabric dependent bitstream mapping database");
+  shell_cmd.set_option_require_value(opt_read_file, openfpga::OPT_STRING);
 
   /* Add command 'fabric_bitstream' to the Shell */
   ShellCommandId shell_cmd_id =

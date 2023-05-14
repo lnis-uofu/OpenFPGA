@@ -69,15 +69,39 @@ template <class T>
 int build_fabric_bitstream_template(T& openfpga_ctx, const Command& cmd,
                                     const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
+  CommandOptionId opt_write_file = cmd.option("write_file");
+  CommandOptionId opt_read_file = cmd.option("read_file");
 
-  /* Build fabric bitstream here */
-  openfpga_ctx.mutable_fabric_bitstream() = build_fabric_dependent_bitstream(
+  int status = CMD_EXEC_SUCCESS;
+
+  if (true == cmd_context.option_enable(cmd, opt_read_file)) {
+    //deserialize fabric dependent bitstream data structure for improved runtime
+    //when running multiple designs on single architecture
+    openfpga_ctx.mutable_fabric_bitstream() = load_fabric_dependent_bitstream(
+    openfpga_ctx.bitstream_manager(), openfpga_ctx.module_graph(),
+    openfpga_ctx.arch().circuit_lib, openfpga_ctx.arch().config_protocol,
+    cmd_context.option_enable(cmd, opt_verbose), cmd_context.option_value(cmd, opt_read_file));
+  } else {
+    /* Build fabric bitstream here */
+    openfpga_ctx.mutable_fabric_bitstream() = build_fabric_dependent_bitstream(
     openfpga_ctx.bitstream_manager(), openfpga_ctx.module_graph(),
     openfpga_ctx.arch().circuit_lib, openfpga_ctx.arch().config_protocol,
     cmd_context.option_enable(cmd, opt_verbose));
+  }
+
+  if (true == cmd_context.option_enable(cmd, opt_write_file)) {
+    std::string src_dir_path =
+      find_path_dir_name(cmd_context.option_value(cmd, opt_write_file));
+
+    /* Create directories */
+    create_directory(src_dir_path);
+
+    //serialize fabric dependent bitstream data structre
+    status = openfpga_ctx.mutable_fabric_bitstream().write_fabric_bitstream_db(cmd_context.option_value(cmd, opt_write_file)); 
+  }
 
   /* TODO: should identify the error code from internal function execution */
-  return CMD_EXEC_SUCCESS;
+  return status;
 }
 
 /********************************************************************
