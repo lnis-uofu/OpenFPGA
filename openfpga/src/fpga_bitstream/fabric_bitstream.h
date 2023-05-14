@@ -30,10 +30,10 @@
 #ifndef FABRIC_BITSTREAM_H
 #define FABRIC_BITSTREAM_H
 
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include <string>
 
 #include "bitstream_manager_fwd.h"
 #include "fabric_bitstream_fwd.h"
@@ -204,9 +204,10 @@ class FabricBitstream {
   bool valid_bit_id(const FabricBitId& bit_id) const;
   bool valid_region_id(const FabricBitRegionId& bit_id) const;
 
-public: /* cache fabric_bitstream data*/
+ public: /* cache fabric_bitstream data*/
   int write_fabric_bitstream_db(std::string);
   int read_fabric_bitstream_db(std::string);
+
  private: /* Private APIs */
   uint64_t encode_address_1bits(const std::vector<char>& address) const;
   uint64_t encode_address_xbits(const std::vector<char>& address) const;

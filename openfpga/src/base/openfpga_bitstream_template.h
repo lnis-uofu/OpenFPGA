@@ -75,18 +75,19 @@ int build_fabric_bitstream_template(T& openfpga_ctx, const Command& cmd,
   int status = CMD_EXEC_SUCCESS;
 
   if (true == cmd_context.option_enable(cmd, opt_read_file)) {
-    //deserialize fabric dependent bitstream data structure for improved runtime
-    //when running multiple designs on single architecture
+    // deserialize fabric dependent bitstream data structure for improved
+    // runtime when running multiple designs on single architecture
     openfpga_ctx.mutable_fabric_bitstream() = load_fabric_dependent_bitstream(
-    openfpga_ctx.bitstream_manager(), openfpga_ctx.module_graph(),
-    openfpga_ctx.arch().circuit_lib, openfpga_ctx.arch().config_protocol,
-    cmd_context.option_enable(cmd, opt_verbose), cmd_context.option_value(cmd, opt_read_file));
+      openfpga_ctx.bitstream_manager(), openfpga_ctx.module_graph(),
+      openfpga_ctx.arch().circuit_lib, openfpga_ctx.arch().config_protocol,
+      cmd_context.option_enable(cmd, opt_verbose),
+      cmd_context.option_value(cmd, opt_read_file));
   } else {
     /* Build fabric bitstream here */
     openfpga_ctx.mutable_fabric_bitstream() = build_fabric_dependent_bitstream(
-    openfpga_ctx.bitstream_manager(), openfpga_ctx.module_graph(),
-    openfpga_ctx.arch().circuit_lib, openfpga_ctx.arch().config_protocol,
-    cmd_context.option_enable(cmd, opt_verbose));
+      openfpga_ctx.bitstream_manager(), openfpga_ctx.module_graph(),
+      openfpga_ctx.arch().circuit_lib, openfpga_ctx.arch().config_protocol,
+      cmd_context.option_enable(cmd, opt_verbose));
   }
 
   if (true == cmd_context.option_enable(cmd, opt_write_file)) {
@@ -96,8 +97,9 @@ int build_fabric_bitstream_template(T& openfpga_ctx, const Command& cmd,
     /* Create directories */
     create_directory(src_dir_path);
 
-    //serialize fabric dependent bitstream data structre
-    status = openfpga_ctx.mutable_fabric_bitstream().write_fabric_bitstream_db(cmd_context.option_value(cmd, opt_write_file)); 
+    // serialize fabric dependent bitstream data structre
+    status = openfpga_ctx.mutable_fabric_bitstream().write_fabric_bitstream_db(
+      cmd_context.option_value(cmd, opt_write_file));
   }
 
   /* TODO: should identify the error code from internal function execution */

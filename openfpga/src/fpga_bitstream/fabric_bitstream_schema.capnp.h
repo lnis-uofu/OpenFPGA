@@ -7,9 +7,9 @@
 #include <kj/windows-sanity.h>
 
 #if CAPNP_VERSION != 9001
-#error "Version mismatch between generated code and library headers.  You must use the same version of the Cap'n Proto compiler and library."
+#error \
+  "Version mismatch between generated code and library headers.  You must use the same version of the Cap'n Proto compiler and library."
 #endif
-
 
 CAPNP_BEGIN_HEADER
 
@@ -32,20 +32,22 @@ struct FabricBitstreamQLMem {
 
   struct _capnpPrivate {
     CAPNP_DECLARE_STRUCT_HEADER(f2b207dd1ea57185, 2, 9)
-    #if !CAPNP_LITE
-    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
-    #endif  // !CAPNP_LITE
+#if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() {
+      return &schema->defaultBrand;
+    }
+#endif  // !CAPNP_LITE
   };
 };
 
 // =======================================================================================
 
 class FabricBitstreamQLMem::Reader {
-public:
+ public:
   typedef FabricBitstreamQLMem Reads;
 
   Reader() = default;
-  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+  inline explicit Reader(::capnp::_::StructReader base) : _reader(base) {}
 
   inline ::capnp::MessageSize totalSize() const {
     return _reader.totalSize().asPublic();
@@ -57,46 +59,59 @@ public:
   }
 #endif  // !CAPNP_LITE
 
-  inline  ::uint8_t getNumRegions() const;
+  inline ::uint8_t getNumRegions() const;
 
   inline bool hasInvalidRegionIds() const;
-  inline  ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>::Reader getInvalidRegionIds() const;
+  inline ::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>::Reader
+  getInvalidRegionIds() const;
 
   inline bool hasRegionBitIds() const;
-  inline  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader getRegionBitIds() const;
+  inline ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader
+  getRegionBitIds() const;
 
-  inline  ::uint64_t getNumBits() const;
+  inline ::uint64_t getNumBits() const;
 
   inline bool hasInvalidBitIds() const;
-  inline  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader getInvalidBitIds() const;
+  inline ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader
+  getInvalidBitIds() const;
 
   inline bool hasConfigBitIds() const;
-  inline  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader getConfigBitIds() const;
+  inline ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader
+  getConfigBitIds() const;
 
   inline bool getUseAddress() const;
 
   inline bool getUseWlAddress() const;
 
-  inline  ::uint8_t getAddressLength() const;
+  inline ::uint8_t getAddressLength() const;
 
-  inline  ::uint8_t getWlAddressLength() const;
+  inline ::uint8_t getWlAddressLength() const;
 
   inline bool hasBitAddress1bits() const;
-  inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Reader getBitAddress1bits() const;
+  inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                       ::capnp::Kind::LIST>::Reader
+  getBitAddress1bits() const;
 
   inline bool hasBitAddressXbits() const;
-  inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Reader getBitAddressXbits() const;
+  inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                       ::capnp::Kind::LIST>::Reader
+  getBitAddressXbits() const;
 
   inline bool hasBitWlAddress1bits() const;
-  inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Reader getBitWlAddress1bits() const;
+  inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                       ::capnp::Kind::LIST>::Reader
+  getBitWlAddress1bits() const;
 
   inline bool hasBitWlAddressXbits() const;
-  inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Reader getBitWlAddressXbits() const;
+  inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                       ::capnp::Kind::LIST>::Reader
+  getBitWlAddressXbits() const;
 
   inline bool hasBitDins() const;
-  inline  ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>::Reader getBitDins() const;
+  inline ::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>::Reader getBitDins()
+    const;
 
-private:
+ private:
   ::capnp::_::StructReader _reader;
   template <typename, ::capnp::Kind>
   friend struct ::capnp::ToDynamic_;
@@ -109,58 +124,84 @@ private:
 };
 
 class FabricBitstreamQLMem::Builder {
-public:
+ public:
   typedef FabricBitstreamQLMem Builds;
 
   Builder() = delete;  // Deleted to discourage incorrect usage.
                        // You can explicitly initialize to nullptr instead.
   inline Builder(decltype(nullptr)) {}
-  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline explicit Builder(::capnp::_::StructBuilder base) : _builder(base) {}
   inline operator Reader() const { return Reader(_builder.asReader()); }
   inline Reader asReader() const { return *this; }
 
-  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+  inline ::capnp::MessageSize totalSize() const {
+    return asReader().totalSize();
+  }
 #if !CAPNP_LITE
   inline ::kj::StringTree toString() const { return asReader().toString(); }
 #endif  // !CAPNP_LITE
 
-  inline  ::uint8_t getNumRegions();
-  inline void setNumRegions( ::uint8_t value);
+  inline ::uint8_t getNumRegions();
+  inline void setNumRegions(::uint8_t value);
 
   inline bool hasInvalidRegionIds();
-  inline  ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>::Builder getInvalidRegionIds();
-  inline void setInvalidRegionIds( ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>::Reader value);
-  inline void setInvalidRegionIds(::kj::ArrayPtr<const  ::uint8_t> value);
-  inline  ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>::Builder initInvalidRegionIds(unsigned int size);
-  inline void adoptInvalidRegionIds(::capnp::Orphan< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>>&& value);
-  inline ::capnp::Orphan< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>> disownInvalidRegionIds();
+  inline ::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>::Builder
+  getInvalidRegionIds();
+  inline void setInvalidRegionIds(
+    ::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>::Reader value);
+  inline void setInvalidRegionIds(::kj::ArrayPtr<const ::uint8_t> value);
+  inline ::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>::Builder
+  initInvalidRegionIds(unsigned int size);
+  inline void adoptInvalidRegionIds(
+    ::capnp::Orphan<::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>>&&
+      value);
+  inline ::capnp::Orphan<::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>>
+  disownInvalidRegionIds();
 
   inline bool hasRegionBitIds();
-  inline  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Builder getRegionBitIds();
-  inline void setRegionBitIds( ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader value);
-  inline void setRegionBitIds(::kj::ArrayPtr<const  ::uint64_t> value);
-  inline  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Builder initRegionBitIds(unsigned int size);
-  inline void adoptRegionBitIds(::capnp::Orphan< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>&& value);
-  inline ::capnp::Orphan< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>> disownRegionBitIds();
+  inline ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Builder
+  getRegionBitIds();
+  inline void setRegionBitIds(
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader value);
+  inline void setRegionBitIds(::kj::ArrayPtr<const ::uint64_t> value);
+  inline ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Builder
+  initRegionBitIds(unsigned int size);
+  inline void adoptRegionBitIds(
+    ::capnp::Orphan<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>&&
+      value);
+  inline ::capnp::Orphan<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>
+  disownRegionBitIds();
 
-  inline  ::uint64_t getNumBits();
-  inline void setNumBits( ::uint64_t value);
+  inline ::uint64_t getNumBits();
+  inline void setNumBits(::uint64_t value);
 
   inline bool hasInvalidBitIds();
-  inline  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Builder getInvalidBitIds();
-  inline void setInvalidBitIds( ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader value);
-  inline void setInvalidBitIds(::kj::ArrayPtr<const  ::uint64_t> value);
-  inline  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Builder initInvalidBitIds(unsigned int size);
-  inline void adoptInvalidBitIds(::capnp::Orphan< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>&& value);
-  inline ::capnp::Orphan< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>> disownInvalidBitIds();
+  inline ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Builder
+  getInvalidBitIds();
+  inline void setInvalidBitIds(
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader value);
+  inline void setInvalidBitIds(::kj::ArrayPtr<const ::uint64_t> value);
+  inline ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Builder
+  initInvalidBitIds(unsigned int size);
+  inline void adoptInvalidBitIds(
+    ::capnp::Orphan<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>&&
+      value);
+  inline ::capnp::Orphan<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>
+  disownInvalidBitIds();
 
   inline bool hasConfigBitIds();
-  inline  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Builder getConfigBitIds();
-  inline void setConfigBitIds( ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader value);
-  inline void setConfigBitIds(::kj::ArrayPtr<const  ::uint64_t> value);
-  inline  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Builder initConfigBitIds(unsigned int size);
-  inline void adoptConfigBitIds(::capnp::Orphan< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>&& value);
-  inline ::capnp::Orphan< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>> disownConfigBitIds();
+  inline ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Builder
+  getConfigBitIds();
+  inline void setConfigBitIds(
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader value);
+  inline void setConfigBitIds(::kj::ArrayPtr<const ::uint64_t> value);
+  inline ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Builder
+  initConfigBitIds(unsigned int size);
+  inline void adoptConfigBitIds(
+    ::capnp::Orphan<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>&&
+      value);
+  inline ::capnp::Orphan<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>
+  disownConfigBitIds();
 
   inline bool getUseAddress();
   inline void setUseAddress(bool value);
@@ -168,53 +209,114 @@ public:
   inline bool getUseWlAddress();
   inline void setUseWlAddress(bool value);
 
-  inline  ::uint8_t getAddressLength();
-  inline void setAddressLength( ::uint8_t value);
+  inline ::uint8_t getAddressLength();
+  inline void setAddressLength(::uint8_t value);
 
-  inline  ::uint8_t getWlAddressLength();
-  inline void setWlAddressLength( ::uint8_t value);
+  inline ::uint8_t getWlAddressLength();
+  inline void setWlAddressLength(::uint8_t value);
 
   inline bool hasBitAddress1bits();
-  inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Builder getBitAddress1bits();
-  inline void setBitAddress1bits( ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Reader value);
-  inline void setBitAddress1bits(::kj::ArrayPtr<const  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader> value);
-  inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Builder initBitAddress1bits(unsigned int size);
-  inline void adoptBitAddress1bits(::capnp::Orphan< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>&& value);
-  inline ::capnp::Orphan< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>> disownBitAddress1bits();
+  inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                       ::capnp::Kind::LIST>::Builder
+  getBitAddress1bits();
+  inline void setBitAddress1bits(
+    ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                  ::capnp::Kind::LIST>::Reader value);
+  inline void setBitAddress1bits(
+    ::kj::ArrayPtr<
+      const ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader>
+      value);
+  inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                       ::capnp::Kind::LIST>::Builder
+  initBitAddress1bits(unsigned int size);
+  inline void adoptBitAddress1bits(
+    ::capnp::Orphan<
+      ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                    ::capnp::Kind::LIST>>&& value);
+  inline ::capnp::Orphan<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>
+  disownBitAddress1bits();
 
   inline bool hasBitAddressXbits();
-  inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Builder getBitAddressXbits();
-  inline void setBitAddressXbits( ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Reader value);
-  inline void setBitAddressXbits(::kj::ArrayPtr<const  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader> value);
-  inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Builder initBitAddressXbits(unsigned int size);
-  inline void adoptBitAddressXbits(::capnp::Orphan< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>&& value);
-  inline ::capnp::Orphan< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>> disownBitAddressXbits();
+  inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                       ::capnp::Kind::LIST>::Builder
+  getBitAddressXbits();
+  inline void setBitAddressXbits(
+    ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                  ::capnp::Kind::LIST>::Reader value);
+  inline void setBitAddressXbits(
+    ::kj::ArrayPtr<
+      const ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader>
+      value);
+  inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                       ::capnp::Kind::LIST>::Builder
+  initBitAddressXbits(unsigned int size);
+  inline void adoptBitAddressXbits(
+    ::capnp::Orphan<
+      ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                    ::capnp::Kind::LIST>>&& value);
+  inline ::capnp::Orphan<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>
+  disownBitAddressXbits();
 
   inline bool hasBitWlAddress1bits();
-  inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Builder getBitWlAddress1bits();
-  inline void setBitWlAddress1bits( ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Reader value);
-  inline void setBitWlAddress1bits(::kj::ArrayPtr<const  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader> value);
-  inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Builder initBitWlAddress1bits(unsigned int size);
-  inline void adoptBitWlAddress1bits(::capnp::Orphan< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>&& value);
-  inline ::capnp::Orphan< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>> disownBitWlAddress1bits();
+  inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                       ::capnp::Kind::LIST>::Builder
+  getBitWlAddress1bits();
+  inline void setBitWlAddress1bits(
+    ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                  ::capnp::Kind::LIST>::Reader value);
+  inline void setBitWlAddress1bits(
+    ::kj::ArrayPtr<
+      const ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader>
+      value);
+  inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                       ::capnp::Kind::LIST>::Builder
+  initBitWlAddress1bits(unsigned int size);
+  inline void adoptBitWlAddress1bits(
+    ::capnp::Orphan<
+      ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                    ::capnp::Kind::LIST>>&& value);
+  inline ::capnp::Orphan<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>
+  disownBitWlAddress1bits();
 
   inline bool hasBitWlAddressXbits();
-  inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Builder getBitWlAddressXbits();
-  inline void setBitWlAddressXbits( ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Reader value);
-  inline void setBitWlAddressXbits(::kj::ArrayPtr<const  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader> value);
-  inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Builder initBitWlAddressXbits(unsigned int size);
-  inline void adoptBitWlAddressXbits(::capnp::Orphan< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>&& value);
-  inline ::capnp::Orphan< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>> disownBitWlAddressXbits();
+  inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                       ::capnp::Kind::LIST>::Builder
+  getBitWlAddressXbits();
+  inline void setBitWlAddressXbits(
+    ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                  ::capnp::Kind::LIST>::Reader value);
+  inline void setBitWlAddressXbits(
+    ::kj::ArrayPtr<
+      const ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader>
+      value);
+  inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                       ::capnp::Kind::LIST>::Builder
+  initBitWlAddressXbits(unsigned int size);
+  inline void adoptBitWlAddressXbits(
+    ::capnp::Orphan<
+      ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                    ::capnp::Kind::LIST>>&& value);
+  inline ::capnp::Orphan<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>
+  disownBitWlAddressXbits();
 
   inline bool hasBitDins();
-  inline  ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>::Builder getBitDins();
-  inline void setBitDins( ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>::Reader value);
-  inline void setBitDins(::kj::ArrayPtr<const  ::capnp::Text::Reader> value);
-  inline  ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>::Builder initBitDins(unsigned int size);
-  inline void adoptBitDins(::capnp::Orphan< ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>>&& value);
-  inline ::capnp::Orphan< ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>> disownBitDins();
+  inline ::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>::Builder
+  getBitDins();
+  inline void setBitDins(
+    ::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>::Reader value);
+  inline void setBitDins(::kj::ArrayPtr<const ::capnp::Text::Reader> value);
+  inline ::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>::Builder initBitDins(
+    unsigned int size);
+  inline void adoptBitDins(
+    ::capnp::Orphan<::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>>&& value);
+  inline ::capnp::Orphan<::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>>
+  disownBitDins();
 
-private:
+ private:
   ::capnp::_::StructBuilder _builder;
   template <typename, ::capnp::Kind>
   friend struct ::capnp::ToDynamic_;
@@ -225,14 +327,14 @@ private:
 
 #if !CAPNP_LITE
 class FabricBitstreamQLMem::Pipeline {
-public:
+ public:
   typedef FabricBitstreamQLMem Pipelines;
 
-  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline Pipeline(decltype(nullptr)) : _typeless(nullptr) {}
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
-      : _typeless(kj::mv(typeless)) {}
+    : _typeless(kj::mv(typeless)) {}
 
-private:
+ private:
   ::capnp::AnyPointer::Pipeline _typeless;
   friend class ::capnp::PipelineHook;
   template <typename, ::capnp::Kind>
@@ -242,433 +344,624 @@ private:
 
 // =======================================================================================
 
-inline  ::uint8_t FabricBitstreamQLMem::Reader::getNumRegions() const {
-  return _reader.getDataField< ::uint8_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, 1u);
+inline ::uint8_t FabricBitstreamQLMem::Reader::getNumRegions() const {
+  return _reader.getDataField<::uint8_t>(
+    ::capnp::bounded<0>() * ::capnp::ELEMENTS, 1u);
 }
 
-inline  ::uint8_t FabricBitstreamQLMem::Builder::getNumRegions() {
-  return _builder.getDataField< ::uint8_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, 1u);
+inline ::uint8_t FabricBitstreamQLMem::Builder::getNumRegions() {
+  return _builder.getDataField<::uint8_t>(
+    ::capnp::bounded<0>() * ::capnp::ELEMENTS, 1u);
 }
-inline void FabricBitstreamQLMem::Builder::setNumRegions( ::uint8_t value) {
-  _builder.setDataField< ::uint8_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value, 1u);
+inline void FabricBitstreamQLMem::Builder::setNumRegions(::uint8_t value) {
+  _builder.setDataField<::uint8_t>(::capnp::bounded<0>() * ::capnp::ELEMENTS,
+                                   value, 1u);
 }
 
 inline bool FabricBitstreamQLMem::Reader::hasInvalidRegionIds() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+  return !_reader.getPointerField(::capnp::bounded<0>() * ::capnp::POINTERS)
+            .isNull();
 }
 inline bool FabricBitstreamQLMem::Builder::hasInvalidRegionIds() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+  return !_builder.getPointerField(::capnp::bounded<0>() * ::capnp::POINTERS)
+            .isNull();
 }
-inline  ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>::Reader FabricBitstreamQLMem::Reader::getInvalidRegionIds() const {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>>::get(_reader.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
+inline ::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>::Reader
+FabricBitstreamQLMem::Reader::getInvalidRegionIds() const {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>>::get(
+      _reader.getPointerField(::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline  ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>::Builder FabricBitstreamQLMem::Builder::getInvalidRegionIds() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>>::get(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
+inline ::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>::Builder
+FabricBitstreamQLMem::Builder::getInvalidRegionIds() {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>>::get(
+      _builder.getPointerField(::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline void FabricBitstreamQLMem::Builder::setInvalidRegionIds( ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>::Reader value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>>::set(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+inline void FabricBitstreamQLMem::Builder::setInvalidRegionIds(
+  ::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>::Reader value) {
+  ::capnp::_::
+    PointerHelpers<::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>>::set(
+      _builder.getPointerField(::capnp::bounded<0>() * ::capnp::POINTERS),
+      value);
 }
-inline void FabricBitstreamQLMem::Builder::setInvalidRegionIds(::kj::ArrayPtr<const  ::uint8_t> value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>>::set(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+inline void FabricBitstreamQLMem::Builder::setInvalidRegionIds(
+  ::kj::ArrayPtr<const ::uint8_t> value) {
+  ::capnp::_::
+    PointerHelpers<::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>>::set(
+      _builder.getPointerField(::capnp::bounded<0>() * ::capnp::POINTERS),
+      value);
 }
-inline  ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>::Builder FabricBitstreamQLMem::Builder::initInvalidRegionIds(unsigned int size) {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>>::init(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+inline ::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>::Builder
+FabricBitstreamQLMem::Builder::initInvalidRegionIds(unsigned int size) {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>>::init(
+      _builder.getPointerField(::capnp::bounded<0>() * ::capnp::POINTERS),
+      size);
 }
 inline void FabricBitstreamQLMem::Builder::adoptInvalidRegionIds(
-    ::capnp::Orphan< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>>&& value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>>::adopt(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+  ::capnp::Orphan<::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>>&& value) {
+  ::capnp::_::
+    PointerHelpers<::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>>::adopt(
+      _builder.getPointerField(::capnp::bounded<0>() * ::capnp::POINTERS),
+      kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>> FabricBitstreamQLMem::Builder::disownInvalidRegionIds() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>>::disown(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
+inline ::capnp::Orphan<::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>>
+FabricBitstreamQLMem::Builder::disownInvalidRegionIds() {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::uint8_t, ::capnp::Kind::PRIMITIVE>>::disown(
+      _builder.getPointerField(::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
 inline bool FabricBitstreamQLMem::Reader::hasRegionBitIds() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+  return !_reader.getPointerField(::capnp::bounded<1>() * ::capnp::POINTERS)
+            .isNull();
 }
 inline bool FabricBitstreamQLMem::Builder::hasRegionBitIds() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+  return !_builder.getPointerField(::capnp::bounded<1>() * ::capnp::POINTERS)
+            .isNull();
 }
-inline  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader FabricBitstreamQLMem::Reader::getRegionBitIds() const {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::get(_reader.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
+inline ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader
+FabricBitstreamQLMem::Reader::getRegionBitIds() const {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::get(
+      _reader.getPointerField(::capnp::bounded<1>() * ::capnp::POINTERS));
 }
-inline  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Builder FabricBitstreamQLMem::Builder::getRegionBitIds() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::get(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
+inline ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Builder
+FabricBitstreamQLMem::Builder::getRegionBitIds() {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::get(
+      _builder.getPointerField(::capnp::bounded<1>() * ::capnp::POINTERS));
 }
-inline void FabricBitstreamQLMem::Builder::setRegionBitIds( ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::set(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+inline void FabricBitstreamQLMem::Builder::setRegionBitIds(
+  ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader value) {
+  ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::set(
+      _builder.getPointerField(::capnp::bounded<1>() * ::capnp::POINTERS),
+      value);
 }
-inline void FabricBitstreamQLMem::Builder::setRegionBitIds(::kj::ArrayPtr<const  ::uint64_t> value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::set(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+inline void FabricBitstreamQLMem::Builder::setRegionBitIds(
+  ::kj::ArrayPtr<const ::uint64_t> value) {
+  ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::set(
+      _builder.getPointerField(::capnp::bounded<1>() * ::capnp::POINTERS),
+      value);
 }
-inline  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Builder FabricBitstreamQLMem::Builder::initRegionBitIds(unsigned int size) {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::init(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS), size);
+inline ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Builder
+FabricBitstreamQLMem::Builder::initRegionBitIds(unsigned int size) {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::init(
+      _builder.getPointerField(::capnp::bounded<1>() * ::capnp::POINTERS),
+      size);
 }
 inline void FabricBitstreamQLMem::Builder::adoptRegionBitIds(
-    ::capnp::Orphan< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>&& value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::adopt(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+  ::capnp::Orphan<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>&&
+    value) {
+  ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::adopt(
+      _builder.getPointerField(::capnp::bounded<1>() * ::capnp::POINTERS),
+      kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>> FabricBitstreamQLMem::Builder::disownRegionBitIds() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::disown(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
+inline ::capnp::Orphan<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>
+FabricBitstreamQLMem::Builder::disownRegionBitIds() {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::disown(
+      _builder.getPointerField(::capnp::bounded<1>() * ::capnp::POINTERS));
 }
 
-inline  ::uint64_t FabricBitstreamQLMem::Reader::getNumBits() const {
-  return _reader.getDataField< ::uint64_t>(
-      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+inline ::uint64_t FabricBitstreamQLMem::Reader::getNumBits() const {
+  return _reader.getDataField<::uint64_t>(::capnp::bounded<1>() *
+                                          ::capnp::ELEMENTS);
 }
 
-inline  ::uint64_t FabricBitstreamQLMem::Builder::getNumBits() {
-  return _builder.getDataField< ::uint64_t>(
-      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+inline ::uint64_t FabricBitstreamQLMem::Builder::getNumBits() {
+  return _builder.getDataField<::uint64_t>(::capnp::bounded<1>() *
+                                           ::capnp::ELEMENTS);
 }
-inline void FabricBitstreamQLMem::Builder::setNumBits( ::uint64_t value) {
-  _builder.setDataField< ::uint64_t>(
-      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
+inline void FabricBitstreamQLMem::Builder::setNumBits(::uint64_t value) {
+  _builder.setDataField<::uint64_t>(::capnp::bounded<1>() * ::capnp::ELEMENTS,
+                                    value);
 }
 
 inline bool FabricBitstreamQLMem::Reader::hasInvalidBitIds() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<2>() * ::capnp::POINTERS).isNull();
+  return !_reader.getPointerField(::capnp::bounded<2>() * ::capnp::POINTERS)
+            .isNull();
 }
 inline bool FabricBitstreamQLMem::Builder::hasInvalidBitIds() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<2>() * ::capnp::POINTERS).isNull();
+  return !_builder.getPointerField(::capnp::bounded<2>() * ::capnp::POINTERS)
+            .isNull();
 }
-inline  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader FabricBitstreamQLMem::Reader::getInvalidBitIds() const {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::get(_reader.getPointerField(
-      ::capnp::bounded<2>() * ::capnp::POINTERS));
+inline ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader
+FabricBitstreamQLMem::Reader::getInvalidBitIds() const {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::get(
+      _reader.getPointerField(::capnp::bounded<2>() * ::capnp::POINTERS));
 }
-inline  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Builder FabricBitstreamQLMem::Builder::getInvalidBitIds() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::get(_builder.getPointerField(
-      ::capnp::bounded<2>() * ::capnp::POINTERS));
+inline ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Builder
+FabricBitstreamQLMem::Builder::getInvalidBitIds() {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::get(
+      _builder.getPointerField(::capnp::bounded<2>() * ::capnp::POINTERS));
 }
-inline void FabricBitstreamQLMem::Builder::setInvalidBitIds( ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::set(_builder.getPointerField(
-      ::capnp::bounded<2>() * ::capnp::POINTERS), value);
+inline void FabricBitstreamQLMem::Builder::setInvalidBitIds(
+  ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader value) {
+  ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::set(
+      _builder.getPointerField(::capnp::bounded<2>() * ::capnp::POINTERS),
+      value);
 }
-inline void FabricBitstreamQLMem::Builder::setInvalidBitIds(::kj::ArrayPtr<const  ::uint64_t> value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::set(_builder.getPointerField(
-      ::capnp::bounded<2>() * ::capnp::POINTERS), value);
+inline void FabricBitstreamQLMem::Builder::setInvalidBitIds(
+  ::kj::ArrayPtr<const ::uint64_t> value) {
+  ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::set(
+      _builder.getPointerField(::capnp::bounded<2>() * ::capnp::POINTERS),
+      value);
 }
-inline  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Builder FabricBitstreamQLMem::Builder::initInvalidBitIds(unsigned int size) {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::init(_builder.getPointerField(
-      ::capnp::bounded<2>() * ::capnp::POINTERS), size);
+inline ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Builder
+FabricBitstreamQLMem::Builder::initInvalidBitIds(unsigned int size) {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::init(
+      _builder.getPointerField(::capnp::bounded<2>() * ::capnp::POINTERS),
+      size);
 }
 inline void FabricBitstreamQLMem::Builder::adoptInvalidBitIds(
-    ::capnp::Orphan< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>&& value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::adopt(_builder.getPointerField(
-      ::capnp::bounded<2>() * ::capnp::POINTERS), kj::mv(value));
+  ::capnp::Orphan<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>&&
+    value) {
+  ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::adopt(
+      _builder.getPointerField(::capnp::bounded<2>() * ::capnp::POINTERS),
+      kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>> FabricBitstreamQLMem::Builder::disownInvalidBitIds() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::disown(_builder.getPointerField(
-      ::capnp::bounded<2>() * ::capnp::POINTERS));
+inline ::capnp::Orphan<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>
+FabricBitstreamQLMem::Builder::disownInvalidBitIds() {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::disown(
+      _builder.getPointerField(::capnp::bounded<2>() * ::capnp::POINTERS));
 }
 
 inline bool FabricBitstreamQLMem::Reader::hasConfigBitIds() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<3>() * ::capnp::POINTERS).isNull();
+  return !_reader.getPointerField(::capnp::bounded<3>() * ::capnp::POINTERS)
+            .isNull();
 }
 inline bool FabricBitstreamQLMem::Builder::hasConfigBitIds() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<3>() * ::capnp::POINTERS).isNull();
+  return !_builder.getPointerField(::capnp::bounded<3>() * ::capnp::POINTERS)
+            .isNull();
 }
-inline  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader FabricBitstreamQLMem::Reader::getConfigBitIds() const {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::get(_reader.getPointerField(
-      ::capnp::bounded<3>() * ::capnp::POINTERS));
+inline ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader
+FabricBitstreamQLMem::Reader::getConfigBitIds() const {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::get(
+      _reader.getPointerField(::capnp::bounded<3>() * ::capnp::POINTERS));
 }
-inline  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Builder FabricBitstreamQLMem::Builder::getConfigBitIds() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::get(_builder.getPointerField(
-      ::capnp::bounded<3>() * ::capnp::POINTERS));
+inline ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Builder
+FabricBitstreamQLMem::Builder::getConfigBitIds() {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::get(
+      _builder.getPointerField(::capnp::bounded<3>() * ::capnp::POINTERS));
 }
-inline void FabricBitstreamQLMem::Builder::setConfigBitIds( ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::set(_builder.getPointerField(
-      ::capnp::bounded<3>() * ::capnp::POINTERS), value);
+inline void FabricBitstreamQLMem::Builder::setConfigBitIds(
+  ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader value) {
+  ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::set(
+      _builder.getPointerField(::capnp::bounded<3>() * ::capnp::POINTERS),
+      value);
 }
-inline void FabricBitstreamQLMem::Builder::setConfigBitIds(::kj::ArrayPtr<const  ::uint64_t> value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::set(_builder.getPointerField(
-      ::capnp::bounded<3>() * ::capnp::POINTERS), value);
+inline void FabricBitstreamQLMem::Builder::setConfigBitIds(
+  ::kj::ArrayPtr<const ::uint64_t> value) {
+  ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::set(
+      _builder.getPointerField(::capnp::bounded<3>() * ::capnp::POINTERS),
+      value);
 }
-inline  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Builder FabricBitstreamQLMem::Builder::initConfigBitIds(unsigned int size) {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::init(_builder.getPointerField(
-      ::capnp::bounded<3>() * ::capnp::POINTERS), size);
+inline ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Builder
+FabricBitstreamQLMem::Builder::initConfigBitIds(unsigned int size) {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::init(
+      _builder.getPointerField(::capnp::bounded<3>() * ::capnp::POINTERS),
+      size);
 }
 inline void FabricBitstreamQLMem::Builder::adoptConfigBitIds(
-    ::capnp::Orphan< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>&& value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::adopt(_builder.getPointerField(
-      ::capnp::bounded<3>() * ::capnp::POINTERS), kj::mv(value));
+  ::capnp::Orphan<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>&&
+    value) {
+  ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::adopt(
+      _builder.getPointerField(::capnp::bounded<3>() * ::capnp::POINTERS),
+      kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>> FabricBitstreamQLMem::Builder::disownConfigBitIds() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>>::disown(_builder.getPointerField(
-      ::capnp::bounded<3>() * ::capnp::POINTERS));
+inline ::capnp::Orphan<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>
+FabricBitstreamQLMem::Builder::disownConfigBitIds() {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>>::disown(
+      _builder.getPointerField(::capnp::bounded<3>() * ::capnp::POINTERS));
 }
 
 inline bool FabricBitstreamQLMem::Reader::getUseAddress() const {
-  return _reader.getDataField<bool>(
-      ::capnp::bounded<8>() * ::capnp::ELEMENTS, true);
+  return _reader.getDataField<bool>(::capnp::bounded<8>() * ::capnp::ELEMENTS,
+                                    true);
 }
 
 inline bool FabricBitstreamQLMem::Builder::getUseAddress() {
-  return _builder.getDataField<bool>(
-      ::capnp::bounded<8>() * ::capnp::ELEMENTS, true);
+  return _builder.getDataField<bool>(::capnp::bounded<8>() * ::capnp::ELEMENTS,
+                                     true);
 }
 inline void FabricBitstreamQLMem::Builder::setUseAddress(bool value) {
-  _builder.setDataField<bool>(
-      ::capnp::bounded<8>() * ::capnp::ELEMENTS, value, true);
+  _builder.setDataField<bool>(::capnp::bounded<8>() * ::capnp::ELEMENTS, value,
+                              true);
 }
 
 inline bool FabricBitstreamQLMem::Reader::getUseWlAddress() const {
-  return _reader.getDataField<bool>(
-      ::capnp::bounded<9>() * ::capnp::ELEMENTS, true);
+  return _reader.getDataField<bool>(::capnp::bounded<9>() * ::capnp::ELEMENTS,
+                                    true);
 }
 
 inline bool FabricBitstreamQLMem::Builder::getUseWlAddress() {
-  return _builder.getDataField<bool>(
-      ::capnp::bounded<9>() * ::capnp::ELEMENTS, true);
+  return _builder.getDataField<bool>(::capnp::bounded<9>() * ::capnp::ELEMENTS,
+                                     true);
 }
 inline void FabricBitstreamQLMem::Builder::setUseWlAddress(bool value) {
-  _builder.setDataField<bool>(
-      ::capnp::bounded<9>() * ::capnp::ELEMENTS, value, true);
+  _builder.setDataField<bool>(::capnp::bounded<9>() * ::capnp::ELEMENTS, value,
+                              true);
 }
 
-inline  ::uint8_t FabricBitstreamQLMem::Reader::getAddressLength() const {
-  return _reader.getDataField< ::uint8_t>(
-      ::capnp::bounded<2>() * ::capnp::ELEMENTS, 64u);
+inline ::uint8_t FabricBitstreamQLMem::Reader::getAddressLength() const {
+  return _reader.getDataField<::uint8_t>(
+    ::capnp::bounded<2>() * ::capnp::ELEMENTS, 64u);
 }
 
-inline  ::uint8_t FabricBitstreamQLMem::Builder::getAddressLength() {
-  return _builder.getDataField< ::uint8_t>(
-      ::capnp::bounded<2>() * ::capnp::ELEMENTS, 64u);
+inline ::uint8_t FabricBitstreamQLMem::Builder::getAddressLength() {
+  return _builder.getDataField<::uint8_t>(
+    ::capnp::bounded<2>() * ::capnp::ELEMENTS, 64u);
 }
-inline void FabricBitstreamQLMem::Builder::setAddressLength( ::uint8_t value) {
-  _builder.setDataField< ::uint8_t>(
-      ::capnp::bounded<2>() * ::capnp::ELEMENTS, value, 64u);
-}
-
-inline  ::uint8_t FabricBitstreamQLMem::Reader::getWlAddressLength() const {
-  return _reader.getDataField< ::uint8_t>(
-      ::capnp::bounded<3>() * ::capnp::ELEMENTS, 64u);
+inline void FabricBitstreamQLMem::Builder::setAddressLength(::uint8_t value) {
+  _builder.setDataField<::uint8_t>(::capnp::bounded<2>() * ::capnp::ELEMENTS,
+                                   value, 64u);
 }
 
-inline  ::uint8_t FabricBitstreamQLMem::Builder::getWlAddressLength() {
-  return _builder.getDataField< ::uint8_t>(
-      ::capnp::bounded<3>() * ::capnp::ELEMENTS, 64u);
+inline ::uint8_t FabricBitstreamQLMem::Reader::getWlAddressLength() const {
+  return _reader.getDataField<::uint8_t>(
+    ::capnp::bounded<3>() * ::capnp::ELEMENTS, 64u);
 }
-inline void FabricBitstreamQLMem::Builder::setWlAddressLength( ::uint8_t value) {
-  _builder.setDataField< ::uint8_t>(
-      ::capnp::bounded<3>() * ::capnp::ELEMENTS, value, 64u);
+
+inline ::uint8_t FabricBitstreamQLMem::Builder::getWlAddressLength() {
+  return _builder.getDataField<::uint8_t>(
+    ::capnp::bounded<3>() * ::capnp::ELEMENTS, 64u);
+}
+inline void FabricBitstreamQLMem::Builder::setWlAddressLength(::uint8_t value) {
+  _builder.setDataField<::uint8_t>(::capnp::bounded<3>() * ::capnp::ELEMENTS,
+                                   value, 64u);
 }
 
 inline bool FabricBitstreamQLMem::Reader::hasBitAddress1bits() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<4>() * ::capnp::POINTERS).isNull();
+  return !_reader.getPointerField(::capnp::bounded<4>() * ::capnp::POINTERS)
+            .isNull();
 }
 inline bool FabricBitstreamQLMem::Builder::hasBitAddress1bits() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<4>() * ::capnp::POINTERS).isNull();
+  return !_builder.getPointerField(::capnp::bounded<4>() * ::capnp::POINTERS)
+            .isNull();
 }
-inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Reader FabricBitstreamQLMem::Reader::getBitAddress1bits() const {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::get(_reader.getPointerField(
-      ::capnp::bounded<4>() * ::capnp::POINTERS));
+inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                     ::capnp::Kind::LIST>::Reader
+FabricBitstreamQLMem::Reader::getBitAddress1bits() const {
+  return ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    get(_reader.getPointerField(::capnp::bounded<4>() * ::capnp::POINTERS));
 }
-inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Builder FabricBitstreamQLMem::Builder::getBitAddress1bits() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::get(_builder.getPointerField(
-      ::capnp::bounded<4>() * ::capnp::POINTERS));
+inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                     ::capnp::Kind::LIST>::Builder
+FabricBitstreamQLMem::Builder::getBitAddress1bits() {
+  return ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    get(_builder.getPointerField(::capnp::bounded<4>() * ::capnp::POINTERS));
 }
-inline void FabricBitstreamQLMem::Builder::setBitAddress1bits( ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Reader value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::set(_builder.getPointerField(
-      ::capnp::bounded<4>() * ::capnp::POINTERS), value);
+inline void FabricBitstreamQLMem::Builder::setBitAddress1bits(
+  ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                ::capnp::Kind::LIST>::Reader value) {
+  ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    set(_builder.getPointerField(::capnp::bounded<4>() * ::capnp::POINTERS),
+        value);
 }
-inline void FabricBitstreamQLMem::Builder::setBitAddress1bits(::kj::ArrayPtr<const  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader> value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::set(_builder.getPointerField(
-      ::capnp::bounded<4>() * ::capnp::POINTERS), value);
+inline void FabricBitstreamQLMem::Builder::setBitAddress1bits(
+  ::kj::ArrayPtr<
+    const ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader>
+    value) {
+  ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    set(_builder.getPointerField(::capnp::bounded<4>() * ::capnp::POINTERS),
+        value);
 }
-inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Builder FabricBitstreamQLMem::Builder::initBitAddress1bits(unsigned int size) {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::init(_builder.getPointerField(
-      ::capnp::bounded<4>() * ::capnp::POINTERS), size);
+inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                     ::capnp::Kind::LIST>::Builder
+FabricBitstreamQLMem::Builder::initBitAddress1bits(unsigned int size) {
+  return ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    init(_builder.getPointerField(::capnp::bounded<4>() * ::capnp::POINTERS),
+         size);
 }
 inline void FabricBitstreamQLMem::Builder::adoptBitAddress1bits(
-    ::capnp::Orphan< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>&& value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::adopt(_builder.getPointerField(
-      ::capnp::bounded<4>() * ::capnp::POINTERS), kj::mv(value));
+  ::capnp::Orphan<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>&&
+    value) {
+  ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    adopt(_builder.getPointerField(::capnp::bounded<4>() * ::capnp::POINTERS),
+          kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>> FabricBitstreamQLMem::Builder::disownBitAddress1bits() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::disown(_builder.getPointerField(
-      ::capnp::bounded<4>() * ::capnp::POINTERS));
+inline ::capnp::Orphan<::capnp::List<
+  ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>
+FabricBitstreamQLMem::Builder::disownBitAddress1bits() {
+  return ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    disown(_builder.getPointerField(::capnp::bounded<4>() * ::capnp::POINTERS));
 }
 
 inline bool FabricBitstreamQLMem::Reader::hasBitAddressXbits() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<5>() * ::capnp::POINTERS).isNull();
+  return !_reader.getPointerField(::capnp::bounded<5>() * ::capnp::POINTERS)
+            .isNull();
 }
 inline bool FabricBitstreamQLMem::Builder::hasBitAddressXbits() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<5>() * ::capnp::POINTERS).isNull();
+  return !_builder.getPointerField(::capnp::bounded<5>() * ::capnp::POINTERS)
+            .isNull();
 }
-inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Reader FabricBitstreamQLMem::Reader::getBitAddressXbits() const {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::get(_reader.getPointerField(
-      ::capnp::bounded<5>() * ::capnp::POINTERS));
+inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                     ::capnp::Kind::LIST>::Reader
+FabricBitstreamQLMem::Reader::getBitAddressXbits() const {
+  return ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    get(_reader.getPointerField(::capnp::bounded<5>() * ::capnp::POINTERS));
 }
-inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Builder FabricBitstreamQLMem::Builder::getBitAddressXbits() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::get(_builder.getPointerField(
-      ::capnp::bounded<5>() * ::capnp::POINTERS));
+inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                     ::capnp::Kind::LIST>::Builder
+FabricBitstreamQLMem::Builder::getBitAddressXbits() {
+  return ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    get(_builder.getPointerField(::capnp::bounded<5>() * ::capnp::POINTERS));
 }
-inline void FabricBitstreamQLMem::Builder::setBitAddressXbits( ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Reader value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::set(_builder.getPointerField(
-      ::capnp::bounded<5>() * ::capnp::POINTERS), value);
+inline void FabricBitstreamQLMem::Builder::setBitAddressXbits(
+  ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                ::capnp::Kind::LIST>::Reader value) {
+  ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    set(_builder.getPointerField(::capnp::bounded<5>() * ::capnp::POINTERS),
+        value);
 }
-inline void FabricBitstreamQLMem::Builder::setBitAddressXbits(::kj::ArrayPtr<const  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader> value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::set(_builder.getPointerField(
-      ::capnp::bounded<5>() * ::capnp::POINTERS), value);
+inline void FabricBitstreamQLMem::Builder::setBitAddressXbits(
+  ::kj::ArrayPtr<
+    const ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader>
+    value) {
+  ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    set(_builder.getPointerField(::capnp::bounded<5>() * ::capnp::POINTERS),
+        value);
 }
-inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Builder FabricBitstreamQLMem::Builder::initBitAddressXbits(unsigned int size) {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::init(_builder.getPointerField(
-      ::capnp::bounded<5>() * ::capnp::POINTERS), size);
+inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                     ::capnp::Kind::LIST>::Builder
+FabricBitstreamQLMem::Builder::initBitAddressXbits(unsigned int size) {
+  return ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    init(_builder.getPointerField(::capnp::bounded<5>() * ::capnp::POINTERS),
+         size);
 }
 inline void FabricBitstreamQLMem::Builder::adoptBitAddressXbits(
-    ::capnp::Orphan< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>&& value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::adopt(_builder.getPointerField(
-      ::capnp::bounded<5>() * ::capnp::POINTERS), kj::mv(value));
+  ::capnp::Orphan<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>&&
+    value) {
+  ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    adopt(_builder.getPointerField(::capnp::bounded<5>() * ::capnp::POINTERS),
+          kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>> FabricBitstreamQLMem::Builder::disownBitAddressXbits() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::disown(_builder.getPointerField(
-      ::capnp::bounded<5>() * ::capnp::POINTERS));
+inline ::capnp::Orphan<::capnp::List<
+  ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>
+FabricBitstreamQLMem::Builder::disownBitAddressXbits() {
+  return ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    disown(_builder.getPointerField(::capnp::bounded<5>() * ::capnp::POINTERS));
 }
 
 inline bool FabricBitstreamQLMem::Reader::hasBitWlAddress1bits() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<6>() * ::capnp::POINTERS).isNull();
+  return !_reader.getPointerField(::capnp::bounded<6>() * ::capnp::POINTERS)
+            .isNull();
 }
 inline bool FabricBitstreamQLMem::Builder::hasBitWlAddress1bits() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<6>() * ::capnp::POINTERS).isNull();
+  return !_builder.getPointerField(::capnp::bounded<6>() * ::capnp::POINTERS)
+            .isNull();
 }
-inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Reader FabricBitstreamQLMem::Reader::getBitWlAddress1bits() const {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::get(_reader.getPointerField(
-      ::capnp::bounded<6>() * ::capnp::POINTERS));
+inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                     ::capnp::Kind::LIST>::Reader
+FabricBitstreamQLMem::Reader::getBitWlAddress1bits() const {
+  return ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    get(_reader.getPointerField(::capnp::bounded<6>() * ::capnp::POINTERS));
 }
-inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Builder FabricBitstreamQLMem::Builder::getBitWlAddress1bits() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::get(_builder.getPointerField(
-      ::capnp::bounded<6>() * ::capnp::POINTERS));
+inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                     ::capnp::Kind::LIST>::Builder
+FabricBitstreamQLMem::Builder::getBitWlAddress1bits() {
+  return ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    get(_builder.getPointerField(::capnp::bounded<6>() * ::capnp::POINTERS));
 }
-inline void FabricBitstreamQLMem::Builder::setBitWlAddress1bits( ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Reader value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::set(_builder.getPointerField(
-      ::capnp::bounded<6>() * ::capnp::POINTERS), value);
+inline void FabricBitstreamQLMem::Builder::setBitWlAddress1bits(
+  ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                ::capnp::Kind::LIST>::Reader value) {
+  ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    set(_builder.getPointerField(::capnp::bounded<6>() * ::capnp::POINTERS),
+        value);
 }
-inline void FabricBitstreamQLMem::Builder::setBitWlAddress1bits(::kj::ArrayPtr<const  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader> value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::set(_builder.getPointerField(
-      ::capnp::bounded<6>() * ::capnp::POINTERS), value);
+inline void FabricBitstreamQLMem::Builder::setBitWlAddress1bits(
+  ::kj::ArrayPtr<
+    const ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader>
+    value) {
+  ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    set(_builder.getPointerField(::capnp::bounded<6>() * ::capnp::POINTERS),
+        value);
 }
-inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Builder FabricBitstreamQLMem::Builder::initBitWlAddress1bits(unsigned int size) {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::init(_builder.getPointerField(
-      ::capnp::bounded<6>() * ::capnp::POINTERS), size);
+inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                     ::capnp::Kind::LIST>::Builder
+FabricBitstreamQLMem::Builder::initBitWlAddress1bits(unsigned int size) {
+  return ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    init(_builder.getPointerField(::capnp::bounded<6>() * ::capnp::POINTERS),
+         size);
 }
 inline void FabricBitstreamQLMem::Builder::adoptBitWlAddress1bits(
-    ::capnp::Orphan< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>&& value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::adopt(_builder.getPointerField(
-      ::capnp::bounded<6>() * ::capnp::POINTERS), kj::mv(value));
+  ::capnp::Orphan<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>&&
+    value) {
+  ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    adopt(_builder.getPointerField(::capnp::bounded<6>() * ::capnp::POINTERS),
+          kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>> FabricBitstreamQLMem::Builder::disownBitWlAddress1bits() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::disown(_builder.getPointerField(
-      ::capnp::bounded<6>() * ::capnp::POINTERS));
+inline ::capnp::Orphan<::capnp::List<
+  ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>
+FabricBitstreamQLMem::Builder::disownBitWlAddress1bits() {
+  return ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    disown(_builder.getPointerField(::capnp::bounded<6>() * ::capnp::POINTERS));
 }
 
 inline bool FabricBitstreamQLMem::Reader::hasBitWlAddressXbits() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<7>() * ::capnp::POINTERS).isNull();
+  return !_reader.getPointerField(::capnp::bounded<7>() * ::capnp::POINTERS)
+            .isNull();
 }
 inline bool FabricBitstreamQLMem::Builder::hasBitWlAddressXbits() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<7>() * ::capnp::POINTERS).isNull();
+  return !_builder.getPointerField(::capnp::bounded<7>() * ::capnp::POINTERS)
+            .isNull();
 }
-inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Reader FabricBitstreamQLMem::Reader::getBitWlAddressXbits() const {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::get(_reader.getPointerField(
-      ::capnp::bounded<7>() * ::capnp::POINTERS));
+inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                     ::capnp::Kind::LIST>::Reader
+FabricBitstreamQLMem::Reader::getBitWlAddressXbits() const {
+  return ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    get(_reader.getPointerField(::capnp::bounded<7>() * ::capnp::POINTERS));
 }
-inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Builder FabricBitstreamQLMem::Builder::getBitWlAddressXbits() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::get(_builder.getPointerField(
-      ::capnp::bounded<7>() * ::capnp::POINTERS));
+inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                     ::capnp::Kind::LIST>::Builder
+FabricBitstreamQLMem::Builder::getBitWlAddressXbits() {
+  return ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    get(_builder.getPointerField(::capnp::bounded<7>() * ::capnp::POINTERS));
 }
-inline void FabricBitstreamQLMem::Builder::setBitWlAddressXbits( ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Reader value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::set(_builder.getPointerField(
-      ::capnp::bounded<7>() * ::capnp::POINTERS), value);
+inline void FabricBitstreamQLMem::Builder::setBitWlAddressXbits(
+  ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                ::capnp::Kind::LIST>::Reader value) {
+  ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    set(_builder.getPointerField(::capnp::bounded<7>() * ::capnp::POINTERS),
+        value);
 }
-inline void FabricBitstreamQLMem::Builder::setBitWlAddressXbits(::kj::ArrayPtr<const  ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>::Reader> value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::set(_builder.getPointerField(
-      ::capnp::bounded<7>() * ::capnp::POINTERS), value);
+inline void FabricBitstreamQLMem::Builder::setBitWlAddressXbits(
+  ::kj::ArrayPtr<
+    const ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>::Reader>
+    value) {
+  ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    set(_builder.getPointerField(::capnp::bounded<7>() * ::capnp::POINTERS),
+        value);
 }
-inline  ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>::Builder FabricBitstreamQLMem::Builder::initBitWlAddressXbits(unsigned int size) {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::init(_builder.getPointerField(
-      ::capnp::bounded<7>() * ::capnp::POINTERS), size);
+inline ::capnp::List<::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>,
+                     ::capnp::Kind::LIST>::Builder
+FabricBitstreamQLMem::Builder::initBitWlAddressXbits(unsigned int size) {
+  return ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    init(_builder.getPointerField(::capnp::bounded<7>() * ::capnp::POINTERS),
+         size);
 }
 inline void FabricBitstreamQLMem::Builder::adoptBitWlAddressXbits(
-    ::capnp::Orphan< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>&& value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::adopt(_builder.getPointerField(
-      ::capnp::bounded<7>() * ::capnp::POINTERS), kj::mv(value));
+  ::capnp::Orphan<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>&&
+    value) {
+  ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    adopt(_builder.getPointerField(::capnp::bounded<7>() * ::capnp::POINTERS),
+          kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>> FabricBitstreamQLMem::Builder::disownBitWlAddressXbits() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::List< ::uint64_t,  ::capnp::Kind::PRIMITIVE>,  ::capnp::Kind::LIST>>::disown(_builder.getPointerField(
-      ::capnp::bounded<7>() * ::capnp::POINTERS));
+inline ::capnp::Orphan<::capnp::List<
+  ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>
+FabricBitstreamQLMem::Builder::disownBitWlAddressXbits() {
+  return ::capnp::_::PointerHelpers<::capnp::List<
+    ::capnp::List<::uint64_t, ::capnp::Kind::PRIMITIVE>, ::capnp::Kind::LIST>>::
+    disown(_builder.getPointerField(::capnp::bounded<7>() * ::capnp::POINTERS));
 }
 
 inline bool FabricBitstreamQLMem::Reader::hasBitDins() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<8>() * ::capnp::POINTERS).isNull();
+  return !_reader.getPointerField(::capnp::bounded<8>() * ::capnp::POINTERS)
+            .isNull();
 }
 inline bool FabricBitstreamQLMem::Builder::hasBitDins() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<8>() * ::capnp::POINTERS).isNull();
+  return !_builder.getPointerField(::capnp::bounded<8>() * ::capnp::POINTERS)
+            .isNull();
 }
-inline  ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>::Reader FabricBitstreamQLMem::Reader::getBitDins() const {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>>::get(_reader.getPointerField(
-      ::capnp::bounded<8>() * ::capnp::POINTERS));
+inline ::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>::Reader
+FabricBitstreamQLMem::Reader::getBitDins() const {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>>::get(
+      _reader.getPointerField(::capnp::bounded<8>() * ::capnp::POINTERS));
 }
-inline  ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>::Builder FabricBitstreamQLMem::Builder::getBitDins() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>>::get(_builder.getPointerField(
-      ::capnp::bounded<8>() * ::capnp::POINTERS));
+inline ::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>::Builder
+FabricBitstreamQLMem::Builder::getBitDins() {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>>::get(
+      _builder.getPointerField(::capnp::bounded<8>() * ::capnp::POINTERS));
 }
-inline void FabricBitstreamQLMem::Builder::setBitDins( ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>::Reader value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>>::set(_builder.getPointerField(
-      ::capnp::bounded<8>() * ::capnp::POINTERS), value);
+inline void FabricBitstreamQLMem::Builder::setBitDins(
+  ::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>::Reader value) {
+  ::capnp::_::
+    PointerHelpers<::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>>::set(
+      _builder.getPointerField(::capnp::bounded<8>() * ::capnp::POINTERS),
+      value);
 }
-inline void FabricBitstreamQLMem::Builder::setBitDins(::kj::ArrayPtr<const  ::capnp::Text::Reader> value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>>::set(_builder.getPointerField(
-      ::capnp::bounded<8>() * ::capnp::POINTERS), value);
+inline void FabricBitstreamQLMem::Builder::setBitDins(
+  ::kj::ArrayPtr<const ::capnp::Text::Reader> value) {
+  ::capnp::_::
+    PointerHelpers<::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>>::set(
+      _builder.getPointerField(::capnp::bounded<8>() * ::capnp::POINTERS),
+      value);
 }
-inline  ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>::Builder FabricBitstreamQLMem::Builder::initBitDins(unsigned int size) {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>>::init(_builder.getPointerField(
-      ::capnp::bounded<8>() * ::capnp::POINTERS), size);
+inline ::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>::Builder
+FabricBitstreamQLMem::Builder::initBitDins(unsigned int size) {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>>::init(
+      _builder.getPointerField(::capnp::bounded<8>() * ::capnp::POINTERS),
+      size);
 }
 inline void FabricBitstreamQLMem::Builder::adoptBitDins(
-    ::capnp::Orphan< ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>>&& value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>>::adopt(_builder.getPointerField(
-      ::capnp::bounded<8>() * ::capnp::POINTERS), kj::mv(value));
+  ::capnp::Orphan<::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>>&& value) {
+  ::capnp::_::
+    PointerHelpers<::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>>::adopt(
+      _builder.getPointerField(::capnp::bounded<8>() * ::capnp::POINTERS),
+      kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>> FabricBitstreamQLMem::Builder::disownBitDins() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::Text,  ::capnp::Kind::BLOB>>::disown(_builder.getPointerField(
-      ::capnp::bounded<8>() * ::capnp::POINTERS));
+inline ::capnp::Orphan<::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>>
+FabricBitstreamQLMem::Builder::disownBitDins() {
+  return ::capnp::_::
+    PointerHelpers<::capnp::List<::capnp::Text, ::capnp::Kind::BLOB>>::disown(
+      _builder.getPointerField(::capnp::bounded<8>() * ::capnp::POINTERS));
 }
 
-}  // namespace
+}  // namespace QLMem_db
 
 CAPNP_END_HEADER
-

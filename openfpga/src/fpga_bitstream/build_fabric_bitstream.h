@@ -4,8 +4,8 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "bitstream_manager.h"
 #include "circuit_library.h"
@@ -28,7 +28,8 @@ FabricBitstream build_fabric_dependent_bitstream(
 FabricBitstream load_fabric_dependent_bitstream(
   const BitstreamManager& bitstream_manager,
   const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  const ConfigProtocol& config_protocol, const bool& verbose, const std::string& infile);
+  const ConfigProtocol& config_protocol, const bool& verbose,
+  const std::string& infile);
 
 } /* end namespace openfpga */
 

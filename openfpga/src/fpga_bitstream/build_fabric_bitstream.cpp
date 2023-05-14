@@ -786,14 +786,16 @@ FabricBitstream build_fabric_dependent_bitstream(
   return fabric_bitstream;
 }
 
-/* A version of the above function with caching of some of the larger data structures to allow faster bitstream generation for a fixed fpga fabric.
-*  Currently only works with ql_memory_bank flattened configuration
-*/
+/* A version of the above function with caching of some of the larger data
+ * structures to allow faster bitstream generation for a fixed fpga fabric.
+ *  Currently only works with ql_memory_bank flattened configuration
+ */
 
 FabricBitstream load_fabric_dependent_bitstream(
   const BitstreamManager& bitstream_manager,
   const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  const ConfigProtocol& config_protocol, const bool& verbose, const std::string& infile) {
+  const ConfigProtocol& config_protocol, const bool& verbose,
+  const std::string& infile) {
   VTR_ASSERT(config_protocol.type() == CONFIG_MEM_QL_MEMORY_BANK);
 
   FabricBitstream fabric_bitstream;
