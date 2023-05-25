@@ -421,8 +421,6 @@ int FabricBitstream::write_fabric_bitstream_db(std::string filename) {
     }
   }
 
-  // bitDins @14 :List(Text); skipping for now because it's unused in flatten
-
   // This is POSIX only because of the use of fds.
   // it seems like writing to an fd is the only way to get the packing I want in
   // capnproto 0.81 it will also allow implementing mmap for larger reads in the
