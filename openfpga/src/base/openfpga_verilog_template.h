@@ -212,9 +212,8 @@ int write_preconfigured_fabric_wrapper_template(
  *FPGA-Verilog
  *******************************************************************/
 template <class T>
-int write_mock_fpga_wrapper_template(
-  const T& openfpga_ctx, const Command& cmd,
-  const CommandContext& cmd_context) {
+int write_mock_fpga_wrapper_template(const T& openfpga_ctx, const Command& cmd,
+                                     const CommandContext& cmd_context) {
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_bgf = cmd.option("bus_group_file");
@@ -260,7 +259,6 @@ int write_mock_fpga_wrapper_template(
     openfpga_ctx.vpr_netlist_annotation(), openfpga_ctx.arch().circuit_lib,
     openfpga_ctx.arch().config_protocol, options);
 }
-
 
 /********************************************************************
  * A wrapper function to call the preconfigured testbench generator of

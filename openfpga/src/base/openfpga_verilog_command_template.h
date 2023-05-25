@@ -305,10 +305,12 @@ ShellCommandId add_write_mock_fpga_wrapper_command_template(
 
   /* add command to the shell */
   ShellCommandId shell_cmd_id = shell.add_command(
-    shell_cmd, "generate a wrapper of a mock fpga fabric mapped with applications", hidden);
+    shell_cmd,
+    "generate a wrapper of a mock fpga fabric mapped with applications",
+    hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(
-    shell_cmd_id, write_mock_fpga_wrapper_template<T>);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     write_mock_fpga_wrapper_template<T>);
 
   /* add command dependency to the shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
