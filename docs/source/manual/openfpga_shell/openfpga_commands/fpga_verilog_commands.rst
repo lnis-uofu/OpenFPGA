@@ -166,6 +166,41 @@ __ iverilog_website_
 
     Show verbose log
 
+write_mock_fpga_wrapper
+~~~~~~~~~~~~~~~~~~~~~~~
+ 
+  Write the Verilog wrapper which mockes a mapped FPGA fabric. See details in :ref:`fpga_verilog_mock_fpga_wrapper`.
+
+  .. option:: --file <string> or -f <string>
+     
+    The output directory for the netlists. We suggest the use of same output directory as fabric Verilog netlists. For example, ``--file /temp/testbench``
+
+  .. option:: --pin_constraints_file <string> or -pcf <string>
+
+    Specify the *Pin Constraints File* (PCF) if you want to custom stimulus in testbenches. For example, ``-pin_constraints_file pin_constraints.xml``
+    Strongly recommend for multi-clock simulations. See detailed file format about :ref:`file_format_pin_constraints_file`.
+
+  .. option:: --bus_group_file <string> or -bgf <string>
+
+    Specify the *Bus Group File* (BGF) if you want to group pins to buses. For example, ``-bgf bus_group.xml``
+    Strongly recommend when input HDL contains bus ports. See detailed file format about :ref:`file_format_bus_group_file`.
+
+  .. option:: --explicit_port_mapping
+
+    Use explicit port mapping when writing the Verilog netlists
+
+  .. option:: --default_net_type <string>
+
+    Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in Verilog netlists
+
+  .. option:: --verbose
+
+    Show verbose log
+
 write_preconfigured_testbench
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  
