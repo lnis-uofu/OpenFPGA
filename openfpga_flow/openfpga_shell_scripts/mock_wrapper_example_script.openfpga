@@ -44,7 +44,7 @@ write_fabric_bitstream --file fabric_bitstream.bit --format plain_text
 
 # Write the Verilog netlist for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
-write_mock_fpga_wrapper --file ./SRC --explicit_port_mapping --verbose
+write_mock_fpga_wrapper --file ./SRC ${OPENFPGA_MOCK_WRAPPER_OPTIONS} ${OPENFPGA_MOCK_WRAPPER_BGF} ${OPENFPGA_MOCK_WRAPPER_PCF}
 
 # Write the Verilog testbench for FPGA fabric
 #  - We suggest the use of same output directory as fabric Verilog netlists
