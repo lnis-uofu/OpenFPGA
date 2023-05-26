@@ -317,8 +317,6 @@ int print_verilog_mock_fpga_wrapper(
     circuit_name;
   print_verilog_file_header(fp, title, options.time_stamp());
 
-  print_verilog_default_net_type_declaration(fp, options.default_net_type());
-
   /* Find the top_module */
   ModuleId top_module =
     module_manager.find_module(generate_fpga_top_module_name());
@@ -335,7 +333,7 @@ int print_verilog_mock_fpga_wrapper(
   /* Instanciate application HDL module */
   print_verilog_testbench_benchmark_instance(
     fp, circuit_name, std::string(APP_INSTANCE_NAME), std::string(),
-    std::string(), std::string(), std::string(APPINST_PORT_POSTFIX),
+    std::string(), std::string(APPINST_PORT_POSTFIX), std::string(APPINST_PORT_POSTFIX),
     benchmark_clock_port_names, atom_ctx, netlist_annotation, pin_constraints,
     bus_group, options.explicit_port_mapping());
 
