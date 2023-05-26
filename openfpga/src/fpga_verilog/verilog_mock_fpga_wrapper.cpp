@@ -29,8 +29,8 @@ namespace openfpga {
 /********************************************************************
  * Local variables used only in this file
  *******************************************************************/
-constexpr const char* BENCHMARK_PORT_POSTFIX = "_bench";
-constexpr const char* BENCHMARK_INSTANCE_NAME = "MAPPED_DESIGN";
+constexpr const char* APPINST_PORT_POSTFIX = "_bench";
+constexpr const char* APP_INSTANCE_NAME = "MAPPED_DESIGN";
 
 /********************************************************************
  * This function adds stimuli to I/Os of FPGA fabric
@@ -334,16 +334,16 @@ int print_verilog_mock_fpga_wrapper(
 
   /* Instanciate application HDL module */
   print_verilog_testbench_benchmark_instance(
-    fp, circuit_name, std::string(BENCHMARK_INSTANCE_NAME), std::string(),
-    std::string(), std::string(), std::string(BENCHMARK_PORT_POSTFIX),
+    fp, circuit_name, std::string(APP_INSTANCE_NAME), std::string(),
+    std::string(), std::string(), std::string(APPINST_PORT_POSTFIX),
     benchmark_clock_port_names, atom_ctx, netlist_annotation, pin_constraints,
     bus_group, options.explicit_port_mapping());
 
   /* Connect I/Os to benchmark I/Os or constant driver */
   print_verilog_mock_fpga_wrapper_connect_ios(
     fp, module_manager, top_module, atom_ctx, place_ctx, io_location_map,
-    netlist_annotation, bus_group, std::string(BENCHMARK_PORT_POSTFIX),
-    std::string(), std::string(), std::vector<std::string>(),
+    netlist_annotation, bus_group, std::string(),
+    std::string(APPINST_PORT_POSTFIX), std::string(APPINST_PORT_POSTFIX), std::vector<std::string>(),
     (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
   /* Testbench ends*/
