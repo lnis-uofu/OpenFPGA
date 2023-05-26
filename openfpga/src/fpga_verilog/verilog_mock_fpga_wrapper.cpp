@@ -12,6 +12,7 @@
 
 /* Headers from openfpgautil library */
 #include "bitstream_manager_utils.h"
+#include "module_manager_utils.h"
 #include "openfpga_atom_netlist_utils.h"
 #include "openfpga_digest.h"
 #include "openfpga_naming.h"
@@ -38,8 +39,7 @@ constexpr const char* BENCHMARK_INSTANCE_NAME = "MAPPED_DESIGN";
  * 2. For unmapped I/Os, this function will assign a constant value
  *    by default
  *******************************************************************/
-static 
-void print_verilog_mock_fpga_wrapper_connect_ios(
+static void print_verilog_mock_fpga_wrapper_connect_ios(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const AtomContext& atom_ctx,
   const PlacementContext& place_ctx, const IoLocationMap& io_location_map,
@@ -204,8 +204,7 @@ void print_verilog_mock_fpga_wrapper_connect_ios(
                         module_mapped_io_port.get_name() + "[" +
                         std::to_string(io_index) + "] -----"));
       print_verilog_wire_connection(fp, benchmark_io_port,
-                                    module_mapped_io_port,
-                                    false);
+                                    module_mapped_io_port, false);
     } else {
       VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
       benchmark_io_port.set_name(
@@ -215,7 +214,8 @@ void print_verilog_mock_fpga_wrapper_connect_ios(
                         " is mapped to FPGA IOPAD " +
                         module_mapped_io_port.get_name() + "[" +
                         std::to_string(io_index) + "] -----"));
-      print_verilog_wire_connection(fp, module_mapped_io_port, benchmark_io_port, false);
+      print_verilog_wire_connection(fp, module_mapped_io_port,
+                                    benchmark_io_port, false);
     }
 
     /* Mark this I/O has been used/wired */
@@ -282,21 +282,21 @@ void print_verilog_mock_fpga_wrapper_connect_ios(
  *                        +-------------------------------------------
  *
  * Note: we do NOT put this module in the module manager.
- * Because, it is not a standard module, where we just wrap an instance of application HDL (supposed to be implemented on FPGA).
+ * Because, it is not a standard module, where we just wrap an instance of
+ *application HDL (supposed to be implemented on FPGA).
  *******************************************************************/
 int print_verilog_mock_fpga_wrapper(
-  const ModuleManager &module_manager,
-  const BitstreamManager &bitstream_manager,
-  const ConfigProtocol &config_protocol, const CircuitLibrary &circuit_lib,
-  const FabricGlobalPortInfo &global_ports, const AtomContext &atom_ctx,
-  const PlacementContext &place_ctx, const PinConstraints &pin_constraints,
-  const BusGroup &bus_group, const IoLocationMap &io_location_map,
-  const VprNetlistAnnotation &netlist_annotation,
-  const std::string &circuit_name, const std::string &verilog_fname,
-  const VerilogTestbenchOption &options) {
+  const ModuleManager& module_manager,
+  const BitstreamManager& bitstream_manager,
+  const ConfigProtocol& config_protocol, const CircuitLibrary& circuit_lib,
+  const FabricGlobalPortInfo& global_ports, const AtomContext& atom_ctx,
+  const PlacementContext& place_ctx, const PinConstraints& pin_constraints,
+  const BusGroup& bus_group, const IoLocationMap& io_location_map,
+  const VprNetlistAnnotation& netlist_annotation,
+  const std::string& circuit_name, const std::string& verilog_fname,
+  const VerilogTestbenchOption& options) {
   std::string timer_message =
-    std::string(
-      "Write mock FPGA wrapper in Verilog format for design '") +
+    std::string("Write mock FPGA wrapper in Verilog format for design '") +
     circuit_name + std::string("'");
 
   int status = CMD_EXEC_SUCCESS;
@@ -326,7 +326,7 @@ int print_verilog_mock_fpga_wrapper(
 
   /* Print module declaration */
   print_verilog_module_declaration(fp, module_manager, top_module,
-                                   default_net_type);
+                                   options.default_net_type());
 
   /* Find clock ports in benchmark */
   std::vector<std::string> benchmark_clock_port_names =
@@ -334,17 +334,16 @@ int print_verilog_mock_fpga_wrapper(
 
   /* Instanciate application HDL module */
   print_verilog_testbench_benchmark_instance(
-    fp, circuit_name, std::string(BENCHMARK_INSTANCE_NAME),
-    std::string(), std::string(), std::string(),
-    std::string(BENCHMARK_PORT_POSTFIX), benchmark_clock_port_names, atom_ctx,
-    netlist_annotation, pin_constraints, bus_group, options.explicit_port_mapping());
+    fp, circuit_name, std::string(BENCHMARK_INSTANCE_NAME), std::string(),
+    std::string(), std::string(), std::string(BENCHMARK_PORT_POSTFIX),
+    benchmark_clock_port_names, atom_ctx, netlist_annotation, pin_constraints,
+    bus_group, options.explicit_port_mapping());
 
   /* Connect I/Os to benchmark I/Os or constant driver */
   print_verilog_mock_fpga_wrapper_connect_ios(
     fp, module_manager, top_module, atom_ctx, place_ctx, io_location_map,
-    netlist_annotation, bus_group,
-    std::string(BENCHMARK_PORT_POSTFIX), std::string(),
-    std::string(), std::vector<std::string>(),
+    netlist_annotation, bus_group, std::string(BENCHMARK_PORT_POSTFIX),
+    std::string(), std::string(), std::vector<std::string>(),
     (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
   /* Testbench ends*/

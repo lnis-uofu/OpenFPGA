@@ -12,6 +12,7 @@
 #include "read_xml_bus_group.h"
 #include "read_xml_pin_constraints.h"
 #include "verilog_api.h"
+#include "verilog_mock_fpga_wrapper.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
 
@@ -252,7 +253,7 @@ int write_mock_fpga_wrapper_template(const T& openfpga_ctx, const Command& cmd,
       read_xml_bus_group(cmd_context.option_value(cmd, opt_bgf).c_str());
   }
 
-  return fpga_verilog_preconfigured_fabric_wrapper(
+  return fpga_verilog_mock_fpga_wrapper(
     openfpga_ctx.module_graph(), openfpga_ctx.bitstream_manager(),
     g_vpr_ctx.atom(), g_vpr_ctx.placement(), pin_constraints, bus_group,
     openfpga_ctx.io_location_map(), openfpga_ctx.fabric_global_port_info(),
