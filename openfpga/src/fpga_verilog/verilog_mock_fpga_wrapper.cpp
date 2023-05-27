@@ -12,6 +12,7 @@
 
 /* Headers from openfpgautil library */
 #include "bitstream_manager_utils.h"
+#include "fabric_global_port_info_utils.h"
 #include "module_manager_utils.h"
 #include "openfpga_atom_netlist_utils.h"
 #include "openfpga_digest.h"
@@ -43,6 +44,8 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const AtomContext& atom_ctx,
   const PlacementContext& place_ctx, const IoLocationMap& io_location_map,
+  const PinConstraints& pin_constraints,
+  const FabricGlobalPortInfo& global_ports,
   const VprNetlistAnnotation& netlist_annotation, const BusGroup& bus_group,
   const std::string& net_name_postfix,
   const std::string& io_input_port_name_postfix,
@@ -189,15 +192,21 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
     }
 
     if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
-      /* If the port is a clock, do not add a postfix */
+      /* If the port is a clock, skip it */
       if (clock_port_names.end() != std::find(clock_port_names.begin(),
                                               clock_port_names.end(),
                                               block_name)) {
-        benchmark_io_port.set_name(block_name);
-      } else {
-        benchmark_io_port.set_name(
-          std::string(block_name + io_input_port_name_postfix));
+        continue;
       }
+      /* For global ports, use wires; otherwise, use registers*/
+      if (true == port_is_fabric_global_reset_port(
+                    global_ports, module_manager,
+                    pin_constraints.net_pin(block_name))) {
+        continue;
+      }
+
+      benchmark_io_port.set_name(
+        std::string(block_name + io_input_port_name_postfix));
       print_verilog_comment(
         fp, std::string("----- Blif Benchmark input " + block_name +
                         " is mapped to FPGA IOPAD " +
@@ -348,9 +357,9 @@ int print_verilog_mock_fpga_wrapper(
   /* Connect I/Os to benchmark I/Os or constant driver */
   print_verilog_mock_fpga_wrapper_connect_ios(
     fp, module_manager, top_module, atom_ctx, place_ctx, io_location_map,
-    netlist_annotation, bus_group, std::string(),
+    pin_constraints, global_ports, netlist_annotation, bus_group, std::string(),
     std::string(APPINST_PORT_POSTFIX), std::string(APPINST_PORT_POSTFIX),
-    std::vector<std::string>(), (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
+    benchmark_clock_port_names, (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
   /* Testbench ends*/
   print_verilog_module_end(fp, title);
