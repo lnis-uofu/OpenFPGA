@@ -330,19 +330,29 @@ int print_verilog_mock_fpga_wrapper(
   std::vector<std::string> benchmark_clock_port_names =
     find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
 
+  /* Print local wires */
+  print_verilog_testbench_shared_input_ports(
+    fp, module_manager, global_ports, pin_constraints, atom_ctx,
+    netlist_annotation, benchmark_clock_port_names,
+    std::string(APPINST_PORT_POSTFIX), false);
+
+  print_verilog_testbench_shared_benchmark_output_ports(
+    fp, atom_ctx, netlist_annotation, std::string(APPINST_PORT_POSTFIX));
+
   /* Instanciate application HDL module */
   print_verilog_testbench_benchmark_instance(
     fp, circuit_name, std::string(APP_INSTANCE_NAME), std::string(),
-    std::string(), std::string(APPINST_PORT_POSTFIX), std::string(APPINST_PORT_POSTFIX),
-    benchmark_clock_port_names, atom_ctx, netlist_annotation, pin_constraints,
-    bus_group, options.explicit_port_mapping());
+    std::string(), std::string(APPINST_PORT_POSTFIX),
+    std::string(APPINST_PORT_POSTFIX), benchmark_clock_port_names, atom_ctx,
+    netlist_annotation, pin_constraints, bus_group,
+    options.explicit_port_mapping());
 
   /* Connect I/Os to benchmark I/Os or constant driver */
   print_verilog_mock_fpga_wrapper_connect_ios(
     fp, module_manager, top_module, atom_ctx, place_ctx, io_location_map,
     netlist_annotation, bus_group, std::string(),
-    std::string(APPINST_PORT_POSTFIX), std::string(APPINST_PORT_POSTFIX), std::vector<std::string>(),
-    (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
+    std::string(APPINST_PORT_POSTFIX), std::string(APPINST_PORT_POSTFIX),
+    std::vector<std::string>(), (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
   /* Testbench ends*/
   print_verilog_module_end(fp, title);
