@@ -27,12 +27,10 @@
 namespace openfpga {
 
 int print_verilog_mock_fpga_wrapper(
-  const ModuleManager& module_manager,
-  const BitstreamManager& bitstream_manager,
-  const ConfigProtocol& config_protocol, const CircuitLibrary& circuit_lib,
-  const FabricGlobalPortInfo& global_ports, const AtomContext& atom_ctx,
-  const PlacementContext& place_ctx, const PinConstraints& pin_constraints,
-  const BusGroup& bus_group, const IoLocationMap& io_location_map,
+  const ModuleManager& module_manager, const FabricGlobalPortInfo& global_ports,
+  const AtomContext& atom_ctx, const PlacementContext& place_ctx,
+  const PinConstraints& pin_constraints, const BusGroup& bus_group,
+  const IoLocationMap& io_location_map,
   const VprNetlistAnnotation& netlist_annotation,
   const std::string& circuit_name, const std::string& verilog_fname,
   const VerilogTestbenchOption& options);

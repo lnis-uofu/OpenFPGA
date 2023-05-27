@@ -281,6 +281,11 @@ ShellCommandId add_write_mock_fpga_wrapper_command_template(
   shell_cmd.set_option_short_name(bgf_opt, "bgf");
   shell_cmd.set_option_require_value(bgf_opt, openfpga::OPT_STRING);
 
+  /* Add an option '--use_relative_path' */
+  shell_cmd.add_option(
+    "use_relative_path", false,
+    "Force to use relative path in netlists when including other netlists");
+
   /* add an option '--explicit_port_mapping' */
   shell_cmd.add_option("explicit_port_mapping", false,
                        "use explicit port mapping in verilog netlists");
