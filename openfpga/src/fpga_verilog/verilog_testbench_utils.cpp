@@ -78,7 +78,8 @@ void print_verilog_testbench_benchmark_instance(
   const std::string& module_input_port_postfix,
   const std::string& module_output_port_postfix,
   const std::string& input_port_postfix, const std::string& output_port_postfix,
-  const std::vector<std::string>& clock_port_names, const AtomContext& atom_ctx,
+  const std::vector<std::string>& clock_port_names,
+  const bool& include_clock_port_postfix, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
   const PinConstraints& pin_constraints, const BusGroup& bus_group,
   const bool& use_explicit_port_map) {
@@ -183,6 +184,8 @@ void print_verilog_testbench_benchmark_instance(
                                                   clock_port_names.end(),
                                                   port_names[iport])) {
             fp << input_port_postfix;
+          } else if (include_clock_port_postfix) {
+            fp << input_port_postfix;
           }
 
           pin_counter++;
@@ -205,6 +208,8 @@ void print_verilog_testbench_benchmark_instance(
         if (clock_port_names.end() == std::find(clock_port_names.begin(),
                                                 clock_port_names.end(),
                                                 port_names[iport])) {
+          fp << input_port_postfix;
+        } else if (include_clock_port_postfix) {
           fp << input_port_postfix;
         }
       }
@@ -922,7 +927,8 @@ void print_verilog_testbench_shared_input_ports(
   const PinConstraints& pin_constraints, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
   const std::vector<std::string>& clock_port_names,
-  const std::string& shared_input_port_postfix, const bool& use_reg_port) {
+  const bool& include_clock_ports, const std::string& shared_input_port_postfix,
+  const bool& use_reg_port) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -945,7 +951,9 @@ void print_verilog_testbench_shared_input_ports(
     if (clock_port_names.end() != std::find(clock_port_names.begin(),
                                             clock_port_names.end(),
                                             block_name)) {
-      continue;
+      if (!include_clock_ports) {
+        continue;
+      }
     }
 
     /* Each logical block assumes a single-width port */
@@ -1114,7 +1122,8 @@ void print_verilog_testbench_shared_ports(
   const std::string& check_flag_port_postfix, const bool& no_self_checking) {
   print_verilog_testbench_shared_input_ports(
     fp, module_manager, global_ports, pin_constraints, atom_ctx,
-    netlist_annotation, clock_port_names, shared_input_port_postfix, true);
+    netlist_annotation, clock_port_names, false, shared_input_port_postfix,
+    true);
 
   print_verilog_testbench_shared_fpga_output_ports(
     fp, atom_ctx, netlist_annotation, fpga_output_port_postfix);

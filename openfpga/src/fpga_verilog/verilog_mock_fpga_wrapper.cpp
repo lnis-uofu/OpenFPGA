@@ -46,7 +46,7 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
   const PlacementContext& place_ctx, const IoLocationMap& io_location_map,
   const PinConstraints& pin_constraints,
   const FabricGlobalPortInfo& global_ports,
-  const VprNetlistAnnotation& netlist_annotation, const BusGroup& bus_group,
+  const VprNetlistAnnotation& netlist_annotation,
   const std::string& net_name_postfix,
   const std::string& io_input_port_name_postfix,
   const std::string& io_output_port_name_postfix,
@@ -265,18 +265,19 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
  * this pre-configured FPGA top module
  *******************************************************************/
 static int print_verilog_mock_fpga_wrapper_connect_global_ports(
-  std::fstream &fp, const ModuleManager &module_manager,
-  const ModuleId &top_module, const PinConstraints &pin_constraints,
-  const FabricGlobalPortInfo &fabric_global_ports,
-  const std::vector<std::string> &benchmark_clock_port_names) {
+  std::fstream& fp, const ModuleManager& module_manager,
+  const ModuleId& top_module, const PinConstraints& pin_constraints,
+  const FabricGlobalPortInfo& fabric_global_ports,
+  const std::vector<std::string>& benchmark_clock_port_names) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
   print_verilog_comment(
     fp,
-    std::string("----- Begin Connect Global ports to FPGA top-level interface -----"));
+    std::string(
+      "----- Begin Connect Global ports to FPGA top-level interface -----"));
 
-  for (const FabricGlobalPortId &global_port_id :
+  for (const FabricGlobalPortId& global_port_id :
        fabric_global_ports.global_ports()) {
     ModulePortId module_global_port_id =
       fabric_global_ports.global_module_port(global_port_id);
@@ -292,9 +293,9 @@ static int print_verilog_mock_fpga_wrapper_connect_global_ports(
        */
       for (size_t pin_id = 0; pin_id < module_global_port.pins().size();
            ++pin_id) {
-        BasicPort module_clock_pin(
-          module_global_port.get_name(),
-          module_global_port.pins()[pin_id], module_global_port.pins()[pin_id]);
+        BasicPort module_clock_pin(module_global_port.get_name(),
+                                   module_global_port.pins()[pin_id],
+                                   module_global_port.pins()[pin_id]);
 
         /* If the clock port name is in the pin constraints, we should wire it
          * to the constrained pin */
@@ -326,6 +327,7 @@ static int print_verilog_mock_fpga_wrapper_connect_global_ports(
           }
           clock_name_to_connect = benchmark_clock_port_names[pin_id];
         }
+        clock_name_to_connect += std::string(APPINST_PORT_POSTFIX);
 
         BasicPort benchmark_clock_pin(clock_name_to_connect, 1);
         print_verilog_wire_connection(fp, benchmark_clock_pin, module_clock_pin,
@@ -345,10 +347,13 @@ static int print_verilog_mock_fpga_wrapper_connect_global_ports(
       /* If the global port name is in the pin constraints, we should wire it to
        * the constrained pin */
       std::string constrained_net_name =
-        pin_constraints.pin_net(module_global_pin) + std::string(APPINST_PORT_POSTFIX);
+        pin_constraints.pin_net(module_global_pin);
+      if (constrained_net_name.empty()) {
+        continue;
+      }
+      constrained_net_name += std::string(APPINST_PORT_POSTFIX);
 
-      module_global_pin.set_name(
-        module_global_port.get_name());
+      module_global_pin.set_name(module_global_port.get_name());
 
       /* - If constrained to a given net in the benchmark, we connect the global
        * pin to the net
@@ -365,14 +370,14 @@ static int print_verilog_mock_fpga_wrapper_connect_global_ports(
   }
 
   print_verilog_comment(
-    fp, std::string("----- End Connect Global ports to FPGA top-level interface -----"));
+    fp, std::string(
+          "----- End Connect Global ports to FPGA top-level interface -----"));
 
   /* Add an empty line as a splitter */
   fp << std::endl;
 
   return CMD_EXEC_SUCCESS;
 }
-
 
 /********************************************************************
  * Top-level function to generate a Verilog module of
@@ -444,7 +449,7 @@ int print_verilog_mock_fpga_wrapper(
   /* Print local wires */
   print_verilog_testbench_shared_input_ports(
     fp, module_manager, global_ports, pin_constraints, atom_ctx,
-    netlist_annotation, benchmark_clock_port_names,
+    netlist_annotation, benchmark_clock_port_names, true,
     std::string(APPINST_PORT_POSTFIX), false);
 
   print_verilog_testbench_shared_benchmark_output_ports(
@@ -454,8 +459,8 @@ int print_verilog_mock_fpga_wrapper(
   print_verilog_testbench_benchmark_instance(
     fp, circuit_name, std::string(APP_INSTANCE_NAME), std::string(),
     std::string(), std::string(APPINST_PORT_POSTFIX),
-    std::string(APPINST_PORT_POSTFIX), benchmark_clock_port_names, atom_ctx,
-    netlist_annotation, pin_constraints, bus_group,
+    std::string(APPINST_PORT_POSTFIX), benchmark_clock_port_names, true,
+    atom_ctx, netlist_annotation, pin_constraints, bus_group,
     options.explicit_port_mapping());
 
   /* Connect FPGA top module global ports to constant or benchmark global
@@ -470,7 +475,7 @@ int print_verilog_mock_fpga_wrapper(
   /* Connect I/Os to benchmark I/Os or constant driver */
   print_verilog_mock_fpga_wrapper_connect_ios(
     fp, module_manager, top_module, atom_ctx, place_ctx, io_location_map,
-    pin_constraints, global_ports, netlist_annotation, bus_group, std::string(),
+    pin_constraints, global_ports, netlist_annotation, std::string(),
     std::string(APPINST_PORT_POSTFIX), std::string(APPINST_PORT_POSTFIX),
     benchmark_clock_port_names, (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
