@@ -189,6 +189,10 @@ write_mock_fpga_wrapper
 
     Use explicit port mapping when writing the Verilog netlists
 
+  .. option:: --use_relative_path
+
+    Force to use relative path in netlists when including other netlists. By default, this is off, which means that netlists use absolute paths when including other netlists
+
   .. option:: --default_net_type <string>
 
     Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
