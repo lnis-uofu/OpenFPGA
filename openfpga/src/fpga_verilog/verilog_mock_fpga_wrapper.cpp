@@ -178,18 +178,7 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
      */
     BasicPort benchmark_io_port;
 
-    /* If this benchmark pin belongs to any bus group, use the bus pin instead
-     */
-    BusGroupId bus_id = bus_group.find_pin_bus(block_name);
-    BusPinId bus_pin_id = bus_group.find_pin(block_name);
-    if (bus_id) {
-      block_name = bus_group.bus_port(bus_id).get_name();
-      VTR_ASSERT_SAFE(bus_pin_id);
-      benchmark_io_port.set_width(bus_group.pin_index(bus_pin_id),
-                                  bus_group.pin_index(bus_pin_id));
-    } else {
-      benchmark_io_port.set_width(1);
-    }
+    benchmark_io_port.set_width(1);
 
     if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
       /* If the port is a clock, skip it */
@@ -269,6 +258,121 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
     fp << std::endl;
   }
 }
+
+/********************************************************************
+ * Connect global ports of FPGA top module to constants except:
+ * 1. operating clock, which should be wired to the clock port of
+ * this pre-configured FPGA top module
+ *******************************************************************/
+static int print_verilog_mock_fpga_wrapper_connect_global_ports(
+  std::fstream &fp, const ModuleManager &module_manager,
+  const ModuleId &top_module, const PinConstraints &pin_constraints,
+  const FabricGlobalPortInfo &fabric_global_ports,
+  const std::vector<std::string> &benchmark_clock_port_names) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  print_verilog_comment(
+    fp,
+    std::string("----- Begin Connect Global ports to FPGA top-level interface -----"));
+
+  for (const FabricGlobalPortId &global_port_id :
+       fabric_global_ports.global_ports()) {
+    ModulePortId module_global_port_id =
+      fabric_global_ports.global_module_port(global_port_id);
+    VTR_ASSERT(ModuleManager::MODULE_GLOBAL_PORT ==
+               module_manager.port_type(top_module, module_global_port_id));
+    BasicPort module_global_port =
+      module_manager.module_port(top_module, module_global_port_id);
+    /* Now, for operating clock port, we should wire it to the clock of
+     * benchmark! */
+    if ((true == fabric_global_ports.global_port_is_clock(global_port_id)) &&
+        (false == fabric_global_ports.global_port_is_prog(global_port_id))) {
+      /* Wiring to each pin of the global port: benchmark clock is always 1-bit
+       */
+      for (size_t pin_id = 0; pin_id < module_global_port.pins().size();
+           ++pin_id) {
+        BasicPort module_clock_pin(
+          module_global_port.get_name(),
+          module_global_port.pins()[pin_id], module_global_port.pins()[pin_id]);
+
+        /* If the clock port name is in the pin constraints, we should wire it
+         * to the constrained pin */
+        std::string constrained_net_name = pin_constraints.pin_net(BasicPort(
+          module_global_port.get_name(), module_global_port.pins()[pin_id],
+          module_global_port.pins()[pin_id]));
+
+        /* If constrained to an open net or there is no clock in the benchmark,
+         * we assign it to a default value */
+        if ((true == pin_constraints.unmapped_net(constrained_net_name)) ||
+            (true == benchmark_clock_port_names.empty())) {
+          continue;
+        }
+
+        std::string clock_name_to_connect;
+        if (!pin_constraints.unconstrained_net(constrained_net_name)) {
+          clock_name_to_connect = constrained_net_name;
+        } else {
+          /* Otherwise, we must have a clear one-to-one clock net
+           * corresponding!!! */
+          if (benchmark_clock_port_names.size() !=
+              module_global_port.get_width()) {
+            VTR_LOG_ERROR(
+              "Unable to map %lu benchmark clocks to %lu clock pins of "
+              "FPGA!\nRequire clear pin constraints!\n",
+              benchmark_clock_port_names.size(),
+              module_global_port.get_width());
+            return CMD_EXEC_FATAL_ERROR;
+          }
+          clock_name_to_connect = benchmark_clock_port_names[pin_id];
+        }
+
+        BasicPort benchmark_clock_pin(clock_name_to_connect, 1);
+        print_verilog_wire_connection(fp, benchmark_clock_pin, module_clock_pin,
+                                      false);
+      }
+      /* Finish, go to the next */
+      continue;
+    }
+
+    /* For other ports, give an default value */
+    for (size_t pin_id = 0; pin_id < module_global_port.pins().size();
+         ++pin_id) {
+      BasicPort module_global_pin(module_global_port.get_name(),
+                                  module_global_port.pins()[pin_id],
+                                  module_global_port.pins()[pin_id]);
+
+      /* If the global port name is in the pin constraints, we should wire it to
+       * the constrained pin */
+      std::string constrained_net_name =
+        pin_constraints.pin_net(module_global_pin) + std::string(APPINST_PORT_POSTFIX);
+
+      module_global_pin.set_name(
+        module_global_port.get_name());
+
+      /* - If constrained to a given net in the benchmark, we connect the global
+       * pin to the net
+       * - If constrained to an open net in the benchmark, we assign it to a
+       * default value
+       */
+      if ((false == pin_constraints.unconstrained_net(constrained_net_name)) &&
+          (false == pin_constraints.unmapped_net(constrained_net_name))) {
+        BasicPort benchmark_pin(constrained_net_name, 1);
+        print_verilog_wire_connection(fp, benchmark_pin, module_global_pin,
+                                      false);
+      }
+    }
+  }
+
+  print_verilog_comment(
+    fp, std::string("----- End Connect Global ports to FPGA top-level interface -----"));
+
+  /* Add an empty line as a splitter */
+  fp << std::endl;
+
+  return CMD_EXEC_SUCCESS;
+}
+
 
 /********************************************************************
  * Top-level function to generate a Verilog module of
@@ -353,6 +457,15 @@ int print_verilog_mock_fpga_wrapper(
     std::string(APPINST_PORT_POSTFIX), benchmark_clock_port_names, atom_ctx,
     netlist_annotation, pin_constraints, bus_group,
     options.explicit_port_mapping());
+
+  /* Connect FPGA top module global ports to constant or benchmark global
+   * signals! */
+  status = print_verilog_mock_fpga_wrapper_connect_global_ports(
+    fp, module_manager, top_module, pin_constraints, global_ports,
+    benchmark_clock_port_names);
+  if (CMD_EXEC_FATAL_ERROR == status) {
+    return status;
+  }
 
   /* Connect I/Os to benchmark I/Os or constant driver */
   print_verilog_mock_fpga_wrapper_connect_ios(

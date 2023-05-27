@@ -116,6 +116,7 @@ run-task basic_tests/fabric_key/load_external_key_qlbanksr_multi_chain_fpga $@
 #run-task basic_tests/fabric_key/load_external_key_multi_region_qlbanksr_fpga $@
 
 echo -e "Testing mock wrapper"
+run-task basic_tests/mock_wrapper/mock_wrapper_explicit_port_mapping $@
 run-task basic_tests/mock_wrapper/mock_wrapper_implicit_port_mapping $@
 run-task basic_tests/mock_wrapper/mock_wrapper_pcf $@
 run-task basic_tests/mock_wrapper/mock_wrapper_bgf $@
