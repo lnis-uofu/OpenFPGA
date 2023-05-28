@@ -22,7 +22,7 @@ To enable self-testing, the FPGA and user's RTL design (simulate using an HDL si
 .. _fig_verilog_testbench_organization:
 
 .. figure:: figures/full_testbench_block_diagram.svg
-   :scale: 50%
+   :width: 100%
    :alt: Verilog testbench principles
 
    Principles of Verilog testbenches: (1) using common input stimuli; (2) applying bitstream; (3) checking output vectors.
@@ -30,7 +30,7 @@ To enable self-testing, the FPGA and user's RTL design (simulate using an HDL si
 .. _fig_verilog_full_testbench_waveform:
 
 .. figure:: figures/full_testbench_waveform.svg
-   :scale: 50%
+   :width: 100%
    :alt: Full testbench waveform
 
    Illustration on the waveforms in full testbench
@@ -48,7 +48,7 @@ Formal-oriented Testbench
 The formal-oriented testbench aims to test a programmed FPGA is instantiated with the user's bitstream.
 The module of the programmed FPGA is encapsulated with the same port mapping as the user's RTL design and thus can be fed to a formal tool for a 100% coverage formal verification. Compared to the full testbench, this skips the time-consuming configuration phase, reducing the simulation time, potentially also significantly accelerating the functional verification, especially for large FPGAs.
 
-.. warning:: Formal-oriented testbenches do not validate the configuration protocol of FPGAs. It is used to  validate FPGA with a wide range of benchmarks.
+.. warning:: Formal-oriented testbenches do not validate the configuration protocol of FPGAs. It is used to validate FPGA with a wide range of benchmarks.
 
 General Usage
 ~~~~~~~~~~~~~
@@ -59,7 +59,7 @@ Inside the directory, the Verilog testbenches are organized as illustrated in :n
 .. _fig_verilog_testbench_hierarchy:
 
 .. figure:: ./figures/verilog_testbench_hierarchy.svg
-   :scale: 100%
+   :width: 100%
 
    Hierarchy of Verilog testbenches for a FPGA fabric implemented with an application
 
@@ -91,7 +91,7 @@ Inside the directory, the Verilog testbenches are organized as illustrated in :n
 .. _fig_preconfig_module:
 
 .. figure:: ./figures/preconfig_module.png
-   :scale: 25%
+   :width: 100%
 
    Internal structure of a pre-configured FPGA module
 

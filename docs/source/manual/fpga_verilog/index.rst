@@ -10,3 +10,5 @@ FPGA-Verilog
    fabric_netlist
  
    testbench
+
+   mock_fpga_wrapper

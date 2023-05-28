@@ -12,6 +12,7 @@
 #include "read_xml_bus_group.h"
 #include "read_xml_pin_constraints.h"
 #include "verilog_api.h"
+#include "verilog_mock_fpga_wrapper.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
 
@@ -205,6 +206,61 @@ int write_preconfigured_fabric_wrapper_template(
     openfpga_ctx.io_location_map(), openfpga_ctx.fabric_global_port_info(),
     openfpga_ctx.vpr_netlist_annotation(), openfpga_ctx.arch().circuit_lib,
     openfpga_ctx.arch().config_protocol, options);
+}
+
+/********************************************************************
+ * A wrapper function to call the mock fpga wrapper generator of
+ *FPGA-Verilog
+ *******************************************************************/
+template <class T>
+int write_mock_fpga_wrapper_template(const T& openfpga_ctx, const Command& cmd,
+                                     const CommandContext& cmd_context) {
+  CommandOptionId opt_output_dir = cmd.option("file");
+  CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
+  CommandOptionId opt_bgf = cmd.option("bus_group_file");
+  CommandOptionId opt_explicit_port_mapping =
+    cmd.option("explicit_port_mapping");
+  CommandOptionId opt_use_relative_path = cmd.option("use_relative_path");
+  CommandOptionId opt_default_net_type = cmd.option("default_net_type");
+  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* This is an intermediate data structure which is designed to modularize the
+   * FPGA-Verilog Keep it independent from any other outside data structures
+   */
+  VerilogTestbenchOption options;
+  options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
+  options.set_explicit_port_mapping(
+    cmd_context.option_enable(cmd, opt_explicit_port_mapping));
+  options.set_use_relative_path(
+    cmd_context.option_enable(cmd, opt_use_relative_path));
+  options.set_time_stamp(!cmd_context.option_enable(cmd, opt_no_time_stamp));
+  options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
+
+  if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
+    options.set_default_net_type(
+      cmd_context.option_value(cmd, opt_default_net_type));
+  }
+
+  /* If pin constraints are enabled by command options, read the file */
+  PinConstraints pin_constraints;
+  if (true == cmd_context.option_enable(cmd, opt_pcf)) {
+    pin_constraints =
+      read_xml_pin_constraints(cmd_context.option_value(cmd, opt_pcf).c_str());
+  }
+
+  /* If bug group file are enabled by command options, read the file */
+  BusGroup bus_group;
+  if (true == cmd_context.option_enable(cmd, opt_bgf)) {
+    bus_group =
+      read_xml_bus_group(cmd_context.option_value(cmd, opt_bgf).c_str());
+  }
+
+  return fpga_verilog_mock_fpga_wrapper(
+    openfpga_ctx.module_graph(), g_vpr_ctx.atom(), g_vpr_ctx.placement(),
+    pin_constraints, bus_group, openfpga_ctx.io_location_map(),
+    openfpga_ctx.fabric_global_port_info(),
+    openfpga_ctx.vpr_netlist_annotation(), options);
 }
 
 /********************************************************************

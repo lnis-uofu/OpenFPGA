@@ -12,11 +12,13 @@
 /* Headers from openfpgautil library */
 #include "device_rr_gsb.h"
 #include "openfpga_digest.h"
+#include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
 #include "verilog_auxiliary_netlists.h"
 #include "verilog_constants.h"
 #include "verilog_formal_random_top_testbench.h"
 #include "verilog_grid.h"
+#include "verilog_mock_fpga_wrapper.h"
 #include "verilog_preconfig_top_module.h"
 #include "verilog_routing.h"
 #include "verilog_simulation_info_writer.h"
@@ -218,6 +220,60 @@ int fpga_verilog_preconfigured_fabric_wrapper(
     fabric_global_port_info, atom_ctx, place_ctx, pin_constraints, bus_group,
     io_location_map, netlist_annotation, netlist_name,
     formal_verification_top_netlist_file_path, options);
+
+  return status;
+}
+
+/********************************************************************
+ * A top-level function of FPGA-Verilog which focuses on a wrapper module,
+ * which encapsulate the application HDL into a mock FPGA module
+ ********************************************************************/
+int fpga_verilog_mock_fpga_wrapper(
+  const ModuleManager &module_manager, const AtomContext &atom_ctx,
+  const PlacementContext &place_ctx, const PinConstraints &pin_constraints,
+  const BusGroup &bus_group, const IoLocationMap &io_location_map,
+  const FabricGlobalPortInfo &fabric_global_port_info,
+  const VprNetlistAnnotation &netlist_annotation,
+  const VerilogTestbenchOption &options) {
+  vtr::ScopedStartFinishTimer timer(
+    "Write a wrapper module to mock a mapped FPGA fabric\n");
+
+  std::string src_dir_path = format_dir_path(options.output_directory());
+
+  std::string netlist_name = atom_ctx.nlist.netlist_name();
+
+  int status = CMD_EXEC_SUCCESS;
+
+  NetlistManager netlist_manager;
+
+  /* Create directories */
+  create_directory(src_dir_path);
+
+  /* Generate wrapper module for FPGA fabric (mapped by the input benchmark and
+   * pre-configured testbench for verification */
+  std::string netlist_file_name =
+    generate_fpga_top_netlist_name(std::string(VERILOG_NETLIST_FILE_POSTFIX));
+  std::string netlist_file_path = src_dir_path + netlist_file_name;
+  status = print_verilog_mock_fpga_wrapper(
+    module_manager, fabric_global_port_info, atom_ctx, place_ctx,
+    pin_constraints, bus_group, io_location_map, netlist_annotation,
+    netlist_name, netlist_file_path, options);
+
+  /* Add fname to the netlist name list */
+  NetlistId nlist_id = NetlistId::INVALID();
+  if (options.use_relative_path()) {
+    nlist_id = netlist_manager.add_netlist(netlist_file_name);
+  } else {
+    nlist_id = netlist_manager.add_netlist(netlist_file_path);
+  }
+  VTR_ASSERT(nlist_id);
+  netlist_manager.set_netlist_type(nlist_id,
+                                   NetlistManager::TOP_MODULE_NETLIST);
+
+  /* Generate an netlist including all the fabric-related netlists */
+  print_verilog_mock_fabric_include_netlist(netlist_manager, src_dir_path,
+                                            options.use_relative_path(),
+                                            options.time_stamp());
 
   return status;
 }

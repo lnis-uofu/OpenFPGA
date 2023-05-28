@@ -115,6 +115,12 @@ run-task basic_tests/fabric_key/load_external_key_qlbanksr_multi_chain_fpga $@
 # TODO: This feature is temporarily out of test due to the emergency in delivering netlists for multi-chain shift-register memory bank
 #run-task basic_tests/fabric_key/load_external_key_multi_region_qlbanksr_fpga $@
 
+echo -e "Testing mock wrapper"
+run-task basic_tests/mock_wrapper/mock_wrapper_explicit_port_mapping $@
+run-task basic_tests/mock_wrapper/mock_wrapper_implicit_port_mapping $@
+run-task basic_tests/mock_wrapper/mock_wrapper_pcf $@
+run-task basic_tests/mock_wrapper/mock_wrapper_bgf $@
+
 echo -e "Testing K4 series FPGA";
 echo -e "Testing K4N4 with facturable LUTs";
 run-task basic_tests/k4_series/k4n4_frac_lut $@
