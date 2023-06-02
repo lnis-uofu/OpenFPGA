@@ -1146,7 +1146,7 @@ static void print_verilog_top_testbench_benchmark_instance(
     std::string(TOP_TESTBENCH_REFERENCE_INSTANCE_NAME), std::string(),
     std::string(), std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
     std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX), clock_port_names,
-    atom_ctx, netlist_annotation, pin_constraints, bus_group,
+    false, atom_ctx, netlist_annotation, pin_constraints, bus_group,
     explicit_port_mapping);
 
   print_verilog_comment(

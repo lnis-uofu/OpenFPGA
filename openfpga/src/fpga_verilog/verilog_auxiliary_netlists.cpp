@@ -29,6 +29,48 @@ namespace openfpga {
  * This does NOT include any testbenches!
  * Some netlists are open to compile under specific preprocessing flags
  *******************************************************************/
+void print_verilog_mock_fabric_include_netlist(
+  const NetlistManager& netlist_manager, const std::string& src_dir_path,
+  const bool& use_relative_path, const bool& include_time_stamp) {
+  /* If we force the use of relative path, the src dir path should NOT be
+   * included in any output */
+  std::string src_dir = src_dir_path;
+  if (use_relative_path) {
+    src_dir.clear();
+  }
+  std::string verilog_fpath =
+    src_dir_path + std::string(FABRIC_INCLUDE_VERILOG_NETLIST_FILE_NAME);
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
+
+  /* Validate the file stream */
+  check_file_stream(verilog_fpath.c_str(), fp);
+
+  /* Print the title */
+  print_verilog_file_header(fp, std::string("Mock Fabric Netlist Summary"),
+                            include_time_stamp);
+
+  /* Include FPGA top module */
+  print_verilog_comment(
+    fp, std::string("------ Include fabric top-level netlists -----"));
+  for (const NetlistId& nlist_id :
+       netlist_manager.netlists_by_type(NetlistManager::TOP_MODULE_NETLIST)) {
+    print_verilog_include_netlist(fp, netlist_manager.netlist_name(nlist_id));
+  }
+  fp << std::endl;
+
+  /* Close the file stream */
+  fp.close();
+}
+
+/********************************************************************
+ * Print a file that includes all the fabric netlists
+ * that have been generated  and user-defined.
+ * This does NOT include any testbenches!
+ * Some netlists are open to compile under specific preprocessing flags
+ *******************************************************************/
 void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
                                           const std::string& src_dir_path,
                                           const CircuitLibrary& circuit_lib,
