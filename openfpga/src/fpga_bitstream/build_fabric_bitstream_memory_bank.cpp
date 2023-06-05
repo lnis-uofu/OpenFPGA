@@ -497,8 +497,8 @@ void load_module_fabric_dependent_bitstream_ql_memory_bank(
 
   int status = fabric_bitstream.read_fabric_bitstream_db(infile);
   for (const FabricBitId& bit_id : fabric_bitstream.bits()) {
-    //with a single region I believe this is correct, but it's brittle
-    fabric_bitstream.set_bit_din(bit_id, bitstream_manager.bit_value(ConfigBitId(size_t(bit_id))));
+    //with a single region this is correct, but it's brittle
+    fabric_bitstream.set_bit_din(bit_id, bitstream_manager.bit_value(fabric_bitstream.config_bit(bit_id)));
   }
 }
 
