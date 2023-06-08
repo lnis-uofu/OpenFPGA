@@ -50,15 +50,16 @@ IoLocationMap build_fabric_io_location_map(const ModuleManager& module_manager,
     ModuleId child = module_manager.io_children(top_module)[ichild];
     vtr::Point<int> coord =
       module_manager.io_child_coordinates(top_module)[ichild];
+    t_physical_tile_type_ptr phy_tile_type = grids.get_physical_type(coord.x(), coord.y());
 
     /* Bypass EMPTY grid */
-    if (true == is_empty_type(grids[coord.x()][coord.y()].type)) {
+    if (true == is_empty_type(phy_tile_type)) {
       continue;
     }
 
     /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
-    if ((0 < grids[coord.x()][coord.y()].width_offset) ||
-        (0 < grids[coord.x()][coord.y()].height_offset)) {
+    if ((0 < grids.get_width_offset(coord.x(), coord.y())) ||
+        (0 < grids.get_height_offset(coord.x(), coord.y()))) {
       continue;
     }
 
@@ -69,14 +70,14 @@ IoLocationMap build_fabric_io_location_map(const ModuleManager& module_manager,
     /* MUST DO: register in io location mapping!
      * I/O location mapping is a critical look-up for testbench generators
      */
-    if (size_t(grids[coord.x()][coord.y()].type->capacity) !=
+    if (size_t(phy_tile_type->capacity) !=
         module_manager.io_children(child).size()) {
       VTR_LOG("%s[%ld][%ld] capacity: %d while io_child number is %d",
-              grids[coord.x()][coord.y()].type->name, coord.x(), coord.y(),
-              grids[coord.x()][coord.y()].type->capacity,
+              phy_tile_type->name, coord.x(), coord.y(),
+              phy_tile_type->capacity,
               module_manager.io_children(child).size());
     }
-    VTR_ASSERT(size_t(grids[coord.x()][coord.y()].type->capacity) ==
+    VTR_ASSERT(size_t(phy_tile_type->capacity) ==
                module_manager.io_children(child).size());
     for (size_t isubchild = 0;
          isubchild < module_manager.io_children(child).size(); ++isubchild) {

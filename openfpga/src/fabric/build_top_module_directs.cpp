@@ -47,7 +47,7 @@ static void add_module_nets_tile_direct_connection(
   vtr::Point<size_t> src_clb_coord =
     tile_direct.from_tile_coordinate(tile_direct_id);
   t_physical_tile_type_ptr src_grid_type =
-    grids[src_clb_coord.x()][src_clb_coord.y()].type;
+    grids.get_physical_type(src_clb_coord.x(), src_clb_coord.y());
   e_side src_grid_border_side =
     find_grid_border_side(device_size, src_clb_coord);
   std::string src_module_name_prefix(GRID_MODULE_NAME_PREFIX);
@@ -64,7 +64,7 @@ static void add_module_nets_tile_direct_connection(
   vtr::Point<size_t> des_clb_coord =
     tile_direct.to_tile_coordinate(tile_direct_id);
   t_physical_tile_type_ptr sink_grid_type =
-    grids[des_clb_coord.x()][des_clb_coord.y()].type;
+    grids.get_physical_type(des_clb_coord.x(), des_clb_coord.y());
   e_side sink_grid_border_side =
     find_grid_border_side(device_size, des_clb_coord);
   std::string sink_module_name_prefix(GRID_MODULE_NAME_PREFIX);
@@ -114,7 +114,7 @@ static void add_module_nets_tile_direct_connection(
   size_t src_tile_pin = tile_direct.from_tile_pin(tile_direct_id);
 
   t_physical_tile_type_ptr src_grid_type_descriptor =
-    grids[src_clb_coord.x()][src_clb_coord.y()].type;
+    grids.get_physical_type(src_clb_coord.x(), src_clb_coord.y());
   size_t src_pin_width =
     src_grid_type_descriptor->pin_width_offset[src_tile_pin];
   size_t src_pin_height =
@@ -148,7 +148,7 @@ static void add_module_nets_tile_direct_connection(
   size_t sink_tile_pin = tile_direct.to_tile_pin(tile_direct_id);
 
   t_physical_tile_type_ptr sink_grid_type_descriptor =
-    grids[des_clb_coord.x()][des_clb_coord.y()].type;
+    grids.get_physical_type(des_clb_coord.x(), des_clb_coord.y());
   size_t sink_pin_width =
     sink_grid_type_descriptor->pin_width_offset[src_tile_pin];
   size_t sink_pin_height =

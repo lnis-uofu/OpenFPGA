@@ -32,7 +32,7 @@ void VprPlacementAnnotation::init_mapped_blocks(const DeviceGrid& grids) {
   for (size_t x = 0; x < grids.width(); ++x) {
     for (size_t y = 0; y < grids.height(); ++y) {
       /* Deposit invalid ids and we will fill later */
-      blocks_[x][y].resize(grids[x][y].type->capacity,
+      blocks_[x][y].resize(grids.get_physical_type(x, y)->capacity,
                            ClusterBlockId::INVALID());
     }
   }

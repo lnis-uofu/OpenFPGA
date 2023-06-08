@@ -127,7 +127,7 @@ static void add_top_module_nets_connect_grids_and_sb(
         rr_gsb.get_opin_node(side_manager.get_side(), inode));
 
       t_physical_tile_type_ptr grid_type_descriptor =
-        grids[grid_coordinate.x()][grid_coordinate.y()].type;
+        grids.get_physical_type(grid_coordinate.x(), grid_coordinate.y());
       size_t src_grid_pin_width =
         grid_type_descriptor->pin_width_offset[src_grid_pin_index];
       size_t src_grid_pin_height =
@@ -301,7 +301,7 @@ static void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(
         rr_gsb.get_opin_node(side_manager.get_side(), inode));
 
       t_physical_tile_type_ptr grid_type_descriptor =
-        grids[grid_coordinate.x()][grid_coordinate.y()].type;
+        grids.get_physical_type(grid_coordinate.x(), grid_coordinate.y());
       size_t src_grid_pin_width =
         grid_type_descriptor->pin_width_offset[src_grid_pin_index];
       size_t src_grid_pin_height =
@@ -520,7 +520,7 @@ static void add_top_module_nets_connect_grids_and_cb(
       size_t sink_grid_pin_index = rr_graph.node_pin_num(instance_ipin_node);
 
       t_physical_tile_type_ptr grid_type_descriptor =
-        grids[grid_coordinate.x()][grid_coordinate.y()].type;
+        grids.get_physical_type(grid_coordinate.x(), grid_coordinate.y());
       size_t sink_grid_pin_width =
         grid_type_descriptor->pin_width_offset[sink_grid_pin_index];
       size_t sink_grid_pin_height =
@@ -859,7 +859,7 @@ static int build_top_module_global_net_for_given_grid_module(
   const vtr::Point<size_t>& grid_coordinate, const e_side& border_side,
   const vtr::Matrix<size_t>& grid_instance_ids) {
   t_physical_tile_type_ptr physical_tile =
-    grids[grid_coordinate.x()][grid_coordinate.y()].type;
+    grids.get_physical_type(grid_coordinate.x(), grid_coordinate.y());
   /* Find the module name for this type of grid */
   std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
   std::string grid_module_name = generate_grid_block_module_name(
@@ -1038,18 +1038,19 @@ static int build_top_module_global_net_from_grid_modules(
     /* Spot the port from child modules from core grids */
     for (size_t ix = start_coord.x(); ix < end_coord.x(); ++ix) {
       for (size_t iy = start_coord.y(); iy < end_coord.y(); ++iy) {
+        t_physical_tile_type_ptr phy_tile_type = grids.get_physical_type(ix, iy);
         /* Bypass EMPTY tiles */
-        if (true == is_empty_type(grids[ix][iy].type)) {
+        if (true == is_empty_type(phy_tile_type)) {
           continue;
         }
         /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
-        if ((0 < grids[ix][iy].width_offset) ||
-            (0 < grids[ix][iy].height_offset)) {
+        if ((0 < grids.get_width_offset(ix, iy)) ||
+            (0 < grids.get_height_offset(ix, iy))) {
           continue;
         }
 
         /* Bypass the tiles whose names do not match */
-        if (std::string(grids[ix][iy].type->name) != tile_name) {
+        if (std::string(phy_tile_type->name) != tile_name) {
           continue;
         }
 
@@ -1067,21 +1068,22 @@ static int build_top_module_global_net_from_grid_modules(
     /* Walk through all the grids on the perimeter, which are I/O grids */
     for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
       for (const vtr::Point<size_t>& io_coordinate : io_coordinates[io_side]) {
+        t_physical_tile_type_ptr phy_tile_type = grids.get_physical_type(io_coordinate.x(), io_coordinate.y());
         /* Bypass EMPTY grid */
         if (true ==
-            is_empty_type(grids[io_coordinate.x()][io_coordinate.y()].type)) {
+            is_empty_type(phy_tile_type)) {
           continue;
         }
 
         /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
-        if ((0 < grids[io_coordinate.x()][io_coordinate.y()].width_offset) ||
-            (0 < grids[io_coordinate.x()][io_coordinate.y()].height_offset)) {
+        if ((0 < grids.get_width_offset(io_coordinate.x(), io_coordinate.y())) ||
+            (0 < grids.get_height_offset(io_coordinate.x(), io_coordinate.y()))) {
           continue;
         }
 
         /* Bypass the tiles whose names do not match */
         if (std::string(
-              grids[io_coordinate.x()][io_coordinate.y()].type->name) !=
+              phy_tile_type->name) !=
             tile_name) {
           continue;
         }
