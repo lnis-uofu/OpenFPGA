@@ -108,15 +108,15 @@ static vtr::Matrix<size_t> add_top_module_grid_instances(
 
   for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
     for (const vtr::Point<size_t>& io_coordinate : io_coordinates[io_side]) {
-      t_physical_tile_type_ptr phy_tile_type = grids.get_physical_type(io_coordinate.x(), io_coordinate.y());
+      t_physical_tile_type_ptr phy_tile_type =
+        grids.get_physical_type(io_coordinate.x(), io_coordinate.y());
       /* Bypass EMPTY grid */
-      if (true ==
-          is_empty_type(phy_tile_type)) {
+      if (true == is_empty_type(phy_tile_type)) {
         continue;
       }
       /* Skip width, height > 1 tiles (mostly heterogeneous blocks) */
       if ((0 < grids.get_width_offset(io_coordinate.x(), io_coordinate.y())) ||
-          (0 < grids.get_height_offset(io_coordinate.x(),io_coordinate.y()))) {
+          (0 < grids.get_height_offset(io_coordinate.x(), io_coordinate.y()))) {
         /* Find the root of this grid, the instance id should be valid.
          * We just copy it here
          */
@@ -134,10 +134,8 @@ static vtr::Matrix<size_t> add_top_module_grid_instances(
 
       /* Add a grid module to top_module*/
       grid_instance_ids[io_coordinate.x()][io_coordinate.y()] =
-        add_top_module_grid_instance(
-          module_manager, top_module,
-          phy_tile_type, io_side,
-          io_coordinate);
+        add_top_module_grid_instance(module_manager, top_module, phy_tile_type,
+                                     io_side, io_coordinate);
     }
   }
 
@@ -160,8 +158,9 @@ static vtr::Matrix<size_t> add_top_module_grid_instances(
         /* Find the root of this grid, the instance id should be valid.
          * We just copy it here
          */
-        vtr::Point<size_t> root_grid_coord(ix - grids.get_width_offset(ix, iy),
-                                           iy - grids.get_height_offset(ix, iy));
+        vtr::Point<size_t> root_grid_coord(
+          ix - grids.get_width_offset(ix, iy),
+          iy - grids.get_height_offset(ix, iy));
         VTR_ASSERT(size_t(-1) !=
                    grid_instance_ids[root_grid_coord.x()][root_grid_coord.y()]);
         grid_instance_ids[ix][iy] =
@@ -326,7 +325,8 @@ static void add_top_module_io_children(
 
   for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
     for (const vtr::Point<size_t>& io_coord : io_coordinates[io_side]) {
-      t_physical_tile_type_ptr grid_type = grids.get_physical_type(io_coord.x(), io_coord.y());
+      t_physical_tile_type_ptr grid_type =
+        grids.get_physical_type(io_coord.x(), io_coord.y());
       /* Bypass EMPTY grid */
       if (true == is_empty_type(grid_type)) {
         continue;
@@ -394,7 +394,8 @@ static void add_top_module_io_children(
 
   /* Now walk through the coordinates */
   for (vtr::Point<size_t> coord : coords) {
-    t_physical_tile_type_ptr grid_type = grids.get_physical_type(coord.x(), coord.y());
+    t_physical_tile_type_ptr grid_type =
+      grids.get_physical_type(coord.x(), coord.y());
     /* Bypass EMPTY grid */
     if (true == is_empty_type(grid_type)) {
       continue;

@@ -28,11 +28,12 @@ std::string generate_grid_block_module_name_in_top_module(
   /* Determine if the grid locates at the border */
   vtr::Point<size_t> device_size(grids.width(), grids.height());
   e_side border_side = find_grid_border_side(device_size, grid_coord);
-  t_physical_tile_type_ptr phy_tile_type = grids.get_physical_type(grid_coord.x(), grid_coord.y());
+  t_physical_tile_type_ptr phy_tile_type =
+    grids.get_physical_type(grid_coord.x(), grid_coord.y());
 
   return generate_grid_block_module_name(
-    prefix, std::string(phy_tile_type->name),
-    is_io_type(phy_tile_type), border_side);
+    prefix, std::string(phy_tile_type->name), is_io_type(phy_tile_type),
+    border_side);
 }
 
 /********************************************************************

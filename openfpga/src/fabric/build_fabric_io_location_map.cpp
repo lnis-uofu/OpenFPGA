@@ -50,7 +50,8 @@ IoLocationMap build_fabric_io_location_map(const ModuleManager& module_manager,
     ModuleId child = module_manager.io_children(top_module)[ichild];
     vtr::Point<int> coord =
       module_manager.io_child_coordinates(top_module)[ichild];
-    t_physical_tile_type_ptr phy_tile_type = grids.get_physical_type(coord.x(), coord.y());
+    t_physical_tile_type_ptr phy_tile_type =
+      grids.get_physical_type(coord.x(), coord.y());
 
     /* Bypass EMPTY grid */
     if (true == is_empty_type(phy_tile_type)) {

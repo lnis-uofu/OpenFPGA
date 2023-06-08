@@ -1038,7 +1038,8 @@ static int build_top_module_global_net_from_grid_modules(
     /* Spot the port from child modules from core grids */
     for (size_t ix = start_coord.x(); ix < end_coord.x(); ++ix) {
       for (size_t iy = start_coord.y(); iy < end_coord.y(); ++iy) {
-        t_physical_tile_type_ptr phy_tile_type = grids.get_physical_type(ix, iy);
+        t_physical_tile_type_ptr phy_tile_type =
+          grids.get_physical_type(ix, iy);
         /* Bypass EMPTY tiles */
         if (true == is_empty_type(phy_tile_type)) {
           continue;
@@ -1068,23 +1069,23 @@ static int build_top_module_global_net_from_grid_modules(
     /* Walk through all the grids on the perimeter, which are I/O grids */
     for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
       for (const vtr::Point<size_t>& io_coordinate : io_coordinates[io_side]) {
-        t_physical_tile_type_ptr phy_tile_type = grids.get_physical_type(io_coordinate.x(), io_coordinate.y());
+        t_physical_tile_type_ptr phy_tile_type =
+          grids.get_physical_type(io_coordinate.x(), io_coordinate.y());
         /* Bypass EMPTY grid */
-        if (true ==
-            is_empty_type(phy_tile_type)) {
+        if (true == is_empty_type(phy_tile_type)) {
           continue;
         }
 
         /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
-        if ((0 < grids.get_width_offset(io_coordinate.x(), io_coordinate.y())) ||
-            (0 < grids.get_height_offset(io_coordinate.x(), io_coordinate.y()))) {
+        if ((0 <
+             grids.get_width_offset(io_coordinate.x(), io_coordinate.y())) ||
+            (0 <
+             grids.get_height_offset(io_coordinate.x(), io_coordinate.y()))) {
           continue;
         }
 
         /* Bypass the tiles whose names do not match */
-        if (std::string(
-              phy_tile_type->name) !=
-            tile_name) {
+        if (std::string(phy_tile_type->name) != tile_name) {
           continue;
         }
 

@@ -859,8 +859,8 @@ void build_grid_bitstream(
   for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
     for (const vtr::Point<size_t>& io_coordinate : io_coordinates[io_side]) {
       /* Bypass EMPTY grid */
-      if (true ==
-          is_empty_type(grids.get_physical_type(io_coordinate.x(), io_coordinate.y()))) {
+      if (true == is_empty_type(grids.get_physical_type(io_coordinate.x(),
+                                                        io_coordinate.y()))) {
         continue;
       }
       /* Skip height > 1 tiles (mostly heterogeneous blocks) */

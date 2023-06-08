@@ -39,7 +39,8 @@ static void update_cluster_pin_with_post_routing_results(
   const e_side& border_side, const size_t& z, const bool& verbose) {
   /* Handle each pin */
   auto logical_block = clustering_ctx.clb_nlist.block_type(blk_id);
-  auto physical_tile = device_ctx.grid.get_physical_type(grid_coord.x(), grid_coord.y());
+  auto physical_tile =
+    device_ctx.grid.get_physical_type(grid_coord.x(), grid_coord.y());
 
   for (int j = 0; j < logical_block->pb_type->num_pins; j++) {
     /* Get the ptc num for the pin in rr_graph, we need t consider the z offset
@@ -222,10 +223,10 @@ void update_pb_pin_with_post_routing_results(
 
   for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
     for (const vtr::Point<size_t>& io_coord : io_coordinates[io_side]) {
-      t_physical_tile_type_ptr phy_tile_type = device_ctx.grid.get_physical_type(io_coord.x(), io_coord.y());
+      t_physical_tile_type_ptr phy_tile_type =
+        device_ctx.grid.get_physical_type(io_coord.x(), io_coord.y());
       /* Bypass EMPTY grid */
-      if (true ==
-          is_empty_type(phy_tile_type)) {
+      if (true == is_empty_type(phy_tile_type)) {
         continue;
       }
       /* Get the mapped blocks to this grid */

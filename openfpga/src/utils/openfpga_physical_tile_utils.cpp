@@ -108,7 +108,8 @@ std::set<e_side> find_physical_io_tile_located_sides(
   for (const e_side& fpga_side : FPGA_SIDES_CLOCKWISE) {
     for (const vtr::Point<size_t>& io_coordinate : io_coordinates[fpga_side]) {
       /* If located in center, we add a NUM_SIDES and finish */
-      if (physical_tile == grids.get_physical_type(io_coordinate.x(), io_coordinate.y())) {
+      if (physical_tile ==
+          grids.get_physical_type(io_coordinate.x(), io_coordinate.y())) {
         io_sides.insert(fpga_side);
         break;
       }
