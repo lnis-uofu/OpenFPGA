@@ -191,7 +191,7 @@ static void organize_top_module_tile_memory_modules(
 
   /* Find the module name for this type of grid */
   t_physical_tile_type_ptr grid_type =
-    grids[tile_coord.x()][tile_coord.y()].type;
+    grids.get_physical_type(tile_coord.x(), tile_coord.y());
 
   /* Skip EMPTY Grid */
   if (true == is_empty_type(grid_type)) {
@@ -199,8 +199,8 @@ static void organize_top_module_tile_memory_modules(
   }
   /* Skip width > 1 or height > 1 Grid, which should already been processed when
    * offset=0 */
-  if ((0 < grids[tile_coord.x()][tile_coord.y()].width_offset) ||
-      (0 < grids[tile_coord.x()][tile_coord.y()].height_offset)) {
+  if ((0 < grids.get_width_offset(tile_coord.x(), tile_coord.y())) ||
+      (0 < grids.get_height_offset(tile_coord.x(), tile_coord.y()))) {
     return;
   }
 

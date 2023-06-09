@@ -736,7 +736,7 @@ static void build_physical_block_bitstream(
   const vtr::Point<size_t>& grid_coord, const e_side& border_side) {
   /* Create a block for the grid in bitstream manager */
   t_physical_tile_type_ptr grid_type =
-    grids[grid_coord.x()][grid_coord.y()].type;
+    grids.get_physical_type(grid_coord.x(), grid_coord.y());
   std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
 
   /* Early exit if this parent module has no configurable child modules */
@@ -831,12 +831,12 @@ void build_grid_bitstream(
   for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
     for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
       /* Bypass EMPTY grid */
-      if (true == is_empty_type(grids[ix][iy].type)) {
+      if (true == is_empty_type(grids.get_physical_type(ix, iy))) {
         continue;
       }
       /* Skip width > 1 or height > 1 tiles (mostly heterogeneous blocks) */
-      if ((0 < grids[ix][iy].width_offset) ||
-          (0 < grids[ix][iy].height_offset)) {
+      if ((0 < grids.get_width_offset(ix, iy)) ||
+          (0 < grids.get_height_offset(ix, iy))) {
         continue;
       }
       /* Add a grid module to top_module*/
@@ -859,13 +859,13 @@ void build_grid_bitstream(
   for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
     for (const vtr::Point<size_t>& io_coordinate : io_coordinates[io_side]) {
       /* Bypass EMPTY grid */
-      if (true ==
-          is_empty_type(grids[io_coordinate.x()][io_coordinate.y()].type)) {
+      if (true == is_empty_type(grids.get_physical_type(io_coordinate.x(),
+                                                        io_coordinate.y()))) {
         continue;
       }
       /* Skip height > 1 tiles (mostly heterogeneous blocks) */
-      if ((0 < grids[io_coordinate.x()][io_coordinate.y()].width_offset) ||
-          (0 < grids[io_coordinate.x()][io_coordinate.y()].height_offset)) {
+      if ((0 < grids.get_width_offset(io_coordinate.x(), io_coordinate.y())) ||
+          (0 < grids.get_height_offset(io_coordinate.x(), io_coordinate.y()))) {
         continue;
       }
       build_physical_block_bitstream(

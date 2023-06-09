@@ -396,7 +396,7 @@ static void try_find_and_add_clock_track2ipin_node(
   const e_side& pin_side, const ClockNetwork& clk_ntwk,
   const ClockTreeId& clk_tree, const ClockTreePinId& clk_pin) {
   t_physical_tile_type_ptr grid_type =
-    grids[grid_coord.x()][grid_coord.y()].type;
+    grids.get_physical_type(grid_coord.x(), grid_coord.y());
   for (std::string tap_pin_name :
        clk_ntwk.tree_flatten_taps(clk_tree, clk_pin)) {
     /* tap pin name could be 'io[5:5].a2f[0]' */
