@@ -388,7 +388,14 @@ int FabricBitstream::read_fabric_bitstream_db(std::string infile) {
   FILE* f = fopen(infile.c_str(), "r");
   int fd = fileno(f);
   //::capnp::StreamFdMessageReader message(fd);
-  ::capnp::PackedFdMessageReader message(fd);
+  //because we have 4 arrays for every bit and millions of bits, message size exceeds the default limit (which is 8*1024*1024)
+  //so we need to adjust traversalLimitInWords to make it work
+  //for 104x68 that's 2286409793. Documentation says the limit should be well over the expected value, so setting to ~2x expected value
+  ::capnp::ReaderOptions my_options = {
+    uint64_t(4294967296), //traversalLimitInWords 
+    64, //nesting limit
+  };
+  ::capnp::PackedFdMessageReader message(fd, my_options);
 
   QLMem_db::FabricBitstreamQLMem::Reader bitstreamDbReader =
     message.getRoot<QLMem_db::FabricBitstreamQLMem>();
