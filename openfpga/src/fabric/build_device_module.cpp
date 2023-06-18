@@ -126,4 +126,31 @@ int build_device_module_graph(
   return status;
 }
 
+/********************************************************************
+ * The main function to be called for adding the fpga_core wrapper to a FPGA fabric
+ * - Rename existing fpga_top to fpga_core
+ * - Create a wrapper module 'fpga_top' on the fpga_core
+ *******************************************************************/
+int add_fpga_core_to_device_module_graph(ModuleManager& module_manager, const bool& verbose) {
+  int status = CMD_EXEC_SUCCESS;
+
+  /* Execute the module graph api */
+  std::string top_module_name = generate_fpga_top_module_name();
+  ModuleId top_module = module_manager.find_module(top_module_name);
+  if (!module_manager.valid_module_id(top_module)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  /* TODO: Use a constant for the top_module name */  
+
+  /* Rename existing top module to fpga_core */
+  module_manager.set_module_name(top_module, "fpga_core");
+  /* Create a wrapper module under the existing fpga_top */
+  ModuleId new_top_module = module_manager.create_wrapper(top_module, top_module_name),
+  if (!module_manager.valid_module_id(new_top_module)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  return status;
+}
+
 } /* end namespace openfpga */

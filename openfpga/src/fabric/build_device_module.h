@@ -23,6 +23,8 @@ int build_device_module_graph(
   const bool& duplicate_grid_pin, const FabricKey& fabric_key,
   const bool& generate_random_fabric_key, const bool& verbose);
 
+int add_fpga_core_to_device_module_graph(ModuleManager& module_manager, const bool& verbose);
+
 } /* end namespace openfpga */
 
 #endif

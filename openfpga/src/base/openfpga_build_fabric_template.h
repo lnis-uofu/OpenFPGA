@@ -231,6 +231,18 @@ int write_fabric_io_info_template(const T& openfpga_ctx, const Command& cmd,
     cmd_context.option_enable(cmd, opt_verbose));
 }
 
+/********************************************************************
+ * Add fpga_core module to the module graph
+ *******************************************************************/
+template <class T>
+int add_fpga_core_to_fabric_template(T& openfpga_ctx, const Command& cmd,
+                                     const CommandContext& cmd_context) {
+  CommandOptionId opt_verbose = cmd.option("verbose");
+  bool verbose_output = cmd_context.option_enable(cmd, opt_verbose);
+
+  return add_fpga_core_to_device_module_graph(openfpga_ctx.mutable_module_graph(), verbose_output);
+}
+
 } /* end namespace openfpga */
 
 #endif
