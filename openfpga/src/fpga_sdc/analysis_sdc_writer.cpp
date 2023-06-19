@@ -258,6 +258,15 @@ void print_analysis_sdc(const AnalysisSdcOption& option,
   ModuleId top_module =
     openfpga_ctx.module_graph().find_module(generate_fpga_top_module_name());
   VTR_ASSERT(true == openfpga_ctx.module_graph().valid_module_id(top_module));
+  /* Use the core module as the top when the fpga_core is added */
+  std::string core_block_name = generate_fpga_core_module_name();
+  const ModuleId& core_module =
+    openfpga_ctx.module_graph().find_module(core_block_name);
+  if (openfpga_ctx.module_graph().valid_module_id(core_module)) {
+    /* Now we use the core_block as the top-level block for the remaining
+     * functions */
+    top_module = core_module;
+  }
 
   /* Create clock and set I/O ports with input/output delays
    * FIXME: Now different I/Os have different delays due to multiple clock

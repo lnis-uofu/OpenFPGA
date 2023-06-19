@@ -154,7 +154,7 @@ int add_fpga_core_to_device_module_graph(ModuleManager& module_manager,
 
   /* Create a wrapper module under the existing fpga_top */
   ModuleId new_top_module = module_manager.create_wrapper_module(
-    top_module, top_module_name, core_inst_name, frame_view);
+    top_module, top_module_name, core_inst_name, !frame_view);
   if (!module_manager.valid_module_id(new_top_module)) {
     VTR_LOGV_ERROR(verbose,
                    "Failed to create a wrapper module '%s' on top of '%s'!\n",

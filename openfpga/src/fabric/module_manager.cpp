@@ -1257,9 +1257,6 @@ ModuleId ModuleManager::create_wrapper_module(
   reserve_module_nets(wrapper_module, num_nets_to_reserve);
   for (ModulePortId new_port : module_ports(wrapper_module)) {
     BasicPort new_port_info = module_port(wrapper_module, new_port);
-    /* Create new net */
-    ModuleNetId new_net = create_module_net(wrapper_module);
-    VTR_ASSERT(valid_module_net_id(wrapper_module, new_net));
     /* For each input pin, create a new source */
     ModuleManager::e_module_port_type new_port_type =
       port_type(wrapper_module, new_port);
@@ -1267,26 +1264,28 @@ ModuleId ModuleManager::create_wrapper_module(
     ModulePortId existing_port = port_map[new_port];
     BasicPort existing_port_info = module_port(existing_module, existing_port);
     VTR_ASSERT(existing_port_info == new_port_info);
-    reserve_module_net_sources(wrapper_module, new_net,
-                               new_port_info.pins().size());
-    reserve_module_net_sinks(wrapper_module, new_net,
-                             new_port_info.pins().size());
     if (new_port_type !=
         ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT) {
-      for (auto pin : new_port_info.pins()) {
+      for (size_t ipin = 0; ipin < new_port_info.pins().size(); ++ipin) {
+        /* Create new net */
+        ModuleNetId new_net = create_module_net(wrapper_module);
+        VTR_ASSERT(valid_module_net_id(wrapper_module, new_net));
         add_module_net_source(wrapper_module, new_net, wrapper_module, 0,
-                              new_port, pin);
+                              new_port, new_port_info.pins()[ipin]);
         add_module_net_sink(wrapper_module, new_net, existing_module, 0,
-                            existing_port, pin);
+                            existing_port, existing_port_info.pins()[ipin]);
       }
     } else {
       VTR_ASSERT_SAFE(new_port_type ==
                       ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT);
-      for (auto pin : new_port_info.pins()) {
+      for (size_t ipin = 0; ipin < new_port_info.pins().size(); ++ipin) {
+        /* Create new net */
+        ModuleNetId new_net = create_module_net(wrapper_module);
+        VTR_ASSERT(valid_module_net_id(wrapper_module, new_net));
         add_module_net_source(wrapper_module, new_net, existing_module, 0,
-                              existing_port, pin);
+                              existing_port, new_port_info.pins()[ipin]);
         add_module_net_sink(wrapper_module, new_net, wrapper_module, 0,
-                            new_port, pin);
+                            new_port, existing_port_info.pins()[ipin]);
       }
     }
   }
