@@ -164,6 +164,12 @@ int add_fpga_core_to_device_module_graph(ModuleManager& module_manager,
   VTR_LOGV(verbose, "Created a wrapper module '%s' on top of '%s'\n",
            top_module_name.c_str(), core_module_name.c_str());
 
+  /* Now fpga_core should be the only configurable child under the top-level
+   * module */
+  module_manager.add_configurable_child(new_top_module, top_module, 0);
+
+  /* TODO: Update the fabric global ports */
+
   return status;
 }
 
