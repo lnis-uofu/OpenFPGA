@@ -918,10 +918,9 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
    * 'build_fabric' */
   std::vector<ShellCommandId> add_fpga_core_to_fabric_dependent_cmds;
   add_fpga_core_to_fabric_dependent_cmds.push_back(build_fabric_cmd_id);
-  ShellCommandId add_fpga_core_to_fabric_cmd_id =
-    add_add_fpga_core_to_fabric_command_template<T>(
-      shell, openfpga_setup_cmd_class, add_fpga_core_to_fabric_dependent_cmds,
-      hidden);
+  add_add_fpga_core_to_fabric_command_template<T>(
+    shell, openfpga_setup_cmd_class, add_fpga_core_to_fabric_dependent_cmds,
+    hidden);
 
   /********************************
    * Command 'write_fabric_hierarchy'
