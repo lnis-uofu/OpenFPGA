@@ -25,14 +25,15 @@ namespace openfpga {
  * Print the wrapper module for the FPGA fabric in Verilog format
  *******************************************************************/
 void print_verilog_core_module(NetlistManager& netlist_manager,
-                              const ModuleManager& module_manager,
-                              const std::string& verilog_dir,
-                              const FabricVerilogOption& options) {
+                               const ModuleManager& module_manager,
+                               const std::string& verilog_dir,
+                               const FabricVerilogOption& options) {
   /* Create a module as the top-level fabric, and add it to the module manager
    */
   std::string core_module_name = generate_fpga_core_module_name();
   ModuleId core_module = module_manager.find_module(core_module_name);
-  /* It could happen that the module does not exist, just return with no errors */
+  /* It could happen that the module does not exist, just return with no errors
+   */
   if (!module_manager.valid_module_id(core_module)) {
     return;
   }
@@ -52,8 +53,8 @@ void print_verilog_core_module(NetlistManager& netlist_manager,
 
   check_file_stream(verilog_fpath.c_str(), fp);
 
-  print_verilog_file_header(
-    fp, std::string("Wrapper Verilog module for FPGA"), options.time_stamp());
+  print_verilog_file_header(fp, std::string("Wrapper Verilog module for FPGA"),
+                            options.time_stamp());
 
   /* Write the module content in Verilog format */
   write_verilog_module_to_file(fp, module_manager, core_module,

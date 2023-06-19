@@ -117,8 +117,8 @@ void fpga_fabric_verilog(
 
   /* Generate FPGA fabric */
   print_verilog_core_module(netlist_manager,
-                           const_cast<const ModuleManager &>(module_manager),
-                           src_dir_path, options);
+                            const_cast<const ModuleManager &>(module_manager),
+                            src_dir_path, options);
   print_verilog_top_module(netlist_manager,
                            const_cast<const ModuleManager &>(module_manager),
                            src_dir_path, options);

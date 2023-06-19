@@ -18,9 +18,9 @@
 namespace openfpga {
 
 void print_verilog_core_module(NetlistManager& netlist_manager,
-                              const ModuleManager& module_manager,
-                              const std::string& verilog_dir,
-                              const FabricVerilogOption& options);
+                               const ModuleManager& module_manager,
+                               const std::string& verilog_dir,
+                               const FabricVerilogOption& options);
 
 void print_verilog_top_module(NetlistManager& netlist_manager,
                               const ModuleManager& module_manager,
