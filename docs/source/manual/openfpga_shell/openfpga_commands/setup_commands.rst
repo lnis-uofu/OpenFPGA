@@ -281,6 +281,29 @@ build_fabric
 
   .. note:: This is a must-run command before launching FPGA-Verilog, FPGA-Bitstream, FPGA-SDC and FPGA-SPICE
 
+.. _cmd_add_fpga_core_to_fabric:
+  
+add_fpga_core_to_fabric
+~~~~~~~~~~~~~~~~~~~~~~~
+
+  Add a wrapper module ``fpga_core`` as an intermediate layer to FPGA fabric. After this command, the existing module ``fpga_top`` will remain the top-level module while there is a new module ``fpga_core`` under it. Under fpga_core, there will be the detailed building blocks.
+
+  .. option:: --instance_name <string>
+
+    This is optional. Specify the instance name to be used when instanciate the ``fpga_core`` module under the top-level module ``fpga_top``. If not defined, by default it is ``fpga_core_inst``.
+
+
+  .. option:: --frame_view
+
+    Create only frame views of the module graph. When enabled, top-level module will not include any nets. This option is made for save runtime and memory.
+
+    .. warning:: Recommend to turn the option on when bitstream generation is the only purpose of the flow. Do not use it when you need generate netlists!
+
+  .. option:: --verbose
+
+    Show verbose log
+
+
 write_fabric_hierarchy
 ~~~~~~~~~~~~~~~~~~~~~~
 
