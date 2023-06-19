@@ -164,7 +164,9 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
   const ModuleId& core_module =
     openfpga_ctx.module_graph().find_module(core_block_name);
   if (openfpga_ctx.module_graph().valid_module_id(core_module)) {
-    ConfigBlockId core_block = bitstream_manager.add_block(core_block_name);
+    std::string core_inst_name =
+      openfpga_ctx.module_graph().instance_name(top_module, core_module, 0);
+    ConfigBlockId core_block = bitstream_manager.add_block(core_inst_name);
     bitstream_manager.add_child_block(top_block, core_block);
     /* Now we use the core_block as the top-level block for the remaining
      * functions */
