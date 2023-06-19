@@ -317,6 +317,8 @@ class ModuleManager {
   /* Set a port to be a wire */
   void set_port_is_wire(const ModuleId& module, const std::string& port_name,
                         const bool& is_wire);
+  void set_port_is_wire(const ModuleId& module, const ModulePortId& port_id,
+                        const bool& is_wire);
   /* Set a port to be mappable to an I/O from users' implemenations */
   void set_port_is_mappable_io(const ModuleId& module,
                                const ModulePortId& port_id,
@@ -324,6 +326,8 @@ class ModuleManager {
   /* Set a port to be a register */
   void set_port_is_register(const ModuleId& module,
                             const std::string& port_name,
+                            const bool& is_register);
+  void set_port_is_register(const ModuleId& module, const ModulePortId& port_id,
                             const bool& is_register);
   /* Set the preprocessing flag for a port */
   void set_port_preproc_flag(const ModuleId& module, const ModulePortId& port,
@@ -422,6 +426,26 @@ class ModuleManager {
                                       const size_t& instance_id,
                                       const ModulePortId& sink_port,
                                       const size_t& sink_pin);
+
+  /** @brief Create a wrapper module on an existing module. The wrapper module
+   * will herit all the ports with the same direction, width and names from the
+   * selected module. The wrapper module will contain the existing module. For
+   * example,
+   *
+   *     Wrapper module
+   *     +------------------------+
+   *     |  existing module       |
+   *     |  +------------------+  |
+   *     |  |                  |  |
+   * a ->+->+ a              b-+--+-> b
+   *     |  |                  |  |
+   *     |  +------------------+  |
+   *     +------------------------+
+   */
+  ModuleId create_wrapper_module(const ModuleId& existing_module,
+                                 const std::string& wrapper_module_name,
+                                 const std::string& instance_name,
+                                 const bool& add_nets);
 
  public: /* Public deconstructors */
   /* This is a strong function which will remove all the configurable children

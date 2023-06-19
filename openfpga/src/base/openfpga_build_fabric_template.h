@@ -14,6 +14,7 @@
 #include "fabric_hierarchy_writer.h"
 #include "fabric_key_writer.h"
 #include "globals.h"
+#include "openfpga_naming.h"
 #include "read_xml_fabric_key.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
@@ -237,10 +238,20 @@ int write_fabric_io_info_template(const T& openfpga_ctx, const Command& cmd,
 template <class T>
 int add_fpga_core_to_fabric_template(T& openfpga_ctx, const Command& cmd,
                                      const CommandContext& cmd_context) {
+  CommandOptionId opt_frame_view = cmd.option("frame_view");
+  bool frame_view = cmd_context.option_enable(cmd, opt_frame_view);
   CommandOptionId opt_verbose = cmd.option("verbose");
   bool verbose_output = cmd_context.option_enable(cmd, opt_verbose);
 
-  return add_fpga_core_to_device_module_graph(openfpga_ctx.mutable_module_graph(), verbose_output);
+  CommandOptionId opt_inst_name = cmd.option("instance_name");
+  std::string core_inst_name = generate_fpga_core_instance_name();
+  if (true == cmd_context.option_enable(cmd, opt_inst_name)) {
+    core_inst_name = cmd_context.option_value(cmd, opt_inst_name);
+  }
+
+  return add_fpga_core_to_device_module_graph(
+    openfpga_ctx.mutable_module_graph(), core_inst_name, frame_view,
+    verbose_output);
 }
 
 } /* end namespace openfpga */

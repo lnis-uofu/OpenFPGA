@@ -768,6 +768,14 @@ void ModuleManager::set_port_is_wire(const ModuleId& module,
   port_is_wire_[module][port] = is_wire;
 }
 
+/* Set a port to be a wire */
+void ModuleManager::set_port_is_wire(const ModuleId& module,
+                                     const ModulePortId& port_id,
+                                     const bool& is_wire) {
+  VTR_ASSERT(valid_module_port_id(module, port_id));
+  port_is_wire_[module][port_id] = is_wire;
+}
+
 /* Set a port to be a mappable I/O */
 void ModuleManager::set_port_is_mappable_io(const ModuleId& module,
                                             const ModulePortId& port_id,
@@ -786,6 +794,14 @@ void ModuleManager::set_port_is_register(const ModuleId& module,
   /* Must find something, otherwise drop an error */
   VTR_ASSERT(ModulePortId::INVALID() != port);
   port_is_register_[module][port] = is_register;
+}
+
+/* Set a port to be a register */
+void ModuleManager::set_port_is_register(const ModuleId& module,
+                                         const ModulePortId& port_id,
+                                         const bool& is_register) {
+  VTR_ASSERT(valid_module_port_id(module, port_id));
+  port_is_register_[module][port_id] = is_register;
 }
 
 /* Set the preprocessing flag for a port */
@@ -1183,6 +1199,93 @@ ModuleNetSinkId ModuleManager::add_module_net_sink(
   net_lookup_[module][sink_module][sink_instance_id][sink_port][sink_pin] = net;
 
   return net_sink;
+}
+
+ModuleId ModuleManager::create_wrapper_module(
+  const ModuleId& existing_module, const std::string& wrapper_module_name,
+  const std::string& instance_name, const bool& add_nets) {
+  /* Create a new module with the given name */
+  ModuleId wrapper_module = add_module(wrapper_module_name);
+  if (!wrapper_module) {
+    return wrapper_module;
+  }
+  /* Add the existing module as an instance */
+  add_child_module(wrapper_module, existing_module, false);
+  set_child_instance_name(wrapper_module, existing_module, 0, instance_name);
+
+  /* A fast-lookup on the port linking: wrapper_module port -> existing_module
+   * port */
+  std::map<ModulePortId, ModulePortId> port_map;
+  /* Herit ports */
+  for (ModulePortId existing_port : module_ports(existing_module)) {
+    /* Create new port */
+    BasicPort existing_port_info = module_port(existing_module, existing_port);
+    ModuleManager::e_module_port_type existing_port_type =
+      port_type(existing_module, existing_port);
+    ModulePortId new_port =
+      add_port(wrapper_module, existing_port_info, existing_port_type);
+    /* Set port attributes */
+    set_port_is_wire(wrapper_module, new_port,
+                     port_is_wire(existing_module, existing_port));
+    set_port_is_mappable_io(
+      wrapper_module, new_port,
+      port_is_mappable_io(existing_module, existing_port));
+    set_port_is_register(wrapper_module, new_port,
+                         port_is_register(existing_module, existing_port));
+    set_port_preproc_flag(wrapper_module, new_port,
+                          port_preproc_flag(existing_module, existing_port));
+    /* Register in port mapping */
+    port_map[new_port] = existing_port;
+  }
+
+  /* Add nets */
+  if (!add_nets) {
+    return wrapper_module;
+  }
+  /* The number of nets are the sum of input and output pins */
+  size_t num_nets_to_reserve = 0;
+  for (ModulePortId new_port : module_ports(wrapper_module)) {
+    BasicPort new_port_info = module_port(wrapper_module, new_port);
+    num_nets_to_reserve += new_port_info.get_width();
+  }
+  reserve_module_nets(wrapper_module, num_nets_to_reserve);
+  for (ModulePortId new_port : module_ports(wrapper_module)) {
+    BasicPort new_port_info = module_port(wrapper_module, new_port);
+    /* Create new net */
+    ModuleNetId new_net = create_module_net(wrapper_module);
+    VTR_ASSERT(valid_module_net_id(wrapper_module, new_net));
+    /* For each input pin, create a new source */
+    ModuleManager::e_module_port_type new_port_type =
+      port_type(wrapper_module, new_port);
+    /* Check if the pin size are matching or not */
+    ModulePortId existing_port = port_map[new_port];
+    BasicPort existing_port_info = module_port(existing_module, existing_port);
+    VTR_ASSERT(existing_port_info == new_port_info);
+    reserve_module_net_sources(wrapper_module, new_net,
+                               new_port_info.pins().size());
+    reserve_module_net_sinks(wrapper_module, new_net,
+                             new_port_info.pins().size());
+    if (new_port_type !=
+        ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT) {
+      for (auto pin : new_port_info.pins()) {
+        add_module_net_source(wrapper_module, new_net, wrapper_module, 0,
+                              new_port, pin);
+        add_module_net_sink(wrapper_module, new_net, existing_module, 0,
+                            existing_port, pin);
+      }
+    } else {
+      VTR_ASSERT_SAFE(new_port_type ==
+                      ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT);
+      for (auto pin : new_port_info.pins()) {
+        add_module_net_source(wrapper_module, new_net, existing_module, 0,
+                              existing_port, pin);
+        add_module_net_sink(wrapper_module, new_net, wrapper_module, 0,
+                            new_port, pin);
+      }
+    }
+  }
+
+  return wrapper_module;
 }
 
 /******************************************************************************

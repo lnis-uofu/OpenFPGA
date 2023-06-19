@@ -20,6 +20,7 @@
 #include "build_top_module.h"
 #include "build_wire_modules.h"
 #include "command_exit_codes.h"
+#include "openfpga_naming.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -127,11 +128,15 @@ int build_device_module_graph(
 }
 
 /********************************************************************
- * The main function to be called for adding the fpga_core wrapper to a FPGA fabric
+ * The main function to be called for adding the fpga_core wrapper to a FPGA
+ *fabric
  * - Rename existing fpga_top to fpga_core
  * - Create a wrapper module 'fpga_top' on the fpga_core
  *******************************************************************/
-int add_fpga_core_to_device_module_graph(ModuleManager& module_manager, const bool& verbose) {
+int add_fpga_core_to_device_module_graph(ModuleManager& module_manager,
+                                         const std::string& core_inst_name,
+                                         const bool& frame_view,
+                                         const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
 
   /* Execute the module graph api */
@@ -140,15 +145,24 @@ int add_fpga_core_to_device_module_graph(ModuleManager& module_manager, const bo
   if (!module_manager.valid_module_id(top_module)) {
     return CMD_EXEC_FATAL_ERROR;
   }
-  /* TODO: Use a constant for the top_module name */  
 
   /* Rename existing top module to fpga_core */
-  module_manager.set_module_name(top_module, "fpga_core");
+  std::string core_module_name = generate_fpga_core_module_name();
+  module_manager.set_module_name(top_module, core_module_name);
+  VTR_LOGV(verbose, "Rename current top-level module '%s' to '%s'\n",
+           top_module_name.c_str(), core_module_name.c_str());
+
   /* Create a wrapper module under the existing fpga_top */
-  ModuleId new_top_module = module_manager.create_wrapper(top_module, top_module_name),
+  ModuleId new_top_module = module_manager.create_wrapper_module(
+    top_module, top_module_name, core_inst_name, frame_view);
   if (!module_manager.valid_module_id(new_top_module)) {
+    VTR_LOGV_ERROR(verbose,
+                   "Failed to create a wrapper module '%s' on top of '%s'!\n",
+                   top_module_name.c_str(), core_module_name.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
+  VTR_LOGV(verbose, "Created a wrapper module '%s' on top of '%s'\n",
+           top_module_name.c_str(), core_module_name.c_str());
 
   return status;
 }
