@@ -159,6 +159,7 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
   VTR_ASSERT(true == openfpga_ctx.module_graph().valid_module_id(top_module));
 
   /* Create the core block when the fpga_core is added */
+  size_t num_blocks_to_reserve = 0;
   std::string core_block_name = generate_fpga_core_module_name();
   const ModuleId& core_module =
     openfpga_ctx.module_graph().find_module(core_block_name);
@@ -169,10 +170,12 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
      * functions */
     top_module = core_module;
     top_block = core_block;
+    /* Count in fpga core as a block to reserve */
+    num_blocks_to_reserve += 1;
   }
 
   /* Estimate the number of blocks to be added to the database */
-  size_t num_blocks_to_reserve = rec_estimate_device_bitstream_num_blocks(
+  num_blocks_to_reserve += rec_estimate_device_bitstream_num_blocks(
     openfpga_ctx.module_graph(), top_module);
   bitstream_manager.reserve_blocks(num_blocks_to_reserve);
   VTR_LOGV(verbose, "Reserved %lu configurable blocks\n",

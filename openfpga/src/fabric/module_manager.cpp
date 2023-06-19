@@ -747,7 +747,13 @@ void ModuleManager::set_module_name(const ModuleId& module,
                                     const std::string& name) {
   /* Validate the id of module */
   VTR_ASSERT(valid_module_id(module));
+  std::string old_name = names_[module];
   names_[module] = name;
+
+  /* Unregister the old name */
+  name_id_map_.erase(old_name);
+  /* Register the new name */
+  name_id_map_[name] = module;
 }
 
 void ModuleManager::set_module_usage(const ModuleId& module,
