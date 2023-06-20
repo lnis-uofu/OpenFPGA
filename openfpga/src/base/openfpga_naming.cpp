@@ -1400,12 +1400,37 @@ std::string generate_fpga_top_module_name() {
 }
 
 /*********************************************************************
+ * Generate the module name for the fpga core module
+ * We give a fixed name here, because it is independent from benchmark file
+ ********************************************************************/
+std::string generate_fpga_core_module_name() {
+  return std::string(FPGA_CORE_MODULE_NAME);
+}
+
+/*********************************************************************
+ * Generate the module name for the fpga core module
+ * We give a fixed name here, because it is independent from benchmark file
+ ********************************************************************/
+std::string generate_fpga_core_instance_name() {
+  return std::string(FPGA_CORE_INSTANCE_NAME);
+}
+
+/*********************************************************************
  * Generate the netlist name for the top-level module
  * The top-level module is actually the FPGA fabric
  * We give a fixed name here, because it is independent from benchmark file
  ********************************************************************/
 std::string generate_fpga_top_netlist_name(const std::string& postfix) {
   return std::string(FPGA_TOP_MODULE_NAME + postfix);
+}
+
+/*********************************************************************
+ * Generate the netlist name for the top-level module
+ * The top-level module is actually the FPGA fabric
+ * We give a fixed name here, because it is independent from benchmark file
+ ********************************************************************/
+std::string generate_fpga_core_netlist_name(const std::string& postfix) {
+  return std::string(FPGA_CORE_MODULE_NAME + postfix);
 }
 
 /*********************************************************************

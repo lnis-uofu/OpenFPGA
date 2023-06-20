@@ -155,12 +155,29 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
    */
   std::string top_block_name = generate_fpga_top_module_name();
   ConfigBlockId top_block = bitstream_manager.add_block(top_block_name);
-  const ModuleId& top_module =
-    openfpga_ctx.module_graph().find_module(top_block_name);
+  ModuleId top_module = openfpga_ctx.module_graph().find_module(top_block_name);
   VTR_ASSERT(true == openfpga_ctx.module_graph().valid_module_id(top_module));
 
+  /* Create the core block when the fpga_core is added */
+  size_t num_blocks_to_reserve = 0;
+  std::string core_block_name = generate_fpga_core_module_name();
+  const ModuleId& core_module =
+    openfpga_ctx.module_graph().find_module(core_block_name);
+  if (openfpga_ctx.module_graph().valid_module_id(core_module)) {
+    std::string core_inst_name =
+      openfpga_ctx.module_graph().instance_name(top_module, core_module, 0);
+    ConfigBlockId core_block = bitstream_manager.add_block(core_inst_name);
+    bitstream_manager.add_child_block(top_block, core_block);
+    /* Now we use the core_block as the top-level block for the remaining
+     * functions */
+    top_module = core_module;
+    top_block = core_block;
+    /* Count in fpga core as a block to reserve */
+    num_blocks_to_reserve += 1;
+  }
+
   /* Estimate the number of blocks to be added to the database */
-  size_t num_blocks_to_reserve = rec_estimate_device_bitstream_num_blocks(
+  num_blocks_to_reserve += rec_estimate_device_bitstream_num_blocks(
     openfpga_ctx.module_graph(), top_module);
   bitstream_manager.reserve_blocks(num_blocks_to_reserve);
   VTR_LOGV(verbose, "Reserved %lu configurable blocks\n",

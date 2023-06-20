@@ -20,6 +20,9 @@ echo -e "Testing bitstream generation for an 96x96 FPGA device";
 run-task fpga_bitstream/generate_bitstream/configuration_chain/device_96x96 $@
 run-task fpga_bitstream/generate_bitstream/ql_memory_bank_shift_register/device_72x72 $@
 
+echo -e "Testing bitstream generation when fpga core wrapper is added";
+run-task fpga_bitstream/generate_bitstream/fpga_core_wrapper $@
+
 echo -e "Testing loading architecture bitstream from an external file";
 run-task fpga_bitstream/load_external_architecture_bitstream $@
 

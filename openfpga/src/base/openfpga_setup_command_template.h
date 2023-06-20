@@ -692,6 +692,47 @@ ShellCommandId add_route_clock_rr_graph_command_template(
   return shell_cmd_id;
 }
 
+/********************************************************************
+ * - Add a command to Shell environment: add_fpga_core_to_fabric
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_add_fpga_core_to_fabric_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("add_fpga_core_to_fabric");
+
+  /* Add an option '--instance_name'*/
+  CommandOptionId opt_inst_name = shell_cmd.add_option(
+    "instance_name", false, "specify the instance of fpga_core under fpga_top");
+  shell_cmd.set_option_require_value(opt_inst_name, openfpga::OPT_STRING);
+
+  /* Add an option '--verbose' */
+  shell_cmd.add_option(
+    "frame_view", false,
+    "Build only frame view of the fabric (nets are skipped)");
+  /* Add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "Show verbose outputs");
+
+  /* Add command 'pb_pin_fixup' to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd,
+    "Add fpga_core as an intermediate layer to FPGA fabric. After this "
+    "command, the fpga_top will remain the top-level module while there is a "
+    "new module fpga_core under it. Under fpga_core, there will be the "
+    "detailed building blocks",
+    hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     add_fpga_core_to_fabric_template<T>);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
 template <class T>
 void add_setup_command_templates(openfpga::Shell<T>& shell,
                                  const bool& hidden = false) {
@@ -859,6 +900,7 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
   lut_tt_fixup_dependent_cmds.push_back(vpr_cmd_id);
   add_lut_truth_table_fixup_command_template<T>(
     shell, openfpga_setup_cmd_class, lut_tt_fixup_dependent_cmds, hidden);
+
   /********************************
    * Command 'build_fabric'
    */
@@ -868,6 +910,17 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
   build_fabric_dependent_cmds.push_back(link_arch_cmd_id);
   ShellCommandId build_fabric_cmd_id = add_build_fabric_command_template<T>(
     shell, openfpga_setup_cmd_class, build_fabric_dependent_cmds, hidden);
+
+  /********************************
+   * Command 'add_fpga_core_to_fabric'
+   */
+  /* The command should NOT be executed before
+   * 'build_fabric' */
+  std::vector<ShellCommandId> add_fpga_core_to_fabric_dependent_cmds;
+  add_fpga_core_to_fabric_dependent_cmds.push_back(build_fabric_cmd_id);
+  add_add_fpga_core_to_fabric_command_template<T>(
+    shell, openfpga_setup_cmd_class, add_fpga_core_to_fabric_dependent_cmds,
+    hidden);
 
   /********************************
    * Command 'write_fabric_hierarchy'

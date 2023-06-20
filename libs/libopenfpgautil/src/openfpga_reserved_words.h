@@ -12,6 +12,8 @@ namespace openfpga {
 
 /* Top-level module name */
 constexpr const char* FPGA_TOP_MODULE_NAME = "fpga_top";
+constexpr const char* FPGA_CORE_MODULE_NAME = "fpga_core";
+constexpr const char* FPGA_CORE_INSTANCE_NAME = "fpga_instance";
 
 /* Configuration chain naming constant strings */
 constexpr const char* CONFIGURABLE_MEMORY_CHAIN_IN_NAME = "ccff_head";

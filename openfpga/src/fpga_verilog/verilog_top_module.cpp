@@ -22,6 +22,66 @@
 namespace openfpga {
 
 /********************************************************************
+ * Print the wrapper module for the FPGA fabric in Verilog format
+ *******************************************************************/
+void print_verilog_core_module(NetlistManager& netlist_manager,
+                               const ModuleManager& module_manager,
+                               const std::string& verilog_dir,
+                               const FabricVerilogOption& options) {
+  /* Create a module as the top-level fabric, and add it to the module manager
+   */
+  std::string core_module_name = generate_fpga_core_module_name();
+  ModuleId core_module = module_manager.find_module(core_module_name);
+  /* It could happen that the module does not exist, just return with no errors
+   */
+  if (!module_manager.valid_module_id(core_module)) {
+    return;
+  }
+
+  /* Start printing out Verilog netlists */
+  /* Create the file name for Verilog netlist */
+  std::string verilog_fname(
+    generate_fpga_core_netlist_name(std::string(VERILOG_NETLIST_FILE_POSTFIX)));
+  std::string verilog_fpath(verilog_dir + verilog_fname);
+
+  VTR_LOG("Writing Verilog netlist for wrapper module of FPGA fabric '%s'...",
+          verilog_fpath.c_str());
+
+  /* Create the file stream */
+  std::fstream fp;
+  fp.open(verilog_fpath, std::fstream::out | std::fstream::trunc);
+
+  check_file_stream(verilog_fpath.c_str(), fp);
+
+  print_verilog_file_header(fp, std::string("Wrapper Verilog module for FPGA"),
+                            options.time_stamp());
+
+  /* Write the module content in Verilog format */
+  write_verilog_module_to_file(fp, module_manager, core_module,
+                               options.explicit_port_mapping(),
+                               options.default_net_type());
+
+  /* Add an empty line as a splitter */
+  fp << std::endl;
+
+  /* Close file handler */
+  fp.close();
+
+  /* Add fname to the netlist name list */
+  NetlistId nlist_id = NetlistId::INVALID();
+  if (options.use_relative_path()) {
+    nlist_id = netlist_manager.add_netlist(verilog_fname);
+  } else {
+    nlist_id = netlist_manager.add_netlist(verilog_fpath);
+  }
+  VTR_ASSERT(nlist_id);
+  netlist_manager.set_netlist_type(nlist_id,
+                                   NetlistManager::TOP_MODULE_NETLIST);
+
+  VTR_LOG("Done\n");
+}
+
+/********************************************************************
  * Print the top-level module for the FPGA fabric in Verilog format
  * This function will
  * 1. name the top-level module

@@ -15,6 +15,10 @@ echo -e "Test source commands in openfpga shell"
 run-task basic_tests/source_command/source_string $@
 run-task basic_tests/source_command/source_file $@
 
+echo -e "Testing testbenches using fpga core wrapper"
+run-task basic_tests/full_testbench/fpga_core_wrapper $@
+run-task basic_tests/preconfig_testbench/fpga_core_wrapper $@
+
 echo -e "Testing configuration chain of a K4N4 FPGA";
 run-task basic_tests/full_testbench/configuration_chain $@
 run-task basic_tests/full_testbench/configuration_chain_no_time_stamp $@

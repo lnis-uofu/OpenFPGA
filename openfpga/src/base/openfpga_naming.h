@@ -258,7 +258,13 @@ std::string generate_fpga_global_io_port_name(
 
 std::string generate_fpga_top_module_name();
 
+std::string generate_fpga_core_module_name();
+
+std::string generate_fpga_core_instance_name();
+
 std::string generate_fpga_top_netlist_name(const std::string& postfix);
+
+std::string generate_fpga_core_netlist_name(const std::string& postfix);
 
 std::string generate_const_value_module_name(const size_t& const_val);
 

@@ -768,17 +768,30 @@ FabricBitstream build_fabric_dependent_bitstream(
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
 
   /* Find the top block in bitstream manager, which has not parents */
-  std::vector<ConfigBlockId> top_block =
+  std::vector<ConfigBlockId> top_blocks =
     find_bitstream_manager_top_blocks(bitstream_manager);
   /* Make sure we have only 1 top block and its name matches the top module */
-  VTR_ASSERT(1 == top_block.size());
+  VTR_ASSERT(1 == top_blocks.size());
   VTR_ASSERT(
-    0 == top_module_name.compare(bitstream_manager.block_name(top_block[0])));
+    0 == top_module_name.compare(bitstream_manager.block_name(top_blocks[0])));
+  ConfigBlockId top_block = top_blocks[0];
+
+  /* Create the core block when the fpga_core is added */
+  std::string core_block_name = generate_fpga_core_module_name();
+  const ModuleId& core_module = module_manager.find_module(core_block_name);
+  if (module_manager.valid_module_id(core_module)) {
+    /* Now we use the core_block as the top-level block for the remaining
+     * functions */
+    VTR_ASSERT(bitstream_manager.block_children(top_block).size() == 1);
+    ConfigBlockId core_block = bitstream_manager.block_children(top_block)[0];
+    top_module = core_module;
+    top_block = core_block;
+  }
 
   /* Start build-up formally */
   build_module_fabric_dependent_bitstream(
-    config_protocol, circuit_lib, bitstream_manager, top_block[0],
-    module_manager, top_module, fabric_bitstream);
+    config_protocol, circuit_lib, bitstream_manager, top_block, module_manager,
+    top_module, fabric_bitstream);
 
   VTR_LOGV(verbose, "Built %lu configuration bits for fabric\n",
            fabric_bitstream.num_bits());

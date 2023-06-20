@@ -351,6 +351,15 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
   ModuleId top_module = module_manager.find_module(top_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
 
+  /* Use the core module as the top when the fpga_core is added */
+  std::string core_block_name = generate_fpga_core_module_name();
+  const ModuleId& core_module = module_manager.find_module(core_block_name);
+  if (module_manager.valid_module_id(core_module)) {
+    /* Now we use the core_block as the top-level block for the remaining
+     * functions */
+    top_module = core_module;
+  }
+
   /* Constrain global ports */
   if (true == sdc_options.constrain_global_port()) {
     print_pnr_sdc_global_ports(sdc_options, module_manager, top_module,
