@@ -1,6 +1,7 @@
 //---------------------------------------
 // 1-bit adder 
 //---------------------------------------
+(* abc9_box, lib_whitebox *)
 module adder(
 	input cin,
 	input a,
