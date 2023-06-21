@@ -288,10 +288,13 @@ add_fpga_core_to_fabric
 
   Add a wrapper module ``fpga_core`` as an intermediate layer to FPGA fabric. After this command, the existing module ``fpga_top`` will remain the top-level module while there is a new module ``fpga_core`` under it. Under fpga_core, there will be the detailed building blocks.
 
+  .. option:: --io_naming <string>
+
+    This is optional. Specify the I/O naming rules when connecting I/Os of ``fpga_core`` module to the top-level module ``fpga_top``. If not defined, the ``fpga_top`` will be the same as ``fpga_core`` w.r.t. ports. See details about the file format of I/O naming rules in :ref:`file_format_io_naming_file`.
+
   .. option:: --instance_name <string>
 
     This is optional. Specify the instance name to be used when instanciate the ``fpga_core`` module under the top-level module ``fpga_top``. If not defined, by default it is ``fpga_core_inst``.
-
 
   .. option:: --frame_view
 

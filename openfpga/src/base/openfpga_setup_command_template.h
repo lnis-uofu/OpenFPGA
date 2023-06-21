@@ -703,6 +703,11 @@ ShellCommandId add_add_fpga_core_to_fabric_command_template(
   const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("add_fpga_core_to_fabric");
 
+  /* Add an option '--io_naming'*/
+  CommandOptionId opt_io_naming = shell_cmd.add_option(
+    "io_naming", false, "specify the file path to the I/O naming rules");
+  shell_cmd.set_option_require_value(opt_io_naming, openfpga::OPT_STRING);
+
   /* Add an option '--instance_name'*/
   CommandOptionId opt_inst_name = shell_cmd.add_option(
     "instance_name", false, "specify the instance of fpga_core under fpga_top");

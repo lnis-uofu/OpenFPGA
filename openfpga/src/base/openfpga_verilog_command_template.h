@@ -92,6 +92,13 @@ ShellCommandId add_write_full_testbench_command_template(
   shell_cmd.set_option_short_name(output_opt, "f");
   shell_cmd.set_option_require_value(output_opt, openfpga::OPT_STRING);
 
+  /* add an option '--dut_module'*/
+  CommandOptionId dut_module_opt = shell_cmd.add_option(
+    "dut_module", false,
+    "specify the module name of DUT to be used in the testbench. Can be either "
+    "fpga_top or fpga_core. By default, it is fpga_top.");
+  shell_cmd.set_option_require_value(dut_module_opt, openfpga::OPT_STRING);
+
   /* add an option '--bitstream'*/
   CommandOptionId bitstream_opt = shell_cmd.add_option(
     "bitstream", true, "specify the bitstream to be loaded in the testbench");
@@ -196,6 +203,13 @@ ShellCommandId add_write_preconfigured_fabric_wrapper_command_template(
                          "specify the file path to the fabric hdl netlist");
   shell_cmd.set_option_require_value(fabric_netlist_opt, openfpga::OPT_STRING);
 
+  /* add an option '--dut_module'*/
+  CommandOptionId dut_module_opt = shell_cmd.add_option(
+    "dut_module", false,
+    "specify the module name of DUT to be used in the testbench. Can be either "
+    "fpga_top or fpga_core. By default, it is fpga_top.");
+  shell_cmd.set_option_require_value(dut_module_opt, openfpga::OPT_STRING);
+
   /* add an option '--pin_constraints_file in short '-pcf' */
   CommandOptionId pcf_opt =
     shell_cmd.add_option("pin_constraints_file", false,
@@ -275,6 +289,14 @@ ShellCommandId add_write_mock_fpga_wrapper_command_template(
   shell_cmd.set_option_short_name(pcf_opt, "pcf");
   shell_cmd.set_option_require_value(pcf_opt, openfpga::OPT_STRING);
 
+  /* add an option '--top_module'*/
+  CommandOptionId top_module_opt =
+    shell_cmd.add_option("dut_module", false,
+                         "specify the top-level module name to be used in the "
+                         "wrapper, which matters the I/O names. Can be either "
+                         "fpga_top or fpga_core. By default, it is fpga_top.");
+  shell_cmd.set_option_require_value(top_module_opt, openfpga::OPT_STRING);
+
   /* add an option '--bus_group_file in short '-bgf' */
   CommandOptionId bgf_opt = shell_cmd.add_option(
     "bus_group_file", false, "specify the file path to the group pins to bus");
@@ -296,10 +318,6 @@ ShellCommandId add_write_mock_fpga_wrapper_command_template(
     "Set the default net type for Verilog netlists. Default value is 'none'");
   shell_cmd.set_option_require_value(default_net_type_opt,
                                      openfpga::OPT_STRING);
-
-  /* add an option '--explicit_port_mapping' */
-  shell_cmd.add_option("explicit_port_mapping", false,
-                       "use explicit port mapping in verilog netlists");
 
   /* Add an option '--no_time_stamp' */
   shell_cmd.add_option("no_time_stamp", false,
