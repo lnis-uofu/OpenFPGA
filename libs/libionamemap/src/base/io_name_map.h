@@ -20,12 +20,16 @@ namespace openfpga {
  */
 class IoNameMap {
  public: /* Public accessors */
+  /** @brief Get all the fpga top ports */
+  std::vector<BasicPort> fpga_top_ports() const;
   /** @brief With a given port at fpga_top, find the corresponding I/O at
    * fpga_core. Return an invalid port if not found */
   BasicPort fpga_core_port(const BasicPort& fpga_top_port) const;
   /** @brief With a given port at fpga_core, find the corresponding I/O at
    * fpga_top. Return an invalid port if not found */
   BasicPort fpga_top_port(const BasicPort& fpga_core_port) const;
+  /** @brief Identify if the fpga_top port is dummy or not */
+  bool fpga_top_port_is_dummy(const BasicPort& fpga_top_port) const;
 
  public: /* Public mutators */
   /** @brief Create the one-on-one mapping between an port of fpga_top and

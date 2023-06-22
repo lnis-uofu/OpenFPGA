@@ -17,6 +17,17 @@ namespace openfpga {
 /**************************************************
  * Public Accessors
  *************************************************/
+std::vector<BasicPort> IoNameMap::fpga_top_ports() const {
+  std::vector<BasicPort> ports;
+
+  for (auto it = top2core_io_name_map_.begin();
+       it != top2core_io_name_map_.end(); ++it) {
+    ports.push_back(it->first);
+  }
+
+  return ports;
+}
+
 BasicPort IoNameMap::fpga_core_port(const BasicPort& fpga_top_port) const {
   BasicPort core_port;
   auto result = top2core_io_name_map_.find(fpga_top_port);
@@ -33,6 +44,10 @@ BasicPort IoNameMap::fpga_top_port(const BasicPort& fpga_core_port) const {
     top_port = result->second;
   }
   return top_port;
+}
+
+bool IoNameMap::fpga_top_port_is_dummy(const BasicPort& fpga_top_port) const {
+  return !fpga_core_port(fpga_top_port).is_valid();
 }
 
 int IoNameMap::set_io_pair(const BasicPort& fpga_top_port,
