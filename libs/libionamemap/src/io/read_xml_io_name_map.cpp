@@ -38,9 +38,9 @@ static int read_xml_io_map_port(pugi::xml_node& xml_port,
   BasicPort top_port = openfpga::PortParser(top_name).port();
 
   /* For dummy port, create the dummy io */
-  bool is_dummy =
-    get_attribute(xml_port, XML_IO_NAME_MAP_ATTRIBUTE_IS_DUMMY, loc_data, pugiutil::ReqOpt::OPTIONAL)
-      .as_bool(false);
+  bool is_dummy = get_attribute(xml_port, XML_IO_NAME_MAP_ATTRIBUTE_IS_DUMMY,
+                                loc_data, pugiutil::ReqOpt::OPTIONAL)
+                    .as_bool(false);
   if (is_dummy) {
     return io_name_map.set_dummy_io(top_port); /* Early return */
   }
