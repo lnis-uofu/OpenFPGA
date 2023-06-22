@@ -39,8 +39,8 @@ static int read_xml_io_map_port(pugi::xml_node& xml_port,
 
   /* For dummy port, create the dummy io */
   bool is_dummy =
-    get_attribute(xml_port, XML_IO_NAME_MAP_ATTRIBUTE_IS_DUMMY, loc_data)
-      .as_bool();
+    get_attribute(xml_port, XML_IO_NAME_MAP_ATTRIBUTE_IS_DUMMY, loc_data, pugiutil::ReqOpt::OPTIONAL)
+      .as_bool(false);
   if (is_dummy) {
     return io_name_map.set_dummy_io(top_port); /* Early return */
   }
@@ -55,7 +55,7 @@ static int read_xml_io_map_port(pugi::xml_node& xml_port,
 }
 
 /********************************************************************
- * Parse XML codes about <clock_network> to an object of ClockNetwork
+ * Parse XML codes about <ports> to an object of ClockNetwork
  *******************************************************************/
 int read_xml_io_name_map(const char* fname, IoNameMap& io_name_map) {
   vtr::ScopedStartFinishTimer timer("Read I/O naming rules");
