@@ -22,6 +22,9 @@ class IoNameMap {
  public: /* Types */
   enum class e_dummy_port_direction { INPUT = 0, OUTPUT, INOUT, NUM_TYPES };
 
+ public: /* Constructors */
+  IoNameMap();
+
  public: /* Public accessors */
   /** @brief Get all the fpga top ports */
   std::vector<BasicPort> fpga_top_ports() const;

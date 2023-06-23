@@ -4,5 +4,5 @@
   <port core_name="gfpga_io_pad[0:31]" top_name="top_io[0:31]"/>
   <port core_name="gfpga_io_pad[32:47]" top_name="right_io[32:47]"/>
   <port core_name="gfpga_io_pad[48:55]" top_name="bottom_io[48:55]"/>
-  <port top_name="pvt_sense" is_dummy="true"/>
+  <port top_name="pvt_sense" is_dummy="true" direction="input"/>
 </ports>

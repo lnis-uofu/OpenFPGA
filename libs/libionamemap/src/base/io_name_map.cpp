@@ -15,6 +15,10 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+IoNameMap::IoNameMap() {
+  DUMMY_PORT_DIR_STRING_ = {"input", "output", "inout"};
+}
+
 /**************************************************
  * Public Accessors
  *************************************************/
