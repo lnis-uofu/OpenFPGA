@@ -99,10 +99,155 @@ static int create_fpga_top_module_ports_using_naming_rules(
     ModuleManager::e_module_port_type top_port_type =
       module_manager.port_type(core_module, core_port_id);
     module_manager.add_port(wrapper_module, core_port, top_port_type);
-    VTR_LOGV(verbose,
-             "Add port '%s' to fpga_top in the same name as the port of "
-             "fpga_core, since naming rules do not specify\n",
-             top_port.to_verilog_string().c_str());
+    VTR_LOG(
+      "Add port '%s' to fpga_top in the same name as the port of "
+      "fpga_core, since naming rules do not specify\n",
+      top_port.to_verilog_string().c_str());
+  }
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
+ * Add nets between top module and core module based on I/O naming rules:
+ * - Dummy ports do not need any nets
+ * - For ports which are defined in the naming rules, create dedicated
+ *connections
+ * - For ports of the core module, which does not appear in the naming rules,
+ *create direct connections
+ *******************************************************************/
+static int create_fpga_top_module_nets_using_naming_rules(
+  ModuleManager& module_manager, const ModuleId& wrapper_module,
+  const ModuleId& core_module, const IoNameMap& io_naming,
+  const bool& verbose) {
+  for (BasicPort top_port : io_naming.fpga_top_ports()) {
+    if (io_naming.fpga_top_port_is_dummy(top_port)) {
+      VTR_LOGV("Skip nets for dummy port '%s' at top module\n",
+               top_port.to_verilog_string().c_str());
+      continue;
+    }
+    /* Collect port-level information */
+    ModulePortId top_port_id =
+      module_manager.find_module_port(wrapper_module, top_port.get_name());
+    if (!module_manager.valid_module_port_id(wrapper_module, top_port_id)) {
+      VTR_LOG_ERROR("fpga_top port '%s' is not found at top module!\n",
+                    top_port.to_verilog_string().c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    BasicPort core_port = io_naming.fpga_core_port(top_port);
+    if (!core_port.is_valid()) {
+      VTR_LOG_ERROR("fpga_top port '%s' is not mapped to any fpga_core port!\n",
+                    top_port.to_verilog_string().c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    ModulePortId core_port_id =
+      module_manager.find_module_port(core_module, core_port.get_name());
+    if (!module_manager.valid_module_port_id(core_module, core_port_id)) {
+      VTR_LOG_ERROR(
+        "fpga_top port '%s' is mapped to an invalid fpga_core port '%s'!\n",
+        top_port.to_verilog_string().c_str(),
+        core_port.to_verilog_string().c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    ModuleManager::e_module_port_type top_port_type =
+      module_manager.port_type(core_module, core_port_id);
+
+    /* Create net for each pin-to-pin connection */
+    if (top_port.get_width() != core_port.get_width()) {
+      VTR_LOG_ERROR(
+        "fpga_top port '%s' does not match the width of fpga_core port '%s'!\n",
+        top_port.to_verilog_string().c_str(),
+        core_port.to_verilog_string().c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    for (size_t ipin = 0; ipin < top_port.pins().size(); ++ipin) {
+      ModuleNetId new_net = module_manager.create_module_net(wrapper_module);
+      if (top_port_type !=
+          ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT) {
+        module_manager.add_module_net_source(wrapper_module, new_net,
+                                             wrapper_module, 0, top_port_id,
+                                             top_port.pins()[ipin]);
+        module_manager.add_module_net_sink(wrapper_module, new_net, core_module,
+                                           0, core_port_id,
+                                           core_port.pins()[ipin]);
+      } else {
+        VTR_ASSERT_SAFE(top_port_type ==
+                        ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT);
+        module_manager.add_module_net_source(wrapper_module, new_net,
+                                             core_module, 0, core_port_id,
+                                             core_port.pins()[ipin]);
+        module_manager.add_module_net_sink(wrapper_module, new_net,
+                                           wrapper_module, 0, top_port_id,
+                                           top_port.pins()[ipin]);
+      }
+      VTR_LOGV(
+        verbose,
+        "Add nets to connect between fpga_top '%s' and fpga_core '%s' by "
+        "following naming rules\n",
+        top_port.to_verilog_string().c_str(),
+        core_port.to_verilog_string().c_str());
+    }
+  }
+  /* Now walk through the ports of fpga_core, if port which is not mapped to
+   * fpga_top, nets should be added */
+  for (ModulePortId core_port_id : module_manager.module_ports(core_module)) {
+    BasicPort core_port = module_manager.module_port(core_module, core_port_id);
+    BasicPort top_port = io_naming.fpga_top_port(core_port);
+    if (top_port.is_valid()) {
+      continue; /* Port has been added in the previous loop, skip now */
+    }
+    /* Throw fatal error if part of the core port is mapped while other part is
+     * not mapped. This is not allowed! */
+    if (io_naming.mapped_fpga_core_port(core_port)) {
+      VTR_LOG_ERROR(
+        "fpga_core port '%s' is partially mapped to fpga_top, which is not "
+        "allowed. Please cover the full-sized port in naming rules!\n",
+        core_port.to_verilog_string().c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    ModuleManager::e_module_port_type top_port_type =
+      module_manager.port_type(core_module, core_port_id);
+    /* Collect port-level information */
+    ModulePortId top_port_id =
+      module_manager.find_module_port(wrapper_module, core_port.get_name());
+    if (!module_manager.valid_module_port_id(wrapper_module, top_port_id)) {
+      VTR_LOG_ERROR("fpga_top port '%s' is not found at top module!\n",
+                    top_port.to_verilog_string().c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    /* Create net for each pin-to-pin connection */
+    if (top_port.get_width() != core_port.get_width()) {
+      VTR_LOG_ERROR(
+        "fpga_top port '%s' does not match the width of fpga_core port '%s'!\n",
+        top_port.to_verilog_string().c_str(),
+        core_port.to_verilog_string().c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    for (size_t ipin = 0; ipin < top_port.pins().size(); ++ipin) {
+      ModuleNetId new_net = module_manager.create_module_net(wrapper_module);
+      if (top_port_type !=
+          ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT) {
+        module_manager.add_module_net_source(wrapper_module, new_net,
+                                             wrapper_module, 0, top_port_id,
+                                             top_port.pins()[ipin]);
+        module_manager.add_module_net_sink(wrapper_module, new_net, core_module,
+                                           0, core_port_id,
+                                           core_port.pins()[ipin]);
+      } else {
+        VTR_ASSERT_SAFE(top_port_type ==
+                        ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT);
+        module_manager.add_module_net_source(wrapper_module, new_net,
+                                             core_module, 0, core_port_id,
+                                             core_port.pins()[ipin]);
+        module_manager.add_module_net_sink(wrapper_module, new_net,
+                                           wrapper_module, 0, top_port_id,
+                                           top_port.pins()[ipin]);
+      }
+      VTR_LOGV(
+        verbose,
+        "Add nets to connect fpga_top '%s' in the same name as the port of "
+        "fpga_core, since naming rules do not specify\n",
+        top_port.to_verilog_string().c_str());
+    }
   }
   return CMD_EXEC_SUCCESS;
 }
@@ -131,8 +276,13 @@ static int create_fpga_top_module_using_naming_rules(
     return CMD_EXEC_FATAL_ERROR;
   }
 
-  /* TODO: Add nets */
+  /* Add nets */
   if (add_nets) {
+    if (CMD_EXEC_SUCCESS !=
+        create_fpga_top_module_nets_using_naming_rules(
+          module_manager, wrapper_module, core_module, io_naming, verbose)) {
+      return CMD_EXEC_FATAL_ERROR;
+    }
   }
 
   /* TODO: Update the fabric global ports */
