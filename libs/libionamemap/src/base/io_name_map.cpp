@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #include "command_exit_codes.h"
+#include "openfpga_port_parser.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
@@ -22,7 +23,7 @@ std::vector<BasicPort> IoNameMap::fpga_top_ports() const {
 
   for (auto it = top2core_io_name_map_.begin();
        it != top2core_io_name_map_.end(); ++it) {
-    ports.push_back(it->first);
+    ports.push_back(str2port(it->first));
   }
 
   return ports;
@@ -30,18 +31,86 @@ std::vector<BasicPort> IoNameMap::fpga_top_ports() const {
 
 BasicPort IoNameMap::fpga_core_port(const BasicPort& fpga_top_port) const {
   BasicPort core_port;
-  auto result = top2core_io_name_map_.find(fpga_top_port);
-  if (result != top2core_io_name_map_.end()) {
-    core_port = result->second;
+  /* First, find the pin name matching */
+  auto result_key = top2core_io_name_keys_.find(fpga_top_port.get_name());
+  if (result_key == top2core_io_name_keys_.end()) {
+    return core_port; /* Not found, return invalid port */
+  }
+  /* Second, find the exact key */
+  std::string top_port_key;
+  for (std::string cand : result_key->second) {
+    BasicPort cand_port = str2port(cand);
+    /* if the top port is part of the cand port, e.g., clk[1] vs. clk[0:2], the
+     * candidate is the key that we want! */
+    if (cand_port.contained(fpga_top_port)) {
+      top_port_key = cand;
+      break;
+    }
+  }
+  if (top_port_key.empty()) {
+    return core_port; /* Not found, return invalid port */
+  }
+  auto result = top2core_io_name_map_.find(top_port_key);
+  if (result != top2core_io_name_map_.end() && result->second.is_valid()) {
+    BasicPort top_port_pool = str2port(top_port_key);
+    BasicPort fpga_top_port_lsb(fpga_top_port.get_name(),
+                                fpga_top_port.get_lsb(),
+                                fpga_top_port.get_lsb());
+    BasicPort fpga_top_port_msb(fpga_top_port.get_name(),
+                                fpga_top_port.get_msb(),
+                                fpga_top_port.get_msb());
+    size_t ipin_anchor_lsb = top_port_pool.find_ipin(fpga_top_port_lsb);
+    size_t ipin_anchor_msb = top_port_pool.find_ipin(fpga_top_port_msb);
+    /* Now find the exact pin and spot the core port with pin index */
+    if (ipin_anchor_lsb < top_port_pool.get_width() &&
+        ipin_anchor_msb < top_port_pool.get_width()) {
+      core_port.set_name(result->second.get_name());
+      core_port.set_lsb(result->second.pins()[ipin_anchor_lsb]);
+      core_port.set_msb(result->second.pins()[ipin_anchor_msb]);
+    }
   }
   return core_port;
 }
 
 BasicPort IoNameMap::fpga_top_port(const BasicPort& fpga_core_port) const {
   BasicPort top_port;
-  auto result = core2top_io_name_map_.find(fpga_core_port);
-  if (result != core2top_io_name_map_.end()) {
-    top_port = result->second;
+  /* First, find the pin name matching */
+  auto result_key = core2top_io_name_keys_.find(fpga_core_port.get_name());
+  if (result_key == core2top_io_name_keys_.end()) {
+    return top_port; /* Not found, return invalid port */
+  }
+  /* Second, find the exact key */
+  std::string core_port_key;
+  for (std::string cand : result_key->second) {
+    BasicPort cand_port = str2port(cand);
+    /* if the top port is part of the cand port, e.g., clk[1] vs. clk[0:2], the
+     * candidate is the key that we want! */
+    if (cand_port.contained(fpga_core_port)) {
+      core_port_key = cand;
+      break;
+    }
+  }
+  if (core_port_key.empty()) {
+    return top_port; /* Not found, return invalid port */
+  }
+  auto result = core2top_io_name_map_.find(core_port_key);
+  if (result != core2top_io_name_map_.end() && result->second.is_valid()) {
+    BasicPort core_port_pool = str2port(core_port_key);
+    BasicPort fpga_core_port_lsb(fpga_core_port.get_name(),
+                                 fpga_core_port.get_lsb(),
+                                 fpga_core_port.get_lsb());
+    BasicPort fpga_core_port_msb(fpga_core_port.get_name(),
+                                 fpga_core_port.get_msb(),
+                                 fpga_core_port.get_msb());
+    size_t ipin_anchor_lsb = core_port_pool.find_ipin(fpga_core_port);
+    size_t ipin_anchor_msb = core_port_pool.find_ipin(fpga_core_port);
+    /* Now find the exact pin and spot the core port with pin index */
+    if (ipin_anchor_lsb < core_port_pool.get_width() &&
+        ipin_anchor_msb < core_port_pool.get_width()) {
+      top_port.set_name(result->second.get_name());
+      top_port.set_lsb(result->second.pins()[ipin_anchor_lsb]);
+      top_port.set_msb(result->second.pins()[ipin_anchor_msb]);
+    }
   }
   return top_port;
 }
@@ -63,36 +132,95 @@ int IoNameMap::set_io_pair(const BasicPort& fpga_top_port,
     return CMD_EXEC_FATAL_ERROR;
   }
   VTR_ASSERT_SAFE(fpga_top_port.get_width() != fpga_core_port.get_width());
-  for (size_t ipin = 0; ipin < fpga_top_port.pins().size(); ++ipin) {
-    BasicPort top_pin(fpga_top_port.get_name(), fpga_top_port.pins()[ipin],
-                      fpga_top_port.pins()[ipin]);
-    BasicPort core_pin(fpga_core_port.get_name(), fpga_core_port.pins()[ipin],
-                       fpga_core_port.pins()[ipin]);
-    top2core_io_name_map_[top_pin] = core_pin;
-    core2top_io_name_map_[core_pin] = top_pin;
+  /* Register in the key first, and then add to the exact name mapping */
+  {
+    std::string top_port_str = port2str(fpga_top_port);
+    auto result_key = top2core_io_name_keys_.find(fpga_top_port.get_name());
+    if (result_key == top2core_io_name_keys_.end()) {
+      /* Add to the key registery */
+      top2core_io_name_keys_[fpga_top_port.get_name()].push_back(top_port_str);
+      top2core_io_name_map_[top_port_str] = fpga_core_port;
+    } else {
+      /* Ensure that the key is not duplicated */
+      if (std::find(result_key->second.begin(), result_key->second.end(),
+                    top_port_str) == result_key->second.end()) {
+        top2core_io_name_keys_[fpga_top_port.get_name()].push_back(
+          top_port_str);
+        top2core_io_name_map_[top_port_str] = fpga_core_port;
+      } else {
+        /* Throw a warning since we have to overwrite */
+        VTR_LOG_WARN(
+          "Overwrite the top-to-core pin mapping: top pin '%s' to core pin "
+          "'%s' (previously was '%s')!\n",
+          top_port_str, port2str(fpga_core_port).c_str(),
+          port2str(top2core_io_name_map_[top_port_str]).c_str());
+        top2core_io_name_map_[top_port_str] = fpga_core_port;
+      }
+    }
+  }
+  /* Now, do similar to the core port */
+  {
+    std::string core_port_str = port2str(fpga_core_port);
+    auto result_key = core2top_io_name_keys_.find(fpga_core_port.get_name());
+    if (result_key == core2top_io_name_keys_.end()) {
+      /* Add to the key registery */
+      core2top_io_name_keys_[fpga_core_port.get_name()].push_back(
+        core_port_str);
+      core2top_io_name_map_[core_port_str] = fpga_top_port;
+    } else {
+      /* Ensure that the key is not duplicated */
+      if (std::find(result_key->second.begin(), result_key->second.end(),
+                    core_port_str) == result_key->second.end()) {
+        core2top_io_name_keys_[fpga_core_port.get_name()].push_back(
+          core_port_str);
+        core2top_io_name_map_[core_port_str] = fpga_top_port;
+      } else {
+        /* Throw a warning since we have to overwrite */
+        VTR_LOG_WARN(
+          "Overwrite the core-to-top pin mapping: core pin '%s' to top pin "
+          "'%s' (previously was '%s')!\n",
+          core_port_str, port2str(fpga_top_port).c_str(),
+          port2str(core2top_io_name_map_[core_port_str]).c_str());
+        core2top_io_name_map_[core_port_str] = fpga_top_port;
+      }
+    }
   }
   return CMD_EXEC_SUCCESS;
 }
 
 int IoNameMap::set_dummy_io(const BasicPort& fpga_top_port) {
   /* Must be a true dummy port, none of its pins have been paired! */
-  for (size_t ipin = 0; ipin < fpga_top_port.pins().size(); ++ipin) {
-    BasicPort top_pin(fpga_top_port.get_name(), fpga_top_port.pins()[ipin],
-                      fpga_top_port.pins()[ipin]);
-    auto result = top2core_io_name_map_.find(top_pin);
-    if (result != top2core_io_name_map_.end() && result->second.is_valid()) {
+  std::string top_port_str = port2str(fpga_top_port);
+  /* First, find the pin name matching */
+  auto result_key = top2core_io_name_keys_.find(fpga_top_port.get_name());
+  if (result_key == top2core_io_name_keys_.end()) {
+    /* Add to the key registery */
+    top2core_io_name_keys_[fpga_top_port.get_name()].push_back(top_port_str);
+    top2core_io_name_map_[top_port_str] = BasicPort();
+  } else {
+    /* Ensure that the key is not duplicated */
+    if (std::find(result_key->second.begin(), result_key->second.end(),
+                  top_port_str) == result_key->second.end()) {
+      top2core_io_name_keys_[fpga_top_port.get_name()].push_back(top_port_str);
+      top2core_io_name_map_[top_port_str] = BasicPort();
+    } else {
+      /* Throw a error because the dummy pin should NOT be mapped before! */
       VTR_LOG_ERROR(
-        "Pin '%lu' in a dummy port '%s[%lu:%lu]' of fpga_top is already mapped "
-        "to a valid pin '%s[%lu:%lu]' of fpga_core!\n",
-        top_pin.get_lsb(), fpga_top_port.get_name().c_str(),
-        fpga_top_port.get_lsb(), fpga_top_port.get_msb(),
-        result->second.get_name().c_str(), result->second.get_lsb(),
-        result->second.get_msb());
-      return CMD_EXEC_FATAL_ERROR;
+        "Dummy port '%s' of fpga_top is already mapped "
+        "to a valid pin '%s' of fpga_core!\n",
+        port2str(fpga_top_port).c_str(),
+        port2str(top2core_io_name_map_[top_port_str]).c_str());
     }
-    top2core_io_name_map_[top_pin] = BasicPort();
   }
   return CMD_EXEC_SUCCESS;
+}
+
+std::string IoNameMap::port2str(const BasicPort& port) const {
+  return port.to_verilog_string();
+}
+
+BasicPort IoNameMap::str2port(const std::string& port_str) const {
+  return PortParser(port_str).port();
 }
 
 } /* end namespace openfpga */

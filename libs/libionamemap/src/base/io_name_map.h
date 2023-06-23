@@ -40,12 +40,23 @@ class IoNameMap {
    * fpga_core */
   int set_dummy_io(const BasicPort& fpga_top_port);
 
+ private: /* Internal utility */
+  /* Convert a port info to string, which can be used to store keys */
+  std::string port2str(const BasicPort& port) const;
+  /* Convert a string to port, which can be used to echo internal info */
+  BasicPort str2port(const std::string& port_str) const;
+
  private: /* Internal Data */
-  /* fpga_top -> fpga_core io name mapping, each port is in the size of 1. This
-   * is designed to fast look-up but at the cost of potential large memory
-   * footprints. TODO: Optimize if we see such issue */
-  std::map<BasicPort, BasicPort> top2core_io_name_map_;
-  std::map<BasicPort, BasicPort> core2top_io_name_map_;
+  /* fpga_top -> fpga_core io_name_keys. Use the port name to find all the port
+   * details. For instance: prog_clk -> ["prog_clk[0:1]", "prog_clk[2:3]"] The
+   * keys are then used to spot the fpga core ports in the io_name_map_. For
+   * instance: "prog_clk[0:1]" -> pclk[0:1]
+   */
+  std::map<std::string, std::vector<std::string>> top2core_io_name_keys_;
+  std::map<std::string, BasicPort> top2core_io_name_map_;
+
+  std::map<std::string, std::vector<std::string>> core2top_io_name_keys_;
+  std::map<std::string, BasicPort> core2top_io_name_map_;
 };
 
 } /* End namespace openfpga*/
