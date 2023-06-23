@@ -11,6 +11,7 @@
 
 /* Headers from vtr util library */
 #include "vtr_assert.h"
+#include "vtr_log.h"
 #include "vtr_time.h"
 
 /* Headers from libopenfpga util library */
@@ -45,12 +46,15 @@ static int read_xml_io_map_port(pugi::xml_node& xml_port,
     std::string dir_str =
       get_attribute(xml_port, XML_IO_NAME_MAP_ATTRIBUTE_DIRECTION, loc_data)
         .as_string();
-    IoNameMap::e_dummy_port_direction dummy_port_dir = io_name_map.str2dummy_port_dir(dir_str, true);
+    IoNameMap::e_dummy_port_direction dummy_port_dir =
+      io_name_map.str2dummy_port_dir(dir_str, true);
     if (!io_name_map.valid_dummy_port_direction(dummy_port_dir)) {
-      VTR_LOG_ERROR("Invalid direction for dummy port '%s'!\n", top_port.to_verilog_string().c_str());
+      VTR_LOG_ERROR("Invalid direction for dummy port '%s'!\n",
+                    top_port.to_verilog_string().c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
-    return io_name_map.set_dummy_io(top_port, dummy_port_dir); /* Early return */
+    return io_name_map.set_dummy_io(top_port,
+                                    dummy_port_dir); /* Early return */
   }
 
   /* This is not a dummy io, create the io mapping */

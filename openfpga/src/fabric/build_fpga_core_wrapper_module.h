@@ -4,9 +4,10 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "module_manager.h"
-#include "io_name_map.h"
 #include <string>
+
+#include "io_name_map.h"
+#include "module_manager.h"
 
 /********************************************************************
  * Function declaration

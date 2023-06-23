@@ -20,12 +20,8 @@ namespace openfpga {
  */
 class IoNameMap {
  public: /* Types */
-   enum class e_dummy_port_direction {
-     INPUT = 0,
-     OUTPUT,
-     INOUT,
-     NUM_TYPES
-   };
+  enum class e_dummy_port_direction { INPUT = 0, OUTPUT, INOUT, NUM_TYPES };
+
  public: /* Public accessors */
   /** @brief Get all the fpga top ports */
   std::vector<BasicPort> fpga_top_ports() const;
@@ -38,7 +34,8 @@ class IoNameMap {
   /** @brief Identify if the fpga_top port is dummy or not */
   bool fpga_top_port_is_dummy(const BasicPort& fpga_top_port) const;
   /** @brief Get the direction of a dummy port */
-  e_dummy_port_direction fpga_top_dummy_port_direction(const BasicPort& fpga_top_port) const;
+  e_dummy_port_direction fpga_top_dummy_port_direction(
+    const BasicPort& fpga_top_port) const;
   /** @brief Identify if there are any naming rules inside */
   bool empty() const;
 
@@ -49,17 +46,29 @@ class IoNameMap {
                   const BasicPort& fpga_core_port);
   /** @brief Add a dummy port at the fpga top, which is not mapped any port at
    * fpga_core */
-  int set_dummy_io(const BasicPort& fpga_top_port, const e_dummy_port_direction& direction);
+  int set_dummy_io(const BasicPort& fpga_top_port,
+                   const e_dummy_port_direction& direction);
 
  public: /* Public utility */
-  /** @brief Parse the dummy port direction from string to valid type. Parser error can be turned on */
-  e_dummy_port_direction str2dummy_port_dir(const std::string& dir_str, const bool& verbose = false) const;
+  /** @brief Parse the dummy port direction from string to valid type. Parser
+   * error can be turned on */
+  e_dummy_port_direction str2dummy_port_dir(const std::string& dir_str,
+                                            const bool& verbose = false) const;
+  /** @brief Output the string representing dummy port direction */
+  std::string dummy_port_dir2str(const e_dummy_port_direction& dir,
+                                 const bool& verbose = false) const;
+  /** @brief Validate the dummy port direction */
+  bool valid_dummy_port_direction(
+    const e_dummy_port_direction& direction) const;
 
  private: /* Internal utility */
   /* Convert a port info to string, which can be used to store keys */
   std::string port2str(const BasicPort& port) const;
   /* Convert a string to port, which can be used to echo internal info */
   BasicPort str2port(const std::string& port_str) const;
+  /* Generate a string include all the valid directions of the dummy port.
+   * Useful for printing debugging messages */
+  std::string dummy_port_dir_all2str() const;
 
  private: /* Internal Data */
   /* fpga_top -> fpga_core io_name_keys. Use the port name to find all the port
@@ -76,7 +85,8 @@ class IoNameMap {
   std::map<std::string, e_dummy_port_direction> dummy_port_direction_;
 
   /* Constants */
-  std::array<const char*, e_dummy_port_direction::NUM_TYPES> DUMMY_PORT_DIR_STRING_;
+  std::array<const char*, size_t(e_dummy_port_direction::NUM_TYPES)>
+    DUMMY_PORT_DIR_STRING_;
 };
 
 } /* End namespace openfpga*/

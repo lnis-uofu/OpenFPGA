@@ -44,6 +44,10 @@ static int write_xml_io_map_port(std::fstream& fp, const IoNameMap& io_name_map,
 
   if (io_name_map.fpga_top_port_is_dummy(fpga_top_port)) {
     write_xml_attribute(fp, XML_IO_NAME_MAP_ATTRIBUTE_IS_DUMMY, "true");
+    IoNameMap::e_dummy_port_direction dir =
+      io_name_map.fpga_top_dummy_port_direction(fpga_top_port);
+    write_xml_attribute(fp, XML_IO_NAME_MAP_ATTRIBUTE_DIRECTION,
+                        io_name_map.dummy_port_dir2str(dir, true).c_str());
   } else {
     BasicPort fpga_core_port = io_name_map.fpga_core_port(fpga_top_port);
     write_xml_attribute(fp, XML_IO_NAME_MAP_ATTRIBUTE_CORE_NAME,

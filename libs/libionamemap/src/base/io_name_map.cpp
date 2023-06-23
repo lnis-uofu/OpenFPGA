@@ -119,7 +119,8 @@ bool IoNameMap::fpga_top_port_is_dummy(const BasicPort& fpga_top_port) const {
   return !fpga_core_port(fpga_top_port).is_valid();
 }
 
-IoNameMap::e_dummy_port_direction IoNameMap::fpga_top_dummy_port_direction(const BasicPort& fpga_top_port) const {
+IoNameMap::e_dummy_port_direction IoNameMap::fpga_top_dummy_port_direction(
+  const BasicPort& fpga_top_port) const {
   for (auto& kv : dummy_port_direction_) {
     BasicPort cand = str2port(kv.first);
     if (cand.contained(fpga_top_port)) {
@@ -131,7 +132,9 @@ IoNameMap::e_dummy_port_direction IoNameMap::fpga_top_dummy_port_direction(const
 }
 
 bool IoNameMap::empty() const {
-  return top2core_io_name_keys_.empty() && top2core_io_name_map_.empty() && core2top_io_name_keys_.empty() && core2top_io_name_map_.empty() && dummy_port_direction_.empty();
+  return top2core_io_name_keys_.empty() && top2core_io_name_map_.empty() &&
+         core2top_io_name_keys_.empty() && core2top_io_name_map_.empty() &&
+         dummy_port_direction_.empty();
 }
 
 int IoNameMap::set_io_pair(const BasicPort& fpga_top_port,
@@ -203,7 +206,8 @@ int IoNameMap::set_io_pair(const BasicPort& fpga_top_port,
   return CMD_EXEC_SUCCESS;
 }
 
-int IoNameMap::set_dummy_io(const BasicPort& fpga_top_port, const e_dummy_port_direction& direction) {
+int IoNameMap::set_dummy_io(const BasicPort& fpga_top_port,
+                            const e_dummy_port_direction& direction) {
   /* Must be a true dummy port, none of its pins have been paired! */
   std::string top_port_str = port2str(fpga_top_port);
   /* First, find the pin name matching */
@@ -236,7 +240,8 @@ int IoNameMap::set_dummy_io(const BasicPort& fpga_top_port, const e_dummy_port_d
       if (kv.second != direction) {
         /* Throw a error because the dummy pin should NOT be mapped before! */
         VTR_LOG_ERROR(
-          "Dummy port '%s' of fpga_top is already assigned to a different direction through another dummy port definition '%s'!\n",
+          "Dummy port '%s' of fpga_top is already assigned to a different "
+          "direction through another dummy port definition '%s'!\n",
           port2str(fpga_top_port).c_str(), port2str(cand).c_str());
         return CMD_EXEC_FATAL_ERROR;
       }
@@ -246,7 +251,7 @@ int IoNameMap::set_dummy_io(const BasicPort& fpga_top_port, const e_dummy_port_d
   }
   if (!dir_defined) {
     dummy_port_direction_[top_port_str] = direction;
-  } 
+  }
   return CMD_EXEC_SUCCESS;
 }
 
@@ -258,20 +263,43 @@ BasicPort IoNameMap::str2port(const std::string& port_str) const {
   return PortParser(port_str).port();
 }
 
-IoNameMap::e_dummy_port_direction IoNameMap::str2dummy_port_dir(const std::string& dir_str, const bool& verbose) const {
-  for (int itype = IoNameMap::e_dummy_port_direction::INPUT; itype != IoNameMap::e_dummy_direction::NUM_TYPES; ++itype) {
-    if (dir_str == std::string(DUMMY_PORT_DIR_STRING_[itype])) {
-      return static_case<IoNameMap::e_dummy_port_direction>(itype);
-    }
-  }
+std::string IoNameMap::dummy_port_dir_all2str() const {
   std::string full_types = "[";
-  for (int itype = IoNameMap::e_dummy_port_direction::INPUT; itype != IoNameMap::e_dummy_direction::NUM_TYPES; ++itype) {
+  for (int itype = size_t(IoNameMap::e_dummy_port_direction::INPUT);
+       itype != size_t(IoNameMap::e_dummy_port_direction::NUM_TYPES); ++itype) {
     full_types += std::string(DUMMY_PORT_DIR_STRING_[itype]) + std::string("|");
-  } 
+  }
   full_types.pop_back();
   full_types += "]";
-  VTR_LOGV_ERROR(verbose, "Invalid direction for dummy port! Expect %s\n", full_types.c_str());
+  return full_types;
+}
+
+IoNameMap::e_dummy_port_direction IoNameMap::str2dummy_port_dir(
+  const std::string& dir_str, const bool& verbose) const {
+  for (int itype = size_t(IoNameMap::e_dummy_port_direction::INPUT);
+       itype != size_t(IoNameMap::e_dummy_port_direction::NUM_TYPES); ++itype) {
+    if (dir_str == std::string(DUMMY_PORT_DIR_STRING_[itype])) {
+      return static_cast<IoNameMap::e_dummy_port_direction>(itype);
+    }
+  }
+  VTR_LOGV_ERROR(verbose, "Invalid direction for dummy port! Expect %s\n",
+                 dummy_port_dir_all2str().c_str());
   return IoNameMap::e_dummy_port_direction::NUM_TYPES;
+}
+
+std::string IoNameMap::dummy_port_dir2str(const e_dummy_port_direction& dir,
+                                          const bool& verbose) const {
+  if (!valid_dummy_port_direction(dir)) {
+    VTR_LOGV_ERROR(verbose, "Invalid direction for dummy port! Expect %s\n",
+                   dummy_port_dir_all2str().c_str());
+    return std::string();
+  }
+  return std::string(DUMMY_PORT_DIR_STRING_[size_t(dir)]);
+}
+
+bool IoNameMap::valid_dummy_port_direction(
+  const IoNameMap::e_dummy_port_direction& direction) const {
+  return direction != IoNameMap::e_dummy_port_direction::NUM_TYPES;
 }
 
 } /* end namespace openfpga */
