@@ -42,6 +42,14 @@ static int read_xml_io_map_port(pugi::xml_node& xml_port,
                                 loc_data, pugiutil::ReqOpt::OPTIONAL)
                     .as_bool(false);
   if (is_dummy) {
+    std::string dir_str =
+      get_attribute(xml_port, XML_IO_NAME_MAP_ATTRIBUTE_DIRECTION, loc_data)
+        .as_string();
+    for (auto acceptable_dir_str : XML_IO_NAME_MAP_DUMMY_PORT_DIRECTION_STRING) {
+      if (dir_str == std::string(acceptable_dir_str)) {
+        
+      }
+    }
     return io_name_map.set_dummy_io(top_port); /* Early return */
   }
 

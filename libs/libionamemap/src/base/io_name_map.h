@@ -19,6 +19,13 @@ namespace openfpga {
  * - the corresponding port of fpga_top, with a given port of fpga_core
  */
 class IoNameMap {
+ public: /* Types */
+   enum class e_dummy_port_direction {
+     INPUT,
+     OUTPUT,
+     INOUT,
+     NUM_TYPES
+   };
  public: /* Public accessors */
   /** @brief Get all the fpga top ports */
   std::vector<BasicPort> fpga_top_ports() const;
@@ -30,6 +37,10 @@ class IoNameMap {
   BasicPort fpga_top_port(const BasicPort& fpga_core_port) const;
   /** @brief Identify if the fpga_top port is dummy or not */
   bool fpga_top_port_is_dummy(const BasicPort& fpga_top_port) const;
+  /** @brief Get the direction of a dummy port */
+  e_dummy_port_direction fpga_top_dummy_port_direction(const BasicPort& fpga_top_port) const;
+  /** @brief Identify if there are any naming rules inside */
+  bool empty() const;
 
  public: /* Public mutators */
   /** @brief Create the one-on-one mapping between an port of fpga_top and
@@ -38,7 +49,7 @@ class IoNameMap {
                   const BasicPort& fpga_core_port);
   /** @brief Add a dummy port at the fpga top, which is not mapped any port at
    * fpga_core */
-  int set_dummy_io(const BasicPort& fpga_top_port);
+  int set_dummy_io(const BasicPort& fpga_top_port, const e_dummy_port_direction& direction);
 
  private: /* Internal utility */
   /* Convert a port info to string, which can be used to store keys */
@@ -57,6 +68,8 @@ class IoNameMap {
 
   std::map<std::string, std::vector<std::string>> core2top_io_name_keys_;
   std::map<std::string, BasicPort> core2top_io_name_map_;
+
+  std::map<std::string, e_dummy_port_direction> dummy_port_direction_;
 };
 
 } /* End namespace openfpga*/

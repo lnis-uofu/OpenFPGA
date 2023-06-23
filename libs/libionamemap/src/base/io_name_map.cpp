@@ -119,6 +119,21 @@ bool IoNameMap::fpga_top_port_is_dummy(const BasicPort& fpga_top_port) const {
   return !fpga_core_port(fpga_top_port).is_valid();
 }
 
+IoNameMap::e_dummy_port_direction IoNameMap::fpga_top_dummy_port_direction(const BasicPort& fpga_top_port) const {
+  for (auto& kv : dummy_port_direction_) {
+    BasicPort cand = str2port(kv.first);
+    if (cand.contained(fpga_top_port)) {
+      return kv.second;
+    }
+  }
+  /* Return an invalid port type */
+  return IoNameMap::e_dummy_port_direction::NUM_TYPES;
+}
+
+bool IoNameMap::empty() const {
+  return top2core_io_name_keys_.empty() && top2core_io_name_map_.empty() && core2top_io_name_keys_.empty() && core2top_io_name_map_.empty() && dummy_port_direction_.empty();
+}
+
 int IoNameMap::set_io_pair(const BasicPort& fpga_top_port,
                            const BasicPort& fpga_core_port) {
   /* Ensure the two ports are matching in size */
@@ -152,7 +167,7 @@ int IoNameMap::set_io_pair(const BasicPort& fpga_top_port,
         VTR_LOG_WARN(
           "Overwrite the top-to-core pin mapping: top pin '%s' to core pin "
           "'%s' (previously was '%s')!\n",
-          top_port_str, port2str(fpga_core_port).c_str(),
+          top_port_str.c_str(), port2str(fpga_core_port).c_str(),
           port2str(top2core_io_name_map_[top_port_str]).c_str());
         top2core_io_name_map_[top_port_str] = fpga_core_port;
       }
@@ -179,7 +194,7 @@ int IoNameMap::set_io_pair(const BasicPort& fpga_top_port,
         VTR_LOG_WARN(
           "Overwrite the core-to-top pin mapping: core pin '%s' to top pin "
           "'%s' (previously was '%s')!\n",
-          core_port_str, port2str(fpga_top_port).c_str(),
+          core_port_str.c_str(), port2str(fpga_top_port).c_str(),
           port2str(core2top_io_name_map_[core_port_str]).c_str());
         core2top_io_name_map_[core_port_str] = fpga_top_port;
       }
@@ -188,7 +203,7 @@ int IoNameMap::set_io_pair(const BasicPort& fpga_top_port,
   return CMD_EXEC_SUCCESS;
 }
 
-int IoNameMap::set_dummy_io(const BasicPort& fpga_top_port) {
+int IoNameMap::set_dummy_io(const BasicPort& fpga_top_port, const e_dummy_port_direction& direction) {
   /* Must be a true dummy port, none of its pins have been paired! */
   std::string top_port_str = port2str(fpga_top_port);
   /* First, find the pin name matching */
@@ -210,8 +225,28 @@ int IoNameMap::set_dummy_io(const BasicPort& fpga_top_port) {
         "to a valid pin '%s' of fpga_core!\n",
         port2str(fpga_top_port).c_str(),
         port2str(top2core_io_name_map_[top_port_str]).c_str());
+      return CMD_EXEC_FATAL_ERROR;
     }
   }
+  /* Add the direction list */
+  bool dir_defined = false;
+  for (auto& kv : dummy_port_direction_) {
+    BasicPort cand = str2port(kv.first);
+    if (cand.contained(fpga_top_port)) {
+      if (kv.second != direction) {
+        /* Throw a error because the dummy pin should NOT be mapped before! */
+        VTR_LOG_ERROR(
+          "Dummy port '%s' of fpga_top is already assigned to a different direction through another dummy port definition '%s'!\n",
+          port2str(fpga_top_port).c_str(), port2str(cand).c_str());
+        return CMD_EXEC_FATAL_ERROR;
+      }
+      dir_defined = true;
+      break;
+    }
+  }
+  if (!dir_defined) {
+    dummy_port_direction_[top_port_str] = direction;
+  } 
   return CMD_EXEC_SUCCESS;
 }
 
