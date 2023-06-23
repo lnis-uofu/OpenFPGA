@@ -33,7 +33,7 @@ static int create_fpga_top_module_using_naming_rules(
   module_manager.set_child_instance_name(wrapper_module, core_module, 0,
                                          instance_name);
 
-  /* TODO: Add ports from I/O naming rules:
+  /* Add ports from I/O naming rules:
    * - Add ports which has been defined in the naming rules
    * - Add ports from the core module, which does not appear in the naming rules
    */
@@ -60,16 +60,52 @@ static int create_fpga_top_module_using_naming_rules(
         return CMD_EXEC_FATAL_ERROR;
       }
       module_manager.add_port(wrapper_module, top_port, port_type);
+      VTR_LOGV(verbose,
+               "Add dummy port '%s' to fpga_top by following naming rules\n",
+               top_port.to_verilog_string().c_str());
       continue; /* Finish for this port addition */
     }
     /* Get the port type which should be same as the fpga_core port */
     BasicPort core_port = io_naming.fpga_core_port(top_port);
     if (!core_port.is_valid()) {
       VTR_LOG_ERROR("fpga_top port '%s' is not mapped to any fpga_core port!\n",
-                    core_port.to_verilog_string().c_str());
+                    top_port.to_verilog_string().c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
-    // module_manager.add_port(wrapper_module, top_port, );
+    ModulePortId core_port_id =
+      module_manager.find_module_port(core_module, core_port.get_name());
+    if (!module_manager.valid_module_port_id(core_module, core_port_id)) {
+      VTR_LOG_ERROR(
+        "fpga_top port '%s' is mapped to an invalid fpga_core port '%s'!\n",
+        top_port.to_verilog_string().c_str(),
+        core_port.to_verilog_string().c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    ModuleManager::e_module_port_type top_port_type =
+      module_manager.port_type(core_module, core_port_id);
+    module_manager.add_port(wrapper_module, top_port, top_port_type);
+    VTR_LOGV(verbose,
+             "Add port '%s' to fpga_top (correspond to '%s' of fpga_core) by "
+             "following naming rules\n",
+             top_port.to_verilog_string().c_str(),
+             core_port.to_verilog_string().c_str());
+  }
+  /* Now walk through the ports of fpga_core, if port which is not mapped to
+   * fpga_top should be added */
+  for (ModulePortId core_port_id : module_manager.module_ports(core_module)) {
+    BasicPort core_port = module_manager.module_port(core_module, core_port_id);
+    BasicPort top_port = io_naming.fpga_top_port(core_port);
+    if (top_port.is_valid()) {
+      continue; /* Port has been added in the previous loop, skip now */
+    }
+    /* Add the port now */
+    ModuleManager::e_module_port_type top_port_type =
+      module_manager.port_type(core_module, core_port_id);
+    module_manager.add_port(wrapper_module, core_port, top_port_type);
+    VTR_LOGV(verbose,
+             "Add port '%s' to fpga_top in the same name as the port of "
+             "fpga_core, since naming rules do not specify\n",
+             top_port.to_verilog_string().c_str());
   }
 
   /* TODO: Add nets */
