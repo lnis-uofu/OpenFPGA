@@ -17,26 +17,14 @@
 namespace openfpga {
 
 /********************************************************************
- * Create a custom fpga_top module by applying naming rules
+ * Add ports to top module based on I/O naming rules:
+ * - Add ports which has been defined in the naming rules
+ * - Add ports from the core module, which does not appear in the naming rules
  *******************************************************************/
-static int create_fpga_top_module_using_naming_rules(
-  ModuleManager& module_manager, const ModuleId& core_module,
-  const std::string& top_module_name, const IoNameMap& io_naming,
-  const std::string& instance_name, const bool& add_nets, const bool& verbose) {
-  /* Create a new module with the given name */
-  ModuleId wrapper_module = module_manager.add_module(top_module_name);
-  if (!wrapper_module) {
-    return CMD_EXEC_FATAL_ERROR;
-  }
-  /* Add the existing module as an instance */
-  module_manager.add_child_module(wrapper_module, core_module, false);
-  module_manager.set_child_instance_name(wrapper_module, core_module, 0,
-                                         instance_name);
-
-  /* Add ports from I/O naming rules:
-   * - Add ports which has been defined in the naming rules
-   * - Add ports from the core module, which does not appear in the naming rules
-   */
+static int create_fpga_top_module_ports_using_naming_rules(
+  ModuleManager& module_manager, const ModuleId& wrapper_module,
+  const ModuleId& core_module, const IoNameMap& io_naming,
+  const bool& verbose) {
   for (BasicPort top_port : io_naming.fpga_top_ports()) {
     /* For dummy port, just add it. Port type should be defined from io naming
      * rules */
@@ -98,6 +86,15 @@ static int create_fpga_top_module_using_naming_rules(
     if (top_port.is_valid()) {
       continue; /* Port has been added in the previous loop, skip now */
     }
+    /* Throw fatal error if part of the core port is mapped while other part is
+     * not mapped. This is not allowed! */
+    if (io_naming.mapped_fpga_core_port(core_port)) {
+      VTR_LOG_ERROR(
+        "fpga_core port '%s' is partially mapped to fpga_top, which is not "
+        "allowed. Please cover the full-sized port in naming rules!\n",
+        core_port.to_verilog_string().c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
     /* Add the port now */
     ModuleManager::e_module_port_type top_port_type =
       module_manager.port_type(core_module, core_port_id);
@@ -106,6 +103,32 @@ static int create_fpga_top_module_using_naming_rules(
              "Add port '%s' to fpga_top in the same name as the port of "
              "fpga_core, since naming rules do not specify\n",
              top_port.to_verilog_string().c_str());
+  }
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
+ * Create a custom fpga_top module by applying naming rules
+ *******************************************************************/
+static int create_fpga_top_module_using_naming_rules(
+  ModuleManager& module_manager, const ModuleId& core_module,
+  const std::string& top_module_name, const IoNameMap& io_naming,
+  const std::string& instance_name, const bool& add_nets, const bool& verbose) {
+  /* Create a new module with the given name */
+  ModuleId wrapper_module = module_manager.add_module(top_module_name);
+  if (!wrapper_module) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  /* Add the existing module as an instance */
+  module_manager.add_child_module(wrapper_module, core_module, false);
+  module_manager.set_child_instance_name(wrapper_module, core_module, 0,
+                                         instance_name);
+
+  /* Add ports */
+  if (CMD_EXEC_SUCCESS !=
+      create_fpga_top_module_ports_using_naming_rules(
+        module_manager, wrapper_module, core_module, io_naming, verbose)) {
+    return CMD_EXEC_FATAL_ERROR;
   }
 
   /* TODO: Add nets */

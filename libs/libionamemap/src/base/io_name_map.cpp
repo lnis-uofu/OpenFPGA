@@ -119,6 +119,12 @@ BasicPort IoNameMap::fpga_top_port(const BasicPort& fpga_core_port) const {
   return top_port;
 }
 
+bool IoNameMap::mapped_fpga_core_port(const BasicPort& fpga_core_port) const {
+  /* First, find the pin name matching */
+  auto result_key = core2top_io_name_keys_.find(fpga_core_port.get_name());
+  return result_key != core2top_io_name_keys_.end();
+}
+
 bool IoNameMap::fpga_top_port_is_dummy(const BasicPort& fpga_top_port) const {
   return !fpga_core_port(fpga_top_port).is_valid();
 }

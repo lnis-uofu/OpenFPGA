@@ -39,6 +39,11 @@ class IoNameMap {
   /** @brief Get the direction of a dummy port */
   e_dummy_port_direction fpga_top_dummy_port_direction(
     const BasicPort& fpga_top_port) const;
+  /** @brief Check if a core port, by considering its port name only, has been
+   * mapped to fpga top. For example, there is a core port 'a[0:3]', while only
+   * 'a[0]' is mapped to the fpga top. We can use the port name find it quickly
+   */
+  bool mapped_fpga_core_port(const BasicPort& fpga_core_port) const;
   /** @brief Identify if there are any naming rules inside */
   bool empty() const;
 
