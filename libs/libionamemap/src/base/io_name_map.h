@@ -21,7 +21,7 @@ namespace openfpga {
 class IoNameMap {
  public: /* Types */
    enum class e_dummy_port_direction {
-     INPUT,
+     INPUT = 0,
      OUTPUT,
      INOUT,
      NUM_TYPES
@@ -51,6 +51,10 @@ class IoNameMap {
    * fpga_core */
   int set_dummy_io(const BasicPort& fpga_top_port, const e_dummy_port_direction& direction);
 
+ public: /* Public utility */
+  /** @brief Parse the dummy port direction from string to valid type. Parser error can be turned on */
+  e_dummy_port_direction str2dummy_port_dir(const std::string& dir_str, const bool& verbose = false) const;
+
  private: /* Internal utility */
   /* Convert a port info to string, which can be used to store keys */
   std::string port2str(const BasicPort& port) const;
@@ -70,6 +74,9 @@ class IoNameMap {
   std::map<std::string, BasicPort> core2top_io_name_map_;
 
   std::map<std::string, e_dummy_port_direction> dummy_port_direction_;
+
+  /* Constants */
+  std::array<const char*, e_dummy_port_direction::NUM_TYPES> DUMMY_PORT_DIR_STRING_;
 };
 
 } /* End namespace openfpga*/

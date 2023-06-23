@@ -258,4 +258,20 @@ BasicPort IoNameMap::str2port(const std::string& port_str) const {
   return PortParser(port_str).port();
 }
 
+IoNameMap::e_dummy_port_direction IoNameMap::str2dummy_port_dir(const std::string& dir_str, const bool& verbose) const {
+  for (int itype = IoNameMap::e_dummy_port_direction::INPUT; itype != IoNameMap::e_dummy_direction::NUM_TYPES; ++itype) {
+    if (dir_str == std::string(DUMMY_PORT_DIR_STRING_[itype])) {
+      return static_case<IoNameMap::e_dummy_port_direction>(itype);
+    }
+  }
+  std::string full_types = "[";
+  for (int itype = IoNameMap::e_dummy_port_direction::INPUT; itype != IoNameMap::e_dummy_direction::NUM_TYPES; ++itype) {
+    full_types += std::string(DUMMY_PORT_DIR_STRING_[itype]) + std::string("|");
+  } 
+  full_types.pop_back();
+  full_types += "]";
+  VTR_LOGV_ERROR(verbose, "Invalid direction for dummy port! Expect %s\n", full_types.c_str());
+  return IoNameMap::e_dummy_port_direction::NUM_TYPES;
+}
+
 } /* end namespace openfpga */
