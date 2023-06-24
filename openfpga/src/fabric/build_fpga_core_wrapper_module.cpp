@@ -88,13 +88,27 @@ static int create_fpga_top_module_ports_using_naming_rules(
     }
     /* Throw fatal error if part of the core port is mapped while other part is
      * not mapped. This is not allowed! */
-    if (io_naming.mapped_fpga_core_port(core_port)) {
+    IoNameMap::e_port_mapping_status mapping_status =
+      io_naming.fpga_core_port_mapping_status(core_port, true);
+    if (mapping_status == IoNameMap::e_port_mapping_status::FULL) {
+      continue;
+    }
+    if (mapping_status == IoNameMap::e_port_mapping_status::PARTIAL) {
       VTR_LOG_ERROR(
         "fpga_core port '%s' is partially mapped to fpga_top, which is not "
         "allowed. Please cover the full-sized port in naming rules!\n",
         core_port.to_verilog_string().c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
+    if (mapping_status == IoNameMap::e_port_mapping_status::OVERLAPPED) {
+      VTR_LOG_ERROR(
+        "fpga_core port '%s' is overlapped mapped to fpga_top, which is not "
+        "allowed. Please cover the full-sized port in naming rules!\n",
+        core_port.to_verilog_string().c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    VTR_ASSERT(mapping_status == IoNameMap::e_port_mapping_status::NONE);
+
     /* Add the port now */
     ModuleManager::e_module_port_type top_port_type =
       module_manager.port_type(core_module, core_port_id);
@@ -102,7 +116,7 @@ static int create_fpga_top_module_ports_using_naming_rules(
     VTR_LOG(
       "Add port '%s' to fpga_top in the same name as the port of "
       "fpga_core, since naming rules do not specify\n",
-      top_port.to_verilog_string().c_str());
+      core_port.to_verilog_string().c_str());
   }
   return CMD_EXEC_SUCCESS;
 }
@@ -179,12 +193,16 @@ static int create_fpga_top_module_nets_using_naming_rules(
                                            wrapper_module, 0, top_port_id,
                                            top_port.pins()[ipin]);
       }
+      BasicPort top_pin(top_port.get_name(), top_port.pins()[ipin],
+                        top_port.pins()[ipin]);
+      BasicPort core_pin(core_port.get_name(), core_port.pins()[ipin],
+                         core_port.pins()[ipin]);
       VTR_LOGV(
         verbose,
         "Add nets to connect between fpga_top '%s' and fpga_core '%s' by "
         "following naming rules\n",
-        top_port.to_verilog_string().c_str(),
-        core_port.to_verilog_string().c_str());
+        top_pin.to_verilog_string().c_str(),
+        core_pin.to_verilog_string().c_str());
     }
   }
   /* Now walk through the ports of fpga_core, if port which is not mapped to
@@ -197,18 +215,33 @@ static int create_fpga_top_module_nets_using_naming_rules(
     }
     /* Throw fatal error if part of the core port is mapped while other part is
      * not mapped. This is not allowed! */
-    if (io_naming.mapped_fpga_core_port(core_port)) {
+    IoNameMap::e_port_mapping_status mapping_status =
+      io_naming.fpga_core_port_mapping_status(core_port);
+    if (mapping_status == IoNameMap::e_port_mapping_status::FULL) {
+      continue;
+    }
+    if (mapping_status == IoNameMap::e_port_mapping_status::PARTIAL) {
       VTR_LOG_ERROR(
         "fpga_core port '%s' is partially mapped to fpga_top, which is not "
         "allowed. Please cover the full-sized port in naming rules!\n",
         core_port.to_verilog_string().c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
+    if (mapping_status == IoNameMap::e_port_mapping_status::OVERLAPPED) {
+      VTR_LOG_ERROR(
+        "fpga_core port '%s' is overlapped mapped to fpga_top, which is not "
+        "allowed. Please cover the full-sized port in naming rules!\n",
+        core_port.to_verilog_string().c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    VTR_ASSERT(mapping_status == IoNameMap::e_port_mapping_status::NONE);
     ModuleManager::e_module_port_type top_port_type =
       module_manager.port_type(core_module, core_port_id);
     /* Collect port-level information */
     ModulePortId top_port_id =
       module_manager.find_module_port(wrapper_module, core_port.get_name());
+    top_port = module_manager.module_port(
+      wrapper_module, top_port_id); /* Note: overwrite the top port */
     if (!module_manager.valid_module_port_id(wrapper_module, top_port_id)) {
       VTR_LOG_ERROR("fpga_top port '%s' is not found at top module!\n",
                     top_port.to_verilog_string().c_str());
@@ -222,7 +255,7 @@ static int create_fpga_top_module_nets_using_naming_rules(
         core_port.to_verilog_string().c_str());
       return CMD_EXEC_FATAL_ERROR;
     }
-    for (size_t ipin = 0; ipin < top_port.pins().size(); ++ipin) {
+    for (size_t ipin = 0; ipin < core_port.pins().size(); ++ipin) {
       ModuleNetId new_net = module_manager.create_module_net(wrapper_module);
       if (top_port_type !=
           ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT) {
@@ -242,11 +275,13 @@ static int create_fpga_top_module_nets_using_naming_rules(
                                            wrapper_module, 0, top_port_id,
                                            top_port.pins()[ipin]);
       }
+      BasicPort core_pin(top_port.get_name(), core_port.pins()[ipin],
+                         core_port.pins()[ipin]);
       VTR_LOGV(
         verbose,
         "Add nets to connect fpga_top '%s' in the same name as the port of "
         "fpga_core, since naming rules do not specify\n",
-        top_port.to_verilog_string().c_str());
+        core_pin.to_verilog_string().c_str());
     }
   }
   return CMD_EXEC_SUCCESS;
@@ -256,11 +291,12 @@ static int create_fpga_top_module_nets_using_naming_rules(
  * Create a custom fpga_top module by applying naming rules
  *******************************************************************/
 static int create_fpga_top_module_using_naming_rules(
-  ModuleManager& module_manager, const ModuleId& core_module,
-  const std::string& top_module_name, const IoNameMap& io_naming,
-  const std::string& instance_name, const bool& add_nets, const bool& verbose) {
+  ModuleManager& module_manager, ModuleId& wrapper_module,
+  const ModuleId& core_module, const std::string& top_module_name,
+  const IoNameMap& io_naming, const std::string& instance_name,
+  const bool& add_nets, const bool& verbose) {
   /* Create a new module with the given name */
-  ModuleId wrapper_module = module_manager.add_module(top_module_name);
+  wrapper_module = module_manager.add_module(top_module_name);
   if (!wrapper_module) {
     return CMD_EXEC_FATAL_ERROR;
   }
@@ -325,20 +361,21 @@ int add_fpga_core_to_device_module_graph(ModuleManager& module_manager,
   if (io_naming.empty()) {
     new_top_module = module_manager.create_wrapper_module(
       top_module, top_module_name, core_inst_name, !frame_view);
-    if (!module_manager.valid_module_id(new_top_module)) {
-      VTR_LOGV_ERROR(verbose,
-                     "Failed to create a wrapper module '%s' on top of '%s'!\n",
-                     top_module_name.c_str(), core_module_name.c_str());
-      return CMD_EXEC_FATAL_ERROR;
-    }
   } else {
     status = create_fpga_top_module_using_naming_rules(
-      module_manager, top_module, top_module_name, io_naming, core_inst_name,
-      !frame_view, verbose);
+      module_manager, new_top_module, top_module, top_module_name, io_naming,
+      core_inst_name, !frame_view, verbose);
     if (CMD_EXEC_SUCCESS != status) {
       return CMD_EXEC_FATAL_ERROR;
     }
   }
+  if (!module_manager.valid_module_id(new_top_module)) {
+    VTR_LOGV_ERROR(verbose,
+                   "Failed to create a wrapper module '%s' on top of '%s'!\n",
+                   top_module_name.c_str(), core_module_name.c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
   VTR_LOGV(verbose, "Created a wrapper module '%s' on top of '%s'\n",
            top_module_name.c_str(), core_module_name.c_str());
 

@@ -119,10 +119,43 @@ BasicPort IoNameMap::fpga_top_port(const BasicPort& fpga_core_port) const {
   return top_port;
 }
 
-bool IoNameMap::mapped_fpga_core_port(const BasicPort& fpga_core_port) const {
+IoNameMap::e_port_mapping_status IoNameMap::fpga_core_port_mapping_status(
+  const BasicPort& fpga_core_port, const bool& verbose) const {
   /* First, find the pin name matching */
   auto result_key = core2top_io_name_keys_.find(fpga_core_port.get_name());
-  return result_key != core2top_io_name_keys_.end();
+  if (result_key == core2top_io_name_keys_.end()) {
+    return IoNameMap::e_port_mapping_status::NONE;
+  }
+  /* Second, find the exact port. Create a scoreboard and check every pin.
+   * Expect only one hit per pin. Error on any pin which has been hit twice
+   * (indicate overlapped ports). Error on any pin which has no hit (indicate
+   * partially unmapped) */
+  std::vector<int8_t> scoreboard(fpga_core_port.get_width(), 0);
+  for (std::string cand : result_key->second) {
+    BasicPort cand_port = str2port(cand);
+    for (auto pin : cand_port.pins()) {
+      scoreboard[pin - fpga_core_port.get_lsb()]++;
+    }
+  }
+  for (int8_t bit : scoreboard) {
+    if (bit == 0) {
+      VTR_LOGV_ERROR(verbose,
+                     "Unmapped pin '%lu' of fpga_core port '%s'! Partially "
+                     "mapping is not allowed\n",
+                     fpga_core_port.pins()[bit + fpga_core_port.get_lsb()],
+                     fpga_core_port.to_verilog_string().c_str());
+      return IoNameMap::e_port_mapping_status::PARTIAL;
+    }
+    if (bit > 1) {
+      VTR_LOGV_ERROR(verbose,
+                     "Overlapped %d times on pin '%lu' of fpga_core port '%s' "
+                     "when mapping!\n",
+                     bit, fpga_core_port.pins()[bit + fpga_core_port.get_lsb()],
+                     fpga_core_port.to_verilog_string().c_str());
+      return IoNameMap::e_port_mapping_status::OVERLAPPED;
+    }
+  }
+  return IoNameMap::e_port_mapping_status::FULL;
 }
 
 bool IoNameMap::fpga_top_port_is_dummy(const BasicPort& fpga_top_port) const {

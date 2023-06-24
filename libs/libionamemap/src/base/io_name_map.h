@@ -21,6 +21,13 @@ namespace openfpga {
 class IoNameMap {
  public: /* Types */
   enum class e_dummy_port_direction { INPUT = 0, OUTPUT, INOUT, NUM_TYPES };
+  enum class e_port_mapping_status {
+    NONE = 0,
+    PARTIAL,
+    FULL,
+    OVERLAPPED,
+    NUM_TYPES
+  };
 
  public: /* Constructors */
   IoNameMap();
@@ -40,10 +47,12 @@ class IoNameMap {
   e_dummy_port_direction fpga_top_dummy_port_direction(
     const BasicPort& fpga_top_port) const;
   /** @brief Check if a core port, by considering its port name only, has been
-   * mapped to fpga top. For example, there is a core port 'a[0:3]', while only
-   * 'a[0]' is mapped to the fpga top. We can use the port name find it quickly
+   * fully/partially/no mapped to fpga top. For example, there is a core port
+   * 'a[0:3]', while only 'a[0]' is mapped to the fpga top. We can use the port
+   * name find it quickly
    */
-  bool mapped_fpga_core_port(const BasicPort& fpga_core_port) const;
+  e_port_mapping_status fpga_core_port_mapping_status(
+    const BasicPort& fpga_core_port, const bool& verbose = false) const;
   /** @brief Identify if there are any naming rules inside */
   bool empty() const;
 
