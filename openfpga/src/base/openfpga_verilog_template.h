@@ -77,6 +77,7 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
                                   const CommandContext& cmd_context) {
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_bitstream = cmd.option("bitstream");
+  CommandOptionId opt_dut_module = cmd.option("dut_module");
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_bgf = cmd.option("bus_group_file");
@@ -96,6 +97,7 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
    */
   VerilogTestbenchOption options;
   options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
+  options.set_dut_module(cmd_context.option_value(cmd, opt_dut_module));
   options.set_fabric_netlist_file_path(
     cmd_context.option_value(cmd, opt_fabric_netlist));
   options.set_reference_benchmark_file_path(
@@ -135,7 +137,8 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
     openfpga_ctx.fabric_bitstream(), openfpga_ctx.blwl_shift_register_banks(),
     g_vpr_ctx.atom(), g_vpr_ctx.placement(), pin_constraints, bus_group,
     cmd_context.option_value(cmd, opt_bitstream),
-    openfpga_ctx.io_location_map(), openfpga_ctx.fabric_global_port_info(),
+    openfpga_ctx.io_location_map(), openfpga_ctx.io_name_map(),
+    openfpga_ctx.fabric_global_port_info(),
     openfpga_ctx.vpr_netlist_annotation(), openfpga_ctx.arch().circuit_lib,
     openfpga_ctx.simulation_setting(), openfpga_ctx.arch().config_protocol,
     options);
@@ -150,6 +153,7 @@ int write_preconfigured_fabric_wrapper_template(
   const T& openfpga_ctx, const Command& cmd,
   const CommandContext& cmd_context) {
   CommandOptionId opt_output_dir = cmd.option("file");
+  CommandOptionId opt_dut_module = cmd.option("dut_module");
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_bgf = cmd.option("bus_group_file");
@@ -166,6 +170,7 @@ int write_preconfigured_fabric_wrapper_template(
    */
   VerilogTestbenchOption options;
   options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
+  options.set_dut_module(cmd_context.option_value(cmd, opt_dut_module));
   options.set_fabric_netlist_file_path(
     cmd_context.option_value(cmd, opt_fabric_netlist));
   options.set_explicit_port_mapping(
@@ -203,7 +208,8 @@ int write_preconfigured_fabric_wrapper_template(
   return fpga_verilog_preconfigured_fabric_wrapper(
     openfpga_ctx.module_graph(), openfpga_ctx.bitstream_manager(),
     g_vpr_ctx.atom(), g_vpr_ctx.placement(), pin_constraints, bus_group,
-    openfpga_ctx.io_location_map(), openfpga_ctx.fabric_global_port_info(),
+    openfpga_ctx.io_location_map(), openfpga_ctx.io_name_map(),
+    openfpga_ctx.fabric_global_port_info(),
     openfpga_ctx.vpr_netlist_annotation(), openfpga_ctx.arch().circuit_lib,
     openfpga_ctx.arch().config_protocol, options);
 }

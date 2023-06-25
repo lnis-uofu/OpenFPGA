@@ -252,16 +252,15 @@ int add_fpga_core_to_fabric_template(T& openfpga_ctx, const Command& cmd,
   }
 
   /* Handle I/O naming rules if defined */
-  IoNameMap io_name_map;
   CommandOptionId opt_io_naming = cmd.option("io_naming");
   if (true == cmd_context.option_enable(cmd, opt_io_naming)) {
     read_xml_io_name_map(cmd_context.option_value(cmd, opt_io_naming).c_str(),
-                         io_name_map);
+                         openfpga_ctx.mutable_io_name_map());
   }
 
   return add_fpga_core_to_device_module_graph(
-    openfpga_ctx.mutable_module_graph(), io_name_map, core_inst_name,
-    frame_view, verbose_output);
+    openfpga_ctx.mutable_module_graph(), openfpga_ctx.io_name_map(),
+    core_inst_name, frame_view, verbose_output);
 }
 
 } /* end namespace openfpga */

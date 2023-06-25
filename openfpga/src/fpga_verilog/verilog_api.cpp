@@ -148,6 +148,7 @@ int fpga_verilog_full_testbench(
   const AtomContext &atom_ctx, const PlacementContext &place_ctx,
   const PinConstraints &pin_constraints, const BusGroup &bus_group,
   const std::string &bitstream_file, const IoLocationMap &io_location_map,
+  const IoNameMap &io_name_map,
   const FabricGlobalPortInfo &fabric_global_port_info,
   const VprNetlistAnnotation &netlist_annotation,
   const CircuitLibrary &circuit_lib,
@@ -174,7 +175,7 @@ int fpga_verilog_full_testbench(
   print_verilog_full_testbench(
     module_manager, bitstream_manager, fabric_bitstream, blwl_sr_banks,
     circuit_lib, config_protocol, fabric_global_port_info, atom_ctx, place_ctx,
-    pin_constraints, bus_group, bitstream_file, io_location_map,
+    pin_constraints, bus_group, bitstream_file, io_location_map, io_name_map,
     netlist_annotation, netlist_name, top_testbench_file_path,
     simulation_setting, options);
 
@@ -197,6 +198,7 @@ int fpga_verilog_preconfigured_fabric_wrapper(
   const BitstreamManager &bitstream_manager, const AtomContext &atom_ctx,
   const PlacementContext &place_ctx, const PinConstraints &pin_constraints,
   const BusGroup &bus_group, const IoLocationMap &io_location_map,
+  const IoNameMap &io_name_map,
   const FabricGlobalPortInfo &fabric_global_port_info,
   const VprNetlistAnnotation &netlist_annotation,
   const CircuitLibrary &circuit_lib, const ConfigProtocol &config_protocol,
@@ -221,7 +223,7 @@ int fpga_verilog_preconfigured_fabric_wrapper(
   status = print_verilog_preconfig_top_module(
     module_manager, bitstream_manager, config_protocol, circuit_lib,
     fabric_global_port_info, atom_ctx, place_ctx, pin_constraints, bus_group,
-    io_location_map, netlist_annotation, netlist_name,
+    io_location_map, io_name_map, netlist_annotation, netlist_name,
     formal_verification_top_netlist_file_path, options);
 
   return status;

@@ -12,6 +12,7 @@
 #include "circuit_library.h"
 #include "fabric_global_port_info.h"
 #include "io_location_map.h"
+#include "io_name_map.h"
 #include "module_manager.h"
 #include "pin_constraints.h"
 #include "simulation_setting.h"
@@ -25,12 +26,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_verilog_testbench_fpga_instance(std::fstream& fp,
-                                           const ModuleManager& module_manager,
-                                           const ModuleId& top_module,
-                                           const std::string& top_instance_name,
-                                           const std::string& net_postfix,
-                                           const bool& explicit_port_mapping);
+void print_verilog_testbench_fpga_instance(
+  std::fstream& fp, const ModuleManager& module_manager,
+  const ModuleId& top_module, const ModuleId& core_module,
+  const std::string& top_instance_name, const std::string& net_postfix,
+  const IoNameMap& io_name_map, const bool& explicit_port_mapping);
 
 void print_verilog_testbench_benchmark_instance(
   std::fstream& fp, const std::string& module_name,

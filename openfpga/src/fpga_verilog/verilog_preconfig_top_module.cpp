@@ -545,7 +545,7 @@ int print_verilog_preconfig_top_module(
   const FabricGlobalPortInfo &global_ports, const AtomContext &atom_ctx,
   const PlacementContext &place_ctx, const PinConstraints &pin_constraints,
   const BusGroup &bus_group, const IoLocationMap &io_location_map,
-  const VprNetlistAnnotation &netlist_annotation,
+  const IoNameMap &io_name_map, const VprNetlistAnnotation &netlist_annotation,
   const std::string &circuit_name, const std::string &verilog_fname,
   const VerilogTestbenchOption &options) {
   std::string timer_message =
@@ -577,20 +577,33 @@ int print_verilog_preconfig_top_module(
   print_verilog_preconfig_top_module_ports(fp, circuit_name, atom_ctx,
                                            netlist_annotation, bus_group);
 
-  /* Find the top_module */
-  ModuleId top_module =
-    module_manager.find_module(generate_fpga_top_module_name());
-  VTR_ASSERT(true == module_manager.valid_module_id(top_module));
+  /* Spot the dut module */
+  ModuleId top_module = module_manager.find_module(options.dut_module());
+  if (!module_manager.valid_module_id(top_module)) {
+    VTR_LOG_ERROR(
+      "Unable to find the DUT module '%s'. Please check if you create "
+      "dedicated module when building the fabric!\n",
+      options.dut_module().c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  /* Note that we always need the core module as it contains the original port
+   * names before possible renaming at top-level module. If there is no core
+   * module, it means that the current top module is the core module */
+  ModuleId core_module =
+    module_manager.find_module(generate_fpga_core_module_name());
+  if (!module_manager.valid_module_id(core_module)) {
+    core_module = top_module;
+  }
 
   /* Print internal wires */
   print_verilog_preconfig_top_module_internal_wires(fp, module_manager,
-                                                    top_module);
+                                                    core_module);
 
   /* Instanciate FPGA top-level module */
   print_verilog_testbench_fpga_instance(
-    fp, module_manager, top_module,
+    fp, module_manager, top_module, core_module,
     std::string(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME),
-    std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
+    std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), io_name_map,
     options.explicit_port_mapping());
 
   /* Find clock ports in benchmark */
@@ -600,7 +613,7 @@ int print_verilog_preconfig_top_module(
   /* Connect FPGA top module global ports to constant or benchmark global
    * signals! */
   status = print_verilog_preconfig_top_module_connect_global_ports(
-    fp, module_manager, top_module, pin_constraints, global_ports,
+    fp, module_manager, core_module, pin_constraints, global_ports,
     benchmark_clock_port_names);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
@@ -608,7 +621,7 @@ int print_verilog_preconfig_top_module(
 
   /* Connect I/Os to benchmark I/Os or constant driver */
   print_verilog_testbench_connect_fpga_ios(
-    fp, module_manager, top_module, atom_ctx, place_ctx, io_location_map,
+    fp, module_manager, core_module, atom_ctx, place_ctx, io_location_map,
     netlist_annotation, bus_group,
     std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), std::string(),
     std::string(), std::vector<std::string>(),
