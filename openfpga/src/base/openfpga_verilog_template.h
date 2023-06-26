@@ -97,7 +97,6 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
    */
   VerilogTestbenchOption options;
   options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
-  options.set_dut_module(cmd_context.option_value(cmd, opt_dut_module));
   options.set_fabric_netlist_file_path(
     cmd_context.option_value(cmd, opt_fabric_netlist));
   options.set_reference_benchmark_file_path(
@@ -116,6 +115,10 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
   if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
     options.set_default_net_type(
       cmd_context.option_value(cmd, opt_default_net_type));
+  }
+
+  if (true == cmd_context.option_enable(cmd, opt_dut_module)) {
+    options.set_dut_module(cmd_context.option_value(cmd, opt_dut_module));
   }
 
   /* If pin constraints are enabled by command options, read the file */
@@ -170,7 +173,6 @@ int write_preconfigured_fabric_wrapper_template(
    */
   VerilogTestbenchOption options;
   options.set_output_directory(cmd_context.option_value(cmd, opt_output_dir));
-  options.set_dut_module(cmd_context.option_value(cmd, opt_dut_module));
   options.set_fabric_netlist_file_path(
     cmd_context.option_value(cmd, opt_fabric_netlist));
   options.set_explicit_port_mapping(
@@ -180,6 +182,10 @@ int write_preconfigured_fabric_wrapper_template(
   options.set_include_signal_init(
     cmd_context.option_enable(cmd, opt_include_signal_init));
   options.set_print_formal_verification_top_netlist(true);
+
+  if (true == cmd_context.option_enable(cmd, opt_dut_module)) {
+    options.set_dut_module(cmd_context.option_value(cmd, opt_dut_module));
+  }
 
   if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
     options.set_default_net_type(

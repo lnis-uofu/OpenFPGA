@@ -88,6 +88,9 @@ void print_verilog_testbench_fpga_instance(
           module_manager.find_module_port(core_module, module_port.get_name());
         if (!module_manager.valid_module_port_id(core_module,
                                                  core_module_port)) {
+          /* Print the wire for the dummy port */
+          fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port) << ";"
+             << std::endl;
           continue;
         }
       }
