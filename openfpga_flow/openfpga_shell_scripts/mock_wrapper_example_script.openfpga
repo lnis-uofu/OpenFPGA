@@ -22,6 +22,7 @@ lut_truth_table_fixup
 #  - Enabled compression on routing architecture modules
 #  - Enable pin duplication on grid modules
 build_fabric --compress_routing #--verbose
+${OPENFPGA_MOCK_WRAPPER_ADD_FPGA_CORE}
 
 # Write the fabric hierarchy of module graph to a file
 # This is used by hierarchical PnR flows
@@ -44,7 +45,7 @@ write_fabric_bitstream --file fabric_bitstream.bit --format plain_text
 
 # Write the Verilog netlist for FPGA fabric
 #  - Enable the use of explicit port mapping in Verilog netlist
-write_mock_fpga_wrapper --file ./SRC ${OPENFPGA_MOCK_WRAPPER_OPTIONS} ${OPENFPGA_MOCK_WRAPPER_BGF} ${OPENFPGA_MOCK_WRAPPER_PCF}
+write_mock_fpga_wrapper --file ./SRC ${OPENFPGA_MOCK_WRAPPER_OPTIONS} ${OPENFPGA_MOCK_WRAPPER_BGF} ${OPENFPGA_MOCK_WRAPPER_PCF} 
 
 # Write the Verilog testbench for FPGA fabric
 #  - We suggest the use of same output directory as fabric Verilog netlists
