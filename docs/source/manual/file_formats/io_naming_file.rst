@@ -72,7 +72,7 @@ Detailed syntax are presented as follows.
 Example
 ```````
 
-Fig. :numref:`fig_fpga_core_wrapper` shows an example of a top-level wrapper with naming rules, which is built on top of an existing FPGA core fabric.
+:numref:`fig_fpga_core_wrapper` shows an example of a top-level wrapper with naming rules, which is built on top of an existing FPGA core fabric.
 There is a dummy input port at the top-level wrapper. 
 
 .. _fig_fpga_core_wrapper:
@@ -83,7 +83,7 @@ There is a dummy input port at the top-level wrapper.
 
    Example of a top-level wrapper: how it interfaces between SoC and an existing FPGA core fabric
 
-The I/O naming in the Fig. :numref:`fig_fpga_core_wrapper`` can be described in the following XML:
+The I/O naming in the :numref:`fig_fpga_core_wrapper` can be described in the following XML:
 
 .. code-block:: xml
 
