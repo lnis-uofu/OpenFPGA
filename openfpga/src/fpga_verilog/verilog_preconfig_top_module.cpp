@@ -330,10 +330,15 @@ static void print_verilog_preconfig_top_module_force_bitstream(
     /* Drop the first block, which is the top module, it should be replaced by
      * the instance name here */
     /* Ensure that this is the module we want to drop! */
-    VTR_ASSERT(0 ==
-               module_manager.module_name(top_module)
-                 .compare(bitstream_manager.block_name(block_hierarchy[0])));
-    block_hierarchy.erase(block_hierarchy.begin());
+    VTR_LOG("Top module: '%s', Block[0]: '%s', Block[1]: '%s'\n", module_manager.module_name(top_module).c_str(), bitstream_manager.block_name(block_hierarchy[0]).c_str(), bitstream_manager.block_name(block_hierarchy[1]).c_str());
+    VTR_ASSERT(0 == module_manager.module_name(top_module).compare(bitstream_manager.block_name(block_hierarchy[0]))
+               || 0 == module_manager.module_name(top_module).compare(bitstream_manager.block_name(block_hierarchy[1])));
+    if (0 == module_manager.module_name(top_module).compare(bitstream_manager.block_name(block_hierarchy[0]))) {
+      block_hierarchy.erase(block_hierarchy.begin());
+    } else if (0 == module_manager.module_name(top_module).compare(bitstream_manager.block_name(block_hierarchy[1]))) {
+      block_hierarchy.erase(block_hierarchy.begin());
+      block_hierarchy.erase(block_hierarchy.begin());
+    }
     /* Build the full hierarchy path */
     std::string bit_hierarchy_path(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME);
     for (const ConfigBlockId &temp_block : block_hierarchy) {
@@ -410,10 +415,15 @@ static void print_verilog_preconfig_top_module_deposit_bitstream(
     /* Drop the first block, which is the top module, it should be replaced by
      * the instance name here */
     /* Ensure that this is the module we want to drop! */
-    VTR_ASSERT(0 ==
-               module_manager.module_name(top_module)
-                 .compare(bitstream_manager.block_name(block_hierarchy[0])));
-    block_hierarchy.erase(block_hierarchy.begin());
+    VTR_ASSERT(0 == module_manager.module_name(top_module).compare(bitstream_manager.block_name(block_hierarchy[0]))
+               || 0 == module_manager.module_name(top_module).compare(bitstream_manager.block_name(block_hierarchy[1])));
+    if (0 == module_manager.module_name(top_module).compare(bitstream_manager.block_name(block_hierarchy[0]))) {
+      block_hierarchy.erase(block_hierarchy.begin());
+    } else if (0 == module_manager.module_name(top_module).compare(bitstream_manager.block_name(block_hierarchy[1]))) {
+      block_hierarchy.erase(block_hierarchy.begin());
+      block_hierarchy.erase(block_hierarchy.begin());
+    }
+
     /* Build the full hierarchy path */
     std::string bit_hierarchy_path(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME);
     for (const ConfigBlockId &temp_block : block_hierarchy) {

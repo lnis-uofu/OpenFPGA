@@ -18,8 +18,10 @@ run-task basic_tests/source_command/source_file $@
 echo -e "Testing testbenches using fpga core wrapper"
 run-task basic_tests/full_testbench/fpga_core_wrapper $@
 run-task basic_tests/full_testbench/fpga_core_wrapper_naming_rules $@
+run-task basic_tests/full_testbench/fpga_core_wrapper_naming_rules_use_core_tb $@
 run-task basic_tests/preconfig_testbench/fpga_core_wrapper $@
 run-task basic_tests/preconfig_testbench/fpga_core_wrapper_naming_rules $@
+run-task basic_tests/preconfig_testbench/fpga_core_wrapper_naming_rules_use_core_tb $@
 
 echo -e "Testing configuration chain of a K4N4 FPGA";
 run-task basic_tests/full_testbench/configuration_chain $@
