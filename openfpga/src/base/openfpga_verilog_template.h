@@ -228,6 +228,7 @@ template <class T>
 int write_mock_fpga_wrapper_template(const T& openfpga_ctx, const Command& cmd,
                                      const CommandContext& cmd_context) {
   CommandOptionId opt_output_dir = cmd.option("file");
+  CommandOptionId opt_top_module = cmd.option("top_module");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
   CommandOptionId opt_bgf = cmd.option("bus_group_file");
   CommandOptionId opt_explicit_port_mapping =
@@ -248,6 +249,10 @@ int write_mock_fpga_wrapper_template(const T& openfpga_ctx, const Command& cmd,
     cmd_context.option_enable(cmd, opt_use_relative_path));
   options.set_time_stamp(!cmd_context.option_enable(cmd, opt_no_time_stamp));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
+
+  if (true == cmd_context.option_enable(cmd, opt_top_module)) {
+    options.set_dut_module(cmd_context.option_value(cmd, opt_top_module));
+  }
 
   if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
     options.set_default_net_type(
@@ -271,7 +276,7 @@ int write_mock_fpga_wrapper_template(const T& openfpga_ctx, const Command& cmd,
   return fpga_verilog_mock_fpga_wrapper(
     openfpga_ctx.module_graph(), g_vpr_ctx.atom(), g_vpr_ctx.placement(),
     pin_constraints, bus_group, openfpga_ctx.io_location_map(),
-    openfpga_ctx.fabric_global_port_info(),
+    openfpga_ctx.io_name_map(), openfpga_ctx.fabric_global_port_info(),
     openfpga_ctx.vpr_netlist_annotation(), options);
 }
 

@@ -237,6 +237,7 @@ int fpga_verilog_mock_fpga_wrapper(
   const ModuleManager &module_manager, const AtomContext &atom_ctx,
   const PlacementContext &place_ctx, const PinConstraints &pin_constraints,
   const BusGroup &bus_group, const IoLocationMap &io_location_map,
+  const IoNameMap &io_name_map,
   const FabricGlobalPortInfo &fabric_global_port_info,
   const VprNetlistAnnotation &netlist_annotation,
   const VerilogTestbenchOption &options) {
@@ -261,8 +262,8 @@ int fpga_verilog_mock_fpga_wrapper(
   std::string netlist_file_path = src_dir_path + netlist_file_name;
   status = print_verilog_mock_fpga_wrapper(
     module_manager, fabric_global_port_info, atom_ctx, place_ctx,
-    pin_constraints, bus_group, io_location_map, netlist_annotation,
-    netlist_name, netlist_file_path, options);
+    pin_constraints, bus_group, io_location_map, io_name_map,
+    netlist_annotation, netlist_name, netlist_file_path, options);
 
   /* Add fname to the netlist name list */
   NetlistId nlist_id = NetlistId::INVALID();

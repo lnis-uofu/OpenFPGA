@@ -291,7 +291,7 @@ ShellCommandId add_write_mock_fpga_wrapper_command_template(
 
   /* add an option '--top_module'*/
   CommandOptionId top_module_opt =
-    shell_cmd.add_option("dut_module", false,
+    shell_cmd.add_option("top_module", false,
                          "specify the top-level module name to be used in the "
                          "wrapper, which matters the I/O names. Can be either "
                          "fpga_top or fpga_core. By default, it is fpga_top.");

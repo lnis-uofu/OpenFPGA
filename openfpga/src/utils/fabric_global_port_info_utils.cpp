@@ -74,10 +74,16 @@ bool port_is_fabric_global_reset_port(
   const FabricGlobalPortInfo& fabric_global_port_info,
   const ModuleManager& module_manager, const BasicPort& port) {
   /* Find the top_module: the fabric global ports are always part of the ports
-   * of the top module */
+   * of the top/core module. If there is a core module, we should consider core
+   * only */
   ModuleId top_module =
     module_manager.find_module(generate_fpga_top_module_name());
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
+  ModuleId core_module =
+    module_manager.find_module(generate_fpga_core_module_name());
+  if (module_manager.valid_module_id(core_module)) {
+    top_module = core_module;
+  }
 
   for (const FabricGlobalPortId& fabric_global_port_id :
        fabric_global_port_info.global_ports()) {
@@ -107,10 +113,16 @@ FabricGlobalPortId find_fabric_global_port(
   const FabricGlobalPortInfo& fabric_global_port_info,
   const ModuleManager& module_manager, const BasicPort& port) {
   /* Find the top_module: the fabric global ports are always part of the ports
-   * of the top module */
+   * of the top/core module. If there is a core module, we should consider core
+   * only */
   ModuleId top_module =
     module_manager.find_module(generate_fpga_top_module_name());
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
+  ModuleId core_module =
+    module_manager.find_module(generate_fpga_core_module_name());
+  if (module_manager.valid_module_id(core_module)) {
+    top_module = core_module;
+  }
 
   for (const FabricGlobalPortId& fabric_global_port_id :
        fabric_global_port_info.global_ports()) {
