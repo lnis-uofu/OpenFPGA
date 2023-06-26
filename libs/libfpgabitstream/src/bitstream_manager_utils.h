@@ -16,7 +16,7 @@
 namespace openfpga {
 
 std::vector<ConfigBlockId> find_bitstream_manager_block_hierarchy(
-  const BitstreamManager& bitstream_manager, const ConfigBlockId& block);
+  const BitstreamManager& bitstream_manager, const ConfigBlockId& block, const std::string& top_block_name = "");
 
 std::vector<ConfigBlockId> find_bitstream_manager_top_blocks(
   const BitstreamManager& bitstream_manager);

@@ -19,15 +19,20 @@ namespace openfpga {
  * Return a vector of the block ids, where the top-level block
  * locates in the head, while the leaf block locates in the tail
  *   top, next, ... , block
+ * Optionally, the top block name in the path can be specified. Useful to trim the hierarchy with a given range
  *******************************************************************/
 std::vector<ConfigBlockId> find_bitstream_manager_block_hierarchy(
-  const BitstreamManager& bitstream_manager, const ConfigBlockId& block) {
+  const BitstreamManager& bitstream_manager, const ConfigBlockId& block, const std::string& top_block_name) {
   std::vector<ConfigBlockId> block_hierarchy;
   ConfigBlockId temp_block = block;
 
   /* Generate a tree of parent block */
   while (true == bitstream_manager.valid_block_id(temp_block)) {
     block_hierarchy.push_back(temp_block);
+    /* Check if we have reached the designated top block */
+    if (!top_block_name.empty() && bitstream_manager.block_name(temp_block) == top_block_name) {
+      break;
+    }
     /* Go to upper level */
     temp_block = bitstream_manager.block_parent(temp_block);
   }
