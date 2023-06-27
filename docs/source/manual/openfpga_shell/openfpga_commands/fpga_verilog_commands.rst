@@ -49,6 +49,10 @@ write_full_testbench
      
     The output directory for all the testbench netlists. We suggest the use of same output directory as fabric Verilog netlists. For example, ``--file /temp/testbench``
 
+  .. option:: --dut_module <string>
+
+    Specify the name of *Design Under Test* (DUT) module to be considered in the testbench. Can be either ``fpga_top`` or ``fpga_core. By default, it is ``fpga_top``.
+
   .. option:: --bitstream <string>     
 
     The bitstream file to be loaded to the full testbench, which should be in the same file format that OpenFPGA can outputs (See detailes in :ref:`file_formats_fabric_bitstream_plain_text`). For example, ``--bitstream and2.bit``
@@ -120,6 +124,10 @@ write_preconfigured_fabric_wrapper
 
     Specify the fabric Verilog file if they are not in the same directory as the testbenches to be generated. If not specified, OpenFPGA will assume that the fabric netlists are the in the same directory as testbenches and assign default names. For example, ``--file /temp/fabric/fabric_netlists.v``
 
+  .. option:: --dut_module <string>
+
+    Specify the name of *Design Under Test* (DUT) module to be considered in the testbench. Can be either ``fpga_top`` or ``fpga_core. By default, it is ``fpga_top``.
+
   .. option:: --pin_constraints_file <string> or -pcf <string>
 
     Specify the *Pin Constraints File* (PCF) if you want to custom stimulus in testbenches. For example, ``-pin_constraints_file pin_constraints.xml``
@@ -174,6 +182,10 @@ write_mock_fpga_wrapper
   .. option:: --file <string> or -f <string>
      
     The output directory for the netlists. We suggest the use of same output directory as fabric Verilog netlists. For example, ``--file /temp/testbench``
+
+  .. option:: --top_module <string>
+
+    Specify the name of top-level module to be considered in the wrapper. Can be either ``fpga_top`` or ``fpga_core. By default, it is ``fpga_top``.
 
   .. option:: --pin_constraints_file <string> or -pcf <string>
 

@@ -34,12 +34,11 @@ namespace openfpga {
                     .out(out_postfix>)
                    );
  *******************************************************************/
-void print_verilog_testbench_fpga_instance(std::fstream& fp,
-                                           const ModuleManager& module_manager,
-                                           const ModuleId& top_module,
-                                           const std::string& top_instance_name,
-                                           const std::string& net_postfix,
-                                           const bool& explicit_port_mapping) {
+void print_verilog_testbench_fpga_instance(
+  std::fstream& fp, const ModuleManager& module_manager,
+  const ModuleId& top_module, const ModuleId& core_module,
+  const std::string& top_instance_name, const std::string& net_postfix,
+  const IoNameMap& io_name_map, const bool& explicit_port_mapping) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -47,15 +46,63 @@ void print_verilog_testbench_fpga_instance(std::fstream& fp,
   print_verilog_comment(
     fp, std::string("----- FPGA top-level module to be capsulated -----"));
 
+  /* Precheck on the top module and decide if we need to consider I/O naming
+   * - If we do have a fpga_core module added, and dut is fpga_top, we need a
+   * I/O naming
+   * - If we do NOT have a fpga_core module added, and dut is fpga_top, we do
+   * NOT need a I/O naming
+   * - If we do have a fpga_core module added, and dut is fpga_core, we do NOT
+   * need a I/O naming
+   * - If we do NOT have a fpga_core module added, and dut is fpga_core, it
+   * should error out earlier.
+   */
+  bool require_io_naming = false;
+  if (top_module != core_module) {
+    require_io_naming = true;
+  }
+
   /* Create an empty port-to-port name mapping, because we use default names */
   std::map<std::string, BasicPort> port2port_name_map;
-  if (!net_postfix.empty()) {
+  if (!require_io_naming) {
+    if (!net_postfix.empty()) {
+      for (const ModulePortId& module_port_id :
+           module_manager.module_ports(top_module)) {
+        BasicPort module_port =
+          module_manager.module_port(top_module, module_port_id);
+        BasicPort net_port = module_port;
+        net_port.set_name(module_port.get_name() + net_postfix);
+        port2port_name_map[module_port.get_name()] = net_port;
+      }
+    }
+  } else {
+    VTR_ASSERT_SAFE(require_io_naming);
+    /* We walk through the ports under top module. Find renamed ports at
+     * core-level and use them as net names */
     for (const ModulePortId& module_port_id :
          module_manager.module_ports(top_module)) {
       BasicPort module_port =
         module_manager.module_port(top_module, module_port_id);
-      BasicPort net_port = module_port;
-      net_port.set_name(module_port.get_name() + net_postfix);
+      /* Bypass dummy port: the port does not exist at core module */
+      if (io_name_map.fpga_top_port_is_dummy(module_port)) {
+        ModulePortId core_module_port =
+          module_manager.find_module_port(core_module, module_port.get_name());
+        if (!module_manager.valid_module_port_id(core_module,
+                                                 core_module_port)) {
+          /* Print the wire for the dummy port */
+          fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port) << ";"
+             << std::endl;
+          continue;
+        }
+      }
+      /* Not a dummy port, if it is renamed, use the new name. Otherwise, keep
+       * the old name */
+      BasicPort net_port = io_name_map.fpga_core_port(module_port);
+      if (net_port.is_valid()) {
+        net_port.set_name(net_port.get_name() + net_postfix);
+      } else {
+        net_port = module_port;
+        net_port.set_name(module_port.get_name() + net_postfix);
+      }
       port2port_name_map[module_port.get_name()] = net_port;
     }
   }

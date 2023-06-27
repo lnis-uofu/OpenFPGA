@@ -18,6 +18,7 @@
 #include "fabric_global_port_info.h"
 #include "fabric_verilog_options.h"
 #include "io_location_map.h"
+#include "io_name_map.h"
 #include "memory_bank_shift_register_banks.h"
 #include "module_manager.h"
 #include "mux_library.h"
@@ -52,6 +53,7 @@ int fpga_verilog_full_testbench(
   const AtomContext& atom_ctx, const PlacementContext& place_ctx,
   const PinConstraints& pin_constraints, const BusGroup& bus_group,
   const std::string& bitstream_file, const IoLocationMap& io_location_map,
+  const IoNameMap& io_name_map,
   const FabricGlobalPortInfo& fabric_global_port_info,
   const VprNetlistAnnotation& netlist_annotation,
   const CircuitLibrary& circuit_lib,
@@ -63,6 +65,7 @@ int fpga_verilog_preconfigured_fabric_wrapper(
   const BitstreamManager& bitstream_manager, const AtomContext& atom_ctx,
   const PlacementContext& place_ctx, const PinConstraints& pin_constraints,
   const BusGroup& bus_group, const IoLocationMap& io_location_map,
+  const IoNameMap& io_name_map,
   const FabricGlobalPortInfo& fabric_global_port_info,
   const VprNetlistAnnotation& netlist_annotation,
   const CircuitLibrary& circuit_lib, const ConfigProtocol& config_protocol,
@@ -72,6 +75,7 @@ int fpga_verilog_mock_fpga_wrapper(
   const ModuleManager& module_manager, const AtomContext& atom_ctx,
   const PlacementContext& place_ctx, const PinConstraints& pin_constraints,
   const BusGroup& bus_group, const IoLocationMap& io_location_map,
+  const IoNameMap& io_name_map,
   const FabricGlobalPortInfo& fabric_global_port_info,
   const VprNetlistAnnotation& netlist_annotation,
   const VerilogTestbenchOption& options);

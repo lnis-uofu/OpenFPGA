@@ -306,9 +306,8 @@ static int print_verilog_preconfig_top_module_connect_global_ports(
  * while uses 'force' syntax to impost the bitstream at mem_inv port
  *******************************************************************/
 static void print_verilog_preconfig_top_module_force_bitstream(
-  std::fstream &fp, const ModuleManager &module_manager,
-  const ModuleId &top_module, const BitstreamManager &bitstream_manager,
-  const bool &output_datab_bits) {
+  std::fstream &fp, const std::string &top_block_name,
+  const BitstreamManager &bitstream_manager, const bool &output_datab_bits) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -325,14 +324,11 @@ static void print_verilog_preconfig_top_module_force_bitstream(
     }
     /* Build the hierarchical path of the configuration bit in modules */
     std::vector<ConfigBlockId> block_hierarchy =
-      find_bitstream_manager_block_hierarchy(bitstream_manager,
-                                             config_block_id);
-    /* Drop the first block, which is the top module, it should be replaced by
-     * the instance name here */
+      find_bitstream_manager_block_hierarchy(bitstream_manager, config_block_id,
+                                             top_block_name);
     /* Ensure that this is the module we want to drop! */
-    VTR_ASSERT(0 ==
-               module_manager.module_name(top_module)
-                 .compare(bitstream_manager.block_name(block_hierarchy[0])));
+    VTR_ASSERT(top_block_name ==
+               bitstream_manager.block_name(block_hierarchy[0]));
     block_hierarchy.erase(block_hierarchy.begin());
     /* Build the full hierarchy path */
     std::string bit_hierarchy_path(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME);
@@ -386,9 +382,8 @@ static void print_verilog_preconfig_top_module_force_bitstream(
  * This function uses '$deposit' syntax to do so
  *******************************************************************/
 static void print_verilog_preconfig_top_module_deposit_bitstream(
-  std::fstream &fp, const ModuleManager &module_manager,
-  const ModuleId &top_module, const BitstreamManager &bitstream_manager,
-  const bool &output_datab_bits) {
+  std::fstream &fp, const std::string &top_block_name,
+  const BitstreamManager &bitstream_manager, const bool &output_datab_bits) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -405,15 +400,15 @@ static void print_verilog_preconfig_top_module_deposit_bitstream(
     }
     /* Build the hierarchical path of the configuration bit in modules */
     std::vector<ConfigBlockId> block_hierarchy =
-      find_bitstream_manager_block_hierarchy(bitstream_manager,
-                                             config_block_id);
+      find_bitstream_manager_block_hierarchy(bitstream_manager, config_block_id,
+                                             top_block_name);
     /* Drop the first block, which is the top module, it should be replaced by
      * the instance name here */
     /* Ensure that this is the module we want to drop! */
-    VTR_ASSERT(0 ==
-               module_manager.module_name(top_module)
-                 .compare(bitstream_manager.block_name(block_hierarchy[0])));
+    VTR_ASSERT(top_block_name ==
+               bitstream_manager.block_name(block_hierarchy[0]));
     block_hierarchy.erase(block_hierarchy.begin());
+
     /* Build the full hierarchy path */
     std::string bit_hierarchy_path(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME);
     for (const ConfigBlockId &temp_block : block_hierarchy) {
@@ -470,9 +465,9 @@ static void print_verilog_preconfig_top_module_deposit_bitstream(
  * 2. Mentor Modelsim prefers using '$deposit' syntax to do so
  *******************************************************************/
 static void print_verilog_preconfig_top_module_load_bitstream(
-  std::fstream &fp, const ModuleManager &module_manager,
-  const ModuleId &top_module, const CircuitLibrary &circuit_lib,
-  const CircuitModelId &mem_model, const BitstreamManager &bitstream_manager,
+  std::fstream &fp, const std::string &top_block_name,
+  const CircuitLibrary &circuit_lib, const CircuitModelId &mem_model,
+  const BitstreamManager &bitstream_manager,
   const e_embedded_bitstream_hdl_type &embedded_bitstream_hdl_type) {
   /* Skip the datab port if there is only 1 output port in memory model
    * Currently, it assumes that the data output port is always defined while
@@ -494,11 +489,11 @@ static void print_verilog_preconfig_top_module_load_bitstream(
   /* Use assign syntax for Icarus simulator */
   if (EMBEDDED_BITSTREAM_HDL_IVERILOG == embedded_bitstream_hdl_type) {
     print_verilog_preconfig_top_module_force_bitstream(
-      fp, module_manager, top_module, bitstream_manager, output_datab_bits);
+      fp, top_block_name, bitstream_manager, output_datab_bits);
     /* Use deposit syntax for other simulators */
   } else if (EMBEDDED_BITSTREAM_HDL_MODELSIM == embedded_bitstream_hdl_type) {
     print_verilog_preconfig_top_module_deposit_bitstream(
-      fp, module_manager, top_module, bitstream_manager, output_datab_bits);
+      fp, top_block_name, bitstream_manager, output_datab_bits);
   }
 
   print_verilog_comment(
@@ -545,7 +540,7 @@ int print_verilog_preconfig_top_module(
   const FabricGlobalPortInfo &global_ports, const AtomContext &atom_ctx,
   const PlacementContext &place_ctx, const PinConstraints &pin_constraints,
   const BusGroup &bus_group, const IoLocationMap &io_location_map,
-  const VprNetlistAnnotation &netlist_annotation,
+  const IoNameMap &io_name_map, const VprNetlistAnnotation &netlist_annotation,
   const std::string &circuit_name, const std::string &verilog_fname,
   const VerilogTestbenchOption &options) {
   std::string timer_message =
@@ -577,20 +572,33 @@ int print_verilog_preconfig_top_module(
   print_verilog_preconfig_top_module_ports(fp, circuit_name, atom_ctx,
                                            netlist_annotation, bus_group);
 
-  /* Find the top_module */
-  ModuleId top_module =
-    module_manager.find_module(generate_fpga_top_module_name());
-  VTR_ASSERT(true == module_manager.valid_module_id(top_module));
+  /* Spot the dut module */
+  ModuleId top_module = module_manager.find_module(options.dut_module());
+  if (!module_manager.valid_module_id(top_module)) {
+    VTR_LOG_ERROR(
+      "Unable to find the DUT module '%s'. Please check if you create "
+      "dedicated module when building the fabric!\n",
+      options.dut_module().c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  /* Note that we always need the core module as it contains the original port
+   * names before possible renaming at top-level module. If there is no core
+   * module, it means that the current top module is the core module */
+  ModuleId core_module =
+    module_manager.find_module(generate_fpga_core_module_name());
+  if (!module_manager.valid_module_id(core_module)) {
+    core_module = top_module;
+  }
 
   /* Print internal wires */
   print_verilog_preconfig_top_module_internal_wires(fp, module_manager,
-                                                    top_module);
+                                                    core_module);
 
   /* Instanciate FPGA top-level module */
   print_verilog_testbench_fpga_instance(
-    fp, module_manager, top_module,
+    fp, module_manager, top_module, core_module,
     std::string(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME),
-    std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX),
+    std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), io_name_map,
     options.explicit_port_mapping());
 
   /* Find clock ports in benchmark */
@@ -600,7 +608,7 @@ int print_verilog_preconfig_top_module(
   /* Connect FPGA top module global ports to constant or benchmark global
    * signals! */
   status = print_verilog_preconfig_top_module_connect_global_ports(
-    fp, module_manager, top_module, pin_constraints, global_ports,
+    fp, module_manager, core_module, pin_constraints, global_ports,
     benchmark_clock_port_names);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
@@ -608,7 +616,7 @@ int print_verilog_preconfig_top_module(
 
   /* Connect I/Os to benchmark I/Os or constant driver */
   print_verilog_testbench_connect_fpga_ios(
-    fp, module_manager, top_module, atom_ctx, place_ctx, io_location_map,
+    fp, module_manager, core_module, atom_ctx, place_ctx, io_location_map,
     netlist_annotation, bus_group,
     std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX), std::string(),
     std::string(), std::vector<std::string>(),
@@ -618,10 +626,20 @@ int print_verilog_preconfig_top_module(
   CircuitModelId sram_model = config_protocol.memory_model();
   VTR_ASSERT(true == circuit_lib.valid_model_id(sram_model));
 
+  /* If we do have the core module, and the dut is specified as core module, the
+   * hierarchy path when adding should be the instance name of the core module
+   */
+  std::string inst_name = generate_fpga_top_module_name();
+  if (options.dut_module() == generate_fpga_core_module_name()) {
+    ModuleId parent_module =
+      module_manager.find_module(generate_fpga_top_module_name());
+    inst_name = module_manager.instance_name(parent_module, core_module, 0);
+  }
+
   /* Assign FPGA internal SRAM/Memory ports to bitstream values, only output
    * when needed */
   print_verilog_preconfig_top_module_load_bitstream(
-    fp, module_manager, top_module, circuit_lib, sram_model, bitstream_manager,
+    fp, inst_name, circuit_lib, sram_model, bitstream_manager,
     options.embedded_bitstream_hdl_type());
 
   /* Add signal initialization:

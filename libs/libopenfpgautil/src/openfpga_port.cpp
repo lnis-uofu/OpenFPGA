@@ -111,6 +111,25 @@ std::string BasicPort::to_verilog_string() const {
          std::to_string(get_msb()) + "]";
 }
 
+size_t BasicPort::find_ipin(const BasicPort& ref_port) const {
+  /* Port name should match first */
+  if (!this->mergeable(ref_port)) {
+    return get_width(); /* Name does not match, no need to find the pin index,
+                           return an invalid range */
+  }
+  /* it should be only a pin (width = 1) */
+  if (!ref_port.is_valid() || ref_port.get_width() != 1) {
+    return get_width(); /* Return an invalid range */
+  }
+  /* Must cache the pin list otherwise the begin() and end() are not constant */
+  auto pin_list = pins();
+  auto it = std::find(pin_list.begin(), pin_list.end(), ref_port.get_lsb());
+  if (it == pin_list.end()) {
+    return get_width(); /* Out of range, return an invalid range */
+  }
+  return it - pin_list.begin();
+}
+
 /************************************************************************
  * Overloaded operators
  ***********************************************************************/

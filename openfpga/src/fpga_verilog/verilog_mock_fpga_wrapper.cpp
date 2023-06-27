@@ -44,7 +44,7 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const AtomContext& atom_ctx,
   const PlacementContext& place_ctx, const IoLocationMap& io_location_map,
-  const PinConstraints& pin_constraints,
+  const IoNameMap& io_name_map, const PinConstraints& pin_constraints,
   const FabricGlobalPortInfo& global_ports,
   const VprNetlistAnnotation& netlist_annotation,
   const std::string& net_name_postfix,
@@ -199,10 +199,17 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
       print_verilog_comment(
         fp, std::string("----- Blif Benchmark input " + block_name +
                         " is mapped to FPGA IOPAD " +
-                        module_mapped_io_port.get_name() + "[" +
-                        std::to_string(io_index) + "] -----"));
-      print_verilog_wire_connection(fp, benchmark_io_port,
-                                    module_mapped_io_port, false);
+                        module_mapped_io_port.to_verilog_string() + " -----"));
+      /* Consider possible I/O naming rules */
+      BasicPort renamed_module_mapped_io_port =
+        io_name_map.fpga_top_port(module_mapped_io_port);
+      if (renamed_module_mapped_io_port.is_valid()) {
+        print_verilog_wire_connection(fp, benchmark_io_port,
+                                      renamed_module_mapped_io_port, false);
+      } else {
+        print_verilog_wire_connection(fp, benchmark_io_port,
+                                      module_mapped_io_port, false);
+      }
     } else {
       VTR_ASSERT(AtomBlockType::OUTPAD == atom_ctx.nlist.block_type(atom_blk));
       benchmark_io_port.set_name(
@@ -210,10 +217,17 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
       print_verilog_comment(
         fp, std::string("----- Blif Benchmark output " + block_name +
                         " is mapped to FPGA IOPAD " +
-                        module_mapped_io_port.get_name() + "[" +
-                        std::to_string(io_index) + "] -----"));
-      print_verilog_wire_connection(fp, module_mapped_io_port,
-                                    benchmark_io_port, false);
+                        module_mapped_io_port.to_verilog_string() + " -----"));
+      /* Consider possible I/O naming rules */
+      BasicPort renamed_module_mapped_io_port =
+        io_name_map.fpga_top_port(module_mapped_io_port);
+      if (renamed_module_mapped_io_port.is_valid()) {
+        print_verilog_wire_connection(fp, renamed_module_mapped_io_port,
+                                      benchmark_io_port, false);
+      } else {
+        print_verilog_wire_connection(fp, module_mapped_io_port,
+                                      benchmark_io_port, false);
+      }
     }
 
     /* Mark this I/O has been used/wired */
@@ -250,8 +264,16 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
 
       std::vector<size_t> default_values(module_unused_io_port.get_width(),
                                          unused_io_value);
-      print_verilog_wire_constant_values(fp, module_unused_io_port,
-                                         default_values);
+      /* Consider possible I/O naming rules */
+      BasicPort renamed_module_unused_io_port =
+        io_name_map.fpga_top_port(module_unused_io_port);
+      if (renamed_module_unused_io_port.is_valid()) {
+        print_verilog_wire_constant_values(fp, renamed_module_unused_io_port,
+                                           default_values);
+      } else {
+        print_verilog_wire_constant_values(fp, module_unused_io_port,
+                                           default_values);
+      }
     }
 
     /* Add an empty line as a splitter */
@@ -267,7 +289,7 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
 static int print_verilog_mock_fpga_wrapper_connect_global_ports(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const PinConstraints& pin_constraints,
-  const FabricGlobalPortInfo& fabric_global_ports,
+  const FabricGlobalPortInfo& fabric_global_ports, const IoNameMap& io_name_map,
   const std::vector<std::string>& benchmark_clock_port_names) {
   /* Validate the file stream */
   valid_file_stream(fp);
@@ -330,8 +352,16 @@ static int print_verilog_mock_fpga_wrapper_connect_global_ports(
         clock_name_to_connect += std::string(APPINST_PORT_POSTFIX);
 
         BasicPort benchmark_clock_pin(clock_name_to_connect, 1);
-        print_verilog_wire_connection(fp, benchmark_clock_pin, module_clock_pin,
-                                      false);
+        /* If io naming is applicable, just consider the renaming port */
+        BasicPort actual_module_clock_pin =
+          io_name_map.fpga_top_port(module_clock_pin);
+        if (!actual_module_clock_pin.is_valid()) {
+          print_verilog_wire_connection(fp, benchmark_clock_pin,
+                                        module_clock_pin, false);
+        } else {
+          print_verilog_wire_connection(fp, benchmark_clock_pin,
+                                        actual_module_clock_pin, false);
+        }
       }
       /* Finish, go to the next */
       continue;
@@ -363,8 +393,16 @@ static int print_verilog_mock_fpga_wrapper_connect_global_ports(
       if ((false == pin_constraints.unconstrained_net(constrained_net_name)) &&
           (false == pin_constraints.unmapped_net(constrained_net_name))) {
         BasicPort benchmark_pin(constrained_net_name, 1);
-        print_verilog_wire_connection(fp, benchmark_pin, module_global_pin,
-                                      false);
+        /* If io naming is applicable, just consider the renaming port */
+        BasicPort actual_module_global_pin =
+          io_name_map.fpga_top_port(module_global_pin);
+        if (!actual_module_global_pin.is_valid()) {
+          print_verilog_wire_connection(fp, benchmark_pin, module_global_pin,
+                                        false);
+        } else {
+          print_verilog_wire_connection(fp, benchmark_pin,
+                                        actual_module_global_pin, false);
+        }
       }
     }
   }
@@ -407,7 +445,7 @@ int print_verilog_mock_fpga_wrapper(
   const ModuleManager& module_manager, const FabricGlobalPortInfo& global_ports,
   const AtomContext& atom_ctx, const PlacementContext& place_ctx,
   const PinConstraints& pin_constraints, const BusGroup& bus_group,
-  const IoLocationMap& io_location_map,
+  const IoLocationMap& io_location_map, const IoNameMap& io_name_map,
   const VprNetlistAnnotation& netlist_annotation,
   const std::string& circuit_name, const std::string& verilog_fname,
   const VerilogTestbenchOption& options) {
@@ -434,9 +472,37 @@ int print_verilog_mock_fpga_wrapper(
   print_verilog_file_header(fp, title, options.time_stamp());
 
   /* Find the top_module */
-  ModuleId top_module =
-    module_manager.find_module(generate_fpga_top_module_name());
-  VTR_ASSERT(true == module_manager.valid_module_id(top_module));
+  ModuleId top_module = module_manager.find_module(options.dut_module());
+  if (!module_manager.valid_module_id(top_module)) {
+    VTR_LOG_ERROR(
+      "Unable to find the DUT module '%s'. Please check if you create "
+      "dedicated module when building the fabric!\n",
+      options.dut_module().c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  /* Note that we always need the core module as it contains the original port
+   * names before possible renaming at top-level module. If there is no core
+   * module, it means that the current top module is the core module */
+  ModuleId core_module =
+    module_manager.find_module(generate_fpga_core_module_name());
+  if (!module_manager.valid_module_id(core_module)) {
+    core_module = top_module;
+  }
+
+  /* Precheck on the top module and decide if we need to consider I/O naming
+   * - If we do have a fpga_core module added, and dut is fpga_top, we need a
+   * I/O naming
+   * - If we do NOT have a fpga_core module added, and dut is fpga_top, we do
+   * NOT need a I/O naming
+   * - If we do have a fpga_core module added, and dut is fpga_core, we do NOT
+   * need a I/O naming
+   * - If we do NOT have a fpga_core module added, and dut is fpga_core, it
+   * should error out earlier.
+   */
+  bool require_io_naming = false;
+  if (top_module != core_module) {
+    require_io_naming = true;
+  }
 
   /* Print module declaration */
   print_verilog_module_declaration(fp, module_manager, top_module,
@@ -466,16 +532,17 @@ int print_verilog_mock_fpga_wrapper(
   /* Connect FPGA top module global ports to constant or benchmark global
    * signals! */
   status = print_verilog_mock_fpga_wrapper_connect_global_ports(
-    fp, module_manager, top_module, pin_constraints, global_ports,
-    benchmark_clock_port_names);
+    fp, module_manager, core_module, pin_constraints, global_ports,
+    require_io_naming ? io_name_map : IoNameMap(), benchmark_clock_port_names);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }
 
   /* Connect I/Os to benchmark I/Os or constant driver */
   print_verilog_mock_fpga_wrapper_connect_ios(
-    fp, module_manager, top_module, atom_ctx, place_ctx, io_location_map,
-    pin_constraints, global_ports, netlist_annotation, std::string(),
+    fp, module_manager, core_module, atom_ctx, place_ctx, io_location_map,
+    require_io_naming ? io_name_map : IoNameMap(), pin_constraints,
+    global_ports, netlist_annotation, std::string(),
     std::string(APPINST_PORT_POSTFIX), std::string(APPINST_PORT_POSTFIX),
     benchmark_clock_port_names, (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 

@@ -6,6 +6,7 @@
 #include "build_device_module.h"
 #include "build_fabric_global_port_info.h"
 #include "build_fabric_io_location_map.h"
+#include "build_fpga_core_wrapper_module.h"
 #include "command.h"
 #include "command_context.h"
 #include "command_exit_codes.h"
@@ -16,6 +17,7 @@
 #include "globals.h"
 #include "openfpga_naming.h"
 #include "read_xml_fabric_key.h"
+#include "read_xml_io_name_map.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
 
@@ -249,9 +251,16 @@ int add_fpga_core_to_fabric_template(T& openfpga_ctx, const Command& cmd,
     core_inst_name = cmd_context.option_value(cmd, opt_inst_name);
   }
 
+  /* Handle I/O naming rules if defined */
+  CommandOptionId opt_io_naming = cmd.option("io_naming");
+  if (true == cmd_context.option_enable(cmd, opt_io_naming)) {
+    read_xml_io_name_map(cmd_context.option_value(cmd, opt_io_naming).c_str(),
+                         openfpga_ctx.mutable_io_name_map());
+  }
+
   return add_fpga_core_to_device_module_graph(
-    openfpga_ctx.mutable_module_graph(), core_inst_name, frame_view,
-    verbose_output);
+    openfpga_ctx.mutable_module_graph(), openfpga_ctx.io_name_map(),
+    core_inst_name, frame_view, verbose_output);
 }
 
 } /* end namespace openfpga */

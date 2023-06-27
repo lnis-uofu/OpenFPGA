@@ -37,6 +37,7 @@ class VerilogTestbenchOption {
 
  public: /* Public accessors */
   std::string output_directory() const;
+  std::string dut_module() const;
   std::string fabric_netlist_file_path() const;
   std::string reference_benchmark_file_path() const;
   bool fast_configuration() const;
@@ -60,6 +61,7 @@ class VerilogTestbenchOption {
 
  public: /* Public mutators */
   void set_output_directory(const std::string& output_dir);
+  void set_dut_module(const std::string& dut_module);
   /* The reference verilog file path is the key parameters that will have an
    * impact on other options:
    *  - print_preconfig_top_testbench
@@ -93,6 +95,7 @@ class VerilogTestbenchOption {
 
  private: /* Internal Data */
   std::string output_directory_;
+  std::string dut_module_;
   std::string fabric_netlist_file_path_;
   std::string reference_benchmark_file_path_;
   bool fast_configuration_;
