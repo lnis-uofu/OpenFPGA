@@ -39,6 +39,20 @@ FabricKey::fabric_word_line_bank_range FabricKey::wl_banks(
                          wl_bank_ids_[region_id].end());
 }
 
+FabricKey::fabric_key_module_range FabricKey::modules() const {
+  return vtr::make_range(sub_key_module_ids_.begin(),
+                         sub_key_module_ids_.end());
+}
+
+FabricKey::fabric_sub_key_range FabricKey::sub_keys(
+  const FabricKeyModuleId& module_id) const {
+  VTR_ASSERT(valid_module_id(module_id));
+  return vtr::make_range(
+    sub_key_ids_.begin() + size_t(module_sub_keys_[module_id][0]),
+    sub_key_ids_.begin() + size_t(module_sub_keys_[module_id][0]) +
+      size_t(module_sub_keys_[module_id].size() - 1));
+}
+
 /************************************************************************
  * Public Accessors : Basic data query
  ***********************************************************************/
@@ -296,4 +310,14 @@ bool FabricKey::valid_wl_bank_id(const FabricRegionId& region_id,
   }
   return (size_t(bank_id) < wl_bank_ids_[region_id].size()) &&
          (bank_id == wl_bank_ids_[region_id][bank_id]);
+}
+
+bool FabricKey::valid_module_id(const FabricKeyModuleId& module_id) const {
+  return (size_t(module_id) < sub_key_module_ids_.size()) &&
+         (module_id == sub_key_module_ids_[module_id]);
+}
+
+bool FabricKey::valid_sub_key_id(const FabricSubKeyId& sub_key_id) const {
+  return (size_t(sub_key_id) < sub_key_ids_.size()) &&
+         (sub_key_id == sub_key_ids_[sub_key_id]);
 }

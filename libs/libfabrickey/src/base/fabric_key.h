@@ -47,12 +47,18 @@ class FabricKey {
   typedef vtr::vector<FabricWordLineBankId,
                       FabricWordLineBankId>::const_iterator
     fabric_word_line_bank_iterator;
+  typedef vtr::vector<FabricSubKeyId, FabricSubKeyId>::const_iterator
+    fabric_sub_key_iterator;
+  typedef vtr::vector<FabricKeyModuleId, FabricKeyModuleId>::const_iterator
+    fabric_key_module_iterator;
   /* Create range */
   typedef vtr::Range<fabric_region_iterator> fabric_region_range;
   typedef vtr::Range<fabric_key_iterator> fabric_key_range;
   typedef vtr::Range<fabric_bit_line_bank_iterator> fabric_bit_line_bank_range;
   typedef vtr::Range<fabric_word_line_bank_iterator>
     fabric_word_line_bank_range;
+  typedef vtr::Range<fabric_sub_key_iterator> fabric_sub_key_range;
+  typedef vtr::Range<fabric_key_module_iterator> fabric_key_module_range;
 
  public: /* Constructors */
   FabricKey();
@@ -62,6 +68,8 @@ class FabricKey {
   fabric_region_range regions() const;
   fabric_bit_line_bank_range bl_banks(const FabricRegionId& region_id) const;
   fabric_word_line_bank_range wl_banks(const FabricRegionId& region_id) const;
+  fabric_key_module_range modules() const;
+  fabric_sub_key_range sub_keys(const FabricKeyModuleId& module_id) const;
 
  public: /* Public Accessors: Basic data query */
   /* Access all the keys of a region */
@@ -156,8 +164,11 @@ class FabricKey {
                         const FabricBitLineBankId& bank_id) const;
   bool valid_wl_bank_id(const FabricRegionId& region_id,
                         const FabricWordLineBankId& bank_id) const;
+  bool valid_module_id(const FabricKeyModuleId& module_id) const;
+  bool valid_sub_key_id(const FabricSubKeyId& sub_key_id) const;
 
  private: /* Internal data */
+  /* ---- Top-level keys and regions ---- */
   /* Unique ids for each region */
   vtr::vector<FabricRegionId, FabricRegionId> region_ids_;
 
@@ -199,6 +210,18 @@ class FabricKey {
   vtr::vector<FabricRegionId, vtr::vector<FabricWordLineBankId,
                                           std::vector<openfpga::BasicPort>>>
     wl_bank_data_ports_;
+
+  /* ---- List of sub modules ---- */
+  vtr::vector<FabricKeyModuleId, FabricKeyModuleId> sub_key_module_ids_;
+  vtr::vector<FabricKeyModuleId, std::string> sub_key_module_names_;
+  vtr::vector<FabricKeyModuleId, std::vector<FabricSubKeyId>> module_sub_keys_;
+  std::map<std::string, FabricKeyModuleId> module2subkey_lookup_;
+
+  /* ---- Sub keys ---- */
+  vtr::vector<FabricSubKeyId, FabricSubKeyId> sub_key_ids_;
+  vtr::vector<FabricSubKeyId, std::string> sub_key_names_;
+  vtr::vector<FabricSubKeyId, size_t> sub_key_values_;
+  vtr::vector<FabricSubKeyId, std::string> sub_key_alias_;
 };
 
 #endif
