@@ -18,6 +18,7 @@
 #include "write_xml_utils.h"
 
 /* Headers from fabrickey library */
+#include "fabric_key_xml_constants.h"
 #include "write_xml_fabric_key.h"
 
 /********************************************************************
@@ -36,27 +37,31 @@ static int write_xml_fabric_component_key(std::fstream& fp,
   }
 
   openfpga::write_tab_to_file(fp, 2);
-  fp << "<key";
+  fp << "<" << XML_FABRIC_KEY_KEY_NODE_NAME;
 
   if (false == fabric_key.valid_key_id(component_key)) {
     return 1;
   }
 
-  write_xml_attribute(fp, "id", size_t(component_key));
+  write_xml_attribute(fp, XML_FABRIC_KEY_KEY_ATTRIBUTE_ID_NAME,
+                      size_t(component_key));
   if (!fabric_key.key_name(component_key).empty()) {
-    write_xml_attribute(fp, "name", fabric_key.key_name(component_key).c_str());
+    write_xml_attribute(fp, XML_FABRIC_KEY_KEY_ATTRIBUTE_NAME_NAME,
+                        fabric_key.key_name(component_key).c_str());
   }
-  write_xml_attribute(fp, "value", fabric_key.key_value(component_key));
+  write_xml_attribute(fp, XML_FABRIC_KEY_KEY_ATTRIBUTE_VALUE_NAME,
+                      fabric_key.key_value(component_key));
 
   if (!fabric_key.key_alias(component_key).empty()) {
-    write_xml_attribute(fp, "alias",
+    write_xml_attribute(fp, XML_FABRIC_KEY_KEY_ATTRIBUTE_ALIAS_NAME,
                         fabric_key.key_alias(component_key).c_str());
   }
 
   vtr::Point<int> coord = fabric_key.key_coordinate(component_key);
   if (fabric_key.valid_key_coordinate(coord)) {
-    write_xml_attribute(fp, "column", coord.x());
-    write_xml_attribute(fp, "row", coord.y());
+    write_xml_attribute(fp, XML_FABRIC_KEY_KEY_ATTRIBUTE_COLUMN_NAME,
+                        coord.x());
+    write_xml_attribute(fp, XML_FABRIC_KEY_KEY_ATTRIBUTE_ROW_NAME, coord.y());
   }
 
   fp << "/>"
@@ -86,14 +91,16 @@ static int write_xml_fabric_bl_shift_register_banks(
 
   /* Write the root node */
   openfpga::write_tab_to_file(fp, 2);
-  fp << "<bl_shift_register_banks>"
+  fp << "<" << XML_FABRIC_KEY_BL_SHIFT_REGISTER_BANKS_NODE_NAME << ">"
      << "\n";
 
   for (const auto& bank : fabric_key.bl_banks(region)) {
     openfpga::write_tab_to_file(fp, 3);
-    fp << "<bank";
+    fp << "<" << XML_FABRIC_KEY_BLWL_SHIFT_REGISTER_BANK_NODE_NAME;
 
-    write_xml_attribute(fp, "id", size_t(bank));
+    write_xml_attribute(
+      fp, XML_FABRIC_KEY_BLWL_SHIFT_REGISTER_BANK_ATTRIBUTE_ID_NAME,
+      size_t(bank));
 
     std::string port_str;
     for (const auto& port : fabric_key.bl_bank_data_ports(region, bank)) {
@@ -103,14 +110,16 @@ static int write_xml_fabric_bl_shift_register_banks(
     if (!port_str.empty()) {
       port_str.pop_back();
     }
-    write_xml_attribute(fp, "range", port_str.c_str());
+    write_xml_attribute(
+      fp, XML_FABRIC_KEY_BLWL_SHIFT_REGISTER_BANK_ATTRIBUTE_RANGE_NAME,
+      port_str.c_str());
 
     fp << "/>"
        << "\n";
   }
 
   openfpga::write_tab_to_file(fp, 2);
-  fp << "</bl_shift_register_banks>"
+  fp << "</" << XML_FABRIC_KEY_BL_SHIFT_REGISTER_BANKS_NODE_NAME << ">"
      << "\n";
 
   return 0;
@@ -137,14 +146,16 @@ static int write_xml_fabric_wl_shift_register_banks(
 
   /* Write the root node */
   openfpga::write_tab_to_file(fp, 2);
-  fp << "<wl_shift_register_banks>"
+  fp << "<" << XML_FABRIC_KEY_WL_SHIFT_REGISTER_BANKS_NODE_NAME << ">"
      << "\n";
 
   for (const auto& bank : fabric_key.wl_banks(region)) {
     openfpga::write_tab_to_file(fp, 3);
-    fp << "<bank";
+    fp << "<" << XML_FABRIC_KEY_BLWL_SHIFT_REGISTER_BANK_NODE_NAME;
 
-    write_xml_attribute(fp, "id", size_t(bank));
+    write_xml_attribute(
+      fp, XML_FABRIC_KEY_BLWL_SHIFT_REGISTER_BANK_ATTRIBUTE_ID_NAME,
+      size_t(bank));
 
     std::string port_str;
     for (const auto& port : fabric_key.wl_bank_data_ports(region, bank)) {
@@ -154,14 +165,16 @@ static int write_xml_fabric_wl_shift_register_banks(
     if (!port_str.empty()) {
       port_str.pop_back();
     }
-    write_xml_attribute(fp, "range", port_str.c_str());
+    write_xml_attribute(
+      fp, XML_FABRIC_KEY_BLWL_SHIFT_REGISTER_BANK_ATTRIBUTE_RANGE_NAME,
+      port_str.c_str());
 
     fp << "/>"
        << "\n";
   }
 
   openfpga::write_tab_to_file(fp, 2);
-  fp << "</wl_shift_register_banks>"
+  fp << "</" << XML_FABRIC_KEY_WL_SHIFT_REGISTER_BANKS_NODE_NAME << ">"
      << "\n";
 
   return 0;
@@ -186,7 +199,7 @@ int write_xml_fabric_key(const char* fname, const FabricKey& fabric_key) {
   openfpga::check_file_stream(fname, fp);
 
   /* Write the root node */
-  fp << "<fabric_key>"
+  fp << "<" << XML_FABRIC_KEY_ROOT_NAME << ">"
      << "\n";
 
   int err_code = 0;
@@ -194,7 +207,9 @@ int write_xml_fabric_key(const char* fname, const FabricKey& fabric_key) {
   /* Write region by region */
   for (const FabricRegionId& region : fabric_key.regions()) {
     openfpga::write_tab_to_file(fp, 1);
-    fp << "<region id=\"" << size_t(region) << "\""
+    fp << "<" << XML_FABRIC_KEY_REGION_NODE_NAME << " "
+       << XML_FABRIC_KEY_REGION_ATTRIBUTE_ID_NAME << "=\"" << size_t(region)
+       << "\""
        << ">\n";
 
     /* Write shift register banks */
@@ -210,12 +225,12 @@ int write_xml_fabric_key(const char* fname, const FabricKey& fabric_key) {
     }
 
     openfpga::write_tab_to_file(fp, 1);
-    fp << "</region>"
+    fp << "</" << XML_FABRIC_KEY_REGION_NODE_NAME << ">"
        << "\n";
   }
 
   /* Finish writing the root node */
-  fp << "</fabric_key>"
+  fp << "</" << XML_FABRIC_KEY_ROOT_NAME << ">"
      << "\n";
 
   /* Close the file stream */

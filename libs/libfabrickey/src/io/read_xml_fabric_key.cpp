@@ -19,6 +19,7 @@
 
 /* Headers from libarchfpga */
 #include "arch_error.h"
+#include "fabric_key_xml_constants.h"
 #include "read_xml_fabric_key.h"
 #include "read_xml_util.h"
 
@@ -30,7 +31,10 @@ static void read_xml_region_key(pugi::xml_node& xml_component_key,
                                 FabricKey& fabric_key,
                                 const FabricRegionId& fabric_region) {
   /* Find the id of component key */
-  const size_t& id = get_attribute(xml_component_key, "id", loc_data).as_int();
+  const size_t& id =
+    get_attribute(xml_component_key, XML_FABRIC_KEY_KEY_ATTRIBUTE_ID_NAME,
+                  loc_data)
+      .as_int();
 
   if (false == fabric_key.valid_key_id(FabricKeyId(id))) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_component_key),
@@ -41,9 +45,10 @@ static void read_xml_region_key(pugi::xml_node& xml_component_key,
   VTR_ASSERT_SAFE(true == fabric_key.valid_key_id(FabricKeyId(id)));
 
   /* If we have an alias, set the value as well */
-  const std::string& alias = get_attribute(xml_component_key, "alias", loc_data,
-                                           pugiutil::ReqOpt::OPTIONAL)
-                               .as_string();
+  const std::string& alias =
+    get_attribute(xml_component_key, XML_FABRIC_KEY_KEY_ATTRIBUTE_ALIAS_NAME,
+                  loc_data, pugiutil::ReqOpt::OPTIONAL)
+      .as_string();
   if (!alias.empty()) {
     fabric_key.set_key_alias(FabricKeyId(id), alias);
   }
@@ -57,10 +62,12 @@ static void read_xml_region_key(pugi::xml_node& xml_component_key,
   }
 
   const std::string& name =
-    get_attribute(xml_component_key, "name", loc_data, required_name_value)
+    get_attribute(xml_component_key, XML_FABRIC_KEY_KEY_ATTRIBUTE_NAME_NAME,
+                  loc_data, required_name_value)
       .as_string();
   const size_t& value =
-    get_attribute(xml_component_key, "value", loc_data, required_name_value)
+    get_attribute(xml_component_key, XML_FABRIC_KEY_KEY_ATTRIBUTE_VALUE_NAME,
+                  loc_data, required_name_value)
       .as_int();
 
   fabric_key.set_key_name(FabricKeyId(id), name);
@@ -69,10 +76,12 @@ static void read_xml_region_key(pugi::xml_node& xml_component_key,
 
   /* Parse coordinates */
   vtr::Point<int> coord;
-  coord.set_x(get_attribute(xml_component_key, "column", loc_data,
+  coord.set_x(get_attribute(xml_component_key,
+                            XML_FABRIC_KEY_KEY_ATTRIBUTE_COLUMN_NAME, loc_data,
                             pugiutil::ReqOpt::OPTIONAL)
                 .as_int(-1));
-  coord.set_y(get_attribute(xml_component_key, "row", loc_data,
+  coord.set_y(get_attribute(xml_component_key,
+                            XML_FABRIC_KEY_KEY_ATTRIBUTE_ROW_NAME, loc_data,
                             pugiutil::ReqOpt::OPTIONAL)
                 .as_int(-1));
   if (fabric_key.valid_key_coordinate(coord)) {
@@ -88,8 +97,11 @@ static void read_xml_region_bl_shift_register_bank(
   pugi::xml_node& xml_bank, const pugiutil::loc_data& loc_data,
   FabricKey& fabric_key, const FabricRegionId& fabric_region) {
   /* Find the id of the bank */
-  FabricBitLineBankId bank_id =
-    FabricBitLineBankId(get_attribute(xml_bank, "id", loc_data).as_int());
+  FabricBitLineBankId bank_id = FabricBitLineBankId(
+    get_attribute(xml_bank,
+                  XML_FABRIC_KEY_BLWL_SHIFT_REGISTER_BANK_ATTRIBUTE_ID_NAME,
+                  loc_data)
+      .as_int());
 
   if (!fabric_key.valid_bl_bank_id(fabric_region, bank_id)) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_bank),
@@ -101,7 +113,10 @@ static void read_xml_region_bl_shift_register_bank(
 
   /* Parse the ports */
   std::string data_ports =
-    get_attribute(xml_bank, "range", loc_data).as_string();
+    get_attribute(xml_bank,
+                  XML_FABRIC_KEY_BLWL_SHIFT_REGISTER_BANK_ATTRIBUTE_RANGE_NAME,
+                  loc_data)
+      .as_string();
   /* Split with ',' if we have multiple ports */
   openfpga::StringToken tokenizer(data_ports);
   for (const std::string& data_port : tokenizer.split(',')) {
@@ -117,8 +132,9 @@ static void read_xml_region_bl_shift_register_bank(
 static void read_xml_region_bl_shift_register_banks(
   pugi::xml_node& xml_bl_bank, const pugiutil::loc_data& loc_data,
   FabricKey& fabric_key, const FabricRegionId& fabric_region) {
-  size_t num_banks =
-    count_children(xml_bl_bank, "bank", loc_data, pugiutil::ReqOpt::OPTIONAL);
+  size_t num_banks = count_children(
+    xml_bl_bank, XML_FABRIC_KEY_BLWL_SHIFT_REGISTER_BANK_NODE_NAME, loc_data,
+    pugiutil::ReqOpt::OPTIONAL);
   fabric_key.reserve_bl_shift_register_banks(fabric_region, num_banks);
 
   for (size_t ibank = 0; ibank < num_banks; ++ibank) {
@@ -127,8 +143,10 @@ static void read_xml_region_bl_shift_register_banks(
 
   for (pugi::xml_node xml_bank : xml_bl_bank.children()) {
     /* Error out if the XML child has an invalid name! */
-    if (xml_bank.name() != std::string("bank")) {
-      bad_tag(xml_bank, loc_data, xml_bl_bank, {"bank"});
+    if (xml_bank.name() !=
+        std::string(XML_FABRIC_KEY_BLWL_SHIFT_REGISTER_BANK_NODE_NAME)) {
+      bad_tag(xml_bank, loc_data, xml_bl_bank,
+              {XML_FABRIC_KEY_BLWL_SHIFT_REGISTER_BANK_NODE_NAME});
     }
     read_xml_region_bl_shift_register_bank(xml_bank, loc_data, fabric_key,
                                            fabric_region);
@@ -143,8 +161,11 @@ static void read_xml_region_wl_shift_register_bank(
   pugi::xml_node& xml_bank, const pugiutil::loc_data& loc_data,
   FabricKey& fabric_key, const FabricRegionId& fabric_region) {
   /* Find the id of the bank */
-  FabricWordLineBankId bank_id =
-    FabricWordLineBankId(get_attribute(xml_bank, "id", loc_data).as_int());
+  FabricWordLineBankId bank_id = FabricWordLineBankId(
+    get_attribute(xml_bank,
+                  XML_FABRIC_KEY_BLWL_SHIFT_REGISTER_BANK_ATTRIBUTE_ID_NAME,
+                  loc_data)
+      .as_int());
 
   if (!fabric_key.valid_wl_bank_id(fabric_region, bank_id)) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_bank),
@@ -156,7 +177,10 @@ static void read_xml_region_wl_shift_register_bank(
 
   /* Parse the ports */
   std::string data_ports =
-    get_attribute(xml_bank, "range", loc_data).as_string();
+    get_attribute(xml_bank,
+                  XML_FABRIC_KEY_BLWL_SHIFT_REGISTER_BANK_ATTRIBUTE_RANGE_NAME,
+                  loc_data)
+      .as_string();
   /* Split with ',' if we have multiple ports */
   openfpga::StringToken tokenizer(data_ports);
   for (const std::string& data_port : tokenizer.split(',')) {
@@ -172,8 +196,9 @@ static void read_xml_region_wl_shift_register_bank(
 static void read_xml_region_wl_shift_register_banks(
   pugi::xml_node& xml_wl_bank, const pugiutil::loc_data& loc_data,
   FabricKey& fabric_key, const FabricRegionId& fabric_region) {
-  size_t num_banks =
-    count_children(xml_wl_bank, "bank", loc_data, pugiutil::ReqOpt::OPTIONAL);
+  size_t num_banks = count_children(
+    xml_wl_bank, XML_FABRIC_KEY_BLWL_SHIFT_REGISTER_BANK_NODE_NAME, loc_data,
+    pugiutil::ReqOpt::OPTIONAL);
   fabric_key.reserve_wl_shift_register_banks(fabric_region, num_banks);
 
   for (size_t ibank = 0; ibank < num_banks; ++ibank) {
@@ -182,8 +207,10 @@ static void read_xml_region_wl_shift_register_banks(
 
   for (pugi::xml_node xml_bank : xml_wl_bank.children()) {
     /* Error out if the XML child has an invalid name! */
-    if (xml_bank.name() != std::string("bank")) {
-      bad_tag(xml_bank, loc_data, xml_wl_bank, {"bank"});
+    if (xml_bank.name() !=
+        std::string(XML_FABRIC_KEY_BLWL_SHIFT_REGISTER_BANK_NODE_NAME)) {
+      bad_tag(xml_bank, loc_data, xml_wl_bank,
+              {XML_FABRIC_KEY_BLWL_SHIFT_REGISTER_BANK_NODE_NAME});
     }
     read_xml_region_wl_shift_register_bank(xml_bank, loc_data, fabric_key,
                                            fabric_region);
@@ -197,8 +224,9 @@ static void read_xml_fabric_region(pugi::xml_node& xml_region,
                                    const pugiutil::loc_data& loc_data,
                                    FabricKey& fabric_key) {
   /* Find the unique id for the region */
-  const FabricRegionId& region_id =
-    FabricRegionId(get_attribute(xml_region, "id", loc_data).as_int());
+  const FabricRegionId& region_id = FabricRegionId(
+    get_attribute(xml_region, XML_FABRIC_KEY_REGION_ATTRIBUTE_ID_NAME, loc_data)
+      .as_int());
   if (false == fabric_key.valid_region_id(region_id)) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_region),
                    "Invalid region id '%lu' (in total %lu regions)!\n",
@@ -207,13 +235,14 @@ static void read_xml_fabric_region(pugi::xml_node& xml_region,
   VTR_ASSERT_SAFE(true == fabric_key.valid_region_id(region_id));
 
   /* Reserve memory space for the keys in the region */
-  size_t num_keys =
-    count_children(xml_region, "key", loc_data, pugiutil::ReqOpt::OPTIONAL);
+  size_t num_keys = count_children(xml_region, XML_FABRIC_KEY_KEY_NODE_NAME,
+                                   loc_data, pugiutil::ReqOpt::OPTIONAL);
   fabric_key.reserve_region_keys(region_id, num_keys);
 
   /* Parse the key for this region */
   if (0 < num_keys) {
-    pugi::xml_node xml_key = get_first_child(xml_region, "key", loc_data);
+    pugi::xml_node xml_key =
+      get_first_child(xml_region, XML_FABRIC_KEY_KEY_NODE_NAME, loc_data);
     while (xml_key) {
       read_xml_region_key(xml_key, loc_data, fabric_key, region_id);
       xml_key = xml_key.next_sibling(xml_key.name());
@@ -221,16 +250,16 @@ static void read_xml_fabric_region(pugi::xml_node& xml_region,
   }
 
   /* Parse the BL shift register bank for this region */
-  pugi::xml_node xml_bl_bank =
-    get_single_child(xml_region, "bl_shift_register_banks", loc_data,
-                     pugiutil::ReqOpt::OPTIONAL);
+  pugi::xml_node xml_bl_bank = get_single_child(
+    xml_region, XML_FABRIC_KEY_BL_SHIFT_REGISTER_BANKS_NODE_NAME, loc_data,
+    pugiutil::ReqOpt::OPTIONAL);
   read_xml_region_bl_shift_register_banks(xml_bl_bank, loc_data, fabric_key,
                                           region_id);
 
   /* Parse the WL shift register bank for this region */
-  pugi::xml_node xml_wl_bank =
-    get_single_child(xml_region, "wl_shift_register_banks", loc_data,
-                     pugiutil::ReqOpt::OPTIONAL);
+  pugi::xml_node xml_wl_bank = get_single_child(
+    xml_region, XML_FABRIC_KEY_WL_SHIFT_REGISTER_BANKS_NODE_NAME, loc_data,
+    pugiutil::ReqOpt::OPTIONAL);
   read_xml_region_wl_shift_register_banks(xml_wl_bank, loc_data, fabric_key,
                                           region_id);
 }
@@ -250,7 +279,8 @@ FabricKey read_xml_fabric_key(const char* key_fname) {
   try {
     loc_data = pugiutil::load_xml(doc, key_fname);
 
-    pugi::xml_node xml_root = get_single_child(doc, "fabric_key", loc_data);
+    pugi::xml_node xml_root =
+      get_single_child(doc, XML_FABRIC_KEY_ROOT_NAME, loc_data);
 
     size_t num_regions =
       std::distance(xml_root.children().begin(), xml_root.children().end());
@@ -265,8 +295,9 @@ FabricKey read_xml_fabric_key(const char* key_fname) {
 
     for (pugi::xml_node xml_region : xml_root.children()) {
       /* Error out if the XML child has an invalid name! */
-      if (xml_region.name() != std::string("region")) {
-        bad_tag(xml_region, loc_data, xml_root, {"region"});
+      if (xml_region.name() != std::string(XML_FABRIC_KEY_REGION_NODE_NAME)) {
+        bad_tag(xml_region, loc_data, xml_root,
+                {XML_FABRIC_KEY_REGION_NODE_NAME});
       }
       num_keys += std::distance(xml_region.children().begin(),
                                 xml_region.children().end());
@@ -282,8 +313,9 @@ FabricKey read_xml_fabric_key(const char* key_fname) {
      */
     for (pugi::xml_node xml_region : xml_root.children()) {
       /* Error out if the XML child has an invalid name! */
-      if (xml_region.name() != std::string("region")) {
-        bad_tag(xml_region, loc_data, xml_root, {"region"});
+      if (xml_region.name() != std::string(XML_FABRIC_KEY_REGION_NODE_NAME)) {
+        bad_tag(xml_region, loc_data, xml_root,
+                {XML_FABRIC_KEY_REGION_NODE_NAME});
       }
       read_xml_fabric_region(xml_region, loc_data, fabric_key);
     }
