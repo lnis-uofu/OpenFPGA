@@ -100,6 +100,29 @@ std::vector<openfpga::BasicPort> FabricKey::wl_bank_data_ports(
   return wl_bank_data_ports_[region_id][bank_id];
 }
 
+std::string FabricKey::module_name(const FabricKeyModuleId& module_id) const {
+  VTR_ASSERT(valid_module_id(module_id));
+  return sub_key_module_names_[module_id];
+}
+
+std::string FabricKey::sub_key_name(const FabricSubKeyId& key_id) const {
+  /* validate the key_id */
+  VTR_ASSERT(valid_sub_key_id(key_id));
+  return sub_key_names_[key_id];
+}
+
+size_t FabricKey::sub_key_value(const FabricSubKeyId& key_id) const {
+  /* validate the key_id */
+  VTR_ASSERT(valid_sub_key_id(key_id));
+  return sub_key_values_[key_id];
+}
+
+std::string FabricKey::sub_key_alias(const FabricSubKeyId& key_id) const {
+  /* validate the key_id */
+  VTR_ASSERT(valid_sub_key_id(key_id));
+  return sub_key_alias_[key_id];
+}
+
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
@@ -300,6 +323,7 @@ FabricKeyModuleId FabricKey::create_module(const std::string& name) {
   }
   /* Create a new id */
   FabricKeyModuleId module_id = FabricKeyModuleId(sub_key_module_ids_.size());
+  sub_key_module_ids_.push_back(module_id);
   sub_key_module_names_.push_back(name);
   module_sub_keys_.emplace_back();
   /* Register in lookup */
@@ -312,6 +336,7 @@ FabricSubKeyId FabricKey::create_module_key(
   VTR_ASSERT(valid_module_id(module_id));
   /* Create a new id */
   FabricSubKeyId key_id = FabricSubKeyId(sub_key_ids_.size());
+  sub_key_ids_.push_back(key_id);
   sub_key_names_.emplace_back();
   sub_key_values_.emplace_back();
   sub_key_alias_.emplace_back();

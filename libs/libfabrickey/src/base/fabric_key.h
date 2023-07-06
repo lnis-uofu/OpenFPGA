@@ -77,16 +77,12 @@ class FabricKey {
  public: /* Public Accessors: Basic data query */
   /* Access all the keys of a region */
   std::vector<FabricKeyId> region_keys(const FabricRegionId& region_id) const;
-
   /* Access the name of a key */
   std::string key_name(const FabricKeyId& key_id) const;
-
   /* Access the value of a key */
   size_t key_value(const FabricKeyId& key_id) const;
-
   /* Access the alias of a key */
   std::string key_alias(const FabricKeyId& key_id) const;
-
   /* Access the coordinate of a key */
   vtr::Point<int> key_coordinate(const FabricKeyId& key_id) const;
 
@@ -102,6 +98,11 @@ class FabricKey {
    * bank */
   std::vector<BasicPort> wl_bank_data_ports(
     const FabricRegionId& region_id, const FabricWordLineBankId& bank_id) const;
+
+  std::string module_name(const FabricKeyModuleId& module_id) const;
+  std::string sub_key_name(const FabricSubKeyId& key_id) const;
+  size_t sub_key_value(const FabricSubKeyId& key_id) const;
+  std::string sub_key_alias(const FabricSubKeyId& key_id) const;
 
  public: /* Public Mutators: model-related */
   /* Reserve a number of regions to be memory efficent */
