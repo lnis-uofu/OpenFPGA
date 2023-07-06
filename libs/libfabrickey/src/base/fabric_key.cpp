@@ -277,6 +277,57 @@ void FabricKey::add_data_port_to_wl_shift_register_bank(
   wl_bank_data_ports_[region_id][bank_id].push_back(data_port);
 }
 
+void FabricKey::reserve_module_keys(const FabricKeyModuleId& module_id, const size_t& num_keys) {
+  VTR_ASSERT(valid_module_id(module_id));
+  module_sub_keys_[module_id].reserve(num_keys);
+  sub_key_ids_.reserve(sub_key_ids_.size() + num_keys);
+  sub_key_names_.reserve(sub_key_names_.size() + num_keys);
+  sub_key_values_.reserve(sub_key_values_.size() + num_keys);
+  sub_key_alias_.reserve(sub_key_alias_.size() + num_keys);
+}
+
+FabricKeyModuleId FabricKey::create_module(const std::string& name) {
+  /* Ensure name is not duplicated */
+  auto result = module2subkey_lookup_.find(name);
+  if (result != module2subkey_lookup_.end()) {
+    return FabricKeyModuleId::INVALID(); /* Return an invalid id */
+  }
+  /* Create a new id */
+  FabricKeyModuleId module_id = FabricKeyModuleId(sub_key_module_ids_.size());
+  sub_key_module_names_.push_back(name);
+  module_sub_keys_.emplace_back();
+  /* Register in lookup */
+  module2subkey_lookup_[name] = module_id;
+  return module_id;
+}
+
+FabricSubKeyId FabricKey::create_module_key(const FabricKeyModuleId& module_id) {
+  VTR_ASSERT(valid_module_id(module_id));
+  /* Create a new id */
+  FabricSubKeyId key_id = FabricSubKeyId(sub_key_ids_.size());
+  sub_key_names_.emplace_back();
+  sub_key_values_.emplace_back();
+  sub_key_alias_.emplace_back();
+  /* Add the new id to module */
+  module_sub_keys_.emplace_back(key_id);
+  return key_id;
+}
+
+void FabricKey::set_sub_key_name(const FabricSubKeyId& key_id, const std::string& name) {
+  VTR_ASSERT(valid_sub_key_id(key_id));
+  sub_key_names_[key_id] = name;
+}
+
+void FabricKey::set_sub_key_value(const FabricSubKeyId& key_id, const size_t& value) {
+  VTR_ASSERT(valid_sub_key_id(key_id));
+  sub_key_values_[key_id] = value;
+}
+
+void FabricKey::set_sub_key_alias(const FabricSubKeyId& key_id, const std::string& alias) {
+  VTR_ASSERT(valid_sub_key_id(key_id));
+  sub_key_alias_[key_id] = alias;
+}
+
 /************************************************************************
  * Internal invalidators/validators
  ***********************************************************************/
