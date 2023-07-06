@@ -123,11 +123,8 @@ class FabricKey {
 
   /* Configure attributes of a key */
   void set_key_name(const FabricKeyId& key_id, const std::string& name);
-
   void set_key_value(const FabricKeyId& key_id, const size_t& value);
-
   void set_key_alias(const FabricKeyId& key_id, const std::string& alias);
-
   void set_key_coordinate(const FabricKeyId& key_id,
                           const vtr::Point<int>& coord);
 
@@ -154,6 +151,16 @@ class FabricKey {
   void add_data_port_to_wl_shift_register_bank(
     const FabricRegionId& region_id, const FabricWordLineBankId& bank_id,
     const openfpga::BasicPort& data_port);
+
+  /* Reserve a number of keys to be memory efficent */
+  void reserve_module_keys(const FabricKeyModuleId& module_id, const size_t& num_keys);
+  /* Create a new key and add it to the library, return an id */
+  FabricModuleId create_module(const std::string& name);
+  FabricSubKeyId create_module_key(const FabricKeyModuleId& module_id);
+  /* Configure attributes of a sub key */
+  void set_sub_key_name(const FabricSubKeyId& key_id, const std::string& name);
+  void set_sub_key_value(const FabricSubKeyId& key_id, const size_t& value);
+  void set_sub_key_alias(const FabricSubKeyId& key_id, const std::string& alias);
 
  public: /* Public invalidators/validators */
   bool valid_region_id(const FabricRegionId& region_id) const;

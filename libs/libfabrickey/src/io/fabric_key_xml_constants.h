@@ -3,6 +3,8 @@
 
 /* Constants required by XML parser */
 constexpr const char* XML_FABRIC_KEY_ROOT_NAME = "fabric_key";
+constexpr const char* XML_FABRIC_KEY_MODULE_NODE_NAME = "module";
+constexpr const char* XML_FABRIC_KEY_MODULE_ATTRIBUTE_NAME_NAME = "name";
 constexpr const char* XML_FABRIC_KEY_REGION_NODE_NAME = "region";
 constexpr const char* XML_FABRIC_KEY_REGION_ATTRIBUTE_ID_NAME = "id";
 constexpr const char* XML_FABRIC_KEY_KEY_NODE_NAME = "key";
