@@ -153,14 +153,16 @@ class FabricKey {
     const openfpga::BasicPort& data_port);
 
   /* Reserve a number of keys to be memory efficent */
-  void reserve_module_keys(const FabricKeyModuleId& module_id, const size_t& num_keys);
+  void reserve_module_keys(const FabricKeyModuleId& module_id,
+                           const size_t& num_keys);
   /* Create a new key and add it to the library, return an id */
   FabricModuleId create_module(const std::string& name);
   FabricSubKeyId create_module_key(const FabricKeyModuleId& module_id);
   /* Configure attributes of a sub key */
   void set_sub_key_name(const FabricSubKeyId& key_id, const std::string& name);
   void set_sub_key_value(const FabricSubKeyId& key_id, const size_t& value);
-  void set_sub_key_alias(const FabricSubKeyId& key_id, const std::string& alias);
+  void set_sub_key_alias(const FabricSubKeyId& key_id,
+                         const std::string& alias);
 
  public: /* Public invalidators/validators */
   bool valid_region_id(const FabricRegionId& region_id) const;
@@ -178,25 +180,19 @@ class FabricKey {
   /* ---- Top-level keys and regions ---- */
   /* Unique ids for each region */
   vtr::vector<FabricRegionId, FabricRegionId> region_ids_;
-
   /* Key ids for each region */
   vtr::vector<FabricRegionId, std::vector<FabricKeyId>> region_key_ids_;
 
   /* Unique ids for each key */
   vtr::vector<FabricKeyId, FabricKeyId> key_ids_;
-
   /* Names for each key */
   vtr::vector<FabricKeyId, std::string> key_names_;
-
   /* Values for each key */
   vtr::vector<FabricKeyId, size_t> key_values_;
-
   /* Values for each key */
   vtr::vector<FabricKeyId, vtr::Point<int>> key_coordinates_;
-
   /* Region for each key */
   vtr::vector<FabricKeyId, FabricRegionId> key_regions_;
-
   /* Optional alias for each key, with which a key can also be represented */
   vtr::vector<FabricKeyId, std::string> key_alias_;
 

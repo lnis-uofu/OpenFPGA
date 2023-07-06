@@ -15,8 +15,8 @@
 
 /* Headers from openfpga util library */
 #include "openfpga_port_parser.h"
-#include "openfpga_tokenizer.h"
 #include "openfpga_reserved_words.h"
+#include "openfpga_tokenizer.h"
 
 /* Headers from libarchfpga */
 #include "arch_error.h"
@@ -341,8 +341,8 @@ static void read_xml_fabric_key_top_module(pugi::xml_node& xml_module,
       bad_tag(xml_region, loc_data, xml_root,
               {XML_FABRIC_KEY_REGION_NODE_NAME});
     }
-    num_keys += std::distance(xml_region.children().begin(),
-                              xml_region.children().end());
+    num_keys +=
+      std::distance(xml_region.children().begin(), xml_region.children().end());
   }
 
   fabric_key.reserve_keys(num_keys);
@@ -369,14 +369,15 @@ static void read_xml_fabric_key_top_module(pugi::xml_node& xml_module,
 static void read_xml_fabric_key_module(pugi::xml_node& xml_module,
                                        const pugiutil::loc_data& loc_data,
                                        FabricKey& fabric_key) {
-  std::string name = 
-    get_attribute(xml_module,
-                  XML_FABRIC_KEY_MODULE_ATTRIBUTE_NAME_NAME,
-                  loc_data).as_string();
-  FabricKeyModuleId module_id = fabric_key.create_module(name);  
+  std::string name =
+    get_attribute(xml_module, XML_FABRIC_KEY_MODULE_ATTRIBUTE_NAME_NAME,
+                  loc_data)
+      .as_string();
+  FabricKeyModuleId module_id = fabric_key.create_module(name);
 
   /* Parse all the sub keys */
-  size_t num_keys = std::distance(xml_module.children().begin(), xml_module.children().end());
+  size_t num_keys =
+    std::distance(xml_module.children().begin(), xml_module.children().end());
 
   /* Reserve for better memory efficiency */
   fabric_key.reserve_module_keys(module_id, num_keys);
@@ -387,8 +388,7 @@ static void read_xml_fabric_key_module(pugi::xml_node& xml_module,
   for (pugi::xml_node xml_key : xml_module.children()) {
     /* Error out if the XML child has an invalid name! */
     if (xml_key.name() != std::string(XML_FABRIC_KEY_KEY_NODE_NAME)) {
-      bad_tag(xml_key, loc_data, xml_module,
-              {XML_FABRIC_KEY_KEY_NODE_NAME});
+      bad_tag(xml_key, loc_data, xml_module, {XML_FABRIC_KEY_KEY_NODE_NAME});
     }
     read_xml_module_key(xml_key, loc_data, fabric_key, module_id);
   }
@@ -396,16 +396,17 @@ static void read_xml_fabric_key_module(pugi::xml_node& xml_module,
 
 /********************************************************************
  * Parse XML codes of a <module> to an object of FabricKey
- * - For top-level module, we expect a fixed name. If so, we use a special parser
+ * - For top-level module, we expect a fixed name. If so, we use a special
+ *parser
  * - For regular module, we follow regular parser
  *******************************************************************/
 static void read_xml_fabric_key_by_modules(pugi::xml_node& xml_module,
                                            const pugiutil::loc_data& loc_data,
                                            FabricKey& fabric_key) {
-  std::string name = 
-    get_attribute(xml_module,
-                  XML_FABRIC_KEY_MODULE_ATTRIBUTE_NAME_NAME,
-                  loc_data).as_string();
+  std::string name =
+    get_attribute(xml_module, XML_FABRIC_KEY_MODULE_ATTRIBUTE_NAME_NAME,
+                  loc_data)
+      .as_string();
   if (name == std::string(FPGA_TOP_MODULE_NAME)) {
     read_xml_fabric_key_top_module(xml_module, loc_data, fabric_key);
   } else {
@@ -432,7 +433,7 @@ FabricKey read_xml_fabric_key(const char* key_fname) {
       get_single_child(doc, XML_FABRIC_KEY_ROOT_NAME, loc_data);
 
     /* Under the root node, we expect only modules */
-    size_t num_modules = 
+    size_t num_modules =
       std::distance(xml_root.children().begin(), xml_root.children().end());
 
     /* Reserve for memory efficiency */

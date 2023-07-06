@@ -277,7 +277,8 @@ void FabricKey::add_data_port_to_wl_shift_register_bank(
   wl_bank_data_ports_[region_id][bank_id].push_back(data_port);
 }
 
-void FabricKey::reserve_module_keys(const FabricKeyModuleId& module_id, const size_t& num_keys) {
+void FabricKey::reserve_module_keys(const FabricKeyModuleId& module_id,
+                                    const size_t& num_keys) {
   VTR_ASSERT(valid_module_id(module_id));
   module_sub_keys_[module_id].reserve(num_keys);
   sub_key_ids_.reserve(sub_key_ids_.size() + num_keys);
@@ -301,7 +302,8 @@ FabricKeyModuleId FabricKey::create_module(const std::string& name) {
   return module_id;
 }
 
-FabricSubKeyId FabricKey::create_module_key(const FabricKeyModuleId& module_id) {
+FabricSubKeyId FabricKey::create_module_key(
+  const FabricKeyModuleId& module_id) {
   VTR_ASSERT(valid_module_id(module_id));
   /* Create a new id */
   FabricSubKeyId key_id = FabricSubKeyId(sub_key_ids_.size());
@@ -313,17 +315,20 @@ FabricSubKeyId FabricKey::create_module_key(const FabricKeyModuleId& module_id) 
   return key_id;
 }
 
-void FabricKey::set_sub_key_name(const FabricSubKeyId& key_id, const std::string& name) {
+void FabricKey::set_sub_key_name(const FabricSubKeyId& key_id,
+                                 const std::string& name) {
   VTR_ASSERT(valid_sub_key_id(key_id));
   sub_key_names_[key_id] = name;
 }
 
-void FabricKey::set_sub_key_value(const FabricSubKeyId& key_id, const size_t& value) {
+void FabricKey::set_sub_key_value(const FabricSubKeyId& key_id,
+                                  const size_t& value) {
   VTR_ASSERT(valid_sub_key_id(key_id));
   sub_key_values_[key_id] = value;
 }
 
-void FabricKey::set_sub_key_alias(const FabricSubKeyId& key_id, const std::string& alias) {
+void FabricKey::set_sub_key_alias(const FabricSubKeyId& key_id,
+                                  const std::string& alias) {
   VTR_ASSERT(valid_sub_key_id(key_id));
   sub_key_alias_[key_id] = alias;
 }
