@@ -1,6 +1,8 @@
 #ifndef FABRIC_KEY_XML_CONSTANTS_H
 #define FABRIC_KEY_XML_CONSTANTS_H
 
+namespace openfpga {  // Begin namespace openfpga
+
 /* Constants required by XML parser */
 constexpr const char* XML_FABRIC_KEY_ROOT_NAME = "fabric_key";
 constexpr const char* XML_FABRIC_KEY_MODULE_NODE_NAME = "module";
@@ -24,5 +26,7 @@ constexpr const char*
   XML_FABRIC_KEY_BLWL_SHIFT_REGISTER_BANK_ATTRIBUTE_ID_NAME = "id";
 constexpr const char*
   XML_FABRIC_KEY_BLWL_SHIFT_REGISTER_BANK_ATTRIBUTE_RANGE_NAME = "range";
+
+}  // End of namespace openfpga
 
 #endif

@@ -21,6 +21,8 @@
 #include "fabric_key_xml_constants.h"
 #include "write_xml_fabric_key.h"
 
+namespace openfpga {  // Begin namespace openfpga
+
 /********************************************************************
  * A writer to output a component key to XML format
  *
@@ -238,3 +240,5 @@ int write_xml_fabric_key(const char* fname, const FabricKey& fabric_key) {
 
   return err_code;
 }
+
+}  // End of namespace openfpga

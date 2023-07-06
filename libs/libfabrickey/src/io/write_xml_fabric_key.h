@@ -11,6 +11,11 @@
 /********************************************************************
  * Function declaration
  *******************************************************************/
+
+namespace openfpga {  // Begin namespace openfpga
+
 int write_xml_fabric_key(const char* fname, const FabricKey& fabric_key);
+
+}  // End of namespace openfpga
 
 #endif

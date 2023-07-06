@@ -5,6 +5,8 @@
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
+namespace openfpga {  // Begin namespace openfpga
+
 /************************************************************************
  * Member functions for class FabricKey
  ***********************************************************************/
@@ -44,13 +46,10 @@ FabricKey::fabric_key_module_range FabricKey::modules() const {
                          sub_key_module_ids_.end());
 }
 
-FabricKey::fabric_sub_key_range FabricKey::sub_keys(
+std::vector<FabricSubKeyId> FabricKey::sub_keys(
   const FabricKeyModuleId& module_id) const {
   VTR_ASSERT(valid_module_id(module_id));
-  return vtr::make_range(
-    sub_key_ids_.begin() + size_t(module_sub_keys_[module_id][0]),
-    sub_key_ids_.begin() + size_t(module_sub_keys_[module_id][0]) +
-      size_t(module_sub_keys_[module_id].size() - 1));
+  return module_sub_keys_[module_id];
 }
 
 /************************************************************************
@@ -277,6 +276,12 @@ void FabricKey::add_data_port_to_wl_shift_register_bank(
   wl_bank_data_ports_[region_id][bank_id].push_back(data_port);
 }
 
+void FabricKey::reserve_modules(const size_t& num_modules) {
+  sub_key_module_ids_.reserve(num_modules);
+  sub_key_module_names_.reserve(num_modules);
+  module_sub_keys_.reserve(num_modules);
+}
+
 void FabricKey::reserve_module_keys(const FabricKeyModuleId& module_id,
                                     const size_t& num_keys) {
   VTR_ASSERT(valid_module_id(module_id));
@@ -311,7 +316,7 @@ FabricSubKeyId FabricKey::create_module_key(
   sub_key_values_.emplace_back();
   sub_key_alias_.emplace_back();
   /* Add the new id to module */
-  module_sub_keys_.emplace_back(key_id);
+  module_sub_keys_[module_id].emplace_back(key_id);
   return key_id;
 }
 
@@ -377,3 +382,5 @@ bool FabricKey::valid_sub_key_id(const FabricSubKeyId& sub_key_id) const {
   return (size_t(sub_key_id) < sub_key_ids_.size()) &&
          (sub_key_id == sub_key_ids_[sub_key_id]);
 }
+
+}  // End of namespace openfpga
