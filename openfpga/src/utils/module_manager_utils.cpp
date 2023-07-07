@@ -2580,6 +2580,79 @@ static bool submodule_memory_modules_match_fabric_key(
 }
 
 /********************************************************************
+ * Update the configurable children list based on fabric key definitions
+ *******************************************************************/
+static bool update_submodule_memory_modules_from_fabric_key(
+  ModuleManager& module_manager, const ModuleId& module_id,
+  const CircuitLibrary& circuit_lib, const ConfigProtocol& config_protocol,
+  const FabricKey& fabric_key, const FabricKeyModuleId& key_module_id) {
+  /* Reset the configurable children */
+  module_manager.clear_configurable_children(module_id);
+
+  for (FabricSubKeyId key_id : fabric_key.sub_keys(key_module_id)) {
+    std::pair<ModuleId, size_t> inst_info(ModuleId::INVALID(), 0);
+    /* Try to match the alias */
+    if (!fabric_key.sub_key_alias(key_id).empty()) {
+      if (!fabric_key.sub_key_name(key_id).empty()) {
+        inst_info.first =
+          module_manager.find_module(fabric_key.sub_key_name(key_id));
+        inst_info.second = module_manager.instance_id(
+          module_id, inst_info.first, fabric_key.sub_key_alias(key_id));
+      } else {
+        inst_info = find_module_manager_instance_module_info(
+          module_manager, module_id, fabric_key.sub_key_alias(key_id));
+      }
+    } else {
+      inst_info.first =
+        module_manager.find_module(fabric_key.sub_key_name(key_id));
+      inst_info.second = fabric_key.sub_key_value(key_id);
+    }
+    if (false == module_manager.valid_module_id(inst_info.first)) {
+      if (!fabric_key.sub_key_alias(key_id).empty()) {
+        VTR_LOG_ERROR("Invalid key alias '%s'!\n",
+                      fabric_key.sub_key_alias(key_id).c_str());
+      } else {
+        VTR_LOG_ERROR("Invalid key name '%s'!\n",
+                      fabric_key.sub_key_name(key_id).c_str());
+      }
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
+    if (false == module_manager.valid_module_instance_id(
+                   module_id, inst_info.first, inst_info.second)) {
+      if (!fabric_key.sub_key_alias(key_id).empty()) {
+        VTR_LOG_ERROR("Invalid key alias '%s'!\n",
+                      fabric_key.sub_key_alias(key_id).c_str());
+      } else {
+        VTR_LOG_ERROR("Invalid key value '%ld'!\n", inst_info.second);
+      }
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
+    /* If the the child has not configuration bits, error out */
+    if (0 == find_module_num_config_bits(
+               module_manager, inst_info.first, circuit_lib,
+               config_protocol.memory_model(), config_protocol.type())) {
+      if (!fabric_key.sub_key_alias(key_id).empty()) {
+        VTR_LOG_ERROR(
+          "Invalid key alias '%s' which has zero configuration bits!\n",
+          fabric_key.sub_key_alias(key_id).c_str());
+      } else {
+        VTR_LOG_ERROR(
+          "Invalid key name '%s' which has zero configuration bits!\n",
+          fabric_key.sub_key_name(key_id).c_str());
+      }
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
+    /* Now we can add the child to configurable children of the top module */
+    module_manager.add_configurable_child(module_id, inst_info.first,
+                                          inst_info.second, vtr::Point<int>());
+  }
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
  * Load and update the configurable children of a given module (not a top-level
  *module) Compare the configurable children list with fabric sub-keys.
  * - If match, nothing should be done
@@ -2600,7 +2673,13 @@ static int load_and_update_submodule_memory_modules_from_fabric_key(
   }
   /* TODO: Do not match, now remove all the nets for the configurable children
    */
-  /* TODO: Overwrite the configurable children list */
+  /* Overwrite the configurable children list */
+  status = update_submodule_memory_modules_from_fabric_key(
+    module_manager, module_id, circuit_lib, config_protocol, fabric_key,
+    key_module_id);
+  if (status == CMD_EXEC_FATAL_ERROR) {
+    return status;
+  }
   /* TODO: Create the nets for the new list of configurable children */
   return status;
 }
