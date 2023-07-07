@@ -75,13 +75,14 @@ static int write_xml_fabric_component_sub_key(
  *******************************************************************/
 static int write_xml_fabric_component_key(std::fstream& fp,
                                           const FabricKey& fabric_key,
-                                          const FabricKeyId& component_key) {
+                                          const FabricKeyId& component_key,
+                                          const size_t& level) {
   /* Validate the file stream */
   if (false == openfpga::valid_file_stream(fp)) {
     return 2;
   }
 
-  openfpga::write_tab_to_file(fp, 2);
+  openfpga::write_tab_to_file(fp, level);
   fp << "<" << XML_FABRIC_KEY_KEY_NODE_NAME;
 
   if (false == fabric_key.valid_key_id(component_key)) {
@@ -253,7 +254,7 @@ static int write_xml_top_module_keys(std::fstream& fp,
 
     /* Write component by component */
     for (const FabricKeyId& key : fabric_key.region_keys(region)) {
-      err_code = write_xml_fabric_component_key(fp, fabric_key, key);
+      err_code = write_xml_fabric_component_key(fp, fabric_key, key, level + 2);
       if (0 != err_code) {
         return err_code;
       }
@@ -264,6 +265,7 @@ static int write_xml_top_module_keys(std::fstream& fp,
        << "\n";
   }
 
+  openfpga::write_tab_to_file(fp, level);
   fp << "</" << XML_FABRIC_KEY_MODULE_NODE_NAME << ">\n";
 
   return err_code;
@@ -292,6 +294,7 @@ static int write_xml_module_keys(std::fstream& fp, const FabricKey& fabric_key,
     key_idx++;
   }
 
+  openfpga::write_tab_to_file(fp, level);
   fp << "</" << XML_FABRIC_KEY_MODULE_NODE_NAME << ">\n";
 
   return err_code;
