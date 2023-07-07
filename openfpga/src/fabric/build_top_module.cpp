@@ -542,6 +542,13 @@ int build_top_module(
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
     }
+
+    /* Update the memory organization in sub module (non-top) */
+    status = load_submodules_memory_modules_from_fabric_key(
+      module_manager, circuit_lib, config_protocol, fabric_key);
+    if (CMD_EXEC_FATAL_ERROR == status) {
+      return status;
+    }
   }
 
   /* Shuffle the configurable children in a random sequence */

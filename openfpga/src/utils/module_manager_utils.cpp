@@ -8,6 +8,7 @@
 #include <map>
 
 /* Headers from vtrutil library */
+#include "command_exit_codes.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
@@ -2530,5 +2531,116 @@ void add_module_bus_nets(
  *                     formal_port_sramb
  *
  *******************************************************************/
+
+/********************************************************************
+ * Compare the configurable children list with a given list of fabric sub-keys
+ * Return true if exact naming-matches are found
+ * When searching for matching, we consider
+ * - alias is treated as No. 1 reference
+ * - the <name, value> pair as No. 2 reference
+ *******************************************************************/
+static bool submodule_memory_modules_match_fabric_key(
+  ModuleManager& module_manager, const ModuleId& module_id,
+  const FabricKey& fabric_key, const FabricKeyModuleId& key_module_id) {
+  /* If the length does not match, conclusion is easy to be made */
+  size_t len_module_memory =
+    module_manager.configurable_children(module_id).size();
+  size_t len_fabric_sub_key = fabric_key.sub_keys(key_module_id).size();
+  if (len_module_memory != len_fabric_sub_key) {
+    return false;
+  }
+  /* Now walk through the child one by one */
+  for (size_t ikey = 0; ikey < len_module_memory; ++ikey) {
+    FabricSubKeyId key_id = fabric_key.sub_keys(key_module_id)[ikey];
+    std::pair<ModuleId, size_t> inst_info(ModuleId::INVALID(), 0);
+    /* Try to match the alias */
+    if (!fabric_key.sub_key_alias(key_id).empty()) {
+      if (!fabric_key.sub_key_name(key_id).empty()) {
+        inst_info.first =
+          module_manager.find_module(fabric_key.sub_key_name(key_id));
+        inst_info.second = module_manager.instance_id(
+          module_id, inst_info.first, fabric_key.sub_key_alias(key_id));
+      } else {
+        inst_info = find_module_manager_instance_module_info(
+          module_manager, module_id, fabric_key.sub_key_alias(key_id));
+      }
+    } else {
+      inst_info.first =
+        module_manager.find_module(fabric_key.sub_key_name(key_id));
+      inst_info.second = fabric_key.sub_key_value(key_id);
+    }
+    if (inst_info.first !=
+          module_manager.configurable_children(module_id)[ikey] ||
+        inst_info.second !=
+          module_manager.configurable_child_instances(module_id)[ikey]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/********************************************************************
+ * Load and update the configurable children of a given module (not a top-level
+ *module) Compare the configurable children list with fabric sub-keys.
+ * - If match, nothing should be done
+ * - If not match,
+ *   - remove the nets related to configurable children
+ *   - rebuild the configurable children list
+ *   - add the nets related to configurable children
+ *******************************************************************/
+static int load_and_update_submodule_memory_modules_from_fabric_key(
+  ModuleManager& module_manager, const ModuleId& module_id,
+  const CircuitLibrary& circuit_lib, const ConfigProtocol& config_protocol,
+  const FabricKey& fabric_key, const FabricKeyModuleId& key_module_id) {
+  int status = CMD_EXEC_SUCCESS;
+  /* Compare the configurable children list */
+  if (submodule_memory_modules_match_fabric_key(module_manager, module_id,
+                                                fabric_key, key_module_id)) {
+    return CMD_EXEC_SUCCESS;
+  }
+  /* TODO: Do not match, now remove all the nets for the configurable children
+   */
+  /* TODO: Overwrite the configurable children list */
+  /* TODO: Create the nets for the new list of configurable children */
+  return status;
+}
+
+/********************************************************************
+ * Load and update the configurable children of a given list of modules (not a
+ *top-level module)
+ *******************************************************************/
+int load_submodules_memory_modules_from_fabric_key(
+  ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
+  const ConfigProtocol& config_protocol, const FabricKey& fabric_key) {
+  int status = CMD_EXEC_SUCCESS;
+  for (FabricKeyModuleId key_module_id : fabric_key.modules()) {
+    std::string module_name = fabric_key.module_name(key_module_id);
+    /* Ensure this is not a top module! */
+    if (module_name == std::string(FPGA_TOP_MODULE_NAME)) {
+      VTR_LOG_ERROR(
+        "Expect a non-top-level name for the sub-module '%s' in fabric key!\n",
+        module_name.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    ModuleId module_id = module_manager.find_module(module_name);
+    if (module_id) {
+      /* This is a valid module, try to load and update */
+      status = load_and_update_submodule_memory_modules_from_fabric_key(
+        module_manager, module_id, circuit_lib, config_protocol, fabric_key,
+        key_module_id);
+      if (status == CMD_EXEC_FATAL_ERROR) {
+        return status;
+      }
+    } else {
+      /* Not a valid module, report error */
+      VTR_LOG_ERROR(
+        "The sub-module '%s' in fabric key is not a valid module in FPGA "
+        "fabric!\n",
+        module_name.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
+  return status;
+}
 
 } /* end namespace openfpga */

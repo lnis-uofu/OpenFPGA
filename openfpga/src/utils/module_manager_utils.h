@@ -20,7 +20,9 @@
 /* Headers from readarchopenfpga library */
 #include "circuit_library.h"
 #include "circuit_types.h"
+#include "config_protocol.h"
 #include "decoder_library.h"
+#include "fabric_key.h"
 #include "module_manager.h"
 #include "vpr_device_annotation.h"
 
@@ -182,6 +184,10 @@ void add_module_bus_nets(
   const ModuleId& src_module_id, const size_t& src_instance_id,
   const ModulePortId& src_module_port_id, const ModuleId& des_module_id,
   const size_t& des_instance_id, const ModulePortId& des_module_port_id);
+
+int load_submodules_memory_modules_from_fabric_key(
+  ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
+  const ConfigProtocol& config_protocol, const FabricKey& fabric_key);
 
 } /* end namespace openfpga */
 
