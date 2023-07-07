@@ -185,10 +185,6 @@ void add_module_bus_nets(
   const ModulePortId& src_module_port_id, const ModuleId& des_module_id,
   const size_t& des_instance_id, const ModulePortId& des_module_port_id);
 
-int load_submodules_memory_modules_from_fabric_key(
-  ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  const ConfigProtocol& config_protocol, const FabricKey& fabric_key);
-
 } /* end namespace openfpga */
 
 #endif

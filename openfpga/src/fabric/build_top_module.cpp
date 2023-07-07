@@ -22,6 +22,7 @@
 #include "build_top_module_memory_bank.h"
 #include "build_top_module_utils.h"
 #include "command_exit_codes.h"
+#include "module_manager_memory_utils.h"
 #include "module_manager_utils.h"
 #include "openfpga_device_grid_utils.h"
 #include "openfpga_naming.h"
