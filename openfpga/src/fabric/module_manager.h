@@ -469,6 +469,10 @@ class ModuleManager {
    */
   void clear_io_children(const ModuleId& parent_module);
 
+  /* Remove all the sinks for a given net under a module */
+  void clear_module_net_sinks(const ModuleId& parent_module,
+                              const ModuleNetId& net);
+
  public: /* Public validators/invalidators */
   bool valid_module_id(const ModuleId& module) const;
   bool valid_module_port_id(const ModuleId& module,
