@@ -269,7 +269,7 @@ build_fabric
 
     Output current fabric key to an XML file. For example, ``--write_fabric_key fpga_2x2.xml`` See details in :ref:`file_formats_fabric_key`.
 
-    .. warning:: This option will be deprecated. Use :ref:`cmd_write_fabric_key`` as a replacement.
+    .. warning:: This option will be deprecated. Use :ref:`cmd_write_fabric_key` as a replacement.
 
   .. option:: --frame_view
 
