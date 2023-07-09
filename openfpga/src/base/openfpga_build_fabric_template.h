@@ -157,11 +157,11 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
     std::string fkey_fname =
       cmd_context.option_value(cmd, opt_write_fabric_key);
     VTR_ASSERT(false == fkey_fname.empty());
-    curr_status =
-      write_fabric_key_to_xml_file(openfpga_ctx.module_graph(), fkey_fname,
-                                   openfpga_ctx.arch().config_protocol,
-                                   openfpga_ctx.blwl_shift_register_banks(),
-                                   cmd_context.option_enable(cmd, opt_verbose));
+    curr_status = write_fabric_key_to_xml_file(
+      openfpga_ctx.module_graph(), fkey_fname,
+      openfpga_ctx.arch().config_protocol,
+      openfpga_ctx.blwl_shift_register_banks(), false,
+      cmd_context.option_enable(cmd, opt_verbose));
     /* If there is any error, final status cannot be overwritten by a success
      * flag */
     if (CMD_EXEC_SUCCESS != curr_status) {
@@ -170,6 +170,32 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
   }
 
   return final_status;
+}
+
+/********************************************************************
+ * Write fabric key of the module graph for FPGA device to a file
+ *******************************************************************/
+template <class T>
+int write_fabric_key_template(const T& openfpga_ctx, const Command& cmd,
+                              const CommandContext& cmd_context) {
+  CommandOptionId opt_verbose = cmd.option("verbose");
+  CommandOptionId opt_include_module_keys = cmd.option("include_module_keys");
+
+  /* Check the option '--file' is enabled or not
+   * Actually, it must be enabled as the shell interface will check
+   * before reaching this fuction
+   */
+  CommandOptionId opt_file = cmd.option("file");
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  /* Write fabric key to a file */
+  return write_fabric_key_to_xml_file(
+    openfpga_ctx.module_graph(), cmd_context.option_value(cmd, opt_file),
+    openfpga_ctx.arch().config_protocol,
+    openfpga_ctx.blwl_shift_register_banks(),
+    cmd_context.option_enable(cmd, opt_include_module_keys),
+    cmd_context.option_enable(cmd, opt_verbose));
 }
 
 /********************************************************************

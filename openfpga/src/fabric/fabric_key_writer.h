@@ -20,7 +20,8 @@ namespace openfpga {
 int write_fabric_key_to_xml_file(
   const ModuleManager& module_manager, const std::string& fname,
   const ConfigProtocol& config_protocol,
-  const MemoryBankShiftRegisterBanks& blwl_sr_banks, const bool& verbose);
+  const MemoryBankShiftRegisterBanks& blwl_sr_banks,
+  const bool& include_module_keys, const bool& verbose);
 
 } /* end namespace openfpga */
 
