@@ -116,6 +116,7 @@ run-task basic_tests/fabric_key/generate_random_key $@
 run-task basic_tests/fabric_key/generate_random_key_ql_memory_bank $@
 run-task basic_tests/fabric_key/load_external_key $@
 run-task basic_tests/fabric_key/load_external_key_cc_fpga $@
+run-task basic_tests/fabric_key/load_external_subkey_cc_fpga $@
 run-task basic_tests/fabric_key/load_external_key_multi_region_cc_fpga $@
 run-task basic_tests/fabric_key/load_external_key_qlbank_fpga $@
 run-task basic_tests/fabric_key/load_external_key_multi_region_qlbank_fpga $@
