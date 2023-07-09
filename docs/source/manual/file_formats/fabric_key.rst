@@ -5,6 +5,19 @@ Fabric Key (.xml)
 
 A fabric key follows an XML format. As shown in the following XML code, the key file includes the organization of configurable blocks in the top-level FPGA fabric. 
 
+Configurable Module
+^^^^^^^^^^^^^^^^^^^
+
+Fabric key can be applied to various modules. Each module can be a top-level FPGA fabric, or a submodule of the FPGA fabric.
+
+.. option:: <module name="<string>"/>
+
+  Under each module, a set of keys can be defined. Note that for the top-level FPGA fabric, not only keys but also regions and shift-register banks can be defined. For non-top-level module, only keys are allowed.
+ 
+  - ``name`` indicates the unique name of a valid module in FPGA fabric. Note that ``fpga_top`` is the considered as the module name of the top-level FPGA fabric. 
+
+  .. note:: ``fpga_core`` is not applicable to fabric key. 
+
 Configurable Region
 ^^^^^^^^^^^^^^^^^^^
 
