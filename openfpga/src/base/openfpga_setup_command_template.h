@@ -407,7 +407,9 @@ ShellCommandId add_build_fabric_command_template(
 
   /* Add an option '--group_tile' */
   CommandOptionId opt_group_tile = shell_cmd.add_option(
-    "group_tile", false, "group programmable blocks and routing blocks into tiles. This helps to reduce the number of blocks at top-level");
+    "group_tile", false,
+    "group programmable blocks and routing blocks into tiles. This helps to "
+    "reduce the number of blocks at top-level");
   shell_cmd.set_option_require_value(opt_group_tile, openfpga::OPT_STRING);
 
   /* Add an option '--generate_random_fabric_key' */

@@ -50,7 +50,6 @@ int write_xml_tile_config(const char* fname, const TileConfig& tile_config) {
   fp << "/>"
      << "\n";
 
-
   /* Close the file stream */
   fp.close();
 

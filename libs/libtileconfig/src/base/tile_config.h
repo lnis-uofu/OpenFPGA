@@ -4,18 +4,27 @@
 /********************************************************************
  * Include header files required by the data structure definition
  *******************************************************************/
-#include <string>
 #include <array>
+#include <string>
 
 /* Begin namespace openfpga */
 namespace openfpga {
 
 /**
- * @brief tile configuration is a data structure to represent how programmable blocks and routing blocks are grouped into tiles
+ * @brief tile configuration is a data structure to represent how programmable
+ * blocks and routing blocks are grouped into tiles
  */
 class TileConfig {
  public: /* Types */
-  enum class e_style { TOP_LEFT = 0, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, CUSTOM, NUM_TYPES };
+  enum class e_style {
+    TOP_LEFT = 0,
+    TOP_RIGHT,
+    BOTTOM_LEFT,
+    BOTTOM_RIGHT,
+    CUSTOM,
+    NUM_TYPES
+  };
+
  public: /* Constructors */
   TileConfig();
 
@@ -40,8 +49,7 @@ class TileConfig {
   std::string style2str(const e_style& style,
                         const bool& verbose = false) const;
   /** @brief Validate the style */
-  bool valid_style(
-    const e_style& style) const;
+  bool valid_style(const e_style& style) const;
 
  private: /* Internal utility */
   /* Generate a string include all the valid style
@@ -51,8 +59,7 @@ class TileConfig {
  private: /* Internal Data */
   e_style style_;
   /* Constants */
-  std::array<const char*, size_t(e_style::NUM_TYPES)>
-    STYLE_STRING_;
+  std::array<const char*, size_t(e_style::NUM_TYPES)> STYLE_STRING_;
 };
 
 } /* End namespace openfpga*/

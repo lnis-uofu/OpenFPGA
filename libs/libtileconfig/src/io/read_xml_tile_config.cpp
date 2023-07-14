@@ -17,9 +17,9 @@
 /* Headers from libarchfpga */
 #include "arch_error.h"
 #include "command_exit_codes.h"
-#include "tile_config_xml_constants.h"
 #include "read_xml_tile_config.h"
 #include "read_xml_util.h"
+#include "tile_config_xml_constants.h"
 
 namespace openfpga {  // Begin namespace openfpga
 
@@ -40,7 +40,7 @@ int read_xml_tile_config(const char* fname, TileConfig& tile_config) {
 
     pugi::xml_node xml_root =
       get_single_child(doc, XML_TILE_CONFIG_ROOT_NAME, loc_data);
-    
+
     std::string style =
       get_attribute(xml_root, XML_TILE_CONFIG_ATTRIBUTE_STYLE_NAME, loc_data)
         .as_string();

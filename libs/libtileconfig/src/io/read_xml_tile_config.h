@@ -4,9 +4,9 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include "tile_config.h"
 #include "pugixml.hpp"
 #include "pugixml_util.hpp"
+#include "tile_config.h"
 
 /********************************************************************
  * Function declaration

@@ -17,8 +17,8 @@
 #include "globals.h"
 #include "openfpga_naming.h"
 #include "read_xml_fabric_key.h"
-#include "read_xml_tile_config.h"
 #include "read_xml_io_name_map.h"
+#include "read_xml_tile_config.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
 
@@ -135,10 +135,12 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
   TileConfig tile_config;
   if (cmd_context.option_enable(cmd, opt_group_tile)) {
     if (!cmd_context.option_enable(cmd, opt_compress_routing)) {
-      VTR_LOG_ERROR("Group tile is applicable only when compress routing is enabled!\n");
+      VTR_LOG_ERROR(
+        "Group tile is applicable only when compress routing is enabled!\n");
       return CMD_EXEC_FATAL_ERROR;
     }
-    curr_status = read_xml_tile_config(cmd_context.option_value(cmd, opt_group_tile).c_str(), tile_config);
+    curr_status = read_xml_tile_config(
+      cmd_context.option_value(cmd, opt_group_tile).c_str(), tile_config);
     if (CMD_EXEC_SUCCESS != curr_status) {
       return CMD_EXEC_FATAL_ERROR;
     }
