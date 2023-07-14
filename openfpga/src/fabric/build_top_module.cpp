@@ -22,6 +22,7 @@
 #include "build_top_module_memory_bank.h"
 #include "build_top_module_utils.h"
 #include "command_exit_codes.h"
+#include "module_manager_memory_utils.h"
 #include "module_manager_utils.h"
 #include "openfpga_device_grid_utils.h"
 #include "openfpga_naming.h"
@@ -539,6 +540,13 @@ int build_top_module(
 
     status = load_top_module_shift_register_banks_from_fabric_key(
       fabric_key, blwl_sr_banks);
+    if (CMD_EXEC_FATAL_ERROR == status) {
+      return status;
+    }
+
+    /* Update the memory organization in sub module (non-top) */
+    status = load_submodules_memory_modules_from_fabric_key(
+      module_manager, circuit_lib, config_protocol, fabric_key);
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
     }

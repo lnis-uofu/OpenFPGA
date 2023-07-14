@@ -20,7 +20,9 @@
 /* Headers from readarchopenfpga library */
 #include "circuit_library.h"
 #include "circuit_types.h"
+#include "config_protocol.h"
 #include "decoder_library.h"
+#include "fabric_key.h"
 #include "module_manager.h"
 #include "vpr_device_annotation.h"
 

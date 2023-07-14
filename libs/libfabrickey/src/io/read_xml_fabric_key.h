@@ -9,6 +9,11 @@
 /********************************************************************
  * Function declaration
  *******************************************************************/
+
+namespace openfpga {  // Begin namespace openfpga
+
 FabricKey read_xml_fabric_key(const char* key_fname);
+
+}  // End of namespace openfpga
 
 #endif

@@ -269,6 +269,8 @@ build_fabric
 
     Output current fabric key to an XML file. For example, ``--write_fabric_key fpga_2x2.xml`` See details in :ref:`file_formats_fabric_key`.
 
+    .. warning:: This option will be deprecated. Use :ref:`cmd_write_fabric_key` as a replacement.
+
   .. option:: --frame_view
 
     Create only frame views of the module graph. When enabled, top-level module will not include any nets. This option is made for save runtime and memory.
@@ -280,6 +282,27 @@ build_fabric
     Show verbose log
 
   .. note:: This is a must-run command before launching FPGA-Verilog, FPGA-Bitstream, FPGA-SDC and FPGA-SPICE
+
+.. _cmd_write_fabric_key:
+
+write_fabric_key
+~~~~~~~~~~~~~~~~
+
+  Output current fabric key to an XML file. For example, ``write_fabric_key --file fpga_2x2.xml`` See details in :ref:`file_formats_fabric_key`.
+
+  .. note:: This command can output module-level keys while the ``--write_fabric_key`` option in command ``build_fabric`` does NOT support! Strongly recommend to use this command to obtain fabric key.
+
+  .. option:: --file <string> or -f <string>
+     
+    Specify the file name. For example, ``--file fabric_key_echo.xml``.
+
+  .. option:: --include_module_keys
+
+    Output module-level keys to the file.
+
+  .. option:: --verbose
+
+    Show verbose log
 
 .. _cmd_add_fpga_core_to_fabric:
   

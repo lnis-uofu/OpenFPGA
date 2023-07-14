@@ -738,6 +738,40 @@ ShellCommandId add_add_fpga_core_to_fabric_command_template(
   return shell_cmd_id;
 }
 
+/********************************************************************
+ * - Add a command to Shell environment: write_fabric_key
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_write_fabric_key_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("write_fabric_key");
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file =
+    shell_cmd.add_option("file", true, "file path to the fabric key XML");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  /* Add an option '--include_module_keys'*/
+  shell_cmd.add_option("include_module_keys", false,
+                       "Include module-level keys");
+  shell_cmd.add_option("verbose", false, "Show verbose outputs");
+
+  /* Add command to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "write fabric key of the FPGA fabric to file", hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_const_execute_function(shell_cmd_id,
+                                           write_fabric_key_template<T>);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
 template <class T>
 void add_setup_command_templates(openfpga::Shell<T>& shell,
                                  const bool& hidden = false) {
@@ -926,6 +960,16 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
   add_add_fpga_core_to_fabric_command_template<T>(
     shell, openfpga_setup_cmd_class, add_fpga_core_to_fabric_dependent_cmds,
     hidden);
+
+  /********************************
+   * Command 'write_fabric_key'
+   */
+  /* The 'write_fabric_key' command should NOT be executed before
+   * 'build_fabric' */
+  std::vector<ShellCommandId> write_fabric_key_dependent_cmds;
+  write_fabric_key_dependent_cmds.push_back(build_fabric_cmd_id);
+  add_write_fabric_key_command_template<T>(
+    shell, openfpga_setup_cmd_class, write_fabric_key_dependent_cmds, hidden);
 
   /********************************
    * Command 'write_fabric_hierarchy'

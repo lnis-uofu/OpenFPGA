@@ -8,6 +8,7 @@
 #include <map>
 
 /* Headers from vtrutil library */
+#include "command_exit_codes.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 

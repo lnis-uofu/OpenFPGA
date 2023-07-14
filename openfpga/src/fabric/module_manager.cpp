@@ -1320,6 +1320,15 @@ void ModuleManager::clear_io_children(const ModuleId& parent_module) {
   io_child_coordinates_[parent_module].clear();
 }
 
+void ModuleManager::clear_module_net_sinks(const ModuleId& parent_module,
+                                           const ModuleNetId& net) {
+  VTR_ASSERT(valid_module_net_id(parent_module, net));
+  net_sink_ids_[parent_module][net].clear();
+  net_sink_terminal_ids_[parent_module][net].clear();
+  net_sink_instance_ids_[parent_module][net].clear();
+  net_sink_pin_ids_[parent_module][net].clear();
+}
+
 /******************************************************************************
  * Private validators/invalidators
  ******************************************************************************/

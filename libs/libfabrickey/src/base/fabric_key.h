@@ -16,6 +16,8 @@
 #include "fabric_key_fwd.h"
 #include "openfpga_port.h"
 
+namespace openfpga {  // Begin namespace openfpga
+
 /********************************************************************
  * A data structure to describe a secure key for fabric organization
  * A fabric may consist of multiple regions
@@ -47,12 +49,18 @@ class FabricKey {
   typedef vtr::vector<FabricWordLineBankId,
                       FabricWordLineBankId>::const_iterator
     fabric_word_line_bank_iterator;
+  typedef vtr::vector<FabricSubKeyId, FabricSubKeyId>::const_iterator
+    fabric_sub_key_iterator;
+  typedef vtr::vector<FabricKeyModuleId, FabricKeyModuleId>::const_iterator
+    fabric_key_module_iterator;
   /* Create range */
   typedef vtr::Range<fabric_region_iterator> fabric_region_range;
   typedef vtr::Range<fabric_key_iterator> fabric_key_range;
   typedef vtr::Range<fabric_bit_line_bank_iterator> fabric_bit_line_bank_range;
   typedef vtr::Range<fabric_word_line_bank_iterator>
     fabric_word_line_bank_range;
+  typedef vtr::Range<fabric_sub_key_iterator> fabric_sub_key_range;
+  typedef vtr::Range<fabric_key_module_iterator> fabric_key_module_range;
 
  public: /* Constructors */
   FabricKey();
@@ -62,20 +70,19 @@ class FabricKey {
   fabric_region_range regions() const;
   fabric_bit_line_bank_range bl_banks(const FabricRegionId& region_id) const;
   fabric_word_line_bank_range wl_banks(const FabricRegionId& region_id) const;
+  fabric_key_module_range modules() const;
+  std::vector<FabricSubKeyId> sub_keys(
+    const FabricKeyModuleId& module_id) const;
 
  public: /* Public Accessors: Basic data query */
   /* Access all the keys of a region */
   std::vector<FabricKeyId> region_keys(const FabricRegionId& region_id) const;
-
   /* Access the name of a key */
   std::string key_name(const FabricKeyId& key_id) const;
-
   /* Access the value of a key */
   size_t key_value(const FabricKeyId& key_id) const;
-
   /* Access the alias of a key */
   std::string key_alias(const FabricKeyId& key_id) const;
-
   /* Access the coordinate of a key */
   vtr::Point<int> key_coordinate(const FabricKeyId& key_id) const;
 
@@ -84,13 +91,18 @@ class FabricKey {
 
   /* Return a list of data ports which will be driven by a BL shift register
    * bank */
-  std::vector<openfpga::BasicPort> bl_bank_data_ports(
+  std::vector<BasicPort> bl_bank_data_ports(
     const FabricRegionId& region_id, const FabricBitLineBankId& bank_id) const;
 
   /* Return a list of data ports which will be driven by a WL shift register
    * bank */
-  std::vector<openfpga::BasicPort> wl_bank_data_ports(
+  std::vector<BasicPort> wl_bank_data_ports(
     const FabricRegionId& region_id, const FabricWordLineBankId& bank_id) const;
+
+  std::string module_name(const FabricKeyModuleId& module_id) const;
+  std::string sub_key_name(const FabricSubKeyId& key_id) const;
+  size_t sub_key_value(const FabricSubKeyId& key_id) const;
+  std::string sub_key_alias(const FabricSubKeyId& key_id) const;
 
  public: /* Public Mutators: model-related */
   /* Reserve a number of regions to be memory efficent */
@@ -115,11 +127,8 @@ class FabricKey {
 
   /* Configure attributes of a key */
   void set_key_name(const FabricKeyId& key_id, const std::string& name);
-
   void set_key_value(const FabricKeyId& key_id, const size_t& value);
-
   void set_key_alias(const FabricKeyId& key_id, const std::string& alias);
-
   void set_key_coordinate(const FabricKeyId& key_id,
                           const vtr::Point<int>& coord);
 
@@ -136,7 +145,7 @@ class FabricKey {
   /* Add a data port to a given BL shift register bank */
   void add_data_port_to_bl_shift_register_bank(
     const FabricRegionId& region_id, const FabricBitLineBankId& bank_id,
-    const openfpga::BasicPort& data_port);
+    const BasicPort& data_port);
 
   /* Create a new shift register bank for WLs and return an id */
   FabricWordLineBankId create_wl_shift_register_bank(
@@ -145,7 +154,20 @@ class FabricKey {
   /* Add a data port to a given WL shift register bank */
   void add_data_port_to_wl_shift_register_bank(
     const FabricRegionId& region_id, const FabricWordLineBankId& bank_id,
-    const openfpga::BasicPort& data_port);
+    const BasicPort& data_port);
+
+  /* Reserve a number of keys to be memory efficent */
+  void reserve_modules(const size_t& num_modules);
+  void reserve_module_keys(const FabricKeyModuleId& module_id,
+                           const size_t& num_keys);
+  /* Create a new key and add it to the library, return an id */
+  FabricKeyModuleId create_module(const std::string& name);
+  FabricSubKeyId create_module_key(const FabricKeyModuleId& module_id);
+  /* Configure attributes of a sub key */
+  void set_sub_key_name(const FabricSubKeyId& key_id, const std::string& name);
+  void set_sub_key_value(const FabricSubKeyId& key_id, const size_t& value);
+  void set_sub_key_alias(const FabricSubKeyId& key_id,
+                         const std::string& alias);
 
  public: /* Public invalidators/validators */
   bool valid_region_id(const FabricRegionId& region_id) const;
@@ -156,29 +178,26 @@ class FabricKey {
                         const FabricBitLineBankId& bank_id) const;
   bool valid_wl_bank_id(const FabricRegionId& region_id,
                         const FabricWordLineBankId& bank_id) const;
+  bool valid_module_id(const FabricKeyModuleId& module_id) const;
+  bool valid_sub_key_id(const FabricSubKeyId& sub_key_id) const;
 
  private: /* Internal data */
+  /* ---- Top-level keys and regions ---- */
   /* Unique ids for each region */
   vtr::vector<FabricRegionId, FabricRegionId> region_ids_;
-
   /* Key ids for each region */
   vtr::vector<FabricRegionId, std::vector<FabricKeyId>> region_key_ids_;
 
   /* Unique ids for each key */
   vtr::vector<FabricKeyId, FabricKeyId> key_ids_;
-
   /* Names for each key */
   vtr::vector<FabricKeyId, std::string> key_names_;
-
   /* Values for each key */
   vtr::vector<FabricKeyId, size_t> key_values_;
-
   /* Values for each key */
   vtr::vector<FabricKeyId, vtr::Point<int>> key_coordinates_;
-
   /* Region for each key */
   vtr::vector<FabricKeyId, FabricRegionId> key_regions_;
-
   /* Optional alias for each key, with which a key can also be represented */
   vtr::vector<FabricKeyId, std::string> key_alias_;
 
@@ -187,8 +206,8 @@ class FabricKey {
               vtr::vector<FabricBitLineBankId, FabricBitLineBankId>>
     bl_bank_ids_;
   /* Data ports to be connected to each BL shift register bank */
-  vtr::vector<FabricRegionId, vtr::vector<FabricBitLineBankId,
-                                          std::vector<openfpga::BasicPort>>>
+  vtr::vector<FabricRegionId,
+              vtr::vector<FabricBitLineBankId, std::vector<BasicPort>>>
     bl_bank_data_ports_;
 
   /* Unique ids for each WL shift register bank */
@@ -196,9 +215,23 @@ class FabricKey {
               vtr::vector<FabricWordLineBankId, FabricWordLineBankId>>
     wl_bank_ids_;
   /* Data ports to be connected to each WL shift register bank */
-  vtr::vector<FabricRegionId, vtr::vector<FabricWordLineBankId,
-                                          std::vector<openfpga::BasicPort>>>
+  vtr::vector<FabricRegionId,
+              vtr::vector<FabricWordLineBankId, std::vector<BasicPort>>>
     wl_bank_data_ports_;
+
+  /* ---- List of sub modules ---- */
+  vtr::vector<FabricKeyModuleId, FabricKeyModuleId> sub_key_module_ids_;
+  vtr::vector<FabricKeyModuleId, std::string> sub_key_module_names_;
+  vtr::vector<FabricKeyModuleId, std::vector<FabricSubKeyId>> module_sub_keys_;
+  std::map<std::string, FabricKeyModuleId> module2subkey_lookup_;
+
+  /* ---- Sub keys ---- */
+  vtr::vector<FabricSubKeyId, FabricSubKeyId> sub_key_ids_;
+  vtr::vector<FabricSubKeyId, std::string> sub_key_names_;
+  vtr::vector<FabricSubKeyId, size_t> sub_key_values_;
+  vtr::vector<FabricSubKeyId, std::string> sub_key_alias_;
 };
+
+}  // End of namespace openfpga
 
 #endif
