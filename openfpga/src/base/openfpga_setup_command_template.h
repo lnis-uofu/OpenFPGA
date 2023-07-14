@@ -405,6 +405,11 @@ ShellCommandId add_build_fabric_command_template(
     "write_fabric_key", false, "output current fabric key to a file");
   shell_cmd.set_option_require_value(opt_write_fkey, openfpga::OPT_STRING);
 
+  /* Add an option '--group_tile' */
+  CommandOptionId opt_group_tile = shell_cmd.add_option(
+    "group_tile", false, "group programmable blocks and routing blocks into tiles. This helps to reduce the number of blocks at top-level");
+  shell_cmd.set_option_require_value(opt_group_tile, openfpga::OPT_STRING);
+
   /* Add an option '--generate_random_fabric_key' */
   shell_cmd.add_option("generate_random_fabric_key", false,
                        "Create a random fabric key which will shuffle the "

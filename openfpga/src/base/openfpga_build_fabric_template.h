@@ -17,6 +17,7 @@
 #include "globals.h"
 #include "openfpga_naming.h"
 #include "read_xml_fabric_key.h"
+#include "read_xml_tile_config.h"
 #include "read_xml_io_name_map.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
@@ -98,6 +99,7 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
     cmd.option("generate_random_fabric_key");
   CommandOptionId opt_write_fabric_key = cmd.option("write_fabric_key");
   CommandOptionId opt_load_fabric_key = cmd.option("load_fabric_key");
+  CommandOptionId opt_group_tile = cmd.option("group_tile");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   if (true == cmd_context.option_enable(cmd, opt_compress_routing)) {
@@ -124,6 +126,23 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
   }
 
   VTR_LOG("\n");
+
+  /* Build tile-level information:
+   * - This feature only supports when compress routing is enabled
+   * - Read the tile organization configuration file
+   * - Build tile info
+   */
+  TileConfig tile_config;
+  if (cmd_context.option_enable(cmd, opt_group_tile)) {
+    if (!cmd_context.option_enable(cmd, opt_compress_routing)) {
+      VTR_LOG_ERROR("Group tile is applicable only when compress routing is enabled!\n");
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    curr_status = read_xml_tile_config(cmd_context.option_value(cmd, opt_group_file).c_str(), tile_config);
+    if (CMD_EXEC_SUCCESS != curr_status) {
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
 
   curr_status = build_device_module_graph(
     openfpga_ctx.mutable_module_graph(), openfpga_ctx.mutable_decoder_lib(),
