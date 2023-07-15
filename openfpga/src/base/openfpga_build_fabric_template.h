@@ -153,7 +153,7 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
     cmd_context.option_enable(cmd, opt_frame_view),
     cmd_context.option_enable(cmd, opt_compress_routing),
     cmd_context.option_enable(cmd, opt_duplicate_grid_pin),
-    predefined_fabric_key,
+    predefined_fabric_key, tile_config,
     cmd_context.option_enable(cmd, opt_gen_random_fabric_key),
     cmd_context.option_enable(cmd, opt_verbose));
 

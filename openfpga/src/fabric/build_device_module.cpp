@@ -35,7 +35,8 @@ int build_device_module_graph(
   const OpenfpgaContext& openfpga_ctx, const DeviceContext& vpr_device_ctx,
   const bool& frame_view, const bool& compress_routing,
   const bool& duplicate_grid_pin, const FabricKey& fabric_key,
-  const bool& generate_random_fabric_key, const bool& verbose) {
+  const TileConfig& tile_config, const bool& generate_random_fabric_key,
+  const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build fabric module graph");
 
   int status = CMD_EXEC_SUCCESS;
@@ -97,6 +98,18 @@ int build_device_module_graph(
       openfpga_ctx.vpr_device_annotation(), openfpga_ctx.device_rr_gsb(),
       openfpga_ctx.arch().circuit_lib,
       openfpga_ctx.arch().config_protocol.type(), sram_model, verbose);
+  }
+
+  /* Build tile modules if defined */
+  FabricTile fabric_tile(openfpga_ctx.device_rr_gsb());
+  if (!tile_config.empty()) {
+    /* TODO: Build detailed tile-level information */
+    status = build_fabric_tile(fabric_tile, tile_config, vpr_device_ctx.grid, openfpga_ctx.device_rr_gsb());
+    if (CMD_EXEC_FATAL_ERROR == status) {
+      return status;
+    }
+    /* TODO: Build the modules */
+    // build_tile_modules(module_manager, fabric_tile);
   }
 
   /* Build FPGA fabric top-level module */
