@@ -27,7 +27,9 @@ namespace openfpga {
  * - The connection blocks and switch block are placed on the right and bottom
  *sides
  *******************************************************************/
-static int build_fabric_tile_top_left(FabricTile& fabric_tile, const DeviceGrid& grids, const DeviceRRGSB& device_rr_gsb) {
+static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
+                                            const DeviceGrid& grids,
+                                            const DeviceRRGSB& device_rr_gsb) {
   int status_code = CMD_EXEC_SUCCESS;
 
   /* Walk through all the device rr_gsb and create tile one by one */
@@ -36,14 +38,17 @@ static int build_fabric_tile_top_left(FabricTile& fabric_tile, const DeviceGrid&
       t_physical_tile_type_ptr phy_tile_type = grids.get_physical_type(ix, iy);
       bool skip_add_pb = false;
       vtr::Point<size_t> curr_tile_coord(ix, iy);
+      vtr::Point<size_t> curr_gsb_coord(ix, iy - 1);
       FabricTileId curr_tile_id = FabricTileId::INVALID();
       /* For EMPTY grid, routing blocks may still be required if there is a gsb
        */
       if (true == is_empty_type(phy_tile_type)) {
         skip_add_pb = true;
+        if (!device_rr_gsb.is_gsb_exist(curr_gsb_coord)) {
+          continue;
+        }
         /* Need to create a new tile here */
-        curr_tile_id = fabric_tile.create_tile();
-        fabric_tile.set_coordinate(curr_tile_coord);
+        curr_tile_id = fabric_tile.create_tile(curr_tile_coord);
       }
       /* Skip width, height > 1 tiles (mostly heterogeneous blocks) */
       if ((0 < grids.get_width_offset(ix, iy)) ||
@@ -58,8 +63,7 @@ static int build_fabric_tile_top_left(FabricTile& fabric_tile, const DeviceGrid&
         curr_tile_id = fabric_tile.find_tile(root_tile_coord);
       } else {
         /* Need to create a new tile here */
-        curr_tile_id = fabric_tile.create_tile();
-        fabric_tile.set_coordinate(curr_tile_coord);
+        curr_tile_id = fabric_tile.create_tile(curr_tile_coord);
       }
 
       /* Ensure that we have a valid id */
@@ -85,7 +89,6 @@ static int build_fabric_tile_top_left(FabricTile& fabric_tile, const DeviceGrid&
        *  +----------+ +----------+
        *
        */
-      vtr::Point<size_t> curr_gsb_coord(ix, iy - 1);
       if (!device_rr_gsb.is_gsb_exist(curr_gsb_coord)) {
         continue;
       }
@@ -111,7 +114,9 @@ static int build_fabric_tile_top_left(FabricTile& fabric_tile, const DeviceGrid&
 /********************************************************************
  * Build tile-level information for a given FPGA fabric, w.r.t. to configuration
  *******************************************************************/
-int build_fabric_tile(FabricTile& fabric_tile, const TileConfig& tile_config, const DeviceGrid& grids, const DeviceRRGSB& device_rr_gsb) {
+int build_fabric_tile(FabricTile& fabric_tile, const TileConfig& tile_config,
+                      const DeviceGrid& grids,
+                      const DeviceRRGSB& device_rr_gsb) {
   vtr::ScopedStartFinishTimer timer(
     "Build tile-level information for the FPGA fabric");
 
@@ -119,7 +124,8 @@ int build_fabric_tile(FabricTile& fabric_tile, const TileConfig& tile_config, co
 
   /* Depending on the selected style, follow different approaches */
   if (tile_config.style() == TileConfig::e_style::TOP_LEFT) {
-    status_code = build_fabric_tile_style_top_left(fabric_tile, grids, device_rr_gsb);
+    status_code =
+      build_fabric_tile_style_top_left(fabric_tile, grids, device_rr_gsb);
   } else {
     /* Error out for styles that are not supported yet! */
     VTR_LOG_ERROR("Tile style '%s' is not supported yet!\n",

@@ -23,17 +23,19 @@ namespace openfpga {
  *******************************************************************/
 class FabricTile {
  public: /* Contructors */
-  FabricTile(const DeviceRRGSB& device_rr_gsb);
+  FabricTile(const vtr::Point<size_t>& max_coord);
 
  public: /* Accessors */
   vtr::Point<size_t> tile_coordinate(const FabricTileId& tile_id) const;
   /** @brief With a given coordinate, find the id of the unique tile (which is
    * the same as the tile in structure) */
   FabricTileId unique_tile(const vtr::Point<size_t>& coord) const;
+  /** @brief Find the tile info with a given coordinate */
+  FabricTileId find_tile(const vtr::Point<size_t>& coord) const;
 
  public: /* Mutators */
-  FabricTileId create_tile();
-  void set_tile_coordinate(const FabricTileId& tile_id,
+  FabricTileId create_tile(const vtr::Point<size_t>& coord);
+  bool set_tile_coordinate(const FabricTileId& tile_id,
                            const vtr::Point<size_t>& coord);
   void add_pb_coordinate(const FabricTileId& tile_id,
                          const vtr::Point<size_t>& coord);
@@ -48,11 +50,17 @@ class FabricTile {
   void build_unique_tiles();
   /** @brief Clear all the content */
   void clear();
+  /** @brief Initialize the data with a given range. Used by constructors */
+  void init(const vtr::Point<size_t>& max_coord);
 
- private: /* Validators */
+ public: /* Validators */
   bool valid_tile_id(const FabricTileId& tile_id) const;
 
  private: /* Internal builders */
+  void invalidate_tile_in_lookup(const vtr::Point<size_t>& coord);
+  bool register_tile_in_lookup(const FabricTileId& tile_id,
+                               const vtr::Point<size_t>& coord);
+
  private: /* Internal Data */
   vtr::vector<FabricTileId, FabricTileId> ids_;
   vtr::vector<FabricTileId, vtr::Point<size_t>> coords_;
@@ -61,11 +69,11 @@ class FabricTile {
   vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> cbx_coords_;
   vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> cby_coords_;
   vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> sb_coords_;
+  /* A fast lookup to spot tile by coordinate */
+  std::vector<std::vector<FabricTileId>> tile_coord2id_lookup_;
   std::vector<std::vector<FabricTileId>>
     unique_tile_ids_; /* Use [x][y] to get the id of the unique tile with a
                          given coordinate */
-  /* Cached data */
-  const DeviceRRGSB& device_rr_gsb_;
 };
 
 } /* End namespace openfpga*/

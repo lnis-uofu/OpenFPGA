@@ -12,6 +12,7 @@
 #include "build_decoder_modules.h"
 #include "build_device_module.h"
 #include "build_essential_modules.h"
+#include "build_fabric_tile.h"
 #include "build_grid_modules.h"
 #include "build_lut_modules.h"
 #include "build_memory_modules.h"
@@ -101,10 +102,12 @@ int build_device_module_graph(
   }
 
   /* Build tile modules if defined */
-  FabricTile fabric_tile(openfpga_ctx.device_rr_gsb());
-  if (!tile_config.empty()) {
+  FabricTile fabric_tile(vtr::Point<size_t>(vpr_device_ctx.grid.width(),
+                                            vpr_device_ctx.grid.height()));
+  if (!tile_config.is_valid()) {
     /* TODO: Build detailed tile-level information */
-    status = build_fabric_tile(fabric_tile, tile_config, vpr_device_ctx.grid, openfpga_ctx.device_rr_gsb());
+    status = build_fabric_tile(fabric_tile, tile_config, vpr_device_ctx.grid,
+                               openfpga_ctx.device_rr_gsb());
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
     }
