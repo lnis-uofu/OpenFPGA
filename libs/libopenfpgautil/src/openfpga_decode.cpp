@@ -5,6 +5,7 @@
 
 /* Headers from vtrutil library */
 #include "openfpga_decode.h"
+
 #include "vtr_assert.h"
 
 /* begin namespace openfpga */
@@ -108,14 +109,14 @@ std::string combine_two_1hot_str(const std::string& code1,
  *   Output:
  *     index | 0 | 1 | 2
  *     ret   | 0 | 0 | 1
-*
-*  ToDo: Need to revisit and change all the feature that call to this function
-*            Had studied the code, should be safe to make the change
-*            Apparently we only want to store 0 or 1 (binary vector)
-*            Yet we store it in a vector on size_t (8 Bytes)
-*            We are using 8x memory that we supposed to
-*            uint8_t is good enough
-*            Not a bug, but is a serious unoptimized issue
+ *
+ *  ToDo: Need to revisit and change all the feature that call to this function
+ *            Had studied the code, should be safe to make the change
+ *            Apparently we only want to store 0 or 1 (binary vector)
+ *            Yet we store it in a vector on size_t (8 Bytes)
+ *            We are using 8x memory that we supposed to
+ *            uint8_t is good enough
+ *            Not a bug, but is a serious unoptimized issue
  ********************************************************************/
 std::vector<size_t> itobin_vec(const size_t& in_int, const size_t& bin_len) {
   /* bin_len must be in valid range*/
@@ -123,9 +124,10 @@ std::vector<size_t> itobin_vec(const size_t& in_int, const size_t& bin_len) {
   std::vector<size_t> ret(bin_len, 0);
 
   /* Make sure we do not have any overflow! */
-  /* If the length is 64 bits, in_int can be any number since this is the max bit length, and BTW pow(2, 64) 
-         itself should be zero (from 64bits size_t perspective). Once we fix the bintoi_charvec() bug, without 
-         this change, it will cause assertion */
+  /* If the length is 64 bits, in_int can be any number since this is the max
+     bit length, and BTW pow(2, 64) itself should be zero (from 64bits size_t
+     perspective). Once we fix the bintoi_charvec() bug, without this change, it
+     will cause assertion */
   if (bin_len < 64) {
     VTR_ASSERT(in_int < (size_t(1) << bin_len));
   }
@@ -159,9 +161,10 @@ std::vector<char> itobin_charvec(const size_t& in_int, const size_t& bin_len) {
   std::vector<char> ret(bin_len, '0');
 
   /* Make sure we do not have any overflow! */
-  /* If the length is 64 bits, in_int can be any number since this is the max bit length, and BTW pow(2, 64) 
-         itself should be zero (from 64bits size_t perspective). Once we fix the bintoi_charvec() bug, without 
-         this change, it will cause assertion */
+  /* If the length is 64 bits, in_int can be any number since this is the max
+     bit length, and BTW pow(2, 64) itself should be zero (from 64bits size_t
+     perspective). Once we fix the bintoi_charvec() bug, without this change, it
+     will cause assertion */
   if (bin_len < 64) {
     VTR_ASSERT(in_int < (size_t(1) << bin_len));
   }
@@ -193,7 +196,7 @@ std::vector<char> itobin_charvec(const size_t& in_int, const size_t& bin_len) {
 size_t bintoi_charvec(const std::vector<char>& bin) {
   /* bin.size() must be in valid range*/
   VTR_ASSERT(bin.size() > 0 && bin.size() <= 64);
-  
+
   size_t ret = 0;
 
   for (size_t i = 0; i < bin.size(); ++i) {
