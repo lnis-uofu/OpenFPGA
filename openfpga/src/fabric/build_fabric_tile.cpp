@@ -95,11 +95,11 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
       const RRGSB& curr_rr_gsb = device_rr_gsb.get_gsb(curr_gsb_coord);
       if (curr_rr_gsb.is_cb_exist(CHANX)) {
         fabric_tile.add_cbx_coordinate(curr_tile_id,
-                                       curr_rr_gsb.get_cb_coordinate(CHANX));
+                                       curr_rr_gsb.get_sb_coordinate());
       }
       if (curr_rr_gsb.is_cb_exist(CHANY)) {
         fabric_tile.add_cby_coordinate(curr_tile_id,
-                                       curr_rr_gsb.get_cb_coordinate(CHANY));
+                                       curr_rr_gsb.get_sb_coordinate());
       }
       if (curr_rr_gsb.is_sb_exist()) {
         fabric_tile.add_sb_coordinate(curr_tile_id,
@@ -132,6 +132,14 @@ int build_fabric_tile(FabricTile& fabric_tile, const TileConfig& tile_config,
                   tile_config.style_to_string().c_str());
     status_code = CMD_EXEC_FATAL_ERROR;
   }
+
+  if (status_code != CMD_EXEC_SUCCESS) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Build unique tiles to compress the number of tile modules to be built in
+   * later steps */
+  status_code = fabric_tile.build_unique_tiles(grids, device_rr_gsb);
 
   return status_code;
 }

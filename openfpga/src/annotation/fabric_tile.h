@@ -6,6 +6,7 @@
  *******************************************************************/
 #include <vector>
 
+#include "device_grid.h"
 #include "device_rr_gsb.h"
 #include "fabric_tile_fwd.h"
 #include "vtr_geometry.h"
@@ -52,9 +53,19 @@ class FabricTile {
   void clear();
   /** @brief Initialize the data with a given range. Used by constructors */
   void init(const vtr::Point<size_t>& max_coord);
+  /** @brief Identify the number of unique tiles and keep in the lookup */
+  int build_unique_tiles(const DeviceGrid& grids,
+                         const DeviceRRGSB& device_rr_gsb);
 
  public: /* Validators */
   bool valid_tile_id(const FabricTileId& tile_id) const;
+
+ private: /* Internal validators */
+  /** @brief Identify if two tile are equivalent in their sub-modules, including
+   * pb, cbx, cby and sb */
+  bool equivalent_tile(const FabricTileId& tile_a, const FabricTileId& tile_b,
+                       const DeviceGrid& grids,
+                       const DeviceRRGSB& device_rr_gsb) const;
 
  private: /* Internal builders */
   void invalidate_tile_in_lookup(const vtr::Point<size_t>& coord);
@@ -72,8 +83,9 @@ class FabricTile {
   /* A fast lookup to spot tile by coordinate */
   std::vector<std::vector<FabricTileId>> tile_coord2id_lookup_;
   std::vector<std::vector<FabricTileId>>
-    unique_tile_ids_; /* Use [x][y] to get the id of the unique tile with a
-                         given coordinate */
+    tile_coord2unique_tile_ids_; /* Use [x][y] to get the id of the unique tile
+                         with a given coordinate */
+  std::vector<FabricTileId> unique_tile_ids_;
 };
 
 } /* End namespace openfpga*/
