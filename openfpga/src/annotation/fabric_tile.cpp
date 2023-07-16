@@ -17,6 +17,33 @@ vtr::Point<size_t> FabricTile::tile_coordinate(
   return coords_[tile_id];
 }
 
+std::vector<vtr::Point<size_t>> FabricTile::pb_coordinates(
+  const FabricTileId& tile_id) const {
+  VTR_ASSERT(valid_tile_id(tile_id));
+  return pb_coords_[tile_id];
+}
+
+std::vector<vtr::Point<size_t>> FabricTile::cb_coordinates(
+  const FabricTileId& tile_id, const t_rr_type& cb_type) const {
+  VTR_ASSERT(valid_tile_id(tile_id));
+  switch (cb_type) {
+    case CHANX:
+      return cbx_coords_[tile_id];
+    case CHANY:
+      return cby_coords_[tile_id];
+    default:
+      VTR_LOG("Invalid type of connection block!\n");
+      exit(1);
+  }
+  return std::vector<vtr::Point<size_t>>();
+}
+
+std::vector<vtr::Point<size_t>> FabricTile::sb_coordinates(
+  const FabricTileId& tile_id) const {
+  VTR_ASSERT(valid_tile_id(tile_id));
+  return sb_coords_[tile_id];
+}
+
 FabricTileId FabricTile::unique_tile(const vtr::Point<size_t>& coord) const {
   /* Return invalid Id when out of range! */
   if (coord.x() < tile_coord2unique_tile_ids_.size()) {
@@ -43,6 +70,10 @@ FabricTileId FabricTile::find_tile(const vtr::Point<size_t>& coord) const {
     return FabricTileId::INVALID();
   }
   return tile_coord2id_lookup_[coord.x()][coord.y()];
+}
+
+std::vector<FabricTileId> FabricTile::unique_tiles() const {
+  return unique_tile_ids_;
 }
 
 FabricTileId FabricTile::create_tile(const vtr::Point<size_t>& coord) {
@@ -117,19 +148,24 @@ bool FabricTile::set_tile_coordinate(const FabricTileId& tile_id,
 void FabricTile::add_pb_coordinate(const FabricTileId& tile_id,
                                    const vtr::Point<size_t>& coord) {
   VTR_ASSERT(valid_tile_id(tile_id));
-  pb_coords_[tile_id] = coord;
+  pb_coords_[tile_id].push_back(coord);
 }
 
-void FabricTile::add_cbx_coordinate(const FabricTileId& tile_id,
-                                    const vtr::Point<size_t>& coord) {
+void FabricTile::add_cb_coordinate(const FabricTileId& tile_id,
+                                   const t_rr_type& cb_type,
+                                   const vtr::Point<size_t>& coord) {
   VTR_ASSERT(valid_tile_id(tile_id));
-  cbx_coords_[tile_id].push_back(coord);
-}
-
-void FabricTile::add_cby_coordinate(const FabricTileId& tile_id,
-                                    const vtr::Point<size_t>& coord) {
-  VTR_ASSERT(valid_tile_id(tile_id));
-  cby_coords_[tile_id].push_back(coord);
+  switch (cb_type) {
+    case CHANX:
+      cbx_coords_[tile_id].push_back(coord);
+      break;
+    case CHANY:
+      cby_coords_[tile_id].push_back(coord);
+      break;
+    default:
+      VTR_LOG("Invalid type of connection block!\n");
+      exit(1);
+  }
 }
 
 void FabricTile::add_sb_coordinate(const FabricTileId& tile_id,
@@ -158,16 +194,21 @@ bool FabricTile::equivalent_tile(const FabricTileId& tile_a,
                                  const FabricTileId& tile_b,
                                  const DeviceGrid& grids,
                                  const DeviceRRGSB& device_rr_gsb) const {
-  /* The pb of two tiles should be the same, otherwise not equivalent */
-  if (grids.get_physical_type(pb_coords_[tile_a].x(), pb_coords_[tile_a].y()) !=
-      grids.get_physical_type(pb_coords_[tile_b].x(), pb_coords_[tile_b].y())) {
-    return false;
-  }
   /* The number of cbx, cby and sb blocks should be the same */
-  if (cbx_coords_[tile_a].size() != cbx_coords_[tile_b].size() ||
+  if (pb_coords_[tile_a].size() != pb_coords_[tile_b].size() ||
+      cbx_coords_[tile_a].size() != cbx_coords_[tile_b].size() ||
       cby_coords_[tile_a].size() != cby_coords_[tile_b].size() ||
       sb_coords_[tile_a].size() != sb_coords_[tile_b].size()) {
     return false;
+  }
+  /* The pb of two tiles should be the same, otherwise not equivalent */
+  for (size_t iblk = 0; iblk < pb_coords_[tile_a].size(); ++iblk) {
+    if (grids.get_physical_type(pb_coords_[tile_a][iblk].x(),
+                                pb_coords_[tile_a][iblk].y()) !=
+        grids.get_physical_type(pb_coords_[tile_b][iblk].x(),
+                                pb_coords_[tile_b][iblk].y())) {
+      return false;
+    }
   }
   /* Each CBx should have the same unique modules in the device rr_gsb */
   for (size_t iblk = 0; iblk < cbx_coords_[tile_a].size(); ++iblk) {

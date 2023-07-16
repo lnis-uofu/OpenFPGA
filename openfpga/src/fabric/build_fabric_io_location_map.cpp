@@ -114,6 +114,7 @@ IoLocationMap build_fabric_io_location_map(const ModuleManager& module_manager,
           if (curr_io_index == io_counter.end()) {
             io_counter[gpio_port.get_name()] = 0;
           }
+          /* FIXME: Will cause critical bugs when tile modules are added */
           io_location_map.set_io_index(coord.x(), coord.y(), subchild_coord.x(),
                                        gpio_port.get_name(),
                                        io_counter[gpio_port.get_name()]);

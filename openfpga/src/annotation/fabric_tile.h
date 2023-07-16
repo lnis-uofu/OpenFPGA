@@ -28,11 +28,19 @@ class FabricTile {
 
  public: /* Accessors */
   vtr::Point<size_t> tile_coordinate(const FabricTileId& tile_id) const;
+  std::vector<vtr::Point<size_t>> pb_coordinates(
+    const FabricTileId& tile_id) const;
+  std::vector<vtr::Point<size_t>> cb_coordinates(
+    const FabricTileId& tile_id, const t_rr_type& cb_type) const;
+  std::vector<vtr::Point<size_t>> sb_coordinates(
+    const FabricTileId& tile_id) const;
   /** @brief With a given coordinate, find the id of the unique tile (which is
    * the same as the tile in structure) */
   FabricTileId unique_tile(const vtr::Point<size_t>& coord) const;
   /** @brief Find the tile info with a given coordinate */
   FabricTileId find_tile(const vtr::Point<size_t>& coord) const;
+  /** @brief Return a list of unique tiles */
+  std::vector<FabricTileId> unique_tiles() const;
 
  public: /* Mutators */
   FabricTileId create_tile(const vtr::Point<size_t>& coord);
@@ -40,10 +48,8 @@ class FabricTile {
                            const vtr::Point<size_t>& coord);
   void add_pb_coordinate(const FabricTileId& tile_id,
                          const vtr::Point<size_t>& coord);
-  void add_cbx_coordinate(const FabricTileId& tile_id,
-                          const vtr::Point<size_t>& coord);
-  void add_cby_coordinate(const FabricTileId& tile_id,
-                          const vtr::Point<size_t>& coord);
+  void add_cb_coordinate(const FabricTileId& tile_id, const t_rr_type& cb_type,
+                         const vtr::Point<size_t>& coord);
   void add_sb_coordinate(const FabricTileId& tile_id,
                          const vtr::Point<size_t>& coord);
   /** @brief Build a list of unique tiles by comparing the coordinates in
@@ -76,7 +82,7 @@ class FabricTile {
   vtr::vector<FabricTileId, FabricTileId> ids_;
   vtr::vector<FabricTileId, vtr::Point<size_t>> coords_;
   /* Coordinates w.r.t. RRGSB */
-  vtr::vector<FabricTileId, vtr::Point<size_t>> pb_coords_;
+  vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> pb_coords_;
   vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> cbx_coords_;
   vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> cby_coords_;
   vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> sb_coords_;

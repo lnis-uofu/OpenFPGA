@@ -18,6 +18,7 @@
 #include "build_memory_modules.h"
 #include "build_mux_modules.h"
 #include "build_routing_modules.h"
+#include "build_tile_modules.h"
 #include "build_top_module.h"
 #include "build_wire_modules.h"
 #include "command_exit_codes.h"
@@ -105,14 +106,17 @@ int build_device_module_graph(
   FabricTile fabric_tile(vtr::Point<size_t>(vpr_device_ctx.grid.width(),
                                             vpr_device_ctx.grid.height()));
   if (!tile_config.is_valid()) {
-    /* TODO: Build detailed tile-level information */
+    /* Build detailed tile-level information */
     status = build_fabric_tile(fabric_tile, tile_config, vpr_device_ctx.grid,
                                openfpga_ctx.device_rr_gsb());
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
     }
     /* TODO: Build the modules */
-    // build_tile_modules(module_manager, fabric_tile);
+    build_tile_modules(module_manager, fabric_tile, vpr_device_ctx.grid,
+                       openfpga_ctx.device_rr_gsb(),
+                       openfpga_ctx.arch().circuit_lib, sram_model,
+                       openfpga_ctx.arch().config_protocol.type(), verbose);
   }
 
   /* Build FPGA fabric top-level module */

@@ -93,13 +93,11 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
         continue;
       }
       const RRGSB& curr_rr_gsb = device_rr_gsb.get_gsb(curr_gsb_coord);
-      if (curr_rr_gsb.is_cb_exist(CHANX)) {
-        fabric_tile.add_cbx_coordinate(curr_tile_id,
-                                       curr_rr_gsb.get_sb_coordinate());
-      }
-      if (curr_rr_gsb.is_cb_exist(CHANY)) {
-        fabric_tile.add_cby_coordinate(curr_tile_id,
-                                       curr_rr_gsb.get_sb_coordinate());
+      for (t_rr_type cb_type : {CHANX, CHANY}) {
+        if (curr_rr_gsb.is_cb_exist(cb_type)) {
+          fabric_tile.add_cb_coordinate(curr_tile_id, cb_type,
+                                        curr_rr_gsb.get_sb_coordinate());
+        }
       }
       if (curr_rr_gsb.is_sb_exist()) {
         fabric_tile.add_sb_coordinate(curr_tile_id,
