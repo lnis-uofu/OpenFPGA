@@ -2,7 +2,7 @@ FROM ghcr.io/lnis-uofu/openfpga-master:8d555772
 
 # Install node js
 USER root
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
+RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 RUN apt-get install -y nodejs
 RUN apt-get install tree
@@ -49,7 +49,7 @@ RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install --user --no-cache-dir notebook
 RUN python3 -m pip install --user --no-cache-dir jupyterlab
 RUN python3 -m pip install --user --no-cache-dir jupyterhub
-RUN python3 -m pip install --user --no-cache-dir "jupyter-server<2.0.0"
+RUN python3 -m pip install --user --no-cache-dir jupyter-server
 RUN python3 -m pip install --user --no-cache-dir jupyter-server-proxy
 RUN python3 -m pip install --user --no-cache-dir jupyter-vscode-proxy
 
