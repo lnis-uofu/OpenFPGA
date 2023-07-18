@@ -18,9 +18,6 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-e_side find_grid_side_by_coordinate(const DeviceGrid& grids,
-                                    const vtr::Point<size_t>& coord);
-
 /* A constant array to walk through FPGA border sides clockwise*/
 constexpr std::array<e_side, 4> FPGA_SIDES_CLOCKWISE{TOP, RIGHT, BOTTOM, LEFT};
 

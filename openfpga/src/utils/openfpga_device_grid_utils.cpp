@@ -14,28 +14,6 @@
 namespace openfpga {
 
 /********************************************************************
- * Identify if a grid locates the side of an FPGA fabric
- * - If on a side, return the side
- * - If not, return an invalid side
- *******************************************************************/
-e_side find_grid_side_by_coordinate(const DeviceGrid& grids,
-                                    const vtr::Point<size_t>& coord) {
-  if (coord.x() == 0) {
-    return LEFT;
-  }
-  if (coord.y() == 0) {
-    return BOTTOM;
-  }
-  if (coord.x() == grids.width() - 1) {
-    return RIGHT;
-  }
-  if (coord.y() == grids.height() - 1) {
-    return TOP;
-  }
-  return NUM_SIDES;
-}
-
-/********************************************************************
  * Create a list of the coordinates for the grids on the device perimeter
  * It follows a clockwise sequence when including the coordinates.
  * Detailed sequence is as follows:

@@ -9,6 +9,7 @@
 
 #include "circuit_library.h"
 #include "config_protocol.h"
+#include "vpr_device_annotation.h"
 #include "device_grid.h"
 #include "device_rr_gsb.h"
 #include "fabric_tile.h"
@@ -23,10 +24,12 @@ namespace openfpga {
 
 int build_tile_modules(ModuleManager& module_manager,
                        const FabricTile& fabric_tile, const DeviceGrid& grids,
+                       const VprDeviceAnnotation& vpr_device_annotation,
                        const DeviceRRGSB& device_rr_gsb,
                        const CircuitLibrary& circuit_lib,
                        const CircuitModelId& sram_model,
                        const e_config_protocol_type& sram_orgz_type,
+                       const bool& frame_view,
                        const bool& verbose);
 
 } /* end namespace openfpga */

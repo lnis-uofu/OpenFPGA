@@ -72,6 +72,49 @@ FabricTileId FabricTile::find_tile(const vtr::Point<size_t>& coord) const {
   return tile_coord2id_lookup_[coord.x()][coord.y()];
 }
 
+bool FabricTile::pb_in_tile(const FabricTileId& tile_id, const vtr::Point<size_t>& coord) const {
+  VTR_ASSERT(valid_tile_id(tile_id));
+  for (vtr::Point<size_t> curr_coord : pb_coords_[tile_id]) {
+    if (curr_coord == coord) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool FabricTile::sb_in_tile(const FabricTileId& tile_id, const vtr::Point<size_t>& coord) const {
+  VTR_ASSERT(valid_tile_id(tile_id));
+  for (vtr::Point<size_t> curr_coord : sb_coords_[tile_id]) {
+    if (curr_coord == coord) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool FabricTile::cb_in_tile(const FabricTileId& tile_id, const t_rr_type& cb_type, const vtr::Point<size_t>& coord) const {
+  VTR_ASSERT(valid_tile_id(tile_id));
+  switch (cb_type) {
+    case CHANX:
+      for (vtr::Point<size_t> curr_coord : cbx_coords_[tile_id]) {
+        if (curr_coord == coord) {
+          return true;
+        }
+      }
+      return false;
+    case CHANY:
+      for (vtr::Point<size_t> curr_coord : cby_coords_[tile_id]) {
+        if (curr_coord == coord) {
+          return true;
+        }
+      }
+      return false;
+    default:
+      VTR_LOG("Invalid type of connection block!\n");
+      exit(1);
+  }
+}
+
 std::vector<FabricTileId> FabricTile::unique_tiles() const {
   return unique_tile_ids_;
 }

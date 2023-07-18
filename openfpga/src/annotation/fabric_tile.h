@@ -41,7 +41,12 @@ class FabricTile {
   FabricTileId find_tile(const vtr::Point<size_t>& coord) const;
   /** @brief Return a list of unique tiles */
   std::vector<FabricTileId> unique_tiles() const;
-
+  /** @brief Check if a programmable block (with a coordinate) exists in a tile */
+  bool pb_in_tile(const FabricTileId& tile_id, const vtr::Point<size_t>& coord) const;
+  /** @brief Check if a switch block (with a coordinate) exists in a tile */
+  bool sb_in_tile(const FabricTileId& tile_id, const vtr::Point<size_t>& coord) const;
+  /** @brief Check if a connection block (with a coordinate) exists in a tile */
+  bool cb_in_tile(const FabricTileId& tile_id, const t_rr_type& cb_type, const vtr::Point<size_t>& coord) const;
  public: /* Mutators */
   FabricTileId create_tile(const vtr::Point<size_t>& coord);
   bool set_tile_coordinate(const FabricTileId& tile_id,
