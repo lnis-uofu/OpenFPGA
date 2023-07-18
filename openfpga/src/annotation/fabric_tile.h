@@ -41,6 +41,12 @@ class FabricTile {
   FabricTileId find_tile(const vtr::Point<size_t>& coord) const;
   /** @brief Return a list of unique tiles */
   std::vector<FabricTileId> unique_tiles() const;
+  /** @brief Find the index of a programmable block in the internal list by a given coordinate. */
+  size_t find_pb_index_in_tile(const FabricTileId& tile_id, const vtr::Point<size_t>& coord) const;
+  /** @brief Find the index of a switch block in the internal list by a given coordinate. */
+  size_t find_sb_index_in_tile(const FabricTileId& tile_id, const vtr::Point<size_t>& coord) const;
+  /** @brief Find the index of a connection block in the internal list by a given coordinate. */
+  size_t find_cb_index_in_tile(const FabricTileId& tile_id, const t_rr_type& cb_type, const vtr::Point<size_t>& coord) const;
   /** @brief Check if a programmable block (with a coordinate) exists in a tile */
   bool pb_in_tile(const FabricTileId& tile_id, const vtr::Point<size_t>& coord) const;
   /** @brief Check if a switch block (with a coordinate) exists in a tile */
