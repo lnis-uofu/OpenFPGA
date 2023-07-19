@@ -68,6 +68,7 @@ constexpr const char* INV_PORT_POSTFIX = "_inv";
 /* Bitstream file strings */
 constexpr const char* BITSTREAM_XML_FILE_NAME_POSTFIX = "_bitstream.xml";
 
+constexpr const char* DEFAULT_TILE_DIR_NAME = "tile/";
 constexpr const char* DEFAULT_LB_DIR_NAME = "lb/";
 constexpr const char* DEFAULT_RR_DIR_NAME = "routing/";
 constexpr const char* DEFAULT_SUBMODULE_DIR_NAME = "sub_module/";

@@ -9,8 +9,6 @@
 /* namespace openfpga begins */
 namespace openfpga {
 
-FabricTile::FabricTile(const vtr::Point<size_t>& max_coord) { init(max_coord); }
-
 vtr::Point<size_t> FabricTile::tile_coordinate(
   const FabricTileId& tile_id) const {
   VTR_ASSERT(valid_tile_id(tile_id));
@@ -154,6 +152,8 @@ size_t FabricTile::find_cb_index_in_tile(
 std::vector<FabricTileId> FabricTile::unique_tiles() const {
   return unique_tile_ids_;
 }
+
+bool FabricTile::empty() const { return ids_.empty(); }
 
 FabricTileId FabricTile::create_tile(const vtr::Point<size_t>& coord) {
   FabricTileId tile_id = FabricTileId(ids_.size());

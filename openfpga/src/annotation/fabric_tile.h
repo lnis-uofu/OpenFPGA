@@ -23,9 +23,6 @@ namespace openfpga {
  * 2. a collection of unique tiles
  *******************************************************************/
 class FabricTile {
- public: /* Contructors */
-  FabricTile(const vtr::Point<size_t>& max_coord);
-
  public: /* Accessors */
   vtr::Point<size_t> tile_coordinate(const FabricTileId& tile_id) const;
   std::vector<vtr::Point<size_t>> pb_coordinates(
@@ -64,6 +61,8 @@ class FabricTile {
   /** @brief Check if a connection block (with a coordinate) exists in a tile */
   bool cb_in_tile(const FabricTileId& tile_id, const t_rr_type& cb_type,
                   const vtr::Point<size_t>& coord) const;
+  /** @brief Identify if the fabric tile is empty: no tiles are defined */
+  bool empty() const;
 
  public: /* Mutators */
   FabricTileId create_tile(const vtr::Point<size_t>& coord);

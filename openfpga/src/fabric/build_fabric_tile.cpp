@@ -120,6 +120,8 @@ int build_fabric_tile(FabricTile& fabric_tile, const TileConfig& tile_config,
 
   int status_code = CMD_EXEC_SUCCESS;
 
+  fabric_tile.init(vtr::Point<size_t>(grids.width(), grids.height()));
+
   /* Depending on the selected style, follow different approaches */
   if (tile_config.style() == TileConfig::e_style::TOP_LEFT) {
     status_code =

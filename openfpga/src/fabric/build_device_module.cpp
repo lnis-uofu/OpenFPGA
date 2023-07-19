@@ -33,7 +33,7 @@ namespace openfpga {
  *******************************************************************/
 int build_device_module_graph(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
-  MemoryBankShiftRegisterBanks& blwl_sr_banks,
+  MemoryBankShiftRegisterBanks& blwl_sr_banks, FabricTile& fabric_tile,
   const OpenfpgaContext& openfpga_ctx, const DeviceContext& vpr_device_ctx,
   const bool& frame_view, const bool& compress_routing,
   const bool& duplicate_grid_pin, const FabricKey& fabric_key,
@@ -103,8 +103,6 @@ int build_device_module_graph(
   }
 
   /* Build tile modules if defined */
-  FabricTile fabric_tile(vtr::Point<size_t>(vpr_device_ctx.grid.width(),
-                                            vpr_device_ctx.grid.height()));
   if (!tile_config.is_valid()) {
     /* Build detailed tile-level information */
     status = build_fabric_tile(fabric_tile, tile_config, vpr_device_ctx.grid,
@@ -114,9 +112,10 @@ int build_device_module_graph(
     }
     /* Build the modules */
     build_tile_modules(
-      module_manager, decoder_lib, fabric_tile, vpr_device_ctx.grid,
-      openfpga_ctx.vpr_device_annotation(), openfpga_ctx.device_rr_gsb(),
-      vpr_device_ctx.rr_graph, openfpga_ctx.arch().circuit_lib, sram_model,
+      module_manager, decoder_lib, openfpga_ctx.fabric_tile(),
+      vpr_device_ctx.grid, openfpga_ctx.vpr_device_annotation(),
+      openfpga_ctx.device_rr_gsb(), vpr_device_ctx.rr_graph,
+      openfpga_ctx.arch().circuit_lib, sram_model,
       openfpga_ctx.arch().config_protocol.type(), frame_view, verbose);
   }
 

@@ -16,6 +16,7 @@
 #include "device_rr_gsb.h"
 #include "fabric_bitstream.h"
 #include "fabric_global_port_info.h"
+#include "fabric_tile.h"
 #include "fabric_verilog_options.h"
 #include "io_location_map.h"
 #include "io_name_map.h"
@@ -37,13 +38,14 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void fpga_fabric_verilog(
+int fpga_fabric_verilog(
   ModuleManager& module_manager, NetlistManager& netlist_manager,
   const MemoryBankShiftRegisterBanks& blwl_sr_banks,
   const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
   const DecoderLibrary& decoder_lib, const DeviceContext& device_ctx,
   const VprDeviceAnnotation& device_annotation,
-  const DeviceRRGSB& device_rr_gsb, const FabricVerilogOption& options);
+  const DeviceRRGSB& device_rr_gsb, const FabricTile& fabric_tile,
+  const FabricVerilogOption& options);
 
 int fpga_verilog_full_testbench(
   const ModuleManager& module_manager,

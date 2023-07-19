@@ -5,6 +5,7 @@
  * Include header files that are required by function declaration
  *******************************************************************/
 #include "fabric_key.h"
+#include "fabric_tile.h"
 #include "io_name_map.h"
 #include "openfpga_context.h"
 #include "tile_config.h"
@@ -19,7 +20,7 @@ namespace openfpga {
 
 int build_device_module_graph(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
-  MemoryBankShiftRegisterBanks& blwl_sr_banks,
+  MemoryBankShiftRegisterBanks& blwl_sr_banks, FabricTile& fabric_tile,
   const OpenfpgaContext& openfpga_ctx, const DeviceContext& vpr_device_ctx,
   const bool& frame_view, const bool& compress_routing,
   const bool& duplicate_grid_pin, const FabricKey& fabric_key,

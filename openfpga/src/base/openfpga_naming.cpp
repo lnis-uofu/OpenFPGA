@@ -500,8 +500,17 @@ std::string generate_switch_block_module_name(
 /*********************************************************************
  * Generate the module name for a switch block with a given index
  *********************************************************************/
-std::string generate_tile_module_name(const size_t& index) {
-  return std::string("tile_" + std::to_string(index));
+std::string generate_tile_module_name(const vtr::Point<size_t>& tile_coord) {
+  return std::string("tile_" + std::to_string(tile_coord.x()) + "__" +
+                     std::to_string(tile_coord.y()) + "_");
+}
+
+/*********************************************************************
+ * Generate the netlist name of a grid block
+ **********************************************************************/
+std::string generate_tile_module_netlist_name(const std::string& block_name,
+                                              const std::string& postfix) {
+  return block_name + postfix;
 }
 
 /*********************************************************************
