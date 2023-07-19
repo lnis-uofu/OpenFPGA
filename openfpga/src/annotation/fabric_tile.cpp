@@ -283,8 +283,15 @@ bool FabricTile::equivalent_tile(const FabricTileId& tile_a,
   }
   /* The pb of two tiles should be the same, otherwise not equivalent */
   for (size_t iblk = 0; iblk < pb_coords_[tile_a].size(); ++iblk) {
-    if (generate_grid_block_module_name_in_top_module(std::string(), grids, pb_coords_[tile_a][iblk]) != generate_grid_block_module_name_in_top_module(std::string(), grids, pb_coords_[tile_b][iblk])) {
+    if (device_rr_gsb.is_gsb_exist(pb_coords_[tile_a][iblk]) != device_rr_gsb.is_gsb_exist(pb_coords_[tile_b][iblk])) {
       return false;
+    }
+    if (device_rr_gsb.is_gsb_exist(pb_coords_[tile_a][iblk])) {
+      vtr::Point<size_t> tile_a_pb_coord = device_rr_gsb.get_gsb(pb_coords_[tile_a][iblk]).get_sb_coordinate();
+      vtr::Point<size_t> tile_b_pb_coord = device_rr_gsb.get_gsb(pb_coords_[tile_b][iblk]).get_sb_coordinate();
+      if (generate_grid_block_module_name_in_top_module(std::string(), grids, tile_a_pb_coord) != generate_grid_block_module_name_in_top_module(std::string(), grids, tile_b_pb_coord)) {
+        return false;
+      }
     }
   }
   /* Each CBx should have the same unique modules in the device rr_gsb */

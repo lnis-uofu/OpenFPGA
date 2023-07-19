@@ -78,7 +78,7 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
 
       /* Add components: pb, cbx, cby, and sb if exists */
       if (!skip_add_pb) {
-        fabric_tile.add_pb_coordinate(curr_tile_id, curr_tile_coord);
+        fabric_tile.add_pb_coordinate(curr_tile_id, curr_gsb_coord);
       }
       /* The gsb coordinate is different than the grid coordinate when the
        * top-left style is considered
