@@ -167,11 +167,11 @@ static int build_tile_module_port_and_nets_between_sb_and_pb(
         module_manager.module_port(sink_sb_module, sink_sb_port_id);
 
       /* Check if the grid is inside the tile, if not, create ports */
-      if (fabric_tile.pb_in_tile(fabric_tile_id, grid_coordinate)) {
-        VTR_LOGV(verbose, "Build intra-tile nets between switch block '%s' and programmable block '%s'\n", sink_sb_module_name.c_str(), src_grid_module_name.c_str());
+      if (fabric_tile.pb_in_tile(fabric_tile_id, device_rr_gsb, grid_coordinate)) {
+        VTR_LOGV(verbose, "Build intra-tile nets between switch block '%s' and programmable block '%s[%lu][%lu]'\n", sink_sb_module_name.c_str(), src_grid_module_name.c_str(), grid_coordinate.x(), grid_coordinate.y());
         if (!frame_view) {
           size_t src_grid_instance =
-            pb_instances[fabric_tile.find_pb_index_in_tile(fabric_tile_id,
+            pb_instances[fabric_tile.find_pb_index_in_tile(fabric_tile_id, device_rr_gsb,
                                                            grid_coordinate)];
 
           /* Source and sink port should match in size */
@@ -385,10 +385,10 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
         module_manager.module_port(sink_grid_module, sink_grid_port_id);
 
       /* Check if the grid is inside the tile, if not, create ports */
-      if (fabric_tile.pb_in_tile(fabric_tile_id, grid_coordinate)) {
+      if (fabric_tile.pb_in_tile(fabric_tile_id, device_rr_gsb, grid_coordinate)) {
         if (!frame_view) {
           size_t sink_grid_instance =
-            pb_instances[fabric_tile.find_pb_index_in_tile(fabric_tile_id,
+            pb_instances[fabric_tile.find_pb_index_in_tile(fabric_tile_id, device_rr_gsb,
                                                            grid_coordinate)];
 
           /* Source and sink port should match in size */

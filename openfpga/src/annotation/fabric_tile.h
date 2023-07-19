@@ -41,6 +41,7 @@ class FabricTile {
   /** @brief Find the index of a programmable block in the internal list by a
    * given coordinate. */
   size_t find_pb_index_in_tile(const FabricTileId& tile_id,
+                               const DeviceRRGSB& device_rr_gsb,
                                const vtr::Point<size_t>& coord) const;
   /** @brief Find the index of a switch block in the internal list by a given
    * coordinate. */
@@ -54,6 +55,7 @@ class FabricTile {
   /** @brief Check if a programmable block (with a coordinate) exists in a tile
    */
   bool pb_in_tile(const FabricTileId& tile_id,
+                  const DeviceRRGSB& device_rr_gsb,
                   const vtr::Point<size_t>& coord) const;
   /** @brief Check if a switch block (with a coordinate) exists in a tile */
   bool sb_in_tile(const FabricTileId& tile_id,

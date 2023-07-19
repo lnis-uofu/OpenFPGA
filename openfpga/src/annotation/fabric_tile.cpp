@@ -72,21 +72,28 @@ FabricTileId FabricTile::find_tile(const vtr::Point<size_t>& coord) const {
 }
 
 bool FabricTile::pb_in_tile(const FabricTileId& tile_id,
+                            const DeviceRRGSB& device_rr_gsb,
                             const vtr::Point<size_t>& coord) const {
-  return !pb_coords_[tile_id].empty() && find_pb_index_in_tile(tile_id, coord) != pb_coords_[tile_id].size();
+  return !pb_coords_[tile_id].empty() && find_pb_index_in_tile(tile_id, device_rr_gsb, coord) != pb_coords_[tile_id].size();
 }
 
 size_t FabricTile::find_pb_index_in_tile(
-  const FabricTileId& tile_id, const vtr::Point<size_t>& coord) const {
+  const FabricTileId& tile_id,
+  const DeviceRRGSB& device_rr_gsb,
+  const vtr::Point<size_t>& coord) const {
   VTR_ASSERT(valid_tile_id(tile_id));
   for (size_t idx = 0; idx < pb_coords_[tile_id].size(); ++idx) {
-    vtr::Point<size_t> curr_coord = pb_coords_[tile_id][idx];
+    /* Convert gsb coordinate to actual pb coordinate */
+    if (!device_rr_gsb.is_gsb_exist(pb_coords_[tile_id][idx])) {
+      continue;
+    }
+    vtr::Point<size_t> curr_coord = device_rr_gsb.get_gsb(pb_coords_[tile_id][idx]).get_grid_coordinate();
     if (curr_coord == coord) {
       return idx;
     }
   }
   /* Not found, return an invalid index */
-  return pb_coords_.size();
+  return pb_coords_[tile_id].size();
 }
 
 bool FabricTile::sb_in_tile(const FabricTileId& tile_id,
@@ -104,7 +111,7 @@ size_t FabricTile::find_sb_index_in_tile(
     }
   }
   /* Not found, return an invalid index */
-  return sb_coords_.size();
+  return sb_coords_[tile_id].size();
 }
 
 bool FabricTile::cb_in_tile(const FabricTileId& tile_id,
