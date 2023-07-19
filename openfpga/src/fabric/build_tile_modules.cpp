@@ -168,6 +168,7 @@ static int build_tile_module_port_and_nets_between_sb_and_pb(
 
       /* Check if the grid is inside the tile, if not, create ports */
       if (fabric_tile.pb_in_tile(fabric_tile_id, grid_coordinate)) {
+        VTR_LOGV(verbose, "Build intra-tile nets between switch block '%s' and programmable block '%s'\n", sink_sb_module_name.c_str(), src_grid_module_name.c_str());
         if (!frame_view) {
           size_t src_grid_instance =
             pb_instances[fabric_tile.find_pb_index_in_tile(fabric_tile_id,
@@ -1005,6 +1006,7 @@ static int build_tile_module(
     vtr::Point<size_t> grid_coord = grid_rr_gsb.get_grid_coordinate();
     t_physical_tile_type_ptr phy_tile =
       grids.get_physical_type(grid_coord.x(), grid_coord.y());
+    VTR_LOGV(verbose, "Try to find pb at [%lu][%lu]\n", grid_coord.x(), grid_coord.y());
     /* Empty type does not require a module */
     if (!is_empty_type(phy_tile)) {
       e_side grid_side = find_grid_border_side(

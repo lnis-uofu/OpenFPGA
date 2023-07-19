@@ -73,7 +73,7 @@ FabricTileId FabricTile::find_tile(const vtr::Point<size_t>& coord) const {
 
 bool FabricTile::pb_in_tile(const FabricTileId& tile_id,
                             const vtr::Point<size_t>& coord) const {
-  return find_pb_index_in_tile(tile_id, coord) != pb_coords_.size();
+  return !pb_coords_[tile_id].empty() && find_pb_index_in_tile(tile_id, coord) != pb_coords_[tile_id].size();
 }
 
 size_t FabricTile::find_pb_index_in_tile(
@@ -91,7 +91,7 @@ size_t FabricTile::find_pb_index_in_tile(
 
 bool FabricTile::sb_in_tile(const FabricTileId& tile_id,
                             const vtr::Point<size_t>& coord) const {
-  return find_sb_index_in_tile(tile_id, coord) != sb_coords_.size();
+  return !sb_coords_[tile_id].empty() && find_sb_index_in_tile(tile_id, coord) != sb_coords_[tile_id].size();
 }
 
 size_t FabricTile::find_sb_index_in_tile(
@@ -112,11 +112,11 @@ bool FabricTile::cb_in_tile(const FabricTileId& tile_id,
                             const vtr::Point<size_t>& coord) const {
   switch (cb_type) {
     case CHANX:
-      return find_cb_index_in_tile(tile_id, cb_type, coord) ==
-             cbx_coords_.size();
+      return !cbx_coords_[tile_id].empty() && find_cb_index_in_tile(tile_id, cb_type, coord) ==
+             cbx_coords_[tile_id].size();
     case CHANY:
-      return find_cb_index_in_tile(tile_id, cb_type, coord) ==
-             cby_coords_.size();
+      return !cby_coords_[tile_id].empty() && find_cb_index_in_tile(tile_id, cb_type, coord) ==
+             cby_coords_[tile_id].size();
     default:
       VTR_LOG("Invalid type of connection block!\n");
       exit(1);
