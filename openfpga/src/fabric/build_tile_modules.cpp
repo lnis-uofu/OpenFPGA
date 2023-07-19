@@ -993,7 +993,7 @@ static int build_tile_module(
   /* Create the module */
   vtr::Point<size_t> tile_coord = fabric_tile.tile_coordinate(fabric_tile_id);
   std::string module_name = generate_tile_module_name(tile_coord);
-  VTR_LOGV(verbose, "Building tile module '%s'...\n");
+  VTR_LOGV(verbose, "Building tile module '%s'...\n", module_name.c_str());
   ModuleId tile_module = module_manager.add_module(module_name);
 
   /* Add instance of programmable block */

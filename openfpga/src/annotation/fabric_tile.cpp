@@ -1,6 +1,7 @@
 /************************************************************************
  * Member functions for class FabricTile
  ***********************************************************************/
+#include "build_top_module_utils.h"
 #include "fabric_tile.h"
 
 #include "vtr_assert.h"
@@ -282,10 +283,7 @@ bool FabricTile::equivalent_tile(const FabricTileId& tile_a,
   }
   /* The pb of two tiles should be the same, otherwise not equivalent */
   for (size_t iblk = 0; iblk < pb_coords_[tile_a].size(); ++iblk) {
-    if (grids.get_physical_type(pb_coords_[tile_a][iblk].x(),
-                                pb_coords_[tile_a][iblk].y()) !=
-        grids.get_physical_type(pb_coords_[tile_b][iblk].x(),
-                                pb_coords_[tile_b][iblk].y())) {
+    if (generate_grid_block_module_name_in_top_module(std::string(), grids, pb_coords_[tile_a][iblk]) != generate_grid_block_module_name_in_top_module(std::string(), grids, pb_coords_[tile_b][iblk])) {
       return false;
     }
   }
@@ -319,6 +317,9 @@ int FabricTile::build_unique_tiles(const DeviceGrid& grids,
                                    const DeviceRRGSB& device_rr_gsb) {
   for (size_t ix = 0; ix < grids.width(); ++ix) {
     for (size_t iy = 0; iy < grids.height(); ++iy) {
+      if (!valid_tile_id(tile_coord2id_lookup_[ix][iy])) {
+        continue; /* Skip invalid tile (which does not exist) */
+      }
       bool is_unique_tile = true;
       for (FabricTileId unique_tile_id : unique_tile_ids_) {
         if (equivalent_tile(tile_coord2id_lookup_[ix][iy], unique_tile_id,
@@ -330,7 +331,7 @@ int FabricTile::build_unique_tiles(const DeviceGrid& grids,
       }
       /* Update list if this is a unique tile */
       if (is_unique_tile) {
-        unique_tile_ids_.push_back(tile_coord2unique_tile_ids_[ix][iy]);
+        unique_tile_ids_.push_back(tile_coord2id_lookup_[ix][iy]);
         tile_coord2unique_tile_ids_[ix][iy] = tile_coord2id_lookup_[ix][iy];
       }
     }
