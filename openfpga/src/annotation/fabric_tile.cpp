@@ -72,11 +72,13 @@ FabricTileId FabricTile::find_tile(const vtr::Point<size_t>& coord) const {
   return tile_coord2id_lookup_[coord.x()][coord.y()];
 }
 
-bool FabricTile::pb_in_tile(const FabricTileId& tile_id, const vtr::Point<size_t>& coord) const {
+bool FabricTile::pb_in_tile(const FabricTileId& tile_id,
+                            const vtr::Point<size_t>& coord) const {
   return find_pb_index_in_tile(tile_id, coord) != pb_coords_.size();
 }
 
-size_t FabricTile::find_pb_index_in_tile(const FabricTileId& tile_id, const vtr::Point<size_t>& coord) const {
+size_t FabricTile::find_pb_index_in_tile(
+  const FabricTileId& tile_id, const vtr::Point<size_t>& coord) const {
   VTR_ASSERT(valid_tile_id(tile_id));
   for (size_t idx = 0; idx < pb_coords_[tile_id].size(); ++idx) {
     vtr::Point<size_t> curr_coord = pb_coords_[tile_id][idx];
@@ -88,11 +90,13 @@ size_t FabricTile::find_pb_index_in_tile(const FabricTileId& tile_id, const vtr:
   return pb_coords_.size();
 }
 
-bool FabricTile::sb_in_tile(const FabricTileId& tile_id, const vtr::Point<size_t>& coord) const {
+bool FabricTile::sb_in_tile(const FabricTileId& tile_id,
+                            const vtr::Point<size_t>& coord) const {
   return find_sb_index_in_tile(tile_id, coord) != sb_coords_.size();
 }
 
-size_t FabricTile::find_sb_index_in_tile(const FabricTileId& tile_id, const vtr::Point<size_t>& coord) const {
+size_t FabricTile::find_sb_index_in_tile(
+  const FabricTileId& tile_id, const vtr::Point<size_t>& coord) const {
   VTR_ASSERT(valid_tile_id(tile_id));
   for (size_t idx = 0; idx < sb_coords_[tile_id].size(); ++idx) {
     vtr::Point<size_t> curr_coord = sb_coords_[tile_id][idx];
@@ -104,19 +108,25 @@ size_t FabricTile::find_sb_index_in_tile(const FabricTileId& tile_id, const vtr:
   return sb_coords_.size();
 }
 
-bool FabricTile::cb_in_tile(const FabricTileId& tile_id, const t_rr_type& cb_type, const vtr::Point<size_t>& coord) const {
+bool FabricTile::cb_in_tile(const FabricTileId& tile_id,
+                            const t_rr_type& cb_type,
+                            const vtr::Point<size_t>& coord) const {
   switch (cb_type) {
     case CHANX:
-      return find_cb_index_in_tile(tile_id, cb_type, coord) == cbx_coords_.size();
+      return find_cb_index_in_tile(tile_id, cb_type, coord) ==
+             cbx_coords_.size();
     case CHANY:
-      return find_cb_index_in_tile(tile_id, cb_type, coord) == cby_coords_.size();
+      return find_cb_index_in_tile(tile_id, cb_type, coord) ==
+             cby_coords_.size();
     default:
       VTR_LOG("Invalid type of connection block!\n");
       exit(1);
   }
 }
 
-size_t FabricTile::find_cb_index_in_tile(const FabricTileId& tile_id, const t_rr_type& cb_type, const vtr::Point<size_t>& coord) const {
+size_t FabricTile::find_cb_index_in_tile(
+  const FabricTileId& tile_id, const t_rr_type& cb_type,
+  const vtr::Point<size_t>& coord) const {
   VTR_ASSERT(valid_tile_id(tile_id));
   switch (cb_type) {
     case CHANX:

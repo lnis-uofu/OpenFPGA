@@ -112,12 +112,12 @@ int build_device_module_graph(
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
     }
-    /* TODO: Build the modules */
-    build_tile_modules(module_manager, fabric_tile, vpr_device_ctx.grid,
-                       openfpga_ctx.vpr_device_annotation(),
-                       openfpga_ctx.device_rr_gsb(),
-                       openfpga_ctx.arch().circuit_lib, sram_model,
-                       openfpga_ctx.arch().config_protocol.type(), frame_view, verbose);
+    /* Build the modules */
+    build_tile_modules(
+      module_manager, decoder_lib, fabric_tile, vpr_device_ctx.grid,
+      openfpga_ctx.vpr_device_annotation(), openfpga_ctx.device_rr_gsb(),
+      vpr_device_ctx.rr_graph, openfpga_ctx.arch().circuit_lib, sram_model,
+      openfpga_ctx.arch().config_protocol.type(), frame_view, verbose);
   }
 
   /* Build FPGA fabric top-level module */
