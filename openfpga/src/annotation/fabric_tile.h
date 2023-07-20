@@ -39,7 +39,8 @@ class FabricTile {
   /** @brief Return a list of unique tiles */
   std::vector<FabricTileId> unique_tiles() const;
   /** @brief Find the index of a programmable block in the internal list by a
-   * given coordinate. Note that the coord can be either the one in device grid or the one of gsb which the programmable block belongs to  */
+   * given coordinate. Note that the coord can be either the one in device grid
+   * or the one of gsb which the programmable block belongs to  */
   size_t find_pb_index_in_tile(const FabricTileId& tile_id,
                                const vtr::Point<size_t>& coord,
                                const bool& use_gsb_coord = false) const;
@@ -52,10 +53,11 @@ class FabricTile {
   size_t find_cb_index_in_tile(const FabricTileId& tile_id,
                                const t_rr_type& cb_type,
                                const vtr::Point<size_t>& coord) const;
-  /** @brief Check if a programmable block (with a coordinate) exists in a tile. Note that the coord can be either the one in device grid or the one of gsb which the programmable block belongs to 
+  /** @brief Check if a programmable block (with a coordinate) exists in a tile.
+   * Note that the coord can be either the one in device grid or the one of gsb
+   * which the programmable block belongs to
    */
-  bool pb_in_tile(const FabricTileId& tile_id,
-                  const vtr::Point<size_t>& coord,
+  bool pb_in_tile(const FabricTileId& tile_id, const vtr::Point<size_t>& coord,
                   const bool& use_gsb_coord = false) const;
   /** @brief Check if a switch block (with a coordinate) exists in a tile */
   bool sb_in_tile(const FabricTileId& tile_id,
@@ -107,7 +109,12 @@ class FabricTile {
   vtr::vector<FabricTileId, FabricTileId> ids_;
   vtr::vector<FabricTileId, vtr::Point<size_t>> coords_;
   /* Coordinates w.r.t. RRGSB
-   * Note that we keep two coordinates for the programmable block: regular one (in device grid) and the one in gsb. This is to ease the  lookup/search for coordinates through both device grid and gsb. Client functions need one of the them depending on the scenario. In future, once we refactor the RRGSB organization (to follow bottom-left corner style). This limitation can be resolved.
+   * Note that we keep two coordinates for the programmable block: regular one
+   * (in device grid) and the one in gsb. This is to ease the  lookup/search for
+   * coordinates through both device grid and gsb. Client functions need one of
+   * the them depending on the scenario. In future, once we refactor the RRGSB
+   * organization (to follow bottom-left corner style). This limitation can be
+   * resolved.
    */
   vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> pb_coords_;
   vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> pb_gsb_coords_;

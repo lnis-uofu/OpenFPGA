@@ -1,9 +1,9 @@
 /************************************************************************
  * Member functions for class FabricTile
  ***********************************************************************/
-#include "build_top_module_utils.h"
 #include "fabric_tile.h"
 
+#include "build_top_module_utils.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
@@ -75,15 +75,17 @@ bool FabricTile::pb_in_tile(const FabricTileId& tile_id,
                             const vtr::Point<size_t>& coord,
                             const bool& use_gsb_coord) const {
   if (use_gsb_coord) {
-    return !pb_gsb_coords_[tile_id].empty() && find_pb_index_in_tile(tile_id, coord, use_gsb_coord) != pb_gsb_coords_[tile_id].size();
+    return !pb_gsb_coords_[tile_id].empty() &&
+           find_pb_index_in_tile(tile_id, coord, use_gsb_coord) !=
+             pb_gsb_coords_[tile_id].size();
   }
-  return !pb_coords_[tile_id].empty() && find_pb_index_in_tile(tile_id, coord) != pb_coords_[tile_id].size();
+  return !pb_coords_[tile_id].empty() &&
+         find_pb_index_in_tile(tile_id, coord) != pb_coords_[tile_id].size();
 }
 
-size_t FabricTile::find_pb_index_in_tile(
-  const FabricTileId& tile_id,
-  const vtr::Point<size_t>& coord,
-  const bool& use_gsb_coord) const {
+size_t FabricTile::find_pb_index_in_tile(const FabricTileId& tile_id,
+                                         const vtr::Point<size_t>& coord,
+                                         const bool& use_gsb_coord) const {
   VTR_ASSERT(valid_tile_id(tile_id));
   if (use_gsb_coord) {
     for (size_t idx = 0; idx < pb_gsb_coords_[tile_id].size(); ++idx) {
@@ -108,7 +110,8 @@ size_t FabricTile::find_pb_index_in_tile(
 
 bool FabricTile::sb_in_tile(const FabricTileId& tile_id,
                             const vtr::Point<size_t>& coord) const {
-  return !sb_coords_[tile_id].empty() && find_sb_index_in_tile(tile_id, coord) != sb_coords_[tile_id].size();
+  return !sb_coords_[tile_id].empty() &&
+         find_sb_index_in_tile(tile_id, coord) != sb_coords_[tile_id].size();
 }
 
 size_t FabricTile::find_sb_index_in_tile(
@@ -129,11 +132,13 @@ bool FabricTile::cb_in_tile(const FabricTileId& tile_id,
                             const vtr::Point<size_t>& coord) const {
   switch (cb_type) {
     case CHANX:
-      return !cbx_coords_[tile_id].empty() && find_cb_index_in_tile(tile_id, cb_type, coord) ==
-             cbx_coords_[tile_id].size();
+      return !cbx_coords_[tile_id].empty() &&
+             find_cb_index_in_tile(tile_id, cb_type, coord) ==
+               cbx_coords_[tile_id].size();
     case CHANY:
-      return !cby_coords_[tile_id].empty() && find_cb_index_in_tile(tile_id, cb_type, coord) ==
-             cby_coords_[tile_id].size();
+      return !cby_coords_[tile_id].empty() &&
+             find_cb_index_in_tile(tile_id, cb_type, coord) ==
+               cby_coords_[tile_id].size();
     default:
       VTR_LOG("Invalid type of connection block!\n");
       exit(1);
@@ -307,7 +312,10 @@ bool FabricTile::equivalent_tile(const FabricTileId& tile_a,
   for (size_t iblk = 0; iblk < pb_coords_[tile_a].size(); ++iblk) {
     vtr::Point<size_t> tile_a_pb_coord = pb_coords_[tile_a][iblk];
     vtr::Point<size_t> tile_b_pb_coord = pb_coords_[tile_b][iblk];
-    if (generate_grid_block_module_name_in_top_module(std::string(), grids, tile_a_pb_coord) != generate_grid_block_module_name_in_top_module(std::string(), grids, tile_b_pb_coord)) {
+    if (generate_grid_block_module_name_in_top_module(std::string(), grids,
+                                                      tile_a_pb_coord) !=
+        generate_grid_block_module_name_in_top_module(std::string(), grids,
+                                                      tile_b_pb_coord)) {
       return false;
     }
   }

@@ -46,15 +46,19 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
       if (true == is_empty_type(phy_tile_type)) {
         skip_add_pb = true;
         if (!device_rr_gsb.is_gsb_exist(curr_gsb_coord)) {
-          VTR_LOGV(verbose, "Skip tile[%lu][%lu] as it is empty\n", curr_tile_coord.x(), curr_tile_coord.y());
+          VTR_LOGV(verbose, "Skip tile[%lu][%lu] as it is empty\n",
+                   curr_tile_coord.x(), curr_tile_coord.y());
           continue;
         }
         /* Need to create a new tile here */
-        VTR_LOGV(verbose, "Create tile[%lu][%lu] which only has routing but not a programmable block\n", curr_tile_coord.x(), curr_tile_coord.y());
+        VTR_LOGV(verbose,
+                 "Create tile[%lu][%lu] which only has routing but not a "
+                 "programmable block\n",
+                 curr_tile_coord.x(), curr_tile_coord.y());
         curr_tile_id = fabric_tile.create_tile(curr_tile_coord);
       } else if ((0 < grids.get_width_offset(ix, iy)) ||
-          (0 < grids.get_height_offset(ix, iy))) {
-      /* Skip width, height > 1 tiles (mostly heterogeneous blocks) */
+                 (0 < grids.get_height_offset(ix, iy))) {
+        /* Skip width, height > 1 tiles (mostly heterogeneous blocks) */
         /* Find the root of this grid, the instance id should be valid.
          * We just copy it here
          */
@@ -62,11 +66,16 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
           ix - grids.get_width_offset(ix, iy),
           iy - grids.get_height_offset(ix, iy));
         skip_add_pb = true;
-        VTR_LOGV(verbose, "Tile[%lu][%lu] contains a heterogeneous block which is rooted from tile[%lu][%lu]\n", curr_tile_coord.x(), curr_tile_coord.y(), root_tile_coord.x(), root_tile_coord.y());
+        VTR_LOGV(verbose,
+                 "Tile[%lu][%lu] contains a heterogeneous block which is "
+                 "rooted from tile[%lu][%lu]\n",
+                 curr_tile_coord.x(), curr_tile_coord.y(), root_tile_coord.x(),
+                 root_tile_coord.y());
         curr_tile_id = fabric_tile.find_tile(root_tile_coord);
       } else {
         /* Need to create a new tile here */
-        VTR_LOGV(verbose, "Create a regular tile[%lu][%lu]\n", curr_tile_coord.x(), curr_tile_coord.y());
+        VTR_LOGV(verbose, "Create a regular tile[%lu][%lu]\n",
+                 curr_tile_coord.x(), curr_tile_coord.y());
         curr_tile_id = fabric_tile.create_tile(curr_tile_coord);
       }
 
@@ -78,7 +87,8 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
 
       /* Add components: pb, cbx, cby, and sb if exists */
       if (!skip_add_pb) {
-        fabric_tile.add_pb_coordinate(curr_tile_id, curr_tile_coord, curr_gsb_coord);
+        fabric_tile.add_pb_coordinate(curr_tile_id, curr_tile_coord,
+                                      curr_gsb_coord);
       }
       /* The gsb coordinate is different than the grid coordinate when the
        * top-left style is considered
@@ -116,10 +126,8 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
 /********************************************************************
  * Build tile-level information for a given FPGA fabric, w.r.t. to configuration
  *******************************************************************/
-int build_fabric_tile(FabricTile& fabric_tile,
-                      const TileConfig& tile_config,
-                      const DeviceGrid& grids,
-                      const DeviceRRGSB& device_rr_gsb,
+int build_fabric_tile(FabricTile& fabric_tile, const TileConfig& tile_config,
+                      const DeviceGrid& grids, const DeviceRRGSB& device_rr_gsb,
                       const bool& verbose) {
   vtr::ScopedStartFinishTimer timer(
     "Build tile-level information for the FPGA fabric");
@@ -130,8 +138,8 @@ int build_fabric_tile(FabricTile& fabric_tile,
 
   /* Depending on the selected style, follow different approaches */
   if (tile_config.style() == TileConfig::e_style::TOP_LEFT) {
-    status_code =
-      build_fabric_tile_style_top_left(fabric_tile, grids, device_rr_gsb, verbose);
+    status_code = build_fabric_tile_style_top_left(fabric_tile, grids,
+                                                   device_rr_gsb, verbose);
   } else {
     /* Error out for styles that are not supported yet! */
     VTR_LOG_ERROR("Tile style '%s' is not supported yet!\n",
@@ -146,7 +154,8 @@ int build_fabric_tile(FabricTile& fabric_tile,
   /* Build unique tiles to compress the number of tile modules to be built in
    * later steps */
   status_code = fabric_tile.build_unique_tiles(grids, device_rr_gsb);
-  VTR_LOGV(verbose, "Extracted %lu uniques tiles from the FPGA fabric\n", fabric_tile.unique_tiles().size());
+  VTR_LOGV(verbose, "Extracted %lu uniques tiles from the FPGA fabric\n",
+           fabric_tile.unique_tiles().size());
 
   return status_code;
 }

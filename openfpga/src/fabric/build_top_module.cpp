@@ -421,18 +421,12 @@ static void add_top_module_io_children(
 }
 
 /********************************************************************
- * Print the top-level module for the FPGA fabric in Verilog format
- * This function will
- * 1. name the top-level module
- * 2. include dependent netlists
- *    - User defined netlists
- *    - Auto-generated netlists
- * 3. Add the submodules to the top-level graph
- * 4. Add module nets to connect datapath ports
- * 5. Add module nets/submodules to connect configuration ports
+ * Add the fine-grained instances to the top module of FPGA fabric
+ * The fine-grained instances include programmable blocks, connection blocks and
+ *switch blocks, each of which is an instance under the top module
  *******************************************************************/
-int build_top_module(
-  ModuleManager& module_manager, DecoderLibrary& decoder_lib,
+static int build_top_module_fine_grained_child_instances(
+  ModuleManager& module_manager, const ModuleId& top_module,
   MemoryBankShiftRegisterBanks& blwl_sr_banks,
   const CircuitLibrary& circuit_lib, const ClockNetwork& clk_ntwk,
   const RRClockSpatialLookup& rr_clock_lookup,
@@ -442,19 +436,8 @@ int build_top_module(
   const ArchDirect& arch_direct, const ConfigProtocol& config_protocol,
   const CircuitModelId& sram_model, const bool& frame_view,
   const bool& compact_routing_hierarchy, const bool& duplicate_grid_pin,
-  const FabricKey& fabric_key, const bool& generate_random_fabric_key) {
-  vtr::ScopedStartFinishTimer timer("Build FPGA fabric module");
-
+  const FabricKey& fabric_key) {
   int status = CMD_EXEC_SUCCESS;
-
-  /* Create a module as the top-level fabric, and add it to the module manager
-   */
-  std::string top_module_name = generate_fpga_top_module_name();
-  ModuleId top_module = module_manager.add_module(top_module_name);
-
-  /* Label module usage */
-  module_manager.set_module_usage(top_module, ModuleManager::MODULE_TOP);
-
   std::map<t_rr_type, vtr::Matrix<size_t>> cb_instance_ids;
 
   /* Add sub modules, which are grid, SB and CBX/CBY modules as instances */
@@ -550,6 +533,52 @@ int build_top_module(
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
     }
+  }
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
+ * Print the top-level module for the FPGA fabric in Verilog format
+ * This function will
+ * 1. name the top-level module
+ * 2. include dependent netlists
+ *    - User defined netlists
+ *    - Auto-generated netlists
+ * 3. Add the submodules to the top-level graph
+ * 4. Add module nets to connect datapath ports
+ * 5. Add module nets/submodules to connect configuration ports
+ *******************************************************************/
+int build_top_module(
+  ModuleManager& module_manager, DecoderLibrary& decoder_lib,
+  MemoryBankShiftRegisterBanks& blwl_sr_banks,
+  const CircuitLibrary& circuit_lib, const ClockNetwork& clk_ntwk,
+  const RRClockSpatialLookup& rr_clock_lookup,
+  const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
+  const TileAnnotation& tile_annotation, const RRGraphView& rr_graph,
+  const DeviceRRGSB& device_rr_gsb, const TileDirect& tile_direct,
+  const ArchDirect& arch_direct, const ConfigProtocol& config_protocol,
+  const CircuitModelId& sram_model, const bool& frame_view,
+  const bool& compact_routing_hierarchy, const bool& duplicate_grid_pin,
+  const FabricKey& fabric_key, const bool& generate_random_fabric_key) {
+  vtr::ScopedStartFinishTimer timer("Build FPGA fabric module");
+
+  int status = CMD_EXEC_SUCCESS;
+
+  /* Create a module as the top-level fabric, and add it to the module manager
+   */
+  std::string top_module_name = generate_fpga_top_module_name();
+  ModuleId top_module = module_manager.add_module(top_module_name);
+
+  /* Label module usage */
+  module_manager.set_module_usage(top_module, ModuleManager::MODULE_TOP);
+
+  status = build_top_module_fine_grained_child_instances(
+    module_manager, top_module, blwl_sr_banks, circuit_lib, clk_ntwk,
+    rr_clock_lookup, vpr_device_annotation, grids, tile_annotation, rr_graph,
+    device_rr_gsb, tile_direct, arch_direct, config_protocol, sram_model,
+    frame_view, compact_routing_hierarchy, duplicate_grid_pin, fabric_key);
+  if (status != CMD_EXEC_SUCCESS) {
+    return CMD_EXEC_FATAL_ERROR;
   }
 
   /* Shuffle the configurable children in a random sequence */
