@@ -72,28 +72,38 @@ FabricTileId FabricTile::find_tile(const vtr::Point<size_t>& coord) const {
 }
 
 bool FabricTile::pb_in_tile(const FabricTileId& tile_id,
-                            const DeviceRRGSB& device_rr_gsb,
-                            const vtr::Point<size_t>& coord) const {
-  return !pb_coords_[tile_id].empty() && find_pb_index_in_tile(tile_id, device_rr_gsb, coord) != pb_coords_[tile_id].size();
+                            const vtr::Point<size_t>& coord,
+                            const bool& use_gsb_coord) const {
+  if (use_gsb_coord) {
+    return !pb_gsb_coords_[tile_id].empty() && find_pb_index_in_tile(tile_id, coord, use_gsb_coord) != pb_gsb_coords_[tile_id].size();
+  }
+  return !pb_coords_[tile_id].empty() && find_pb_index_in_tile(tile_id, coord) != pb_coords_[tile_id].size();
 }
 
 size_t FabricTile::find_pb_index_in_tile(
   const FabricTileId& tile_id,
-  const DeviceRRGSB& device_rr_gsb,
-  const vtr::Point<size_t>& coord) const {
+  const vtr::Point<size_t>& coord,
+  const bool& use_gsb_coord) const {
   VTR_ASSERT(valid_tile_id(tile_id));
-  for (size_t idx = 0; idx < pb_coords_[tile_id].size(); ++idx) {
-    /* Convert gsb coordinate to actual pb coordinate */
-    if (!device_rr_gsb.is_gsb_exist(pb_coords_[tile_id][idx])) {
-      continue;
+  if (use_gsb_coord) {
+    for (size_t idx = 0; idx < pb_gsb_coords_[tile_id].size(); ++idx) {
+      vtr::Point<size_t> curr_coord = pb_gsb_coords_[tile_id][idx];
+      if (curr_coord == coord) {
+        return idx;
+      }
     }
-    vtr::Point<size_t> curr_coord = device_rr_gsb.get_gsb(pb_coords_[tile_id][idx]).get_grid_coordinate();
-    if (curr_coord == coord) {
-      return idx;
+    /* Not found, return an invalid index */
+    return pb_gsb_coords_[tile_id].size();
+  } else {
+    for (size_t idx = 0; idx < pb_coords_[tile_id].size(); ++idx) {
+      vtr::Point<size_t> curr_coord = pb_coords_[tile_id][idx];
+      if (curr_coord == coord) {
+        return idx;
+      }
     }
+    /* Not found, return an invalid index */
+    return pb_coords_[tile_id].size();
   }
-  /* Not found, return an invalid index */
-  return pb_coords_[tile_id].size();
 }
 
 bool FabricTile::sb_in_tile(const FabricTileId& tile_id,
@@ -168,6 +178,7 @@ FabricTileId FabricTile::create_tile(const vtr::Point<size_t>& coord) {
   ids_.push_back(tile_id);
   coords_.push_back(coord);
   pb_coords_.emplace_back();
+  pb_gsb_coords_.emplace_back();
   cbx_coords_.emplace_back();
   cby_coords_.emplace_back();
   sb_coords_.emplace_back();
@@ -233,9 +244,11 @@ bool FabricTile::set_tile_coordinate(const FabricTileId& tile_id,
 }
 
 void FabricTile::add_pb_coordinate(const FabricTileId& tile_id,
-                                   const vtr::Point<size_t>& coord) {
+                                   const vtr::Point<size_t>& coord,
+                                   const vtr::Point<size_t>& gsb_coord) {
   VTR_ASSERT(valid_tile_id(tile_id));
   pb_coords_[tile_id].push_back(coord);
+  pb_gsb_coords_[tile_id].push_back(gsb_coord);
 }
 
 void FabricTile::add_cb_coordinate(const FabricTileId& tile_id,
@@ -265,6 +278,7 @@ void FabricTile::clear() {
   ids_.clear();
   coords_.clear();
   pb_coords_.clear();
+  pb_gsb_coords_.clear();
   cbx_coords_.clear();
   cby_coords_.clear();
   sb_coords_.clear();
@@ -283,6 +297,7 @@ bool FabricTile::equivalent_tile(const FabricTileId& tile_a,
                                  const DeviceRRGSB& device_rr_gsb) const {
   /* The number of cbx, cby and sb blocks should be the same */
   if (pb_coords_[tile_a].size() != pb_coords_[tile_b].size() ||
+      pb_gsb_coords_[tile_a].size() != pb_gsb_coords_[tile_b].size() ||
       cbx_coords_[tile_a].size() != cbx_coords_[tile_b].size() ||
       cby_coords_[tile_a].size() != cby_coords_[tile_b].size() ||
       sb_coords_[tile_a].size() != sb_coords_[tile_b].size()) {
@@ -290,15 +305,10 @@ bool FabricTile::equivalent_tile(const FabricTileId& tile_a,
   }
   /* The pb of two tiles should be the same, otherwise not equivalent */
   for (size_t iblk = 0; iblk < pb_coords_[tile_a].size(); ++iblk) {
-    if (device_rr_gsb.is_gsb_exist(pb_coords_[tile_a][iblk]) != device_rr_gsb.is_gsb_exist(pb_coords_[tile_b][iblk])) {
+    vtr::Point<size_t> tile_a_pb_coord = pb_coords_[tile_a][iblk];
+    vtr::Point<size_t> tile_b_pb_coord = pb_coords_[tile_b][iblk];
+    if (generate_grid_block_module_name_in_top_module(std::string(), grids, tile_a_pb_coord) != generate_grid_block_module_name_in_top_module(std::string(), grids, tile_b_pb_coord)) {
       return false;
-    }
-    if (device_rr_gsb.is_gsb_exist(pb_coords_[tile_a][iblk])) {
-      vtr::Point<size_t> tile_a_pb_coord = device_rr_gsb.get_gsb(pb_coords_[tile_a][iblk]).get_sb_coordinate();
-      vtr::Point<size_t> tile_b_pb_coord = device_rr_gsb.get_gsb(pb_coords_[tile_b][iblk]).get_sb_coordinate();
-      if (generate_grid_block_module_name_in_top_module(std::string(), grids, tile_a_pb_coord) != generate_grid_block_module_name_in_top_module(std::string(), grids, tile_b_pb_coord)) {
-        return false;
-      }
     }
   }
   /* Each CBx should have the same unique modules in the device rr_gsb */

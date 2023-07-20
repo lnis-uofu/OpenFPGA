@@ -167,11 +167,11 @@ static int build_tile_module_port_and_nets_between_sb_and_pb(
         module_manager.module_port(sink_sb_module, sink_sb_port_id);
 
       /* Check if the grid is inside the tile, if not, create ports */
-      if (fabric_tile.pb_in_tile(fabric_tile_id, device_rr_gsb, grid_coordinate)) {
+      if (fabric_tile.pb_in_tile(fabric_tile_id, grid_coordinate)) {
         VTR_LOGV(verbose, "Build intra-tile nets between switch block '%s' and programmable block '%s[%lu][%lu]'\n", sink_sb_module_name.c_str(), src_grid_module_name.c_str(), grid_coordinate.x(), grid_coordinate.y());
         if (!frame_view) {
           size_t src_grid_instance =
-            pb_instances[fabric_tile.find_pb_index_in_tile(fabric_tile_id, device_rr_gsb,
+            pb_instances[fabric_tile.find_pb_index_in_tile(fabric_tile_id, 
                                                            grid_coordinate)];
 
           /* Source and sink port should match in size */
@@ -385,10 +385,10 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
         module_manager.module_port(sink_grid_module, sink_grid_port_id);
 
       /* Check if the grid is inside the tile, if not, create ports */
-      if (fabric_tile.pb_in_tile(fabric_tile_id, device_rr_gsb, grid_coordinate)) {
+      if (fabric_tile.pb_in_tile(fabric_tile_id, grid_coordinate)) {
         if (!frame_view) {
           size_t sink_grid_instance =
-            pb_instances[fabric_tile.find_pb_index_in_tile(fabric_tile_id, device_rr_gsb,
+            pb_instances[fabric_tile.find_pb_index_in_tile(fabric_tile_id, 
                                                            grid_coordinate)];
 
           /* Source and sink port should match in size */
@@ -1000,10 +1000,8 @@ static int build_tile_module(
   /* Add instance of programmable block */
   std::vector<size_t>
     pb_instances; /* Keep tracking the instance id of each pb */
-  for (vtr::Point<size_t> grid_gsb_coord :
+  for (vtr::Point<size_t> grid_coord :
        fabric_tile.pb_coordinates(fabric_tile_id)) {
-    const RRGSB& grid_rr_gsb = device_rr_gsb.get_gsb(grid_gsb_coord);
-    vtr::Point<size_t> grid_coord = grid_rr_gsb.get_grid_coordinate();
     t_physical_tile_type_ptr phy_tile =
       grids.get_physical_type(grid_coord.x(), grid_coord.y());
     VTR_LOGV(verbose, "Try to find pb at [%lu][%lu]\n", grid_coord.x(), grid_coord.y());
