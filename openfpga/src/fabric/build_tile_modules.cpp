@@ -423,7 +423,7 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
                ++pin_id) {
             ModuleNetId net = create_module_source_pin_net(
               module_manager, tile_module, src_cb_module, src_cb_instance,
-              sink_tile_port_id, src_cb_port.pins()[pin_id]);
+              src_cb_port_id, src_cb_port.pins()[pin_id]);
             /* Configure the net sink */
             module_manager.add_module_net_sink(tile_module, net, tile_module, 0,
                                                sink_tile_port_id,
