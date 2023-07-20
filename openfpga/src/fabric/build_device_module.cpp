@@ -127,8 +127,8 @@ int build_device_module_graph(
     openfpga_ctx.arch().tile_annotations, vpr_device_ctx.rr_graph,
     openfpga_ctx.device_rr_gsb(), openfpga_ctx.tile_direct(),
     openfpga_ctx.arch().arch_direct, openfpga_ctx.arch().config_protocol,
-    sram_model, frame_view, compress_routing, duplicate_grid_pin, fabric_key,
-    generate_random_fabric_key);
+    sram_model, fabric_tile, frame_view, compress_routing, duplicate_grid_pin,
+    fabric_key, generate_random_fabric_key);
 
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
