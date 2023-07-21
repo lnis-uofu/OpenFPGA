@@ -37,7 +37,8 @@ int build_top_module_tile_child_instances(
   MemoryBankShiftRegisterBanks& blwl_sr_banks,
   const CircuitLibrary& circuit_lib, const DeviceGrid& grids,
   const FabricTile& fabric_tile, const ConfigProtocol& config_protocol,
-  const FabricKey& fabric_key, const bool& frame_view);
+  const FabricKey& fabric_key, const bool& frame_view,
+  const bool& verbose);
 
 } /* end namespace openfpga */
 

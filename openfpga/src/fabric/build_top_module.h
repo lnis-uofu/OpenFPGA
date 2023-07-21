@@ -44,7 +44,8 @@ int build_top_module(
   const CircuitModelId& sram_model, const FabricTile& fabric_tile,
   const bool& frame_view, const bool& compact_routing_hierarchy,
   const bool& duplicate_grid_pin, const FabricKey& fabric_key,
-  const bool& generate_random_fabric_key);
+  const bool& generate_random_fabric_key,
+  const bool& verbose);
 
 } /* end namespace openfpga */
 

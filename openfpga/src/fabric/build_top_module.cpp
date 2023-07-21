@@ -57,7 +57,7 @@ int build_top_module(
   const CircuitModelId& sram_model, const FabricTile& fabric_tile,
   const bool& frame_view, const bool& compact_routing_hierarchy,
   const bool& duplicate_grid_pin, const FabricKey& fabric_key,
-  const bool& generate_random_fabric_key) {
+  const bool& generate_random_fabric_key, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build FPGA fabric module");
 
   int status = CMD_EXEC_SUCCESS;
@@ -80,7 +80,7 @@ int build_top_module(
     /* TODO: Build the tile instances under the top module */
     status = build_top_module_tile_child_instances(
       module_manager, top_module, blwl_sr_banks, circuit_lib, grids,
-      fabric_tile, config_protocol, fabric_key, frame_view);
+      fabric_tile, config_protocol, fabric_key, frame_view, verbose);
   }
 
   if (status != CMD_EXEC_SUCCESS) {
