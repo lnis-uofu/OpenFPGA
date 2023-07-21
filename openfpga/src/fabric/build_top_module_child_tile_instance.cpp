@@ -274,7 +274,13 @@ int build_top_module_tile_child_instances(
   if (false == frame_view) {
     /* Reserve nets to be memory efficient */
     reserve_module_manager_module_nets(module_manager, top_module);
-    /* TODO: Regular nets between tiles */
+    /* TODO: Regular nets between tiles
+    add_top_module_nets_connect_tiles(
+      module_manager, top_module, vpr_device_annotation, grids,
+      tile_instance_ids, rr_graph, device_rr_gsb, compact_routing_hierarchy,
+    duplicate_grid_pin);
+     */
+
     /* TODO: Inter-tile direct connections */
   }
 

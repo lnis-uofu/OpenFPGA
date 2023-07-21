@@ -102,6 +102,27 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_group_tile = cmd.option("group_tile");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
+  /* Report conflicts with options:
+   * - group tile does not support duplicate_grid_pin
+   * - group tile requires compress_routing to be enabled
+   */
+  if (cmd_context.option_enable(cmd, opt_group_tile)) {
+    if (cmd_context.option_enable(cmd, opt_duplicate_grid_pin)) {
+      VTR_LOG_ERROR(
+        "Option '%s' requires options '%s' to be disabled due to a conflict!\n",
+        cmd.option_name(opt_group_tile).c_str(),
+        cmd.option_name(opt_duplicate_grid_pin).c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    if (!cmd_context.option_enable(cmd, opt_compress_routing)) {
+      VTR_LOG_ERROR(
+        "Option '%s' requires options '%s' to be enabled due to a conflict!\n",
+        cmd.option_name(opt_group_tile).c_str(),
+        cmd.option_name(opt_compress_routing).c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
+
   if (true == cmd_context.option_enable(cmd, opt_compress_routing)) {
     compress_routing_hierarchy_template<T>(
       openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
