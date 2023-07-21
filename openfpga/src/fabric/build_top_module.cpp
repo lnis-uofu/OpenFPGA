@@ -16,7 +16,8 @@
 /* Headers from openfpgashell library */
 #include "build_module_graph_utils.h"
 #include "build_top_module.h"
-#include "build_top_module_child_instance.h"
+#include "build_top_module_child_tile_instance.h"
+#include "build_top_module_child_fine_grained_instance.h"
 #include "build_top_module_connection.h"
 #include "build_top_module_directs.h"
 #include "build_top_module_memory.h"

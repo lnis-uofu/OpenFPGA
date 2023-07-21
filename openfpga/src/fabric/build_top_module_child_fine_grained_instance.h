@@ -1,5 +1,5 @@
-#ifndef BUILD_TOP_MODULE_CHILD_INSTANCE_H
-#define BUILD_TOP_MODULE_CHILD_INSTANCE_H
+#ifndef BUILD_TOP_MODULE_CHILD_FINE_GRAINED_INSTANCE_H
+#define BUILD_TOP_MODULE_CHILD_FINE_GRAINED_INSTANCE_H
 
 /********************************************************************
  * Include header files that are required by function declaration
@@ -44,11 +44,6 @@ int build_top_module_fine_grained_child_instances(
   const CircuitModelId& sram_model, const bool& frame_view,
   const bool& compact_routing_hierarchy, const bool& duplicate_grid_pin,
   const FabricKey& fabric_key);
-
-static int build_top_module_tile_child_instances(ModuleManager& module_manager,
-                                                 const ModuleId& top_module,
-                                                 const DeviceGrid& grids,
-                                                 const FabricTile& fabric_tile);
 
 } /* end namespace openfpga */
 
