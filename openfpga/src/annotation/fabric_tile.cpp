@@ -16,6 +16,13 @@ vtr::Point<size_t> FabricTile::tile_coordinate(
   return coords_[tile_id];
 }
 
+vtr::Point<size_t> FabricTile::unique_tile_coordinate(
+  const FabricTileId& tile_id) const {
+  vtr::Point<size_t> tile_coord = tile_coordinate(tile_id);
+  FabricTileId unique_fabric_tile_id = unique_tile(tile_coord);
+  return tile_coordinate(unique_fabric_tile_id);
+}
+
 std::vector<vtr::Point<size_t>> FabricTile::pb_coordinates(
   const FabricTileId& tile_id) const {
   VTR_ASSERT(valid_tile_id(tile_id));

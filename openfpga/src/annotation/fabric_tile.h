@@ -36,6 +36,9 @@ class FabricTile {
   FabricTileId unique_tile(const vtr::Point<size_t>& coord) const;
   /** @brief Find the tile info with a given coordinate */
   FabricTileId find_tile(const vtr::Point<size_t>& coord) const;
+  /** @brief Find the coordinate of the unique tile w.r.t the tile with a tile
+   * id */
+  vtr::Point<size_t> unique_tile_coordinate(const FabricTileId& tile_id) const;
   /** @brief Return a list of unique tiles */
   std::vector<FabricTileId> unique_tiles() const;
   /** @brief Find the index of a programmable block in the internal list by a

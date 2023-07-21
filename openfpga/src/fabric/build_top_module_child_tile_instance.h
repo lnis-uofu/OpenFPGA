@@ -32,10 +32,12 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-int build_top_module_tile_child_instances(ModuleManager& module_manager,
-                                          const ModuleId& top_module,
-                                          const DeviceGrid& grids,
-                                          const FabricTile& fabric_tile);
+int build_top_module_tile_child_instances(
+  ModuleManager& module_manager, const ModuleId& top_module,
+  MemoryBankShiftRegisterBanks& blwl_sr_banks,
+  const CircuitLibrary& circuit_lib, const DeviceGrid& grids,
+  const FabricTile& fabric_tile, const ConfigProtocol& config_protocol,
+  const FabricKey& fabric_key, const bool& frame_view);
 
 } /* end namespace openfpga */
 

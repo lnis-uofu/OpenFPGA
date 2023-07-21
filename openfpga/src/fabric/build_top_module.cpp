@@ -78,8 +78,9 @@ int build_top_module(
       frame_view, compact_routing_hierarchy, duplicate_grid_pin, fabric_key);
   } else {
     /* TODO: Build the tile instances under the top module */
-    status = build_top_module_tile_child_instances(module_manager, top_module,
-                                                   grids, fabric_tile);
+    status = build_top_module_tile_child_instances(
+      module_manager, top_module, blwl_sr_banks, circuit_lib, grids,
+      fabric_tile, config_protocol, fabric_key, frame_view);
   }
 
   if (status != CMD_EXEC_SUCCESS) {
