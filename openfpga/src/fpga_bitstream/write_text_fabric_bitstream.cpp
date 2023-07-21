@@ -247,6 +247,142 @@ static int write_memory_bank_flatten_fabric_bitstream_to_text_file(
 
 /********************************************************************
  * Write the fabric bitstream fitting a memory bank protocol
+ * to a plain text file in efficient method
+ *
+ * Old function is write_memory_bank_flatten_fabric_bitstream_to_text_file()
+ *
+ * As compared to original function, based on 100K LE FPGA:
+ *  1. Original function used 600 seconds and need 80G Bytes of memory
+ *  2. This new function only needs 1 second and 4M Bytes
+ *
+ * Old function only print WL in decremental order. It is not by intentional
+ * It is because of the map-key ordering
+ * In QL Memory Bank with Flatten BL/WL, data is stored by WL address,
+ *   where we use WL string as map key
+ *     WL #0 --- "1000000000000 .... 0000"
+ *     WL #1 --- "0100000000000 .... 0000"
+ *     WL #n-1 --- "0000000000000 .... 0001
+ * From string comparison wise, WL #n-1 will be first, and WL #0 will be last
+ * The sequence of WL does not really matter,  but preferrable in some ordering
+ *   manner. Using map key as ordering cannot guarantee the determinstic
+ *
+ * This new way of writting fabric guarantee the WL order in 100% deterministc
+ *   way: either incremental (default) or decremental
+ *
+ * Return:
+ *  - 0 if succeed
+ *  - 1 if critical errors occured
+ *******************************************************************/
+static int fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
+  std::fstream& fp, const bool& fast_configuration,
+  const bool& bit_value_to_skip, const FabricBitstream& fabric_bitstream,
+  const bool& keep_dont_care_bits, const bool& wl_incremental_order) {
+  int status = 0;
+
+  std::string dont_care_bit = "0";
+  if (keep_dont_care_bits) {
+    dont_care_bit = "x";
+  }
+  const FabricBitstreamMemoryBank* memory_bank =
+    fabric_bitstream.memory_bank_info();
+
+  // Must call this to prepare wls_to_skip
+  (const_cast<FabricBitstreamMemoryBank*>(memory_bank))
+    ->fast_configuration(fast_configuration, bit_value_to_skip);
+
+  fabric_size_t lontest_effective_wl_addr_size =
+    memory_bank->get_lontest_effective_wl_addr_size();
+  /* Output information about how to intepret the bitstream */
+  fp << "// Bitstream length: " << lontest_effective_wl_addr_size << std::endl;
+  fp << "// Bitstream width (LSB -> MSB): ";
+  fp << "<bl_address " << memory_bank->get_total_bl_addr_size() << " bits>";
+  fp << "<wl_address " << memory_bank->get_total_wl_addr_size() << " bits>";
+  fp << std::endl;
+
+  std::vector<fabric_size_t> wl_indexes;
+  for (size_t region = 0; region < memory_bank->datas.size(); region++) {
+    if (wl_incremental_order) {
+      wl_indexes.push_back(0);
+    } else {
+      wl_indexes.push_back(
+        (fabric_size_t)(memory_bank->datas[region].size() - 1));
+    }
+  }
+  for (size_t wl_index = 0; wl_index < lontest_effective_wl_addr_size;
+       wl_index++) {
+    /* Write BL address code */
+    /* cascade region 0, 1, 2, 3 ... */
+    for (size_t region = 0; region < memory_bank->datas.size(); region++) {
+      const fabric_blwl_length& lengths = memory_bank->blwl_lengths[region];
+      fabric_size_t current_wl = wl_indexes[region];
+      while (std::find(memory_bank->wls_to_skip[region].begin(),
+                       memory_bank->wls_to_skip[region].end(),
+                       current_wl) != memory_bank->wls_to_skip[region].end()) {
+        // We would like to skip this
+        if (wl_incremental_order) {
+          wl_indexes[region]++;
+        } else {
+          wl_indexes[region]--;
+        }
+        current_wl = wl_indexes[region];
+      }
+      if (current_wl < memory_bank->datas[region].size()) {
+        const std::vector<uint8_t>& data =
+          memory_bank->datas[region][current_wl];
+        const std::vector<uint8_t>& mask =
+          memory_bank->masks[region][current_wl];
+        for (size_t bl = 0; bl < lengths.bl; bl++) {
+          if (mask[bl >> 3] & (1 << (bl & 7))) {
+            if (data[bl >> 3] & (1 << (bl & 7))) {
+              fp << "1";
+            } else {
+              fp << "0";
+            }
+          } else {
+            fp << dont_care_bit.c_str();
+          }
+        }
+      } else {
+        /* However not all region has equal WL, for those that is shortest,
+         * print 'x' for all BL*/
+        for (size_t bl = 0; bl < lengths.bl; bl++) {
+          fp << dont_care_bit.c_str();
+        }
+      }
+    }
+    /* Write WL address code */
+    /* cascade region 0, 1, 2, 3 ... */
+    for (size_t region = 0; region < memory_bank->datas.size(); region++) {
+      const fabric_blwl_length& lengths = memory_bank->blwl_lengths[region];
+      fabric_size_t current_wl = wl_indexes[region];
+      if (current_wl < memory_bank->datas[region].size()) {
+        for (size_t wl_temp = 0; wl_temp < lengths.wl; wl_temp++) {
+          if (wl_temp == current_wl) {
+            fp << "1";
+          } else {
+            fp << "0";
+          }
+        }
+        if (wl_incremental_order) {
+          wl_indexes[region]++;
+        } else {
+          wl_indexes[region]--;
+        }
+      } else {
+        /* However not all region has equal WL, for those that is shortest,
+         * print 'x' for all WL */
+        for (size_t wl_temp = 0; wl_temp < lengths.wl; wl_temp++) {
+          fp << dont_care_bit.c_str();
+        }
+      }
+    }
+    fp << std::endl;
+  }
+  return status;
+}
+
+/********************************************************************
+ * Write the fabric bitstream fitting a memory bank protocol
  * to a plain text file
  *
  * Return:
@@ -393,7 +529,8 @@ int write_fabric_bitstream_to_text_file(
   const ConfigProtocol& config_protocol,
   const FabricGlobalPortInfo& global_ports, const std::string& fname,
   const bool& fast_configuration, const bool& keep_dont_care_bits,
-  const bool& include_time_stamp, const bool& verbose) {
+  const bool& wl_incremental_order, const bool& include_time_stamp,
+  const bool& verbose) {
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
     VTR_LOG_ERROR(
@@ -454,6 +591,14 @@ int write_fabric_bitstream_to_text_file(
       if (BLWL_PROTOCOL_DECODER == config_protocol.bl_protocol_type()) {
         status = write_memory_bank_fabric_bitstream_to_text_file(
           fp, apply_fast_configuration, bit_value_to_skip, fabric_bitstream);
+      } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type() &&
+                 BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type()) {
+        // If both BL and WL protocols are flatten, use new way to write the
+        // bitstream
+        status = fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
+          fp, apply_fast_configuration, bit_value_to_skip, fabric_bitstream,
+          keep_dont_care_bits, wl_incremental_order);
+
       } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()) {
         status = write_memory_bank_flatten_fabric_bitstream_to_text_file(
           fp, apply_fast_configuration, bit_value_to_skip, fabric_bitstream,

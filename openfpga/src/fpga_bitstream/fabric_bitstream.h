@@ -41,6 +41,85 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+// Use uint32_t (maximum of 4Gigs) is good enough, we have BL and WL,
+// combination of both hold up to 18 quintillion of configuration bits (+ dont
+// care)
+typedef uint32_t fabric_size_t;
+struct fabric_bit_data {
+  fabric_bit_data(fabric_size_t r, fabric_size_t b, fabric_size_t w, bool bi)
+    : region(r), bl(b), wl(w), bit(bi) {}
+  const fabric_size_t region = 0;
+  const fabric_size_t bl = 0;
+  const fabric_size_t wl = 0;
+  const bool bit = false;
+};
+struct fabric_blwl_length {
+  fabric_blwl_length(fabric_size_t b, fabric_size_t w) : bl(b), wl(w) {}
+  const fabric_size_t bl = 0;
+  const fabric_size_t wl = 0;
+};
+
+/*
+  This class arrange Memory Bank databae in a compact way
+*/
+struct FabricBitstreamMemoryBank {
+  void add_bit(const fabric_size_t& bit_id, const fabric_size_t& region_id,
+               const fabric_size_t& bl, const fabric_size_t& wl,
+               const fabric_size_t& bl_addr_size,
+               const fabric_size_t& wl_addr_size, bool bit);
+  void fast_configuration(const bool& fast, const bool& bit_value_to_skip);
+  fabric_size_t get_lontest_effective_wl_addr_size() const;
+  fabric_size_t get_total_bl_addr_size() const;
+  fabric_size_t get_total_wl_addr_size() const;
+
+  /*************************
+   * All the database (except fabric_bit_datas) is sorted by region
+   *  1. The very first layer of vector is region
+   * For the datas and masks
+   *  1. They are sorted by WL, hence second layer is WL
+   *  2. Layer is BL data stored in vector of uint8_t
+   *  3. Each uint8_t will store up-to 8 configuration bit info
+   **************************/
+  // Store the BL WL of each region
+  std::vector<fabric_blwl_length> blwl_lengths;
+  // Store config ID raw data. Not used by bitstream generation
+  // Used by XML generation
+  /*
+      fabric_bit_datas[Bit #0] = (region, bl, wl)
+      fabric_bit_datas[Bit #1] = (region, bl, wl)
+      fabric_bit_datas[Bit #2] = (region, bl, wl)
+    */
+  std::vector<fabric_bit_data> fabric_bit_datas;
+  // 100K LE FPGA only need few mega bytes
+  /*
+    datas represent the Din value of a given WL and BL (1bit)
+      datas[region #0][wl #0] = std::vector<uint8_t> to represent BLs
+        where uint8_t #0 = MSB{ BL#7, BL#6, .... BL #1, BL #0 } LSB
+        where uint8_t #1 = MSB{ BL#15, BL#14, .... BL #9, BL #8 } LSB
+      datas[region #0][wl #1] = std::vector<uint8_t> to represent BLs
+      datas[region #0][wl #2] = std::vector<uint8_t> to represent BLs
+      ......
+      datas[region #0][wl #n-1] = std::vector<uint8_t> to represent BLs
+      ......
+      datas[region #1][wl #0] = std::vector<uint8_t> to represent BLs
+      datas[region #1][wl #1] = std::vector<uint8_t> to represent BLs
+      ......
+  */
+  std::vector<std::vector<std::vector<uint8_t>>> datas;
+  /*
+    masks has same structure as datas
+    but masks presents data that being used
+    for exampe:
+      if mask's uint8_t #0 value = 0x41 it means for this WL
+        a. BL #0 is being used, and its Din is recoreded in datas
+        b. BL #6 is being used, and its Din is recoreded in datas
+        c. Other BLs #1, 2, 3, 4, 5, 7 are don't care bit (not being used)
+  */
+  std::vector<std::vector<std::vector<uint8_t>>> masks;
+  // This track which WL to skip because of fast configuration
+  std::vector<std::vector<fabric_size_t>> wls_to_skip;
+};
+
 class FabricBitstream {
  public: /* Type implementations */
   /*
@@ -144,6 +223,8 @@ class FabricBitstream {
   bool use_address() const;
   bool use_wl_address() const;
 
+  const FabricBitstreamMemoryBank* memory_bank_info() const;
+
  public: /* Public Mutators */
   /* Reserve config bits */
   void reserve_bits(const size_t& num_bits);
@@ -192,6 +273,18 @@ class FabricBitstream {
   void set_use_address(const bool& enable);
   void set_address_length(const size_t& length);
   void set_bl_address_length(const size_t& length);
+
+  /*
+    This is setting memory bank protocol in a more efficient way
+    Instead of building lengthy BL/WL bits of database (BL or Wl could be in
+    thousand bits of size), a small device like 100K LE (compared to other
+    vendors offer) might end up using tens of gig bytes.
+  */
+  void set_memory_bank_info(const FabricBitId& bit_id,
+                            const FabricBitRegionId& region_id,
+                            const size_t& bl, const size_t& wl,
+                            const size_t& bl_addr_size,
+                            const size_t& wl_addr_size, bool bit);
 
   /* Enable the use of WL-address related data
    * Same priniciple as the set_use_address()
@@ -250,6 +343,9 @@ class FabricBitstream {
 
   /* Data input (Din) bits: this is designed for memory decoders */
   vtr::vector<FabricBitId, char> bit_dins_;
+
+  /* New way of dealing with memory bank protocol - fast and compact */
+  FabricBitstreamMemoryBank memory_bank_data_;
 };
 
 } /* end namespace openfpga */
