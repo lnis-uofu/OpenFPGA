@@ -45,9 +45,10 @@ int build_top_module_fine_grained_child_instances(
   const bool& compact_routing_hierarchy, const bool& duplicate_grid_pin,
   const FabricKey& fabric_key);
 
-static int build_top_module_tile_child_instances(
-  ModuleManager& module_manager, const ModuleId& top_module,
-  const DeviceGrid& grids, const FabricTile& fabric_tile);
+static int build_top_module_tile_child_instances(ModuleManager& module_manager,
+                                                 const ModuleId& top_module,
+                                                 const DeviceGrid& grids,
+                                                 const FabricTile& fabric_tile);
 
 } /* end namespace openfpga */
 

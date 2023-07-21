@@ -650,9 +650,10 @@ static int add_top_module_tile_instances(ModuleManager& module_manager,
  * Add the tile-level instances to the top module of FPGA fabric
  * and build connects between them
  *******************************************************************/
-int build_top_module_tile_child_instances(
-  ModuleManager& module_manager, const ModuleId& top_module,
-  const DeviceGrid& grids, const FabricTile& fabric_tile) {
+int build_top_module_tile_child_instances(ModuleManager& module_manager,
+                                          const ModuleId& top_module,
+                                          const DeviceGrid& grids,
+                                          const FabricTile& fabric_tile) {
   int status = CMD_EXEC_SUCCESS;
   vtr::Matrix<size_t> tile_instance_ids;
   status = add_top_module_tile_instances(module_manager, top_module,
