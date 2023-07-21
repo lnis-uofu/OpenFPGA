@@ -15,7 +15,7 @@
 
 /* Headers from openfpgashell library */
 #include "build_module_graph_utils.h"
-#include "build_top_module_child_instance.h"
+#include "build_top_module_child_fine_grained_instance.h"
 #include "build_top_module_connection.h"
 #include "build_top_module_directs.h"
 #include "build_top_module_memory.h"
@@ -425,7 +425,7 @@ static void add_top_module_io_children(
  * The fine-grained instances include programmable blocks, connection blocks and
  *switch blocks, each of which is an instance under the top module
  *******************************************************************/
-static int build_top_module_fine_grained_child_instances(
+int build_top_module_fine_grained_child_instances(
   ModuleManager& module_manager, const ModuleId& top_module,
   MemoryBankShiftRegisterBanks& blwl_sr_banks,
   const CircuitLibrary& circuit_lib, const ClockNetwork& clk_ntwk,

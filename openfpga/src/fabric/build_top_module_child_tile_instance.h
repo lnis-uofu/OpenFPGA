@@ -32,10 +32,10 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-static int build_top_module_tile_child_instances(ModuleManager& module_manager,
-                                                 const ModuleId& top_module,
-                                                 const DeviceGrid& grids,
-                                                 const FabricTile& fabric_tile);
+int build_top_module_tile_child_instances(ModuleManager& module_manager,
+                                          const ModuleId& top_module,
+                                          const DeviceGrid& grids,
+                                          const FabricTile& fabric_tile);
 
 } /* end namespace openfpga */
 
