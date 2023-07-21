@@ -228,11 +228,15 @@ static void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(
         fabric_bit, wl_addr_bits_vec,
         BLWL_PROTOCOL_DECODER != config_protocol.wl_protocol_type());
     }
-
-    /* New way of storing information in compact way*/
-    fabric_bitstream.set_memory_bank_info(
-      fabric_bit, fabric_bitstream_region, cur_bl_index, cur_wl_index,
-      bl_addr_size, wl_addr_size, bitstream_manager.bit_value(config_bit));
+    if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type() &&
+        BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type()) {
+      // New way of storing information in compact way
+      // Only for Flatten protocol (can easily support shift register as well)
+      // Need to understand decoder to better assessment
+      fabric_bitstream.set_memory_bank_info(
+        fabric_bit, fabric_bitstream_region, cur_bl_index, cur_wl_index,
+        bl_addr_size, wl_addr_size, bitstream_manager.bit_value(config_bit));
+    }
 
     /* Set data input */
     fabric_bitstream.set_bit_din(fabric_bit,
