@@ -498,11 +498,18 @@ std::string generate_switch_block_module_name(
 }
 
 /*********************************************************************
- * Generate the module name for a switch block with a given index
+ * Generate the module name for a tile module with a given coordinate
  *********************************************************************/
 std::string generate_tile_module_name(const vtr::Point<size_t>& tile_coord) {
   return std::string("tile_" + std::to_string(tile_coord.x()) + "__" +
                      std::to_string(tile_coord.y()) + "_");
+}
+
+/*********************************************************************
+ * Generate the port name for a tile. Note that use the index to make the tile port name unique!
+ *********************************************************************/
+std::string generate_tile_module_port_name(const std::string& prefix, const std::string& port_name) {
+  return prefix + port_name;
 }
 
 /*********************************************************************

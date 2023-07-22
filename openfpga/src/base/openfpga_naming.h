@@ -112,6 +112,8 @@ std::string generate_connection_block_module_name(
 
 std::string generate_tile_module_name(const vtr::Point<size_t>& tile_coord);
 
+std::string generate_tile_module_port_name(const vtr::Point<size_t>& tile_coord, const std::string& port_name);
+
 std::string generate_tile_module_netlist_name(const std::string& block_name,
                                               const std::string& postfix);
 

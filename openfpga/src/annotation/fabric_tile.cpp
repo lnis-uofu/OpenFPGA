@@ -78,6 +78,84 @@ FabricTileId FabricTile::find_tile(const vtr::Point<size_t>& coord) const {
   return tile_coord2id_lookup_[coord.x()][coord.y()];
 }
 
+FabricTileId FabricTile::find_tile_by_pb_coordinate(const vtr::Point<size_t>& coord) const {
+  if (coord.x() >= pb_coord2id_lookup_.size()) {
+    VTR_LOG_ERROR(
+      "Programmable block coordinate [%lu][%lu] exceeds the maximum range [%lu][%lu]!\n",
+      coord.x(), coord.y(), pb_coord2id_lookup_.size(),
+      pb_coord2id_lookup_[0].size());
+    return FabricTileId::INVALID();
+  }
+  if (coord.y() >= pb_coord2id_lookup_[coord.x()].size()) {
+    VTR_LOG_ERROR(
+      "Programmable block coordinate [%lu][%lu] exceeds the maximum range [%lu][%lu]!\n",
+      coord.x(), coord.y(), pb_coord2id_lookup_.size(),
+      pb_coord2id_lookup_[0].size());
+    return FabricTileId::INVALID();
+  }
+  return pb_coord2id_lookup_[coord.x()][coord.y()];
+}
+
+FabricTileId FabricTile::find_tile_by_cb_coordinate(const t_rr_type& cb_type, const vtr::Point<size_t>& coord) const {
+  switch (cb_type) {
+    case CHANX: {
+      if (coord.x() >= cbx_coord2id_lookup_.size()) {
+        VTR_LOG_ERROR(
+          "X-direction connection block coordinate [%lu][%lu] exceeds the maximum range [%lu][%lu]!\n",
+          coord.x(), coord.y(), cbx_coord2id_lookup_.size(),
+          cbx_coord2id_lookup_[0].size());
+        return FabricTileId::INVALID();
+      }
+      if (coord.y() >= cbx_coord2id_lookup_[coord.x()].size()) {
+        VTR_LOG_ERROR(
+          "X-direction connection block coordinate [%lu][%lu] exceeds the maximum range [%lu][%lu]!\n",
+          coord.x(), coord.y(), cbx_coord2id_lookup_.size(),
+          cbx_coord2id_lookup_[0].size());
+        return FabricTileId::INVALID();
+      }
+      return cbx_coord2id_lookup_[coord.x()][coord.y()];
+    }
+    case CHANY: {
+      if (coord.x() >= cby_coord2id_lookup_.size()) {
+        VTR_LOG_ERROR(
+          "Y-direction connection block coordinate [%lu][%lu] exceeds the maximum range [%lu][%lu]!\n",
+          coord.x(), coord.y(), cby_coord2id_lookup_.size(),
+          cby_coord2id_lookup_[0].size());
+        return FabricTileId::INVALID();
+      }
+      if (coord.y() >= cby_coord2id_lookup_[coord.x()].size()) {
+        VTR_LOG_ERROR(
+          "Y-direction connection block coordinate [%lu][%lu] exceeds the maximum range [%lu][%lu]!\n",
+          coord.x(), coord.y(), cby_coord2id_lookup_.size(),
+          cby_coord2id_lookup_[0].size());
+        return FabricTileId::INVALID();
+      }
+      return cby_coord2id_lookup_[coord.x()][coord.y()];
+    }
+    default:
+      VTR_LOG("Invalid type of connection block!\n");
+      exit(1);
+  }
+}
+
+FabricTileId FabricTile::find_tile_by_sb_coordinate(const vtr::Point<size_t>& coord) const {
+  if (coord.x() >= sb_coord2id_lookup_.size()) {
+    VTR_LOG_ERROR(
+      "Switch block coordinate [%lu][%lu] exceeds the maximum range [%lu][%lu]!\n",
+      coord.x(), coord.y(), sb_coord2id_lookup_.size(),
+      sb_coord2id_lookup_[0].size());
+    return FabricTileId::INVALID();
+  }
+  if (coord.y() >= sb_coord2id_lookup_[coord.x()].size()) {
+    VTR_LOG_ERROR(
+      "Switch block coordinate [%lu][%lu] exceeds the maximum range [%lu][%lu]!\n",
+      coord.x(), coord.y(), sb_coord2id_lookup_.size(),
+      sb_coord2id_lookup_[0].size());
+    return FabricTileId::INVALID();
+  }
+  return sb_coord2id_lookup_[coord.x()][coord.y()];
+}
+
 bool FabricTile::pb_in_tile(const FabricTileId& tile_id,
                             const vtr::Point<size_t>& coord,
                             const bool& use_gsb_coord) const {
@@ -204,8 +282,16 @@ FabricTileId FabricTile::create_tile(const vtr::Point<size_t>& coord) {
 
 void FabricTile::init(const vtr::Point<size_t>& max_coord) {
   tile_coord2id_lookup_.resize(max_coord.x());
+  pb_coord2id_lookup_.resize(max_coord.x());
+  cbx_coord2id_lookup_.resize(max_coord.x());
+  cby_coord2id_lookup_.resize(max_coord.x());
+  sb_coord2id_lookup_.resize(max_coord.x());
   for (size_t ix = 0; ix < max_coord.x(); ++ix) {
     tile_coord2id_lookup_[ix].resize(max_coord.y(), FabricTileId::INVALID());
+    pb_coord2id_lookup_[ix].resize(max_coord.y(), FabricTileId::INVALID());
+    cbx_coord2id_lookup_[ix].resize(max_coord.y(), FabricTileId::INVALID());
+    cby_coord2id_lookup_[ix].resize(max_coord.y(), FabricTileId::INVALID());
+    sb_coord2id_lookup_[ix].resize(max_coord.y(), FabricTileId::INVALID());
   }
   tile_coord2unique_tile_ids_.resize(max_coord.x());
   for (size_t ix = 0; ix < max_coord.x(); ++ix) {
@@ -240,8 +326,128 @@ bool FabricTile::register_tile_in_lookup(const FabricTileId& tile_id,
   return true;
 }
 
+bool FabricTile::register_pb_in_lookup(const FabricTileId& tile_id,
+                                         const vtr::Point<size_t>& coord) {
+  if (coord.x() >= pb_coord2id_lookup_.size()) {
+    VTR_LOG_ERROR(
+      "Fast look-up has not been re-allocated properly! Given x='%lu' exceeds "
+      "the upper-bound '%lu'!\n",
+      coord.x(), pb_coord2id_lookup_.size());
+    return false;
+  }
+  if (coord.y() >= pb_coord2id_lookup_[coord.x()].size()) {
+    VTR_LOG_ERROR(
+      "Fast look-up has not been re-allocated properly! Given y='%lu' exceeds "
+      "the upper-bound '%lu'!\n",
+      coord.y(), pb_coord2id_lookup_[coord.x()].size());
+    return false;
+  }
+  /* Throw error if this coord is already registered! */
+  if (pb_coord2id_lookup_[coord.x()][coord.y()]) {
+    VTR_LOG_ERROR("Programmable block at [%lu][%lu] has already been registered!\n");
+    return false;
+  }
+  pb_coord2id_lookup_[coord.x()][coord.y()] = tile_id;
+
+  return true;
+}
+
+bool FabricTile::register_cbx_in_lookup(const FabricTileId& tile_id,
+                                         const vtr::Point<size_t>& coord) {
+  if (coord.x() >= cbx_coord2id_lookup_.size()) {
+    VTR_LOG_ERROR(
+      "Fast look-up has not been re-allocated properly! Given x='%lu' exceeds "
+      "the upper-bound '%lu'!\n",
+      coord.x(), cbx_coord2id_lookup_.size());
+    return false;
+  }
+  if (coord.y() >= cbx_coord2id_lookup_[coord.x()].size()) {
+    VTR_LOG_ERROR(
+      "Fast look-up has not been re-allocated properly! Given y='%lu' exceeds "
+      "the upper-bound '%lu'!\n",
+      coord.y(), cbx_coord2id_lookup_[coord.x()].size());
+    return false;
+  }
+  /* Throw error if this coord is already registered! */
+  if (cbx_coord2id_lookup_[coord.x()][coord.y()]) {
+    VTR_LOG_ERROR("X-direction connection block at [%lu][%lu] has already been registered!\n");
+    return false;
+  }
+  cbx_coord2id_lookup_[coord.x()][coord.y()] = tile_id;
+
+  return true;
+}
+
+bool FabricTile::register_cby_in_lookup(const FabricTileId& tile_id,
+                                         const vtr::Point<size_t>& coord) {
+  if (coord.x() >= cby_coord2id_lookup_.size()) {
+    VTR_LOG_ERROR(
+      "Fast look-up has not been re-allocated properly! Given x='%lu' exceeds "
+      "the upper-bound '%lu'!\n",
+      coord.x(), cby_coord2id_lookup_.size());
+    return false;
+  }
+  if (coord.y() >= cby_coord2id_lookup_[coord.x()].size()) {
+    VTR_LOG_ERROR(
+      "Fast look-up has not been re-allocated properly! Given y='%lu' exceeds "
+      "the upper-bound '%lu'!\n",
+      coord.y(), cby_coord2id_lookup_[coord.x()].size());
+    return false;
+  }
+  /* Throw error if this coord is already registered! */
+  if (cby_coord2id_lookup_[coord.x()][coord.y()]) {
+    VTR_LOG_ERROR("Y-direction connection block at [%lu][%lu] has already been registered!\n");
+    return false;
+  }
+  cby_coord2id_lookup_[coord.x()][coord.y()] = tile_id;
+
+  return true;
+}
+
+bool FabricTile::register_sb_in_lookup(const FabricTileId& tile_id,
+                                         const vtr::Point<size_t>& coord) {
+  if (coord.x() >= sb_coord2id_lookup_.size()) {
+    VTR_LOG_ERROR(
+      "Fast look-up has not been re-allocated properly! Given x='%lu' exceeds "
+      "the upper-bound '%lu'!\n",
+      coord.x(), sb_coord2id_lookup_.size());
+    return false;
+  }
+  if (coord.y() >= sb_coord2id_lookup_[coord.x()].size()) {
+    VTR_LOG_ERROR(
+      "Fast look-up has not been re-allocated properly! Given y='%lu' exceeds "
+      "the upper-bound '%lu'!\n",
+      coord.y(), sb_coord2id_lookup_[coord.x()].size());
+    return false;
+  }
+  /* Throw error if this coord is already registered! */
+  if (sb_coord2id_lookup_[coord.x()][coord.y()]) {
+    VTR_LOG_ERROR("Switch block at [%lu][%lu] has already been registered!\n");
+    return false;
+  }
+  sb_coord2id_lookup_[coord.x()][coord.y()] = tile_id;
+
+  return true;
+}
+
 void FabricTile::invalidate_tile_in_lookup(const vtr::Point<size_t>& coord) {
   tile_coord2id_lookup_[coord.x()][coord.y()] = FabricTileId::INVALID();
+}
+
+void FabricTile::invalidate_pb_in_lookup(const vtr::Point<size_t>& coord) {
+  pb_coord2id_lookup_[coord.x()][coord.y()] = FabricTileId::INVALID();
+}
+
+void FabricTile::invalidate_cbx_in_lookup(const vtr::Point<size_t>& coord) {
+  cbx_coord2id_lookup_[coord.x()][coord.y()] = FabricTileId::INVALID();
+}
+
+void FabricTile::invalidate_cby_in_lookup(const vtr::Point<size_t>& coord) {
+  cby_coord2id_lookup_[coord.x()][coord.y()] = FabricTileId::INVALID();
+}
+
+void FabricTile::invalidate_sb_in_lookup(const vtr::Point<size_t>& coord) {
+  sb_coord2id_lookup_[coord.x()][coord.y()] = FabricTileId::INVALID();
 }
 
 bool FabricTile::set_tile_coordinate(const FabricTileId& tile_id,
@@ -255,35 +461,41 @@ bool FabricTile::set_tile_coordinate(const FabricTileId& tile_id,
   return register_tile_in_lookup(tile_id, coord);
 }
 
-void FabricTile::add_pb_coordinate(const FabricTileId& tile_id,
+int FabricTile::add_pb_coordinate(const FabricTileId& tile_id,
                                    const vtr::Point<size_t>& coord,
                                    const vtr::Point<size_t>& gsb_coord) {
   VTR_ASSERT(valid_tile_id(tile_id));
   pb_coords_[tile_id].push_back(coord);
   pb_gsb_coords_[tile_id].push_back(gsb_coord);
+  /* Register in fast look-up */
+  return register_pb_in_lookup(tile_id, coord);
 }
 
-void FabricTile::add_cb_coordinate(const FabricTileId& tile_id,
+int FabricTile::add_cb_coordinate(const FabricTileId& tile_id,
                                    const t_rr_type& cb_type,
                                    const vtr::Point<size_t>& coord) {
   VTR_ASSERT(valid_tile_id(tile_id));
   switch (cb_type) {
     case CHANX:
       cbx_coords_[tile_id].push_back(coord);
-      break;
+      /* Register in fast look-up */
+      return register_cbx_in_lookup(tile_id, coord);
     case CHANY:
       cby_coords_[tile_id].push_back(coord);
-      break;
+      /* Register in fast look-up */
+      return register_cby_in_lookup(tile_id, coord);
     default:
       VTR_LOG("Invalid type of connection block!\n");
       exit(1);
   }
 }
 
-void FabricTile::add_sb_coordinate(const FabricTileId& tile_id,
+int FabricTile::add_sb_coordinate(const FabricTileId& tile_id,
                                    const vtr::Point<size_t>& coord) {
   VTR_ASSERT(valid_tile_id(tile_id));
   sb_coords_[tile_id].push_back(coord);
+  /* Register in fast look-up */
+  return register_sb_in_lookup(tile_id, coord);
 }
 
 void FabricTile::clear() {
@@ -295,6 +507,10 @@ void FabricTile::clear() {
   cby_coords_.clear();
   sb_coords_.clear();
   tile_coord2id_lookup_.clear();
+  pb_coord2id_lookup_.clear();
+  cbx_coord2id_lookup_.clear();
+  cby_coord2id_lookup_.clear();
+  sb_coord2id_lookup_.clear();
   tile_coord2unique_tile_ids_.clear();
   unique_tile_ids_.clear();
 }

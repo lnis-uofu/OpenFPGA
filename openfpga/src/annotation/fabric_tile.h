@@ -36,6 +36,12 @@ class FabricTile {
   FabricTileId unique_tile(const vtr::Point<size_t>& coord) const;
   /** @brief Find the tile info with a given coordinate */
   FabricTileId find_tile(const vtr::Point<size_t>& coord) const;
+  /** @brief Find the id of a tile, with a given coordinate of the programmable block under the tile */
+  FabricTileId find_tile_by_pb_coordinate(const vtr::Point<size_t>& coord) const;
+  /** @brief Find the id of a tile, with a given coordinate of the connection block under the tile */
+  FabricTileId find_tile_by_cb_coordinate(const t_rr_type& cb_type, const vtr::Point<size_t>& coord) const;
+  /** @brief Find the id of a tile, with a given coordinate of the switch block under the tile */
+  FabricTileId find_tile_by_sb_coordinate(const vtr::Point<size_t>& coord) const;
   /** @brief Find the coordinate of the unique tile w.r.t the tile with a tile
    * id */
   vtr::Point<size_t> unique_tile_coordinate(const FabricTileId& tile_id) const;
@@ -75,12 +81,12 @@ class FabricTile {
   FabricTileId create_tile(const vtr::Point<size_t>& coord);
   bool set_tile_coordinate(const FabricTileId& tile_id,
                            const vtr::Point<size_t>& coord);
-  void add_pb_coordinate(const FabricTileId& tile_id,
+  int add_pb_coordinate(const FabricTileId& tile_id,
                          const vtr::Point<size_t>& coord,
                          const vtr::Point<size_t>& gsb_coord);
-  void add_cb_coordinate(const FabricTileId& tile_id, const t_rr_type& cb_type,
+  int add_cb_coordinate(const FabricTileId& tile_id, const t_rr_type& cb_type,
                          const vtr::Point<size_t>& coord);
-  void add_sb_coordinate(const FabricTileId& tile_id,
+  int add_sb_coordinate(const FabricTileId& tile_id,
                          const vtr::Point<size_t>& coord);
   /** @brief Build a list of unique tiles by comparing the coordinates in
    * DeviceRRGSB */
@@ -105,7 +111,19 @@ class FabricTile {
 
  private: /* Internal builders */
   void invalidate_tile_in_lookup(const vtr::Point<size_t>& coord);
+  void invalidate_pb_in_lookup(const vtr::Point<size_t>& coord);
+  void invalidate_cbx_in_lookup(const vtr::Point<size_t>& coord);
+  void invalidate_cby_in_lookup(const vtr::Point<size_t>& coord);
+  void invalidate_sb_in_lookup(const vtr::Point<size_t>& coord);
   bool register_tile_in_lookup(const FabricTileId& tile_id,
+                               const vtr::Point<size_t>& coord);
+  bool register_pb_in_lookup(const FabricTileId& tile_id,
+                               const vtr::Point<size_t>& coord);
+  bool register_cbx_in_lookup(const FabricTileId& tile_id,
+                               const vtr::Point<size_t>& coord);
+  bool register_cby_in_lookup(const FabricTileId& tile_id,
+                               const vtr::Point<size_t>& coord);
+  bool register_sb_in_lookup(const FabricTileId& tile_id,
                                const vtr::Point<size_t>& coord);
 
  private: /* Internal Data */
@@ -124,6 +142,11 @@ class FabricTile {
   vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> cbx_coords_;
   vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> cby_coords_;
   vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> sb_coords_;
+  /* A few fast lookup to spot tile by coordinate of programmable blocks, connection blocks and switch blocks */
+  std::vector<std::vector<FabricTileId>> pb_coord2id_lookup_;
+  std::vector<std::vector<FabricTileId>> cbx_coord2id_lookup_;
+  std::vector<std::vector<FabricTileId>> cby_coord2id_lookup_;
+  std::vector<std::vector<FabricTileId>> sb_coord2id_lookup_;
   /* A fast lookup to spot tile by coordinate */
   std::vector<std::vector<FabricTileId>> tile_coord2id_lookup_;
   std::vector<std::vector<FabricTileId>>

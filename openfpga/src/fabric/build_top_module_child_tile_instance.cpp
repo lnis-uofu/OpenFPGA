@@ -278,16 +278,21 @@ static void add_top_module_tile_io_children(
  *******************************************************************/
 static int build_top_module_tile_nets_between_sb_and_pb(
   ModuleManager& module_manager, const ModuleId& top_module,
-  const ModuleId& tile_module, const size_t& tile_instance_id,
+  const ModuleId& curr_tile_module,
+  const vtr::Matrix<size_t>& tile_instance_ids, 
+  const size_t& curr_tile_instance_id,
   const DeviceGrid& grids, const VprDeviceAnnotation& vpr_device_annotation,
   const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph,
   const RRGSB& rr_gsb, const FabricTile& fabric_tile,
   const FabricTileId& fabric_tile_id,
-  const bool& frame_view, const bool& verbose) {
+  const bool& compact_routing_hierarchy,
+  const bool& verbose) {
   /* Skip those Switch blocks that do not exist */
   if (false == rr_gsb.is_sb_exist()) {
     return CMD_EXEC_SUCCESS;
   }
+
+  vtr::Point<size_t> sink_tile_coord = fabric_tile.tile_coordinate(curr_fabric_tile_id);
 
   /* We could have two different coordinators, one is the instance, the other is
    * the module */
@@ -312,9 +317,6 @@ static int build_top_module_tile_nets_between_sb_and_pb(
   /* Collect sink-related information */
   std::string sink_sb_module_name =
     generate_switch_block_module_name(module_sb_coordinate);
-  ModuleId sink_sb_module = module_manager.find_module(sink_sb_module_name);
-  VTR_ASSERT(true == module_manager.valid_module_id(sink_sb_module));
-  size_t sink_sb_instance = sb_instance;
 
   /* Connect grid output pins (OPIN) to switch block grid pins */
   for (size_t side = 0; side < module_sb.get_num_sides(); ++side) {
@@ -323,19 +325,28 @@ static int build_top_module_tile_nets_between_sb_and_pb(
          inode < module_sb.get_num_opin_nodes(side_manager.get_side());
          ++inode) {
       /* Collect source-related information */
-      /* Generate the grid module name by considering if it locates on the
-       * border */
       vtr::Point<size_t> grid_coordinate(
         rr_graph.node_xlow(
           rr_gsb.get_opin_node(side_manager.get_side(), inode)),
         rr_graph.node_ylow(
           rr_gsb.get_opin_node(side_manager.get_side(), inode)));
-      std::string src_grid_module_name =
-        generate_grid_block_module_name_in_top_module(
-          std::string(GRID_MODULE_NAME_PREFIX), grids, grid_coordinate);
-      ModuleId src_grid_module =
-        module_manager.find_module(src_grid_module_name);
-      VTR_ASSERT(true == module_manager.valid_module_id(src_grid_module));
+      /* Check if the grid is inside the tile, if not, create ports */
+      if (fabric_tile.pb_in_tile(fabric_tile_id, grid_coordinate)) {
+        continue;
+      }
+
+      /* Find the source tile id, coordinate etc., which is required to find source tile module and port */
+      FabricTileId src_fabric_tile_id = fabric_tile.find_tile_by_pb_coordinate(grid_coordinate);
+      size_t pb_idx_in_src_fabric_tile = fabric_tile.find_pb_index_in_tile(src_fabric_tile_id, grid_coordinate);
+      vtr::Point<size_t> src_tile_coord = fabric_tile.tile_coordinate(src_fabric_tile_id);
+      vtr::Point<size_t> src_unique_tile_coord = fabric_tile.unique_tile_coordinate(src_fabric_tile_id);
+      FabricTileId src_unique_tile = fabric_tile.unique_tile(src_tile_coord);
+      vtr::Point<size_t> src_pb_coord_in_unique_tile = fabric_tile.pb_coordinates(src_unique_tile)[pb_idx_in_src_fabric_tile];
+      std::string src_tile_module_name =
+        generate_tile_module_name(src_unique_tile_coord);
+      ModuleId src_tile_module =
+        module_manager.find_module(src_tile_module_name);
+      VTR_ASSERT(true == module_manager.valid_module_id(src_tile_module));
       size_t src_grid_pin_index = rr_graph.node_pin_num(
         rr_gsb.get_opin_node(side_manager.get_side(), inode));
 
@@ -358,12 +369,14 @@ static int build_top_module_tile_nets_between_sb_and_pb(
         get_rr_graph_single_node_side(
           rr_graph, rr_gsb.get_opin_node(side_manager.get_side(), inode)),
         src_grid_pin_info);
-      ModulePortId src_grid_port_id =
-        module_manager.find_module_port(src_grid_module, src_grid_port_name);
-      VTR_ASSERT(true == module_manager.valid_module_port_id(src_grid_module,
-                                                             src_grid_port_id));
-      BasicPort src_grid_port =
-        module_manager.module_port(src_grid_module, src_grid_port_id);
+      std::string src_grid_module_name = generate_grid_block_module_name_in_top_module(std::string(GRID_MODULE_NAME_PREFIX), grids, src_pb_coord_in_unique_tile);
+      std::string src_tile_grid_port_name = generate_tile_module_port_name(src_grid_module_name, src_grid_port_name);
+      ModulePortId src_tile_grid_port_id =
+        module_manager.find_module_port(src_tile_module, src_tile_grid_port_name);
+      VTR_ASSERT(true == module_manager.valid_module_port_id(src_tile_module,
+                                                             src_tile_grid_port_id));
+      BasicPort src_tile_grid_port =
+        module_manager.module_port(src_tile_module, src_tile_grid_port_id);
 
       /* Collect sink-related information */
       vtr::Point<size_t> sink_sb_port_coord(
@@ -377,19 +390,37 @@ static int build_top_module_tile_nets_between_sb_and_pb(
           rr_graph, module_sb.get_opin_node(side_manager.get_side(), inode)),
         grids, vpr_device_annotation, rr_graph,
         module_sb.get_opin_node(side_manager.get_side(), inode));
-      ModulePortId sink_sb_port_id =
-        module_manager.find_module_port(sink_sb_module, sink_sb_port_name);
-      VTR_ASSERT(true == module_manager.valid_module_port_id(sink_sb_module,
-                                                             sink_sb_port_id));
-      BasicPort sink_sb_port =
-        module_manager.module_port(sink_sb_module, sink_sb_port_id);
+      std::string sink_tile_sb_port_name = generate_tile_module_port_name(sink_sb_module_name, sink_sb_port_name);
+      ModulePortId sink_tile_sb_port_id =
+        module_manager.find_module_port(tile_module, sink_tile_sb_port_name);
+      VTR_ASSERT(true == module_manager.valid_module_port_id(tile_module,
+                                                             sink_tile_sb_port_id));
+      BasicPort sink_tile_sb_port =
+        module_manager.module_port(tile_module, sink_tile_sb_port_id);
 
-      /* Check if the grid is inside the tile, if not, create ports */
-      if (fabric_tile.pb_in_tile(fabric_tile_id, grid_coordinate)) {
-        continue;
-      }
-      /* TODO: Create nets */
-      if (!frame_view) {
+      /* Create nets */
+      VTR_LOGV(verbose,
+               "Build inter-tile nets between switch block '%s' in tile[%lu][%lu] and "
+               "programmable block in tile[%lu][%lu]\n",
+               sink_sb_module_name.c_str(),
+               sink_tile_coord.x(), sink_tile_coord.y(),
+               src_tile_coord.x(), src_tile_coord.y());
+      size_t src_tile_instance =
+        tile_instance_ids[src_tile_coord.x(), src_tile_coord.y()];
+
+      /* Source and sink port should match in size */
+      VTR_ASSERT(src_tile_grid_port.get_width() == sink_tile_sb_port.get_width());
+
+      /* Create a net for each pin */
+      for (size_t pin_id = 0; pin_id < src_tile_grid_port.pins().size();
+           ++pin_id) {
+        ModuleNetId net = create_module_source_pin_net(
+          module_manager, top_module, src_tile_module, src_tile_instance,
+          src_tile_grid_port_id, src_tile_grid_port.pins()[pin_id]);
+        /* Configure the net sink */
+        module_manager.add_module_net_sink(
+          top_module, net, curr_tile_module, curr_tile_instance_id,
+          sink_tile_sb_port_id, sink_tile_sb_port.pins()[pin_id]);
       }
     }
   }
@@ -460,7 +491,7 @@ static int build_top_module_tile_nets_between_cb_and_pb(
   const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph,
   const RRGSB& rr_gsb, const FabricTile& fabric_tile,
   const FabricTileId& fabric_tile_id, const t_rr_type& cb_type,
-  const bool& frame_view,
+  const bool& compact_routing_hierarchy,
   const bool& verbose) {
   /* We could have two different coordinators, one is the instance, the other is
    * the module */
@@ -568,8 +599,6 @@ static int build_top_module_tile_nets_between_cb_and_pb(
         continue;
       }
       /* TODO: Create nets */
-      if (!frame_view) {
-      }
     }
   }
   return CMD_EXEC_SUCCESS;
@@ -622,7 +651,8 @@ static int build_top_module_tile_nets_between_sb_and_cb(
   const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph,
   const RRGSB& rr_gsb, const FabricTile& fabric_tile,
   const FabricTileId& fabric_tile_id,
-  const bool& frame_view, const bool& verbose) {
+  const bool& compact_routing_hierarchy,
+  const bool& verbose) {
   /* We could have two different coordinators, one is the instance, the other is
    * the module */
   vtr::Point<size_t> instance_sb_coordinate(rr_gsb.get_sb_x(),
@@ -721,8 +751,6 @@ static int build_top_module_tile_nets_between_sb_and_cb(
       continue;
     }
     /* TODO: Create nets */
-    if (!frame_view) {
-    }
   }
   return CMD_EXEC_SUCCESS;
 }
@@ -735,7 +763,8 @@ static int build_top_module_tile_nets_between_pbs(
   const ModuleId& tile_module, const size_t& tile_instance_id,
   const DeviceGrid& grids, const VprDeviceAnnotation& vpr_device_annotation,
   const vtr::Point<size_t>& pb_coord, const size_t& pb_instance,
-  const bool& frame_view, const bool& verbose) {
+  const bool& compact_routing_hierarchy,
+  const bool& verbose) {
   t_physical_tile_type_ptr phy_tile =
     grids.get_physical_type(pb_coord.x(), pb_coord.y());
   /* Empty type does not require a module */
@@ -877,8 +906,8 @@ static int add_top_module_nets_around_one_tile(
       fabric_tile.sb_coordinates(fabric_tile_id)[isb];
     const RRGSB& rr_gsb = device_rr_gsb.get_gsb(sb_coord);
     status_code = build_top_module_tile_nets_between_sb_and_pb(
-      module_manager, top_module, tile_module, tile_instance_id, grids, vpr_device_annotation, device_rr_gsb,
-      rr_graph_view, rr_gsb, fabric_tile, fabric_tile_id, verbose);
+      module_manager, top_module, tile_module, tile_instance_ids, tile_instance_id, grids, vpr_device_annotation, device_rr_gsb,
+      rr_graph_view, rr_gsb, fabric_tile, fabric_tile_id, true, verbose);
     if (status_code != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;
     }
@@ -895,7 +924,7 @@ static int add_top_module_nets_around_one_tile(
       status_code = build_top_module_tile_nets_between_cb_and_pb(
         module_manager, tile_module, grids, vpr_device_annotation,
         device_rr_gsb, rr_graph_view, rr_gsb, fabric_tile, fabric_tile_id,
-        cb_type, pb_instances, cb_instances.at(cb_type)[icb], true, frame_view,
+        cb_type, pb_instances, cb_instances.at(cb_type)[icb], true, 
         verbose);
       if (status_code != CMD_EXEC_SUCCESS) {
         return CMD_EXEC_FATAL_ERROR;
@@ -912,7 +941,7 @@ static int add_top_module_nets_around_one_tile(
     status_code = build_top_module_tile_nets_between_sb_and_cb(
       module_manager, tile_module, device_rr_gsb, rr_graph_view, rr_gsb,
       fabric_tile, fabric_tile_id, cb_instances, sb_instances[isb], true,
-      frame_view, verbose);
+      verbose);
     if (status_code != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;
     }
@@ -925,7 +954,7 @@ static int add_top_module_nets_around_one_tile(
       fabric_tile.pb_coordinates(fabric_tile_id)[ipb];
     status_code = build_top_module_tile_nets_between_pbs(
       module_manager, tile_module, grids, vpr_device_annotation, pb_coord,
-      pb_instances[ipb], frame_view, verbose);
+      pb_instances[ipb], verbose);
     if (status_code != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;
     }
