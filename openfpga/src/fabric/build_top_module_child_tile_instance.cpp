@@ -1054,6 +1054,476 @@ static void organize_top_module_tile_based_memory_modules(
                                         config_protocol);
 }
 
+/*********************************************************************
+ * Generate an input port for routing multiplexer inside the tile
+ * which is the middle output of a routing track
+ ********************************************************************/
+ModulePinInfo find_tile_module_chan_port(
+  const ModuleManager& module_manager, const ModuleId& tile_module,
+  const vtr::Point<size_t>& cb_coord_in_tile,
+  const RRGraphView& rr_graph, const RRGSB& rr_gsb, const t_rr_type& cb_type,
+  const RRNodeId& chan_rr_node) {
+  ModulePinInfo input_port_info;
+  /* Generate the input port object */
+  switch (rr_graph.node_type(chan_rr_node)) {
+    case CHANX:
+    case CHANY: {
+      /* Create port description for the routing track middle output */
+      int chan_node_track_id =
+        rr_gsb.get_cb_chan_node_index(cb_type, chan_rr_node);
+      /* Create a port description for the middle output */
+      std::string input_port_name = generate_cb_module_track_port_name(
+        cb_type, IN_PORT, 0 == chan_node_track_id % 2);
+      std::string tile_input_port_name = generate_tile_module_port_name(generate_connection_block_module_name(cb_type, cb_coord_in_tile), input_port_name);
+      /* Must find a valid port id in the Switch Block module */
+      input_port_info.first =
+        module_manager.find_module_port(tile_module, tile_input_port_name);
+      input_port_info.second = chan_node_track_id / 2;
+      VTR_ASSERT(true == module_manager.valid_module_port_id(
+                           tile_module, input_port_info.first));
+      break;
+    }
+    default: /* OPIN, SOURCE, IPIN, SINK are invalid*/
+      VTR_LOGF_ERROR(__FILE__, __LINE__,
+                     "Invalid rr_node type! Should be [OPIN|CHANX|CHANY].\n");
+      exit(1);
+  }
+
+  return input_port_info;
+}
+
+/********************************************************************
+ * Add nets between a global port and its sinks at an entry point of clock tree
+ *******************************************************************/
+static int build_top_module_global_net_from_tile_clock_arch_tree(
+  ModuleManager& module_manager, const ModuleId& top_module,
+  const ModulePortId& top_module_port, const RRGraphView& rr_graph,
+  const DeviceRRGSB& device_rr_gsb,
+  const vtr::Matrix<size_t>& tile_instance_ids,
+  const FabricTile& fabric_tile,
+  const ClockNetwork& clk_ntwk, const std::string& clk_tree_name,
+  const RRClockSpatialLookup& rr_clock_lookup) {
+  int status = CMD_EXEC_SUCCESS;
+
+  /* Ensure the clock arch tree name is valid */
+  ClockTreeId clk_tree = clk_ntwk.find_tree(clk_tree_name);
+  if (!clk_ntwk.valid_tree_id(clk_tree)) {
+    VTR_LOG(
+      "Fail to find a matched clock tree '%s' in the clock architecture "
+      "definition",
+      clk_tree_name.c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Ensure the clock tree width matches the global port size */
+  if (clk_ntwk.tree_width(clk_tree) !=
+      module_manager.module_port(top_module, top_module_port).get_width()) {
+    VTR_LOG(
+      "Clock tree '%s' does not have the same width '%lu' as the port '%'s of "
+      "FPGA top module",
+      clk_tree_name.c_str(), clk_ntwk.tree_width(clk_tree),
+      module_manager.module_port(top_module, top_module_port)
+        .get_name()
+        .c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  for (ClockTreePinId pin : clk_ntwk.pins(clk_tree)) {
+    BasicPort src_port =
+      module_manager.module_port(top_module, top_module_port);
+    /* Add the module net */
+    ModuleNetId net = create_module_source_pin_net(
+      module_manager, top_module, top_module, 0, top_module_port,
+      src_port.pins()[size_t(pin)]);
+    VTR_ASSERT(ModuleNetId::INVALID() != net);
+
+    for (ClockSpineId spine : clk_ntwk.tree_top_spines(clk_tree)) {
+      vtr::Point<int> entry_point = clk_ntwk.spine_start_point(spine);
+      Direction entry_dir = clk_ntwk.spine_direction(spine);
+      t_rr_type entry_track_type = clk_ntwk.spine_track_type(spine);
+      /* Find the routing resource node of the entry point */
+      RRNodeId entry_rr_node =
+        rr_clock_lookup.find_node(entry_point.x(), entry_point.y(), clk_tree,
+                                  clk_ntwk.spine_level(spine), pin, entry_dir);
+
+      /* Get the tile module and instance at the entry point */
+      const RRGSB& rr_gsb = device_rr_gsb.get_gsb_by_cb_coordinate(
+        entry_track_type, vtr::Point<size_t>(entry_point.x(), entry_point.y()));
+      vtr::Point<size_t> cb_coord_in_tile = rr_gsb.get_sb_coordinate();
+      FabricTileId curr_fabric_tile_id = fabric_tile.find_tile_by_cb_coordinate(entry_track_type, cb_coord_in_tile);
+      vtr::Point<size_t> curr_fabric_tile_coord = fabric_tile.tile_coordinate(curr_fabric_tile_id);
+      FabricTileId unique_fabric_tile_id = fabric_tile.unique_tile(curr_fabric_tile_coord);
+      vtr::Point<size_t> unique_fabric_tile_coord = fabric_tile.tile_coordinate(unique_fabric_tile_id);
+     
+      ModuleId tile_module = module_manager.find_module(generate_tile_module_name(unique_fabric_tile_coord));
+      size_t tile_instance = tile_instance_ids[curr_fabric_tile_coord.x()][curr_fabric_tile_coord.y()];
+
+      /* Find the port name */
+      size_t cb_idx_in_curr_fabric_tile = fabric_tile.find_cb_index_in_tile(curr_fabric_tile_id, entry_track_type, cb_coord_in_tile);
+      vtr::Point<size_t> cb_coord_in_unique_fabric_tile = fabric_tile.cb_coordinates(unique_fabric_tile_id, entry_track_type)[cb_idx_in_curr_fabric_tile];
+      ModulePinInfo des_pin_info = find_tile_module_chan_port(
+        module_manager, tile_module, cb_coord_in_unique_fabric_tile, rr_graph, rr_gsb, entry_track_type,
+        entry_rr_node);
+
+      /* Configure the net sink */
+      BasicPort sink_port =
+        module_manager.module_port(tile_module, des_pin_info.first);
+      module_manager.add_module_net_sink(top_module, net, tile_module,
+                                         tile_instance, des_pin_info.first,
+                                         sink_port.pins()[des_pin_info.second]);
+    }
+  }
+
+  return status;
+}
+
+/********************************************************************
+ * Add global port connection for a given port of a physical tile
+ * that are defined as global in tile annotation
+ *******************************************************************/
+static int build_top_module_global_net_for_given_tile_module(
+  ModuleManager& module_manager, const ModuleId& top_module,
+  const ModulePortId& top_module_port, const TileAnnotation& tile_annotation,
+  const TileGlobalPortId& tile_global_port,
+  const BasicPort& tile_port_to_connect,
+  const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
+  const vtr::Point<size_t>& grid_coordinate, const e_side& border_side,
+  const vtr::Matrix<size_t>& grid_instance_ids) {
+  t_physical_tile_type_ptr physical_tile =
+    grids.get_physical_type(grid_coordinate.x(), grid_coordinate.y());
+  /* Find the module name for this type of grid */
+  std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
+  std::string grid_module_name = generate_grid_block_module_name(
+    grid_module_name_prefix, std::string(physical_tile->name),
+    is_io_type(physical_tile), border_side);
+  ModuleId grid_module = module_manager.find_module(grid_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
+  size_t grid_instance =
+    grid_instance_ids[grid_coordinate.x()][grid_coordinate.y()];
+  /* Find the source port at the top-level module */
+  BasicPort src_port = module_manager.module_port(top_module, top_module_port);
+
+  /* Walk through each instance considering the unique sub tile and capacity
+   * range, each instance may have an independent pin to be driven by a global
+   * net! */
+  for (const t_sub_tile& sub_tile : physical_tile->sub_tiles) {
+    VTR_ASSERT(1 == sub_tile.equivalent_sites.size());
+    int grid_pin_start_index = physical_tile->num_pins;
+    t_physical_tile_port physical_tile_port;
+    physical_tile_port.num_pins = 0;
+
+    /* Count the total number of pins for this type of sub tile */
+    int sub_tile_num_pins = sub_tile.num_phy_pins / sub_tile.capacity.total();
+
+    /* For each instance of the same sub tile type, find the port of the grid
+     * module according to the tile annotation A tile may consist of multiple
+     * subtile, connect to all the pins from sub tiles */
+    for (int subtile_index = sub_tile.capacity.low;
+         subtile_index <= sub_tile.capacity.high; subtile_index++) {
+      for (const t_physical_tile_port& tile_port : sub_tile.ports) {
+        if (std::string(tile_port.name) == tile_port_to_connect.get_name()) {
+          BasicPort ref_tile_port(tile_port.name, tile_port.num_pins);
+          /* Port size must match!!! */
+          if (false == ref_tile_port.contained(tile_port_to_connect)) {
+            VTR_LOG_ERROR(
+              "Tile annotation '%s' port '%s[%lu:%lu]' is out of the range of "
+              "physical tile port '%s[%lu:%lu]'!",
+              tile_annotation.global_port_name(tile_global_port).c_str(),
+              tile_port_to_connect.get_name().c_str(),
+              tile_port_to_connect.get_lsb(), tile_port_to_connect.get_msb(),
+              ref_tile_port.get_name().c_str(), ref_tile_port.get_lsb(),
+              ref_tile_port.get_msb());
+            return CMD_EXEC_FATAL_ERROR;
+          }
+          grid_pin_start_index =
+            (subtile_index - sub_tile.capacity.low) * sub_tile_num_pins +
+            tile_port.absolute_first_pin_index;
+          physical_tile_port = tile_port;
+          break;
+        }
+      }
+      /* Ensure the pin index is valid */
+      VTR_ASSERT(grid_pin_start_index < physical_tile->num_pins);
+      /* Ensure port width is in range */
+      VTR_ASSERT(src_port.get_width() == tile_port_to_connect.get_width());
+
+      /* Create a pin id mapping between the source port (top module) and the
+       * sink port (grid module) */
+      std::map<size_t, size_t> sink2src_pin_map;
+      for (size_t ipin = 0; ipin < tile_port_to_connect.get_width(); ++ipin) {
+        size_t sink_pin = tile_port_to_connect.pins()[ipin];
+        size_t src_pin = src_port.pins()[ipin];
+        sink2src_pin_map[sink_pin] = src_pin;
+      }
+
+      /* Create the connections */
+      for (size_t pin_id = tile_port_to_connect.get_lsb();
+           pin_id < tile_port_to_connect.get_msb() + 1; ++pin_id) {
+        int grid_pin_index = grid_pin_start_index + pin_id;
+        /* Find the module pin */
+        size_t grid_pin_width = physical_tile->pin_width_offset[grid_pin_index];
+        size_t grid_pin_height =
+          physical_tile->pin_height_offset[grid_pin_index];
+        std::vector<e_side> pin_sides = find_physical_tile_pin_side(
+          physical_tile, grid_pin_index, border_side);
+
+        BasicPort grid_pin_info =
+          vpr_device_annotation.physical_tile_pin_port_info(physical_tile,
+                                                            grid_pin_index);
+        VTR_ASSERT(true == grid_pin_info.is_valid());
+
+        /* Build nets */
+        for (const e_side& pin_side : pin_sides) {
+          std::string grid_port_name =
+            generate_grid_port_name(grid_pin_width, grid_pin_height,
+                                    subtile_index, pin_side, grid_pin_info);
+          ModulePortId grid_port_id =
+            module_manager.find_module_port(grid_module, grid_port_name);
+          VTR_ASSERT(true == module_manager.valid_module_port_id(grid_module,
+                                                                 grid_port_id));
+
+          VTR_ASSERT(
+            1 ==
+            module_manager.module_port(grid_module, grid_port_id).get_width());
+
+          ModuleNetId net = create_module_source_pin_net(
+            module_manager, top_module, top_module, 0, top_module_port,
+            src_port.pins()[sink2src_pin_map[pin_id]]);
+          VTR_ASSERT(ModuleNetId::INVALID() != net);
+
+          /* Configure the net sink */
+          BasicPort sink_port =
+            module_manager.module_port(grid_module, grid_port_id);
+          module_manager.add_module_net_sink(top_module, net, grid_module,
+                                             grid_instance, grid_port_id,
+                                             sink_port.pins()[0]);
+        }
+      }
+    }
+  }
+
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
+ * Add nets between a global port and its sinks at each tile modules
+ *******************************************************************/
+static int build_top_module_global_net_from_tile_modules(
+  ModuleManager& module_manager, const ModuleId& top_module,
+  const ModulePortId& top_module_port, const TileAnnotation& tile_annotation,
+  const TileGlobalPortId& tile_global_port,
+  const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
+  const vtr::Matrix<size_t>& tile_instance_ids,
+  const FabricTile& fabric_tile) {
+  int status = CMD_EXEC_SUCCESS;
+
+  std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates =
+    generate_perimeter_grid_coordinates(grids);
+
+  for (size_t tile_info_id = 0;
+       tile_info_id <
+       tile_annotation.global_port_tile_names(tile_global_port).size();
+       ++tile_info_id) {
+    std::string tile_name =
+      tile_annotation.global_port_tile_names(tile_global_port)[tile_info_id];
+    BasicPort tile_port =
+      tile_annotation.global_port_tile_ports(tile_global_port)[tile_info_id];
+    /* Find the coordinates for the wanted tiles */
+    vtr::Point<size_t> start_coord(1, 1);
+    vtr::Point<size_t> end_coord(grids.width() - 1, grids.height() - 1);
+    vtr::Point<size_t> range = tile_annotation.global_port_tile_coordinates(
+      tile_global_port)[tile_info_id];
+    bool out_of_range = false;
+
+    /* -1 means all the x should be considered */
+    if (size_t(-1) != range.x()) {
+      if ((range.x() < start_coord.x()) || (range.x() > end_coord.x())) {
+        out_of_range = true;
+      } else {
+        /* Set the range */
+        start_coord.set_x(range.x());
+        end_coord.set_x(range.x());
+      }
+    }
+
+    /* -1 means all the y should be considered */
+    if (size_t(-1) != range.y()) {
+      if ((range.y() < start_coord.y()) || (range.y() > end_coord.y())) {
+        out_of_range = true;
+      } else {
+        /* Set the range */
+        start_coord.set_y(range.y());
+        end_coord.set_y(range.y());
+      }
+    }
+
+    /* Error out immediately if the coordinate is not valid! */
+    if (true == out_of_range) {
+      VTR_LOG_ERROR(
+        "Coordinate (%lu, %lu) in tile annotation for tile '%s' is out of "
+        "range (%lu:%lu, %lu:%lu)!",
+        range.x(), range.y(), tile_name.c_str(), start_coord.x(), end_coord.x(),
+        start_coord.y(), end_coord.y());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+
+    /* Spot the port from child modules from core grids */
+    for (size_t ix = start_coord.x(); ix < end_coord.x(); ++ix) {
+      for (size_t iy = start_coord.y(); iy < end_coord.y(); ++iy) {
+        t_physical_tile_type_ptr phy_tile_type =
+          grids.get_physical_type(ix, iy);
+        /* Bypass EMPTY tiles */
+        if (true == is_empty_type(phy_tile_type)) {
+          continue;
+        }
+        /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
+        if ((0 < grids.get_width_offset(ix, iy)) ||
+            (0 < grids.get_height_offset(ix, iy))) {
+          continue;
+        }
+
+        /* Bypass the tiles whose names do not match */
+        if (std::string(phy_tile_type->name) != tile_name) {
+          continue;
+        }
+
+        /* Create nets and finish connection build-up */
+        status = build_top_module_global_net_for_given_tile_module(
+          module_manager, top_module, top_module_port, tile_annotation,
+          tile_global_port, tile_port, vpr_device_annotation, grids,
+          vtr::Point<size_t>(ix, iy), NUM_SIDES, grid_instance_ids);
+        if (CMD_EXEC_FATAL_ERROR == status) {
+          return status;
+        }
+      }
+    }
+
+    /* Walk through all the grids on the perimeter, which are I/O grids */
+    for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
+      for (const vtr::Point<size_t>& io_coordinate : io_coordinates[io_side]) {
+        t_physical_tile_type_ptr phy_tile_type =
+          grids.get_physical_type(io_coordinate.x(), io_coordinate.y());
+        /* Bypass EMPTY grid */
+        if (true == is_empty_type(phy_tile_type)) {
+          continue;
+        }
+
+        /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
+        if ((0 <
+             grids.get_width_offset(io_coordinate.x(), io_coordinate.y())) ||
+            (0 <
+             grids.get_height_offset(io_coordinate.x(), io_coordinate.y()))) {
+          continue;
+        }
+
+        /* Bypass the tiles whose names do not match */
+        if (std::string(phy_tile_type->name) != tile_name) {
+          continue;
+        }
+
+        /* Check if the coordinate satisfy the tile coordinate defintion
+         * - Bypass if the x is a specific number (!= -1), and io_coordinate
+         * is different
+         * - Bypass if the y is a specific number (!= -1), and io_coordinate
+         * is different
+         */
+        if ((size_t(-1) != range.x()) && (range.x() != io_coordinate.x())) {
+          continue;
+        }
+        if ((size_t(-1) != range.y()) && (range.y() != io_coordinate.y())) {
+          continue;
+        }
+
+        /* Create nets and finish connection build-up */
+        status = build_top_module_global_net_for_given_tile_module(
+          module_manager, top_module, top_module_port, tile_annotation,
+          tile_global_port, tile_port, vpr_device_annotation, grids,
+          io_coordinate, io_side, grid_instance_ids);
+        if (CMD_EXEC_FATAL_ERROR == status) {
+          return status;
+        }
+      }
+    }
+  }
+
+  return status;
+}
+
+/********************************************************************
+ * Add global ports from tile ports that are defined as global in tile
+ *annotation
+ *******************************************************************/
+static int add_top_module_global_ports_from_tile_modules(
+  ModuleManager& module_manager, const ModuleId& top_module,
+  const TileAnnotation& tile_annotation,
+  const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
+  const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
+  const vtr::Matrix<size_t>& tile_instance_ids,
+  const FabricTile& fabric_tile, const ClockNetwork& clk_ntwk,
+  const RRClockSpatialLookup& rr_clock_lookup) {
+  int status = CMD_EXEC_SUCCESS;
+
+  /* Add the global ports which are NOT yet added to the top-level module
+   * (in different names than the global ports defined in circuit library
+   */
+  std::vector<BasicPort> global_ports_to_add;
+  for (const TileGlobalPortId& tile_global_port :
+       tile_annotation.global_ports()) {
+    ModulePortId module_port = module_manager.find_module_port(
+      top_module, tile_annotation.global_port_name(tile_global_port));
+    /* The global port size is derived from the maximum port size among all the
+     * tile port defintion */
+    if (ModulePortId::INVALID() == module_port) {
+      BasicPort global_port_to_add;
+      global_port_to_add.set_name(
+        tile_annotation.global_port_name(tile_global_port));
+      size_t max_port_size = 0;
+      for (const BasicPort& tile_port :
+           tile_annotation.global_port_tile_ports(tile_global_port)) {
+        max_port_size = std::max(tile_port.get_width(), max_port_size);
+      }
+      global_port_to_add.set_width(max_port_size);
+      global_ports_to_add.push_back(global_port_to_add);
+    }
+  }
+
+  for (const BasicPort& global_port_to_add : global_ports_to_add) {
+    module_manager.add_port(top_module, global_port_to_add,
+                            ModuleManager::MODULE_GLOBAL_PORT);
+  }
+
+  /* Add module nets */
+  for (const TileGlobalPortId& tile_global_port :
+       tile_annotation.global_ports()) {
+    /* Must found one valid port! */
+    ModulePortId top_module_port = module_manager.find_module_port(
+      top_module, tile_annotation.global_port_name(tile_global_port));
+    VTR_ASSERT(ModulePortId::INVALID() != top_module_port);
+
+    /* There are two cases when building the nets:
+     * - If the net will go through a dedicated clock tree network, the net will
+     * drive an input of a routing block
+     * - If the net will be directly wired to tiles, the net will drive an input
+     * of a tile
+     */
+    if (!tile_annotation.global_port_clock_arch_tree_name(tile_global_port)
+           .empty()) {
+      status = build_top_module_global_net_from_tile_clock_arch_tree(
+        module_manager, top_module, top_module_port, rr_graph, device_rr_gsb,
+        tile_instance_ids, fabric_tile, clk_ntwk,
+        tile_annotation.global_port_clock_arch_tree_name(tile_global_port),
+        rr_clock_lookup);
+    } else {
+      status = build_top_module_global_net_from_tile_modules(
+        module_manager, top_module, top_module_port, tile_annotation,
+        tile_global_port, vpr_device_annotation, grids, tile_instance_ids, fabric_tile);
+    }
+    if (status == CMD_EXEC_FATAL_ERROR) {
+      return status;
+    }
+  }
+  return status;
+}
 
 /********************************************************************
  * Add the tile-level instances to the top module of FPGA fabric
@@ -1092,14 +1562,14 @@ int build_top_module_tile_child_instances(
     /* TODO: Inter-tile direct connections */
   }
 
-  /* TODO: Add global ports from tile modules: how to connect to clock
-  architecture and the global port from tile annotation status =
-  add_top_module_global_ports_from_grid_modules( module_manager, top_module,
-  tile_annotation, vpr_device_annotation, grids, rr_graph, device_rr_gsb,
-  cb_instance_ids, grid_instance_ids, clk_ntwk, rr_clock_lookup); if
-  (CMD_EXEC_FATAL_ERROR == status) { return status;
+  /* TODO: Add global ports from tile modules: how to connect to clock architecture and the global port from tile annotation 
+   */
+  status = add_top_module_global_ports_from_tile_modules( module_manager, top_module,
+    tile_annotation, vpr_device_annotation, grids, rr_graph, device_rr_gsb,
+    tile_instance_ids, fabric_tile, clk_ntwk, rr_clock_lookup);
+  if (CMD_EXEC_FATAL_ERROR == status) {
+    return status;
   }
-  */
 
   /* Add GPIO ports from the sub-modules under this Verilog module
    * For top-level module, we follow a special sequencing for I/O modules. So we
