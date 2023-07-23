@@ -37,6 +37,43 @@ std::string generate_grid_block_module_name_in_top_module(
 }
 
 /********************************************************************
+ * Generate the port name for a grid block, by considering
+ * 1. its pin index
+ * 2. side on the grid
+ * 3. relative position in the physical tile
+ *
+ * This function is mainly used in the top-level module generation
+ * Note that it may be useful for other modules but not tried yet!
+ *******************************************************************/
+std::string generate_grid_module_port_name_in_top_module(
+  const vtr::Point<size_t>& grid_coordinate,
+  const size_t& sink_grid_pin_index,
+  const VprDeviceAnnotation& vpr_device_annotation,
+  const RRGraph& rr_graph, const RRNodeId& inode) {
+  t_physical_tile_type_ptr grid_type_descriptor =
+    grids.get_physical_type(grid_coordinate.x(), grid_coordinate.y());
+  size_t sink_grid_pin_width =
+    grid_type_descriptor->pin_width_offset[sink_grid_pin_index];
+  size_t sink_grid_pin_height =
+    grid_type_descriptor->pin_height_offset[sink_grid_pin_index];
+  BasicPort sink_grid_pin_info =
+    vpr_device_annotation.physical_tile_pin_port_info(grid_type_descriptor,
+                                                      sink_grid_pin_index);
+  VTR_ASSERT(true == sink_grid_pin_info.is_valid());
+  int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
+    grid_type_descriptor, sink_grid_pin_index);
+  VTR_ASSERT(OPEN != subtile_index &&
+             subtile_index < grid_type_descriptor->capacity);
+  std::string sink_grid_port_name = generate_grid_port_name(
+    sink_grid_pin_width, sink_grid_pin_height, subtile_index,
+    get_rr_graph_single_node_side(
+      rr_graph, rr_gsb.get_ipin_node(cb_ipin_side, inode)),
+    sink_grid_pin_info);
+
+  return sink_grid_port_name;
+}
+
+/********************************************************************
  * Find the cb_type of a GSB in the top-level module
  * depending on the side of SB
  * TOP/BOTTOM side: CHANY
