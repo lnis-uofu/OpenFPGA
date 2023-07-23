@@ -1187,19 +1187,29 @@ static int build_top_module_global_net_for_given_tile_module(
   const TileGlobalPortId& tile_global_port,
   const BasicPort& tile_port_to_connect,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const vtr::Point<size_t>& grid_coordinate, const e_side& border_side,
-  const vtr::Matrix<size_t>& grid_instance_ids) {
+  const vtr::Point<size_t>& grid_coordinate,
+  const vtr::Matrix<size_t>& tile_instance_ids,
+  const FabricTile& fabric_tile) {
+  /* Get the tile module and instance */
+  FabricTileId curr_fabric_tile_id = fabric_tile.find_tile_by_pb_coordinate(grid_coordinate);
+  vtr::Point<size_t> curr_fabric_tile_coord = fabric_tile.tile_coordinate(curr_fabric_tile_id);
+  FabricTileId unique_fabric_tile_id = fabric_tile.unique_tile(curr_fabric_tile_coord);
+  vtr::Point<size_t> unique_fabric_tile_coord = fabric_tile.tile_coordinate(unique_fabric_tile_id);
+  std::string tile_module_name = generate_tile_module_name(unique_fabric_tile_coord);
+  ModuleId tile_module = module_manager.find_module(tile_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(tile_module));
+  size_t tile_instance = tile_instance_ids[curr_fabric_tile_coord.x()][curr_fabric_tile_coord.y()];
+
+  /* Get the grid coordinate in the context of the tile */
+  size_t pb_idx_in_curr_fabric_tile = fabric_tile.find_pb_index_in_tile(curr_fabric_tile_id, grid_coordinate);
+  vtr::Point<size_t> pb_coord_in_unique_fabric_tile = fabric_tile.pb_coordinates(unique_fabric_tile_id)[pb_idx_in_curr_fabric_tile];
+
   t_physical_tile_type_ptr physical_tile =
     grids.get_physical_type(grid_coordinate.x(), grid_coordinate.y());
   /* Find the module name for this type of grid */
   std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
-  std::string grid_module_name = generate_grid_block_module_name(
-    grid_module_name_prefix, std::string(physical_tile->name),
-    is_io_type(physical_tile), border_side);
-  ModuleId grid_module = module_manager.find_module(grid_module_name);
-  VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
-  size_t grid_instance =
-    grid_instance_ids[grid_coordinate.x()][grid_coordinate.y()];
+  std::string grid_instance_name = generate_grid_block_module_name_in_top_module(
+    grid_module_name_prefix, grids, pb_coord_in_unique_fabric_tile);
   /* Find the source port at the top-level module */
   BasicPort src_port = module_manager.module_port(top_module, top_module_port);
 
@@ -1277,14 +1287,15 @@ static int build_top_module_global_net_for_given_tile_module(
           std::string grid_port_name =
             generate_grid_port_name(grid_pin_width, grid_pin_height,
                                     subtile_index, pin_side, grid_pin_info);
-          ModulePortId grid_port_id =
-            module_manager.find_module_port(grid_module, grid_port_name);
-          VTR_ASSERT(true == module_manager.valid_module_port_id(grid_module,
-                                                                 grid_port_id));
+          std::string tile_grid_port_name = generate_tile_module_port_name(grid_instance_name, grid_port_name);
+          ModulePortId tile_grid_port_id =
+            module_manager.find_module_port(grid_module, tile_grid_port_name);
+          VTR_ASSERT(true == module_manager.valid_module_port_id(tile_module,
+                                                                 tile_port_id));
 
           VTR_ASSERT(
             1 ==
-            module_manager.module_port(grid_module, grid_port_id).get_width());
+            module_manager.module_port(tile_module, tile_grid_port_id).get_width());
 
           ModuleNetId net = create_module_source_pin_net(
             module_manager, top_module, top_module, 0, top_module_port,
@@ -1293,9 +1304,9 @@ static int build_top_module_global_net_for_given_tile_module(
 
           /* Configure the net sink */
           BasicPort sink_port =
-            module_manager.module_port(grid_module, grid_port_id);
-          module_manager.add_module_net_sink(top_module, net, grid_module,
-                                             grid_instance, grid_port_id,
+            module_manager.module_port(tile_module, tile_port_id);
+          module_manager.add_module_net_sink(top_module, net, tile_module,
+                                             tile_instance, tile_grid_port_id,
                                              sink_port.pins()[0]);
         }
       }
