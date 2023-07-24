@@ -202,7 +202,7 @@ static int build_tile_module_port_and_nets_between_sb_and_pb(
         src_grid_port.set_name(generate_tile_module_port_name(
           generate_switch_block_module_name(
             fabric_tile.sb_coordinates(fabric_tile_id)[isb]),
-          src_grid_port.get_name()));
+          sink_sb_port.get_name()));
         ModulePortId src_tile_port_id = module_manager.add_port(
           tile_module, src_grid_port,
           ModuleManager::e_module_port_type::MODULE_INPUT_PORT);

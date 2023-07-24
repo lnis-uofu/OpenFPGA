@@ -572,22 +572,6 @@ static int build_top_module_tile_nets_between_cb_and_pb(
     enum e_side cb_ipin_side = cb_ipin_sides[iside];
     for (size_t inode = 0; inode < module_cb.get_num_ipin_nodes(cb_ipin_side);
          ++inode) {
-      /* Collect source-related information */
-      RRNodeId module_ipin_node = module_cb.get_ipin_node(cb_ipin_side, inode);
-      vtr::Point<size_t> cb_src_port_coord(
-        rr_graph.node_xlow(module_ipin_node),
-        rr_graph.node_ylow(module_ipin_node));
-      std::string src_cb_port_name = generate_cb_module_grid_port_name(
-        cb_ipin_side, grids, vpr_device_annotation, rr_graph, module_ipin_node);
-      std::string src_tile_cb_port_name = generate_tile_module_port_name(
-        src_cb_instance_name_in_unique_tile, src_cb_port_name);
-      ModulePortId src_cb_port_id =
-        module_manager.find_module_port(tile_module, src_cb_port_name);
-      VTR_ASSERT(true == module_manager.valid_module_port_id(tile_module,
-                                                             src_cb_port_id));
-      BasicPort src_cb_port =
-        module_manager.module_port(tile_module, src_cb_port_id);
-
       /* Collect sink-related information */
       /* Note that we use the instance cb pin here!!!
        * because it has the correct coordinator for the grid!!!
@@ -600,6 +584,23 @@ static int build_top_module_tile_nets_between_cb_and_pb(
       if (fabric_tile.pb_in_tile(curr_fabric_tile_id, grid_coordinate)) {
         continue;
       }
+
+      /* Collect source-related information */
+      RRNodeId module_ipin_node = module_cb.get_ipin_node(cb_ipin_side, inode);
+      vtr::Point<size_t> cb_src_port_coord(
+        rr_graph.node_xlow(module_ipin_node),
+        rr_graph.node_ylow(module_ipin_node));
+      std::string src_cb_port_name = generate_cb_module_grid_port_name(
+        cb_ipin_side, grids, vpr_device_annotation, rr_graph, module_ipin_node);
+      std::string src_tile_cb_port_name = generate_tile_module_port_name(
+        src_cb_instance_name_in_unique_tile, src_cb_port_name);
+      VTR_LOGV(verbose, "Finding port '%s' from connection block in tile [%lu][%lu]\n", src_tile_cb_port_name.c_str(), src_tile_coord.x(), src_tile_coord.y());
+      ModulePortId src_cb_port_id =
+        module_manager.find_module_port(tile_module, src_tile_cb_port_name);
+      VTR_ASSERT(true == module_manager.valid_module_port_id(tile_module,
+                                                             src_cb_port_id));
+      BasicPort src_cb_port =
+        module_manager.module_port(tile_module, src_cb_port_id);
 
       FabricTileId sink_fabric_tile_id =
         fabric_tile.find_tile_by_pb_coordinate(grid_coordinate);
@@ -636,7 +637,7 @@ static int build_top_module_tile_nets_between_cb_and_pb(
       std::string sink_tile_grid_port_name = generate_tile_module_port_name(
         sink_grid_module_name, sink_grid_port_name);
       ModulePortId sink_grid_port_id =
-        module_manager.find_module_port(sink_tile_module, sink_grid_port_name);
+        module_manager.find_module_port(sink_tile_module, sink_tile_grid_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(
                            sink_tile_module, sink_grid_port_id));
       BasicPort sink_grid_port =

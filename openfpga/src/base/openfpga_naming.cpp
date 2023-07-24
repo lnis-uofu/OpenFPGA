@@ -511,7 +511,7 @@ std::string generate_tile_module_name(const vtr::Point<size_t>& tile_coord) {
  *********************************************************************/
 std::string generate_tile_module_port_name(const std::string& prefix,
                                            const std::string& port_name) {
-  return prefix + port_name;
+  return prefix + std::string("_") + port_name;
 }
 
 /*********************************************************************
