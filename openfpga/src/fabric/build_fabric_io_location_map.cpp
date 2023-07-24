@@ -31,8 +31,8 @@ namespace openfpga {
  *io_children() list of top-level module. Here we just build a fast lookup from
  *(x, y, z) coordinate to the actual indices
  *******************************************************************/
-static IoLocationMap build_fabric_fine_grained_io_location_map(const ModuleManager& module_manager,
-                                           const DeviceGrid& grids) {
+static IoLocationMap build_fabric_fine_grained_io_location_map(
+  const ModuleManager& module_manager, const DeviceGrid& grids) {
   vtr::ScopedStartFinishTimer timer(
     "Create I/O location mapping for top module");
 
@@ -152,8 +152,8 @@ static IoLocationMap build_fabric_fine_grained_io_location_map(const ModuleManag
  *io_children() list of top-level module. Here we just build a fast lookup from
  *(x, y, z) coordinate to the actual indices
  *******************************************************************/
-static IoLocationMap build_fabric_tiled_io_location_map(const ModuleManager& module_manager,
-                                                 const DeviceGrid& grids) {
+static IoLocationMap build_fabric_tiled_io_location_map(
+  const ModuleManager& module_manager, const DeviceGrid& grids) {
   vtr::ScopedStartFinishTimer timer(
     "Create I/O location mapping for top module");
 
@@ -202,18 +202,20 @@ static IoLocationMap build_fabric_tiled_io_location_map(const ModuleManager& mod
     VTR_ASSERT(size_t(phy_tile_type->capacity) ==
                module_manager.io_children(child).size());
     for (ModuleId tile_child : module_manager.io_children(child)) {
-      /* Note that we should use the subchild of the subchild module when checking the GPIO
-       * ports. The child module is the tile module while the subchild module is actually the grid-level I/O module, while
-       * the subchild module is the subtile inside grid-level I/O modules. Note
-       * that grid-level I/O module contains all the GPIO ports while the
-       * subtile may have part of it. For example, a grid I/O module may have 24
-       * GPINs and 12 GPOUTs, while the first subtile only have 4 GPINs, and the
-       * second subtile only have 3 GPOUTs. Therefore, to accurately build the
-       * I/O location map downto subtile level, we need to check the subchild
-       * module here.
+      /* Note that we should use the subchild of the subchild module when
+       * checking the GPIO ports. The child module is the tile module while the
+       * subchild module is actually the grid-level I/O module, while the
+       * subchild module is the subtile inside grid-level I/O modules. Note that
+       * grid-level I/O module contains all the GPIO ports while the subtile may
+       * have part of it. For example, a grid I/O module may have 24 GPINs and
+       * 12 GPOUTs, while the first subtile only have 4 GPINs, and the second
+       * subtile only have 3 GPOUTs. Therefore, to accurately build the I/O
+       * location map downto subtile level, we need to check the subchild module
+       * here.
        */
       for (size_t isubchild = 0;
-           isubchild < module_manager.io_children(tile_child).size(); ++isubchild) {
+           isubchild < module_manager.io_children(tile_child).size();
+           ++isubchild) {
         ModuleId subchild = module_manager.io_children(tile_child)[isubchild];
         vtr::Point<int> subchild_coord =
           module_manager.io_child_coordinates(tile_child)[isubchild];
@@ -237,9 +239,9 @@ static IoLocationMap build_fabric_tiled_io_location_map(const ModuleManager& mod
               io_counter[gpio_port.get_name()] = 0;
             }
             /* This is a dirty hack! */
-            io_location_map.set_io_index(coord.x(), coord.y(), subchild_coord.x(),
-                                         gpio_port.get_name(),
-                                         io_counter[gpio_port.get_name()]);
+            io_location_map.set_io_index(
+              coord.x(), coord.y(), subchild_coord.x(), gpio_port.get_name(),
+              io_counter[gpio_port.get_name()]);
             io_counter[gpio_port.get_name()]++;
           }
         }
@@ -270,7 +272,8 @@ static IoLocationMap build_fabric_tiled_io_location_map(const ModuleManager& mod
 
 /********************************************************************
  * Top-level function, if tile modules are built under the top-level module
- * The data to access for I/O location is different than the fine-grained grid modules
+ * The data to access for I/O location is different than the fine-grained grid
+ *modules
  * FIXME: Think about a unified way for the two kinds of fabrics!!!
  *******************************************************************/
 IoLocationMap build_fabric_io_location_map(const ModuleManager& module_manager,
@@ -281,6 +284,5 @@ IoLocationMap build_fabric_io_location_map(const ModuleManager& module_manager,
   }
   return build_fabric_fine_grained_io_location_map(module_manager, grids);
 }
-
 
 } /* end namespace openfpga */

@@ -656,8 +656,11 @@ static int build_top_module_tile_nets_between_cb_and_pb(
           top_module, net, sink_tile_module, sink_tile_instance_id,
           sink_grid_port_id, sink_grid_port.pins()[pin_id]);
       }
-      VTR_LOGV(verbose, "Built nets between connection block of tile[%lu][%lu] and grid block of tile[%lu][%lu]\n",
-               src_tile_coord.x(), src_tile_coord.y(), sink_tile_coord.x(), sink_tile_coord.y());
+      VTR_LOGV(verbose,
+               "Built nets between connection block of tile[%lu][%lu] and grid "
+               "block of tile[%lu][%lu]\n",
+               src_tile_coord.x(), src_tile_coord.y(), sink_tile_coord.x(),
+               sink_tile_coord.y());
     }
   }
   return CMD_EXEC_SUCCESS;
@@ -898,8 +901,11 @@ static int build_top_module_tile_nets_between_sb_and_cb(
                                            tile_instance_id, sb_port_id,
                                            itrack / 2);
       }
-      VTR_LOGV(verbose, "Built nets between switch block of tile[%lu][%lu] and connection block of tile[%lu][%lu]\n",
-               sb_tile_coord.x(), sb_tile_coord.y(), cb_tile_coord.x(), cb_tile_coord.y());
+      VTR_LOGV(verbose,
+               "Built nets between switch block of tile[%lu][%lu] and "
+               "connection block of tile[%lu][%lu]\n",
+               sb_tile_coord.x(), sb_tile_coord.y(), cb_tile_coord.x(),
+               cb_tile_coord.y());
     }
   }
   return CMD_EXEC_SUCCESS;
@@ -1072,7 +1078,7 @@ static void organize_top_module_tile_based_memory_modules(
     } else {
       VTR_ASSERT(false == positive_direction);
       /* For negative direction: -----> */
-      for (int ix = grids.width() - 1; ix >= 0; --ix) {
+      for (size_t ix = grids.width() - 1; ix >= 0; --ix) {
         tile_coords.push_back(vtr::Point<size_t>(ix, iy));
       }
     }
