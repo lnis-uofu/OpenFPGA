@@ -1692,12 +1692,12 @@ static void add_module_nets_connect_tile_direct_connection(
                             sink_pin_grid_side, sink_pin_info);
   sink_port_name = generate_tile_module_port_name(des_grid_instance_name, sink_port_name);
   ModulePortId sink_port_id =
-    module_manager.find_module_port(sink_tile_module, sink_port_name);
-  VTR_ASSERT(true == module_manager.valid_module_port_id(sink_tile_module,
+    module_manager.find_module_port(des_tile_module, sink_port_name);
+  VTR_ASSERT(true == module_manager.valid_module_port_id(des_tile_module,
                                                          sink_port_id));
   VTR_ASSERT(
     1 ==
-    module_manager.module_port(sink_tile_module, sink_port_id).get_width());
+    module_manager.module_port(des_tile_module, sink_port_id).get_width());
 
   /* Add a submodule of direct connection module to the top-level module */
   size_t direct_instance_id =
@@ -1756,11 +1756,15 @@ static void add_top_module_nets_connect_tile_direct_connections(
 int build_top_module_tile_child_instances(
   ModuleManager& module_manager, const ModuleId& top_module,
   MemoryBankShiftRegisterBanks& blwl_sr_banks,
-  const CircuitLibrary& circuit_lib, const DeviceGrid& grids,
+  const CircuitLibrary& circuit_lib, const ClockNetwork& clk_ntwk,
+  const RRClockSpatialLookup& rr_clock_lookup,
+  const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
+  const TileAnnotation& tile_annotation, const RRGraphView& rr_graph,
+  const DeviceRRGSB& device_rr_gsb, const TileDirect& tile_direct,
+  const ArchDirect& arch_direct, 
   const FabricTile& fabric_tile, const ConfigProtocol& config_protocol,
+  const CircuitModelId& sram_model,
   const FabricKey& fabric_key, const bool& frame_view,
-  const TileDirect& tile_direct,
-  const ArchDirect& arch_direct,
   const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   vtr::Matrix<size_t> tile_instance_ids;

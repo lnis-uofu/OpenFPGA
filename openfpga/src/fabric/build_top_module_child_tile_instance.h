@@ -35,11 +35,15 @@ namespace openfpga {
 int build_top_module_tile_child_instances(
   ModuleManager& module_manager, const ModuleId& top_module,
   MemoryBankShiftRegisterBanks& blwl_sr_banks,
-  const CircuitLibrary& circuit_lib, const DeviceGrid& grids,
+  const CircuitLibrary& circuit_lib, const ClockNetwork& clk_ntwk,
+  const RRClockSpatialLookup& rr_clock_lookup,
+  const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
+  const TileAnnotation& tile_annotation, const RRGraphView& rr_graph,
+  const DeviceRRGSB& device_rr_gsb, const TileDirect& tile_direct,
+  const ArchDirect& arch_direct, 
   const FabricTile& fabric_tile, const ConfigProtocol& config_protocol,
+  const CircuitModelId& sram_model,
   const FabricKey& fabric_key, const bool& frame_view,
-  const TileDirect& tile_direct,
-  const ArchDirect& arch_direct,
   const bool& verbose);
 
 } /* end namespace openfpga */
