@@ -80,7 +80,7 @@ int build_top_module(
     /* TODO: Build the tile instances under the top module */
     status = build_top_module_tile_child_instances(
       module_manager, top_module, blwl_sr_banks, circuit_lib, grids,
-      fabric_tile, config_protocol, fabric_key, frame_view, verbose);
+      fabric_tile, config_protocol, fabric_key, frame_view, tile_direct, arch_direct, verbose);
   }
 
   if (status != CMD_EXEC_SUCCESS) {

@@ -741,6 +741,7 @@ static int build_tile_module_port_and_nets_between_sb_and_cb(
  *block is the only submodule under the tile. Also, it could happen that the
  *programmable block drives or is driven by other blocks from another tile. As a
  *result, we should build the nets for these unconnected pins
+ * Note that direct connections, e.g., carry chain is not handled at tile-level. It will be handled in the top-level module, which should not case a negative impact on the physical design.
  *
  *    +------------+
  *    |            |-->grid_xxx
@@ -756,7 +757,6 @@ static int build_tile_port_and_nets_from_pb(
   const std::vector<size_t>& pb_instances,
   const size_t& ipb,
   const bool& frame_view, const bool& verbose) {
-  /* FIXME: Should consider tile direct connections here! */
   size_t pb_instance = pb_instances[ipb];
   t_physical_tile_type_ptr phy_tile =
     grids.get_physical_type(pb_coord.x(), pb_coord.y());

@@ -1537,6 +1537,219 @@ static int add_top_module_global_ports_from_tile_modules(
 }
 
 /********************************************************************
+ * Add module net for one direction connection between two CLBs or
+ * two grids
+ * This function will
+ * 1. find the pin id and port id of the source clb port in module manager
+ * 2. find the pin id and port id of the destination clb port in module manager
+ * 3. add a direct connection module to the top module
+ * 4. add a first module net and configure its source and sink,
+ * in order to connect the source pin to the input of the top module
+ * 4. add a second module net and configure its source and sink,
+ * in order to connect the sink pin to the output of the top module
+ *******************************************************************/
+static void add_module_nets_connect_tile_direct_connection(
+  ModuleManager& module_manager, const ModuleId& top_module,
+  const CircuitLibrary& circuit_lib,
+  const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
+  const vtr::Matrix<size_t>& tile_instance_ids,
+  const FabricTile& fabric_tile,
+  const TileDirect& tile_direct,
+  const TileDirectId& tile_direct_id, const ArchDirect& arch_direct) {
+  vtr::Point<size_t> device_size(grids.width(), grids.height());
+  std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
+
+  /* Find the module name of source clb */
+  vtr::Point<size_t> src_clb_coord =
+    tile_direct.from_tile_coordinate(tile_direct_id);
+  t_physical_tile_type_ptr src_grid_type =
+    grids.get_physical_type(src_clb_coord.x(), src_clb_coord.y());
+  FabricTileId src_tile_id = fabric_tile.find_tile_by_pb_coordinate(src_clb_coord);
+  vtr::Point<size_t> src_tile_coord = fabric_tile.tile_coordinate(src_tile_id);
+  FabricTileId src_unique_tile_id = fabric_tile.unique_tile(src_tile_coord);
+  vtr::Point<size_t> src_unique_tile_coord = fabric_tile.tile_coordinate(src_unique_tile_id);
+  std::string src_module_name = generate_tile_module_name(src_unique_tile_coord);
+  ModuleId src_tile_module = module_manager.find_module(src_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(src_tile_module));
+  /* Record the instance id */
+  size_t src_tile_instance =
+    tile_instance_ids[src_tile_coord.x()][src_tile_coord.y()];
+  /* Grid instance name in the unique tile */
+  size_t pb_idx_in_src_tile = fabric_tile.find_pb_index_in_tile(src_tile_id, src_clb_coord);
+  vtr::Point<size_t> pb_coord_in_unique_src_tile = fabric_tile.pb_coordinates(src_unique_tile_id)[pb_idx_in_src_tile];
+  std::string src_grid_instance_name = generate_grid_block_module_name_in_top_module(
+    grid_module_name_prefix, grids, pb_coord_in_unique_src_tile);
+
+  /* Find the module name of sink clb */
+  vtr::Point<size_t> des_clb_coord =
+    tile_direct.to_tile_coordinate(tile_direct_id);
+  t_physical_tile_type_ptr sink_grid_type =
+    grids.get_physical_type(des_clb_coord.x(), des_clb_coord.y());
+  FabricTileId des_tile_id = fabric_tile.find_tile_by_pb_coordinate(des_clb_coord);
+  vtr::Point<size_t> des_tile_coord = fabric_tile.tile_coordinate(des_tile_id);
+  FabricTileId des_unique_tile_id = fabric_tile.unique_tile(des_tile_coord);
+  vtr::Point<size_t> des_unique_tile_coord = fabric_tile.tile_coordinate(des_unique_tile_id);
+  std::string des_module_name = generate_tile_module_name(des_unique_tile_coord);
+  ModuleId des_tile_module = module_manager.find_module(des_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(des_tile_module));
+  /* Record the instance id */
+  size_t des_tile_instance =
+    tile_instance_ids[des_tile_coord.x()][des_tile_coord.y()];
+  /* Grid instance name in the unique tile */
+  size_t pb_idx_in_des_tile = fabric_tile.find_pb_index_in_tile(des_tile_id, des_clb_coord);
+  vtr::Point<size_t> pb_coord_in_unique_des_tile = fabric_tile.pb_coordinates(des_unique_tile_id)[pb_idx_in_des_tile];
+  std::string des_grid_instance_name = generate_grid_block_module_name_in_top_module(
+    grid_module_name_prefix, grids, pb_coord_in_unique_des_tile);
+
+  /* Find the module id of a direct connection module */
+  CircuitModelId direct_circuit_model =
+    arch_direct.circuit_model(tile_direct.arch_direct(tile_direct_id));
+  std::string direct_module_name = circuit_lib.model_name(direct_circuit_model);
+  ModuleId direct_module = module_manager.find_module(direct_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(direct_module));
+
+  /* Find inputs and outputs of the direct circuit module */
+  std::vector<CircuitPortId> direct_input_ports =
+    circuit_lib.model_ports_by_type(direct_circuit_model,
+                                    CIRCUIT_MODEL_PORT_INPUT, true);
+  VTR_ASSERT(1 == direct_input_ports.size());
+  ModulePortId direct_input_port_id = module_manager.find_module_port(
+    direct_module, circuit_lib.port_prefix(direct_input_ports[0]));
+  VTR_ASSERT(true == module_manager.valid_module_port_id(direct_module,
+                                                         direct_input_port_id));
+  VTR_ASSERT(1 ==
+             module_manager.module_port(direct_module, direct_input_port_id)
+               .get_width());
+
+  std::vector<CircuitPortId> direct_output_ports =
+    circuit_lib.model_ports_by_type(direct_circuit_model,
+                                    CIRCUIT_MODEL_PORT_OUTPUT, true);
+  VTR_ASSERT(1 == direct_output_ports.size());
+  ModulePortId direct_output_port_id = module_manager.find_module_port(
+    direct_module, circuit_lib.port_prefix(direct_output_ports[0]));
+  VTR_ASSERT(true == module_manager.valid_module_port_id(
+                       direct_module, direct_output_port_id));
+  VTR_ASSERT(1 ==
+             module_manager.module_port(direct_module, direct_output_port_id)
+               .get_width());
+
+  /* Generate the pin name of source port/pin in the grid */
+  e_side src_pin_grid_side = tile_direct.from_tile_side(tile_direct_id);
+  size_t src_tile_pin = tile_direct.from_tile_pin(tile_direct_id);
+
+  t_physical_tile_type_ptr src_grid_type_descriptor =
+    grids.get_physical_type(src_clb_coord.x(), src_clb_coord.y());
+  size_t src_pin_width =
+    src_grid_type_descriptor->pin_width_offset[src_tile_pin];
+  size_t src_pin_height =
+    src_grid_type_descriptor->pin_height_offset[src_tile_pin];
+
+  BasicPort src_pin_info = vpr_device_annotation.physical_tile_pin_port_info(
+    src_grid_type_descriptor, src_tile_pin);
+  VTR_ASSERT(true == src_pin_info.is_valid());
+  int src_subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
+    src_grid_type_descriptor, src_tile_pin);
+  VTR_ASSERT(OPEN != src_subtile_index &&
+             src_subtile_index < src_grid_type_descriptor->capacity);
+  std::string src_port_name =
+    generate_grid_port_name(src_pin_width, src_pin_height, src_subtile_index,
+                            src_pin_grid_side, src_pin_info);
+  src_port_name = generate_tile_module_port_name(src_grid_instance_name, src_port_name);
+  ModulePortId src_port_id =
+    module_manager.find_module_port(src_tile_module, src_port_name);
+  if (true !=
+      module_manager.valid_module_port_id(src_tile_module, src_port_id)) {
+    VTR_LOG_ERROR("Fail to find port '%s[%lu][%lu].%s'\n",
+                  src_module_name.c_str(), src_tile_coord.x(), src_tile_coord.y(),
+                  src_port_name.c_str());
+  }
+  VTR_ASSERT(true ==
+             module_manager.valid_module_port_id(src_tile_module, src_port_id));
+  VTR_ASSERT(
+    1 == module_manager.module_port(src_tile_module, src_port_id).get_width());
+
+  /* Generate the pin name of sink port/pin in the grid */
+  e_side sink_pin_grid_side = tile_direct.to_tile_side(tile_direct_id);
+  size_t sink_tile_pin = tile_direct.to_tile_pin(tile_direct_id);
+
+  t_physical_tile_type_ptr sink_grid_type_descriptor =
+    grids.get_physical_type(des_clb_coord.x(), des_clb_coord.y());
+  size_t sink_pin_width =
+    sink_grid_type_descriptor->pin_width_offset[src_tile_pin];
+  size_t sink_pin_height =
+    sink_grid_type_descriptor->pin_height_offset[src_tile_pin];
+
+  BasicPort sink_pin_info = vpr_device_annotation.physical_tile_pin_port_info(
+    sink_grid_type_descriptor, sink_tile_pin);
+  VTR_ASSERT(true == sink_pin_info.is_valid());
+  int sink_subtile_index =
+    vpr_device_annotation.physical_tile_pin_subtile_index(
+      sink_grid_type_descriptor, sink_tile_pin);
+  VTR_ASSERT(OPEN != src_subtile_index &&
+             src_subtile_index < sink_grid_type_descriptor->capacity);
+  std::string sink_port_name =
+    generate_grid_port_name(sink_pin_width, sink_pin_height, sink_subtile_index,
+                            sink_pin_grid_side, sink_pin_info);
+  sink_port_name = generate_tile_module_port_name(des_grid_instance_name, sink_port_name);
+  ModulePortId sink_port_id =
+    module_manager.find_module_port(sink_tile_module, sink_port_name);
+  VTR_ASSERT(true == module_manager.valid_module_port_id(sink_tile_module,
+                                                         sink_port_id));
+  VTR_ASSERT(
+    1 ==
+    module_manager.module_port(sink_tile_module, sink_port_id).get_width());
+
+  /* Add a submodule of direct connection module to the top-level module */
+  size_t direct_instance_id =
+    module_manager.num_instance(top_module, direct_module);
+  module_manager.add_child_module(top_module, direct_module, false);
+
+  /* Create the 1st module net */
+  ModuleNetId net_direct_src = module_manager.create_module_net(top_module);
+  /* Connect the wire between src_pin of clb and direct_instance input*/
+  module_manager.add_module_net_source(top_module, net_direct_src,
+                                       src_tile_module, src_tile_instance,
+                                       src_port_id, 0);
+  module_manager.add_module_net_sink(top_module, net_direct_src, direct_module,
+                                     direct_instance_id, direct_input_port_id,
+                                     0);
+
+  /* Create the 2nd module net
+   * Connect the wire between direct_instance output and sink_pin of clb
+   */
+  ModuleNetId net_direct_sink =
+    create_module_source_pin_net(module_manager, top_module, direct_module,
+                                 direct_instance_id, direct_output_port_id, 0);
+  module_manager.add_module_net_sink(top_module, net_direct_sink,
+                                     des_tile_module, des_tile_instance,
+                                     sink_port_id, 0);
+}
+
+/********************************************************************
+ * Add module net of clb-to-clb direct connections to module manager
+ * Note that the direct connections are not limited to CLBs only.
+ * It can be more generic and thus cover all the grid types,
+ * such as heterogeneous blocks
+ *******************************************************************/
+static void add_top_module_nets_connect_tile_direct_connections(
+  ModuleManager& module_manager, const ModuleId& top_module,
+  const CircuitLibrary& circuit_lib,
+  const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
+  const vtr::Matrix<size_t>& tile_instance_ids,
+  const FabricTile& fabric_tile,
+  const TileDirect& tile_direct,
+  const ArchDirect& arch_direct) {
+  vtr::ScopedStartFinishTimer timer(
+    "Add module nets for inter-tile connections");
+
+  for (const TileDirectId& tile_direct_id : tile_direct.directs()) {
+    add_module_nets_connect_tile_direct_connection(
+      module_manager, top_module, circuit_lib, vpr_device_annotation, grids,
+      tile_instance_ids, fabric_tile, tile_direct, tile_direct_id, arch_direct);
+  }
+}
+
+/********************************************************************
  * Add the tile-level instances to the top module of FPGA fabric
  * and build connects between them
  *******************************************************************/
@@ -1546,6 +1759,8 @@ int build_top_module_tile_child_instances(
   const CircuitLibrary& circuit_lib, const DeviceGrid& grids,
   const FabricTile& fabric_tile, const ConfigProtocol& config_protocol,
   const FabricKey& fabric_key, const bool& frame_view,
+  const TileDirect& tile_direct,
+  const ArchDirect& arch_direct,
   const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   vtr::Matrix<size_t> tile_instance_ids;
@@ -1559,11 +1774,11 @@ int build_top_module_tile_child_instances(
   add_top_module_tile_io_children(module_manager, top_module, grids,
                                   fabric_tile, tile_instance_ids);
 
-  /* TODO: Build the nets between tiles */
+  /* Build the nets between tiles */
   if (false == frame_view) {
     /* Reserve nets to be memory efficient */
     reserve_module_manager_module_nets(module_manager, top_module);
-    /* TODO: Regular nets between tiles */
+    /* Regular nets between tiles */
     status = add_top_module_nets_connect_tiles(
       module_manager, top_module, vpr_device_annotation, grids,
       tile_instance_ids, rr_graph, device_rr_gsb, fabric_tile, verbose);
@@ -1571,9 +1786,12 @@ int build_top_module_tile_child_instances(
       return CMD_EXEC_FATAL_ERROR;
     }
     /* TODO: Inter-tile direct connections */
+    add_top_module_nets_connect_tile_direct_connections(
+      module_manager, top_module, circuit_lib, vpr_device_annotation, grids,
+      tile_instance_ids, fabric_tile, tile_direct, arch_direct);
   }
 
-  /* TODO: Add global ports from tile modules: how to connect to clock architecture and the global port from tile annotation 
+  /* Add global ports from tile modules: how to connect to clock architecture and the global port from tile annotation 
    */
   status = add_top_module_global_ports_from_tile_modules( module_manager, top_module,
     tile_annotation, vpr_device_annotation, grids, rr_graph, device_rr_gsb,
