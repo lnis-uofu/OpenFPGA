@@ -656,6 +656,8 @@ static int build_top_module_tile_nets_between_cb_and_pb(
           top_module, net, sink_tile_module, sink_tile_instance_id,
           sink_grid_port_id, sink_grid_port.pins()[pin_id]);
       }
+      VTR_LOGV(verbose, "Built nets between connection block of tile[%lu][%lu] and grid block of tile[%lu][%lu]\n",
+               src_tile_coord.x(), src_tile_coord.y(), sink_tile_coord.x(), sink_tile_coord.y());
     }
   }
   return CMD_EXEC_SUCCESS;
@@ -896,6 +898,8 @@ static int build_top_module_tile_nets_between_sb_and_cb(
                                            tile_instance_id, sb_port_id,
                                            itrack / 2);
       }
+      VTR_LOGV(verbose, "Built nets between switch block of tile[%lu][%lu] and connection block of tile[%lu][%lu]\n",
+               sb_tile_coord.x(), sb_tile_coord.y(), cb_tile_coord.x(), cb_tile_coord.y());
     }
   }
   return CMD_EXEC_SUCCESS;
@@ -1068,7 +1072,7 @@ static void organize_top_module_tile_based_memory_modules(
     } else {
       VTR_ASSERT(false == positive_direction);
       /* For negative direction: -----> */
-      for (size_t ix = grids.width() - 1; ix >= 0; --ix) {
+      for (int ix = grids.width() - 1; ix >= 0; --ix) {
         tile_coords.push_back(vtr::Point<size_t>(ix, iy));
       }
     }
@@ -1108,7 +1112,7 @@ static void organize_top_module_tile_based_memory_modules(
  * Generate an input port for routing multiplexer inside the tile
  * which is the middle output of a routing track
  ********************************************************************/
-ModulePinInfo find_tile_module_chan_port(
+static ModulePinInfo find_tile_module_chan_port(
   const ModuleManager& module_manager, const ModuleId& tile_module,
   const vtr::Point<size_t>& cb_coord_in_tile, const RRGraphView& rr_graph,
   const RRGSB& rr_gsb, const t_rr_type& cb_type, const RRNodeId& chan_rr_node) {
@@ -1630,8 +1634,6 @@ static void add_module_nets_connect_tile_direct_connection(
   /* Find the module name of source clb */
   vtr::Point<size_t> src_clb_coord =
     tile_direct.from_tile_coordinate(tile_direct_id);
-  t_physical_tile_type_ptr src_grid_type =
-    grids.get_physical_type(src_clb_coord.x(), src_clb_coord.y());
   FabricTileId src_tile_id =
     fabric_tile.find_tile_by_pb_coordinate(src_clb_coord);
   vtr::Point<size_t> src_tile_coord = fabric_tile.tile_coordinate(src_tile_id);
@@ -1657,8 +1659,6 @@ static void add_module_nets_connect_tile_direct_connection(
   /* Find the module name of sink clb */
   vtr::Point<size_t> des_clb_coord =
     tile_direct.to_tile_coordinate(tile_direct_id);
-  t_physical_tile_type_ptr sink_grid_type =
-    grids.get_physical_type(des_clb_coord.x(), des_clb_coord.y());
   FabricTileId des_tile_id =
     fabric_tile.find_tile_by_pb_coordinate(des_clb_coord);
   vtr::Point<size_t> des_tile_coord = fabric_tile.tile_coordinate(des_tile_id);
