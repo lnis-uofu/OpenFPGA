@@ -186,7 +186,7 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
 
   /* Build I/O location map */
   openfpga_ctx.mutable_io_location_map() = build_fabric_io_location_map(
-    openfpga_ctx.module_graph(), g_vpr_ctx.device().grid);
+    openfpga_ctx.module_graph(), g_vpr_ctx.device().grid, cmd_context.option_enable(cmd, opt_group_tile));
 
   /* Build fabric global port information */
   openfpga_ctx.mutable_fabric_global_port_info() =

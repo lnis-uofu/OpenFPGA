@@ -1071,6 +1071,9 @@ static int build_tile_module(
       VTR_LOGV(verbose, "Added programmable module '%s' to tile[%lu][%lu]\n",
                pb_module_name.c_str(), tile_coord.x(), tile_coord.y());
       pb_instances.push_back(pb_instance);
+      /* Add a custom I/O child with the grid */
+      module_manager.add_io_child(tile_module, pb_module, pb_instance,
+                                  vtr::Point<int>(grid_coord.x(), grid_coord.y()));
     }
   }
 
