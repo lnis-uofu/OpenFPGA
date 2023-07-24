@@ -79,8 +79,10 @@ int build_top_module(
   } else {
     /* TODO: Build the tile instances under the top module */
     status = build_top_module_tile_child_instances(
-      module_manager, top_module, blwl_sr_banks, circuit_lib, clk_ntwk, rr_clock_lookup, vpr_device_annotation, grids, tile_annotation, rr_graph, device_rr_gsb, tile_direct, arch_direct,
-      fabric_tile, config_protocol, sram_model, fabric_key, frame_view, verbose);
+      module_manager, top_module, blwl_sr_banks, circuit_lib, clk_ntwk,
+      rr_clock_lookup, vpr_device_annotation, grids, tile_annotation, rr_graph,
+      device_rr_gsb, tile_direct, arch_direct, fabric_tile, config_protocol,
+      sram_model, fabric_key, frame_view, verbose);
   }
 
   if (status != CMD_EXEC_SUCCESS) {

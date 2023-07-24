@@ -11,6 +11,7 @@
 
 /* Module builder headers */
 #include "build_top_module_utils.h"
+#include "openfpga_rr_graph_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -46,10 +47,10 @@ std::string generate_grid_block_module_name_in_top_module(
  * Note that it may be useful for other modules but not tried yet!
  *******************************************************************/
 std::string generate_grid_module_port_name_in_top_module(
-  const vtr::Point<size_t>& grid_coordinate,
+  const DeviceGrid& grids, const vtr::Point<size_t>& grid_coordinate,
   const size_t& sink_grid_pin_index,
-  const VprDeviceAnnotation& vpr_device_annotation,
-  const RRGraph& rr_graph, const RRNodeId& inode) {
+  const VprDeviceAnnotation& vpr_device_annotation, const RRGraphView& rr_graph,
+  const RRNodeId& inode) {
   t_physical_tile_type_ptr grid_type_descriptor =
     grids.get_physical_type(grid_coordinate.x(), grid_coordinate.y());
   size_t sink_grid_pin_width =
@@ -66,9 +67,7 @@ std::string generate_grid_module_port_name_in_top_module(
              subtile_index < grid_type_descriptor->capacity);
   std::string sink_grid_port_name = generate_grid_port_name(
     sink_grid_pin_width, sink_grid_pin_height, subtile_index,
-    get_rr_graph_single_node_side(
-      rr_graph, rr_gsb.get_ipin_node(cb_ipin_side, inode)),
-    sink_grid_pin_info);
+    get_rr_graph_single_node_side(rr_graph, inode), sink_grid_pin_info);
 
   return sink_grid_port_name;
 }

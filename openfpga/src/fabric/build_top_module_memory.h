@@ -37,6 +37,10 @@ void organize_top_module_memory_modules(
   const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
   const bool& compact_routing_hierarchy);
 
+void build_top_module_configurable_regions(
+  ModuleManager& module_manager, const ModuleId& top_module,
+  const ConfigProtocol& config_protocol);
+
 void shuffle_top_module_configurable_children(
   ModuleManager& module_manager, const ModuleId& top_module,
   const ConfigProtocol& config_protocol);

@@ -506,9 +506,11 @@ std::string generate_tile_module_name(const vtr::Point<size_t>& tile_coord) {
 }
 
 /*********************************************************************
- * Generate the port name for a tile. Note that use the index to make the tile port name unique!
+ * Generate the port name for a tile. Note that use the index to make the tile
+ *port name unique!
  *********************************************************************/
-std::string generate_tile_module_port_name(const std::string& prefix, const std::string& port_name) {
+std::string generate_tile_module_port_name(const std::string& prefix,
+                                           const std::string& port_name) {
   return prefix + port_name;
 }
 
