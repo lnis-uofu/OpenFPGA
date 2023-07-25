@@ -56,7 +56,8 @@ write_full_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VE
 
 # Write the SDC files for PnR backend
 #  - Turn on every options here
-write_pnr_sdc --file ./SDC
+# FIXME: Not supported yet. 
+#write_pnr_sdc --file ./SDC
 
 # Write SDC to disable timing for configure ports
 write_sdc_disable_timing_configure_ports --file ./SDC/disable_configure_ports.sdc
