@@ -192,15 +192,6 @@ static IoLocationMap build_fabric_tiled_io_location_map(
     /* MUST DO: register in io location mapping!
      * I/O location mapping is a critical look-up for testbench generators
      */
-    if (size_t(phy_tile_type->capacity) !=
-        module_manager.io_children(child).size()) {
-      VTR_LOG("%s[%ld][%ld] capacity: %d while io_child number is %d",
-              phy_tile_type->name, coord.x(), coord.y(),
-              phy_tile_type->capacity,
-              module_manager.io_children(child).size());
-    }
-    VTR_ASSERT(size_t(phy_tile_type->capacity) ==
-               module_manager.io_children(child).size());
     for (ModuleId tile_child : module_manager.io_children(child)) {
       /* Note that we should use the subchild of the subchild module when
        * checking the GPIO ports. The child module is the tile module while the
@@ -213,6 +204,15 @@ static IoLocationMap build_fabric_tiled_io_location_map(
        * location map downto subtile level, we need to check the subchild module
        * here.
        */
+      if (size_t(phy_tile_type->capacity) !=
+          module_manager.io_children(tile_child).size()) {
+        VTR_LOG("%s[%ld][%ld] capacity: %d while io_child number is %d",
+                phy_tile_type->name, coord.x(), coord.y(),
+                phy_tile_type->capacity,
+                module_manager.io_children(tile_child).size());
+      }
+      VTR_ASSERT(size_t(phy_tile_type->capacity) ==
+                 module_manager.io_children(tile_child).size());
       for (size_t isubchild = 0;
            isubchild < module_manager.io_children(tile_child).size();
            ++isubchild) {

@@ -1352,7 +1352,7 @@ static int build_tile_module(
         return CMD_EXEC_FATAL_ERROR;
       }
       size_t cb_instance = module_manager.num_instance(tile_module, cb_module);
-      module_manager.add_child_module(tile_module, cb_module);
+      module_manager.add_child_module(tile_module, cb_module, false);
       if (0 < find_module_num_config_bits(module_manager, cb_module,
                                           circuit_lib, sram_model,
                                           sram_orgz_type)) {
@@ -1385,7 +1385,7 @@ static int build_tile_module(
       return CMD_EXEC_FATAL_ERROR;
     }
     size_t sb_instance = module_manager.num_instance(tile_module, sb_module);
-    module_manager.add_child_module(tile_module, sb_module);
+    module_manager.add_child_module(tile_module, sb_module, false);
     if (0 < find_module_num_config_bits(module_manager, sb_module, circuit_lib,
                                         sram_model, sram_orgz_type)) {
       module_manager.add_configurable_child(tile_module, sb_module,
