@@ -1313,7 +1313,7 @@ static int build_tile_module(
         return CMD_EXEC_FATAL_ERROR;
       }
       size_t pb_instance = module_manager.num_instance(tile_module, pb_module);
-      module_manager.add_child_module(tile_module, pb_module);
+      module_manager.add_child_module(tile_module, pb_module, false);
       std::string pb_instance_name = generate_grid_block_instance_name(
         std::string(GRID_MODULE_NAME_PREFIX), std::string(phy_tile->name),
         is_io_type(phy_tile), grid_side, grid_coord);
