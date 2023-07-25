@@ -744,6 +744,222 @@ static int build_tile_module_port_and_nets_between_sb_and_cb(
 }
 
 /********************************************************************
+ * This function will a port for tile where its connection blocks
+ * need to drive or to be driven by a switch block which is not in the tile
+ *
+ *    +------------+      +------------------+
+ *    | Connection |      |                  |
+ *    |    Block   |----->|  Switch Block    |
+ *    | X-direction|<-----|      [x][y]      |
+ *    |   [x][y]   |      |                  |
+ *    +------------+      +------------------+
+ *
+ *******************************************************************/
+static int build_tile_module_one_port_from_cb(
+  ModuleManager& module_manager, const ModuleId& tile_module,
+  const ModuleId& cb_module, const std::string& chan_port_name,
+  const vtr::Point<size_t>& tile_coord,
+  const std::string& cb_instance_name_in_tile, const size_t& cb_instance,
+  const bool& frame_view, const bool& verbose) {
+  std::string cb_module_name = module_manager.module_name(cb_module);
+  ModulePortId chan_port_id =
+    module_manager.find_module_port(cb_module, chan_port_name);
+  BasicPort chan_port = module_manager.module_port(cb_module, chan_port_id);
+  ModuleManager::e_module_port_type chan_port_type =
+    module_manager.port_type(cb_module, chan_port_id);
+
+  bool require_port_addition = false;
+  for (size_t pin_id = 0; pin_id < chan_port.pins().size(); ++pin_id) {
+    if (module_manager.valid_module_net_id(
+          tile_module, module_manager.module_instance_port_net(
+                         tile_module, cb_module, cb_instance, chan_port_id,
+                         chan_port.pins()[pin_id]))) {
+      continue;
+    }
+    require_port_addition = true;
+    break;
+  }
+
+  /* Early exit if this port is fully connected inside the tile */
+  if (!require_port_addition) {
+    return CMD_EXEC_SUCCESS;
+  }
+
+  BasicPort tile_chan_port(chan_port);
+  tile_chan_port.set_name(generate_tile_module_port_name(
+    cb_instance_name_in_tile, chan_port.get_name()));
+
+  /* Add new port */
+  VTR_LOGV(verbose,
+           "Adding ports '%s' to tile as required by the "
+           "connection block '%s'...\n",
+           tile_chan_port.to_verilog_string().c_str(), cb_module_name.c_str());
+  /* Create a new port and a new net. FIXME: Create a proper name to
+   * avoid naming conflicts  */
+  ModulePortId tile_module_port_id =
+    module_manager.add_port(tile_module, tile_chan_port, chan_port_type);
+
+  if (!frame_view) {
+    for (size_t pin_id = 0; pin_id < chan_port.pins().size(); ++pin_id) {
+      if (module_manager.valid_module_net_id(
+            tile_module, module_manager.module_instance_port_net(
+                           tile_module, cb_module, cb_instance, chan_port_id,
+                           chan_port.pins()[pin_id]))) {
+        continue;
+      }
+      if (chan_port_type ==
+          ModuleManager::e_module_port_type::MODULE_INPUT_PORT) {
+        ModuleNetId net = create_module_source_pin_net(
+          module_manager, tile_module, tile_module, 0, tile_module_port_id,
+          chan_port.pins()[pin_id]);
+        /* Configure the net sink */
+        module_manager.add_module_net_sink(tile_module, net, cb_module,
+                                           cb_instance, chan_port_id,
+                                           chan_port.pins()[pin_id]);
+      } else if (chan_port_type ==
+                 ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT) {
+        ModuleNetId net = create_module_source_pin_net(
+          module_manager, tile_module, cb_module, cb_instance, chan_port_id,
+          chan_port.pins()[pin_id]);
+        /* Configure the net sink */
+        module_manager.add_module_net_sink(tile_module, net, tile_module, 0,
+                                           tile_module_port_id,
+                                           chan_port.pins()[pin_id]);
+      } else {
+        VTR_LOG_ERROR(
+          "Expect either input or output port '%s' for cb module '%s' "
+          "required by tile[%lu][%lu]!\n",
+          chan_port.to_verilog_string().c_str(), cb_module_name.c_str(),
+          tile_coord.x(), tile_coord.y());
+        return CMD_EXEC_FATAL_ERROR;
+      }
+    }
+  }
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
+ * This function will create ports for tile where its connection blocks
+ * need to drive or to be driven by a switch block which is not in the tile
+ *
+ *    +------------+      +------------------+
+ *    | Connection |      |                  |
+ *    |    Block   |----->|  Switch Block    |
+ *    | X-direction|<-----|      [x][y]      |
+ *    |   [x][y]   |      |                  |
+ *    +------------+      +------------------+
+ *
+ *******************************************************************/
+static int build_tile_module_ports_from_cb(
+  ModuleManager& module_manager, const ModuleId& tile_module,
+  const DeviceRRGSB& device_rr_gsb, const RRGSB& rr_gsb,
+  const FabricTile& fabric_tile, const FabricTileId& curr_fabric_tile_id,
+  const t_rr_type& cb_type,
+  const std::map<t_rr_type, std::vector<size_t>>& cb_instances,
+  const size_t& icb, const bool& compact_routing_hierarchy,
+  const bool& frame_view, const bool& verbose) {
+  int status = CMD_EXEC_SUCCESS;
+
+  size_t cb_instance = cb_instances.at(cb_type)[icb];
+  /* We could have two different coordinators, one is the instance, the other is
+   * the module */
+  vtr::Point<size_t> instance_cb_coordinate(rr_gsb.get_cb_x(cb_type),
+                                            rr_gsb.get_cb_y(cb_type));
+  vtr::Point<size_t> module_gsb_coordinate(rr_gsb.get_x(), rr_gsb.get_y());
+
+  /* Skip those Connection blocks that do not exist */
+  if (false == rr_gsb.is_cb_exist(cb_type)) {
+    return CMD_EXEC_SUCCESS;
+  }
+
+  /* Skip if the cb does not contain any configuration bits! */
+  if (true == connection_block_contain_only_routing_tracks(rr_gsb, cb_type)) {
+    return CMD_EXEC_SUCCESS;
+  }
+
+  /* If we use compact routing hierarchy, we should find the unique module of
+   * CB, which is added to the top module */
+  if (true == compact_routing_hierarchy) {
+    vtr::Point<size_t> gsb_coord(rr_gsb.get_x(), rr_gsb.get_y());
+    const RRGSB& unique_mirror =
+      device_rr_gsb.get_cb_unique_module(cb_type, gsb_coord);
+    module_gsb_coordinate.set_x(unique_mirror.get_x());
+    module_gsb_coordinate.set_y(unique_mirror.get_y());
+  }
+
+  /* This is the source cb that is added to the top module */
+  const RRGSB& module_cb = device_rr_gsb.get_gsb(module_gsb_coordinate);
+  vtr::Point<size_t> module_cb_coordinate(module_cb.get_cb_x(cb_type),
+                                          module_cb.get_cb_y(cb_type));
+
+  /* Collect source-related information */
+  std::string cb_module_name =
+    generate_connection_block_module_name(cb_type, module_cb_coordinate);
+  ModuleId cb_module = module_manager.find_module(cb_module_name);
+  VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
+
+  /* Find the instance name for the connection block in the context of the tile
+   */
+  vtr::Point<size_t> cb_coord_in_unique_tile =
+    fabric_tile.cb_coordinates(curr_fabric_tile_id, cb_type)[icb];
+  std::string cb_instance_name_in_tile =
+    generate_connection_block_module_name(cb_type, cb_coord_in_unique_tile);
+  vtr::Point<size_t> tile_coord =
+    fabric_tile.tile_coordinate(curr_fabric_tile_id);
+
+  /* Check any track input and output are unconnected in the tile */
+  /* Upper input port: W/2 == 0 tracks */
+  std::string chan_upper_input_port_name =
+    generate_cb_module_track_port_name(cb_type, IN_PORT, true);
+
+  /* Check if any of the input port is driven, if not add new port */
+  status = build_tile_module_one_port_from_cb(
+    module_manager, tile_module, cb_module, chan_upper_input_port_name,
+    tile_coord, cb_instance_name_in_tile, cb_instance, frame_view, verbose);
+  if (status != CMD_EXEC_SUCCESS) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Lower input port: W/2 == 1 tracks */
+  std::string chan_lower_input_port_name =
+    generate_cb_module_track_port_name(cb_type, IN_PORT, false);
+
+  /* Check if any of the input port is driven, if not add new port */
+  status = build_tile_module_one_port_from_cb(
+    module_manager, tile_module, cb_module, chan_lower_input_port_name,
+    tile_coord, cb_instance_name_in_tile, cb_instance, frame_view, verbose);
+  if (status != CMD_EXEC_SUCCESS) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Upper output port: W/2 == 0 tracks */
+  std::string chan_upper_output_port_name =
+    generate_cb_module_track_port_name(cb_type, OUT_PORT, true);
+
+  /* Check if any of the input port is driven, if not add new port */
+  status = build_tile_module_one_port_from_cb(
+    module_manager, tile_module, cb_module, chan_upper_output_port_name,
+    tile_coord, cb_instance_name_in_tile, cb_instance, frame_view, verbose);
+  if (status != CMD_EXEC_SUCCESS) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Lower output port: W/2 == 1 tracks */
+  std::string chan_lower_output_port_name =
+    generate_cb_module_track_port_name(cb_type, OUT_PORT, false);
+
+  /* Check if any of the input port is driven, if not add new port */
+  status = build_tile_module_one_port_from_cb(
+    module_manager, tile_module, cb_module, chan_lower_output_port_name,
+    tile_coord, cb_instance_name_in_tile, cb_instance, frame_view, verbose);
+  if (status != CMD_EXEC_SUCCESS) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  return CMD_EXEC_SUCCESS;
+}
+
+/********************************************************************
  * This function will create nets for the unconnected pins for a programmable
  *block in a tile This function should be called after the following functions:
  * - build_tile_module_port_and_nets_between_sb_and_pb()
@@ -981,6 +1197,7 @@ static int build_tile_module_ports_and_nets(
       }
     }
   }
+
   /* Get the submodule of connection blocks one by one, build connections
    * between sb and cb */
   for (size_t isb = 0; isb < fabric_tile.sb_coordinates(fabric_tile_id).size();
@@ -1007,6 +1224,25 @@ static int build_tile_module_ports_and_nets(
       pb_instances, fabric_tile, fabric_tile_id, ipb, frame_view, verbose);
     if (status_code != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;
+    }
+  }
+  /* Get the submodule of connection blocks one by one, build connections
+   * between cb and pb */
+  for (t_rr_type cb_type : {CHANX, CHANY}) {
+    for (size_t icb = 0;
+         icb < fabric_tile.cb_coordinates(fabric_tile_id, cb_type).size();
+         ++icb) {
+      vtr::Point<size_t> cb_coord =
+        fabric_tile.cb_coordinates(fabric_tile_id, cb_type)[icb];
+      const RRGSB& rr_gsb = device_rr_gsb.get_gsb(cb_coord);
+
+      /* Build any ports missing from connection blocks */
+      status_code = build_tile_module_ports_from_cb(
+        module_manager, tile_module, device_rr_gsb, rr_gsb, fabric_tile,
+        fabric_tile_id, cb_type, cb_instances, icb, true, frame_view, verbose);
+      if (status_code != CMD_EXEC_SUCCESS) {
+        return CMD_EXEC_FATAL_ERROR;
+      }
     }
   }
 
