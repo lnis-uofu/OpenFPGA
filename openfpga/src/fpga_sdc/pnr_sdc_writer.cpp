@@ -13,6 +13,7 @@
 #include <iomanip>
 
 /* Headers from vtrutil library */
+#include "command_exit_codes.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
@@ -338,15 +339,19 @@ static void print_pnr_sdc_compact_routing_disable_switch_block_outputs(
  * 3. Design constraints for Connection Blocks
  * 4. Design constraints for breaking the combinational loops in FPGA fabric
  *******************************************************************/
-void print_pnr_sdc(const PnrSdcOption& sdc_options,
-                   const DeviceContext& device_ctx,
-                   const VprDeviceAnnotation& device_annotation,
-                   const DeviceRRGSB& device_rr_gsb,
-                   const ModuleManager& module_manager,
-                   const MuxLibrary& mux_lib, const CircuitLibrary& circuit_lib,
-                   const FabricGlobalPortInfo& global_ports,
-                   const SimulationSetting& sim_setting,
-                   const bool& compact_routing_hierarchy) {
+int print_pnr_sdc(
+  const PnrSdcOption& sdc_options, const DeviceContext& device_ctx,
+  const VprDeviceAnnotation& device_annotation, const FabricTile& fabric_tile,
+  const DeviceRRGSB& device_rr_gsb, const ModuleManager& module_manager,
+  const MuxLibrary& mux_lib, const CircuitLibrary& circuit_lib,
+  const FabricGlobalPortInfo& global_ports,
+  const SimulationSetting& sim_setting, const bool& compact_routing_hierarchy) {
+  /* Fabric tile is not supported yet, error out */
+  if (!fabric_tile.empty()) {
+    VTR_LOG_ERROR("Tile-based modules are not supported yet!\n");
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
   std::string top_module_name = generate_fpga_top_module_name();
   ModuleId top_module = module_manager.find_module(top_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
@@ -453,6 +458,8 @@ void print_pnr_sdc(const PnrSdcOption& sdc_options,
     print_pnr_sdc_grid_hierarchy(sdc_options.sdc_dir(), device_ctx,
                                  device_annotation, module_manager, top_module);
   }
+
+  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */
