@@ -400,6 +400,9 @@ static int build_top_module_tile_nets_between_sb_and_pb(
           src_pb_coord_in_unique_tile);
       std::string src_tile_grid_port_name = generate_tile_module_port_name(
         src_grid_module_name, src_grid_port_name);
+      VTR_LOGV(verbose, "Try to find port '%s' from tile[%lu][%lu]\n",
+               src_tile_grid_port_name.c_str(), src_tile_coord.x(),
+               src_tile_coord.y());
       ModulePortId src_tile_grid_port_id = module_manager.find_module_port(
         src_tile_module, src_tile_grid_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(

@@ -984,9 +984,10 @@ static int build_tile_module_ports_from_cb(
 static int build_tile_port_and_nets_from_pb(
   ModuleManager& module_manager, const ModuleId& tile_module,
   const DeviceGrid& grids, const VprDeviceAnnotation& vpr_device_annotation,
-  const vtr::Point<size_t>& pb_coord, const std::vector<size_t>& pb_instances,
-  const FabricTile& fabric_tile, const FabricTileId& curr_fabric_tile_id,
-  const size_t& ipb, const bool& frame_view, const bool& verbose) {
+  const RRGraphView& rr_graph, const vtr::Point<size_t>& pb_coord,
+  const std::vector<size_t>& pb_instances, const FabricTile& fabric_tile,
+  const FabricTileId& curr_fabric_tile_id, const size_t& ipb,
+  const bool& frame_view, const bool& verbose) {
   size_t pb_instance = pb_instances[ipb];
   t_physical_tile_type_ptr phy_tile =
     grids.get_physical_type(pb_coord.x(), pb_coord.y());
@@ -1099,12 +1100,26 @@ static int build_tile_port_and_nets_from_pb(
             }
           } else if (module_manager.port_type(pb_module, pb_module_port_id) ==
                      ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT) {
+            /* Note that an output may drive multiple blocks, therefore, we
+             * cannot just check if there is a net driven by this pin, need to
+             * check the fannout of the net!!! */
             for (size_t pin_id = 0; pin_id < pb_port.pins().size(); ++pin_id) {
-              if (module_manager.valid_module_net_id(
-                    tile_module,
-                    module_manager.module_instance_port_net(
-                      tile_module, pb_module, pb_instance, pb_module_port_id,
-                      pb_port.pins()[pin_id]))) {
+              ModuleNetId curr_net = module_manager.module_instance_port_net(
+                tile_module, pb_module, pb_instance, pb_module_port_id,
+                pb_port.pins()[pin_id]);
+              bool require_port_addition = true;
+              if (module_manager.valid_module_net_id(tile_module, curr_net)) {
+                size_t num_fanout_in_tile =
+                  module_manager.module_net_sinks(tile_module, curr_net).size();
+                RRNodeId rr_node = rr_graph.node_lookup().find_node(
+                  pb_coord.x(), pb_coord.y(), OPIN, ipin, side);
+                size_t num_fanout_required =
+                  rr_graph.node_out_edges(rr_node).size();
+                if (num_fanout_in_tile == num_fanout_required) {
+                  require_port_addition = false;
+                }
+              }
+              if (!require_port_addition) {
                 continue;
               }
               VTR_LOGV(verbose,
@@ -1220,8 +1235,9 @@ static int build_tile_module_ports_and_nets(
     vtr::Point<size_t> pb_coord =
       fabric_tile.pb_coordinates(fabric_tile_id)[ipb];
     status_code = build_tile_port_and_nets_from_pb(
-      module_manager, tile_module, grids, vpr_device_annotation, pb_coord,
-      pb_instances, fabric_tile, fabric_tile_id, ipb, frame_view, verbose);
+      module_manager, tile_module, grids, vpr_device_annotation, rr_graph_view,
+      pb_coord, pb_instances, fabric_tile, fabric_tile_id, ipb, frame_view,
+      verbose);
     if (status_code != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;
     }
