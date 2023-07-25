@@ -1084,7 +1084,7 @@ static void organize_top_module_tile_based_memory_modules(
     } else {
       VTR_ASSERT(false == positive_direction);
       /* For negative direction: -----> */
-      for (size_t ix = grids.width() - 1; ix >= 0; --ix) {
+      for (int ix = grids.width() - 1; ix >= 0; --ix) {
         tile_coords.push_back(vtr::Point<size_t>(ix, iy));
       }
     }
