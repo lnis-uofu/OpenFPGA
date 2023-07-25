@@ -819,9 +819,10 @@ static void build_physical_block_bitstream(
  *******************************************************************/
 void build_grid_bitstream(
   BitstreamManager& bitstream_manager, const ConfigBlockId& top_block,
-  const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  const MuxLibrary& mux_lib, const DeviceGrid& grids,
-  const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
+  const ModuleManager& module_manager, const FabricTile& fabric_tile,
+  const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
+  const DeviceGrid& grids, const AtomContext& atom_ctx,
+  const VprDeviceAnnotation& device_annotation,
   const VprClusteringAnnotation& cluster_annotation,
   const VprPlacementAnnotation& place_annotation,
   const VprBitstreamAnnotation& bitstream_annotation, const bool& verbose) {
@@ -841,8 +842,22 @@ void build_grid_bitstream(
       }
       /* Add a grid module to top_module*/
       vtr::Point<size_t> grid_coord(ix, iy);
+      /* TODO: If the fabric tile is not empty, find the tile module and create
+       * the block accordingly. Also to support future hierarchy changes, when
+       * creating the blocks, trace backward until reach the current top block.
+       * If any block is missing during the back tracing, create it. */
+      ConfigBlockId parent_block = top_block;
+      FabricTileId curr_tile =
+        fabric_tile.find_tile_by_pb_coordinate(grid_coord);
+      if (fabric_tile.valid_tile_id(curr_tile)) {
+        vtr::Point<size_t> tile_coord = fabric_tile.tile_coordinate(curr_tile);
+        std::string tile_inst_name = generate_tile_module_name(tile_coord);
+        parent_block = bitstream_manager.find_or_create_child_block(
+          top_block, tile_inst_name);
+      }
+
       build_physical_block_bitstream(
-        bitstream_manager, top_block, module_manager, circuit_lib, mux_lib,
+        bitstream_manager, parent_block, module_manager, circuit_lib, mux_lib,
         atom_ctx, device_annotation, cluster_annotation, place_annotation,
         bitstream_annotation, grids, grid_coord, NUM_SIDES);
     }
@@ -868,8 +883,22 @@ void build_grid_bitstream(
           (0 < grids.get_height_offset(io_coordinate.x(), io_coordinate.y()))) {
         continue;
       }
+      /* TODO: If the fabric tile is not empty, find the tile module and create
+       * the block accordingly. Also to support future hierarchy changes, when
+       * creating the blocks, trace backward until reach the current top block.
+       * If any block is missing during the back tracing, create it. */
+      ConfigBlockId parent_block = top_block;
+      FabricTileId curr_tile =
+        fabric_tile.find_tile_by_pb_coordinate(io_coordinate);
+      if (fabric_tile.valid_tile_id(curr_tile)) {
+        vtr::Point<size_t> tile_coord = fabric_tile.tile_coordinate(curr_tile);
+        std::string tile_inst_name = generate_tile_module_name(tile_coord);
+        parent_block = bitstream_manager.find_or_create_child_block(
+          top_block, tile_inst_name);
+      }
+
       build_physical_block_bitstream(
-        bitstream_manager, top_block, module_manager, circuit_lib, mux_lib,
+        bitstream_manager, parent_block, module_manager, circuit_lib, mux_lib,
         atom_ctx, device_annotation, cluster_annotation, place_annotation,
         bitstream_annotation, grids, io_coordinate, io_side);
     }
