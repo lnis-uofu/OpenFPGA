@@ -1314,6 +1314,11 @@ static int build_tile_module(
       }
       size_t pb_instance = module_manager.num_instance(tile_module, pb_module);
       module_manager.add_child_module(tile_module, pb_module);
+      std::string pb_instance_name = generate_grid_block_instance_name(
+        std::string(GRID_MODULE_NAME_PREFIX), std::string(phy_tile->name),
+        is_io_type(phy_tile), grid_side, grid_coord);
+      module_manager.set_child_instance_name(tile_module, pb_module,
+                                             pb_instance, pb_instance_name);
       if (0 < find_module_num_config_bits(module_manager, pb_module,
                                           circuit_lib, sram_model,
                                           sram_orgz_type)) {
@@ -1353,6 +1358,11 @@ static int build_tile_module(
       }
       size_t cb_instance = module_manager.num_instance(tile_module, cb_module);
       module_manager.add_child_module(tile_module, cb_module, false);
+      const RRGSB& inst_rr_gsb = device_rr_gsb.get_gsb(cb_coord);
+      std::string cb_instance_name = generate_connection_block_module_name(
+        cb_type, inst_rr_gsb.get_cb_coordinate(cb_type));
+      module_manager.set_child_instance_name(tile_module, cb_module,
+                                             cb_instance, cb_instance_name);
       if (0 < find_module_num_config_bits(module_manager, cb_module,
                                           circuit_lib, sram_model,
                                           sram_orgz_type)) {
@@ -1386,6 +1396,11 @@ static int build_tile_module(
     }
     size_t sb_instance = module_manager.num_instance(tile_module, sb_module);
     module_manager.add_child_module(tile_module, sb_module, false);
+    const RRGSB& inst_rr_gsb = device_rr_gsb.get_gsb(sb_coord);
+    std::string sb_instance_name =
+      generate_switch_block_module_name(inst_rr_gsb.get_sb_coordinate());
+    module_manager.set_child_instance_name(tile_module, sb_module, sb_instance,
+                                           sb_instance_name);
     if (0 < find_module_num_config_bits(module_manager, sb_module, circuit_lib,
                                         sram_model, sram_orgz_type)) {
       module_manager.add_configurable_child(tile_module, sb_module,
