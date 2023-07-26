@@ -12,11 +12,13 @@
 #include "build_decoder_modules.h"
 #include "build_device_module.h"
 #include "build_essential_modules.h"
+#include "build_fabric_tile.h"
 #include "build_grid_modules.h"
 #include "build_lut_modules.h"
 #include "build_memory_modules.h"
 #include "build_mux_modules.h"
 #include "build_routing_modules.h"
+#include "build_tile_modules.h"
 #include "build_top_module.h"
 #include "build_wire_modules.h"
 #include "command_exit_codes.h"
@@ -31,11 +33,12 @@ namespace openfpga {
  *******************************************************************/
 int build_device_module_graph(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
-  MemoryBankShiftRegisterBanks& blwl_sr_banks,
+  MemoryBankShiftRegisterBanks& blwl_sr_banks, FabricTile& fabric_tile,
   const OpenfpgaContext& openfpga_ctx, const DeviceContext& vpr_device_ctx,
   const bool& frame_view, const bool& compress_routing,
   const bool& duplicate_grid_pin, const FabricKey& fabric_key,
-  const bool& generate_random_fabric_key, const bool& verbose) {
+  const TileConfig& tile_config, const bool& generate_random_fabric_key,
+  const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build fabric module graph");
 
   int status = CMD_EXEC_SUCCESS;
@@ -99,6 +102,23 @@ int build_device_module_graph(
       openfpga_ctx.arch().config_protocol.type(), sram_model, verbose);
   }
 
+  /* Build tile modules if defined */
+  if (tile_config.is_valid()) {
+    /* Build detailed tile-level information */
+    status = build_fabric_tile(fabric_tile, tile_config, vpr_device_ctx.grid,
+                               openfpga_ctx.device_rr_gsb(), verbose);
+    if (CMD_EXEC_FATAL_ERROR == status) {
+      return status;
+    }
+    /* Build the modules */
+    build_tile_modules(
+      module_manager, decoder_lib, openfpga_ctx.fabric_tile(),
+      vpr_device_ctx.grid, openfpga_ctx.vpr_device_annotation(),
+      openfpga_ctx.device_rr_gsb(), vpr_device_ctx.rr_graph,
+      openfpga_ctx.arch().circuit_lib, sram_model,
+      openfpga_ctx.arch().config_protocol.type(), frame_view, verbose);
+  }
+
   /* Build FPGA fabric top-level module */
   status = build_top_module(
     module_manager, decoder_lib, blwl_sr_banks, openfpga_ctx.arch().circuit_lib,
@@ -107,8 +127,8 @@ int build_device_module_graph(
     openfpga_ctx.arch().tile_annotations, vpr_device_ctx.rr_graph,
     openfpga_ctx.device_rr_gsb(), openfpga_ctx.tile_direct(),
     openfpga_ctx.arch().arch_direct, openfpga_ctx.arch().config_protocol,
-    sram_model, frame_view, compress_routing, duplicate_grid_pin, fabric_key,
-    generate_random_fabric_key);
+    sram_model, fabric_tile, frame_view, compress_routing, duplicate_grid_pin,
+    fabric_key, generate_random_fabric_key, verbose);
 
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;

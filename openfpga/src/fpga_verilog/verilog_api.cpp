@@ -23,6 +23,7 @@
 #include "verilog_routing.h"
 #include "verilog_simulation_info_writer.h"
 #include "verilog_submodule.h"
+#include "verilog_tile.h"
 #include "verilog_top_module.h"
 #include "verilog_top_testbench.h"
 
@@ -53,14 +54,17 @@ namespace openfpga {
  * We should think clearly about how to handle them for both Verilog and SPICE
  *generators!
  ********************************************************************/
-void fpga_fabric_verilog(
+int fpga_fabric_verilog(
   ModuleManager &module_manager, NetlistManager &netlist_manager,
   const MemoryBankShiftRegisterBanks &blwl_sr_banks,
   const CircuitLibrary &circuit_lib, const MuxLibrary &mux_lib,
   const DecoderLibrary &decoder_lib, const DeviceContext &device_ctx,
   const VprDeviceAnnotation &device_annotation,
-  const DeviceRRGSB &device_rr_gsb, const FabricVerilogOption &options) {
+  const DeviceRRGSB &device_rr_gsb, const FabricTile &fabric_tile,
+  const FabricVerilogOption &options) {
   vtr::ScopedStartFinishTimer timer("Write Verilog netlists for FPGA fabric\n");
+
+  int status_code = CMD_EXEC_SUCCESS;
 
   std::string src_dir_path = format_dir_path(options.output_directory());
 
@@ -82,6 +86,13 @@ void fpga_fabric_verilog(
    */
   std::string rr_dir_path = src_dir_path + std::string(DEFAULT_RR_DIR_NAME);
   create_directory(rr_dir_path);
+
+  /* Sub directory under SRC directory to contain all the tile netlists
+   */
+  std::string tile_dir_path = src_dir_path + std::string(DEFAULT_TILE_DIR_NAME);
+  if (!fabric_tile.empty()) {
+    create_directory(tile_dir_path);
+  }
 
   /* Print Verilog files containing preprocessing flags */
   print_verilog_preprocessing_flags_netlist(std::string(src_dir_path), options);
@@ -115,6 +126,16 @@ void fpga_fabric_verilog(
     device_ctx, device_annotation, lb_dir_path,
     std::string(DEFAULT_LB_DIR_NAME), options, options.verbose_output());
 
+  /* Generate tiles */
+  if (!fabric_tile.empty()) {
+    status_code = print_verilog_tiles(
+      netlist_manager, const_cast<const ModuleManager &>(module_manager),
+      tile_dir_path, fabric_tile, options);
+    if (status_code != CMD_EXEC_SUCCESS) {
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
+
   /* Generate FPGA fabric */
   print_verilog_core_module(netlist_manager,
                             const_cast<const ModuleManager &>(module_manager),
@@ -132,6 +153,8 @@ void fpga_fabric_verilog(
    */
   VTR_LOGV(options.verbose_output(), "Written %lu Verilog modules in total\n",
            module_manager.num_modules());
+
+  return CMD_EXEC_SUCCESS;
 }
 
 /********************************************************************

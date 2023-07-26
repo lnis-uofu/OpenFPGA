@@ -433,9 +433,9 @@ static void build_connection_block_bitstream(
 static void build_connection_block_bitstreams(
   BitstreamManager& bitstream_manager,
   const ConfigBlockId& top_configurable_block,
-  const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
-  const VprDeviceAnnotation& device_annotation,
+  const ModuleManager& module_manager, const FabricTile& fabric_tile,
+  const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
+  const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
   const DeviceRRGSB& device_rr_gsb, const bool& compact_routing_hierarchy,
   const t_rr_type& cb_type, const bool& verbose) {
@@ -491,13 +491,26 @@ static void build_connection_block_bitstreams(
         continue;
       }
 
+      /* TODO: If the fabric tile is not empty, find the tile module and create
+       * the block accordingly. Also to support future hierarchy changes, when
+       * creating the blocks, trace backward until reach the current top block.
+       * If any block is missing during the back tracing, create it. */
+      ConfigBlockId parent_block = top_configurable_block;
+      FabricTileId curr_tile = fabric_tile.find_tile_by_cb_coordinate(
+        cb_type, vtr::Point<size_t>(ix, iy));
+      if (fabric_tile.valid_tile_id(curr_tile)) {
+        vtr::Point<size_t> tile_coord = fabric_tile.tile_coordinate(curr_tile);
+        std::string tile_inst_name = generate_tile_module_name(tile_coord);
+        parent_block = bitstream_manager.find_or_create_child_block(
+          top_configurable_block, tile_inst_name);
+      }
+
       /* Create a block for the bitstream which corresponds to the Switch block
        */
       ConfigBlockId cb_configurable_block = bitstream_manager.add_block(
         generate_connection_block_module_name(cb_type, cb_coord));
       /* Set switch block as a child of top block */
-      bitstream_manager.add_child_block(top_configurable_block,
-                                        cb_configurable_block);
+      bitstream_manager.add_child_block(parent_block, cb_configurable_block);
 
       /* Reserve child blocks for new created block */
       bitstream_manager.reserve_child_blocks(
@@ -524,9 +537,9 @@ static void build_connection_block_bitstreams(
 void build_routing_bitstream(
   BitstreamManager& bitstream_manager,
   const ConfigBlockId& top_configurable_block,
-  const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
-  const VprDeviceAnnotation& device_annotation,
+  const ModuleManager& module_manager, const FabricTile& fabric_tile,
+  const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
+  const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
   const DeviceRRGSB& device_rr_gsb, const bool& compact_routing_hierarchy,
   const bool& verbose) {
@@ -573,13 +586,25 @@ void build_routing_bitstream(
         continue;
       }
 
+      /* TODO: If the fabric tile is not empty, find the tile module and create
+       * the block accordingly. Also to support future hierarchy changes, when
+       * creating the blocks, trace backward until reach the current top block.
+       * If any block is missing during the back tracing, create it. */
+      ConfigBlockId parent_block = top_configurable_block;
+      FabricTileId curr_tile = fabric_tile.find_tile_by_sb_coordinate(sb_coord);
+      if (fabric_tile.valid_tile_id(curr_tile)) {
+        vtr::Point<size_t> tile_coord = fabric_tile.tile_coordinate(curr_tile);
+        std::string tile_inst_name = generate_tile_module_name(tile_coord);
+        parent_block = bitstream_manager.find_or_create_child_block(
+          top_configurable_block, tile_inst_name);
+      }
+
       /* Create a block for the bitstream which corresponds to the Switch block
        */
       ConfigBlockId sb_configurable_block = bitstream_manager.add_block(
         generate_switch_block_module_name(sb_coord));
       /* Set switch block as a child of top block */
-      bitstream_manager.add_child_block(top_configurable_block,
-                                        sb_configurable_block);
+      bitstream_manager.add_child_block(parent_block, sb_configurable_block);
 
       /* Reserve child blocks for new created block */
       bitstream_manager.reserve_child_blocks(
@@ -605,17 +630,17 @@ void build_routing_bitstream(
   VTR_LOG("Generating bitstream for X-direction Connection blocks ...");
 
   build_connection_block_bitstreams(
-    bitstream_manager, top_configurable_block, module_manager, circuit_lib,
-    mux_lib, atom_ctx, device_annotation, routing_annotation, rr_graph,
-    device_rr_gsb, compact_routing_hierarchy, CHANX, verbose);
+    bitstream_manager, top_configurable_block, module_manager, fabric_tile,
+    circuit_lib, mux_lib, atom_ctx, device_annotation, routing_annotation,
+    rr_graph, device_rr_gsb, compact_routing_hierarchy, CHANX, verbose);
   VTR_LOG("Done\n");
 
   VTR_LOG("Generating bitstream for Y-direction Connection blocks ...");
 
   build_connection_block_bitstreams(
-    bitstream_manager, top_configurable_block, module_manager, circuit_lib,
-    mux_lib, atom_ctx, device_annotation, routing_annotation, rr_graph,
-    device_rr_gsb, compact_routing_hierarchy, CHANY, verbose);
+    bitstream_manager, top_configurable_block, module_manager, fabric_tile,
+    circuit_lib, mux_lib, atom_ctx, device_annotation, routing_annotation,
+    rr_graph, device_rr_gsb, compact_routing_hierarchy, CHANY, verbose);
   VTR_LOG("Done\n");
 }
 

@@ -59,6 +59,13 @@ class DeviceRRGSB {
   size_t get_num_cb_unique_module(const t_rr_type& cb_type)
     const; /* get the number of unique mirrors of CBs */
   bool is_gsb_exist(const vtr::Point<size_t> coord) const;
+  /* Get the index of the unique Switch block module with a given GSB
+   * coordinate. Note: Do NOT use sb coordinate!!! */
+  size_t get_sb_unique_module_index(const vtr::Point<size_t>& coordinate) const;
+  /* Get the index of the unique Connection block module with a given GSB
+   * coordinate. Note: Do NOT use sb coordinate!!! */
+  size_t get_cb_unique_module_index(const t_rr_type& cb_type,
+                                    const vtr::Point<size_t>& coordinate) const;
 
  public: /* Mutators */
   void reserve(

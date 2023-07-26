@@ -18,6 +18,7 @@
 #include "openfpga_naming.h"
 #include "read_xml_fabric_key.h"
 #include "read_xml_io_name_map.h"
+#include "read_xml_tile_config.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
 
@@ -98,7 +99,29 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
     cmd.option("generate_random_fabric_key");
   CommandOptionId opt_write_fabric_key = cmd.option("write_fabric_key");
   CommandOptionId opt_load_fabric_key = cmd.option("load_fabric_key");
+  CommandOptionId opt_group_tile = cmd.option("group_tile");
   CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* Report conflicts with options:
+   * - group tile does not support duplicate_grid_pin
+   * - group tile requires compress_routing to be enabled
+   */
+  if (cmd_context.option_enable(cmd, opt_group_tile)) {
+    if (cmd_context.option_enable(cmd, opt_duplicate_grid_pin)) {
+      VTR_LOG_ERROR(
+        "Option '%s' requires options '%s' to be disabled due to a conflict!\n",
+        cmd.option_name(opt_group_tile).c_str(),
+        cmd.option_name(opt_duplicate_grid_pin).c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    if (!cmd_context.option_enable(cmd, opt_compress_routing)) {
+      VTR_LOG_ERROR(
+        "Option '%s' requires options '%s' to be enabled due to a conflict!\n",
+        cmd.option_name(opt_group_tile).c_str(),
+        cmd.option_name(opt_compress_routing).c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
 
   if (true == cmd_context.option_enable(cmd, opt_compress_routing)) {
     compress_routing_hierarchy_template<T>(
@@ -125,14 +148,33 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
 
   VTR_LOG("\n");
 
+  /* Build tile-level information:
+   * - This feature only supports when compress routing is enabled
+   * - Read the tile organization configuration file
+   * - Build tile info
+   */
+  TileConfig tile_config;
+  if (cmd_context.option_enable(cmd, opt_group_tile)) {
+    if (!cmd_context.option_enable(cmd, opt_compress_routing)) {
+      VTR_LOG_ERROR(
+        "Group tile is applicable only when compress routing is enabled!\n");
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    curr_status = read_xml_tile_config(
+      cmd_context.option_value(cmd, opt_group_tile).c_str(), tile_config);
+    if (CMD_EXEC_SUCCESS != curr_status) {
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
+
   curr_status = build_device_module_graph(
     openfpga_ctx.mutable_module_graph(), openfpga_ctx.mutable_decoder_lib(),
     openfpga_ctx.mutable_blwl_shift_register_banks(),
-    const_cast<const T&>(openfpga_ctx), g_vpr_ctx.device(),
-    cmd_context.option_enable(cmd, opt_frame_view),
+    openfpga_ctx.mutable_fabric_tile(), const_cast<const T&>(openfpga_ctx),
+    g_vpr_ctx.device(), cmd_context.option_enable(cmd, opt_frame_view),
     cmd_context.option_enable(cmd, opt_compress_routing),
     cmd_context.option_enable(cmd, opt_duplicate_grid_pin),
-    predefined_fabric_key,
+    predefined_fabric_key, tile_config,
     cmd_context.option_enable(cmd, opt_gen_random_fabric_key),
     cmd_context.option_enable(cmd, opt_verbose));
 
@@ -144,7 +186,8 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
 
   /* Build I/O location map */
   openfpga_ctx.mutable_io_location_map() = build_fabric_io_location_map(
-    openfpga_ctx.module_graph(), g_vpr_ctx.device().grid);
+    openfpga_ctx.module_graph(), g_vpr_ctx.device().grid,
+    cmd_context.option_enable(cmd, opt_group_tile));
 
   /* Build fabric global port information */
   openfpga_ctx.mutable_fabric_global_port_info() =

@@ -145,34 +145,14 @@ const RRGSB& DeviceRRGSB::get_cb_unique_module(const t_rr_type& cb_type,
 /* Give a coordinate of a rr switch block, and return its unique mirror */
 const RRGSB& DeviceRRGSB::get_cb_unique_module(
   const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate) const {
-  VTR_ASSERT(validate_cb_type(cb_type));
-  VTR_ASSERT(validate_coordinate(coordinate));
-  size_t cb_unique_module_id;
-
-  switch (cb_type) {
-    case CHANX:
-      cb_unique_module_id =
-        cbx_unique_module_id_[coordinate.x()][coordinate.y()];
-      break;
-    case CHANY:
-      cb_unique_module_id =
-        cby_unique_module_id_[coordinate.x()][coordinate.y()];
-      break;
-    default:
-      VTR_LOG_ERROR("Invalid type of connection block!\n");
-      exit(1);
-  }
-
-  return get_cb_unique_module(cb_type, cb_unique_module_id);
+  return get_cb_unique_module(cb_type,
+                              get_cb_unique_module_index(cb_type, coordinate));
 }
 
 /* Give a coordinate of a rr switch block, and return its unique mirror */
 const RRGSB& DeviceRRGSB::get_sb_unique_module(
   const vtr::Point<size_t>& coordinate) const {
-  VTR_ASSERT(validate_coordinate(coordinate));
-  size_t sb_unique_module_id =
-    sb_unique_module_id_[coordinate.x()][coordinate.y()];
-  return get_sb_unique_module(sb_unique_module_id);
+  return get_sb_unique_module(get_sb_unique_module_index(coordinate));
 }
 
 /************************************************************************
@@ -548,6 +528,37 @@ bool DeviceRRGSB::validate_cb_unique_module_index(const t_rr_type& cb_type,
 
 bool DeviceRRGSB::validate_cb_type(const t_rr_type& cb_type) const {
   return ((CHANX == cb_type) || (CHANY == cb_type));
+}
+
+size_t DeviceRRGSB::get_sb_unique_module_index(
+  const vtr::Point<size_t>& coordinate) const {
+  VTR_ASSERT(validate_coordinate(coordinate));
+  size_t sb_unique_module_id =
+    sb_unique_module_id_[coordinate.x()][coordinate.y()];
+  return sb_unique_module_id;
+}
+
+size_t DeviceRRGSB::get_cb_unique_module_index(
+  const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate) const {
+  VTR_ASSERT(validate_cb_type(cb_type));
+  VTR_ASSERT(validate_coordinate(coordinate));
+  size_t cb_unique_module_id;
+
+  switch (cb_type) {
+    case CHANX:
+      cb_unique_module_id =
+        cbx_unique_module_id_[coordinate.x()][coordinate.y()];
+      break;
+    case CHANY:
+      cb_unique_module_id =
+        cby_unique_module_id_[coordinate.x()][coordinate.y()];
+      break;
+    default:
+      VTR_LOG_ERROR("Invalid type of connection block!\n");
+      exit(1);
+  }
+
+  return cb_unique_module_id;
 }
 
 } /* End namespace openfpga*/

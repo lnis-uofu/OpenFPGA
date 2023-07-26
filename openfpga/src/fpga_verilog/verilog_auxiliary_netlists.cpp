@@ -138,6 +138,15 @@ void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
   }
   fp << std::endl;
 
+  /* Include all the tile modules */
+  print_verilog_comment(
+    fp, std::string("------ Include tile module netlists -----"));
+  for (const NetlistId& nlist_id :
+       netlist_manager.netlists_by_type(NetlistManager::TILE_MODULE_NETLIST)) {
+    print_verilog_include_netlist(fp, netlist_manager.netlist_name(nlist_id));
+  }
+  fp << std::endl;
+
   /* Include FPGA top module */
   print_verilog_comment(
     fp, std::string("------ Include fabric top-level netlists -----"));

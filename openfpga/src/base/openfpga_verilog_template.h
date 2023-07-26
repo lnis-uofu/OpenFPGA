@@ -57,16 +57,13 @@ int write_fabric_verilog_template(T& openfpga_ctx, const Command& cmd,
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_compress_routing(openfpga_ctx.flow_manager().compress_routing());
 
-  fpga_fabric_verilog(openfpga_ctx.mutable_module_graph(),
-                      openfpga_ctx.mutable_verilog_netlists(),
-                      openfpga_ctx.blwl_shift_register_banks(),
-                      openfpga_ctx.arch().circuit_lib, openfpga_ctx.mux_lib(),
-                      openfpga_ctx.decoder_lib(), g_vpr_ctx.device(),
-                      openfpga_ctx.vpr_device_annotation(),
-                      openfpga_ctx.device_rr_gsb(), options);
-
-  /* TODO: should identify the error code from internal function execution */
-  return CMD_EXEC_SUCCESS;
+  return fpga_fabric_verilog(
+    openfpga_ctx.mutable_module_graph(),
+    openfpga_ctx.mutable_verilog_netlists(),
+    openfpga_ctx.blwl_shift_register_banks(), openfpga_ctx.arch().circuit_lib,
+    openfpga_ctx.mux_lib(), openfpga_ctx.decoder_lib(), g_vpr_ctx.device(),
+    openfpga_ctx.vpr_device_annotation(), openfpga_ctx.device_rr_gsb(),
+    openfpga_ctx.fabric_tile(), options);
 }
 
 /********************************************************************

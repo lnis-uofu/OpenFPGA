@@ -197,20 +197,22 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
 
   /* Create bitstream from grids */
   VTR_LOGV(verbose, "Building grid bitstream...\n");
-  build_grid_bitstream(
-    bitstream_manager, top_block, openfpga_ctx.module_graph(),
-    openfpga_ctx.arch().circuit_lib, openfpga_ctx.mux_lib(),
-    vpr_ctx.device().grid, vpr_ctx.atom(), openfpga_ctx.vpr_device_annotation(),
-    openfpga_ctx.vpr_clustering_annotation(),
-    openfpga_ctx.vpr_placement_annotation(),
-    openfpga_ctx.vpr_bitstream_annotation(), verbose);
+  build_grid_bitstream(bitstream_manager, top_block,
+                       openfpga_ctx.module_graph(), openfpga_ctx.fabric_tile(),
+                       openfpga_ctx.arch().circuit_lib, openfpga_ctx.mux_lib(),
+                       vpr_ctx.device().grid, vpr_ctx.atom(),
+                       openfpga_ctx.vpr_device_annotation(),
+                       openfpga_ctx.vpr_clustering_annotation(),
+                       openfpga_ctx.vpr_placement_annotation(),
+                       openfpga_ctx.vpr_bitstream_annotation(), verbose);
   VTR_LOGV(verbose, "Done\n");
 
   /* Create bitstream from routing architectures */
   VTR_LOGV(verbose, "Building routing bitstream...\n");
   build_routing_bitstream(
     bitstream_manager, top_block, openfpga_ctx.module_graph(),
-    openfpga_ctx.arch().circuit_lib, openfpga_ctx.mux_lib(), vpr_ctx.atom(),
+    openfpga_ctx.fabric_tile(), openfpga_ctx.arch().circuit_lib,
+    openfpga_ctx.mux_lib(), vpr_ctx.atom(),
     openfpga_ctx.vpr_device_annotation(), openfpga_ctx.vpr_routing_annotation(),
     vpr_ctx.device().rr_graph, openfpga_ctx.device_rr_gsb(),
     openfpga_ctx.flow_manager().compress_routing(), verbose);

@@ -55,6 +55,8 @@
 `include "routing/cby_1__1_.v"
 `include "routing/cby_4__1_.v"
 
+// ------ Include tile module netlists -----
+
 // ------ Include fabric top-level netlists -----
 `include "fpga_top.v"
 
