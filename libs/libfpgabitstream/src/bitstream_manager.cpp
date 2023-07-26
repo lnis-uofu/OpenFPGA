@@ -6,6 +6,7 @@
 #include <algorithm>
 
 #include "vtr_assert.h"
+#include "vtr_log.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -200,10 +201,20 @@ ConfigBlockId BitstreamManager::create_block() {
 }
 
 ConfigBlockId BitstreamManager::add_block(const std::string& block_name) {
-  ConfigBlockId block = create_block();
-  set_block_name(block, block_name);
+  ConfigBlockId new_block = create_block();
+  set_block_name(new_block, block_name);
+  return new_block;
+}
 
-  return block;
+ConfigBlockId BitstreamManager::find_or_create_child_block(
+  const ConfigBlockId& block_id, const std::string& child_block_name) {
+  ConfigBlockId curr_block = find_child_block(block_id, child_block_name);
+  if (valid_block_id(curr_block)) {
+    return curr_block;
+  }
+  curr_block = add_block(child_block_name);
+  add_child_block(block_id, curr_block);
+  return curr_block;
 }
 
 void BitstreamManager::set_block_name(const ConfigBlockId& block_id,

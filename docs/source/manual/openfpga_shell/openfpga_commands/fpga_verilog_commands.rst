@@ -3,6 +3,8 @@
 FPGA-Verilog
 ------------
 
+.. _cmd_write_fabric_verilog:
+
 write_fabric_verilog
 ~~~~~~~~~~~~~~~~~~~~
 

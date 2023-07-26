@@ -181,6 +181,11 @@ class BitstreamManager {
   /* Add a new block of configuration bits to the bitstream manager */
   ConfigBlockId add_block(const std::string& block_name);
 
+  /* Try to find the child block in a bitstream manager with a given name. If
+   * not found, create a new child block */
+  ConfigBlockId find_or_create_child_block(const ConfigBlockId& block_id,
+                                           const std::string& child_block_name);
+
   /* Set a name for a block */
   void set_block_name(const ConfigBlockId& block_id,
                       const std::string& block_name);
@@ -233,6 +238,9 @@ class BitstreamManager {
   vtr::vector<ConfigBlockId, std::string> block_names_;
   vtr::vector<ConfigBlockId, ConfigBlockId> parent_block_ids_;
   vtr::vector<ConfigBlockId, std::vector<ConfigBlockId>> child_block_ids_;
+
+  /* Fast look-up by block name to ids */
+  std::map<std::string, ConfigBlockId> block_name2ids_;
 
   /* The ids of the inputs of routing multiplexer blocks which is propagated to
    * outputs By default, it will be -2 (which is invalid) A valid id starts from

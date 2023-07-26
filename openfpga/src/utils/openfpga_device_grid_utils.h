@@ -24,6 +24,9 @@ constexpr std::array<e_side, 4> FPGA_SIDES_CLOCKWISE{TOP, RIGHT, BOTTOM, LEFT};
 std::map<e_side, std::vector<vtr::Point<size_t>>>
 generate_perimeter_grid_coordinates(const DeviceGrid& grids);
 
+std::map<e_side, std::vector<vtr::Point<size_t>>>
+generate_perimeter_tile_coordinates(const DeviceGrid& grids);
+
 } /* end namespace openfpga */
 
 #endif

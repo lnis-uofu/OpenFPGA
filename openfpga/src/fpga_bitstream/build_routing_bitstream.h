@@ -12,6 +12,7 @@
 #include "bitstream_manager.h"
 #include "circuit_library.h"
 #include "device_rr_gsb.h"
+#include "fabric_tile.h"
 #include "module_manager.h"
 #include "mux_library.h"
 #include "vpr_context.h"
@@ -28,9 +29,9 @@ namespace openfpga {
 void build_routing_bitstream(
   BitstreamManager& bitstream_manager,
   const ConfigBlockId& top_configurable_block,
-  const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
-  const VprDeviceAnnotation& device_annotation,
+  const ModuleManager& module_manager, const FabricTile& fabric_tile,
+  const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
+  const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
   const DeviceRRGSB& device_rr_gsb, const bool& compact_routing_hierarchy,
   const bool& verbose);

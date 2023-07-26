@@ -262,7 +262,7 @@ static void organize_top_module_tile_memory_modules(
  *   - This function should NOT modify configurable children
  *
  *******************************************************************/
-static void build_top_module_configurable_regions(
+void build_top_module_configurable_regions(
   ModuleManager& module_manager, const ModuleId& top_module,
   const ConfigProtocol& config_protocol) {
   vtr::ScopedStartFinishTimer timer(

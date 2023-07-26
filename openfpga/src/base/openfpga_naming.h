@@ -110,6 +110,14 @@ std::string generate_switch_block_module_name(
 std::string generate_connection_block_module_name(
   const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate);
 
+std::string generate_tile_module_name(const vtr::Point<size_t>& tile_coord);
+
+std::string generate_tile_module_port_name(const std::string& prefix,
+                                           const std::string& port_name);
+
+std::string generate_tile_module_netlist_name(const std::string& block_name,
+                                              const std::string& postfix);
+
 std::string generate_sb_mux_instance_name(const std::string& prefix,
                                           const e_side& sb_side,
                                           const size_t& track_id,

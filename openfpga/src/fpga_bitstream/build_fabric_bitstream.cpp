@@ -39,7 +39,7 @@ static void rec_build_module_fabric_dependent_chain_bitstream(
   const ModuleManager& module_manager, const ModuleId& top_module,
   const ModuleId& parent_module, const ConfigRegionId& config_region,
   FabricBitstream& fabric_bitstream,
-  const FabricBitRegionId& fabric_bitstream_region) {
+  const FabricBitRegionId& fabric_bitstream_region, const bool& verbose) {
   /* Depth-first search: if we have any children in the parent_block,
    * we dive to the next level first!
    */
@@ -69,7 +69,7 @@ static void rec_build_module_fabric_dependent_chain_bitstream(
         rec_build_module_fabric_dependent_chain_bitstream(
           bitstream_manager, child_block, module_manager, top_module,
           child_module, config_region, fabric_bitstream,
-          fabric_bitstream_region);
+          fabric_bitstream_region, verbose);
       }
     } else {
       for (size_t child_id = 0;
@@ -87,6 +87,11 @@ static void rec_build_module_fabric_dependent_chain_bitstream(
         /* Find the child block that matches the instance name! */
         ConfigBlockId child_block =
           bitstream_manager.find_child_block(parent_block, instance_name);
+        VTR_LOGV(verbose,
+                 "Try to find a configurable block corresponding to module "
+                 "'%s' in FPGA fabric under its parent block '%s'\n",
+                 instance_name.c_str(),
+                 bitstream_manager.block_name(parent_block).c_str());
         /* We must have one valid block id! */
         VTR_ASSERT(true == bitstream_manager.valid_block_id(child_block));
 
@@ -94,7 +99,7 @@ static void rec_build_module_fabric_dependent_chain_bitstream(
         rec_build_module_fabric_dependent_chain_bitstream(
           bitstream_manager, child_block, module_manager, top_module,
           child_module, config_region, fabric_bitstream,
-          fabric_bitstream_region);
+          fabric_bitstream_region, verbose);
       }
     }
     /* Ensure that there should be no configuration bits in the parent block */
@@ -534,7 +539,7 @@ static void build_module_fabric_dependent_bitstream(
   const ConfigProtocol& config_protocol, const CircuitLibrary& circuit_lib,
   const BitstreamManager& bitstream_manager, const ConfigBlockId& top_block,
   const ModuleManager& module_manager, const ModuleId& top_module,
-  FabricBitstream& fabric_bitstream) {
+  FabricBitstream& fabric_bitstream, const bool& verbose) {
   switch (config_protocol.type()) {
     case CONFIG_MEM_STANDALONE: {
       /* Reserve bits before build-up */
@@ -546,7 +551,7 @@ static void build_module_fabric_dependent_bitstream(
           fabric_bitstream.add_region();
         rec_build_module_fabric_dependent_chain_bitstream(
           bitstream_manager, top_block, module_manager, top_module, top_module,
-          config_region, fabric_bitstream, fabric_bitstream_region);
+          config_region, fabric_bitstream, fabric_bitstream_region, verbose);
       }
 
       break;
@@ -561,7 +566,7 @@ static void build_module_fabric_dependent_bitstream(
           fabric_bitstream.add_region();
         rec_build_module_fabric_dependent_chain_bitstream(
           bitstream_manager, top_block, module_manager, top_module, top_module,
-          config_region, fabric_bitstream, fabric_bitstream_region);
+          config_region, fabric_bitstream, fabric_bitstream_region, verbose);
         fabric_bitstream.reverse_region_bits(fabric_bitstream_region);
       }
       break;
@@ -791,7 +796,7 @@ FabricBitstream build_fabric_dependent_bitstream(
   /* Start build-up formally */
   build_module_fabric_dependent_bitstream(
     config_protocol, circuit_lib, bitstream_manager, top_block, module_manager,
-    top_module, fabric_bitstream);
+    top_module, fabric_bitstream, verbose);
 
   VTR_LOGV(verbose, "Built %lu configuration bits for fabric\n",
            fabric_bitstream.num_bits());

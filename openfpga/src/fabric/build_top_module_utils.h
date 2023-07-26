@@ -9,6 +9,7 @@
 
 #include "device_grid.h"
 #include "rr_gsb.h"
+#include "vpr_device_annotation.h"
 #include "vtr_geometry.h"
 
 /********************************************************************
@@ -21,6 +22,12 @@ namespace openfpga {
 std::string generate_grid_block_module_name_in_top_module(
   const std::string& prefix, const DeviceGrid& grids,
   const vtr::Point<size_t>& grid_coord);
+
+std::string generate_grid_module_port_name_in_top_module(
+  const DeviceGrid& grids, const vtr::Point<size_t>& grid_coordinate,
+  const size_t& sink_grid_pin_index,
+  const VprDeviceAnnotation& vpr_device_annotation, const RRGraphView& rr_graph,
+  const RRNodeId& inode);
 
 t_rr_type find_top_module_cb_type_by_sb_side(const e_side& sb_side);
 

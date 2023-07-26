@@ -19,7 +19,8 @@
 namespace openfpga {
 
 IoLocationMap build_fabric_io_location_map(const ModuleManager& module_manager,
-                                           const DeviceGrid& grids);
+                                           const DeviceGrid& grids,
+                                           const bool& tiled_fabric);
 
 } /* end namespace openfpga */
 
