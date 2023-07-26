@@ -37,3 +37,5 @@ OpenFPGA widely uses XML format for interchangable files
    clock_network
 
    io_naming_file
+
+   tile_config_tile

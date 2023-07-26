@@ -252,6 +252,14 @@ build_fabric
   .. option:: --compress_routing
 
     Enable compression on routing architecture modules. Strongly recommend this as it will minimize the number of routing modules to be outputted. It can reduce the netlist size significantly.
+
+  .. option:: --group_tile <string>
+
+    Group fine-grained programmable blocks, connection blocks and switch blocks into tiles. Once enabled, tiles will be added to the top-level module. Otherwise, the top-level module consists of programmable blocks, connection blocks and switch blocks. The tile style can be customized through a file. See details in :ref:`file_formats_tile_config_file`. 
+
+    .. warning:: This option does not support ``--duplicate_grid_pin``!
+   
+    .. warning:: This option requires ``--compress_routing`` to be enabled!
   
   .. option:: --duplicate_grid_pin
 
