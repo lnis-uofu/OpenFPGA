@@ -255,7 +255,7 @@ build_fabric
 
   .. option:: --group_tile <string>
 
-    Group fine-grained programmable blocks, connection blocks and switch blocks into tiles. Once enabled, tiles will be added to the top-level module. Otherwise, the top-level module consists of programmable blocks, connection blocks and switch blocks. The tile style can be customized through a file. See details in :ref:`file_formats_tile_config_file`. 
+    Group fine-grained programmable blocks, connection blocks and switch blocks into tiles. Once enabled, tiles will be added to the top-level module. Otherwise, the top-level module consists of programmable blocks, connection blocks and switch blocks. The tile style can be customized through a file. See details in :ref:`file_formats_tile_config_file`. When enabled, the Verilog netlists will contain additional netlists that model tiles (see details in :ref:`fabric_netlists_tiles`). 
 
     .. warning:: This option does not support ``--duplicate_grid_pin``!
    
