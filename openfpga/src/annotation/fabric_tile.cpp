@@ -80,6 +80,9 @@ FabricTileId FabricTile::find_tile(const vtr::Point<size_t>& coord) const {
 
 FabricTileId FabricTile::find_tile_by_pb_coordinate(
   const vtr::Point<size_t>& coord) const {
+  if (pb_coord2id_lookup_.empty()) {
+    return FabricTileId::INVALID();
+  }
   if (coord.x() >= pb_coord2id_lookup_.size()) {
     VTR_LOG_ERROR(
       "Programmable block coordinate [%lu][%lu] exceeds the maximum range "
@@ -103,6 +106,9 @@ FabricTileId FabricTile::find_tile_by_cb_coordinate(
   const t_rr_type& cb_type, const vtr::Point<size_t>& coord) const {
   switch (cb_type) {
     case CHANX: {
+      if (cbx_coord2id_lookup_.empty()) {
+        return FabricTileId::INVALID();
+      }
       if (coord.x() >= cbx_coord2id_lookup_.size()) {
         VTR_LOG_ERROR(
           "X-direction connection block coordinate [%lu][%lu] exceeds the "
@@ -122,6 +128,9 @@ FabricTileId FabricTile::find_tile_by_cb_coordinate(
       return cbx_coord2id_lookup_[coord.x()][coord.y()];
     }
     case CHANY: {
+      if (cby_coord2id_lookup_.empty()) {
+        return FabricTileId::INVALID();
+      }
       if (coord.x() >= cby_coord2id_lookup_.size()) {
         VTR_LOG_ERROR(
           "Y-direction connection block coordinate [%lu][%lu] exceeds the "
@@ -148,6 +157,9 @@ FabricTileId FabricTile::find_tile_by_cb_coordinate(
 
 FabricTileId FabricTile::find_tile_by_sb_coordinate(
   const vtr::Point<size_t>& coord) const {
+  if (sb_coord2id_lookup_.empty()) {
+    return FabricTileId::INVALID();
+  }
   if (coord.x() >= sb_coord2id_lookup_.size()) {
     VTR_LOG_ERROR(
       "Switch block coordinate [%lu][%lu] exceeds the maximum range "
