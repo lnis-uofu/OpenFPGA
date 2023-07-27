@@ -600,10 +600,17 @@ static int build_tile_module_port_and_nets_between_sb_and_cb(
     /* Check if the grid is inside the tile, if not, create ports */
     if (fabric_tile.cb_in_tile(fabric_tile_id, cb_type,
                                instance_gsb_cb_coordinate)) {
+      VTR_LOGV(
+        verbose,
+        "Skip adding ports to tile as connection block '%s' is part of the "
+        "tile along with the switch block '%s'...\n",
+        generate_connection_block_module_name(cb_type, instance_cb_coordinate)
+          .c_str(),
+        sb_module_name.c_str());
       if (!frame_view) {
         size_t cb_instance =
           cb_instances.at(cb_type)[fabric_tile.find_cb_index_in_tile(
-            fabric_tile_id, cb_type, instance_cb_coordinate)];
+            fabric_tile_id, cb_type, instance_gsb_cb_coordinate)];
 
         for (size_t itrack = 0;
              itrack < module_sb.get_chan_width(side_manager.get_side());
@@ -1326,8 +1333,11 @@ static int build_tile_module(
         module_manager.add_configurable_child(tile_module, pb_module,
                                               pb_instance);
       }
-      VTR_LOGV(verbose, "Added programmable module '%s' to tile[%lu][%lu]\n",
-               pb_module_name.c_str(), tile_coord.x(), tile_coord.y());
+      VTR_LOGV(
+        verbose,
+        "Added programmable module '%s' (instance: '%s') to tile[%lu][%lu]\n",
+        pb_module_name.c_str(), pb_instance_name.c_str(), tile_coord.x(),
+        tile_coord.y());
       pb_instances.push_back(pb_instance);
       /* Add a custom I/O child with the grid */
       module_manager.add_io_child(
@@ -1371,8 +1381,10 @@ static int build_tile_module(
                                               cb_instance);
       }
       VTR_LOGV(verbose,
-               "Added connection block module '%s' to tile[%lu][%lu]\n",
-               cb_module_name.c_str(), tile_coord.x(), tile_coord.y());
+               "Added connection block module '%s' (instance: '%s') to "
+               "tile[%lu][%lu]\n",
+               cb_module_name.c_str(), cb_instance_name.c_str(), tile_coord.x(),
+               tile_coord.y());
       cb_instances[cb_type].push_back(cb_instance);
     }
   }
@@ -1407,8 +1419,11 @@ static int build_tile_module(
       module_manager.add_configurable_child(tile_module, sb_module,
                                             sb_instance);
     }
-    VTR_LOGV(verbose, "Added switch block module '%s' to tile[%lu][%lu]\n",
-             sb_module_name.c_str(), tile_coord.x(), tile_coord.y());
+    VTR_LOGV(
+      verbose,
+      "Added switch block module '%s' (instance: %s') to tile[%lu][%lu]\n",
+      sb_module_name.c_str(), sb_instance_name.c_str(), tile_coord.x(),
+      tile_coord.y());
     sb_instances.push_back(sb_instance);
   }
 

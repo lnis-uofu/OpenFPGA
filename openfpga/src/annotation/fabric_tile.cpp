@@ -241,11 +241,11 @@ bool FabricTile::cb_in_tile(const FabricTileId& tile_id,
   switch (cb_type) {
     case CHANX:
       return !cbx_coords_[tile_id].empty() &&
-             find_cb_index_in_tile(tile_id, cb_type, coord) ==
+             find_cb_index_in_tile(tile_id, cb_type, coord) !=
                cbx_coords_[tile_id].size();
     case CHANY:
       return !cby_coords_[tile_id].empty() &&
-             find_cb_index_in_tile(tile_id, cb_type, coord) ==
+             find_cb_index_in_tile(tile_id, cb_type, coord) !=
                cby_coords_[tile_id].size();
     default:
       VTR_LOG("Invalid type of connection block!\n");
