@@ -816,7 +816,7 @@ static int build_top_module_tile_nets_between_sb_and_cb(
 
     /* Check if the grid is inside the tile, if not, create ports */
     if (fabric_tile.cb_in_tile(curr_fabric_tile_id, cb_type,
-                               instance_cb_coordinate)) {
+                               instance_gsb_cb_coordinate)) {
       continue;
     }
     /* Collect cb tile information */

@@ -599,7 +599,7 @@ static int build_tile_module_port_and_nets_between_sb_and_cb(
 
     /* Check if the grid is inside the tile, if not, create ports */
     if (fabric_tile.cb_in_tile(fabric_tile_id, cb_type,
-                               instance_cb_coordinate)) {
+                               instance_gsb_cb_coordinate)) {
       if (!frame_view) {
         size_t cb_instance =
           cb_instances.at(cb_type)[fabric_tile.find_cb_index_in_tile(
