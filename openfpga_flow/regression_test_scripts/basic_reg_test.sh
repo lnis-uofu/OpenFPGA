@@ -179,6 +179,7 @@ echo -e "Testing tile grouping on a homogeneous FPGA fabric (Full testbench)";
 run-task basic_tests/tile_organization/homo_fabric_tile $@
 echo -e "Testing tile grouping on a homogeneous FPGA fabric (Preconfigured testbench)";
 run-task basic_tests/tile_organization/homo_fabric_tile_preconfig $@
+run-task basic_tests/tile_organization/homo_fabric_tile_4x4_preconfig $@
 
 echo -e "Testing global port definition from tiles";
 run-task basic_tests/global_tile_ports/global_tile_clock $@
