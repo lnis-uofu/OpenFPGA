@@ -830,9 +830,11 @@ static int build_top_module_tile_nets_between_sb_and_cb(
       fabric_tile.tile_coordinate(cb_unique_tile);
     vtr::Point<size_t> cb_coord_in_cb_unique_tile =
       fabric_tile.cb_coordinates(cb_unique_tile, cb_type)[cb_idx_in_cb_tile];
+    const RRGSB& unique_cb_rr_gsb =
+      device_rr_gsb.get_gsb(cb_coord_in_cb_unique_tile);
     std::string cb_instance_name_in_unique_tile =
-      generate_connection_block_module_name(cb_type,
-                                            cb_coord_in_cb_unique_tile);
+      generate_connection_block_module_name(
+        cb_type, unique_cb_rr_gsb.get_cb_coordinate(cb_type));
     std::string cb_tile_module_name =
       generate_tile_module_name(cb_unique_tile_coord);
     ModuleId cb_tile_module = module_manager.find_module(cb_tile_module_name);
