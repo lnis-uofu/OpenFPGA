@@ -878,6 +878,9 @@ static int build_top_module_tile_nets_between_sb_and_cb(
         cb_type, cb_port_direction, use_cb_upper_port);
       std::string cb_tile_cb_port_name = generate_tile_module_port_name(
         cb_instance_name_in_unique_tile, cb_port_name);
+      VTR_LOGV(
+        verbose, "Finding port '%s' from connection block in tile [%lu][%lu]\n",
+        cb_tile_cb_port_name.c_str(), cb_tile_coord.x(), cb_tile_coord.y());
       ModulePortId cb_port_id =
         module_manager.find_module_port(cb_tile_module, cb_tile_cb_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(cb_tile_module,

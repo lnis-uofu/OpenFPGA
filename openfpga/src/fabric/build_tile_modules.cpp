@@ -902,8 +902,9 @@ static int build_tile_module_ports_from_cb(
    */
   vtr::Point<size_t> cb_coord_in_unique_tile =
     fabric_tile.cb_coordinates(curr_fabric_tile_id, cb_type)[icb];
-  std::string cb_instance_name_in_tile =
-    generate_connection_block_module_name(cb_type, cb_coord_in_unique_tile);
+  const RRGSB& unique_rr_gsb = device_rr_gsb.get_gsb(cb_coord_in_unique_tile);
+  std::string cb_instance_name_in_tile = generate_connection_block_module_name(
+    cb_type, unique_rr_gsb.get_cb_coordinate(cb_type));
   vtr::Point<size_t> tile_coord =
     fabric_tile.tile_coordinate(curr_fabric_tile_id);
 
