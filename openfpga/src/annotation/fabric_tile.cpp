@@ -597,7 +597,8 @@ bool FabricTile::equivalent_tile(const FabricTileId& tile_a,
 }
 
 int FabricTile::build_unique_tiles(const DeviceGrid& grids,
-                                   const DeviceRRGSB& device_rr_gsb) {
+                                   const DeviceRRGSB& device_rr_gsb,
+                                   const bool& verbose) {
   for (size_t ix = 0; ix < grids.width(); ++ix) {
     for (size_t iy = 0; iy < grids.height(); ++iy) {
       if (!valid_tile_id(tile_coord2id_lookup_[ix][iy])) {
@@ -607,6 +608,10 @@ int FabricTile::build_unique_tiles(const DeviceGrid& grids,
       for (FabricTileId unique_tile_id : unique_tile_ids_) {
         if (equivalent_tile(tile_coord2id_lookup_[ix][iy], unique_tile_id,
                             grids, device_rr_gsb)) {
+          VTR_LOGV(verbose,
+                   "Tile[%lu][%lu] is a mirror to the unique tile[%lu][%lu]\n",
+                   ix, iy, tile_coordinate(unique_tile_id).x(),
+                   tile_coordinate(unique_tile_id).y());
           is_unique_tile = false;
           tile_coord2unique_tile_ids_[ix][iy] = unique_tile_id;
           break;
@@ -614,6 +619,8 @@ int FabricTile::build_unique_tiles(const DeviceGrid& grids,
       }
       /* Update list if this is a unique tile */
       if (is_unique_tile) {
+        VTR_LOGV(verbose, "Tile[%lu][%lu] is added as a new unique tile\n", ix,
+                 iy);
         unique_tile_ids_.push_back(tile_coord2id_lookup_[ix][iy]);
         tile_coord2unique_tile_ids_[ix][iy] = tile_coord2id_lookup_[ix][iy];
       }

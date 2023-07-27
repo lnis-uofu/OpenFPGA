@@ -153,7 +153,7 @@ int build_fabric_tile(FabricTile& fabric_tile, const TileConfig& tile_config,
 
   /* Build unique tiles to compress the number of tile modules to be built in
    * later steps */
-  status_code = fabric_tile.build_unique_tiles(grids, device_rr_gsb);
+  status_code = fabric_tile.build_unique_tiles(grids, device_rr_gsb, verbose);
   VTR_LOGV(verbose, "Extracted %lu uniques tiles from the FPGA fabric\n",
            fabric_tile.unique_tiles().size());
 

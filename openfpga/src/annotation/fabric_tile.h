@@ -103,7 +103,7 @@ class FabricTile {
   void init(const vtr::Point<size_t>& max_coord);
   /** @brief Identify the number of unique tiles and keep in the lookup */
   int build_unique_tiles(const DeviceGrid& grids,
-                         const DeviceRRGSB& device_rr_gsb);
+                         const DeviceRRGSB& device_rr_gsb, const bool& verbose);
 
  public: /* Validators */
   bool valid_tile_id(const FabricTileId& tile_id) const;
