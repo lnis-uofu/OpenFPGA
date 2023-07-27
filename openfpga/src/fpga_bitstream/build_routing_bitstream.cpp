@@ -498,17 +498,29 @@ static void build_connection_block_bitstreams(
       ConfigBlockId parent_block = top_configurable_block;
       FabricTileId curr_tile = fabric_tile.find_tile_by_cb_coordinate(
         cb_type, vtr::Point<size_t>(ix, iy));
+      ConfigBlockId cb_configurable_block;
       if (fabric_tile.valid_tile_id(curr_tile)) {
         vtr::Point<size_t> tile_coord = fabric_tile.tile_coordinate(curr_tile);
         std::string tile_inst_name = generate_tile_module_name(tile_coord);
         parent_block = bitstream_manager.find_or_create_child_block(
           top_configurable_block, tile_inst_name);
+        /* For tile modules, need to find the specific instance name under its
+         * unique tile */
+        vtr::Point<size_t> cb_coord_in_unique_tile =
+          fabric_tile.find_cb_coordinate_in_unique_tile(
+            curr_tile, cb_type, vtr::Point<size_t>(ix, iy));
+        const RRGSB& unique_tile_cb_rr_gsb =
+          device_rr_gsb.get_gsb(cb_coord_in_unique_tile);
+        cb_configurable_block =
+          bitstream_manager.add_block(generate_connection_block_module_name(
+            cb_type, unique_tile_cb_rr_gsb.get_cb_coordinate(cb_type)));
+      } else {
+        /* Create a block for the bitstream which corresponds to the Switch
+         * block
+         */
+        cb_configurable_block = bitstream_manager.add_block(
+          generate_connection_block_module_name(cb_type, cb_coord));
       }
-
-      /* Create a block for the bitstream which corresponds to the Switch block
-       */
-      ConfigBlockId cb_configurable_block = bitstream_manager.add_block(
-        generate_connection_block_module_name(cb_type, cb_coord));
       /* Set switch block as a child of top block */
       bitstream_manager.add_child_block(parent_block, cb_configurable_block);
 
@@ -592,17 +604,25 @@ void build_routing_bitstream(
        * If any block is missing during the back tracing, create it. */
       ConfigBlockId parent_block = top_configurable_block;
       FabricTileId curr_tile = fabric_tile.find_tile_by_sb_coordinate(sb_coord);
+      ConfigBlockId sb_configurable_block;
       if (fabric_tile.valid_tile_id(curr_tile)) {
         vtr::Point<size_t> tile_coord = fabric_tile.tile_coordinate(curr_tile);
         std::string tile_inst_name = generate_tile_module_name(tile_coord);
         parent_block = bitstream_manager.find_or_create_child_block(
           top_configurable_block, tile_inst_name);
+        /* For tile modules, need to find the specific instance name under its
+         * unique tile */
+        vtr::Point<size_t> sb_coord_in_unique_tile =
+          fabric_tile.find_sb_coordinate_in_unique_tile(curr_tile, sb_coord);
+        sb_configurable_block = bitstream_manager.add_block(
+          generate_switch_block_module_name(sb_coord_in_unique_tile));
+      } else {
+        /* Create a block for the bitstream which corresponds to the Switch
+         * block
+         */
+        sb_configurable_block = bitstream_manager.add_block(
+          generate_switch_block_module_name(sb_coord));
       }
-
-      /* Create a block for the bitstream which corresponds to the Switch block
-       */
-      ConfigBlockId sb_configurable_block = bitstream_manager.add_block(
-        generate_switch_block_module_name(sb_coord));
       /* Set switch block as a child of top block */
       bitstream_manager.add_child_block(parent_block, sb_configurable_block);
 

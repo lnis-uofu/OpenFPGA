@@ -34,6 +34,9 @@ class FabricTile {
   /** @brief With a given coordinate, find the id of the unique tile (which is
    * the same as the tile in structure) */
   FabricTileId unique_tile(const vtr::Point<size_t>& coord) const;
+  /** @brief With a given tile id, find the id of its unique tile (which is
+   * the same as the tile in structure) */
+  FabricTileId find_unique_tile(const FabricTileId& tile_id) const;
   /** @brief Find the tile info with a given coordinate */
   FabricTileId find_tile(const vtr::Point<size_t>& coord) const;
   /** @brief Find the id of a tile, with a given coordinate of the programmable
@@ -68,6 +71,28 @@ class FabricTile {
   size_t find_cb_index_in_tile(const FabricTileId& tile_id,
                                const t_rr_type& cb_type,
                                const vtr::Point<size_t>& coord) const;
+  /** @brief Find the coodinate of a connection block in its unique tile. For
+   * example, a cbx[1][0] is the 2nd element of the connection block list in
+   * tile[1][1], while the unique tile of tile[1][1] is tile[2][2]. We will find
+   * the 2nd element of the connection block list in tile[2][2] and return its
+   * coordinate. Error out on any exception. */
+  vtr::Point<size_t> find_cb_coordinate_in_unique_tile(
+    const FabricTileId& tile_id, const t_rr_type& cb_type,
+    const vtr::Point<size_t>& cb_coord) const;
+  /** @brief Find the coodinate of a programmable block in its unique tile. For
+   * example, a pb[1][0] is the 2nd element of the programmable block list in
+   * tile[1][1], while the unique tile of tile[1][1] is tile[2][2]. We will find
+   * the 2nd element of the programmable block list in tile[2][2] and return its
+   * coordinate. Error out on any exception. */
+  vtr::Point<size_t> find_pb_coordinate_in_unique_tile(
+    const FabricTileId& tile_id, const vtr::Point<size_t>& pb_coord) const;
+  /** @brief Find the coodinate of a switch block in its unique tile. For
+   * example, a pb[1][0] is the 2nd element of the switch block list in
+   * tile[1][1], while the unique tile of tile[1][1] is tile[2][2]. We will find
+   * the 2nd element of the switch block list in tile[2][2] and return its
+   * coordinate. Error out on any exception. */
+  vtr::Point<size_t> find_sb_coordinate_in_unique_tile(
+    const FabricTileId& tile_id, const vtr::Point<size_t>& sb_coord) const;
   /** @brief Check if a programmable block (with a coordinate) exists in a tile.
    * Note that the coord can be either the one in device grid or the one of gsb
    * which the programmable block belongs to

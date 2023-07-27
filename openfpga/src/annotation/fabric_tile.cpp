@@ -23,6 +23,11 @@ vtr::Point<size_t> FabricTile::unique_tile_coordinate(
   return tile_coordinate(unique_fabric_tile_id);
 }
 
+FabricTileId FabricTile::find_unique_tile(const FabricTileId& tile_id) const {
+  vtr::Point<size_t> tile_coord = tile_coordinate(tile_id);
+  return unique_tile(tile_coord);
+}
+
 std::vector<vtr::Point<size_t>> FabricTile::pb_coordinates(
   const FabricTileId& tile_id) const {
   VTR_ASSERT(valid_tile_id(tile_id));
@@ -278,6 +283,29 @@ size_t FabricTile::find_cb_index_in_tile(
       VTR_LOG("Invalid type of connection block!\n");
       exit(1);
   }
+}
+
+vtr::Point<size_t> FabricTile::find_cb_coordinate_in_unique_tile(
+  const FabricTileId& tile_id, const t_rr_type& cb_type,
+  const vtr::Point<size_t>& cb_coord) const {
+  size_t cb_idx_in_curr_tile =
+    find_cb_index_in_tile(tile_id, cb_type, cb_coord);
+  FabricTileId unique_tile = find_unique_tile(tile_id);
+  return cb_coordinates(unique_tile, cb_type)[cb_idx_in_curr_tile];
+}
+
+vtr::Point<size_t> FabricTile::find_pb_coordinate_in_unique_tile(
+  const FabricTileId& tile_id, const vtr::Point<size_t>& pb_coord) const {
+  size_t pb_idx_in_curr_tile = find_pb_index_in_tile(tile_id, pb_coord);
+  FabricTileId unique_tile = find_unique_tile(tile_id);
+  return pb_coordinates(unique_tile)[pb_idx_in_curr_tile];
+}
+
+vtr::Point<size_t> FabricTile::find_sb_coordinate_in_unique_tile(
+  const FabricTileId& tile_id, const vtr::Point<size_t>& sb_coord) const {
+  size_t sb_idx_in_curr_tile = find_sb_index_in_tile(tile_id, sb_coord);
+  FabricTileId unique_tile = find_unique_tile(tile_id);
+  return sb_coordinates(unique_tile)[sb_idx_in_curr_tile];
 }
 
 std::vector<FabricTileId> FabricTile::unique_tiles() const {
