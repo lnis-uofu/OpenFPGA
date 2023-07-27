@@ -182,6 +182,7 @@ run-task basic_tests/tile_organization/homo_fabric_tile_preconfig $@
 run-task basic_tests/tile_organization/homo_fabric_tile_2x2_preconfig $@
 run-task basic_tests/tile_organization/homo_fabric_tile_4x4_preconfig $@
 run-task basic_tests/tile_organization/homo_fabric_tile_global_tile_clock $@
+run-task basic_tests/tile_organization/homo_fabric_tile_adder_chain $@
 
 echo -e "Testing global port definition from tiles";
 run-task basic_tests/global_tile_ports/global_tile_clock $@
