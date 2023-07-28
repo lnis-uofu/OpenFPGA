@@ -1120,7 +1120,8 @@ static int build_tile_port_and_nets_from_pb(
                 size_t num_fanout_in_tile =
                   module_manager.module_net_sinks(tile_module, curr_net).size();
                 RRNodeId rr_node = rr_graph.node_lookup().find_node(
-                  pb_coord.x(), pb_coord.y(), OPIN, ipin, side);
+                  pb_coord.x() + iwidth, pb_coord.y() + iheight, OPIN, ipin,
+                  side);
                 size_t num_fanout_required =
                   rr_graph.node_out_edges(rr_node).size();
                 if (num_fanout_in_tile == num_fanout_required) {

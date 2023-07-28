@@ -72,6 +72,14 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
                  curr_tile_coord.x(), curr_tile_coord.y(), root_tile_coord.x(),
                  root_tile_coord.y());
         curr_tile_id = fabric_tile.find_tile(root_tile_coord);
+        /* Update the coordinates of the pb in tiles */
+        size_t root_pb_idx_in_curr_tile =
+          fabric_tile.find_pb_index_in_tile(curr_tile_id, root_tile_coord);
+        status_code = fabric_tile.set_pb_max_coordinate(
+          curr_tile_id, root_pb_idx_in_curr_tile, vtr::Point<size_t>(ix, iy));
+        if (status_code != CMD_EXEC_SUCCESS) {
+          return CMD_EXEC_FATAL_ERROR;
+        }
       } else {
         /* Need to create a new tile here */
         VTR_LOGV(verbose, "Create a regular tile[%lu][%lu]\n",

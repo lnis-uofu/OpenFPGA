@@ -4,6 +4,7 @@
 #include "fabric_tile.h"
 
 #include "build_top_module_utils.h"
+#include "command_exit_codes.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
@@ -31,7 +32,12 @@ FabricTileId FabricTile::find_unique_tile(const FabricTileId& tile_id) const {
 std::vector<vtr::Point<size_t>> FabricTile::pb_coordinates(
   const FabricTileId& tile_id) const {
   VTR_ASSERT(valid_tile_id(tile_id));
-  return pb_coords_[tile_id];
+  std::vector<vtr::Point<size_t>> pb_root_coords;
+  pb_root_coords.reserve(pb_coords_[tile_id].size());
+  for (auto curr_rect : pb_coords_[tile_id]) {
+    pb_root_coords.push_back(curr_rect.bottom_left());
+  }
+  return pb_root_coords;
 }
 
 std::vector<vtr::Point<size_t>> FabricTile::cb_coordinates(
@@ -211,8 +217,7 @@ size_t FabricTile::find_pb_index_in_tile(const FabricTileId& tile_id,
     return pb_gsb_coords_[tile_id].size();
   } else {
     for (size_t idx = 0; idx < pb_coords_[tile_id].size(); ++idx) {
-      vtr::Point<size_t> curr_coord = pb_coords_[tile_id][idx];
-      if (curr_coord == coord) {
+      if (pb_coords_[tile_id][idx].coincident(coord)) {
         return idx;
       }
     }
@@ -521,10 +526,47 @@ int FabricTile::add_pb_coordinate(const FabricTileId& tile_id,
                                   const vtr::Point<size_t>& coord,
                                   const vtr::Point<size_t>& gsb_coord) {
   VTR_ASSERT(valid_tile_id(tile_id));
-  pb_coords_[tile_id].push_back(coord);
+  pb_coords_[tile_id].push_back(vtr::Rect<size_t>(coord, coord));
   pb_gsb_coords_[tile_id].push_back(gsb_coord);
   /* Register in fast look-up */
   return register_pb_in_lookup(tile_id, coord);
+}
+
+int FabricTile::set_pb_max_coordinate(const FabricTileId& tile_id,
+                                      const size_t& pb_index,
+                                      const vtr::Point<size_t>& max_coord) {
+  VTR_ASSERT(valid_tile_id(tile_id));
+  if (pb_index >= pb_coords_[tile_id].size()) {
+    VTR_LOG_ERROR(
+      "Invalid pb_index '%lu' is out of range of programmable block list "
+      "(size='%lu') of tile[%lu][%lu]!\n",
+      pb_index, pb_coords_[tile_id].size(), tile_coordinate(tile_id).x(),
+      tile_coordinate(tile_id).y());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  if (max_coord.x() < pb_coords_[tile_id][pb_index].xmin() ||
+      max_coord.y() < pb_coords_[tile_id][pb_index].ymin()) {
+    VTR_LOG_ERROR(
+      "Invalid max. coordinate (%lu, %lu) is out of range of programmable "
+      "block list (%lu, %lu) <-> (%lu, %lu) of tile[%lu][%lu]!\n",
+      max_coord.x(), max_coord.y(), pb_coords_[tile_id][pb_index].xmin(),
+      pb_coords_[tile_id][pb_index].ymin(),
+      pb_coords_[tile_id][pb_index].xmax(),
+      pb_coords_[tile_id][pb_index].ymax(), tile_coordinate(tile_id).x(),
+      tile_coordinate(tile_id).y());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  pb_coords_[tile_id][pb_index].set_xmax(max_coord.x());
+  pb_coords_[tile_id][pb_index].set_ymax(max_coord.y());
+  /* Update fast lookup */
+  for (size_t ix = pb_coords_[tile_id][pb_index].xmin();
+       ix <= pb_coords_[tile_id][pb_index].xmax(); ++ix) {
+    for (size_t iy = pb_coords_[tile_id][pb_index].ymin();
+         iy <= pb_coords_[tile_id][pb_index].ymax(); ++iy) {
+      register_pb_in_lookup(tile_id, vtr::Point<size_t>(ix, iy));
+    }
+  }
+  return CMD_EXEC_SUCCESS;
 }
 
 int FabricTile::add_cb_coordinate(const FabricTileId& tile_id,
@@ -589,8 +631,8 @@ bool FabricTile::equivalent_tile(const FabricTileId& tile_a,
   }
   /* The pb of two tiles should be the same, otherwise not equivalent */
   for (size_t iblk = 0; iblk < pb_coords_[tile_a].size(); ++iblk) {
-    vtr::Point<size_t> tile_a_pb_coord = pb_coords_[tile_a][iblk];
-    vtr::Point<size_t> tile_b_pb_coord = pb_coords_[tile_b][iblk];
+    vtr::Point<size_t> tile_a_pb_coord = pb_coords_[tile_a][iblk].bottom_left();
+    vtr::Point<size_t> tile_b_pb_coord = pb_coords_[tile_b][iblk].bottom_left();
     if (generate_grid_block_module_name_in_top_module(std::string(), grids,
                                                       tile_a_pb_coord) !=
         generate_grid_block_module_name_in_top_module(std::string(), grids,

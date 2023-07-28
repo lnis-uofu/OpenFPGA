@@ -25,6 +25,8 @@ namespace openfpga {
 class FabricTile {
  public: /* Accessors */
   vtr::Point<size_t> tile_coordinate(const FabricTileId& tile_id) const;
+  /* Return all the root (bottom-left point) coordinates of programmable blocks
+   * under a given tile. */
   std::vector<vtr::Point<size_t>> pb_coordinates(
     const FabricTileId& tile_id) const;
   std::vector<vtr::Point<size_t>> cb_coordinates(
@@ -115,6 +117,10 @@ class FabricTile {
   int add_pb_coordinate(const FabricTileId& tile_id,
                         const vtr::Point<size_t>& coord,
                         const vtr::Point<size_t>& gsb_coord);
+  /* Set the top-right coordinate of a pb. This is mainly for heterogeneous
+   * blocks, whose height or width can be > 1 */
+  int set_pb_max_coordinate(const FabricTileId& tile_id, const size_t& pb_index,
+                            const vtr::Point<size_t>& max_coord);
   int add_cb_coordinate(const FabricTileId& tile_id, const t_rr_type& cb_type,
                         const vtr::Point<size_t>& coord);
   int add_sb_coordinate(const FabricTileId& tile_id,
@@ -168,7 +174,7 @@ class FabricTile {
    * organization (to follow bottom-left corner style). This limitation can be
    * resolved.
    */
-  vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> pb_coords_;
+  vtr::vector<FabricTileId, std::vector<vtr::Rect<size_t>>> pb_coords_;
   vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> pb_gsb_coords_;
   vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> cbx_coords_;
   vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> cby_coords_;
