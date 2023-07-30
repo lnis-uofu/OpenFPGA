@@ -125,8 +125,8 @@ static int write_fabric_config_bit_to_xml_file(
           VTR_ASSERT(wl_addr.size() == 0);
           bl_addr.resize(lengths.bl);
           wl_addr.resize(lengths.wl);
-          memset(&bl_addr[0], 'x', lengths.bl);
-          memset(&wl_addr[0], '0', lengths.wl);
+          bl_addr.assign(lengths.bl, 'x');
+          wl_addr.assign(lengths.wl, '0');
         } else {
           VTR_ASSERT((fabric_size_t)(bl_addr.size()) == lengths.bl);
           VTR_ASSERT((fabric_size_t)(wl_addr.size()) == lengths.wl);
