@@ -256,10 +256,13 @@ bool FabricBitstream::use_address() const { return use_address_; }
 
 bool FabricBitstream::use_wl_address() const { return use_wl_address_; }
 
-const FabricBitstreamMemoryBank* FabricBitstream::memory_bank_info() const {
+const FabricBitstreamMemoryBank& FabricBitstream::memory_bank_info(
+  const bool& fast, const bool& bit_value_to_skip) const {
   VTR_ASSERT(true == use_address_);
   VTR_ASSERT(true == use_wl_address_);
-  return &memory_bank_data_;
+  (const_cast<FabricBitstreamMemoryBank*>(&memory_bank_data_))
+    ->fast_configuration(fast, bit_value_to_skip);
+  return memory_bank_data_;
 }
 
 /******************************************************************************

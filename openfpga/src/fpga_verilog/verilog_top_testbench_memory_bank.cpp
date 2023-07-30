@@ -569,11 +569,8 @@ static void print_verilog_full_testbench_ql_memory_bank_flatten_bitstream(
   // Based on 100K LE FPGA, we are wasting a lot of time to build
   // MemoryBankFlattenFabricBitstream just to get size(). So wasteful of the
   // resource
-  const FabricBitstreamMemoryBank* memory_bank =
-    fabric_bitstream.memory_bank_info();
-  // Must call this to prepare wls_to_skip
-  (const_cast<FabricBitstreamMemoryBank*>(memory_bank))
-    ->fast_configuration(fast_configuration, bit_value_to_skip);
+  const FabricBitstreamMemoryBank& memory_bank =
+    fabric_bitstream.memory_bank_info(fast_configuration, bit_value_to_skip);
 
   /* Feed address and data input pair one by one
    * Note: the first cycle is reserved for programming reset
@@ -610,7 +607,7 @@ static void print_verilog_full_testbench_ql_memory_bank_flatten_bitstream(
 
   /* Define a constant for the bitstream length */
   print_verilog_define_flag(fp, std::string(TOP_TB_BITSTREAM_LENGTH_VARIABLE),
-                            memory_bank->get_longest_effective_wl_count());
+                            memory_bank.get_longest_effective_wl_count());
   print_verilog_define_flag(fp, std::string(TOP_TB_BITSTREAM_WIDTH_VARIABLE),
                             bl_port_width + wl_port_width);
 

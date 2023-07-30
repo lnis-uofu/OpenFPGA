@@ -283,20 +283,16 @@ static int fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
   if (keep_dont_care_bits) {
     dont_care_bit = "x";
   }
-  const FabricBitstreamMemoryBank* memory_bank =
-    fabric_bitstream.memory_bank_info();
-
-  // Must call this to prepare wls_to_skip
-  (const_cast<FabricBitstreamMemoryBank*>(memory_bank))
-    ->fast_configuration(fast_configuration, bit_value_to_skip);
+  const FabricBitstreamMemoryBank& memory_bank =
+    fabric_bitstream.memory_bank_info(fast_configuration, bit_value_to_skip);
 
   fabric_size_t longest_effective_wl_count =
-    memory_bank->get_longest_effective_wl_count();
+    memory_bank.get_longest_effective_wl_count();
   /* Output information about how to intepret the bitstream */
   fp << "// Bitstream length: " << longest_effective_wl_count << std::endl;
   fp << "// Bitstream width (LSB -> MSB): ";
-  fp << "<bl_address " << memory_bank->get_total_bl_addr_size() << " bits>";
-  fp << "<wl_address " << memory_bank->get_total_wl_addr_size() << " bits>";
+  fp << "<bl_address " << memory_bank.get_total_bl_addr_size() << " bits>";
+  fp << "<wl_address " << memory_bank.get_total_wl_addr_size() << " bits>";
   fp << std::endl;
 
   // Step 1
@@ -305,12 +301,12 @@ static int fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
   // It could either be 0 (if wl_incremental_order=true) or
   // last WL index (if wl_incremental_order=false)
   std::vector<fabric_size_t> wl_indexes;
-  for (size_t region = 0; region < memory_bank->datas.size(); region++) {
+  for (size_t region = 0; region < memory_bank.datas.size(); region++) {
     if (wl_incremental_order) {
       wl_indexes.push_back(0);
     } else {
       wl_indexes.push_back(
-        (fabric_size_t)(memory_bank->datas[region].size() - 1));
+        (fabric_size_t)(memory_bank.datas[region].size() - 1));
     }
   }
   // Step 2
@@ -319,7 +315,7 @@ static int fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
     // Step 3
     // Write BL address
     // We cascade all regions: 0, 1, 2 ...
-    for (size_t region = 0; region < memory_bank->datas.size(); region++) {
+    for (size_t region = 0; region < memory_bank.datas.size(); region++) {
       // Step 3a
       // The sequence of configuration of each region WL is not the same
       //   since WL to skip for each region is not the same
@@ -327,11 +323,11 @@ static int fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
       //   one of the WLs (stored in wls_to_skip) that we had determined
       //   to skip, the we will increment or decrement to next
       //   depending on wl_incremental_order
-      const fabric_blwl_length& lengths = memory_bank->blwl_lengths[region];
+      const fabric_blwl_length& lengths = memory_bank.blwl_lengths[region];
       fabric_size_t current_wl = wl_indexes[region];
-      while (std::find(memory_bank->wls_to_skip[region].begin(),
-                       memory_bank->wls_to_skip[region].end(),
-                       current_wl) != memory_bank->wls_to_skip[region].end()) {
+      while (std::find(memory_bank.wls_to_skip[region].begin(),
+                       memory_bank.wls_to_skip[region].end(),
+                       current_wl) != memory_bank.wls_to_skip[region].end()) {
         // We would like to skip this
         if (wl_incremental_order) {
           wl_indexes[region]++;
@@ -348,11 +344,11 @@ static int fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
       // Since fabric_blwl_length is unsigned, hence underflow of -1 will be
       //   considered as overflow too
       // If it is overflow/underflow, then we just print don't care
-      if (current_wl < memory_bank->datas[region].size()) {
+      if (current_wl < memory_bank.datas[region].size()) {
         const std::vector<uint8_t>& data =
-          memory_bank->datas[region][current_wl];
+          memory_bank.datas[region][current_wl];
         const std::vector<uint8_t>& mask =
-          memory_bank->masks[region][current_wl];
+          memory_bank.masks[region][current_wl];
         // Step 3c
         // Real code to print BL data that we had stored
         // mask tell you each BL is valid
@@ -384,13 +380,13 @@ static int fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
     // Step 4
     // Write BL address
     // We cascade all regions: 0, 1, 2 ...
-    for (size_t region = 0; region < memory_bank->datas.size(); region++) {
-      const fabric_blwl_length& lengths = memory_bank->blwl_lengths[region];
+    for (size_t region = 0; region < memory_bank.datas.size(); region++) {
+      const fabric_blwl_length& lengths = memory_bank.blwl_lengths[region];
       fabric_size_t current_wl = wl_indexes[region];
       // Step 4a
       // If current WL still within the valid range, we will print WL
       // Otherwise it is overflow/underflow then we will print don't care
-      if (current_wl < memory_bank->datas[region].size()) {
+      if (current_wl < memory_bank.datas[region].size()) {
         // Step 4b
         // One hot printing
         for (size_t wl_temp = 0; wl_temp < lengths.wl; wl_temp++) {

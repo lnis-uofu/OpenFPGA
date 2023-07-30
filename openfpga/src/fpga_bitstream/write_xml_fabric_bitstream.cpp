@@ -113,14 +113,14 @@ static int write_fabric_config_bit_to_xml_file(
         // New way of printing XML
         // This is fast (less than 100s) as compared to original 1300s seen in
         // 100K LE FPFA
-        const FabricBitstreamMemoryBank* memory_bank =
+        const FabricBitstreamMemoryBank& memory_bank =
           fabric_bitstream.memory_bank_info();
         /* Bit line address */
         write_tab_to_file(fp, xml_hierarchy_depth + 1);
         const fabric_bit_data& bit =
-          memory_bank->fabric_bit_datas[(size_t)(fabric_bit)];
+          memory_bank.fabric_bit_datas[(size_t)(fabric_bit)];
         const fabric_blwl_length& lengths =
-          memory_bank->blwl_lengths[bit.region];
+          memory_bank.blwl_lengths[bit.region];
         if (bl_addr.size() == 0) {
           VTR_ASSERT(wl_addr.size() == 0);
           bl_addr.resize(lengths.bl);

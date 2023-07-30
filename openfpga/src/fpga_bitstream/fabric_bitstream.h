@@ -223,7 +223,8 @@ class FabricBitstream {
   bool use_address() const;
   bool use_wl_address() const;
 
-  const FabricBitstreamMemoryBank* memory_bank_info() const;
+  const FabricBitstreamMemoryBank& memory_bank_info(
+    const bool& fast = false, const bool& bit_value_to_skip = false) const;
 
  public: /* Public Mutators */
   /* Reserve config bits */
