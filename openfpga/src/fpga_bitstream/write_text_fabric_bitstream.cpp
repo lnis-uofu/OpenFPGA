@@ -291,7 +291,7 @@ static int fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
     ->fast_configuration(fast_configuration, bit_value_to_skip);
 
   fabric_size_t lontest_effective_wl_addr_size =
-    memory_bank->get_lontest_effective_wl_addr_size();
+    memory_bank->get_longest_effective_wl_count();
   /* Output information about how to intepret the bitstream */
   fp << "// Bitstream length: " << lontest_effective_wl_addr_size << std::endl;
   fp << "// Bitstream width (LSB -> MSB): ";

@@ -610,7 +610,7 @@ static void print_verilog_full_testbench_ql_memory_bank_flatten_bitstream(
 
   /* Define a constant for the bitstream length */
   print_verilog_define_flag(fp, std::string(TOP_TB_BITSTREAM_LENGTH_VARIABLE),
-                            memory_bank->get_lontest_effective_wl_addr_size());
+                            memory_bank->get_longest_effective_wl_count());
   print_verilog_define_flag(fp, std::string(TOP_TB_BITSTREAM_WIDTH_VARIABLE),
                             bl_port_width + wl_port_width);
 

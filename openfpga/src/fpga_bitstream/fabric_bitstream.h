@@ -68,7 +68,7 @@ struct FabricBitstreamMemoryBank {
                const fabric_size_t& bl_addr_size,
                const fabric_size_t& wl_addr_size, bool bit);
   void fast_configuration(const bool& fast, const bool& bit_value_to_skip);
-  fabric_size_t get_lontest_effective_wl_addr_size() const;
+  fabric_size_t get_longest_effective_wl_count() const;
   fabric_size_t get_total_bl_addr_size() const;
   fabric_size_t get_total_wl_addr_size() const;
 

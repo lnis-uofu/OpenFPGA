@@ -1073,7 +1073,7 @@ static size_t calculate_num_config_clock_cycles(
         (const_cast<FabricBitstreamMemoryBank*>(memory_bank))
           ->fast_configuration(fast_configuration, bit_value_to_skip);
         num_config_clock_cycles =
-          1 + memory_bank->get_lontest_effective_wl_addr_size();
+          1 + memory_bank->get_longest_effective_wl_count();
       } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()) {
         num_config_clock_cycles =
           1 + build_memory_bank_flatten_fabric_bitstream(

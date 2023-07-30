@@ -103,11 +103,11 @@ void FabricBitstreamMemoryBank::fast_configuration(
   }
 }
 
-fabric_size_t FabricBitstreamMemoryBank::get_lontest_effective_wl_addr_size()
+fabric_size_t FabricBitstreamMemoryBank::get_longest_effective_wl_count()
   const {
-  // This function check effective WL addr size
-  // Where effective WL is the WL that we wantt to program after considering
-  // fast configuration From all the region, it return the longest
+  // This function check effective WL count
+  // Where effective WL is the WL that we want to program after considering
+  // fast configuration from all the region, it return the longest
   fabric_size_t longest_wl = 0;
   for (size_t region = 0; region < datas.size(); region++) {
     VTR_ASSERT((size_t)(region) < wls_to_skip.size());
