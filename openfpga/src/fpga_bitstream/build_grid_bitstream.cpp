@@ -727,7 +727,8 @@ static void rec_build_physical_block_bitstream(
  *******************************************************************/
 static void build_physical_block_bitstream(
   BitstreamManager& bitstream_manager, const ConfigBlockId& top_block,
-  const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
+  const ModuleManager& module_manager, const FabricTile& fabric_tile,
+  const FabricTileId& curr_tile, const CircuitLibrary& circuit_lib,
   const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
   const VprClusteringAnnotation& cluster_annotation,
@@ -751,9 +752,17 @@ static void build_physical_block_bitstream(
     return;
   }
 
+  vtr::Point<size_t> grid_coord_in_unique_tile = grid_coord;
+  if (fabric_tile.valid_tile_id(curr_tile)) {
+    /* For tile modules, need to find the specific instance name under its
+     * unique tile */
+    grid_coord_in_unique_tile =
+      fabric_tile.find_pb_coordinate_in_unique_tile(curr_tile, grid_coord);
+  }
   std::string grid_block_name = generate_grid_block_instance_name(
     grid_module_name_prefix, std::string(grid_type->name),
-    is_io_type(grid_type), border_side, grid_coord);
+    is_io_type(grid_type), border_side, grid_coord_in_unique_tile);
+
   ConfigBlockId grid_configurable_block =
     bitstream_manager.add_block(grid_block_name);
   bitstream_manager.add_child_block(top_block, grid_configurable_block);
@@ -854,12 +863,17 @@ void build_grid_bitstream(
         std::string tile_inst_name = generate_tile_module_name(tile_coord);
         parent_block = bitstream_manager.find_or_create_child_block(
           top_block, tile_inst_name);
+        VTR_LOGV(verbose,
+                 "Add configurable block '%s' as a child under configurable "
+                 "block '%s'\n",
+                 tile_inst_name.c_str(),
+                 bitstream_manager.block_name(top_block).c_str());
       }
 
       build_physical_block_bitstream(
-        bitstream_manager, parent_block, module_manager, circuit_lib, mux_lib,
-        atom_ctx, device_annotation, cluster_annotation, place_annotation,
-        bitstream_annotation, grids, grid_coord, NUM_SIDES);
+        bitstream_manager, parent_block, module_manager, fabric_tile, curr_tile,
+        circuit_lib, mux_lib, atom_ctx, device_annotation, cluster_annotation,
+        place_annotation, bitstream_annotation, grids, grid_coord, NUM_SIDES);
     }
   }
   VTR_LOGV(verbose, "Done\n");
@@ -895,12 +909,17 @@ void build_grid_bitstream(
         std::string tile_inst_name = generate_tile_module_name(tile_coord);
         parent_block = bitstream_manager.find_or_create_child_block(
           top_block, tile_inst_name);
+        VTR_LOGV(verbose,
+                 "Add configurable block '%s' as a child under configurable "
+                 "block '%s'\n",
+                 tile_inst_name.c_str(),
+                 bitstream_manager.block_name(parent_block).c_str());
       }
 
       build_physical_block_bitstream(
-        bitstream_manager, parent_block, module_manager, circuit_lib, mux_lib,
-        atom_ctx, device_annotation, cluster_annotation, place_annotation,
-        bitstream_annotation, grids, io_coordinate, io_side);
+        bitstream_manager, parent_block, module_manager, fabric_tile, curr_tile,
+        circuit_lib, mux_lib, atom_ctx, device_annotation, cluster_annotation,
+        place_annotation, bitstream_annotation, grids, io_coordinate, io_side);
     }
   }
   VTR_LOGV(verbose, "Done\n");

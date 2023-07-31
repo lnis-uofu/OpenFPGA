@@ -25,6 +25,8 @@ namespace openfpga {
 class FabricTile {
  public: /* Accessors */
   vtr::Point<size_t> tile_coordinate(const FabricTileId& tile_id) const;
+  /* Return all the root (bottom-left point) coordinates of programmable blocks
+   * under a given tile. */
   std::vector<vtr::Point<size_t>> pb_coordinates(
     const FabricTileId& tile_id) const;
   std::vector<vtr::Point<size_t>> cb_coordinates(
@@ -34,6 +36,9 @@ class FabricTile {
   /** @brief With a given coordinate, find the id of the unique tile (which is
    * the same as the tile in structure) */
   FabricTileId unique_tile(const vtr::Point<size_t>& coord) const;
+  /** @brief With a given tile id, find the id of its unique tile (which is
+   * the same as the tile in structure) */
+  FabricTileId find_unique_tile(const FabricTileId& tile_id) const;
   /** @brief Find the tile info with a given coordinate */
   FabricTileId find_tile(const vtr::Point<size_t>& coord) const;
   /** @brief Find the id of a tile, with a given coordinate of the programmable
@@ -68,6 +73,28 @@ class FabricTile {
   size_t find_cb_index_in_tile(const FabricTileId& tile_id,
                                const t_rr_type& cb_type,
                                const vtr::Point<size_t>& coord) const;
+  /** @brief Find the coodinate of a connection block in its unique tile. For
+   * example, a cbx[1][0] is the 2nd element of the connection block list in
+   * tile[1][1], while the unique tile of tile[1][1] is tile[2][2]. We will find
+   * the 2nd element of the connection block list in tile[2][2] and return its
+   * coordinate. Error out on any exception. */
+  vtr::Point<size_t> find_cb_coordinate_in_unique_tile(
+    const FabricTileId& tile_id, const t_rr_type& cb_type,
+    const vtr::Point<size_t>& cb_coord) const;
+  /** @brief Find the coodinate of a programmable block in its unique tile. For
+   * example, a pb[1][0] is the 2nd element of the programmable block list in
+   * tile[1][1], while the unique tile of tile[1][1] is tile[2][2]. We will find
+   * the 2nd element of the programmable block list in tile[2][2] and return its
+   * coordinate. Error out on any exception. */
+  vtr::Point<size_t> find_pb_coordinate_in_unique_tile(
+    const FabricTileId& tile_id, const vtr::Point<size_t>& pb_coord) const;
+  /** @brief Find the coodinate of a switch block in its unique tile. For
+   * example, a pb[1][0] is the 2nd element of the switch block list in
+   * tile[1][1], while the unique tile of tile[1][1] is tile[2][2]. We will find
+   * the 2nd element of the switch block list in tile[2][2] and return its
+   * coordinate. Error out on any exception. */
+  vtr::Point<size_t> find_sb_coordinate_in_unique_tile(
+    const FabricTileId& tile_id, const vtr::Point<size_t>& sb_coord) const;
   /** @brief Check if a programmable block (with a coordinate) exists in a tile.
    * Note that the coord can be either the one in device grid or the one of gsb
    * which the programmable block belongs to
@@ -90,6 +117,10 @@ class FabricTile {
   int add_pb_coordinate(const FabricTileId& tile_id,
                         const vtr::Point<size_t>& coord,
                         const vtr::Point<size_t>& gsb_coord);
+  /* Set the top-right coordinate of a pb. This is mainly for heterogeneous
+   * blocks, whose height or width can be > 1 */
+  int set_pb_max_coordinate(const FabricTileId& tile_id, const size_t& pb_index,
+                            const vtr::Point<size_t>& max_coord);
   int add_cb_coordinate(const FabricTileId& tile_id, const t_rr_type& cb_type,
                         const vtr::Point<size_t>& coord);
   int add_sb_coordinate(const FabricTileId& tile_id,
@@ -103,7 +134,7 @@ class FabricTile {
   void init(const vtr::Point<size_t>& max_coord);
   /** @brief Identify the number of unique tiles and keep in the lookup */
   int build_unique_tiles(const DeviceGrid& grids,
-                         const DeviceRRGSB& device_rr_gsb);
+                         const DeviceRRGSB& device_rr_gsb, const bool& verbose);
 
  public: /* Validators */
   bool valid_tile_id(const FabricTileId& tile_id) const;
@@ -143,7 +174,7 @@ class FabricTile {
    * organization (to follow bottom-left corner style). This limitation can be
    * resolved.
    */
-  vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> pb_coords_;
+  vtr::vector<FabricTileId, std::vector<vtr::Rect<size_t>>> pb_coords_;
   vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> pb_gsb_coords_;
   vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> cbx_coords_;
   vtr::vector<FabricTileId, std::vector<vtr::Point<size_t>>> cby_coords_;
