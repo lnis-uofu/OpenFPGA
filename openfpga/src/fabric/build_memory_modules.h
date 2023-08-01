@@ -26,7 +26,8 @@ void build_memory_modules(ModuleManager& module_manager,
                           DecoderLibrary& arch_decoder_lib,
                           const MuxLibrary& mux_lib,
                           const CircuitLibrary& circuit_lib,
-                          const e_config_protocol_type& sram_orgz_type);
+                          const e_config_protocol_type& sram_orgz_type,
+                          const bool& require_feedthrough_memory);
 
 } /* end namespace openfpga */
 

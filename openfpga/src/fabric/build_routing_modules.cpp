@@ -461,6 +461,8 @@ static void build_switch_block_module(
     }
   }
 
+  /* TODO: Build a physical memory block */
+
   /* Add global ports to the pb_module:
    * This is a much easier job after adding sub modules (instances),
    * we just need to find all the global ports from the child modules and build
@@ -1038,7 +1040,9 @@ void build_flatten_routing_modules(
   const DeviceContext& device_ctx, const VprDeviceAnnotation& device_annotation,
   const DeviceRRGSB& device_rr_gsb, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
-  const CircuitModelId& sram_model, const bool& verbose) {
+  const CircuitModelId& sram_model,
+  const bool& group_config_block,
+  const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build routing modules...");
 
   vtr::Point<size_t> sb_range = device_rr_gsb.get_gsb_range();
@@ -1082,7 +1086,9 @@ void build_unique_routing_modules(
   const DeviceContext& device_ctx, const VprDeviceAnnotation& device_annotation,
   const DeviceRRGSB& device_rr_gsb, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
-  const CircuitModelId& sram_model, const bool& verbose) {
+  const CircuitModelId& sram_model,
+  const bool& group_config_block,
+  const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build unique routing modules...");
 
   /* Build unique switch block modules */

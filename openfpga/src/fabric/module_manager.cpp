@@ -903,6 +903,7 @@ void ModuleManager::set_child_instance_name(const ModuleId& parent_module,
 void ModuleManager::add_configurable_child(const ModuleId& parent_module,
                                            const ModuleId& child_module,
                                            const size_t& child_instance,
+                                           const bool& logical_only,
                                            const vtr::Point<int> coord) {
   /* Validate the id of both parent and child modules */
   VTR_ASSERT(valid_module_id(parent_module));
@@ -910,29 +911,35 @@ void ModuleManager::add_configurable_child(const ModuleId& parent_module,
   /* Ensure that the instance id is in range */
   VTR_ASSERT(child_instance < num_instance(parent_module, child_module));
 
-  configurable_children_[parent_module].push_back(child_module);
-  configurable_child_instances_[parent_module].push_back(child_instance);
-  configurable_child_regions_[parent_module].push_back(
+  logical_configurable_children_[parent_module].push_back(child_module);
+  logical_configurable_child_instances_[parent_module].push_back(child_instance);
+  logical_configurable_child_regions_[parent_module].push_back(
     ConfigRegionId::INVALID());
-  configurable_child_coordinates_[parent_module].push_back(coord);
+  logical_configurable_child_coordinates_[parent_module].push_back(coord);
+
+  if (!logical_only) {
+    physical_configurable_children_[parent_module].push_back(child_module);
+    physical_configurable_child_instances_[parent_module].push_back(child_instance);
+    physical_configurable_child_parents_[parent_module].push_back(parent_module);
+  }
 }
 
-void ModuleManager::reserve_configurable_child(const ModuleId& parent_module,
+void ModuleManager::reserve_logical_configurable_child(const ModuleId& parent_module,
                                                const size_t& num_children) {
   VTR_ASSERT(valid_module_id(parent_module));
   /* Do reserve when the number of children is larger than current size of lists
    */
-  if (num_children > configurable_children_[parent_module].size()) {
-    configurable_children_[parent_module].reserve(num_children);
+  if (num_children > logical_configurable_children_[parent_module].size()) {
+    logical_configurable_children_[parent_module].reserve(num_children);
   }
-  if (num_children > configurable_child_instances_[parent_module].size()) {
-    configurable_child_instances_[parent_module].reserve(num_children);
+  if (num_children > logical_configurable_child_instances_[parent_module].size()) {
+    logical_configurable_child_instances_[parent_module].reserve(num_children);
   }
   if (num_children > configurable_child_regions_[parent_module].size()) {
-    configurable_child_regions_[parent_module].reserve(num_children);
+    logical_configurable_child_regions_[parent_module].reserve(num_children);
   }
   if (num_children > configurable_child_coordinates_[parent_module].size()) {
-    configurable_child_coordinates_[parent_module].reserve(num_children);
+    logical_configurable_child_coordinates_[parent_module].reserve(num_children);
   }
 }
 

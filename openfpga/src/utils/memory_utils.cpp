@@ -342,6 +342,11 @@ std::vector<std::string> generate_sram_port_names(
   std::vector<e_circuit_model_port_type> model_port_types;
 
   switch (sram_orgz_type) {
+    case CONFIG_MEM_FEEDTHROUGH:
+      /* Feed through wires are all inputs */
+      model_port_types.push_back(CIRCUIT_MODEL_PORT_BL); /* Indicate mem port */
+      model_port_types.push_back(CIRCUIT_MODEL_PORT_BLB); /* Indicate mem_inv port */
+      break;
     case CONFIG_MEM_SCAN_CHAIN:
       model_port_types.push_back(CIRCUIT_MODEL_PORT_INPUT);
       model_port_types.push_back(CIRCUIT_MODEL_PORT_OUTPUT);
@@ -400,6 +405,7 @@ size_t generate_sram_port_size(const e_config_protocol_type sram_orgz_type,
   size_t sram_port_size = num_config_bits;
 
   switch (sram_orgz_type) {
+    case CONFIG_MEM_FEEDTHROUGH:
     case CONFIG_MEM_STANDALONE:
       break;
     case CONFIG_MEM_SCAN_CHAIN:

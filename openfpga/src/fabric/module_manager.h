@@ -358,6 +358,7 @@ class ModuleManager {
   void add_configurable_child(
     const ModuleId& module, const ModuleId& child_module,
     const size_t& child_instance,
+    const bool& logical_only,
     const vtr::Point<int> coord = vtr::Point<int>(-1, -1));
   /* Reserved a number of configurable children for memory efficiency */
   void reserve_configurable_child(const ModuleId& module,
@@ -513,21 +514,31 @@ class ModuleManager {
    * protocol is organized which should be made by users/designers
    */
   vtr::vector<ModuleId, std::vector<ModuleId>>
-    configurable_children_; /* Child modules with configurable memory bits that
+    logical_configurable_children_; /* Child modules with configurable memory bits that
                                this module contain */
   vtr::vector<ModuleId, std::vector<size_t>>
-    configurable_child_instances_; /* Instances of child modules with
+    logical_configurable_child_instances_; /* Instances of child modules with
                                       configurable memory bits that this module
                                       contain */
   vtr::vector<ModuleId, std::vector<ConfigRegionId>>
-    configurable_child_regions_; /* Instances of child modules with configurable
+    logical_configurable_child_regions_; /* Instances of child modules with configurable
                                     memory bits that this module contain */
   vtr::vector<ModuleId, std::vector<vtr::Point<int>>>
-    configurable_child_coordinates_; /* Relative coorindates of child modules
+    logical_configurable_child_coordinates_; /* Relative coorindates of child modules
                                         with configurable memory bits that this
                                         module contain */
+  vtr::vector<ModuleId, std::vector<ModuleId>>
+    physical_configurable_children_; /* Child modules with configurable memory bits that
+                               this module contain */
+  vtr::vector<ModuleId, std::vector<size_t>>
+    physical_configurable_child_instances_; /* Instances of child modules with
+                                      configurable memory bits that this module
+                                      contain */
+  vtr::vector<ModuleId, std::vector<ModuleId>>
+    physical_configurable_child_parents_; /* Parent modules with configurable memory bits that
+                               this module contain */
 
-  /* Configurable regions to group the configurable children
+  /* Configurable regions to group the physical configurable children
    * Note:
    *   - Each child can only be added a group
    */

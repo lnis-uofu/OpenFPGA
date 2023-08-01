@@ -1005,12 +1005,14 @@ static void build_mux_memory_module(
  * memory modules.
  * Take another example, the memory circuit can implement the scan-chain or
  * memory-bank organization for the memories.
+ * If we need feedthrough memory blocks, build the memory modules which contain only feedthrough wires
  ********************************************************************/
 void build_memory_modules(ModuleManager& module_manager,
                           DecoderLibrary& arch_decoder_lib,
                           const MuxLibrary& mux_lib,
                           const CircuitLibrary& circuit_lib,
-                          const e_config_protocol_type& sram_orgz_type) {
+                          const e_config_protocol_type& sram_orgz_type,
+                          const bool& require_feedthrough_memory) {
   vtr::ScopedStartFinishTimer timer("Build memory modules");
 
   /* Create the memory circuits for the multiplexer */
@@ -1027,6 +1029,7 @@ void build_memory_modules(ModuleManager& module_manager,
     /* Create a Verilog module for the memories used by the multiplexer */
     build_mux_memory_module(module_manager, arch_decoder_lib, circuit_lib,
                             sram_orgz_type, mux_model, mux_graph);
+    /* TODO: Create feedthrough memory module */
   }
 
   /* Create the memory circuits for non-MUX circuit models.
@@ -1063,6 +1066,7 @@ void build_memory_modules(ModuleManager& module_manager,
     /* Create a Verilog module for the memories used by the circuit model */
     build_memory_module(module_manager, arch_decoder_lib, circuit_lib,
                         sram_orgz_type, module_name, sram_models[0], num_mems);
+    /* TODO: Create feedthrough memory module */
   }
 }
 

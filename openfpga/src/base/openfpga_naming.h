@@ -68,7 +68,8 @@ std::string generate_segment_wire_mid_output_name(
 std::string generate_memory_module_name(const CircuitLibrary& circuit_lib,
                                         const CircuitModelId& circuit_model,
                                         const CircuitModelId& sram_model,
-                                        const std::string& postfix);
+                                        const std::string& postfix,
+                                        const bool& feedthrough_memory = false);
 
 std::string generate_routing_block_netlist_name(const std::string& prefix,
                                                 const size_t& block_id,
@@ -144,7 +145,8 @@ std::string generate_pb_mux_instance_name(const std::string& prefix,
 
 std::string generate_pb_memory_instance_name(const std::string& prefix,
                                              t_pb_graph_pin* pb_graph_pin,
-                                             const std::string& postfix);
+                                             const std::string& postfix,
+                                             const bool& feedthrough_memory = false);
 
 std::string generate_grid_port_name(const size_t& width, const size_t& height,
                                     const int& subtile_index,

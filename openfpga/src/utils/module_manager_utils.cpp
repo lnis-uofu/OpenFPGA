@@ -342,6 +342,7 @@ void add_sram_ports_to_module_manager(
 
   /* Add ports to the module manager */
   switch (sram_orgz_type) {
+    case CONFIG_MEM_FEEDTHROUGH:
     case CONFIG_MEM_STANDALONE:
     case CONFIG_MEM_QL_MEMORY_BANK:
     case CONFIG_MEM_MEMORY_BANK: {
@@ -1730,6 +1731,7 @@ static void add_module_nets_cmos_memory_config_bus(
         module_manager, parent_module, sram_orgz_type);
       break;
     }
+    case CONFIG_MEM_FEEDTHROUGH:
     case CONFIG_MEM_STANDALONE:
     case CONFIG_MEM_QL_MEMORY_BANK:
     case CONFIG_MEM_MEMORY_BANK:
