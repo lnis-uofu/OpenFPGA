@@ -252,7 +252,7 @@ static int write_memory_bank_flatten_fabric_bitstream_to_text_file(
  * Old function is write_memory_bank_flatten_fabric_bitstream_to_text_file()
  *
  * As compared to original function, based on 100K LE FPGA:
- *  1. Original function used 600 seconds and need 80G Bytes of memory
+ *  1. Original function used 600 seconds and needs high memory usage
  *  2. This new function only needs 1 second and 4M Bytes
  *
  * Old function only print WL in decremental order. It is not by intentional
@@ -370,7 +370,7 @@ static int fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
           }
         }
       } else {
-        /* However not all region has equal WL, for those that is shortest,
+        /* However not all region has equal WL, for those that is shorter,
          * print 'x' for all BL*/
         for (size_t bl = 0; bl < lengths.bl; bl++) {
           fp << dont_care_bit.c_str();
@@ -378,7 +378,7 @@ static int fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
       }
     }
     // Step 4
-    // Write BL address
+    // Write WL address
     // We cascade all regions: 0, 1, 2 ...
     for (size_t region = 0; region < memory_bank.datas.size(); region++) {
       const fabric_blwl_length& lengths = memory_bank.blwl_lengths[region];
@@ -404,7 +404,7 @@ static int fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
           wl_indexes[region]--;
         }
       } else {
-        /* However not all region has equal WL, for those that is shortest,
+        /* However not all region has equal WL, for those that is shorter,
          * print 'x' for all WL */
         for (size_t wl_temp = 0; wl_temp < lengths.wl; wl_temp++) {
           fp << dont_care_bit.c_str();

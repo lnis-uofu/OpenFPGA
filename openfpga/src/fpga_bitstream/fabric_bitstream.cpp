@@ -69,37 +69,32 @@ void FabricBitstreamMemoryBank::fast_configuration(
     wls.clear();
   }
   wls_to_skip.clear();
-  // If we had processed it before, we do not need to process again
-  if (wls_to_skip.size() == 0) {
-    for (size_t region = 0; region < datas.size(); region++) {
-      wls_to_skip.emplace_back();
-      if (fast) {
-        for (fabric_size_t wl = 0; wl < blwl_lengths[region].wl; wl++) {
-          VTR_ASSERT((size_t)(wl) < datas[region].size());
-          bool skip_wl = true;
-          for (fabric_size_t bl = 0; bl < blwl_lengths[region].bl && skip_wl;
-               bl++) {
-            // Only check the bit that being used (marked in the mask),
-            // otherwise it is just a don't care, we can skip
-            if (masks[region][wl][bl >> 3] & (1 << (bl & 7))) {
-              if (datas[region][wl][bl >> 3] & (1 << (bl & 7))) {
-                // If bit_value_to_skip=true, and yet the din (recorded in
-                // datas) also 1, then we can skip
-                skip_wl = bit_value_to_skip;
-              } else {
-                skip_wl = !bit_value_to_skip;
-              }
+  for (size_t region = 0; region < datas.size(); region++) {
+    wls_to_skip.emplace_back();
+    if (fast) {
+      for (fabric_size_t wl = 0; wl < blwl_lengths[region].wl; wl++) {
+        VTR_ASSERT((size_t)(wl) < datas[region].size());
+        bool skip_wl = true;
+        for (fabric_size_t bl = 0; bl < blwl_lengths[region].bl && skip_wl;
+             bl++) {
+          // Only check the bit that being used (marked in the mask),
+          // otherwise it is just a don't care, we can skip
+          if (masks[region][wl][bl >> 3] & (1 << (bl & 7))) {
+            if (datas[region][wl][bl >> 3] & (1 << (bl & 7))) {
+              // If bit_value_to_skip=true, and yet the din (recorded in
+              // datas) also 1, then we can skip
+              skip_wl = bit_value_to_skip;
+            } else {
+              skip_wl = !bit_value_to_skip;
             }
           }
-          if (skip_wl) {
-            // Record down that for this region, we will skip this WL
-            wls_to_skip[region].push_back(wl);
-          }
+        }
+        if (skip_wl) {
+          // Record down that for this region, we will skip this WL
+          wls_to_skip[region].push_back(wl);
         }
       }
     }
-  } else {
-    VTR_ASSERT(wls_to_skip.size() == datas.size());
   }
 }
 

@@ -77,7 +77,7 @@ struct FabricBitstreamMemoryBank {
    *  1. The very first layer of vector is region
    * For the datas and masks
    *  1. They are sorted by WL, hence second layer is WL
-   *  2. Layer is BL data stored in vector of uint8_t
+   *  2. Last layer is BL data stored in vector of uint8_t
    *  3. Each uint8_t will store up-to 8 configuration bit info
    **************************/
   // Store the BL WL of each region
