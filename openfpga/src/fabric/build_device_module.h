@@ -24,8 +24,8 @@ int build_device_module_graph(
   const OpenfpgaContext& openfpga_ctx, const DeviceContext& vpr_device_ctx,
   const bool& frame_view, const bool& compress_routing,
   const bool& duplicate_grid_pin, const FabricKey& fabric_key,
-  const TileConfig& tile_config, const bool& generate_random_fabric_key,
-  const bool& verbose);
+  const TileConfig& tile_config, const bool& group_config_block,
+  const bool& generate_random_fabric_key, const bool& verbose);
 
 } /* end namespace openfpga */
 

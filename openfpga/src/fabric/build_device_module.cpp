@@ -37,8 +37,8 @@ int build_device_module_graph(
   const OpenfpgaContext& openfpga_ctx, const DeviceContext& vpr_device_ctx,
   const bool& frame_view, const bool& compress_routing,
   const bool& duplicate_grid_pin, const FabricKey& fabric_key,
-  const TileConfig& tile_config, const bool& generate_random_fabric_key,
-  const bool& verbose) {
+  const TileConfig& tile_config, const bool& group_config_block,
+  const bool& generate_random_fabric_key, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build fabric module graph");
 
   int status = CMD_EXEC_SUCCESS;
@@ -85,7 +85,7 @@ int build_device_module_graph(
                      openfpga_ctx.vpr_device_annotation(),
                      openfpga_ctx.arch().circuit_lib, openfpga_ctx.mux_lib(),
                      openfpga_ctx.arch().config_protocol.type(), sram_model,
-                     duplicate_grid_pin, verbose);
+                     duplicate_grid_pin, group_config_block, verbose);
 
   if (true == compress_routing) {
     build_unique_routing_modules(

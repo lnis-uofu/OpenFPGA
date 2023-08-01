@@ -265,7 +265,7 @@ static void build_primitive_block_module(
   const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, t_pb_graph_node* primitive_pb_graph_node,
-  const bool& verbose) {
+  const bool& group_config_block, const bool& verbose) {
   /* Ensure a valid pb_graph_node */
   VTR_ASSERT(nullptr != primitive_pb_graph_node);
 
@@ -504,7 +504,7 @@ static void add_module_pb_graph_pin_interc(
   std::vector<ModuleId>& memory_modules, std::vector<size_t>& memory_instances,
   const VprDeviceAnnotation& device_annotation,
   const CircuitLibrary& circuit_lib, t_pb_graph_pin* des_pb_graph_pin,
-  t_mode* physical_mode) {
+  t_mode* physical_mode, const bool& group_config_block, const bool& verbose) {
   /* Find the number of fan-in and detailed interconnection information
    * related to the destination pb_graph_pin
    */
@@ -732,7 +732,8 @@ static void add_module_pb_graph_port_interc(
   std::vector<ModuleId>& memory_modules, std::vector<size_t>& memory_instances,
   const VprDeviceAnnotation& device_annotation,
   const CircuitLibrary& circuit_lib, t_pb_graph_node* des_pb_graph_node,
-  const e_circuit_pb_port_type& pb_port_type, t_mode* physical_mode) {
+  const e_circuit_pb_port_type& pb_port_type, t_mode* physical_mode,
+  const bool& group_config_block, const bool& verbose) {
   switch (pb_port_type) {
     case CIRCUIT_PB_PORT_INPUT: {
       for (int iport = 0; iport < des_pb_graph_node->num_input_ports; ++iport) {
@@ -742,7 +743,8 @@ static void add_module_pb_graph_port_interc(
           add_module_pb_graph_pin_interc(
             module_manager, pb_module, memory_modules, memory_instances,
             device_annotation, circuit_lib,
-            &(des_pb_graph_node->input_pins[iport][ipin]), physical_mode);
+            &(des_pb_graph_node->input_pins[iport][ipin]), physical_mode,
+            group_config_block, verbose);
         }
       }
       break;
@@ -755,7 +757,8 @@ static void add_module_pb_graph_port_interc(
           add_module_pb_graph_pin_interc(
             module_manager, pb_module, memory_modules, memory_instances,
             device_annotation, circuit_lib,
-            &(des_pb_graph_node->output_pins[iport][ipin]), physical_mode);
+            &(des_pb_graph_node->output_pins[iport][ipin]), physical_mode,
+            group_config_block, verbose);
         }
       }
       break;
@@ -767,7 +770,8 @@ static void add_module_pb_graph_port_interc(
           add_module_pb_graph_pin_interc(
             module_manager, pb_module, memory_modules, memory_instances,
             device_annotation, circuit_lib,
-            &(des_pb_graph_node->clock_pins[iport][ipin]), physical_mode);
+            &(des_pb_graph_node->clock_pins[iport][ipin]), physical_mode,
+            group_config_block, verbose);
         }
       }
       break;
@@ -814,7 +818,8 @@ static void add_module_pb_graph_interc(
   std::vector<ModuleId>& memory_modules, std::vector<size_t>& memory_instances,
   const VprDeviceAnnotation& device_annotation,
   const CircuitLibrary& circuit_lib, t_pb_graph_node* physical_pb_graph_node,
-  const int& physical_mode_index) {
+  const int& physical_mode_index, const bool& group_config_block,
+  const bool& verbose) {
   /* Check cur_pb_graph_node*/
   VTR_ASSERT(nullptr != physical_pb_graph_node);
 
@@ -830,10 +835,10 @@ static void add_module_pb_graph_interc(
    *                                         |
    *                         input_pins,   edges,       output_pins
    */
-  add_module_pb_graph_port_interc(module_manager, pb_module, memory_modules,
-                                  memory_instances, device_annotation,
-                                  circuit_lib, physical_pb_graph_node,
-                                  CIRCUIT_PB_PORT_OUTPUT, physical_mode);
+  add_module_pb_graph_port_interc(
+    module_manager, pb_module, memory_modules, memory_instances,
+    device_annotation, circuit_lib, physical_pb_graph_node,
+    CIRCUIT_PB_PORT_OUTPUT, physical_mode, group_config_block, verbose);
 
   /* We check input_pins of child_pb_graph_node and its the input_edges
    * Built the interconnections between inputs of cur_pb_graph_node and inputs
@@ -856,16 +861,16 @@ static void add_module_pb_graph_interc(
         &(physical_pb_graph_node
             ->child_pb_graph_nodes[physical_mode_index][child][inst]);
       /* For each child_pb_graph_node input pins*/
-      add_module_pb_graph_port_interc(module_manager, pb_module, memory_modules,
-                                      memory_instances, device_annotation,
-                                      circuit_lib, child_pb_graph_node,
-                                      CIRCUIT_PB_PORT_INPUT, physical_mode);
+      add_module_pb_graph_port_interc(
+        module_manager, pb_module, memory_modules, memory_instances,
+        device_annotation, circuit_lib, child_pb_graph_node,
+        CIRCUIT_PB_PORT_INPUT, physical_mode, group_config_block, verbose);
 
       /* For each child_pb_graph_node clock pins*/
-      add_module_pb_graph_port_interc(module_manager, pb_module, memory_modules,
-                                      memory_instances, device_annotation,
-                                      circuit_lib, child_pb_graph_node,
-                                      CIRCUIT_PB_PORT_CLOCK, physical_mode);
+      add_module_pb_graph_port_interc(
+        module_manager, pb_module, memory_modules, memory_instances,
+        device_annotation, circuit_lib, child_pb_graph_node,
+        CIRCUIT_PB_PORT_CLOCK, physical_mode, group_config_block, verbose);
     }
   }
 }
@@ -892,7 +897,7 @@ static void rec_build_logical_tile_modules(
   const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, t_pb_graph_node* physical_pb_graph_node,
-  const bool& verbose) {
+  const bool& group_config_block, const bool& verbose) {
   /* Check cur_pb_graph_node*/
   VTR_ASSERT(nullptr != physical_pb_graph_node);
 
@@ -913,7 +918,7 @@ static void rec_build_logical_tile_modules(
         sram_orgz_type, sram_model,
         &(physical_pb_graph_node
             ->child_pb_graph_nodes[physical_mode->index][ipb][0]),
-        verbose);
+        group_config_block, verbose);
     }
   }
 
@@ -921,7 +926,8 @@ static void rec_build_logical_tile_modules(
   if (true == is_primitive_pb_type(physical_pb_type)) {
     build_primitive_block_module(module_manager, decoder_lib, device_annotation,
                                  circuit_lib, sram_orgz_type, sram_model,
-                                 physical_pb_graph_node, verbose);
+                                 physical_pb_graph_node, group_config_block,
+                                 verbose);
     /* Finish for primitive node, return */
     return;
   }
@@ -1003,7 +1009,8 @@ static void rec_build_logical_tile_modules(
    */
   add_module_pb_graph_interc(module_manager, pb_module, memory_modules,
                              memory_instances, device_annotation, circuit_lib,
-                             physical_pb_graph_node, physical_mode->index);
+                             physical_pb_graph_node, physical_mode->index,
+                             group_config_block, verbose);
 
   /* Add global ports to the pb_module:
    * This is a much easier job after adding sub modules (instances),
@@ -1253,15 +1260,13 @@ static void build_physical_tile_module(
  *   - Only one module for each CLB (FILL_TYPE)
  *   - Only one module for each heterogeneous block
  ****************************************************************************/
-void build_grid_modules(ModuleManager& module_manager,
-                        DecoderLibrary& decoder_lib,
-                        const DeviceContext& device_ctx,
-                        const VprDeviceAnnotation& device_annotation,
-                        const CircuitLibrary& circuit_lib,
-                        const MuxLibrary& mux_lib,
-                        const e_config_protocol_type& sram_orgz_type,
-                        const CircuitModelId& sram_model,
-                        const bool& duplicate_grid_pin, const bool& verbose) {
+void build_grid_modules(
+  ModuleManager& module_manager, DecoderLibrary& decoder_lib,
+  const DeviceContext& device_ctx, const VprDeviceAnnotation& device_annotation,
+  const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
+  const e_config_protocol_type& sram_orgz_type,
+  const CircuitModelId& sram_model, const bool& duplicate_grid_pin,
+  const bool& group_config_block, const bool& verbose) {
   /* Start time count */
   vtr::ScopedStartFinishTimer timer("Build grid modules");
 
@@ -1284,7 +1289,8 @@ void build_grid_modules(ModuleManager& module_manager,
     }
     rec_build_logical_tile_modules(
       module_manager, decoder_lib, device_annotation, circuit_lib, mux_lib,
-      sram_orgz_type, sram_model, logical_tile.pb_graph_head, verbose);
+      sram_orgz_type, sram_model, logical_tile.pb_graph_head,
+      group_config_block, verbose);
   }
   VTR_LOG("Done\n");
 

@@ -17,15 +17,13 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void build_grid_modules(ModuleManager& module_manager,
-                        DecoderLibrary& decoder_lib,
-                        const DeviceContext& device_ctx,
-                        const VprDeviceAnnotation& device_annotation,
-                        const CircuitLibrary& circuit_lib,
-                        const MuxLibrary& mux_lib,
-                        const e_config_protocol_type& sram_orgz_type,
-                        const CircuitModelId& sram_model,
-                        const bool& duplicate_grid_pin, const bool& verbose);
+void build_grid_modules(
+  ModuleManager& module_manager, DecoderLibrary& decoder_lib,
+  const DeviceContext& device_ctx, const VprDeviceAnnotation& device_annotation,
+  const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
+  const e_config_protocol_type& sram_orgz_type,
+  const CircuitModelId& sram_model, const bool& duplicate_grid_pin,
+  const bool& group_config_block, const bool& verbose);
 
 } /* end namespace openfpga */
 
