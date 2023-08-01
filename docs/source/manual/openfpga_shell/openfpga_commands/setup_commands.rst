@@ -260,6 +260,10 @@ build_fabric
     .. warning:: This option does not support ``--duplicate_grid_pin``!
    
     .. warning:: This option requires ``--compress_routing`` to be enabled!
+
+  .. option:: --group_config_block
+
+    Group configuration memory blocks under each CLB/SB/CB etc. into a centralized configuration memory blocks. When disabled, the configuration memory blocks are placed in a distributed way under CLB/SB/CB etc. For example, each programming resource, e.g., LUT, has a dedicated configuration memory block, being placed in the same module.
   
   .. option:: --duplicate_grid_pin
 
