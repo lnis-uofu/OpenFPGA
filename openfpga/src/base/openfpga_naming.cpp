@@ -529,6 +529,13 @@ std::string generate_tile_module_netlist_name(const std::string& block_name,
 }
 
 /*********************************************************************
+ * Generate the module name of a physical memory module
+ **********************************************************************/
+std::string generate_physical_memory_module_name(const size_t& mem_size) {
+  return std::string("physical_config_mem_size") + std::to_string(mem_size);
+}
+
+/*********************************************************************
  * Generate the module name for a connection block with a given coordinate
  *********************************************************************/
 std::string generate_connection_block_module_name(

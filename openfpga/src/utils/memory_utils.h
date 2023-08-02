@@ -53,6 +53,13 @@ size_t generate_pb_sram_port_size(const e_config_protocol_type sram_orgz_type,
 size_t estimate_num_configurable_children_to_skip_by_config_protocol(
   const ConfigProtocol& config_protocol, size_t curr_region_num_config_child);
 
+/**
+ * @brief Find the physical memory child modules with a given root module
+ * This function will walk through the module tree in a recursive way until reaching the leaf node (which require configurable memories)
+ * Return a list of modules
+ */
+int rec_find_physical_memory_children(const ModuleManager& module_manager, const ModuleId& curr_module, std::vector<ModuleId>& physical_memory_children);
+
 } /* end namespace openfpga */
 
 #endif

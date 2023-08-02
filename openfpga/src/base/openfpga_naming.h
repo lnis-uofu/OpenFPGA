@@ -119,6 +119,8 @@ std::string generate_tile_module_port_name(const std::string& prefix,
 std::string generate_tile_module_netlist_name(const std::string& block_name,
                                               const std::string& postfix);
 
+std::string generate_physical_memory_module_name(const size_t& mem_size);
+
 std::string generate_sb_mux_instance_name(const std::string& prefix,
                                           const e_side& sb_side,
                                           const size_t& track_id,

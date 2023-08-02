@@ -496,4 +496,20 @@ size_t estimate_num_configurable_children_to_skip_by_config_protocol(
   return num_child_to_skip;
 }
 
+int rec_find_physical_memory_children(const ModuleManager& module_manager, const ModuleId& curr_module, std::vector<ModuleId>& physical_memory_children) {
+  if (module_manager.logical_configurable_children(curr_module).empty()) {
+    return CMD_EXEC_SUCCESS;
+  }
+  for (size_t ichild = 0; ichild < module_manager.logical_configurable_children(curr_module).size(); ++ichild) {
+    ModuleId logical_child = module_manager.logical_configurable_children(curr_module)[ichild];
+    if (module_manager.logical_configurable_children(logical_child).empty()) {
+      /* This is a leaf node, get the physical memory module */
+      physical_memory_children.push_back(module_manager.physical_configurable_children(curr_module)[ichild]);
+    } else {
+      rec_find_physical_memory_children(module_manager, logical_child, physical_memory_children);
+    }
+  }
+  return CMD_EXEC_SUCCESS; 
+}
+
 } /* end namespace openfpga */

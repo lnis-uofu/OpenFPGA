@@ -6,8 +6,7 @@
 #include <algorithm>
 #include <ctime>
 #include <string>
-
-/* Headers from vtrutil library */
+#include "command_exit_codes.h"
 #include "build_decoder_modules.h"
 #include "build_memory_modules.h"
 #include "circuit_library_utils.h"
@@ -933,6 +932,79 @@ static void build_memory_module(ModuleManager& module_manager,
 }
 
 /*********************************************************************
+ * Generate Verilog modules for the feedthrough memories that are used
+ * by a circuit model
+ *           mem_out           mem_outb
+ *               |               |
+ *               v               v
+ *      +------------------------------------+
+ *      |                                    |
+ *      |                                    |
+ *      |                                    |
+ *      +------------------------------------+
+ *          |                   |
+ *          | mem_in            | mem_inb
+ *          v                   v
+ *      +------------------------------------+
+ *      |   Multiplexer Configuration port   |
+ *
+ ********************************************************************/
+static int build_feedthrough_memory_module(ModuleManager& module_manager,
+                                           const std::string& module_name,
+                                           const size_t& num_mems) {
+  /* Create a module and add to the module manager */
+  ModuleId mem_module = module_manager.add_module(module_name);
+  if (!module_manager.valid_module_id(mem_module)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Label module usage */
+  module_manager.set_module_usage(mem_module, ModuleManager::MODULE_CONFIG);
+
+  /* Add module ports */
+  /* Input: memory inputs */
+  BasicPort in_port(std::string(MEMORY_FEEDTHROUGH_DATA_IN_PORT_NAME), num_mems);
+  ModulePortId mem_in_port = module_manager.add_port(
+    mem_module, in_port, ModuleManager::MODULE_INPUT_PORT);
+  BasicPort inb_port(std::string(MEMORY_FEEDTHROUGH_DATA_IN_INV_PORT_NAME), num_mems);
+  ModulePortId mem_inb_port = module_manager.add_port(
+    mem_module, inb_port, ModuleManager::MODULE_INPUT_PORT);
+
+  /* Add each output port */
+  BasicPort out_port(std::string(CONFIGURABLE_MEMORY_DATA_OUT_NAME), num_mems);
+  ModulePortId mem_out_port = module_manager.add_port(
+    mem_module, out_port, ModuleManager::MODULE_OUTPUT_PORT);
+  BasicPort outb_port(std::string(CONFIGURABLE_MEMORY_INVERTED_DATA_OUT_NAME), num_mems);
+  ModulePortId mem_outb_port = module_manager.add_port(
+    mem_module, outb_port, ModuleManager::MODULE_OUTPUT_PORT);
+
+  /* Build feedthrough nets */
+  for (size_t pin_id = 0; pin_id < in_port.pins().size(); ++pin_id) {
+    ModuleNetId net = module_manager.create_module_net(mem_module);
+    if (!module_manager.valid_module_net_id(mem_module, net)) {
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    module_manager.add_module_net_source(mem_module, net, mem_module, 0,
+                                         mem_in_port, in_port.pins()[pin_id]);
+    module_manager.add_module_net_sink(
+      mem_module, net, mem_module, 0, mem_out_port, out_port.pins()[pin_id]);
+  }
+  for (size_t pin_id = 0; pin_id < inb_port.pins().size(); ++pin_id) {
+    ModuleNetId net = module_manager.create_module_net(mem_module);
+    if (!module_manager.valid_module_net_id(mem_module, net)) {
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    module_manager.add_module_net_source(mem_module, net, mem_module, 0,
+                                         mem_inb_port, inb_port.pins()[pin_id]);
+    module_manager.add_module_net_sink(
+      mem_module, net, mem_module, 0, mem_outb_port, outb_port.pins()[pin_id]);
+  }
+
+  return CMD_EXEC_SUCCESS;
+}
+
+
+/*********************************************************************
  * Generate Verilog modules for the memories that are used
  * by multiplexers
  *
@@ -991,6 +1063,62 @@ static void build_mux_memory_module(
 }
 
 /*********************************************************************
+ * Generate Verilog modules for the feedthrough memories that are used
+ * by multiplexers
+ *             SRAM ports as feedthrough (driven by physical memory blocks)
+ *              |  |      |  |
+ *              v  v ...  v  v
+ *            +----------------+
+ *            |  Memory Module |            
+ *            +----------------+
+ *              |  |  ... |  |
+ *              v  v      v  v SRAM ports of multiplexer
+ *          +---------------------+
+ *    in--->|  Multiplexer Module |---> out
+ *          +---------------------+
+ ********************************************************************/
+static int build_mux_feedthrough_memory_module(
+  ModuleManager& module_manager,
+  const CircuitLibrary& circuit_lib,
+  const e_config_protocol_type& sram_orgz_type, const CircuitModelId& mux_model,
+  const MuxGraph& mux_graph) {
+  int status = CMD_EXEC_SUCCESS;
+  /* Find the actual number of configuration bits, based on the mux graph
+   * Due to the use of local decoders inside mux, this may be
+   */
+  size_t num_config_bits =
+    find_mux_num_config_bits(circuit_lib, mux_model, mux_graph, sram_orgz_type);
+  /* Multiplexers built with different technology is in different organization
+   */
+  switch (circuit_lib.design_tech_type(mux_model)) {
+    case CIRCUIT_MODEL_DESIGN_CMOS: {
+      /* Generate module name */
+      std::string module_name = generate_mux_subckt_name(
+        circuit_lib, mux_model,
+        find_mux_num_datapath_inputs(circuit_lib, mux_model,
+                                     mux_graph.num_inputs()),
+        std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
+
+      status = build_feedthrough_memory_module(module_manager, module_name, num_config_bits);
+      break;
+    }
+    case CIRCUIT_MODEL_DESIGN_RRAM:
+      /* We do not need a memory submodule for RRAM MUX,
+       * RRAM are embedded in the datapath
+       * TODO: generate local encoders for RRAM-based multiplexers here!!!
+       */
+      break;
+    default:
+      VTR_LOGF_ERROR(__FILE__, __LINE__,
+                     "Invalid design technology of multiplexer '%s'\n",
+                     circuit_lib.model_name(mux_model).c_str());
+      exit(1);
+  }
+  return status;
+}
+
+
+/*********************************************************************
  * Build modules for
  * the memories that are affiliated to multiplexers and other programmable
  * circuit models, such as IOPADs, LUTs, etc.
@@ -1007,12 +1135,13 @@ static void build_mux_memory_module(
  * memory-bank organization for the memories.
  * If we need feedthrough memory blocks, build the memory modules which contain only feedthrough wires
  ********************************************************************/
-void build_memory_modules(ModuleManager& module_manager,
+int build_memory_modules(ModuleManager& module_manager,
                           DecoderLibrary& arch_decoder_lib,
                           const MuxLibrary& mux_lib,
                           const CircuitLibrary& circuit_lib,
                           const e_config_protocol_type& sram_orgz_type,
                           const bool& require_feedthrough_memory) {
+  int status = CMD_EXEC_SUCCESS;
   vtr::ScopedStartFinishTimer timer("Build memory modules");
 
   /* Create the memory circuits for the multiplexer */
@@ -1029,7 +1158,14 @@ void build_memory_modules(ModuleManager& module_manager,
     /* Create a Verilog module for the memories used by the multiplexer */
     build_mux_memory_module(module_manager, arch_decoder_lib, circuit_lib,
                             sram_orgz_type, mux_model, mux_graph);
-    /* TODO: Create feedthrough memory module */
+    /* Create feedthrough memory module */
+    if (require_feedthrough_memory) {
+      status = build_mux_feedthrough_memory_module(module_manager, circuit_lib,
+                              sram_orgz_type, mux_model, mux_graph);
+      if (status != CMD_EXEC_SUCCESS) {
+        return CMD_EXEC_FATAL_ERROR;
+      }
+    }
   }
 
   /* Create the memory circuits for non-MUX circuit models.
@@ -1066,8 +1202,165 @@ void build_memory_modules(ModuleManager& module_manager,
     /* Create a Verilog module for the memories used by the circuit model */
     build_memory_module(module_manager, arch_decoder_lib, circuit_lib,
                         sram_orgz_type, module_name, sram_models[0], num_mems);
-    /* TODO: Create feedthrough memory module */
+    /* Create feedthrough memory module */
+    if (require_feedthrough_memory) {
+      status = build_feedthrough_memory_module(module_manager, module_name, num_mems);
+      if (status != CMD_EXEC_SUCCESS) {
+        return CMD_EXEC_FATAL_ERROR;
+      }
+    }
   }
+  return status;
+}
+
+/*********************************************************************
+ * Add module nets to connect an output port of a configuration-chain
+ * memory module to an output port of its child module
+ * Restriction: this function is really designed for memory modules
+ * 1. It assumes that output port name of child module is the same as memory
+ *module
+ * 2. It assumes exact pin-to-pin mapping:
+ *     j-th pin of output port of the i-th child module is wired to the j + i*W
+ *-th pin of output port of the memory module, where W is the size of port
+ * 3. It assumes fixed port name for output ports
+ ********************************************************************/
+void add_module_output_nets_to_memory_group_module(
+  ModuleManager& module_manager, const ModuleId& mem_module,
+  const std::string& mem_module_output_name, const ModuleId& child_module,
+  const size_t& output_pin_start_index, const size_t& child_instance) {
+  /* Wire inputs of parent module to inputs of child modules */
+  ModulePortId src_port_id = module_manager.find_module_port(
+    child_module, mem_module_output_name);
+  ModulePortId sink_port_id =
+    module_manager.find_module_port(mem_module, mem_module_output_name);
+  for (size_t pin_id = 0;
+       pin_id <
+       module_manager.module_port(child_module, src_port_id).pins().size();
+       ++pin_id) {
+    ModuleNetId net = module_manager.create_module_net(mem_module);
+    /* Source pin is shifted by the number of memories */
+    size_t src_pin_id =
+      module_manager.module_port(child_module, src_port_id).pins()[pin_id];
+    /* Source node of the input net is the input of memory module */
+    module_manager.add_module_net_source(
+      mem_module, net, child_module, child_instance, src_port_id, src_pin_id);
+    /* Sink node of the input net is the input of sram module */
+    size_t sink_pin_id =
+      output_pin_start_index +
+      module_manager.module_port(mem_module, sink_port_id).pins()[pin_id];
+    module_manager.add_module_net_sink(mem_module, net, mem_module, 0,
+                                       sink_port_id, sink_pin_id);
+  }
+}
+
+/*********************************************************************
+ * Build a grouped memory module based on existing memory modules
+ * - Create the module
+ * - Add dedicated instance
+ * - Add ports
+ * - Add nets
+ ********************************************************************/
+int build_memory_group_module(ModuleManager& module_manager,
+                              DecoderLibrary& decoder_lib,
+                              const CircuitLibrary& circuit_lib,
+                              const e_config_protocol_type& sram_orgz_type,
+                              const std::string& module_name,
+                              const CircuitModelId& sram_model,
+                              const std::vector<ModuleId>& child_modules,
+                              const size_t& num_mems) {
+  ModuleId mem_module = module_manager.add_module(module_name);
+  if (!module_manager.valid_module_id(mem_module)) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Add output ports */
+  std::string out_port_name = generate_configurable_memory_data_out_name();
+  BasicPort out_port(out_port_name, num_mems);
+  module_manager.add_port(mem_module, out_port,
+                          ModuleManager::MODULE_OUTPUT_PORT);
+
+  std::string outb_port_name = generate_configurable_memory_inverted_data_out_name();
+  BasicPort outb_port(outb_port_name, num_mems);
+  module_manager.add_port(mem_module, outb_port,
+                          ModuleManager::MODULE_OUTPUT_PORT);
+
+  /* Add nets between child module outputs and memory modules */
+  size_t mem_out_pin_start_index = 0;
+  size_t mem_outb_pin_start_index = 0;
+  for (size_t ichild = 0; ichild < child_modules.size(); ++ichild) {
+    ModuleId child_module = child_modules[ichild];
+    size_t child_instance = module_manager.num_instance(mem_module, child_module);
+    module_manager.add_child_module(mem_module, child_module, false);
+    module_manager.add_configurable_child(mem_module, child_module, child_instance, false);
+    /* Wire outputs of child module to outputs of parent module */
+    add_module_output_nets_to_memory_group_module(
+      module_manager, mem_module, out_port_name,
+      child_module, mem_out_pin_start_index, child_instance);
+    add_module_output_nets_to_memory_group_module(
+      module_manager, mem_module, outb_port_name,
+      child_module, mem_outb_pin_start_index, child_instance);
+    /* Update pin counter */
+    ModulePortId child_out_port_id = module_manager.find_module_port(child_module, out_port_name);
+    mem_out_pin_start_index += module_manager.module_port(child_module, child_out_port_id).get_width(); 
+
+    ModulePortId child_outb_port_id = module_manager.find_module_port(child_module, outb_port_name);
+    mem_outb_pin_start_index += module_manager.module_port(child_module, child_outb_port_id).get_width(); 
+  }
+  /* Check pin counter */
+  VTR_ASSERT(mem_out_pin_start_index == num_mems && mem_outb_pin_start_index == num_mems);
+
+  /* Add global ports to the pb_module:
+   * This is a much easier job after adding sub modules (instances),
+   * we just need to find all the global ports from the child modules and build
+   * a list of it
+   */
+  add_module_global_ports_from_child_modules(module_manager, mem_module);
+
+  /* Count GPIO ports from the sub-modules under this Verilog module
+   * This is a much easier job after adding sub modules (instances),
+   * we just need to find all the I/O ports from the child modules and build a
+   * list of it
+   */
+  add_module_gpio_ports_from_child_modules(module_manager, mem_module);
+
+  /* Count shared SRAM ports from the sub-modules under this Verilog module
+   * This is a much easier job after adding sub modules (instances),
+   * we just need to find all the I/O ports from the child modules and build a
+   * list of it
+   */
+  size_t module_num_shared_config_bits =
+    find_module_num_shared_config_bits_from_child_modules(module_manager,
+                                                          mem_module);
+  if (0 < module_num_shared_config_bits) {
+    add_reserved_sram_ports_to_module_manager(module_manager, mem_module,
+                                              module_num_shared_config_bits);
+  }
+
+  /* Count SRAM ports from the sub-modules under this Verilog module
+   * This is a much easier job after adding sub modules (instances),
+   * we just need to find all the I/O ports from the child modules and build a
+   * list of it
+   */
+  size_t module_num_config_bits =
+    find_module_num_config_bits_from_child_modules(
+      module_manager, mem_module, circuit_lib, sram_model, sram_orgz_type);
+  if (0 < module_num_config_bits) {
+    add_sram_ports_to_module_manager(module_manager, mem_module, circuit_lib,
+                                     sram_model, sram_orgz_type,
+                                     module_num_config_bits);
+  }
+
+  /* Add module nets to connect memory cells inside
+   * This is a one-shot addition that covers all the memory modules in this pb
+   * module!
+   */
+  if (0 < module_manager.configurable_children(mem_module).size()) {
+    add_module_nets_memory_config_bus(module_manager, decoder_lib, mem_module,
+                                      sram_orgz_type,
+                                      circuit_lib.design_tech_type(sram_model));
+  }
+
+  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */
