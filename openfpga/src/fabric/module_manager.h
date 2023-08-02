@@ -166,15 +166,28 @@ class ModuleManager {
   std::vector<size_t> child_module_instances(
     const ModuleId& parent_module, const ModuleId& child_module) const;
   /* Find all the configurable child modules under a parent module */
-  std::vector<ModuleId> configurable_children(
+  std::vector<ModuleId> logical_configurable_children(
     const ModuleId& parent_module) const;
   /* Find all the instances of configurable child modules under a parent module
    */
-  std::vector<size_t> configurable_child_instances(
+  std::vector<size_t> logical_configurable_child_instances(
     const ModuleId& parent_module) const;
   /* Find the coordindate of a configurable child module under a parent module
    */
-  std::vector<vtr::Point<int>> configurable_child_coordinates(
+  std::vector<vtr::Point<int>> logical_configurable_child_coordinates(
+    const ModuleId& parent_module) const;
+
+  /* Find all the configurable child modules under a parent module */
+  std::vector<ModuleId> physical_configurable_children(
+    const ModuleId& parent_module) const;
+  /* Find all the instances of configurable child modules under a parent module
+   */
+  std::vector<size_t> physical_configurable_child_instances(
+    const ModuleId& parent_module) const;
+  /* Find all the parent modules of physical configurable child modules under a parent module
+   * Note that a physical configurable child module may be at another module; Only the logical child module is under the current parent module
+   */
+  std::vector<ModuleId> physical_configurable_child_parents(
     const ModuleId& parent_module) const;
 
   /* Find all the I/O child modules under a parent module */
@@ -195,16 +208,17 @@ class ModuleManager {
   /* Find all the regions */
   region_range regions(const ModuleId& module) const;
   /* Find all the configurable child modules under a region of a parent module
+   * Note that we use logical children here
    */
   std::vector<ModuleId> region_configurable_children(
     const ModuleId& parent_module, const ConfigRegionId& region) const;
   /* Find all the instances of configurable child modules under a region of a
-   * parent module */
+   * parent module; Note that we use logical children here */
   std::vector<size_t> region_configurable_child_instances(
     const ModuleId& parent_module, const ConfigRegionId& region) const;
 
   /* Find all the coordinates of configurable child modules under a region of a
-   * parent module */
+   * parent module; Note that we use logical children here */
   std::vector<vtr::Point<int>> region_configurable_child_coordinates(
     const ModuleId& parent_module, const ConfigRegionId& region) const;
 
@@ -238,6 +252,8 @@ class ModuleManager {
   size_t instance_id(const ModuleId& parent_module,
                      const ModuleId& child_module,
                      const std::string& instance_name) const;
+  /** @brief Count the number of logical configurable children */
+  size_t num_logical_configurable_children(const ModuleId& parent_module) const;
   /* Find the type of a port */
   ModuleManager::e_module_port_type port_type(const ModuleId& module,
                                               const ModulePortId& port) const;
@@ -360,6 +376,11 @@ class ModuleManager {
     const size_t& child_instance,
     const bool& logical_only,
     const vtr::Point<int> coord = vtr::Point<int>(-1, -1));
+  /** @brief Create a pair of mapping from a logical configurable child to a physical configurable child */
+  void set_physical_configurable_child(const ModuleId& parent_module, const size_t& logical_child_id, const ModuleId& physical_child_module);
+  /** @brief Create a pair of mapping from a logical configurable child to a physical configurable child */
+  void set_physical_configurable_child_instance(const ModuleId& parent_module, const size_t& logical_child_id, const size_t& physical_child_instance);
+  void set_physical_configurable_child_parent_module(const ModuleId& parent_module, const size_t& logical_child_id, const ModuleId& physical_child_parent_module);
   /* Reserved a number of configurable children for memory efficiency */
   void reserve_configurable_child(const ModuleId& module,
                                   const size_t& num_children);

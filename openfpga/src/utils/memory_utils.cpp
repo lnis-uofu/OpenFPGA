@@ -512,4 +512,27 @@ int rec_find_physical_memory_children(const ModuleManager& module_manager, const
   return CMD_EXEC_SUCCESS; 
 }
 
+int rec_update_logical_memory_children_with_physical_mapping(ModuleManager& module_manager, const ModuleId& curr_module, const ModuleId& phy_mem_module, std::map<ModuleId, size_t>& logical_mem_child_inst_count) {
+  if (module_manager.logical_configurable_children(curr_module).empty()) {
+    return CMD_EXEC_SUCCESS;
+  }
+  for (size_t ichild = 0; ichild < module_manager.logical_configurable_children(curr_module).size(); ++ichild) {
+    ModuleId logical_child = module_manager.logical_configurable_children(curr_module)[ichild];
+    if (module_manager.logical_configurable_children(logical_child).empty()) {
+      /* This is a leaf node, update its physical information */
+      ModuleId phy_mem_submodule = module_manager.physical_configurable_children(curr_module)[ichild]
+      auto result = logical_mem_child_inst_count.find(phy_mem_submodule);
+      if (result == logical_mem_child_inst_count.end()) {
+        logical_mem_child_inst_count.find[phy_mem_submodule] = 0;
+      }
+      module_manager.set_physical_configurable_child_instance(curr_module, ichild, logical_mem_child_inst_count[phy_mem_submodule]);
+      module_manager.set_physical_configurable_child_parent_module(curr_module, ichild, phy_mem_module);
+      logical_mem_child_inst_count[phy_mem_submodule]++;
+    } else {
+      rec_find_physical_memory_children(module_manager, logical_child, physical_memory_children, logical_mem_child_inst_count);
+    }
+  }
+  return CMD_EXEC_SUCCESS; 
+}
+
 } /* end namespace openfpga */

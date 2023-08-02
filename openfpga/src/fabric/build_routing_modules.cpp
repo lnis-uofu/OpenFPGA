@@ -17,6 +17,7 @@
 #include "build_module_graph_utils.h"
 #include "build_routing_module_utils.h"
 #include "build_routing_modules.h"
+#include "build_memory_modules.h"
 #include "module_manager_utils.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
@@ -240,7 +241,16 @@ static void build_switch_block_mux_module(
     module_manager, sb_module, mux_module, mux_instance_id, mem_module,
     mem_instance_id, circuit_lib, mux_model);
   /* Update memory and instance list */
+  size_t config_child_id = module_manager.num_configurable_children(sb_module);
   module_manager.add_configurable_child(sb_module, mem_module, mem_instance_id, group_config_block);
+  /* For logical memory, define the physical memory here */
+  if (group_config_block) {
+    std::string physical_mem_module_name =
+      generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size,
+                               std::string(MEMORY_MODULE_POSTFIX));
+    ModuleId physical_mem_module = module_manager.find_module(physical_mem_module_name);
+    module_manager.set_physical_configurable_child(sb_module, config_child_id, physical_mem_module);
+  }
 }
 
 /*********************************************************************
@@ -740,7 +750,16 @@ static void build_connection_block_mux_module(
     module_manager, cb_module, mux_module, mux_instance_id, mem_module,
     mem_instance_id, circuit_lib, mux_model);
   /* Update memory and instance list */
+  size_t config_child_id = module_manager.num_configurable_children(cb_module);
   module_manager.add_configurable_child(cb_module, mem_module, mem_instance_id, group_config_block);
+  /* For logical memory, define the physical memory here */
+  if (group_config_block) {
+    std::string physical_mem_module_name =
+      generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size,
+                               std::string(MEMORY_MODULE_POSTFIX));
+    ModuleId physical_mem_module = module_manager.find_module(physical_mem_module_name);
+    module_manager.set_physical_configurable_child(cb_module, config_child_id, physical_mem_module);
+  }
 }
 
 /********************************************************************

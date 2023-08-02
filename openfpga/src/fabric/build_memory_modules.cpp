@@ -15,6 +15,7 @@
 #include "module_manager_utils.h"
 #include "mux_graph.h"
 #include "mux_utils.h"
+#include "memory_utils.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
 #include "vtr_assert.h"
@@ -1362,5 +1363,118 @@ int build_memory_group_module(ModuleManager& module_manager,
 
   return CMD_EXEC_SUCCESS;
 }
+
+/*****************************************************************************
+ * This function creates a physical memory module and add it the current module
+ * The following tasks will be accomplished:
+ * - Traverse all the logical configurable children in the module tree, starting from the current module
+ * - Build a list of the leaf logical configurable children and count the total memory sizes, the memory size for each physical memory submodule. Note that the physical memory submodule should be cached already in each leaf logical configurable children
+ * - Get the physical memory module required by each leaf logical configurable child
+ * - Create a dedicated module name for the physical memory (check if already exists, if yes, skip creating a new module)
+ * - Instanciate the module
+ * - Built nets. Note that only the output ports of the physical memory block is required, since they should drive the dedicated memory ports of logical configurable children 
+ *****************************************************************************/
+int add_physical_memory_module(ModuleManager& module_manager,
+                               DecoderLibrary& decoder_lib,
+                               const ModuleId& curr_module,
+                               const CircuitLibrary& circuit_lib,
+                               const e_config_protocol_type& sram_orgz_type,
+                               const CircuitModelId& sram_model) {
+  int status = CMD_EXEC_SUCCESS;
+
+  std::vector<ModuleId> required_phy_mem_modules;
+  status = rec_find_physical_memory_children(static_cast<const ModuleManager&>(module_manager), curr_module, required_phy_mem_modules);
+  if (status != CMD_EXEC_SUCCESS) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  size_t module_num_config_bits =
+    find_module_num_config_bits_from_child_modules(
+      module_manager, curr_module, circuit_lib, sram_model, CONFIG_MEM_FEEDTHROUGH);
+  std::string phy_mem_module_name = generate_physical_memory_module_name(module_num_config_bits);
+  ModuleId phy_mem_module = module_manager.find_module(phy_mem_module_name);
+  if (!module_manager.valid_module_id(phy_mem_module)) {
+    status = build_memory_group_module(module_manager, decode_lib, circuit_lib, sram_orgz_type, phy_mem_module_name, sram_model, required_phy_mem_modules);
+  }
+  if (status != CMD_EXEC_SUCCESS) {
+    VTR_LOG_ERROR("Failed to create the physical memory module '%s'!\n", phy_mem_module_name.c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  phy_mem_module = module_manager.find_module(phy_mem_module_name);
+  if (!module_manager.valid_module_id(phy_mem_module)) {
+    VTR_LOG_ERROR("Failed to create the physical memory module '%s'!\n", phy_mem_module_name.c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  /* Add the physical memory module to the current module */
+  size_t phy_mem_instance = module_manager.num_instance(curr_module, phy_mem_module);
+  module_manager.add_child_module(curr_module, phy_mem_module, false);
+
+  /* Register in the physical configurable children list */
+  module_manager.add_physical_configurable_child(curr_module, phy_mem_module, phy_mem_instance, curr_module);
+
+  /* Build nets between the data output of the physical memory module and the outputs of the logical configurable children */
+  size_t curr_mem_pin_index = 0;
+  std::map<CircuitPortType, std::string> mem2mem_port_map;
+  mem2mem_port_map[CIRCUIT_MODEL_PORT_BL] = std::string(CONFIGURABLE_MEMORY_DATA_OUT_NAME);
+  mem2mem_port_map[CIRCUIT_MODEL_PORT_BLB] = std::string(CONFIGURABLE_MEMORY_INVERTED_DATA_OUT_NAME);
+  for (size_t ichild = 0; ichild < module_manager.logical_configurable_children(curr_module).size(); ++ichild) {
+    for (CircuitPortType port_type : {CIRCUIT_MODEL_PORT_BL, CIRCUIT_MODEL_PORT_BLB}) {
+      std::string src_port_name = mem2mem_port_map[port_type];
+      std::string des_port_name =
+        generate_sram_port_name(CONFIG_MEM_FEEDTHROUGH, port_type); 
+      /* Try to find these ports in the module manager */
+      ModulePortId src_port_id =
+        module_manager.find_module_port(phy_mem_module, src_port_name);
+      if (!module_manager.valid_module_port_id(phy_mem_module, src_port_id)) {
+        return CMD_EXEC_FATAL_ERROR;
+      }
+      BasicPort src_port =
+        module_manager.module_port(phy_mem_module, src_port_id);
+
+      ModuleId des_module = module_manager.logical_configurable_children(curr_module)[ichild];
+      size_t des_instance = module_manager.logical_configurable_child_instances(curr_module)[ichild];
+      ModulePortId des_port_id =
+        module_manager.find_module_port(des_module, des_port_name);
+      if (!module_manager.valid_module_port_id(des_module, des_port_id)) {
+        return CMD_EXEC_FATAL_ERROR;
+      }
+      BasicPort des_port =
+        module_manager.module_port(des_module, des_port_id);
+      /* Build nets */
+      for (size_t ipin = 0; ipin < des_port.pins().size(); ++ipin) {
+        /* Create a net and add source and sink to it */
+        ModuleNetId net = create_module_source_pin_net(
+          module_manager, curr_module, phy_mem_module, phy_mem_instance,
+          src_port_id, src_port.pins()[cur_mem_pin_index]);
+        if (module_manager.valid_module_net_id(curr_module, net)) {
+          return CMD_EXEC_FATAL_ERROR;
+        }
+        /* Add net sink */
+        module_manager.add_module_net_sink(curr_module, net, des_module,
+                                           des_instance, des_port_id,
+                                           des_port.pins()[ipin]);
+        curr_mem_pin_index++;
+      }
+    }
+  }
+
+  /* TODO: Recursively update the logical configurable child with the physical memory module parent and its instance id */
+  std::map<ModuleId, size_t> logical_mem_child_inst_count;
+  status = rec_update_logical_memory_children_with_physical_mapping(module_manager, curr_module, phy_mem_module, logical_mem_child_inst_count);
+  if (status != CMD_EXEC_SUCCESS) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  /* Sanity check */
+  std::map<ModuleId, size_t> required_mem_child_inst_count;
+  for (ModuleId curr_module : module_manager.child_modules(phy_mem_module)) {
+    if (logical_mem_child_inst_count[curr_module] != module_manager.num_instance(phy_mem_module, curr_module)) {
+      VTR_LOG_ERROR("Expect the %lu instances of module '%s' under its parent '%s' while only updated %lu during logical-to-physical configurable child mapping sync-up!\n", module_manager.num_instance(phy_mem_module, curr_module), module_manager.module_name(curr_module).c_str(), module_manager.module_name(phy_mem_module).c_str(), logical_mem_child_inst_count[curr_module]);
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
+
+  return status;
+}
+
 
 } /* end namespace openfpga */

@@ -60,6 +60,13 @@ size_t estimate_num_configurable_children_to_skip_by_config_protocol(
  */
 int rec_find_physical_memory_children(const ModuleManager& module_manager, const ModuleId& curr_module, std::vector<ModuleId>& physical_memory_children);
 
+/**
+ * @brief Update all the mappings between logical-to-physical memory children with a given root module
+ * This function will walk through the module tree in a recursive way until reaching the leaf node (which require configurable memories)
+ * Keep a scoreboard of instance number for checking. Note that when calling this the function, use an empty scoreboard! 
+ */
+int rec_update_logical_memory_children_with_physical_mapping(ModuleManager& module_manager, const ModuleId& curr_module, const ModuleId& phy_mem_module, std::map<ModuleId, size_t>& logical_mem_child_inst_count);
+
 } /* end namespace openfpga */
 
 #endif
