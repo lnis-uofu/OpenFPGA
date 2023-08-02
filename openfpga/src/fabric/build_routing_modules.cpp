@@ -108,7 +108,8 @@ static void build_switch_block_mux_module(
   const CircuitLibrary& circuit_lib, const e_side& chan_side,
   const size_t& chan_node_id, const RRNodeId& cur_rr_node,
   const std::vector<RRNodeId>& driver_rr_nodes, const RRSwitchId& switch_index,
-  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
+  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
+  const bool& group_config_block) {
   /* Check current rr_node is CHANX or CHANY*/
   VTR_ASSERT((CHANX == rr_graph.node_type(cur_rr_node)) ||
              (CHANY == rr_graph.node_type(cur_rr_node)));
@@ -214,6 +215,11 @@ static void build_switch_block_mux_module(
   std::string mem_module_name =
     generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size,
                              std::string(MEMORY_MODULE_POSTFIX));
+  if (group_config_block) {
+    mem_module_name =
+      generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size,
+                               std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
+  }
   ModuleId mem_module = module_manager.find_module(mem_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
 
@@ -224,7 +230,7 @@ static void build_switch_block_mux_module(
    * modules
    */
   std::string mem_instance_name = generate_sb_memory_instance_name(
-    SWITCH_BLOCK_MEM_INSTANCE_PREFIX, chan_side, chan_node_id, std::string(""));
+    SWITCH_BLOCK_MEM_INSTANCE_PREFIX, chan_side, chan_node_id, std::string(""), group_config_block);
   module_manager.set_child_instance_name(sb_module, mem_module, mem_instance_id,
                                          mem_instance_name);
 
@@ -234,7 +240,7 @@ static void build_switch_block_mux_module(
     module_manager, sb_module, mux_module, mux_instance_id, mem_module,
     mem_instance_id, circuit_lib, mux_model);
   /* Update memory and instance list */
-  module_manager.add_configurable_child(sb_module, mem_module, mem_instance_id);
+  module_manager.add_configurable_child(sb_module, mem_module, mem_instance_id, group_config_block);
 }
 
 /*********************************************************************
@@ -248,7 +254,8 @@ static void build_switch_block_interc_modules(
   const RRGraphView& rr_graph, const RRGSB& rr_gsb,
   const CircuitLibrary& circuit_lib, const e_side& chan_side,
   const size_t& chan_node_id,
-  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
+  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
+  const bool& group_config_block) {
   std::vector<RRNodeId> driver_rr_nodes;
 
   /* Get the node */
@@ -284,7 +291,7 @@ static void build_switch_block_interc_modules(
     build_switch_block_mux_module(
       module_manager, sb_module, device_annotation, grids, rr_graph, rr_gsb,
       circuit_lib, chan_side, chan_node_id, cur_rr_node, driver_rr_nodes,
-      driver_switches[0], input_port_to_module_nets);
+      driver_switches[0], input_port_to_module_nets, group_config_block);
   } /*Nothing should be done else*/
 }
 
@@ -354,7 +361,8 @@ static void build_switch_block_module(
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
   const RRGraphView& rr_graph, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
-  const CircuitModelId& sram_model, const RRGSB& rr_gsb, const bool& verbose) {
+  const CircuitModelId& sram_model, const RRGSB& rr_gsb,
+  const bool& group_config_block, const bool& verbose) {
   /* Create a Module of Switch Block and add to module manager */
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
   ModuleId sb_module = module_manager.add_module(
@@ -456,12 +464,15 @@ static void build_switch_block_module(
         build_switch_block_interc_modules(
           module_manager, sb_module, device_annotation, grids, rr_graph, rr_gsb,
           circuit_lib, side_manager.get_side(), itrack,
-          input_port_to_module_nets);
+          input_port_to_module_nets, group_config_block);
       }
     }
   }
 
-  /* TODO: Build a physical memory block */
+  /* Build a physical memory block */
+  if (group_config_block) {
+    add_physical_memory_module(module_manager, decoder_lib, sb_module, circuit_lib, sram_orgz_type, sram_model);
+  }
 
   /* Add global ports to the pb_module:
    * This is a much easier job after adding sub modules (instances),
@@ -588,7 +599,8 @@ static void build_connection_block_mux_module(
   const RRGraphView& rr_graph, const RRGSB& rr_gsb, const t_rr_type& cb_type,
   const CircuitLibrary& circuit_lib, const e_side& cb_ipin_side,
   const size_t& ipin_index,
-  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
+  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
+  const bool& group_config_block) {
   const RRNodeId& cur_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
   /* Check current rr_node is an input pin of a CLB */
   VTR_ASSERT(IPIN == rr_graph.node_type(cur_rr_node));
@@ -699,6 +711,11 @@ static void build_connection_block_mux_module(
   std::string mem_module_name =
     generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size,
                              std::string(MEMORY_MODULE_POSTFIX));
+  if (group_config_block) {
+    mem_module_name =
+      generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size,
+                             std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
+  }
   ModuleId mem_module = module_manager.find_module(mem_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
 
@@ -713,7 +730,7 @@ static void build_connection_block_mux_module(
     CONNECTION_BLOCK_MEM_INSTANCE_PREFIX,
     get_rr_graph_single_node_side(
       rr_graph, rr_gsb.get_ipin_node(cb_ipin_side, ipin_index)),
-    ipin_index, std::string(""));
+    ipin_index, std::string(""), group_config_block);
   module_manager.set_child_instance_name(cb_module, mem_module, mem_instance_id,
                                          mem_instance_name);
 
@@ -723,7 +740,7 @@ static void build_connection_block_mux_module(
     module_manager, cb_module, mux_module, mux_instance_id, mem_module,
     mem_instance_id, circuit_lib, mux_model);
   /* Update memory and instance list */
-  module_manager.add_configurable_child(cb_module, mem_module, mem_instance_id);
+  module_manager.add_configurable_child(cb_module, mem_module, mem_instance_id, group_config_block);
 }
 
 /********************************************************************
@@ -739,7 +756,8 @@ static void build_connection_block_interc_modules(
   const RRGraphView& rr_graph, const RRGSB& rr_gsb, const t_rr_type& cb_type,
   const CircuitLibrary& circuit_lib, const e_side& cb_ipin_side,
   const size_t& ipin_index,
-  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets) {
+  const std::map<ModulePinInfo, ModuleNetId>& input_port_to_module_nets,
+  const bool& group_config_block) {
   std::vector<RREdgeId> driver_rr_edges =
     rr_gsb.get_ipin_node_in_edges(rr_graph, cb_ipin_side, ipin_index);
 
@@ -756,7 +774,7 @@ static void build_connection_block_interc_modules(
     build_connection_block_mux_module(
       module_manager, cb_module, device_annotation, grids, rr_graph, rr_gsb,
       cb_type, circuit_lib, cb_ipin_side, ipin_index,
-      input_port_to_module_nets);
+      input_port_to_module_nets, group_config_block);
   } /*Nothing should be done else*/
 }
 
@@ -821,7 +839,9 @@ static void build_connection_block_module(
   const RRGraphView& rr_graph, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const RRGSB& rr_gsb,
-  const t_rr_type& cb_type, const bool& verbose) {
+  const t_rr_type& cb_type,
+  const bool& group_config_block, 
+  const bool& verbose) {
   /* Create the netlist */
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_cb_x(cb_type),
                                     rr_gsb.get_cb_y(cb_type));
@@ -943,8 +963,13 @@ static void build_connection_block_module(
          ++inode) {
       build_connection_block_interc_modules(
         module_manager, cb_module, device_annotation, grids, rr_graph, rr_gsb,
-        cb_type, circuit_lib, cb_ipin_side, inode, input_port_to_module_nets);
+        cb_type, circuit_lib, cb_ipin_side, inode, input_port_to_module_nets, group_config_block);
     }
+  }
+
+  /* Build a physical memory block */
+  if (group_config_block) {
+    add_physical_memory_module(module_manager, decoder_lib, sb_module, circuit_lib, sram_orgz_type, sram_model);
   }
 
   /* Add global ports to the pb_module:
@@ -1057,17 +1082,17 @@ void build_flatten_routing_modules(
       build_switch_block_module(module_manager, decoder_lib, device_annotation,
                                 device_ctx.grid, device_ctx.rr_graph,
                                 circuit_lib, sram_orgz_type, sram_model, rr_gsb,
-                                verbose);
+                                group_config_block, verbose);
     }
   }
 
   build_flatten_connection_block_modules(
     module_manager, decoder_lib, device_ctx, device_annotation, device_rr_gsb,
-    circuit_lib, sram_orgz_type, sram_model, CHANX, verbose);
+    circuit_lib, sram_orgz_type, sram_model, CHANX, group_config_block, verbose);
 
   build_flatten_connection_block_modules(
     module_manager, decoder_lib, device_ctx, device_annotation, device_rr_gsb,
-    circuit_lib, sram_orgz_type, sram_model, CHANY, verbose);
+    circuit_lib, sram_orgz_type, sram_model, CHANY, group_config_block, verbose);
 }
 
 /********************************************************************
@@ -1097,7 +1122,7 @@ void build_unique_routing_modules(
     build_switch_block_module(module_manager, decoder_lib, device_annotation,
                               device_ctx.grid, device_ctx.rr_graph, circuit_lib,
                               sram_orgz_type, sram_model, unique_mirror,
-                              verbose);
+                              group_config_block, verbose);
   }
 
   /* Build unique X-direction connection block modules */
@@ -1108,7 +1133,7 @@ void build_unique_routing_modules(
     build_connection_block_module(
       module_manager, decoder_lib, device_annotation, device_ctx.grid,
       device_ctx.rr_graph, circuit_lib, sram_orgz_type, sram_model,
-      unique_mirror, CHANX, verbose);
+      unique_mirror, CHANX, group_config_block, verbose);
   }
 
   /* Build unique X-direction connection block modules */
@@ -1119,7 +1144,7 @@ void build_unique_routing_modules(
     build_connection_block_module(
       module_manager, decoder_lib, device_annotation, device_ctx.grid,
       device_ctx.rr_graph, circuit_lib, sram_orgz_type, sram_model,
-      unique_mirror, CHANY, verbose);
+      unique_mirror, CHANY, group_config_block, verbose);
   }
 }
 

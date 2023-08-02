@@ -1098,8 +1098,12 @@ std::string generate_sb_mux_instance_name(const std::string& prefix,
 std::string generate_sb_memory_instance_name(const std::string& prefix,
                                              const e_side& sb_side,
                                              const size_t& track_id,
-                                             const std::string& postfix) {
+                                             const std::string& postfix,
+                                             const bool& logical_memory) {
   std::string instance_name(prefix);
+  if (logical_memory) {
+    instance_name = std::string("virtual_") + instance_name;
+  }
   instance_name += SideManager(sb_side).to_string();
   instance_name += std::string("_track_") + std::to_string(track_id);
   instance_name += postfix;
@@ -1136,8 +1140,12 @@ std::string generate_cb_mux_instance_name(const std::string& prefix,
 std::string generate_cb_memory_instance_name(const std::string& prefix,
                                              const e_side& cb_side,
                                              const size_t& pin_id,
-                                             const std::string& postfix) {
+                                             const std::string& postfix,
+                                             const bool& logical_memory) {
   std::string instance_name(prefix);
+  if (logical_memory) {
+    instance_name = std::string("virtual_") + instance_name;
+  }
 
   instance_name += SideManager(cb_side).to_string();
   instance_name += std::string("_ipin_") + std::to_string(pin_id);
