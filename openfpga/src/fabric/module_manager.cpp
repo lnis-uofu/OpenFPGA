@@ -77,56 +77,65 @@ std::vector<size_t> ModuleManager::child_module_instances(
 }
 
 /* Find all the configurable child modules under a parent module */
-std::vector<ModuleId> ModuleManager::logical_configurable_children(
-  const ModuleId& parent_module) const {
+std::vector<ModuleId> ModuleManager::configurable_children(
+  const ModuleId& parent_module, const e_config_child_type& type) const {
   /* Validate the module_id */
   VTR_ASSERT(valid_module_id(parent_module));
 
-  return logical_configurable_children_[parent_module];
-}
-
-/* Find all the instances of configurable child modules under a parent module */
-std::vector<size_t> ModuleManager::logical_configurable_child_instances(
-  const ModuleId& parent_module) const {
-  /* Validate the module_id */
-  VTR_ASSERT(valid_module_id(parent_module));
-
-  return logical_configurable_child_instances_[parent_module];
-}
-
-std::vector<vtr::Point<int>> ModuleManager::logical_configurable_child_coordinates(
-  const ModuleId& parent_module) const {
-  /* Validate the module_id */
-  VTR_ASSERT(valid_module_id(parent_module));
-
-  return logical_configurable_child_coordinates_[parent_module];
-}
-
-/* Find all the configurable child modules under a parent module */
-std::vector<ModuleId> ModuleManager::physical_configurable_children(
-  const ModuleId& parent_module) const {
-  /* Validate the module_id */
-  VTR_ASSERT(valid_module_id(parent_module));
-
+  if (type == ModuleManager::e_config_child_type::LOGICAL) {
+    return logical_configurable_children_[parent_module];
+  } 
+  VTR_ASSERT(type == ModuleManager::e_config_child_type::PHYSICAL);
   return physical_configurable_children_[parent_module];
 }
 
 /* Find all the instances of configurable child modules under a parent module */
-std::vector<size_t> ModuleManager::physical_configurable_child_instances(
-  const ModuleId& parent_module) const {
+std::vector<size_t> ModuleManager::configurable_child_instances(
+  const ModuleId& parent_module, const e_config_child_type& type) const {
   /* Validate the module_id */
   VTR_ASSERT(valid_module_id(parent_module));
 
+  if (type == ModuleManager::e_config_child_type::LOGICAL) {
+    return logical_configurable_child_instances_[parent_module];
+  }
+  VTR_ASSERT(type == ModuleManager::e_config_child_type::PHYSICAL);
   return physical_configurable_child_instances_[parent_module];
 }
 
-/* Find all the instances of configurable child modules under a parent module */
-std::vector<ModuleId> ModuleManager::physical_configurable_child_parents(
+std::vector<vtr::Point<int>> ModuleManager::configurable_child_coordinates(
+  const ModuleId& parent_module, const e_config_child_type& type) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(parent_module));
+  VTR_ASSERT(type == ModuleManager::e_config_child_type::PHYSICAL);
+
+  return physical_configurable_child_coordinates_[parent_module];
+}
+
+/* Find all the configurable child modules under a parent module */
+std::vector<ModuleId> ModuleManager::logical2physical_configurable_children(
   const ModuleId& parent_module) const {
   /* Validate the module_id */
   VTR_ASSERT(valid_module_id(parent_module));
 
-  return physical_configurable_child_parents_[parent_module];
+  return logical2physical_configurable_children_[parent_module];
+}
+
+/* Find all the instances of configurable child modules under a parent module */
+std::vector<size_t> ModuleManager::logical2physical_configurable_child_instances(
+  const ModuleId& parent_module) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(parent_module));
+
+  return logical2physical_configurable_child_instances_[parent_module];
+}
+
+/* Find all the instances of configurable child modules under a parent module */
+std::vector<ModuleId> ModuleManager::logical2physical_configurable_child_parents(
+  const ModuleId& parent_module) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(parent_module));
+
+  return logical2physical_configurable_child_parents_[parent_module];
 }
 
 /* Find all the configurable child modules under a parent module */
@@ -193,7 +202,7 @@ std::vector<ModuleId> ModuleManager::region_configurable_children(
   for (const size_t& child_id :
        config_region_children_[parent_module][region]) {
     region_config_children.push_back(
-      logical_configurable_children_[parent_module][child_id]);
+      physical_configurable_children_[parent_module][child_id]);
   }
 
   return region_config_children;
@@ -212,7 +221,7 @@ std::vector<size_t> ModuleManager::region_configurable_child_instances(
   for (const size_t& child_id :
        config_region_children_[parent_module][region]) {
     region_config_child_instances.push_back(
-      logical_configurable_child_instances_[parent_module][child_id]);
+      physical_configurable_child_instances_[parent_module][child_id]);
   }
 
   return region_config_child_instances;
@@ -939,7 +948,7 @@ void ModuleManager::set_child_instance_name(const ModuleId& parent_module,
 void ModuleManager::add_configurable_child(const ModuleId& parent_module,
                                            const ModuleId& child_module,
                                            const size_t& child_instance,
-                                           const bool& logical_only,
+                                           const e_config_child_type& type,
                                            const vtr::Point<int> coord) {
   /* Validate the id of both parent and child modules */
   VTR_ASSERT(valid_module_id(parent_module));
@@ -947,72 +956,89 @@ void ModuleManager::add_configurable_child(const ModuleId& parent_module,
   /* Ensure that the instance id is in range */
   VTR_ASSERT(child_instance < num_instance(parent_module, child_module));
 
-  logical_configurable_children_[parent_module].push_back(child_module);
-  logical_configurable_child_instances_[parent_module].push_back(child_instance);
-  logical_configurable_child_regions_[parent_module].push_back(
-    ConfigRegionId::INVALID());
-  logical_configurable_child_coordinates_[parent_module].push_back(coord);
-
-  if (!logical_only) {
+  if (type == ModuleManager::e_config_child_type::LOGICAL || type == ModuleManager::e_config_child_type::UNIFIED) {
+    logical_configurable_children_[parent_module].push_back(child_module);
+    logical_configurable_child_instances_[parent_module].push_back(child_instance);
+  }
+  if (type == ModuleManager::e_config_child_type::PHYSICAL || type == ModuleManager::e_config_child_type::UNIFIED) {
     physical_configurable_children_[parent_module].push_back(child_module);
     physical_configurable_child_instances_[parent_module].push_back(child_instance);
-    physical_configurable_child_parents_[parent_module].push_back(parent_module);
-  } else {
-    physical_configurable_children_[parent_module].emplace_back();
-    physical_configurable_child_instances_[parent_module].emplace_back();
-    physical_configurable_child_parents_[parent_module].emplace_back();
+    physical_configurable_child_regions_[parent_module].push_back(
+      ConfigRegionId::INVALID());
+    physical_configurable_child_coordinates_[parent_module].push_back(coord);
+  }
+
+  if (type == ModuleManager::e_config_child_type::UNIFIED) {
+    logical2physical_configurable_children_[parent_module].push_back(child_module);
+    logical2physical_configurable_child_instances_[parent_module].push_back(child_instance);
+    logical2physical_configurable_child_parents_[parent_module].push_back(parent_module);
+  } else if (type == ModuleManager::e_config_child_type::LOGICAL) {
+    logical2physical_configurable_children_[parent_module].emplace_back();
+    logical2physical_configurable_child_instances_[parent_module].emplace_back();
+    logical2physical_configurable_child_parents_[parent_module].emplace_back();
   }
 }
 
-void ModuleManager::set_physical_configurable_child(const ModuleId& parent_module, const size_t& logical_child_id, const ModuleId& physical_child_module) {
+void ModuleManager::set_logical2physical_configurable_child(const ModuleId& parent_module, const size_t& logical_child_id, const ModuleId& physical_child_module) {
   /* Sanity checks */
   VTR_ASSERT(valid_module_id(parent_module));
   VTR_ASSERT(logical_child_id < num_logical_configurable_children(parent_module));
   /* Create the pair */
-  physical_configurable_children_[parent_module][logical_child_id] = physical_child_module;
+  logical2physical_configurable_children_[parent_module][logical_child_id] = physical_child_module;
 }
 
-void ModuleManager::set_physical_configurable_child_instance(const ModuleId& parent_module, const size_t& logical_child_id, const size_t& physical_child_instance) {
+void ModuleManager::set_logical2physical_configurable_child_instance(const ModuleId& parent_module, const size_t& logical_child_id, const size_t& physical_child_instance) {
   /* Sanity checks */
   VTR_ASSERT(valid_module_id(parent_module));
   VTR_ASSERT(logical_child_id < num_logical_configurable_children(parent_module));
   /* Create the pair */
-  physical_configurable_child_instances_[parent_module][logical_child_id] = physical_child_instance;
+  logical2physical_configurable_child_instances_[parent_module][logical_child_id] = physical_child_instance;
 }
 
-void ModuleManager::set_physical_configurable_child_parent_module(const ModuleId& parent_module, const size_t& logical_child_id, const ModuleId& physical_child_parent_module) {
+void ModuleManager::set_logical2physical_configurable_child_parent_module(const ModuleId& parent_module, const size_t& logical_child_id, const ModuleId& physical_child_parent_module) {
   /* Sanity checks */
   VTR_ASSERT(valid_module_id(parent_module));
   VTR_ASSERT(logical_child_id < num_logical_configurable_children(parent_module));
   /* Create the pair */
-  physical_configurable_child_parents_[parent_module][logical_child_id] = physical_child_parent_module;
+  logical2physical_configurable_child_parents_[parent_module][logical_child_id] = physical_child_parent_module;
 }
 
 void ModuleManager::reserve_configurable_child(const ModuleId& parent_module,
-                                               const size_t& num_children) {
+                                               const size_t& num_children,
+                                               const e_config_child_type& type) {
   VTR_ASSERT(valid_module_id(parent_module));
-  /* Do reserve when the number of children is larger than current size of lists
-   */
-  if (num_children > logical_configurable_children_[parent_module].size()) {
-    logical_configurable_children_[parent_module].reserve(num_children);
+  if (type == ModuleManager::e_config_child_type::LOGICAL || type == ModuleManager::e_config_child_type::UNIFIED) {
+    /* Do reserve when the number of children is larger than current size of lists
+     */
+    if (num_children > logical_configurable_children_[parent_module].size()) {
+      logical_configurable_children_[parent_module].reserve(num_children);
+    }
+    if (num_children > logical_configurable_child_instances_[parent_module].size()) {
+      logical_configurable_child_instances_[parent_module].reserve(num_children);
+    }
+    if (num_children > logical2physical_configurable_children_[parent_module].size()) {
+      logical2physical_configurable_children_[parent_module].reserve(num_children);
+    }
+    if (num_children > logical2physical_configurable_child_instances_[parent_module].size()) {
+      logical2physical_configurable_child_instances_[parent_module].reserve(num_children);
+    }
+    if (num_children > logical2physical_configurable_child_parents_[parent_module].size()) {
+      logical2physical_configurable_child_parents_[parent_module].reserve(num_children);
+    }
   }
-  if (num_children > logical_configurable_child_instances_[parent_module].size()) {
-    logical_configurable_child_instances_[parent_module].reserve(num_children);
-  }
-  if (num_children > logical_configurable_child_regions_[parent_module].size()) {
-    logical_configurable_child_regions_[parent_module].reserve(num_children);
-  }
-  if (num_children > logical_configurable_child_coordinates_[parent_module].size()) {
-    logical_configurable_child_coordinates_[parent_module].reserve(num_children);
-  }
-  if (num_children > physical_configurable_children_[parent_module].size()) {
-    physical_configurable_children_[parent_module].reserve(num_children);
-  }
-  if (num_children > physical_configurable_child_instances_[parent_module].size()) {
-    physical_configurable_child_instances_[parent_module].reserve(num_children);
-  }
-  if (num_children > physical_configurable_child_parents_[parent_module].size()) {
-    physical_configurable_child_parents_[parent_module].reserve(num_children);
+  if (type == ModuleManager::e_config_child_type::PHYSICAL || type == ModuleManager::e_config_child_type::UNIFIED) {
+    if (num_children > physical_configurable_children_[parent_module].size()) {
+      physical_configurable_children_[parent_module].reserve(num_children);
+    }
+    if (num_children > physical_configurable_child_instances_[parent_module].size()) {
+      physical_configurable_child_instances_[parent_module].reserve(num_children);
+    }
+    if (num_children > physical_configurable_child_regions_[parent_module].size()) {
+      physical_configurable_child_regions_[parent_module].reserve(num_children);
+    }
+    if (num_children > physical_configurable_child_coordinates_[parent_module].size()) {
+      physical_configurable_child_coordinates_[parent_module].reserve(num_children);
+    }
   }
 }
 
@@ -1041,23 +1067,23 @@ void ModuleManager::add_configurable_child_to_region(
 
   /* Ensure that the child module is in the configurable children list */
   VTR_ASSERT(child_module ==
-             logical_configurable_children(parent_module)[config_child_id]);
+             physical_configurable_children(parent_module)[config_child_id]);
   VTR_ASSERT(child_instance ==
-             logical_configurable_child_instances(parent_module)[config_child_id]);
+             physical_configurable_child_instances(parent_module)[config_child_id]);
 
   /* If the child is already in another region, error out */
   if ((true ==
        valid_region_id(
          parent_module,
-         logical_configurable_child_regions_[parent_module][config_child_id])) &&
+         physical_configurable_child_regions_[parent_module][config_child_id])) &&
       (config_region !=
-       logical_configurable_child_regions_[parent_module][config_child_id])) {
+       physical_configurable_child_regions_[parent_module][config_child_id])) {
     VTR_LOGF_ERROR(
       __FILE__, __LINE__,
       "Try to add a configurable child '%s[%lu]' to region '%lu' which is "
       "already added to another region '%lu'!\n",
       module_name(child_module).c_str(), child_instance, size_t(config_region),
-      size_t(logical_configurable_child_regions_[parent_module][config_child_id]));
+      size_t(physical_configurable_child_regions_[parent_module][config_child_id]));
     exit(1);
   }
 
