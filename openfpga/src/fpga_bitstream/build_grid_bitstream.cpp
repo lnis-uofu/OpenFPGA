@@ -636,7 +636,7 @@ static void rec_build_physical_block_bitstream(
   VTR_ASSERT(true == module_manager.valid_module_id(pb_module));
 
   /* Skip module with no configurable children */
-  if (0 == module_manager.configurable_children(pb_module).size()) {
+  if (0 == module_manager.logical_configurable_children(pb_module).size()) {
     return;
   }
 

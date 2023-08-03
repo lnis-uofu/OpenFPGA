@@ -1479,7 +1479,7 @@ static int build_tile_module(
    * This is a one-shot addition that covers all the memory modules in this pb
    * module!
    */
-  if (0 < module_manager.configurable_children(tile_module).size()) {
+  if (0 < module_manager.logical_configurable_children(tile_module).size()) {
     add_pb_module_nets_memory_config_bus(
       module_manager, decoder_lib, tile_module, sram_orgz_type,
       circuit_lib.design_tech_type(sram_model));

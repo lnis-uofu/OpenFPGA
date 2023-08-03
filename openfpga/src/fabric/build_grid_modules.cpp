@@ -966,7 +966,7 @@ static void rec_build_logical_tile_modules(
   std::vector<ModuleId> memory_modules;
   std::vector<size_t> memory_instances;
 
-  e_config_protocol mem_module_type = group_config_block ? CONFIG_MEM_FEEDTHROUGH : sram_orgz_type;
+  e_config_protocol_type mem_module_type = group_config_block ? CONFIG_MEM_FEEDTHROUGH : sram_orgz_type;
 
   /* Add all the child Verilog modules as instances */
   for (int ichild = 0; ichild < physical_mode->num_pb_type_children; ++ichild) {
@@ -1070,7 +1070,7 @@ static void rec_build_logical_tile_modules(
    * This is a one-shot addition that covers all the memory modules in this pb
    * module!
    */
-  if (0 < module_manager.configurable_children(pb_module).size()) {
+  if (0 < module_manager.logical_configurable_children(pb_module).size()) {
     add_module_nets_memory_config_bus(module_manager, decoder_lib, pb_module,
                                       mem_module_type,
                                       circuit_lib.design_tech_type(sram_model));
@@ -1258,7 +1258,7 @@ static void build_physical_tile_module(
    * This is a one-shot addition that covers all the memory modules in this pb
    * module!
    */
-  if (0 < module_manager.configurable_children(grid_module).size()) {
+  if (0 < module_manager.logical_configurable_children(grid_module).size()) {
     add_pb_module_nets_memory_config_bus(
       module_manager, decoder_lib, grid_module, sram_orgz_type,
       circuit_lib.design_tech_type(sram_model));

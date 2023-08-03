@@ -413,12 +413,11 @@ ShellCommandId add_build_fabric_command_template(
   shell_cmd.set_option_require_value(opt_group_tile, openfpga::OPT_STRING);
 
   /* Add an option '--group_config_block' */
-  CommandOptionId opt_group_config_block =
-    shell_cmd.add_option("group_config_block", false,
-                         "group configuration memory blocks under CLB/SB/CB "
-                         "blocks etc. This helps to "
-                         "reduce optimize the density of configuration memory "
-                         "through physical design");
+  shell_cmd.add_option("group_config_block", false,
+                       "group configuration memory blocks under CLB/SB/CB "
+                       "blocks etc. This helps to "
+                       "reduce optimize the density of configuration memory "
+                       "through physical design");
 
   /* Add an option '--generate_random_fabric_key' */
   shell_cmd.add_option("generate_random_fabric_key", false,

@@ -1391,7 +1391,7 @@ int add_physical_memory_module(ModuleManager& module_manager,
   size_t module_num_config_bits =
     find_module_num_config_bits_from_child_modules(
       module_manager, curr_module, circuit_lib, sram_model, CONFIG_MEM_FEEDTHROUGH);
-  std::string phy_mem_module_name = generate_physical_memory_module_name(module_num_config_bits);
+  std::string phy_mem_module_name = generate_physical_memory_module_name(module_manager.module_name(curr_module), module_num_config_bits);
   ModuleId phy_mem_module = module_manager.find_module(phy_mem_module_name);
   if (!module_manager.valid_module_id(phy_mem_module)) {
     status = build_memory_group_module(module_manager, decode_lib, circuit_lib, sram_orgz_type, phy_mem_module_name, sram_model, required_phy_mem_modules);
@@ -1414,7 +1414,7 @@ int add_physical_memory_module(ModuleManager& module_manager,
 
   /* Build nets between the data output of the physical memory module and the outputs of the logical configurable children */
   size_t curr_mem_pin_index = 0;
-  std::map<CircuitPortType, std::string> mem2mem_port_map;
+  std::map<e_circuit_model_port_type, std::string> mem2mem_port_map;
   mem2mem_port_map[CIRCUIT_MODEL_PORT_BL] = std::string(CONFIGURABLE_MEMORY_DATA_OUT_NAME);
   mem2mem_port_map[CIRCUIT_MODEL_PORT_BLB] = std::string(CONFIGURABLE_MEMORY_INVERTED_DATA_OUT_NAME);
   for (size_t ichild = 0; ichild < module_manager.logical_configurable_children(curr_module).size(); ++ichild) {

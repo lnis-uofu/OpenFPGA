@@ -32,7 +32,7 @@ static int add_module_keys_to_fabric_key(const ModuleManager& module_manager,
     return CMD_EXEC_SUCCESS;
   }
   /* Bypass modules which does not have any configurable children */
-  if (module_manager.configurable_children(curr_module).empty()) {
+  if (module_manager.logical_configurable_children(curr_module).empty()) {
     return CMD_EXEC_SUCCESS;
   }
   /* Now create the module and add subkey one by one */
@@ -41,12 +41,12 @@ static int add_module_keys_to_fabric_key(const ModuleManager& module_manager,
     return CMD_EXEC_FATAL_ERROR;
   }
   size_t num_config_child =
-    module_manager.configurable_children(curr_module).size();
+    module_manager.logical_configurable_children(curr_module).size();
   for (size_t ichild = 0; ichild < num_config_child; ++ichild) {
     ModuleId child_module =
-      module_manager.configurable_children(curr_module)[ichild];
+      module_manager.logical_configurable_children(curr_module)[ichild];
     size_t child_instance =
-      module_manager.configurable_child_instances(curr_module)[ichild];
+      module_manager.logical_configurable_child_instances(curr_module)[ichild];
 
     FabricSubKeyId sub_key = fabric_key.create_module_key(key_module_id);
     fabric_key.set_sub_key_name(sub_key,
@@ -111,7 +111,7 @@ int write_fabric_key_to_xml_file(
 
   /* Build a fabric key database by visiting all the configurable children */
   FabricKey fabric_key;
-  size_t num_keys = module_manager.configurable_children(top_module).size();
+  size_t num_keys = module_manager.logical_configurable_children(top_module).size();
 
   fabric_key.reserve_keys(num_keys);
 

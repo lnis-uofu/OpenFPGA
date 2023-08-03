@@ -234,7 +234,7 @@ std::string generate_memory_module_name(const CircuitLibrary& circuit_lib,
                                         const bool& feedthrough_memory) {
   std::string mid_name;
   if (feedthrough_memory) {
-    mid_name = "feedthrough_" 
+    mid_name = "feedthrough_"; 
   }
   return std::string(circuit_lib.model_name(circuit_model) + "_" + mid_name +
                      circuit_lib.model_name(sram_model) + postfix);
@@ -531,8 +531,8 @@ std::string generate_tile_module_netlist_name(const std::string& block_name,
 /*********************************************************************
  * Generate the module name of a physical memory module
  **********************************************************************/
-std::string generate_physical_memory_module_name(const size_t& mem_size) {
-  return std::string("physical_config_mem_size") + std::to_string(mem_size);
+std::string generate_physical_memory_module_name(const std::string& prefix, const size_t& mem_size) {
+  return prefix + std::string("_config_group_mem_size") + std::to_string(mem_size);
 }
 
 /*********************************************************************
@@ -764,7 +764,7 @@ std::string generate_sram_port_name(
         port_name = std::string(MEMORY_FEEDTHROUGH_DATA_IN_PORT_NAME);
       } else {
         VTR_ASSERT(CIRCUIT_MODEL_PORT_BLB == port_type);
-        port_name = std::string(MEMEMORY_FEEDTHROUGH_DATA_IN_INV_PORT_NAME);
+        port_name = std::string(MEMORY_FEEDTHROUGH_DATA_IN_INV_PORT_NAME);
       }
       break;
     case CONFIG_MEM_SCAN_CHAIN:
@@ -1099,10 +1099,10 @@ std::string generate_sb_memory_instance_name(const std::string& prefix,
                                              const e_side& sb_side,
                                              const size_t& track_id,
                                              const std::string& postfix,
-                                             const bool& logical_memory) {
+                                             const bool& feedthrough_memory) {
   std::string instance_name(prefix);
-  if (logical_memory) {
-    instance_name = std::string("virtual_") + instance_name;
+  if (feedthrough_memory) {
+    instance_name = std::string("feedthrough_") + instance_name;
   }
   instance_name += SideManager(sb_side).to_string();
   instance_name += std::string("_track_") + std::to_string(track_id);
@@ -1141,10 +1141,10 @@ std::string generate_cb_memory_instance_name(const std::string& prefix,
                                              const e_side& cb_side,
                                              const size_t& pin_id,
                                              const std::string& postfix,
-                                             const bool& logical_memory) {
+                                             const bool& feedthrough_memory) {
   std::string instance_name(prefix);
-  if (logical_memory) {
-    instance_name = std::string("virtual_") + instance_name;
+  if (feedthrough_memory) {
+    instance_name = std::string("feedthrough_") + instance_name;
   }
 
   instance_name += SideManager(cb_side).to_string();

@@ -89,8 +89,8 @@ size_t count_module_manager_module_configurable_children(
   const ModuleManager& module_manager, const ModuleId& module) {
   size_t num_config_children = 0;
 
-  for (const ModuleId& child : module_manager.configurable_children(module)) {
-    if (0 != module_manager.configurable_children(child).size()) {
+  for (const ModuleId& child : module_manager.logical_configurable_children(module)) {
+    if (0 != module_manager.logical_configurable_children(child).size()) {
       num_config_children++;
     }
   }

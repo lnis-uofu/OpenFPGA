@@ -123,7 +123,7 @@ static void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(
        *   - no need to exclude decoders as they are not there
        */
       std::vector<ModuleId> configurable_children =
-        module_manager.configurable_children(parent_module);
+        module_manager.logical_configurable_children(parent_module);
 
       size_t num_configurable_children = configurable_children.size();
 
@@ -139,7 +139,7 @@ static void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(
            ++child_id) {
         ModuleId child_module = configurable_children[child_id];
         size_t child_instance =
-          module_manager.configurable_child_instances(parent_module)[child_id];
+          module_manager.logical_configurable_child_instances(parent_module)[child_id];
 
         /* Get the instance name and ensure it is not empty */
         std::string instance_name = module_manager.instance_name(

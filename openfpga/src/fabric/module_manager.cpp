@@ -1384,9 +1384,9 @@ void ModuleManager::clear_configurable_children(const ModuleId& parent_module) {
   logical_configurable_child_regions_[parent_module].clear();
   logical_configurable_child_coordinates_[parent_module].clear();
 
-  parent_configurable_children_[parent_module].clear();
-  parent_configurable_child_instances_[parent_module].clear();
-  parent_configurable_child_parents_[parent_module].clear();
+  physical_configurable_children_[parent_module].clear();
+  physical_configurable_child_instances_[parent_module].clear();
+  physical_configurable_child_parents_[parent_module].clear();
 }
 
 void ModuleManager::clear_config_region(const ModuleId& parent_module) {

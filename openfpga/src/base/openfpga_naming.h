@@ -119,7 +119,7 @@ std::string generate_tile_module_port_name(const std::string& prefix,
 std::string generate_tile_module_netlist_name(const std::string& block_name,
                                               const std::string& postfix);
 
-std::string generate_physical_memory_module_name(const size_t& mem_size);
+std::string generate_physical_memory_module_name(const std::string& prefix, const size_t& mem_size);
 
 std::string generate_sb_mux_instance_name(const std::string& prefix,
                                           const e_side& sb_side,
@@ -130,7 +130,7 @@ std::string generate_sb_memory_instance_name(const std::string& prefix,
                                              const e_side& sb_side,
                                              const size_t& track_id,
                                              const std::string& postfix,
-                                             const bool& logical_memory = false);
+                                             const bool& feedthrough_memory = false);
 
 std::string generate_cb_mux_instance_name(const std::string& prefix,
                                           const e_side& cb_side,
@@ -141,7 +141,7 @@ std::string generate_cb_memory_instance_name(const std::string& prefix,
                                              const e_side& cb_side,
                                              const size_t& pin_id,
                                              const std::string& postfix,
-                                             const bool& logical_memory = false);
+                                             const bool& feedthrough_memory = false);
 
 std::string generate_pb_mux_instance_name(const std::string& prefix,
                                           t_pb_graph_pin* pb_graph_pin,

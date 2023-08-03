@@ -35,15 +35,15 @@ static size_t rec_estimate_device_bitstream_num_blocks(
    * actually configurable memory elements
    * We skip them in couting
    */
-  if (0 == module_manager.configurable_children(top_module).size()) {
+  if (0 == module_manager.logical_configurable_children(top_module).size()) {
     return 0;
   }
 
   size_t num_configurable_children =
-    module_manager.configurable_children(top_module).size();
+    module_manager.logical_configurable_children(top_module).size();
   for (size_t ichild = 0; ichild < num_configurable_children; ++ichild) {
     ModuleId child_module =
-      module_manager.configurable_children(top_module)[ichild];
+      module_manager.logical_configurable_children(top_module)[ichild];
     num_blocks +=
       rec_estimate_device_bitstream_num_blocks(module_manager, child_module);
   }
@@ -68,7 +68,7 @@ static size_t rec_estimate_device_bitstream_num_bits(
   /* If a child module has no configurable children, this is a leaf node
    * We can count it in. Otherwise, we should go recursively.
    */
-  if (0 == module_manager.configurable_children(parent_module).size()) {
+  if (0 == module_manager.logical_configurable_children(parent_module).size()) {
     return 1;
   }
 
@@ -105,7 +105,7 @@ static size_t rec_estimate_device_bitstream_num_bits(
     VTR_ASSERT_SAFE(parent_module != top_module);
 
     size_t num_configurable_children =
-      module_manager.configurable_children(parent_module).size();
+      module_manager.logical_configurable_children(parent_module).size();
 
     /* Frame-based configuration protocol will have 1 decoder
      * if there are more than 1 configurable children
@@ -117,7 +117,7 @@ static size_t rec_estimate_device_bitstream_num_bits(
 
     for (size_t ichild = 0; ichild < num_configurable_children; ++ichild) {
       ModuleId child_module =
-        module_manager.configurable_children(parent_module)[ichild];
+        module_manager.logical_configurable_children(parent_module)[ichild];
       num_bits += rec_estimate_device_bitstream_num_bits(
         module_manager, top_module, child_module, config_protocol);
     }

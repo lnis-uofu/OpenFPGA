@@ -555,8 +555,23 @@ class ModuleManager {
     physical_configurable_child_instances_; /* Instances of child modules with
                                       configurable memory bits that this module
                                       contain */
+  vtr::vector<ModuleId, std::vector<ConfigRegionId>>
+    physical_configurable_child_regions_; /* Instances of child modules with configurable
+                                    memory bits that this module contain */
+  vtr::vector<ModuleId, std::vector<vtr::Point<int>>>
+    physical_configurable_child_coordinates_; /* Relative coorindates of child modules
+                                        with configurable memory bits that this
+                                        module contain */
+
   vtr::vector<ModuleId, std::vector<ModuleId>>
-    physical_configurable_child_parents_; /* Parent modules with configurable memory bits that
+    logical2physical_configurable_children_; /* Child modules with configurable memory bits that
+                               this module contain */
+  vtr::vector<ModuleId, std::vector<size_t>>
+    logical2physical_configurable_child_instances_; /* Instances of child modules with
+                                      configurable memory bits that this module
+                                      contain */
+  vtr::vector<ModuleId, std::vector<ModuleId>>
+    logical2physical_configurable_child_parents_; /* Parent modules with configurable memory bits that
                                this module contain */
 
   /* Configurable regions to group the physical configurable children
