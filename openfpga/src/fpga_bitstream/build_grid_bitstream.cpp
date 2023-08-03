@@ -636,7 +636,7 @@ static void rec_build_physical_block_bitstream(
   VTR_ASSERT(true == module_manager.valid_module_id(pb_module));
 
   /* Skip module with no configurable children */
-  if (0 == module_manager.logical_configurable_children(pb_module).size()) {
+  if (0 == module_manager.num_configurable_children(pb_module, ModuleManager::e_config_child_type::LOGICAL)) {
     return;
   }
 
@@ -653,7 +653,7 @@ static void rec_build_physical_block_bitstream(
   bitstream_manager.reserve_child_blocks(
     parent_configurable_block,
     count_module_manager_module_configurable_children(module_manager,
-                                                      pb_module));
+                                                      pb_module, ModuleManager::e_config_child_type::PHYSICAL));
 
   /* Recursively finish all the child pb_types*/
   if (false == is_primitive_pb_type(physical_pb_type)) {
@@ -748,7 +748,7 @@ static void build_physical_block_bitstream(
   VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
 
   /* Skip module with no configurable children */
-  if (0 == module_manager.configurable_children(grid_module).size()) {
+  if (0 == module_manager.num_configurable_children(grid_module, ModuleManager::e_config_child_type::LOGICAL)) {
     return;
   }
 
@@ -770,7 +770,7 @@ static void build_physical_block_bitstream(
   /* Reserve child blocks for new created block */
   bitstream_manager.reserve_child_blocks(
     grid_configurable_block, count_module_manager_module_configurable_children(
-                               module_manager, grid_module));
+                               module_manager, grid_module, ModuleManager::e_config_child_type::PHYSICAL));
 
   /* Iterate over the capacity of the grid
    * Now each physical tile may have a number of logical blocks

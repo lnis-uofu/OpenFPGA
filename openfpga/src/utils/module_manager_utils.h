@@ -42,7 +42,7 @@ void reserve_module_manager_module_nets(ModuleManager& module_manager,
                                         const ModuleId& module);
 
 size_t count_module_manager_module_configurable_children(
-  const ModuleManager& module_manager, const ModuleId& module);
+  const ModuleManager& module_manager, const ModuleId& module, const ModuleManager::e_config_child_type& config_child_type);
 
 std::pair<ModuleId, size_t> find_module_manager_instance_module_info(
   const ModuleManager& module_manager, const ModuleId& parent,

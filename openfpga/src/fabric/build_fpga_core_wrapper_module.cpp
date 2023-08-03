@@ -381,7 +381,7 @@ int add_fpga_core_to_device_module_graph(ModuleManager& module_manager,
 
   /* Now fpga_core should be the only configurable child under the top-level
    * module */
-  module_manager.add_configurable_child(new_top_module, top_module, 0, false);
+  module_manager.add_configurable_child(new_top_module, top_module, 0, ModuleManager::e_config_child_type::UNIFIED);
 
   return status;
 }

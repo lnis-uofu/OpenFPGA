@@ -86,11 +86,11 @@ void reserve_module_manager_module_nets(ModuleManager& module_manager,
  *children as well
  ******************************************************************************/
 size_t count_module_manager_module_configurable_children(
-  const ModuleManager& module_manager, const ModuleId& module) {
+  const ModuleManager& module_manager, const ModuleId& module, const ModuleManager::e_config_child_type& config_child_type) {
   size_t num_config_children = 0;
 
-  for (const ModuleId& child : module_manager.logical_configurable_children(module)) {
-    if (0 != module_manager.logical_configurable_children(child).size()) {
+  for (const ModuleId& child : module_manager.configurable_children(module, config_child_type)) {
+    if (0 != module_manager.configurable_children(child, config_child_type).size()) {
       num_config_children++;
     }
   }

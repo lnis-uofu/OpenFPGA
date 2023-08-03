@@ -1392,6 +1392,10 @@ int add_physical_memory_module(ModuleManager& module_manager,
   size_t module_num_config_bits =
     find_module_num_config_bits_from_child_modules(
       module_manager, curr_module, circuit_lib, sram_model, CONFIG_MEM_FEEDTHROUGH);
+  /* No need to build a memory when there are no configuration bits required */
+  if (module_num_config_bits == 0) {
+    return CMD_EXEC_SUCCESS;
+  }
   std::string phy_mem_module_name = generate_physical_memory_module_name(module_manager.module_name(curr_module), module_num_config_bits);
   ModuleId phy_mem_module = module_manager.find_module(phy_mem_module_name);
   if (!module_manager.valid_module_id(phy_mem_module)) {
