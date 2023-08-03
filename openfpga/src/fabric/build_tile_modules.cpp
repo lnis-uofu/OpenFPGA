@@ -1332,7 +1332,7 @@ static int build_tile_module(
                                           circuit_lib, sram_model,
                                           sram_orgz_type)) {
         module_manager.add_configurable_child(tile_module, pb_module,
-                                              pb_instance);
+                                              pb_instance, ModuleManager::e_config_child_type::UNIFIED);
       }
       VTR_LOGV(
         verbose,
@@ -1379,7 +1379,7 @@ static int build_tile_module(
                                           circuit_lib, sram_model,
                                           sram_orgz_type)) {
         module_manager.add_configurable_child(tile_module, cb_module,
-                                              cb_instance);
+                                              cb_instance, ModuleManager::e_config_child_type::UNIFIED);
       }
       VTR_LOGV(verbose,
                "Added connection block module '%s' (instance: '%s') to "
@@ -1418,7 +1418,7 @@ static int build_tile_module(
     if (0 < find_module_num_config_bits(module_manager, sb_module, circuit_lib,
                                         sram_model, sram_orgz_type)) {
       module_manager.add_configurable_child(tile_module, sb_module,
-                                            sb_instance);
+                                            sb_instance, ModuleManager::e_config_child_type::UNIFIED);
     }
     VTR_LOGV(
       verbose,
@@ -1468,7 +1468,7 @@ static int build_tile_module(
    */
   size_t module_num_config_bits =
     find_module_num_config_bits_from_child_modules(
-      module_manager, tile_module, circuit_lib, sram_model, sram_orgz_type);
+      module_manager, tile_module, circuit_lib, sram_model, sram_orgz_type, ModuleManager::e_config_child_type::LOGICAL);
   if (0 < module_num_config_bits) {
     add_pb_sram_ports_to_module_manager(module_manager, tile_module,
                                         circuit_lib, sram_model, sram_orgz_type,
@@ -1479,10 +1479,10 @@ static int build_tile_module(
    * This is a one-shot addition that covers all the memory modules in this pb
    * module!
    */
-  if (0 < module_manager.logical_configurable_children(tile_module).size()) {
+  if (0 < module_manager.num_configurable_children(tile_module, ModuleManager::e_config_child_type::LOGICAL)) {
     add_pb_module_nets_memory_config_bus(
       module_manager, decoder_lib, tile_module, sram_orgz_type,
-      circuit_lib.design_tech_type(sram_model));
+      circuit_lib.design_tech_type(sram_model), ModuleManager::e_config_child_type::LOGICAL);
   }
 
   VTR_LOGV(verbose, "Done\n");

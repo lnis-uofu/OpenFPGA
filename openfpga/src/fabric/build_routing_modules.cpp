@@ -241,15 +241,16 @@ static void build_switch_block_mux_module(
     module_manager, sb_module, mux_module, mux_instance_id, mem_module,
     mem_instance_id, circuit_lib, mux_model);
   /* Update memory and instance list */
-  size_t config_child_id = module_manager.num_configurable_children(sb_module);
-  module_manager.add_configurable_child(sb_module, mem_module, mem_instance_id, group_config_block);
+  size_t config_child_id = module_manager.num_configurable_children(sb_module, ModuleManager::e_config_child_type::LOGICAL);
+  module_manager.add_configurable_child(sb_module, mem_module, mem_instance_id, group_config_block ? ModuleManager::e_config_child_type::LOGICAL : ModuleManager::e_config_child_type::UNIFIED);
   /* For logical memory, define the physical memory here */
   if (group_config_block) {
     std::string physical_mem_module_name =
       generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size,
                                std::string(MEMORY_MODULE_POSTFIX));
     ModuleId physical_mem_module = module_manager.find_module(physical_mem_module_name);
-    module_manager.set_physical_configurable_child(sb_module, config_child_id, physical_mem_module);
+    VTR_ASSERT(true == module_manager.valid_module_id(physical_mem_module));
+    module_manager.set_logical2physical_configurable_child(sb_module, config_child_id, physical_mem_module);
   }
 }
 
@@ -509,9 +510,10 @@ static void build_switch_block_module(
    * we just need to find all the I/O ports from the child modules and build a
    * list of it
    */
+  ModuleManager::e_config_child_type config_child_type = group_config_block ? ModuleManager::e_config_child_type::PHYSICAL : ModuleManager::e_config_child_type::LOGICAL;
   size_t module_num_config_bits =
     find_module_num_config_bits_from_child_modules(
-      module_manager, sb_module, circuit_lib, sram_model, sram_orgz_type);
+      module_manager, sb_module, circuit_lib, sram_model, sram_orgz_type, config_child_type);
   if (0 < module_num_config_bits) {
     add_pb_sram_ports_to_module_manager(module_manager, sb_module, circuit_lib,
                                         sram_model, sram_orgz_type,
@@ -522,10 +524,10 @@ static void build_switch_block_module(
    * primitive modules This is a one-shot addition that covers all the memory
    * modules in this primitive module!
    */
-  if (0 < module_manager.configurable_children(sb_module).size()) {
+  if (0 < module_manager.num_configurable_children(sb_module, config_child_type)) {
     add_pb_module_nets_memory_config_bus(
       module_manager, decoder_lib, sb_module, sram_orgz_type,
-      circuit_lib.design_tech_type(sram_model));
+      circuit_lib.design_tech_type(sram_model), config_child_type);
   }
 
   VTR_LOGV(verbose, "Done\n");
@@ -751,14 +753,15 @@ static void build_connection_block_mux_module(
     mem_instance_id, circuit_lib, mux_model);
   /* Update memory and instance list */
   size_t config_child_id = module_manager.num_configurable_children(cb_module);
-  module_manager.add_configurable_child(cb_module, mem_module, mem_instance_id, group_config_block);
+  module_manager.add_configurable_child(cb_module, mem_module, mem_instance_id, group_config_block ? ModuleManager::e_config_child_type::LOGICAL : ModuleManager::e_config_child_type::UNIFIED);
   /* For logical memory, define the physical memory here */
   if (group_config_block) {
     std::string physical_mem_module_name =
       generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size,
                                std::string(MEMORY_MODULE_POSTFIX));
     ModuleId physical_mem_module = module_manager.find_module(physical_mem_module_name);
-    module_manager.set_physical_configurable_child(cb_module, config_child_id, physical_mem_module);
+    VTR_ASSERT(true == module_manager.valid_module_id(physical_mem_module));
+    module_manager.set_logical2physical_configurable_child(cb_module, config_child_id, physical_mem_module);
   }
 }
 
@@ -1016,9 +1019,10 @@ static void build_connection_block_module(
    * we just need to find all the I/O ports from the child modules and build a
    * list of it
    */
+  ModuleManager::e_config_child_type config_child_type = group_config_block ? ModuleManager::e_config_child_type::PHYSICAL : ModuleManager::e_config_child_type::LOGICAL;
   size_t module_num_config_bits =
     find_module_num_config_bits_from_child_modules(
-      module_manager, cb_module, circuit_lib, sram_model, sram_orgz_type);
+      module_manager, cb_module, circuit_lib, sram_model, sram_orgz_type, config_child_type);
   if (0 < module_num_config_bits) {
     add_pb_sram_ports_to_module_manager(module_manager, cb_module, circuit_lib,
                                         sram_model, sram_orgz_type,
@@ -1029,10 +1033,10 @@ static void build_connection_block_module(
    * primitive modules This is a one-shot addition that covers all the memory
    * modules in this primitive module!
    */
-  if (0 < module_manager.configurable_children(cb_module).size()) {
+  if (0 < module_manager.num_configurable_children(cb_module, config_child_type)) {
     add_pb_module_nets_memory_config_bus(
       module_manager, decoder_lib, cb_module, sram_orgz_type,
-      circuit_lib.design_tech_type(sram_model));
+      circuit_lib.design_tech_type(sram_model), config_child_type);
   }
 
   VTR_LOGV(verbose, "Done\n");
