@@ -241,7 +241,7 @@ ModuleManager::region_configurable_child_coordinates(
   for (const size_t& child_id :
        config_region_children_[parent_module][region]) {
     region_config_child_coordinates.push_back(
-      logical_configurable_child_coordinates_[parent_module][child_id]);
+      physical_configurable_child_coordinates_[parent_module][child_id]);
   }
 
   return region_config_child_coordinates;
@@ -655,6 +655,21 @@ bool ModuleManager::net_sink_exist(const ModuleId& module,
 
   /* Reach here, it means nothing has been found. Return false */
   return false;
+}
+
+bool ModuleManager::unified_configurable_children(const ModuleId& curr_module) const {
+  if (logical_configurable_children_[curr_module].size() != physical_configurable_children_[curr_module].size()) {
+    return false;
+  }
+  for (size_t ichild = 0; ichild < logical_configurable_children_[curr_module].size(); ++ichild) {
+    if (logical_configurable_children_[curr_module][ichild] != physical_configurable_children_[curr_module][ichild]) {
+      return false;
+    }
+    if (logical_configurable_child_instances_[curr_module][ichild] != physical_configurable_child_instances_[curr_module][ichild]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /******************************************************************************

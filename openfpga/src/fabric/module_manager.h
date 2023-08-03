@@ -323,6 +323,9 @@ class ModuleManager {
                       const ModuleId& sink_module, const size_t& instance_id,
                       const ModulePortId& sink_port, const size_t& sink_pin);
 
+  /** @brief Check if the configurable children under a given module are unified or not. If unified, it means that the logical configurable children are the same as the physical configurable children */
+  bool unified_configurable_children(const ModuleId& curr_module) const;
+
  private: /* Private accessors */
   size_t find_child_module_index_in_parent_module(
     const ModuleId& parent_module, const ModuleId& child_module) const;
