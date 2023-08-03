@@ -412,9 +412,13 @@ size_t ModuleManager::instance_id(const ModuleId& parent_module,
   return size_t(-1);
 }
 
-size_t ModuleManager::num_logical_configurable_children(const ModuleId& parent_module) const {
+size_t ModuleManager::num_configurable_children(const ModuleId& parent_module, const e_config_child_type& type) const;
   VTR_ASSERT(valid_module_id(parent_module));
-  return logical_configurable_children_[parent_module].size();
+  if (type == ModuleManager::e_config_child_type::LOGICAL) {
+    return logical_configurable_children_[parent_module].size();
+  }
+  VTR_ASSERT(type == ModuleManager::e_config_child_type::LOGICAL);
+  return physical_configurable_children_[parent_module].size()
 }
 
 ModuleManager::e_module_port_type ModuleManager::port_type(

@@ -265,7 +265,7 @@ class ModuleManager {
                      const ModuleId& child_module,
                      const std::string& instance_name) const;
   /** @brief Count the number of logical configurable children */
-  size_t num_logical_configurable_children(const ModuleId& parent_module) const;
+  size_t num_configurable_children(const ModuleId& parent_module, const e_config_child_type& type) const;
   /* Find the type of a port */
   ModuleManager::e_module_port_type port_type(const ModuleId& module,
                                               const ModulePortId& port) const;

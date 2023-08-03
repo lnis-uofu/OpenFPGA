@@ -1410,7 +1410,7 @@ int add_physical_memory_module(ModuleManager& module_manager,
   module_manager.add_child_module(curr_module, phy_mem_module, false);
 
   /* Register in the physical configurable children list */
-  module_manager.add_physical_configurable_child(curr_module, phy_mem_module, phy_mem_instance, curr_module);
+  module_manager.add_configurable_child(curr_module, phy_mem_module, phy_mem_instance, ModuleManager::e_config_child_type::PHYSICAL);
 
   /* Build nets between the data output of the physical memory module and the outputs of the logical configurable children */
   size_t curr_mem_pin_index = 0;

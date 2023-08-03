@@ -357,16 +357,17 @@ static void build_primitive_block_module(
       module_manager, primitive_module, logic_module, logic_instance_id,
       memory_module, memory_instance_id, circuit_lib, primitive_model);
     /* Record memory-related information */
-    size_t config_child_id = module_manager.num_configurable_children(primitive_module);
+    size_t config_child_id = module_manager.num_configurable_children(primitive_module, ModuleManager::e_config_child_type::LOGICAL);
     module_manager.add_configurable_child(primitive_module, memory_module,
-                                          memory_instance_id, group_config_block);
+                                          memory_instance_id,
+                                          group_config_block ? ModuleManager::e_config_child_type::LOGICAL : ModuleManager::e_config_child_type::UNIFIED);
     /* For logical memory, define the physical memory here */
     if (group_config_block) {
       std::string physical_memory_module_name =
         generate_memory_module_name(circuit_lib, primitive_model, sram_model,
                                     std::string(MEMORY_MODULE_POSTFIX), false);
       ModuleId physical_memory_module = module_manager.find_module(physical_memory_module_name);
-      module_manager.set_physical_configurable_child(primitive_module, config_child_id, physical_memory_module);
+      module_manager.set_logical2physical_configurable_child(primitive_module, config_child_id, physical_memory_module);
     }
   }
 
@@ -374,10 +375,11 @@ static void build_primitive_block_module(
    * primitive modules This is a one-shot addition that covers all the memory
    * modules in this primitive module!
    */
-  if (0 < module_manager.configurable_children(primitive_module).size()) {
+  if (0 < module_manager.num_configurable_children(primitive_module, ModuleManager::e_config_child_type::LOGICAL)) {
     add_module_nets_memory_config_bus(module_manager, decoder_lib,
                                       primitive_module, sram_orgz_type,
-                                      circuit_lib.design_tech_type(sram_model));
+                                      circuit_lib.design_tech_type(sram_model),
+                                      ModuleManager::e_config_child_type::LOGICAL);
   }
 
   /* Add global ports to the pb_module:
@@ -639,6 +641,11 @@ static void add_module_pb_graph_pin_interc(
       std::string mux_mem_module_name =
         generate_mux_subckt_name(circuit_lib, interc_circuit_model, fan_in,
                                  std::string(MEMORY_MODULE_POSTFIX));
+      if (group_config_block) {
+        mux_mem_module_name =
+          generate_mux_subckt_name(circuit_lib, interc_circuit_model, fan_in,
+                                   std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
+      }
       ModuleId mux_mem_module = module_manager.find_module(mux_mem_module_name);
       VTR_ASSERT(true == module_manager.valid_module_id(mux_mem_module));
       size_t mux_mem_instance =
@@ -653,8 +660,18 @@ static void add_module_pb_graph_pin_interc(
       module_manager.set_child_instance_name(
         pb_module, mux_mem_module, mux_mem_instance, mux_mem_instance_name);
       /* Add this MUX as a configurable child to the pb_module */
+      size_t config_child_id = module_manager.num_configurable_child(pb_module, ModuleManager::e_config_child_type::LOGICAL);
       module_manager.add_configurable_child(pb_module, mux_mem_module,
-                                            mux_mem_instance, group_config_block);
+                                            mux_mem_instance, group_config_block ? ModuleManager::e_config_child_type::LOGICAL : ModuleManager::e_config_child_type::UNIFIED);
+      if (group_config_block) {
+        std::string phy_mem_module_name =
+          generate_mux_subckt_name(circuit_lib, interc_circuit_model, fan_in,
+                                   std::string(MEMORY_MODULE_POSTFIX));
+        ModuleId phy_mem_module = module_manager.find_module(phy_mem_module_name);
+        VTR_ASSERT(true == module_manager.valid_module_id(phy_mem_module));
+        module_manager.set_logical2physical_configurable_child(pb_module, config_child_id,
+                                            phy_mem_module);
+      }
 
       /* Add nets to connect SRAM ports of the MUX to the SRAM port of memory
        * module */
@@ -1012,7 +1029,7 @@ static void rec_build_logical_tile_modules(
                                           circuit_lib, sram_model,
                                           mem_module_type)) {
         module_manager.add_configurable_child(pb_module, child_pb_module,
-                                              child_instance_id, group_config_block);
+                                              child_instance_id, group_config_block ? ModuleManager::e_config_child_type::LOGICAL : ModuleManager::e_config_child_type::UNIFIED);
       }
     }
   }
@@ -1070,10 +1087,11 @@ static void rec_build_logical_tile_modules(
    * This is a one-shot addition that covers all the memory modules in this pb
    * module!
    */
-  if (0 < module_manager.logical_configurable_children(pb_module).size()) {
+  if (0 < module_manager.num_configurable_children(pb_module, ModuleManager::e_config_child_type::LOGICAL)) {
     add_module_nets_memory_config_bus(module_manager, decoder_lib, pb_module,
                                       mem_module_type,
-                                      circuit_lib.design_tech_type(sram_model));
+                                      circuit_lib.design_tech_type(sram_model),
+                                      ModuleManager::e_config_child_type::LOGICAL);
   }
 
   VTR_LOGV(verbose, "Done\n");
@@ -1150,7 +1168,7 @@ static void build_physical_tile_module(
                                           group_config_block ? CONFIG_MEM_FEEDTHROUGH : sram_orgz_type)) {
         /* Only add logical configurable children here. Since we will add a physical memory block at this level */
         module_manager.add_configurable_child(grid_module, pb_module,
-                                              pb_instance_id, group_config_block);
+                                              pb_instance_id, group_config_block ? ModuleManager::e_config_child_type::LOGICAL : ModuleManager::e_config_child_type::UNIFIED);
       }
     }
   }
@@ -1245,9 +1263,10 @@ static void build_physical_tile_module(
    * we just need to find all the I/O ports from the child modules and build a
    * list of it
    */
+  ModuleManager::e_config_child_type config_child_type = group_config_block ? ModuleManager::e_config_child_type::PHYSICAL : ModuleManager::e_config_child_type::LOGICAL;
   size_t module_num_config_bits =
     find_module_num_config_bits_from_child_modules(
-      module_manager, grid_module, circuit_lib, sram_model, sram_orgz_type);
+      module_manager, grid_module, circuit_lib, sram_model, sram_orgz_type, config_child_type);
   if (0 < module_num_config_bits) {
     add_pb_sram_ports_to_module_manager(module_manager, grid_module,
                                         circuit_lib, sram_model, sram_orgz_type,
@@ -1258,10 +1277,10 @@ static void build_physical_tile_module(
    * This is a one-shot addition that covers all the memory modules in this pb
    * module!
    */
-  if (0 < module_manager.logical_configurable_children(grid_module).size()) {
+  if (0 < module_manager.num_configurable_children(grid_module, config_child_type)) {
     add_pb_module_nets_memory_config_bus(
       module_manager, decoder_lib, grid_module, sram_orgz_type,
-      circuit_lib.design_tech_type(sram_model));
+      circuit_lib.design_tech_type(sram_model), config_child_type);
   }
 
   VTR_LOGV(verbose, "Done\n");

@@ -497,14 +497,14 @@ size_t estimate_num_configurable_children_to_skip_by_config_protocol(
 }
 
 int rec_find_physical_memory_children(const ModuleManager& module_manager, const ModuleId& curr_module, std::vector<ModuleId>& physical_memory_children) {
-  if (module_manager.logical_configurable_children(curr_module).empty()) {
+  if (module_manager.configurable_children(curr_module, ModuleManager::e_config_child_type::LOGICAL).empty()) {
     return CMD_EXEC_SUCCESS;
   }
-  for (size_t ichild = 0; ichild < module_manager.logical_configurable_children(curr_module).size(); ++ichild) {
-    ModuleId logical_child = module_manager.logical_configurable_children(curr_module)[ichild];
-    if (module_manager.logical_configurable_children(logical_child).empty()) {
+  for (size_t ichild = 0; ichild < module_manager.configurable_children(curr_module, ModuleManager::e_config_child_type::LOGICAL).size(); ++ichild) {
+    ModuleId logical_child = module_manager.configurable_children(curr_module, ModuleManager::e_config_child_type::LOGICAL)[ichild];
+    if (module_manager.configurable_children(logical_child, ModuleManager::e_config_child_type::LOGICAL).empty()) {
       /* This is a leaf node, get the physical memory module */
-      physical_memory_children.push_back(module_manager.physical_configurable_children(curr_module)[ichild]);
+      physical_memory_children.push_back(module_manager.logical2physical_configurable_children(curr_module)[ichild]);
     } else {
       rec_find_physical_memory_children(module_manager, logical_child, physical_memory_children);
     }
@@ -513,20 +513,20 @@ int rec_find_physical_memory_children(const ModuleManager& module_manager, const
 }
 
 int rec_update_logical_memory_children_with_physical_mapping(ModuleManager& module_manager, const ModuleId& curr_module, const ModuleId& phy_mem_module, std::map<ModuleId, size_t>& logical_mem_child_inst_count) {
-  if (module_manager.logical_configurable_children(curr_module).empty()) {
+  if (module_manager.configurable_children(curr_module, ModuleManager::e_config_child_type::LOGICAL).empty()) {
     return CMD_EXEC_SUCCESS;
   }
-  for (size_t ichild = 0; ichild < module_manager.logical_configurable_children(curr_module).size(); ++ichild) {
-    ModuleId logical_child = module_manager.logical_configurable_children(curr_module)[ichild];
-    if (module_manager.logical_configurable_children(logical_child).empty()) {
+  for (size_t ichild = 0; ichild < module_manager.configurable_children(curr_module, ModuleManager::e_config_child_type::LOGICAL).size(); ++ichild) {
+    ModuleId logical_child = module_manager.configurable_children(curr_module, ModuleManager::e_config_child_type::LOGICAL)[ichild];
+    if (module_manager.configurable_children(logical_child, ModuleManager::e_config_child_type::LOGICAL).empty()) {
       /* This is a leaf node, update its physical information */
-      ModuleId phy_mem_submodule = module_manager.physical_configurable_children(curr_module)[ichild]
+      ModuleId phy_mem_submodule = module_manager.logical2physical_configurable_children(curr_module)[ichild]
       auto result = logical_mem_child_inst_count.find(phy_mem_submodule);
       if (result == logical_mem_child_inst_count.end()) {
         logical_mem_child_inst_count.find[phy_mem_submodule] = 0;
       }
-      module_manager.set_physical_configurable_child_instance(curr_module, ichild, logical_mem_child_inst_count[phy_mem_submodule]);
-      module_manager.set_physical_configurable_child_parent_module(curr_module, ichild, phy_mem_module);
+      module_manager.set_logical2physical_configurable_child_instance(curr_module, ichild, logical_mem_child_inst_count[phy_mem_submodule]);
+      module_manager.set_logical2physical_configurable_child_parent_module(curr_module, ichild, phy_mem_module);
       logical_mem_child_inst_count[phy_mem_submodule]++;
     } else {
       rec_find_physical_memory_children(module_manager, logical_child, physical_memory_children, logical_mem_child_inst_count);

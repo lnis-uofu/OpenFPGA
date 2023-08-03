@@ -110,7 +110,8 @@ void add_module_nets_between_logic_and_memory_sram_bus(
 void add_module_nets_cmos_flatten_memory_config_bus(
   ModuleManager& module_manager, const ModuleId& parent_module,
   const e_config_protocol_type& sram_orgz_type,
-  const e_circuit_model_port_type& config_port_type);
+  const e_circuit_model_port_type& config_port_type,
+  const ModuleManager::e_config_child_type& config_child_type);
 
 void add_module_nets_cmos_memory_bank_bl_config_bus(
   ModuleManager& module_manager, const ModuleId& parent_module,
@@ -124,21 +125,25 @@ void add_module_nets_cmos_memory_bank_wl_config_bus(
 
 void add_module_nets_cmos_memory_chain_config_bus(
   ModuleManager& module_manager, const ModuleId& parent_module,
-  const e_config_protocol_type& sram_orgz_type);
+  const e_config_protocol_type& sram_orgz_type,
+  const ModuleManager::e_config_child_type& config_child_type);
 
 void add_module_nets_cmos_memory_frame_config_bus(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
-  const ModuleId& parent_module);
+  const ModuleId& parent_module,
+  const ModuleManager::e_config_child_type& config_child_type);
 
 void add_module_nets_memory_config_bus(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   const ModuleId& parent_module, const e_config_protocol_type& sram_orgz_type,
-  const e_circuit_model_design_tech& mem_tech);
+  const e_circuit_model_design_tech& mem_tech,
+  const ModuleManager::e_config_child_type& config_child_type);
 
 void add_pb_module_nets_memory_config_bus(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   const ModuleId& parent_module, const e_config_protocol_type& sram_orgz_type,
-  const e_circuit_model_design_tech& mem_tech);
+  const e_circuit_model_design_tech& mem_tech,
+  const ModuleManager::e_config_child_type& config_child_type);
 
 size_t find_module_num_shared_config_bits(const ModuleManager& module_manager,
                                           const ModuleId& module_id);
@@ -146,7 +151,8 @@ size_t find_module_num_shared_config_bits(const ModuleManager& module_manager,
 size_t find_module_num_config_bits(
   const ModuleManager& module_manager, const ModuleId& module_id,
   const CircuitLibrary& circuit_lib, const CircuitModelId& sram_model,
-  const e_config_protocol_type& sram_orgz_type);
+  const e_config_protocol_type& sram_orgz_type,
+  const ModuleManager::e_config_child_type& config_child_type);
 
 void add_module_global_input_ports_from_child_modules(
   ModuleManager& module_manager, const ModuleId& module_id,
