@@ -1544,10 +1544,12 @@ int add_physical_memory_module(ModuleManager& module_manager,
       BasicPort des_port = module_manager.module_port(des_module, des_port_id);
       /* Build nets */
       for (size_t ipin = 0; ipin < des_port.pins().size(); ++ipin) {
-        VTR_LOGV(verbose,
-                 "Building net '%s[%lu].%s[%lu]' -> '%s[%lu].%s[%lu]\n",
-                 module_manager.module_name(phy_mem_module).c_str(), phy_mem_instance, src_port.get_name().c_str(), curr_mem_pin_index[port_type], 
-                 module_manager.module_name(des_module).c_str(), des_instance, des_port.get_name().c_str(), des_port.pins()[ipin]);
+        VTR_LOGV(
+          verbose, "Building net '%s[%lu].%s[%lu]' -> '%s[%lu].%s[%lu]\n",
+          module_manager.module_name(phy_mem_module).c_str(), phy_mem_instance,
+          src_port.get_name().c_str(), curr_mem_pin_index[port_type],
+          module_manager.module_name(des_module).c_str(), des_instance,
+          des_port.get_name().c_str(), des_port.pins()[ipin]);
         /* Create a net and add source and sink to it */
         ModuleNetId net = create_module_source_pin_net(
           module_manager, curr_module, phy_mem_module, phy_mem_instance,

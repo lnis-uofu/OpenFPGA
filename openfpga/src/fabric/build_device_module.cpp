@@ -82,11 +82,14 @@ int build_device_module_graph(
                        group_config_block, verbose);
 
   /* Build grid and programmable block modules */
-  build_grid_modules(module_manager, decoder_lib, vpr_device_ctx,
-                     openfpga_ctx.vpr_device_annotation(),
-                     openfpga_ctx.arch().circuit_lib, openfpga_ctx.mux_lib(),
-                     openfpga_ctx.arch().config_protocol.type(), sram_model,
-                     duplicate_grid_pin, group_config_block, verbose);
+  status = build_grid_modules(
+    module_manager, decoder_lib, vpr_device_ctx,
+    openfpga_ctx.vpr_device_annotation(), openfpga_ctx.arch().circuit_lib,
+    openfpga_ctx.mux_lib(), openfpga_ctx.arch().config_protocol.type(),
+    sram_model, duplicate_grid_pin, group_config_block, verbose);
+  if (CMD_EXEC_FATAL_ERROR == status) {
+    return status;
+  }
 
   if (true == compress_routing) {
     build_unique_routing_modules(module_manager, decoder_lib, vpr_device_ctx,

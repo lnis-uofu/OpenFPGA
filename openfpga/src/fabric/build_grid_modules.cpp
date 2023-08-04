@@ -6,6 +6,7 @@
 #include <vector>
 
 /* Headers from vtrutil library */
+#include "command_exit_codes.h"
 #include "vtr_assert.h"
 #include "vtr_geometry.h"
 #include "vtr_log.h"
@@ -1137,7 +1138,7 @@ static void rec_build_logical_tile_modules(
  * The param 'border_side' is required, which is specify which side of fabric
  * the I/O block locates at.
  *****************************************************************************/
-static void build_physical_tile_module(
+static int build_physical_tile_module(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   const VprDeviceAnnotation& vpr_device_annotation,
   const CircuitLibrary& circuit_lib,
@@ -1145,6 +1146,7 @@ static void build_physical_tile_module(
   const CircuitModelId& sram_model, t_physical_tile_type_ptr phy_block_type,
   const e_side& border_side, const bool& duplicate_grid_pin,
   const bool& group_config_block, const bool& verbose) {
+  int status = CMD_EXEC_SUCCESS;
   /* Create a Module for the top-level physical block, and add to module manager
    */
   std::string grid_module_name = generate_grid_block_module_name(
@@ -1209,9 +1211,12 @@ static void build_physical_tile_module(
 
   /* TODO: Add a physical memory block */
   if (group_config_block) {
-    add_physical_memory_module(module_manager, decoder_lib, grid_module,
-                               circuit_lib, sram_orgz_type, sram_model,
-                               verbose);
+    status = add_physical_memory_module(module_manager, decoder_lib,
+                                        grid_module, circuit_lib,
+                                        sram_orgz_type, sram_model, verbose);
+    if (status != CMD_EXEC_SUCCESS) {
+      return CMD_EXEC_FATAL_ERROR;
+    }
   }
 
   /* Add grid ports(pins) to the module */
@@ -1324,6 +1329,8 @@ static void build_physical_tile_module(
   }
 
   VTR_LOGV(verbose, "Done\n");
+
+  return status;
 }
 
 /*****************************************************************************
@@ -1339,7 +1346,7 @@ static void build_physical_tile_module(
  *   - Only one module for each CLB (FILL_TYPE)
  *   - Only one module for each heterogeneous block
  ****************************************************************************/
-void build_grid_modules(
+int build_grid_modules(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   const DeviceContext& device_ctx, const VprDeviceAnnotation& device_annotation,
   const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
@@ -1348,6 +1355,8 @@ void build_grid_modules(
   const bool& group_config_block, const bool& verbose) {
   /* Start time count */
   vtr::ScopedStartFinishTimer timer("Build grid modules");
+
+  int status = CMD_EXEC_SUCCESS;
 
   /* Enumerate the types of logical tiles, and build a module for each
    * Build modules for all the pb_types/pb_graph_nodes
@@ -1396,20 +1405,28 @@ void build_grid_modules(
       std::set<e_side> io_type_sides =
         find_physical_io_tile_located_sides(device_ctx.grid, &physical_tile);
       for (const e_side& io_type_side : io_type_sides) {
-        build_physical_tile_module(
+        status = build_physical_tile_module(
           module_manager, decoder_lib, device_annotation, circuit_lib,
           sram_orgz_type, sram_model, &physical_tile, io_type_side,
           duplicate_grid_pin, group_config_block, verbose);
+        if (status != CMD_EXEC_SUCCESS) {
+          return CMD_EXEC_FATAL_ERROR;
+        }
       }
     } else {
       /* For CLB and heterogenenous blocks */
-      build_physical_tile_module(module_manager, decoder_lib, device_annotation,
-                                 circuit_lib, sram_orgz_type, sram_model,
-                                 &physical_tile, NUM_SIDES, duplicate_grid_pin,
-                                 group_config_block, verbose);
+      status = build_physical_tile_module(
+        module_manager, decoder_lib, device_annotation, circuit_lib,
+        sram_orgz_type, sram_model, &physical_tile, NUM_SIDES,
+        duplicate_grid_pin, group_config_block, verbose);
+      if (status != CMD_EXEC_SUCCESS) {
+        return CMD_EXEC_FATAL_ERROR;
+      }
     }
   }
   VTR_LOG("Done\n");
+
+  return status;
 }
 
 } /* end namespace openfpga */

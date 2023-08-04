@@ -17,7 +17,7 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void build_grid_modules(
+int build_grid_modules(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   const DeviceContext& device_ctx, const VprDeviceAnnotation& device_annotation,
   const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
