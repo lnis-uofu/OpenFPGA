@@ -17,6 +17,7 @@
 #include "mux_utils.h"
 #include "openfpga_digest.h"
 #include "openfpga_naming.h"
+#include "openfpga_reserved_words.h"
 #include "verilog_constants.h"
 #include "verilog_memory.h"
 #include "verilog_module_writer.h"
@@ -51,7 +52,7 @@ static void print_verilog_mux_memory_module(
         circuit_lib, mux_model,
         find_mux_num_datapath_inputs(circuit_lib, mux_model,
                                      mux_graph.num_inputs()),
-        std::string(VERILOG_MEM_POSTFIX));
+        std::string(MEMORY_MODULE_POSTFIX));
       ModuleId mem_module = module_manager.find_module(module_name);
       VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
       /* Write the module content in Verilog format */
@@ -63,6 +64,28 @@ static void print_verilog_mux_memory_module(
 
       /* Add an empty line as a splitter */
       fp << std::endl;
+
+      /* Print feedthrough memory if exists */
+      std::string feedthru_module_name = generate_mux_subckt_name(
+        circuit_lib, mux_model,
+        find_mux_num_datapath_inputs(circuit_lib, mux_model,
+                                     mux_graph.num_inputs()),
+        std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
+      ModuleId feedthru_mem_module =
+        module_manager.find_module(feedthru_module_name);
+      if (module_manager.valid_module_id(feedthru_mem_module)) {
+        VTR_ASSERT(true == module_manager.valid_module_id(feedthru_mem_module));
+        /* Write the module content in Verilog format */
+        write_verilog_module_to_file(
+          fp, module_manager, feedthru_mem_module,
+          options.explicit_port_mapping() ||
+            circuit_lib.dump_explicit_port_map(mux_model),
+          options.default_net_type());
+
+        /* Add an empty line as a splitter */
+        fp << std::endl;
+      }
+
       break;
     }
     case CIRCUIT_MODEL_DESIGN_RRAM:
@@ -174,7 +197,7 @@ void print_verilog_submodule_memories(const ModuleManager& module_manager,
 
     /* Create the module name for the memory block */
     std::string module_name = generate_memory_module_name(
-      circuit_lib, model, sram_models[0], std::string(VERILOG_MEM_POSTFIX));
+      circuit_lib, model, sram_models[0], std::string(MEMORY_MODULE_POSTFIX));
 
     ModuleId mem_module = module_manager.find_module(module_name);
     VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
@@ -186,6 +209,24 @@ void print_verilog_submodule_memories(const ModuleManager& module_manager,
 
     /* Add an empty line as a splitter */
     fp << std::endl;
+
+    /* Create the module name for the memory block */
+    std::string feedthru_module_name = generate_memory_module_name(
+      circuit_lib, model, sram_models[0],
+      std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
+
+    ModuleId feedthru_mem_module =
+      module_manager.find_module(feedthru_module_name);
+    if (module_manager.valid_module_id(feedthru_mem_module)) {
+      /* Write the module content in Verilog format */
+      write_verilog_module_to_file(fp, module_manager, feedthru_mem_module,
+                                   options.explicit_port_mapping() ||
+                                     circuit_lib.dump_explicit_port_map(model),
+                                   options.default_net_type());
+
+      /* Add an empty line as a splitter */
+      fp << std::endl;
+    }
   }
 
   /* Close the file stream */

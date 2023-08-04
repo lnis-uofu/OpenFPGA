@@ -1508,7 +1508,7 @@ int add_physical_memory_module(ModuleManager& module_manager,
   for (size_t ichild = 0;
        ichild < module_manager
                   .configurable_children(
-                    curr_module, ModuleManager::e_config_child_type::PHYSICAL)
+                    curr_module, ModuleManager::e_config_child_type::LOGICAL)
                   .size();
        ++ichild) {
     for (e_circuit_model_port_type port_type :
@@ -1526,9 +1526,9 @@ int add_physical_memory_module(ModuleManager& module_manager,
         module_manager.module_port(phy_mem_module, src_port_id);
 
       ModuleId des_module = module_manager.configurable_children(
-        curr_module, ModuleManager::e_config_child_type::PHYSICAL)[ichild];
+        curr_module, ModuleManager::e_config_child_type::LOGICAL)[ichild];
       size_t des_instance = module_manager.configurable_child_instances(
-        curr_module, ModuleManager::e_config_child_type::PHYSICAL)[ichild];
+        curr_module, ModuleManager::e_config_child_type::LOGICAL)[ichild];
       ModulePortId des_port_id =
         module_manager.find_module_port(des_module, des_port_name);
       if (!module_manager.valid_module_port_id(des_module, des_port_id)) {
