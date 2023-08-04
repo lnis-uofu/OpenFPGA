@@ -490,7 +490,8 @@ static void build_switch_block_module(
   /* Build a physical memory block */
   if (group_config_block) {
     add_physical_memory_module(module_manager, decoder_lib, sb_module,
-                               circuit_lib, sram_orgz_type, sram_model);
+                               circuit_lib, sram_orgz_type, sram_model,
+                               verbose);
   }
 
   /* Add global ports to the pb_module:
@@ -1010,7 +1011,8 @@ static void build_connection_block_module(
   /* Build a physical memory block */
   if (group_config_block) {
     add_physical_memory_module(module_manager, decoder_lib, cb_module,
-                               circuit_lib, sram_orgz_type, sram_model);
+                               circuit_lib, sram_orgz_type, sram_model,
+                               verbose);
   }
 
   /* Add global ports to the pb_module:

@@ -1243,9 +1243,9 @@ int build_memory_modules(ModuleManager& module_manager,
                         verbose);
     /* Create feedthrough memory module */
     if (require_feedthrough_memory) {
-      module_name = generate_memory_module_name(
-        circuit_lib, model, sram_models[0],
-        std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
+      module_name =
+        generate_memory_module_name(circuit_lib, model, sram_models[0],
+                                    std::string(MEMORY_MODULE_POSTFIX), true);
       status = build_feedthrough_memory_module(module_manager, module_name,
                                                num_mems, verbose);
       if (status != CMD_EXEC_SUCCESS) {
@@ -1310,7 +1310,9 @@ int build_memory_group_module(ModuleManager& module_manager,
                               const std::string& module_name,
                               const CircuitModelId& sram_model,
                               const std::vector<ModuleId>& child_modules,
-                              const size_t& num_mems) {
+                              const size_t& num_mems, const bool& verbose) {
+  VTR_LOGV(verbose, "Building memory group module '%s'...\n",
+           module_name.c_str());
   ModuleId mem_module = module_manager.add_module(module_name);
   if (!module_manager.valid_module_id(mem_module)) {
     return CMD_EXEC_FATAL_ERROR;
@@ -1442,13 +1444,14 @@ int add_physical_memory_module(ModuleManager& module_manager,
                                const ModuleId& curr_module,
                                const CircuitLibrary& circuit_lib,
                                const e_config_protocol_type& sram_orgz_type,
-                               const CircuitModelId& sram_model) {
+                               const CircuitModelId& sram_model,
+                               const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
 
   std::vector<ModuleId> required_phy_mem_modules;
   status = rec_find_physical_memory_children(
     static_cast<const ModuleManager&>(module_manager), curr_module,
-    required_phy_mem_modules);
+    required_phy_mem_modules, verbose);
   if (status != CMD_EXEC_SUCCESS) {
     return CMD_EXEC_FATAL_ERROR;
   }
@@ -1463,12 +1466,15 @@ int add_physical_memory_module(ModuleManager& module_manager,
   }
   std::string phy_mem_module_name = generate_physical_memory_module_name(
     module_manager.module_name(curr_module), module_num_config_bits);
+  VTR_LOGV(verbose, "Adding memory group module '%s' as a child to '%s'...\n",
+           phy_mem_module_name.c_str(),
+           module_manager.module_name(curr_module).c_str());
   ModuleId phy_mem_module = module_manager.find_module(phy_mem_module_name);
   if (!module_manager.valid_module_id(phy_mem_module)) {
     status = build_memory_group_module(module_manager, decoder_lib, circuit_lib,
                                        sram_orgz_type, phy_mem_module_name,
                                        sram_model, required_phy_mem_modules,
-                                       module_num_config_bits);
+                                       module_num_config_bits, verbose);
   }
   if (status != CMD_EXEC_SUCCESS) {
     VTR_LOG_ERROR("Failed to create the physical memory module '%s'!\n",

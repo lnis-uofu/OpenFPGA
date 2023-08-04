@@ -61,7 +61,7 @@ size_t estimate_num_configurable_children_to_skip_by_config_protocol(
  */
 int rec_find_physical_memory_children(
   const ModuleManager& module_manager, const ModuleId& curr_module,
-  std::vector<ModuleId>& physical_memory_children);
+  std::vector<ModuleId>& physical_memory_children, const bool& verbose);
 
 /**
  * @brief Update all the mappings between logical-to-physical memory children

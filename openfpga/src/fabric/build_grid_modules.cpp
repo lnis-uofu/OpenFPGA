@@ -278,7 +278,7 @@ static void build_primitive_block_module(
   std::string primitive_module_name =
     generate_physical_block_module_name(primitive_pb_graph_node->pb_type);
 
-  VTR_LOGV(verbose, "Building primitive module '%s'...",
+  VTR_LOGV(verbose, "Building primitive module '%s'...\n",
            primitive_module_name.c_str());
 
   /* Create a module of the primitive LUT and register it to module manager */
@@ -372,6 +372,11 @@ static void build_primitive_block_module(
                                     std::string(MEMORY_MODULE_POSTFIX), false);
       ModuleId physical_memory_module =
         module_manager.find_module(physical_memory_module_name);
+      VTR_LOGV(verbose,
+               "Mapping feedthrough memory module '%s' to physical memory "
+               "module '%s'...\n",
+               memory_module_name.c_str(), physical_memory_module_name.c_str());
+      VTR_ASSERT(module_manager.valid_module_id(physical_memory_module));
       module_manager.set_logical2physical_configurable_child(
         primitive_module, config_child_id, physical_memory_module);
     }
@@ -384,7 +389,7 @@ static void build_primitive_block_module(
   if (0 < module_manager.num_configurable_children(
             primitive_module, ModuleManager::e_config_child_type::LOGICAL)) {
     add_module_nets_memory_config_bus(
-      module_manager, decoder_lib, primitive_module, sram_orgz_type,
+      module_manager, decoder_lib, primitive_module, mem_module_type,
       circuit_lib.design_tech_type(sram_model),
       ModuleManager::e_config_child_type::LOGICAL);
   }
@@ -680,7 +685,11 @@ static void add_module_pb_graph_pin_interc(
                                    std::string(MEMORY_MODULE_POSTFIX));
         ModuleId phy_mem_module =
           module_manager.find_module(phy_mem_module_name);
-        VTR_ASSERT(true == module_manager.valid_module_id(phy_mem_module));
+        VTR_ASSERT(module_manager.valid_module_id(phy_mem_module));
+        VTR_LOGV(verbose,
+                 "Mapping feedthrough memory module '%s' to physical memory "
+                 "module '%s'...\n",
+                 mux_mem_module_name.c_str(), phy_mem_module_name.c_str());
         module_manager.set_logical2physical_configurable_child(
           pb_module, config_child_id, phy_mem_module);
         VTR_LOGV(verbose, "Now use a feedthrough memory for '%s'\n",
@@ -978,7 +987,7 @@ static void rec_build_logical_tile_modules(
   std::string pb_module_name =
     generate_physical_block_module_name(physical_pb_type);
 
-  VTR_LOGV(verbose, "Building module '%s'...", pb_module_name.c_str());
+  VTR_LOGV(verbose, "Building module '%s'...\n", pb_module_name.c_str());
 
   /* Register the Verilog module in module manager */
   ModuleId pb_module = module_manager.add_module(pb_module_name);
@@ -1201,7 +1210,8 @@ static void build_physical_tile_module(
   /* TODO: Add a physical memory block */
   if (group_config_block) {
     add_physical_memory_module(module_manager, decoder_lib, grid_module,
-                               circuit_lib, sram_orgz_type, sram_model);
+                               circuit_lib, sram_orgz_type, sram_model,
+                               verbose);
   }
 
   /* Add grid ports(pins) to the module */

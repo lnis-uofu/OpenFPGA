@@ -37,14 +37,15 @@ int build_memory_group_module(ModuleManager& module_manager,
                               const std::string& module_name,
                               const CircuitModelId& sram_model,
                               const std::vector<ModuleId>& child_modules,
-                              const size_t& num_mems);
+                              const size_t& num_mems, const bool& verbose);
 
 int add_physical_memory_module(ModuleManager& module_manager,
                                DecoderLibrary& decoder_lib,
                                const ModuleId& curr_module,
                                const CircuitLibrary& circuit_lib,
                                const e_config_protocol_type& sram_orgz_type,
-                               const CircuitModelId& sram_model);
+                               const CircuitModelId& sram_model,
+                               const bool& verbose);
 
 } /* end namespace openfpga */
 

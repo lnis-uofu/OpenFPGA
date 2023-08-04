@@ -499,7 +499,7 @@ size_t estimate_num_configurable_children_to_skip_by_config_protocol(
 
 int rec_find_physical_memory_children(
   const ModuleManager& module_manager, const ModuleId& curr_module,
-  std::vector<ModuleId>& physical_memory_children) {
+  std::vector<ModuleId>& physical_memory_children, const bool& verbose) {
   if (module_manager
         .configurable_children(curr_module,
                                ModuleManager::e_config_child_type::LOGICAL)
@@ -522,9 +522,15 @@ int rec_find_physical_memory_children(
       physical_memory_children.push_back(
         module_manager.logical2physical_configurable_children(
           curr_module)[ichild]);
+      VTR_LOGV(
+        verbose, "Collecting physical memory module '%s'...\n",
+        module_manager
+          .module_name(module_manager.logical2physical_configurable_children(
+            curr_module)[ichild])
+          .c_str());
     } else {
       rec_find_physical_memory_children(module_manager, logical_child,
-                                        physical_memory_children);
+                                        physical_memory_children, verbose);
     }
   }
   return CMD_EXEC_SUCCESS;
