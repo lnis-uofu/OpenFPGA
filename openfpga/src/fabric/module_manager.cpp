@@ -420,7 +420,7 @@ size_t ModuleManager::num_configurable_children(
   if (type == ModuleManager::e_config_child_type::LOGICAL) {
     return logical_configurable_children_[parent_module].size();
   }
-  VTR_ASSERT(type == ModuleManager::e_config_child_type::LOGICAL);
+  VTR_ASSERT(type == ModuleManager::e_config_child_type::PHYSICAL);
   return physical_configurable_children_[parent_module].size();
 }
 
