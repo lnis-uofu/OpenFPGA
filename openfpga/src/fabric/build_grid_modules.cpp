@@ -278,7 +278,8 @@ static void build_primitive_block_module(
   std::string primitive_module_name =
     generate_physical_block_module_name(primitive_pb_graph_node->pb_type);
 
-  VTR_LOGV(verbose, "Building module '%s'...", primitive_module_name.c_str());
+  VTR_LOGV(verbose, "Building primitive module '%s'...",
+           primitive_module_name.c_str());
 
   /* Create a module of the primitive LUT and register it to module manager */
   ModuleId primitive_module = module_manager.add_module(primitive_module_name);
@@ -1036,6 +1037,9 @@ static void rec_build_logical_tile_modules(
       module_manager.set_child_instance_name(
         pb_module, child_pb_module, child_instance_id, child_pb_instance_name);
 
+      VTR_LOGV(verbose, "Building instance '%s'\n",
+               child_pb_instance_name.c_str());
+
       /* Identify if this sub module includes configuration bits,
        * we will update the memory module and instance list
        */
@@ -1053,6 +1057,7 @@ static void rec_build_logical_tile_modules(
   /* Add modules and nets for programmable/non-programmable interconnections
    * inside the Verilog module
    */
+  VTR_LOGV(verbose, "Building local interconnecting modules\n");
   add_module_pb_graph_interc(module_manager, pb_module, memory_modules,
                              memory_instances, device_annotation, circuit_lib,
                              physical_pb_graph_node, physical_mode->index,

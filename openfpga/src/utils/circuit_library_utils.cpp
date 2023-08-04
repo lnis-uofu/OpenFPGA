@@ -188,6 +188,7 @@ size_t find_circuit_num_config_bits(
   }
 
   switch (config_protocol_type) {
+    case CONFIG_MEM_FEEDTHROUGH:
     case CONFIG_MEM_STANDALONE:
     case CONFIG_MEM_SCAN_CHAIN:
     case CONFIG_MEM_QL_MEMORY_BANK:
