@@ -234,7 +234,7 @@ std::string generate_memory_module_name(const CircuitLibrary& circuit_lib,
                                         const bool& feedthrough_memory) {
   std::string mid_name;
   if (feedthrough_memory) {
-    mid_name = "feedthrough_"; 
+    mid_name = "feedthrough_";
   }
   return std::string(circuit_lib.model_name(circuit_model) + "_" + mid_name +
                      circuit_lib.model_name(sram_model) + postfix);
@@ -531,8 +531,10 @@ std::string generate_tile_module_netlist_name(const std::string& block_name,
 /*********************************************************************
  * Generate the module name of a physical memory module
  **********************************************************************/
-std::string generate_physical_memory_module_name(const std::string& prefix, const size_t& mem_size) {
-  return prefix + std::string("_config_group_mem_size") + std::to_string(mem_size);
+std::string generate_physical_memory_module_name(const std::string& prefix,
+                                                 const size_t& mem_size) {
+  return prefix + std::string("_config_group_mem_size") +
+         std::to_string(mem_size);
 }
 
 /*********************************************************************
@@ -748,17 +750,17 @@ std::string generate_sram_port_name(
 
   switch (sram_orgz_type) {
     case CONFIG_MEM_FEEDTHROUGH:
-     /* Two types of ports are available:
+      /* Two types of ports are available:
        * (1) BL indicates the mem port
        * (2) BLB indicates the inverted mem port
        *
-       *               mem  mem_inv     
-       *               [0]   [0]    
-       *                |     |      
-       *                v     v      
-       *           +----------------+ 
-       *           |   Virtual Mem  | 
-       *           +----------------+ 
+       *               mem  mem_inv
+       *               [0]   [0]
+       *                |     |
+       *                v     v
+       *           +----------------+
+       *           |   Virtual Mem  |
+       *           +----------------+
        */
       if (CIRCUIT_MODEL_PORT_BL == port_type) {
         port_name = std::string(MEMORY_FEEDTHROUGH_DATA_IN_PORT_NAME);
@@ -1202,7 +1204,7 @@ std::string generate_pb_memory_instance_name(const std::string& prefix,
                                              t_pb_graph_pin* pb_graph_pin,
                                              const std::string& postfix,
                                              const bool& feedthrough_memory) {
-  std::string mid_name = feedthrough_memory ? "virtual_" : ""; 
+  std::string mid_name = feedthrough_memory ? "virtual_" : "";
   std::string instance_name(mid_name + prefix);
   instance_name += std::string(pb_graph_pin->parent_node->pb_type->name);
 

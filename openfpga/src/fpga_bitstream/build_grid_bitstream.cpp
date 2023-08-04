@@ -636,7 +636,8 @@ static void rec_build_physical_block_bitstream(
   VTR_ASSERT(true == module_manager.valid_module_id(pb_module));
 
   /* Skip module with no configurable children */
-  if (0 == module_manager.num_configurable_children(pb_module, ModuleManager::e_config_child_type::LOGICAL)) {
+  if (0 == module_manager.num_configurable_children(
+             pb_module, ModuleManager::e_config_child_type::LOGICAL)) {
     return;
   }
 
@@ -644,17 +645,20 @@ static void rec_build_physical_block_bitstream(
    * manager */
   std::string pb_block_name = generate_physical_block_instance_name(
     physical_pb_type, pb_graph_node_index);
-  /* If there are no physical memory blocks under the current module, use the previous module, which is the physical memory block */
+  /* If there are no physical memory blocks under the current module, use the
+   * previous module, which is the physical memory block */
   ConfigBlockId pb_configurable_block = parent_configurable_block;
-  if (0 < module_manager.num_configurable_children(pb_module, ModuleManager::e_config_child_type::PHYSICAL)) {
+  if (0 < module_manager.num_configurable_children(
+            pb_module, ModuleManager::e_config_child_type::PHYSICAL)) {
     pb_configurable_block = bitstream_manager.add_block(pb_block_name);
     bitstream_manager.add_child_block(parent_configurable_block,
                                       pb_configurable_block);
     /* Reserve child blocks for new created block */
     bitstream_manager.reserve_child_blocks(
       parent_configurable_block,
-      count_module_manager_module_configurable_children(module_manager,
-                                                        pb_module, ModuleManager::e_config_child_type::PHYSICAL));
+      count_module_manager_module_configurable_children(
+        module_manager, pb_module,
+        ModuleManager::e_config_child_type::PHYSICAL));
   }
 
   /* Recursively finish all the child pb_types*/
@@ -750,7 +754,8 @@ static void build_physical_block_bitstream(
   VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
 
   /* Skip module with no configurable children */
-  if (0 == module_manager.num_configurable_children(grid_module, ModuleManager::e_config_child_type::LOGICAL)) {
+  if (0 == module_manager.num_configurable_children(
+             grid_module, ModuleManager::e_config_child_type::LOGICAL)) {
     return;
   }
 
@@ -772,14 +777,26 @@ static void build_physical_block_bitstream(
   /* Reserve child blocks for new created block */
   bitstream_manager.reserve_child_blocks(
     grid_configurable_block, count_module_manager_module_configurable_children(
-                               module_manager, grid_module, ModuleManager::e_config_child_type::PHYSICAL));
+                               module_manager, grid_module,
+                               ModuleManager::e_config_child_type::PHYSICAL));
 
   /* Create a dedicated block for the non-unified configurable child */
   if (!module_manager.unified_configurable_children(grid_module)) {
-    VTR_ASSERT(1 == module_manager.configurable_children(grid_module, ModuleManager::e_config_child_type::PHYSICAL).size());
-    std::string phy_mem_instance_name = module_manager.instance_name(grid_module, module_manager.configurable_children(grid_module, ModuleManager::e_config_child_type::PHYSICAL)[0], module_manager.configurable_child_instances(grid_module, ModuleManager::e_config_child_type::PHYSICAL)[0]);
-    ConfigBlockId grid_grouped_config_block = bitstream_manager.add_block(phy_mem_instance_name);
-    bitstream_manager.add_child_block(grid_configurable_block, grid_grouped_config_block);
+    VTR_ASSERT(1 ==
+               module_manager
+                 .configurable_children(
+                   grid_module, ModuleManager::e_config_child_type::PHYSICAL)
+                 .size());
+    std::string phy_mem_instance_name = module_manager.instance_name(
+      grid_module,
+      module_manager.configurable_children(
+        grid_module, ModuleManager::e_config_child_type::PHYSICAL)[0],
+      module_manager.configurable_child_instances(
+        grid_module, ModuleManager::e_config_child_type::PHYSICAL)[0]);
+    ConfigBlockId grid_grouped_config_block =
+      bitstream_manager.add_block(phy_mem_instance_name);
+    bitstream_manager.add_child_block(grid_configurable_block,
+                                      grid_grouped_config_block);
     grid_configurable_block = grid_grouped_config_block;
   }
 

@@ -39,7 +39,10 @@ static bool submodule_memory_modules_match_fabric_key(
   const FabricKey& fabric_key, const FabricKeyModuleId& key_module_id) {
   /* If the length does not match, conclusion is easy to be made */
   size_t len_module_memory =
-    module_manager.configurable_children(module_id, ModuleManager::e_config_child_type::PHYSICAL).size();
+    module_manager
+      .configurable_children(module_id,
+                             ModuleManager::e_config_child_type::PHYSICAL)
+      .size();
   size_t len_fabric_sub_key = fabric_key.sub_keys(key_module_id).size();
   if (len_module_memory != len_fabric_sub_key) {
     return false;
@@ -65,9 +68,11 @@ static bool submodule_memory_modules_match_fabric_key(
       inst_info.second = fabric_key.sub_key_value(key_id);
     }
     if (inst_info.first !=
-          module_manager.configurable_children(module_id, ModuleManager::e_config_child_type::PHYSICAL)[ikey] ||
+          module_manager.configurable_children(
+            module_id, ModuleManager::e_config_child_type::PHYSICAL)[ikey] ||
         inst_info.second !=
-          module_manager.configurable_child_instances(module_id, ModuleManager::e_config_child_type::PHYSICAL)[ikey]) {
+          module_manager.configurable_child_instances(
+            module_id, ModuleManager::e_config_child_type::PHYSICAL)[ikey]) {
       return false;
     }
   }
@@ -143,7 +148,8 @@ static bool update_submodule_memory_modules_from_fabric_key(
 
     /* Now we can add the child to configurable children of the top module */
     module_manager.add_configurable_child(module_id, inst_info.first,
-                                          inst_info.second, config_child_type, vtr::Point<int>());
+                                          inst_info.second, config_child_type,
+                                          vtr::Point<int>());
   }
   return CMD_EXEC_SUCCESS;
 }
@@ -156,7 +162,9 @@ static int remove_submodule_nets_cmos_memory_chain_config_bus(
   const e_config_protocol_type& sram_orgz_type,
   const ModuleManager::e_config_child_type& config_child_type) {
   for (size_t mem_index = 0;
-       mem_index < module_manager.configurable_children(parent_module, config_child_type).size();
+       mem_index <
+       module_manager.configurable_children(parent_module, config_child_type)
+         .size();
        ++mem_index) {
     ModuleId net_src_module_id;
     size_t net_src_instance_id;
@@ -173,8 +181,8 @@ static int remove_submodule_nets_cmos_memory_chain_config_bus(
     } else {
       /* Find the port name of previous memory module */
       std::string src_port_name = generate_configuration_chain_tail_name();
-      net_src_module_id =
-        module_manager.configurable_children(parent_module, config_child_type)[mem_index - 1];
+      net_src_module_id = module_manager.configurable_children(
+        parent_module, config_child_type)[mem_index - 1];
       net_src_instance_id = module_manager.configurable_child_instances(
         parent_module, config_child_type)[mem_index - 1];
       net_src_port_id =
@@ -203,9 +211,12 @@ static int remove_submodule_nets_cmos_memory_chain_config_bus(
   /* Find the port name of previous memory module */
   std::string src_port_name = generate_configuration_chain_tail_name();
   ModuleId net_src_module_id =
-    module_manager.configurable_children(parent_module, config_child_type).back();
+    module_manager.configurable_children(parent_module, config_child_type)
+      .back();
   size_t net_src_instance_id =
-    module_manager.configurable_child_instances(parent_module, config_child_type).back();
+    module_manager
+      .configurable_child_instances(parent_module, config_child_type)
+      .back();
   ModulePortId net_src_port_id =
     module_manager.find_module_port(net_src_module_id, src_port_name);
 
@@ -304,7 +315,9 @@ static int rebuild_submodule_nets_cmos_memory_chain_config_bus(
   const e_config_protocol_type& sram_orgz_type,
   const ModuleManager::e_config_child_type& config_child_type) {
   for (size_t mem_index = 0;
-       mem_index < module_manager.configurable_children(parent_module, config_child_type).size();
+       mem_index <
+       module_manager.configurable_children(parent_module, config_child_type)
+         .size();
        ++mem_index) {
     ModuleId net_src_module_id;
     size_t net_src_instance_id;
@@ -325,17 +338,17 @@ static int rebuild_submodule_nets_cmos_memory_chain_config_bus(
 
       /* Find the port name of next memory module */
       std::string sink_port_name = generate_configuration_chain_head_name();
-      net_sink_module_id =
-        module_manager.configurable_children(parent_module, config_child_type)[mem_index];
-      net_sink_instance_id =
-        module_manager.configurable_child_instances(parent_module, config_child_type)[mem_index];
+      net_sink_module_id = module_manager.configurable_children(
+        parent_module, config_child_type)[mem_index];
+      net_sink_instance_id = module_manager.configurable_child_instances(
+        parent_module, config_child_type)[mem_index];
       net_sink_port_id =
         module_manager.find_module_port(net_sink_module_id, sink_port_name);
     } else {
       /* Find the port name of previous memory module */
       std::string src_port_name = generate_configuration_chain_tail_name();
-      net_src_module_id =
-        module_manager.configurable_children(parent_module, config_child_type)[mem_index - 1];
+      net_src_module_id = module_manager.configurable_children(
+        parent_module, config_child_type)[mem_index - 1];
       net_src_instance_id = module_manager.configurable_child_instances(
         parent_module, config_child_type)[mem_index - 1];
       net_src_port_id =
@@ -343,10 +356,10 @@ static int rebuild_submodule_nets_cmos_memory_chain_config_bus(
 
       /* Find the port name of next memory module */
       std::string sink_port_name = generate_configuration_chain_head_name();
-      net_sink_module_id =
-        module_manager.configurable_children(parent_module, config_child_type)[mem_index];
-      net_sink_instance_id =
-        module_manager.configurable_child_instances(parent_module, config_child_type)[mem_index];
+      net_sink_module_id = module_manager.configurable_children(
+        parent_module, config_child_type)[mem_index];
+      net_sink_instance_id = module_manager.configurable_child_instances(
+        parent_module, config_child_type)[mem_index];
       net_sink_port_id =
         module_manager.find_module_port(net_sink_module_id, sink_port_name);
     }
@@ -380,9 +393,12 @@ static int rebuild_submodule_nets_cmos_memory_chain_config_bus(
   /* Find the port name of previous memory module */
   std::string src_port_name = generate_configuration_chain_tail_name();
   ModuleId net_src_module_id =
-    module_manager.configurable_children(parent_module, config_child_type).back();
+    module_manager.configurable_children(parent_module, config_child_type)
+      .back();
   size_t net_src_instance_id =
-    module_manager.configurable_child_instances(parent_module, config_child_type).back();
+    module_manager
+      .configurable_child_instances(parent_module, config_child_type)
+      .back();
   ModulePortId net_src_port_id =
     module_manager.find_module_port(net_src_module_id, src_port_name);
 
@@ -509,20 +525,22 @@ static int load_and_update_submodule_memory_modules_from_fabric_key(
   }
   /* Do not match, now remove all the nets for the configurable children */
   status = remove_submodule_configurable_children_nets(
-    module_manager, module_id, circuit_lib, config_protocol, ModuleManager::e_config_child_type::PHYSICAL);
+    module_manager, module_id, circuit_lib, config_protocol,
+    ModuleManager::e_config_child_type::PHYSICAL);
   if (status == CMD_EXEC_FATAL_ERROR) {
     return status;
   }
   /* Overwrite the configurable children list */
   status = update_submodule_memory_modules_from_fabric_key(
-    module_manager, module_id, circuit_lib, config_protocol, ModuleManager::e_config_child_type::PHYSICAL, fabric_key,
-    key_module_id);
+    module_manager, module_id, circuit_lib, config_protocol,
+    ModuleManager::e_config_child_type::PHYSICAL, fabric_key, key_module_id);
   if (status == CMD_EXEC_FATAL_ERROR) {
     return status;
   }
   /* TODO: Create the nets for the new list of configurable children */
   status = rebuild_submodule_configurable_children_nets(
-    module_manager, module_id, circuit_lib, config_protocol, ModuleManager::e_config_child_type::PHYSICAL);
+    module_manager, module_id, circuit_lib, config_protocol,
+    ModuleManager::e_config_child_type::PHYSICAL);
   if (status == CMD_EXEC_FATAL_ERROR) {
     return status;
   }

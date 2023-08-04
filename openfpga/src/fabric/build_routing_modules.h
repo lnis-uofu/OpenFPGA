@@ -24,8 +24,7 @@ void build_flatten_routing_modules(
   const DeviceContext& device_ctx, const VprDeviceAnnotation& device_annotation,
   const DeviceRRGSB& device_rr_gsb, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
-  const CircuitModelId& sram_model,
-  const bool& group_config_block,
+  const CircuitModelId& sram_model, const bool& group_config_block,
   const bool& verbose);
 
 void build_unique_routing_modules(
@@ -33,8 +32,7 @@ void build_unique_routing_modules(
   const DeviceContext& device_ctx, const VprDeviceAnnotation& device_annotation,
   const DeviceRRGSB& device_rr_gsb, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
-  const CircuitModelId& sram_model,
-  const bool& group_config_block,
+  const CircuitModelId& sram_model, const bool& group_config_block,
   const bool& verbose);
 
 } /* end namespace openfpga */

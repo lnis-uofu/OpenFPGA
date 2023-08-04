@@ -14,10 +14,10 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
+#include "build_memory_modules.h"
 #include "build_module_graph_utils.h"
 #include "build_routing_module_utils.h"
 #include "build_routing_modules.h"
-#include "build_memory_modules.h"
 #include "module_manager_utils.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
@@ -231,7 +231,8 @@ static void build_switch_block_mux_module(
    * modules
    */
   std::string mem_instance_name = generate_sb_memory_instance_name(
-    SWITCH_BLOCK_MEM_INSTANCE_PREFIX, chan_side, chan_node_id, std::string(""), group_config_block);
+    SWITCH_BLOCK_MEM_INSTANCE_PREFIX, chan_side, chan_node_id, std::string(""),
+    group_config_block);
   module_manager.set_child_instance_name(sb_module, mem_module, mem_instance_id,
                                          mem_instance_name);
 
@@ -241,16 +242,22 @@ static void build_switch_block_mux_module(
     module_manager, sb_module, mux_module, mux_instance_id, mem_module,
     mem_instance_id, circuit_lib, mux_model);
   /* Update memory and instance list */
-  size_t config_child_id = module_manager.num_configurable_children(sb_module, ModuleManager::e_config_child_type::LOGICAL);
-  module_manager.add_configurable_child(sb_module, mem_module, mem_instance_id, group_config_block ? ModuleManager::e_config_child_type::LOGICAL : ModuleManager::e_config_child_type::UNIFIED);
+  size_t config_child_id = module_manager.num_configurable_children(
+    sb_module, ModuleManager::e_config_child_type::LOGICAL);
+  module_manager.add_configurable_child(
+    sb_module, mem_module, mem_instance_id,
+    group_config_block ? ModuleManager::e_config_child_type::LOGICAL
+                       : ModuleManager::e_config_child_type::UNIFIED);
   /* For logical memory, define the physical memory here */
   if (group_config_block) {
     std::string physical_mem_module_name =
       generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size,
                                std::string(MEMORY_MODULE_POSTFIX));
-    ModuleId physical_mem_module = module_manager.find_module(physical_mem_module_name);
+    ModuleId physical_mem_module =
+      module_manager.find_module(physical_mem_module_name);
     VTR_ASSERT(true == module_manager.valid_module_id(physical_mem_module));
-    module_manager.set_logical2physical_configurable_child(sb_module, config_child_id, physical_mem_module);
+    module_manager.set_logical2physical_configurable_child(
+      sb_module, config_child_id, physical_mem_module);
   }
 }
 
@@ -482,7 +489,8 @@ static void build_switch_block_module(
 
   /* Build a physical memory block */
   if (group_config_block) {
-    add_physical_memory_module(module_manager, decoder_lib, sb_module, circuit_lib, sram_orgz_type, sram_model);
+    add_physical_memory_module(module_manager, decoder_lib, sb_module,
+                               circuit_lib, sram_orgz_type, sram_model);
   }
 
   /* Add global ports to the pb_module:
@@ -510,10 +518,13 @@ static void build_switch_block_module(
    * we just need to find all the I/O ports from the child modules and build a
    * list of it
    */
-  ModuleManager::e_config_child_type config_child_type = group_config_block ? ModuleManager::e_config_child_type::PHYSICAL : ModuleManager::e_config_child_type::LOGICAL;
+  ModuleManager::e_config_child_type config_child_type =
+    group_config_block ? ModuleManager::e_config_child_type::PHYSICAL
+                       : ModuleManager::e_config_child_type::LOGICAL;
   size_t module_num_config_bits =
     find_module_num_config_bits_from_child_modules(
-      module_manager, sb_module, circuit_lib, sram_model, sram_orgz_type, config_child_type);
+      module_manager, sb_module, circuit_lib, sram_model, sram_orgz_type,
+      config_child_type);
   if (0 < module_num_config_bits) {
     add_pb_sram_ports_to_module_manager(module_manager, sb_module, circuit_lib,
                                         sram_model, sram_orgz_type,
@@ -524,7 +535,8 @@ static void build_switch_block_module(
    * primitive modules This is a one-shot addition that covers all the memory
    * modules in this primitive module!
    */
-  if (0 < module_manager.num_configurable_children(sb_module, config_child_type)) {
+  if (0 <
+      module_manager.num_configurable_children(sb_module, config_child_type)) {
     add_pb_module_nets_memory_config_bus(
       module_manager, decoder_lib, sb_module, sram_orgz_type,
       circuit_lib.design_tech_type(sram_model), config_child_type);
@@ -726,7 +738,7 @@ static void build_connection_block_mux_module(
   if (group_config_block) {
     mem_module_name =
       generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size,
-                             std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
+                               std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
   }
   ModuleId mem_module = module_manager.find_module(mem_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
@@ -752,16 +764,22 @@ static void build_connection_block_mux_module(
     module_manager, cb_module, mux_module, mux_instance_id, mem_module,
     mem_instance_id, circuit_lib, mux_model);
   /* Update memory and instance list */
-  size_t config_child_id = module_manager.num_configurable_children(cb_module, ModuleManager::e_config_child_type::LOGICAL);
-  module_manager.add_configurable_child(cb_module, mem_module, mem_instance_id, group_config_block ? ModuleManager::e_config_child_type::LOGICAL : ModuleManager::e_config_child_type::UNIFIED);
+  size_t config_child_id = module_manager.num_configurable_children(
+    cb_module, ModuleManager::e_config_child_type::LOGICAL);
+  module_manager.add_configurable_child(
+    cb_module, mem_module, mem_instance_id,
+    group_config_block ? ModuleManager::e_config_child_type::LOGICAL
+                       : ModuleManager::e_config_child_type::UNIFIED);
   /* For logical memory, define the physical memory here */
   if (group_config_block) {
     std::string physical_mem_module_name =
       generate_mux_subckt_name(circuit_lib, mux_model, datapath_mux_size,
                                std::string(MEMORY_MODULE_POSTFIX));
-    ModuleId physical_mem_module = module_manager.find_module(physical_mem_module_name);
+    ModuleId physical_mem_module =
+      module_manager.find_module(physical_mem_module_name);
     VTR_ASSERT(true == module_manager.valid_module_id(physical_mem_module));
-    module_manager.set_logical2physical_configurable_child(cb_module, config_child_id, physical_mem_module);
+    module_manager.set_logical2physical_configurable_child(
+      cb_module, config_child_id, physical_mem_module);
   }
 }
 
@@ -795,8 +813,8 @@ static void build_connection_block_interc_modules(
     /* Print the multiplexer, fan_in >= 2 */
     build_connection_block_mux_module(
       module_manager, cb_module, device_annotation, grids, rr_graph, rr_gsb,
-      cb_type, circuit_lib, cb_ipin_side, ipin_index,
-      input_port_to_module_nets, group_config_block);
+      cb_type, circuit_lib, cb_ipin_side, ipin_index, input_port_to_module_nets,
+      group_config_block);
   } /*Nothing should be done else*/
 }
 
@@ -861,8 +879,7 @@ static void build_connection_block_module(
   const RRGraphView& rr_graph, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const RRGSB& rr_gsb,
-  const t_rr_type& cb_type,
-  const bool& group_config_block, 
+  const t_rr_type& cb_type, const bool& group_config_block,
   const bool& verbose) {
   /* Create the netlist */
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_cb_x(cb_type),
@@ -985,13 +1002,15 @@ static void build_connection_block_module(
          ++inode) {
       build_connection_block_interc_modules(
         module_manager, cb_module, device_annotation, grids, rr_graph, rr_gsb,
-        cb_type, circuit_lib, cb_ipin_side, inode, input_port_to_module_nets, group_config_block);
+        cb_type, circuit_lib, cb_ipin_side, inode, input_port_to_module_nets,
+        group_config_block);
     }
   }
 
   /* Build a physical memory block */
   if (group_config_block) {
-    add_physical_memory_module(module_manager, decoder_lib, cb_module, circuit_lib, sram_orgz_type, sram_model);
+    add_physical_memory_module(module_manager, decoder_lib, cb_module,
+                               circuit_lib, sram_orgz_type, sram_model);
   }
 
   /* Add global ports to the pb_module:
@@ -1019,10 +1038,13 @@ static void build_connection_block_module(
    * we just need to find all the I/O ports from the child modules and build a
    * list of it
    */
-  ModuleManager::e_config_child_type config_child_type = group_config_block ? ModuleManager::e_config_child_type::PHYSICAL : ModuleManager::e_config_child_type::LOGICAL;
+  ModuleManager::e_config_child_type config_child_type =
+    group_config_block ? ModuleManager::e_config_child_type::PHYSICAL
+                       : ModuleManager::e_config_child_type::LOGICAL;
   size_t module_num_config_bits =
     find_module_num_config_bits_from_child_modules(
-      module_manager, cb_module, circuit_lib, sram_model, sram_orgz_type, config_child_type);
+      module_manager, cb_module, circuit_lib, sram_model, sram_orgz_type,
+      config_child_type);
   if (0 < module_num_config_bits) {
     add_pb_sram_ports_to_module_manager(module_manager, cb_module, circuit_lib,
                                         sram_model, sram_orgz_type,
@@ -1033,7 +1055,8 @@ static void build_connection_block_module(
    * primitive modules This is a one-shot addition that covers all the memory
    * modules in this primitive module!
    */
-  if (0 < module_manager.num_configurable_children(cb_module, config_child_type)) {
+  if (0 <
+      module_manager.num_configurable_children(cb_module, config_child_type)) {
     add_pb_module_nets_memory_config_bus(
       module_manager, decoder_lib, cb_module, sram_orgz_type,
       circuit_lib.design_tech_type(sram_model), config_child_type);
@@ -1052,8 +1075,7 @@ static void build_flatten_connection_block_modules(
   const DeviceRRGSB& device_rr_gsb, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const t_rr_type& cb_type,
-  const bool& group_config_block,
-  const bool& verbose) {
+  const bool& group_config_block, const bool& verbose) {
   /* Build unique X-direction connection block modules */
   vtr::Point<size_t> cb_range = device_rr_gsb.get_gsb_range();
 
@@ -1089,8 +1111,7 @@ void build_flatten_routing_modules(
   const DeviceContext& device_ctx, const VprDeviceAnnotation& device_annotation,
   const DeviceRRGSB& device_rr_gsb, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
-  const CircuitModelId& sram_model,
-  const bool& group_config_block,
+  const CircuitModelId& sram_model, const bool& group_config_block,
   const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build routing modules...");
 
@@ -1112,11 +1133,13 @@ void build_flatten_routing_modules(
 
   build_flatten_connection_block_modules(
     module_manager, decoder_lib, device_ctx, device_annotation, device_rr_gsb,
-    circuit_lib, sram_orgz_type, sram_model, CHANX, group_config_block, verbose);
+    circuit_lib, sram_orgz_type, sram_model, CHANX, group_config_block,
+    verbose);
 
   build_flatten_connection_block_modules(
     module_manager, decoder_lib, device_ctx, device_annotation, device_rr_gsb,
-    circuit_lib, sram_orgz_type, sram_model, CHANY, group_config_block, verbose);
+    circuit_lib, sram_orgz_type, sram_model, CHANY, group_config_block,
+    verbose);
 }
 
 /********************************************************************
@@ -1135,8 +1158,7 @@ void build_unique_routing_modules(
   const DeviceContext& device_ctx, const VprDeviceAnnotation& device_annotation,
   const DeviceRRGSB& device_rr_gsb, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
-  const CircuitModelId& sram_model,
-  const bool& group_config_block,
+  const CircuitModelId& sram_model, const bool& group_config_block,
   const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build unique routing modules...");
 

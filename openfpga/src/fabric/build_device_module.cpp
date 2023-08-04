@@ -78,7 +78,8 @@ int build_device_module_graph(
   /* Build memory modules */
   build_memory_modules(module_manager, decoder_lib, openfpga_ctx.mux_lib(),
                        openfpga_ctx.arch().circuit_lib,
-                       openfpga_ctx.arch().config_protocol.type(), group_config_block);
+                       openfpga_ctx.arch().config_protocol.type(),
+                       group_config_block);
 
   /* Build grid and programmable block modules */
   build_grid_modules(module_manager, decoder_lib, vpr_device_ctx,
@@ -88,18 +89,20 @@ int build_device_module_graph(
                      duplicate_grid_pin, group_config_block, verbose);
 
   if (true == compress_routing) {
-    build_unique_routing_modules(
-      module_manager, decoder_lib, vpr_device_ctx,
-      openfpga_ctx.vpr_device_annotation(), openfpga_ctx.device_rr_gsb(),
-      openfpga_ctx.arch().circuit_lib,
-      openfpga_ctx.arch().config_protocol.type(), sram_model, group_config_block, verbose);
+    build_unique_routing_modules(module_manager, decoder_lib, vpr_device_ctx,
+                                 openfpga_ctx.vpr_device_annotation(),
+                                 openfpga_ctx.device_rr_gsb(),
+                                 openfpga_ctx.arch().circuit_lib,
+                                 openfpga_ctx.arch().config_protocol.type(),
+                                 sram_model, group_config_block, verbose);
   } else {
     VTR_ASSERT_SAFE(false == compress_routing);
-    build_flatten_routing_modules(
-      module_manager, decoder_lib, vpr_device_ctx,
-      openfpga_ctx.vpr_device_annotation(), openfpga_ctx.device_rr_gsb(),
-      openfpga_ctx.arch().circuit_lib,
-      openfpga_ctx.arch().config_protocol.type(), sram_model, group_config_block, verbose);
+    build_flatten_routing_modules(module_manager, decoder_lib, vpr_device_ctx,
+                                  openfpga_ctx.vpr_device_annotation(),
+                                  openfpga_ctx.device_rr_gsb(),
+                                  openfpga_ctx.arch().circuit_lib,
+                                  openfpga_ctx.arch().config_protocol.type(),
+                                  sram_model, group_config_block, verbose);
   }
 
   /* Build tile modules if defined */

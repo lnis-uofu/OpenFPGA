@@ -1076,7 +1076,11 @@ static void organize_top_module_tile_based_memory_modules(
   const CircuitModelId& sram_model, const DeviceGrid& grids,
   const vtr::Matrix<size_t>& tile_instance_ids, const FabricTile& fabric_tile) {
   /* Ensure clean vectors to return */
-  VTR_ASSERT(true == module_manager.configurable_children(top_module, ModuleManager::e_config_child_type::PHYSICAL).empty());
+  VTR_ASSERT(true ==
+             module_manager
+               .configurable_children(
+                 top_module, ModuleManager::e_config_child_type::PHYSICAL)
+               .empty());
 
   std::vector<vtr::Point<size_t>> tile_coords;
   bool positive_direction = true;

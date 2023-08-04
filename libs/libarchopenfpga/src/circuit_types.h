@@ -134,7 +134,8 @@ constexpr std::array<const char*, NUM_CIRCUIT_MODEL_DELAY_TYPES>
  * - configurable memories are organized and accessed by quicklogic memory bank
  * - configurable memories are organized and accessed by memory bank
  * - configurable memories are organized and accessed by frames
- * - configurable memories are organized and accessed by feedthrough. Currently, this is only for internal use only
+ * - configurable memories are organized and accessed by feedthrough. Currently,
+ * this is only for internal use only
  */
 enum e_config_protocol_type {
   CONFIG_MEM_STANDALONE,
@@ -148,6 +149,7 @@ enum e_config_protocol_type {
 
 constexpr std::array<const char*, NUM_CONFIG_PROTOCOL_TYPES>
   CONFIG_PROTOCOL_TYPE_STRING = {{"standalone", "scan_chain", "memory_bank",
-                                  "ql_memory_bank", "frame_based", "feedthrough"}};
+                                  "ql_memory_bank", "frame_based",
+                                  "feedthrough"}};
 
 #endif

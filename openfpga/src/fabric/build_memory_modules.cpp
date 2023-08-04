@@ -3,19 +3,21 @@
  * the memories that are affiliated to multiplexers and other programmable
  * circuit models, such as IOPADs, LUTs, etc.
  ********************************************************************/
+#include "build_memory_modules.h"
+
 #include <algorithm>
 #include <ctime>
 #include <string>
-#include "command_exit_codes.h"
+
 #include "build_decoder_modules.h"
-#include "build_memory_modules.h"
 #include "circuit_library_utils.h"
+#include "command_exit_codes.h"
 #include "decoder_library_utils.h"
+#include "memory_utils.h"
 #include "module_manager.h"
 #include "module_manager_utils.h"
 #include "mux_graph.h"
 #include "mux_utils.h"
-#include "memory_utils.h"
 #include "openfpga_naming.h"
 #include "openfpga_reserved_words.h"
 #include "vtr_assert.h"
@@ -173,7 +175,11 @@ static void add_module_nets_to_cmos_memory_config_chain_module(
   const CircuitLibrary& circuit_lib, const CircuitPortId& model_input_port,
   const CircuitPortId& model_output_port) {
   for (size_t mem_index = 0;
-       mem_index < module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::LOGICAL).size();
+       mem_index <
+       module_manager
+         .configurable_children(parent_module,
+                                ModuleManager::e_config_child_type::LOGICAL)
+         .size();
        ++mem_index) {
     ModuleId net_src_module_id;
     size_t net_src_instance_id;
@@ -193,28 +199,30 @@ static void add_module_nets_to_cmos_memory_config_chain_module(
 
       /* Find the port name of next memory module */
       std::string sink_port_name = circuit_lib.port_prefix(model_input_port);
-      net_sink_module_id =
-        module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index];
-      net_sink_instance_id =
-        module_manager.configurable_child_instances(parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index];
+      net_sink_module_id = module_manager.configurable_children(
+        parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index];
+      net_sink_instance_id = module_manager.configurable_child_instances(
+        parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index];
       net_sink_port_id =
         module_manager.find_module_port(net_sink_module_id, sink_port_name);
     } else {
       /* Find the port name of previous memory module */
       std::string src_port_name = circuit_lib.port_prefix(model_output_port);
-      net_src_module_id =
-        module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index - 1];
+      net_src_module_id = module_manager.configurable_children(
+        parent_module,
+        ModuleManager::e_config_child_type::LOGICAL)[mem_index - 1];
       net_src_instance_id = module_manager.configurable_child_instances(
-        parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index - 1];
+        parent_module,
+        ModuleManager::e_config_child_type::LOGICAL)[mem_index - 1];
       net_src_port_id =
         module_manager.find_module_port(net_src_module_id, src_port_name);
 
       /* Find the port name of next memory module */
       std::string sink_port_name = circuit_lib.port_prefix(model_input_port);
-      net_sink_module_id =
-        module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index];
-      net_sink_instance_id =
-        module_manager.configurable_child_instances(parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index];
+      net_sink_module_id = module_manager.configurable_children(
+        parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index];
+      net_sink_instance_id = module_manager.configurable_child_instances(
+        parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index];
       net_sink_port_id =
         module_manager.find_module_port(net_sink_module_id, sink_port_name);
     }
@@ -248,9 +256,15 @@ static void add_module_nets_to_cmos_memory_config_chain_module(
   /* Find the port name of previous memory module */
   std::string src_port_name = circuit_lib.port_prefix(model_output_port);
   ModuleId net_src_module_id =
-    module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::LOGICAL).back();
+    module_manager
+      .configurable_children(parent_module,
+                             ModuleManager::e_config_child_type::LOGICAL)
+      .back();
   size_t net_src_instance_id =
-    module_manager.configurable_child_instances(parent_module, ModuleManager::e_config_child_type::LOGICAL).back();
+    module_manager
+      .configurable_child_instances(parent_module,
+                                    ModuleManager::e_config_child_type::LOGICAL)
+      .back();
   ModulePortId net_src_port_id =
     module_manager.find_module_port(net_src_module_id, src_port_name);
 
@@ -310,7 +324,11 @@ static void add_module_nets_to_cmos_memory_scan_chain_module(
   const CircuitLibrary& circuit_lib, const CircuitPortId& model_input_port,
   const CircuitPortId& model_output_port) {
   for (size_t mem_index = 0;
-       mem_index < module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::LOGICAL).size();
+       mem_index <
+       module_manager
+         .configurable_children(parent_module,
+                                ModuleManager::e_config_child_type::LOGICAL)
+         .size();
        ++mem_index) {
     ModuleId net_src_module_id;
     size_t net_src_instance_id;
@@ -330,28 +348,30 @@ static void add_module_nets_to_cmos_memory_scan_chain_module(
 
       /* Find the port name of next memory module */
       std::string sink_port_name = circuit_lib.port_prefix(model_input_port);
-      net_sink_module_id =
-        module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index];
-      net_sink_instance_id =
-        module_manager.configurable_child_instances(parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index];
+      net_sink_module_id = module_manager.configurable_children(
+        parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index];
+      net_sink_instance_id = module_manager.configurable_child_instances(
+        parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index];
       net_sink_port_id =
         module_manager.find_module_port(net_sink_module_id, sink_port_name);
     } else {
       /* Find the port name of previous memory module */
       std::string src_port_name = circuit_lib.port_prefix(model_output_port);
-      net_src_module_id =
-        module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index - 1];
+      net_src_module_id = module_manager.configurable_children(
+        parent_module,
+        ModuleManager::e_config_child_type::LOGICAL)[mem_index - 1];
       net_src_instance_id = module_manager.configurable_child_instances(
-        parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index - 1];
+        parent_module,
+        ModuleManager::e_config_child_type::LOGICAL)[mem_index - 1];
       net_src_port_id =
         module_manager.find_module_port(net_src_module_id, src_port_name);
 
       /* Find the port name of next memory module */
       std::string sink_port_name = circuit_lib.port_prefix(model_input_port);
-      net_sink_module_id =
-        module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index];
-      net_sink_instance_id =
-        module_manager.configurable_child_instances(parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index];
+      net_sink_module_id = module_manager.configurable_children(
+        parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index];
+      net_sink_instance_id = module_manager.configurable_child_instances(
+        parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index];
       net_sink_port_id =
         module_manager.find_module_port(net_sink_module_id, sink_port_name);
     }
@@ -479,8 +499,9 @@ static void build_memory_flatten_module(ModuleManager& module_manager,
     size_t sram_mem_instance =
       module_manager.num_instance(mem_module, sram_mem_module);
     module_manager.add_child_module(mem_module, sram_mem_module);
-    module_manager.add_configurable_child(mem_module, sram_mem_module,
-                                          sram_mem_instance, ModuleManager::e_config_child_type::UNIFIED);
+    module_manager.add_configurable_child(
+      mem_module, sram_mem_module, sram_mem_instance,
+      ModuleManager::e_config_child_type::UNIFIED);
 
     /* Build module nets */
     /* Wire inputs of parent module to inputs of child modules */
@@ -612,8 +633,9 @@ static void build_memory_chain_module(ModuleManager& module_manager,
     size_t sram_mem_instance =
       module_manager.num_instance(mem_module, sram_mem_module);
     module_manager.add_child_module(mem_module, sram_mem_module);
-    module_manager.add_configurable_child(mem_module, sram_mem_module,
-                                          sram_mem_instance, ModuleManager::e_config_child_type::UNIFIED);
+    module_manager.add_configurable_child(
+      mem_module, sram_mem_module, sram_mem_instance,
+      ModuleManager::e_config_child_type::UNIFIED);
 
     /* Build module nets to wire outputs of sram modules to outputs of memory
      * module */
@@ -829,8 +851,9 @@ static void build_frame_memory_module(ModuleManager& module_manager,
     size_t sram_instance =
       module_manager.num_instance(mem_module, sram_mem_module);
     module_manager.add_child_module(mem_module, sram_mem_module);
-    module_manager.add_configurable_child(mem_module, sram_mem_module,
-                                          sram_instance, ModuleManager::e_config_child_type::UNIFIED);
+    module_manager.add_configurable_child(
+      mem_module, sram_mem_module, sram_instance,
+      ModuleManager::e_config_child_type::UNIFIED);
 
     /* Wire data_in port to SRAM BL port */
     ModulePortId sram_bl_port = module_manager.find_module_port(
@@ -890,7 +913,8 @@ static void build_frame_memory_module(ModuleManager& module_manager,
   add_module_global_ports_from_child_modules(module_manager, mem_module);
 
   /* Add the decoder as the last configurable children */
-  module_manager.add_configurable_child(mem_module, decoder_module, 0, ModuleManager::e_config_child_type::UNIFIED);
+  module_manager.add_configurable_child(
+    mem_module, decoder_module, 0, ModuleManager::e_config_child_type::UNIFIED);
 }
 
 /*********************************************************************
@@ -964,10 +988,12 @@ static int build_feedthrough_memory_module(ModuleManager& module_manager,
 
   /* Add module ports */
   /* Input: memory inputs */
-  BasicPort in_port(std::string(MEMORY_FEEDTHROUGH_DATA_IN_PORT_NAME), num_mems);
+  BasicPort in_port(std::string(MEMORY_FEEDTHROUGH_DATA_IN_PORT_NAME),
+                    num_mems);
   ModulePortId mem_in_port = module_manager.add_port(
     mem_module, in_port, ModuleManager::MODULE_INPUT_PORT);
-  BasicPort inb_port(std::string(MEMORY_FEEDTHROUGH_DATA_IN_INV_PORT_NAME), num_mems);
+  BasicPort inb_port(std::string(MEMORY_FEEDTHROUGH_DATA_IN_INV_PORT_NAME),
+                     num_mems);
   ModulePortId mem_inb_port = module_manager.add_port(
     mem_module, inb_port, ModuleManager::MODULE_INPUT_PORT);
 
@@ -975,7 +1001,8 @@ static int build_feedthrough_memory_module(ModuleManager& module_manager,
   BasicPort out_port(std::string(CONFIGURABLE_MEMORY_DATA_OUT_NAME), num_mems);
   ModulePortId mem_out_port = module_manager.add_port(
     mem_module, out_port, ModuleManager::MODULE_OUTPUT_PORT);
-  BasicPort outb_port(std::string(CONFIGURABLE_MEMORY_INVERTED_DATA_OUT_NAME), num_mems);
+  BasicPort outb_port(std::string(CONFIGURABLE_MEMORY_INVERTED_DATA_OUT_NAME),
+                      num_mems);
   ModulePortId mem_outb_port = module_manager.add_port(
     mem_module, outb_port, ModuleManager::MODULE_OUTPUT_PORT);
 
@@ -987,8 +1014,8 @@ static int build_feedthrough_memory_module(ModuleManager& module_manager,
     }
     module_manager.add_module_net_source(mem_module, net, mem_module, 0,
                                          mem_in_port, in_port.pins()[pin_id]);
-    module_manager.add_module_net_sink(
-      mem_module, net, mem_module, 0, mem_out_port, out_port.pins()[pin_id]);
+    module_manager.add_module_net_sink(mem_module, net, mem_module, 0,
+                                       mem_out_port, out_port.pins()[pin_id]);
   }
   for (size_t pin_id = 0; pin_id < inb_port.pins().size(); ++pin_id) {
     ModuleNetId net = module_manager.create_module_net(mem_module);
@@ -997,13 +1024,12 @@ static int build_feedthrough_memory_module(ModuleManager& module_manager,
     }
     module_manager.add_module_net_source(mem_module, net, mem_module, 0,
                                          mem_inb_port, inb_port.pins()[pin_id]);
-    module_manager.add_module_net_sink(
-      mem_module, net, mem_module, 0, mem_outb_port, outb_port.pins()[pin_id]);
+    module_manager.add_module_net_sink(mem_module, net, mem_module, 0,
+                                       mem_outb_port, outb_port.pins()[pin_id]);
   }
 
   return CMD_EXEC_SUCCESS;
 }
-
 
 /*********************************************************************
  * Generate Verilog modules for the memories that are used
@@ -1070,7 +1096,7 @@ static void build_mux_memory_module(
  *              |  |      |  |
  *              v  v ...  v  v
  *            +----------------+
- *            |  Memory Module |            
+ *            |  Memory Module |
  *            +----------------+
  *              |  |  ... |  |
  *              v  v      v  v SRAM ports of multiplexer
@@ -1079,8 +1105,7 @@ static void build_mux_memory_module(
  *          +---------------------+
  ********************************************************************/
 static int build_mux_feedthrough_memory_module(
-  ModuleManager& module_manager,
-  const CircuitLibrary& circuit_lib,
+  ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type, const CircuitModelId& mux_model,
   const MuxGraph& mux_graph) {
   int status = CMD_EXEC_SUCCESS;
@@ -1100,7 +1125,8 @@ static int build_mux_feedthrough_memory_module(
                                      mux_graph.num_inputs()),
         std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
 
-      status = build_feedthrough_memory_module(module_manager, module_name, num_config_bits);
+      status = build_feedthrough_memory_module(module_manager, module_name,
+                                               num_config_bits);
       break;
     }
     case CIRCUIT_MODEL_DESIGN_RRAM:
@@ -1118,7 +1144,6 @@ static int build_mux_feedthrough_memory_module(
   return status;
 }
 
-
 /*********************************************************************
  * Build modules for
  * the memories that are affiliated to multiplexers and other programmable
@@ -1134,14 +1159,15 @@ static int build_mux_feedthrough_memory_module(
  * memory modules.
  * Take another example, the memory circuit can implement the scan-chain or
  * memory-bank organization for the memories.
- * If we need feedthrough memory blocks, build the memory modules which contain only feedthrough wires
+ * If we need feedthrough memory blocks, build the memory modules which contain
+ *only feedthrough wires
  ********************************************************************/
 int build_memory_modules(ModuleManager& module_manager,
-                          DecoderLibrary& arch_decoder_lib,
-                          const MuxLibrary& mux_lib,
-                          const CircuitLibrary& circuit_lib,
-                          const e_config_protocol_type& sram_orgz_type,
-                          const bool& require_feedthrough_memory) {
+                         DecoderLibrary& arch_decoder_lib,
+                         const MuxLibrary& mux_lib,
+                         const CircuitLibrary& circuit_lib,
+                         const e_config_protocol_type& sram_orgz_type,
+                         const bool& require_feedthrough_memory) {
   int status = CMD_EXEC_SUCCESS;
   vtr::ScopedStartFinishTimer timer("Build memory modules");
 
@@ -1161,8 +1187,8 @@ int build_memory_modules(ModuleManager& module_manager,
                             sram_orgz_type, mux_model, mux_graph);
     /* Create feedthrough memory module */
     if (require_feedthrough_memory) {
-      status = build_mux_feedthrough_memory_module(module_manager, circuit_lib,
-                              sram_orgz_type, mux_model, mux_graph);
+      status = build_mux_feedthrough_memory_module(
+        module_manager, circuit_lib, sram_orgz_type, mux_model, mux_graph);
       if (status != CMD_EXEC_SUCCESS) {
         return CMD_EXEC_FATAL_ERROR;
       }
@@ -1205,7 +1231,8 @@ int build_memory_modules(ModuleManager& module_manager,
                         sram_orgz_type, module_name, sram_models[0], num_mems);
     /* Create feedthrough memory module */
     if (require_feedthrough_memory) {
-      status = build_feedthrough_memory_module(module_manager, module_name, num_mems);
+      status =
+        build_feedthrough_memory_module(module_manager, module_name, num_mems);
       if (status != CMD_EXEC_SUCCESS) {
         return CMD_EXEC_FATAL_ERROR;
       }
@@ -1230,8 +1257,8 @@ static void add_module_output_nets_to_memory_group_module(
   const std::string& mem_module_output_name, const ModuleId& child_module,
   const size_t& output_pin_start_index, const size_t& child_instance) {
   /* Wire inputs of parent module to inputs of child modules */
-  ModulePortId src_port_id = module_manager.find_module_port(
-    child_module, mem_module_output_name);
+  ModulePortId src_port_id =
+    module_manager.find_module_port(child_module, mem_module_output_name);
   ModulePortId sink_port_id =
     module_manager.find_module_port(mem_module, mem_module_output_name);
   for (size_t pin_id = 0;
@@ -1280,7 +1307,8 @@ int build_memory_group_module(ModuleManager& module_manager,
   module_manager.add_port(mem_module, out_port,
                           ModuleManager::MODULE_OUTPUT_PORT);
 
-  std::string outb_port_name = generate_configurable_memory_inverted_data_out_name();
+  std::string outb_port_name =
+    generate_configurable_memory_inverted_data_out_name();
   BasicPort outb_port(outb_port_name, num_mems);
   module_manager.add_port(mem_module, outb_port,
                           ModuleManager::MODULE_OUTPUT_PORT);
@@ -1290,25 +1318,33 @@ int build_memory_group_module(ModuleManager& module_manager,
   size_t mem_outb_pin_start_index = 0;
   for (size_t ichild = 0; ichild < child_modules.size(); ++ichild) {
     ModuleId child_module = child_modules[ichild];
-    size_t child_instance = module_manager.num_instance(mem_module, child_module);
+    size_t child_instance =
+      module_manager.num_instance(mem_module, child_module);
     module_manager.add_child_module(mem_module, child_module, false);
-    module_manager.add_configurable_child(mem_module, child_module, child_instance, ModuleManager::e_config_child_type::UNIFIED);
+    module_manager.add_configurable_child(
+      mem_module, child_module, child_instance,
+      ModuleManager::e_config_child_type::UNIFIED);
     /* Wire outputs of child module to outputs of parent module */
     add_module_output_nets_to_memory_group_module(
-      module_manager, mem_module, out_port_name,
-      child_module, mem_out_pin_start_index, child_instance);
+      module_manager, mem_module, out_port_name, child_module,
+      mem_out_pin_start_index, child_instance);
     add_module_output_nets_to_memory_group_module(
-      module_manager, mem_module, outb_port_name,
-      child_module, mem_outb_pin_start_index, child_instance);
+      module_manager, mem_module, outb_port_name, child_module,
+      mem_outb_pin_start_index, child_instance);
     /* Update pin counter */
-    ModulePortId child_out_port_id = module_manager.find_module_port(child_module, out_port_name);
-    mem_out_pin_start_index += module_manager.module_port(child_module, child_out_port_id).get_width(); 
+    ModulePortId child_out_port_id =
+      module_manager.find_module_port(child_module, out_port_name);
+    mem_out_pin_start_index +=
+      module_manager.module_port(child_module, child_out_port_id).get_width();
 
-    ModulePortId child_outb_port_id = module_manager.find_module_port(child_module, outb_port_name);
-    mem_outb_pin_start_index += module_manager.module_port(child_module, child_outb_port_id).get_width(); 
+    ModulePortId child_outb_port_id =
+      module_manager.find_module_port(child_module, outb_port_name);
+    mem_outb_pin_start_index +=
+      module_manager.module_port(child_module, child_outb_port_id).get_width();
   }
   /* Check pin counter */
-  VTR_ASSERT(mem_out_pin_start_index == num_mems && mem_outb_pin_start_index == num_mems);
+  VTR_ASSERT(mem_out_pin_start_index == num_mems &&
+             mem_outb_pin_start_index == num_mems);
 
   /* Add global ports to the pb_module:
    * This is a much easier job after adding sub modules (instances),
@@ -1342,10 +1378,12 @@ int build_memory_group_module(ModuleManager& module_manager,
    * we just need to find all the I/O ports from the child modules and build a
    * list of it
    */
-  ModuleManager::e_config_child_type config_child_type = ModuleManager::e_config_child_type::PHYSICAL;
+  ModuleManager::e_config_child_type config_child_type =
+    ModuleManager::e_config_child_type::PHYSICAL;
   size_t module_num_config_bits =
     find_module_num_config_bits_from_child_modules(
-      module_manager, mem_module, circuit_lib, sram_model, sram_orgz_type, config_child_type);
+      module_manager, mem_module, circuit_lib, sram_model, sram_orgz_type,
+      config_child_type);
   if (0 < module_num_config_bits) {
     add_sram_ports_to_module_manager(module_manager, mem_module, circuit_lib,
                                      sram_model, sram_orgz_type,
@@ -1356,10 +1394,11 @@ int build_memory_group_module(ModuleManager& module_manager,
    * This is a one-shot addition that covers all the memory modules in this pb
    * module!
    */
-  if (0 < module_manager.num_configurable_children(mem_module, config_child_type)) {
-    add_module_nets_memory_config_bus(module_manager, decoder_lib, mem_module,
-                                      sram_orgz_type,
-                                      circuit_lib.design_tech_type(sram_model), config_child_type);
+  if (0 <
+      module_manager.num_configurable_children(mem_module, config_child_type)) {
+    add_module_nets_memory_config_bus(
+      module_manager, decoder_lib, mem_module, sram_orgz_type,
+      circuit_lib.design_tech_type(sram_model), config_child_type);
   }
 
   return CMD_EXEC_SUCCESS;
@@ -1368,12 +1407,20 @@ int build_memory_group_module(ModuleManager& module_manager,
 /*****************************************************************************
  * This function creates a physical memory module and add it the current module
  * The following tasks will be accomplished:
- * - Traverse all the logical configurable children in the module tree, starting from the current module
- * - Build a list of the leaf logical configurable children and count the total memory sizes, the memory size for each physical memory submodule. Note that the physical memory submodule should be cached already in each leaf logical configurable children
- * - Get the physical memory module required by each leaf logical configurable child
- * - Create a dedicated module name for the physical memory (check if already exists, if yes, skip creating a new module)
+ * - Traverse all the logical configurable children in the module tree, starting
+ *from the current module
+ * - Build a list of the leaf logical configurable children and count the total
+ *memory sizes, the memory size for each physical memory submodule. Note that
+ *the physical memory submodule should be cached already in each leaf logical
+ *configurable children
+ * - Get the physical memory module required by each leaf logical configurable
+ *child
+ * - Create a dedicated module name for the physical memory (check if already
+ *exists, if yes, skip creating a new module)
  * - Instanciate the module
- * - Built nets. Note that only the output ports of the physical memory block is required, since they should drive the dedicated memory ports of logical configurable children 
+ * - Built nets. Note that only the output ports of the physical memory block is
+ *required, since they should drive the dedicated memory ports of logical
+ *configurable children
  *****************************************************************************/
 int add_physical_memory_module(ModuleManager& module_manager,
                                DecoderLibrary& decoder_lib,
@@ -1384,49 +1431,70 @@ int add_physical_memory_module(ModuleManager& module_manager,
   int status = CMD_EXEC_SUCCESS;
 
   std::vector<ModuleId> required_phy_mem_modules;
-  status = rec_find_physical_memory_children(static_cast<const ModuleManager&>(module_manager), curr_module, required_phy_mem_modules);
+  status = rec_find_physical_memory_children(
+    static_cast<const ModuleManager&>(module_manager), curr_module,
+    required_phy_mem_modules);
   if (status != CMD_EXEC_SUCCESS) {
     return CMD_EXEC_FATAL_ERROR;
   }
 
   size_t module_num_config_bits =
     find_module_num_config_bits_from_child_modules(
-      module_manager, curr_module, circuit_lib, sram_model, CONFIG_MEM_FEEDTHROUGH, ModuleManager::e_config_child_type::LOGICAL);
+      module_manager, curr_module, circuit_lib, sram_model,
+      CONFIG_MEM_FEEDTHROUGH, ModuleManager::e_config_child_type::LOGICAL);
   /* No need to build a memory when there are no configuration bits required */
   if (module_num_config_bits == 0) {
     return CMD_EXEC_SUCCESS;
   }
-  std::string phy_mem_module_name = generate_physical_memory_module_name(module_manager.module_name(curr_module), module_num_config_bits);
+  std::string phy_mem_module_name = generate_physical_memory_module_name(
+    module_manager.module_name(curr_module), module_num_config_bits);
   ModuleId phy_mem_module = module_manager.find_module(phy_mem_module_name);
   if (!module_manager.valid_module_id(phy_mem_module)) {
-    status = build_memory_group_module(module_manager, decoder_lib, circuit_lib, sram_orgz_type, phy_mem_module_name, sram_model, required_phy_mem_modules, module_num_config_bits);
+    status = build_memory_group_module(module_manager, decoder_lib, circuit_lib,
+                                       sram_orgz_type, phy_mem_module_name,
+                                       sram_model, required_phy_mem_modules,
+                                       module_num_config_bits);
   }
   if (status != CMD_EXEC_SUCCESS) {
-    VTR_LOG_ERROR("Failed to create the physical memory module '%s'!\n", phy_mem_module_name.c_str());
+    VTR_LOG_ERROR("Failed to create the physical memory module '%s'!\n",
+                  phy_mem_module_name.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
   phy_mem_module = module_manager.find_module(phy_mem_module_name);
   if (!module_manager.valid_module_id(phy_mem_module)) {
-    VTR_LOG_ERROR("Failed to create the physical memory module '%s'!\n", phy_mem_module_name.c_str());
+    VTR_LOG_ERROR("Failed to create the physical memory module '%s'!\n",
+                  phy_mem_module_name.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
   /* Add the physical memory module to the current module */
-  size_t phy_mem_instance = module_manager.num_instance(curr_module, phy_mem_module);
+  size_t phy_mem_instance =
+    module_manager.num_instance(curr_module, phy_mem_module);
   module_manager.add_child_module(curr_module, phy_mem_module, false);
 
   /* Register in the physical configurable children list */
-  module_manager.add_configurable_child(curr_module, phy_mem_module, phy_mem_instance, ModuleManager::e_config_child_type::PHYSICAL);
+  module_manager.add_configurable_child(
+    curr_module, phy_mem_module, phy_mem_instance,
+    ModuleManager::e_config_child_type::PHYSICAL);
 
-  /* Build nets between the data output of the physical memory module and the outputs of the logical configurable children */
+  /* Build nets between the data output of the physical memory module and the
+   * outputs of the logical configurable children */
   size_t curr_mem_pin_index = 0;
   std::map<e_circuit_model_port_type, std::string> mem2mem_port_map;
-  mem2mem_port_map[CIRCUIT_MODEL_PORT_BL] = std::string(CONFIGURABLE_MEMORY_DATA_OUT_NAME);
-  mem2mem_port_map[CIRCUIT_MODEL_PORT_BLB] = std::string(CONFIGURABLE_MEMORY_INVERTED_DATA_OUT_NAME);
-  for (size_t ichild = 0; ichild < module_manager.configurable_children(curr_module, ModuleManager::e_config_child_type::PHYSICAL).size(); ++ichild) {
-    for (e_circuit_model_port_type port_type : {CIRCUIT_MODEL_PORT_BL, CIRCUIT_MODEL_PORT_BLB}) {
+  mem2mem_port_map[CIRCUIT_MODEL_PORT_BL] =
+    std::string(CONFIGURABLE_MEMORY_DATA_OUT_NAME);
+  mem2mem_port_map[CIRCUIT_MODEL_PORT_BLB] =
+    std::string(CONFIGURABLE_MEMORY_INVERTED_DATA_OUT_NAME);
+  for (size_t ichild = 0;
+       ichild < module_manager
+                  .configurable_children(
+                    curr_module, ModuleManager::e_config_child_type::PHYSICAL)
+                  .size();
+       ++ichild) {
+    for (e_circuit_model_port_type port_type :
+         {CIRCUIT_MODEL_PORT_BL, CIRCUIT_MODEL_PORT_BLB}) {
       std::string src_port_name = mem2mem_port_map[port_type];
       std::string des_port_name =
-        generate_sram_port_name(CONFIG_MEM_FEEDTHROUGH, port_type); 
+        generate_sram_port_name(CONFIG_MEM_FEEDTHROUGH, port_type);
       /* Try to find these ports in the module manager */
       ModulePortId src_port_id =
         module_manager.find_module_port(phy_mem_module, src_port_name);
@@ -1436,15 +1504,16 @@ int add_physical_memory_module(ModuleManager& module_manager,
       BasicPort src_port =
         module_manager.module_port(phy_mem_module, src_port_id);
 
-      ModuleId des_module = module_manager.configurable_children(curr_module, ModuleManager::e_config_child_type::PHYSICAL)[ichild];
-      size_t des_instance = module_manager.configurable_child_instances(curr_module, ModuleManager::e_config_child_type::PHYSICAL)[ichild];
+      ModuleId des_module = module_manager.configurable_children(
+        curr_module, ModuleManager::e_config_child_type::PHYSICAL)[ichild];
+      size_t des_instance = module_manager.configurable_child_instances(
+        curr_module, ModuleManager::e_config_child_type::PHYSICAL)[ichild];
       ModulePortId des_port_id =
         module_manager.find_module_port(des_module, des_port_name);
       if (!module_manager.valid_module_port_id(des_module, des_port_id)) {
         return CMD_EXEC_FATAL_ERROR;
       }
-      BasicPort des_port =
-        module_manager.module_port(des_module, des_port_id);
+      BasicPort des_port = module_manager.module_port(des_module, des_port_id);
       /* Build nets */
       for (size_t ipin = 0; ipin < des_port.pins().size(); ++ipin) {
         /* Create a net and add source and sink to it */
@@ -1463,23 +1532,33 @@ int add_physical_memory_module(ModuleManager& module_manager,
     }
   }
 
-  /* TODO: Recursively update the logical configurable child with the physical memory module parent and its instance id */
+  /* TODO: Recursively update the logical configurable child with the physical
+   * memory module parent and its instance id */
   std::map<ModuleId, size_t> logical_mem_child_inst_count;
-  status = rec_update_logical_memory_children_with_physical_mapping(module_manager, curr_module, phy_mem_module, logical_mem_child_inst_count);
+  status = rec_update_logical_memory_children_with_physical_mapping(
+    module_manager, curr_module, phy_mem_module, logical_mem_child_inst_count);
   if (status != CMD_EXEC_SUCCESS) {
     return CMD_EXEC_FATAL_ERROR;
   }
   /* Sanity check */
   std::map<ModuleId, size_t> required_mem_child_inst_count;
-  for (ModuleId curr_child_module : module_manager.child_modules(phy_mem_module)) {
-    if (logical_mem_child_inst_count[curr_child_module] != module_manager.num_instance(phy_mem_module, curr_child_module)) {
-      VTR_LOG_ERROR("Expect the %lu instances of module '%s' under its parent '%s' while only updated %lu during logical-to-physical configurable child mapping sync-up!\n", module_manager.num_instance(phy_mem_module, curr_child_module), module_manager.module_name(curr_child_module).c_str(), module_manager.module_name(phy_mem_module).c_str(), logical_mem_child_inst_count[curr_child_module]);
+  for (ModuleId curr_child_module :
+       module_manager.child_modules(phy_mem_module)) {
+    if (logical_mem_child_inst_count[curr_child_module] !=
+        module_manager.num_instance(phy_mem_module, curr_child_module)) {
+      VTR_LOG_ERROR(
+        "Expect the %lu instances of module '%s' under its parent '%s' while "
+        "only updated %lu during logical-to-physical configurable child "
+        "mapping sync-up!\n",
+        module_manager.num_instance(phy_mem_module, curr_child_module),
+        module_manager.module_name(curr_child_module).c_str(),
+        module_manager.module_name(phy_mem_module).c_str(),
+        logical_mem_child_inst_count[curr_child_module]);
       return CMD_EXEC_FATAL_ERROR;
     }
   }
 
   return status;
 }
-
 
 } /* end namespace openfpga */

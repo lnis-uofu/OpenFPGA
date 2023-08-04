@@ -86,11 +86,14 @@ void reserve_module_manager_module_nets(ModuleManager& module_manager,
  *children as well
  ******************************************************************************/
 size_t count_module_manager_module_configurable_children(
-  const ModuleManager& module_manager, const ModuleId& module, const ModuleManager::e_config_child_type& config_child_type) {
+  const ModuleManager& module_manager, const ModuleId& module,
+  const ModuleManager::e_config_child_type& config_child_type) {
   size_t num_config_children = 0;
 
-  for (const ModuleId& child : module_manager.configurable_children(module, config_child_type)) {
-    if (0 != module_manager.configurable_children(child, config_child_type).size()) {
+  for (const ModuleId& child :
+       module_manager.configurable_children(module, config_child_type)) {
+    if (0 !=
+        module_manager.configurable_children(child, config_child_type).size()) {
       num_config_children++;
     }
   }
@@ -1041,7 +1044,8 @@ void add_module_nets_cmos_flatten_memory_config_bus(
     module_manager.module_port(net_src_module_id, net_src_port_id);
 
   for (size_t mem_index = 0;
-       mem_index < module_manager.num_configurable_children(parent_module, config_child_type);
+       mem_index < module_manager.num_configurable_children(parent_module,
+                                                            config_child_type);
        ++mem_index) {
     ModuleId net_sink_module_id;
     size_t net_sink_instance_id;
@@ -1050,10 +1054,10 @@ void add_module_nets_cmos_flatten_memory_config_bus(
     /* Find the port name of next memory module */
     std::string sink_port_name =
       generate_sram_port_name(sram_orgz_type, config_port_type);
-    net_sink_module_id =
-      module_manager.configurable_children(parent_module, config_child_type)[mem_index];
-    net_sink_instance_id =
-      module_manager.configurable_child_instances(parent_module, config_child_type)[mem_index];
+    net_sink_module_id = module_manager.configurable_children(
+      parent_module, config_child_type)[mem_index];
+    net_sink_instance_id = module_manager.configurable_child_instances(
+      parent_module, config_child_type)[mem_index];
     net_sink_port_id =
       module_manager.find_module_port(net_sink_module_id, sink_port_name);
 
@@ -1125,15 +1129,17 @@ void add_module_nets_cmos_memory_bank_bl_config_bus(
     module_manager.module_port(net_src_module_id, net_src_port_id);
 
   for (size_t mem_index = 0;
-       mem_index < module_manager.configurable_children(parent_module, config_child_type).size();
+       mem_index <
+       module_manager.configurable_children(parent_module, config_child_type)
+         .size();
        ++mem_index) {
     /* Find the port name of next memory module */
     std::string sink_port_name =
       generate_sram_port_name(sram_orgz_type, config_port_type);
-    ModuleId net_sink_module_id =
-      module_manager.configurable_children(parent_module, config_child_type)[mem_index];
-    size_t net_sink_instance_id =
-      module_manager.configurable_child_instances(parent_module, config_child_type)[mem_index];
+    ModuleId net_sink_module_id = module_manager.configurable_children(
+      parent_module, config_child_type)[mem_index];
+    size_t net_sink_instance_id = module_manager.configurable_child_instances(
+      parent_module, config_child_type)[mem_index];
     ModulePortId net_sink_port_id =
       module_manager.find_module_port(net_sink_module_id, sink_port_name);
 
@@ -1221,15 +1227,17 @@ void add_module_nets_cmos_memory_bank_wl_config_bus(
     module_manager.module_port(net_src_module_id, net_bl_port_id);
 
   for (size_t mem_index = 0;
-       mem_index < module_manager.configurable_children(parent_module, config_child_type).size();
+       mem_index <
+       module_manager.configurable_children(parent_module, config_child_type)
+         .size();
        ++mem_index) {
     /* Find the port name of next memory module */
     std::string sink_port_name =
       generate_sram_port_name(sram_orgz_type, config_port_type);
-    ModuleId net_sink_module_id =
-      module_manager.configurable_children(parent_module, config_child_type)[mem_index];
-    size_t net_sink_instance_id =
-      module_manager.configurable_child_instances(parent_module, config_child_type)[mem_index];
+    ModuleId net_sink_module_id = module_manager.configurable_children(
+      parent_module, config_child_type)[mem_index];
+    size_t net_sink_instance_id = module_manager.configurable_child_instances(
+      parent_module, config_child_type)[mem_index];
     ModulePortId net_sink_port_id =
       module_manager.find_module_port(net_sink_module_id, sink_port_name);
 
@@ -1279,7 +1287,8 @@ void add_module_nets_cmos_memory_chain_config_bus(
   const e_config_protocol_type& sram_orgz_type,
   const ModuleManager::e_config_child_type& config_child_type) {
   for (size_t mem_index = 0;
-       mem_index < module_manager.num_configurable_children(parent_module, config_child_type);
+       mem_index < module_manager.num_configurable_children(parent_module,
+                                                            config_child_type);
        ++mem_index) {
     ModuleId net_src_module_id;
     size_t net_src_instance_id;
@@ -1300,17 +1309,17 @@ void add_module_nets_cmos_memory_chain_config_bus(
 
       /* Find the port name of next memory module */
       std::string sink_port_name = generate_configuration_chain_head_name();
-      net_sink_module_id =
-        module_manager.configurable_children(parent_module, config_child_type)[mem_index];
-      net_sink_instance_id =
-        module_manager.configurable_child_instances(parent_module, config_child_type)[mem_index];
+      net_sink_module_id = module_manager.configurable_children(
+        parent_module, config_child_type)[mem_index];
+      net_sink_instance_id = module_manager.configurable_child_instances(
+        parent_module, config_child_type)[mem_index];
       net_sink_port_id =
         module_manager.find_module_port(net_sink_module_id, sink_port_name);
     } else {
       /* Find the port name of previous memory module */
       std::string src_port_name = generate_configuration_chain_tail_name();
-      net_src_module_id =
-        module_manager.configurable_children(parent_module, config_child_type)[mem_index - 1];
+      net_src_module_id = module_manager.configurable_children(
+        parent_module, config_child_type)[mem_index - 1];
       net_src_instance_id = module_manager.configurable_child_instances(
         parent_module, config_child_type)[mem_index - 1];
       net_src_port_id =
@@ -1318,10 +1327,10 @@ void add_module_nets_cmos_memory_chain_config_bus(
 
       /* Find the port name of next memory module */
       std::string sink_port_name = generate_configuration_chain_head_name();
-      net_sink_module_id =
-        module_manager.configurable_children(parent_module, config_child_type)[mem_index];
-      net_sink_instance_id =
-        module_manager.configurable_child_instances(parent_module, config_child_type)[mem_index];
+      net_sink_module_id = module_manager.configurable_children(
+        parent_module, config_child_type)[mem_index];
+      net_sink_instance_id = module_manager.configurable_child_instances(
+        parent_module, config_child_type)[mem_index];
       net_sink_port_id =
         module_manager.find_module_port(net_sink_module_id, sink_port_name);
     }
@@ -1355,9 +1364,12 @@ void add_module_nets_cmos_memory_chain_config_bus(
   /* Find the port name of previous memory module */
   std::string src_port_name = generate_configuration_chain_tail_name();
   ModuleId net_src_module_id =
-    module_manager.configurable_children(parent_module, config_child_type).back();
+    module_manager.configurable_children(parent_module, config_child_type)
+      .back();
   size_t net_src_instance_id =
-    module_manager.configurable_child_instances(parent_module, config_child_type).back();
+    module_manager
+      .configurable_child_instances(parent_module, config_child_type)
+      .back();
   ModulePortId net_src_port_id =
     module_manager.find_module_port(net_src_module_id, src_port_name);
 
@@ -1577,8 +1589,8 @@ static void add_module_nets_cmos_memory_frame_decoder_config_bus(
   for (size_t mem_index = 0; mem_index < configurable_children.size();
        ++mem_index) {
     ModuleId child_module = configurable_children[mem_index];
-    size_t child_instance =
-      module_manager.configurable_child_instances(parent_module, config_child_type)[mem_index];
+    size_t child_instance = module_manager.configurable_child_instances(
+      parent_module, config_child_type)[mem_index];
     ModulePortId child_addr_port = module_manager.find_module_port(
       child_module, std::string(DECODER_ADDRESS_PORT_NAME));
     BasicPort child_addr_port_info =
@@ -1609,8 +1621,8 @@ static void add_module_nets_cmos_memory_frame_decoder_config_bus(
   for (size_t mem_index = 0; mem_index < configurable_children.size();
        ++mem_index) {
     ModuleId child_module = configurable_children[mem_index];
-    size_t child_instance =
-      module_manager.configurable_child_instances(parent_module, config_child_type)[mem_index];
+    size_t child_instance = module_manager.configurable_child_instances(
+      parent_module, config_child_type)[mem_index];
     ModulePortId child_din_port = module_manager.find_module_port(
       child_module, std::string(DECODER_DATA_IN_PORT_NAME));
     add_module_bus_nets(module_manager, parent_module, parent_module, 0,
@@ -1630,8 +1642,8 @@ static void add_module_nets_cmos_memory_frame_decoder_config_bus(
   for (size_t mem_index = 0; mem_index < configurable_children.size();
        ++mem_index) {
     ModuleId child_module = configurable_children[mem_index];
-    size_t child_instance =
-      module_manager.configurable_child_instances(parent_module, config_child_type)[mem_index];
+    size_t child_instance = module_manager.configurable_child_instances(
+      parent_module, config_child_type)[mem_index];
     ModulePortId child_en_port = module_manager.find_module_port(
       child_module, std::string(DECODER_ENABLE_PORT_NAME));
     BasicPort child_en_port_info =
@@ -1655,7 +1667,8 @@ static void add_module_nets_cmos_memory_frame_decoder_config_bus(
   }
 
   /* Add the decoder as the last configurable children */
-  module_manager.add_configurable_child(parent_module, decoder_module, 0, config_child_type);
+  module_manager.add_configurable_child(parent_module, decoder_module, 0,
+                                        config_child_type);
 }
 
 /*********************************************************************
@@ -1671,15 +1684,18 @@ void add_module_nets_cmos_memory_frame_config_bus(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   const ModuleId& parent_module,
   const ModuleManager::e_config_child_type& config_child_type) {
-  if (0 == module_manager.num_configurable_children(parent_module, config_child_type)) {
+  if (0 == module_manager.num_configurable_children(parent_module,
+                                                    config_child_type)) {
     return;
   }
 
-  if (1 == module_manager.num_configurable_children(parent_module, config_child_type)) {
-    add_module_nets_cmos_memory_frame_short_config_bus(module_manager,
-                                                       parent_module, config_child_type);
+  if (1 == module_manager.num_configurable_children(parent_module,
+                                                    config_child_type)) {
+    add_module_nets_cmos_memory_frame_short_config_bus(
+      module_manager, parent_module, config_child_type);
   } else {
-    VTR_ASSERT(1 < module_manager.num_configurable_children(parent_module, config_child_type));
+    VTR_ASSERT(1 < module_manager.num_configurable_children(parent_module,
+                                                            config_child_type));
     add_module_nets_cmos_memory_frame_decoder_config_bus(
       module_manager, decoder_lib, parent_module, config_child_type);
   }
@@ -1741,23 +1757,28 @@ static void add_module_nets_cmos_memory_config_bus(
     }
     case CONFIG_MEM_FEEDTHROUGH:
       add_module_nets_cmos_flatten_memory_config_bus(
-        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_BL, config_child_type);
+        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_BL,
+        config_child_type);
       add_module_nets_cmos_flatten_memory_config_bus(
-        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_BLB, config_child_type);
+        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_BLB,
+        config_child_type);
       break;
     case CONFIG_MEM_STANDALONE:
     case CONFIG_MEM_QL_MEMORY_BANK:
     case CONFIG_MEM_MEMORY_BANK:
       add_module_nets_cmos_flatten_memory_config_bus(
-        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_BL, config_child_type);
+        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_BL,
+        config_child_type);
       add_module_nets_cmos_flatten_memory_config_bus(
-        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_WL, config_child_type);
+        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_WL,
+        config_child_type);
       add_module_nets_cmos_flatten_memory_config_bus(
-        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_WLR, config_child_type);
+        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_WLR,
+        config_child_type);
       break;
     case CONFIG_MEM_FRAME_BASED:
-      add_module_nets_cmos_memory_frame_config_bus(module_manager, decoder_lib,
-                                                   parent_module, config_child_type);
+      add_module_nets_cmos_memory_frame_config_bus(
+        module_manager, decoder_lib, parent_module, config_child_type);
       break;
     default:
       VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -1814,21 +1835,26 @@ static void add_pb_module_nets_cmos_memory_config_bus(
     case CONFIG_MEM_STANDALONE:
     case CONFIG_MEM_QL_MEMORY_BANK:
       add_module_nets_cmos_memory_bank_bl_config_bus(
-        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_BL, config_child_type);
+        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_BL,
+        config_child_type);
       add_module_nets_cmos_memory_bank_wl_config_bus(
-        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_WL, config_child_type);
+        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_WL,
+        config_child_type);
       add_module_nets_cmos_memory_bank_wl_config_bus(
-        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_WLR, config_child_type);
+        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_WLR,
+        config_child_type);
       break;
     case CONFIG_MEM_MEMORY_BANK:
       add_module_nets_cmos_flatten_memory_config_bus(
-        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_BL, config_child_type);
+        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_BL,
+        config_child_type);
       add_module_nets_cmos_flatten_memory_config_bus(
-        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_WL, config_child_type);
+        module_manager, parent_module, sram_orgz_type, CIRCUIT_MODEL_PORT_WL,
+        config_child_type);
       break;
     case CONFIG_MEM_FRAME_BASED:
-      add_module_nets_cmos_memory_frame_config_bus(module_manager, decoder_lib,
-                                                   parent_module, config_child_type);
+      add_module_nets_cmos_memory_frame_config_bus(
+        module_manager, decoder_lib, parent_module, config_child_type);
       break;
     default:
       VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -1899,7 +1925,8 @@ void add_module_nets_memory_config_bus(
   switch (mem_tech) {
     case CIRCUIT_MODEL_DESIGN_CMOS:
       add_module_nets_cmos_memory_config_bus(module_manager, decoder_lib,
-                                             parent_module, sram_orgz_type, config_child_type);
+                                             parent_module, sram_orgz_type,
+                                             config_child_type);
       break;
     case CIRCUIT_MODEL_DESIGN_RRAM:
       /* TODO: */
@@ -1931,7 +1958,8 @@ void add_pb_module_nets_memory_config_bus(
   switch (mem_tech) {
     case CIRCUIT_MODEL_DESIGN_CMOS:
       add_pb_module_nets_cmos_memory_config_bus(module_manager, decoder_lib,
-                                                parent_module, sram_orgz_type, config_child_type);
+                                                parent_module, sram_orgz_type,
+                                                config_child_type);
       break;
     case CIRCUIT_MODEL_DESIGN_RRAM:
       /* TODO: */
@@ -2420,9 +2448,11 @@ size_t find_module_num_config_bits_from_child_modules(
       /* If there are more than 2 configurable children, we need a decoder
        * Otherwise, we can just short wire the address port to the children
        */
-      if (1 < module_manager.num_configurable_children(module_id, config_child_type)) {
+      if (1 < module_manager.num_configurable_children(module_id,
+                                                       config_child_type)) {
         num_config_bits += find_mux_local_decoder_addr_size(
-          module_manager.num_configurable_children(module_id, config_child_type));
+          module_manager.num_configurable_children(module_id,
+                                                   config_child_type));
       }
 
       break;

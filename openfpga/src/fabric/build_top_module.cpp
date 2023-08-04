@@ -134,7 +134,10 @@ int build_top_module(
    * module!
    */
   if (false == frame_view) {
-    if (0 < module_manager.configurable_children(top_module, ModuleManager::e_config_child_type::PHYSICAL).size()) {
+    if (0 < module_manager
+              .configurable_children(
+                top_module, ModuleManager::e_config_child_type::PHYSICAL)
+              .size()) {
       add_top_module_nets_memory_config_bus(
         module_manager, decoder_lib, blwl_sr_banks, top_module, circuit_lib,
         config_protocol, circuit_lib.design_tech_type(sram_model),

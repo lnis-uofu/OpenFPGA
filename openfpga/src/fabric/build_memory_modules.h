@@ -23,11 +23,11 @@ std::vector<ModuleNetId> add_module_output_nets_to_chain_mem_modules(
   const size_t& child_index, const size_t& child_instance);
 
 int build_memory_modules(ModuleManager& module_manager,
-                          DecoderLibrary& arch_decoder_lib,
-                          const MuxLibrary& mux_lib,
-                          const CircuitLibrary& circuit_lib,
-                          const e_config_protocol_type& sram_orgz_type,
-                          const bool& require_feedthrough_memory);
+                         DecoderLibrary& arch_decoder_lib,
+                         const MuxLibrary& mux_lib,
+                         const CircuitLibrary& circuit_lib,
+                         const e_config_protocol_type& sram_orgz_type,
+                         const bool& require_feedthrough_memory);
 
 int build_memory_group_module(ModuleManager& module_manager,
                               DecoderLibrary& decoder_lib,

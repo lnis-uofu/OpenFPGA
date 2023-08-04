@@ -74,12 +74,17 @@ static void rec_build_module_fabric_dependent_chain_bitstream(
     } else {
       for (size_t child_id = 0;
            child_id <
-           module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::PHYSICAL).size();
+           module_manager
+             .configurable_children(
+               parent_module, ModuleManager::e_config_child_type::PHYSICAL)
+             .size();
            ++child_id) {
-        ModuleId child_module =
-          module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::PHYSICAL)[child_id];
-        size_t child_instance =
-          module_manager.configurable_child_instances(parent_module, ModuleManager::e_config_child_type::PHYSICAL)[child_id];
+        ModuleId child_module = module_manager.configurable_children(
+          parent_module,
+          ModuleManager::e_config_child_type::PHYSICAL)[child_id];
+        size_t child_instance = module_manager.configurable_child_instances(
+          parent_module,
+          ModuleManager::e_config_child_type::PHYSICAL)[child_id];
         /* Get the instance name and ensure it is not empty */
         std::string instance_name = module_manager.instance_name(
           parent_module, child_module, child_instance);
@@ -196,7 +201,8 @@ static void rec_build_module_fabric_dependent_memory_bank_bitstream(
        *   - no need to exclude decoders as they are not there
        */
       std::vector<ModuleId> configurable_children =
-        module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::PHYSICAL);
+        module_manager.configurable_children(
+          parent_module, ModuleManager::e_config_child_type::PHYSICAL);
 
       size_t num_configurable_children = configurable_children.size();
 
@@ -211,8 +217,9 @@ static void rec_build_module_fabric_dependent_memory_bank_bitstream(
       for (size_t child_id = 0; child_id < num_configurable_children;
            ++child_id) {
         ModuleId child_module = configurable_children[child_id];
-        size_t child_instance =
-          module_manager.configurable_child_instances(parent_module, ModuleManager::e_config_child_type::PHYSICAL)[child_id];
+        size_t child_instance = module_manager.configurable_child_instances(
+          parent_module,
+          ModuleManager::e_config_child_type::PHYSICAL)[child_id];
 
         /* Get the instance name and ensure it is not empty */
         std::string instance_name = module_manager.instance_name(
@@ -323,10 +330,11 @@ static void rec_build_module_fabric_dependent_frame_bitstream(
                                                            config_region);
     } else {
       VTR_ASSERT(top_module != parent_module);
-      configurable_children =
-        module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::PHYSICAL);
+      configurable_children = module_manager.configurable_children(
+        parent_module, ModuleManager::e_config_child_type::PHYSICAL);
       configurable_child_instances =
-        module_manager.configurable_child_instances(parent_module, ModuleManager::e_config_child_type::PHYSICAL);
+        module_manager.configurable_child_instances(
+          parent_module, ModuleManager::e_config_child_type::PHYSICAL);
     }
 
     size_t num_configurable_children = configurable_children.size();
@@ -360,10 +368,13 @@ static void rec_build_module_fabric_dependent_frame_bitstream(
       /* The max address code size is the max address code size of all the
        * configurable children in all the regions
        */
-      for (const ModuleId& child_module :
-           module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::PHYSICAL)) {
+      for (const ModuleId& child_module : module_manager.configurable_children(
+             parent_module, ModuleManager::e_config_child_type::PHYSICAL)) {
         /* Bypass any decoder module (which no configurable children */
-        if (module_manager.configurable_children(child_module, ModuleManager::e_config_child_type::PHYSICAL).empty()) {
+        if (module_manager
+              .configurable_children(
+                child_module, ModuleManager::e_config_child_type::PHYSICAL)
+              .empty()) {
           continue;
         }
         const ModulePortId& child_addr_port_id =
@@ -493,8 +504,8 @@ static void rec_build_module_fabric_dependent_frame_bitstream(
       parent_modules.back(), config_region);
   } else {
     VTR_ASSERT(top_module != parent_modules.back());
-    configurable_children =
-      module_manager.configurable_children(parent_modules.back(), ModuleManager::e_config_child_type::PHYSICAL);
+    configurable_children = module_manager.configurable_children(
+      parent_modules.back(), ModuleManager::e_config_child_type::PHYSICAL);
   }
 
   ModuleId decoder_module = configurable_children.back();

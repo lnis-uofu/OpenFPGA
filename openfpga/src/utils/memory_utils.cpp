@@ -3,6 +3,7 @@
  * generating ports for memory modules
  *********************************************************************/
 #include "memory_utils.h"
+
 #include "command_exit_codes.h"
 #include "decoder_library_utils.h"
 #include "openfpga_naming.h"
@@ -344,7 +345,8 @@ std::vector<std::string> generate_sram_port_names(
     case CONFIG_MEM_FEEDTHROUGH:
       /* Feed through wires are all inputs */
       model_port_types.push_back(CIRCUIT_MODEL_PORT_BL); /* Indicate mem port */
-      model_port_types.push_back(CIRCUIT_MODEL_PORT_BLB); /* Indicate mem_inv port */
+      model_port_types.push_back(
+        CIRCUIT_MODEL_PORT_BLB); /* Indicate mem_inv port */
       break;
     case CONFIG_MEM_SCAN_CHAIN:
       model_port_types.push_back(CIRCUIT_MODEL_PORT_INPUT);
@@ -495,43 +497,81 @@ size_t estimate_num_configurable_children_to_skip_by_config_protocol(
   return num_child_to_skip;
 }
 
-int rec_find_physical_memory_children(const ModuleManager& module_manager, const ModuleId& curr_module, std::vector<ModuleId>& physical_memory_children) {
-  if (module_manager.configurable_children(curr_module, ModuleManager::e_config_child_type::LOGICAL).empty()) {
+int rec_find_physical_memory_children(
+  const ModuleManager& module_manager, const ModuleId& curr_module,
+  std::vector<ModuleId>& physical_memory_children) {
+  if (module_manager
+        .configurable_children(curr_module,
+                               ModuleManager::e_config_child_type::LOGICAL)
+        .empty()) {
     return CMD_EXEC_SUCCESS;
   }
-  for (size_t ichild = 0; ichild < module_manager.configurable_children(curr_module, ModuleManager::e_config_child_type::LOGICAL).size(); ++ichild) {
-    ModuleId logical_child = module_manager.configurable_children(curr_module, ModuleManager::e_config_child_type::LOGICAL)[ichild];
-    if (module_manager.configurable_children(logical_child, ModuleManager::e_config_child_type::LOGICAL).empty()) {
+  for (size_t ichild = 0;
+       ichild < module_manager
+                  .configurable_children(
+                    curr_module, ModuleManager::e_config_child_type::LOGICAL)
+                  .size();
+       ++ichild) {
+    ModuleId logical_child = module_manager.configurable_children(
+      curr_module, ModuleManager::e_config_child_type::LOGICAL)[ichild];
+    if (module_manager
+          .configurable_children(logical_child,
+                                 ModuleManager::e_config_child_type::LOGICAL)
+          .empty()) {
       /* This is a leaf node, get the physical memory module */
-      physical_memory_children.push_back(module_manager.logical2physical_configurable_children(curr_module)[ichild]);
+      physical_memory_children.push_back(
+        module_manager.logical2physical_configurable_children(
+          curr_module)[ichild]);
     } else {
-      rec_find_physical_memory_children(module_manager, logical_child, physical_memory_children);
+      rec_find_physical_memory_children(module_manager, logical_child,
+                                        physical_memory_children);
     }
   }
-  return CMD_EXEC_SUCCESS; 
+  return CMD_EXEC_SUCCESS;
 }
 
-int rec_update_logical_memory_children_with_physical_mapping(ModuleManager& module_manager, const ModuleId& curr_module, const ModuleId& phy_mem_module, std::map<ModuleId, size_t>& logical_mem_child_inst_count) {
-  if (module_manager.configurable_children(curr_module, ModuleManager::e_config_child_type::LOGICAL).empty()) {
+int rec_update_logical_memory_children_with_physical_mapping(
+  ModuleManager& module_manager, const ModuleId& curr_module,
+  const ModuleId& phy_mem_module,
+  std::map<ModuleId, size_t>& logical_mem_child_inst_count) {
+  if (module_manager
+        .configurable_children(curr_module,
+                               ModuleManager::e_config_child_type::LOGICAL)
+        .empty()) {
     return CMD_EXEC_SUCCESS;
   }
-  for (size_t ichild = 0; ichild < module_manager.configurable_children(curr_module, ModuleManager::e_config_child_type::LOGICAL).size(); ++ichild) {
-    ModuleId logical_child = module_manager.configurable_children(curr_module, ModuleManager::e_config_child_type::LOGICAL)[ichild];
-    if (module_manager.configurable_children(logical_child, ModuleManager::e_config_child_type::LOGICAL).empty()) {
+  for (size_t ichild = 0;
+       ichild < module_manager
+                  .configurable_children(
+                    curr_module, ModuleManager::e_config_child_type::LOGICAL)
+                  .size();
+       ++ichild) {
+    ModuleId logical_child = module_manager.configurable_children(
+      curr_module, ModuleManager::e_config_child_type::LOGICAL)[ichild];
+    if (module_manager
+          .configurable_children(logical_child,
+                                 ModuleManager::e_config_child_type::LOGICAL)
+          .empty()) {
       /* This is a leaf node, update its physical information */
-      ModuleId phy_mem_submodule = module_manager.logical2physical_configurable_children(curr_module)[ichild];
+      ModuleId phy_mem_submodule =
+        module_manager.logical2physical_configurable_children(
+          curr_module)[ichild];
       auto result = logical_mem_child_inst_count.find(phy_mem_submodule);
       if (result == logical_mem_child_inst_count.end()) {
         logical_mem_child_inst_count[phy_mem_submodule] = 0;
       }
-      module_manager.set_logical2physical_configurable_child_instance(curr_module, ichild, logical_mem_child_inst_count[phy_mem_submodule]);
-      module_manager.set_logical2physical_configurable_child_parent_module(curr_module, ichild, phy_mem_module);
+      module_manager.set_logical2physical_configurable_child_instance(
+        curr_module, ichild, logical_mem_child_inst_count[phy_mem_submodule]);
+      module_manager.set_logical2physical_configurable_child_parent_module(
+        curr_module, ichild, phy_mem_module);
       logical_mem_child_inst_count[phy_mem_submodule]++;
     } else {
-      rec_update_logical_memory_children_with_physical_mapping(module_manager, logical_child, phy_mem_module, logical_mem_child_inst_count);
+      rec_update_logical_memory_children_with_physical_mapping(
+        module_manager, logical_child, phy_mem_module,
+        logical_mem_child_inst_count);
     }
   }
-  return CMD_EXEC_SUCCESS; 
+  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */
