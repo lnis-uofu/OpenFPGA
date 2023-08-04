@@ -778,7 +778,7 @@ static void build_physical_block_bitstream(
   if (!module_manager.unified_configurable_children(grid_module)) {
     VTR_ASSERT(1 == module_manager.configurable_children(grid_module, ModuleManager::e_config_child_type::PHYSICAL).size());
     std::string phy_mem_instance_name = module_manager.instance_name(grid_module, module_manager.configurable_children(grid_module, ModuleManager::e_config_child_type::PHYSICAL)[0], module_manager.configurable_child_instances(grid_module, ModuleManager::e_config_child_type::PHYSICAL)[0]);
-    ConfigBlockId grid_grouped_config_block = bitstream_manager.add_child_block(phy_mem_instance_name);
+    ConfigBlockId grid_grouped_config_block = bitstream_manager.add_block(phy_mem_instance_name);
     bitstream_manager.add_child_block(grid_configurable_block, grid_grouped_config_block);
     grid_configurable_block = grid_grouped_config_block;
   }

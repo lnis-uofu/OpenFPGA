@@ -49,13 +49,13 @@ static void rec_print_pnr_sdc_constrain_configurable_chain(
   ModuleId& previous_module) {
   /* For each configurable child, we will go one level down in priority */
   for (size_t child_index = 0;
-       child_index < module_manager.configurable_children(parent_module).size();
+       child_index < module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::PHYSICAL).size();
        ++child_index) {
     std::string child_module_path = parent_module_path;
     ModuleId child_module_id =
-      module_manager.configurable_children(parent_module)[child_index];
+      module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::PHYSICAL)[child_index];
     size_t child_instance_id =
-      module_manager.configurable_child_instances(parent_module)[child_index];
+      module_manager.configurable_child_instances(parent_module, ModuleManager::e_config_child_type::PHYSICAL)[child_index];
     std::string child_instance_name;
     if (true ==
         module_manager
@@ -79,7 +79,7 @@ static void rec_print_pnr_sdc_constrain_configurable_chain(
 
   /* If there is no configurable children any more, this is a leaf module, print
    * a SDC command for disable timing */
-  if (0 < module_manager.configurable_children(parent_module).size()) {
+  if (0 < module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::PHYSICAL).size()) {
     return;
   }
 

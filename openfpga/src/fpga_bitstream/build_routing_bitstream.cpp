@@ -534,7 +534,7 @@ static void build_connection_block_bitstreams(
       if (!module_manager.unified_configurable_children(cb_module)) {
         VTR_ASSERT(1 == module_manager.configurable_children(cb_module, ModuleManager::e_config_child_type::PHYSICAL).size());
         std::string phy_mem_instance_name = module_manager.instance_name(cb_module, module_manager.configurable_children(cb_module, ModuleManager::e_config_child_type::PHYSICAL)[0], module_manager.configurable_child_instances(cb_module, ModuleManager::e_config_child_type::PHYSICAL)[0]);
-        ConfigBlockId cb_grouped_config_block = bitstream_manager.add_child_block(phy_mem_instance_name);
+        ConfigBlockId cb_grouped_config_block = bitstream_manager.add_block(phy_mem_instance_name);
         bitstream_manager.add_child_block(cb_configurable_block, cb_grouped_config_block);
         cb_configurable_block = cb_grouped_config_block;
       }
@@ -645,7 +645,7 @@ void build_routing_bitstream(
       if (!module_manager.unified_configurable_children(sb_module)) {
         VTR_ASSERT(1 == module_manager.configurable_children(sb_module, ModuleManager::e_config_child_type::PHYSICAL).size());
         std::string phy_mem_instance_name = module_manager.instance_name(sb_module, module_manager.configurable_children(sb_module, ModuleManager::e_config_child_type::PHYSICAL)[0], module_manager.configurable_child_instances(sb_module, ModuleManager::e_config_child_type::PHYSICAL)[0]);
-        ConfigBlockId sb_grouped_config_block = bitstream_manager.add_child_block(phy_mem_instance_name);
+        ConfigBlockId sb_grouped_config_block = bitstream_manager.add_block(phy_mem_instance_name);
         bitstream_manager.add_child_block(sb_configurable_block, sb_grouped_config_block);
         sb_configurable_block = sb_grouped_config_block;
       }

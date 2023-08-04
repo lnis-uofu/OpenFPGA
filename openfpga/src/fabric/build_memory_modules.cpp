@@ -342,7 +342,7 @@ static void add_module_nets_to_cmos_memory_scan_chain_module(
       net_src_module_id =
         module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index - 1];
       net_src_instance_id = module_manager.configurable_child_instances(
-        parent_module)[mem_index - 1];
+        parent_module, ModuleManager::e_config_child_type::LOGICAL)[mem_index - 1];
       net_src_port_id =
         module_manager.find_module_port(net_src_module_id, src_port_name);
 
@@ -1225,7 +1225,7 @@ int build_memory_modules(ModuleManager& module_manager,
  *-th pin of output port of the memory module, where W is the size of port
  * 3. It assumes fixed port name for output ports
  ********************************************************************/
-void add_module_output_nets_to_memory_group_module(
+static void add_module_output_nets_to_memory_group_module(
   ModuleManager& module_manager, const ModuleId& mem_module,
   const std::string& mem_module_output_name, const ModuleId& child_module,
   const size_t& output_pin_start_index, const size_t& child_instance) {
@@ -1391,7 +1391,7 @@ int add_physical_memory_module(ModuleManager& module_manager,
 
   size_t module_num_config_bits =
     find_module_num_config_bits_from_child_modules(
-      module_manager, curr_module, circuit_lib, sram_model, CONFIG_MEM_FEEDTHROUGH);
+      module_manager, curr_module, circuit_lib, sram_model, CONFIG_MEM_FEEDTHROUGH, ModuleManager::e_config_child_type::LOGICAL);
   /* No need to build a memory when there are no configuration bits required */
   if (module_num_config_bits == 0) {
     return CMD_EXEC_SUCCESS;
@@ -1399,7 +1399,7 @@ int add_physical_memory_module(ModuleManager& module_manager,
   std::string phy_mem_module_name = generate_physical_memory_module_name(module_manager.module_name(curr_module), module_num_config_bits);
   ModuleId phy_mem_module = module_manager.find_module(phy_mem_module_name);
   if (!module_manager.valid_module_id(phy_mem_module)) {
-    status = build_memory_group_module(module_manager, decode_lib, circuit_lib, sram_orgz_type, phy_mem_module_name, sram_model, required_phy_mem_modules);
+    status = build_memory_group_module(module_manager, decoder_lib, circuit_lib, sram_orgz_type, phy_mem_module_name, sram_model, required_phy_mem_modules, module_num_config_bits);
   }
   if (status != CMD_EXEC_SUCCESS) {
     VTR_LOG_ERROR("Failed to create the physical memory module '%s'!\n", phy_mem_module_name.c_str());
@@ -1423,7 +1423,7 @@ int add_physical_memory_module(ModuleManager& module_manager,
   mem2mem_port_map[CIRCUIT_MODEL_PORT_BL] = std::string(CONFIGURABLE_MEMORY_DATA_OUT_NAME);
   mem2mem_port_map[CIRCUIT_MODEL_PORT_BLB] = std::string(CONFIGURABLE_MEMORY_INVERTED_DATA_OUT_NAME);
   for (size_t ichild = 0; ichild < module_manager.configurable_children(curr_module, ModuleManager::e_config_child_type::PHYSICAL).size(); ++ichild) {
-    for (CircuitPortType port_type : {CIRCUIT_MODEL_PORT_BL, CIRCUIT_MODEL_PORT_BLB}) {
+    for (e_circuit_model_port_type port_type : {CIRCUIT_MODEL_PORT_BL, CIRCUIT_MODEL_PORT_BLB}) {
       std::string src_port_name = mem2mem_port_map[port_type];
       std::string des_port_name =
         generate_sram_port_name(CONFIG_MEM_FEEDTHROUGH, port_type); 
@@ -1450,7 +1450,7 @@ int add_physical_memory_module(ModuleManager& module_manager,
         /* Create a net and add source and sink to it */
         ModuleNetId net = create_module_source_pin_net(
           module_manager, curr_module, phy_mem_module, phy_mem_instance,
-          src_port_id, src_port.pins()[cur_mem_pin_index]);
+          src_port_id, src_port.pins()[curr_mem_pin_index]);
         if (module_manager.valid_module_net_id(curr_module, net)) {
           return CMD_EXEC_FATAL_ERROR;
         }
@@ -1471,9 +1471,9 @@ int add_physical_memory_module(ModuleManager& module_manager,
   }
   /* Sanity check */
   std::map<ModuleId, size_t> required_mem_child_inst_count;
-  for (ModuleId curr_module : module_manager.child_modules(phy_mem_module)) {
-    if (logical_mem_child_inst_count[curr_module] != module_manager.num_instance(phy_mem_module, curr_module)) {
-      VTR_LOG_ERROR("Expect the %lu instances of module '%s' under its parent '%s' while only updated %lu during logical-to-physical configurable child mapping sync-up!\n", module_manager.num_instance(phy_mem_module, curr_module), module_manager.module_name(curr_module).c_str(), module_manager.module_name(phy_mem_module).c_str(), logical_mem_child_inst_count[curr_module]);
+  for (ModuleId curr_child_module : module_manager.child_modules(phy_mem_module)) {
+    if (logical_mem_child_inst_count[curr_child_module] != module_manager.num_instance(phy_mem_module, curr_child_module)) {
+      VTR_LOG_ERROR("Expect the %lu instances of module '%s' under its parent '%s' while only updated %lu during logical-to-physical configurable child mapping sync-up!\n", module_manager.num_instance(phy_mem_module, curr_child_module), module_manager.module_name(curr_child_module).c_str(), module_manager.module_name(phy_mem_module).c_str(), logical_mem_child_inst_count[curr_child_module]);
       return CMD_EXEC_FATAL_ERROR;
     }
   }

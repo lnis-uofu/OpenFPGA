@@ -752,7 +752,7 @@ static void build_connection_block_mux_module(
     module_manager, cb_module, mux_module, mux_instance_id, mem_module,
     mem_instance_id, circuit_lib, mux_model);
   /* Update memory and instance list */
-  size_t config_child_id = module_manager.num_configurable_children(cb_module);
+  size_t config_child_id = module_manager.num_configurable_children(cb_module, ModuleManager::e_config_child_type::LOGICAL);
   module_manager.add_configurable_child(cb_module, mem_module, mem_instance_id, group_config_block ? ModuleManager::e_config_child_type::LOGICAL : ModuleManager::e_config_child_type::UNIFIED);
   /* For logical memory, define the physical memory here */
   if (group_config_block) {
@@ -991,7 +991,7 @@ static void build_connection_block_module(
 
   /* Build a physical memory block */
   if (group_config_block) {
-    add_physical_memory_module(module_manager, decoder_lib, sb_module, circuit_lib, sram_orgz_type, sram_model);
+    add_physical_memory_module(module_manager, decoder_lib, cb_module, circuit_lib, sram_orgz_type, sram_model);
   }
 
   /* Add global ports to the pb_module:
@@ -1052,6 +1052,7 @@ static void build_flatten_connection_block_modules(
   const DeviceRRGSB& device_rr_gsb, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const t_rr_type& cb_type,
+  const bool& group_config_block,
   const bool& verbose) {
   /* Build unique X-direction connection block modules */
   vtr::Point<size_t> cb_range = device_rr_gsb.get_gsb_range();
@@ -1069,7 +1070,7 @@ static void build_flatten_connection_block_modules(
       build_connection_block_module(
         module_manager, decoder_lib, device_annotation, device_ctx.grid,
         device_ctx.rr_graph, circuit_lib, sram_orgz_type, sram_model, rr_gsb,
-        cb_type, verbose);
+        cb_type, group_config_block, verbose);
     }
   }
 }

@@ -660,7 +660,7 @@ static void add_module_pb_graph_pin_interc(
       module_manager.set_child_instance_name(
         pb_module, mux_mem_module, mux_mem_instance, mux_mem_instance_name);
       /* Add this MUX as a configurable child to the pb_module */
-      size_t config_child_id = module_manager.num_configurable_child(pb_module, ModuleManager::e_config_child_type::LOGICAL);
+      size_t config_child_id = module_manager.num_configurable_children(pb_module, ModuleManager::e_config_child_type::LOGICAL);
       module_manager.add_configurable_child(pb_module, mux_mem_module,
                                             mux_mem_instance, group_config_block ? ModuleManager::e_config_child_type::LOGICAL : ModuleManager::e_config_child_type::UNIFIED);
       if (group_config_block) {
@@ -671,6 +671,7 @@ static void add_module_pb_graph_pin_interc(
         VTR_ASSERT(true == module_manager.valid_module_id(phy_mem_module));
         module_manager.set_logical2physical_configurable_child(pb_module, config_child_id,
                                             phy_mem_module);
+        VTR_LOGV(verbose, "Now use a feedthrough memory for '%s'\n", phy_mem_module_name.c_str());
       }
 
       /* Add nets to connect SRAM ports of the MUX to the SRAM port of memory
@@ -1076,7 +1077,7 @@ static void rec_build_logical_tile_modules(
    */
   size_t module_num_config_bits =
     find_module_num_config_bits_from_child_modules(
-      module_manager, pb_module, circuit_lib, sram_model, mem_module_type);
+      module_manager, pb_module, circuit_lib, sram_model, mem_module_type, ModuleManager::e_config_child_type::LOGICAL);
   if (0 < module_num_config_bits) {
     add_sram_ports_to_module_manager(module_manager, pb_module, circuit_lib,
                                      sram_model, mem_module_type,

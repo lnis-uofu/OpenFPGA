@@ -193,7 +193,7 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
   /* Reserve child blocks for the top level block */
   bitstream_manager.reserve_child_blocks(
     top_block, count_module_manager_module_configurable_children(
-                 openfpga_ctx.module_graph(), top_module), ModuleManager::e_config_child_type::PHYSICAL);
+                 openfpga_ctx.module_graph(), top_module, ModuleManager::e_config_child_type::PHYSICAL));
 
   /* Create bitstream from grids */
   VTR_LOGV(verbose, "Building grid bitstream...\n");

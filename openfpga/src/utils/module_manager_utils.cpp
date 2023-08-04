@@ -1107,7 +1107,8 @@ void add_module_nets_cmos_flatten_memory_config_bus(
 void add_module_nets_cmos_memory_bank_bl_config_bus(
   ModuleManager& module_manager, const ModuleId& parent_module,
   const e_config_protocol_type& sram_orgz_type,
-  const e_circuit_model_port_type& config_port_type) {
+  const e_circuit_model_port_type& config_port_type,
+  const ModuleManager::e_config_child_type& config_child_type) {
   /* A counter for the current pin id for the source port of parent module */
   size_t cur_src_pin_id = 0;
 
@@ -1124,15 +1125,15 @@ void add_module_nets_cmos_memory_bank_bl_config_bus(
     module_manager.module_port(net_src_module_id, net_src_port_id);
 
   for (size_t mem_index = 0;
-       mem_index < module_manager.configurable_children(parent_module).size();
+       mem_index < module_manager.configurable_children(parent_module, config_child_type).size();
        ++mem_index) {
     /* Find the port name of next memory module */
     std::string sink_port_name =
       generate_sram_port_name(sram_orgz_type, config_port_type);
     ModuleId net_sink_module_id =
-      module_manager.configurable_children(parent_module)[mem_index];
+      module_manager.configurable_children(parent_module, config_child_type)[mem_index];
     size_t net_sink_instance_id =
-      module_manager.configurable_child_instances(parent_module)[mem_index];
+      module_manager.configurable_child_instances(parent_module, config_child_type)[mem_index];
     ModulePortId net_sink_port_id =
       module_manager.find_module_port(net_sink_module_id, sink_port_name);
 
@@ -1190,7 +1191,8 @@ void add_module_nets_cmos_memory_bank_bl_config_bus(
 void add_module_nets_cmos_memory_bank_wl_config_bus(
   ModuleManager& module_manager, const ModuleId& parent_module,
   const e_config_protocol_type& sram_orgz_type,
-  const e_circuit_model_port_type& config_port_type) {
+  const e_circuit_model_port_type& config_port_type,
+  const ModuleManager::e_config_child_type& config_child_type) {
   /* A counter for the current pin id for the source port of parent module */
   size_t cur_src_pin_id = 0;
 
@@ -1219,15 +1221,15 @@ void add_module_nets_cmos_memory_bank_wl_config_bus(
     module_manager.module_port(net_src_module_id, net_bl_port_id);
 
   for (size_t mem_index = 0;
-       mem_index < module_manager.configurable_children(parent_module).size();
+       mem_index < module_manager.configurable_children(parent_module, config_child_type).size();
        ++mem_index) {
     /* Find the port name of next memory module */
     std::string sink_port_name =
       generate_sram_port_name(sram_orgz_type, config_port_type);
     ModuleId net_sink_module_id =
-      module_manager.configurable_children(parent_module)[mem_index];
+      module_manager.configurable_children(parent_module, config_child_type)[mem_index];
     size_t net_sink_instance_id =
-      module_manager.configurable_child_instances(parent_module)[mem_index];
+      module_manager.configurable_child_instances(parent_module, config_child_type)[mem_index];
     ModulePortId net_sink_port_id =
       module_manager.find_module_port(net_sink_module_id, sink_port_name);
 

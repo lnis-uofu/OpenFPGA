@@ -58,7 +58,7 @@ static void add_module_nets_to_ql_memory_bank_shift_register_module(
   const std::string& chain_head_port_name,
   const std::string& chain_tail_port_name) {
   for (size_t mem_index = 0;
-       mem_index < module_manager.configurable_children(parent_module).size();
+       mem_index < module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::PHYSICAL).size();
        ++mem_index) {
     ModuleId net_src_module_id;
     size_t net_src_instance_id;
@@ -79,27 +79,27 @@ static void add_module_nets_to_ql_memory_bank_shift_register_module(
       /* Find the port name of next memory module */
       std::string sink_port_name = circuit_lib.port_prefix(model_input_port);
       net_sink_module_id =
-        module_manager.configurable_children(parent_module)[mem_index];
+        module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::PHYSICAL)[mem_index];
       net_sink_instance_id =
-        module_manager.configurable_child_instances(parent_module)[mem_index];
+        module_manager.configurable_child_instances(parent_module, ModuleManager::e_config_child_type::PHYSICAL)[mem_index];
       net_sink_port_id =
         module_manager.find_module_port(net_sink_module_id, sink_port_name);
     } else {
       /* Find the port name of previous memory module */
       std::string src_port_name = circuit_lib.port_prefix(model_output_port);
       net_src_module_id =
-        module_manager.configurable_children(parent_module)[mem_index - 1];
+        module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::PHYSICAL)[mem_index - 1];
       net_src_instance_id = module_manager.configurable_child_instances(
-        parent_module)[mem_index - 1];
+        parent_module, ModuleManager::e_config_child_type::PHYSICAL)[mem_index - 1];
       net_src_port_id =
         module_manager.find_module_port(net_src_module_id, src_port_name);
 
       /* Find the port name of next memory module */
       std::string sink_port_name = circuit_lib.port_prefix(model_input_port);
       net_sink_module_id =
-        module_manager.configurable_children(parent_module)[mem_index];
+        module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::PHYSICAL)[mem_index];
       net_sink_instance_id =
-        module_manager.configurable_child_instances(parent_module)[mem_index];
+        module_manager.configurable_child_instances(parent_module, ModuleManager::e_config_child_type::PHYSICAL)[mem_index];
       net_sink_port_id =
         module_manager.find_module_port(net_sink_module_id, sink_port_name);
     }
@@ -133,9 +133,9 @@ static void add_module_nets_to_ql_memory_bank_shift_register_module(
   /* Find the port name of previous memory module */
   std::string src_port_name = circuit_lib.port_prefix(model_output_port);
   ModuleId net_src_module_id =
-    module_manager.configurable_children(parent_module).back();
+    module_manager.configurable_children(parent_module, ModuleManager::e_config_child_type::PHYSICAL).back();
   size_t net_src_instance_id =
-    module_manager.configurable_child_instances(parent_module).back();
+    module_manager.configurable_child_instances(parent_module, ModuleManager::e_config_child_type::PHYSICAL).back();
   ModulePortId net_src_port_id =
     module_manager.find_module_port(net_src_module_id, src_port_name);
 
@@ -245,7 +245,7 @@ static ModuleId build_bl_shift_register_chain_module(
       module_manager.num_instance(mem_module, sram_mem_module);
     module_manager.add_child_module(mem_module, sram_mem_module);
     module_manager.add_configurable_child(mem_module, sram_mem_module,
-                                          sram_mem_instance);
+                                          sram_mem_instance, ModuleManager::e_config_child_type::UNIFIED);
 
     /* Build module nets to wire bl outputs of sram modules to BL outputs of
      * memory module */
@@ -363,7 +363,7 @@ static ModuleId build_wl_shift_register_chain_module(
       module_manager.num_instance(mem_module, sram_mem_module);
     module_manager.add_child_module(mem_module, sram_mem_module);
     module_manager.add_configurable_child(mem_module, sram_mem_module,
-                                          sram_mem_instance);
+                                          sram_mem_instance, ModuleManager::e_config_child_type::UNIFIED);
 
     /* Build module nets to wire wl outputs of sram modules to WL outputs of
      * memory module */
@@ -699,10 +699,10 @@ static void add_top_module_nets_cmos_ql_memory_bank_bl_decoder_config_bus(
      * configurable children
      */
     module_manager.add_configurable_child(top_module, bl_decoder_module,
-                                          curr_bl_decoder_instance_id);
+                                          curr_bl_decoder_instance_id, ModuleManager::e_config_child_type::UNIFIED);
     module_manager.add_configurable_child_to_region(
       top_module, config_region, bl_decoder_module, curr_bl_decoder_instance_id,
-      module_manager.configurable_children(top_module).size() - 1);
+      module_manager.configurable_children(top_module, ModuleManager::e_config_child_type::PHYSICAL).size() - 1);
   }
 }
 
@@ -968,10 +968,10 @@ static void add_top_module_nets_cmos_ql_memory_bank_wl_decoder_config_bus(
      * configurable children
      */
     module_manager.add_configurable_child(top_module, wl_decoder_module,
-                                          curr_wl_decoder_instance_id);
+                                          curr_wl_decoder_instance_id, ModuleManager::e_config_child_type::UNIFIED);
     module_manager.add_configurable_child_to_region(
       top_module, config_region, wl_decoder_module, curr_wl_decoder_instance_id,
-      module_manager.configurable_children(top_module).size() - 1);
+      module_manager.configurable_children(top_module, ModuleManager::e_config_child_type::PHYSICAL).size() - 1);
   }
 }
 

@@ -83,7 +83,7 @@ static bool update_submodule_memory_modules_from_fabric_key(
   const ModuleManager::e_config_child_type& config_child_type,
   const FabricKey& fabric_key, const FabricKeyModuleId& key_module_id) {
   /* Reset the configurable children */
-  module_manager.clear_configurable_children(module_id, config_child_type);
+  module_manager.clear_configurable_children(module_id);
 
   for (FabricSubKeyId key_id : fabric_key.sub_keys(key_module_id)) {
     std::pair<ModuleId, size_t> inst_info(ModuleId::INVALID(), 0);
