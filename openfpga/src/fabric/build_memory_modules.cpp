@@ -1318,6 +1318,10 @@ int build_memory_group_module(ModuleManager& module_manager,
     return CMD_EXEC_FATAL_ERROR;
   }
 
+  /* Label module usage */
+  module_manager.set_module_usage(mem_module,
+                                  ModuleManager::MODULE_CONFIG_GROUP);
+
   /* Add output ports */
   std::string out_port_name = generate_configurable_memory_data_out_name();
   BasicPort out_port(out_port_name, num_mems);
@@ -1499,7 +1503,9 @@ int add_physical_memory_module(ModuleManager& module_manager,
 
   /* Build nets between the data output of the physical memory module and the
    * outputs of the logical configurable children */
-  size_t curr_mem_pin_index = 0;
+  std::map<e_circuit_model_port_type, size_t> curr_mem_pin_index;
+  curr_mem_pin_index[CIRCUIT_MODEL_PORT_BL] = 0;
+  curr_mem_pin_index[CIRCUIT_MODEL_PORT_BLB] = 0;
   std::map<e_circuit_model_port_type, std::string> mem2mem_port_map;
   mem2mem_port_map[CIRCUIT_MODEL_PORT_BL] =
     std::string(CONFIGURABLE_MEMORY_DATA_OUT_NAME);
@@ -1511,6 +1517,11 @@ int add_physical_memory_module(ModuleManager& module_manager,
                     curr_module, ModuleManager::e_config_child_type::LOGICAL)
                   .size();
        ++ichild) {
+    ModuleId des_module = module_manager.configurable_children(
+      curr_module, ModuleManager::e_config_child_type::LOGICAL)[ichild];
+    size_t des_instance = module_manager.configurable_child_instances(
+      curr_module, ModuleManager::e_config_child_type::LOGICAL)[ichild];
+
     for (e_circuit_model_port_type port_type :
          {CIRCUIT_MODEL_PORT_BL, CIRCUIT_MODEL_PORT_BLB}) {
       std::string src_port_name = mem2mem_port_map[port_type];
@@ -1525,10 +1536,6 @@ int add_physical_memory_module(ModuleManager& module_manager,
       BasicPort src_port =
         module_manager.module_port(phy_mem_module, src_port_id);
 
-      ModuleId des_module = module_manager.configurable_children(
-        curr_module, ModuleManager::e_config_child_type::LOGICAL)[ichild];
-      size_t des_instance = module_manager.configurable_child_instances(
-        curr_module, ModuleManager::e_config_child_type::LOGICAL)[ichild];
       ModulePortId des_port_id =
         module_manager.find_module_port(des_module, des_port_name);
       if (!module_manager.valid_module_port_id(des_module, des_port_id)) {
@@ -1540,7 +1547,7 @@ int add_physical_memory_module(ModuleManager& module_manager,
         /* Create a net and add source and sink to it */
         ModuleNetId net = create_module_source_pin_net(
           module_manager, curr_module, phy_mem_module, phy_mem_instance,
-          src_port_id, src_port.pins()[curr_mem_pin_index]);
+          src_port_id, src_port.pins()[curr_mem_pin_index[port_type]]);
         if (module_manager.valid_module_net_id(curr_module, net)) {
           return CMD_EXEC_FATAL_ERROR;
         }
@@ -1548,10 +1555,14 @@ int add_physical_memory_module(ModuleManager& module_manager,
         module_manager.add_module_net_sink(curr_module, net, des_module,
                                            des_instance, des_port_id,
                                            des_port.pins()[ipin]);
-        curr_mem_pin_index++;
+        curr_mem_pin_index[port_type]++;
       }
     }
   }
+  VTR_ASSERT(curr_mem_pin_index[CIRCUIT_MODEL_PORT_BL] ==
+             module_num_config_bits);
+  VTR_ASSERT(curr_mem_pin_index[CIRCUIT_MODEL_PORT_BLB] ==
+             module_num_config_bits);
 
   /* TODO: Recursively update the logical configurable child with the physical
    * memory module parent and its instance id */

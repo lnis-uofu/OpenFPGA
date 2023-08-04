@@ -229,6 +229,18 @@ void print_verilog_submodule_memories(const ModuleManager& module_manager,
     }
   }
 
+  /* Include memory group modules */
+  for (ModuleId mem_group_module : module_manager.modules_by_usage(
+         ModuleManager::e_module_usage_type::MODULE_CONFIG_GROUP)) {
+    /* Write the module content in Verilog format */
+    write_verilog_module_to_file(fp, module_manager, mem_group_module,
+                                 options.explicit_port_mapping(),
+                                 options.default_net_type());
+
+    /* Add an empty line as a splitter */
+    fp << std::endl;
+  }
+
   /* Close the file stream */
   fp.close();
 

@@ -53,8 +53,9 @@ class ModuleManager {
    * port should be applied to modules
    */
   enum e_module_usage_type {
-    MODULE_TOP,     /* Top-level module */
-    MODULE_CONFIG,  /* Configuration modules, i.e., decoders, sram etc. */
+    MODULE_TOP,          /* Top-level module */
+    MODULE_CONFIG,       /* Configuration modules, i.e., decoders, sram etc. */
+    MODULE_CONFIG_GROUP, /* Configuration modules, i.e., decoders, sram etc. */
     MODULE_INTERC,  /* Programmable interconnection, e.g., routing multiplexer
                        etc. */
     MODULE_GRID,    /* Grids (programmable blocks) */
@@ -165,6 +166,11 @@ class ModuleManager {
  public: /* Public aggregators */
   /* Find all the modules */
   module_range modules() const;
+  /** @brief find all the modules with a given usage. Note that this function is
+   * not optimized when the number of modules are large. In most cases, the
+   * number of modules are fairly small (less than 10k). */
+  std::vector<ModuleId> modules_by_usage(
+    const ModuleManager::e_module_usage_type& usage) const;
   /* Find all the ports belonging to a module */
   module_port_range module_ports(const ModuleId& module) const;
   /* Find all the nets belonging to a module */

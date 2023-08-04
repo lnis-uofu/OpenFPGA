@@ -26,6 +26,17 @@ ModuleManager::module_range ModuleManager::modules() const {
   return vtr::make_range(ids_.begin(), ids_.end());
 }
 
+std::vector<ModuleId> ModuleManager::modules_by_usage(
+  const ModuleManager::e_module_usage_type& usage) const {
+  std::vector<ModuleId> module_list;
+  for (ModuleId curr_module : ids_) {
+    if (usages_[curr_module] == usage) {
+      module_list.push_back(curr_module);
+    }
+  }
+  return module_list;
+}
+
 /* Find all the ports belonging to a module */
 ModuleManager::module_port_range ModuleManager::module_ports(
   const ModuleId& module) const {
