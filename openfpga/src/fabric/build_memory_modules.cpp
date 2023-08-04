@@ -424,7 +424,8 @@ static void build_memory_flatten_module(ModuleManager& module_manager,
                                         const CircuitLibrary& circuit_lib,
                                         const std::string& module_name,
                                         const CircuitModelId& sram_model,
-                                        const size_t& num_mems) {
+                                        const size_t& num_mems,
+                                        const bool& verbose) {
   /* Get the global ports required by the SRAM */
   std::vector<enum e_circuit_model_port_type> global_port_types;
   global_port_types.push_back(CIRCUIT_MODEL_PORT_CLOCK);
@@ -453,6 +454,7 @@ static void build_memory_flatten_module(ModuleManager& module_manager,
   VTR_ASSERT(2 == sram_output_ports.size());
 
   /* Create a module and add to the module manager */
+  VTR_LOGV(verbose, "Building memory module '%s'\n", module_name.c_str());
   ModuleId mem_module = module_manager.add_module(module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
 
@@ -551,7 +553,8 @@ static void build_memory_chain_module(ModuleManager& module_manager,
                                       const CircuitLibrary& circuit_lib,
                                       const std::string& module_name,
                                       const CircuitModelId& sram_model,
-                                      const size_t& num_mems) {
+                                      const size_t& num_mems,
+                                      const bool& verbose) {
   /* Get the input ports from the SRAM */
   std::vector<CircuitPortId> sram_input_ports =
     circuit_lib.model_ports_by_type(sram_model, CIRCUIT_MODEL_PORT_INPUT, true);
@@ -567,6 +570,7 @@ static void build_memory_chain_module(ModuleManager& module_manager,
              (3 == sram_output_ports.size()));
 
   /* Create a module and add to the module manager */
+  VTR_LOGV(verbose, "Building memory module '%s'\n", module_name.c_str());
   ModuleId mem_module = module_manager.add_module(module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
 
@@ -711,7 +715,8 @@ static void build_frame_memory_module(ModuleManager& module_manager,
                                       const CircuitLibrary& circuit_lib,
                                       const std::string& module_name,
                                       const CircuitModelId& sram_model,
-                                      const size_t& num_mems) {
+                                      const size_t& num_mems,
+                                      const bool& verbose) {
   /* Get the global ports required by the SRAM */
   std::vector<enum e_circuit_model_port_type> global_port_types;
   global_port_types.push_back(CIRCUIT_MODEL_PORT_CLOCK);
@@ -754,6 +759,7 @@ static void build_frame_memory_module(ModuleManager& module_manager,
   VTR_ASSERT(0 == sram_blb_ports.size());
 
   /* Create a module and add to the module manager */
+  VTR_LOGV(verbose, "Building memory module '%s'\n", module_name.c_str());
   ModuleId mem_module = module_manager.add_module(module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
 
@@ -933,21 +939,21 @@ static void build_memory_module(ModuleManager& module_manager,
                                 const e_config_protocol_type& sram_orgz_type,
                                 const std::string& module_name,
                                 const CircuitModelId& sram_model,
-                                const size_t& num_mems) {
+                                const size_t& num_mems, const bool& verbose) {
   switch (sram_orgz_type) {
     case CONFIG_MEM_STANDALONE:
     case CONFIG_MEM_QL_MEMORY_BANK:
     case CONFIG_MEM_MEMORY_BANK:
       build_memory_flatten_module(module_manager, circuit_lib, module_name,
-                                  sram_model, num_mems);
+                                  sram_model, num_mems, verbose);
       break;
     case CONFIG_MEM_SCAN_CHAIN:
       build_memory_chain_module(module_manager, circuit_lib, module_name,
-                                sram_model, num_mems);
+                                sram_model, num_mems, verbose);
       break;
     case CONFIG_MEM_FRAME_BASED:
       build_frame_memory_module(module_manager, arch_decoder_lib, circuit_lib,
-                                module_name, sram_model, num_mems);
+                                module_name, sram_model, num_mems, verbose);
       break;
     default:
       VTR_LOGF_ERROR(__FILE__, __LINE__,
@@ -976,8 +982,11 @@ static void build_memory_module(ModuleManager& module_manager,
  ********************************************************************/
 static int build_feedthrough_memory_module(ModuleManager& module_manager,
                                            const std::string& module_name,
-                                           const size_t& num_mems) {
+                                           const size_t& num_mems,
+                                           const bool& verbose) {
   /* Create a module and add to the module manager */
+  VTR_LOGV(verbose, "Building feedthrough memory module '%s'\n",
+           module_name.c_str());
   ModuleId mem_module = module_manager.add_module(module_name);
   if (!module_manager.valid_module_id(mem_module)) {
     return CMD_EXEC_FATAL_ERROR;
@@ -1048,7 +1057,7 @@ static void build_mux_memory_module(
   ModuleManager& module_manager, DecoderLibrary& arch_decoder_lib,
   const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type, const CircuitModelId& mux_model,
-  const MuxGraph& mux_graph) {
+  const MuxGraph& mux_graph, const bool& verbose) {
   /* Find the actual number of configuration bits, based on the mux graph
    * Due to the use of local decoders inside mux, this may be
    */
@@ -1072,7 +1081,7 @@ static void build_mux_memory_module(
 
       build_memory_module(module_manager, arch_decoder_lib, circuit_lib,
                           sram_orgz_type, module_name, sram_models[0],
-                          num_config_bits);
+                          num_config_bits, verbose);
       break;
     }
     case CIRCUIT_MODEL_DESIGN_RRAM:
@@ -1107,7 +1116,7 @@ static void build_mux_memory_module(
 static int build_mux_feedthrough_memory_module(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type, const CircuitModelId& mux_model,
-  const MuxGraph& mux_graph) {
+  const MuxGraph& mux_graph, const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   /* Find the actual number of configuration bits, based on the mux graph
    * Due to the use of local decoders inside mux, this may be
@@ -1126,7 +1135,7 @@ static int build_mux_feedthrough_memory_module(
         std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
 
       status = build_feedthrough_memory_module(module_manager, module_name,
-                                               num_config_bits);
+                                               num_config_bits, verbose);
       break;
     }
     case CIRCUIT_MODEL_DESIGN_RRAM:
@@ -1167,7 +1176,8 @@ int build_memory_modules(ModuleManager& module_manager,
                          const MuxLibrary& mux_lib,
                          const CircuitLibrary& circuit_lib,
                          const e_config_protocol_type& sram_orgz_type,
-                         const bool& require_feedthrough_memory) {
+                         const bool& require_feedthrough_memory,
+                         const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   vtr::ScopedStartFinishTimer timer("Build memory modules");
 
@@ -1184,11 +1194,12 @@ int build_memory_modules(ModuleManager& module_manager,
     }
     /* Create a Verilog module for the memories used by the multiplexer */
     build_mux_memory_module(module_manager, arch_decoder_lib, circuit_lib,
-                            sram_orgz_type, mux_model, mux_graph);
+                            sram_orgz_type, mux_model, mux_graph, verbose);
     /* Create feedthrough memory module */
     if (require_feedthrough_memory) {
-      status = build_mux_feedthrough_memory_module(
-        module_manager, circuit_lib, sram_orgz_type, mux_model, mux_graph);
+      status = build_mux_feedthrough_memory_module(module_manager, circuit_lib,
+                                                   sram_orgz_type, mux_model,
+                                                   mux_graph, verbose);
       if (status != CMD_EXEC_SUCCESS) {
         return CMD_EXEC_FATAL_ERROR;
       }
@@ -1228,11 +1239,15 @@ int build_memory_modules(ModuleManager& module_manager,
 
     /* Create a Verilog module for the memories used by the circuit model */
     build_memory_module(module_manager, arch_decoder_lib, circuit_lib,
-                        sram_orgz_type, module_name, sram_models[0], num_mems);
+                        sram_orgz_type, module_name, sram_models[0], num_mems,
+                        verbose);
     /* Create feedthrough memory module */
     if (require_feedthrough_memory) {
-      status =
-        build_feedthrough_memory_module(module_manager, module_name, num_mems);
+      module_name = generate_memory_module_name(
+        circuit_lib, model, sram_models[0],
+        std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
+      status = build_feedthrough_memory_module(module_manager, module_name,
+                                               num_mems, verbose);
       if (status != CMD_EXEC_SUCCESS) {
         return CMD_EXEC_FATAL_ERROR;
       }

@@ -79,7 +79,7 @@ int build_device_module_graph(
   build_memory_modules(module_manager, decoder_lib, openfpga_ctx.mux_lib(),
                        openfpga_ctx.arch().circuit_lib,
                        openfpga_ctx.arch().config_protocol.type(),
-                       group_config_block);
+                       group_config_block, verbose);
 
   /* Build grid and programmable block modules */
   build_grid_modules(module_manager, decoder_lib, vpr_device_ctx,

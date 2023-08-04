@@ -27,7 +27,8 @@ int build_memory_modules(ModuleManager& module_manager,
                          const MuxLibrary& mux_lib,
                          const CircuitLibrary& circuit_lib,
                          const e_config_protocol_type& sram_orgz_type,
-                         const bool& require_feedthrough_memory);
+                         const bool& require_feedthrough_memory,
+                         const bool& verbose);
 
 int build_memory_group_module(ModuleManager& module_manager,
                               DecoderLibrary& decoder_lib,
