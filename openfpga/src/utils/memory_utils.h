@@ -66,6 +66,6 @@ int rec_find_physical_memory_children(
   std::vector<std::string>& physical_memory_instance_names,
   const bool& verbose);
 
- /* end namespace openfpga */
+} /* end namespace openfpga */
 
 #endif
