@@ -533,10 +533,8 @@ int rec_find_physical_memory_children(
           .module_name(module_manager.logical2physical_configurable_children(
             curr_module)[ichild])
           .c_str(),
-        module_manager
-          .module_name(module_manager.logical2physical_configurable_instance_names(
-            curr_module)[ichild])
-          .c_str(),
+        module_manager.logical2physical_configurable_instance_names(
+            curr_module)[ichild].c_str()
         );
     } else {
       rec_find_physical_memory_children(module_manager, logical_child,
