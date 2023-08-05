@@ -499,7 +499,9 @@ size_t estimate_num_configurable_children_to_skip_by_config_protocol(
 
 int rec_find_physical_memory_children(
   const ModuleManager& module_manager, const ModuleId& curr_module,
-  std::vector<ModuleId>& physical_memory_children, const bool& verbose) {
+  std::vector<ModuleId>& physical_memory_children,
+  std::vector<std::string>& physical_memory_instance_names,
+  const bool& verbose) {
   if (module_manager
         .configurable_children(curr_module,
                                ModuleManager::e_config_child_type::LOGICAL)
@@ -522,59 +524,23 @@ int rec_find_physical_memory_children(
       physical_memory_children.push_back(
         module_manager.logical2physical_configurable_children(
           curr_module)[ichild]);
+      physical_memory_instance_names.push_back(
+        module_manager.logical2physical_configurable_instance_names(
+          curr_module)[ichild]);
       VTR_LOGV(
-        verbose, "Collecting physical memory module '%s'...\n",
+        verbose, "Collecting physical memory module '%s' with an instance name '%s'...\n",
         module_manager
           .module_name(module_manager.logical2physical_configurable_children(
             curr_module)[ichild])
-          .c_str());
+          .c_str(),
+        module_manager
+          .module_name(module_manager.logical2physical_configurable_instance_names(
+            curr_module)[ichild])
+          .c_str(),
+        );
     } else {
       rec_find_physical_memory_children(module_manager, logical_child,
-                                        physical_memory_children, verbose);
-    }
-  }
-  return CMD_EXEC_SUCCESS;
-}
-
-int rec_update_logical_memory_children_with_physical_mapping(
-  ModuleManager& module_manager, const ModuleId& curr_module,
-  const ModuleId& phy_mem_module,
-  std::map<ModuleId, size_t>& logical_mem_child_inst_count) {
-  if (module_manager
-        .configurable_children(curr_module,
-                               ModuleManager::e_config_child_type::LOGICAL)
-        .empty()) {
-    return CMD_EXEC_SUCCESS;
-  }
-  for (size_t ichild = 0;
-       ichild < module_manager
-                  .configurable_children(
-                    curr_module, ModuleManager::e_config_child_type::LOGICAL)
-                  .size();
-       ++ichild) {
-    ModuleId logical_child = module_manager.configurable_children(
-      curr_module, ModuleManager::e_config_child_type::LOGICAL)[ichild];
-    if (module_manager
-          .configurable_children(logical_child,
-                                 ModuleManager::e_config_child_type::LOGICAL)
-          .empty()) {
-      /* This is a leaf node, update its physical information */
-      ModuleId phy_mem_submodule =
-        module_manager.logical2physical_configurable_children(
-          curr_module)[ichild];
-      auto result = logical_mem_child_inst_count.find(phy_mem_submodule);
-      if (result == logical_mem_child_inst_count.end()) {
-        logical_mem_child_inst_count[phy_mem_submodule] = 0;
-      }
-      module_manager.set_logical2physical_configurable_child_instance(
-        curr_module, ichild, logical_mem_child_inst_count[phy_mem_submodule]);
-      module_manager.set_logical2physical_configurable_child_parent_module(
-        curr_module, ichild, phy_mem_module);
-      logical_mem_child_inst_count[phy_mem_submodule]++;
-    } else {
-      rec_update_logical_memory_children_with_physical_mapping(
-        module_manager, logical_child, phy_mem_module,
-        logical_mem_child_inst_count);
+                                        physical_memory_children, physical_memory_instance_names, verbose);
     }
   }
   return CMD_EXEC_SUCCESS;

@@ -50,6 +50,7 @@ static std::vector<bool> generate_mode_select_bitstream(
  *******************************************************************/
 static void build_primitive_bitstream(
   BitstreamManager& bitstream_manager,
+  std::map<std::string, size_t>& grouped_mem_inst_scoreboard,
   const ConfigBlockId& parent_configurable_block,
   const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   const VprDeviceAnnotation& device_annotation, const PhysicalPb& physical_pb,
@@ -132,6 +133,21 @@ static void build_primitive_bitstream(
     mode_select_bitstream.size() ==
     module_manager.module_port(mem_module, mem_out_port_id).get_width());
 
+  /* If there is a feedthrough module, we should consider the scoreboard */
+  std::string feedthru_mem_block_name = generate_memory_module_name(
+    circuit_lib, primitive_model, sram_models[0], std::string(MEMORY_MODULE_POSTFIX), true);
+  ModuleId feedthru_mem_module = module_manager.find_module(feedthru_mem_block_name);
+  if (module_manager.valid_module_id(feedthru_mem_module)) {
+    auto result = grouped_mem_inst_scoreboard.find(mem_block_name);
+    if (result == grouped_mem_inst_scoreboard.end()) {
+       /* Update scoreboard */
+       grouped_mem_inst_scoreboard[mem_block_name] = 1;
+    } else {
+       mem_block_name = generate_instance_name(mem_block_name, result->second); 
+       grouped_mem_inst_scoreboard[mem_block_name]++;
+    }
+  }
+
   /* Create a block for the bitstream which corresponds to the memory module
    * associated to the LUT */
   ConfigBlockId mem_block = bitstream_manager.add_block(mem_block_name);
@@ -159,6 +175,7 @@ static void build_primitive_bitstream(
  *******************************************************************/
 static void build_physical_block_pin_interc_bitstream(
   BitstreamManager& bitstream_manager,
+  std::map<std::string, size_t>& grouped_mem_inst_scoreboard,
   const ConfigBlockId& parent_configurable_block,
   const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
@@ -264,9 +281,6 @@ static void build_physical_block_pin_interc_bitstream(
        * physical_block */
       std::string mem_block_name = generate_pb_memory_instance_name(
         GRID_MEM_INSTANCE_PREFIX, des_pb_graph_pin, std::string(""));
-      ConfigBlockId mux_mem_block = bitstream_manager.add_block(mem_block_name);
-      bitstream_manager.add_child_block(parent_configurable_block,
-                                        mux_mem_block);
 
       /* Find the module in module manager and ensure the bitstream size
        * matches! */
@@ -280,6 +294,24 @@ static void build_physical_block_pin_interc_bitstream(
       VTR_ASSERT(mux_bitstream.size() ==
                  module_manager.module_port(mux_mem_module, mux_mem_out_port_id)
                    .get_width());
+
+      /* If there is a feedthrough module, we should consider the scoreboard */
+      std::string feedthru_mem_block_name = generate_pb_memory_instance_name(
+        GRID_MEM_INSTANCE_PREFIX, des_pb_graph_pin, std::string(""), true);
+      ModuleId feedthru_mem_module = module_manager.find_module(feedthru_mem_block_name);
+      if (module_manager.valid_module_id(feedthru_mem_module)) {
+        auto result = grouped_mem_inst_scoreboard.find(mem_block_name);
+        if (result == grouped_mem_inst_scoreboard.end()) {
+           /* Update scoreboard */
+           grouped_mem_inst_scoreboard[mem_block_name] = 1;
+        } else {
+           mem_block_name = generate_instance_name(mem_block_name, result->second); 
+           grouped_mem_inst_scoreboard[mem_block_name]++;
+        }
+      }
+      ConfigBlockId mux_mem_block = bitstream_manager.add_block(mem_block_name);
+      bitstream_manager.add_child_block(parent_configurable_block,
+                                        mux_mem_block);
 
       VTR_LOGV(verbose, "Added %lu bits to '%s' under '%s'\n",
                mux_bitstream.size(),
@@ -335,6 +367,7 @@ static void build_physical_block_pin_interc_bitstream(
  *******************************************************************/
 static void build_physical_block_interc_port_bitstream(
   BitstreamManager& bitstream_manager,
+  std::map<std::string, size_t>& grouped_mem_inst_scoreboard,
   const ConfigBlockId& parent_configurable_block,
   const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
@@ -350,7 +383,7 @@ static void build_physical_block_interc_port_bitstream(
         for (int ipin = 0; ipin < physical_pb_graph_node->num_input_pins[iport];
              ++ipin) {
           build_physical_block_pin_interc_bitstream(
-            bitstream_manager, parent_configurable_block, module_manager,
+            bitstream_manager, grouped_mem_inst_scoreboard, parent_configurable_block, module_manager,
             circuit_lib, mux_lib, atom_ctx, device_annotation,
             bitstream_annotation, physical_pb,
             &(physical_pb_graph_node->input_pins[iport][ipin]), physical_mode,
@@ -364,7 +397,7 @@ static void build_physical_block_interc_port_bitstream(
         for (int ipin = 0;
              ipin < physical_pb_graph_node->num_output_pins[iport]; ++ipin) {
           build_physical_block_pin_interc_bitstream(
-            bitstream_manager, parent_configurable_block, module_manager,
+            bitstream_manager, grouped_mem_inst_scoreboard, parent_configurable_block, module_manager,
             circuit_lib, mux_lib, atom_ctx, device_annotation,
             bitstream_annotation, physical_pb,
             &(physical_pb_graph_node->output_pins[iport][ipin]), physical_mode,
@@ -378,7 +411,7 @@ static void build_physical_block_interc_port_bitstream(
         for (int ipin = 0; ipin < physical_pb_graph_node->num_clock_pins[iport];
              ++ipin) {
           build_physical_block_pin_interc_bitstream(
-            bitstream_manager, parent_configurable_block, module_manager,
+            bitstream_manager, grouped_mem_inst_scoreboard, parent_configurable_block, module_manager,
             circuit_lib, mux_lib, atom_ctx, device_annotation,
             bitstream_annotation, physical_pb,
             &(physical_pb_graph_node->clock_pins[iport][ipin]), physical_mode,
@@ -398,6 +431,7 @@ static void build_physical_block_interc_port_bitstream(
  *******************************************************************/
 static void build_physical_block_interc_bitstream(
   BitstreamManager& bitstream_manager,
+  std::map<std::string, size_t>& grouped_mem_inst_scoreboard,
   const ConfigBlockId& parent_configurable_block,
   const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
@@ -422,7 +456,7 @@ static void build_physical_block_interc_bitstream(
    * Note: it is not applied to primitive pb_type!
    */
   build_physical_block_interc_port_bitstream(
-    bitstream_manager, parent_configurable_block, module_manager, circuit_lib,
+    bitstream_manager, grouped_mem_inst_scoreboard, parent_configurable_block, module_manager, circuit_lib,
     mux_lib, atom_ctx, device_annotation, bitstream_annotation,
     physical_pb_graph_node, physical_pb, CIRCUIT_PB_PORT_OUTPUT, physical_mode,
     verbose);
@@ -445,13 +479,13 @@ static void build_physical_block_interc_bitstream(
 
       /* For each child_pb_graph_node input pins*/
       build_physical_block_interc_port_bitstream(
-        bitstream_manager, parent_configurable_block, module_manager,
+        bitstream_manager, grouped_mem_inst_scoreboard, parent_configurable_block, module_manager,
         circuit_lib, mux_lib, atom_ctx, device_annotation, bitstream_annotation,
         child_pb_graph_node, physical_pb, CIRCUIT_PB_PORT_INPUT, physical_mode,
         verbose);
       /* For clock pins, we should do the same work */
       build_physical_block_interc_port_bitstream(
-        bitstream_manager, parent_configurable_block, module_manager,
+        bitstream_manager, grouped_mem_inst_scoreboard, parent_configurable_block, module_manager,
         circuit_lib, mux_lib, atom_ctx, device_annotation, bitstream_annotation,
         child_pb_graph_node, physical_pb, CIRCUIT_PB_PORT_CLOCK, physical_mode,
         verbose);
@@ -464,6 +498,7 @@ static void build_physical_block_interc_bitstream(
  * This function supports both single-output and fracturable LUTs
  *******************************************************************/
 static void build_lut_bitstream(BitstreamManager& bitstream_manager,
+                                std::map<std::string, size_t>& grouped_mem_inst_scoreboard,
                                 const ConfigBlockId& parent_configurable_block,
                                 const VprDeviceAnnotation& device_annotation,
                                 const ModuleManager& module_manager,
@@ -612,6 +647,21 @@ static void build_lut_bitstream(BitstreamManager& bitstream_manager,
     lut_bitstream.size() ==
     module_manager.module_port(mem_module, mem_out_port_id).get_width());
 
+  /* If there is a feedthrough module, we should consider the scoreboard */
+  std::string feedthru_mem_block_name = generate_memory_module_name(
+    circuit_lib, lut_model, sram_models[0], std::string(MEMORY_MODULE_POSTFIX), true);
+  ModuleId feedthru_mem_module = module_manager.find_module(feedthru_mem_block_name);
+  if (module_manager.valid_module_id(feedthru_mem_module)) {
+    auto result = grouped_mem_inst_scoreboard.find(mem_block_name);
+    if (result == grouped_mem_inst_scoreboard.end()) {
+       /* Update scoreboard */
+       grouped_mem_inst_scoreboard[mem_block_name] = 1;
+    } else {
+       mem_block_name = generate_instance_name(mem_block_name, result->second); 
+       grouped_mem_inst_scoreboard[mem_block_name]++;
+    }
+  }
+
   /* Create a block for the bitstream which corresponds to the memory module
    * associated to the LUT */
   ConfigBlockId mem_block = bitstream_manager.add_block(mem_block_name);
@@ -638,6 +688,7 @@ static void build_lut_bitstream(BitstreamManager& bitstream_manager,
  *******************************************************************/
 static void rec_build_physical_block_bitstream(
   BitstreamManager& bitstream_manager,
+  std::map<std::string, size_t>& grouped_mem_inst_scoreboard,
   const ConfigBlockId& parent_configurable_block,
   const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
@@ -699,7 +750,7 @@ static void rec_build_physical_block_bitstream(
         }
         /* Go recursively */
         rec_build_physical_block_bitstream(
-          bitstream_manager, pb_configurable_block, module_manager, circuit_lib,
+          bitstream_manager, grouped_mem_inst_scoreboard, pb_configurable_block, module_manager, circuit_lib,
           mux_lib, atom_ctx, device_annotation, bitstream_annotation,
           border_side, physical_pb, child_pb,
           &(physical_pb_graph_node
@@ -719,7 +770,7 @@ static void rec_build_physical_block_bitstream(
         /* Special case for LUT !!!
          * Mapped logical block information is stored in child_pbs of this pb!!!
          */
-        build_lut_bitstream(bitstream_manager, pb_configurable_block,
+        build_lut_bitstream(bitstream_manager, grouped_mem_inst_scoreboard, pb_configurable_block,
                             device_annotation, module_manager, circuit_lib,
                             mux_lib, physical_pb, pb_id, physical_pb_type,
                             verbose);
@@ -729,7 +780,7 @@ static void rec_build_physical_block_bitstream(
       case CIRCUIT_MODEL_IOPAD:
         /* For other types of blocks, we can apply a generic therapy */
         build_primitive_bitstream(
-          bitstream_manager, pb_configurable_block, module_manager, circuit_lib,
+          bitstream_manager, grouped_mem_inst_scoreboard, pb_configurable_block, module_manager, circuit_lib,
           device_annotation, physical_pb, pb_id, physical_pb_type, verbose);
         break;
       default:
@@ -744,7 +795,7 @@ static void rec_build_physical_block_bitstream(
 
   /* Generate the bitstream for the interconnection in this physical block */
   build_physical_block_interc_bitstream(
-    bitstream_manager, pb_configurable_block, module_manager, circuit_lib,
+    bitstream_manager, grouped_mem_inst_scoreboard, pb_configurable_block, module_manager, circuit_lib,
     mux_lib, atom_ctx, device_annotation, bitstream_annotation,
     physical_pb_graph_node, physical_pb, physical_mode, verbose);
 }
@@ -838,6 +889,7 @@ static void build_physical_block_bitstream(
    * If you need different equivalent sites, you can always define
    * it as a mode under a <pb_type>
    */
+  std::map<std::string, size_t> grouped_mem_inst_scoreboard;
   for (size_t z = 0; z < place_annotation.grid_blocks(grid_coord).size(); ++z) {
     int sub_tile_index =
       device_annotation.physical_tile_z_to_subtile_index(grid_type, z);
@@ -854,7 +906,7 @@ static void build_physical_block_bitstream(
           place_annotation.grid_blocks(grid_coord)[z]) {
         /* Recursively traverse the pb_graph and generate bitstream */
         rec_build_physical_block_bitstream(
-          bitstream_manager, grid_configurable_block, module_manager,
+          bitstream_manager, grouped_mem_inst_scoreboard, grid_configurable_block, module_manager,
           circuit_lib, mux_lib, atom_ctx, device_annotation,
           bitstream_annotation, border_side, PhysicalPb(),
           PhysicalPbId::INVALID(), lb_type->pb_graph_head, z, verbose);
@@ -869,7 +921,7 @@ static void build_physical_block_bitstream(
 
         /* Recursively traverse the pb_graph and generate bitstream */
         rec_build_physical_block_bitstream(
-          bitstream_manager, grid_configurable_block, module_manager,
+          bitstream_manager, grouped_mem_inst_scoreboard, grid_configurable_block, module_manager,
           circuit_lib, mux_lib, atom_ctx, device_annotation,
           bitstream_annotation, border_side, phy_pb, top_pb_id, pb_graph_head,
           z, verbose);

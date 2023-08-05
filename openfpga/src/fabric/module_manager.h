@@ -192,19 +192,16 @@ class ModuleManager {
   std::vector<vtr::Point<int>> configurable_child_coordinates(
     const ModuleId& parent_module, const e_config_child_type& type) const;
 
-  /* Find all the configurable child modules under a parent module */
-  std::vector<ModuleId> logical2physical_configurable_children(
-    const ModuleId& parent_module) const;
-  /* Find all the instances of configurable child modules under a parent module
-   */
-  std::vector<size_t> logical2physical_configurable_child_instances(
-    const ModuleId& parent_module) const;
-  /* Find all the parent modules of physical configurable child modules under a
-   * parent module Note that a physical configurable child module may be at
+  /* Find all the configurable child modules under a parent module
+   * Note that a physical configurable child module may be at
    * another module; Only the logical child module is under the current parent
    * module
    */
-  std::vector<ModuleId> logical2physical_configurable_child_parents(
+  std::vector<ModuleId> logical2physical_configurable_children(
+    const ModuleId& parent_module) const;
+  /* Find all the instance names of configurable child modules under a parent module
+   */
+  std::vector<std::string> logical2physical_configurable_child_instance_names(
     const ModuleId& parent_module) const;
 
   /* Find all the I/O child modules under a parent module */
@@ -405,12 +402,9 @@ class ModuleManager {
     const ModuleId& physical_child_module);
   /** @brief Create a pair of mapping from a logical configurable child to a
    * physical configurable child */
-  void set_logical2physical_configurable_child_instance(
+  void set_logical2physical_configurable_child_instance_name(
     const ModuleId& parent_module, const size_t& logical_child_id,
-    const size_t& physical_child_instance);
-  void set_logical2physical_configurable_child_parent_module(
-    const ModuleId& parent_module, const size_t& logical_child_id,
-    const ModuleId& physical_child_parent_module);
+    const std::string& physical_child_instance_name);
   /* Reserved a number of configurable children for memory efficiency */
   void reserve_configurable_child(const ModuleId& module,
                                   const size_t& num_children,
@@ -584,14 +578,10 @@ class ModuleManager {
   vtr::vector<ModuleId, std::vector<ModuleId>>
     logical2physical_configurable_children_; /* Child modules with configurable
                                memory bits that this module contain */
-  vtr::vector<ModuleId, std::vector<size_t>>
-    logical2physical_configurable_child_instances_; /* Instances of child
+  vtr::vector<ModuleId, std::vector<std::string>>
+    logical2physical_configurable_child_instance_names_; /* Instances of child
                                       modules with configurable memory bits that
                                       this module contain */
-  vtr::vector<ModuleId, std::vector<ModuleId>>
-    logical2physical_configurable_child_parents_; /* Parent modules with
-                               configurable memory bits that this module contain
-                             */
 
   vtr::vector<ModuleId, std::vector<ModuleId>>
     physical_configurable_children_; /* Child modules with configurable memory

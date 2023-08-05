@@ -258,6 +258,11 @@ static void build_switch_block_mux_module(
     VTR_ASSERT(true == module_manager.valid_module_id(physical_mem_module));
     module_manager.set_logical2physical_configurable_child(
       sb_module, config_child_id, physical_mem_module);
+    std::string physical_mem_instance_name = generate_sb_memory_instance_name(
+      SWITCH_BLOCK_MEM_INSTANCE_PREFIX, chan_side, chan_node_id, std::string(""),
+      false);
+    module_manager.set_logical2physical_configurable_child_instance_name(
+      sb_module, config_child_id, physical_mem_instance_name);
   }
 }
 
@@ -781,6 +786,13 @@ static void build_connection_block_mux_module(
     VTR_ASSERT(true == module_manager.valid_module_id(physical_mem_module));
     module_manager.set_logical2physical_configurable_child(
       cb_module, config_child_id, physical_mem_module);
+    std::string physical_mem_instance_name = generate_cb_memory_instance_name(
+      CONNECTION_BLOCK_MEM_INSTANCE_PREFIX,
+      get_rr_graph_single_node_side(
+        rr_graph, rr_gsb.get_ipin_node(cb_ipin_side, ipin_index)),
+      ipin_index, std::string(""), false);
+    module_manager.set_logical2physical_configurable_child_instance_name(
+      cb_module, config_child_id, physical_mem_instance_name);
   }
 }
 

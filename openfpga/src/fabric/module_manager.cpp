@@ -132,23 +132,13 @@ std::vector<ModuleId> ModuleManager::logical2physical_configurable_children(
 }
 
 /* Find all the instances of configurable child modules under a parent module */
-std::vector<size_t>
-ModuleManager::logical2physical_configurable_child_instances(
+std::vector<std::string>
+ModuleManager::logical2physical_configurable_child_instance_names(
   const ModuleId& parent_module) const {
   /* Validate the module_id */
   VTR_ASSERT(valid_module_id(parent_module));
 
-  return logical2physical_configurable_child_instances_[parent_module];
-}
-
-/* Find all the instances of configurable child modules under a parent module */
-std::vector<ModuleId>
-ModuleManager::logical2physical_configurable_child_parents(
-  const ModuleId& parent_module) const {
-  /* Validate the module_id */
-  VTR_ASSERT(valid_module_id(parent_module));
-
-  return logical2physical_configurable_child_parents_[parent_module];
+  return logical2physical_configurable_child_instance_names_[parent_module];
 }
 
 /* Find all the configurable child modules under a parent module */
@@ -741,8 +731,7 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   physical_configurable_child_coordinates_.emplace_back();
 
   logical2physical_configurable_children_.emplace_back();
-  logical2physical_configurable_child_instances_.emplace_back();
-  logical2physical_configurable_child_parents_.emplace_back();
+  logical2physical_configurable_child_instance_names_.emplace_back();
 
   config_region_ids_.emplace_back();
   config_region_children_.emplace_back();
@@ -1015,15 +1004,11 @@ void ModuleManager::add_configurable_child(const ModuleId& parent_module,
   if (type == ModuleManager::e_config_child_type::UNIFIED) {
     logical2physical_configurable_children_[parent_module].push_back(
       child_module);
-    logical2physical_configurable_child_instances_[parent_module].push_back(
-      child_instance);
-    logical2physical_configurable_child_parents_[parent_module].push_back(
-      parent_module);
+    logical2physical_configurable_child_instance_names_[parent_module].emplace_back();
   } else if (type == ModuleManager::e_config_child_type::LOGICAL) {
     logical2physical_configurable_children_[parent_module].emplace_back();
-    logical2physical_configurable_child_instances_[parent_module]
+    logical2physical_configurable_child_instance_names_[parent_module]
       .emplace_back();
-    logical2physical_configurable_child_parents_[parent_module].emplace_back();
   }
 }
 
@@ -1040,32 +1025,18 @@ void ModuleManager::set_logical2physical_configurable_child(
     physical_child_module;
 }
 
-void ModuleManager::set_logical2physical_configurable_child_instance(
+void ModuleManager::set_logical2physical_configurable_child_instance_name(
   const ModuleId& parent_module, const size_t& logical_child_id,
-  const size_t& physical_child_instance) {
+  const std::string& physical_child_instance_name) {
   /* Sanity checks */
   VTR_ASSERT(valid_module_id(parent_module));
   VTR_ASSERT(logical_child_id <
              num_configurable_children(
                parent_module, ModuleManager::e_config_child_type::LOGICAL));
   /* Create the pair */
-  logical2physical_configurable_child_instances_[parent_module]
+  logical2physical_configurable_child_instance_names_[parent_module]
                                                 [logical_child_id] =
-                                                  physical_child_instance;
-}
-
-void ModuleManager::set_logical2physical_configurable_child_parent_module(
-  const ModuleId& parent_module, const size_t& logical_child_id,
-  const ModuleId& physical_child_parent_module) {
-  /* Sanity checks */
-  VTR_ASSERT(valid_module_id(parent_module));
-  VTR_ASSERT(logical_child_id <
-             num_configurable_children(
-               parent_module, ModuleManager::e_config_child_type::LOGICAL));
-  /* Create the pair */
-  logical2physical_configurable_child_parents_[parent_module]
-                                              [logical_child_id] =
-                                                physical_child_parent_module;
+                                                  physical_child_instance_name;
 }
 
 void ModuleManager::reserve_configurable_child(
@@ -1091,13 +1062,8 @@ void ModuleManager::reserve_configurable_child(
         num_children);
     }
     if (num_children >
-        logical2physical_configurable_child_instances_[parent_module].size()) {
-      logical2physical_configurable_child_instances_[parent_module].reserve(
-        num_children);
-    }
-    if (num_children >
-        logical2physical_configurable_child_parents_[parent_module].size()) {
-      logical2physical_configurable_child_parents_[parent_module].reserve(
+        logical2physical_configurable_child_instance_names_[parent_module].size()) {
+      logical2physical_configurable_child_instance_names_[parent_module].reserve(
         num_children);
     }
   }
@@ -1499,8 +1465,7 @@ void ModuleManager::clear_configurable_children(const ModuleId& parent_module) {
   physical_configurable_child_coordinates_[parent_module].clear();
 
   logical2physical_configurable_children_[parent_module].clear();
-  logical2physical_configurable_child_instances_[parent_module].clear();
-  logical2physical_configurable_child_parents_[parent_module].clear();
+  logical2physical_configurable_child_instance_names_[parent_module].clear();
 }
 
 void ModuleManager::clear_config_region(const ModuleId& parent_module) {

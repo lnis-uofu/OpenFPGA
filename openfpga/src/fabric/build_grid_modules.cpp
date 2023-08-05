@@ -380,6 +380,8 @@ static void build_primitive_block_module(
       VTR_ASSERT(module_manager.valid_module_id(physical_memory_module));
       module_manager.set_logical2physical_configurable_child(
         primitive_module, config_child_id, physical_memory_module);
+      module_manager.set_logical2physical_configurable_child_instance_name(
+        primitive_module, config_child_id, physical_memory_module_name);
     }
   }
 
@@ -693,6 +695,11 @@ static void add_module_pb_graph_pin_interc(
                  mux_mem_module_name.c_str(), phy_mem_module_name.c_str());
         module_manager.set_logical2physical_configurable_child(
           pb_module, config_child_id, phy_mem_module);
+        std::string phy_mux_mem_instance_name = generate_pb_memory_instance_name(
+          GRID_MEM_INSTANCE_PREFIX, des_pb_graph_pin, std::string(""),
+          false);
+        module_manager.set_logical2physical_configurable_child_instance_name(
+          pb_module, config_child_id, phy_mux_mem_instance_name);
         VTR_LOGV(verbose, "Now use a feedthrough memory for '%s'\n",
                  phy_mem_module_name.c_str());
       }

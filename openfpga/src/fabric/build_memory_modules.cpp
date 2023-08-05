@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <ctime>
 #include <string>
+#include <map>
 
 #include "build_decoder_modules.h"
 #include "circuit_library_utils.h"
@@ -1310,6 +1311,7 @@ int build_memory_group_module(ModuleManager& module_manager,
                               const std::string& module_name,
                               const CircuitModelId& sram_model,
                               const std::vector<ModuleId>& child_modules,
+                              const std::vector<std::string>& child_instance_names,
                               const size_t& num_mems, const bool& verbose) {
   VTR_LOGV(verbose, "Building memory group module '%s'...\n",
            module_name.c_str());
@@ -1334,6 +1336,28 @@ int build_memory_group_module(ModuleManager& module_manager,
   module_manager.add_port(mem_module, outb_port,
                           ModuleManager::MODULE_OUTPUT_PORT);
 
+  /* Identify the duplicated instance name: This mainly comes from the grid modules, which contains multi-instanced blocks. Therefore, we just count the duplicated instance names and name each of them with a unique index, e.g., mem_lut -> mem_lut_0, mem_lut_1 etc. The only exception is for the uinque instance name, we keep the original instance name */
+  std::vector<std::string> unique_child_instance_names;
+  unique_child_instance_names.reserve(child_instance_names.size());
+  std::map<std::string, size_t> unique_child_instance_name_count;
+  for (std::string curr_inst_name : child_instance_names) {
+    unique_child_instance_name_count[curr_inst_name]++;
+  } 
+  std::map<std::string, size_t> unique_child_instance_name_scoreboard;
+  for (std::string curr_inst_name : child_instance_names) {
+    if (1 == unique_child_instance_name_count[curr_inst_name]) {
+      unique_child_instance_names.push_back(curr_inst_name);
+      unique_child_instance_name_scoreboard[curr_inst_name] = 1;
+      continue;
+    }
+    auto result = unique_child_instance_name_scoreboard.find(curr_inst_name);
+    if (result == unique_child_instance_name_scoreboard.end()) {
+      unique_child_instance_names.push_back(generate_instance_name(curr_inst_name, result->second));
+      unique_child_instance_name_scoreboard[curr_inst_name]++;
+    }
+  }
+  VTR_ASSERT(unique_child_instance_names.size() == child_instance_names.size());
+
   /* Add nets between child module outputs and memory modules */
   size_t mem_out_pin_start_index = 0;
   size_t mem_outb_pin_start_index = 0;
@@ -1342,6 +1366,7 @@ int build_memory_group_module(ModuleManager& module_manager,
     size_t child_instance =
       module_manager.num_instance(mem_module, child_module);
     module_manager.add_child_module(mem_module, child_module, false);
+    module_manager.set_child_instance_name(mem_module, child_module, child_instance, unique_child_instance_names[ichild]);
     module_manager.add_configurable_child(
       mem_module, child_module, child_instance,
       ModuleManager::e_config_child_type::UNIFIED);
@@ -1453,9 +1478,10 @@ int add_physical_memory_module(ModuleManager& module_manager,
   int status = CMD_EXEC_SUCCESS;
 
   std::vector<ModuleId> required_phy_mem_modules;
+  std::vector<std::string> required_phy_mem_instance_names;
   status = rec_find_physical_memory_children(
     static_cast<const ModuleManager&>(module_manager), curr_module,
-    required_phy_mem_modules, verbose);
+    required_phy_mem_modules, required_phy_mem_instance_names, verbose);
   if (status != CMD_EXEC_SUCCESS) {
     return CMD_EXEC_FATAL_ERROR;
   }
@@ -1478,6 +1504,7 @@ int add_physical_memory_module(ModuleManager& module_manager,
     status = build_memory_group_module(module_manager, decoder_lib, circuit_lib,
                                        sram_orgz_type, phy_mem_module_name,
                                        sram_model, required_phy_mem_modules,
+                                       required_phy_mem_instance_names,
                                        module_num_config_bits, verbose);
   }
   if (status != CMD_EXEC_SUCCESS) {
@@ -1572,32 +1599,6 @@ int add_physical_memory_module(ModuleManager& module_manager,
              module_num_config_bits);
   VTR_ASSERT(curr_mem_pin_index[CIRCUIT_MODEL_PORT_BLB] ==
              module_num_config_bits);
-
-  /* TODO: Recursively update the logical configurable child with the physical
-   * memory module parent and its instance id */
-  std::map<ModuleId, size_t> logical_mem_child_inst_count;
-  status = rec_update_logical_memory_children_with_physical_mapping(
-    module_manager, curr_module, phy_mem_module, logical_mem_child_inst_count);
-  if (status != CMD_EXEC_SUCCESS) {
-    return CMD_EXEC_FATAL_ERROR;
-  }
-  /* Sanity check */
-  std::map<ModuleId, size_t> required_mem_child_inst_count;
-  for (ModuleId curr_child_module :
-       module_manager.child_modules(phy_mem_module)) {
-    if (logical_mem_child_inst_count[curr_child_module] !=
-        module_manager.num_instance(phy_mem_module, curr_child_module)) {
-      VTR_LOG_ERROR(
-        "Expect the %lu instances of module '%s' under its parent '%s' while "
-        "only updated %lu during logical-to-physical configurable child "
-        "mapping sync-up!\n",
-        module_manager.num_instance(phy_mem_module, curr_child_module),
-        module_manager.module_name(curr_child_module).c_str(),
-        module_manager.module_name(phy_mem_module).c_str(),
-        logical_mem_child_inst_count[curr_child_module]);
-      return CMD_EXEC_FATAL_ERROR;
-    }
-  }
 
   return status;
 }
