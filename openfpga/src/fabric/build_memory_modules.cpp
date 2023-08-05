@@ -1495,6 +1495,9 @@ int add_physical_memory_module(ModuleManager& module_manager,
   size_t phy_mem_instance =
     module_manager.num_instance(curr_module, phy_mem_module);
   module_manager.add_child_module(curr_module, phy_mem_module, false);
+  /* TODO: Give a more meaningful instance name? */
+  module_manager.set_child_instance_name(curr_module, phy_mem_module,
+                                         phy_mem_instance, phy_mem_module_name);
 
   /* Register in the physical configurable children list */
   module_manager.add_configurable_child(
