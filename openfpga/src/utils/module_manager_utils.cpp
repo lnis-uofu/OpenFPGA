@@ -1667,8 +1667,9 @@ static void add_module_nets_cmos_memory_frame_decoder_config_bus(
   }
 
   /* Add the decoder as the last configurable children */
-  module_manager.add_configurable_child(parent_module, decoder_module, 0,
-                                        config_child_type);
+  module_manager.add_configurable_child(
+    parent_module, decoder_module, 0,
+    ModuleManager::e_config_child_type::UNIFIED);
 }
 
 /*********************************************************************
