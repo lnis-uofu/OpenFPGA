@@ -259,8 +259,8 @@ static void build_switch_block_mux_module(
     module_manager.set_logical2physical_configurable_child(
       sb_module, config_child_id, physical_mem_module);
     std::string physical_mem_instance_name = generate_sb_memory_instance_name(
-      SWITCH_BLOCK_MEM_INSTANCE_PREFIX, chan_side, chan_node_id, std::string(""),
-      false);
+      SWITCH_BLOCK_MEM_INSTANCE_PREFIX, chan_side, chan_node_id,
+      std::string(""), false);
     module_manager.set_logical2physical_configurable_child_instance_name(
       sb_module, config_child_id, physical_mem_instance_name);
   }

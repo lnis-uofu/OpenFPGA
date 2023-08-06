@@ -7,8 +7,8 @@
 
 #include <algorithm>
 #include <ctime>
-#include <string>
 #include <map>
+#include <string>
 
 #include "build_decoder_modules.h"
 #include "circuit_library_utils.h"
@@ -1304,15 +1304,13 @@ static void add_module_output_nets_to_memory_group_module(
  * - Add ports
  * - Add nets
  ********************************************************************/
-int build_memory_group_module(ModuleManager& module_manager,
-                              DecoderLibrary& decoder_lib,
-                              const CircuitLibrary& circuit_lib,
-                              const e_config_protocol_type& sram_orgz_type,
-                              const std::string& module_name,
-                              const CircuitModelId& sram_model,
-                              const std::vector<ModuleId>& child_modules,
-                              const std::vector<std::string>& child_instance_names,
-                              const size_t& num_mems, const bool& verbose) {
+int build_memory_group_module(
+  ModuleManager& module_manager, DecoderLibrary& decoder_lib,
+  const CircuitLibrary& circuit_lib,
+  const e_config_protocol_type& sram_orgz_type, const std::string& module_name,
+  const CircuitModelId& sram_model, const std::vector<ModuleId>& child_modules,
+  const std::vector<std::string>& child_instance_names, const size_t& num_mems,
+  const bool& verbose) {
   VTR_LOGV(verbose, "Building memory group module '%s'...\n",
            module_name.c_str());
   ModuleId mem_module = module_manager.add_module(module_name);
@@ -1336,13 +1334,17 @@ int build_memory_group_module(ModuleManager& module_manager,
   module_manager.add_port(mem_module, outb_port,
                           ModuleManager::MODULE_OUTPUT_PORT);
 
-  /* Identify the duplicated instance name: This mainly comes from the grid modules, which contains multi-instanced blocks. Therefore, we just count the duplicated instance names and name each of them with a unique index, e.g., mem_lut -> mem_lut_0, mem_lut_1 etc. The only exception is for the uinque instance name, we keep the original instance name */
+  /* Identify the duplicated instance name: This mainly comes from the grid
+   * modules, which contains multi-instanced blocks. Therefore, we just count
+   * the duplicated instance names and name each of them with a unique index,
+   * e.g., mem_lut -> mem_lut_0, mem_lut_1 etc. The only exception is for the
+   * uinque instance name, we keep the original instance name */
   std::vector<std::string> unique_child_instance_names;
   unique_child_instance_names.reserve(child_instance_names.size());
   std::map<std::string, size_t> unique_child_instance_name_count;
   for (std::string curr_inst_name : child_instance_names) {
     unique_child_instance_name_count[curr_inst_name]++;
-  } 
+  }
   std::map<std::string, size_t> unique_child_instance_name_scoreboard;
   for (std::string curr_inst_name : child_instance_names) {
     if (1 == unique_child_instance_name_count[curr_inst_name]) {
@@ -1352,7 +1354,8 @@ int build_memory_group_module(ModuleManager& module_manager,
     }
     auto result = unique_child_instance_name_scoreboard.find(curr_inst_name);
     if (result == unique_child_instance_name_scoreboard.end()) {
-      unique_child_instance_names.push_back(generate_instance_name(curr_inst_name, result->second));
+      unique_child_instance_names.push_back(
+        generate_instance_name(curr_inst_name, result->second));
       unique_child_instance_name_scoreboard[curr_inst_name]++;
     }
   }
@@ -1366,7 +1369,9 @@ int build_memory_group_module(ModuleManager& module_manager,
     size_t child_instance =
       module_manager.num_instance(mem_module, child_module);
     module_manager.add_child_module(mem_module, child_module, false);
-    module_manager.set_child_instance_name(mem_module, child_module, child_instance, unique_child_instance_names[ichild]);
+    module_manager.set_child_instance_name(mem_module, child_module,
+                                           child_instance,
+                                           unique_child_instance_names[ichild]);
     module_manager.add_configurable_child(
       mem_module, child_module, child_instance,
       ModuleManager::e_config_child_type::UNIFIED);
@@ -1501,11 +1506,10 @@ int add_physical_memory_module(ModuleManager& module_manager,
            module_manager.module_name(curr_module).c_str());
   ModuleId phy_mem_module = module_manager.find_module(phy_mem_module_name);
   if (!module_manager.valid_module_id(phy_mem_module)) {
-    status = build_memory_group_module(module_manager, decoder_lib, circuit_lib,
-                                       sram_orgz_type, phy_mem_module_name,
-                                       sram_model, required_phy_mem_modules,
-                                       required_phy_mem_instance_names,
-                                       module_num_config_bits, verbose);
+    status = build_memory_group_module(
+      module_manager, decoder_lib, circuit_lib, sram_orgz_type,
+      phy_mem_module_name, sram_model, required_phy_mem_modules,
+      required_phy_mem_instance_names, module_num_config_bits, verbose);
   }
   if (status != CMD_EXEC_SUCCESS) {
     VTR_LOG_ERROR("Failed to create the physical memory module '%s'!\n",

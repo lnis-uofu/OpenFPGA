@@ -30,15 +30,13 @@ int build_memory_modules(ModuleManager& module_manager,
                          const bool& require_feedthrough_memory,
                          const bool& verbose);
 
-int build_memory_group_module(ModuleManager& module_manager,
-                              DecoderLibrary& decoder_lib,
-                              const CircuitLibrary& circuit_lib,
-                              const e_config_protocol_type& sram_orgz_type,
-                              const std::string& module_name,
-                              const CircuitModelId& sram_model,
-                              const std::vector<ModuleId>& child_modules,
-                              const std::vector<std::string>& child_instance_names,
-                              const size_t& num_mems, const bool& verbose);
+int build_memory_group_module(
+  ModuleManager& module_manager, DecoderLibrary& decoder_lib,
+  const CircuitLibrary& circuit_lib,
+  const e_config_protocol_type& sram_orgz_type, const std::string& module_name,
+  const CircuitModelId& sram_model, const std::vector<ModuleId>& child_modules,
+  const std::vector<std::string>& child_instance_names, const size_t& num_mems,
+  const bool& verbose);
 
 int add_physical_memory_module(ModuleManager& module_manager,
                                DecoderLibrary& decoder_lib,

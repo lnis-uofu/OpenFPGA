@@ -528,17 +528,21 @@ int rec_find_physical_memory_children(
         module_manager.logical2physical_configurable_child_instance_names(
           curr_module)[ichild]);
       VTR_LOGV(
-        verbose, "Collecting physical memory module '%s' with an instance name '%s'...\n",
+        verbose,
+        "Collecting physical memory module '%s' with an instance name "
+        "'%s'...\n",
         module_manager
           .module_name(module_manager.logical2physical_configurable_children(
             curr_module)[ichild])
           .c_str(),
-        module_manager.logical2physical_configurable_child_instance_names(
-            curr_module)[ichild].c_str()
-        );
+        module_manager
+          .logical2physical_configurable_child_instance_names(
+            curr_module)[ichild]
+          .c_str());
     } else {
-      rec_find_physical_memory_children(module_manager, logical_child,
-                                        physical_memory_children, physical_memory_instance_names, verbose);
+      rec_find_physical_memory_children(
+        module_manager, logical_child, physical_memory_children,
+        physical_memory_instance_names, verbose);
     }
   }
   return CMD_EXEC_SUCCESS;

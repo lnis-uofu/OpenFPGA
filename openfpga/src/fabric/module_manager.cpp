@@ -1004,7 +1004,8 @@ void ModuleManager::add_configurable_child(const ModuleId& parent_module,
   if (type == ModuleManager::e_config_child_type::UNIFIED) {
     logical2physical_configurable_children_[parent_module].push_back(
       child_module);
-    logical2physical_configurable_child_instance_names_[parent_module].emplace_back();
+    logical2physical_configurable_child_instance_names_[parent_module]
+      .emplace_back();
   } else if (type == ModuleManager::e_config_child_type::LOGICAL) {
     logical2physical_configurable_children_[parent_module].emplace_back();
     logical2physical_configurable_child_instance_names_[parent_module]
@@ -1034,9 +1035,8 @@ void ModuleManager::set_logical2physical_configurable_child_instance_name(
              num_configurable_children(
                parent_module, ModuleManager::e_config_child_type::LOGICAL));
   /* Create the pair */
-  logical2physical_configurable_child_instance_names_[parent_module]
-                                                [logical_child_id] =
-                                                  physical_child_instance_name;
+  logical2physical_configurable_child_instance_names_
+    [parent_module][logical_child_id] = physical_child_instance_name;
 }
 
 void ModuleManager::reserve_configurable_child(
@@ -1062,9 +1062,10 @@ void ModuleManager::reserve_configurable_child(
         num_children);
     }
     if (num_children >
-        logical2physical_configurable_child_instance_names_[parent_module].size()) {
-      logical2physical_configurable_child_instance_names_[parent_module].reserve(
-        num_children);
+        logical2physical_configurable_child_instance_names_[parent_module]
+          .size()) {
+      logical2physical_configurable_child_instance_names_[parent_module]
+        .reserve(num_children);
     }
   }
   if (type == ModuleManager::e_config_child_type::PHYSICAL ||

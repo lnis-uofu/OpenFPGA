@@ -4,8 +4,8 @@
 /********************************************************************
  * Include header files that are required by function declaration
  *******************************************************************/
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "circuit_types.h"
 #include "config_protocol.h"

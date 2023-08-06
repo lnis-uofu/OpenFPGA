@@ -199,7 +199,8 @@ class ModuleManager {
    */
   std::vector<ModuleId> logical2physical_configurable_children(
     const ModuleId& parent_module) const;
-  /* Find all the instance names of configurable child modules under a parent module
+  /* Find all the instance names of configurable child modules under a parent
+   * module
    */
   std::vector<std::string> logical2physical_configurable_child_instance_names(
     const ModuleId& parent_module) const;
