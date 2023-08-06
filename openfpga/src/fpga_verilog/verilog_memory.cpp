@@ -211,9 +211,9 @@ void print_verilog_submodule_memories(const ModuleManager& module_manager,
     fp << std::endl;
 
     /* Create the module name for the memory block */
-    std::string feedthru_module_name = generate_memory_module_name(
-      circuit_lib, model, sram_models[0],
-      std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
+    std::string feedthru_module_name =
+      generate_memory_module_name(circuit_lib, model, sram_models[0],
+                                  std::string(MEMORY_MODULE_POSTFIX), true);
 
     ModuleId feedthru_mem_module =
       module_manager.find_module(feedthru_module_name);
