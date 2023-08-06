@@ -1343,7 +1343,12 @@ int build_memory_group_module(
   unique_child_instance_names.reserve(child_instance_names.size());
   std::map<std::string, size_t> unique_child_instance_name_count;
   for (std::string curr_inst_name : child_instance_names) {
-    unique_child_instance_name_count[curr_inst_name]++;
+    auto result = unique_child_instance_name_count.find(curr_inst_name);
+    if (result == unique_child_instance_name_count.end()) {
+      unique_child_instance_name_count[curr_inst_name] = 1;
+    } else {
+      unique_child_instance_name_count[curr_inst_name]++;
+    }
   }
   std::map<std::string, size_t> unique_child_instance_name_scoreboard;
   for (std::string curr_inst_name : child_instance_names) {
@@ -1354,9 +1359,12 @@ int build_memory_group_module(
     }
     auto result = unique_child_instance_name_scoreboard.find(curr_inst_name);
     if (result == unique_child_instance_name_scoreboard.end()) {
-      unique_child_instance_names.push_back(
-        generate_instance_name(curr_inst_name, result->second));
+      unique_child_instance_name_scoreboard[curr_inst_name] = 0;
+      unique_child_instance_names.push_back(curr_inst_name);
+    } else {
       unique_child_instance_name_scoreboard[curr_inst_name]++;
+      unique_child_instance_names.push_back(generate_instance_name(
+        curr_inst_name, unique_child_instance_name_scoreboard[curr_inst_name]));
     }
   }
   VTR_ASSERT(unique_child_instance_names.size() == child_instance_names.size());

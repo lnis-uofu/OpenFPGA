@@ -143,10 +143,11 @@ static void build_primitive_bitstream(
     auto result = grouped_mem_inst_scoreboard.find(mem_block_name);
     if (result == grouped_mem_inst_scoreboard.end()) {
       /* Update scoreboard */
-      grouped_mem_inst_scoreboard[mem_block_name] = 1;
+      grouped_mem_inst_scoreboard[mem_block_name] = 0;
     } else {
-      mem_block_name = generate_instance_name(mem_block_name, result->second);
       grouped_mem_inst_scoreboard[mem_block_name]++;
+      mem_block_name = generate_instance_name(
+        mem_block_name, grouped_mem_inst_scoreboard[mem_block_name]);
     }
   }
 
@@ -298,19 +299,20 @@ static void build_physical_block_pin_interc_bitstream(
                    .get_width());
 
       /* If there is a feedthrough module, we should consider the scoreboard */
-      std::string feedthru_mem_block_name = generate_pb_memory_instance_name(
-        GRID_MEM_INSTANCE_PREFIX, des_pb_graph_pin, std::string(""), true);
+      std::string feedthru_mem_block_name = generate_mux_subckt_name(
+        circuit_lib, mux_model, datapath_mux_size,
+        std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
       ModuleId feedthru_mem_module =
         module_manager.find_module(feedthru_mem_block_name);
       if (module_manager.valid_module_id(feedthru_mem_module)) {
         auto result = grouped_mem_inst_scoreboard.find(mem_block_name);
         if (result == grouped_mem_inst_scoreboard.end()) {
           /* Update scoreboard */
-          grouped_mem_inst_scoreboard[mem_block_name] = 1;
+          grouped_mem_inst_scoreboard[mem_block_name] = 0;
         } else {
-          mem_block_name =
-            generate_instance_name(mem_block_name, result->second);
           grouped_mem_inst_scoreboard[mem_block_name]++;
+          mem_block_name = generate_instance_name(
+            mem_block_name, grouped_mem_inst_scoreboard[mem_block_name]);
         }
       }
       ConfigBlockId mux_mem_block = bitstream_manager.add_block(mem_block_name);
@@ -659,10 +661,11 @@ static void build_lut_bitstream(
     auto result = grouped_mem_inst_scoreboard.find(mem_block_name);
     if (result == grouped_mem_inst_scoreboard.end()) {
       /* Update scoreboard */
-      grouped_mem_inst_scoreboard[mem_block_name] = 1;
+      grouped_mem_inst_scoreboard[mem_block_name] = 0;
     } else {
-      mem_block_name = generate_instance_name(mem_block_name, result->second);
       grouped_mem_inst_scoreboard[mem_block_name]++;
+      mem_block_name = generate_instance_name(
+        mem_block_name, grouped_mem_inst_scoreboard[mem_block_name]);
     }
   }
 
