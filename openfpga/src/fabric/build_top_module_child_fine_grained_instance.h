@@ -43,7 +43,7 @@ int build_top_module_fine_grained_child_instances(
   const ArchDirect& arch_direct, const ConfigProtocol& config_protocol,
   const CircuitModelId& sram_model, const bool& frame_view,
   const bool& compact_routing_hierarchy, const bool& duplicate_grid_pin,
-  const FabricKey& fabric_key);
+  const FabricKey& fabric_key, const bool& group_config_block);
 
 } /* end namespace openfpga */
 

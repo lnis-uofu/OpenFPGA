@@ -34,7 +34,8 @@ namespace openfpga {
 
 int load_submodules_memory_modules_from_fabric_key(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  const ConfigProtocol& config_protocol, const FabricKey& fabric_key);
+  const ConfigProtocol& config_protocol, const FabricKey& fabric_key,
+  const bool& group_config_block);
 
 } /* end namespace openfpga */
 

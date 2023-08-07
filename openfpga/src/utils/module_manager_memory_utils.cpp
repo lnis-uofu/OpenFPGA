@@ -516,7 +516,8 @@ static int rebuild_submodule_configurable_children_nets(
 static int load_and_update_submodule_memory_modules_from_fabric_key(
   ModuleManager& module_manager, const ModuleId& module_id,
   const CircuitLibrary& circuit_lib, const ConfigProtocol& config_protocol,
-  const FabricKey& fabric_key, const FabricKeyModuleId& key_module_id) {
+  const FabricKey& fabric_key, const FabricKeyModuleId& key_module_id,
+  const bool& group_config_block) {
   int status = CMD_EXEC_SUCCESS;
   /* Compare the configurable children list */
   if (submodule_memory_modules_match_fabric_key(module_manager, module_id,
@@ -533,7 +534,9 @@ static int load_and_update_submodule_memory_modules_from_fabric_key(
   /* Overwrite the configurable children list */
   status = update_submodule_memory_modules_from_fabric_key(
     module_manager, module_id, circuit_lib, config_protocol,
-    ModuleManager::e_config_child_type::PHYSICAL, fabric_key, key_module_id);
+    group_config_block ? ModuleManager::e_config_child_type::PHYSICAL
+                       : ModuleManager::e_config_child_type::UNIFIED,
+    fabric_key, key_module_id);
   if (status == CMD_EXEC_FATAL_ERROR) {
     return status;
   }
@@ -553,7 +556,8 @@ static int load_and_update_submodule_memory_modules_from_fabric_key(
  *******************************************************************/
 int load_submodules_memory_modules_from_fabric_key(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  const ConfigProtocol& config_protocol, const FabricKey& fabric_key) {
+  const ConfigProtocol& config_protocol, const FabricKey& fabric_key,
+  const bool& group_config_block) {
   int status = CMD_EXEC_SUCCESS;
   for (FabricKeyModuleId key_module_id : fabric_key.modules()) {
     std::string module_name = fabric_key.module_name(key_module_id);
@@ -569,7 +573,7 @@ int load_submodules_memory_modules_from_fabric_key(
       /* This is a valid module, try to load and update */
       status = load_and_update_submodule_memory_modules_from_fabric_key(
         module_manager, module_id, circuit_lib, config_protocol, fabric_key,
-        key_module_id);
+        key_module_id, group_config_block);
       if (status == CMD_EXEC_FATAL_ERROR) {
         return status;
       }
