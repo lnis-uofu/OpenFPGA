@@ -37,8 +37,8 @@ int build_device_module_graph(
   const OpenfpgaContext& openfpga_ctx, const DeviceContext& vpr_device_ctx,
   const bool& frame_view, const bool& compress_routing,
   const bool& duplicate_grid_pin, const FabricKey& fabric_key,
-  const TileConfig& tile_config, const bool& generate_random_fabric_key,
-  const bool& verbose) {
+  const TileConfig& tile_config, const bool& group_config_block,
+  const bool& generate_random_fabric_key, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build fabric module graph");
 
   int status = CMD_EXEC_SUCCESS;
@@ -78,28 +78,34 @@ int build_device_module_graph(
   /* Build memory modules */
   build_memory_modules(module_manager, decoder_lib, openfpga_ctx.mux_lib(),
                        openfpga_ctx.arch().circuit_lib,
-                       openfpga_ctx.arch().config_protocol.type());
+                       openfpga_ctx.arch().config_protocol.type(),
+                       group_config_block, verbose);
 
   /* Build grid and programmable block modules */
-  build_grid_modules(module_manager, decoder_lib, vpr_device_ctx,
-                     openfpga_ctx.vpr_device_annotation(),
-                     openfpga_ctx.arch().circuit_lib, openfpga_ctx.mux_lib(),
-                     openfpga_ctx.arch().config_protocol.type(), sram_model,
-                     duplicate_grid_pin, verbose);
+  status = build_grid_modules(
+    module_manager, decoder_lib, vpr_device_ctx,
+    openfpga_ctx.vpr_device_annotation(), openfpga_ctx.arch().circuit_lib,
+    openfpga_ctx.mux_lib(), openfpga_ctx.arch().config_protocol.type(),
+    sram_model, duplicate_grid_pin, group_config_block, verbose);
+  if (CMD_EXEC_FATAL_ERROR == status) {
+    return status;
+  }
 
   if (true == compress_routing) {
-    build_unique_routing_modules(
-      module_manager, decoder_lib, vpr_device_ctx,
-      openfpga_ctx.vpr_device_annotation(), openfpga_ctx.device_rr_gsb(),
-      openfpga_ctx.arch().circuit_lib,
-      openfpga_ctx.arch().config_protocol.type(), sram_model, verbose);
+    build_unique_routing_modules(module_manager, decoder_lib, vpr_device_ctx,
+                                 openfpga_ctx.vpr_device_annotation(),
+                                 openfpga_ctx.device_rr_gsb(),
+                                 openfpga_ctx.arch().circuit_lib,
+                                 openfpga_ctx.arch().config_protocol.type(),
+                                 sram_model, group_config_block, verbose);
   } else {
     VTR_ASSERT_SAFE(false == compress_routing);
-    build_flatten_routing_modules(
-      module_manager, decoder_lib, vpr_device_ctx,
-      openfpga_ctx.vpr_device_annotation(), openfpga_ctx.device_rr_gsb(),
-      openfpga_ctx.arch().circuit_lib,
-      openfpga_ctx.arch().config_protocol.type(), sram_model, verbose);
+    build_flatten_routing_modules(module_manager, decoder_lib, vpr_device_ctx,
+                                  openfpga_ctx.vpr_device_annotation(),
+                                  openfpga_ctx.device_rr_gsb(),
+                                  openfpga_ctx.arch().circuit_lib,
+                                  openfpga_ctx.arch().config_protocol.type(),
+                                  sram_model, group_config_block, verbose);
   }
 
   /* Build tile modules if defined */
@@ -128,7 +134,7 @@ int build_device_module_graph(
     openfpga_ctx.device_rr_gsb(), openfpga_ctx.tile_direct(),
     openfpga_ctx.arch().arch_direct, openfpga_ctx.arch().config_protocol,
     sram_model, fabric_tile, frame_view, compress_routing, duplicate_grid_pin,
-    fabric_key, generate_random_fabric_key, verbose);
+    fabric_key, generate_random_fabric_key, group_config_block, verbose);
 
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;

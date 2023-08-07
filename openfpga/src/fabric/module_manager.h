@@ -53,8 +53,9 @@ class ModuleManager {
    * port should be applied to modules
    */
   enum e_module_usage_type {
-    MODULE_TOP,     /* Top-level module */
-    MODULE_CONFIG,  /* Configuration modules, i.e., decoders, sram etc. */
+    MODULE_TOP,          /* Top-level module */
+    MODULE_CONFIG,       /* Configuration modules, i.e., decoders, sram etc. */
+    MODULE_CONFIG_GROUP, /* Configuration modules, i.e., decoders, sram etc. */
     MODULE_INTERC,  /* Programmable interconnection, e.g., routing multiplexer
                        etc. */
     MODULE_GRID,    /* Grids (programmable blocks) */
@@ -67,6 +68,15 @@ class ModuleManager {
     MODULE_VSS,     /* Local VSS lines to generate constant voltages */
     NUM_MODULE_USAGE_TYPES
   };
+
+  /* Type of configurable child:
+   * - logical: represent a logical configurable block, which may not contain a
+   * physical memory inside
+   * - physical: represent a physical configurable block, which contains a
+   * physical memory inside
+   * - unified: a unified block whose physical memory is also the logical memory
+   */
+  enum class e_config_child_type { LOGICAL, PHYSICAL, UNIFIED, NUM_TYPES };
 
  public: /* Public Constructors */
  public: /* Type implementations */
@@ -156,6 +166,11 @@ class ModuleManager {
  public: /* Public aggregators */
   /* Find all the modules */
   module_range modules() const;
+  /** @brief find all the modules with a given usage. Note that this function is
+   * not optimized when the number of modules are large. In most cases, the
+   * number of modules are fairly small (less than 10k). */
+  std::vector<ModuleId> modules_by_usage(
+    const ModuleManager::e_module_usage_type& usage) const;
   /* Find all the ports belonging to a module */
   module_port_range module_ports(const ModuleId& module) const;
   /* Find all the nets belonging to a module */
@@ -167,14 +182,27 @@ class ModuleManager {
     const ModuleId& parent_module, const ModuleId& child_module) const;
   /* Find all the configurable child modules under a parent module */
   std::vector<ModuleId> configurable_children(
-    const ModuleId& parent_module) const;
+    const ModuleId& parent_module, const e_config_child_type& type) const;
   /* Find all the instances of configurable child modules under a parent module
    */
   std::vector<size_t> configurable_child_instances(
-    const ModuleId& parent_module) const;
+    const ModuleId& parent_module, const e_config_child_type& type) const;
   /* Find the coordindate of a configurable child module under a parent module
    */
   std::vector<vtr::Point<int>> configurable_child_coordinates(
+    const ModuleId& parent_module, const e_config_child_type& type) const;
+
+  /* Find all the configurable child modules under a parent module
+   * Note that a physical configurable child module may be at
+   * another module; Only the logical child module is under the current parent
+   * module
+   */
+  std::vector<ModuleId> logical2physical_configurable_children(
+    const ModuleId& parent_module) const;
+  /* Find all the instance names of configurable child modules under a parent
+   * module
+   */
+  std::vector<std::string> logical2physical_configurable_child_instance_names(
     const ModuleId& parent_module) const;
 
   /* Find all the I/O child modules under a parent module */
@@ -195,16 +223,17 @@ class ModuleManager {
   /* Find all the regions */
   region_range regions(const ModuleId& module) const;
   /* Find all the configurable child modules under a region of a parent module
+   * Note that we use logical children here
    */
   std::vector<ModuleId> region_configurable_children(
     const ModuleId& parent_module, const ConfigRegionId& region) const;
   /* Find all the instances of configurable child modules under a region of a
-   * parent module */
+   * parent module; Note that we use logical children here */
   std::vector<size_t> region_configurable_child_instances(
     const ModuleId& parent_module, const ConfigRegionId& region) const;
 
   /* Find all the coordinates of configurable child modules under a region of a
-   * parent module */
+   * parent module; Note that we use logical children here */
   std::vector<vtr::Point<int>> region_configurable_child_coordinates(
     const ModuleId& parent_module, const ConfigRegionId& region) const;
 
@@ -238,6 +267,9 @@ class ModuleManager {
   size_t instance_id(const ModuleId& parent_module,
                      const ModuleId& child_module,
                      const std::string& instance_name) const;
+  /** @brief Count the number of logical configurable children */
+  size_t num_configurable_children(const ModuleId& parent_module,
+                                   const e_config_child_type& type) const;
   /* Find the type of a port */
   ModuleManager::e_module_port_type port_type(const ModuleId& module,
                                               const ModulePortId& port) const;
@@ -294,6 +326,11 @@ class ModuleManager {
   bool net_sink_exist(const ModuleId& module, const ModuleNetId& net,
                       const ModuleId& sink_module, const size_t& instance_id,
                       const ModulePortId& sink_port, const size_t& sink_pin);
+
+  /** @brief Check if the configurable children under a given module are unified
+   * or not. If unified, it means that the logical configurable children are the
+   * same as the physical configurable children */
+  bool unified_configurable_children(const ModuleId& curr_module) const;
 
  private: /* Private accessors */
   size_t find_child_module_index_in_parent_module(
@@ -357,18 +394,29 @@ class ModuleManager {
    */
   void add_configurable_child(
     const ModuleId& module, const ModuleId& child_module,
-    const size_t& child_instance,
+    const size_t& child_instance, const e_config_child_type& type,
     const vtr::Point<int> coord = vtr::Point<int>(-1, -1));
+  /** @brief Create a pair of mapping from a logical configurable child to a
+   * physical configurable child */
+  void set_logical2physical_configurable_child(
+    const ModuleId& parent_module, const size_t& logical_child_id,
+    const ModuleId& physical_child_module);
+  /** @brief Create a pair of mapping from a logical configurable child to a
+   * physical configurable child */
+  void set_logical2physical_configurable_child_instance_name(
+    const ModuleId& parent_module, const size_t& logical_child_id,
+    const std::string& physical_child_instance_name);
   /* Reserved a number of configurable children for memory efficiency */
   void reserve_configurable_child(const ModuleId& module,
-                                  const size_t& num_children);
+                                  const size_t& num_children,
+                                  const e_config_child_type& type);
 
   /* Create a new configurable region under a module */
   ConfigRegionId add_config_region(const ModuleId& module);
   /* Add a configurable child module to a region
    * Note:
-   *   - The child module must be added as a configurable child to the parent
-   * module before calling this function!
+   *   - The child module must be added as a physical configurable child to the
+   * parent module before calling this function!
    */
   void add_configurable_child_to_region(const ModuleId& parent_module,
                                         const ConfigRegionId& config_region,
@@ -511,23 +559,48 @@ class ModuleManager {
    * is configured first, etc. Note that the sequence can be totally different
    * from the children_ list This is really dependent how the configuration
    * protocol is organized which should be made by users/designers
+   * Note that there could be two types of configurable children under a module
+   * - logical: only contains virtual/feedthough memory blocks. A logical
+   * configurable child can only contain logical subchild. Logical memory block
+   * is required for architecture bitstream generation, because it carries
+   * logical information (the location of memory to its programmable resources)
+   * - physical: contains physical memory blocks. Logical memory blocks are
+   * mapped to the physical memory block. A physical memory block may contain
+   * coordinates and configuration regions which are required for fabric
+   * bitstream generation.
    */
   vtr::vector<ModuleId, std::vector<ModuleId>>
-    configurable_children_; /* Child modules with configurable memory bits that
-                               this module contain */
+    logical_configurable_children_; /* Child modules with configurable memory
+                               bits that this module contain */
   vtr::vector<ModuleId, std::vector<size_t>>
-    configurable_child_instances_; /* Instances of child modules with
+    logical_configurable_child_instances_; /* Instances of child modules with
+                                      configurable memory bits that this module
+                                      contain */
+  vtr::vector<ModuleId, std::vector<ModuleId>>
+    logical2physical_configurable_children_; /* Child modules with configurable
+                               memory bits that this module contain */
+  vtr::vector<ModuleId, std::vector<std::string>>
+    logical2physical_configurable_child_instance_names_; /* Instances of child
+                                      modules with configurable memory bits that
+                                      this module contain */
+
+  vtr::vector<ModuleId, std::vector<ModuleId>>
+    physical_configurable_children_; /* Child modules with configurable memory
+                               bits that this module contain */
+  vtr::vector<ModuleId, std::vector<size_t>>
+    physical_configurable_child_instances_; /* Instances of child modules with
                                       configurable memory bits that this module
                                       contain */
   vtr::vector<ModuleId, std::vector<ConfigRegionId>>
-    configurable_child_regions_; /* Instances of child modules with configurable
-                                    memory bits that this module contain */
+    physical_configurable_child_regions_; /* Instances of child modules with
+                                    configurable memory bits that this module
+                                    contain */
   vtr::vector<ModuleId, std::vector<vtr::Point<int>>>
-    configurable_child_coordinates_; /* Relative coorindates of child modules
-                                        with configurable memory bits that this
-                                        module contain */
+    physical_configurable_child_coordinates_; /* Relative coorindates of child
+                                        modules with configurable memory bits
+                                        that this module contain */
 
-  /* Configurable regions to group the configurable children
+  /* Configurable regions to group the physical configurable children
    * Note:
    *   - Each child can only be added a group
    */

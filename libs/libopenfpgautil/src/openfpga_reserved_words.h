@@ -41,6 +41,11 @@ constexpr const char* GRID_MEM_INSTANCE_PREFIX = "mem_";
 constexpr const char* SWITCH_BLOCK_MEM_INSTANCE_PREFIX = "mem_";
 constexpr const char* CONNECTION_BLOCK_MEM_INSTANCE_PREFIX = "mem_";
 constexpr const char* MEMORY_MODULE_POSTFIX = "_mem";
+constexpr const char* MEMORY_FEEDTHROUGH_MODULE_POSTFIX = "_feedthrough_mem";
+constexpr const char* MEMORY_FEEDTHROUGH_DATA_IN_PORT_NAME =
+  "feedthrough_mem_in";
+constexpr const char* MEMORY_FEEDTHROUGH_DATA_IN_INV_PORT_NAME =
+  "feedthrough_mem_inb";
 constexpr const char* MEMORY_BL_PORT_NAME = "bl";
 constexpr const char* MEMORY_WL_PORT_NAME = "wl";
 constexpr const char* MEMORY_WLR_PORT_NAME = "wlr";
