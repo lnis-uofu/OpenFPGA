@@ -22,6 +22,8 @@ lut_truth_table_fixup
 #  - Enabled compression on routing architecture modules
 #  - Enable pin duplication on grid modules
 build_fabric --compress_routing --group_config_block ${OPENFPGA_GROUP_TILE_CONFIG_OPTION} #--verbose
+# Add a fpga core between fpga top and the underlying modules
+${OPENFPGA_ADD_FPGA_CORE_MODULE}
 
 # Write the fabric hierarchy of module graph to a file
 # This is used by hierarchical PnR flows
