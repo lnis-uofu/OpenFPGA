@@ -263,7 +263,7 @@ build_fabric
 
   .. option:: --group_config_block
 
-    Group configuration memory blocks under each CLB/SB/CB etc. into a centralized configuration memory blocks, as depicted in :numref:`fig_group_config_block_overview`. When disabled, the configuration memory blocks are placed in a distributed way under CLB/SB/CB etc. For example, each programming resource, e.g., LUT, has a dedicated configuration memory block, being placed in the same module.
+    Group configuration memory blocks under each CLB/SB/CB etc. into a centralized configuration memory blocks, as depicted in :numref:`fig_group_config_block_overview`. When disabled, the configuration memory blocks are placed in a distributed way under CLB/SB/CB etc. For example, each programming resource, e.g., LUT, has a dedicated configuration memory block, being placed in the same module. When enabled, as illustrated in :numref:`fig_group_config_block_hierarchy`, the physical memory block locates under a CLB, driving a number of logical memory blocks which are close to the programmable resources. The logical memory blocks contain only pass-through wires which can be optimized out during physical design phase.
 
 .. _fig_group_config_block_overview:
 
@@ -271,6 +271,13 @@ build_fabric
    :width: 100%
 
    Impact on grouping configuable blocks: before and after
+
+.. _fig_group_config_block_hierarchy:
+
+.. figure:: ./figures/group_config_block_hierarchy.png
+   :width: 100%
+
+   Netlist hierarchy on grouped configuable blocks
   
   .. option:: --duplicate_grid_pin
 
