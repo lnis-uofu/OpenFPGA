@@ -1384,26 +1384,28 @@ int build_memory_group_module(
       mem_module, child_module, child_instance,
       ModuleManager::e_config_child_type::UNIFIED);
     /* Wire outputs of child module to outputs of parent module */
-    add_module_output_nets_to_memory_group_module(
-      module_manager, mem_module, out_port_name, child_module,
-      mem_out_pin_start_index, child_instance);
-    add_module_output_nets_to_memory_group_module(
-      module_manager, mem_module, outb_port_name, child_module,
-      mem_outb_pin_start_index, child_instance);
-    /* Update pin counter */
     ModulePortId child_out_port_id =
       module_manager.find_module_port(child_module, out_port_name);
-    mem_out_pin_start_index +=
-      module_manager.module_port(child_module, child_out_port_id).get_width();
-
+    if (module_manager.valid_module_port_id(child_module, child_out_port_id)) {
+      add_module_output_nets_to_memory_group_module(
+        module_manager, mem_module, out_port_name, child_module,
+        mem_out_pin_start_index, child_instance);
+      /* Update pin counter */
+      mem_out_pin_start_index +=
+        module_manager.module_port(child_module, child_out_port_id).get_width();
+    }
     ModulePortId child_outb_port_id =
       module_manager.find_module_port(child_module, outb_port_name);
-    mem_outb_pin_start_index +=
-      module_manager.module_port(child_module, child_outb_port_id).get_width();
+    if (module_manager.valid_module_port_id(child_module, child_outb_port_id)) {
+      add_module_output_nets_to_memory_group_module(
+        module_manager, mem_module, outb_port_name, child_module,
+        mem_outb_pin_start_index, child_instance);
+      /* Update pin counter */
+      mem_outb_pin_start_index +=
+        module_manager.module_port(child_module, child_outb_port_id)
+          .get_width();
+    }
   }
-  /* Check pin counter */
-  VTR_ASSERT(mem_out_pin_start_index == num_mems &&
-             mem_outb_pin_start_index == num_mems);
 
   /* Add global ports to the pb_module:
    * This is a much easier job after adding sub modules (instances),
