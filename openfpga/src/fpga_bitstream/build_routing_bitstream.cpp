@@ -103,7 +103,8 @@ static void build_switch_block_mux_bitstream(
                .get_width());
 
   VTR_LOGV(verbose, "Added %lu bits to '%s' under '%s'\n", mux_bitstream.size(),
-           bitstream_manager.block_name(mux_mem_block).c_str());
+           bitstream_manager.block_name(mux_mem_block).c_str(),
+           bitstream_manager.block_name(bitstream_manager.block_parent(mux_mem_block)).c_str());
 
   /* Add the bistream to the bitstream manager */
   bitstream_manager.add_block_bits(mux_mem_block, mux_bitstream);
@@ -316,7 +317,8 @@ static void build_connection_block_mux_bitstream(
                .get_width());
 
   VTR_LOGV(verbose, "Added %lu bits to '%s' under '%s'\n", mux_bitstream.size(),
-           bitstream_manager.block_name(mux_mem_block).c_str());
+           bitstream_manager.block_name(mux_mem_block).c_str(),
+           bitstream_manager.block_name(bitstream_manager.block_parent(mux_mem_block)).c_str());
 
   /* Add the bistream to the bitstream manager */
   bitstream_manager.add_block_bits(mux_mem_block, mux_bitstream);
