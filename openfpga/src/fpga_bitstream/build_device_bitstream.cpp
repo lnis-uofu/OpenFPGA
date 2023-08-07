@@ -35,15 +35,19 @@ static size_t rec_estimate_device_bitstream_num_blocks(
    * actually configurable memory elements
    * We skip them in couting
    */
-  if (0 == module_manager.configurable_children(top_module).size()) {
+  if (0 == module_manager.num_configurable_children(
+             top_module, ModuleManager::e_config_child_type::PHYSICAL)) {
     return 0;
   }
 
   size_t num_configurable_children =
-    module_manager.configurable_children(top_module).size();
+    module_manager
+      .configurable_children(top_module,
+                             ModuleManager::e_config_child_type::PHYSICAL)
+      .size();
   for (size_t ichild = 0; ichild < num_configurable_children; ++ichild) {
-    ModuleId child_module =
-      module_manager.configurable_children(top_module)[ichild];
+    ModuleId child_module = module_manager.configurable_children(
+      top_module, ModuleManager::e_config_child_type::PHYSICAL)[ichild];
     num_blocks +=
       rec_estimate_device_bitstream_num_blocks(module_manager, child_module);
   }
@@ -68,7 +72,8 @@ static size_t rec_estimate_device_bitstream_num_bits(
   /* If a child module has no configurable children, this is a leaf node
    * We can count it in. Otherwise, we should go recursively.
    */
-  if (0 == module_manager.configurable_children(parent_module).size()) {
+  if (0 == module_manager.num_configurable_children(
+             parent_module, ModuleManager::e_config_child_type::PHYSICAL)) {
     return 1;
   }
 
@@ -105,7 +110,10 @@ static size_t rec_estimate_device_bitstream_num_bits(
     VTR_ASSERT_SAFE(parent_module != top_module);
 
     size_t num_configurable_children =
-      module_manager.configurable_children(parent_module).size();
+      module_manager
+        .configurable_children(parent_module,
+                               ModuleManager::e_config_child_type::PHYSICAL)
+        .size();
 
     /* Frame-based configuration protocol will have 1 decoder
      * if there are more than 1 configurable children
@@ -116,8 +124,8 @@ static size_t rec_estimate_device_bitstream_num_bits(
     }
 
     for (size_t ichild = 0; ichild < num_configurable_children; ++ichild) {
-      ModuleId child_module =
-        module_manager.configurable_children(parent_module)[ichild];
+      ModuleId child_module = module_manager.configurable_children(
+        parent_module, ModuleManager::e_config_child_type::PHYSICAL)[ichild];
       num_bits += rec_estimate_device_bitstream_num_bits(
         module_manager, top_module, child_module, config_protocol);
     }
@@ -193,7 +201,8 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
   /* Reserve child blocks for the top level block */
   bitstream_manager.reserve_child_blocks(
     top_block, count_module_manager_module_configurable_children(
-                 openfpga_ctx.module_graph(), top_module));
+                 openfpga_ctx.module_graph(), top_module,
+                 ModuleManager::e_config_child_type::PHYSICAL));
 
   /* Create bitstream from grids */
   VTR_LOGV(verbose, "Building grid bitstream...\n");

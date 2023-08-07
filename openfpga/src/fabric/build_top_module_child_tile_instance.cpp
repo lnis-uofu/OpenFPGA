@@ -1076,7 +1076,11 @@ static void organize_top_module_tile_based_memory_modules(
   const CircuitModelId& sram_model, const DeviceGrid& grids,
   const vtr::Matrix<size_t>& tile_instance_ids, const FabricTile& fabric_tile) {
   /* Ensure clean vectors to return */
-  VTR_ASSERT(true == module_manager.configurable_children(top_module).empty());
+  VTR_ASSERT(true ==
+             module_manager
+               .configurable_children(
+                 top_module, ModuleManager::e_config_child_type::PHYSICAL)
+               .empty());
 
   std::vector<vtr::Point<size_t>> tile_coords;
   bool positive_direction = true;
@@ -1116,6 +1120,7 @@ static void organize_top_module_tile_based_memory_modules(
       module_manager.add_configurable_child(
         top_module, tile_module,
         tile_instance_ids[curr_tile_coord.x()][curr_tile_coord.y()],
+        ModuleManager::e_config_child_type::UNIFIED,
         vtr::Point<int>(curr_tile_coord.x(), curr_tile_coord.y()));
     }
   }
@@ -1859,7 +1864,8 @@ int build_top_module_tile_child_instances(
   const DeviceRRGSB& device_rr_gsb, const TileDirect& tile_direct,
   const ArchDirect& arch_direct, const FabricTile& fabric_tile,
   const ConfigProtocol& config_protocol, const CircuitModelId& sram_model,
-  const FabricKey& fabric_key, const bool& frame_view, const bool& verbose) {
+  const FabricKey& fabric_key, const bool& group_config_block,
+  const bool& frame_view, const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   vtr::Matrix<size_t> tile_instance_ids;
   status = add_top_module_tile_instances(module_manager, top_module,
@@ -1941,7 +1947,8 @@ int build_top_module_tile_child_instances(
 
     /* Update the memory organization in sub module (non-top) */
     status = load_submodules_memory_modules_from_fabric_key(
-      module_manager, circuit_lib, config_protocol, fabric_key);
+      module_manager, circuit_lib, config_protocol, fabric_key,
+      group_config_block);
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
     }

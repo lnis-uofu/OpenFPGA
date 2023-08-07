@@ -57,7 +57,8 @@ int build_top_module(
   const CircuitModelId& sram_model, const FabricTile& fabric_tile,
   const bool& frame_view, const bool& compact_routing_hierarchy,
   const bool& duplicate_grid_pin, const FabricKey& fabric_key,
-  const bool& generate_random_fabric_key, const bool& verbose) {
+  const bool& generate_random_fabric_key, const bool& group_config_block,
+  const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build FPGA fabric module");
 
   int status = CMD_EXEC_SUCCESS;
@@ -75,14 +76,15 @@ int build_top_module(
       module_manager, top_module, blwl_sr_banks, circuit_lib, clk_ntwk,
       rr_clock_lookup, vpr_device_annotation, grids, tile_annotation, rr_graph,
       device_rr_gsb, tile_direct, arch_direct, config_protocol, sram_model,
-      frame_view, compact_routing_hierarchy, duplicate_grid_pin, fabric_key);
+      frame_view, compact_routing_hierarchy, duplicate_grid_pin, fabric_key,
+      group_config_block);
   } else {
     /* TODO: Build the tile instances under the top module */
     status = build_top_module_tile_child_instances(
       module_manager, top_module, blwl_sr_banks, circuit_lib, clk_ntwk,
       rr_clock_lookup, vpr_device_annotation, grids, tile_annotation, rr_graph,
       device_rr_gsb, tile_direct, arch_direct, fabric_tile, config_protocol,
-      sram_model, fabric_key, frame_view, verbose);
+      sram_model, fabric_key, group_config_block, frame_view, verbose);
   }
 
   if (status != CMD_EXEC_SUCCESS) {
@@ -134,7 +136,10 @@ int build_top_module(
    * module!
    */
   if (false == frame_view) {
-    if (0 < module_manager.configurable_children(top_module).size()) {
+    if (0 < module_manager
+              .configurable_children(
+                top_module, ModuleManager::e_config_child_type::PHYSICAL)
+              .size()) {
       add_top_module_nets_memory_config_bus(
         module_manager, decoder_lib, blwl_sr_banks, top_module, circuit_lib,
         config_protocol, circuit_lib.design_tech_type(sram_model),

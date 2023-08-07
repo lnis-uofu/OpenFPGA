@@ -2,9 +2,9 @@
  * This file includes functions that are used for
  * generating ports for memory modules
  *********************************************************************/
-/* Headers from vtrutil library */
 #include "memory_utils.h"
 
+#include "command_exit_codes.h"
 #include "decoder_library_utils.h"
 #include "openfpga_naming.h"
 #include "vtr_assert.h"
@@ -342,6 +342,12 @@ std::vector<std::string> generate_sram_port_names(
   std::vector<e_circuit_model_port_type> model_port_types;
 
   switch (sram_orgz_type) {
+    case CONFIG_MEM_FEEDTHROUGH:
+      /* Feed through wires are all inputs */
+      model_port_types.push_back(CIRCUIT_MODEL_PORT_BL); /* Indicate mem port */
+      model_port_types.push_back(
+        CIRCUIT_MODEL_PORT_BLB); /* Indicate mem_inv port */
+      break;
     case CONFIG_MEM_SCAN_CHAIN:
       model_port_types.push_back(CIRCUIT_MODEL_PORT_INPUT);
       model_port_types.push_back(CIRCUIT_MODEL_PORT_OUTPUT);
@@ -400,6 +406,7 @@ size_t generate_sram_port_size(const e_config_protocol_type sram_orgz_type,
   size_t sram_port_size = num_config_bits;
 
   switch (sram_orgz_type) {
+    case CONFIG_MEM_FEEDTHROUGH:
     case CONFIG_MEM_STANDALONE:
       break;
     case CONFIG_MEM_SCAN_CHAIN:
@@ -488,6 +495,57 @@ size_t estimate_num_configurable_children_to_skip_by_config_protocol(
   }
 
   return num_child_to_skip;
+}
+
+int rec_find_physical_memory_children(
+  const ModuleManager& module_manager, const ModuleId& curr_module,
+  std::vector<ModuleId>& physical_memory_children,
+  std::vector<std::string>& physical_memory_instance_names,
+  const bool& verbose) {
+  if (module_manager
+        .configurable_children(curr_module,
+                               ModuleManager::e_config_child_type::LOGICAL)
+        .empty()) {
+    return CMD_EXEC_SUCCESS;
+  }
+  for (size_t ichild = 0;
+       ichild < module_manager
+                  .configurable_children(
+                    curr_module, ModuleManager::e_config_child_type::LOGICAL)
+                  .size();
+       ++ichild) {
+    ModuleId logical_child = module_manager.configurable_children(
+      curr_module, ModuleManager::e_config_child_type::LOGICAL)[ichild];
+    if (module_manager
+          .configurable_children(logical_child,
+                                 ModuleManager::e_config_child_type::LOGICAL)
+          .empty()) {
+      /* This is a leaf node, get the physical memory module */
+      physical_memory_children.push_back(
+        module_manager.logical2physical_configurable_children(
+          curr_module)[ichild]);
+      physical_memory_instance_names.push_back(
+        module_manager.logical2physical_configurable_child_instance_names(
+          curr_module)[ichild]);
+      VTR_LOGV(
+        verbose,
+        "Collecting physical memory module '%s' with an instance name "
+        "'%s'...\n",
+        module_manager
+          .module_name(module_manager.logical2physical_configurable_children(
+            curr_module)[ichild])
+          .c_str(),
+        module_manager
+          .logical2physical_configurable_child_instance_names(
+            curr_module)[ichild]
+          .c_str());
+    } else {
+      rec_find_physical_memory_children(
+        module_manager, logical_child, physical_memory_children,
+        physical_memory_instance_names, verbose);
+    }
+  }
+  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */

@@ -37,7 +37,7 @@ static void build_switch_block_mux_bitstream(
   const MuxLibrary& mux_lib, const RRGraphView& rr_graph,
   const RRNodeId& cur_rr_node, const std::vector<RRNodeId>& drive_rr_nodes,
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
-  const VprRoutingAnnotation& routing_annotation) {
+  const VprRoutingAnnotation& routing_annotation, const bool& verbose) {
   /* Check current rr_node is CHANX or CHANY*/
   VTR_ASSERT((CHANX == rr_graph.node_type(cur_rr_node)) ||
              (CHANY == rr_graph.node_type(cur_rr_node)));
@@ -102,6 +102,12 @@ static void build_switch_block_mux_bitstream(
              module_manager.module_port(mux_mem_module, mux_mem_out_port_id)
                .get_width());
 
+  VTR_LOGV(
+    verbose, "Added %lu bits to '%s' under '%s'\n", mux_bitstream.size(),
+    bitstream_manager.block_name(mux_mem_block).c_str(),
+    bitstream_manager.block_name(bitstream_manager.block_parent(mux_mem_block))
+      .c_str());
+
   /* Add the bistream to the bitstream manager */
   bitstream_manager.add_block_bits(mux_mem_block, mux_bitstream);
   /* Record path ids, input and output nets */
@@ -150,7 +156,7 @@ static void build_switch_block_interc_bitstream(
   const MuxLibrary& mux_lib, const RRGraphView& rr_graph,
   const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGSB& rr_gsb,
-  const e_side& chan_side, const size_t& chan_node_id) {
+  const e_side& chan_side, const size_t& chan_node_id, const bool& verbose) {
   std::vector<RRNodeId> driver_rr_nodes;
 
   /* Get the node */
@@ -179,11 +185,14 @@ static void build_switch_block_interc_bitstream(
       std::string(""));
     ConfigBlockId mux_mem_block = bitstream_manager.add_block(mem_block_name);
     bitstream_manager.add_child_block(sb_configurable_block, mux_mem_block);
+    VTR_LOGV(verbose, "Added '%s' under '%s'\n",
+             bitstream_manager.block_name(mux_mem_block).c_str(),
+             bitstream_manager.block_name(sb_configurable_block).c_str());
     /* This is a routing multiplexer! Generate bitstream */
     build_switch_block_mux_bitstream(
       bitstream_manager, mux_mem_block, module_manager, circuit_lib, mux_lib,
       rr_graph, cur_rr_node, driver_rr_nodes, atom_ctx, device_annotation,
-      routing_annotation);
+      routing_annotation, verbose);
   } /*Nothing should be done else*/
 }
 
@@ -204,7 +213,7 @@ static void build_switch_block_bitstream(
   const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
-  const RRGSB& rr_gsb) {
+  const RRGSB& rr_gsb, const bool& verbose) {
   /* Iterate over all the multiplexers */
   for (size_t side = 0; side < rr_gsb.get_num_sides(); ++side) {
     SideManager side_manager(side);
@@ -222,7 +231,7 @@ static void build_switch_block_bitstream(
       build_switch_block_interc_bitstream(
         bitstream_manager, sb_config_block, module_manager, circuit_lib,
         mux_lib, rr_graph, atom_ctx, device_annotation, routing_annotation,
-        rr_gsb, side_manager.get_side(), itrack);
+        rr_gsb, side_manager.get_side(), itrack, verbose);
     }
   }
 }
@@ -240,7 +249,8 @@ static void build_connection_block_mux_bitstream(
   const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
-  const RRGSB& rr_gsb, const e_side& cb_ipin_side, const size_t& ipin_index) {
+  const RRGSB& rr_gsb, const e_side& cb_ipin_side, const size_t& ipin_index,
+  const bool& verbose) {
   RRNodeId src_rr_node = rr_gsb.get_ipin_node(cb_ipin_side, ipin_index);
   /* Find drive_rr_nodes*/
   std::vector<RREdgeId> driver_rr_edges =
@@ -307,6 +317,12 @@ static void build_connection_block_mux_bitstream(
   VTR_ASSERT(mux_bitstream.size() ==
              module_manager.module_port(mux_mem_module, mux_mem_out_port_id)
                .get_width());
+
+  VTR_LOGV(
+    verbose, "Added %lu bits to '%s' under '%s'\n", mux_bitstream.size(),
+    bitstream_manager.block_name(mux_mem_block).c_str(),
+    bitstream_manager.block_name(bitstream_manager.block_parent(mux_mem_block))
+      .c_str());
 
   /* Add the bistream to the bitstream manager */
   bitstream_manager.add_block_bits(mux_mem_block, mux_bitstream);
@@ -381,11 +397,14 @@ static void build_connection_block_interc_bitstream(
       std::string(""));
     ConfigBlockId mux_mem_block = bitstream_manager.add_block(mem_block_name);
     bitstream_manager.add_child_block(cb_configurable_block, mux_mem_block);
+    VTR_LOGV(verbose, "Added '%s' under '%s'\n",
+             bitstream_manager.block_name(mux_mem_block).c_str(),
+             bitstream_manager.block_name(cb_configurable_block).c_str());
     /* This is a routing multiplexer! Generate bitstream */
     build_connection_block_mux_bitstream(
       bitstream_manager, mux_mem_block, module_manager, circuit_lib, mux_lib,
       atom_ctx, device_annotation, routing_annotation, rr_graph, rr_gsb,
-      cb_ipin_side, ipin_index);
+      cb_ipin_side, ipin_index, verbose);
   } /*Nothing should be done else*/
 }
 
@@ -486,8 +505,12 @@ static void build_connection_block_bitstreams(
       VTR_ASSERT(true == module_manager.valid_module_id(cb_module));
 
       /* Bypass empty blocks which have none configurable children */
-      if (0 == count_module_manager_module_configurable_children(module_manager,
-                                                                 cb_module)) {
+      if (0 == count_module_manager_module_configurable_children(
+                 module_manager, cb_module,
+                 ModuleManager::e_config_child_type::LOGICAL) &&
+          0 == count_module_manager_module_configurable_children(
+                 module_manager, cb_module,
+                 ModuleManager::e_config_child_type::PHYSICAL)) {
         continue;
       }
 
@@ -527,8 +550,32 @@ static void build_connection_block_bitstreams(
       /* Reserve child blocks for new created block */
       bitstream_manager.reserve_child_blocks(
         cb_configurable_block,
-        count_module_manager_module_configurable_children(module_manager,
-                                                          cb_module));
+        count_module_manager_module_configurable_children(
+          module_manager, cb_module,
+          ModuleManager::e_config_child_type::PHYSICAL));
+
+      /* Create a dedicated block for the non-unified configurable child */
+      if (!module_manager.unified_configurable_children(cb_module)) {
+        VTR_ASSERT(1 ==
+                   module_manager
+                     .configurable_children(
+                       cb_module, ModuleManager::e_config_child_type::PHYSICAL)
+                     .size());
+        std::string phy_mem_instance_name = module_manager.instance_name(
+          cb_module,
+          module_manager.configurable_children(
+            cb_module, ModuleManager::e_config_child_type::PHYSICAL)[0],
+          module_manager.configurable_child_instances(
+            cb_module, ModuleManager::e_config_child_type::PHYSICAL)[0]);
+        ConfigBlockId cb_grouped_config_block =
+          bitstream_manager.add_block(phy_mem_instance_name);
+        bitstream_manager.add_child_block(cb_configurable_block,
+                                          cb_grouped_config_block);
+        VTR_LOGV(verbose, "Added '%s' as a child to '%s'\n",
+                 bitstream_manager.block_name(cb_grouped_config_block).c_str(),
+                 bitstream_manager.block_name(cb_configurable_block).c_str());
+        cb_configurable_block = cb_grouped_config_block;
+      }
 
       build_connection_block_bitstream(
         bitstream_manager, cb_configurable_block, module_manager, circuit_lib,
@@ -593,8 +640,12 @@ void build_routing_bitstream(
       VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
 
       /* Bypass empty blocks which have none configurable children */
-      if (0 == count_module_manager_module_configurable_children(module_manager,
-                                                                 sb_module)) {
+      if (0 == count_module_manager_module_configurable_children(
+                 module_manager, sb_module,
+                 ModuleManager::e_config_child_type::LOGICAL) &&
+          0 == count_module_manager_module_configurable_children(
+                 module_manager, sb_module,
+                 ModuleManager::e_config_child_type::PHYSICAL)) {
         continue;
       }
 
@@ -629,13 +680,37 @@ void build_routing_bitstream(
       /* Reserve child blocks for new created block */
       bitstream_manager.reserve_child_blocks(
         sb_configurable_block,
-        count_module_manager_module_configurable_children(module_manager,
-                                                          sb_module));
+        count_module_manager_module_configurable_children(
+          module_manager, sb_module,
+          ModuleManager::e_config_child_type::PHYSICAL));
 
-      build_switch_block_bitstream(bitstream_manager, sb_configurable_block,
-                                   module_manager, circuit_lib, mux_lib,
-                                   atom_ctx, device_annotation,
-                                   routing_annotation, rr_graph, rr_gsb);
+      /* Create a dedicated block for the non-unified configurable child */
+      if (!module_manager.unified_configurable_children(sb_module)) {
+        VTR_ASSERT(1 ==
+                   module_manager
+                     .configurable_children(
+                       sb_module, ModuleManager::e_config_child_type::PHYSICAL)
+                     .size());
+        std::string phy_mem_instance_name = module_manager.instance_name(
+          sb_module,
+          module_manager.configurable_children(
+            sb_module, ModuleManager::e_config_child_type::PHYSICAL)[0],
+          module_manager.configurable_child_instances(
+            sb_module, ModuleManager::e_config_child_type::PHYSICAL)[0]);
+        ConfigBlockId sb_grouped_config_block =
+          bitstream_manager.add_block(phy_mem_instance_name);
+        bitstream_manager.add_child_block(sb_configurable_block,
+                                          sb_grouped_config_block);
+        VTR_LOGV(verbose, "Added '%s' as a child to '%s'\n",
+                 bitstream_manager.block_name(sb_grouped_config_block).c_str(),
+                 bitstream_manager.block_name(sb_configurable_block).c_str());
+        sb_configurable_block = sb_grouped_config_block;
+      }
+
+      build_switch_block_bitstream(
+        bitstream_manager, sb_configurable_block, module_manager, circuit_lib,
+        mux_lib, atom_ctx, device_annotation, routing_annotation, rr_graph,
+        rr_gsb, verbose);
 
       VTR_LOGV(verbose, "\tDone\n");
     }
