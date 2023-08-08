@@ -39,6 +39,7 @@ static void add_module_nets_tile_direct_connection(
   ModuleManager& module_manager, const ModuleId& top_module,
   const CircuitLibrary& circuit_lib,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
+  const size_t& layer,
   const vtr::Matrix<size_t>& grid_instance_ids, const TileDirect& tile_direct,
   const TileDirectId& tile_direct_id, const ArchDirect& arch_direct) {
   vtr::Point<size_t> device_size(grids.width(), grids.height());
@@ -46,8 +47,9 @@ static void add_module_nets_tile_direct_connection(
   /* Find the module name of source clb */
   vtr::Point<size_t> src_clb_coord =
     tile_direct.from_tile_coordinate(tile_direct_id);
+  t_physical_tile_loc src_grid_loc(src_clb_coord.x(), src_clb_coord.y(), layer);
   t_physical_tile_type_ptr src_grid_type =
-    grids.get_physical_type(src_clb_coord.x(), src_clb_coord.y());
+    grids.get_physical_type(src_grid_loc);
   e_side src_grid_border_side =
     find_grid_border_side(device_size, src_clb_coord);
   std::string src_module_name_prefix(GRID_MODULE_NAME_PREFIX);
@@ -63,8 +65,9 @@ static void add_module_nets_tile_direct_connection(
   /* Find the module name of sink clb */
   vtr::Point<size_t> des_clb_coord =
     tile_direct.to_tile_coordinate(tile_direct_id);
+  t_physical_tile_loc sink_grid_loc(des_clb_coord.x(), des_clb_coord.y(), layer);
   t_physical_tile_type_ptr sink_grid_type =
-    grids.get_physical_type(des_clb_coord.x(), des_clb_coord.y());
+    grids.get_physical_type(sink_grid_loc);
   e_side sink_grid_border_side =
     find_grid_border_side(device_size, des_clb_coord);
   std::string sink_module_name_prefix(GRID_MODULE_NAME_PREFIX);
@@ -114,7 +117,7 @@ static void add_module_nets_tile_direct_connection(
   size_t src_tile_pin = tile_direct.from_tile_pin(tile_direct_id);
 
   t_physical_tile_type_ptr src_grid_type_descriptor =
-    grids.get_physical_type(src_clb_coord.x(), src_clb_coord.y());
+    grids.get_physical_type(src_grid_loc);
   size_t src_pin_width =
     src_grid_type_descriptor->pin_width_offset[src_tile_pin];
   size_t src_pin_height =
@@ -148,7 +151,7 @@ static void add_module_nets_tile_direct_connection(
   size_t sink_tile_pin = tile_direct.to_tile_pin(tile_direct_id);
 
   t_physical_tile_type_ptr sink_grid_type_descriptor =
-    grids.get_physical_type(des_clb_coord.x(), des_clb_coord.y());
+    grids.get_physical_type(sink_grid_loc);
   size_t sink_pin_width =
     sink_grid_type_descriptor->pin_width_offset[src_tile_pin];
   size_t sink_pin_height =
@@ -209,6 +212,7 @@ void add_top_module_nets_tile_direct_connections(
   ModuleManager& module_manager, const ModuleId& top_module,
   const CircuitLibrary& circuit_lib,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
+  const size_t& layer,
   const vtr::Matrix<size_t>& grid_instance_ids, const TileDirect& tile_direct,
   const ArchDirect& arch_direct) {
   vtr::ScopedStartFinishTimer timer(
@@ -217,7 +221,7 @@ void add_top_module_nets_tile_direct_connections(
   for (const TileDirectId& tile_direct_id : tile_direct.directs()) {
     add_module_nets_tile_direct_connection(
       module_manager, top_module, circuit_lib, vpr_device_annotation, grids,
-      grid_instance_ids, tile_direct, tile_direct_id, arch_direct);
+      layer, grid_instance_ids, tile_direct, tile_direct_id, arch_direct);
   }
 }
 

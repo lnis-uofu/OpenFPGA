@@ -168,7 +168,7 @@ static vtr::Point<size_t> find_grid_coordinate_given_type(
       continue;
     }
     if (wanted_grid_type_name ==
-        std::string(grids.get_physical_type(coord.x(), coord.y())->name)) {
+        std::string(grids.get_physical_type(t_physical_tile_loc(coord.x(), coord.y(), 0))->name)) {
       return coord;
     }
   }
@@ -401,8 +401,9 @@ static void build_inner_column_row_tile_direct(
   /* Walk through the device fabric and find the grid that fit the source */
   for (size_t x = 0; x < device_ctx.grid.width(); ++x) {
     for (size_t y = 0; y < device_ctx.grid.height(); ++y) {
+      t_physical_tile_loc from_phy_tile_loc(x, y, 0);
       t_physical_tile_type_ptr from_phy_tile_type =
-        device_ctx.grid.get_physical_type(x, y);
+        device_ctx.grid.get_physical_type(from_phy_tile_loc);
       /* Bypass empty grid */
       if (true == is_empty_type(from_phy_tile_type)) {
         continue;
@@ -420,8 +421,8 @@ static void build_inner_column_row_tile_direct(
       for (const e_side& from_side : {TOP, RIGHT, BOTTOM, LEFT}) {
         /* Try to find the pin in this tile */
         std::vector<size_t> from_pins = find_physical_tile_pin_id(
-          from_phy_tile_type, device_ctx.grid.get_width_offset(x, y),
-          device_ctx.grid.get_height_offset(x, y), from_tile_port, from_side);
+          from_phy_tile_type, device_ctx.grid.get_width_offset(from_phy_tile_loc),
+          device_ctx.grid.get_height_offset(from_phy_tile_loc), from_tile_port, from_side);
         /* If nothing found, we can continue */
         if (0 == from_pins.size()) {
           continue;
@@ -437,9 +438,9 @@ static void build_inner_column_row_tile_direct(
           continue;
         }
 
+        t_physical_tile_loc to_phy_tile_loc(to_grid_coord.x(), to_grid_coord.y(), 0);
         t_physical_tile_type_ptr to_phy_tile_type =
-          device_ctx.grid.get_physical_type(to_grid_coord.x(),
-                                            to_grid_coord.y());
+          device_ctx.grid.get_physical_type(to_phy_tile_loc);
         /* Bypass the grid that does not fit the from_tile name */
         if (to_tile_name != std::string(to_phy_tile_type->name)) {
           continue;
@@ -454,9 +455,9 @@ static void build_inner_column_row_tile_direct(
           std::vector<size_t> to_pins =
             find_physical_tile_pin_id(to_phy_tile_type,
                                       device_ctx.grid.get_width_offset(
-                                        to_grid_coord.x(), to_grid_coord.y()),
+                                        to_phy_tile_loc),
                                       device_ctx.grid.get_height_offset(
-                                        to_grid_coord.x(), to_grid_coord.y()),
+                                        to_phy_tile_loc),
                                       to_tile_port, to_side);
           /* If nothing found, we can continue */
           if (0 == to_pins.size()) {
@@ -594,13 +595,14 @@ static void build_inter_column_row_tile_direct(
        */
       for (const e_side& from_side : {TOP, RIGHT, BOTTOM, LEFT}) {
         /* Try to find the pin in this tile */
+        t_physical_tile_loc from_phy_tile_loc(from_grid_coord.x(), from_grid_coord.y(), 0);
         std::vector<size_t> from_pins =
           find_physical_tile_pin_id(device_ctx.grid.get_physical_type(
-                                      from_grid_coord.x(), from_grid_coord.y()),
+                                      from_phy_tile_loc),
                                     device_ctx.grid.get_width_offset(
-                                      from_grid_coord.x(), from_grid_coord.y()),
+                                      from_phy_tile_loc),
                                     device_ctx.grid.get_height_offset(
-                                      from_grid_coord.x(), from_grid_coord.y()),
+                                      from_phy_tile_loc),
                                     from_tile_port, from_side);
         /* If nothing found, we can continue */
         if (0 == from_pins.size()) {
@@ -625,13 +627,14 @@ static void build_inter_column_row_tile_direct(
          */
         for (const e_side& to_side : {TOP, RIGHT, BOTTOM, LEFT}) {
           /* Try to find the pin in this tile */
+          t_physical_tile_loc to_phy_tile_loc(to_grid_coord.x(), to_grid_coord.y(), 0);
           std::vector<size_t> to_pins =
             find_physical_tile_pin_id(device_ctx.grid.get_physical_type(
-                                        to_grid_coord.x(), to_grid_coord.y()),
+                                        to_phy_tile_loc),
                                       device_ctx.grid.get_width_offset(
-                                        to_grid_coord.x(), to_grid_coord.y()),
+                                        to_phy_tile_loc),
                                       device_ctx.grid.get_height_offset(
-                                        to_grid_coord.x(), to_grid_coord.y()),
+                                        to_phy_tile_loc),
                                       to_tile_port, to_side);
           /* If nothing found, we can continue */
           if (0 == to_pins.size()) {
@@ -707,13 +710,14 @@ static void build_inter_column_row_tile_direct(
      */
     for (const e_side& from_side : {TOP, RIGHT, BOTTOM, LEFT}) {
       /* Try to find the pin in this tile */
+      t_physical_tile_loc from_phy_tile_loc(from_grid_coord.x(), from_grid_coord.y(), 0);
       std::vector<size_t> from_pins =
         find_physical_tile_pin_id(device_ctx.grid.get_physical_type(
-                                    from_grid_coord.x(), from_grid_coord.y()),
+                                    from_phy_tile_loc),
                                   device_ctx.grid.get_width_offset(
-                                    from_grid_coord.x(), from_grid_coord.y()),
+                                    from_phy_tile_loc),
                                   device_ctx.grid.get_height_offset(
-                                    from_grid_coord.x(), from_grid_coord.y()),
+                                    from_phy_tile_loc),
                                   from_tile_port, from_side);
       /* If nothing found, we can continue */
       if (0 == from_pins.size()) {
@@ -738,13 +742,14 @@ static void build_inter_column_row_tile_direct(
        */
       for (const e_side& to_side : {TOP, RIGHT, BOTTOM, LEFT}) {
         /* Try to find the pin in this tile */
+        t_physical_tile_loc to_phy_tile_loc(to_grid_coord.x(), to_grid_coord.y(), 0);
         std::vector<size_t> to_pins =
           find_physical_tile_pin_id(device_ctx.grid.get_physical_type(
-                                      to_grid_coord.x(), to_grid_coord.y()),
+                                      to_phy_tile_loc),
                                     device_ctx.grid.get_width_offset(
-                                      to_grid_coord.x(), to_grid_coord.y()),
+                                      to_phy_tile_loc),
                                     device_ctx.grid.get_height_offset(
-                                      to_grid_coord.x(), to_grid_coord.y()),
+                                      to_phy_tile_loc),
                                     to_tile_port, to_side);
         /* If nothing found, we can continue */
         if (0 == to_pins.size()) {

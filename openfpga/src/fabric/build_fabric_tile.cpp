@@ -29,6 +29,7 @@ namespace openfpga {
  *******************************************************************/
 static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
                                             const DeviceGrid& grids,
+                                            const size_t& layer,
                                             const DeviceRRGSB& device_rr_gsb,
                                             const bool& verbose) {
   int status_code = CMD_EXEC_SUCCESS;
@@ -36,7 +37,8 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
   /* Walk through all the device rr_gsb and create tile one by one */
   for (size_t ix = 0; ix < grids.width(); ++ix) {
     for (size_t iy = 0; iy < grids.height(); ++iy) {
-      t_physical_tile_type_ptr phy_tile_type = grids.get_physical_type(ix, iy);
+      t_physical_tile_loc tile_loc(ix, iy, layer);
+      t_physical_tile_type_ptr phy_tile_type = grids.get_physical_type(tile_loc);
       bool skip_add_pb = false;
       vtr::Point<size_t> curr_tile_coord(ix, iy);
       vtr::Point<size_t> curr_gsb_coord(ix, iy - 1);
@@ -56,15 +58,15 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
                  "programmable block\n",
                  curr_tile_coord.x(), curr_tile_coord.y());
         curr_tile_id = fabric_tile.create_tile(curr_tile_coord);
-      } else if ((0 < grids.get_width_offset(ix, iy)) ||
-                 (0 < grids.get_height_offset(ix, iy))) {
+      } else if ((0 < grids.get_width_offset(tile_loc)) ||
+                 (0 < grids.get_height_offset(tile_loc))) {
         /* Skip width, height > 1 tiles (mostly heterogeneous blocks) */
         /* Find the root of this grid, the instance id should be valid.
          * We just copy it here
          */
         vtr::Point<size_t> root_tile_coord(
-          ix - grids.get_width_offset(ix, iy),
-          iy - grids.get_height_offset(ix, iy));
+          ix - grids.get_width_offset(tile_loc),
+          iy - grids.get_height_offset(tile_loc));
         skip_add_pb = true;
         VTR_LOGV(verbose,
                  "Tile[%lu][%lu] contains a heterogeneous block which is "
@@ -146,7 +148,7 @@ int build_fabric_tile(FabricTile& fabric_tile, const TileConfig& tile_config,
 
   /* Depending on the selected style, follow different approaches */
   if (tile_config.style() == TileConfig::e_style::TOP_LEFT) {
-    status_code = build_fabric_tile_style_top_left(fabric_tile, grids,
+    status_code = build_fabric_tile_style_top_left(fabric_tile, grids, 0,
                                                    device_rr_gsb, verbose);
   } else {
     /* Error out for styles that are not supported yet! */

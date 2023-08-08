@@ -824,11 +824,12 @@ static void build_physical_block_bitstream(
   const VprClusteringAnnotation& cluster_annotation,
   const VprPlacementAnnotation& place_annotation,
   const VprBitstreamAnnotation& bitstream_annotation, const DeviceGrid& grids,
+  const size_t& layer,
   const vtr::Point<size_t>& grid_coord, const e_side& border_side,
   const bool& verbose) {
   /* Create a block for the grid in bitstream manager */
   t_physical_tile_type_ptr grid_type =
-    grids.get_physical_type(grid_coord.x(), grid_coord.y());
+    grids.get_physical_type(t_physical_tile_loc(grid_coord.x(), grid_coord.y(), layer));
   std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
 
   /* Early exit if this parent module has no configurable child modules */
@@ -950,7 +951,8 @@ void build_grid_bitstream(
   BitstreamManager& bitstream_manager, const ConfigBlockId& top_block,
   const ModuleManager& module_manager, const FabricTile& fabric_tile,
   const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
-  const DeviceGrid& grids, const AtomContext& atom_ctx,
+  const DeviceGrid& grids, const size_t& layer,
+  const AtomContext& atom_ctx,
   const VprDeviceAnnotation& device_annotation,
   const VprClusteringAnnotation& cluster_annotation,
   const VprPlacementAnnotation& place_annotation,
@@ -960,13 +962,14 @@ void build_grid_bitstream(
   /* Generate bitstream for the core logic block one by one */
   for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
     for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
+      t_physical_tile_loc phy_tile_loc(ix, iy, layer);
       /* Bypass EMPTY grid */
-      if (true == is_empty_type(grids.get_physical_type(ix, iy))) {
+      if (true == is_empty_type(grids.get_physical_type(phy_tile_loc))) {
         continue;
       }
       /* Skip width > 1 or height > 1 tiles (mostly heterogeneous blocks) */
-      if ((0 < grids.get_width_offset(ix, iy)) ||
-          (0 < grids.get_height_offset(ix, iy))) {
+      if ((0 < grids.get_width_offset(phy_tile_loc)) ||
+          (0 < grids.get_height_offset(phy_tile_loc))) {
         continue;
       }
       /* Add a grid module to top_module*/
@@ -993,7 +996,7 @@ void build_grid_bitstream(
       build_physical_block_bitstream(
         bitstream_manager, parent_block, module_manager, fabric_tile, curr_tile,
         circuit_lib, mux_lib, atom_ctx, device_annotation, cluster_annotation,
-        place_annotation, bitstream_annotation, grids, grid_coord, NUM_SIDES,
+        place_annotation, bitstream_annotation, grids, layer, grid_coord, NUM_SIDES,
         verbose);
     }
   }
@@ -1008,14 +1011,14 @@ void build_grid_bitstream(
   /* Add instances of I/O grids to top_module */
   for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
     for (const vtr::Point<size_t>& io_coordinate : io_coordinates[io_side]) {
+      t_physical_tile_loc phy_tile_loc(io_coordinate.x(), io_coordinate.y(), layer);
       /* Bypass EMPTY grid */
-      if (true == is_empty_type(grids.get_physical_type(io_coordinate.x(),
-                                                        io_coordinate.y()))) {
+      if (true == is_empty_type(grids.get_physical_type(phy_tile_loc))) {
         continue;
       }
       /* Skip height > 1 tiles (mostly heterogeneous blocks) */
-      if ((0 < grids.get_width_offset(io_coordinate.x(), io_coordinate.y())) ||
-          (0 < grids.get_height_offset(io_coordinate.x(), io_coordinate.y()))) {
+      if ((0 < grids.get_width_offset(phy_tile_loc)) ||
+          (0 < grids.get_height_offset(phy_tile_loc))) {
         continue;
       }
       /* TODO: If the fabric tile is not empty, find the tile module and create
@@ -1040,7 +1043,7 @@ void build_grid_bitstream(
       build_physical_block_bitstream(
         bitstream_manager, parent_block, module_manager, fabric_tile, curr_tile,
         circuit_lib, mux_lib, atom_ctx, device_annotation, cluster_annotation,
-        place_annotation, bitstream_annotation, grids, io_coordinate, io_side,
+        place_annotation, bitstream_annotation, grids, layer, io_coordinate, io_side,
         verbose);
     }
   }

@@ -60,7 +60,8 @@ namespace openfpga {
  *******************************************************************/
 static int build_tile_module_port_and_nets_between_sb_and_pb(
   ModuleManager& module_manager, const ModuleId& tile_module,
-  const DeviceGrid& grids, const VprDeviceAnnotation& vpr_device_annotation,
+  const DeviceGrid& grids, const size_t& layer,
+  const VprDeviceAnnotation& vpr_device_annotation,
   const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph,
   const RRGSB& rr_gsb, const FabricTile& fabric_tile,
   const FabricTileId& fabric_tile_id, const std::vector<size_t>& pb_instances,
@@ -125,7 +126,7 @@ static int build_tile_module_port_and_nets_between_sb_and_pb(
         rr_gsb.get_opin_node(side_manager.get_side(), inode));
 
       t_physical_tile_type_ptr grid_type_descriptor =
-        grids.get_physical_type(grid_coordinate.x(), grid_coordinate.y());
+        grids.get_physical_type(t_physical_tile_loc(grid_coordinate.x(), grid_coordinate.y(), layer));
       size_t src_grid_pin_width =
         grid_type_descriptor->pin_width_offset[src_grid_pin_index];
       size_t src_grid_pin_height =
@@ -287,7 +288,8 @@ static int build_tile_module_port_and_nets_between_sb_and_pb(
  *******************************************************************/
 static int build_tile_module_port_and_nets_between_cb_and_pb(
   ModuleManager& module_manager, const ModuleId& tile_module,
-  const DeviceGrid& grids, const VprDeviceAnnotation& vpr_device_annotation,
+  const DeviceGrid& grids, const size_t& layer,
+  const VprDeviceAnnotation& vpr_device_annotation,
   const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph,
   const RRGSB& rr_gsb, const FabricTile& fabric_tile,
   const FabricTileId& fabric_tile_id, const t_rr_type& cb_type,
@@ -372,7 +374,7 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
       size_t sink_grid_pin_index = rr_graph.node_pin_num(instance_ipin_node);
 
       t_physical_tile_type_ptr grid_type_descriptor =
-        grids.get_physical_type(grid_coordinate.x(), grid_coordinate.y());
+        grids.get_physical_type(t_physical_tile_loc(grid_coordinate.x(), grid_coordinate.y(), layer));
       size_t sink_grid_pin_width =
         grid_type_descriptor->pin_width_offset[sink_grid_pin_index];
       size_t sink_grid_pin_height =
@@ -991,14 +993,15 @@ static int build_tile_module_ports_from_cb(
  ********************************************************************/
 static int build_tile_port_and_nets_from_pb(
   ModuleManager& module_manager, const ModuleId& tile_module,
-  const DeviceGrid& grids, const VprDeviceAnnotation& vpr_device_annotation,
+  const DeviceGrid& grids, const size_t& layer,
+  const VprDeviceAnnotation& vpr_device_annotation,
   const RRGraphView& rr_graph, const vtr::Point<size_t>& pb_coord,
   const std::vector<size_t>& pb_instances, const FabricTile& fabric_tile,
   const FabricTileId& curr_fabric_tile_id, const size_t& ipb,
   const bool& frame_view, const bool& verbose) {
   size_t pb_instance = pb_instances[ipb];
   t_physical_tile_type_ptr phy_tile =
-    grids.get_physical_type(pb_coord.x(), pb_coord.y());
+    grids.get_physical_type(t_physical_tile_loc(pb_coord.x(), pb_coord.y(), layer));
   /* Empty type does not require a module */
   if (is_empty_type(phy_tile)) {
     return CMD_EXEC_SUCCESS;
@@ -1120,7 +1123,7 @@ static int build_tile_port_and_nets_from_pb(
                 size_t num_fanout_in_tile =
                   module_manager.module_net_sinks(tile_module, curr_net).size();
                 RRNodeId rr_node = rr_graph.node_lookup().find_node(
-                  pb_coord.x() + iwidth, pb_coord.y() + iheight, OPIN, ipin,
+                  layer, pb_coord.x() + iwidth, pb_coord.y() + iheight, OPIN, ipin,
                   side);
                 size_t num_fanout_required =
                   rr_graph.node_out_edges(rr_node).size();
@@ -1179,7 +1182,8 @@ static int build_tile_port_and_nets_from_pb(
  *******************************************************************/
 static int build_tile_module_ports_and_nets(
   ModuleManager& module_manager, const ModuleId& tile_module,
-  const DeviceGrid& grids, const VprDeviceAnnotation& vpr_device_annotation,
+  const DeviceGrid& grids, const size_t& layer,
+  const VprDeviceAnnotation& vpr_device_annotation,
   const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph_view,
   const FabricTile& fabric_tile, const FabricTileId& fabric_tile_id,
   const std::vector<size_t>& pb_instances,
@@ -1196,7 +1200,7 @@ static int build_tile_module_ports_and_nets(
       fabric_tile.sb_coordinates(fabric_tile_id)[isb];
     const RRGSB& rr_gsb = device_rr_gsb.get_gsb(sb_coord);
     status_code = build_tile_module_port_and_nets_between_sb_and_pb(
-      module_manager, tile_module, grids, vpr_device_annotation, device_rr_gsb,
+      module_manager, tile_module, grids, layer, vpr_device_annotation, device_rr_gsb,
       rr_graph_view, rr_gsb, fabric_tile, fabric_tile_id, pb_instances,
       sb_instances, isb, true, frame_view, verbose);
     if (status_code != CMD_EXEC_SUCCESS) {
@@ -1213,7 +1217,7 @@ static int build_tile_module_ports_and_nets(
         fabric_tile.cb_coordinates(fabric_tile_id, cb_type)[icb];
       const RRGSB& rr_gsb = device_rr_gsb.get_gsb(cb_coord);
       status_code = build_tile_module_port_and_nets_between_cb_and_pb(
-        module_manager, tile_module, grids, vpr_device_annotation,
+        module_manager, tile_module, grids, layer, vpr_device_annotation,
         device_rr_gsb, rr_graph_view, rr_gsb, fabric_tile, fabric_tile_id,
         cb_type, pb_instances, cb_instances, icb, true, frame_view, verbose);
       if (status_code != CMD_EXEC_SUCCESS) {
@@ -1244,7 +1248,7 @@ static int build_tile_module_ports_and_nets(
     vtr::Point<size_t> pb_coord =
       fabric_tile.pb_coordinates(fabric_tile_id)[ipb];
     status_code = build_tile_port_and_nets_from_pb(
-      module_manager, tile_module, grids, vpr_device_annotation, rr_graph_view,
+      module_manager, tile_module, grids, layer, vpr_device_annotation, rr_graph_view,
       pb_coord, pb_instances, fabric_tile, fabric_tile_id, ipb, frame_view,
       verbose);
     if (status_code != CMD_EXEC_SUCCESS) {
@@ -1285,7 +1289,8 @@ static int build_tile_module_ports_and_nets(
 static int build_tile_module(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   const FabricTile& fabric_tile, const FabricTileId& fabric_tile_id,
-  const DeviceGrid& grids, const VprDeviceAnnotation& vpr_device_annotation,
+  const DeviceGrid& grids, const size_t& layer,
+  const VprDeviceAnnotation& vpr_device_annotation,
   const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph_view,
   const CircuitLibrary& circuit_lib, const CircuitModelId& sram_model,
   const e_config_protocol_type& sram_orgz_type, const bool& frame_view,
@@ -1304,7 +1309,7 @@ static int build_tile_module(
   for (vtr::Point<size_t> grid_coord :
        fabric_tile.pb_coordinates(fabric_tile_id)) {
     t_physical_tile_type_ptr phy_tile =
-      grids.get_physical_type(grid_coord.x(), grid_coord.y());
+      grids.get_physical_type(t_physical_tile_loc(grid_coord.x(), grid_coord.y(), layer));
     VTR_LOGV(verbose, "Try to find pb at [%lu][%lu]\n", grid_coord.x(),
              grid_coord.y());
     /* Empty type does not require a module */
@@ -1433,7 +1438,7 @@ static int build_tile_module(
 
   /* Add module nets and ports */
   status_code = build_tile_module_ports_and_nets(
-    module_manager, tile_module, grids, vpr_device_annotation, device_rr_gsb,
+    module_manager, tile_module, grids, layer, vpr_device_annotation, device_rr_gsb,
     rr_graph_view, fabric_tile, fabric_tile_id, pb_instances, cb_instances,
     sb_instances, frame_view, verbose);
 
@@ -1512,10 +1517,12 @@ int build_tile_modules(ModuleManager& module_manager,
 
   int status_code = CMD_EXEC_SUCCESS;
 
+  size_t layer = 0;
+
   /* Build a module for each unique tile  */
   for (FabricTileId fabric_tile_id : fabric_tile.unique_tiles()) {
     status_code = build_tile_module(
-      module_manager, decoder_lib, fabric_tile, fabric_tile_id, grids,
+      module_manager, decoder_lib, fabric_tile, fabric_tile_id, grids, layer,
       vpr_device_annotation, device_rr_gsb, rr_graph_view, circuit_lib,
       sram_model, sram_orgz_type, frame_view, verbose);
     if (status_code != CMD_EXEC_SUCCESS) {

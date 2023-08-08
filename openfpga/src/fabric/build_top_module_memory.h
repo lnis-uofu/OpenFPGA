@@ -32,6 +32,7 @@ void organize_top_module_memory_modules(
   ModuleManager& module_manager, const ModuleId& top_module,
   const CircuitLibrary& circuit_lib, const ConfigProtocol& config_protocol,
   const CircuitModelId& sram_model, const DeviceGrid& grids,
+  const size_t& layer,
   const vtr::Matrix<size_t>& grid_instance_ids,
   const DeviceRRGSB& device_rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
   const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
