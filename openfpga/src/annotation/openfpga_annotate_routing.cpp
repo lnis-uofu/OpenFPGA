@@ -3,8 +3,9 @@
  * from VPR to OpenFPGA
  *******************************************************************/
 #include "openfpga_annotate_routing.h"
-#include "old_traceback.h"
+
 #include "annotate_routing.h"
+#include "old_traceback.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
@@ -133,14 +134,17 @@ void annotate_rr_node_previous_nodes(
     /* Cache Previous nodes */
     RRNodeId prev_node = RRNodeId::INVALID();
 
-    t_trace* tptr = TracebackCompat::traceback_from_route_tree(routing_ctx.route_trees[net_id].value());
+    t_trace* tptr = TracebackCompat::traceback_from_route_tree(
+      routing_ctx.route_trees[net_id].value());
     while (tptr != nullptr) {
       RRNodeId rr_node = RRNodeId(tptr->index);
 
       /* Find the right previous node */
       prev_node = find_previous_node_from_routing_traces(
-        device_ctx.rr_graph, TracebackCompat::traceback_from_route_tree(routing_ctx.route_trees[net_id].value()), prev_node,
-        rr_node);
+        device_ctx.rr_graph,
+        TracebackCompat::traceback_from_route_tree(
+          routing_ctx.route_trees[net_id].value()),
+        prev_node, rr_node);
 
       /* Only update mapped nodes */
       if (prev_node) {

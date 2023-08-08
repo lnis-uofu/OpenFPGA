@@ -34,14 +34,13 @@ namespace openfpga {
 static void update_cluster_pin_with_post_routing_results(
   const DeviceContext& device_ctx, const ClusteringContext& clustering_ctx,
   const VprRoutingAnnotation& vpr_routing_annotation,
-  VprClusteringAnnotation& vpr_clustering_annotation,
-  const size_t& layer,
+  VprClusteringAnnotation& vpr_clustering_annotation, const size_t& layer,
   const vtr::Point<size_t>& grid_coord, const ClusterBlockId& blk_id,
   const e_side& border_side, const size_t& z, const bool& verbose) {
   /* Handle each pin */
   auto logical_block = clustering_ctx.clb_nlist.block_type(blk_id);
-  auto physical_tile =
-    device_ctx.grid.get_physical_type(t_physical_tile_loc(grid_coord.x(), grid_coord.y(), layer));
+  auto physical_tile = device_ctx.grid.get_physical_type(
+    t_physical_tile_loc(grid_coord.x(), grid_coord.y(), layer));
 
   for (int j = 0; j < logical_block->pb_type->num_pins; j++) {
     /* Get the ptc num for the pin in rr_graph, we need t consider the z offset
@@ -87,7 +86,8 @@ static void update_cluster_pin_with_post_routing_results(
 
     /* Find the net mapped to this pin in routing results */
     const RRNodeId& rr_node = device_ctx.rr_graph.node_lookup().find_node(
-      layer, grid_coord.x(), grid_coord.y(), rr_node_type, physical_pin, pin_side);
+      layer, grid_coord.x(), grid_coord.y(), rr_node_type, physical_pin,
+      pin_side);
     if (false == device_ctx.rr_graph.valid_node(rr_node)) {
       continue;
     }
@@ -197,14 +197,17 @@ void update_pb_pin_with_post_routing_results(
   /* Update the core logic (center blocks of the FPGA) */
   for (size_t x = 1; x < device_ctx.grid.width() - 1; ++x) {
     for (size_t y = 1; y < device_ctx.grid.height() - 1; ++y) {
-      t_physical_tile_type_ptr phy_tile = device_ctx.grid.get_physical_type(t_physical_tile_loc(x, y, layer));
+      t_physical_tile_type_ptr phy_tile =
+        device_ctx.grid.get_physical_type(t_physical_tile_loc(x, y, layer));
       /* Bypass the EMPTY tiles */
       if (true == is_empty_type(phy_tile)) {
         continue;
       }
       /* Get the mapped blocks to this grid */
-      for (int isubtile = 0; isubtile < phy_tile->capacity; ++isubtile) { 
-        ClusterBlockId cluster_blk_id = placement_ctx.grid_blocks.block_at_location({(int)x, (int)y, (int)isubtile, (int)layer});
+      for (int isubtile = 0; isubtile < phy_tile->capacity; ++isubtile) {
+        ClusterBlockId cluster_blk_id =
+          placement_ctx.grid_blocks.block_at_location(
+            {(int)x, (int)y, (int)isubtile, (int)layer});
         /* Skip invalid ids */
         if (ClusterBlockId::INVALID() == cluster_blk_id) {
           continue;
@@ -214,8 +217,9 @@ void update_pb_pin_with_post_routing_results(
         vtr::Point<size_t> grid_coord(x, y);
         update_cluster_pin_with_post_routing_results(
           device_ctx, clustering_ctx, vpr_routing_annotation,
-          vpr_clustering_annotation, layer, grid_coord, cluster_blk_id, NUM_SIDES,
-          placement_ctx.block_locs[cluster_blk_id].loc.sub_tile, verbose);
+          vpr_clustering_annotation, layer, grid_coord, cluster_blk_id,
+          NUM_SIDES, placement_ctx.block_locs[cluster_blk_id].loc.sub_tile,
+          verbose);
       }
     }
   }
@@ -227,14 +231,17 @@ void update_pb_pin_with_post_routing_results(
   for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
     for (const vtr::Point<size_t>& io_coord : io_coordinates[io_side]) {
       t_physical_tile_type_ptr phy_tile_type =
-        device_ctx.grid.get_physical_type(t_physical_tile_loc(io_coord.x(), io_coord.y(), layer));
+        device_ctx.grid.get_physical_type(
+          t_physical_tile_loc(io_coord.x(), io_coord.y(), layer));
       /* Bypass EMPTY grid */
       if (true == is_empty_type(phy_tile_type)) {
         continue;
       }
       /* Get the mapped blocks to this grid */
-      for (int isubtile = 0; isubtile < phy_tile_type->capacity; ++isubtile) { 
-        ClusterBlockId cluster_blk_id = placement_ctx.grid_blocks.block_at_location({(int)io_coord.x(), (int)io_coord.y(), (int)isubtile, (int)layer});
+      for (int isubtile = 0; isubtile < phy_tile_type->capacity; ++isubtile) {
+        ClusterBlockId cluster_blk_id =
+          placement_ctx.grid_blocks.block_at_location(
+            {(int)io_coord.x(), (int)io_coord.y(), (int)isubtile, (int)layer});
         /* Skip invalid ids */
         if (ClusterBlockId::INVALID() == cluster_blk_id) {
           continue;

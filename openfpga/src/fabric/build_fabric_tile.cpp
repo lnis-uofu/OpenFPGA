@@ -38,7 +38,8 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
   for (size_t ix = 0; ix < grids.width(); ++ix) {
     for (size_t iy = 0; iy < grids.height(); ++iy) {
       t_physical_tile_loc tile_loc(ix, iy, layer);
-      t_physical_tile_type_ptr phy_tile_type = grids.get_physical_type(tile_loc);
+      t_physical_tile_type_ptr phy_tile_type =
+        grids.get_physical_type(tile_loc);
       bool skip_add_pb = false;
       vtr::Point<size_t> curr_tile_coord(ix, iy);
       vtr::Point<size_t> curr_gsb_coord(ix, iy - 1);

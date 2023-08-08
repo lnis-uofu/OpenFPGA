@@ -15,8 +15,8 @@
 /* Headers from vpr library */
 #include "AnalysisDelayCalculator.h"
 #include "annotate_simulation_setting.h"
-#include "net_delay.h"
 #include "concrete_timing_info.h"
+#include "net_delay.h"
 
 /* begin namespace openfpga */
 namespace openfpga {

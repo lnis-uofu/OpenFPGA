@@ -39,9 +39,9 @@ static void add_module_nets_tile_direct_connection(
   ModuleManager& module_manager, const ModuleId& top_module,
   const CircuitLibrary& circuit_lib,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const size_t& layer,
-  const vtr::Matrix<size_t>& grid_instance_ids, const TileDirect& tile_direct,
-  const TileDirectId& tile_direct_id, const ArchDirect& arch_direct) {
+  const size_t& layer, const vtr::Matrix<size_t>& grid_instance_ids,
+  const TileDirect& tile_direct, const TileDirectId& tile_direct_id,
+  const ArchDirect& arch_direct) {
   vtr::Point<size_t> device_size(grids.width(), grids.height());
 
   /* Find the module name of source clb */
@@ -65,7 +65,8 @@ static void add_module_nets_tile_direct_connection(
   /* Find the module name of sink clb */
   vtr::Point<size_t> des_clb_coord =
     tile_direct.to_tile_coordinate(tile_direct_id);
-  t_physical_tile_loc sink_grid_loc(des_clb_coord.x(), des_clb_coord.y(), layer);
+  t_physical_tile_loc sink_grid_loc(des_clb_coord.x(), des_clb_coord.y(),
+                                    layer);
   t_physical_tile_type_ptr sink_grid_type =
     grids.get_physical_type(sink_grid_loc);
   e_side sink_grid_border_side =
@@ -212,9 +213,8 @@ void add_top_module_nets_tile_direct_connections(
   ModuleManager& module_manager, const ModuleId& top_module,
   const CircuitLibrary& circuit_lib,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const size_t& layer,
-  const vtr::Matrix<size_t>& grid_instance_ids, const TileDirect& tile_direct,
-  const ArchDirect& arch_direct) {
+  const size_t& layer, const vtr::Matrix<size_t>& grid_instance_ids,
+  const TileDirect& tile_direct, const ArchDirect& arch_direct) {
   vtr::ScopedStartFinishTimer timer(
     "Add module nets for inter-tile connections");
 

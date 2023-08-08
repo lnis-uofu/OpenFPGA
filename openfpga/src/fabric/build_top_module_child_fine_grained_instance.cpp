@@ -109,7 +109,8 @@ static vtr::Matrix<size_t> add_top_module_grid_instances(
 
   for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
     for (const vtr::Point<size_t>& io_coordinate : io_coordinates[io_side]) {
-      t_physical_tile_loc phy_tile_loc(io_coordinate.x(), io_coordinate.y(), layer);
+      t_physical_tile_loc phy_tile_loc(io_coordinate.x(), io_coordinate.y(),
+                                       layer);
       t_physical_tile_type_ptr phy_tile_type =
         grids.get_physical_type(phy_tile_loc);
       /* Bypass EMPTY grid */
@@ -123,10 +124,8 @@ static vtr::Matrix<size_t> add_top_module_grid_instances(
          * We just copy it here
          */
         vtr::Point<size_t> root_grid_coord(
-          io_coordinate.x() -
-            grids.get_width_offset(phy_tile_loc),
-          io_coordinate.y() -
-            grids.get_height_offset(phy_tile_loc));
+          io_coordinate.x() - grids.get_width_offset(phy_tile_loc),
+          io_coordinate.y() - grids.get_height_offset(phy_tile_loc));
         VTR_ASSERT(size_t(-1) !=
                    grid_instance_ids[root_grid_coord.x()][root_grid_coord.y()]);
         grid_instance_ids[io_coordinate.x()][io_coordinate.y()] =
@@ -150,7 +149,8 @@ static vtr::Matrix<size_t> add_top_module_grid_instances(
   for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
     for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
       t_physical_tile_loc phy_tile_loc(ix, iy, layer);
-      t_physical_tile_type_ptr phy_tile_type = grids.get_physical_type(phy_tile_loc);
+      t_physical_tile_type_ptr phy_tile_type =
+        grids.get_physical_type(phy_tile_loc);
       /* Bypass EMPTY grid */
       if (true == is_empty_type(phy_tile_type)) {
         continue;
@@ -400,8 +400,7 @@ static void add_top_module_io_children(
   /* Now walk through the coordinates */
   for (vtr::Point<size_t> coord : coords) {
     t_physical_tile_loc phy_tile_loc(coord.x(), coord.y(), layer);
-    t_physical_tile_type_ptr grid_type =
-      grids.get_physical_type(phy_tile_loc);
+    t_physical_tile_type_ptr grid_type = grids.get_physical_type(phy_tile_loc);
     /* Bypass EMPTY grid */
     if (true == is_empty_type(grid_type)) {
       continue;
@@ -436,13 +435,13 @@ int build_top_module_fine_grained_child_instances(
   const CircuitLibrary& circuit_lib, const ClockNetwork& clk_ntwk,
   const RRClockSpatialLookup& rr_clock_lookup,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const size_t& layer,
-  const TileAnnotation& tile_annotation, const RRGraphView& rr_graph,
-  const DeviceRRGSB& device_rr_gsb, const TileDirect& tile_direct,
-  const ArchDirect& arch_direct, const ConfigProtocol& config_protocol,
-  const CircuitModelId& sram_model, const bool& frame_view,
-  const bool& compact_routing_hierarchy, const bool& duplicate_grid_pin,
-  const FabricKey& fabric_key, const bool& group_config_block) {
+  const size_t& layer, const TileAnnotation& tile_annotation,
+  const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
+  const TileDirect& tile_direct, const ArchDirect& arch_direct,
+  const ConfigProtocol& config_protocol, const CircuitModelId& sram_model,
+  const bool& frame_view, const bool& compact_routing_hierarchy,
+  const bool& duplicate_grid_pin, const FabricKey& fabric_key,
+  const bool& group_config_block) {
   int status = CMD_EXEC_SUCCESS;
   std::map<t_rr_type, vtr::Matrix<size_t>> cb_instance_ids;
 
@@ -462,8 +461,8 @@ int build_top_module_fine_grained_child_instances(
     compact_routing_hierarchy);
 
   /* Update I/O children list */
-  add_top_module_io_children(module_manager, top_module, grids,
-                             layer, grid_instance_ids);
+  add_top_module_io_children(module_manager, top_module, grids, layer,
+                             grid_instance_ids);
 
   /* Add nets when we need a complete fabric modeling,
    * which is required by downstream functions
@@ -486,9 +485,9 @@ int build_top_module_fine_grained_child_instances(
   /* Add global ports from grid ports that are defined as global in tile
    * annotation */
   status = add_top_module_global_ports_from_grid_modules(
-    module_manager, top_module, tile_annotation, vpr_device_annotation, grids, layer,
-    rr_graph, device_rr_gsb, cb_instance_ids, grid_instance_ids, clk_ntwk,
-    rr_clock_lookup);
+    module_manager, top_module, tile_annotation, vpr_device_annotation, grids,
+    layer, rr_graph, device_rr_gsb, cb_instance_ids, grid_instance_ids,
+    clk_ntwk, rr_clock_lookup);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }
@@ -506,8 +505,8 @@ int build_top_module_fine_grained_child_instances(
   if (true == fabric_key.empty()) {
     organize_top_module_memory_modules(
       module_manager, top_module, circuit_lib, config_protocol, sram_model,
-      grids, layer, grid_instance_ids, device_rr_gsb, sb_instance_ids, cb_instance_ids,
-      compact_routing_hierarchy);
+      grids, layer, grid_instance_ids, device_rr_gsb, sb_instance_ids,
+      cb_instance_ids, compact_routing_hierarchy);
   } else {
     VTR_ASSERT_SAFE(false == fabric_key.empty());
     /* Throw a fatal error when the fabric key has a mismatch in region

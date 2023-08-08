@@ -136,10 +136,8 @@ static void organize_top_module_tile_memory_modules(
   const vtr::Matrix<size_t>& grid_instance_ids,
   const DeviceRRGSB& device_rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
   const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
-  const bool& compact_routing_hierarchy,
-  const size_t& layer,
-  const vtr::Point<size_t>& tile_coord,
-  const e_side& tile_border_side) {
+  const bool& compact_routing_hierarchy, const size_t& layer,
+  const vtr::Point<size_t>& tile_coord, const e_side& tile_border_side) {
   vtr::Point<size_t> gsb_coord_range = device_rr_gsb.get_gsb_range();
 
   vtr::Point<size_t> gsb_coord(tile_coord.x(), tile_coord.y() - 1);
@@ -194,8 +192,7 @@ static void organize_top_module_tile_memory_modules(
 
   /* Find the module name for this type of grid */
   t_physical_tile_loc phy_tile_loc(tile_coord.x(), tile_coord.y(), layer);
-  t_physical_tile_type_ptr grid_type =
-    grids.get_physical_type(phy_tile_loc);
+  t_physical_tile_type_ptr grid_type = grids.get_physical_type(phy_tile_loc);
 
   /* Skip EMPTY Grid */
   if (true == is_empty_type(grid_type)) {
@@ -440,8 +437,7 @@ void organize_top_module_memory_modules(
   ModuleManager& module_manager, const ModuleId& top_module,
   const CircuitLibrary& circuit_lib, const ConfigProtocol& config_protocol,
   const CircuitModelId& sram_model, const DeviceGrid& grids,
-  const size_t& layer,
-  const vtr::Matrix<size_t>& grid_instance_ids,
+  const size_t& layer, const vtr::Matrix<size_t>& grid_instance_ids,
   const DeviceRRGSB& device_rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
   const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
   const bool& compact_routing_hierarchy) {

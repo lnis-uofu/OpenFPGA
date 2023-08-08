@@ -21,8 +21,7 @@ namespace openfpga {
 
 /* Build a RRChan Object with the given channel type and coorindators */
 static RRChan build_one_rr_chan(const DeviceContext& vpr_device_ctx,
-                                const t_rr_type& chan_type,
-                                const size_t& layer,
+                                const t_rr_type& chan_type, const size_t& layer,
                                 vtr::Point<size_t>& chan_coord) {
   std::vector<RRNodeId> chan_rr_nodes;
 
@@ -153,8 +152,8 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
           gsb_coord.y() + 1, OPIN, opin_grid_side[0]);
         /* Include Grid[x+1][y+1] Left side output pins */
         temp_opin_rr_nodes[1] = find_rr_graph_grid_nodes(
-          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, gsb_coord.x() + 1,
-          gsb_coord.y() + 1, OPIN, opin_grid_side[1]);
+          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer,
+          gsb_coord.x() + 1, gsb_coord.y() + 1, OPIN, opin_grid_side[1]);
 
         break;
       case RIGHT: /* RIGHT = 1 */
@@ -182,12 +181,12 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
 
         /* include Grid[x+1][y+1] Bottom side output pins */
         temp_opin_rr_nodes[0] = find_rr_graph_grid_nodes(
-          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, gsb_coord.x() + 1,
-          gsb_coord.y() + 1, OPIN, opin_grid_side[0]);
+          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer,
+          gsb_coord.x() + 1, gsb_coord.y() + 1, OPIN, opin_grid_side[0]);
         /* include Grid[x+1][y] Top side output pins */
         temp_opin_rr_nodes[1] = find_rr_graph_grid_nodes(
-          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, gsb_coord.x() + 1,
-          gsb_coord.y(), OPIN, opin_grid_side[1]);
+          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer,
+          gsb_coord.x() + 1, gsb_coord.y(), OPIN, opin_grid_side[1]);
         break;
       case BOTTOM: /* BOTTOM = 2*/
         /* For the border, we should take special care */
@@ -213,8 +212,8 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
         opin_grid_side[1] = RIGHT;
         /* include Grid[x+1][y] Left side output pins */
         temp_opin_rr_nodes[0] = find_rr_graph_grid_nodes(
-          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, gsb_coord.x() + 1,
-          gsb_coord.y(), OPIN, opin_grid_side[0]);
+          vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer,
+          gsb_coord.x() + 1, gsb_coord.y(), OPIN, opin_grid_side[0]);
         /* include Grid[x][y] Right side output pins */
         temp_opin_rr_nodes[1] = find_rr_graph_grid_nodes(
           vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, gsb_coord.x(),
@@ -371,9 +370,9 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
       continue;
     }
     /* Collect IPIN rr_nodes*/
-    temp_ipin_rr_nodes =
-      find_rr_graph_grid_nodes(vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, ix,
-                               iy, IPIN, ipin_rr_node_grid_side, include_clock);
+    temp_ipin_rr_nodes = find_rr_graph_grid_nodes(
+      vpr_device_ctx.rr_graph, vpr_device_ctx.grid, layer, ix, iy, IPIN,
+      ipin_rr_node_grid_side, include_clock);
     /* Fill the ipin nodes of RRGSB */
     for (const RRNodeId& inode : temp_ipin_rr_nodes) {
       /* Skip those has no configurable outgoing, they should NOT appear in the

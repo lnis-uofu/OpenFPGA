@@ -32,7 +32,8 @@ namespace openfpga {
  *(x, y, z) coordinate to the actual indices
  *******************************************************************/
 static IoLocationMap build_fabric_fine_grained_io_location_map(
-  const ModuleManager& module_manager, const DeviceGrid& grids, const size_t& layer) {
+  const ModuleManager& module_manager, const DeviceGrid& grids,
+  const size_t& layer) {
   vtr::ScopedStartFinishTimer timer(
     "Create I/O location mapping for top module");
 
@@ -154,7 +155,8 @@ static IoLocationMap build_fabric_fine_grained_io_location_map(
  *(x, y, z) coordinate to the actual indices
  *******************************************************************/
 static IoLocationMap build_fabric_tiled_io_location_map(
-  const ModuleManager& module_manager, const DeviceGrid& grids, const size_t& layer) {
+  const ModuleManager& module_manager, const DeviceGrid& grids,
+  const size_t& layer) {
   vtr::ScopedStartFinishTimer timer(
     "Create I/O location mapping for top module");
 

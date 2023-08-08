@@ -602,10 +602,9 @@ static void print_analysis_sdc_disable_unused_grid(
   const ModuleManager& module_manager, const e_side& border_side) {
   /* Validate file stream */
   valid_file_stream(fp);
-  
+
   t_physical_tile_loc phy_tile_loc(grid_coordinate.x(), grid_coordinate.y(), 0);
-  t_physical_tile_type_ptr grid_type =
-    grids.get_physical_type(phy_tile_loc);
+  t_physical_tile_type_ptr grid_type = grids.get_physical_type(phy_tile_loc);
   /* Bypass conditions for grids :
    * 1. EMPTY type, which is by nature unused
    * 2. Offset > 0, which has already been processed when offset = 0

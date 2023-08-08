@@ -88,9 +88,9 @@ static size_t estimate_clock_rr_graph_num_nodes(const DeviceGrid& grids,
 static void add_rr_graph_block_clock_nodes(
   RRGraphBuilder& rr_graph_builder, RRClockSpatialLookup& clk_rr_lookup,
   const RRGraphView& rr_graph_view, const ClockNetwork& clk_ntwk,
-  const size_t& layer,
-  const vtr::Point<size_t> chan_coord, const t_rr_type& chan_type,
-  const int& cost_index_offset, const bool& verbose) {
+  const size_t& layer, const vtr::Point<size_t> chan_coord,
+  const t_rr_type& chan_type, const int& cost_index_offset,
+  const bool& verbose) {
   size_t orig_chan_width =
     rr_graph_view.node_lookup()
       .find_channel_nodes(layer, chan_coord.x(), chan_coord.y(), chan_type)
@@ -148,14 +148,11 @@ static void add_rr_graph_block_clock_nodes(
  * Add clock nodes one by one to the routing resource graph.
  * Assign node-level attributes properly and register in dedicated lookup
  *******************************************************************/
-static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
-                                     RRClockSpatialLookup& clk_rr_lookup,
-                                     const RRGraphView& rr_graph_view,
-                                     const DeviceGrid& grids,
-                                     const size_t& layer,
-                                     const bool& through_channel,
-                                     const ClockNetwork& clk_ntwk,
-                                     const bool& verbose) {
+static void add_rr_graph_clock_nodes(
+  RRGraphBuilder& rr_graph_builder, RRClockSpatialLookup& clk_rr_lookup,
+  const RRGraphView& rr_graph_view, const DeviceGrid& grids,
+  const size_t& layer, const bool& through_channel,
+  const ClockNetwork& clk_ntwk, const bool& verbose) {
   /* Pre-allocate memory: Must do otherwise data will be messed up! */
   clk_rr_lookup.reserve_nodes(grids.width(), grids.height(),
                               clk_ntwk.num_trees(), clk_ntwk.max_tree_depth(),
@@ -171,9 +168,9 @@ static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
           (false == is_chanx_exist(grids, layer, chanx_coord))) {
         continue;
       }
-      add_rr_graph_block_clock_nodes(rr_graph_builder, clk_rr_lookup,
-                                     rr_graph_view, clk_ntwk, layer, chanx_coord,
-                                     CHANX, CHANX_COST_INDEX_START, verbose);
+      add_rr_graph_block_clock_nodes(
+        rr_graph_builder, clk_rr_lookup, rr_graph_view, clk_ntwk, layer,
+        chanx_coord, CHANX, CHANX_COST_INDEX_START, verbose);
       VTR_ASSERT(rr_graph_view.valid_node(
         clk_rr_lookup.find_node(1, 0, ClockTreeId(0), ClockLevelId(0),
                                 ClockTreePinId(0), Direction::INC)));
@@ -194,9 +191,9 @@ static void add_rr_graph_clock_nodes(RRGraphBuilder& rr_graph_builder,
         continue;
       }
       add_rr_graph_block_clock_nodes(
-        rr_graph_builder, clk_rr_lookup, rr_graph_view, clk_ntwk, layer, chany_coord,
-        CHANY, CHANX_COST_INDEX_START + rr_graph_view.num_rr_segments(),
-        verbose);
+        rr_graph_builder, clk_rr_lookup, rr_graph_view, clk_ntwk, layer,
+        chany_coord, CHANY,
+        CHANX_COST_INDEX_START + rr_graph_view.num_rr_segments(), verbose);
       VTR_ASSERT(rr_graph_view.valid_node(
         clk_rr_lookup.find_node(1, 0, ClockTreeId(0), ClockLevelId(0),
                                 ClockTreePinId(0), Direction::INC)));
@@ -397,11 +394,11 @@ static std::vector<RRNodeId> find_clock_track2track_node(
 static void try_find_and_add_clock_track2ipin_node(
   std::vector<RRNodeId>& des_nodes, const DeviceGrid& grids,
   const RRGraphView& rr_graph_view, const size_t& layer,
-  const vtr::Point<size_t>& grid_coord,
-  const e_side& pin_side, const ClockNetwork& clk_ntwk,
-  const ClockTreeId& clk_tree, const ClockTreePinId& clk_pin) {
-  t_physical_tile_type_ptr grid_type =
-    grids.get_physical_type(t_physical_tile_loc(grid_coord.x(), grid_coord.y(), layer));
+  const vtr::Point<size_t>& grid_coord, const e_side& pin_side,
+  const ClockNetwork& clk_ntwk, const ClockTreeId& clk_tree,
+  const ClockTreePinId& clk_pin) {
+  t_physical_tile_type_ptr grid_type = grids.get_physical_type(
+    t_physical_tile_loc(grid_coord.x(), grid_coord.y(), layer));
   for (std::string tap_pin_name :
        clk_ntwk.tree_flatten_taps(clk_tree, clk_pin)) {
     /* tap pin name could be 'io[5:5].a2f[0]' */
@@ -445,17 +442,17 @@ static void try_find_and_add_clock_track2ipin_node(
  *******************************************************************/
 static std::vector<RRNodeId> find_clock_track2ipin_node(
   const DeviceGrid& grids, const RRGraphView& rr_graph_view,
-  const t_rr_type& chan_type, const size_t& layer, const vtr::Point<size_t>& chan_coord,
-  const ClockNetwork& clk_ntwk, const ClockTreeId& clk_tree,
-  const ClockTreePinId& clk_pin) {
+  const t_rr_type& chan_type, const size_t& layer,
+  const vtr::Point<size_t>& chan_coord, const ClockNetwork& clk_ntwk,
+  const ClockTreeId& clk_tree, const ClockTreePinId& clk_pin) {
   std::vector<RRNodeId> des_nodes;
 
   if (chan_type == CHANX) {
     /* Get the clock IPINs at the BOTTOM side of adjacent grids [x][y+1] */
     vtr::Point<size_t> bot_grid_coord(chan_coord.x(), chan_coord.y() + 1);
     try_find_and_add_clock_track2ipin_node(des_nodes, grids, rr_graph_view,
-                                           layer, bot_grid_coord, BOTTOM, clk_ntwk,
-                                           clk_tree, clk_pin);
+                                           layer, bot_grid_coord, BOTTOM,
+                                           clk_ntwk, clk_tree, clk_pin);
 
     /* Get the clock IPINs at the TOP side of adjacent grids [x][y] */
     vtr::Point<size_t> top_grid_coord(chan_coord.x(), chan_coord.y());
@@ -467,14 +464,14 @@ static std::vector<RRNodeId> find_clock_track2ipin_node(
     /* Get the clock IPINs at the LEFT side of adjacent grids [x][y+1] */
     vtr::Point<size_t> left_grid_coord(chan_coord.x() + 1, chan_coord.y());
     try_find_and_add_clock_track2ipin_node(des_nodes, grids, rr_graph_view,
-                                           layer, left_grid_coord, LEFT, clk_ntwk,
-                                           clk_tree, clk_pin);
+                                           layer, left_grid_coord, LEFT,
+                                           clk_ntwk, clk_tree, clk_pin);
 
     /* Get the clock IPINs at the RIGHT side of adjacent grids [x][y] */
     vtr::Point<size_t> right_grid_coord(chan_coord.x(), chan_coord.y());
     try_find_and_add_clock_track2ipin_node(des_nodes, grids, rr_graph_view,
-                                           layer, right_grid_coord, RIGHT, clk_ntwk,
-                                           clk_tree, clk_pin);
+                                           layer, right_grid_coord, RIGHT,
+                                           clk_ntwk, clk_tree, clk_pin);
   }
 
   return des_nodes;
@@ -486,9 +483,7 @@ static std::vector<RRNodeId> find_clock_track2ipin_node(
 static void add_rr_graph_block_clock_edges(
   RRGraphBuilder& rr_graph_builder, size_t& num_edges_to_create,
   const RRClockSpatialLookup& clk_rr_lookup, const RRGraphView& rr_graph_view,
-  const DeviceGrid& grids,
-  const size_t& layer,
-  const ClockNetwork& clk_ntwk,
+  const DeviceGrid& grids, const size_t& layer, const ClockNetwork& clk_ntwk,
   const vtr::Point<size_t>& chan_coord, const t_rr_type& chan_type,
   const bool& verbose) {
   size_t edge_count = 0;
@@ -542,8 +537,8 @@ static void add_rr_graph_block_clock_edges(
           if (clk_ntwk.is_last_level(itree, ilvl)) {
             size_t curr_edge_count = edge_count;
             for (RRNodeId des_node : find_clock_track2ipin_node(
-                   grids, rr_graph_view, chan_type, layer, chan_coord, clk_ntwk, itree,
-                   ClockTreePinId(ipin))) {
+                   grids, rr_graph_view, chan_type, layer, chan_coord, clk_ntwk,
+                   itree, ClockTreePinId(ipin))) {
               /* Create edges */
               VTR_ASSERT(rr_graph_view.valid_node(des_node));
               rr_graph_builder.create_edge(src_node, des_node,
