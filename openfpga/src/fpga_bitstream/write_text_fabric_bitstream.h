@@ -27,7 +27,8 @@ int write_fabric_bitstream_to_text_file(
   const ConfigProtocol& config_protocol,
   const FabricGlobalPortInfo& global_ports, const std::string& fname,
   const bool& fast_configuration, const bool& keep_dont_care_bits,
-  const bool& include_time_stamp, const bool& verbose);
+  const bool& wl_incremental_order, const bool& include_time_stamp,
+  const bool& verbose);
 
 } /* end namespace openfpga */
 

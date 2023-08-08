@@ -1061,6 +1061,17 @@ static size_t calculate_num_config_clock_cycles(
                       (float)full_num_config_clock_cycles -
                     1.));
         }
+      } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type() &&
+                 BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type()) {
+        // Only support new fast way if both BL/WL protocols are flatten
+        // Based on 100K LE FPGA, we are wasting a lot of time to build
+        // MemoryBankFlattenFabricBitstream
+        // just to get the effective WL addr size. So wasteful of the resource
+        const FabricBitstreamMemoryBank& memory_bank =
+          fabric_bitstream.memory_bank_info(fast_configuration,
+                                            bit_value_to_skip);
+        num_config_clock_cycles =
+          1 + memory_bank.get_longest_effective_wl_count();
       } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()) {
         num_config_clock_cycles =
           1 + build_memory_bank_flatten_fabric_bitstream(

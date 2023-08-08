@@ -71,7 +71,8 @@ static void write_fabric_bitstream_xml_file_head(
 static int write_fabric_config_bit_to_xml_file(
   std::fstream& fp, const BitstreamManager& bitstream_manager,
   const FabricBitstream& fabric_bitstream, const FabricBitId& fabric_bit,
-  const e_config_protocol_type& config_type, const int& xml_hierarchy_depth) {
+  const e_config_protocol_type& config_type, bool fast_xml,
+  const int& xml_hierarchy_depth, std::string& bl_addr, std::string& wl_addr) {
   if (false == valid_file_stream(fp)) {
     return 1;
   }
@@ -106,22 +107,60 @@ static int write_fabric_config_bit_to_xml_file(
     case CONFIG_MEM_STANDALONE:
     case CONFIG_MEM_SCAN_CHAIN:
       break;
-    case CONFIG_MEM_QL_MEMORY_BANK:
-    case CONFIG_MEM_MEMORY_BANK: {
-      /* Bit line address */
-      write_tab_to_file(fp, xml_hierarchy_depth + 1);
-      fp << "<bl address=\"";
-      for (const char& addr_bit : fabric_bitstream.bit_bl_address(fabric_bit)) {
-        fp << addr_bit;
-      }
-      fp << "\"/>\n";
+    case CONFIG_MEM_MEMORY_BANK:
+    case CONFIG_MEM_QL_MEMORY_BANK: {
+      if (fast_xml) {
+        // New way of printing XML
+        // This is fast (less than 100s) as compared to original 1300s seen in
+        // 100K LE FPFA
+        const FabricBitstreamMemoryBank& memory_bank =
+          fabric_bitstream.memory_bank_info();
+        /* Bit line address */
+        write_tab_to_file(fp, xml_hierarchy_depth + 1);
+        const fabric_bit_data& bit =
+          memory_bank.fabric_bit_datas[(size_t)(fabric_bit)];
+        const fabric_blwl_length& lengths =
+          memory_bank.blwl_lengths[bit.region];
+        if (bl_addr.size() == 0) {
+          VTR_ASSERT(wl_addr.size() == 0);
+          bl_addr.resize(lengths.bl);
+          wl_addr.resize(lengths.wl);
+          bl_addr.assign(lengths.bl, 'x');
+          wl_addr.assign(lengths.wl, '0');
+        } else {
+          VTR_ASSERT((fabric_size_t)(bl_addr.size()) == lengths.bl);
+          VTR_ASSERT((fabric_size_t)(wl_addr.size()) == lengths.wl);
+        }
+        fp << "<bl address=\"";
+        memset(&bl_addr[bit.bl], '1', 1);
+        fp << bl_addr.c_str();
+        memset(&bl_addr[bit.bl], 'x', 1);
+        fp << "\"/>\n";
+        /* Word line address */
+        write_tab_to_file(fp, xml_hierarchy_depth + 1);
+        fp << "<wl address=\"";
+        memset(&wl_addr[bit.wl], '1', 1);
+        fp << wl_addr.c_str();
+        memset(&wl_addr[bit.wl], '0', 1);
+        fp << "\"/>\n";
+      } else {
+        /* Bit line address */
+        write_tab_to_file(fp, xml_hierarchy_depth + 1);
+        fp << "<bl address=\"";
+        for (const char& addr_bit :
+             fabric_bitstream.bit_bl_address(fabric_bit)) {
+          fp << addr_bit;
+        }
+        fp << "\"/>\n";
 
-      write_tab_to_file(fp, xml_hierarchy_depth + 1);
-      fp << "<wl address=\"";
-      for (const char& addr_bit : fabric_bitstream.bit_wl_address(fabric_bit)) {
-        fp << addr_bit;
+        write_tab_to_file(fp, xml_hierarchy_depth + 1);
+        fp << "<wl address=\"";
+        for (const char& addr_bit :
+             fabric_bitstream.bit_wl_address(fabric_bit)) {
+          fp << addr_bit;
+        }
+        fp << "\"/>\n";
       }
-      fp << "\"/>\n";
       break;
     }
     case CONFIG_MEM_FRAME_BASED: {
@@ -156,13 +195,25 @@ static int write_fabric_regional_config_bit_to_xml_file(
   std::fstream& fp, const BitstreamManager& bitstream_manager,
   const FabricBitstream& fabric_bitstream,
   const FabricBitRegionId& fabric_region,
-  const e_config_protocol_type& config_type, const int& xml_hierarchy_depth) {
+  const e_config_protocol_type& config_type, bool fast_xml,
+  const int& xml_hierarchy_depth) {
   if (false == valid_file_stream(fp)) {
     return 1;
   }
 
   int status = 0;
-
+  // Use string to print, instead of char by char
+  // This is for Flatten BL/WL protocol
+  // You will find this much more faster than char by char
+  // We do not need to build the string for every BL/WL
+  // It is one-hot and sequal addr
+  // We start with all '0' (WL) or 'x' (BL)
+  // By setting "1' and resettting ('0' or 'x') at approriate bit position
+  // We could create one-hot string much faster
+  // Use FPGA 100K as example: old way needs 1300seconds to write 85Gig XML
+  // New way only needs 80seconds to write identical XML
+  std::string bl_addr = "";
+  std::string wl_addr = "";
   write_tab_to_file(fp, xml_hierarchy_depth);
   fp << "<region ";
   fp << "id=\"";
@@ -170,13 +221,23 @@ static int write_fabric_regional_config_bit_to_xml_file(
   fp << "\"";
   fp << ">\n";
 
+  size_t bit_index = 0;
+  size_t total_bits = fabric_bitstream.region_bits(fabric_region).size();
+  size_t percentage = 0;
   for (const FabricBitId& fabric_bit :
        fabric_bitstream.region_bits(fabric_region)) {
     status = write_fabric_config_bit_to_xml_file(
       fp, bitstream_manager, fabric_bitstream, fabric_bit, config_type,
-      xml_hierarchy_depth + 1);
+      fast_xml, xml_hierarchy_depth + 1, bl_addr, wl_addr);
     if (1 == status) {
       return status;
+    }
+    // Misc to print percentage of the process
+    bit_index++;
+    size_t temp = (bit_index * 100) / total_bits;
+    if (temp != percentage) {
+      VTR_LOG("  Progress: %lu%\r", percentage);
+      percentage = temp;
     }
   }
 
@@ -231,6 +292,8 @@ int write_fabric_bitstream_to_xml_file(
   for (const FabricBitRegionId& region : fabric_bitstream.regions()) {
     status = write_fabric_regional_config_bit_to_xml_file(
       fp, bitstream_manager, fabric_bitstream, region, config_protocol.type(),
+      BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type() &&
+        BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type(),
       xml_hierarchy_depth + 1);
     if (1 == status) {
       break;
