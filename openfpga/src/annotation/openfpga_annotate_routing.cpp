@@ -136,6 +136,7 @@ void annotate_rr_node_previous_nodes(
 
     t_trace* tptr = TracebackCompat::traceback_from_route_tree(
       routing_ctx.route_trees[net_id].value());
+    t_trace* head = tptr;
     while (tptr != nullptr) {
       RRNodeId rr_node = RRNodeId(tptr->index);
 
@@ -159,6 +160,7 @@ void annotate_rr_node_previous_nodes(
       /* Move on to the next */
       tptr = tptr->next;
     }
+    free_traceback(head);
   }
 
   VTR_LOG("Done with %d nodes mapping\n", counter);
