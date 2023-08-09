@@ -143,8 +143,7 @@ void annotate_rr_node_previous_nodes(
       /* Find the right previous node */
       prev_node = find_previous_node_from_routing_traces(
         device_ctx.rr_graph,
-        TracebackCompat::traceback_from_route_tree(
-          routing_ctx.route_trees[net_id].value()),
+        head,
         prev_node, rr_node);
 
       /* Only update mapped nodes */
