@@ -29,8 +29,8 @@ std::string generate_grid_block_module_name_in_top_module(
   /* Determine if the grid locates at the border */
   vtr::Point<size_t> device_size(grids.width(), grids.height());
   e_side border_side = find_grid_border_side(device_size, grid_coord);
-  t_physical_tile_type_ptr phy_tile_type =
-    grids.get_physical_type(grid_coord.x(), grid_coord.y());
+  t_physical_tile_type_ptr phy_tile_type = grids.get_physical_type(
+    t_physical_tile_loc(grid_coord.x(), grid_coord.y(), 0));
 
   return generate_grid_block_module_name(
     prefix, std::string(phy_tile_type->name), is_io_type(phy_tile_type),
@@ -51,8 +51,8 @@ std::string generate_grid_module_port_name_in_top_module(
   const size_t& sink_grid_pin_index,
   const VprDeviceAnnotation& vpr_device_annotation, const RRGraphView& rr_graph,
   const RRNodeId& inode) {
-  t_physical_tile_type_ptr grid_type_descriptor =
-    grids.get_physical_type(grid_coordinate.x(), grid_coordinate.y());
+  t_physical_tile_type_ptr grid_type_descriptor = grids.get_physical_type(
+    t_physical_tile_loc(grid_coordinate.x(), grid_coordinate.y(), 0));
   size_t sink_grid_pin_width =
     grid_type_descriptor->pin_width_offset[sink_grid_pin_index];
   size_t sink_grid_pin_height =

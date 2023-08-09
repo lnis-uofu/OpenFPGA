@@ -32,7 +32,8 @@ namespace openfpga {
  *(x, y, z) coordinate to the actual indices
  *******************************************************************/
 static IoLocationMap build_fabric_fine_grained_io_location_map(
-  const ModuleManager& module_manager, const DeviceGrid& grids) {
+  const ModuleManager& module_manager, const DeviceGrid& grids,
+  const size_t& layer) {
   vtr::ScopedStartFinishTimer timer(
     "Create I/O location mapping for top module");
 
@@ -50,8 +51,9 @@ static IoLocationMap build_fabric_fine_grained_io_location_map(
     ModuleId child = module_manager.io_children(top_module)[ichild];
     vtr::Point<int> coord =
       module_manager.io_child_coordinates(top_module)[ichild];
+    t_physical_tile_loc phy_tile_loc(coord.x(), coord.y(), layer);
     t_physical_tile_type_ptr phy_tile_type =
-      grids.get_physical_type(coord.x(), coord.y());
+      grids.get_physical_type(phy_tile_loc);
 
     /* Bypass EMPTY grid */
     if (true == is_empty_type(phy_tile_type)) {
@@ -59,8 +61,8 @@ static IoLocationMap build_fabric_fine_grained_io_location_map(
     }
 
     /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
-    if ((0 < grids.get_width_offset(coord.x(), coord.y())) ||
-        (0 < grids.get_height_offset(coord.x(), coord.y()))) {
+    if ((0 < grids.get_width_offset(phy_tile_loc)) ||
+        (0 < grids.get_height_offset(phy_tile_loc))) {
       continue;
     }
 
@@ -153,7 +155,8 @@ static IoLocationMap build_fabric_fine_grained_io_location_map(
  *(x, y, z) coordinate to the actual indices
  *******************************************************************/
 static IoLocationMap build_fabric_tiled_io_location_map(
-  const ModuleManager& module_manager, const DeviceGrid& grids) {
+  const ModuleManager& module_manager, const DeviceGrid& grids,
+  const size_t& layer) {
   vtr::ScopedStartFinishTimer timer(
     "Create I/O location mapping for top module");
 
@@ -171,8 +174,9 @@ static IoLocationMap build_fabric_tiled_io_location_map(
     ModuleId child = module_manager.io_children(top_module)[ichild];
     vtr::Point<int> coord =
       module_manager.io_child_coordinates(top_module)[ichild];
+    t_physical_tile_loc phy_tile_loc(coord.x(), coord.y(), layer);
     t_physical_tile_type_ptr phy_tile_type =
-      grids.get_physical_type(coord.x(), coord.y());
+      grids.get_physical_type(phy_tile_loc);
 
     /* Bypass EMPTY grid */
     if (true == is_empty_type(phy_tile_type)) {
@@ -180,8 +184,8 @@ static IoLocationMap build_fabric_tiled_io_location_map(
     }
 
     /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
-    if ((0 < grids.get_width_offset(coord.x(), coord.y())) ||
-        (0 < grids.get_height_offset(coord.x(), coord.y()))) {
+    if ((0 < grids.get_width_offset(phy_tile_loc)) ||
+        (0 < grids.get_height_offset(phy_tile_loc))) {
       continue;
     }
 
@@ -280,9 +284,9 @@ IoLocationMap build_fabric_io_location_map(const ModuleManager& module_manager,
                                            const DeviceGrid& grids,
                                            const bool& tiled_fabric) {
   if (tiled_fabric) {
-    return build_fabric_tiled_io_location_map(module_manager, grids);
+    return build_fabric_tiled_io_location_map(module_manager, grids, 0);
   }
-  return build_fabric_fine_grained_io_location_map(module_manager, grids);
+  return build_fabric_fine_grained_io_location_map(module_manager, grids, 0);
 }
 
 } /* end namespace openfpga */

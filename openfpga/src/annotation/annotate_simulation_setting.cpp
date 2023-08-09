@@ -15,8 +15,8 @@
 /* Headers from vpr library */
 #include "AnalysisDelayCalculator.h"
 #include "annotate_simulation_setting.h"
+#include "concrete_timing_info.h"
 #include "net_delay.h"
-#include "timing_info.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -212,7 +212,7 @@ int annotate_simulation_setting(
       make_net_pins_matrix<float>((const Netlist<>&)cluster_ctx.clb_nlist);
     /* Load the net delays */
     load_net_delay_from_routing((const Netlist<>&)cluster_ctx.clb_nlist,
-                                net_delay, false);
+                                net_delay);
 
     /* Do final timing analysis */
     auto analysis_delay_calc = std::make_shared<AnalysisDelayCalculator>(

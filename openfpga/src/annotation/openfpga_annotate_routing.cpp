@@ -2,10 +2,10 @@
  * This file includes functions that are used to annotate routing results
  * from VPR to OpenFPGA
  *******************************************************************/
-/* Headers from vtrutil library */
 #include "openfpga_annotate_routing.h"
 
 #include "annotate_routing.h"
+#include "old_traceback.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
@@ -134,14 +134,15 @@ void annotate_rr_node_previous_nodes(
     /* Cache Previous nodes */
     RRNodeId prev_node = RRNodeId::INVALID();
 
-    t_trace* tptr = routing_ctx.trace[net_id].head;
+    t_trace* tptr = TracebackCompat::traceback_from_route_tree(
+      routing_ctx.route_trees[net_id].value());
+    t_trace* head = tptr;
     while (tptr != nullptr) {
       RRNodeId rr_node = RRNodeId(tptr->index);
 
       /* Find the right previous node */
       prev_node = find_previous_node_from_routing_traces(
-        device_ctx.rr_graph, routing_ctx.trace[net_id].head, prev_node,
-        rr_node);
+        device_ctx.rr_graph, head, prev_node, rr_node);
 
       /* Only update mapped nodes */
       if (prev_node) {
@@ -156,6 +157,7 @@ void annotate_rr_node_previous_nodes(
       /* Move on to the next */
       tptr = tptr->next;
     }
+    free_traceback(head);
   }
 
   VTR_LOG("Done with %d nodes mapping\n", counter);

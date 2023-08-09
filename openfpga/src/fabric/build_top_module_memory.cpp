@@ -136,8 +136,8 @@ static void organize_top_module_tile_memory_modules(
   const vtr::Matrix<size_t>& grid_instance_ids,
   const DeviceRRGSB& device_rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
   const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
-  const bool& compact_routing_hierarchy, const vtr::Point<size_t>& tile_coord,
-  const e_side& tile_border_side) {
+  const bool& compact_routing_hierarchy, const size_t& layer,
+  const vtr::Point<size_t>& tile_coord, const e_side& tile_border_side) {
   vtr::Point<size_t> gsb_coord_range = device_rr_gsb.get_gsb_range();
 
   vtr::Point<size_t> gsb_coord(tile_coord.x(), tile_coord.y() - 1);
@@ -191,8 +191,8 @@ static void organize_top_module_tile_memory_modules(
   }
 
   /* Find the module name for this type of grid */
-  t_physical_tile_type_ptr grid_type =
-    grids.get_physical_type(tile_coord.x(), tile_coord.y());
+  t_physical_tile_loc phy_tile_loc(tile_coord.x(), tile_coord.y(), layer);
+  t_physical_tile_type_ptr grid_type = grids.get_physical_type(phy_tile_loc);
 
   /* Skip EMPTY Grid */
   if (true == is_empty_type(grid_type)) {
@@ -200,8 +200,8 @@ static void organize_top_module_tile_memory_modules(
   }
   /* Skip width > 1 or height > 1 Grid, which should already been processed when
    * offset=0 */
-  if ((0 < grids.get_width_offset(tile_coord.x(), tile_coord.y())) ||
-      (0 < grids.get_height_offset(tile_coord.x(), tile_coord.y()))) {
+  if ((0 < grids.get_width_offset(phy_tile_loc)) ||
+      (0 < grids.get_height_offset(phy_tile_loc))) {
     return;
   }
 
@@ -437,7 +437,7 @@ void organize_top_module_memory_modules(
   ModuleManager& module_manager, const ModuleId& top_module,
   const CircuitLibrary& circuit_lib, const ConfigProtocol& config_protocol,
   const CircuitModelId& sram_model, const DeviceGrid& grids,
-  const vtr::Matrix<size_t>& grid_instance_ids,
+  const size_t& layer, const vtr::Matrix<size_t>& grid_instance_ids,
   const DeviceRRGSB& device_rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
   const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
   const bool& compact_routing_hierarchy) {
@@ -497,7 +497,7 @@ void organize_top_module_memory_modules(
       organize_top_module_tile_memory_modules(
         module_manager, top_module, circuit_lib, config_protocol.type(),
         sram_model, grids, grid_instance_ids, device_rr_gsb, sb_instance_ids,
-        cb_instance_ids, compact_routing_hierarchy, io_coord, io_side);
+        cb_instance_ids, compact_routing_hierarchy, layer, io_coord, io_side);
     }
   }
 
@@ -525,7 +525,7 @@ void organize_top_module_memory_modules(
     organize_top_module_tile_memory_modules(
       module_manager, top_module, circuit_lib, config_protocol.type(),
       sram_model, grids, grid_instance_ids, device_rr_gsb, sb_instance_ids,
-      cb_instance_ids, compact_routing_hierarchy, core_coord, NUM_SIDES);
+      cb_instance_ids, compact_routing_hierarchy, layer, core_coord, NUM_SIDES);
   }
 
   /* Split memory modules into different regions */

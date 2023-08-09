@@ -95,7 +95,7 @@ static size_t add_top_module_grid_instance(
  *******************************************************************/
 static vtr::Matrix<size_t> add_top_module_grid_instances(
   ModuleManager& module_manager, const ModuleId& top_module,
-  const DeviceGrid& grids) {
+  const DeviceGrid& grids, const size_t& layer) {
   vtr::ScopedStartFinishTimer timer("Add grid instances to top module");
 
   /* Reserve an array for the instance ids */
@@ -109,23 +109,23 @@ static vtr::Matrix<size_t> add_top_module_grid_instances(
 
   for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
     for (const vtr::Point<size_t>& io_coordinate : io_coordinates[io_side]) {
+      t_physical_tile_loc phy_tile_loc(io_coordinate.x(), io_coordinate.y(),
+                                       layer);
       t_physical_tile_type_ptr phy_tile_type =
-        grids.get_physical_type(io_coordinate.x(), io_coordinate.y());
+        grids.get_physical_type(phy_tile_loc);
       /* Bypass EMPTY grid */
       if (true == is_empty_type(phy_tile_type)) {
         continue;
       }
       /* Skip width, height > 1 tiles (mostly heterogeneous blocks) */
-      if ((0 < grids.get_width_offset(io_coordinate.x(), io_coordinate.y())) ||
-          (0 < grids.get_height_offset(io_coordinate.x(), io_coordinate.y()))) {
+      if ((0 < grids.get_width_offset(phy_tile_loc)) ||
+          (0 < grids.get_height_offset(phy_tile_loc))) {
         /* Find the root of this grid, the instance id should be valid.
          * We just copy it here
          */
         vtr::Point<size_t> root_grid_coord(
-          io_coordinate.x() -
-            grids.get_width_offset(io_coordinate.x(), io_coordinate.y()),
-          io_coordinate.y() -
-            grids.get_height_offset(io_coordinate.x(), io_coordinate.y()));
+          io_coordinate.x() - grids.get_width_offset(phy_tile_loc),
+          io_coordinate.y() - grids.get_height_offset(phy_tile_loc));
         VTR_ASSERT(size_t(-1) !=
                    grid_instance_ids[root_grid_coord.x()][root_grid_coord.y()]);
         grid_instance_ids[io_coordinate.x()][io_coordinate.y()] =
@@ -148,20 +148,22 @@ static vtr::Matrix<size_t> add_top_module_grid_instances(
    */
   for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
     for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
-      t_physical_tile_type_ptr phy_tile_type = grids.get_physical_type(ix, iy);
+      t_physical_tile_loc phy_tile_loc(ix, iy, layer);
+      t_physical_tile_type_ptr phy_tile_type =
+        grids.get_physical_type(phy_tile_loc);
       /* Bypass EMPTY grid */
       if (true == is_empty_type(phy_tile_type)) {
         continue;
       }
       /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
-      if ((0 < grids.get_width_offset(ix, iy)) ||
-          (0 < grids.get_height_offset(ix, iy))) {
+      if ((0 < grids.get_width_offset(phy_tile_loc)) ||
+          (0 < grids.get_height_offset(phy_tile_loc))) {
         /* Find the root of this grid, the instance id should be valid.
          * We just copy it here
          */
         vtr::Point<size_t> root_grid_coord(
-          ix - grids.get_width_offset(ix, iy),
-          iy - grids.get_height_offset(ix, iy));
+          ix - grids.get_width_offset(phy_tile_loc),
+          iy - grids.get_height_offset(phy_tile_loc));
         VTR_ASSERT(size_t(-1) !=
                    grid_instance_ids[root_grid_coord.x()][root_grid_coord.y()]);
         grid_instance_ids[ix][iy] =
@@ -319,22 +321,24 @@ static vtr::Matrix<size_t> add_top_module_connection_block_instances(
  *******************************************************************/
 static void add_top_module_io_children(
   ModuleManager& module_manager, const ModuleId& top_module,
-  const DeviceGrid& grids, const vtr::Matrix<size_t>& grid_instance_ids) {
+  const DeviceGrid& grids, const size_t& layer,
+  const vtr::Matrix<size_t>& grid_instance_ids) {
   /* Create the coordinate range for the perimeter I/Os of FPGA fabric */
   std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates =
     generate_perimeter_grid_coordinates(grids);
 
   for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
     for (const vtr::Point<size_t>& io_coord : io_coordinates[io_side]) {
+      t_physical_tile_loc phy_tile_loc(io_coord.x(), io_coord.y(), layer);
       t_physical_tile_type_ptr grid_type =
-        grids.get_physical_type(io_coord.x(), io_coord.y());
+        grids.get_physical_type(phy_tile_loc);
       /* Bypass EMPTY grid */
       if (true == is_empty_type(grid_type)) {
         continue;
       }
       /* Skip width, height > 1 tiles (mostly heterogeneous blocks) */
-      if ((0 < grids.get_width_offset(io_coord.x(), io_coord.y())) ||
-          (0 < grids.get_height_offset(io_coord.x(), io_coord.y()))) {
+      if ((0 < grids.get_width_offset(phy_tile_loc)) ||
+          (0 < grids.get_height_offset(phy_tile_loc))) {
         continue;
       }
       /* Find the module name for this type of grid */
@@ -395,15 +399,15 @@ static void add_top_module_io_children(
 
   /* Now walk through the coordinates */
   for (vtr::Point<size_t> coord : coords) {
-    t_physical_tile_type_ptr grid_type =
-      grids.get_physical_type(coord.x(), coord.y());
+    t_physical_tile_loc phy_tile_loc(coord.x(), coord.y(), layer);
+    t_physical_tile_type_ptr grid_type = grids.get_physical_type(phy_tile_loc);
     /* Bypass EMPTY grid */
     if (true == is_empty_type(grid_type)) {
       continue;
     }
     /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
-    if ((0 < grids.get_width_offset(coord.x(), coord.y())) ||
-        (0 < grids.get_height_offset(coord.x(), coord.y()))) {
+    if ((0 < grids.get_width_offset(phy_tile_loc)) ||
+        (0 < grids.get_height_offset(phy_tile_loc))) {
       continue;
     }
     /* Find the module name for this type of grid */
@@ -431,19 +435,20 @@ int build_top_module_fine_grained_child_instances(
   const CircuitLibrary& circuit_lib, const ClockNetwork& clk_ntwk,
   const RRClockSpatialLookup& rr_clock_lookup,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const TileAnnotation& tile_annotation, const RRGraphView& rr_graph,
-  const DeviceRRGSB& device_rr_gsb, const TileDirect& tile_direct,
-  const ArchDirect& arch_direct, const ConfigProtocol& config_protocol,
-  const CircuitModelId& sram_model, const bool& frame_view,
-  const bool& compact_routing_hierarchy, const bool& duplicate_grid_pin,
-  const FabricKey& fabric_key, const bool& group_config_block) {
+  const size_t& layer, const TileAnnotation& tile_annotation,
+  const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
+  const TileDirect& tile_direct, const ArchDirect& arch_direct,
+  const ConfigProtocol& config_protocol, const CircuitModelId& sram_model,
+  const bool& frame_view, const bool& compact_routing_hierarchy,
+  const bool& duplicate_grid_pin, const FabricKey& fabric_key,
+  const bool& group_config_block) {
   int status = CMD_EXEC_SUCCESS;
   std::map<t_rr_type, vtr::Matrix<size_t>> cb_instance_ids;
 
   /* Add sub modules, which are grid, SB and CBX/CBY modules as instances */
   /* Add all the grids across the fabric */
   vtr::Matrix<size_t> grid_instance_ids =
-    add_top_module_grid_instances(module_manager, top_module, grids);
+    add_top_module_grid_instances(module_manager, top_module, grids, layer);
   /* Add all the SBs across the fabric */
   vtr::Matrix<size_t> sb_instance_ids = add_top_module_switch_block_instances(
     module_manager, top_module, device_rr_gsb, compact_routing_hierarchy);
@@ -456,7 +461,7 @@ int build_top_module_fine_grained_child_instances(
     compact_routing_hierarchy);
 
   /* Update I/O children list */
-  add_top_module_io_children(module_manager, top_module, grids,
+  add_top_module_io_children(module_manager, top_module, grids, layer,
                              grid_instance_ids);
 
   /* Add nets when we need a complete fabric modeling,
@@ -468,21 +473,21 @@ int build_top_module_fine_grained_child_instances(
 
     /* Add module nets to connect the sub modules */
     add_top_module_nets_connect_grids_and_gsbs(
-      module_manager, top_module, vpr_device_annotation, grids,
+      module_manager, top_module, vpr_device_annotation, grids, layer,
       grid_instance_ids, rr_graph, device_rr_gsb, sb_instance_ids,
       cb_instance_ids, compact_routing_hierarchy, duplicate_grid_pin);
     /* Add inter-CLB direct connections */
     add_top_module_nets_tile_direct_connections(
       module_manager, top_module, circuit_lib, vpr_device_annotation, grids,
-      grid_instance_ids, tile_direct, arch_direct);
+      layer, grid_instance_ids, tile_direct, arch_direct);
   }
 
   /* Add global ports from grid ports that are defined as global in tile
    * annotation */
   status = add_top_module_global_ports_from_grid_modules(
     module_manager, top_module, tile_annotation, vpr_device_annotation, grids,
-    rr_graph, device_rr_gsb, cb_instance_ids, grid_instance_ids, clk_ntwk,
-    rr_clock_lookup);
+    layer, rr_graph, device_rr_gsb, cb_instance_ids, grid_instance_ids,
+    clk_ntwk, rr_clock_lookup);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }
@@ -500,8 +505,8 @@ int build_top_module_fine_grained_child_instances(
   if (true == fabric_key.empty()) {
     organize_top_module_memory_modules(
       module_manager, top_module, circuit_lib, config_protocol, sram_model,
-      grids, grid_instance_ids, device_rr_gsb, sb_instance_ids, cb_instance_ids,
-      compact_routing_hierarchy);
+      grids, layer, grid_instance_ids, device_rr_gsb, sb_instance_ids,
+      cb_instance_ids, compact_routing_hierarchy);
   } else {
     VTR_ASSERT_SAFE(false == fabric_key.empty());
     /* Throw a fatal error when the fabric key has a mismatch in region

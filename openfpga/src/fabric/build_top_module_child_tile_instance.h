@@ -38,12 +38,12 @@ int build_top_module_tile_child_instances(
   const CircuitLibrary& circuit_lib, const ClockNetwork& clk_ntwk,
   const RRClockSpatialLookup& rr_clock_lookup,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const TileAnnotation& tile_annotation, const RRGraphView& rr_graph,
-  const DeviceRRGSB& device_rr_gsb, const TileDirect& tile_direct,
-  const ArchDirect& arch_direct, const FabricTile& fabric_tile,
-  const ConfigProtocol& config_protocol, const CircuitModelId& sram_model,
-  const FabricKey& fabric_key, const bool& group_config_block,
-  const bool& frame_view, const bool& verbose);
+  const size_t& layer, const TileAnnotation& tile_annotation,
+  const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
+  const TileDirect& tile_direct, const ArchDirect& arch_direct,
+  const FabricTile& fabric_tile, const ConfigProtocol& config_protocol,
+  const CircuitModelId& sram_model, const FabricKey& fabric_key,
+  const bool& group_config_block, const bool& frame_view, const bool& verbose);
 
 } /* end namespace openfpga */
 

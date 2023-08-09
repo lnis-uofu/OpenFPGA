@@ -1272,8 +1272,9 @@ static int build_top_module_global_net_for_given_tile_module(
   const TileGlobalPortId& tile_global_port,
   const BasicPort& tile_port_to_connect,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const vtr::Point<size_t>& grid_coordinate, const e_side& border_side,
-  const vtr::Matrix<size_t>& tile_instance_ids, const FabricTile& fabric_tile) {
+  const size_t& layer, const vtr::Point<size_t>& grid_coordinate,
+  const e_side& border_side, const vtr::Matrix<size_t>& tile_instance_ids,
+  const FabricTile& fabric_tile) {
   /* Get the tile module and instance */
   FabricTileId curr_fabric_tile_id =
     fabric_tile.find_tile_by_pb_coordinate(grid_coordinate);
@@ -1297,8 +1298,8 @@ static int build_top_module_global_net_for_given_tile_module(
     fabric_tile.pb_coordinates(
       unique_fabric_tile_id)[pb_idx_in_curr_fabric_tile];
 
-  t_physical_tile_type_ptr physical_tile =
-    grids.get_physical_type(grid_coordinate.x(), grid_coordinate.y());
+  t_physical_tile_type_ptr physical_tile = grids.get_physical_type(
+    t_physical_tile_loc(grid_coordinate.x(), grid_coordinate.y(), layer));
   /* Find the module name for this type of grid */
   std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
   std::string grid_instance_name =
@@ -1419,7 +1420,8 @@ static int build_top_module_global_net_from_tile_modules(
   const ModulePortId& top_module_port, const TileAnnotation& tile_annotation,
   const TileGlobalPortId& tile_global_port,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const vtr::Matrix<size_t>& tile_instance_ids, const FabricTile& fabric_tile) {
+  const size_t& layer, const vtr::Matrix<size_t>& tile_instance_ids,
+  const FabricTile& fabric_tile) {
   int status = CMD_EXEC_SUCCESS;
 
   std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates =
@@ -1475,15 +1477,16 @@ static int build_top_module_global_net_from_tile_modules(
     /* Spot the port from child modules from core grids */
     for (size_t ix = start_coord.x(); ix < end_coord.x(); ++ix) {
       for (size_t iy = start_coord.y(); iy < end_coord.y(); ++iy) {
+        t_physical_tile_loc phy_tile_loc(ix, iy, layer);
         t_physical_tile_type_ptr phy_tile_type =
-          grids.get_physical_type(ix, iy);
+          grids.get_physical_type(phy_tile_loc);
         /* Bypass EMPTY tiles */
         if (true == is_empty_type(phy_tile_type)) {
           continue;
         }
         /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
-        if ((0 < grids.get_width_offset(ix, iy)) ||
-            (0 < grids.get_height_offset(ix, iy))) {
+        if ((0 < grids.get_width_offset(phy_tile_loc)) ||
+            (0 < grids.get_height_offset(phy_tile_loc))) {
           continue;
         }
 
@@ -1495,7 +1498,7 @@ static int build_top_module_global_net_from_tile_modules(
         /* Create nets and finish connection build-up */
         status = build_top_module_global_net_for_given_tile_module(
           module_manager, top_module, top_module_port, tile_annotation,
-          tile_global_port, tile_port, vpr_device_annotation, grids,
+          tile_global_port, tile_port, vpr_device_annotation, grids, layer,
           vtr::Point<size_t>(ix, iy), NUM_SIDES, tile_instance_ids,
           fabric_tile);
         if (CMD_EXEC_FATAL_ERROR == status) {
@@ -1507,18 +1510,18 @@ static int build_top_module_global_net_from_tile_modules(
     /* Walk through all the grids on the perimeter, which are I/O grids */
     for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
       for (const vtr::Point<size_t>& io_coordinate : io_coordinates[io_side]) {
+        t_physical_tile_loc phy_tile_loc(io_coordinate.x(), io_coordinate.y(),
+                                         layer);
         t_physical_tile_type_ptr phy_tile_type =
-          grids.get_physical_type(io_coordinate.x(), io_coordinate.y());
+          grids.get_physical_type(phy_tile_loc);
         /* Bypass EMPTY grid */
         if (true == is_empty_type(phy_tile_type)) {
           continue;
         }
 
         /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
-        if ((0 <
-             grids.get_width_offset(io_coordinate.x(), io_coordinate.y())) ||
-            (0 <
-             grids.get_height_offset(io_coordinate.x(), io_coordinate.y()))) {
+        if ((0 < grids.get_width_offset(phy_tile_loc)) ||
+            (0 < grids.get_height_offset(phy_tile_loc))) {
           continue;
         }
 
@@ -1543,7 +1546,7 @@ static int build_top_module_global_net_from_tile_modules(
         /* Create nets and finish connection build-up */
         status = build_top_module_global_net_for_given_tile_module(
           module_manager, top_module, top_module_port, tile_annotation,
-          tile_global_port, tile_port, vpr_device_annotation, grids,
+          tile_global_port, tile_port, vpr_device_annotation, grids, layer,
           io_coordinate, io_side, tile_instance_ids, fabric_tile);
         if (CMD_EXEC_FATAL_ERROR == status) {
           return status;
@@ -1563,7 +1566,8 @@ static int add_top_module_global_ports_from_tile_modules(
   ModuleManager& module_manager, const ModuleId& top_module,
   const TileAnnotation& tile_annotation,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
+  const size_t& layer, const RRGraphView& rr_graph,
+  const DeviceRRGSB& device_rr_gsb,
   const vtr::Matrix<size_t>& tile_instance_ids, const FabricTile& fabric_tile,
   const ClockNetwork& clk_ntwk, const RRClockSpatialLookup& rr_clock_lookup) {
   int status = CMD_EXEC_SUCCESS;
@@ -1621,8 +1625,8 @@ static int add_top_module_global_ports_from_tile_modules(
     } else {
       status = build_top_module_global_net_from_tile_modules(
         module_manager, top_module, top_module_port, tile_annotation,
-        tile_global_port, vpr_device_annotation, grids, tile_instance_ids,
-        fabric_tile);
+        tile_global_port, vpr_device_annotation, grids, layer,
+        tile_instance_ids, fabric_tile);
     }
     if (status == CMD_EXEC_FATAL_ERROR) {
       return status;
@@ -1647,9 +1651,9 @@ static void add_module_nets_connect_tile_direct_connection(
   ModuleManager& module_manager, const ModuleId& top_module,
   const CircuitLibrary& circuit_lib,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const vtr::Matrix<size_t>& tile_instance_ids, const FabricTile& fabric_tile,
-  const TileDirect& tile_direct, const TileDirectId& tile_direct_id,
-  const ArchDirect& arch_direct) {
+  const size_t& layer, const vtr::Matrix<size_t>& tile_instance_ids,
+  const FabricTile& fabric_tile, const TileDirect& tile_direct,
+  const TileDirectId& tile_direct_id, const ArchDirect& arch_direct) {
   vtr::Point<size_t> device_size(grids.width(), grids.height());
   std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
 
@@ -1739,8 +1743,9 @@ static void add_module_nets_connect_tile_direct_connection(
   e_side src_pin_grid_side = tile_direct.from_tile_side(tile_direct_id);
   size_t src_tile_pin = tile_direct.from_tile_pin(tile_direct_id);
 
+  t_physical_tile_loc src_tile_loc(src_clb_coord.x(), src_clb_coord.y(), layer);
   t_physical_tile_type_ptr src_grid_type_descriptor =
-    grids.get_physical_type(src_clb_coord.x(), src_clb_coord.y());
+    grids.get_physical_type(src_tile_loc);
   size_t src_pin_width =
     src_grid_type_descriptor->pin_width_offset[src_tile_pin];
   size_t src_pin_height =
@@ -1775,8 +1780,9 @@ static void add_module_nets_connect_tile_direct_connection(
   e_side sink_pin_grid_side = tile_direct.to_tile_side(tile_direct_id);
   size_t sink_tile_pin = tile_direct.to_tile_pin(tile_direct_id);
 
+  t_physical_tile_loc des_tile_loc(des_clb_coord.x(), des_clb_coord.y(), layer);
   t_physical_tile_type_ptr sink_grid_type_descriptor =
-    grids.get_physical_type(des_clb_coord.x(), des_clb_coord.y());
+    grids.get_physical_type(des_tile_loc);
   size_t sink_pin_width =
     sink_grid_type_descriptor->pin_width_offset[src_tile_pin];
   size_t sink_pin_height =
@@ -1838,15 +1844,17 @@ static void add_top_module_nets_connect_tile_direct_connections(
   ModuleManager& module_manager, const ModuleId& top_module,
   const CircuitLibrary& circuit_lib,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const vtr::Matrix<size_t>& tile_instance_ids, const FabricTile& fabric_tile,
-  const TileDirect& tile_direct, const ArchDirect& arch_direct) {
+  const size_t& layer, const vtr::Matrix<size_t>& tile_instance_ids,
+  const FabricTile& fabric_tile, const TileDirect& tile_direct,
+  const ArchDirect& arch_direct) {
   vtr::ScopedStartFinishTimer timer(
     "Add module nets for inter-tile connections");
 
   for (const TileDirectId& tile_direct_id : tile_direct.directs()) {
     add_module_nets_connect_tile_direct_connection(
       module_manager, top_module, circuit_lib, vpr_device_annotation, grids,
-      tile_instance_ids, fabric_tile, tile_direct, tile_direct_id, arch_direct);
+      layer, tile_instance_ids, fabric_tile, tile_direct, tile_direct_id,
+      arch_direct);
   }
 }
 
@@ -1860,12 +1868,12 @@ int build_top_module_tile_child_instances(
   const CircuitLibrary& circuit_lib, const ClockNetwork& clk_ntwk,
   const RRClockSpatialLookup& rr_clock_lookup,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const TileAnnotation& tile_annotation, const RRGraphView& rr_graph,
-  const DeviceRRGSB& device_rr_gsb, const TileDirect& tile_direct,
-  const ArchDirect& arch_direct, const FabricTile& fabric_tile,
-  const ConfigProtocol& config_protocol, const CircuitModelId& sram_model,
-  const FabricKey& fabric_key, const bool& group_config_block,
-  const bool& frame_view, const bool& verbose) {
+  const size_t& layer, const TileAnnotation& tile_annotation,
+  const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
+  const TileDirect& tile_direct, const ArchDirect& arch_direct,
+  const FabricTile& fabric_tile, const ConfigProtocol& config_protocol,
+  const CircuitModelId& sram_model, const FabricKey& fabric_key,
+  const bool& group_config_block, const bool& frame_view, const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   vtr::Matrix<size_t> tile_instance_ids;
   status = add_top_module_tile_instances(module_manager, top_module,
@@ -1892,7 +1900,7 @@ int build_top_module_tile_child_instances(
     /* TODO: Inter-tile direct connections */
     add_top_module_nets_connect_tile_direct_connections(
       module_manager, top_module, circuit_lib, vpr_device_annotation, grids,
-      tile_instance_ids, fabric_tile, tile_direct, arch_direct);
+      layer, tile_instance_ids, fabric_tile, tile_direct, arch_direct);
   }
 
   /* Add global ports from tile modules: how to connect to clock architecture
@@ -1900,7 +1908,7 @@ int build_top_module_tile_child_instances(
    */
   status = add_top_module_global_ports_from_tile_modules(
     module_manager, top_module, tile_annotation, vpr_device_annotation, grids,
-    rr_graph, device_rr_gsb, tile_instance_ids, fabric_tile, clk_ntwk,
+    layer, rr_graph, device_rr_gsb, tile_instance_ids, fabric_tile, clk_ntwk,
     rr_clock_lookup);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
