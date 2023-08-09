@@ -142,9 +142,7 @@ void annotate_rr_node_previous_nodes(
 
       /* Find the right previous node */
       prev_node = find_previous_node_from_routing_traces(
-        device_ctx.rr_graph,
-        head,
-        prev_node, rr_node);
+        device_ctx.rr_graph, head, prev_node, rr_node);
 
       /* Only update mapped nodes */
       if (prev_node) {
