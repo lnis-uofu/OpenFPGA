@@ -188,7 +188,11 @@ run-task basic_tests/tile_organization/hetero_fabric_tile $@
 
 echo -e "Testing group config block";
 run-task basic_tests/group_config_block/group_config_block_homo_full_testbench $@
+run-task basic_tests/group_config_block/group_config_block_homo_Lshape_full_testbench $@
 run-task basic_tests/group_config_block/group_config_block_homo_fabric_tile $@
+run-task basic_tests/group_config_block/group_config_block_homo_fabric_tile_core_wrapper $@
+run-task basic_tests/group_config_block/group_config_block_hetero_fabric_tile $@
+run-task basic_tests/group_config_block/group_config_block_hetero_fabric_tile_Lshape $@
 
 echo -e "Testing global port definition from tiles";
 run-task basic_tests/global_tile_ports/global_tile_clock $@
