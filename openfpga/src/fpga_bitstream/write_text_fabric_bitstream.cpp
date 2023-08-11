@@ -358,6 +358,23 @@ static int fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
         // (1 << (bl & 7)) - This is to find Bit index of the BL
         //                   within that Byte index
         // When we '&' both, we can know if that BL is set or unset
+        /*
+          -----------------------------------------------------------------
+          |  bit (bl)  |  Byte index (bl >> 3) | Bit index (1 << (bl & 7)) |
+          |----------------------------------------------------------------
+          |  0         |             0         |    b0000_0001 (or 0x01)   |
+          |  1         |             0         |    b0000_0010 (or 0x02)   |
+          |  2         |             0         |    b0000_0100 (or 0x04)   |
+          |  3         |             0         |    b0000_1000 (or 0x08)   |
+          |  4         |             0         |    b0001_0000 (or 0x10)   |
+          |  5         |             0         |    b0010_0000 (or 0x20)   |
+          |  6         |             0         |    b0100_0000 (or 0x40)   |
+          |  7         |             0         |    b1000_0000 (or 0x80)   |
+          |  8         |             1         |    b0000_0001 (or 0x01)   |
+          | ...        |            ...        |          ...              |
+          ------------------------------------------------------------------
+          Each BL can be uniquely represented by bit slice in byte array
+        */
         for (size_t bl = 0; bl < lengths.bl; bl++) {
           if (mask[bl >> 3] & (1 << (bl & 7))) {
             if (data[bl >> 3] & (1 << (bl & 7))) {
