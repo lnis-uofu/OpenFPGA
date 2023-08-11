@@ -132,16 +132,16 @@ static int write_fabric_config_bit_to_xml_file(
           VTR_ASSERT((fabric_size_t)(wl_addr.size()) == lengths.wl);
         }
         fp << "<bl address=\"";
-        memset(&bl_addr[bit.bl], '1', 1);
+        bl_addr.replace(bit.bl, 1, "1");
         fp << bl_addr.c_str();
-        memset(&bl_addr[bit.bl], 'x', 1);
+        bl_addr.replace(bit.bl, 1, "x");
         fp << "\"/>\n";
         /* Word line address */
         write_tab_to_file(fp, xml_hierarchy_depth + 1);
         fp << "<wl address=\"";
-        memset(&wl_addr[bit.wl], '1', 1);
+        wl_addr.replace(bit.wl, 1, "1");
         fp << wl_addr.c_str();
-        memset(&wl_addr[bit.wl], '0', 1);
+        wl_addr.replace(bit.wl, 1, "0");
         fp << "\"/>\n";
       } else {
         /* Bit line address */
