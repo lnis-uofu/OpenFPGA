@@ -59,12 +59,12 @@ Layout
 .. option:: through_channel="<bool>"
   
   Allow routing channels to pass through multi-width and multi-height programable blocks. This is mainly used in heterogeneous FPGAs to increase routability, as illustrated in :numref:`fig_thru_channel`.
-  By default, it is ``off``.
+  By default, it is ``false``.
 
   .. _fig_thru_channel:
   
   .. figure:: ./figures/thru_channel.png
-     :scale: 80%
+     :width: 100%
      :alt: Impact of through channel
   
      Impact on routing architecture when through channel in multi-width and multi-height programmable blocks: (a) disabled; (b) enabled.
@@ -73,12 +73,26 @@ Layout
   
   .. warning:: You cannot use ``spread`` pin location for the ``height > 1`` or ``width >1`` tiles when using the tileable routing resource graph!!! Otherwise, it will cause undriven pins in your device!!!
 
+.. option:: shrink_boundary="<bool>"
+  
+  Remove all the routing wires in empty regions. This is mainly used in non-rectangle FPGAs to avoid redundant routing wires in blank area, as illustrated in :numref:`fig_shrink_boundary`.
+  By default, it is ``false``.
 
-A quick example to show tileable routing is enabled and through channels are disabled:
+  .. _fig_shrink_boundary:
+  
+  .. figure:: ./figures/shrink_boundary.png
+     :width: 100%
+     :alt: Impact of shrink boundary
+  
+     Impact on routing architecture when shrink-boundary: (a) disabled; (b) enabled.
+
+  .. warning:: Do NOT enable ``shrink_boundary`` if you are not using the tileable routing resource graph generator!
+
+A quick example to show tileable routing is enabled, other options, e.g., through channels are disabled:
 
 .. code-block:: xml
 
-  <layout tileable="true" through_channel="false">
+  <layout tileable="true" through_channel="false" shrink_boundary="false">
   </layout>
 
 Switch Block
