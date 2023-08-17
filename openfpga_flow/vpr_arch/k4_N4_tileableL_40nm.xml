@@ -62,9 +62,9 @@
         <output name="inpad" num_pins="1"/>
         <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
         <pinlocations pattern="custom">
-          <loc side="left"></loc>
-          <loc side="top"></loc>
-          <loc side="right"></loc>
+          <loc side="left"/>
+          <loc side="top"/>
+          <loc side="right"/>
           <loc side="bottom">io_topL.outpad io_topL.inpad</loc>
         </pinlocations>
       </sub_tile>
