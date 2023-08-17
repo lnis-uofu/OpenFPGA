@@ -52,6 +52,23 @@
         </pinlocations>
       </sub_tile>
     </tile>
+    <!-- IMPORTANT: DO NOT USE 'io_top' which will conflict with the tile 'io' when placed on the top side!!! So, I rename with 'io_topL' here -->
+    <tile name="io_topL" area="0">
+      <sub_tile name="io_topL" capacity="8">
+        <equivalent_sites>
+          <site pb_type="io"/>
+        </equivalent_sites>
+        <input name="outpad" num_pins="1"/>
+        <output name="inpad" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="custom">
+          <loc side="left"></loc>
+          <loc side="top"></loc>
+          <loc side="right"></loc>
+          <loc side="bottom">io_topL.outpad io_topL.inpad</loc>
+        </pinlocations>
+      </sub_tile>
+    </tile>
     <tile name="clb" area="53894">
       <sub_tile name="clb">
         <equivalent_sites>
@@ -91,6 +108,15 @@
     </fixed_layout>
     <fixed_layout name="4x4L" width="6" height="6">
       <region type="EMPTY" startx="0" starty="2" endx="2" endy="5" priority="101"/>
+      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
+      <perimeter type="io" priority="100"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+    </fixed_layout>
+    <fixed_layout name="4x4L_io_boundary" width="6" height="6">
+      <region type="EMPTY" startx="0" starty="2" endx="2" endy="5" priority="101"/>
+      <region type="io_top" startx="1" starty="2" endx="2" endy="2" priority="102"/>
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="100"/>
       <corners type="EMPTY" priority="101"/>
