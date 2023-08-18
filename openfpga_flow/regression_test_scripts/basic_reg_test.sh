@@ -175,6 +175,7 @@ echo -e "Testing tiles with I/O in center grid";
 run-task basic_tests/tile_organization/tileable_io $@
 echo -e "Testing tiles with I/O consisting of subtiles";
 run-task basic_tests/tile_organization/io_subtile $@
+run-task basic_tests/tile_organization/io_subtile_strong $@
 echo -e "Testing tile grouping on a homogeneous FPGA fabric (Full testbench)";
 run-task basic_tests/tile_organization/homo_fabric_tile $@
 echo -e "Testing tile grouping on a homogeneous FPGA fabric (Preconfigured testbench)";
