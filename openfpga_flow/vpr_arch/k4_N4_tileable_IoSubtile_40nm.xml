@@ -32,7 +32,7 @@
     <tile name="hybrid_io_tile_center" area="0">
       <sub_tile name="fpga_input_center" capacity="6">
         <equivalent_sites>
-          <site pb_type="fpga_input_center"/>
+          <site pb_type="fpga_input"/>
         </equivalent_sites>
         <output name="inpad" num_pins="1"/>
         <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
@@ -45,7 +45,7 @@
       </sub_tile>
       <sub_tile name="fpga_output_center" capacity="4">
         <equivalent_sites>
-          <site pb_type="fpga_output_center"/>
+          <site pb_type="fpga_output"/>
         </equivalent_sites>
         <input name="outpad" num_pins="1"/>
         <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
