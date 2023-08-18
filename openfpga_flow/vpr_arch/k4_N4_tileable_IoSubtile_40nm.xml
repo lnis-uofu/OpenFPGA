@@ -51,9 +51,9 @@
         <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
         <pinlocations pattern="custom">
           <loc side="left">fpga_output_center[1:0].outpad</loc>
-          <loc side="top"></loc>
+          <loc side="top"/>
           <loc side="right">fpga_output_center[3:2].outpad</loc>
-          <loc side="bottom"></loc>
+          <loc side="bottom"/>
         </pinlocations>
       </sub_tile>
     </tile>
