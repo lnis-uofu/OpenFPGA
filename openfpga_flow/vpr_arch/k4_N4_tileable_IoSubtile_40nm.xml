@@ -29,6 +29,34 @@
     </model>
   </models>
   <tiles>
+    <tile name="hybrid_io_tile_center" area="0">
+      <sub_tile name="fpga_input_center" capacity="6">
+        <equivalent_sites>
+          <site pb_type="fpga_input"/>
+        </equivalent_sites>
+        <output name="inpad" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="custom">
+          <loc side="left">fpga_input_center[1:0].inpad</loc>
+          <loc side="top">fpga_input_center[3:2].inpad</loc>
+          <loc side="right">fpga_input_center[4:4].inpad</loc>
+          <loc side="bottom">fpga_input_center[5:5].inpad</loc>
+        </pinlocations>
+      </sub_tile>
+      <sub_tile name="fpga_output_center" capacity="4">
+        <equivalent_sites>
+          <site pb_type="fpga_output"/>
+        </equivalent_sites>
+        <input name="outpad" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
+        <pinlocations pattern="custom">
+          <loc side="left">fpga_output_center[1:0].outpad</loc>
+          <loc side="top"/>
+          <loc side="right">fpga_output_center[3:2].outpad</loc>
+          <loc side="bottom"/>
+        </pinlocations>
+      </sub_tile>
+    </tile>
     <tile name="hybrid_io_tile" area="0">
       <sub_tile name="fpga_input" capacity="4">
         <equivalent_sites>
@@ -85,6 +113,14 @@
     <fixed_layout name="2x2" width="4" height="4">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="hybrid_io_tile" priority="100"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+    </fixed_layout>
+    <fixed_layout name="3x3" width="5" height="5">
+      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
+      <perimeter type="hybrid_io_tile" priority="100"/>
+      <single type="hybrid_io_tile_center" x="2" y="2" priority="100"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
