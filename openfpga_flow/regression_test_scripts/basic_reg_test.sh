@@ -190,6 +190,7 @@ echo -e "Testing group config block";
 run-task basic_tests/group_config_block/group_config_block_homo_full_testbench $@
 run-task basic_tests/group_config_block/group_config_block_homo_Lshape_full_testbench $@
 run-task basic_tests/group_config_block/group_config_block_homo_fabric_tile $@
+run-task basic_tests/group_config_block/group_config_block_homo_fabric_tile_Lshape $@
 run-task basic_tests/group_config_block/group_config_block_homo_fabric_tile_core_wrapper $@
 run-task basic_tests/group_config_block/group_config_block_hetero_fabric_tile $@
 run-task basic_tests/group_config_block/group_config_block_hetero_fabric_tile_Lshape $@

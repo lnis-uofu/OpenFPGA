@@ -374,7 +374,8 @@ bool FabricTile::register_tile_in_lookup(const FabricTileId& tile_id,
   }
   /* Throw error if this coord is already registered! */
   if (tile_coord2id_lookup_[coord.x()][coord.y()]) {
-    VTR_LOG_ERROR("Tile at [%lu][%lu] has already been registered!\n");
+    VTR_LOG_ERROR("Tile at [%lu][%lu] has already been registered!\n",
+                  coord.x(), coord.y());
     return false;
   }
   tile_coord2id_lookup_[coord.x()][coord.y()] = tile_id;
@@ -401,7 +402,8 @@ bool FabricTile::register_pb_in_lookup(const FabricTileId& tile_id,
   /* Throw error if this coord is already registered! */
   if (pb_coord2id_lookup_[coord.x()][coord.y()]) {
     VTR_LOG_ERROR(
-      "Programmable block at [%lu][%lu] has already been registered!\n");
+      "Programmable block at [%lu][%lu] has already been registered!\n",
+      coord.x(), coord.y());
     return false;
   }
   pb_coord2id_lookup_[coord.x()][coord.y()] = tile_id;
@@ -429,7 +431,8 @@ bool FabricTile::register_cbx_in_lookup(const FabricTileId& tile_id,
   if (cbx_coord2id_lookup_[coord.x()][coord.y()]) {
     VTR_LOG_ERROR(
       "X-direction connection block at [%lu][%lu] has already been "
-      "registered!\n");
+      "registered!\n",
+      coord.x(), coord.y());
     return false;
   }
   cbx_coord2id_lookup_[coord.x()][coord.y()] = tile_id;
@@ -457,7 +460,8 @@ bool FabricTile::register_cby_in_lookup(const FabricTileId& tile_id,
   if (cby_coord2id_lookup_[coord.x()][coord.y()]) {
     VTR_LOG_ERROR(
       "Y-direction connection block at [%lu][%lu] has already been "
-      "registered!\n");
+      "registered!\n",
+      coord.x(), coord.y());
     return false;
   }
   cby_coord2id_lookup_[coord.x()][coord.y()] = tile_id;
@@ -483,7 +487,8 @@ bool FabricTile::register_sb_in_lookup(const FabricTileId& tile_id,
   }
   /* Throw error if this coord is already registered! */
   if (sb_coord2id_lookup_[coord.x()][coord.y()]) {
-    VTR_LOG_ERROR("Switch block at [%lu][%lu] has already been registered!\n");
+    VTR_LOG_ERROR("Switch block at [%lu][%lu] has already been registered!\n",
+                  coord.x(), coord.y());
     return false;
   }
   sb_coord2id_lookup_[coord.x()][coord.y()] = tile_id;

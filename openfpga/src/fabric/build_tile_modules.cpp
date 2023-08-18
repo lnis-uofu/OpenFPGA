@@ -881,11 +881,6 @@ static int build_tile_module_ports_from_cb(
     return CMD_EXEC_SUCCESS;
   }
 
-  /* Skip if the cb does not contain any configuration bits! */
-  if (true == connection_block_contain_only_routing_tracks(rr_gsb, cb_type)) {
-    return CMD_EXEC_SUCCESS;
-  }
-
   /* If we use compact routing hierarchy, we should find the unique module of
    * CB, which is added to the top module */
   if (true == compact_routing_hierarchy) {
