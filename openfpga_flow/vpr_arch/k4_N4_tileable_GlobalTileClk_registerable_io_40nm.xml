@@ -34,10 +34,50 @@
         <port name="inpad"/>
       </output_ports>
     </model>
+    <model name="io_inpad">
+      <output_ports>
+        <port name="inpad"/>
+      </output_ports>
+    </model>
   </models>
   <tiles>
     <tile name="io" area="0">
       <sub_tile name="io" capacity="8">
+        <equivalent_sites>
+          <site pb_type="io"/>
+        </equivalent_sites>
+        <input name="outpad" num_pins="1"/>
+        <output name="inpad" num_pins="1"/>
+        <clock name="clk" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+          <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
+        </fc>
+        <pinlocations pattern="custom">
+          <loc side="left">io.outpad io.inpad io.clk</loc>
+          <loc side="top">io.outpad io.inpad io.clk</loc>
+          <loc side="right">io.outpad io.inpad io.clk</loc>
+          <loc side="bottom">io.outpad io.inpad io.clk</loc>
+        </pinlocations>
+      </sub_tile>
+    </tile>
+    <tile name="io_hybrid" area="0">
+      <sub_tile name="io_input" capacity="2">
+        <equivalent_sites>
+          <site pb_type="io_input"/>
+        </equivalent_sites>
+        <output name="inpad" num_pins="1"/>
+        <clock name="clk" num_pins="1"/>
+        <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10">
+          <fc_override port_name="clk" fc_type="frac" fc_val="0"/>
+        </fc>
+        <pinlocations pattern="custom">
+          <loc side="left">io_input.inpad io_input.clk</loc>
+          <loc side="top">io_input.inpad io_input.clk</loc>
+          <loc side="right">io_input.inpad io_input.clk</loc>
+          <loc side="bottom">io_input.inpad io_input.clk</loc>
+        </pinlocations>
+      </sub_tile>
+      <sub_tile name="io" capacity="6">
         <equivalent_sites>
           <site pb_type="io"/>
         </equivalent_sites>
@@ -83,6 +123,13 @@
     <fixed_layout name="2x2" width="4" height="4">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="100"/>
+      <corners type="EMPTY" priority="101"/>
+      <!--Fill with 'clb'-->
+      <fill type="clb" priority="10"/>
+    </fixed_layout>
+    <fixed_layout name="2x2_hybrid_io" width="4" height="4">
+      <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
+      <perimeter type="io_hybrid" priority="100"/>
       <corners type="EMPTY" priority="101"/>
       <!--Fill with 'clb'-->
       <fill type="clb" priority="10"/>
@@ -222,6 +269,75 @@
           <direct name="outpad" input="io.outpad" output="outpad.outpad">
             <delay_constant max="1.394e-11" in_port="io.outpad" out_port="outpad.outpad"/>
           </direct>
+        </interconnect>
+      </mode>
+      <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 10% of the tracks in a channel -->
+      <!-- IOs go on the periphery of the FPGA, for consistency, 
+          make it physically equivalent on all sides so that only one definition of I/Os is needed.
+          If I do not make a physically equivalent definition, then I need to define 4 different I/Os, one for each side of the FPGA
+        -->
+      <!-- Place I/Os on the sides of the FPGA -->
+      <power method="ignore"/>
+    </pb_type>
+    <pb_type name="io_input">
+      <output name="inpad" num_pins="1"/>
+      <clock name="clk" num_pins="1"/>
+      <!-- A mode denotes the physical implementation of an I/O 
+           This mode will be not packable but is mainly used for fabric verilog generation   
+        -->
+      <mode name="physical" disable_packing="true">
+        <pb_type name="iopad" blif_model=".subckt io_inpad" num_pb="1">
+          <output name="inpad" num_pins="1"/>
+        </pb_type>
+        <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
+          <input name="D" num_pins="1" port_class="D"/>
+          <output name="Q" num_pins="1" port_class="Q"/>
+          <clock name="clk" num_pins="1" port_class="clock"/>
+          <T_setup value="66e-12" port="ff.D" clock="clk"/>
+          <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+        </pb_type>
+        <interconnect>
+          <direct name="clk" input="io.clk" output="ff.clk"/>
+          <!-- Create a selector between registered/combinational I/O -->
+          <direct name="inpad" input="iopad.inpad" output="ff.D"/>
+          <mux name="mux1" input="iopad.inpad ff.Q" output="io.inpad">
+            <delay_constant max="4.5e-11" in_port="iopad.inpad" out_port="io.inpad"/>
+            <delay_constant max="4.243e-11" in_port="ff.Q" out_port="io.inpad"/>
+          </mux>
+        </interconnect>
+      </mode>
+      <!-- IOs can operate as either inputs or outputs.
+	     Delays below come from Ian Kuon. They are small, so they should be interpreted as
+	     the delays to and from registers in the I/O (and generally I/Os are registered 
+	     today and that is when you timing analyze them.
+	     -->
+      <mode name="inpad">
+        <pb_type name="inpad" blif_model=".input" num_pb="1">
+          <output name="inpad" num_pins="1"/>
+        </pb_type>
+        <interconnect>
+          <direct name="inpad" input="inpad.inpad" output="io.inpad">
+            <delay_constant max="4.243e-11" in_port="inpad.inpad" out_port="io.inpad"/>
+          </direct>
+        </interconnect>
+      </mode>
+      <mode name="inpad_registered">
+        <pb_type name="inpad" blif_model=".input" num_pb="1">
+          <output name="inpad" num_pins="1"/>
+        </pb_type>
+        <pb_type name="ff" blif_model=".latch" num_pb="1" class="flipflop">
+          <input name="D" num_pins="1" port_class="D"/>
+          <output name="Q" num_pins="1" port_class="Q"/>
+          <clock name="clk" num_pins="1" port_class="clock"/>
+          <T_setup value="66e-12" port="ff.D" clock="clk"/>
+          <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
+        </pb_type>
+        <interconnect>
+          <direct name="clk" input="io.clk" output="ff.clk"/>
+          <direct name="inpad" input="inpad.inpad" output="ff.D">
+            <pack_pattern name="registered_io" in_port="inpad.inpad" out_port="ff.D"/>
+          </direct>
+          <direct name="ff2inpad" input="ff.Q" output="io.inpad"/>
         </interconnect>
       </mode>
       <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 10% of the tracks in a channel -->

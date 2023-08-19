@@ -198,6 +198,7 @@ run-task basic_tests/group_config_block/group_config_block_hetero_fabric_tile_Ls
 
 echo -e "Testing global port definition from tiles";
 run-task basic_tests/global_tile_ports/global_tile_clock $@
+run-task basic_tests/global_tile_ports/global_tile_clock_subtile $@
 run-task basic_tests/global_tile_ports/global_tile_reset $@
 run-task basic_tests/global_tile_ports/global_tile_4clock $@
 run-task basic_tests/global_tile_ports/global_tile_4clock_pin $@
