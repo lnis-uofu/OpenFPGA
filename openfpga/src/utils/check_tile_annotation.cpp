@@ -167,7 +167,8 @@ static int check_tile_annotation_conflicts_with_physical_tile(
             }
 
             /* Check if port property matches */
-            int grid_pin_index = sub_tile.sub_tile_to_tile_pin_indices[tile_port.absolute_first_pin_index];
+            int grid_pin_index = sub_tile.sub_tile_to_tile_pin_indices
+                                   [tile_port.absolute_first_pin_index];
 
             if (tile_port.is_clock !=
                 tile_annotation.global_port_is_clock(tile_global_port)) {
@@ -218,7 +219,8 @@ static int check_tile_annotation_conflicts_with_physical_tile(
           if (0 == found_matched_physical_tile_port) {
             VTR_LOGF_ERROR(
               __FILE__, __LINE__,
-              "Tile port '%s.%s[%ld:%ld]' in tile annotation '%s' does not match "
+              "Tile port '%s.%s[%ld:%ld]' in tile annotation '%s' does not "
+              "match "
               "any physical tile port!\n",
               required_tile_name.c_str(), required_tile_port.get_name().c_str(),
               required_tile_port.get_lsb(), required_tile_port.get_msb(),
@@ -228,7 +230,8 @@ static int check_tile_annotation_conflicts_with_physical_tile(
           if (1 < found_matched_physical_tile_port) {
             VTR_LOGF_ERROR(
               __FILE__, __LINE__,
-              "Tile port '%s.%s[%ld:%ld]' in tile annotation '%s' match more than "
+              "Tile port '%s.%s[%ld:%ld]' in tile annotation '%s' match more "
+              "than "
               "1 physical tile port!\n",
               required_tile_name.c_str(), required_tile_port.get_name().c_str(),
               required_tile_port.get_lsb(), required_tile_port.get_msb(),
