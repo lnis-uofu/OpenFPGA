@@ -402,7 +402,6 @@ static void add_top_module_io_children(
 
   /* Now walk through the coordinates */
   for (vtr::Point<size_t> coord : coords) {
-    VTR_LOG("Adding coord [%lu][%lu]\n", coord.x(), coord.y());
     t_physical_tile_loc phy_tile_loc(coord.x(), coord.y(), layer);
     t_physical_tile_type_ptr grid_type = grids.get_physical_type(phy_tile_loc);
     /* Bypass EMPTY grid */

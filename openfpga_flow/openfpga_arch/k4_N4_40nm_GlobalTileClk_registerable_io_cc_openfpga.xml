@@ -158,6 +158,13 @@
       <port type="input" prefix="outpad" lib_name="A" size="1"/>
       <port type="output" prefix="inpad" lib_name="Y" size="1"/>
     </circuit_model>
+    <circuit_model type="iopad" name="GPIN" prefix="GPIN" is_default="true" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/gpio.v">
+      <design_technology type="cmos"/>
+      <input_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
+      <output_buffer exist="true" circuit_model_name="sky130_fd_sc_hd__inv_1"/>
+      <port type="inout" prefix="PAD" lib_name="A" size="1" is_global="true" is_io="true" is_data_io="true"/>
+      <port type="output" prefix="inpad" lib_name="Y" size="1"/>
+    </circuit_model>
   </circuit_library>
   <configuration_protocol>
     <organization type="scan_chain" circuit_model_name="DFF"/>
@@ -175,6 +182,7 @@
     <global_port name="clk" is_clock="true" default_val="0">
       <tile name="clb" port="clk" x="-1" y="-1"/>
       <tile name="io" port="clk" x="-1" y="-1"/>
+      <tile name="io_hybrid" port="clk" x="-1" y="-1"/>
     </global_port>
   </tile_annotations>
   <pb_type_annotations>
@@ -186,6 +194,12 @@
     <pb_type name="io[inpad_registered].inpad" physical_pb_type_name="io[physical].iopad" mode_bits="1"/>
     <pb_type name="io[inpad_registered].ff" physical_pb_type_name="io[physical].ff"/>
     <pb_type name="io[outpad].outpad" physical_pb_type_name="io[physical].iopad" mode_bits="0"/>
+    <pb_type name="io_input" physical_mode_name="physical" idle_mode_name="inpad"/>
+    <pb_type name="io_input[physical].iopad" circuit_model_name="GPIN" mode_bits="1"/>
+    <pb_type name="io_input[physical].ff" circuit_model_name="DFFSRQ"/>
+    <pb_type name="io_input[inpad].inpad" physical_pb_type_name="io_input[physical].iopad" mode_bits="1"/>
+    <pb_type name="io_input[inpad_registered].inpad" physical_pb_type_name="io_input[physical].iopad" mode_bits="1"/>
+    <pb_type name="io_input[inpad_registered].ff" physical_pb_type_name="io_input[physical].ff"/>
     <!-- End physical pb_type binding in complex block IO -->
     <!-- physical pb_type binding in complex block CLB -->
     <!-- physical mode will be the default mode if not specified -->

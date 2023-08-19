@@ -1341,8 +1341,9 @@ static int build_top_module_global_net_for_given_tile_module(
             return CMD_EXEC_FATAL_ERROR;
           }
           grid_pin_start_index =
-            (subtile_index - sub_tile.capacity.low) * sub_tile_num_pins +
-            tile_port.absolute_first_pin_index;
+            sub_tile.sub_tile_to_tile_pin_indices
+              [(subtile_index - sub_tile.capacity.low) * sub_tile_num_pins +
+               tile_port.absolute_first_pin_index];
           physical_tile_port = tile_port;
           break;
         }
