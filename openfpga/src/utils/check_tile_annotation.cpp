@@ -128,7 +128,6 @@ static int check_tile_annotation_conflicts_with_physical_tile(
          ++tile_info_id) {
       /* Must find a valid physical tile in the same name */
       size_t found_matched_physical_tile = 0;
-      size_t found_matched_physical_tile_port = 0;
 
       std::string required_tile_name =
         tile_annotation.global_port_tile_names(tile_global_port)[tile_info_id];
@@ -146,6 +145,7 @@ static int check_tile_annotation_conflicts_with_physical_tile(
         /* Must found a valid port where both port name and port size must
          * match!!! */
         for (const t_sub_tile& sub_tile : physical_tile.sub_tiles) {
+          size_t found_matched_physical_tile_port = 0;
           for (const t_physical_tile_port& tile_port : sub_tile.ports) {
             if (std::string(tile_port.name) != required_tile_port.get_name()) {
               continue;
@@ -167,7 +167,7 @@ static int check_tile_annotation_conflicts_with_physical_tile(
             }
 
             /* Check if port property matches */
-            int grid_pin_index = tile_port.absolute_first_pin_index;
+            int grid_pin_index = sub_tile.sub_tile_to_tile_pin_indices[tile_port.absolute_first_pin_index];
 
             if (tile_port.is_clock !=
                 tile_annotation.global_port_is_clock(tile_global_port)) {
@@ -215,6 +215,26 @@ static int check_tile_annotation_conflicts_with_physical_tile(
 
             found_matched_physical_tile_port++;
           }
+          if (0 == found_matched_physical_tile_port) {
+            VTR_LOGF_ERROR(
+              __FILE__, __LINE__,
+              "Tile port '%s.%s[%ld:%ld]' in tile annotation '%s' does not match "
+              "any physical tile port!\n",
+              required_tile_name.c_str(), required_tile_port.get_name().c_str(),
+              required_tile_port.get_lsb(), required_tile_port.get_msb(),
+              tile_annotation.global_port_name(tile_global_port).c_str());
+            num_err++;
+          }
+          if (1 < found_matched_physical_tile_port) {
+            VTR_LOGF_ERROR(
+              __FILE__, __LINE__,
+              "Tile port '%s.%s[%ld:%ld]' in tile annotation '%s' match more than "
+              "1 physical tile port!\n",
+              required_tile_name.c_str(), required_tile_port.get_name().c_str(),
+              required_tile_port.get_lsb(), required_tile_port.get_msb(),
+              tile_annotation.global_port_name(tile_global_port).c_str());
+            num_err++;
+          }
         }
       }
 
@@ -228,17 +248,6 @@ static int check_tile_annotation_conflicts_with_physical_tile(
           tile_annotation.global_port_name(tile_global_port).c_str());
         num_err++;
       }
-      if (0 == found_matched_physical_tile_port) {
-        VTR_LOGF_ERROR(
-          __FILE__, __LINE__,
-          "Tile port '%s.%s[%ld:%ld]' in tile annotation '%s' does not match "
-          "any physical tile port!\n",
-          required_tile_name.c_str(), required_tile_port.get_name().c_str(),
-          required_tile_port.get_lsb(), required_tile_port.get_msb(),
-          tile_annotation.global_port_name(tile_global_port).c_str());
-        num_err++;
-      }
-
       /* If we found more than 1 match, error out */
       if (1 < found_matched_physical_tile) {
         VTR_LOGF_ERROR(
@@ -246,16 +255,6 @@ static int check_tile_annotation_conflicts_with_physical_tile(
           "Tile name '%s' in tile annotation '%s' match more than 1 physical "
           "tile!\n",
           required_tile_name.c_str(),
-          tile_annotation.global_port_name(tile_global_port).c_str());
-        num_err++;
-      }
-      if (1 < found_matched_physical_tile_port) {
-        VTR_LOGF_ERROR(
-          __FILE__, __LINE__,
-          "Tile port '%s.%s[%ld:%ld]' in tile annotation '%s' match more than "
-          "1 physical tile port!\n",
-          required_tile_name.c_str(), required_tile_port.get_name().c_str(),
-          required_tile_port.get_lsb(), required_tile_port.get_msb(),
           tile_annotation.global_port_name(tile_global_port).c_str());
         num_err++;
       }
