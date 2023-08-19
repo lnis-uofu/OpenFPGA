@@ -297,12 +297,12 @@
           <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
         </pb_type>
         <interconnect>
-          <direct name="clk" input="io.clk" output="ff.clk"/>
+          <direct name="clk" input="io_input.clk" output="ff.clk"/>
           <!-- Create a selector between registered/combinational I/O -->
           <direct name="inpad" input="iopad.inpad" output="ff.D"/>
-          <mux name="mux1" input="iopad.inpad ff.Q" output="io.inpad">
-            <delay_constant max="4.5e-11" in_port="iopad.inpad" out_port="io.inpad"/>
-            <delay_constant max="4.243e-11" in_port="ff.Q" out_port="io.inpad"/>
+          <mux name="mux1" input="iopad.inpad ff.Q" output="io_input.inpad">
+            <delay_constant max="4.5e-11" in_port="iopad.inpad" out_port="io_input.inpad"/>
+            <delay_constant max="4.243e-11" in_port="ff.Q" out_port="io_input.inpad"/>
           </mux>
         </interconnect>
       </mode>
@@ -316,8 +316,8 @@
           <output name="inpad" num_pins="1"/>
         </pb_type>
         <interconnect>
-          <direct name="inpad" input="inpad.inpad" output="io.inpad">
-            <delay_constant max="4.243e-11" in_port="inpad.inpad" out_port="io.inpad"/>
+          <direct name="inpad" input="inpad.inpad" output="io_input.inpad">
+            <delay_constant max="4.243e-11" in_port="inpad.inpad" out_port="io_input.inpad"/>
           </direct>
         </interconnect>
       </mode>
@@ -333,11 +333,11 @@
           <T_clock_to_Q max="124e-12" port="ff.Q" clock="clk"/>
         </pb_type>
         <interconnect>
-          <direct name="clk" input="io.clk" output="ff.clk"/>
+          <direct name="clk" input="io_input.clk" output="ff.clk"/>
           <direct name="inpad" input="inpad.inpad" output="ff.D">
             <pack_pattern name="registered_io" in_port="inpad.inpad" out_port="ff.D"/>
           </direct>
-          <direct name="ff2inpad" input="ff.Q" output="io.inpad"/>
+          <direct name="ff2inpad" input="ff.Q" output="io_input.inpad"/>
         </interconnect>
       </mode>
       <!-- Every input pin is driven by 15% of the tracks in a channel, every output pin is driven by 10% of the tracks in a channel -->
