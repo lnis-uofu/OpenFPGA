@@ -179,6 +179,7 @@ run-task basic_tests/tile_organization/io_subtile_strong $@
 echo -e "Testing tile grouping on a homogeneous FPGA fabric (Full testbench)";
 run-task basic_tests/tile_organization/homo_fabric_tile $@
 echo -e "Testing tile grouping on a homogeneous FPGA fabric (Preconfigured testbench)";
+run-task basic_tests/tile_organization/fabric_tile_global_tile_clock_io_subtile $@
 run-task basic_tests/tile_organization/homo_fabric_tile_preconfig $@
 run-task basic_tests/tile_organization/homo_fabric_tile_2x2_preconfig $@
 run-task basic_tests/tile_organization/homo_fabric_tile_4x4_preconfig $@
