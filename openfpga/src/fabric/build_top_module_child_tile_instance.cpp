@@ -1387,8 +1387,6 @@ static int build_top_module_global_net_for_given_tile_module(
             generate_tile_module_port_name(grid_instance_name, grid_port_name);
           ModulePortId tile_grid_port_id =
             module_manager.find_module_port(tile_module, tile_grid_port_name);
-          VTR_LOG("Finding global port '%s' from grid '%s'\n",
-                  tile_grid_port_name.c_str(), tile_module_name.c_str());
           VTR_ASSERT(true == module_manager.valid_module_port_id(
                                tile_module, tile_grid_port_id));
 
