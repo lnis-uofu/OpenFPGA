@@ -1,7 +1,7 @@
 File Formats
 ------------
 
-OpenFPGA widely uses XML format for interchangable files
+OpenFPGA widely uses XML format for interchangeable files
 
 
 .. _file_formats:

@@ -44,7 +44,7 @@ in which case the docker image compiled for the latest master branch is used for
        ];
 
        RunRegression [
-           label = "Run functional regeression test"
+           label = "Run functional regression test"
            shape = box
        ];
 
@@ -69,7 +69,7 @@ in which case the docker image compiled for the latest master branch is used for
 
 .. option:: Build regression test
 
-    The OpenFPGA soure is compiled with the following set of compilers.
+    The OpenFPGA source is compiled with the following set of compilers.
 
       #. gcc-7
       #. gcc-8
@@ -81,9 +81,9 @@ in which case the docker image compiled for the latest master branch is used for
       #. clang-8
       #. clang-10
 
-    The docker images for these build enviroment are available on `github packages <https://github.com/orgs/lnis-uofu/packages>`_.
+    The docker images for these build environment are available on `github packages <https://github.com/orgs/lnis-uofu/packages>`_.
 
-.. option:: Functional regeression test
+.. option:: Functional regression test
 
     OpenFPGA maintains a set of functional tests to validate the different functionality.
     The test are broadly catagories into ``basic_reg_test``, ``fpga_verilog_reg_test``,
@@ -93,7 +93,7 @@ in which case the docker image compiled for the latest master branch is used for
 
 How to debug failed regression test
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-In case the ``funtional regression test`` fails,
+In case the ``functional regression test`` fails,
 the actions script will collect all ``.log`` files from
 the task directory and upload as a artifacts on github storage.
 These artifacts can be downloaded from the github website actions tab, for more reference follow `this <https://docs.github.com/en/actions/managing-workflow-runs/downloading-workflow-artifacts>`_ article.
@@ -113,11 +113,11 @@ Release Docker Images
 
 CI after cloning repository
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-If you clone the repository the CI setup will still function, except the based images are  still pullled from "lnis-uofu" repsitory and the master branch
+If you clone the repository the CI setup will still function, except the based images are  still pulled from "lnis-uofu" repository and the master branch
 of cloned repo will not push final docker image to any repository .
 
-**In case you want to host your own copies of OpenFPGA base images** and final release create a githib secret variable with name  ``DOCKER_REPO`` and set it to ``true``. This will make ci script to download base images from your own repo pakcages, and upload final realse to the same.
+**In case you want to host your own copies of OpenFPGA base images** and final release create a github secret variable with name  ``DOCKER_REPO`` and set it to ``true``. This will make ci script to download base images from your own repo packages, and upload final release to the same.
 
-**If you don not want to use docker images based regression test** and like to compile all the bianries for each CI run. You can set ``IGNORE_DOCKER_TEST`` secrete variable to ``true``.
+**If you don not want to use docker images based regression test** and like to compile all the binaries for each CI run. You can set ``IGNORE_DOCKER_TEST`` secrete variable to ``true``.
 
-.. note:: Once you add ``DOCKER_REPO`` variable, you need to genrerate base images. To do this trigger mannual workflow ``Build docker CI images``
+.. note:: Once you add ``DOCKER_REPO`` variable, you need to generate base images. To do this trigger manual workflow ``Build docker CI images``

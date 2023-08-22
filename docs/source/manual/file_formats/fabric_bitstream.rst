@@ -11,7 +11,7 @@ Plain text (.bit)
 This file format is designed to be directly loaded to an FPGA fabric.
 It does not include any comments but only bitstream.
 
-The information depends on the type of configuration procotol.
+The information depends on the type of configuration protocol.
 
 .. option:: vanilla
 
@@ -232,7 +232,7 @@ A quick example:
   <bit id="0" value="1" path="fpga_top.grid_clb_1__2_.logical_tile_clb_mode_clb__0.mem_fle_9_in_5.mem_out[0]"/>
   </bit>
 
-Other information may depend on the type of configuration procotol.
+Other information may depend on the type of configuration protocol.
 
 .. option:: memory_bank
 
