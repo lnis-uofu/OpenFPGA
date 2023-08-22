@@ -130,7 +130,7 @@ int fpga_fabric_verilog(
   if (!fabric_tile.empty()) {
     status_code = print_verilog_tiles(
       netlist_manager, const_cast<const ModuleManager &>(module_manager),
-      tile_dir_path, fabric_tile, options);
+      tile_dir_path, fabric_tile, std::string(DEFAULT_TILE_DIR_NAME), options);
     if (status_code != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;
     }
