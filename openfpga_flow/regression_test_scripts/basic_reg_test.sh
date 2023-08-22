@@ -147,6 +147,8 @@ echo -e "Testing K4N4 with LUTRAM";
 run-task basic_tests/k4_series/k4n4_lutram $@
 echo -e "Testing K4N4 with multiple lengths of routing segments";
 run-task basic_tests/k4_series/k4n4_L124 $@
+echo -e "Testing K4N4 with routing channel width distribution: x = 0.8, y = 1.0";
+run-task basic_tests/k4_series/k4n4_chandistr $@
 echo -e "Testing K4N4 with 32-bit fracturable multiplier";
 run-task basic_tests/k4_series/k4n4_frac_mult $@
 echo -e "Testing K4N5 with pattern based local routing";
