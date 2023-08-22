@@ -22,6 +22,7 @@ int print_verilog_tiles(NetlistManager& netlist_manager,
                         const ModuleManager& module_manager,
                         const std::string& verilog_dir,
                         const FabricTile& fabric_tile,
+                        const std::string& subckt_dir_name,
                         const FabricVerilogOption& options);
 
 } /* end namespace openfpga */
