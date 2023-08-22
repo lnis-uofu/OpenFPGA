@@ -24,7 +24,7 @@ CMAKE_BUILD_TYPE := $(shell echo ${BUILD_TYPE} | sed 's/_\?pgo//' | sed 's/_\?st
 # e.g. make CMAKE_FLAGS="-DCMAKE_CXX_COMPILER=g++-9'
 override CMAKE_FLAGS := -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -G 'Unix Makefiles' ${CMAKE_FLAGS}
 
-# -s : Suppresss makefile output (e.g. entering/leaving directories)
+# -s : Suppress makefile output (e.g. entering/leaving directories)
 # --output-sync target : For parallel compilation ensure output for each target is synchronized (make version >= 4.0)
 MAKEFLAGS := -s
 

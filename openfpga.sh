@@ -132,7 +132,7 @@ goto-task () {
     done
 }
 
-# Clears enviroment variables and fucntions
+# Clears environment variables and functions
 unset-openfpga (){
     unset -v OPENFPGA_PATH
     unset -f list-tasks run-task run-flow goto-task goto-root >/dev/null 2>&1
