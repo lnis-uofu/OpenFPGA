@@ -27,7 +27,8 @@ namespace openfpga {
 static int print_verilog_tile_module_netlist(
   NetlistManager& netlist_manager, const ModuleManager& module_manager,
   const std::string& verilog_dir, const FabricTile& fabric_tile,
-  const FabricTileId& fabric_tile_id, const FabricVerilogOption& options) {
+  const FabricTileId& fabric_tile_id, const std::string& subckt_dir_name,
+  const FabricVerilogOption& options) {
   /* Create a module as the top-level fabric, and add it to the module manager
    */
   vtr::Point<size_t> tile_coord = fabric_tile.tile_coordinate(fabric_tile_id);
@@ -69,10 +70,11 @@ static int print_verilog_tile_module_netlist(
   /* Add fname to the netlist name list */
   NetlistId nlist_id = NetlistId::INVALID();
   if (options.use_relative_path()) {
-    nlist_id = netlist_manager.add_netlist(verilog_fname);
+    nlist_id = netlist_manager.add_netlist(subckt_dir_name + verilog_fname);
   } else {
     nlist_id = netlist_manager.add_netlist(verilog_fpath);
   }
+
   VTR_ASSERT(nlist_id);
   netlist_manager.set_netlist_type(nlist_id,
                                    NetlistManager::TILE_MODULE_NETLIST);
@@ -89,6 +91,7 @@ int print_verilog_tiles(NetlistManager& netlist_manager,
                         const ModuleManager& module_manager,
                         const std::string& verilog_dir,
                         const FabricTile& fabric_tile,
+                        const std::string& subckt_dir_name,
                         const FabricVerilogOption& options) {
   vtr::ScopedStartFinishTimer timer("Build tile modules for the FPGA fabric");
 
@@ -98,7 +101,7 @@ int print_verilog_tiles(NetlistManager& netlist_manager,
   for (FabricTileId fabric_tile_id : fabric_tile.unique_tiles()) {
     status_code = print_verilog_tile_module_netlist(
       netlist_manager, module_manager, verilog_dir, fabric_tile, fabric_tile_id,
-      options);
+      subckt_dir_name, options);
     if (status_code != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;
     }
