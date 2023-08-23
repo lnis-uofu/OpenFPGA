@@ -37,7 +37,7 @@ To enable self-testing, the FPGA and user's RTL design (simulate using an HDL si
 
 Full Testbench
 ~~~~~~~~~~~~~~
-Full testbench aims at simulating an entire FPGA operating period, consisting of two phases: 
+Full testbench aims at simulating an entire FPGA operating period, consisting of two phases:
 
   - the **Configuration Phase**, where the synthesized design bitstream is loaded to the programmable fabric, as highlighted by the green rectangle of :numref:`fig_verilog_full_testbench_waveform`;
 
@@ -63,7 +63,7 @@ Inside the directory, the Verilog testbenches are organized as illustrated in :n
 
    Hierarchy of Verilog testbenches for a FPGA fabric implemented with an application
 
-.. note:: ``<bench_name>`` is the module name of users' RTL design. 
+.. note:: ``<bench_name>`` is the module name of users' RTL design.
 
 .. option:: <bench_name>_include_netlist.v
 
@@ -84,9 +84,9 @@ Inside the directory, the Verilog testbenches are organized as illustrated in :n
 .. option:: <bench_name>_top_formal_verification.v
 
   This netlist includes a Verilog module of a pre-configured FPGA fabric, which is a wrapper on top of the ``fpga_top.v`` netlist.
-  The wrapper module has the same port map as the top-level module of user's RTL design, which be directly def to formal verification tools to validate FPGA's functional equivalence. 
+  The wrapper module has the same port map as the top-level module of user's RTL design, which be directly def to formal verification tools to validate FPGA's functional equivalence.
   :numref:`fig_preconfig_module` illustrates the organization of a pre-configured module, which consists of a FPGA fabric (see :ref:`fabric_netlists`) and a hard-coded bitstream.
-  Only used I/Os of FPGA fabric will appear in the port list of the pre-configured module. 
+  Only used I/Os of FPGA fabric will appear in the port list of the pre-configured module.
 
 .. _fig_preconfig_module:
 
@@ -94,4 +94,3 @@ Inside the directory, the Verilog testbenches are organized as illustrated in :n
    :width: 100%
 
    Internal structure of a pre-configured FPGA module
-

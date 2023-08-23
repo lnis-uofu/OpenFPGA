@@ -30,7 +30,7 @@ A summary of the architectural features is as follows:
   - K4N4 Configurable Logic Block (CLB), which consists of four Basic Logic Elements (BLEs) and a fully-connected crossbar. Each BLE contains a 4-input Look-Up Table (LUT), a Flip-Flop (FF) and a 2:1 routing multiplexer
   - Length-1 routing wires interconnected by Wilton-Style Switch Block (SB)
 
-The VPR architecture description is designed for EDA needs mainly, which lacks the details physical modelingrequired by OpenFPGA.
+The VPR architecture description is designed for EDA needs mainly, which lacks the details physical modeling required by OpenFPGA.
 Here, we show a step-by-step adaption on the architecture template.
 
 Physical I/O Modeling

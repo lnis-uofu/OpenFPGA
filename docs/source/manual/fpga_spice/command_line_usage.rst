@@ -23,16 +23,16 @@ FPGA-SPICE Supported Options::
     --fpga_spice_testbench_load_extraction_off
     --fpga_spice_sim_mt_num <int>
 
-.. note:: FPGA-SPICE requires the input of activity estimation results (\*.act file) from ACE2. 
-   Remember to use the option --activity_file <act_file> to read the activity file. 
+.. note:: FPGA-SPICE requires the input of activity estimation results (\*.act file) from ACE2.
+   Remember to use the option --activity_file <act_file> to read the activity file.
 
-.. note::  To dump full-chip-level testbenches, the option –-fpga_spice_print_top_testbench should be enabled. 
-   
-.. note:: To dump grid-level testbenches, the options -- fpga_spice_print_grid_testbench, -- fpga_spice_print_cb_testbench and -- fpga_spice_print_sb_testbench should be enabled. 
-  
-.. note::  To dump component-level testbenches, the options –fpga_spice_print_lut_testbench, --fpga_spice_print_hardlogic_testbench, --fpga_spice_print_pb_mux_testbench, --fpga_spice_print_cb_mux_testbench and --fpga_spice_print_sb_mux_testbench should be enabled. 
+.. note::  To dump full-chip-level testbenches, the option –-fpga_spice_print_top_testbench should be enabled.
 
-.. csv-table:: Commmand-line Options of FPGA-SPICE
+.. note:: To dump grid-level testbenches, the options -- fpga_spice_print_grid_testbench, -- fpga_spice_print_cb_testbench and -- fpga_spice_print_sb_testbench should be enabled.
+
+.. note::  To dump component-level testbenches, the options –fpga_spice_print_lut_testbench, --fpga_spice_print_hardlogic_testbench, --fpga_spice_print_pb_mux_testbench, --fpga_spice_print_cb_mux_testbench and --fpga_spice_print_sb_mux_testbench should be enabled.
+
+.. csv-table:: Command-line Options of FPGA-SPICE
    :header: "Command Options", "Description"
    :widths: 15, 20
 

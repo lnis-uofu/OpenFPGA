@@ -42,6 +42,6 @@ Version updates are made in the following scenario
 
   - significant improvements on Quality-of-Results (QoR).
   - significant changes on user interface.
-  - a techical feature is developed and validated by the community, which can impact the complete design flow.
+  - a technical feature is developed and validated by the community, which can impact the complete design flow.
 
 
