@@ -30,6 +30,7 @@ namespace openfpga {
 static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
                                             const DeviceGrid& grids,
                                             const size_t& layer,
+                                            const RRGraphView& rr_graph,
                                             const DeviceRRGSB& device_rr_gsb,
                                             const bool& verbose) {
   int status_code = CMD_EXEC_SUCCESS;
@@ -48,7 +49,7 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
        */
       if (true == is_empty_type(phy_tile_type)) {
         skip_add_pb = true;
-        if (!device_rr_gsb.is_gsb_exist(curr_gsb_coord)) {
+        if (!device_rr_gsb.is_gsb_exist(rr_graph, curr_gsb_coord)) {
           VTR_LOGV(verbose, "Skip tile[%lu][%lu] as it is empty\n",
                    curr_tile_coord.x(), curr_tile_coord.y());
           continue;
@@ -114,7 +115,7 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
        *  +----------+ +----------+
        *
        */
-      if (!device_rr_gsb.is_gsb_exist(curr_gsb_coord)) {
+      if (!device_rr_gsb.is_gsb_exist(rr_graph, curr_gsb_coord)) {
         continue;
       }
       const RRGSB& curr_rr_gsb = device_rr_gsb.get_gsb(curr_gsb_coord);
@@ -124,7 +125,7 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
                                         curr_rr_gsb.get_sb_coordinate());
         }
       }
-      if (curr_rr_gsb.is_sb_exist()) {
+      if (curr_rr_gsb.is_sb_exist(rr_graph)) {
         fabric_tile.add_sb_coordinate(curr_tile_id,
                                       curr_rr_gsb.get_sb_coordinate());
       }
@@ -138,7 +139,8 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
  * Build tile-level information for a given FPGA fabric, w.r.t. to configuration
  *******************************************************************/
 int build_fabric_tile(FabricTile& fabric_tile, const TileConfig& tile_config,
-                      const DeviceGrid& grids, const DeviceRRGSB& device_rr_gsb,
+                      const DeviceGrid& grids, const RRGraphView& rr_graph,
+                      const DeviceRRGSB& device_rr_gsb,
                       const bool& verbose) {
   vtr::ScopedStartFinishTimer timer(
     "Build tile-level information for the FPGA fabric");
@@ -149,7 +151,7 @@ int build_fabric_tile(FabricTile& fabric_tile, const TileConfig& tile_config,
 
   /* Depending on the selected style, follow different approaches */
   if (tile_config.style() == TileConfig::e_style::TOP_LEFT) {
-    status_code = build_fabric_tile_style_top_left(fabric_tile, grids, 0,
+    status_code = build_fabric_tile_style_top_left(fabric_tile, grids, 0, rr_graph,
                                                    device_rr_gsb, verbose);
   } else {
     /* Error out for styles that are not supported yet! */

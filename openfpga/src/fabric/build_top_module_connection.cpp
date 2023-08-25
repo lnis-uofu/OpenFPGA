@@ -69,7 +69,7 @@ static void add_top_module_nets_connect_grids_and_sb(
   const RRGSB& rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
   const bool& compact_routing_hierarchy) {
   /* Skip those Switch blocks that do not exist */
-  if (false == rr_gsb.is_sb_exist()) {
+  if (false == rr_gsb.is_sb_exist(rr_graph)) {
     return;
   }
 
@@ -232,7 +232,7 @@ static void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(
   const RRGSB& rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
   const bool& compact_routing_hierarchy) {
   /* Skip those Switch blocks that do not exist */
-  if (false == rr_gsb.is_sb_exist()) {
+  if (false == rr_gsb.is_sb_exist(rr_graph)) {
     return;
   }
 
@@ -617,7 +617,7 @@ static void add_top_module_nets_connect_sb_and_cb(
   vtr::Point<size_t> module_gsb_sb_coordinate(rr_gsb.get_x(), rr_gsb.get_y());
 
   /* Skip those Switch blocks that do not exist */
-  if (false == rr_gsb.is_sb_exist()) {
+  if (false == rr_gsb.is_sb_exist(rr_graph)) {
     return;
   }
 

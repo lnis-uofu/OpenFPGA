@@ -1135,7 +1135,7 @@ void build_flatten_routing_modules(
   for (size_t ix = 0; ix < sb_range.x(); ++ix) {
     for (size_t iy = 0; iy < sb_range.y(); ++iy) {
       const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
-      if (false == rr_gsb.is_sb_exist()) {
+      if (false == rr_gsb.is_sb_exist(device_ctx.rr_graph)) {
         continue;
       }
       build_switch_block_module(module_manager, decoder_lib, device_annotation,

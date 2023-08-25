@@ -20,7 +20,7 @@
 namespace openfpga {
 
 int build_fabric_tile(FabricTile& fabric_tile, const TileConfig& tile_config,
-                      const DeviceGrid& grids, const DeviceRRGSB& device_rr_gsb,
+                      const DeviceGrid& grids, const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
                       const bool& verbose);
 
 } /* end namespace openfpga */

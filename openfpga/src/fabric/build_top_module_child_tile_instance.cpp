@@ -292,7 +292,7 @@ static int build_top_module_tile_nets_between_sb_and_pb(
   const size_t& sb_idx_in_curr_fabric_tile,
   const bool& compact_routing_hierarchy, const bool& verbose) {
   /* Skip those Switch blocks that do not exist */
-  if (false == rr_gsb.is_sb_exist()) {
+  if (false == rr_gsb.is_sb_exist(rr_graph)) {
     return CMD_EXEC_SUCCESS;
   }
 
@@ -736,7 +736,7 @@ static int build_top_module_tile_nets_between_sb_and_cb(
     generate_switch_block_module_name(sb_coord_in_unique_tile);
 
   /* Skip those Switch blocks that do not exist */
-  if (false == rr_gsb.is_sb_exist()) {
+  if (false == rr_gsb.is_sb_exist(rr_graph)) {
     return CMD_EXEC_SUCCESS;
   }
 
