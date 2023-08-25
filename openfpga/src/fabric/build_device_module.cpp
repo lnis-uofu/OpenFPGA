@@ -111,7 +111,8 @@ int build_device_module_graph(
   /* Build tile modules if defined */
   if (tile_config.is_valid()) {
     /* Build detailed tile-level information */
-    status = build_fabric_tile(fabric_tile, tile_config, vpr_device_ctx.grid, vpr_device_ctx.rr_graph,
+    status = build_fabric_tile(fabric_tile, tile_config, vpr_device_ctx.grid,
+                               vpr_device_ctx.rr_graph,
                                openfpga_ctx.device_rr_gsb(), verbose);
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;

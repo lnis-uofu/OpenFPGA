@@ -117,7 +117,8 @@ int fpga_fabric_verilog(
     VTR_ASSERT(false == options.compress_routing());
     print_verilog_flatten_routing_modules(
       netlist_manager, const_cast<const ModuleManager &>(module_manager),
-      device_rr_gsb, device_ctx.rr_graph, rr_dir_path, std::string(DEFAULT_RR_DIR_NAME), options);
+      device_rr_gsb, device_ctx.rr_graph, rr_dir_path,
+      std::string(DEFAULT_RR_DIR_NAME), options);
   }
 
   /* Generate grids */

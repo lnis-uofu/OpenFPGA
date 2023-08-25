@@ -95,7 +95,8 @@ int fpga_fabric_spice(const ModuleManager& module_manager,
   } else {
     VTR_ASSERT(false == options.compress_routing());
     print_spice_flatten_routing_modules(netlist_manager, module_manager,
-                                        device_rr_gsb, device_ctx.rr_graph, rr_dir_path);
+                                        device_rr_gsb, device_ctx.rr_graph,
+                                        rr_dir_path);
   }
 
   /* Generate grids */

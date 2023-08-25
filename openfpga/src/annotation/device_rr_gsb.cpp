@@ -78,7 +78,8 @@ size_t DeviceRRGSB::get_num_cb_unique_module(const t_rr_type& cb_type) const {
 }
 
 /* Identify if a GSB actually exists at a location */
-bool DeviceRRGSB::is_gsb_exist(const RRGraphView& rr_graph, const vtr::Point<size_t> coord) const {
+bool DeviceRRGSB::is_gsb_exist(const RRGraphView& rr_graph,
+                               const vtr::Point<size_t> coord) const {
   /* Out of range, does not exist */
   if (false == validate_coordinate(coord)) {
     return false;

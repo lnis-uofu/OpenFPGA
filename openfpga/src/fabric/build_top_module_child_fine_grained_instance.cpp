@@ -187,8 +187,8 @@ static vtr::Matrix<size_t> add_top_module_grid_instances(
  *******************************************************************/
 static vtr::Matrix<size_t> add_top_module_switch_block_instances(
   ModuleManager& module_manager, const ModuleId& top_module,
-  const RRGraphView& rr_graph,
-  const DeviceRRGSB& device_rr_gsb, const bool& compact_routing_hierarchy) {
+  const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
+  const bool& compact_routing_hierarchy) {
   vtr::ScopedStartFinishTimer timer("Add switch block instances to top module");
 
   vtr::Point<size_t> sb_range = device_rr_gsb.get_gsb_range();
@@ -455,7 +455,8 @@ int build_top_module_fine_grained_child_instances(
     add_top_module_grid_instances(module_manager, top_module, grids, layer);
   /* Add all the SBs across the fabric */
   vtr::Matrix<size_t> sb_instance_ids = add_top_module_switch_block_instances(
-    module_manager, top_module, rr_graph, device_rr_gsb, compact_routing_hierarchy);
+    module_manager, top_module, rr_graph, device_rr_gsb,
+    compact_routing_hierarchy);
   /* Add all the CBX and CBYs across the fabric */
   cb_instance_ids[CHANX] = add_top_module_connection_block_instances(
     module_manager, top_module, device_rr_gsb, CHANX,

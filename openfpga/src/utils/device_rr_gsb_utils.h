@@ -20,9 +20,11 @@ namespace openfpga {
 size_t find_device_rr_gsb_num_cb_modules(const DeviceRRGSB& device_rr_gsb,
                                          const t_rr_type& cb_type);
 
-size_t find_device_rr_gsb_num_sb_modules(const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph);
+size_t find_device_rr_gsb_num_sb_modules(const DeviceRRGSB& device_rr_gsb,
+                                         const RRGraphView& rr_graph);
 
-size_t find_device_rr_gsb_num_gsb_modules(const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph);
+size_t find_device_rr_gsb_num_gsb_modules(const DeviceRRGSB& device_rr_gsb,
+                                          const RRGraphView& rr_graph);
 
 } /* end namespace openfpga */
 

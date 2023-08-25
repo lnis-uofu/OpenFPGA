@@ -140,8 +140,7 @@ static int build_fabric_tile_style_top_left(FabricTile& fabric_tile,
  *******************************************************************/
 int build_fabric_tile(FabricTile& fabric_tile, const TileConfig& tile_config,
                       const DeviceGrid& grids, const RRGraphView& rr_graph,
-                      const DeviceRRGSB& device_rr_gsb,
-                      const bool& verbose) {
+                      const DeviceRRGSB& device_rr_gsb, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer(
     "Build tile-level information for the FPGA fabric");
 
@@ -151,8 +150,8 @@ int build_fabric_tile(FabricTile& fabric_tile, const TileConfig& tile_config,
 
   /* Depending on the selected style, follow different approaches */
   if (tile_config.style() == TileConfig::e_style::TOP_LEFT) {
-    status_code = build_fabric_tile_style_top_left(fabric_tile, grids, 0, rr_graph,
-                                                   device_rr_gsb, verbose);
+    status_code = build_fabric_tile_style_top_left(
+      fabric_tile, grids, 0, rr_graph, device_rr_gsb, verbose);
   } else {
     /* Error out for styles that are not supported yet! */
     VTR_LOG_ERROR("Tile style '%s' is not supported yet!\n",
