@@ -15,7 +15,8 @@ namespace openfpga {
 
 int check_fabric_key_alias(const FabricKey& input_key, const bool& verbose);
 
-int check_fabric_key_names_values(const FabricKey& input_key, const bool& verbose);
+int check_fabric_key_names_and_values(const FabricKey& input_key,
+                                      const bool& verbose);
 
 } /* end namespace openfpga */
 

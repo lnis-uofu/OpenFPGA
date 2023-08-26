@@ -55,18 +55,18 @@ std::vector<FabricSubKeyId> FabricKey::sub_keys(
 /************************************************************************
  * Public Accessors : Basic data query
  ***********************************************************************/
-size_t FabricKey::num_regions() const {
-  return region_ids_.size();
-}
+size_t FabricKey::num_regions() const { return region_ids_.size(); }
 
-size_t FabricKey::num_keys() const {
-  return key_ids_.size();
-}
+size_t FabricKey::num_keys() const { return key_ids_.size(); }
 
-std::vector<FabricKeyId> find_key_by_alias(const std::string& alias) const {
-  /* Throw warning on empty alias which may cause unexpected results: whole key is dumped! */
+std::vector<FabricKeyId> FabricKey::find_key_by_alias(
+  const std::string& alias) const {
+  /* Throw warning on empty alias which may cause unexpected results: whole key
+   * is dumped! */
   if (alias.empty()) {
-    VTR_LOG_WARN("Empty alias is given! This may cause unexpected results, i.e., a whole data base is dumped!\n");
+    VTR_LOG_WARN(
+      "Empty alias is given! This may cause unexpected results, i.e., a whole "
+      "data base is dumped!\n");
   }
   size_t num_found_keys = 0;
   for (FabricKeyId key_id : key_ids_) {

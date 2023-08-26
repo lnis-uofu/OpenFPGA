@@ -88,7 +88,10 @@ class FabricKey {
   /* Access the coordinate of a key */
   vtr::Point<int> key_coordinate(const FabricKeyId& key_id) const;
 
-  /** @brief Find valid key ids for a given alias. Note that you should NOT send an empty alias which may cause a complete list of key ids to be returned (extremely inefficent and NOT useful). Suggest to check if the existing fabric key contains valid alias for each key before calling this API!!! */
+  /** @brief Find valid key ids for a given alias. Note that you should NOT send
+   * an empty alias which may cause a complete list of key ids to be returned
+   * (extremely inefficent and NOT useful). Suggest to check if the existing
+   * fabric key contains valid alias for each key before calling this API!!! */
   std::vector<FabricKeyId> find_key_by_alias(const std::string& alias) const;
 
   /* Check if there are any keys */
