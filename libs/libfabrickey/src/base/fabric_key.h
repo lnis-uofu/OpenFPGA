@@ -75,6 +75,8 @@ class FabricKey {
     const FabricKeyModuleId& module_id) const;
 
  public: /* Public Accessors: Basic data query */
+  size_t num_regions() const;
+  size_t num_keys() const;
   /* Access all the keys of a region */
   std::vector<FabricKeyId> region_keys(const FabricRegionId& region_id) const;
   /* Access the name of a key */
@@ -85,6 +87,9 @@ class FabricKey {
   std::string key_alias(const FabricKeyId& key_id) const;
   /* Access the coordinate of a key */
   vtr::Point<int> key_coordinate(const FabricKeyId& key_id) const;
+
+  /** @brief Find valid key ids for a given alias. Note that you should NOT send an empty alias which may cause a complete list of key ids to be returned (extremely inefficent and NOT useful). Suggest to check if the existing fabric key contains valid alias for each key before calling this API!!! */
+  std::vector<FabricKeyId> find_key_by_alias(const std::string& alias) const;
 
   /* Check if there are any keys */
   bool empty() const;
