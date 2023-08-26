@@ -579,7 +579,7 @@ void print_analysis_sdc_disable_unused_sbs(
        * We will skip those modules
        */
       const RRGSB& rr_gsb = device_rr_gsb.get_gsb(ix, iy);
-      if (false == rr_gsb.is_sb_exist()) {
+      if (false == rr_gsb.is_sb_exist(rr_graph)) {
         continue;
       }
 

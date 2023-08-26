@@ -17,7 +17,8 @@ namespace openfpga {
 void print_pnr_sdc_routing_sb_hierarchy(const std::string& sdc_dir,
                                         const ModuleManager& module_manager,
                                         const ModuleId& top_module,
-                                        const DeviceRRGSB& device_rr_gsb);
+                                        const DeviceRRGSB& device_rr_gsb,
+                                        const RRGraphView& rr_graph);
 
 void print_pnr_sdc_routing_cb_hierarchy(const std::string& sdc_dir,
                                         const ModuleManager& module_manager,

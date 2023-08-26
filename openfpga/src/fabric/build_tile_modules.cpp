@@ -69,7 +69,7 @@ static int build_tile_module_port_and_nets_between_sb_and_pb(
   const bool& compact_routing_hierarchy, const bool& frame_view,
   const bool& verbose) {
   /* Skip those Switch blocks that do not exist */
-  if (false == rr_gsb.is_sb_exist()) {
+  if (false == rr_gsb.is_sb_exist(rr_graph)) {
     return CMD_EXEC_SUCCESS;
   }
 
@@ -514,7 +514,7 @@ static int build_tile_module_port_and_nets_between_sb_and_cb(
   vtr::Point<size_t> module_gsb_sb_coordinate(rr_gsb.get_x(), rr_gsb.get_y());
 
   /* Skip those Switch blocks that do not exist */
-  if (false == rr_gsb.is_sb_exist()) {
+  if (false == rr_gsb.is_sb_exist(rr_graph)) {
     return CMD_EXEC_SUCCESS;
   }
 

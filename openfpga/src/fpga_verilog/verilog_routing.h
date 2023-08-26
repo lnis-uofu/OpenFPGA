@@ -10,6 +10,7 @@
 #include "module_manager.h"
 #include "mux_library.h"
 #include "netlist_manager.h"
+#include "rr_graph_view.h"
 
 /********************************************************************
  * Function declaration
@@ -21,6 +22,7 @@ namespace openfpga {
 void print_verilog_flatten_routing_modules(NetlistManager& netlist_manager,
                                            const ModuleManager& module_manager,
                                            const DeviceRRGSB& device_rr_gsb,
+                                           const RRGraphView& rr_graph,
                                            const std::string& subckt_dir,
                                            const std::string& subckt_dir_name,
                                            const FabricVerilogOption& options);

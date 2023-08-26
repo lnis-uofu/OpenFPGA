@@ -436,7 +436,6 @@ void annotate_device_rr_gsb(const DeviceContext& vpr_device_ctx,
                      vtr::Point<size_t>(vpr_device_ctx.grid.width() - 2,
                                         vpr_device_ctx.grid.height() - 2),
                      layer, vtr::Point<size_t>(ix, iy), include_clock);
-
       /* Add to device_rr_gsb */
       vtr::Point<size_t> gsb_coordinate = rr_gsb.get_sb_coordinate();
       device_rr_gsb.add_rr_gsb(gsb_coordinate, rr_gsb);

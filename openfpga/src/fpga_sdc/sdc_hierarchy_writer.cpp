@@ -31,7 +31,8 @@ namespace openfpga {
 void print_pnr_sdc_routing_sb_hierarchy(const std::string& sdc_dir,
                                         const ModuleManager& module_manager,
                                         const ModuleId& top_module,
-                                        const DeviceRRGSB& device_rr_gsb) {
+                                        const DeviceRRGSB& device_rr_gsb,
+                                        const RRGraphView& rr_graph) {
   std::string fname(sdc_dir + std::string(SDC_SB_HIERARCHY_FILE_NAME));
 
   std::string timer_message =
@@ -59,7 +60,7 @@ void print_pnr_sdc_routing_sb_hierarchy(const std::string& sdc_dir,
 
   for (size_t isb = 0; isb < device_rr_gsb.get_num_sb_unique_module(); ++isb) {
     const RRGSB& rr_gsb = device_rr_gsb.get_sb_unique_module(isb);
-    if (false == rr_gsb.is_sb_exist()) {
+    if (false == rr_gsb.is_sb_exist(rr_graph)) {
       continue;
     }
 

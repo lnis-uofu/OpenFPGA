@@ -616,7 +616,7 @@ void build_routing_bitstream(
        * Some of them do NOT exist due to heterogeneous blocks (width > 1)
        * We will skip those modules
        */
-      if (false == rr_gsb.is_sb_exist()) {
+      if (false == rr_gsb.is_sb_exist(rr_graph)) {
         continue;
       }
 

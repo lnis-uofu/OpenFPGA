@@ -400,7 +400,8 @@ bool FabricTile::register_pb_in_lookup(const FabricTileId& tile_id,
     return false;
   }
   /* Throw error if this coord is already registered! */
-  if (pb_coord2id_lookup_[coord.x()][coord.y()]) {
+  if (pb_coord2id_lookup_[coord.x()][coord.y()] &&
+      pb_coord2id_lookup_[coord.x()][coord.y()] != tile_id) {
     VTR_LOG_ERROR(
       "Programmable block at [%lu][%lu] has already been registered!\n",
       coord.x(), coord.y());
