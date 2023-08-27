@@ -20,6 +20,7 @@ set_target_properties(libfabrickey PROPERTIES PREFIX "") #Avoid extra 'lib' pref
 #Specify link-time dependancies
 target_link_libraries(libfabrickey
                       libopenfpgautil
+                      libopenfpgashell
                       libarchopenfpga
                       libvtrutil
                       libpugiutil)

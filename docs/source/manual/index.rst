@@ -18,3 +18,5 @@
 
    file_formats/index
 
+   utilities/index
+
