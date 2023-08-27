@@ -31,7 +31,8 @@ static std::vector<std::string> format_argv(const std::string& cmd_name,
  * - Each alias of reference key can be found in the input key
  */
 static int check_input_and_ref_key_alias_match(
-  const openfpga::FabricKey& input_key, const openfpga::FabricKey& ref_key, const bool& verbose) {
+  const openfpga::FabricKey& input_key, const openfpga::FabricKey& ref_key,
+  const bool& verbose) {
   size_t num_errors = 0;
   size_t num_keys_checked = 0;
   float progress = 0.;
@@ -45,17 +46,17 @@ static int check_input_and_ref_key_alias_match(
     progress = static_cast<float>(num_keys_checked) /
                static_cast<float>(ref_key.num_keys()) * 100.0;
     VTR_LOGV(verbose, "[%lu%] Checking key alias '%s'\r", size_t(progress),
-            curr_alias.c_str());
+             curr_alias.c_str());
     if (input_found_keys.empty()) {
       VTR_LOG_ERROR(
-        "\nInvalid alias '%s' in the reference key (id='%lu'), which does not "
+        "Invalid alias '%s' in the reference key (id='%lu'), which does not "
         "exist in the input key!\n",
         curr_alias.c_str(), size_t(key_id));
       num_errors++;
     }
     if (input_found_keys.size() > 1) {
       VTR_LOG_ERROR(
-        "\nInvalid alias '%s' in the input key (id='%lu'), which have been "
+        "Invalid alias '%s' in the input key (id='%lu'), which have been "
         "found %lu times!\n",
         curr_alias.c_str(), size_t(key_id), input_found_keys.size());
       num_errors++;
@@ -106,7 +107,8 @@ static int check_input_key(const openfpga::FabricKey& input_key,
   num_errors += curr_num_err;
   VTR_LOG("Checking key alias in input key... %s\n",
           curr_num_err ? "[Fail]" : "[Pass]");
-  num_errors += check_input_and_ref_key_alias_match(input_key, ref_key, verbose);
+  num_errors +=
+    check_input_and_ref_key_alias_match(input_key, ref_key, verbose);
   return num_errors ? openfpga::CMD_EXEC_FATAL_ERROR
                     : openfpga::CMD_EXEC_SUCCESS;
 }
@@ -131,17 +133,17 @@ static int update_input_key(openfpga::FabricKey& input_key,
     progress = static_cast<float>(num_keys_checked) /
                static_cast<float>(input_key.num_keys()) * 100.0;
     VTR_LOGV(verbose, "[%lu%] Pairing key alias '%s'\r", size_t(progress),
-            curr_alias.c_str());
+             curr_alias.c_str());
     if (ref_found_keys.empty()) {
       VTR_LOG_ERROR(
-        "\nInvalid alias '%s' in the input key (id='%lu'), which does not "
+        "Invalid alias '%s' in the input key (id='%lu'), which does not "
         "exist in the reference key!\n",
         curr_alias.c_str(), size_t(key_id));
       num_errors++;
     }
     if (ref_found_keys.size() > 1) {
       VTR_LOG_ERROR(
-        "\nInvalid alias '%s' in the reference key (id='%lu'), which have been "
+        "Invalid alias '%s' in the reference key (id='%lu'), which have been "
         "found %lu times!\n",
         curr_alias.c_str(), size_t(key_id));
       num_errors++;
@@ -149,9 +151,9 @@ static int update_input_key(openfpga::FabricKey& input_key,
     /* Now we have a key, get the name and value, and update input key */
     input_key.set_key_name(key_id, ref_key.key_name(ref_found_keys[0]));
     input_key.set_key_value(key_id, ref_key.key_value(ref_found_keys[0]));
-    VTR_LOGV(verbose, "[%lu%] Pairing key alias '%s' -> ('%s', %lu)\r", size_t(progress),
-            curr_alias.c_str(), input_key.key_name(key_id).c_str(),
-            input_key.key_value(key_id));
+    VTR_LOGV(verbose, "[%lu%] Pairing key alias '%s' -> ('%s', %lu)\r",
+             size_t(progress), curr_alias.c_str(),
+             input_key.key_name(key_id).c_str(), input_key.key_value(key_id));
     num_keys_checked++;
   }
   return num_errors ? openfpga::CMD_EXEC_FATAL_ERROR
@@ -219,7 +221,8 @@ int main(int argc, const char** argv) {
     openfpga::read_xml_fabric_key(cmd_ctx.option_value(cmd, opt_input).c_str());
 
   /* Check the input key */
-  if (check_and_update_input_key(input_key, ref_key, cmd_ctx.option_enable(cmd, opt_verbose))) {
+  if (check_and_update_input_key(input_key, ref_key,
+                                 cmd_ctx.option_enable(cmd, opt_verbose))) {
     return openfpga::CMD_EXEC_FATAL_ERROR;
   }
 
