@@ -57,7 +57,7 @@ static int check_input_and_ref_key_alias_match(
       VTR_LOG_ERROR(
         "\nInvalid alias '%s' in the input key (id='%lu'), which have been "
         "found %lu times!\n",
-        curr_alias.c_str(), size_t(key_id));
+        curr_alias.c_str(), size_t(key_id), input_found_keys.size());
       num_errors++;
     }
     num_keys_checked++;
