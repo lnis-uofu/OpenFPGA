@@ -12,6 +12,128 @@
 namespace openfpga {
 
 /**************************************************
+ * FabricBitstreamMemoryBank
+ *************************************************/
+void FabricBitstreamMemoryBank::add_bit(const fabric_size_t& bit_id,
+                                        const fabric_size_t& region_id,
+                                        const fabric_size_t& bl,
+                                        const fabric_size_t& wl,
+                                        const fabric_size_t& bl_addr_size,
+                                        const fabric_size_t& wl_addr_size,
+                                        bool bit) {
+  // Fabric Bit is added in sequential manner and each bit is unique
+  VTR_ASSERT((size_t)(bit_id) == fabric_bit_datas.size());
+  // Region is added in sequntial manner but it is not unique from fabric bit
+  // perspective
+  VTR_ASSERT((size_t)(region_id) <= blwl_lengths.size());
+  if ((size_t)(region_id) == blwl_lengths.size()) {
+    // Add if this is first time
+    blwl_lengths.push_back(fabric_blwl_length(bl_addr_size, wl_addr_size));
+  } else {
+    // Otherwise if the region had been added, it must always be consistent
+    VTR_ASSERT(blwl_lengths[region_id].bl == bl_addr_size);
+    VTR_ASSERT(blwl_lengths[region_id].wl == wl_addr_size);
+  }
+  // The BL/WL index must be within respective length
+  VTR_ASSERT(bl < blwl_lengths[region_id].bl);
+  VTR_ASSERT(wl < blwl_lengths[region_id].wl);
+  // We might not need this at all to track the raw data
+  // But since it does not use a lot of memory, tracking for good
+  fabric_bit_datas.push_back(fabric_bit_data((fabric_size_t)(size_t)(region_id),
+                                             (fabric_size_t)(bl),
+                                             (fabric_size_t)(wl), bit));
+  // This is real compact data
+  VTR_ASSERT(datas.size() == masks.size());
+  while ((size_t)(region_id) >= datas.size()) {
+    datas.emplace_back();
+    masks.emplace_back();
+  }
+  VTR_ASSERT(datas[region_id].size() == masks[region_id].size());
+  while ((size_t)(wl) >= datas[region_id].size()) {
+    datas[region_id].push_back(std::vector<uint8_t>((bl_addr_size + 7) / 8, 0));
+    masks[region_id].push_back(std::vector<uint8_t>((bl_addr_size + 7) / 8, 0));
+  }
+  // Same uniqie config bit cannot be set twice
+  VTR_ASSERT((masks[region_id][wl][bl >> 3] & (1 << (bl & 7))) == 0);
+  if (bit) {
+    // Mark the data value if bit (or din) is true
+    datas[region_id][wl][bl >> 3] |= (1 << (bl & 7));
+  }
+  // Mark the mask to indicate we had used this bit
+  masks[region_id][wl][bl >> 3] |= (1 << (bl & 7));
+}
+
+void FabricBitstreamMemoryBank::fast_configuration(
+  const bool& fast, const bool& bit_value_to_skip) {
+  for (auto& wls : wls_to_skip) {
+    wls.clear();
+  }
+  wls_to_skip.clear();
+  for (size_t region = 0; region < datas.size(); region++) {
+    wls_to_skip.emplace_back();
+    if (fast) {
+      for (fabric_size_t wl = 0; wl < blwl_lengths[region].wl; wl++) {
+        VTR_ASSERT((size_t)(wl) < datas[region].size());
+        bool skip_wl = true;
+        for (fabric_size_t bl = 0; bl < blwl_lengths[region].bl && skip_wl;
+             bl++) {
+          // Only check the bit that being used (marked in the mask),
+          // otherwise it is just a don't care, we can skip
+          if (masks[region][wl][bl >> 3] & (1 << (bl & 7))) {
+            if (datas[region][wl][bl >> 3] & (1 << (bl & 7))) {
+              // If bit_value_to_skip=true, and yet the din (recorded in
+              // datas) also 1, then we can skip
+              skip_wl = bit_value_to_skip;
+            } else {
+              skip_wl = !bit_value_to_skip;
+            }
+          }
+        }
+        if (skip_wl) {
+          // Record down that for this region, we will skip this WL
+          wls_to_skip[region].push_back(wl);
+        }
+      }
+    }
+  }
+}
+
+fabric_size_t FabricBitstreamMemoryBank::get_longest_effective_wl_count()
+  const {
+  // This function check effective WL count
+  // Where effective WL is the WL that we want to program after considering
+  // fast configuration from all the region, it return the longest
+  fabric_size_t longest_wl = 0;
+  for (size_t region = 0; region < datas.size(); region++) {
+    VTR_ASSERT((size_t)(region) < wls_to_skip.size());
+    fabric_size_t current_wl =
+      (fabric_size_t)(datas[region].size() - wls_to_skip[region].size());
+    if (current_wl > longest_wl) {
+      longest_wl = current_wl;
+    }
+  }
+  return longest_wl;
+}
+
+fabric_size_t FabricBitstreamMemoryBank::get_total_bl_addr_size() const {
+  // Simply total up all the BL addr size
+  fabric_size_t bl = 0;
+  for (size_t region = 0; region < datas.size(); region++) {
+    bl += blwl_lengths[region].bl;
+  }
+  return bl;
+}
+
+fabric_size_t FabricBitstreamMemoryBank::get_total_wl_addr_size() const {
+  // Simply total up all the WL addr size
+  fabric_size_t wl = 0;
+  for (size_t region = 0; region < datas.size(); region++) {
+    wl += blwl_lengths[region].wl;
+  }
+  return wl;
+}
+
+/**************************************************
  * Public Constructor
  *************************************************/
 FabricBitstream::FabricBitstream() {
@@ -129,6 +251,15 @@ bool FabricBitstream::use_address() const { return use_address_; }
 
 bool FabricBitstream::use_wl_address() const { return use_wl_address_; }
 
+const FabricBitstreamMemoryBank& FabricBitstream::memory_bank_info(
+  const bool& fast, const bool& bit_value_to_skip) const {
+  VTR_ASSERT(true == use_address_);
+  VTR_ASSERT(true == use_wl_address_);
+  (const_cast<FabricBitstreamMemoryBank*>(&memory_bank_data_))
+    ->fast_configuration(fast, bit_value_to_skip);
+  return memory_bank_data_;
+}
+
 /******************************************************************************
  * Public Mutators
  ******************************************************************************/
@@ -241,6 +372,27 @@ void FabricBitstream::set_address_length(const size_t& length) {
 
 void FabricBitstream::set_bl_address_length(const size_t& length) {
   set_address_length(length);
+}
+
+void FabricBitstream::set_memory_bank_info(const FabricBitId& bit_id,
+                                           const FabricBitRegionId& region_id,
+                                           const size_t& bl, const size_t& wl,
+                                           const size_t& bl_addr_size,
+                                           const size_t& wl_addr_size,
+                                           bool bit) {
+  // Bit must be valid one
+  // We only support this in protocol that use BL and WL address
+  VTR_ASSERT(true == valid_bit_id(bit_id));
+  VTR_ASSERT(true == use_address_);
+  VTR_ASSERT(true == use_wl_address_);
+  VTR_ASSERT(bl_addr_size);
+  VTR_ASSERT(wl_addr_size);
+  // All the basic checking had passed, we can add the data into
+  // memory_bank_data_
+  memory_bank_data_.add_bit(
+    (fabric_size_t)(size_t)(bit_id), (fabric_size_t)(size_t)(region_id),
+    (fabric_size_t)(bl), (fabric_size_t)(wl), (fabric_size_t)(bl_addr_size),
+    (fabric_size_t)(wl_addr_size), bit);
 }
 
 void FabricBitstream::set_use_wl_address(const bool& enable) {

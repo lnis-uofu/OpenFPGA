@@ -294,6 +294,7 @@ def generate_each_task_actions(taskname):
         yosys_params = [
             "read_verilog_options",
             "yosys_args",
+            "yosys_adder_map_verilog",
             "yosys_bram_map_rules",
             "yosys_bram_map_verilog",
             "yosys_cell_sim_verilog",

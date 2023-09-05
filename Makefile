@@ -24,7 +24,7 @@ CMAKE_BUILD_TYPE := $(shell echo ${BUILD_TYPE} | sed 's/_\?pgo//' | sed 's/_\?st
 # e.g. make CMAKE_FLAGS="-DCMAKE_CXX_COMPILER=g++-9'
 override CMAKE_FLAGS := -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -G 'Unix Makefiles' ${CMAKE_FLAGS}
 
-# -s : Suppresss makefile output (e.g. entering/leaving directories)
+# -s : Suppress makefile output (e.g. entering/leaving directories)
 # --output-sync target : For parallel compilation ensure output for each target is synchronized (make version >= 4.0)
 MAKEFLAGS := -s
 
@@ -66,7 +66,7 @@ prebuild:
 	echo "cd ${BUILD_DIR} && ${CMAKE_COMMAND} ${CMAKE_FLAGS} ${SOURCE_DIR}" && \
 	cd ${BUILD_DIR} && ${CMAKE_COMMAND} ${CMAKE_FLAGS} ${SOURCE_DIR}
 
-compile: prebuild
+compile: | prebuild
 # Compile the code base. By default, all the targets will be compiled
 # Following options are available
 # .. option:: CMAKE_GOALS
@@ -75,12 +75,13 @@ compile: prebuild
 	echo "Building target(s): ${CMAKE_GOALS}"
 	@+${MAKE} -C ${BUILD_DIR} ${CMAKE_GOALS}
 
-list_cmake_targets: prebuild
+list_cmake_targets: | prebuild
 # Show the targets available to be built, which can be specified through ``CMAKE_GOALS`` when compile
 	cd ${BUILD_DIR} && make help && cd -
 
-all: checkout compile
+all: checkout
 # A shortcut command to run checkout and compile in serial
+	@+${MAKE} compile
 
 format-cpp:
 # Format all the C/C++ files under this project, excluding submodules

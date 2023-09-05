@@ -151,6 +151,7 @@ void add_grid_module_duplicated_pb_type_ports(
 static void add_grid_module_net_connect_duplicated_pb_graph_pin(
   ModuleManager& module_manager, const ModuleId& grid_module,
   const ModuleId& child_module, const size_t& child_instance,
+  const size_t& child_inst_subtile_index,
   const VprDeviceAnnotation& vpr_device_annotation,
   t_physical_tile_type_ptr grid_type_descriptor, t_pb_graph_pin* pb_graph_pin,
   const e_side& border_side, const e_pin2pin_interc_type& pin2pin_interc_type) {
@@ -169,15 +170,18 @@ static void add_grid_module_net_connect_duplicated_pb_graph_pin(
     grid_pin_sides = {TOP, RIGHT, BOTTOM, LEFT};
   }
 
-  /* num_pins/capacity = the number of pins that each type_descriptor has.
-   * Capacity defines the number of type_descriptors in each grid
-   * so the pin index at grid level = pin_index_in_type_descriptor
-   *                                + type_descriptor_index_in_capacity *
-   * num_pins_per_type_descriptor
+  /* Note that each grid may contain a number of sub tiles, each type of which
+   * may a different capacity and number of pins We need to find the start pin
+   * index for a given z offset (instance id), denotes the index of the first
+   * pin regarding the current instance. The variable 'pin_count_in_cluster'
+   * represent the pin index in the context of current instance only. With the
+   * information above, we can then calculate the absolute pin index at
+   * grid-level (considering all the sub tiles).
    */
-  size_t grid_pin_index = pb_graph_pin->pin_count_in_cluster +
-                          child_instance * grid_type_descriptor->num_pins /
-                            grid_type_descriptor->capacity;
+  size_t grid_pin_index =
+    pb_graph_pin->pin_count_in_cluster +
+    vpr_device_annotation.physical_tile_z_to_start_pin_index(
+      grid_type_descriptor, child_inst_subtile_index);
 
   int pin_width = grid_type_descriptor->pin_width_offset[grid_pin_index];
   int pin_height = grid_type_descriptor->pin_height_offset[grid_pin_index];
@@ -292,49 +296,48 @@ static void add_grid_module_net_connect_duplicated_pb_graph_pin(
 void add_grid_module_nets_connect_duplicated_pb_type_ports(
   ModuleManager& module_manager, const ModuleId& grid_module,
   const ModuleId& child_module, const size_t& child_instance,
-  const VprDeviceAnnotation& vpr_device_annotation,
+  const t_sub_tile& sub_tile, const VprDeviceAnnotation& vpr_device_annotation,
   t_physical_tile_type_ptr grid_type_descriptor, const e_side& border_side) {
   /* Ensure that we have a valid grid_type_descriptor */
   VTR_ASSERT(false == is_empty_type(grid_type_descriptor));
 
   /* FIXME: Currently support only 1 equivalent site! Should clarify this
    * limitation in documentation! */
-  for (const t_sub_tile& sub_tile : grid_type_descriptor->sub_tiles) {
-    t_logical_block_type_ptr lb_type = sub_tile.equivalent_sites[0];
-    t_pb_graph_node* top_pb_graph_node = lb_type->pb_graph_head;
-    VTR_ASSERT(nullptr != top_pb_graph_node);
+  t_logical_block_type_ptr lb_type = sub_tile.equivalent_sites[0];
+  t_pb_graph_node* top_pb_graph_node = lb_type->pb_graph_head;
+  VTR_ASSERT(nullptr != top_pb_graph_node);
+  size_t child_inst_subtile_index = sub_tile.capacity.low + child_instance;
 
-    for (int iport = 0; iport < top_pb_graph_node->num_input_ports; ++iport) {
-      for (int ipin = 0; ipin < top_pb_graph_node->num_input_pins[iport];
-           ++ipin) {
-        add_grid_module_net_connect_pb_graph_pin(
-          module_manager, grid_module, child_module, child_instance,
-          vpr_device_annotation, grid_type_descriptor,
-          &(top_pb_graph_node->input_pins[iport][ipin]), border_side,
-          INPUT2INPUT_INTERC);
-      }
+  for (int iport = 0; iport < top_pb_graph_node->num_input_ports; ++iport) {
+    for (int ipin = 0; ipin < top_pb_graph_node->num_input_pins[iport];
+         ++ipin) {
+      add_grid_module_net_connect_pb_graph_pin(
+        module_manager, grid_module, child_module, child_instance,
+        child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
+        &(top_pb_graph_node->input_pins[iport][ipin]), border_side,
+        INPUT2INPUT_INTERC);
     }
+  }
 
-    for (int iport = 0; iport < top_pb_graph_node->num_output_ports; ++iport) {
-      for (int ipin = 0; ipin < top_pb_graph_node->num_output_pins[iport];
-           ++ipin) {
-        add_grid_module_net_connect_duplicated_pb_graph_pin(
-          module_manager, grid_module, child_module, child_instance,
-          vpr_device_annotation, grid_type_descriptor,
-          &(top_pb_graph_node->output_pins[iport][ipin]), border_side,
-          OUTPUT2OUTPUT_INTERC);
-      }
+  for (int iport = 0; iport < top_pb_graph_node->num_output_ports; ++iport) {
+    for (int ipin = 0; ipin < top_pb_graph_node->num_output_pins[iport];
+         ++ipin) {
+      add_grid_module_net_connect_duplicated_pb_graph_pin(
+        module_manager, grid_module, child_module, child_instance,
+        child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
+        &(top_pb_graph_node->output_pins[iport][ipin]), border_side,
+        OUTPUT2OUTPUT_INTERC);
     }
+  }
 
-    for (int iport = 0; iport < top_pb_graph_node->num_clock_ports; ++iport) {
-      for (int ipin = 0; ipin < top_pb_graph_node->num_clock_pins[iport];
-           ++ipin) {
-        add_grid_module_net_connect_pb_graph_pin(
-          module_manager, grid_module, child_module, child_instance,
-          vpr_device_annotation, grid_type_descriptor,
-          &(top_pb_graph_node->clock_pins[iport][ipin]), border_side,
-          INPUT2INPUT_INTERC);
-      }
+  for (int iport = 0; iport < top_pb_graph_node->num_clock_ports; ++iport) {
+    for (int ipin = 0; ipin < top_pb_graph_node->num_clock_pins[iport];
+         ++ipin) {
+      add_grid_module_net_connect_pb_graph_pin(
+        module_manager, grid_module, child_module, child_instance,
+        child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
+        &(top_pb_graph_node->clock_pins[iport][ipin]), border_side,
+        INPUT2INPUT_INTERC);
     }
   }
 }

@@ -7,6 +7,7 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
+#include "command_exit_codes.h"
 #include "openfpga_digest.h"
 
 /* Headers from archopenfpga library */
@@ -19,6 +20,57 @@
 namespace openfpga {
 
 /***************************************************************************************
+ * Add module-level keys to fabric key
+ ***************************************************************************************/
+static int add_module_keys_to_fabric_key(const ModuleManager& module_manager,
+                                         const ModuleId& curr_module,
+                                         FabricKey& fabric_key) {
+  /* Bypass top-level module */
+  std::string module_name = module_manager.module_name(curr_module);
+  if (module_name == generate_fpga_top_module_name() ||
+      module_name == generate_fpga_core_module_name()) {
+    return CMD_EXEC_SUCCESS;
+  }
+  /* Bypass modules which does not have any configurable children */
+  if (module_manager
+        .configurable_children(curr_module,
+                               ModuleManager::e_config_child_type::PHYSICAL)
+        .empty()) {
+    return CMD_EXEC_SUCCESS;
+  }
+  /* Now create the module and add subkey one by one */
+  FabricKeyModuleId key_module_id = fabric_key.create_module(module_name);
+  if (!key_module_id) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  size_t num_config_child =
+    module_manager
+      .configurable_children(curr_module,
+                             ModuleManager::e_config_child_type::PHYSICAL)
+      .size();
+  for (size_t ichild = 0; ichild < num_config_child; ++ichild) {
+    ModuleId child_module = module_manager.configurable_children(
+      curr_module, ModuleManager::e_config_child_type::PHYSICAL)[ichild];
+    size_t child_instance = module_manager.configurable_child_instances(
+      curr_module, ModuleManager::e_config_child_type::PHYSICAL)[ichild];
+
+    FabricSubKeyId sub_key = fabric_key.create_module_key(key_module_id);
+    fabric_key.set_sub_key_name(sub_key,
+                                module_manager.module_name(child_module));
+    fabric_key.set_sub_key_value(sub_key, child_instance);
+
+    if (false ==
+        module_manager.instance_name(curr_module, child_module, child_instance)
+          .empty()) {
+      fabric_key.set_sub_key_alias(
+        sub_key, module_manager.instance_name(curr_module, child_module,
+                                              child_instance));
+    }
+  }
+  return CMD_EXEC_SUCCESS;
+}
+
+/***************************************************************************************
  * Write the fabric key of top module to an XML file
  * We will use the writer API in libfabrickey
  *
@@ -29,7 +81,9 @@ namespace openfpga {
 int write_fabric_key_to_xml_file(
   const ModuleManager& module_manager, const std::string& fname,
   const ConfigProtocol& config_protocol,
-  const MemoryBankShiftRegisterBanks& blwl_sr_banks, const bool& verbose) {
+  const MemoryBankShiftRegisterBanks& blwl_sr_banks,
+  const bool& include_module_keys, const bool& verbose) {
+  int err_code = CMD_EXEC_SUCCESS;
   std::string timer_message =
     std::string("Write fabric key to XML file '") + fname + std::string("'");
 
@@ -47,15 +101,27 @@ int write_fabric_key_to_xml_file(
   /* Find top-level module */
   std::string top_module_name = generate_fpga_top_module_name();
   ModuleId top_module = module_manager.find_module(top_module_name);
-  if (true != module_manager.valid_module_id(top_module)) {
-    VTR_LOGV_ERROR(verbose, "Unable to find the top-level module '%s'!\n",
-                   top_module_name.c_str());
-    return 1;
+  std::string core_module_name = generate_fpga_core_module_name();
+  ModuleId core_module = module_manager.find_module(core_module_name);
+  if (!module_manager.valid_module_id(top_module) &&
+      !module_manager.valid_module_id(core_module)) {
+    VTR_LOGV_ERROR(
+      verbose, "Unable to find the top-level/core-level module '%s' or '%s'!\n",
+      top_module_name.c_str(), core_module_name.c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  if (module_manager.valid_module_id(top_module) &&
+      module_manager.valid_module_id(core_module)) {
+    top_module = core_module;
   }
 
   /* Build a fabric key database by visiting all the configurable children */
   FabricKey fabric_key;
-  size_t num_keys = module_manager.configurable_children(top_module).size();
+  size_t num_keys =
+    module_manager
+      .configurable_children(top_module,
+                             ModuleManager::e_config_child_type::PHYSICAL)
+      .size();
 
   fabric_key.reserve_keys(num_keys);
 
@@ -165,8 +231,19 @@ int write_fabric_key_to_xml_file(
   VTR_LOGV(verbose, "Created %lu regions and %lu keys for the top module %s.\n",
            num_regions, num_keys, top_module_name.c_str());
 
+  /* Output module subkeys if specified */
+  if (include_module_keys) {
+    for (ModuleId submodule : module_manager.modules()) {
+      err_code =
+        add_module_keys_to_fabric_key(module_manager, submodule, fabric_key);
+      if (err_code != CMD_EXEC_SUCCESS) {
+        return CMD_EXEC_FATAL_ERROR;
+      }
+    }
+  }
+
   /* Call the XML writer for fabric key */
-  int err_code = write_xml_fabric_key(fname.c_str(), fabric_key);
+  err_code = write_xml_fabric_key(fname.c_str(), fabric_key);
 
   return err_code;
 }

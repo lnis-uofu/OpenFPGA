@@ -24,6 +24,8 @@ lut_truth_table_fixup
 #    Note that this is turned on when bitstream generation 
 #    is the ONLY purpose of the flow!!!
 build_fabric --compress_routing --frame_view #--verbose
+# Add a fpga core between fpga top and the underlying modules
+add_fpga_core_to_fabric --instance_name fpga_core_inst --frame_view --verbose
 
 # Repack the netlist to physical pbs
 # This must be done before bitstream generator and testbench generation

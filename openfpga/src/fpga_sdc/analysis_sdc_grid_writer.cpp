@@ -603,15 +603,15 @@ static void print_analysis_sdc_disable_unused_grid(
   /* Validate file stream */
   valid_file_stream(fp);
 
-  t_physical_tile_type_ptr grid_type =
-    grids[grid_coordinate.x()][grid_coordinate.y()].type;
+  t_physical_tile_loc phy_tile_loc(grid_coordinate.x(), grid_coordinate.y(), 0);
+  t_physical_tile_type_ptr grid_type = grids.get_physical_type(phy_tile_loc);
   /* Bypass conditions for grids :
    * 1. EMPTY type, which is by nature unused
    * 2. Offset > 0, which has already been processed when offset = 0
    */
   if ((true == is_empty_type(grid_type)) ||
-      (0 < grids[grid_coordinate.x()][grid_coordinate.y()].width_offset) ||
-      (0 < grids[grid_coordinate.x()][grid_coordinate.y()].height_offset)) {
+      (0 < grids.get_width_offset(phy_tile_loc)) ||
+      (0 < grids.get_height_offset(phy_tile_loc))) {
     return;
   }
 

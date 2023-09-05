@@ -200,6 +200,11 @@ ShellCommandId add_write_fabric_bitstream_command_template(
     "Keep don't care bits in bitstream file; If not enabled, don't care bits "
     "are converted to logic '0' or '1'");
 
+  /* Add an option '--wl_incremental_order' */
+  shell_cmd.add_option(
+    "wl_decremental_order", false,
+    "Generate bitstream in WL decremental addressing order if supported");
+
   /* Add an option '--no_time_stamp' */
   shell_cmd.add_option("no_time_stamp", false,
                        "Do not print time stamp in output files");

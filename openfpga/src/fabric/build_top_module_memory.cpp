@@ -86,7 +86,7 @@ static void organize_top_module_tile_cb_modules(
     module_manager.add_configurable_child(
       top_module, cb_module,
       cb_instance_ids[rr_gsb.get_cb_x(cb_type)][rr_gsb.get_cb_y(cb_type)],
-      config_coord);
+      ModuleManager::e_config_child_type::UNIFIED, config_coord);
   }
 }
 
@@ -134,10 +134,11 @@ static void organize_top_module_tile_memory_modules(
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, const DeviceGrid& grids,
   const vtr::Matrix<size_t>& grid_instance_ids,
-  const DeviceRRGSB& device_rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
+  const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph,
+  const vtr::Matrix<size_t>& sb_instance_ids,
   const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
-  const bool& compact_routing_hierarchy, const vtr::Point<size_t>& tile_coord,
-  const e_side& tile_border_side) {
+  const bool& compact_routing_hierarchy, const size_t& layer,
+  const vtr::Point<size_t>& tile_coord, const e_side& tile_border_side) {
   vtr::Point<size_t> gsb_coord_range = device_rr_gsb.get_gsb_range();
 
   vtr::Point<size_t> gsb_coord(tile_coord.x(), tile_coord.y() - 1);
@@ -165,7 +166,7 @@ static void organize_top_module_tile_memory_modules(
      * we will update the memory module and instance list
      */
     /* If the CB does not exist, we can skip addition */
-    if (true == rr_gsb.is_sb_exist()) {
+    if (true == rr_gsb.is_sb_exist(rr_graph)) {
       if (0 < find_module_num_config_bits(module_manager, sb_module,
                                           circuit_lib, sram_model,
                                           sram_orgz_type)) {
@@ -173,7 +174,8 @@ static void organize_top_module_tile_memory_modules(
                                      rr_gsb.get_sb_y() * 2 + 1);
         module_manager.add_configurable_child(
           top_module, sb_module,
-          sb_instance_ids[rr_gsb.get_sb_x()][rr_gsb.get_sb_y()], config_coord);
+          sb_instance_ids[rr_gsb.get_sb_x()][rr_gsb.get_sb_y()],
+          ModuleManager::e_config_child_type::UNIFIED, config_coord);
       }
     }
 
@@ -190,8 +192,8 @@ static void organize_top_module_tile_memory_modules(
   }
 
   /* Find the module name for this type of grid */
-  t_physical_tile_type_ptr grid_type =
-    grids[tile_coord.x()][tile_coord.y()].type;
+  t_physical_tile_loc phy_tile_loc(tile_coord.x(), tile_coord.y(), layer);
+  t_physical_tile_type_ptr grid_type = grids.get_physical_type(phy_tile_loc);
 
   /* Skip EMPTY Grid */
   if (true == is_empty_type(grid_type)) {
@@ -199,8 +201,8 @@ static void organize_top_module_tile_memory_modules(
   }
   /* Skip width > 1 or height > 1 Grid, which should already been processed when
    * offset=0 */
-  if ((0 < grids[tile_coord.x()][tile_coord.y()].width_offset) ||
-      (0 < grids[tile_coord.x()][tile_coord.y()].height_offset)) {
+  if ((0 < grids.get_width_offset(phy_tile_loc)) ||
+      (0 < grids.get_height_offset(phy_tile_loc))) {
     return;
   }
 
@@ -219,7 +221,8 @@ static void organize_top_module_tile_memory_modules(
     vtr::Point<int> config_coord(tile_coord.x() * 2, tile_coord.y() * 2);
     module_manager.add_configurable_child(
       top_module, grid_module,
-      grid_instance_ids[tile_coord.x()][tile_coord.y()], config_coord);
+      grid_instance_ids[tile_coord.x()][tile_coord.y()],
+      ModuleManager::e_config_child_type::UNIFIED, config_coord);
   }
 }
 
@@ -262,21 +265,28 @@ static void organize_top_module_tile_memory_modules(
  *   - This function should NOT modify configurable children
  *
  *******************************************************************/
-static void build_top_module_configurable_regions(
+void build_top_module_configurable_regions(
   ModuleManager& module_manager, const ModuleId& top_module,
   const ConfigProtocol& config_protocol) {
   vtr::ScopedStartFinishTimer timer(
     "Build configurable regions for the top module");
 
   /* Ensure we have valid configurable children */
-  VTR_ASSERT(false == module_manager.configurable_children(top_module).empty());
+  VTR_ASSERT(false ==
+             module_manager
+               .configurable_children(
+                 top_module, ModuleManager::e_config_child_type::PHYSICAL)
+               .empty());
 
   /* Ensure that our region definition is valid */
   VTR_ASSERT(1 <= config_protocol.num_regions());
 
   /* Exclude decoders from the list */
   size_t num_configurable_children =
-    module_manager.configurable_children(top_module).size();
+    module_manager
+      .configurable_children(top_module,
+                             ModuleManager::e_config_child_type::PHYSICAL)
+      .size();
   if (CONFIG_MEM_MEMORY_BANK == config_protocol.type() ||
       CONFIG_MEM_QL_MEMORY_BANK == config_protocol.type()) {
     num_configurable_children -= 2;
@@ -291,7 +301,10 @@ static void build_top_module_configurable_regions(
   bool create_region = true;
   ConfigRegionId curr_region = ConfigRegionId::INVALID();
   for (size_t ichild = 0;
-       ichild < module_manager.configurable_children(top_module).size();
+       ichild < module_manager
+                  .configurable_children(
+                    top_module, ModuleManager::e_config_child_type::PHYSICAL)
+                  .size();
        ++ichild) {
     if (true == create_region) {
       curr_region = module_manager.add_config_region(top_module);
@@ -300,8 +313,11 @@ static void build_top_module_configurable_regions(
     /* Add the child to a region */
     module_manager.add_configurable_child_to_region(
       top_module, curr_region,
-      module_manager.configurable_children(top_module)[ichild],
-      module_manager.configurable_child_instances(top_module)[ichild], ichild);
+      module_manager.configurable_children(
+        top_module, ModuleManager::e_config_child_type::PHYSICAL)[ichild],
+      module_manager.configurable_child_instances(
+        top_module, ModuleManager::e_config_child_type::PHYSICAL)[ichild],
+      ichild);
 
     /* See if the current region is full or not:
      * For the last region, we will keep adding until we finish all the children
@@ -422,12 +438,17 @@ void organize_top_module_memory_modules(
   ModuleManager& module_manager, const ModuleId& top_module,
   const CircuitLibrary& circuit_lib, const ConfigProtocol& config_protocol,
   const CircuitModelId& sram_model, const DeviceGrid& grids,
-  const vtr::Matrix<size_t>& grid_instance_ids,
-  const DeviceRRGSB& device_rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
+  const size_t& layer, const vtr::Matrix<size_t>& grid_instance_ids,
+  const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph,
+  const vtr::Matrix<size_t>& sb_instance_ids,
   const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
   const bool& compact_routing_hierarchy) {
   /* Ensure clean vectors to return */
-  VTR_ASSERT(true == module_manager.configurable_children(top_module).empty());
+  VTR_ASSERT(true ==
+             module_manager
+               .configurable_children(
+                 top_module, ModuleManager::e_config_child_type::PHYSICAL)
+               .empty());
 
   /* First, organize the I/O tiles on the border */
   /* Special for the I/O tileas on RIGHT and BOTTOM,
@@ -477,8 +498,9 @@ void organize_top_module_memory_modules(
       /* Identify the GSB that surrounds the grid */
       organize_top_module_tile_memory_modules(
         module_manager, top_module, circuit_lib, config_protocol.type(),
-        sram_model, grids, grid_instance_ids, device_rr_gsb, sb_instance_ids,
-        cb_instance_ids, compact_routing_hierarchy, io_coord, io_side);
+        sram_model, grids, grid_instance_ids, device_rr_gsb, rr_graph,
+        sb_instance_ids, cb_instance_ids, compact_routing_hierarchy, layer,
+        io_coord, io_side);
     }
   }
 
@@ -505,8 +527,9 @@ void organize_top_module_memory_modules(
   for (const vtr::Point<size_t>& core_coord : core_coords) {
     organize_top_module_tile_memory_modules(
       module_manager, top_module, circuit_lib, config_protocol.type(),
-      sram_model, grids, grid_instance_ids, device_rr_gsb, sb_instance_ids,
-      cb_instance_ids, compact_routing_hierarchy, core_coord, NUM_SIDES);
+      sram_model, grids, grid_instance_ids, device_rr_gsb, rr_graph,
+      sb_instance_ids, cb_instance_ids, compact_routing_hierarchy, layer,
+      core_coord, NUM_SIDES);
   }
 
   /* Split memory modules into different regions */
@@ -530,7 +553,11 @@ void organize_top_module_memory_modules(
 void shuffle_top_module_configurable_children(
   ModuleManager& module_manager, const ModuleId& top_module,
   const ConfigProtocol& config_protocol) {
-  size_t num_keys = module_manager.configurable_children(top_module).size();
+  size_t num_keys =
+    module_manager
+      .configurable_children(top_module,
+                             ModuleManager::e_config_child_type::PHYSICAL)
+      .size();
   std::vector<size_t> shuffled_keys;
   shuffled_keys.reserve(num_keys);
   for (size_t ikey = 0; ikey < num_keys; ++ikey) {
@@ -541,11 +568,14 @@ void shuffle_top_module_configurable_children(
 
   /* Cache the configurable children and their instances */
   std::vector<ModuleId> orig_configurable_children =
-    module_manager.configurable_children(top_module);
+    module_manager.configurable_children(
+      top_module, ModuleManager::e_config_child_type::PHYSICAL);
   std::vector<size_t> orig_configurable_child_instances =
-    module_manager.configurable_child_instances(top_module);
+    module_manager.configurable_child_instances(
+      top_module, ModuleManager::e_config_child_type::PHYSICAL);
   std::vector<vtr::Point<int>> orig_configurable_child_coordinates =
-    module_manager.configurable_child_coordinates(top_module);
+    module_manager.configurable_child_coordinates(
+      top_module, ModuleManager::e_config_child_type::PHYSICAL);
 
   /* Reorganize the configurable children */
   module_manager.clear_configurable_children(top_module);
@@ -554,6 +584,7 @@ void shuffle_top_module_configurable_children(
     module_manager.add_configurable_child(
       top_module, orig_configurable_children[shuffled_keys[ikey]],
       orig_configurable_child_instances[shuffled_keys[ikey]],
+      ModuleManager::e_config_child_type::UNIFIED,
       orig_configurable_child_coordinates[shuffled_keys[ikey]]);
   }
 
@@ -650,9 +681,10 @@ int load_top_module_memory_modules_from_fabric_key(
       }
 
       /* Now we can add the child to configurable children of the top module */
-      module_manager.add_configurable_child(top_module, instance_info.first,
-                                            instance_info.second,
-                                            fabric_key.key_coordinate(key));
+      module_manager.add_configurable_child(
+        top_module, instance_info.first, instance_info.second,
+        ModuleManager::e_config_child_type::UNIFIED,
+        fabric_key.key_coordinate(key));
       module_manager.add_configurable_child_to_region(
         top_module, top_module_config_region, instance_info.first,
         instance_info.second, curr_configurable_child_id);
@@ -1329,17 +1361,27 @@ static void add_top_module_nets_cmos_memory_bank_config_bus(
      * Note: this MUST be done after adding all the module nets to other regular
      * configurable children
      */
-    module_manager.add_configurable_child(top_module, bl_decoder_module,
-                                          curr_bl_decoder_instance_id);
+    module_manager.add_configurable_child(
+      top_module, bl_decoder_module, curr_bl_decoder_instance_id,
+      ModuleManager::e_config_child_type::PHYSICAL);
     module_manager.add_configurable_child_to_region(
       top_module, config_region, bl_decoder_module, curr_bl_decoder_instance_id,
-      module_manager.configurable_children(top_module).size() - 1);
+      module_manager
+          .configurable_children(top_module,
+                                 ModuleManager::e_config_child_type::PHYSICAL)
+          .size() -
+        1);
 
-    module_manager.add_configurable_child(top_module, wl_decoder_module,
-                                          curr_wl_decoder_instance_id);
+    module_manager.add_configurable_child(
+      top_module, wl_decoder_module, curr_wl_decoder_instance_id,
+      ModuleManager::e_config_child_type::PHYSICAL);
     module_manager.add_configurable_child_to_region(
       top_module, config_region, wl_decoder_module, curr_wl_decoder_instance_id,
-      module_manager.configurable_children(top_module).size() - 1);
+      module_manager
+          .configurable_children(top_module,
+                                 ModuleManager::e_config_child_type::PHYSICAL)
+          .size() -
+        1);
   }
 }
 
@@ -1759,8 +1801,8 @@ static void add_top_module_nets_cmos_memory_frame_decoder_config_bus(
   for (size_t mem_index = 0; mem_index < configurable_children.size();
        ++mem_index) {
     ModuleId child_module = configurable_children[mem_index];
-    size_t child_instance =
-      module_manager.configurable_child_instances(parent_module)[mem_index];
+    size_t child_instance = module_manager.configurable_child_instances(
+      parent_module, ModuleManager::e_config_child_type::PHYSICAL)[mem_index];
     ModulePortId child_din_port = module_manager.find_module_port(
       child_module, std::string(DECODER_DATA_IN_PORT_NAME));
     BasicPort child_din_port_info =
@@ -1794,8 +1836,8 @@ static void add_top_module_nets_cmos_memory_frame_decoder_config_bus(
   for (size_t mem_index = 0; mem_index < configurable_children.size();
        ++mem_index) {
     ModuleId child_module = configurable_children[mem_index];
-    size_t child_instance =
-      module_manager.configurable_child_instances(parent_module)[mem_index];
+    size_t child_instance = module_manager.configurable_child_instances(
+      parent_module, ModuleManager::e_config_child_type::PHYSICAL)[mem_index];
     ModulePortId child_en_port = module_manager.find_module_port(
       child_module, std::string(DECODER_ENABLE_PORT_NAME));
     BasicPort child_en_port_info =
@@ -1814,12 +1856,17 @@ static void add_top_module_nets_cmos_memory_frame_decoder_config_bus(
   }
 
   /* Add the decoder as the last configurable children */
-  module_manager.add_configurable_child(parent_module, decoder_module,
-                                        decoder_instance);
+  module_manager.add_configurable_child(
+    parent_module, decoder_module, decoder_instance,
+    ModuleManager::e_config_child_type::PHYSICAL);
   /* Register the configurable child to configuration region */
   module_manager.add_configurable_child_to_region(
     parent_module, config_region, decoder_module, decoder_instance,
-    module_manager.configurable_children(parent_module).size() - 1);
+    module_manager
+        .configurable_children(parent_module,
+                               ModuleManager::e_config_child_type::PHYSICAL)
+        .size() -
+      1);
 }
 
 /*********************************************************************
@@ -1927,10 +1974,10 @@ static void add_top_module_nets_cmos_memory_config_bus(
     case CONFIG_MEM_STANDALONE:
       add_module_nets_cmos_flatten_memory_config_bus(
         module_manager, parent_module, config_protocol.type(),
-        CIRCUIT_MODEL_PORT_BL);
+        CIRCUIT_MODEL_PORT_BL, ModuleManager::e_config_child_type::PHYSICAL);
       add_module_nets_cmos_flatten_memory_config_bus(
         module_manager, parent_module, config_protocol.type(),
-        CIRCUIT_MODEL_PORT_WL);
+        CIRCUIT_MODEL_PORT_WL, ModuleManager::e_config_child_type::PHYSICAL);
       break;
     case CONFIG_MEM_SCAN_CHAIN: {
       add_top_module_nets_cmos_memory_chain_config_bus(

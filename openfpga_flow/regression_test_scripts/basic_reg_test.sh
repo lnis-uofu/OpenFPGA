@@ -15,6 +15,14 @@ echo -e "Test source commands in openfpga shell"
 run-task basic_tests/source_command/source_string $@
 run-task basic_tests/source_command/source_file $@
 
+echo -e "Testing testbenches using fpga core wrapper"
+run-task basic_tests/full_testbench/fpga_core_wrapper $@
+run-task basic_tests/full_testbench/fpga_core_wrapper_naming_rules $@
+run-task basic_tests/full_testbench/fpga_core_wrapper_naming_rules_use_core_tb $@
+run-task basic_tests/preconfig_testbench/fpga_core_wrapper $@
+run-task basic_tests/preconfig_testbench/fpga_core_wrapper_naming_rules $@
+run-task basic_tests/preconfig_testbench/fpga_core_wrapper_naming_rules_use_core_tb $@
+
 echo -e "Testing configuration chain of a K4N4 FPGA";
 run-task basic_tests/full_testbench/configuration_chain $@
 run-task basic_tests/full_testbench/configuration_chain_no_time_stamp $@
@@ -108,12 +116,19 @@ run-task basic_tests/fabric_key/generate_random_key $@
 run-task basic_tests/fabric_key/generate_random_key_ql_memory_bank $@
 run-task basic_tests/fabric_key/load_external_key $@
 run-task basic_tests/fabric_key/load_external_key_cc_fpga $@
+run-task basic_tests/fabric_key/load_external_subkey_cc_fpga $@
 run-task basic_tests/fabric_key/load_external_key_multi_region_cc_fpga $@
 run-task basic_tests/fabric_key/load_external_key_qlbank_fpga $@
 run-task basic_tests/fabric_key/load_external_key_multi_region_qlbank_fpga $@
 run-task basic_tests/fabric_key/load_external_key_qlbanksr_multi_chain_fpga $@
 # TODO: This feature is temporarily out of test due to the emergency in delivering netlists for multi-chain shift-register memory bank
 #run-task basic_tests/fabric_key/load_external_key_multi_region_qlbanksr_fpga $@
+
+echo -e "Testing mock wrapper"
+run-task basic_tests/mock_wrapper/mock_wrapper_explicit_port_mapping $@
+run-task basic_tests/mock_wrapper/mock_wrapper_implicit_port_mapping $@
+run-task basic_tests/mock_wrapper/mock_wrapper_pcf $@
+run-task basic_tests/mock_wrapper/mock_wrapper_bgf $@
 
 echo -e "Testing K4 series FPGA";
 echo -e "Testing K4N4 with facturable LUTs";
@@ -132,6 +147,10 @@ echo -e "Testing K4N4 with LUTRAM";
 run-task basic_tests/k4_series/k4n4_lutram $@
 echo -e "Testing K4N4 with multiple lengths of routing segments";
 run-task basic_tests/k4_series/k4n4_L124 $@
+echo -e "Testing K4N4 with routing channel width distribution: x = 0.8, y = 1.0";
+run-task basic_tests/k4_series/k4n4_chandistr $@
+echo -e "Testing K4N4 with routing channel width distribution: x = 0.8, y = 1.0 and wire segment distribution: x=L124, Y=L12";
+run-task basic_tests/k4_series/k4n4_chandistr_segdist $@
 echo -e "Testing K4N4 with 32-bit fracturable multiplier";
 run-task basic_tests/k4_series/k4n4_frac_mult $@
 echo -e "Testing K4N5 with pattern based local routing";
@@ -158,9 +177,34 @@ echo -e "Testing tiles with pins only on bottom and right sides";
 run-task basic_tests/tile_organization/bottom_right_custom_pins $@
 echo -e "Testing tiles with I/O in center grid";
 run-task basic_tests/tile_organization/tileable_io $@
+echo -e "Testing tiles with I/O consisting of subtiles";
+run-task basic_tests/tile_organization/io_subtile $@
+run-task basic_tests/tile_organization/io_subtile_strong $@
+echo -e "Testing tile grouping on a homogeneous FPGA fabric (Full testbench)";
+run-task basic_tests/tile_organization/homo_fabric_tile $@
+echo -e "Testing tile grouping on a homogeneous FPGA fabric (Preconfigured testbench)";
+run-task basic_tests/tile_organization/fabric_tile_global_tile_clock_io_subtile $@
+run-task basic_tests/tile_organization/homo_fabric_tile_preconfig $@
+run-task basic_tests/tile_organization/homo_fabric_tile_2x2_preconfig $@
+run-task basic_tests/tile_organization/homo_fabric_tile_4x4_preconfig $@
+run-task basic_tests/tile_organization/homo_fabric_tile_global_tile_clock $@
+run-task basic_tests/tile_organization/homo_fabric_tile_adder_chain $@
+run-task basic_tests/tile_organization/homo_fabric_tile_clkntwk $@
+run-task basic_tests/tile_organization/hetero_fabric_tile $@
+
+echo -e "Testing group config block";
+run-task basic_tests/group_config_block/group_config_block_homo_full_testbench $@
+run-task basic_tests/group_config_block/group_config_block_homo_Lshape_full_testbench $@
+run-task basic_tests/group_config_block/group_config_block_homo_fabric_tile $@
+run-task basic_tests/group_config_block/group_config_block_homo_fabric_tile_Lshape $@
+run-task basic_tests/group_config_block/group_config_block_homo_fabric_tile_core_wrapper $@
+run-task basic_tests/group_config_block/group_config_block_hetero_fabric_tile $@
+run-task basic_tests/group_config_block/group_config_block_hetero_fabric_tile_Lshape $@
+run-task basic_tests/group_config_block/group_config_block_homo_fabric_tile_global_tile_clock_io_subtile $@
 
 echo -e "Testing global port definition from tiles";
 run-task basic_tests/global_tile_ports/global_tile_clock $@
+run-task basic_tests/global_tile_ports/global_tile_clock_subtile $@
 run-task basic_tests/global_tile_ports/global_tile_reset $@
 run-task basic_tests/global_tile_ports/global_tile_4clock $@
 run-task basic_tests/global_tile_ports/global_tile_4clock_pin $@

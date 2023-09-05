@@ -37,6 +37,10 @@ class BasicPort {
   size_t get_origin_port_width() const;
   std::string to_verilog_string()
     const; /* Generate verilog-style string, e.g., a[0:1] */
+  /** @brief Find the index of the pin in the reference port w.r.t. to this
+   * port. For example, given a reference pin 'a[1]', this port is 'a[0:2]', the
+   * pin is the second pin in the port. As a result, the index will be 1. */
+  size_t find_ipin(const BasicPort& ref_port) const;
 
  public:                                  /* Mutators */
   void set(const BasicPort& basic_port);  /* copy */

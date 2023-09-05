@@ -1,0 +1,11 @@
+<ports>
+  <port top_name="pclk" core_name="prog_clk"/> 
+  <port top_name="top_io[0:7]" core_name="gfpga_pad_GPIO_PAD[0:7]"/> 
+  <port top_name="right_ioA[0:3]" core_name="gfpga_pad_GPIO_PAD[8:11]"/> 
+  <port top_name="right_ioB[0:3]" core_name="gfpga_pad_GPIO_PAD[12:15]"/> 
+  <port top_name="bottom_io[0:7]" core_name="gfpga_pad_GPIO_PAD[16:23]"/> 
+  <port top_name="left_io[0:7]" core_name="gfpga_pad_GPIO_PAD[24:31]"/> 
+  <port top_name="config_head" core_name="ccff_head"/> 
+  <port top_name="config_tail" core_name="ccff_tail"/> 
+  <port top_name="pvt_sensor" is_dummy="true" direction="input"/>
+</ports>

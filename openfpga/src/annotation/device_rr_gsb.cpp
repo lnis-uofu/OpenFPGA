@@ -78,7 +78,8 @@ size_t DeviceRRGSB::get_num_cb_unique_module(const t_rr_type& cb_type) const {
 }
 
 /* Identify if a GSB actually exists at a location */
-bool DeviceRRGSB::is_gsb_exist(const vtr::Point<size_t> coord) const {
+bool DeviceRRGSB::is_gsb_exist(const RRGraphView& rr_graph,
+                               const vtr::Point<size_t> coord) const {
   /* Out of range, does not exist */
   if (false == validate_coordinate(coord)) {
     return false;
@@ -93,7 +94,7 @@ bool DeviceRRGSB::is_gsb_exist(const vtr::Point<size_t> coord) const {
     return true;
   }
 
-  if (true == get_gsb(coord).is_sb_exist()) {
+  if (true == get_gsb(coord).is_sb_exist(rr_graph)) {
     return true;
   }
 
@@ -145,34 +146,14 @@ const RRGSB& DeviceRRGSB::get_cb_unique_module(const t_rr_type& cb_type,
 /* Give a coordinate of a rr switch block, and return its unique mirror */
 const RRGSB& DeviceRRGSB::get_cb_unique_module(
   const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate) const {
-  VTR_ASSERT(validate_cb_type(cb_type));
-  VTR_ASSERT(validate_coordinate(coordinate));
-  size_t cb_unique_module_id;
-
-  switch (cb_type) {
-    case CHANX:
-      cb_unique_module_id =
-        cbx_unique_module_id_[coordinate.x()][coordinate.y()];
-      break;
-    case CHANY:
-      cb_unique_module_id =
-        cby_unique_module_id_[coordinate.x()][coordinate.y()];
-      break;
-    default:
-      VTR_LOG_ERROR("Invalid type of connection block!\n");
-      exit(1);
-  }
-
-  return get_cb_unique_module(cb_type, cb_unique_module_id);
+  return get_cb_unique_module(cb_type,
+                              get_cb_unique_module_index(cb_type, coordinate));
 }
 
 /* Give a coordinate of a rr switch block, and return its unique mirror */
 const RRGSB& DeviceRRGSB::get_sb_unique_module(
   const vtr::Point<size_t>& coordinate) const {
-  VTR_ASSERT(validate_coordinate(coordinate));
-  size_t sb_unique_module_id =
-    sb_unique_module_id_[coordinate.x()][coordinate.y()];
-  return get_sb_unique_module(sb_unique_module_id);
+  return get_sb_unique_module(get_sb_unique_module_index(coordinate));
 }
 
 /************************************************************************
@@ -548,6 +529,37 @@ bool DeviceRRGSB::validate_cb_unique_module_index(const t_rr_type& cb_type,
 
 bool DeviceRRGSB::validate_cb_type(const t_rr_type& cb_type) const {
   return ((CHANX == cb_type) || (CHANY == cb_type));
+}
+
+size_t DeviceRRGSB::get_sb_unique_module_index(
+  const vtr::Point<size_t>& coordinate) const {
+  VTR_ASSERT(validate_coordinate(coordinate));
+  size_t sb_unique_module_id =
+    sb_unique_module_id_[coordinate.x()][coordinate.y()];
+  return sb_unique_module_id;
+}
+
+size_t DeviceRRGSB::get_cb_unique_module_index(
+  const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate) const {
+  VTR_ASSERT(validate_cb_type(cb_type));
+  VTR_ASSERT(validate_coordinate(coordinate));
+  size_t cb_unique_module_id;
+
+  switch (cb_type) {
+    case CHANX:
+      cb_unique_module_id =
+        cbx_unique_module_id_[coordinate.x()][coordinate.y()];
+      break;
+    case CHANY:
+      cb_unique_module_id =
+        cby_unique_module_id_[coordinate.x()][coordinate.y()];
+      break;
+    default:
+      VTR_LOG_ERROR("Invalid type of connection block!\n");
+      exit(1);
+  }
+
+  return cb_unique_module_id;
 }
 
 } /* End namespace openfpga*/

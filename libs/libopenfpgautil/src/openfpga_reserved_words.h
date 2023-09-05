@@ -12,6 +12,8 @@ namespace openfpga {
 
 /* Top-level module name */
 constexpr const char* FPGA_TOP_MODULE_NAME = "fpga_top";
+constexpr const char* FPGA_CORE_MODULE_NAME = "fpga_core";
+constexpr const char* FPGA_CORE_INSTANCE_NAME = "fpga_instance";
 
 /* Configuration chain naming constant strings */
 constexpr const char* CONFIGURABLE_MEMORY_CHAIN_IN_NAME = "ccff_head";
@@ -39,6 +41,11 @@ constexpr const char* GRID_MEM_INSTANCE_PREFIX = "mem_";
 constexpr const char* SWITCH_BLOCK_MEM_INSTANCE_PREFIX = "mem_";
 constexpr const char* CONNECTION_BLOCK_MEM_INSTANCE_PREFIX = "mem_";
 constexpr const char* MEMORY_MODULE_POSTFIX = "_mem";
+constexpr const char* MEMORY_FEEDTHROUGH_MODULE_POSTFIX = "_feedthrough_mem";
+constexpr const char* MEMORY_FEEDTHROUGH_DATA_IN_PORT_NAME =
+  "feedthrough_mem_in";
+constexpr const char* MEMORY_FEEDTHROUGH_DATA_IN_INV_PORT_NAME =
+  "feedthrough_mem_inb";
 constexpr const char* MEMORY_BL_PORT_NAME = "bl";
 constexpr const char* MEMORY_WL_PORT_NAME = "wl";
 constexpr const char* MEMORY_WLR_PORT_NAME = "wlr";
@@ -66,6 +73,7 @@ constexpr const char* INV_PORT_POSTFIX = "_inv";
 /* Bitstream file strings */
 constexpr const char* BITSTREAM_XML_FILE_NAME_POSTFIX = "_bitstream.xml";
 
+constexpr const char* DEFAULT_TILE_DIR_NAME = "tile/";
 constexpr const char* DEFAULT_LB_DIR_NAME = "lb/";
 constexpr const char* DEFAULT_RR_DIR_NAME = "routing/";
 constexpr const char* DEFAULT_SUBMODULE_DIR_NAME = "sub_module/";

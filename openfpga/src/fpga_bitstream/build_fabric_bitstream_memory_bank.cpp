@@ -123,7 +123,8 @@ static void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(
        *   - no need to exclude decoders as they are not there
        */
       std::vector<ModuleId> configurable_children =
-        module_manager.configurable_children(parent_module);
+        module_manager.configurable_children(
+          parent_module, ModuleManager::e_config_child_type::PHYSICAL);
 
       size_t num_configurable_children = configurable_children.size();
 
@@ -138,8 +139,9 @@ static void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(
       for (size_t child_id = 0; child_id < num_configurable_children;
            ++child_id) {
         ModuleId child_module = configurable_children[child_id];
-        size_t child_instance =
-          module_manager.configurable_child_instances(parent_module)[child_id];
+        size_t child_instance = module_manager.configurable_child_instances(
+          parent_module,
+          ModuleManager::e_config_child_type::PHYSICAL)[child_id];
 
         /* Get the instance name and ensure it is not empty */
         std::string instance_name = module_manager.instance_name(
@@ -174,6 +176,11 @@ static void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(
        bitstream_manager.block_bits(parent_block)) {
     FabricBitId fabric_bit = fabric_bitstream.add_bit(config_bit);
 
+    /*
+      If both BL and WL protocols are Flatten, we will have new way of
+      storing information in fabric_bitstream. This will save high
+      memory usage, as well as fast processing
+    */
     /* The BL address to be decoded depends on the protocol
      * - flatten BLs: use 1-hot decoding
      * - BL decoders: fully encoded
@@ -181,38 +188,57 @@ static void rec_build_module_fabric_dependent_ql_memory_bank_regional_bitstream(
      */
     size_t cur_bl_index = bl_start_index_per_tile.at(tile_coord.x()) +
                           cur_mem_index[tile_coord] % num_bls_cur_tile;
-    std::vector<char> bl_addr_bits_vec;
-    if (BLWL_PROTOCOL_DECODER == config_protocol.bl_protocol_type()) {
-      bl_addr_bits_vec = itobin_charvec(cur_bl_index, bl_addr_size);
-    } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type() ||
-               BLWL_PROTOCOL_SHIFT_REGISTER ==
-                 config_protocol.bl_protocol_type()) {
-      bl_addr_bits_vec =
-        ito1hot_charvec(cur_bl_index, bl_addr_size, DONT_CARE_CHAR);
+    if (BLWL_PROTOCOL_FLATTEN != config_protocol.bl_protocol_type() ||
+        BLWL_PROTOCOL_FLATTEN != config_protocol.wl_protocol_type()) {
+      // This is using old way
+      // We only do this kind of resource wasting storing if
+      // either protocol is not flatten
+      std::vector<char> bl_addr_bits_vec;
+      if (BLWL_PROTOCOL_DECODER == config_protocol.bl_protocol_type()) {
+        bl_addr_bits_vec = itobin_charvec(cur_bl_index, bl_addr_size);
+      } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type() ||
+                 BLWL_PROTOCOL_SHIFT_REGISTER ==
+                   config_protocol.bl_protocol_type()) {
+        bl_addr_bits_vec =
+          ito1hot_charvec(cur_bl_index, bl_addr_size, DONT_CARE_CHAR);
+      }
+      /* Set BL address */
+      fabric_bitstream.set_bit_bl_address(
+        fabric_bit, bl_addr_bits_vec,
+        BLWL_PROTOCOL_DECODER != config_protocol.bl_protocol_type());
     }
 
     /* Find WL address */
     size_t cur_wl_index =
       wl_start_index_per_tile.at(tile_coord.y()) +
       std::floor(cur_mem_index[tile_coord] / num_bls_cur_tile);
-    std::vector<char> wl_addr_bits_vec;
-    if (BLWL_PROTOCOL_DECODER == config_protocol.wl_protocol_type()) {
-      wl_addr_bits_vec = itobin_charvec(cur_wl_index, wl_addr_size);
-    } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type() ||
-               BLWL_PROTOCOL_SHIFT_REGISTER ==
-                 config_protocol.wl_protocol_type()) {
-      wl_addr_bits_vec = ito1hot_charvec(cur_wl_index, wl_addr_size);
+    if (BLWL_PROTOCOL_FLATTEN != config_protocol.bl_protocol_type() ||
+        BLWL_PROTOCOL_FLATTEN != config_protocol.wl_protocol_type()) {
+      // This is using old way
+      // We only do this kind of resource wasting storing if
+      // either protocol is not flatten
+      std::vector<char> wl_addr_bits_vec;
+      if (BLWL_PROTOCOL_DECODER == config_protocol.wl_protocol_type()) {
+        wl_addr_bits_vec = itobin_charvec(cur_wl_index, wl_addr_size);
+      } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type() ||
+                 BLWL_PROTOCOL_SHIFT_REGISTER ==
+                   config_protocol.wl_protocol_type()) {
+        wl_addr_bits_vec = ito1hot_charvec(cur_wl_index, wl_addr_size);
+      }
+      /* Set WL address */
+      fabric_bitstream.set_bit_wl_address(
+        fabric_bit, wl_addr_bits_vec,
+        BLWL_PROTOCOL_DECODER != config_protocol.wl_protocol_type());
     }
-
-    /* Set BL address */
-    fabric_bitstream.set_bit_bl_address(
-      fabric_bit, bl_addr_bits_vec,
-      BLWL_PROTOCOL_DECODER != config_protocol.bl_protocol_type());
-
-    /* Set WL address */
-    fabric_bitstream.set_bit_wl_address(
-      fabric_bit, wl_addr_bits_vec,
-      BLWL_PROTOCOL_DECODER != config_protocol.wl_protocol_type());
+    if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type() &&
+        BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type()) {
+      // New way of storing information in compact way
+      // Only for Flatten protocol (can easily support shift register as well)
+      // Need to understand decoder to better assessment
+      fabric_bitstream.set_memory_bank_info(
+        fabric_bit, fabric_bitstream_region, cur_bl_index, cur_wl_index,
+        bl_addr_size, wl_addr_size, bitstream_manager.bit_value(config_bit));
+    }
 
     /* Set data input */
     fabric_bitstream.set_bit_din(fabric_bit,

@@ -46,7 +46,7 @@ Once the ``openfpga.sh`` script is sourced, you can run any following commands d
 
 .. option:: clear-task-run <task_name>
 
-   Clears all run diretories of the given task
+   Clears all run directories of the given task
 
 .. option:: run-modelsim <task_name>
 

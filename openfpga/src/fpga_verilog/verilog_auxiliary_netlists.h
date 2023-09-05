@@ -18,6 +18,10 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+void print_verilog_mock_fabric_include_netlist(
+  const NetlistManager& netlist_manager, const std::string& src_dir_path,
+  const bool& use_relative_path, const bool& include_time_stamp);
+
 void print_verilog_fabric_include_netlist(const NetlistManager& netlist_manager,
                                           const std::string& src_dir_path,
                                           const CircuitLibrary& circuit_lib,

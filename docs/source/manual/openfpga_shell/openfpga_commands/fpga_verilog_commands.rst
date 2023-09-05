@@ -3,6 +3,8 @@
 FPGA-Verilog
 ------------
 
+.. _cmd_write_fabric_verilog:
+
 write_fabric_verilog
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -48,6 +50,10 @@ write_full_testbench
   .. option:: --file <string> or -f <string>
      
     The output directory for all the testbench netlists. We suggest the use of same output directory as fabric Verilog netlists. For example, ``--file /temp/testbench``
+
+  .. option:: --dut_module <string>
+
+    Specify the name of *Design Under Test* (DUT) module to be considered in the testbench. Can be either ``fpga_top`` or ``fpga_core. By default, it is ``fpga_top``.
 
   .. option:: --bitstream <string>     
 
@@ -120,6 +126,10 @@ write_preconfigured_fabric_wrapper
 
     Specify the fabric Verilog file if they are not in the same directory as the testbenches to be generated. If not specified, OpenFPGA will assume that the fabric netlists are the in the same directory as testbenches and assign default names. For example, ``--file /temp/fabric/fabric_netlists.v``
 
+  .. option:: --dut_module <string>
+
+    Specify the name of *Design Under Test* (DUT) module to be considered in the testbench. Can be either ``fpga_top`` or ``fpga_core. By default, it is ``fpga_top``.
+
   .. option:: --pin_constraints_file <string> or -pcf <string>
 
     Specify the *Pin Constraints File* (PCF) if you want to custom stimulus in testbenches. For example, ``-pin_constraints_file pin_constraints.xml``
@@ -157,6 +167,49 @@ __ iverilog_website_
     .. note:: We strongly recommend users to turn on this flag as it can help simulators to converge quickly.
 
    .. warning:: Signal initialization is only applied to the datapath inputs of routing multiplexers (considering the fact that they are indispensible cells of FPGAs)! If your FPGA does not contain any multiplexer cells, signal initialization is not applicable.
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in Verilog netlists
+
+  .. option:: --verbose
+
+    Show verbose log
+
+write_mock_fpga_wrapper
+~~~~~~~~~~~~~~~~~~~~~~~
+ 
+  Write the Verilog wrapper which mockes a mapped FPGA fabric. See details in :ref:`fpga_verilog_mock_fpga_wrapper`.
+
+  .. option:: --file <string> or -f <string>
+     
+    The output directory for the netlists. We suggest the use of same output directory as fabric Verilog netlists. For example, ``--file /temp/testbench``
+
+  .. option:: --top_module <string>
+
+    Specify the name of top-level module to be considered in the wrapper. Can be either ``fpga_top`` or ``fpga_core. By default, it is ``fpga_top``.
+
+  .. option:: --pin_constraints_file <string> or -pcf <string>
+
+    Specify the *Pin Constraints File* (PCF) if you want to custom stimulus in testbenches. For example, ``-pin_constraints_file pin_constraints.xml``
+    Strongly recommend for multi-clock simulations. See detailed file format about :ref:`file_format_pin_constraints_file`.
+
+  .. option:: --bus_group_file <string> or -bgf <string>
+
+    Specify the *Bus Group File* (BGF) if you want to group pins to buses. For example, ``-bgf bus_group.xml``
+    Strongly recommend when input HDL contains bus ports. See detailed file format about :ref:`file_format_bus_group_file`.
+
+  .. option:: --explicit_port_mapping
+
+    Use explicit port mapping when writing the Verilog netlists
+
+  .. option:: --use_relative_path
+
+    Force to use relative path in netlists when including other netlists. By default, this is off, which means that netlists use absolute paths when including other netlists
+
+  .. option:: --default_net_type <string>
+
+    Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
 
   .. option:: --no_time_stamp
 

@@ -252,7 +252,34 @@ build_fabric
   .. option:: --compress_routing
 
     Enable compression on routing architecture modules. Strongly recommend this as it will minimize the number of routing modules to be outputted. It can reduce the netlist size significantly.
+
+  .. option:: --group_tile <string>
+
+    Group fine-grained programmable blocks, connection blocks and switch blocks into tiles. Once enabled, tiles will be added to the top-level module. Otherwise, the top-level module consists of programmable blocks, connection blocks and switch blocks. The tile style can be customized through a file. See details in :ref:`file_formats_tile_config_file`. When enabled, the Verilog netlists will contain additional netlists that model tiles (see details in :ref:`fabric_netlists_tiles`). 
+
+    .. warning:: This option does not support ``--duplicate_grid_pin``!
+   
+    .. warning:: This option requires ``--compress_routing`` to be enabled!
+
+  .. option:: --group_config_block
+
+    Group configuration memory blocks under each CLB/SB/CB etc. into a centralized configuration memory blocks, as depicted in :numref:`fig_group_config_block_overview`. When disabled, the configuration memory blocks are placed in a distributed way under CLB/SB/CB etc. For example, each programming resource, e.g., LUT, has a dedicated configuration memory block, being placed in the same module. When enabled, as illustrated in :numref:`fig_group_config_block_hierarchy`, the physical memory block locates under a CLB, driving a number of logical memory blocks which are close to the programmable resources. The logical memory blocks contain only pass-through wires which can be optimized out during physical design phase.
+
+  .. _fig_group_config_block_overview:
   
+  .. figure:: ./figures/group_config_block_overview.png
+     :width: 100%
+  
+     Impact on grouping configuable blocks: before and after
+  
+  .. _fig_group_config_block_hierarchy:
+  
+  .. figure:: ./figures/group_config_block_hierarchy.png
+     :width: 100%
+  
+     Netlist hierarchy on grouped configuable blocks
+
+ 
   .. option:: --duplicate_grid_pin
 
     Enable pin duplication on grid modules. This is optional unless ultra-dense layout generation is needed
@@ -269,6 +296,8 @@ build_fabric
 
     Output current fabric key to an XML file. For example, ``--write_fabric_key fpga_2x2.xml`` See details in :ref:`file_formats_fabric_key`.
 
+    .. warning:: This option will be deprecated. Use :ref:`cmd_write_fabric_key` as a replacement.
+
   .. option:: --frame_view
 
     Create only frame views of the module graph. When enabled, top-level module will not include any nets. This option is made for save runtime and memory.
@@ -280,6 +309,53 @@ build_fabric
     Show verbose log
 
   .. note:: This is a must-run command before launching FPGA-Verilog, FPGA-Bitstream, FPGA-SDC and FPGA-SPICE
+
+.. _cmd_write_fabric_key:
+
+write_fabric_key
+~~~~~~~~~~~~~~~~
+
+  Output current fabric key to an XML file. For example, ``write_fabric_key --file fpga_2x2.xml`` See details in :ref:`file_formats_fabric_key`.
+
+  .. note:: This command can output module-level keys while the ``--write_fabric_key`` option in command ``build_fabric`` does NOT support! Strongly recommend to use this command to obtain fabric key.
+
+  .. option:: --file <string> or -f <string>
+     
+    Specify the file name. For example, ``--file fabric_key_echo.xml``.
+
+  .. option:: --include_module_keys
+
+    Output module-level keys to the file.
+
+  .. option:: --verbose
+
+    Show verbose log
+
+.. _cmd_add_fpga_core_to_fabric:
+  
+add_fpga_core_to_fabric
+~~~~~~~~~~~~~~~~~~~~~~~
+
+  Add a wrapper module ``fpga_core`` as an intermediate layer to FPGA fabric. After this command, the existing module ``fpga_top`` will remain the top-level module while there is a new module ``fpga_core`` under it. Under fpga_core, there will be the detailed building blocks.
+
+  .. option:: --io_naming <string>
+
+    This is optional. Specify the I/O naming rules when connecting I/Os of ``fpga_core`` module to the top-level module ``fpga_top``. If not defined, the ``fpga_top`` will be the same as ``fpga_core`` w.r.t. ports. See details about the file format of I/O naming rules in :ref:`file_formats_io_naming_file`.
+
+  .. option:: --instance_name <string>
+
+    This is optional. Specify the instance name to be used when instanciate the ``fpga_core`` module under the top-level module ``fpga_top``. If not defined, by default it is ``fpga_core_inst``.
+
+  .. option:: --frame_view
+
+    Create only frame views of the module graph. When enabled, top-level module will not include any nets. This option is made for save runtime and memory.
+
+    .. warning:: Recommend to turn the option on when bitstream generation is the only purpose of the flow. Do not use it when you need generate netlists!
+
+  .. option:: --verbose
+
+    Show verbose log
+
 
 write_fabric_hierarchy
 ~~~~~~~~~~~~~~~~~~~~~~

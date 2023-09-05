@@ -10,7 +10,9 @@
 #include "device_rr_gsb.h"
 #include "fabric_bitstream.h"
 #include "fabric_global_port_info.h"
+#include "fabric_tile.h"
 #include "io_location_map.h"
+#include "io_name_map.h"
 #include "memory_bank_shift_register_banks.h"
 #include "module_manager.h"
 #include "mux_library.h"
@@ -104,6 +106,8 @@ class OpenfpgaContext : public Context {
   const openfpga::IoLocationMap& io_location_map() const {
     return io_location_map_;
   }
+  const openfpga::IoNameMap& io_name_map() const { return io_name_map_; }
+  const openfpga::FabricTile& fabric_tile() const { return fabric_tile_; }
   const openfpga::FabricGlobalPortInfo& fabric_global_port_info() const {
     return fabric_global_port_info_;
   }
@@ -162,6 +166,8 @@ class OpenfpgaContext : public Context {
   openfpga::IoLocationMap& mutable_io_location_map() {
     return io_location_map_;
   }
+  openfpga::IoNameMap& mutable_io_name_map() { return io_name_map_; }
+  openfpga::FabricTile& mutable_fabric_tile() { return fabric_tile_; }
   openfpga::FabricGlobalPortInfo& mutable_fabric_global_port_info() {
     return fabric_global_port_info_;
   }
@@ -216,6 +222,8 @@ class OpenfpgaContext : public Context {
   /* Fabric module graph */
   openfpga::ModuleManager module_graph_;
   openfpga::IoLocationMap io_location_map_;
+  openfpga::IoNameMap io_name_map_;
+  openfpga::FabricTile fabric_tile_;
   openfpga::FabricGlobalPortInfo fabric_global_port_info_;
 
   /* Bitstream database */

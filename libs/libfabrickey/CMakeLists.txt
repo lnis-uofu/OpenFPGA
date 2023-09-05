@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.9)
 project("libfabrickey")
 
 file(GLOB_RECURSE EXEC_SOURCES test/*.cpp)
-file(GLOB_RECURSE LIB_SOURCES src/*.cpp)
-file(GLOB_RECURSE LIB_HEADERS src/*.h)
+file(GLOB_RECURSE LIB_SOURCES src/*/*.cpp)
+file(GLOB_RECURSE LIB_HEADERS src/*/*.h)
 files_to_dirs(LIB_HEADERS LIB_INCLUDE_DIRS)
 
 #Remove test executable from library
@@ -20,6 +20,7 @@ set_target_properties(libfabrickey PROPERTIES PREFIX "") #Avoid extra 'lib' pref
 #Specify link-time dependancies
 target_link_libraries(libfabrickey
                       libopenfpgautil
+                      libopenfpgashell
                       libarchopenfpga
                       libvtrutil
                       libpugiutil)

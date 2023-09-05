@@ -1061,6 +1061,17 @@ static size_t calculate_num_config_clock_cycles(
                       (float)full_num_config_clock_cycles -
                     1.));
         }
+      } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type() &&
+                 BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type()) {
+        // Only support new fast way if both BL/WL protocols are flatten
+        // Based on 100K LE FPGA, we are wasting a lot of time to build
+        // MemoryBankFlattenFabricBitstream
+        // just to get the effective WL addr size. So wasteful of the resource
+        const FabricBitstreamMemoryBank& memory_bank =
+          fabric_bitstream.memory_bank_info(fast_configuration,
+                                            bit_value_to_skip);
+        num_config_clock_cycles =
+          1 + memory_bank.get_longest_effective_wl_count();
       } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()) {
         num_config_clock_cycles =
           1 + build_memory_bank_flatten_fabric_bitstream(
@@ -1146,7 +1157,7 @@ static void print_verilog_top_testbench_benchmark_instance(
     std::string(TOP_TESTBENCH_REFERENCE_INSTANCE_NAME), std::string(),
     std::string(), std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
     std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX), clock_port_names,
-    atom_ctx, netlist_annotation, pin_constraints, bus_group,
+    false, atom_ctx, netlist_annotation, pin_constraints, bus_group,
     explicit_port_mapping);
 
   print_verilog_comment(
@@ -2435,7 +2446,7 @@ int print_verilog_full_testbench(
   const FabricGlobalPortInfo& global_ports, const AtomContext& atom_ctx,
   const PlacementContext& place_ctx, const PinConstraints& pin_constraints,
   const BusGroup& bus_group, const std::string& bitstream_file,
-  const IoLocationMap& io_location_map,
+  const IoLocationMap& io_location_map, const IoNameMap& io_name_map,
   const VprNetlistAnnotation& netlist_annotation,
   const std::string& circuit_name, const std::string& verilog_fname,
   const SimulationSetting& simulation_parameters,
@@ -2465,10 +2476,23 @@ int print_verilog_full_testbench(
     circuit_name;
   print_verilog_file_header(fp, title, options.time_stamp());
 
-  /* Find the top_module */
-  ModuleId top_module =
-    module_manager.find_module(generate_fpga_top_module_name());
-  VTR_ASSERT(true == module_manager.valid_module_id(top_module));
+  /* Spot the dut module */
+  ModuleId top_module = module_manager.find_module(options.dut_module());
+  if (!module_manager.valid_module_id(top_module)) {
+    VTR_LOG_ERROR(
+      "Unable to find the DUT module '%s'. Please check if you create "
+      "dedicated module when building the fabric!\n",
+      options.dut_module().c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  /* Note that we always need the core module as it contains the original port
+   * names before possible renaming at top-level module. If there is no core
+   * module, it means that the current top module is the core module */
+  ModuleId core_module =
+    module_manager.find_module(generate_fpga_core_module_name());
+  if (!module_manager.valid_module_id(core_module)) {
+    core_module = top_module;
+  }
 
   /* Preparation: find all the clock ports */
   std::vector<std::string> clock_port_names =
@@ -2492,7 +2516,7 @@ int print_verilog_full_testbench(
 
   /* Start of testbench */
   print_verilog_top_testbench_ports(
-    fp, module_manager, top_module, atom_ctx, netlist_annotation,
+    fp, module_manager, core_module, atom_ctx, netlist_annotation,
     clock_port_names, global_ports, pin_constraints, simulation_parameters,
     config_protocol, circuit_name, options);
 
@@ -2522,7 +2546,7 @@ int print_verilog_full_testbench(
   /* Generate stimuli for programming interface */
   int status = CMD_EXEC_SUCCESS;
   status = print_verilog_top_testbench_configuration_protocol_stimulus(
-    fp, config_protocol, simulation_parameters, module_manager, top_module,
+    fp, config_protocol, simulation_parameters, module_manager, core_module,
     fast_configuration, bit_value_to_skip, fabric_bitstream, blwl_sr_banks,
     prog_clock_period, VERILOG_SIM_TIMESCALE);
 
@@ -2557,19 +2581,19 @@ int print_verilog_full_testbench(
 
   /* Generate stimuli for global ports or connect them to existed signals */
   print_verilog_top_testbench_global_ports_stimuli(
-    fp, module_manager, top_module, pin_constraints, config_protocol,
+    fp, module_manager, core_module, pin_constraints, config_protocol,
     global_ports, simulation_parameters, active_global_prog_reset,
     active_global_prog_set);
 
   /* Instanciate FPGA top-level module */
   print_verilog_testbench_fpga_instance(
-    fp, module_manager, top_module,
-    std::string(TOP_TESTBENCH_FPGA_INSTANCE_NAME), std::string(),
+    fp, module_manager, top_module, core_module,
+    std::string(TOP_TESTBENCH_FPGA_INSTANCE_NAME), std::string(), io_name_map,
     explicit_port_mapping);
 
   /* Connect I/Os to benchmark I/Os or constant driver */
   print_verilog_testbench_connect_fpga_ios(
-    fp, module_manager, top_module, atom_ctx, place_ctx, io_location_map,
+    fp, module_manager, core_module, atom_ctx, place_ctx, io_location_map,
     netlist_annotation, BusGroup(), std::string(),
     std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
     std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX), clock_port_names,
@@ -2585,7 +2609,7 @@ int print_verilog_full_testbench(
   /* load bitstream to FPGA fabric in a configuration phase */
   print_verilog_full_testbench_bitstream(
     fp, bitstream_file, config_protocol, apply_fast_configuration,
-    bit_value_to_skip, module_manager, top_module, bitstream_manager,
+    bit_value_to_skip, module_manager, core_module, bitstream_manager,
     fabric_bitstream, blwl_sr_banks);
 
   /* Add signal initialization:

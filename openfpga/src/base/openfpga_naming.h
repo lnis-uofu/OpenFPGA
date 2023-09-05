@@ -68,7 +68,8 @@ std::string generate_segment_wire_mid_output_name(
 std::string generate_memory_module_name(const CircuitLibrary& circuit_lib,
                                         const CircuitModelId& circuit_model,
                                         const CircuitModelId& sram_model,
-                                        const std::string& postfix);
+                                        const std::string& postfix,
+                                        const bool& feedthrough_memory = false);
 
 std::string generate_routing_block_netlist_name(const std::string& prefix,
                                                 const size_t& block_id,
@@ -110,33 +111,42 @@ std::string generate_switch_block_module_name(
 std::string generate_connection_block_module_name(
   const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate);
 
+std::string generate_tile_module_name(const vtr::Point<size_t>& tile_coord);
+
+std::string generate_tile_module_port_name(const std::string& prefix,
+                                           const std::string& port_name);
+
+std::string generate_tile_module_netlist_name(const std::string& block_name,
+                                              const std::string& postfix);
+
+std::string generate_physical_memory_module_name(const std::string& prefix,
+                                                 const size_t& mem_size);
+
 std::string generate_sb_mux_instance_name(const std::string& prefix,
                                           const e_side& sb_side,
                                           const size_t& track_id,
                                           const std::string& postfix);
 
-std::string generate_sb_memory_instance_name(const std::string& prefix,
-                                             const e_side& sb_side,
-                                             const size_t& track_id,
-                                             const std::string& postfix);
+std::string generate_sb_memory_instance_name(
+  const std::string& prefix, const e_side& sb_side, const size_t& track_id,
+  const std::string& postfix, const bool& feedthrough_memory = false);
 
 std::string generate_cb_mux_instance_name(const std::string& prefix,
                                           const e_side& cb_side,
                                           const size_t& pin_id,
                                           const std::string& postfix);
 
-std::string generate_cb_memory_instance_name(const std::string& prefix,
-                                             const e_side& cb_side,
-                                             const size_t& pin_id,
-                                             const std::string& postfix);
+std::string generate_cb_memory_instance_name(
+  const std::string& prefix, const e_side& cb_side, const size_t& pin_id,
+  const std::string& postfix, const bool& feedthrough_memory = false);
 
 std::string generate_pb_mux_instance_name(const std::string& prefix,
                                           t_pb_graph_pin* pb_graph_pin,
                                           const std::string& postfix);
 
-std::string generate_pb_memory_instance_name(const std::string& prefix,
-                                             t_pb_graph_pin* pb_graph_pin,
-                                             const std::string& postfix);
+std::string generate_pb_memory_instance_name(
+  const std::string& prefix, t_pb_graph_pin* pb_graph_pin,
+  const std::string& postfix, const bool& feedthrough_memory = false);
 
 std::string generate_grid_port_name(const size_t& width, const size_t& height,
                                     const int& subtile_index,
@@ -258,7 +268,13 @@ std::string generate_fpga_global_io_port_name(
 
 std::string generate_fpga_top_module_name();
 
+std::string generate_fpga_core_module_name();
+
+std::string generate_fpga_core_instance_name();
+
 std::string generate_fpga_top_netlist_name(const std::string& postfix);
+
+std::string generate_fpga_core_netlist_name(const std::string& postfix);
 
 std::string generate_const_value_module_name(const size_t& const_val);
 

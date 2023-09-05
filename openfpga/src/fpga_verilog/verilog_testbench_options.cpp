@@ -3,6 +3,7 @@
  ******************************************************************************/
 #include "verilog_testbench_options.h"
 
+#include "openfpga_naming.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
@@ -14,6 +15,7 @@ namespace openfpga {
  *************************************************/
 VerilogTestbenchOption::VerilogTestbenchOption() {
   output_directory_.clear();
+  dut_module_ = "fpga_top";
   fabric_netlist_file_path_.clear();
   reference_benchmark_file_path_.clear();
   print_preconfig_top_testbench_ = false;
@@ -36,6 +38,8 @@ VerilogTestbenchOption::VerilogTestbenchOption() {
 std::string VerilogTestbenchOption::output_directory() const {
   return output_directory_;
 }
+
+std::string VerilogTestbenchOption::dut_module() const { return dut_module_; }
 
 std::string VerilogTestbenchOption::fabric_netlist_file_path() const {
   return fabric_netlist_file_path_;
@@ -106,6 +110,19 @@ bool VerilogTestbenchOption::verbose_output() const { return verbose_output_; }
 void VerilogTestbenchOption::set_output_directory(
   const std::string& output_dir) {
   output_directory_ = output_dir;
+}
+
+void VerilogTestbenchOption::set_dut_module(const std::string& dut_module) {
+  /* Precheck: only accept two legal names */
+  if (dut_module != generate_fpga_top_module_name() &&
+      dut_module != generate_fpga_core_module_name()) {
+    VTR_LOG_ERROR(
+      "Invalid module name '%s' for Design Under Test (DUT)! Expect [%s|%s]\n",
+      dut_module.c_str(), generate_fpga_top_module_name().c_str(),
+      generate_fpga_core_module_name().c_str());
+    exit(1);
+  }
+  dut_module_ = dut_module;
 }
 
 void VerilogTestbenchOption::set_fabric_netlist_file_path(

@@ -116,8 +116,9 @@ static void print_verilog_top_random_testbench_benchmark_instance(
   print_verilog_testbench_benchmark_instance(
     fp, reference_verilog_top_name, std::string(BENCHMARK_INSTANCE_NAME),
     std::string(), std::string(), std::string(),
-    std::string(BENCHMARK_PORT_POSTFIX), std::vector<std::string>(), atom_ctx,
-    netlist_annotation, pin_constraints, bus_group, explicit_port_mapping);
+    std::string(BENCHMARK_PORT_POSTFIX), std::vector<std::string>(), false,
+    atom_ctx, netlist_annotation, pin_constraints, bus_group,
+    explicit_port_mapping);
 
   print_verilog_comment(
     fp, std::string("----- End reference Benchmark Instanication -------"));
@@ -147,7 +148,7 @@ static void print_verilog_random_testbench_fpga_instance(
                 std::string(FORMAL_VERIFICATION_TOP_MODULE_POSTFIX)),
     std::string(FPGA_INSTANCE_NAME), std::string(), std::string(),
     std::string(), std::string(FPGA_PORT_POSTFIX), std::vector<std::string>(),
-    atom_ctx, netlist_annotation, pin_constraints, bus_group,
+    false, atom_ctx, netlist_annotation, pin_constraints, bus_group,
     explicit_port_mapping);
 
   print_verilog_comment(

@@ -64,12 +64,12 @@ namespace openfpga {
 static void add_top_module_nets_connect_grids_and_sb(
   ModuleManager& module_manager, const ModuleId& top_module,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const vtr::Matrix<size_t>& grid_instance_ids, const RRGraphView& rr_graph,
-  const DeviceRRGSB& device_rr_gsb, const RRGSB& rr_gsb,
-  const vtr::Matrix<size_t>& sb_instance_ids,
+  const size_t& layer, const vtr::Matrix<size_t>& grid_instance_ids,
+  const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
+  const RRGSB& rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
   const bool& compact_routing_hierarchy) {
   /* Skip those Switch blocks that do not exist */
-  if (false == rr_gsb.is_sb_exist()) {
+  if (false == rr_gsb.is_sb_exist(rr_graph)) {
     return;
   }
 
@@ -126,8 +126,8 @@ static void add_top_module_nets_connect_grids_and_sb(
       size_t src_grid_pin_index = rr_graph.node_pin_num(
         rr_gsb.get_opin_node(side_manager.get_side(), inode));
 
-      t_physical_tile_type_ptr grid_type_descriptor =
-        grids[grid_coordinate.x()][grid_coordinate.y()].type;
+      t_physical_tile_type_ptr grid_type_descriptor = grids.get_physical_type(
+        t_physical_tile_loc(grid_coordinate.x(), grid_coordinate.y(), layer));
       size_t src_grid_pin_width =
         grid_type_descriptor->pin_width_offset[src_grid_pin_index];
       size_t src_grid_pin_height =
@@ -227,12 +227,12 @@ static void add_top_module_nets_connect_grids_and_sb(
 static void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(
   ModuleManager& module_manager, const ModuleId& top_module,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const vtr::Matrix<size_t>& grid_instance_ids, const RRGraphView& rr_graph,
-  const DeviceRRGSB& device_rr_gsb, const RRGSB& rr_gsb,
-  const vtr::Matrix<size_t>& sb_instance_ids,
+  const size_t& layer, const vtr::Matrix<size_t>& grid_instance_ids,
+  const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
+  const RRGSB& rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
   const bool& compact_routing_hierarchy) {
   /* Skip those Switch blocks that do not exist */
-  if (false == rr_gsb.is_sb_exist()) {
+  if (false == rr_gsb.is_sb_exist(rr_graph)) {
     return;
   }
 
@@ -300,8 +300,10 @@ static void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(
       size_t src_grid_pin_index = rr_graph.node_pin_num(
         rr_gsb.get_opin_node(side_manager.get_side(), inode));
 
+      t_physical_tile_loc phy_tile_loc(grid_coordinate.x(), grid_coordinate.y(),
+                                       layer);
       t_physical_tile_type_ptr grid_type_descriptor =
-        grids[grid_coordinate.x()][grid_coordinate.y()].type;
+        grids.get_physical_type(phy_tile_loc);
       size_t src_grid_pin_width =
         grid_type_descriptor->pin_width_offset[src_grid_pin_index];
       size_t src_grid_pin_height =
@@ -437,9 +439,10 @@ static void add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(
 static void add_top_module_nets_connect_grids_and_cb(
   ModuleManager& module_manager, const ModuleId& top_module,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const vtr::Matrix<size_t>& grid_instance_ids, const RRGraphView& rr_graph,
-  const DeviceRRGSB& device_rr_gsb, const RRGSB& rr_gsb,
-  const t_rr_type& cb_type, const vtr::Matrix<size_t>& cb_instance_ids,
+  const size_t& layer, const vtr::Matrix<size_t>& grid_instance_ids,
+  const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
+  const RRGSB& rr_gsb, const t_rr_type& cb_type,
+  const vtr::Matrix<size_t>& cb_instance_ids,
   const bool& compact_routing_hierarchy) {
   /* We could have two different coordinators, one is the instance, the other is
    * the module */
@@ -519,8 +522,8 @@ static void add_top_module_nets_connect_grids_and_cb(
         grid_instance_ids[grid_coordinate.x()][grid_coordinate.y()];
       size_t sink_grid_pin_index = rr_graph.node_pin_num(instance_ipin_node);
 
-      t_physical_tile_type_ptr grid_type_descriptor =
-        grids[grid_coordinate.x()][grid_coordinate.y()].type;
+      t_physical_tile_type_ptr grid_type_descriptor = grids.get_physical_type(
+        t_physical_tile_loc(grid_coordinate.x(), grid_coordinate.y(), layer));
       size_t sink_grid_pin_width =
         grid_type_descriptor->pin_width_offset[sink_grid_pin_index];
       size_t sink_grid_pin_height =
@@ -614,7 +617,7 @@ static void add_top_module_nets_connect_sb_and_cb(
   vtr::Point<size_t> module_gsb_sb_coordinate(rr_gsb.get_x(), rr_gsb.get_y());
 
   /* Skip those Switch blocks that do not exist */
-  if (false == rr_gsb.is_sb_exist()) {
+  if (false == rr_gsb.is_sb_exist(rr_graph)) {
     return;
   }
 
@@ -802,8 +805,9 @@ static void add_top_module_nets_connect_sb_and_cb(
 void add_top_module_nets_connect_grids_and_gsbs(
   ModuleManager& module_manager, const ModuleId& top_module,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const vtr::Matrix<size_t>& grid_instance_ids, const RRGraphView& rr_graph,
-  const DeviceRRGSB& device_rr_gsb, const vtr::Matrix<size_t>& sb_instance_ids,
+  const size_t& layer, const vtr::Matrix<size_t>& grid_instance_ids,
+  const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
+  const vtr::Matrix<size_t>& sb_instance_ids,
   const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
   const bool& compact_routing_hierarchy, const bool& duplicate_grid_pin) {
   vtr::ScopedStartFinishTimer timer("Add module nets between grids and GSBs");
@@ -818,24 +822,24 @@ void add_top_module_nets_connect_grids_and_gsbs(
       /* Connect the grid pins of the GSB to adjacent grids */
       if (false == duplicate_grid_pin) {
         add_top_module_nets_connect_grids_and_sb(
-          module_manager, top_module, vpr_device_annotation, grids,
+          module_manager, top_module, vpr_device_annotation, grids, layer,
           grid_instance_ids, rr_graph, device_rr_gsb, rr_gsb, sb_instance_ids,
           compact_routing_hierarchy);
       } else {
         VTR_ASSERT_SAFE(true == duplicate_grid_pin);
         add_top_module_nets_connect_grids_and_sb_with_duplicated_pins(
-          module_manager, top_module, vpr_device_annotation, grids,
+          module_manager, top_module, vpr_device_annotation, grids, layer,
           grid_instance_ids, rr_graph, device_rr_gsb, rr_gsb, sb_instance_ids,
           compact_routing_hierarchy);
       }
 
       add_top_module_nets_connect_grids_and_cb(
-        module_manager, top_module, vpr_device_annotation, grids,
+        module_manager, top_module, vpr_device_annotation, grids, layer,
         grid_instance_ids, rr_graph, device_rr_gsb, rr_gsb, CHANX,
         cb_instance_ids.at(CHANX), compact_routing_hierarchy);
 
       add_top_module_nets_connect_grids_and_cb(
-        module_manager, top_module, vpr_device_annotation, grids,
+        module_manager, top_module, vpr_device_annotation, grids, layer,
         grid_instance_ids, rr_graph, device_rr_gsb, rr_gsb, CHANY,
         cb_instance_ids.at(CHANY), compact_routing_hierarchy);
 
@@ -856,10 +860,10 @@ static int build_top_module_global_net_for_given_grid_module(
   const TileGlobalPortId& tile_global_port,
   const BasicPort& tile_port_to_connect,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const vtr::Point<size_t>& grid_coordinate, const e_side& border_side,
-  const vtr::Matrix<size_t>& grid_instance_ids) {
-  t_physical_tile_type_ptr physical_tile =
-    grids[grid_coordinate.x()][grid_coordinate.y()].type;
+  const size_t& layer, const vtr::Point<size_t>& grid_coordinate,
+  const e_side& border_side, const vtr::Matrix<size_t>& grid_instance_ids) {
+  t_physical_tile_type_ptr physical_tile = grids.get_physical_type(
+    t_physical_tile_loc(grid_coordinate.x(), grid_coordinate.y(), layer));
   /* Find the module name for this type of grid */
   std::string grid_module_name_prefix(GRID_MODULE_NAME_PREFIX);
   std::string grid_module_name = generate_grid_block_module_name(
@@ -982,7 +986,7 @@ static int build_top_module_global_net_from_grid_modules(
   const ModulePortId& top_module_port, const TileAnnotation& tile_annotation,
   const TileGlobalPortId& tile_global_port,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const vtr::Matrix<size_t>& grid_instance_ids) {
+  const size_t& layer, const vtr::Matrix<size_t>& grid_instance_ids) {
   int status = CMD_EXEC_SUCCESS;
 
   std::map<e_side, std::vector<vtr::Point<size_t>>> io_coordinates =
@@ -1038,25 +1042,28 @@ static int build_top_module_global_net_from_grid_modules(
     /* Spot the port from child modules from core grids */
     for (size_t ix = start_coord.x(); ix < end_coord.x(); ++ix) {
       for (size_t iy = start_coord.y(); iy < end_coord.y(); ++iy) {
+        t_physical_tile_loc tile_loc(ix, iy, layer);
+        t_physical_tile_type_ptr phy_tile_type =
+          grids.get_physical_type(tile_loc);
         /* Bypass EMPTY tiles */
-        if (true == is_empty_type(grids[ix][iy].type)) {
+        if (true == is_empty_type(phy_tile_type)) {
           continue;
         }
         /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
-        if ((0 < grids[ix][iy].width_offset) ||
-            (0 < grids[ix][iy].height_offset)) {
+        if ((0 < grids.get_width_offset(tile_loc)) ||
+            (0 < grids.get_height_offset(tile_loc))) {
           continue;
         }
 
         /* Bypass the tiles whose names do not match */
-        if (std::string(grids[ix][iy].type->name) != tile_name) {
+        if (std::string(phy_tile_type->name) != tile_name) {
           continue;
         }
 
         /* Create nets and finish connection build-up */
         status = build_top_module_global_net_for_given_grid_module(
           module_manager, top_module, top_module_port, tile_annotation,
-          tile_global_port, tile_port, vpr_device_annotation, grids,
+          tile_global_port, tile_port, vpr_device_annotation, grids, layer,
           vtr::Point<size_t>(ix, iy), NUM_SIDES, grid_instance_ids);
         if (CMD_EXEC_FATAL_ERROR == status) {
           return status;
@@ -1067,22 +1074,23 @@ static int build_top_module_global_net_from_grid_modules(
     /* Walk through all the grids on the perimeter, which are I/O grids */
     for (const e_side& io_side : FPGA_SIDES_CLOCKWISE) {
       for (const vtr::Point<size_t>& io_coordinate : io_coordinates[io_side]) {
+        t_physical_tile_loc tile_loc(io_coordinate.x(), io_coordinate.y(),
+                                     layer);
+        t_physical_tile_type_ptr phy_tile_type =
+          grids.get_physical_type(tile_loc);
         /* Bypass EMPTY grid */
-        if (true ==
-            is_empty_type(grids[io_coordinate.x()][io_coordinate.y()].type)) {
+        if (true == is_empty_type(phy_tile_type)) {
           continue;
         }
 
         /* Skip width or height > 1 tiles (mostly heterogeneous blocks) */
-        if ((0 < grids[io_coordinate.x()][io_coordinate.y()].width_offset) ||
-            (0 < grids[io_coordinate.x()][io_coordinate.y()].height_offset)) {
+        if ((0 < grids.get_width_offset(tile_loc)) ||
+            (0 < grids.get_height_offset(tile_loc))) {
           continue;
         }
 
         /* Bypass the tiles whose names do not match */
-        if (std::string(
-              grids[io_coordinate.x()][io_coordinate.y()].type->name) !=
-            tile_name) {
+        if (std::string(phy_tile_type->name) != tile_name) {
           continue;
         }
 
@@ -1102,7 +1110,7 @@ static int build_top_module_global_net_from_grid_modules(
         /* Create nets and finish connection build-up */
         status = build_top_module_global_net_for_given_grid_module(
           module_manager, top_module, top_module_port, tile_annotation,
-          tile_global_port, tile_port, vpr_device_annotation, grids,
+          tile_global_port, tile_port, vpr_device_annotation, grids, layer,
           io_coordinate, io_side, grid_instance_ids);
         if (CMD_EXEC_FATAL_ERROR == status) {
           return status;
@@ -1200,7 +1208,8 @@ int add_top_module_global_ports_from_grid_modules(
   ModuleManager& module_manager, const ModuleId& top_module,
   const TileAnnotation& tile_annotation,
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
-  const RRGraphView& rr_graph, const DeviceRRGSB& device_rr_gsb,
+  const size_t& layer, const RRGraphView& rr_graph,
+  const DeviceRRGSB& device_rr_gsb,
   const std::map<t_rr_type, vtr::Matrix<size_t>>& cb_instance_ids,
   const vtr::Matrix<size_t>& grid_instance_ids, const ClockNetwork& clk_ntwk,
   const RRClockSpatialLookup& rr_clock_lookup) {
@@ -1259,7 +1268,8 @@ int add_top_module_global_ports_from_grid_modules(
     } else {
       status = build_top_module_global_net_from_grid_modules(
         module_manager, top_module, top_module_port, tile_annotation,
-        tile_global_port, vpr_device_annotation, grids, grid_instance_ids);
+        tile_global_port, vpr_device_annotation, grids, layer,
+        grid_instance_ids);
     }
     if (status == CMD_EXEC_FATAL_ERROR) {
       return status;

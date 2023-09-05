@@ -39,7 +39,7 @@ static void rec_build_module_fabric_dependent_chain_bitstream(
   const ModuleManager& module_manager, const ModuleId& top_module,
   const ModuleId& parent_module, const ConfigRegionId& config_region,
   FabricBitstream& fabric_bitstream,
-  const FabricBitRegionId& fabric_bitstream_region) {
+  const FabricBitRegionId& fabric_bitstream_region, const bool& verbose) {
   /* Depth-first search: if we have any children in the parent_block,
    * we dive to the next level first!
    */
@@ -69,17 +69,22 @@ static void rec_build_module_fabric_dependent_chain_bitstream(
         rec_build_module_fabric_dependent_chain_bitstream(
           bitstream_manager, child_block, module_manager, top_module,
           child_module, config_region, fabric_bitstream,
-          fabric_bitstream_region);
+          fabric_bitstream_region, verbose);
       }
     } else {
       for (size_t child_id = 0;
            child_id <
-           module_manager.configurable_children(parent_module).size();
+           module_manager
+             .configurable_children(
+               parent_module, ModuleManager::e_config_child_type::PHYSICAL)
+             .size();
            ++child_id) {
-        ModuleId child_module =
-          module_manager.configurable_children(parent_module)[child_id];
-        size_t child_instance =
-          module_manager.configurable_child_instances(parent_module)[child_id];
+        ModuleId child_module = module_manager.configurable_children(
+          parent_module,
+          ModuleManager::e_config_child_type::PHYSICAL)[child_id];
+        size_t child_instance = module_manager.configurable_child_instances(
+          parent_module,
+          ModuleManager::e_config_child_type::PHYSICAL)[child_id];
         /* Get the instance name and ensure it is not empty */
         std::string instance_name = module_manager.instance_name(
           parent_module, child_module, child_instance);
@@ -87,6 +92,11 @@ static void rec_build_module_fabric_dependent_chain_bitstream(
         /* Find the child block that matches the instance name! */
         ConfigBlockId child_block =
           bitstream_manager.find_child_block(parent_block, instance_name);
+        VTR_LOGV(verbose,
+                 "Try to find a configurable block corresponding to module "
+                 "'%s' in FPGA fabric under its parent block '%s'\n",
+                 instance_name.c_str(),
+                 bitstream_manager.block_name(parent_block).c_str());
         /* We must have one valid block id! */
         VTR_ASSERT(true == bitstream_manager.valid_block_id(child_block));
 
@@ -94,7 +104,7 @@ static void rec_build_module_fabric_dependent_chain_bitstream(
         rec_build_module_fabric_dependent_chain_bitstream(
           bitstream_manager, child_block, module_manager, top_module,
           child_module, config_region, fabric_bitstream,
-          fabric_bitstream_region);
+          fabric_bitstream_region, verbose);
       }
     }
     /* Ensure that there should be no configuration bits in the parent block */
@@ -191,7 +201,8 @@ static void rec_build_module_fabric_dependent_memory_bank_bitstream(
        *   - no need to exclude decoders as they are not there
        */
       std::vector<ModuleId> configurable_children =
-        module_manager.configurable_children(parent_module);
+        module_manager.configurable_children(
+          parent_module, ModuleManager::e_config_child_type::PHYSICAL);
 
       size_t num_configurable_children = configurable_children.size();
 
@@ -206,8 +217,9 @@ static void rec_build_module_fabric_dependent_memory_bank_bitstream(
       for (size_t child_id = 0; child_id < num_configurable_children;
            ++child_id) {
         ModuleId child_module = configurable_children[child_id];
-        size_t child_instance =
-          module_manager.configurable_child_instances(parent_module)[child_id];
+        size_t child_instance = module_manager.configurable_child_instances(
+          parent_module,
+          ModuleManager::e_config_child_type::PHYSICAL)[child_id];
 
         /* Get the instance name and ensure it is not empty */
         std::string instance_name = module_manager.instance_name(
@@ -318,10 +330,11 @@ static void rec_build_module_fabric_dependent_frame_bitstream(
                                                            config_region);
     } else {
       VTR_ASSERT(top_module != parent_module);
-      configurable_children =
-        module_manager.configurable_children(parent_module);
+      configurable_children = module_manager.configurable_children(
+        parent_module, ModuleManager::e_config_child_type::PHYSICAL);
       configurable_child_instances =
-        module_manager.configurable_child_instances(parent_module);
+        module_manager.configurable_child_instances(
+          parent_module, ModuleManager::e_config_child_type::PHYSICAL);
     }
 
     size_t num_configurable_children = configurable_children.size();
@@ -355,10 +368,13 @@ static void rec_build_module_fabric_dependent_frame_bitstream(
       /* The max address code size is the max address code size of all the
        * configurable children in all the regions
        */
-      for (const ModuleId& child_module :
-           module_manager.configurable_children(parent_module)) {
+      for (const ModuleId& child_module : module_manager.configurable_children(
+             parent_module, ModuleManager::e_config_child_type::PHYSICAL)) {
         /* Bypass any decoder module (which no configurable children */
-        if (module_manager.configurable_children(child_module).empty()) {
+        if (module_manager
+              .configurable_children(
+                child_module, ModuleManager::e_config_child_type::PHYSICAL)
+              .empty()) {
           continue;
         }
         const ModulePortId& child_addr_port_id =
@@ -488,8 +504,8 @@ static void rec_build_module_fabric_dependent_frame_bitstream(
       parent_modules.back(), config_region);
   } else {
     VTR_ASSERT(top_module != parent_modules.back());
-    configurable_children =
-      module_manager.configurable_children(parent_modules.back());
+    configurable_children = module_manager.configurable_children(
+      parent_modules.back(), ModuleManager::e_config_child_type::PHYSICAL);
   }
 
   ModuleId decoder_module = configurable_children.back();
@@ -534,7 +550,7 @@ static void build_module_fabric_dependent_bitstream(
   const ConfigProtocol& config_protocol, const CircuitLibrary& circuit_lib,
   const BitstreamManager& bitstream_manager, const ConfigBlockId& top_block,
   const ModuleManager& module_manager, const ModuleId& top_module,
-  FabricBitstream& fabric_bitstream) {
+  FabricBitstream& fabric_bitstream, const bool& verbose) {
   switch (config_protocol.type()) {
     case CONFIG_MEM_STANDALONE: {
       /* Reserve bits before build-up */
@@ -546,7 +562,7 @@ static void build_module_fabric_dependent_bitstream(
           fabric_bitstream.add_region();
         rec_build_module_fabric_dependent_chain_bitstream(
           bitstream_manager, top_block, module_manager, top_module, top_module,
-          config_region, fabric_bitstream, fabric_bitstream_region);
+          config_region, fabric_bitstream, fabric_bitstream_region, verbose);
       }
 
       break;
@@ -561,7 +577,7 @@ static void build_module_fabric_dependent_bitstream(
           fabric_bitstream.add_region();
         rec_build_module_fabric_dependent_chain_bitstream(
           bitstream_manager, top_block, module_manager, top_module, top_module,
-          config_region, fabric_bitstream, fabric_bitstream_region);
+          config_region, fabric_bitstream, fabric_bitstream_region, verbose);
         fabric_bitstream.reverse_region_bits(fabric_bitstream_region);
       }
       break;
@@ -768,17 +784,30 @@ FabricBitstream build_fabric_dependent_bitstream(
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
 
   /* Find the top block in bitstream manager, which has not parents */
-  std::vector<ConfigBlockId> top_block =
+  std::vector<ConfigBlockId> top_blocks =
     find_bitstream_manager_top_blocks(bitstream_manager);
   /* Make sure we have only 1 top block and its name matches the top module */
-  VTR_ASSERT(1 == top_block.size());
+  VTR_ASSERT(1 == top_blocks.size());
   VTR_ASSERT(
-    0 == top_module_name.compare(bitstream_manager.block_name(top_block[0])));
+    0 == top_module_name.compare(bitstream_manager.block_name(top_blocks[0])));
+  ConfigBlockId top_block = top_blocks[0];
+
+  /* Create the core block when the fpga_core is added */
+  std::string core_block_name = generate_fpga_core_module_name();
+  const ModuleId& core_module = module_manager.find_module(core_block_name);
+  if (module_manager.valid_module_id(core_module)) {
+    /* Now we use the core_block as the top-level block for the remaining
+     * functions */
+    VTR_ASSERT(bitstream_manager.block_children(top_block).size() == 1);
+    ConfigBlockId core_block = bitstream_manager.block_children(top_block)[0];
+    top_module = core_module;
+    top_block = core_block;
+  }
 
   /* Start build-up formally */
   build_module_fabric_dependent_bitstream(
-    config_protocol, circuit_lib, bitstream_manager, top_block[0],
-    module_manager, top_module, fabric_bitstream);
+    config_protocol, circuit_lib, bitstream_manager, top_block, module_manager,
+    top_module, fabric_bitstream, verbose);
 
   VTR_LOGV(verbose, "Built %lu configuration bits for fabric\n",
            fabric_bitstream.num_bits());

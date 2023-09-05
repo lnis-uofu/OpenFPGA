@@ -225,12 +225,18 @@ std::string generate_segment_wire_mid_output_name(
 
 /*********************************************************************
  * Generate the module name for a memory sub-circuit
+ * If this is a module just to feed through memory lines, use a special name
  ********************************************************************/
 std::string generate_memory_module_name(const CircuitLibrary& circuit_lib,
                                         const CircuitModelId& circuit_model,
                                         const CircuitModelId& sram_model,
-                                        const std::string& postfix) {
-  return std::string(circuit_lib.model_name(circuit_model) + "_" +
+                                        const std::string& postfix,
+                                        const bool& feedthrough_memory) {
+  std::string mid_name;
+  if (feedthrough_memory) {
+    mid_name = "feedthrough_";
+  }
+  return std::string(circuit_lib.model_name(circuit_model) + "_" + mid_name +
                      circuit_lib.model_name(sram_model) + postfix);
 }
 
@@ -498,6 +504,40 @@ std::string generate_switch_block_module_name(
 }
 
 /*********************************************************************
+ * Generate the module name for a tile module with a given coordinate
+ *********************************************************************/
+std::string generate_tile_module_name(const vtr::Point<size_t>& tile_coord) {
+  return std::string("tile_" + std::to_string(tile_coord.x()) + "__" +
+                     std::to_string(tile_coord.y()) + "_");
+}
+
+/*********************************************************************
+ * Generate the port name for a tile. Note that use the index to make the tile
+ *port name unique!
+ *********************************************************************/
+std::string generate_tile_module_port_name(const std::string& prefix,
+                                           const std::string& port_name) {
+  return prefix + std::string("_") + port_name;
+}
+
+/*********************************************************************
+ * Generate the netlist name of a grid block
+ **********************************************************************/
+std::string generate_tile_module_netlist_name(const std::string& block_name,
+                                              const std::string& postfix) {
+  return block_name + postfix;
+}
+
+/*********************************************************************
+ * Generate the module name of a physical memory module
+ **********************************************************************/
+std::string generate_physical_memory_module_name(const std::string& prefix,
+                                                 const size_t& mem_size) {
+  return prefix + std::string("_config_group_mem_size") +
+         std::to_string(mem_size);
+}
+
+/*********************************************************************
  * Generate the module name for a connection block with a given coordinate
  *********************************************************************/
 std::string generate_connection_block_module_name(
@@ -709,6 +749,26 @@ std::string generate_sram_port_name(
   std::string port_name;
 
   switch (sram_orgz_type) {
+    case CONFIG_MEM_FEEDTHROUGH:
+      /* Two types of ports are available:
+       * (1) BL indicates the mem port
+       * (2) BLB indicates the inverted mem port
+       *
+       *               mem  mem_inv
+       *               [0]   [0]
+       *                |     |
+       *                v     v
+       *           +----------------+
+       *           |   Virtual Mem  |
+       *           +----------------+
+       */
+      if (CIRCUIT_MODEL_PORT_BL == port_type) {
+        port_name = std::string(MEMORY_FEEDTHROUGH_DATA_IN_PORT_NAME);
+      } else {
+        VTR_ASSERT(CIRCUIT_MODEL_PORT_BLB == port_type);
+        port_name = std::string(MEMORY_FEEDTHROUGH_DATA_IN_INV_PORT_NAME);
+      }
+      break;
     case CONFIG_MEM_SCAN_CHAIN:
       /* Two types of ports are available:
        * (1) Head of a chain of Configuration-chain Flip-Flops (CCFFs), enabled
@@ -1040,8 +1100,12 @@ std::string generate_sb_mux_instance_name(const std::string& prefix,
 std::string generate_sb_memory_instance_name(const std::string& prefix,
                                              const e_side& sb_side,
                                              const size_t& track_id,
-                                             const std::string& postfix) {
+                                             const std::string& postfix,
+                                             const bool& feedthrough_memory) {
   std::string instance_name(prefix);
+  if (feedthrough_memory) {
+    instance_name = std::string("feedthrough_") + instance_name;
+  }
   instance_name += SideManager(sb_side).to_string();
   instance_name += std::string("_track_") + std::to_string(track_id);
   instance_name += postfix;
@@ -1078,8 +1142,12 @@ std::string generate_cb_mux_instance_name(const std::string& prefix,
 std::string generate_cb_memory_instance_name(const std::string& prefix,
                                              const e_side& cb_side,
                                              const size_t& pin_id,
-                                             const std::string& postfix) {
+                                             const std::string& postfix,
+                                             const bool& feedthrough_memory) {
   std::string instance_name(prefix);
+  if (feedthrough_memory) {
+    instance_name = std::string("feedthrough_") + instance_name;
+  }
 
   instance_name += SideManager(cb_side).to_string();
   instance_name += std::string("_ipin_") + std::to_string(pin_id);
@@ -1134,8 +1202,10 @@ std::string generate_pb_mux_instance_name(const std::string& prefix,
  ********************************************************************/
 std::string generate_pb_memory_instance_name(const std::string& prefix,
                                              t_pb_graph_pin* pb_graph_pin,
-                                             const std::string& postfix) {
-  std::string instance_name(prefix);
+                                             const std::string& postfix,
+                                             const bool& feedthrough_memory) {
+  std::string mid_name = feedthrough_memory ? "virtual_" : "";
+  std::string instance_name(mid_name + prefix);
   instance_name += std::string(pb_graph_pin->parent_node->pb_type->name);
 
   if (IN_PORT == pb_graph_pin->port->type) {
@@ -1400,12 +1470,37 @@ std::string generate_fpga_top_module_name() {
 }
 
 /*********************************************************************
+ * Generate the module name for the fpga core module
+ * We give a fixed name here, because it is independent from benchmark file
+ ********************************************************************/
+std::string generate_fpga_core_module_name() {
+  return std::string(FPGA_CORE_MODULE_NAME);
+}
+
+/*********************************************************************
+ * Generate the module name for the fpga core module
+ * We give a fixed name here, because it is independent from benchmark file
+ ********************************************************************/
+std::string generate_fpga_core_instance_name() {
+  return std::string(FPGA_CORE_INSTANCE_NAME);
+}
+
+/*********************************************************************
  * Generate the netlist name for the top-level module
  * The top-level module is actually the FPGA fabric
  * We give a fixed name here, because it is independent from benchmark file
  ********************************************************************/
 std::string generate_fpga_top_netlist_name(const std::string& postfix) {
   return std::string(FPGA_TOP_MODULE_NAME + postfix);
+}
+
+/*********************************************************************
+ * Generate the netlist name for the top-level module
+ * The top-level module is actually the FPGA fabric
+ * We give a fixed name here, because it is independent from benchmark file
+ ********************************************************************/
+std::string generate_fpga_core_netlist_name(const std::string& postfix) {
+  return std::string(FPGA_CORE_MODULE_NAME + postfix);
 }
 
 /*********************************************************************

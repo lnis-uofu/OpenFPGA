@@ -129,10 +129,13 @@ constexpr std::array<const char*, NUM_CIRCUIT_MODEL_DELAY_TYPES>
 
 /********************************************************************
  * Types of configuration protocol
- * 1. configurable memories are organized and accessed as standalone elements
- * 2. configurable memories are organized and accessed by a scan-chain
- * 3. configurable memories are organized and accessed by memory bank
- * 4. configurable memories are organized and accessed by frames
+ * - configurable memories are organized and accessed as standalone elements
+ * - configurable memories are organized and accessed by a scan-chain
+ * - configurable memories are organized and accessed by quicklogic memory bank
+ * - configurable memories are organized and accessed by memory bank
+ * - configurable memories are organized and accessed by frames
+ * - configurable memories are organized and accessed by feedthrough. Currently,
+ * this is only for internal use only
  */
 enum e_config_protocol_type {
   CONFIG_MEM_STANDALONE,
@@ -140,11 +143,13 @@ enum e_config_protocol_type {
   CONFIG_MEM_MEMORY_BANK,
   CONFIG_MEM_QL_MEMORY_BANK,
   CONFIG_MEM_FRAME_BASED,
+  CONFIG_MEM_FEEDTHROUGH,
   NUM_CONFIG_PROTOCOL_TYPES
 };
 
 constexpr std::array<const char*, NUM_CONFIG_PROTOCOL_TYPES>
   CONFIG_PROTOCOL_TYPE_STRING = {{"standalone", "scan_chain", "memory_bank",
-                                  "ql_memory_bank", "frame_based"}};
+                                  "ql_memory_bank", "frame_based",
+                                  "feedthrough"}};
 
 #endif

@@ -91,6 +91,7 @@ int write_fabric_bitstream_template(const T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_file_format = cmd.option("format");
   CommandOptionId opt_fast_config = cmd.option("fast_configuration");
   CommandOptionId opt_keep_dont_care_bits = cmd.option("keep_dont_care_bits");
+  CommandOptionId opt_wl_decremental_order = cmd.option("wl_decremental_order");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
 
   /* Write fabric bitstream if required */
@@ -127,6 +128,7 @@ int write_fabric_bitstream_template(const T& openfpga_ctx, const Command& cmd,
       cmd_context.option_value(cmd, opt_file),
       cmd_context.option_enable(cmd, opt_fast_config),
       cmd_context.option_enable(cmd, opt_keep_dont_care_bits),
+      !cmd_context.option_enable(cmd, opt_wl_decremental_order),
       !cmd_context.option_enable(cmd, opt_no_time_stamp),
       cmd_context.option_enable(cmd, opt_verbose));
   }

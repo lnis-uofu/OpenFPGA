@@ -96,11 +96,12 @@ int write_pnr_sdc_template(const T& openfpga_ctx, const Command& cmd,
 
   /* Execute only when sdc is enabled */
   if (true == options.generate_sdc_pnr()) {
-    print_pnr_sdc(
+    return print_pnr_sdc(
       options, g_vpr_ctx.device(), openfpga_ctx.vpr_device_annotation(),
-      openfpga_ctx.device_rr_gsb(), openfpga_ctx.module_graph(),
-      openfpga_ctx.mux_lib(), openfpga_ctx.arch().circuit_lib,
-      openfpga_ctx.fabric_global_port_info(), openfpga_ctx.simulation_setting(),
+      openfpga_ctx.fabric_tile(), openfpga_ctx.device_rr_gsb(),
+      openfpga_ctx.module_graph(), openfpga_ctx.mux_lib(),
+      openfpga_ctx.arch().circuit_lib, openfpga_ctx.fabric_global_port_info(),
+      openfpga_ctx.simulation_setting(),
       openfpga_ctx.flow_manager().compress_routing());
   }
 

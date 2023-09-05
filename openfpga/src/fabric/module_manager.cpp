@@ -26,6 +26,17 @@ ModuleManager::module_range ModuleManager::modules() const {
   return vtr::make_range(ids_.begin(), ids_.end());
 }
 
+std::vector<ModuleId> ModuleManager::modules_by_usage(
+  const ModuleManager::e_module_usage_type& usage) const {
+  std::vector<ModuleId> module_list;
+  for (ModuleId curr_module : ids_) {
+    if (usages_[curr_module] == usage) {
+      module_list.push_back(curr_module);
+    }
+  }
+  return module_list;
+}
+
 /* Find all the ports belonging to a module */
 ModuleManager::module_port_range ModuleManager::module_ports(
   const ModuleId& module) const {
@@ -78,28 +89,56 @@ std::vector<size_t> ModuleManager::child_module_instances(
 
 /* Find all the configurable child modules under a parent module */
 std::vector<ModuleId> ModuleManager::configurable_children(
-  const ModuleId& parent_module) const {
+  const ModuleId& parent_module, const e_config_child_type& type) const {
   /* Validate the module_id */
   VTR_ASSERT(valid_module_id(parent_module));
 
-  return configurable_children_[parent_module];
+  if (type == ModuleManager::e_config_child_type::LOGICAL) {
+    return logical_configurable_children_[parent_module];
+  }
+  VTR_ASSERT(type == ModuleManager::e_config_child_type::PHYSICAL);
+  return physical_configurable_children_[parent_module];
 }
 
 /* Find all the instances of configurable child modules under a parent module */
 std::vector<size_t> ModuleManager::configurable_child_instances(
-  const ModuleId& parent_module) const {
+  const ModuleId& parent_module, const e_config_child_type& type) const {
   /* Validate the module_id */
   VTR_ASSERT(valid_module_id(parent_module));
 
-  return configurable_child_instances_[parent_module];
+  if (type == ModuleManager::e_config_child_type::LOGICAL) {
+    return logical_configurable_child_instances_[parent_module];
+  }
+  VTR_ASSERT(type == ModuleManager::e_config_child_type::PHYSICAL);
+  return physical_configurable_child_instances_[parent_module];
 }
 
 std::vector<vtr::Point<int>> ModuleManager::configurable_child_coordinates(
+  const ModuleId& parent_module, const e_config_child_type& type) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(parent_module));
+  VTR_ASSERT(type == ModuleManager::e_config_child_type::PHYSICAL);
+
+  return physical_configurable_child_coordinates_[parent_module];
+}
+
+/* Find all the configurable child modules under a parent module */
+std::vector<ModuleId> ModuleManager::logical2physical_configurable_children(
   const ModuleId& parent_module) const {
   /* Validate the module_id */
   VTR_ASSERT(valid_module_id(parent_module));
 
-  return configurable_child_coordinates_[parent_module];
+  return logical2physical_configurable_children_[parent_module];
+}
+
+/* Find all the instances of configurable child modules under a parent module */
+std::vector<std::string>
+ModuleManager::logical2physical_configurable_child_instance_names(
+  const ModuleId& parent_module) const {
+  /* Validate the module_id */
+  VTR_ASSERT(valid_module_id(parent_module));
+
+  return logical2physical_configurable_child_instance_names_[parent_module];
 }
 
 /* Find all the configurable child modules under a parent module */
@@ -166,7 +205,7 @@ std::vector<ModuleId> ModuleManager::region_configurable_children(
   for (const size_t& child_id :
        config_region_children_[parent_module][region]) {
     region_config_children.push_back(
-      configurable_children_[parent_module][child_id]);
+      physical_configurable_children_[parent_module][child_id]);
   }
 
   return region_config_children;
@@ -185,7 +224,7 @@ std::vector<size_t> ModuleManager::region_configurable_child_instances(
   for (const size_t& child_id :
        config_region_children_[parent_module][region]) {
     region_config_child_instances.push_back(
-      configurable_child_instances_[parent_module][child_id]);
+      physical_configurable_child_instances_[parent_module][child_id]);
   }
 
   return region_config_child_instances;
@@ -205,7 +244,7 @@ ModuleManager::region_configurable_child_coordinates(
   for (const size_t& child_id :
        config_region_children_[parent_module][region]) {
     region_config_child_coordinates.push_back(
-      configurable_child_coordinates_[parent_module][child_id]);
+      physical_configurable_child_coordinates_[parent_module][child_id]);
   }
 
   return region_config_child_coordinates;
@@ -374,6 +413,16 @@ size_t ModuleManager::instance_id(const ModuleId& parent_module,
 
   /* Not found, return an invalid name */
   return size_t(-1);
+}
+
+size_t ModuleManager::num_configurable_children(
+  const ModuleId& parent_module, const e_config_child_type& type) const {
+  VTR_ASSERT(valid_module_id(parent_module));
+  if (type == ModuleManager::e_config_child_type::LOGICAL) {
+    return logical_configurable_children_[parent_module].size();
+  }
+  VTR_ASSERT(type == ModuleManager::e_config_child_type::PHYSICAL);
+  return physical_configurable_children_[parent_module].size();
 }
 
 ModuleManager::e_module_port_type ModuleManager::port_type(
@@ -612,6 +661,26 @@ bool ModuleManager::net_sink_exist(const ModuleId& module,
   return false;
 }
 
+bool ModuleManager::unified_configurable_children(
+  const ModuleId& curr_module) const {
+  if (logical_configurable_children_[curr_module].size() !=
+      physical_configurable_children_[curr_module].size()) {
+    return false;
+  }
+  for (size_t ichild = 0;
+       ichild < logical_configurable_children_[curr_module].size(); ++ichild) {
+    if (logical_configurable_children_[curr_module][ichild] !=
+        physical_configurable_children_[curr_module][ichild]) {
+      return false;
+    }
+    if (logical_configurable_child_instances_[curr_module][ichild] !=
+        physical_configurable_child_instances_[curr_module][ichild]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 /******************************************************************************
  * Private Accessors
  ******************************************************************************/
@@ -654,10 +723,15 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   children_.emplace_back();
   num_child_instances_.emplace_back();
   child_instance_names_.emplace_back();
-  configurable_children_.emplace_back();
-  configurable_child_instances_.emplace_back();
-  configurable_child_regions_.emplace_back();
-  configurable_child_coordinates_.emplace_back();
+  logical_configurable_children_.emplace_back();
+  logical_configurable_child_instances_.emplace_back();
+  physical_configurable_children_.emplace_back();
+  physical_configurable_child_instances_.emplace_back();
+  physical_configurable_child_regions_.emplace_back();
+  physical_configurable_child_coordinates_.emplace_back();
+
+  logical2physical_configurable_children_.emplace_back();
+  logical2physical_configurable_child_instance_names_.emplace_back();
 
   config_region_ids_.emplace_back();
   config_region_children_.emplace_back();
@@ -747,7 +821,13 @@ void ModuleManager::set_module_name(const ModuleId& module,
                                     const std::string& name) {
   /* Validate the id of module */
   VTR_ASSERT(valid_module_id(module));
+  std::string old_name = names_[module];
   names_[module] = name;
+
+  /* Unregister the old name */
+  name_id_map_.erase(old_name);
+  /* Register the new name */
+  name_id_map_[name] = module;
 }
 
 void ModuleManager::set_module_usage(const ModuleId& module,
@@ -768,6 +848,14 @@ void ModuleManager::set_port_is_wire(const ModuleId& module,
   port_is_wire_[module][port] = is_wire;
 }
 
+/* Set a port to be a wire */
+void ModuleManager::set_port_is_wire(const ModuleId& module,
+                                     const ModulePortId& port_id,
+                                     const bool& is_wire) {
+  VTR_ASSERT(valid_module_port_id(module, port_id));
+  port_is_wire_[module][port_id] = is_wire;
+}
+
 /* Set a port to be a mappable I/O */
 void ModuleManager::set_port_is_mappable_io(const ModuleId& module,
                                             const ModulePortId& port_id,
@@ -786,6 +874,14 @@ void ModuleManager::set_port_is_register(const ModuleId& module,
   /* Must find something, otherwise drop an error */
   VTR_ASSERT(ModulePortId::INVALID() != port);
   port_is_register_[module][port] = is_register;
+}
+
+/* Set a port to be a register */
+void ModuleManager::set_port_is_register(const ModuleId& module,
+                                         const ModulePortId& port_id,
+                                         const bool& is_register) {
+  VTR_ASSERT(valid_module_port_id(module, port_id));
+  port_is_register_[module][port_id] = is_register;
 }
 
 /* Set the preprocessing flag for a port */
@@ -881,6 +977,7 @@ void ModuleManager::set_child_instance_name(const ModuleId& parent_module,
 void ModuleManager::add_configurable_child(const ModuleId& parent_module,
                                            const ModuleId& child_module,
                                            const size_t& child_instance,
+                                           const e_config_child_type& type,
                                            const vtr::Point<int> coord) {
   /* Validate the id of both parent and child modules */
   VTR_ASSERT(valid_module_id(parent_module));
@@ -888,29 +985,108 @@ void ModuleManager::add_configurable_child(const ModuleId& parent_module,
   /* Ensure that the instance id is in range */
   VTR_ASSERT(child_instance < num_instance(parent_module, child_module));
 
-  configurable_children_[parent_module].push_back(child_module);
-  configurable_child_instances_[parent_module].push_back(child_instance);
-  configurable_child_regions_[parent_module].push_back(
-    ConfigRegionId::INVALID());
-  configurable_child_coordinates_[parent_module].push_back(coord);
+  if (type == ModuleManager::e_config_child_type::LOGICAL ||
+      type == ModuleManager::e_config_child_type::UNIFIED) {
+    logical_configurable_children_[parent_module].push_back(child_module);
+    logical_configurable_child_instances_[parent_module].push_back(
+      child_instance);
+  }
+  if (type == ModuleManager::e_config_child_type::PHYSICAL ||
+      type == ModuleManager::e_config_child_type::UNIFIED) {
+    physical_configurable_children_[parent_module].push_back(child_module);
+    physical_configurable_child_instances_[parent_module].push_back(
+      child_instance);
+    physical_configurable_child_regions_[parent_module].push_back(
+      ConfigRegionId::INVALID());
+    physical_configurable_child_coordinates_[parent_module].push_back(coord);
+  }
+
+  if (type == ModuleManager::e_config_child_type::UNIFIED) {
+    logical2physical_configurable_children_[parent_module].push_back(
+      child_module);
+    logical2physical_configurable_child_instance_names_[parent_module]
+      .emplace_back();
+  } else if (type == ModuleManager::e_config_child_type::LOGICAL) {
+    logical2physical_configurable_children_[parent_module].emplace_back();
+    logical2physical_configurable_child_instance_names_[parent_module]
+      .emplace_back();
+  }
 }
 
-void ModuleManager::reserve_configurable_child(const ModuleId& parent_module,
-                                               const size_t& num_children) {
+void ModuleManager::set_logical2physical_configurable_child(
+  const ModuleId& parent_module, const size_t& logical_child_id,
+  const ModuleId& physical_child_module) {
+  /* Sanity checks */
   VTR_ASSERT(valid_module_id(parent_module));
-  /* Do reserve when the number of children is larger than current size of lists
-   */
-  if (num_children > configurable_children_[parent_module].size()) {
-    configurable_children_[parent_module].reserve(num_children);
+  VTR_ASSERT(logical_child_id <
+             num_configurable_children(
+               parent_module, ModuleManager::e_config_child_type::LOGICAL));
+  /* Create the pair */
+  logical2physical_configurable_children_[parent_module][logical_child_id] =
+    physical_child_module;
+}
+
+void ModuleManager::set_logical2physical_configurable_child_instance_name(
+  const ModuleId& parent_module, const size_t& logical_child_id,
+  const std::string& physical_child_instance_name) {
+  /* Sanity checks */
+  VTR_ASSERT(valid_module_id(parent_module));
+  VTR_ASSERT(logical_child_id <
+             num_configurable_children(
+               parent_module, ModuleManager::e_config_child_type::LOGICAL));
+  /* Create the pair */
+  logical2physical_configurable_child_instance_names_
+    [parent_module][logical_child_id] = physical_child_instance_name;
+}
+
+void ModuleManager::reserve_configurable_child(
+  const ModuleId& parent_module, const size_t& num_children,
+  const e_config_child_type& type) {
+  VTR_ASSERT(valid_module_id(parent_module));
+  if (type == ModuleManager::e_config_child_type::LOGICAL ||
+      type == ModuleManager::e_config_child_type::UNIFIED) {
+    /* Do reserve when the number of children is larger than current size of
+     * lists
+     */
+    if (num_children > logical_configurable_children_[parent_module].size()) {
+      logical_configurable_children_[parent_module].reserve(num_children);
+    }
+    if (num_children >
+        logical_configurable_child_instances_[parent_module].size()) {
+      logical_configurable_child_instances_[parent_module].reserve(
+        num_children);
+    }
+    if (num_children >
+        logical2physical_configurable_children_[parent_module].size()) {
+      logical2physical_configurable_children_[parent_module].reserve(
+        num_children);
+    }
+    if (num_children >
+        logical2physical_configurable_child_instance_names_[parent_module]
+          .size()) {
+      logical2physical_configurable_child_instance_names_[parent_module]
+        .reserve(num_children);
+    }
   }
-  if (num_children > configurable_child_instances_[parent_module].size()) {
-    configurable_child_instances_[parent_module].reserve(num_children);
-  }
-  if (num_children > configurable_child_regions_[parent_module].size()) {
-    configurable_child_regions_[parent_module].reserve(num_children);
-  }
-  if (num_children > configurable_child_coordinates_[parent_module].size()) {
-    configurable_child_coordinates_[parent_module].reserve(num_children);
+  if (type == ModuleManager::e_config_child_type::PHYSICAL ||
+      type == ModuleManager::e_config_child_type::UNIFIED) {
+    if (num_children > physical_configurable_children_[parent_module].size()) {
+      physical_configurable_children_[parent_module].reserve(num_children);
+    }
+    if (num_children >
+        physical_configurable_child_instances_[parent_module].size()) {
+      physical_configurable_child_instances_[parent_module].reserve(
+        num_children);
+    }
+    if (num_children >
+        physical_configurable_child_regions_[parent_module].size()) {
+      physical_configurable_child_regions_[parent_module].reserve(num_children);
+    }
+    if (num_children >
+        physical_configurable_child_coordinates_[parent_module].size()) {
+      physical_configurable_child_coordinates_[parent_module].reserve(
+        num_children);
+    }
   }
 }
 
@@ -939,23 +1115,28 @@ void ModuleManager::add_configurable_child_to_region(
 
   /* Ensure that the child module is in the configurable children list */
   VTR_ASSERT(child_module ==
-             configurable_children(parent_module)[config_child_id]);
+             configurable_children(
+               parent_module,
+               ModuleManager::e_config_child_type::PHYSICAL)[config_child_id]);
   VTR_ASSERT(child_instance ==
-             configurable_child_instances(parent_module)[config_child_id]);
+             configurable_child_instances(
+               parent_module,
+               ModuleManager::e_config_child_type::PHYSICAL)[config_child_id]);
 
   /* If the child is already in another region, error out */
-  if ((true ==
-       valid_region_id(
-         parent_module,
-         configurable_child_regions_[parent_module][config_child_id])) &&
+  if ((true == valid_region_id(
+                 parent_module,
+                 physical_configurable_child_regions_[parent_module]
+                                                     [config_child_id])) &&
       (config_region !=
-       configurable_child_regions_[parent_module][config_child_id])) {
+       physical_configurable_child_regions_[parent_module][config_child_id])) {
     VTR_LOGF_ERROR(
       __FILE__, __LINE__,
       "Try to add a configurable child '%s[%lu]' to region '%lu' which is "
       "already added to another region '%lu'!\n",
       module_name(child_module).c_str(), child_instance, size_t(config_region),
-      size_t(configurable_child_regions_[parent_module][config_child_id]));
+      size_t(
+        physical_configurable_child_regions_[parent_module][config_child_id]));
     exit(1);
   }
 
@@ -1185,16 +1366,107 @@ ModuleNetSinkId ModuleManager::add_module_net_sink(
   return net_sink;
 }
 
+ModuleId ModuleManager::create_wrapper_module(
+  const ModuleId& existing_module, const std::string& wrapper_module_name,
+  const std::string& instance_name, const bool& add_nets) {
+  /* Create a new module with the given name */
+  ModuleId wrapper_module = add_module(wrapper_module_name);
+  if (!wrapper_module) {
+    return wrapper_module;
+  }
+  /* Add the existing module as an instance */
+  add_child_module(wrapper_module, existing_module, false);
+  set_child_instance_name(wrapper_module, existing_module, 0, instance_name);
+
+  /* A fast-lookup on the port linking: wrapper_module port -> existing_module
+   * port */
+  std::map<ModulePortId, ModulePortId> port_map;
+  /* Herit ports */
+  for (ModulePortId existing_port : module_ports(existing_module)) {
+    /* Create new port */
+    BasicPort existing_port_info = module_port(existing_module, existing_port);
+    ModuleManager::e_module_port_type existing_port_type =
+      port_type(existing_module, existing_port);
+    ModulePortId new_port =
+      add_port(wrapper_module, existing_port_info, existing_port_type);
+    /* Set port attributes */
+    set_port_is_wire(wrapper_module, new_port,
+                     port_is_wire(existing_module, existing_port));
+    set_port_is_mappable_io(
+      wrapper_module, new_port,
+      port_is_mappable_io(existing_module, existing_port));
+    set_port_is_register(wrapper_module, new_port,
+                         port_is_register(existing_module, existing_port));
+    set_port_preproc_flag(wrapper_module, new_port,
+                          port_preproc_flag(existing_module, existing_port));
+    /* Register in port mapping */
+    port_map[new_port] = existing_port;
+  }
+
+  /* Add nets */
+  if (!add_nets) {
+    return wrapper_module;
+  }
+  /* The number of nets are the sum of input and output pins */
+  size_t num_nets_to_reserve = 0;
+  for (ModulePortId new_port : module_ports(wrapper_module)) {
+    BasicPort new_port_info = module_port(wrapper_module, new_port);
+    num_nets_to_reserve += new_port_info.get_width();
+  }
+  reserve_module_nets(wrapper_module, num_nets_to_reserve);
+  for (ModulePortId new_port : module_ports(wrapper_module)) {
+    BasicPort new_port_info = module_port(wrapper_module, new_port);
+    /* For each input pin, create a new source */
+    ModuleManager::e_module_port_type new_port_type =
+      port_type(wrapper_module, new_port);
+    /* Check if the pin size are matching or not */
+    ModulePortId existing_port = port_map[new_port];
+    BasicPort existing_port_info = module_port(existing_module, existing_port);
+    VTR_ASSERT(existing_port_info == new_port_info);
+    if (new_port_type !=
+        ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT) {
+      for (size_t ipin = 0; ipin < new_port_info.pins().size(); ++ipin) {
+        /* Create new net */
+        ModuleNetId new_net = create_module_net(wrapper_module);
+        VTR_ASSERT(valid_module_net_id(wrapper_module, new_net));
+        add_module_net_source(wrapper_module, new_net, wrapper_module, 0,
+                              new_port, new_port_info.pins()[ipin]);
+        add_module_net_sink(wrapper_module, new_net, existing_module, 0,
+                            existing_port, existing_port_info.pins()[ipin]);
+      }
+    } else {
+      VTR_ASSERT_SAFE(new_port_type ==
+                      ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT);
+      for (size_t ipin = 0; ipin < new_port_info.pins().size(); ++ipin) {
+        /* Create new net */
+        ModuleNetId new_net = create_module_net(wrapper_module);
+        VTR_ASSERT(valid_module_net_id(wrapper_module, new_net));
+        add_module_net_source(wrapper_module, new_net, existing_module, 0,
+                              existing_port, new_port_info.pins()[ipin]);
+        add_module_net_sink(wrapper_module, new_net, wrapper_module, 0,
+                            new_port, existing_port_info.pins()[ipin]);
+      }
+    }
+  }
+
+  return wrapper_module;
+}
+
 /******************************************************************************
  * Public Deconstructor
  ******************************************************************************/
 void ModuleManager::clear_configurable_children(const ModuleId& parent_module) {
   VTR_ASSERT(valid_module_id(parent_module));
 
-  configurable_children_[parent_module].clear();
-  configurable_child_instances_[parent_module].clear();
-  configurable_child_regions_[parent_module].clear();
-  configurable_child_coordinates_[parent_module].clear();
+  logical_configurable_children_[parent_module].clear();
+  logical_configurable_child_instances_[parent_module].clear();
+  physical_configurable_children_[parent_module].clear();
+  physical_configurable_child_instances_[parent_module].clear();
+  physical_configurable_child_regions_[parent_module].clear();
+  physical_configurable_child_coordinates_[parent_module].clear();
+
+  logical2physical_configurable_children_[parent_module].clear();
+  logical2physical_configurable_child_instance_names_[parent_module].clear();
 }
 
 void ModuleManager::clear_config_region(const ModuleId& parent_module) {
@@ -1210,6 +1482,15 @@ void ModuleManager::clear_io_children(const ModuleId& parent_module) {
   io_children_[parent_module].clear();
   io_child_instances_[parent_module].clear();
   io_child_coordinates_[parent_module].clear();
+}
+
+void ModuleManager::clear_module_net_sinks(const ModuleId& parent_module,
+                                           const ModuleNetId& net) {
+  VTR_ASSERT(valid_module_net_id(parent_module, net));
+  net_sink_ids_[parent_module][net].clear();
+  net_sink_terminal_ids_[parent_module][net].clear();
+  net_sink_instance_ids_[parent_module][net].clear();
+  net_sink_pin_ids_[parent_module][net].clear();
 }
 
 /******************************************************************************
