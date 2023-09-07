@@ -69,7 +69,7 @@ endmodule
 // ----- END Verilog module for logical_tile_io_mode_physical__iopad -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 

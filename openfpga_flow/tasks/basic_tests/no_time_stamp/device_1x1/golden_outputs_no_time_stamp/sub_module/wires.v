@@ -33,7 +33,7 @@ endmodule
 // ----- END Verilog module for direct_interc -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 // ----- END Verilog modules for regular wires -----

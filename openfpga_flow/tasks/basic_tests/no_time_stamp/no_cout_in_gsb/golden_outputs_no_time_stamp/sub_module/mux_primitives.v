@@ -60,7 +60,7 @@ endmodule
 // ----- END Verilog module for mux_2level_tapbuf_basis_input3_mem3 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -112,7 +112,7 @@ endmodule
 // ----- END Verilog module for mux_2level_tapbuf_basis_input2_mem1 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -176,7 +176,7 @@ endmodule
 // ----- END Verilog module for mux_2level_tapbuf_basis_input4_mem4 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -228,7 +228,7 @@ endmodule
 // ----- END Verilog module for mux_2level_tapbuf_basis_input2_mem2 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -298,7 +298,7 @@ endmodule
 // ----- END Verilog module for mux_2level_basis_input5_mem5 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -362,7 +362,7 @@ endmodule
 // ----- END Verilog module for mux_1level_tapbuf_basis_input4_mem4 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -420,7 +420,7 @@ endmodule
 // ----- END Verilog module for mux_1level_tapbuf_basis_input3_mem3 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -472,7 +472,7 @@ endmodule
 // ----- END Verilog module for frac_lut4_mux_basis_input2_mem1 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 

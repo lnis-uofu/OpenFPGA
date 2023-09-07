@@ -84,7 +84,7 @@ endmodule
 // ----- END Verilog module for mux_2level_tapbuf_size4 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -156,7 +156,7 @@ endmodule
 // ----- END Verilog module for mux_2level_tapbuf_size2 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -240,7 +240,7 @@ endmodule
 // ----- END Verilog module for mux_2level_tapbuf_size3 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -371,7 +371,7 @@ endmodule
 // ----- END Verilog module for mux_2level_tapbuf_size11 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -485,7 +485,7 @@ endmodule
 // ----- END Verilog module for mux_2level_tapbuf_size9 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -611,7 +611,7 @@ endmodule
 // ----- END Verilog module for mux_2level_tapbuf_size10 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -759,7 +759,7 @@ endmodule
 // ----- END Verilog module for mux_2level_tapbuf_size13 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -870,7 +870,7 @@ endmodule
 // ----- END Verilog module for mux_2level_tapbuf_size7 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -986,7 +986,7 @@ endmodule
 // ----- END Verilog module for mux_2level_tapbuf_size8 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -1080,7 +1080,7 @@ endmodule
 // ----- END Verilog module for mux_2level_tapbuf_size5 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -1263,7 +1263,7 @@ endmodule
 // ----- END Verilog module for mux_2level_size20 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -1333,7 +1333,7 @@ endmodule
 // ----- END Verilog module for mux_1level_tapbuf_size3 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -1398,7 +1398,7 @@ endmodule
 // ----- END Verilog module for mux_1level_tapbuf_size2 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -1658,7 +1658,7 @@ endmodule
 // ----- END Verilog module for frac_lut4_mux -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 

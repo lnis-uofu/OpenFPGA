@@ -400,7 +400,7 @@ endmodule
 // ----- END Verilog module for sb_4__4_ -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 

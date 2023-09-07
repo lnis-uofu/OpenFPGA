@@ -2528,5 +2528,5 @@ endmodule
 // ----- END Verilog module for and2_top_formal_verification -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 

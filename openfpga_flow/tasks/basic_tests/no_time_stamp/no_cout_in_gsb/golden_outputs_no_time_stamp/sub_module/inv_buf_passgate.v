@@ -27,7 +27,7 @@ endmodule
 // ----- END Verilog module for const0 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 //----- Default net type -----
 `default_nettype none
@@ -49,7 +49,7 @@ endmodule
 // ----- END Verilog module for const1 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 //----- Default net type -----
 `default_nettype none
@@ -83,7 +83,7 @@ endmodule
 // ----- END Verilog module for INVTX1 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 //----- Default net type -----
 `default_nettype none
@@ -117,7 +117,7 @@ endmodule
 // ----- END Verilog module for buf4 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 //----- Default net type -----
 `default_nettype none
@@ -151,7 +151,7 @@ endmodule
 // ----- END Verilog module for tap_buf4 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 //----- Default net type -----
 `default_nettype none
@@ -189,7 +189,7 @@ endmodule
 // ----- END Verilog module for OR2 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 //----- Default net type -----
 `default_nettype none
@@ -230,5 +230,5 @@ endmodule
 // ----- END Verilog module for TGATE -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 

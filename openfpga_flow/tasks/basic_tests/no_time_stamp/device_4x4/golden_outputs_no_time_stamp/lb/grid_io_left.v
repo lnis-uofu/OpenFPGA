@@ -162,7 +162,7 @@ endmodule
 // ----- END Verilog module for grid_io_left -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 

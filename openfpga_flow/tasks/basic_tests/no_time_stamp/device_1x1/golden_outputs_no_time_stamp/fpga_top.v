@@ -456,7 +456,7 @@ endmodule
 // ----- END Verilog module for fpga_top -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 

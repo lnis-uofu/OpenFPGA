@@ -90,7 +90,7 @@ endmodule
 // ----- END Verilog module for lut4 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 

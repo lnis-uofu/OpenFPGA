@@ -105,7 +105,7 @@ endmodule
 // ----- END Verilog module for grid_clb -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 

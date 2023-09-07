@@ -107,7 +107,7 @@ endmodule
 // ----- END Verilog module for frac_lut4 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 

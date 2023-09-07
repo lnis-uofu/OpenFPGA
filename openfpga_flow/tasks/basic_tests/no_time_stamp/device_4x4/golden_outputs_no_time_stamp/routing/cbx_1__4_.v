@@ -339,7 +339,7 @@ endmodule
 // ----- END Verilog module for cbx_1__4_ -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 

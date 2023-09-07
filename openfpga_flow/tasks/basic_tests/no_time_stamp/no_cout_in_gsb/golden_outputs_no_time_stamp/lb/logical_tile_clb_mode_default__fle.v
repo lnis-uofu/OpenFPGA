@@ -130,7 +130,7 @@ endmodule
 // ----- END Verilog module for logical_tile_clb_mode_default__fle -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 

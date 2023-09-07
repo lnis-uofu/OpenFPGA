@@ -62,7 +62,7 @@ endmodule
 // ----- END Verilog module for logical_tile_clb_mode_default__fle_mode_n1_lut4__ble4_mode_default__lut4 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
