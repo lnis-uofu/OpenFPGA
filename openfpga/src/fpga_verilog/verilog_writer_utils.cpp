@@ -43,7 +43,8 @@ void print_verilog_default_net_type_declaration(
  * include the description
  ***********************************************/
 void print_verilog_file_header(std::fstream& fp, const std::string& usage,
-                               const bool& include_time_stamp) {
+                               const bool& include_time_stamp,
+                               const bool& include_time_scale) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
   fp << "//-------------------------------------------" << std::endl;
@@ -60,9 +61,11 @@ void print_verilog_file_header(std::fstream& fp, const std::string& usage,
 
   fp << "//-------------------------------------------" << std::endl;
 
-  fp << "//----- Time scale -----" << std::endl;
-  fp << "`timescale 1ns / 1ps" << std::endl;
-  fp << std::endl;
+  if (include_time_scale) {
+    fp << "//----- Time scale -----" << std::endl;
+    fp << "`timescale 1ns / 1ps" << std::endl;
+    fp << std::endl;
+  }
 }
 
 /********************************************************************
@@ -338,7 +341,9 @@ void print_verilog_module_declaration(
   VTR_ASSERT(true == valid_file_stream(fp));
 
   /* Apply default net type from user's option */
-  print_verilog_default_net_type_declaration(fp, default_net_type);
+  if (default_net_type != VERILOG_DEFAULT_NET_TYPE_WIRE) {
+    print_verilog_default_net_type_declaration(fp, default_net_type);
+  }
 
   print_verilog_module_definition(fp, module_manager, module_id);
 
@@ -470,8 +475,9 @@ void print_verilog_module_instance(
 /************************************************
  * Print an end line for a Verilog module
  ***********************************************/
-void print_verilog_module_end(std::fstream& fp,
-                              const std::string& module_name) {
+void print_verilog_module_end(
+  std::fstream& fp, const std::string& module_name,
+  const e_verilog_default_net_type& default_net_type) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
   fp << "endmodule" << std::endl;
@@ -480,7 +486,10 @@ void print_verilog_module_end(std::fstream& fp,
   fp << std::endl;
 
   /* Reset default net type to be none */
-  print_verilog_default_net_type_declaration(fp, VERILOG_DEFAULT_NET_TYPE_NONE);
+  if (default_net_type != VERILOG_DEFAULT_NET_TYPE_WIRE) {
+    print_verilog_default_net_type_declaration(fp,
+                                               VERILOG_DEFAULT_NET_TYPE_WIRE);
+  }
 }
 
 /************************************************

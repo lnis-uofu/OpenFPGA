@@ -186,7 +186,7 @@ static void print_verilog_cmos_mux_branch_module_behavioral(
     fp, input_port, output_port, mem_port, mux_graph, mem_default_val[0]);
 
   /* Put an end to the Verilog module */
-  print_verilog_module_end(fp, module_name);
+  print_verilog_module_end(fp, module_name, default_net_type);
 }
 
 /*********************************************************************
@@ -633,7 +633,7 @@ static void generate_verilog_rram_mux_branch_module(
   }
 
   /* Put an end to the Verilog module */
-  print_verilog_module_end(fp, module_name);
+  print_verilog_module_end(fp, module_name, default_net_type);
 }
 
 /***********************************************
@@ -1390,7 +1390,7 @@ static void generate_verilog_rram_mux_module(
     module_manager, circuit_lib, fp, module_id, circuit_model, mux_graph);
 
   /* Put an end to the Verilog module */
-  print_verilog_module_end(fp, module_name);
+  print_verilog_module_end(fp, module_name, default_net_type);
 }
 
 /***********************************************

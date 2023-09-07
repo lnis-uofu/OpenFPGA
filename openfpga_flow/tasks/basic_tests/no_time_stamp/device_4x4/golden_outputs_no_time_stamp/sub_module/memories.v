@@ -4,9 +4,6 @@
 //	Author: Xifan TANG
 //	Organization: University of Utah
 //-------------------------------------------
-//----- Time scale -----
-`timescale 1ns / 1ps
-
 //----- Default net type -----
 `default_nettype none
 
@@ -64,7 +61,7 @@ endmodule
 // ----- END Verilog module for mux_tree_tapbuf_size4_mem -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -120,7 +117,7 @@ endmodule
 // ----- END Verilog module for mux_tree_tapbuf_size2_mem -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -188,7 +185,7 @@ endmodule
 // ----- END Verilog module for mux_tree_tapbuf_size10_mem -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -256,7 +253,7 @@ endmodule
 // ----- END Verilog module for mux_tree_tapbuf_size8_mem -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -324,7 +321,7 @@ endmodule
 // ----- END Verilog module for mux_tree_tapbuf_size9_mem -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -392,7 +389,7 @@ endmodule
 // ----- END Verilog module for mux_tree_tapbuf_size11_mem -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -448,7 +445,7 @@ endmodule
 // ----- END Verilog module for mux_tree_tapbuf_size3_mem -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -510,7 +507,7 @@ endmodule
 // ----- END Verilog module for mux_tree_tapbuf_size5_mem -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -578,7 +575,7 @@ endmodule
 // ----- END Verilog module for mux_tree_size14_mem -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -718,7 +715,7 @@ endmodule
 // ----- END Verilog module for lut4_DFF_mem -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -768,7 +765,7 @@ endmodule
 // ----- END Verilog module for GPIO_DFF_mem -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 

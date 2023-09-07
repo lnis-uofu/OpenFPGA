@@ -4,9 +4,6 @@
 //	Author: Xifan TANG
 //	Organization: University of Utah
 //-------------------------------------------
-//----- Time scale -----
-`timescale 1ns / 1ps
-
 //----- Default net type -----
 `default_nettype none
 
@@ -98,7 +95,7 @@ endmodule
 // ----- END Verilog module for mux_tree_tapbuf_size4 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -170,7 +167,7 @@ endmodule
 // ----- END Verilog module for mux_tree_tapbuf_size2 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -338,7 +335,7 @@ endmodule
 // ----- END Verilog module for mux_tree_tapbuf_size10 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -482,7 +479,7 @@ endmodule
 // ----- END Verilog module for mux_tree_tapbuf_size8 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -638,7 +635,7 @@ endmodule
 // ----- END Verilog module for mux_tree_tapbuf_size9 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -818,7 +815,7 @@ endmodule
 // ----- END Verilog module for mux_tree_tapbuf_size11 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -902,7 +899,7 @@ endmodule
 // ----- END Verilog module for mux_tree_tapbuf_size3 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -1010,7 +1007,7 @@ endmodule
 // ----- END Verilog module for mux_tree_tapbuf_size5 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -1226,7 +1223,7 @@ endmodule
 // ----- END Verilog module for mux_tree_size14 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -1455,7 +1452,7 @@ endmodule
 // ----- END Verilog module for lut4_mux -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 

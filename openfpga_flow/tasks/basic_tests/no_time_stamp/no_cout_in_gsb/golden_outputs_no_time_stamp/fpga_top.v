@@ -4,9 +4,6 @@
 //	Author: Xifan TANG
 //	Organization: University of Utah
 //-------------------------------------------
-//----- Time scale -----
-`timescale 1ns / 1ps
-
 //----- Default net type -----
 `default_nettype none
 
@@ -1204,7 +1201,7 @@ endmodule
 // ----- END Verilog module for fpga_top -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 

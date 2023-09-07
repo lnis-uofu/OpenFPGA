@@ -4,9 +4,6 @@
 //	Author: Xifan TANG
 //	Organization: University of Utah
 //-------------------------------------------
-//----- Time scale -----
-`timescale 1ns / 1ps
-
 // ------ Include defines: preproc flags -----
 `include "fpga_defines.v"
 

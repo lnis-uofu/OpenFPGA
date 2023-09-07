@@ -4,9 +4,6 @@
 //	Author: Xifan TANG
 //	Organization: University of Utah
 //-------------------------------------------
-//----- Time scale -----
-`timescale 1ns / 1ps
-
 // ----- BEGIN Grid Verilog module: grid_clb -----
 //----- Default net type -----
 `default_nettype none
@@ -135,7 +132,7 @@ endmodule
 // ----- END Verilog module for grid_clb -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 

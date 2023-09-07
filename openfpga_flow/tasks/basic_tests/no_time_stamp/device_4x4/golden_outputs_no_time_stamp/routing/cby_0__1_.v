@@ -4,9 +4,6 @@
 //	Author: Xifan TANG
 //	Organization: University of Utah
 //-------------------------------------------
-//----- Time scale -----
-`timescale 1ns / 1ps
-
 //----- Default net type -----
 `default_nettype none
 
@@ -320,7 +317,7 @@ endmodule
 // ----- END Verilog module for cby_0__1_ -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 

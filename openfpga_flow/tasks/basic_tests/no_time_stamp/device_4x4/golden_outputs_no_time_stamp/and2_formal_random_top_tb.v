@@ -4,9 +4,6 @@
 //	Author: Xifan TANG
 //	Organization: University of Utah
 //-------------------------------------------
-//----- Time scale -----
-`timescale 1ns / 1ps
-
 //----- Default net type -----
 `default_nettype none
 
@@ -120,7 +117,4 @@ end
 
 endmodule
 // ----- END Verilog module for and2_top_formal_verification_random_tb -----
-
-//----- Default net type -----
-`default_nettype none
 

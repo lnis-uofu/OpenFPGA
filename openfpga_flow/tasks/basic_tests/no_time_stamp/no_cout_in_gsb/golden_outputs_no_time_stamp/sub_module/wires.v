@@ -4,9 +4,6 @@
 //	Author: Xifan TANG
 //	Organization: University of Utah
 //-------------------------------------------
-//----- Time scale -----
-`timescale 1ns / 1ps
-
 // ----- BEGIN Verilog modules for regular wires -----
 //----- Default net type -----
 `default_nettype none
@@ -33,7 +30,7 @@ endmodule
 // ----- END Verilog module for direct_interc -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 // ----- END Verilog modules for regular wires -----

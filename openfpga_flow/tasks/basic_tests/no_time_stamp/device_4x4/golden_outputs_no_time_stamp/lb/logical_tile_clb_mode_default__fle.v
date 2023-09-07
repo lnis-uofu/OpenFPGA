@@ -4,9 +4,6 @@
 //	Author: Xifan TANG
 //	Organization: University of Utah
 //-------------------------------------------
-//----- Time scale -----
-`timescale 1ns / 1ps
-
 // ----- BEGIN Physical programmable logic block Verilog module: fle -----
 //----- Default net type -----
 `default_nettype none
@@ -102,7 +99,7 @@ endmodule
 // ----- END Verilog module for logical_tile_clb_mode_default__fle -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 

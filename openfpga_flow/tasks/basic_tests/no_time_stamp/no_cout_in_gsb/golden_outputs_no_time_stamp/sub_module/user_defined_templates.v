@@ -4,9 +4,6 @@
 //	Author: Xifan TANG
 //	Organization: University of Utah
 //-------------------------------------------
-//----- Time scale -----
-`timescale 1ns / 1ps
-
 // ----- Template Verilog module for DFFSRQ -----
 //----- Default net type -----
 `default_nettype none
@@ -43,7 +40,7 @@ endmodule
 // ----- END Verilog module for DFFSRQ -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 // ----- Template Verilog module for DFFR -----
@@ -82,7 +79,7 @@ endmodule
 // ----- END Verilog module for DFFR -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 // ----- Template Verilog module for GPIO -----
@@ -118,7 +115,7 @@ endmodule
 // ----- END Verilog module for GPIO -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 // ----- Template Verilog module for ADDF -----
@@ -157,6 +154,6 @@ endmodule
 // ----- END Verilog module for ADDF -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 

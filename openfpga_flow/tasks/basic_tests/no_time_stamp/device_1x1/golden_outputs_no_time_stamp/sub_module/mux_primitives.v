@@ -4,9 +4,6 @@
 //	Author: Xifan TANG
 //	Organization: University of Utah
 //-------------------------------------------
-//----- Time scale -----
-`timescale 1ns / 1ps
-
 //----- Default net type -----
 `default_nettype none
 
@@ -54,7 +51,7 @@ endmodule
 // ----- END Verilog module for mux_tree_tapbuf_basis_input2_mem1 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -106,7 +103,7 @@ endmodule
 // ----- END Verilog module for mux_tree_basis_input2_mem1 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
@@ -158,7 +155,7 @@ endmodule
 // ----- END Verilog module for lut4_mux_basis_input2_mem1 -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 

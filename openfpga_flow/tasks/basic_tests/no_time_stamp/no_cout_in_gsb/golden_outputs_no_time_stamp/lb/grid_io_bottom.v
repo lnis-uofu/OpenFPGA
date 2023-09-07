@@ -4,9 +4,6 @@
 //	Author: Xifan TANG
 //	Organization: University of Utah
 //-------------------------------------------
-//----- Time scale -----
-`timescale 1ns / 1ps
-
 // ----- BEGIN Grid Verilog module: grid_io_bottom -----
 //----- Default net type -----
 `default_nettype none
@@ -173,7 +170,7 @@ endmodule
 // ----- END Verilog module for grid_io_bottom -----
 
 //----- Default net type -----
-`default_nettype none
+`default_nettype wire
 
 
 
