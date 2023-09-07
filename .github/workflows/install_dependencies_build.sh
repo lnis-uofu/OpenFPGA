@@ -62,4 +62,5 @@ apt-get install -y \
     clang-8 \
     clang-10 \
     clang-format-10 \
-    libxml2-utils
+    libxml2-utils \
+    libssl-dev
