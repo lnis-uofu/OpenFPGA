@@ -32,15 +32,9 @@ void print_verilog_default_net_type_declaration(
   std::fstream& fp, const e_verilog_default_net_type& default_net_type) {
   VTR_ASSERT(true == valid_file_stream(fp));
 
-  if (default_net_type != VERILOG_DEFAULT_NET_TYPE_WIRE) {
-    fp << "//----- Default net type -----" << std::endl;
-    fp << "`default_nettype "
-       << VERILOG_DEFAULT_NET_TYPE_STRING[default_net_type] << std::endl;
-  } else {
-    fp << "//----- Assume default net type to be "
-       << VERILOG_DEFAULT_NET_TYPE_STRING[VERILOG_DEFAULT_NET_TYPE_WIRE]
-       << "-----" << std::endl;
-  }
+  fp << "//----- Default net type -----" << std::endl;
+  fp << "`default_nettype "
+     << VERILOG_DEFAULT_NET_TYPE_STRING[default_net_type] << std::endl;
   fp << std::endl;
 }
 
@@ -347,7 +341,9 @@ void print_verilog_module_declaration(
   VTR_ASSERT(true == valid_file_stream(fp));
 
   /* Apply default net type from user's option */
-  print_verilog_default_net_type_declaration(fp, default_net_type);
+  if (default_net_type != VERILOG_DEFAULT_NET_TYPE_WIRE) {
+    print_verilog_default_net_type_declaration(fp, default_net_type);
+  }  
 
   print_verilog_module_definition(fp, module_manager, module_id);
 
