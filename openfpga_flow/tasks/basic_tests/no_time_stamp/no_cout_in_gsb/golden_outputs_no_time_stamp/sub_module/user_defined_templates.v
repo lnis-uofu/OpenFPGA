@@ -4,9 +4,6 @@
 //	Author: Xifan TANG
 //	Organization: University of Utah
 //-------------------------------------------
-//----- Time scale -----
-`timescale 1ns / 1ps
-
 // ----- Template Verilog module for DFFSRQ -----
 //----- Default net type -----
 `default_nettype none
