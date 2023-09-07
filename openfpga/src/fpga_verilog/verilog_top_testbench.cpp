@@ -2678,7 +2678,7 @@ int print_verilog_full_testbench(
     fp,
     std::string(circuit_name) +
       std::string(AUTOCHECK_TOP_TESTBENCH_VERILOG_MODULE_POSTFIX),
-    VERILOG_DEFAULT_NET_TYPE_WIRE);
+    options.default_net_type());
 
   /* Close the file stream */
   fp.close();

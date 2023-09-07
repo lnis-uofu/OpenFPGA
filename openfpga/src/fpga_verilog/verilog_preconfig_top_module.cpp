@@ -657,7 +657,7 @@ int print_verilog_preconfig_top_module(
     fp,
     std::string(circuit_name) +
       std::string(FORMAL_VERIFICATION_TOP_MODULE_POSTFIX),
-    VERILOG_DEFAULT_NET_TYPE_WIRE);
+    options.default_net_type());
 
   /* Close the file stream */
   fp.close();
