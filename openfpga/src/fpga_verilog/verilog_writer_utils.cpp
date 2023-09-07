@@ -480,7 +480,7 @@ void print_verilog_module_end(std::fstream& fp,
   fp << std::endl;
 
   /* Reset default net type to be none */
-  print_verilog_default_net_type_declaration(fp, VERILOG_DEFAULT_NET_TYPE_NONE);
+  print_verilog_default_net_type_declaration(fp, VERILOG_DEFAULT_NET_TYPE_WIRE);
 }
 
 /************************************************
