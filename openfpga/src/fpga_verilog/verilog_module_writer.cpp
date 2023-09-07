@@ -608,7 +608,8 @@ void write_verilog_module_to_file(
   }
 
   /* Print an end for the module */
-  print_verilog_module_end(fp, module_manager.module_name(module_id), default_net_type);
+  print_verilog_module_end(fp, module_manager.module_name(module_id),
+                           default_net_type);
 
   /* Print an empty line as splitter */
   fp << std::endl;

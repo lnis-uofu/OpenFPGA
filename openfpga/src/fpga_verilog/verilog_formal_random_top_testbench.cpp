@@ -365,8 +365,7 @@ void print_verilog_random_top_testbench(
   print_verilog_module_end(fp,
                            std::string(circuit_name) +
                              std::string(FORMAL_RANDOM_TOP_TESTBENCH_POSTFIX),
-                           VERILOG_DEFAULT_NET_TYPE_WIRE
-                           );
+                           VERILOG_DEFAULT_NET_TYPE_WIRE);
 
   /* Close the file stream */
   fp.close();

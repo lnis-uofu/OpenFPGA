@@ -82,7 +82,9 @@ void print_verilog_module_instance(
   const std::map<std::string, BasicPort>& port2port_name_map,
   const bool& use_explicit_port_map);
 
-void print_verilog_module_end(std::fstream& fp, const std::string& module_name, const e_verilog_default_net_type& default_net_type);
+void print_verilog_module_end(
+  std::fstream& fp, const std::string& module_name,
+  const e_verilog_default_net_type& default_net_type);
 
 std::string generate_verilog_port(
   const enum e_dump_verilog_port_type& dump_port_type,

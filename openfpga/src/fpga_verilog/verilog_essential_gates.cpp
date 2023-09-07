@@ -209,7 +209,8 @@ static void print_verilog_invbuf_module(
   print_verilog_submodule_timing(fp, circuit_lib, circuit_model);
 
   /* Put an end to the Verilog module */
-  print_verilog_module_end(fp, circuit_lib.model_name(circuit_model), default_net_type);
+  print_verilog_module_end(fp, circuit_lib.model_name(circuit_model),
+                           default_net_type);
 }
 
 /************************************************
@@ -290,7 +291,8 @@ static void print_verilog_passgate_module(
   print_verilog_submodule_timing(fp, circuit_lib, circuit_model);
 
   /* Put an end to the Verilog module */
-  print_verilog_module_end(fp, circuit_lib.model_name(circuit_model), default_net_type);
+  print_verilog_module_end(fp, circuit_lib.model_name(circuit_model),
+                           default_net_type);
 }
 
 /************************************************
@@ -494,7 +496,8 @@ static void print_verilog_gate_module(
   print_verilog_submodule_timing(fp, circuit_lib, circuit_model);
 
   /* Put an end to the Verilog module */
-  print_verilog_module_end(fp, circuit_lib.model_name(circuit_model), default_net_type);
+  print_verilog_module_end(fp, circuit_lib.model_name(circuit_model),
+                           default_net_type);
 }
 
 /************************************************
