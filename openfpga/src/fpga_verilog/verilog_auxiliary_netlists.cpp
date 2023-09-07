@@ -186,7 +186,7 @@ void print_verilog_full_testbench_include_netlists(
 
   /* Print the title */
   print_verilog_file_header(fp, std::string("Netlist Summary"),
-                            options.time_stamp());
+                            options.time_stamp(), true);
 
   /* If relative path is forced, we do not include an src_dir_path in the
    * netlist */
@@ -248,7 +248,7 @@ void print_verilog_preconfigured_testbench_include_netlists(
 
   /* Print the title */
   print_verilog_file_header(fp, std::string("Netlist Summary"),
-                            options.time_stamp());
+                            options.time_stamp(), true);
 
   /* If relative path is forced, we do not include an src_dir_path in the
    * netlist */

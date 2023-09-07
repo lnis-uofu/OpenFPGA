@@ -547,7 +547,7 @@ int print_verilog_mock_fpga_wrapper(
     benchmark_clock_port_names, (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 
   /* Testbench ends*/
-  print_verilog_module_end(fp, title);
+  print_verilog_module_end(fp, title, options.default_net_type());
 
   /* Close the file stream */
   fp.close();

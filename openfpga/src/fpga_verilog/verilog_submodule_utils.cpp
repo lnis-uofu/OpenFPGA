@@ -174,7 +174,7 @@ static void print_one_verilog_template_module(
     fp, std::string("----- Internal logic should end here -----"));
 
   /* Put an end to the Verilog module */
-  print_verilog_module_end(fp, module_name);
+  print_verilog_module_end(fp, module_name, default_net_type);
 
   /* Add an empty line as a splitter */
   fp << std::endl;

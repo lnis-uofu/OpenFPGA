@@ -96,7 +96,7 @@ static void print_verilog_mux_local_decoder_module(
                       std::to_string(data_size) + "-bit data -----"));
 
     /* Put an end to the Verilog module */
-    print_verilog_module_end(fp, module_name);
+    print_verilog_module_end(fp, module_name, default_net_type);
     return;
   }
 
@@ -147,7 +147,7 @@ static void print_verilog_mux_local_decoder_module(
                     std::to_string(data_size) + "-bit data -----"));
 
   /* Put an end to the Verilog module */
-  print_verilog_module_end(fp, module_name);
+  print_verilog_module_end(fp, module_name, default_net_type);
 }
 
 /***************************************************************************************
@@ -430,7 +430,7 @@ static void print_verilog_arch_decoder_module(
                       std::to_string(data_size) + "-bit data -----"));
 
     /* Put an end to the Verilog module */
-    print_verilog_module_end(fp, module_name);
+    print_verilog_module_end(fp, module_name, default_net_type);
     return;
   }
 
@@ -575,7 +575,7 @@ static void print_verilog_arch_decoder_module(
                     std::to_string(data_size) + "-bit data -----"));
 
   /* Put an end to the Verilog module */
-  print_verilog_module_end(fp, module_name);
+  print_verilog_module_end(fp, module_name, default_net_type);
 }
 
 /***************************************************************************************
@@ -693,7 +693,7 @@ static void print_verilog_arch_decoder_with_data_in_module(
                       std::to_string(data_size) + "-bit data -----"));
 
     /* Put an end to the Verilog module */
-    print_verilog_module_end(fp, module_name);
+    print_verilog_module_end(fp, module_name, default_net_type);
     return;
   }
 
@@ -763,7 +763,7 @@ static void print_verilog_arch_decoder_with_data_in_module(
                     std::to_string(data_size) + "-bit data -----"));
 
   /* Put an end to the Verilog module */
-  print_verilog_module_end(fp, module_name);
+  print_verilog_module_end(fp, module_name, default_net_type);
 }
 
 /***************************************************************************************

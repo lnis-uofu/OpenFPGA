@@ -37,7 +37,8 @@ void print_verilog_default_net_type_declaration(
   std::fstream& fp, const e_verilog_default_net_type& default_net_type);
 
 void print_verilog_file_header(std::fstream& fp, const std::string& usage,
-                               const bool& include_time_stamp);
+                               const bool& include_time_stamp,
+                               const bool& include_time_scale = false);
 
 void print_verilog_include_netlist(std::fstream& fp,
                                    const std::string& netlist_name);
@@ -81,7 +82,7 @@ void print_verilog_module_instance(
   const std::map<std::string, BasicPort>& port2port_name_map,
   const bool& use_explicit_port_map);
 
-void print_verilog_module_end(std::fstream& fp, const std::string& module_name);
+void print_verilog_module_end(std::fstream& fp, const std::string& module_name, const e_verilog_default_net_type& default_net_type);
 
 std::string generate_verilog_port(
   const enum e_dump_verilog_port_type& dump_port_type,
