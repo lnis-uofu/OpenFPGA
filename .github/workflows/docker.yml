@@ -64,7 +64,6 @@ jobs:
     strategy:
       matrix:
         compiler:
-          - gcc-7
           - gcc-8
           - gcc-9
           - gcc-10
