@@ -64,7 +64,7 @@ int update_module_map_name_with_indexing_names(ModuleNameMap& module_name_map, c
     FabricTileId fabric_tile_id = fabric_tile.unique_tiles()[itile];
     vtr::Point<size_t> tile_coord = fabric_tile.tile_coordinate(fabric_tile_id);
     std::string name_using_coord = generate_tile_module_name(tile_coord);
-    std::string name_using_index = generate_tile_module_name_using_index(tile_coord, itile);
+    std::string name_using_index = generate_tile_module_name_using_index(itile);
     status = module_name_map.set_tag_to_name_pair(name_using_coord, name_using_index);
     if (status != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_SUCCESS;
@@ -79,7 +79,7 @@ int rename_fabric_modules(ModuleManager& module_manager, const ModuleNameMap& mo
   size_t cnt = 0;
   for (ModuleId curr_module : module_manager.modules()) {
     std::string new_name = module_name_map.name(module_manager.module_name(curr_module));
-    if (new_name != module_manager.module_name()) {
+    if (new_name != module_manager.module_name(curr_module)) {
       VTR_LOGV(verbose, "Rename module '%s' to its new name '%s'\n", module_manager.module_name(curr_module).c_str(), new_name.c_str());
       module_manager.set_module_name(curr_module, new_name);
     }

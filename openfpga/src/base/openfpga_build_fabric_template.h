@@ -346,7 +346,7 @@ int add_fpga_core_to_fabric_template(T& openfpga_ctx, const Command& cmd,
  * Rename modules in module graph with a set of given rules
  *******************************************************************/
 template <class T>
-int rename_modules_template(const T& openfpga_ctx, const Command& cmd,
+int rename_modules_template(T& openfpga_ctx, const Command& cmd,
                             const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
 

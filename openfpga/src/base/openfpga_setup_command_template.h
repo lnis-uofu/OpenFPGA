@@ -812,7 +812,7 @@ ShellCommandId add_rename_modules_command_template(
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd, "Rename modules with a set of given rules", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_const_execute_function(shell_cmd_id,
+  shell.set_command_execute_function(shell_cmd_id,
                                            rename_modules_template<T>);
 
   /* Add command dependency to the Shell */

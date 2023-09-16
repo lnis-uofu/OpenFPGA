@@ -162,7 +162,7 @@ int build_device_module_graph(
   }
   if (name_module_using_index) {
     /* Update module name data */
-    status = update_module_map_name_with_indexing_names(module_name_map, device_rr_gsb, fabric_tile, verbose);
+    status = update_module_map_name_with_indexing_names(module_name_map, openfpga_ctx.device_rr_gsb(), fabric_tile, verbose);
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
     }
