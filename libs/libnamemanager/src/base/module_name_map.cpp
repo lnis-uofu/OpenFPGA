@@ -48,11 +48,11 @@ int ModuleNameMap::set_tag_to_name_pair(const std::string& tag, const std::strin
 	VTR_LOG_ERROR("The customized name '%s' has already been mapped to a built-in name '%s'! Fail to bind it to a new built-in name '%s'\n", name.c_str(), result->second.c_str(), tag.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
+  /* Clean up */
+  name2tags_.erase(name);
   /* Create double link */
   name2tags_[name] = tag;
   tag2names_[tag] = name;
-  /* Clean up */
-  name2tags_.erase(name);
   return CMD_EXEC_SUCCESS;
 }
 
