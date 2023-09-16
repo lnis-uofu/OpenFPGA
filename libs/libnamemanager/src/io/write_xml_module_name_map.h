@@ -13,7 +13,8 @@
  *******************************************************************/
 namespace openfpga {  // Begin namespace openfpga
 
-int write_xml_module_name_map(const char* fname, const ModuleNameMap& module_name_map);
+int write_xml_module_name_map(const char* fname,
+                              const ModuleNameMap& module_name_map);
 
 }  // End of namespace openfpga
 

@@ -30,8 +30,9 @@ namespace openfpga {  // Begin namespace openfpga
  * Return 1 if there are more serious bugs in the architecture
  * Return 2 if fail when creating files
  *******************************************************************/
-static int write_xml_module_name_binding(std::fstream& fp, const ModuleNameMap& module_name_map,
-                                 const std::string& built_in_name) {
+static int write_xml_module_name_binding(std::fstream& fp,
+                                         const ModuleNameMap& module_name_map,
+                                         const std::string& built_in_name) {
   /* Validate the file stream */
   if (false == openfpga::valid_file_stream(fp)) {
     return 2;
@@ -44,11 +45,11 @@ static int write_xml_module_name_binding(std::fstream& fp, const ModuleNameMap& 
 
   std::string given_name = module_name_map.name(built_in_name);
   if (given_name.empty()) {
-    VTR_LOG_ERROR("Default name '%s' is not mapped to any given name!\n", built_in_name.c_str());
+    VTR_LOG_ERROR("Default name '%s' is not mapped to any given name!\n",
+                  built_in_name.c_str());
     return 1;
   }
-  write_xml_attribute(fp, XML_MODULE_NAME_ATTRIBUTE_GIVEN,
-                      given_name.c_str());
+  write_xml_attribute(fp, XML_MODULE_NAME_ATTRIBUTE_GIVEN, given_name.c_str());
   fp << ">"
      << "\n";
 
@@ -62,7 +63,8 @@ static int write_xml_module_name_binding(std::fstream& fp, const ModuleNameMap& 
  * Return 1 if there are more serious bugs in the architecture
  * Return 2 if fail when creating files
  *******************************************************************/
-int write_xml_module_name_map(const char* fname, const ModuleNameMap& module_name_map) {
+int write_xml_module_name_map(const char* fname,
+                              const ModuleNameMap& module_name_map) {
   vtr::ScopedStartFinishTimer timer("Write module renaming rules");
 
   /* Create a file handler */
@@ -83,7 +85,8 @@ int write_xml_module_name_map(const char* fname, const ModuleNameMap& module_nam
   /* Write each port */
   for (std::string built_in_name : module_name_map.tags()) {
     /* Write bus */
-    err_code = write_xml_module_name_binding(fp, module_name_map, built_in_name);
+    err_code =
+      write_xml_module_name_binding(fp, module_name_map, built_in_name);
     if (0 != err_code) {
       return err_code;
     }

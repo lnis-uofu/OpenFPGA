@@ -22,12 +22,11 @@ namespace openfpga {
 int build_device_module_graph(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   MemoryBankShiftRegisterBanks& blwl_sr_banks, FabricTile& fabric_tile,
-  ModuleNameMap& module_name_map,
-  const OpenfpgaContext& openfpga_ctx, const DeviceContext& vpr_device_ctx,
-  const bool& frame_view, const bool& compress_routing,
-  const bool& duplicate_grid_pin, const FabricKey& fabric_key,
-  const TileConfig& tile_config, const bool& group_config_block,
-  const bool& name_module_using_index,
+  ModuleNameMap& module_name_map, const OpenfpgaContext& openfpga_ctx,
+  const DeviceContext& vpr_device_ctx, const bool& frame_view,
+  const bool& compress_routing, const bool& duplicate_grid_pin,
+  const FabricKey& fabric_key, const TileConfig& tile_config,
+  const bool& group_config_block, const bool& name_module_using_index,
   const bool& generate_random_fabric_key, const bool& verbose);
 
 } /* end namespace openfpga */

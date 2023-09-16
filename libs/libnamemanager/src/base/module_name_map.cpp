@@ -20,7 +20,8 @@ namespace openfpga {
 std::string ModuleNameMap::name(const std::string& tag) const {
   auto result = tag2names_.find(tag);
   if (result == tag2names_.end()) {
-	VTR_LOG_ERROR("The given built-in name '%s' does not exist!\n", tag.c_str());
+    VTR_LOG_ERROR("The given built-in name '%s' does not exist!\n",
+                  tag.c_str());
     return std::string();
   }
   return result->second;
@@ -34,9 +35,10 @@ std::vector<std::string> ModuleNameMap::tags() const {
   return keys;
 }
 
-int ModuleNameMap::set_tag_to_name_pair(const std::string& tag, const std::string& name) {
+int ModuleNameMap::set_tag_to_name_pair(const std::string& tag,
+                                        const std::string& name) {
   /*  tagA <--x--> nameA
-   *        | 
+   *        |
    *        +----> nameB
    *  tagB <--x--> nameB
    * Scenarios to be considered:
@@ -45,7 +47,10 @@ int ModuleNameMap::set_tag_to_name_pair(const std::string& tag, const std::strin
    */
   auto result = name2tags_.find(name);
   if (result != name2tags_.end() && result->second != tag) {
-	VTR_LOG_ERROR("The customized name '%s' has already been mapped to a built-in name '%s'! Fail to bind it to a new built-in name '%s'\n", name.c_str(), result->second.c_str(), tag.c_str());
+    VTR_LOG_ERROR(
+      "The customized name '%s' has already been mapped to a built-in name "
+      "'%s'! Fail to bind it to a new built-in name '%s'\n",
+      name.c_str(), result->second.c_str(), tag.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
   /* Clean up */
@@ -54,7 +59,7 @@ int ModuleNameMap::set_tag_to_name_pair(const std::string& tag, const std::strin
   name2tags_[name] = tag;
   tag2names_[tag] = name;
   return CMD_EXEC_SUCCESS;
-} 
+}
 
 void ModuleNameMap::clear() {
   tag2names_.clear();

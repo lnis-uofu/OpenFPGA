@@ -397,7 +397,8 @@ ShellCommandId add_build_fabric_command_template(
 
   /* Add an option '--name_module_using_index' */
   shell_cmd.add_option("name_module_using_index", false,
-                       "Use index to name modules, such as cbx_0_, rather than coordinates, such as cbx_1__0_");
+                       "Use index to name modules, such as cbx_0_, rather than "
+                       "coordinates, such as cbx_1__0_");
 
   /* Add an option '--load_fabric_key' */
   CommandOptionId opt_load_fkey = shell_cmd.add_option(
@@ -801,8 +802,8 @@ ShellCommandId add_rename_modules_command_template(
   const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
   Command shell_cmd("rename_modules");
   /* Add an option '--file' in short '-f'*/
-  CommandOptionId opt_file =
-    shell_cmd.add_option("file", true, "file path to the XML file that contains renaming rules");
+  CommandOptionId opt_file = shell_cmd.add_option(
+    "file", true, "file path to the XML file that contains renaming rules");
   shell_cmd.set_option_short_name(opt_file, "f");
   shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
 
@@ -812,8 +813,7 @@ ShellCommandId add_rename_modules_command_template(
   ShellCommandId shell_cmd_id = shell.add_command(
     shell_cmd, "Rename modules with a set of given rules", hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(shell_cmd_id,
-                                           rename_modules_template<T>);
+  shell.set_command_execute_function(shell_cmd_id, rename_modules_template<T>);
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
@@ -1048,10 +1048,8 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
    * 'build_fabric' */
   std::vector<ShellCommandId> cmd_dependency_rename_modules;
   cmd_dependency_rename_modules.push_back(build_fabric_cmd_id);
-  add_rename_modules_command_template<T>(
-    shell, openfpga_setup_cmd_class, cmd_dependency_rename_modules,
-    hidden);
-
+  add_rename_modules_command_template<T>(shell, openfpga_setup_cmd_class,
+                                         cmd_dependency_rename_modules, hidden);
 }
 
 } /* end namespace openfpga */

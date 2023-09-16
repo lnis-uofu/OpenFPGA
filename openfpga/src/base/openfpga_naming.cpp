@@ -506,10 +506,8 @@ std::string generate_switch_block_module_name(
 /*********************************************************************
  * Generate the module name for a switch block with a given index
  *********************************************************************/
-std::string generate_switch_block_module_name_using_index(
-  const size_t& index) {
-  return std::string("sb_" + std::to_string(index) +
-                     std::string("_"));
+std::string generate_switch_block_module_name_using_index(const size_t& index) {
+  return std::string("sb_" + std::to_string(index) + std::string("_"));
 }
 
 /*********************************************************************
@@ -594,8 +592,7 @@ std::string generate_connection_block_module_name_using_index(
       exit(1);
   }
 
-  return std::string(prefix + std::to_string(index) +
-                     std::string("_"));
+  return std::string(prefix + std::to_string(index) + std::string("_"));
 }
 
 /*********************************************************************

@@ -20,9 +20,9 @@
 #include "read_xml_io_name_map.h"
 #include "read_xml_module_name_map.h"
 #include "read_xml_tile_config.h"
+#include "rename_modules.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
-#include "rename_modules.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -105,7 +105,8 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_load_fabric_key = cmd.option("load_fabric_key");
   CommandOptionId opt_group_tile = cmd.option("group_tile");
   CommandOptionId opt_group_config_block = cmd.option("group_config_block");
-  CommandOptionId opt_name_module_using_index = cmd.option("name_module_using_index");
+  CommandOptionId opt_name_module_using_index =
+    cmd.option("name_module_using_index");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* Report conflicts with options:
@@ -176,10 +177,9 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
   curr_status = build_device_module_graph(
     openfpga_ctx.mutable_module_graph(), openfpga_ctx.mutable_decoder_lib(),
     openfpga_ctx.mutable_blwl_shift_register_banks(),
-    openfpga_ctx.mutable_fabric_tile(), 
-    openfpga_ctx.mutable_module_name_map(), 
-    const_cast<const T&>(openfpga_ctx),
-    g_vpr_ctx.device(), cmd_context.option_enable(cmd, opt_frame_view),
+    openfpga_ctx.mutable_fabric_tile(), openfpga_ctx.mutable_module_name_map(),
+    const_cast<const T&>(openfpga_ctx), g_vpr_ctx.device(),
+    cmd_context.option_enable(cmd, opt_frame_view),
     cmd_context.option_enable(cmd, opt_compress_routing),
     cmd_context.option_enable(cmd, opt_duplicate_grid_pin),
     predefined_fabric_key, tile_config,
@@ -360,12 +360,16 @@ int rename_modules_template(T& openfpga_ctx, const Command& cmd,
 
   std::string file_name = cmd_context.option_value(cmd, opt_file);
 
-  if (CMD_EXEC_SUCCESS != read_xml_module_name_map(file_name.c_str(), openfpga_ctx.mutable_module_name_map())) {
+  if (CMD_EXEC_SUCCESS !=
+      read_xml_module_name_map(file_name.c_str(),
+                               openfpga_ctx.mutable_module_name_map())) {
     return CMD_EXEC_FATAL_ERROR;
   }
 
   /* Write hierarchy to a file */
-  return rename_fabric_modules(openfpga_ctx.mutable_module_graph(), openfpga_ctx.module_name_map(), cmd_context.option_enable(cmd, opt_verbose));
+  return rename_fabric_modules(openfpga_ctx.mutable_module_graph(),
+                               openfpga_ctx.module_name_map(),
+                               cmd_context.option_enable(cmd, opt_verbose));
 }
 
 } /* end namespace openfpga */

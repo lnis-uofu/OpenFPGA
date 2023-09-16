@@ -4,15 +4,16 @@
 /********************************************************************
  * Include header files required by the data structure definition
  *******************************************************************/
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 /* Begin namespace openfpga */
 namespace openfpga {
 
 /**
- * @brief Module name map is a data structure to show mapping between a tag (built-in name) and customized names (may be given by users)
+ * @brief Module name map is a data structure to show mapping between a tag
+ * (built-in name) and customized names (may be given by users)
  */
 class ModuleNameMap {
  public: /* Public accessors */
@@ -22,13 +23,16 @@ class ModuleNameMap {
   std::vector<std::string> tags() const;
 
  public: /* Public mutators */
-  /** @brief Create the one-on-one mapping between an built-in name and a customized name. Return 0 for success, return 1 for fail */
+  /** @brief Create the one-on-one mapping between an built-in name and a
+   * customized name. Return 0 for success, return 1 for fail */
   int set_tag_to_name_pair(const std::string& tag, const std::string& name);
   /** @brief Reset to empty status. Clear all the storage */
   void clear();
+
  private: /* Internal Data */
   /* built-in name -> customized_name
-   * Create a double link to check any customized name is mapped to more than 1 built-in name!
+   * Create a double link to check any customized name is mapped to more than 1
+   * built-in name!
    */
   std::map<std::string, std::string> tag2names_;
   std::map<std::string, std::string> name2tags_;

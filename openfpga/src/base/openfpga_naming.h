@@ -108,8 +108,7 @@ std::string generate_routing_track_middle_output_port_name(
 std::string generate_switch_block_module_name(
   const vtr::Point<size_t>& coordinate);
 
-std::string generate_switch_block_module_name_using_index(
-  const size_t& index);
+std::string generate_switch_block_module_name_using_index(const size_t& index);
 
 std::string generate_connection_block_module_name(
   const t_rr_type& cb_type, const vtr::Point<size_t>& coordinate);
