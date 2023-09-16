@@ -22,6 +22,7 @@
 #include "read_xml_tile_config.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
+#include "rename_modules.h"
 
 /* begin namespace openfpga */
 namespace openfpga {

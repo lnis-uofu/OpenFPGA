@@ -23,6 +23,7 @@
 #include "build_wire_modules.h"
 #include "command_exit_codes.h"
 #include "openfpga_naming.h"
+#include "rename_modules.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -155,13 +156,13 @@ int build_device_module_graph(
                                      openfpga_ctx.arch().circuit_lib);
 
   /* Collect module names and initialize module name mapping */
-  status = init_fabric_module_map_name(module_manager, module_name_map);
+  status = init_fabric_module_name_map(module_name_map, module_manager, verbose);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }
   if (name_module_using_index) {
     /* Update module name data */
-    status = update_module_map_name_with_indexing_names(module_name_map, device_rr_gsb, fabric_tile);
+    status = update_module_map_name_with_indexing_names(module_name_map, device_rr_gsb, fabric_tile, verbose);
     if (CMD_EXEC_FATAL_ERROR == status) {
       return status;
     }

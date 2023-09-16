@@ -504,11 +504,27 @@ std::string generate_switch_block_module_name(
 }
 
 /*********************************************************************
+ * Generate the module name for a switch block with a given index
+ *********************************************************************/
+std::string generate_switch_block_module_name_using_index(
+  const size_t& index) {
+  return std::string("sb_" + std::to_string(index) +
+                     std::string("_"));
+}
+
+/*********************************************************************
  * Generate the module name for a tile module with a given coordinate
  *********************************************************************/
 std::string generate_tile_module_name(const vtr::Point<size_t>& tile_coord) {
   return std::string("tile_" + std::to_string(tile_coord.x()) + "__" +
                      std::to_string(tile_coord.y()) + "_");
+}
+
+/*********************************************************************
+ * Generate the module name for a tile module with a given index
+ *********************************************************************/
+std::string generate_tile_module_name_using_index(const size_t& index) {
+  return std::string("tile_" + std::to_string(index) + "_");
 }
 
 /*********************************************************************
@@ -557,6 +573,28 @@ std::string generate_connection_block_module_name(
 
   return std::string(prefix + std::to_string(coordinate.x()) +
                      std::string("__") + std::to_string(coordinate.y()) +
+                     std::string("_"));
+}
+
+/*********************************************************************
+ * Generate the module name for a connection block with a given index
+ *********************************************************************/
+std::string generate_connection_block_module_name_using_index(
+  const t_rr_type& cb_type, const size_t& index) {
+  std::string prefix("cb");
+  switch (cb_type) {
+    case CHANX:
+      prefix += std::string("x_");
+      break;
+    case CHANY:
+      prefix += std::string("y_");
+      break;
+    default:
+      VTR_LOG_ERROR("Invalid type of connection block!\n");
+      exit(1);
+  }
+
+  return std::string(prefix + std::to_string(index) +
                      std::string("_"));
 }
 

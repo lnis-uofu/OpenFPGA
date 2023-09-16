@@ -54,6 +54,11 @@ int ModuleNameMap::set_tag_to_name_pair(const std::string& tag, const std::strin
   name2tags_[name] = tag;
   tag2names_[tag] = name;
   return CMD_EXEC_SUCCESS;
+} 
+
+void ModuleNameMap::clear() {
+  tag2names_.clear();
+  name2tags_.clear();
 }
 
 } /* end namespace openfpga */
