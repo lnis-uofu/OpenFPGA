@@ -18,6 +18,7 @@
 #include "openfpga_naming.h"
 #include "read_xml_fabric_key.h"
 #include "read_xml_io_name_map.h"
+#include "read_xml_module_name_map.h"
 #include "read_xml_tile_config.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
@@ -103,6 +104,7 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_load_fabric_key = cmd.option("load_fabric_key");
   CommandOptionId opt_group_tile = cmd.option("group_tile");
   CommandOptionId opt_group_config_block = cmd.option("group_config_block");
+  CommandOptionId opt_name_module_using_index = cmd.option("name_module_using_index");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* Report conflicts with options:
@@ -173,12 +175,15 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
   curr_status = build_device_module_graph(
     openfpga_ctx.mutable_module_graph(), openfpga_ctx.mutable_decoder_lib(),
     openfpga_ctx.mutable_blwl_shift_register_banks(),
-    openfpga_ctx.mutable_fabric_tile(), const_cast<const T&>(openfpga_ctx),
+    openfpga_ctx.mutable_fabric_tile(), 
+    openfpga_ctx.mutable_module_name_map(), 
+    const_cast<const T&>(openfpga_ctx),
     g_vpr_ctx.device(), cmd_context.option_enable(cmd, opt_frame_view),
     cmd_context.option_enable(cmd, opt_compress_routing),
     cmd_context.option_enable(cmd, opt_duplicate_grid_pin),
     predefined_fabric_key, tile_config,
     cmd_context.option_enable(cmd, opt_group_config_block),
+    cmd_context.option_enable(cmd, opt_name_module_using_index),
     cmd_context.option_enable(cmd, opt_gen_random_fabric_key),
     cmd_context.option_enable(cmd, opt_verbose));
 
@@ -334,6 +339,32 @@ int add_fpga_core_to_fabric_template(T& openfpga_ctx, const Command& cmd,
   return add_fpga_core_to_device_module_graph(
     openfpga_ctx.mutable_module_graph(), openfpga_ctx.io_name_map(),
     core_inst_name, frame_view, verbose_output);
+}
+
+/********************************************************************
+ * Rename modules in module graph with a set of given rules
+ *******************************************************************/
+template <class T>
+int rename_modules_template(const T& openfpga_ctx, const Command& cmd,
+                            const CommandContext& cmd_context) {
+  CommandOptionId opt_verbose = cmd.option("verbose");
+
+  /* Check the option '--file' is enabled or not
+   * Actually, it must be enabled as the shell interface will check
+   * before reaching this fuction
+   */
+  CommandOptionId opt_file = cmd.option("file");
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  std::string file_name = cmd_context.option_value(cmd, opt_file);
+
+  if (CMD_EXEC_SUCCESS != read_xml_module_name_map(file_name.c_str(), openfpga_ctx.mutable_module_name_map())) {
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Write hierarchy to a file */
+  return rename_fabric_modules(openfpga_ctx.mutable_module_graph(), openfpga_ctx.module_name_map(), cmd_context.option_enable(cmd, opt_verbose));
 }
 
 } /* end namespace openfpga */

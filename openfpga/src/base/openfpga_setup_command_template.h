@@ -395,6 +395,10 @@ ShellCommandId add_build_fabric_command_template(
   shell_cmd.add_option("duplicate_grid_pin", false,
                        "Duplicate the pins on the same side of a grid");
 
+  /* Add an option '--name_module_using_index' */
+  shell_cmd.add_option("name_module_using_index", false,
+                       "Use index to name modules, such as cbx_0_, rather than coordinates, such as cbx_1__0_");
+
   /* Add an option '--load_fabric_key' */
   CommandOptionId opt_load_fkey = shell_cmd.add_option(
     "load_fabric_key", false, "load the fabric key from the given file");
@@ -786,6 +790,37 @@ ShellCommandId add_write_fabric_key_command_template(
   return shell_cmd_id;
 }
 
+/********************************************************************
+ * - Add a command to Shell environment: rename_modules
+ * - Add associated options
+ * - Add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_rename_modules_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("rename_modules");
+  /* Add an option '--file' in short '-f'*/
+  CommandOptionId opt_file =
+    shell_cmd.add_option("file", true, "file path to the XML file that contains renaming rules");
+  shell_cmd.set_option_short_name(opt_file, "f");
+  shell_cmd.set_option_require_value(opt_file, openfpga::OPT_STRING);
+
+  shell_cmd.add_option("verbose", false, "Show verbose outputs");
+
+  /* Add command to the Shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd, "Rename modules with a set of given rules", hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_const_execute_function(shell_cmd_id,
+                                           rename_modules_template<T>);
+
+  /* Add command dependency to the Shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
 template <class T>
 void add_setup_command_templates(openfpga::Shell<T>& shell,
                                  const bool& hidden = false) {
@@ -1005,6 +1040,18 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
   add_write_fabric_io_info_command_template<T>(
     shell, openfpga_setup_cmd_class, cmd_dependency_write_fabric_io_info,
     hidden);
+
+  /********************************
+   * Command 'rename_modules'
+   */
+  /* The 'rename_modules' command should NOT be executed before
+   * 'build_fabric' */
+  std::vector<ShellCommandId> cmd_dependency_rename_modules;
+  cmd_dependency_rename_modules.push_back(build_fabric_cmd_id);
+  add_rename_modules_command_template<T>(
+    shell, openfpga_setup_cmd_class, cmd_dependency_rename_modules,
+    hidden);
+
 }
 
 } /* end namespace openfpga */

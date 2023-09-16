@@ -34,11 +34,14 @@ namespace openfpga {
 int build_device_module_graph(
   ModuleManager& module_manager, DecoderLibrary& decoder_lib,
   MemoryBankShiftRegisterBanks& blwl_sr_banks, FabricTile& fabric_tile,
+  ModuleNameMap& module_name_map,
   const OpenfpgaContext& openfpga_ctx, const DeviceContext& vpr_device_ctx,
   const bool& frame_view, const bool& compress_routing,
   const bool& duplicate_grid_pin, const FabricKey& fabric_key,
   const TileConfig& tile_config, const bool& group_config_block,
-  const bool& generate_random_fabric_key, const bool& verbose) {
+  const bool& name_module_using_index,
+  const bool& generate_random_fabric_key,
+  const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build fabric module graph");
 
   int status = CMD_EXEC_SUCCESS;
@@ -150,6 +153,24 @@ int build_device_module_graph(
    */
   rename_primitive_module_port_names(module_manager,
                                      openfpga_ctx.arch().circuit_lib);
+
+  /* Collect module names and initialize module name mapping */
+  status = init_fabric_module_map_name(module_manager, module_name_map);
+  if (CMD_EXEC_FATAL_ERROR == status) {
+    return status;
+  }
+  if (name_module_using_index) {
+    /* Update module name data */
+    status = update_module_map_name_with_indexing_names(module_name_map, device_rr_gsb, fabric_tile);
+    if (CMD_EXEC_FATAL_ERROR == status) {
+      return status;
+    }
+    /* Apply module naming */
+    status = rename_fabric_modules(module_manager, module_name_map, verbose); 
+    if (CMD_EXEC_FATAL_ERROR == status) {
+      return status;
+    }
+  }
 
   return status;
 }
