@@ -26,6 +26,14 @@ std::string ModuleNameMap::name(const std::string& tag) const {
   return result->second;
 }
 
+std::vector<std::string> ModuleNameMap::tags() const {
+  std::vector<std::string> keys;
+  for (auto const& element : tag2names_) {
+    keys.push_back(element.first);
+  }
+  return keys;
+}
+
 int ModuleNameMap::set_tag_to_name_pair(const std::string& tag, const std::string& name) {
   /*  tagA <--x--> nameA
    *        | 
@@ -45,6 +53,7 @@ int ModuleNameMap::set_tag_to_name_pair(const std::string& tag, const std::strin
   tag2names_[tag] = name;
   /* Clean up */
   name2tags_.erase(name);
+  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */

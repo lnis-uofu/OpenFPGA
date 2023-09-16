@@ -5,6 +5,7 @@
  * Include header files required by the data structure definition
  *******************************************************************/
 #include <string>
+#include <vector>
 #include <map>
 
 /* Begin namespace openfpga */
@@ -17,6 +18,8 @@ class ModuleNameMap {
  public: /* Public accessors */
   /** @brief Get customized name with a given tag */
   std::string name(const std::string& tag) const;
+  /** @brief return a list of all the current keys */
+  std::vector<std::string> tags() const;
 
  public: /* Public mutators */
   /** @brief Create the one-on-one mapping between an built-in name and a customized name. Return 0 for success, return 1 for fail */

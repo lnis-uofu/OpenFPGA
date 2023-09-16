@@ -30,10 +30,10 @@ static int read_xml_module_name_binding(pugi::xml_node& xml_binding,
                                 const pugiutil::loc_data& loc_data,
                                 ModuleNameMap& module_name_map) {
   std::string default_name =
-    get_attribute(xml_port, XML_MODULE_NAME_ATTRIBUTE_DEFAULT, loc_data)
+    get_attribute(xml_binding, XML_MODULE_NAME_ATTRIBUTE_DEFAULT, loc_data)
       .as_string();
   std::string given_name =
-    get_attribute(xml_port, XML_MODULE_NAME_ATTRIBUTE_GIVEN, loc_data)
+    get_attribute(xml_binding, XML_MODULE_NAME_ATTRIBUTE_GIVEN, loc_data)
       .as_string();
 
   return module_name_map.set_tag_to_name_pair(default_name, given_name);
