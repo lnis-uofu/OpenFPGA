@@ -5,6 +5,8 @@
 /* Headers from system goes first */
 #include <algorithm>
 #include <string>
+#include <chrono>
+#include <ctime>
 
 /* Headers from vtr util library */
 #include "vtr_assert.h"
@@ -22,6 +24,29 @@
 #include "write_xml_module_name_map.h"
 
 namespace openfpga {  // Begin namespace openfpga
+
+/********************************************************************
+ * This function write header information to a bitstream file
+ *******************************************************************/
+static void write_xml_module_name_map_file_head(std::fstream& fp,
+                                                const bool& include_time_stamp) {
+  valid_file_stream(fp);
+
+  fp << "<!--" << std::endl;
+  fp << "\t- Module Naming rules" << std::endl;
+  fp << "\t- Author: Xifan TANG" << std::endl;
+  fp << "\t- Organization: RapidFlex" << std::endl;
+
+  if (include_time_stamp) {
+    auto end = std::chrono::system_clock::now();
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+    fp << "\t- Date: " << std::ctime(&end_time);
+  }
+
+  fp << "-->" << std::endl;
+  fp << std::endl;
+}
+
 
 /********************************************************************
  * A writer to output a I/O name mapping to XML format
@@ -64,7 +89,9 @@ static int write_xml_module_name_binding(std::fstream& fp,
  * Return 2 if fail when creating files
  *******************************************************************/
 int write_xml_module_name_map(const char* fname,
-                              const ModuleNameMap& module_name_map) {
+                              const ModuleNameMap& module_name_map,
+                              const bool& include_time_stamp,
+                              const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Write module renaming rules");
 
   /* Create a file handler */
@@ -75,6 +102,8 @@ int write_xml_module_name_map(const char* fname,
   /* Validate the file stream */
   openfpga::check_file_stream(fname, fp);
 
+  write_xml_module_name_map_file_head(fp, include_time_stamp);
+
   /* Write the root node */
   fp << "<" << XML_MODULE_NAMES_ROOT_NAME;
   fp << ">"
@@ -83,6 +112,7 @@ int write_xml_module_name_map(const char* fname,
   int err_code = 0;
 
   /* Write each port */
+  size_t cnt = 0;
   for (std::string built_in_name : module_name_map.tags()) {
     /* Write bus */
     err_code =
@@ -90,6 +120,7 @@ int write_xml_module_name_map(const char* fname,
     if (0 != err_code) {
       return err_code;
     }
+    cnt++;
   }
 
   /* Finish writing the root node */
@@ -98,6 +129,8 @@ int write_xml_module_name_map(const char* fname,
 
   /* Close the file stream */
   fp.close();
+
+  VTR_LOGV(verbose, "Outputted %lu naming rules.\n", cnt);
 
   return err_code;
 }
