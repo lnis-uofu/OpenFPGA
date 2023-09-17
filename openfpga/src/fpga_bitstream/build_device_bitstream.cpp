@@ -220,9 +220,8 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
   VTR_LOGV(verbose, "Building routing bitstream...\n");
   build_routing_bitstream(
     bitstream_manager, top_block, openfpga_ctx.module_graph(),
-    openfpga_ctx.module_name_map(),
-    openfpga_ctx.fabric_tile(), openfpga_ctx.arch().circuit_lib,
-    openfpga_ctx.mux_lib(), vpr_ctx.atom(),
+    openfpga_ctx.module_name_map(), openfpga_ctx.fabric_tile(),
+    openfpga_ctx.arch().circuit_lib, openfpga_ctx.mux_lib(), vpr_ctx.atom(),
     openfpga_ctx.vpr_device_annotation(), openfpga_ctx.vpr_routing_annotation(),
     vpr_ctx.device().rr_graph, openfpga_ctx.device_rr_gsb(),
     openfpga_ctx.flow_manager().compress_routing(), verbose);
