@@ -248,6 +248,7 @@ static void print_verilog_routing_switch_box_unique_module(
  *******************************************************************/
 static void print_verilog_flatten_connection_block_modules(
   NetlistManager& netlist_manager, const ModuleManager& module_manager,
+  const ModuleNameMap& module_name_map,
   const DeviceRRGSB& device_rr_gsb, const std::string& subckt_dir,
   const std::string& subckt_dir_name, const t_rr_type& cb_type,
   const FabricVerilogOption& options) {
@@ -265,7 +266,7 @@ static void print_verilog_flatten_connection_block_modules(
         continue;
       }
       print_verilog_routing_connection_box_unique_module(
-        netlist_manager, module_manager, subckt_dir, subckt_dir_name, rr_gsb,
+        netlist_manager, module_manager, module_name_map, subckt_dir, subckt_dir_name, rr_gsb,
         cb_type, options);
     }
   }

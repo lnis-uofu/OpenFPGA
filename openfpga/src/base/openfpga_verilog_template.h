@@ -63,7 +63,7 @@ int write_fabric_verilog_template(T& openfpga_ctx, const Command& cmd,
     openfpga_ctx.blwl_shift_register_banks(), openfpga_ctx.arch().circuit_lib,
     openfpga_ctx.mux_lib(), openfpga_ctx.decoder_lib(), g_vpr_ctx.device(),
     openfpga_ctx.vpr_device_annotation(), openfpga_ctx.device_rr_gsb(),
-    openfpga_ctx.fabric_tile(), options);
+    openfpga_ctx.fabric_tile(), openfpga_ctx.module_name_map(), options);
 }
 
 /********************************************************************
