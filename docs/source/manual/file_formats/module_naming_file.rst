@@ -8,7 +8,7 @@ The XML-based description language is used to describe module names for an FPGA 
 - the built-in name or default name for each module when building an FPGA fabric
 - the customized name which is given by users for each module, in place of the built-in names
 
-Using the description language, users can customize the name for each module in an FPGA fabric, including testbenches.
+Using the description language, users can customize the name for each module in an FPGA fabric, excluding testbenches.
 
 Under the root node ``<module_names>``, naming rules can be defined line-by-line through syntax ``<module_name>``.
 
