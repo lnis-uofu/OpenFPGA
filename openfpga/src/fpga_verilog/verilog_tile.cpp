@@ -26,14 +26,14 @@ namespace openfpga {
  *******************************************************************/
 static int print_verilog_tile_module_netlist(
   NetlistManager& netlist_manager, const ModuleManager& module_manager,
-  const ModuleNameMap& module_name_map,
-  const std::string& verilog_dir, const FabricTile& fabric_tile,
-  const FabricTileId& fabric_tile_id, const std::string& subckt_dir_name,
-  const FabricVerilogOption& options) {
+  const ModuleNameMap& module_name_map, const std::string& verilog_dir,
+  const FabricTile& fabric_tile, const FabricTileId& fabric_tile_id,
+  const std::string& subckt_dir_name, const FabricVerilogOption& options) {
   /* Create a module as the top-level fabric, and add it to the module manager
    */
   vtr::Point<size_t> tile_coord = fabric_tile.tile_coordinate(fabric_tile_id);
-  std::string tile_module_name = module_name_map.name(generate_tile_module_name(tile_coord));
+  std::string tile_module_name =
+    module_name_map.name(generate_tile_module_name(tile_coord));
   ModuleId tile_module = module_manager.find_module(tile_module_name);
   if (!module_manager.valid_module_id(tile_module)) {
     return CMD_EXEC_FATAL_ERROR;
@@ -102,8 +102,8 @@ int print_verilog_tiles(NetlistManager& netlist_manager,
   /* Build a module for each unique tile  */
   for (FabricTileId fabric_tile_id : fabric_tile.unique_tiles()) {
     status_code = print_verilog_tile_module_netlist(
-      netlist_manager, module_manager, module_name_map, verilog_dir, fabric_tile, fabric_tile_id,
-      subckt_dir_name, options);
+      netlist_manager, module_manager, module_name_map, verilog_dir,
+      fabric_tile, fabric_tile_id, subckt_dir_name, options);
     if (status_code != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;
     }
