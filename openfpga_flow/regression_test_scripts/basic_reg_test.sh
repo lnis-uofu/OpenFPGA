@@ -204,6 +204,7 @@ run-task basic_tests/group_config_block/group_config_block_homo_fabric_tile_glob
 
 echo -e "Module naming";
 run-task basic_tests/module_naming/using_index $@
+run-task basic_tests/module_naming/renaming_rules $@
 
 echo -e "Testing global port definition from tiles";
 run-task basic_tests/global_tile_ports/global_tile_clock $@
