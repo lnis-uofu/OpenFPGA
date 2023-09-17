@@ -38,4 +38,6 @@ OpenFPGA widely uses XML format for interchangeable files
 
    io_naming_file
 
+   module_naming_file
+
    tile_config_file
