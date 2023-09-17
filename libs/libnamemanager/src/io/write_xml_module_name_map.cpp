@@ -4,9 +4,9 @@
  *******************************************************************/
 /* Headers from system goes first */
 #include <algorithm>
-#include <string>
 #include <chrono>
 #include <ctime>
+#include <string>
 
 /* Headers from vtr util library */
 #include "vtr_assert.h"
@@ -28,8 +28,8 @@ namespace openfpga {  // Begin namespace openfpga
 /********************************************************************
  * This function write header information to a bitstream file
  *******************************************************************/
-static void write_xml_module_name_map_file_head(std::fstream& fp,
-                                                const bool& include_time_stamp) {
+static void write_xml_module_name_map_file_head(
+  std::fstream& fp, const bool& include_time_stamp) {
   valid_file_stream(fp);
 
   fp << "<!--" << std::endl;
@@ -46,7 +46,6 @@ static void write_xml_module_name_map_file_head(std::fstream& fp,
   fp << "-->" << std::endl;
   fp << std::endl;
 }
-
 
 /********************************************************************
  * A writer to output a I/O name mapping to XML format

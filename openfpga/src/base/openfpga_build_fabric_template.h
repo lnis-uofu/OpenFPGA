@@ -19,11 +19,11 @@
 #include "read_xml_fabric_key.h"
 #include "read_xml_io_name_map.h"
 #include "read_xml_module_name_map.h"
-#include "write_xml_module_name_map.h"
 #include "read_xml_tile_config.h"
 #include "rename_modules.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
+#include "write_xml_module_name_map.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -377,8 +377,9 @@ int rename_modules_template(T& openfpga_ctx, const Command& cmd,
  * Write module naming rules to a file
  *******************************************************************/
 template <class T>
-int write_module_naming_rules_template(const T& openfpga_ctx, const Command& cmd,
-                            const CommandContext& cmd_context) {
+int write_module_naming_rules_template(const T& openfpga_ctx,
+                                       const Command& cmd,
+                                       const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
 
@@ -393,11 +394,11 @@ int write_module_naming_rules_template(const T& openfpga_ctx, const Command& cmd
   std::string file_name = cmd_context.option_value(cmd, opt_file);
 
   /* Write hierarchy to a file */
-  return write_xml_module_name_map(file_name.c_str(), openfpga_ctx.module_name_map(),
-                                   !cmd_context.option_enable(cmd, opt_no_time_stamp),
-                                   cmd_context.option_enable(cmd, opt_verbose));
+  return write_xml_module_name_map(
+    file_name.c_str(), openfpga_ctx.module_name_map(),
+    !cmd_context.option_enable(cmd, opt_no_time_stamp),
+    cmd_context.option_enable(cmd, opt_verbose));
 }
-
 
 } /* end namespace openfpga */
 

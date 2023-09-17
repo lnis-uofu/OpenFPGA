@@ -30,7 +30,8 @@ int main(int argc, const char** argv) {
    * This is optional only used when there is a second argument
    */
   if (3 <= argc) {
-    status = openfpga::write_xml_module_name_map(argv[2], module_name_map, true, true);
+    status =
+      openfpga::write_xml_module_name_map(argv[2], module_name_map, true, true);
     VTR_LOG("Write the module name mapping to an XML file: %s.\n", argv[2]);
   }
 
