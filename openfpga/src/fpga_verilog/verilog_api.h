@@ -20,6 +20,7 @@
 #include "fabric_verilog_options.h"
 #include "io_location_map.h"
 #include "io_name_map.h"
+#include "module_name_map.h"
 #include "memory_bank_shift_register_banks.h"
 #include "module_manager.h"
 #include "mux_library.h"
@@ -45,6 +46,7 @@ int fpga_fabric_verilog(
   const DecoderLibrary& decoder_lib, const DeviceContext& device_ctx,
   const VprDeviceAnnotation& device_annotation,
   const DeviceRRGSB& device_rr_gsb, const FabricTile& fabric_tile,
+  const ModuleNameMap& module_name_map,
   const FabricVerilogOption& options);
 
 int fpga_verilog_full_testbench(

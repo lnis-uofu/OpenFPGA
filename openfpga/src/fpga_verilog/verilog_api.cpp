@@ -61,6 +61,7 @@ int fpga_fabric_verilog(
   const DecoderLibrary &decoder_lib, const DeviceContext &device_ctx,
   const VprDeviceAnnotation &device_annotation,
   const DeviceRRGSB &device_rr_gsb, const FabricTile &fabric_tile,
+  const ModuleNameMap& module_name_map,
   const FabricVerilogOption &options) {
   vtr::ScopedStartFinishTimer timer("Write Verilog netlists for FPGA fabric\n");
 
@@ -111,12 +112,12 @@ int fpga_fabric_verilog(
   /* Generate routing blocks */
   if (true == options.compress_routing()) {
     print_verilog_unique_routing_modules(
-      netlist_manager, const_cast<const ModuleManager &>(module_manager),
+      netlist_manager, const_cast<const ModuleManager &>(module_manager), module_name_map,
       device_rr_gsb, rr_dir_path, std::string(DEFAULT_RR_DIR_NAME), options);
   } else {
     VTR_ASSERT(false == options.compress_routing());
     print_verilog_flatten_routing_modules(
-      netlist_manager, const_cast<const ModuleManager &>(module_manager),
+      netlist_manager, const_cast<const ModuleManager &>(module_manager), module_name_map,
       device_rr_gsb, device_ctx.rr_graph, rr_dir_path,
       std::string(DEFAULT_RR_DIR_NAME), options);
   }
@@ -130,7 +131,7 @@ int fpga_fabric_verilog(
   /* Generate tiles */
   if (!fabric_tile.empty()) {
     status_code = print_verilog_tiles(
-      netlist_manager, const_cast<const ModuleManager &>(module_manager),
+      netlist_manager, const_cast<const ModuleManager &>(module_manager), module_name_map,
       tile_dir_path, fabric_tile, std::string(DEFAULT_TILE_DIR_NAME), options);
     if (status_code != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;
