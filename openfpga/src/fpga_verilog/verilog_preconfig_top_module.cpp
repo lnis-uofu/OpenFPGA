@@ -540,7 +540,8 @@ int print_verilog_preconfig_top_module(
   const FabricGlobalPortInfo &global_ports, const AtomContext &atom_ctx,
   const PlacementContext &place_ctx, const PinConstraints &pin_constraints,
   const BusGroup &bus_group, const IoLocationMap &io_location_map,
-  const IoNameMap &io_name_map, const VprNetlistAnnotation &netlist_annotation,
+  const IoNameMap &io_name_map, const ModuleNameMap& module_name_map,
+  const VprNetlistAnnotation &netlist_annotation,
   const std::string &circuit_name, const std::string &verilog_fname,
   const VerilogTestbenchOption &options) {
   std::string timer_message =
@@ -573,7 +574,7 @@ int print_verilog_preconfig_top_module(
                                            netlist_annotation, bus_group);
 
   /* Spot the dut module */
-  ModuleId top_module = module_manager.find_module(options.dut_module());
+  ModuleId top_module = module_manager.find_module(module_name_map.name(options.dut_module()));
   if (!module_manager.valid_module_id(top_module)) {
     VTR_LOG_ERROR(
       "Unable to find the DUT module '%s'. Please check if you create "
@@ -585,7 +586,7 @@ int print_verilog_preconfig_top_module(
    * names before possible renaming at top-level module. If there is no core
    * module, it means that the current top module is the core module */
   ModuleId core_module =
-    module_manager.find_module(generate_fpga_core_module_name());
+    module_manager.find_module(module_name_map.name(generate_fpga_core_module_name()));
   if (!module_manager.valid_module_id(core_module)) {
     core_module = top_module;
   }

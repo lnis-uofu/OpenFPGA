@@ -42,6 +42,7 @@ namespace openfpga {
 static void print_verilog_mux_memory_module(
   const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   std::fstream& fp, const CircuitModelId& mux_model, const MuxGraph& mux_graph,
+  const ModuleNameMap& module_name_map,
   const FabricVerilogOption& options) {
   /* Multiplexers built with different technology is in different organization
    */
@@ -53,6 +54,7 @@ static void print_verilog_mux_memory_module(
         find_mux_num_datapath_inputs(circuit_lib, mux_model,
                                      mux_graph.num_inputs()),
         std::string(MEMORY_MODULE_POSTFIX));
+      module_name = module_name_map.name(module_name);
       ModuleId mem_module = module_manager.find_module(module_name);
       VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
       /* Write the module content in Verilog format */
@@ -71,6 +73,7 @@ static void print_verilog_mux_memory_module(
         find_mux_num_datapath_inputs(circuit_lib, mux_model,
                                      mux_graph.num_inputs()),
         std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
+      feedthru_module_name = module_name_map.name(feedthru_module_name);
       ModuleId feedthru_mem_module =
         module_manager.find_module(feedthru_module_name);
       if (module_manager.valid_module_id(feedthru_mem_module)) {
@@ -122,6 +125,7 @@ void print_verilog_submodule_memories(const ModuleManager& module_manager,
                                       NetlistManager& netlist_manager,
                                       const MuxLibrary& mux_lib,
                                       const CircuitLibrary& circuit_lib,
+                                      const ModuleNameMap& module_name_map,
                                       const std::string& submodule_dir,
                                       const std::string& submodule_dir_name,
                                       const FabricVerilogOption& options) {
@@ -155,7 +159,7 @@ void print_verilog_submodule_memories(const ModuleManager& module_manager,
     }
     /* Create a Verilog module for the memories used by the multiplexer */
     print_verilog_mux_memory_module(module_manager, circuit_lib, fp, mux_model,
-                                    mux_graph, options);
+                                    mux_graph, module_name_map, options);
   }
 
   /* Create the memory circuits for non-MUX circuit models.
@@ -198,6 +202,7 @@ void print_verilog_submodule_memories(const ModuleManager& module_manager,
     /* Create the module name for the memory block */
     std::string module_name = generate_memory_module_name(
       circuit_lib, model, sram_models[0], std::string(MEMORY_MODULE_POSTFIX));
+    module_name = module_name_map.name(module_name);
 
     ModuleId mem_module = module_manager.find_module(module_name);
     VTR_ASSERT(true == module_manager.valid_module_id(mem_module));
@@ -214,6 +219,7 @@ void print_verilog_submodule_memories(const ModuleManager& module_manager,
     std::string feedthru_module_name =
       generate_memory_module_name(circuit_lib, model, sram_models[0],
                                   std::string(MEMORY_MODULE_POSTFIX), true);
+    feedthru_module_name = module_name_map.name(feedthru_module_name);
 
     ModuleId feedthru_mem_module =
       module_manager.find_module(feedthru_module_name);

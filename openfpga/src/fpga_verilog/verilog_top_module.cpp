@@ -26,11 +26,13 @@ namespace openfpga {
  *******************************************************************/
 void print_verilog_core_module(NetlistManager& netlist_manager,
                                const ModuleManager& module_manager,
+                               const ModuleNameMap& module_name_map,
                                const std::string& verilog_dir,
                                const FabricVerilogOption& options) {
   /* Create a module as the top-level fabric, and add it to the module manager
    */
   std::string core_module_name = generate_fpga_core_module_name();
+  core_module_name = module_name_map.name(core_module_name);
   ModuleId core_module = module_manager.find_module(core_module_name);
   /* It could happen that the module does not exist, just return with no errors
    */
@@ -94,11 +96,13 @@ void print_verilog_core_module(NetlistManager& netlist_manager,
  *******************************************************************/
 void print_verilog_top_module(NetlistManager& netlist_manager,
                               const ModuleManager& module_manager,
+                              const ModuleNameMap& module_name_map,
                               const std::string& verilog_dir,
                               const FabricVerilogOption& options) {
   /* Create a module as the top-level fabric, and add it to the module manager
    */
   std::string top_module_name = generate_fpga_top_module_name();
+  top_module_name = module_name_map.name(top_module_name);
   ModuleId top_module = module_manager.find_module(top_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
 

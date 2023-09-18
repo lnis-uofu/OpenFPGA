@@ -643,12 +643,14 @@ static void generate_verilog_rram_mux_branch_module(
 static void generate_verilog_mux_branch_module(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   std::fstream& fp, const CircuitModelId& mux_model, const MuxGraph& mux_graph,
+  const ModuleNameMap& module_name_map,
   const bool& use_explicit_port_map,
   const e_verilog_default_net_type& default_net_type,
   std::map<std::string, bool>& branch_mux_module_is_outputted) {
   std::string module_name = generate_mux_branch_subckt_name(
     circuit_lib, mux_model, mux_graph.num_inputs(), mux_graph.num_memory_bits(),
     VERILOG_MUX_BASIS_POSTFIX);
+  module_name = module_name_map.name(module_name);
 
   /* Skip outputting if the module has already been outputted */
   auto result = branch_mux_module_is_outputted.find(module_name);
@@ -1400,6 +1402,7 @@ static void generate_verilog_rram_mux_module(
 static void generate_verilog_mux_module(
   ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   std::fstream& fp, const CircuitModelId& mux_model, const MuxGraph& mux_graph,
+  const ModuleNameMap& module_name_map,
   const bool& use_explicit_port_map,
   const e_verilog_default_net_type& default_net_type) {
   std::string module_name =
@@ -1407,6 +1410,7 @@ static void generate_verilog_mux_module(
                              find_mux_num_datapath_inputs(
                                circuit_lib, mux_model, mux_graph.num_inputs()),
                              std::string(""));
+  module_name = module_name_map.name(module_name);
 
   /* Multiplexers built with different technology is in different organization
    */
@@ -1447,6 +1451,7 @@ static void generate_verilog_mux_module(
 static void print_verilog_submodule_mux_primitives(
   ModuleManager& module_manager, NetlistManager& netlist_manager,
   const MuxLibrary& mux_lib, const CircuitLibrary& circuit_lib,
+                                   const ModuleNameMap& module_name_map,
   const std::string& submodule_dir, const std::string& submodule_dir_name,
   const FabricVerilogOption& options) {
   /* Output primitive cells for MUX modules */
@@ -1483,7 +1488,7 @@ static void print_verilog_submodule_mux_primitives(
     /* Create branch circuits, which are N:1 one-level or 2:1 tree-like MUXes */
     for (auto branch_mux_graph : branch_mux_graphs) {
       generate_verilog_mux_branch_module(
-        module_manager, circuit_lib, fp, mux_circuit_model, branch_mux_graph,
+        module_manager, circuit_lib, fp, mux_circuit_model, branch_mux_graph, module_name_map,
         options.explicit_port_mapping(), options.default_net_type(),
         branch_mux_module_is_outputted);
     }
@@ -1512,6 +1517,7 @@ static void print_verilog_submodule_mux_primitives(
 static void print_verilog_submodule_mux_top_modules(
   ModuleManager& module_manager, NetlistManager& netlist_manager,
   const MuxLibrary& mux_lib, const CircuitLibrary& circuit_lib,
+  const ModuleNameMap& module_name_map,
   const std::string& submodule_dir, const std::string& submodule_dir_name,
   const FabricVerilogOption& options) {
   /* Output top-level MUX modules */
@@ -1538,7 +1544,7 @@ static void print_verilog_submodule_mux_top_modules(
     /* Create MUX circuits */
     generate_verilog_mux_module(
       module_manager, circuit_lib, fp, mux_circuit_model, mux_graph,
-      options.explicit_port_mapping(), options.default_net_type());
+      module_name_map, options.explicit_port_mapping(), options.default_net_type());
   }
 
   /* Close the file stream */
@@ -1570,15 +1576,16 @@ void print_verilog_submodule_muxes(ModuleManager& module_manager,
                                    NetlistManager& netlist_manager,
                                    const MuxLibrary& mux_lib,
                                    const CircuitLibrary& circuit_lib,
+                                   const ModuleNameMap& module_name_map,
                                    const std::string& submodule_dir,
                                    const std::string& submodule_dir_name,
                                    const FabricVerilogOption& options) {
   print_verilog_submodule_mux_primitives(module_manager, netlist_manager,
-                                         mux_lib, circuit_lib, submodule_dir,
+                                         mux_lib, circuit_lib, module_name_map, submodule_dir,
                                          submodule_dir_name, options);
 
   print_verilog_submodule_mux_top_modules(module_manager, netlist_manager,
-                                          mux_lib, circuit_lib, submodule_dir,
+                                          mux_lib, circuit_lib, module_name_map, submodule_dir,
                                           submodule_dir_name, options);
 }
 
