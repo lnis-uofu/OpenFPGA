@@ -161,14 +161,14 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
   /* Create the top-level block for bitstream
    * This is related to the top-level module of fpga
    */
-  std::string top_block_name = generate_fpga_top_module_name();
+  std::string top_block_name = openfpga_ctx.module_name_map().name(generate_fpga_top_module_name());
   ConfigBlockId top_block = bitstream_manager.add_block(top_block_name);
   ModuleId top_module = openfpga_ctx.module_graph().find_module(top_block_name);
   VTR_ASSERT(true == openfpga_ctx.module_graph().valid_module_id(top_module));
 
   /* Create the core block when the fpga_core is added */
   size_t num_blocks_to_reserve = 0;
-  std::string core_block_name = generate_fpga_core_module_name();
+  std::string core_block_name = openfpga_ctx.module_name_map().name(generate_fpga_core_module_name());
   const ModuleId& core_module =
     openfpga_ctx.module_graph().find_module(core_block_name);
   if (openfpga_ctx.module_graph().valid_module_id(core_module)) {
