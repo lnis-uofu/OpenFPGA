@@ -633,8 +633,8 @@ int print_verilog_preconfig_top_module(
    */
   std::string inst_name = module_name_map.name(generate_fpga_top_module_name());
   if (options.dut_module() == generate_fpga_core_module_name()) {
-    ModuleId parent_module =
-      module_manager.find_module(module_name_map.name(generate_fpga_top_module_name()));
+    ModuleId parent_module = module_manager.find_module(
+      module_name_map.name(generate_fpga_top_module_name()));
     inst_name = module_manager.instance_name(parent_module, core_module, 0);
   }
 

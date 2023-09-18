@@ -801,9 +801,8 @@ static void print_verilog_top_testbench_benchmark_clock_ports(
  *******************************************************************/
 static void print_verilog_top_testbench_ports(
   std::fstream& fp, const ModuleManager& module_manager,
-  const ModuleNameMap& module_name_map,
-  const ModuleId& top_module, const AtomContext& atom_ctx,
-  const VprNetlistAnnotation& netlist_annotation,
+  const ModuleNameMap& module_name_map, const ModuleId& top_module,
+  const AtomContext& atom_ctx, const VprNetlistAnnotation& netlist_annotation,
   const std::vector<std::string>& clock_port_names,
   const FabricGlobalPortInfo& global_ports,
   const PinConstraints& pin_constraints,
@@ -951,8 +950,8 @@ static void print_verilog_top_testbench_ports(
 
   std::vector<std::string> global_port_names;
   print_verilog_testbench_shared_ports(
-    fp, module_manager, module_name_map, global_ports, pin_constraints, atom_ctx,
-    netlist_annotation, clock_port_names,
+    fp, module_manager, module_name_map, global_ports, pin_constraints,
+    atom_ctx, netlist_annotation, clock_port_names,
     std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
     std::string(TOP_TESTBENCH_REFERENCE_OUTPUT_POSTFIX),
     std::string(TOP_TESTBENCH_FPGA_OUTPUT_POSTFIX),
@@ -2337,8 +2336,7 @@ static void print_verilog_full_testbench_bitstream(
 static void print_verilog_top_testbench_reset_stimuli(
   std::fstream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
-  const ModuleManager& module_manager,
-  const ModuleNameMap& module_name_map,
+  const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const FabricGlobalPortInfo& global_ports,
   const PinConstraints& pin_constraints, const std::string& port_name_postfix,
   const std::vector<std::string>& clock_port_names) {
@@ -2369,15 +2367,15 @@ static void print_verilog_top_testbench_reset_stimuli(
     /* Bypass any constained net that are mapped to a global port of the FPGA
      * fabric because their stimulus cannot be random
      */
-    if (false ==
-        port_is_fabric_global_reset_port(global_ports, module_manager,
-                                         module_name_map, pin_constraints.net_pin(block_name))) {
+    if (false == port_is_fabric_global_reset_port(
+                   global_ports, module_manager, module_name_map,
+                   pin_constraints.net_pin(block_name))) {
       continue;
     }
 
-    size_t initial_value =
-      global_ports.global_port_default_value(find_fabric_global_port(
-        global_ports, module_manager, module_name_map, pin_constraints.net_pin(block_name)));
+    size_t initial_value = global_ports.global_port_default_value(
+      find_fabric_global_port(global_ports, module_manager, module_name_map,
+                              pin_constraints.net_pin(block_name)));
 
     /* Connect stimuli to greset with an optional inversion, depending on the
      * default value */
@@ -2521,9 +2519,9 @@ int print_verilog_full_testbench(
 
   /* Start of testbench */
   print_verilog_top_testbench_ports(
-    fp, module_manager, module_name_map, core_module, atom_ctx, netlist_annotation,
-    clock_port_names, global_ports, pin_constraints, simulation_parameters,
-    config_protocol, circuit_name, options);
+    fp, module_manager, module_name_map, core_module, atom_ctx,
+    netlist_annotation, clock_port_names, global_ports, pin_constraints,
+    simulation_parameters, config_protocol, circuit_name, options);
 
   /* Find the clock period */
   float prog_clock_period =
@@ -2629,12 +2627,12 @@ int print_verilog_full_testbench(
 
   /* Add stimuli for reset, set, clock and iopad signals */
   print_verilog_top_testbench_reset_stimuli(
-    fp, atom_ctx, netlist_annotation, module_manager, module_name_map, global_ports,
-    pin_constraints, std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
-    clock_port_names);
+    fp, atom_ctx, netlist_annotation, module_manager, module_name_map,
+    global_ports, pin_constraints,
+    std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX), clock_port_names);
   print_verilog_testbench_random_stimuli(
-    fp, atom_ctx, netlist_annotation, module_manager, module_name_map, global_ports,
-    pin_constraints, clock_port_names,
+    fp, atom_ctx, netlist_annotation, module_manager, module_name_map,
+    global_ports, pin_constraints, clock_port_names,
     std::string(TOP_TESTBENCH_SHARED_INPUT_POSTFIX),
     std::string(TOP_TESTBENCH_CHECKFLAG_PORT_POSTFIX),
     std::vector<BasicPort>(

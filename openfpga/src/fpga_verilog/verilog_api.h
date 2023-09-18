@@ -84,10 +84,9 @@ int fpga_verilog_mock_fpga_wrapper(
   const VerilogTestbenchOption& options);
 
 int fpga_verilog_preconfigured_testbench(
-  const ModuleManager& module_manager,
-  const ModuleNameMap &module_name_map,
-  const AtomContext& atom_ctx,
-  const PinConstraints& pin_constraints, const BusGroup& bus_group,
+  const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
+  const AtomContext& atom_ctx, const PinConstraints& pin_constraints,
+  const BusGroup& bus_group,
   const FabricGlobalPortInfo& fabric_global_port_info,
   const VprNetlistAnnotation& netlist_annotation,
   const SimulationSetting& simulation_setting,

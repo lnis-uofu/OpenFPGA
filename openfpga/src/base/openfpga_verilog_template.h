@@ -335,7 +335,8 @@ int write_preconfigured_testbench_template(const T& openfpga_ctx,
   }
 
   return fpga_verilog_preconfigured_testbench(
-    openfpga_ctx.module_graph(), openfpga_ctx.module_name_map(), g_vpr_ctx.atom(), pin_constraints, bus_group,
+    openfpga_ctx.module_graph(), openfpga_ctx.module_name_map(),
+    g_vpr_ctx.atom(), pin_constraints, bus_group,
     openfpga_ctx.fabric_global_port_info(),
     openfpga_ctx.vpr_netlist_annotation(), openfpga_ctx.simulation_setting(),
     options);

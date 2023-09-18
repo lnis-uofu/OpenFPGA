@@ -30,8 +30,7 @@ bool port_is_fabric_global_reset_port(
 
 FabricGlobalPortId find_fabric_global_port(
   const FabricGlobalPortInfo& fabric_global_port_info,
-  const ModuleManager& module_manager,
-  const ModuleNameMap& module_name_map,
+  const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const BasicPort& port);
 
 } /* end namespace openfpga */

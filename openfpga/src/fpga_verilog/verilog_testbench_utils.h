@@ -13,8 +13,8 @@
 #include "fabric_global_port_info.h"
 #include "io_location_map.h"
 #include "io_name_map.h"
-#include "module_name_map.h"
 #include "module_manager.h"
+#include "module_name_map.h"
 #include "pin_constraints.h"
 #include "simulation_setting.h"
 #include "vpr_context.h"
@@ -85,8 +85,7 @@ void print_verilog_testbench_clock_stimuli(
 void print_verilog_testbench_random_stimuli(
   std::fstream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
-  const ModuleManager& module_manager,
-  const ModuleNameMap& module_name_map,
+  const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const FabricGlobalPortInfo& global_ports,
   const PinConstraints& pin_constraints,
   const std::vector<std::string>& clock_port_names,

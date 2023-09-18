@@ -818,8 +818,7 @@ void print_verilog_testbench_clock_stimuli(
 void print_verilog_testbench_random_stimuli(
   std::fstream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
-  const ModuleManager& module_manager,
-  const ModuleNameMap& module_name_map,
+  const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
   const FabricGlobalPortInfo& global_ports,
   const PinConstraints& pin_constraints,
   const std::vector<std::string>& clock_port_names,
@@ -860,9 +859,9 @@ void print_verilog_testbench_random_stimuli(
     /* Bypass any constained net that are mapped to a global port of the FPGA
      * fabric because their stimulus cannot be random
      */
-    if (true ==
-        port_is_fabric_global_reset_port(global_ports, module_manager,
-                                         module_name_map, pin_constraints.net_pin(block_name))) {
+    if (true == port_is_fabric_global_reset_port(
+                  global_ports, module_manager, module_name_map,
+                  pin_constraints.net_pin(block_name))) {
       continue;
     }
 
@@ -944,9 +943,9 @@ void print_verilog_testbench_random_stimuli(
     /* Bypass any constained net that are mapped to a global port of the FPGA
      * fabric because their stimulus cannot be random
      */
-    if (true ==
-        port_is_fabric_global_reset_port(global_ports, module_manager, module_name_map,
-                                         pin_constraints.net_pin(block_name))) {
+    if (true == port_is_fabric_global_reset_port(
+                  global_ports, module_manager, module_name_map,
+                  pin_constraints.net_pin(block_name))) {
       continue;
     }
 
@@ -1009,9 +1008,9 @@ void print_verilog_testbench_shared_input_ports(
     /* Each logical block assumes a single-width port */
     BasicPort input_port(block_name + shared_input_port_postfix, 1);
     /* For global ports, use wires; otherwise, use registers*/
-    if (false ==
-        port_is_fabric_global_reset_port(global_ports, module_manager,
-                                         module_name_map, pin_constraints.net_pin(block_name))) {
+    if (false == port_is_fabric_global_reset_port(
+                   global_ports, module_manager, module_name_map,
+                   pin_constraints.net_pin(block_name))) {
       if (use_reg_port) {
         fp << "\t" << generate_verilog_port(VERILOG_PORT_REG, input_port) << ";"
            << std::endl;
@@ -1172,9 +1171,9 @@ void print_verilog_testbench_shared_ports(
   const std::string& fpga_output_port_postfix,
   const std::string& check_flag_port_postfix, const bool& no_self_checking) {
   print_verilog_testbench_shared_input_ports(
-    fp, module_manager, module_name_map, global_ports, pin_constraints, atom_ctx,
-    netlist_annotation, clock_port_names, false, shared_input_port_postfix,
-    true);
+    fp, module_manager, module_name_map, global_ports, pin_constraints,
+    atom_ctx, netlist_annotation, clock_port_names, false,
+    shared_input_port_postfix, true);
 
   print_verilog_testbench_shared_fpga_output_ports(
     fp, atom_ctx, netlist_annotation, fpga_output_port_postfix);
