@@ -22,14 +22,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void print_verilog_submodule_muxes(ModuleManager& module_manager,
-                                   NetlistManager& netlist_manager,
-                                   const MuxLibrary& mux_lib,
-                                   const CircuitLibrary& circuit_lib,
-                                   const ModuleNameMap& module_name_map,
-                                   const std::string& submodule_dir,
-                                   const std::string& submodule_dir_name,
-                                   const FabricVerilogOption& options);
+void print_verilog_submodule_muxes(
+  ModuleManager& module_manager, NetlistManager& netlist_manager,
+  const MuxLibrary& mux_lib, const CircuitLibrary& circuit_lib,
+  const ModuleNameMap& module_name_map, const std::string& submodule_dir,
+  const std::string& submodule_dir_name, const FabricVerilogOption& options);
 
 } /* end namespace openfpga */
 

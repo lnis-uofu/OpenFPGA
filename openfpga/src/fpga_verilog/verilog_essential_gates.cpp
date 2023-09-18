@@ -176,8 +176,8 @@ static void print_verilog_invbuf_module(
 
   /* Create a Verilog Module based on the circuit model, and add to module
    * manager */
-  ModuleId module_id =
-    module_manager.find_module(module_name_map.name(circuit_lib.model_name(circuit_model)));
+  ModuleId module_id = module_manager.find_module(
+    module_name_map.name(circuit_lib.model_name(circuit_model)));
   VTR_ASSERT(true == module_manager.valid_module_id(module_id));
 
   /* dump module definition + ports */
@@ -272,8 +272,8 @@ static void print_verilog_passgate_module(
 
   /* Create a Verilog Module based on the circuit model, and add to module
    * manager */
-  ModuleId module_id =
-    module_manager.find_module(module_name_map.name(circuit_lib.model_name(circuit_model)));
+  ModuleId module_id = module_manager.find_module(
+    module_name_map.name(circuit_lib.model_name(circuit_model)));
   VTR_ASSERT(true == module_manager.valid_module_id(module_id));
 
   /* dump module definition + ports */
@@ -468,8 +468,8 @@ static void print_verilog_gate_module(
 
   /* Create a Verilog Module based on the circuit model, and add to module
    * manager */
-  ModuleId module_id =
-    module_manager.find_module(module_name_map.name(circuit_lib.model_name(circuit_model)));
+  ModuleId module_id = module_manager.find_module(
+    module_name_map.name(circuit_lib.model_name(circuit_model)));
   VTR_ASSERT(true == module_manager.valid_module_id(module_id));
 
   /* dump module definition + ports */
@@ -509,12 +509,12 @@ static void print_verilog_gate_module(
  ***********************************************/
 static void print_verilog_constant_generator_module(
   const ModuleManager& module_manager, std::fstream& fp,
-  const size_t& const_value,
-  const ModuleNameMap& module_name_map,
+  const size_t& const_value, const ModuleNameMap& module_name_map,
   const e_verilog_default_net_type& default_net_type) {
   /* Find the module in module manager */
   std::string module_name = generate_const_value_module_name(const_value);
-  ModuleId const_val_module = module_manager.find_module(module_name_map.name(module_name));
+  ModuleId const_val_module =
+    module_manager.find_module(module_name_map.name(module_name));
   VTR_ASSERT(true == module_manager.valid_module_id(const_val_module));
 
   /* Ensure a valid file handler*/
@@ -568,11 +568,11 @@ void print_verilog_submodule_essentials(const ModuleManager& module_manager,
 
   /* Print constant generators */
   /* VDD */
-  print_verilog_constant_generator_module(module_manager, fp, 0,
-                                          module_name_map, options.default_net_type());
+  print_verilog_constant_generator_module(
+    module_manager, fp, 0, module_name_map, options.default_net_type());
   /* GND */
-  print_verilog_constant_generator_module(module_manager, fp, 1,
-                                          module_name_map, options.default_net_type());
+  print_verilog_constant_generator_module(
+    module_manager, fp, 1, module_name_map, options.default_net_type());
 
   for (const auto& circuit_model : circuit_lib.models()) {
     /* By pass user-defined modules */
@@ -581,12 +581,14 @@ void print_verilog_submodule_essentials(const ModuleManager& module_manager,
     }
     if (CIRCUIT_MODEL_INVBUF == circuit_lib.model_type(circuit_model)) {
       print_verilog_invbuf_module(module_manager, fp, circuit_lib,
-                                  circuit_model, module_name_map, options.default_net_type());
+                                  circuit_model, module_name_map,
+                                  options.default_net_type());
       continue;
     }
     if (CIRCUIT_MODEL_PASSGATE == circuit_lib.model_type(circuit_model)) {
       print_verilog_passgate_module(module_manager, fp, circuit_lib,
-                                    circuit_model, module_name_map, options.default_net_type());
+                                    circuit_model, module_name_map,
+                                    options.default_net_type());
       continue;
     }
     if (CIRCUIT_MODEL_GATE == circuit_lib.model_type(circuit_model)) {

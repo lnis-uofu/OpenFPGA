@@ -42,8 +42,7 @@ namespace openfpga {
 static void print_verilog_mux_memory_module(
   const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   std::fstream& fp, const CircuitModelId& mux_model, const MuxGraph& mux_graph,
-  const ModuleNameMap& module_name_map,
-  const FabricVerilogOption& options) {
+  const ModuleNameMap& module_name_map, const FabricVerilogOption& options) {
   /* Multiplexers built with different technology is in different organization
    */
   switch (circuit_lib.design_tech_type(mux_model)) {
@@ -121,14 +120,11 @@ static void print_verilog_mux_memory_module(
  * Take another example, the memory circuit can implement the scan-chain or
  * memory-bank organization for the memories.
  ********************************************************************/
-void print_verilog_submodule_memories(const ModuleManager& module_manager,
-                                      NetlistManager& netlist_manager,
-                                      const MuxLibrary& mux_lib,
-                                      const CircuitLibrary& circuit_lib,
-                                      const ModuleNameMap& module_name_map,
-                                      const std::string& submodule_dir,
-                                      const std::string& submodule_dir_name,
-                                      const FabricVerilogOption& options) {
+void print_verilog_submodule_memories(
+  const ModuleManager& module_manager, NetlistManager& netlist_manager,
+  const MuxLibrary& mux_lib, const CircuitLibrary& circuit_lib,
+  const ModuleNameMap& module_name_map, const std::string& submodule_dir,
+  const std::string& submodule_dir_name, const FabricVerilogOption& options) {
   /* Plug in with the mux subckt */
   std::string verilog_fname(MEMORIES_VERILOG_FILE_NAME);
   std::string verilog_fpath(submodule_dir + verilog_fname);

@@ -36,17 +36,19 @@ void print_verilog_submodule(
   ModuleManager& module_manager, NetlistManager& netlist_manager,
   const MemoryBankShiftRegisterBanks& blwl_sr_banks, const MuxLibrary& mux_lib,
   const DecoderLibrary& decoder_lib, const CircuitLibrary& circuit_lib,
-  const ModuleNameMap& module_name_map,
-  const std::string& submodule_dir, const std::string& submodule_dir_name,
+  const ModuleNameMap& module_name_map, const std::string& submodule_dir,
+  const std::string& submodule_dir_name,
   const FabricVerilogOption& fpga_verilog_opts) {
   print_verilog_submodule_essentials(
     const_cast<const ModuleManager&>(module_manager), netlist_manager,
-    submodule_dir, submodule_dir_name, circuit_lib, module_name_map, fpga_verilog_opts);
+    submodule_dir, submodule_dir_name, circuit_lib, module_name_map,
+    fpga_verilog_opts);
 
   /* Decoders for architecture */
   print_verilog_submodule_arch_decoders(
     const_cast<const ModuleManager&>(module_manager), netlist_manager,
-    decoder_lib, module_name_map, submodule_dir, submodule_dir_name, fpga_verilog_opts);
+    decoder_lib, module_name_map, submodule_dir, submodule_dir_name,
+    fpga_verilog_opts);
 
   /* Routing multiplexers */
   /* NOTE: local decoders generation must go before the MUX generation!!!
@@ -55,25 +57,29 @@ void print_verilog_submodule(
    */
   print_verilog_submodule_mux_local_decoders(
     const_cast<const ModuleManager&>(module_manager), netlist_manager, mux_lib,
-    circuit_lib, module_name_map, submodule_dir, submodule_dir_name, fpga_verilog_opts);
+    circuit_lib, module_name_map, submodule_dir, submodule_dir_name,
+    fpga_verilog_opts);
   print_verilog_submodule_muxes(module_manager, netlist_manager, mux_lib,
-                                circuit_lib, module_name_map, submodule_dir, submodule_dir_name,
-                                fpga_verilog_opts);
+                                circuit_lib, module_name_map, submodule_dir,
+                                submodule_dir_name, fpga_verilog_opts);
 
   /* LUTes */
   print_verilog_submodule_luts(const_cast<const ModuleManager&>(module_manager),
-                               netlist_manager, circuit_lib, module_name_map, submodule_dir,
-                               submodule_dir_name, fpga_verilog_opts);
+                               netlist_manager, circuit_lib, module_name_map,
+                               submodule_dir, submodule_dir_name,
+                               fpga_verilog_opts);
 
   /* Hard wires */
   print_verilog_submodule_wires(
     const_cast<const ModuleManager&>(module_manager), netlist_manager,
-    circuit_lib, module_name_map, submodule_dir, submodule_dir_name, fpga_verilog_opts);
+    circuit_lib, module_name_map, submodule_dir, submodule_dir_name,
+    fpga_verilog_opts);
 
   /* Memories */
   print_verilog_submodule_memories(
     const_cast<const ModuleManager&>(module_manager), netlist_manager, mux_lib,
-    circuit_lib, module_name_map, submodule_dir, submodule_dir_name, fpga_verilog_opts);
+    circuit_lib, module_name_map, submodule_dir, submodule_dir_name,
+    fpga_verilog_opts);
 
   /* Shift register banks */
   print_verilog_submodule_shift_register_banks(

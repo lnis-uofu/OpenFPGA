@@ -56,8 +56,8 @@ static void print_verilog_wire_module(
 
   /* Create a Verilog Module based on the circuit model, and add to module
    * manager */
-  ModuleId wire_module =
-    module_manager.find_module(module_name_map.name(circuit_lib.model_name(wire_model)));
+  ModuleId wire_module = module_manager.find_module(
+    module_name_map.name(circuit_lib.model_name(wire_model)));
   VTR_ASSERT(true == module_manager.valid_module_id(wire_module));
 
   /* dump module definition + ports */

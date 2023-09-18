@@ -56,8 +56,8 @@ void print_verilog_submodule_luts(const ModuleManager& module_manager,
       continue;
     }
     /* Find the module id */
-    ModuleId lut_module =
-      module_manager.find_module(module_name_map.name(circuit_lib.model_name(lut_model)));
+    ModuleId lut_module = module_manager.find_module(
+      module_name_map.name(circuit_lib.model_name(lut_model)));
     VTR_ASSERT(true == module_manager.valid_module_id(lut_module));
     write_verilog_module_to_file(
       fp, module_manager, lut_module,

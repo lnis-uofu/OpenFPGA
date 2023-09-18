@@ -105,7 +105,8 @@ int fpga_fabric_verilog(
    * logic generation is not possible!!!
    */
   print_verilog_submodule(module_manager, netlist_manager, blwl_sr_banks,
-                          mux_lib, decoder_lib, circuit_lib, module_name_map, submodule_dir_path,
+                          mux_lib, decoder_lib, circuit_lib, module_name_map,
+                          submodule_dir_path,
                           std::string(DEFAULT_SUBMODULE_DIR_NAME), options);
 
   /* Generate routing blocks */
@@ -142,12 +143,10 @@ int fpga_fabric_verilog(
   /* Generate FPGA fabric */
   print_verilog_core_module(netlist_manager,
                             const_cast<const ModuleManager &>(module_manager),
-                            module_name_map,
-                            src_dir_path, options);
+                            module_name_map, src_dir_path, options);
   print_verilog_top_module(netlist_manager,
                            const_cast<const ModuleManager &>(module_manager),
-                           module_name_map,
-                           src_dir_path, options);
+                           module_name_map, src_dir_path, options);
 
   /* Generate an netlist including all the fabric-related netlists */
   print_verilog_fabric_include_netlist(
@@ -176,8 +175,7 @@ int fpga_verilog_full_testbench(
   const AtomContext &atom_ctx, const PlacementContext &place_ctx,
   const PinConstraints &pin_constraints, const BusGroup &bus_group,
   const std::string &bitstream_file, const IoLocationMap &io_location_map,
-  const IoNameMap &io_name_map,
-  const ModuleNameMap& module_name_map,
+  const IoNameMap &io_name_map, const ModuleNameMap &module_name_map,
   const FabricGlobalPortInfo &fabric_global_port_info,
   const VprNetlistAnnotation &netlist_annotation,
   const CircuitLibrary &circuit_lib,
@@ -205,8 +203,7 @@ int fpga_verilog_full_testbench(
     module_manager, bitstream_manager, fabric_bitstream, blwl_sr_banks,
     circuit_lib, config_protocol, fabric_global_port_info, atom_ctx, place_ctx,
     pin_constraints, bus_group, bitstream_file, io_location_map, io_name_map,
-    module_name_map,
-    netlist_annotation, netlist_name, top_testbench_file_path,
+    module_name_map, netlist_annotation, netlist_name, top_testbench_file_path,
     simulation_setting, options);
 
   /* Generate a Verilog file including all the netlists that have been generated
@@ -228,8 +225,7 @@ int fpga_verilog_preconfigured_fabric_wrapper(
   const BitstreamManager &bitstream_manager, const AtomContext &atom_ctx,
   const PlacementContext &place_ctx, const PinConstraints &pin_constraints,
   const BusGroup &bus_group, const IoLocationMap &io_location_map,
-  const IoNameMap &io_name_map,
-  const ModuleNameMap &module_name_map,
+  const IoNameMap &io_name_map, const ModuleNameMap &module_name_map,
   const FabricGlobalPortInfo &fabric_global_port_info,
   const VprNetlistAnnotation &netlist_annotation,
   const CircuitLibrary &circuit_lib, const ConfigProtocol &config_protocol,
@@ -254,8 +250,8 @@ int fpga_verilog_preconfigured_fabric_wrapper(
   status = print_verilog_preconfig_top_module(
     module_manager, bitstream_manager, config_protocol, circuit_lib,
     fabric_global_port_info, atom_ctx, place_ctx, pin_constraints, bus_group,
-    io_location_map, io_name_map, module_name_map, netlist_annotation, netlist_name,
-    formal_verification_top_netlist_file_path, options);
+    io_location_map, io_name_map, module_name_map, netlist_annotation,
+    netlist_name, formal_verification_top_netlist_file_path, options);
 
   return status;
 }
@@ -268,8 +264,7 @@ int fpga_verilog_mock_fpga_wrapper(
   const ModuleManager &module_manager, const AtomContext &atom_ctx,
   const PlacementContext &place_ctx, const PinConstraints &pin_constraints,
   const BusGroup &bus_group, const IoLocationMap &io_location_map,
-  const IoNameMap &io_name_map,
-  const ModuleNameMap &module_name_map,
+  const IoNameMap &io_name_map, const ModuleNameMap &module_name_map,
   const FabricGlobalPortInfo &fabric_global_port_info,
   const VprNetlistAnnotation &netlist_annotation,
   const VerilogTestbenchOption &options) {
@@ -294,8 +289,8 @@ int fpga_verilog_mock_fpga_wrapper(
   std::string netlist_file_path = src_dir_path + netlist_file_name;
   status = print_verilog_mock_fpga_wrapper(
     module_manager, fabric_global_port_info, atom_ctx, place_ctx,
-    pin_constraints, bus_group, io_location_map, io_name_map,
-    module_name_map, netlist_annotation, netlist_name, netlist_file_path, options);
+    pin_constraints, bus_group, io_location_map, io_name_map, module_name_map,
+    netlist_annotation, netlist_name, netlist_file_path, options);
 
   /* Add fname to the netlist name list */
   NetlistId nlist_id = NetlistId::INVALID();
