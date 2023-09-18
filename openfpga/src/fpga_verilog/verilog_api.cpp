@@ -319,7 +319,9 @@ int fpga_verilog_mock_fpga_wrapper(
  *verification and formal verification purpose.
  ********************************************************************/
 int fpga_verilog_preconfigured_testbench(
-  const ModuleManager &module_manager, const AtomContext &atom_ctx,
+  const ModuleManager &module_manager,
+  const ModuleNameMap &module_name_map,
+  const AtomContext &atom_ctx,
   const PinConstraints &pin_constraints, const BusGroup &bus_group,
   const FabricGlobalPortInfo &fabric_global_port_info,
   const VprNetlistAnnotation &netlist_annotation,
@@ -343,7 +345,7 @@ int fpga_verilog_preconfigured_testbench(
     std::string(RANDOM_TOP_TESTBENCH_VERILOG_FILE_POSTFIX);
   print_verilog_random_top_testbench(
     netlist_name, random_top_testbench_file_path, atom_ctx, netlist_annotation,
-    module_manager, fabric_global_port_info, pin_constraints, bus_group,
+    module_manager, module_name_map, fabric_global_port_info, pin_constraints, bus_group,
     simulation_setting, options);
 
   /* Generate a Verilog file including all the netlists that have been generated

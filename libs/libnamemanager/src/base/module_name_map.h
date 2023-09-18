@@ -19,6 +19,8 @@ class ModuleNameMap {
  public: /* Public accessors */
   /** @brief Get customized name with a given tag */
   std::string name(const std::string& tag) const;
+  /** @brief Check if a name does exist with a given tag. Return true if there is a tag-to-name mapping */
+  bool name_exist(const std::string& tag) const;
   /** @brief return a list of all the current keys */
   std::vector<std::string> tags() const;
 

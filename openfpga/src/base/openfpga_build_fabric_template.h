@@ -285,8 +285,8 @@ int write_fabric_hierarchy_template(const T& openfpga_ctx, const Command& cmd,
 
   /* Write hierarchy to a file */
   return write_fabric_hierarchy_to_text_file(
-    openfpga_ctx.module_graph(), openfpga_ctx.module_name_map(), hie_file_name, size_t(depth),
-    cmd_context.option_enable(cmd, opt_verbose));
+    openfpga_ctx.module_graph(), openfpga_ctx.module_name_map(), hie_file_name,
+    size_t(depth), cmd_context.option_enable(cmd, opt_verbose));
 }
 
 /********************************************************************

@@ -27,6 +27,11 @@ std::string ModuleNameMap::name(const std::string& tag) const {
   return result->second;
 }
 
+bool ModuleNameMap::name_exist(const std::string& tag) const {
+  auto result = tag2names_.find(tag);
+  return result != tag2names_.end();
+}
+
 std::vector<std::string> ModuleNameMap::tags() const {
   std::vector<std::string> keys;
   for (auto const& element : tag2names_) {

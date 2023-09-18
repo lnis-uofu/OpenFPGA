@@ -72,7 +72,9 @@ static void print_verilog_mux_memory_module(
         find_mux_num_datapath_inputs(circuit_lib, mux_model,
                                      mux_graph.num_inputs()),
         std::string(MEMORY_FEEDTHROUGH_MODULE_POSTFIX));
-      feedthru_module_name = module_name_map.name(feedthru_module_name);
+      if (module_name_map.name_exist(feedthru_module_name)) {
+        feedthru_module_name = module_name_map.name(feedthru_module_name);
+      }
       ModuleId feedthru_mem_module =
         module_manager.find_module(feedthru_module_name);
       if (module_manager.valid_module_id(feedthru_mem_module)) {
@@ -215,7 +217,9 @@ void print_verilog_submodule_memories(
     std::string feedthru_module_name =
       generate_memory_module_name(circuit_lib, model, sram_models[0],
                                   std::string(MEMORY_MODULE_POSTFIX), true);
-    feedthru_module_name = module_name_map.name(feedthru_module_name);
+    if (module_name_map.name_exist(feedthru_module_name)) {
+      feedthru_module_name = module_name_map.name(feedthru_module_name);
+    }
 
     ModuleId feedthru_mem_module =
       module_manager.find_module(feedthru_module_name);

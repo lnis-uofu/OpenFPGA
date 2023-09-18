@@ -52,6 +52,7 @@ constexpr const char* FORMAL_TB_SIM_START_PORT_NAME = "sim_start";
  *******************************************************************/
 static void print_verilog_top_random_testbench_ports(
   std::fstream& fp, const ModuleManager& module_manager,
+  const ModuleNameMap& module_name_map,
   const std::string& circuit_name,
   const std::vector<std::string>& clock_port_names, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
@@ -82,7 +83,7 @@ static void print_verilog_top_random_testbench_ports(
   fp << std::endl;
 
   print_verilog_testbench_shared_ports(
-    fp, module_manager, FabricGlobalPortInfo(), PinConstraints(), atom_ctx,
+    fp, module_manager, module_name_map, FabricGlobalPortInfo(), PinConstraints(), atom_ctx,
     netlist_annotation, clock_port_names, std::string(),
     std::string(BENCHMARK_PORT_POSTFIX), std::string(FPGA_PORT_POSTFIX),
     std::string(CHECKFLAG_PORT_POSTFIX), options.no_self_checking());
@@ -168,7 +169,9 @@ static void print_verilog_random_testbench_fpga_instance(
 static void print_verilog_random_testbench_reset_stimuli(
   std::fstream& fp, const AtomContext& atom_ctx,
   const VprNetlistAnnotation& netlist_annotation,
-  const ModuleManager& module_manager, const FabricGlobalPortInfo& global_ports,
+  const ModuleManager& module_manager,
+  const ModuleNameMap& module_name_map,
+  const FabricGlobalPortInfo& global_ports,
   const PinConstraints& pin_constraints,
   const std::vector<std::string>& clock_port_names,
   const BasicPort& clock_port) {
@@ -200,7 +203,7 @@ static void print_verilog_random_testbench_reset_stimuli(
      * fabric because their stimulus cannot be random
      */
     if (false ==
-        port_is_fabric_global_reset_port(global_ports, module_manager,
+        port_is_fabric_global_reset_port(global_ports, module_manager, module_name_map,
                                          pin_constraints.net_pin(block_name))) {
       continue;
     }
@@ -210,7 +213,7 @@ static void print_verilog_random_testbench_reset_stimuli(
     size_t initial_value = 1;
     if (1 ==
         global_ports.global_port_default_value(find_fabric_global_port(
-          global_ports, module_manager, pin_constraints.net_pin(block_name)))) {
+          global_ports, module_manager, module_name_map, pin_constraints.net_pin(block_name)))) {
       initial_value = 0;
     }
 
@@ -270,7 +273,9 @@ static void print_verilog_random_testbench_reset_stimuli(
 void print_verilog_random_top_testbench(
   const std::string& circuit_name, const std::string& verilog_fname,
   const AtomContext& atom_ctx, const VprNetlistAnnotation& netlist_annotation,
-  const ModuleManager& module_manager, const FabricGlobalPortInfo& global_ports,
+  const ModuleManager& module_manager,
+  const ModuleNameMap& module_name_map,
+  const FabricGlobalPortInfo& global_ports,
   const PinConstraints& pin_constraints, const BusGroup& bus_group,
   const SimulationSetting& simulation_parameters,
   const VerilogTestbenchOption& options) {
@@ -301,7 +306,7 @@ void print_verilog_random_top_testbench(
     find_atom_netlist_clock_port_names(atom_ctx.nlist, netlist_annotation);
 
   /* Start of testbench */
-  print_verilog_top_random_testbench_ports(fp, module_manager, circuit_name,
+  print_verilog_top_random_testbench_ports(fp, module_manager, module_name_map, circuit_name,
                                            clock_port_names, atom_ctx,
                                            netlist_annotation, options);
 
@@ -329,11 +334,11 @@ void print_verilog_random_top_testbench(
    * limitation should be removed!
    */
   print_verilog_random_testbench_reset_stimuli(
-    fp, atom_ctx, netlist_annotation, module_manager, global_ports,
+    fp, atom_ctx, netlist_annotation, module_manager, module_name_map, global_ports,
     pin_constraints, clock_port_names, clock_ports[0]);
 
   print_verilog_testbench_random_stimuli(
-    fp, atom_ctx, netlist_annotation, module_manager, global_ports,
+    fp, atom_ctx, netlist_annotation, module_manager, module_name_map, global_ports,
     pin_constraints, clock_port_names, std::string(),
     std::string(CHECKFLAG_PORT_POSTFIX), clock_ports,
     options.no_self_checking());
