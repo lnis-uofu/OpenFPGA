@@ -33,12 +33,11 @@ namespace openfpga {
  *******************************************************************/
 static void build_switch_block_mux_bitstream(
   BitstreamManager& bitstream_manager, const ConfigBlockId& mux_mem_block,
-  const ModuleManager& module_manager,
-  const ModuleNameMap& module_name_map,
-  const CircuitLibrary& circuit_lib,
-  const MuxLibrary& mux_lib, const RRGraphView& rr_graph,
-  const RRNodeId& cur_rr_node, const std::vector<RRNodeId>& drive_rr_nodes,
-  const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
+  const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
+  const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
+  const RRGraphView& rr_graph, const RRNodeId& cur_rr_node,
+  const std::vector<RRNodeId>& drive_rr_nodes, const AtomContext& atom_ctx,
+  const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const bool& verbose) {
   /* Check current rr_node is CHANX or CHANY*/
   VTR_ASSERT((CHANX == rr_graph.node_type(cur_rr_node)) ||
@@ -155,11 +154,10 @@ static void build_switch_block_mux_bitstream(
 static void build_switch_block_interc_bitstream(
   BitstreamManager& bitstream_manager,
   const ConfigBlockId& sb_configurable_block,
-  const ModuleManager& module_manager,
-  const ModuleNameMap& module_name_map,
-  const CircuitLibrary& circuit_lib,
-  const MuxLibrary& mux_lib, const RRGraphView& rr_graph,
-  const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
+  const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
+  const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
+  const RRGraphView& rr_graph, const AtomContext& atom_ctx,
+  const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGSB& rr_gsb,
   const e_side& chan_side, const size_t& chan_node_id, const bool& verbose) {
   std::vector<RRNodeId> driver_rr_nodes;
@@ -195,9 +193,9 @@ static void build_switch_block_interc_bitstream(
              bitstream_manager.block_name(sb_configurable_block).c_str());
     /* This is a routing multiplexer! Generate bitstream */
     build_switch_block_mux_bitstream(
-      bitstream_manager, mux_mem_block, module_manager, module_name_map, circuit_lib, mux_lib,
-      rr_graph, cur_rr_node, driver_rr_nodes, atom_ctx, device_annotation,
-      routing_annotation, verbose);
+      bitstream_manager, mux_mem_block, module_manager, module_name_map,
+      circuit_lib, mux_lib, rr_graph, cur_rr_node, driver_rr_nodes, atom_ctx,
+      device_annotation, routing_annotation, verbose);
   } /*Nothing should be done else*/
 }
 
@@ -215,9 +213,8 @@ static void build_switch_block_interc_bitstream(
 static void build_switch_block_bitstream(
   BitstreamManager& bitstream_manager, const ConfigBlockId& sb_config_block,
   const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
-  const CircuitLibrary& circuit_lib,
-  const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
-  const VprDeviceAnnotation& device_annotation,
+  const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
+  const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
   const RRGSB& rr_gsb, const bool& verbose) {
   /* Iterate over all the multiplexers */
@@ -235,9 +232,9 @@ static void build_switch_block_bitstream(
         continue;
       }
       build_switch_block_interc_bitstream(
-        bitstream_manager, sb_config_block, module_manager, module_name_map, circuit_lib,
-        mux_lib, rr_graph, atom_ctx, device_annotation, routing_annotation,
-        rr_gsb, side_manager.get_side(), itrack, verbose);
+        bitstream_manager, sb_config_block, module_manager, module_name_map,
+        circuit_lib, mux_lib, rr_graph, atom_ctx, device_annotation,
+        routing_annotation, rr_gsb, side_manager.get_side(), itrack, verbose);
     }
   }
 }
@@ -251,11 +248,9 @@ static void build_switch_block_bitstream(
  *******************************************************************/
 static void build_connection_block_mux_bitstream(
   BitstreamManager& bitstream_manager, const ConfigBlockId& mux_mem_block,
-  const ModuleManager& module_manager,
-  const ModuleNameMap& module_name_map,
-  const CircuitLibrary& circuit_lib,
-  const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
-  const VprDeviceAnnotation& device_annotation,
+  const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
+  const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
+  const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
   const RRGSB& rr_gsb, const e_side& cb_ipin_side, const size_t& ipin_index,
   const bool& verbose) {
@@ -377,11 +372,9 @@ static void build_connection_block_mux_bitstream(
 static void build_connection_block_interc_bitstream(
   BitstreamManager& bitstream_manager,
   const ConfigBlockId& cb_configurable_block,
-  const ModuleManager& module_manager,
-  const ModuleNameMap& module_name_map,
-  const CircuitLibrary& circuit_lib,
-  const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
-  const VprDeviceAnnotation& device_annotation,
+  const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
+  const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
+  const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
   const RRGSB& rr_gsb, const e_side& cb_ipin_side, const size_t& ipin_index,
   const bool& verbose) {
@@ -413,9 +406,9 @@ static void build_connection_block_interc_bitstream(
              bitstream_manager.block_name(cb_configurable_block).c_str());
     /* This is a routing multiplexer! Generate bitstream */
     build_connection_block_mux_bitstream(
-      bitstream_manager, mux_mem_block, module_manager, module_name_map, circuit_lib, mux_lib,
-      atom_ctx, device_annotation, routing_annotation, rr_graph, rr_gsb,
-      cb_ipin_side, ipin_index, verbose);
+      bitstream_manager, mux_mem_block, module_manager, module_name_map,
+      circuit_lib, mux_lib, atom_ctx, device_annotation, routing_annotation,
+      rr_graph, rr_gsb, cb_ipin_side, ipin_index, verbose);
   } /*Nothing should be done else*/
 }
 
@@ -433,11 +426,9 @@ static void build_connection_block_interc_bitstream(
 static void build_connection_block_bitstream(
   BitstreamManager& bitstream_manager,
   const ConfigBlockId& cb_configurable_block,
-  const ModuleManager& module_manager,
-  const ModuleNameMap& module_name_map,
-  const CircuitLibrary& circuit_lib,
-  const MuxLibrary& mux_lib, const AtomContext& atom_ctx,
-  const VprDeviceAnnotation& device_annotation,
+  const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
+  const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
+  const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprRoutingAnnotation& routing_annotation, const RRGraphView& rr_graph,
   const RRGSB& rr_gsb, const t_rr_type& cb_type, const bool& verbose) {
   /* Find routing multiplexers on the sides of a Connection block where IPIN
@@ -452,9 +443,9 @@ static void build_connection_block_bitstream(
       VTR_LOGV(verbose, "\tGenerating bitstream for IPIN at '%s' side\n",
                side_manager.to_string().c_str());
       build_connection_block_interc_bitstream(
-        bitstream_manager, cb_configurable_block, module_manager, module_name_map, circuit_lib,
-        mux_lib, atom_ctx, device_annotation, routing_annotation, rr_graph,
-        rr_gsb, cb_ipin_side, inode, verbose);
+        bitstream_manager, cb_configurable_block, module_manager,
+        module_name_map, circuit_lib, mux_lib, atom_ctx, device_annotation,
+        routing_annotation, rr_graph, rr_gsb, cb_ipin_side, inode, verbose);
     }
   }
 }
@@ -593,9 +584,9 @@ static void build_connection_block_bitstreams(
       }
 
       build_connection_block_bitstream(
-        bitstream_manager, cb_configurable_block, module_manager, module_name_map, circuit_lib,
-        mux_lib, atom_ctx, device_annotation, routing_annotation, rr_graph,
-        rr_gsb, cb_type, verbose);
+        bitstream_manager, cb_configurable_block, module_manager,
+        module_name_map, circuit_lib, mux_lib, atom_ctx, device_annotation,
+        routing_annotation, rr_graph, rr_gsb, cb_type, verbose);
 
       VTR_LOGV(verbose, "\tDone\n");
     }
@@ -725,9 +716,9 @@ void build_routing_bitstream(
       }
 
       build_switch_block_bitstream(
-        bitstream_manager, sb_configurable_block, module_manager, module_name_map, circuit_lib,
-        mux_lib, atom_ctx, device_annotation, routing_annotation, rr_graph,
-        rr_gsb, verbose);
+        bitstream_manager, sb_configurable_block, module_manager,
+        module_name_map, circuit_lib, mux_lib, atom_ctx, device_annotation,
+        routing_annotation, rr_graph, rr_gsb, verbose);
 
       VTR_LOGV(verbose, "\tDone\n");
     }
