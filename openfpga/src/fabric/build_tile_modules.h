@@ -33,6 +33,7 @@ int build_tile_modules(ModuleManager& module_manager,
                        const CircuitLibrary& circuit_lib,
                        const CircuitModelId& sram_model,
                        const e_config_protocol_type& sram_orgz_type,
+                       const bool& name_module_using_index,
                        const bool& frame_view, const bool& verbose);
 
 } /* end namespace openfpga */

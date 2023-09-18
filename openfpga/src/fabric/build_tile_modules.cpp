@@ -66,7 +66,9 @@ static int build_tile_module_port_and_nets_between_sb_and_pb(
   const RRGSB& rr_gsb, const FabricTile& fabric_tile,
   const FabricTileId& fabric_tile_id, const std::vector<size_t>& pb_instances,
   const std::vector<size_t>& sb_instances, const size_t& isb,
-  const bool& compact_routing_hierarchy, const bool& frame_view,
+  const bool& compact_routing_hierarchy, 
+  const bool& name_module_using_index,
+  const bool& frame_view,
   const bool& verbose) {
   /* Skip those Switch blocks that do not exist */
   if (false == rr_gsb.is_sb_exist(rr_graph)) {
@@ -200,9 +202,12 @@ static int build_tile_module_port_and_nets_between_sb_and_pb(
       } else {
         /* Create a port on the tile module and create the net if required.
          * Create a proper name to avoid naming conflicts */
+        std::string temp_sb_module_name = generate_switch_block_module_name(fabric_tile.sb_coordinates(fabric_tile_id)[isb]);
+        if (name_module_using_index) {
+          temp_sb_module_name = generate_switch_block_module_name_using_index(device_rr_gsb.get_sb_unique_module_index(fabric_tile.sb_coordinates(fabric_tile_id)[isb]));
+        } 
         src_grid_port.set_name(generate_tile_module_port_name(
-          generate_switch_block_module_name(
-            fabric_tile.sb_coordinates(fabric_tile_id)[isb]),
+          temp_sb_module_name,
           sink_sb_port.get_name()));
         ModulePortId src_tile_port_id = module_manager.add_port(
           tile_module, src_grid_port,
@@ -296,6 +301,7 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
   const std::vector<size_t>& pb_instances,
   const std::map<t_rr_type, std::vector<size_t>>& cb_instances,
   const size_t& icb, const bool& compact_routing_hierarchy,
+  const bool& name_module_using_index,
   const bool& frame_view, const bool& verbose) {
   size_t cb_instance = cb_instances.at(cb_type)[icb];
   /* We could have two different coordinators, one is the instance, the other is
@@ -422,13 +428,15 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
           }
         }
       } else {
-        /* Create a port on the tile module and create the net if required.
-         * FIXME: Create a proper name to avoid naming conflicts */
+        /* Create a port on the tile module and create the net if required. */
         const RRGSB& cb_inst_rr_gsb = device_rr_gsb.get_gsb(
           fabric_tile.cb_coordinates(fabric_tile_id, cb_type)[icb]);
         std::string cb_instance_name_in_tile =
           generate_connection_block_module_name(
             cb_type, cb_inst_rr_gsb.get_cb_coordinate(cb_type));
+        if (name_module_using_index) {
+          cb_instance_name_in_tile = generate_connection_block_module_name_using_index(cb_type, device_rr_gsb.get_cb_unique_module_index(cb_type, cb_inst_rr_gsb.get_cb_coordinate(cb_type)));
+        }
         src_cb_port.set_name(generate_tile_module_port_name(
           cb_instance_name_in_tile, src_cb_port.get_name()));
         ModulePortId sink_tile_port_id = module_manager.add_port(
@@ -504,7 +512,9 @@ static int build_tile_module_port_and_nets_between_sb_and_cb(
   const FabricTileId& fabric_tile_id,
   const std::map<t_rr_type, std::vector<size_t>>& cb_instances,
   const std::vector<size_t>& sb_instances, const size_t& isb,
-  const bool& compact_routing_hierarchy, const bool& frame_view,
+  const bool& compact_routing_hierarchy,
+  const bool& name_module_using_index,
+  const bool& frame_view,
   const bool& verbose) {
   size_t sb_instance = sb_instances[isb];
   /* We could have two different coordinators, one is the instance, the other is
@@ -684,15 +694,17 @@ static int build_tile_module_port_and_nets_between_sb_and_cb(
       /* Create input and output ports */
       std::string chan_input_port_name = generate_sb_module_track_port_name(
         cb_type, side_manager.get_side(), IN_PORT);
-      /* Create a port on the tile module and create the net if required. FIXME:
-       * Create a proper name to avoid naming conflicts  */
+      /* Create a port on the tile module and create the net if required. */
       ModulePortId sb_chan_input_port_id =
         module_manager.find_module_port(sb_module_id, chan_input_port_name);
       BasicPort chan_input_port =
         module_manager.module_port(sb_module_id, sb_chan_input_port_id);
+      std::string temp_sb_module_name = generate_switch_block_module_name(fabric_tile.sb_coordinates(fabric_tile_id)[isb]);
+      if (name_module_using_index) {
+        temp_sb_module_name = generate_switch_block_module_name_using_index(device_rr_gsb.get_sb_unique_module_index(fabric_tile.sb_coordinates(fabric_tile_id)[isb]));
+      }
       chan_input_port.set_name(generate_tile_module_port_name(
-        generate_switch_block_module_name(
-          fabric_tile.sb_coordinates(fabric_tile_id)[isb]),
+        temp_sb_module_name,
         chan_input_port.get_name()));
       ModulePortId tile_chan_input_port_id = module_manager.add_port(
         tile_module, chan_input_port,
@@ -724,8 +736,7 @@ static int build_tile_module_port_and_nets_between_sb_and_cb(
       BasicPort chan_output_port =
         module_manager.module_port(sb_module_id, sb_chan_output_port_id);
       chan_output_port.set_name(generate_tile_module_port_name(
-        generate_switch_block_module_name(
-          fabric_tile.sb_coordinates(fabric_tile_id)[isb]),
+        temp_sb_module_name,
         chan_output_port.get_name()));
       ModulePortId tile_chan_output_port_id = module_manager.add_port(
         tile_module, chan_output_port,
@@ -866,6 +877,7 @@ static int build_tile_module_ports_from_cb(
   const t_rr_type& cb_type,
   const std::map<t_rr_type, std::vector<size_t>>& cb_instances,
   const size_t& icb, const bool& compact_routing_hierarchy,
+  const bool& name_module_using_index,
   const bool& frame_view, const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
 
@@ -909,6 +921,10 @@ static int build_tile_module_ports_from_cb(
   const RRGSB& unique_rr_gsb = device_rr_gsb.get_gsb(cb_coord_in_unique_tile);
   std::string cb_instance_name_in_tile = generate_connection_block_module_name(
     cb_type, unique_rr_gsb.get_cb_coordinate(cb_type));
+  if (name_module_using_index) {
+    cb_instance_name_in_tile = generate_connection_block_module_name_using_index(
+    cb_type, device_rr_gsb.get_cb_unique_module_index(cb_type, unique_rr_gsb.get_cb_coordinate(cb_type)));
+  }
   vtr::Point<size_t> tile_coord =
     fabric_tile.tile_coordinate(curr_fabric_tile_id);
 
@@ -992,7 +1008,8 @@ static int build_tile_port_and_nets_from_pb(
   const VprDeviceAnnotation& vpr_device_annotation, const RRGraphView& rr_graph,
   const vtr::Point<size_t>& pb_coord, const std::vector<size_t>& pb_instances,
   const FabricTile& fabric_tile, const FabricTileId& curr_fabric_tile_id,
-  const size_t& ipb, const bool& frame_view, const bool& verbose) {
+  const size_t& ipb, 
+  const bool& frame_view, const bool& verbose) {
   size_t pb_instance = pb_instances[ipb];
   t_physical_tile_type_ptr phy_tile = grids.get_physical_type(
     t_physical_tile_loc(pb_coord.x(), pb_coord.y(), layer));
@@ -1182,7 +1199,9 @@ static int build_tile_module_ports_and_nets(
   const FabricTile& fabric_tile, const FabricTileId& fabric_tile_id,
   const std::vector<size_t>& pb_instances,
   const std::map<t_rr_type, std::vector<size_t>>& cb_instances,
-  const std::vector<size_t>& sb_instances, const bool& frame_view,
+  const std::vector<size_t>& sb_instances,
+  const bool& name_module_using_index,
+  const bool& frame_view,
   const bool& verbose) {
   int status_code = CMD_EXEC_SUCCESS;
 
@@ -1196,7 +1215,7 @@ static int build_tile_module_ports_and_nets(
     status_code = build_tile_module_port_and_nets_between_sb_and_pb(
       module_manager, tile_module, grids, layer, vpr_device_annotation,
       device_rr_gsb, rr_graph_view, rr_gsb, fabric_tile, fabric_tile_id,
-      pb_instances, sb_instances, isb, true, frame_view, verbose);
+      pb_instances, sb_instances, isb, true, name_module_using_index, frame_view, verbose);
     if (status_code != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;
     }
@@ -1213,7 +1232,7 @@ static int build_tile_module_ports_and_nets(
       status_code = build_tile_module_port_and_nets_between_cb_and_pb(
         module_manager, tile_module, grids, layer, vpr_device_annotation,
         device_rr_gsb, rr_graph_view, rr_gsb, fabric_tile, fabric_tile_id,
-        cb_type, pb_instances, cb_instances, icb, true, frame_view, verbose);
+        cb_type, pb_instances, cb_instances, icb, true, name_module_using_index, frame_view, verbose);
       if (status_code != CMD_EXEC_SUCCESS) {
         return CMD_EXEC_FATAL_ERROR;
       }
@@ -1230,7 +1249,7 @@ static int build_tile_module_ports_and_nets(
     status_code = build_tile_module_port_and_nets_between_sb_and_cb(
       module_manager, tile_module, device_rr_gsb, rr_graph_view, rr_gsb,
       fabric_tile, fabric_tile_id, cb_instances, sb_instances, isb, true,
-      frame_view, verbose);
+      name_module_using_index, frame_view, verbose);
     if (status_code != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;
     }
@@ -1262,7 +1281,7 @@ static int build_tile_module_ports_and_nets(
       /* Build any ports missing from connection blocks */
       status_code = build_tile_module_ports_from_cb(
         module_manager, tile_module, device_rr_gsb, rr_gsb, fabric_tile,
-        fabric_tile_id, cb_type, cb_instances, icb, true, frame_view, verbose);
+        fabric_tile_id, cb_type, cb_instances, icb, true, name_module_using_index, frame_view, verbose);
       if (status_code != CMD_EXEC_SUCCESS) {
         return CMD_EXEC_FATAL_ERROR;
       }
@@ -1287,7 +1306,9 @@ static int build_tile_module(
   const VprDeviceAnnotation& vpr_device_annotation,
   const DeviceRRGSB& device_rr_gsb, const RRGraphView& rr_graph_view,
   const CircuitLibrary& circuit_lib, const CircuitModelId& sram_model,
-  const e_config_protocol_type& sram_orgz_type, const bool& frame_view,
+  const e_config_protocol_type& sram_orgz_type,
+  const bool& name_module_using_index,
+  const bool& frame_view,
   const bool& verbose) {
   int status_code = CMD_EXEC_SUCCESS;
 
@@ -1434,7 +1455,7 @@ static int build_tile_module(
   status_code = build_tile_module_ports_and_nets(
     module_manager, tile_module, grids, layer, vpr_device_annotation,
     device_rr_gsb, rr_graph_view, fabric_tile, fabric_tile_id, pb_instances,
-    cb_instances, sb_instances, frame_view, verbose);
+    cb_instances, sb_instances, name_module_using_index, frame_view, verbose);
 
   /* Add global ports to the pb_module:
    * This is a much easier job after adding sub modules (instances),
@@ -1506,6 +1527,7 @@ int build_tile_modules(ModuleManager& module_manager,
                        const CircuitLibrary& circuit_lib,
                        const CircuitModelId& sram_model,
                        const e_config_protocol_type& sram_orgz_type,
+                       const bool& name_module_using_index,
                        const bool& frame_view, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build tile modules for the FPGA fabric");
 
@@ -1518,7 +1540,7 @@ int build_tile_modules(ModuleManager& module_manager,
     status_code = build_tile_module(
       module_manager, decoder_lib, fabric_tile, fabric_tile_id, grids, layer,
       vpr_device_annotation, device_rr_gsb, rr_graph_view, circuit_lib,
-      sram_model, sram_orgz_type, frame_view, verbose);
+      sram_model, sram_orgz_type, name_module_using_index, frame_view, verbose);
     if (status_code != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;
     }
