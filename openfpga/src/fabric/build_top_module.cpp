@@ -55,11 +55,10 @@ int build_top_module(
   const DeviceRRGSB& device_rr_gsb, const TileDirect& tile_direct,
   const ArchDirect& arch_direct, const ConfigProtocol& config_protocol,
   const CircuitModelId& sram_model, const FabricTile& fabric_tile,
-  const bool& name_module_using_index,
-  const bool& frame_view, const bool& compact_routing_hierarchy,
-  const bool& duplicate_grid_pin, const FabricKey& fabric_key,
-  const bool& generate_random_fabric_key, const bool& group_config_block,
-  const bool& verbose) {
+  const bool& name_module_using_index, const bool& frame_view,
+  const bool& compact_routing_hierarchy, const bool& duplicate_grid_pin,
+  const FabricKey& fabric_key, const bool& generate_random_fabric_key,
+  const bool& group_config_block, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Build FPGA fabric module");
 
   int status = CMD_EXEC_SUCCESS;
@@ -87,8 +86,8 @@ int build_top_module(
       module_manager, top_module, blwl_sr_banks, circuit_lib, clk_ntwk,
       rr_clock_lookup, vpr_device_annotation, grids, layer, tile_annotation,
       rr_graph, device_rr_gsb, tile_direct, arch_direct, fabric_tile,
-      config_protocol, sram_model, fabric_key, group_config_block, name_module_using_index, frame_view,
-      verbose);
+      config_protocol, sram_model, fabric_key, group_config_block,
+      name_module_using_index, frame_view, verbose);
   }
 
   if (status != CMD_EXEC_SUCCESS) {

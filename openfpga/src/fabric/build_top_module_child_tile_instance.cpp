@@ -290,8 +290,7 @@ static int build_top_module_tile_nets_between_sb_and_pb(
   const RRGSB& rr_gsb, const FabricTile& fabric_tile,
   const FabricTileId& curr_fabric_tile_id,
   const size_t& sb_idx_in_curr_fabric_tile,
-  const bool& compact_routing_hierarchy,
-  const bool& name_module_using_index,
+  const bool& compact_routing_hierarchy, const bool& name_module_using_index,
   const bool& verbose) {
   /* Skip those Switch blocks that do not exist */
   if (false == rr_gsb.is_sb_exist(rr_graph)) {
@@ -306,7 +305,9 @@ static int build_top_module_tile_nets_between_sb_and_pb(
   std::string sink_sb_instance_name_in_unique_tile =
     generate_switch_block_module_name(sink_sb_coord_in_unique_tile);
   if (name_module_using_index) {
-    sink_sb_instance_name_in_unique_tile = generate_switch_block_module_name_using_index(device_rr_gsb.get_sb_unique_module_index(sink_sb_coord_in_unique_tile));
+    sink_sb_instance_name_in_unique_tile =
+      generate_switch_block_module_name_using_index(
+        device_rr_gsb.get_sb_unique_module_index(sink_sb_coord_in_unique_tile));
   }
 
   /* We could have two different coordinators, one is the instance, the other is
@@ -531,8 +532,7 @@ static int build_top_module_tile_nets_between_cb_and_pb(
   const RRGSB& rr_gsb, const FabricTile& fabric_tile,
   const FabricTileId& curr_fabric_tile_id, const t_rr_type& cb_type,
   const size_t& cb_idx_in_curr_fabric_tile,
-  const bool& compact_routing_hierarchy, 
-  const bool& name_module_using_index,
+  const bool& compact_routing_hierarchy, const bool& name_module_using_index,
   const bool& verbose) {
   vtr::Point<size_t> src_tile_coord =
     fabric_tile.tile_coordinate(curr_fabric_tile_id);
@@ -545,8 +545,10 @@ static int build_top_module_tile_nets_between_cb_and_pb(
     generate_connection_block_module_name(
       cb_type, src_cb_inst_rr_gsb.get_cb_coordinate(cb_type));
   if (name_module_using_index) {
-    src_cb_instance_name_in_unique_tile = generate_connection_block_module_name_using_index(
-      cb_type, device_rr_gsb.get_cb_unique_module_index(cb_type, src_cb_inst_rr_gsb.get_cb_coordinate(cb_type)));
+    src_cb_instance_name_in_unique_tile =
+      generate_connection_block_module_name_using_index(
+        cb_type, device_rr_gsb.get_cb_unique_module_index(
+                   cb_type, src_cb_inst_rr_gsb.get_cb_coordinate(cb_type)));
   }
 
   /* We could have two different coordinators, one is the instance, the other is
@@ -731,8 +733,7 @@ static int build_top_module_tile_nets_between_sb_and_cb(
   const RRGraphView& rr_graph, const RRGSB& rr_gsb,
   const FabricTile& fabric_tile, const FabricTileId& curr_fabric_tile_id,
   const size_t& sb_idx_in_curr_fabric_tile,
-  const bool& compact_routing_hierarchy,
-  const bool& name_module_using_index,
+  const bool& compact_routing_hierarchy, const bool& name_module_using_index,
   const bool& verbose) {
   /* We could have two different coordinators, one is the instance, the other is
    * the module */
@@ -748,7 +749,9 @@ static int build_top_module_tile_nets_between_sb_and_cb(
   std::string sb_instance_name_in_unique_tile =
     generate_switch_block_module_name(sb_coord_in_unique_tile);
   if (name_module_using_index) {
-    sb_instance_name_in_unique_tile = generate_switch_block_module_name_using_index(device_rr_gsb.get_sb_unique_module_index(sb_coord_in_unique_tile));
+    sb_instance_name_in_unique_tile =
+      generate_switch_block_module_name_using_index(
+        device_rr_gsb.get_sb_unique_module_index(sb_coord_in_unique_tile));
   }
 
   /* Skip those Switch blocks that do not exist */
@@ -854,7 +857,8 @@ static int build_top_module_tile_nets_between_sb_and_cb(
     if (name_module_using_index) {
       cb_instance_name_in_unique_tile =
         generate_connection_block_module_name_using_index(
-          cb_type, device_rr_gsb.get_cb_unique_module_index(cb_type, unique_cb_rr_gsb.get_cb_coordinate(cb_type)));
+          cb_type, device_rr_gsb.get_cb_unique_module_index(
+                     cb_type, unique_cb_rr_gsb.get_cb_coordinate(cb_type)));
     }
     std::string cb_tile_module_name =
       generate_tile_module_name(cb_unique_tile_coord);
@@ -976,8 +980,7 @@ static int add_top_module_nets_around_one_tile(
   const vtr::Matrix<size_t>& tile_instance_ids,
   const RRGraphView& rr_graph_view, const DeviceRRGSB& device_rr_gsb,
   const FabricTile& fabric_tile, const FabricTileId& curr_fabric_tile_id,
-  const bool& name_module_using_index,
-  const bool& verbose) {
+  const bool& name_module_using_index, const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
 
   /* Find the module name for this type of tile */
@@ -1057,8 +1060,7 @@ static int add_top_module_nets_connect_tiles(
   const VprDeviceAnnotation& vpr_device_annotation, const DeviceGrid& grids,
   const vtr::Matrix<size_t>& tile_instance_ids, const RRGraphView& rr_graph,
   const DeviceRRGSB& device_rr_gsb, const FabricTile& fabric_tile,
-  const bool& name_module_using_index,
-  const bool& verbose) {
+  const bool& name_module_using_index, const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Add module nets between tiles");
   int status = CMD_EXEC_SUCCESS;
 
@@ -1897,8 +1899,7 @@ int build_top_module_tile_child_instances(
   const TileDirect& tile_direct, const ArchDirect& arch_direct,
   const FabricTile& fabric_tile, const ConfigProtocol& config_protocol,
   const CircuitModelId& sram_model, const FabricKey& fabric_key,
-  const bool& group_config_block,
-  const bool& name_module_using_index,
+  const bool& group_config_block, const bool& name_module_using_index,
   const bool& frame_view, const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   vtr::Matrix<size_t> tile_instance_ids;
@@ -1919,7 +1920,8 @@ int build_top_module_tile_child_instances(
     /* Regular nets between tiles */
     status = add_top_module_nets_connect_tiles(
       module_manager, top_module, vpr_device_annotation, grids,
-      tile_instance_ids, rr_graph, device_rr_gsb, fabric_tile, name_module_using_index, verbose);
+      tile_instance_ids, rr_graph, device_rr_gsb, fabric_tile,
+      name_module_using_index, verbose);
     if (status != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;
     }
