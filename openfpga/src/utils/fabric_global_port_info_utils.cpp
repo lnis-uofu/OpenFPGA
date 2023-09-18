@@ -80,8 +80,11 @@ bool port_is_fabric_global_reset_port(
   ModuleId top_module = module_manager.find_module(
     module_name_map.name(generate_fpga_top_module_name()));
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
-  ModuleId core_module = module_manager.find_module(
-    module_name_map.name(generate_fpga_core_module_name()));
+  std::string core_module_name = generate_fpga_core_module_name();
+  if (module_name_map.name_exist(core_module_name)) {
+    core_module_name = module_name_map.name(core_module_name);
+  }
+  ModuleId core_module = module_manager.find_module(core_module_name);
   if (module_manager.valid_module_id(core_module)) {
     top_module = core_module;
   }
@@ -120,8 +123,11 @@ FabricGlobalPortId find_fabric_global_port(
   ModuleId top_module = module_manager.find_module(
     module_name_map.name(generate_fpga_top_module_name()));
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
-  ModuleId core_module = module_manager.find_module(
-    module_name_map.name(generate_fpga_core_module_name()));
+  std::string core_module_name = generate_fpga_core_module_name();
+  if (module_name_map.name_exist(core_module_name)) {
+    core_module_name = module_name_map.name(core_module_name);
+  }
+  ModuleId core_module = module_manager.find_module(core_module_name);
   if (module_manager.valid_module_id(core_module)) {
     top_module = core_module;
   }

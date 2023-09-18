@@ -169,8 +169,10 @@ BitstreamManager build_device_bitstream(const VprContext& vpr_ctx,
 
   /* Create the core block when the fpga_core is added */
   size_t num_blocks_to_reserve = 0;
-  std::string core_block_name =
-    openfpga_ctx.module_name_map().name(generate_fpga_core_module_name());
+  std::string core_block_name = generate_fpga_core_module_name();
+  if (openfpga_ctx.module_name_map().name_exist(core_block_name)) {
+    core_block_name = openfpga_ctx.module_name_map().name(core_block_name);
+  }
   const ModuleId& core_module =
     openfpga_ctx.module_graph().find_module(core_block_name);
   if (openfpga_ctx.module_graph().valid_module_id(core_module)) {

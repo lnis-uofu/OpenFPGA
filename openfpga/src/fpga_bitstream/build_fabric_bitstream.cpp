@@ -795,8 +795,10 @@ FabricBitstream build_fabric_dependent_bitstream(
   ConfigBlockId top_block = top_blocks[0];
 
   /* Create the core block when the fpga_core is added */
-  std::string core_block_name =
-    module_name_map.name(generate_fpga_core_module_name());
+  std::string core_block_name = generate_fpga_core_module_name();
+  if (module_name_map.name_exist(core_block_name)) {
+    core_block_name = module_name_map.name(core_block_name);
+  }
   const ModuleId& core_module = module_manager.find_module(core_block_name);
   if (module_manager.valid_module_id(core_module)) {
     /* Now we use the core_block as the top-level block for the remaining

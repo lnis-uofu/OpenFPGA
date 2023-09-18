@@ -2491,8 +2491,11 @@ int print_verilog_full_testbench(
   /* Note that we always need the core module as it contains the original port
    * names before possible renaming at top-level module. If there is no core
    * module, it means that the current top module is the core module */
-  ModuleId core_module = module_manager.find_module(
-    module_name_map.name(generate_fpga_core_module_name()));
+  std::string core_module_name = generate_fpga_core_module_name();
+  if (module_name_map.name_exist(core_module_name)) {
+    core_module_name = module_name_map.name(core_module_name);
+  }
+  ModuleId core_module = module_manager.find_module(core_module_name);
   if (!module_manager.valid_module_id(core_module)) {
     core_module = top_module;
   }
