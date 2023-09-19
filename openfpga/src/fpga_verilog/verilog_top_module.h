@@ -8,6 +8,7 @@
 
 #include "fabric_verilog_options.h"
 #include "module_manager.h"
+#include "module_name_map.h"
 #include "netlist_manager.h"
 
 /********************************************************************
@@ -19,11 +20,13 @@ namespace openfpga {
 
 void print_verilog_core_module(NetlistManager& netlist_manager,
                                const ModuleManager& module_manager,
+                               const ModuleNameMap& module_name_map,
                                const std::string& verilog_dir,
                                const FabricVerilogOption& options);
 
 void print_verilog_top_module(NetlistManager& netlist_manager,
                               const ModuleManager& module_manager,
+                              const ModuleNameMap& module_name_map,
                               const std::string& verilog_dir,
                               const FabricVerilogOption& options);
 

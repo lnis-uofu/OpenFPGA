@@ -279,6 +279,9 @@ build_fabric
   
      Netlist hierarchy on grouped configuable blocks
 
+  .. option:: --name_module_using_index
+
+     Use index in module names, e.g., ``cbx_2_``. This is applied to routing modules, as well as tile modules when option ``--group_tile`` is enabled. If disabled, the module name consist of coordinates, e.g., ``cbx_1__2_``.
  
   .. option:: --duplicate_grid_pin
 
@@ -427,6 +430,40 @@ pcf2place
   .. option:: --pin_table_direction_convention <string>
 
     Specify the naming convention for ports in pin table files from which pin direction can be inferred. Can be [``explicit``|``quicklogic``]. When ``explicit`` is selected, pin direction is inferred based on the explicit definition in a column of pin table file, e.g., GPIO direction (see details in :ref:`file_format_pin_table_file`). When ``quicklogic`` is selected, pin direction is inferred by port name: a port whose postfix is ``_A2F`` is an input, while a port whose postfix is ``_A2F`` is an output. By default, it is ``explicit``.
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in bitstream files
+
+  .. option:: --verbose
+
+    Show verbose log
+
+.. _openfpga_setup_commands_rename_modules:
+
+rename_modules
+~~~~~~~~~~~~~~
+
+  Rename modules of an FPGA fabric with a given set of naming rules
+
+  .. option:: --file <string>
+  
+    Specify the file path which contain the naming rules. See details in :ref:`file_formats_module_naming_file`. 
+
+  .. option:: --verbose
+
+    Show verbose log
+
+.. _openfpga_setup_commands_write_module_naming_rules:
+
+write_module_naming_rules
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Output the naming rules for each module of an FPGA fabric to a given file
+
+  .. option:: --file <string>
+  
+    Specify the file path to be written to
 
   .. option:: --no_time_stamp
 

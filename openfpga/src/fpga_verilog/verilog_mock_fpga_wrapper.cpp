@@ -44,7 +44,8 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
   std::fstream& fp, const ModuleManager& module_manager,
   const ModuleId& top_module, const AtomContext& atom_ctx,
   const PlacementContext& place_ctx, const IoLocationMap& io_location_map,
-  const IoNameMap& io_name_map, const PinConstraints& pin_constraints,
+  const IoNameMap& io_name_map, const ModuleNameMap& module_name_map,
+  const PinConstraints& pin_constraints,
   const FabricGlobalPortInfo& global_ports,
   const VprNetlistAnnotation& netlist_annotation,
   const std::string& net_name_postfix,
@@ -189,7 +190,7 @@ static void print_verilog_mock_fpga_wrapper_connect_ios(
       }
       /* For global ports, use wires; otherwise, use registers*/
       if (true == port_is_fabric_global_reset_port(
-                    global_ports, module_manager,
+                    global_ports, module_manager, module_name_map,
                     pin_constraints.net_pin(block_name))) {
         continue;
       }
@@ -446,6 +447,7 @@ int print_verilog_mock_fpga_wrapper(
   const AtomContext& atom_ctx, const PlacementContext& place_ctx,
   const PinConstraints& pin_constraints, const BusGroup& bus_group,
   const IoLocationMap& io_location_map, const IoNameMap& io_name_map,
+  const ModuleNameMap& module_name_map,
   const VprNetlistAnnotation& netlist_annotation,
   const std::string& circuit_name, const std::string& verilog_fname,
   const VerilogTestbenchOption& options) {
@@ -472,7 +474,8 @@ int print_verilog_mock_fpga_wrapper(
   print_verilog_file_header(fp, title, options.time_stamp());
 
   /* Find the top_module */
-  ModuleId top_module = module_manager.find_module(options.dut_module());
+  ModuleId top_module =
+    module_manager.find_module(module_name_map.name(options.dut_module()));
   if (!module_manager.valid_module_id(top_module)) {
     VTR_LOG_ERROR(
       "Unable to find the DUT module '%s'. Please check if you create "
@@ -483,8 +486,11 @@ int print_verilog_mock_fpga_wrapper(
   /* Note that we always need the core module as it contains the original port
    * names before possible renaming at top-level module. If there is no core
    * module, it means that the current top module is the core module */
-  ModuleId core_module =
-    module_manager.find_module(generate_fpga_core_module_name());
+  std::string core_module_name = generate_fpga_core_module_name();
+  if (module_name_map.name_exist(core_module_name)) {
+    core_module_name = module_name_map.name(core_module_name);
+  }
+  ModuleId core_module = module_manager.find_module(core_module_name);
   if (!module_manager.valid_module_id(core_module)) {
     core_module = top_module;
   }
@@ -514,8 +520,8 @@ int print_verilog_mock_fpga_wrapper(
 
   /* Print local wires */
   print_verilog_testbench_shared_input_ports(
-    fp, module_manager, global_ports, pin_constraints, atom_ctx,
-    netlist_annotation, benchmark_clock_port_names, true,
+    fp, module_manager, module_name_map, global_ports, pin_constraints,
+    atom_ctx, netlist_annotation, benchmark_clock_port_names, true,
     std::string(APPINST_PORT_POSTFIX), false);
 
   print_verilog_testbench_shared_benchmark_output_ports(
@@ -541,8 +547,8 @@ int print_verilog_mock_fpga_wrapper(
   /* Connect I/Os to benchmark I/Os or constant driver */
   print_verilog_mock_fpga_wrapper_connect_ios(
     fp, module_manager, core_module, atom_ctx, place_ctx, io_location_map,
-    require_io_naming ? io_name_map : IoNameMap(), pin_constraints,
-    global_ports, netlist_annotation, std::string(),
+    require_io_naming ? io_name_map : IoNameMap(), module_name_map,
+    pin_constraints, global_ports, netlist_annotation, std::string(),
     std::string(APPINST_PORT_POSTFIX), std::string(APPINST_PORT_POSTFIX),
     benchmark_clock_port_names, (size_t)VERILOG_DEFAULT_SIGNAL_INIT_VALUE);
 

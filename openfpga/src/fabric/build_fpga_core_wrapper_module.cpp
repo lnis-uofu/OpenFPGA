@@ -333,6 +333,7 @@ static int create_fpga_top_module_using_naming_rules(
  * - Create a wrapper module 'fpga_top' on the fpga_core
  *******************************************************************/
 int add_fpga_core_to_device_module_graph(ModuleManager& module_manager,
+                                         ModuleNameMap& module_name_map,
                                          const IoNameMap& io_naming,
                                          const std::string& core_inst_name,
                                          const bool& frame_view,
@@ -340,7 +341,8 @@ int add_fpga_core_to_device_module_graph(ModuleManager& module_manager,
   int status = CMD_EXEC_SUCCESS;
 
   /* Execute the module graph api */
-  std::string top_module_name = generate_fpga_top_module_name();
+  std::string top_module_name =
+    module_name_map.name(generate_fpga_top_module_name());
   ModuleId top_module = module_manager.find_module(top_module_name);
   if (!module_manager.valid_module_id(top_module)) {
     return CMD_EXEC_FATAL_ERROR;
@@ -378,6 +380,17 @@ int add_fpga_core_to_device_module_graph(ModuleManager& module_manager,
 
   VTR_LOGV(verbose, "Created a wrapper module '%s' on top of '%s'\n",
            top_module_name.c_str(), core_module_name.c_str());
+
+  /* Update module name map */
+  status =
+    module_name_map.set_tag_to_name_pair(core_module_name, core_module_name);
+  if (CMD_EXEC_SUCCESS != status) {
+    VTR_LOG_ERROR(
+      "Failed to register fpga core module '%s' in module name map!\n",
+      core_module_name.c_str());
+    return CMD_EXEC_FATAL_ERROR;
+  }
+  VTR_LOGV(verbose, "Updated module name map\n");
 
   /* Now fpga_core should be the only configurable child under the top-level
    * module */

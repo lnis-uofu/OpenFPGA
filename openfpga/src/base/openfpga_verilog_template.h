@@ -63,7 +63,7 @@ int write_fabric_verilog_template(T& openfpga_ctx, const Command& cmd,
     openfpga_ctx.blwl_shift_register_banks(), openfpga_ctx.arch().circuit_lib,
     openfpga_ctx.mux_lib(), openfpga_ctx.decoder_lib(), g_vpr_ctx.device(),
     openfpga_ctx.vpr_device_annotation(), openfpga_ctx.device_rr_gsb(),
-    openfpga_ctx.fabric_tile(), options);
+    openfpga_ctx.fabric_tile(), openfpga_ctx.module_name_map(), options);
 }
 
 /********************************************************************
@@ -138,7 +138,7 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
     g_vpr_ctx.atom(), g_vpr_ctx.placement(), pin_constraints, bus_group,
     cmd_context.option_value(cmd, opt_bitstream),
     openfpga_ctx.io_location_map(), openfpga_ctx.io_name_map(),
-    openfpga_ctx.fabric_global_port_info(),
+    openfpga_ctx.module_name_map(), openfpga_ctx.fabric_global_port_info(),
     openfpga_ctx.vpr_netlist_annotation(), openfpga_ctx.arch().circuit_lib,
     openfpga_ctx.simulation_setting(), openfpga_ctx.arch().config_protocol,
     options);
@@ -212,7 +212,7 @@ int write_preconfigured_fabric_wrapper_template(
     openfpga_ctx.module_graph(), openfpga_ctx.bitstream_manager(),
     g_vpr_ctx.atom(), g_vpr_ctx.placement(), pin_constraints, bus_group,
     openfpga_ctx.io_location_map(), openfpga_ctx.io_name_map(),
-    openfpga_ctx.fabric_global_port_info(),
+    openfpga_ctx.module_name_map(), openfpga_ctx.fabric_global_port_info(),
     openfpga_ctx.vpr_netlist_annotation(), openfpga_ctx.arch().circuit_lib,
     openfpga_ctx.arch().config_protocol, options);
 }
@@ -273,7 +273,8 @@ int write_mock_fpga_wrapper_template(const T& openfpga_ctx, const Command& cmd,
   return fpga_verilog_mock_fpga_wrapper(
     openfpga_ctx.module_graph(), g_vpr_ctx.atom(), g_vpr_ctx.placement(),
     pin_constraints, bus_group, openfpga_ctx.io_location_map(),
-    openfpga_ctx.io_name_map(), openfpga_ctx.fabric_global_port_info(),
+    openfpga_ctx.io_name_map(), openfpga_ctx.module_name_map(),
+    openfpga_ctx.fabric_global_port_info(),
     openfpga_ctx.vpr_netlist_annotation(), options);
 }
 
@@ -334,7 +335,8 @@ int write_preconfigured_testbench_template(const T& openfpga_ctx,
   }
 
   return fpga_verilog_preconfigured_testbench(
-    openfpga_ctx.module_graph(), g_vpr_ctx.atom(), pin_constraints, bus_group,
+    openfpga_ctx.module_graph(), openfpga_ctx.module_name_map(),
+    g_vpr_ctx.atom(), pin_constraints, bus_group,
     openfpga_ctx.fabric_global_port_info(),
     openfpga_ctx.vpr_netlist_annotation(), openfpga_ctx.simulation_setting(),
     options);

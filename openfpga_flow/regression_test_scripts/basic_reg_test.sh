@@ -202,6 +202,11 @@ run-task basic_tests/group_config_block/group_config_block_hetero_fabric_tile $@
 run-task basic_tests/group_config_block/group_config_block_hetero_fabric_tile_Lshape $@
 run-task basic_tests/group_config_block/group_config_block_homo_fabric_tile_global_tile_clock_io_subtile $@
 
+echo -e "Module naming";
+run-task basic_tests/module_naming/using_index $@
+run-task basic_tests/module_naming/renaming_rules $@
+run-task basic_tests/module_naming/renaming_rules_strong $@
+
 echo -e "Testing global port definition from tiles";
 run-task basic_tests/global_tile_ports/global_tile_clock $@
 run-task basic_tests/global_tile_ports/global_tile_clock_subtile $@

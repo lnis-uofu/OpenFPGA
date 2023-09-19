@@ -34,6 +34,7 @@ namespace openfpga {
 static void print_verilog_wire_module(
   const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
   std::fstream& fp, const CircuitModelId& wire_model,
+  const ModuleNameMap& module_name_map,
   const e_verilog_default_net_type& default_net_type) {
   /* Ensure a valid file handler*/
   VTR_ASSERT(true == valid_file_stream(fp));
@@ -55,8 +56,8 @@ static void print_verilog_wire_module(
 
   /* Create a Verilog Module based on the circuit model, and add to module
    * manager */
-  ModuleId wire_module =
-    module_manager.find_module(circuit_lib.model_name(wire_model));
+  ModuleId wire_module = module_manager.find_module(
+    module_name_map.name(circuit_lib.model_name(wire_model)));
   VTR_ASSERT(true == module_manager.valid_module_id(wire_module));
 
   /* dump module definition + ports */
@@ -106,6 +107,7 @@ static void print_verilog_wire_module(
 void print_verilog_submodule_wires(const ModuleManager& module_manager,
                                    NetlistManager& netlist_manager,
                                    const CircuitLibrary& circuit_lib,
+                                   const ModuleNameMap& module_name_map,
                                    const std::string& submodule_dir,
                                    const std::string& submodule_dir_name,
                                    const FabricVerilogOption& options) {
@@ -133,7 +135,7 @@ void print_verilog_submodule_wires(const ModuleManager& module_manager,
       continue;
     }
     print_verilog_wire_module(module_manager, circuit_lib, fp, model,
-                              options.default_net_type());
+                              module_name_map, options.default_net_type());
   }
   print_verilog_comment(
     fp, std::string("----- END Verilog modules for regular wires -----"));

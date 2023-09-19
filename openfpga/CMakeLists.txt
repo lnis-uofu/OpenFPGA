@@ -41,7 +41,7 @@ target_link_libraries(libopenfpga
                       libpcf
                       libvtrutil
                       libbusgroup
-                      libionamemap
+                      libnamemanager
                       libtileconfig
                       libpugixml
                       libvpr)

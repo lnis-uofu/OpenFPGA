@@ -55,6 +55,8 @@ write_full_testbench
 
     Specify the name of *Design Under Test* (DUT) module to be considered in the testbench. Can be either ``fpga_top`` or ``fpga_core. By default, it is ``fpga_top``.
 
+  .. note:: Please use the reserved words ``fpga_top`` or ``fpga_core`` even when renaming is applied to the modules (See details in :ref:`openfpga_setup_commands_rename_modules`). Renaming will be applied automatically.
+
   .. option:: --bitstream <string>     
 
     The bitstream file to be loaded to the full testbench, which should be in the same file format that OpenFPGA can outputs (See detailes in :ref:`file_formats_fabric_bitstream_plain_text`). For example, ``--bitstream and2.bit``
@@ -129,6 +131,8 @@ write_preconfigured_fabric_wrapper
   .. option:: --dut_module <string>
 
     Specify the name of *Design Under Test* (DUT) module to be considered in the testbench. Can be either ``fpga_top`` or ``fpga_core. By default, it is ``fpga_top``.
+
+  .. note:: Please use the reserved words ``fpga_top`` or ``fpga_core`` even when renaming is applied to the modules (See details in :ref:`openfpga_setup_commands_rename_modules`). Renaming will be applied automatically.
 
   .. option:: --pin_constraints_file <string> or -pcf <string>
 

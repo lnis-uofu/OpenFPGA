@@ -22,6 +22,7 @@
 #include "io_name_map.h"
 #include "memory_bank_shift_register_banks.h"
 #include "module_manager.h"
+#include "module_name_map.h"
 #include "mux_library.h"
 #include "netlist_manager.h"
 #include "pin_constraints.h"
@@ -45,7 +46,7 @@ int fpga_fabric_verilog(
   const DecoderLibrary& decoder_lib, const DeviceContext& device_ctx,
   const VprDeviceAnnotation& device_annotation,
   const DeviceRRGSB& device_rr_gsb, const FabricTile& fabric_tile,
-  const FabricVerilogOption& options);
+  const ModuleNameMap& module_name_map, const FabricVerilogOption& options);
 
 int fpga_verilog_full_testbench(
   const ModuleManager& module_manager,
@@ -55,7 +56,7 @@ int fpga_verilog_full_testbench(
   const AtomContext& atom_ctx, const PlacementContext& place_ctx,
   const PinConstraints& pin_constraints, const BusGroup& bus_group,
   const std::string& bitstream_file, const IoLocationMap& io_location_map,
-  const IoNameMap& io_name_map,
+  const IoNameMap& io_name_map, const ModuleNameMap& module_name_map,
   const FabricGlobalPortInfo& fabric_global_port_info,
   const VprNetlistAnnotation& netlist_annotation,
   const CircuitLibrary& circuit_lib,
@@ -67,7 +68,7 @@ int fpga_verilog_preconfigured_fabric_wrapper(
   const BitstreamManager& bitstream_manager, const AtomContext& atom_ctx,
   const PlacementContext& place_ctx, const PinConstraints& pin_constraints,
   const BusGroup& bus_group, const IoLocationMap& io_location_map,
-  const IoNameMap& io_name_map,
+  const IoNameMap& io_name_map, const ModuleNameMap& module_name_map,
   const FabricGlobalPortInfo& fabric_global_port_info,
   const VprNetlistAnnotation& netlist_annotation,
   const CircuitLibrary& circuit_lib, const ConfigProtocol& config_protocol,
@@ -77,14 +78,15 @@ int fpga_verilog_mock_fpga_wrapper(
   const ModuleManager& module_manager, const AtomContext& atom_ctx,
   const PlacementContext& place_ctx, const PinConstraints& pin_constraints,
   const BusGroup& bus_group, const IoLocationMap& io_location_map,
-  const IoNameMap& io_name_map,
+  const IoNameMap& io_name_map, const ModuleNameMap& module_name_map,
   const FabricGlobalPortInfo& fabric_global_port_info,
   const VprNetlistAnnotation& netlist_annotation,
   const VerilogTestbenchOption& options);
 
 int fpga_verilog_preconfigured_testbench(
-  const ModuleManager& module_manager, const AtomContext& atom_ctx,
-  const PinConstraints& pin_constraints, const BusGroup& bus_group,
+  const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
+  const AtomContext& atom_ctx, const PinConstraints& pin_constraints,
+  const BusGroup& bus_group,
   const FabricGlobalPortInfo& fabric_global_port_info,
   const VprNetlistAnnotation& netlist_annotation,
   const SimulationSetting& simulation_setting,

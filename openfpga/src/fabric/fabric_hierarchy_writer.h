@@ -15,6 +15,7 @@
 namespace openfpga {
 
 int write_fabric_hierarchy_to_text_file(const ModuleManager& module_manager,
+                                        const ModuleNameMap& module_name_map,
                                         const std::string& fname,
                                         const size_t& hie_depth_to_stop,
                                         const bool& verbose);

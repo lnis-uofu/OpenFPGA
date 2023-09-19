@@ -8,6 +8,7 @@
 
 #include "io_name_map.h"
 #include "module_manager.h"
+#include "module_name_map.h"
 
 /********************************************************************
  * Function declaration
@@ -17,6 +18,7 @@
 namespace openfpga {
 
 int add_fpga_core_to_device_module_graph(ModuleManager& module_manager,
+                                         ModuleNameMap& module_name_map,
                                          const IoNameMap& io_naming,
                                          const std::string& core_inst_name,
                                          const bool& frame_view,

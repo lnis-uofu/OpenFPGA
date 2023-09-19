@@ -772,14 +772,16 @@ static void build_module_fabric_dependent_bitstream(
  *******************************************************************/
 FabricBitstream build_fabric_dependent_bitstream(
   const BitstreamManager& bitstream_manager,
-  const ModuleManager& module_manager, const CircuitLibrary& circuit_lib,
-  const ConfigProtocol& config_protocol, const bool& verbose) {
+  const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
+  const CircuitLibrary& circuit_lib, const ConfigProtocol& config_protocol,
+  const bool& verbose) {
   FabricBitstream fabric_bitstream;
 
   vtr::ScopedStartFinishTimer timer("\nBuild fabric dependent bitstream\n");
 
   /* Get the top module name in module manager, which is our starting point */
-  std::string top_module_name = generate_fpga_top_module_name();
+  std::string top_module_name =
+    module_name_map.name(generate_fpga_top_module_name());
   ModuleId top_module = module_manager.find_module(top_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(top_module));
 
@@ -794,6 +796,9 @@ FabricBitstream build_fabric_dependent_bitstream(
 
   /* Create the core block when the fpga_core is added */
   std::string core_block_name = generate_fpga_core_module_name();
+  if (module_name_map.name_exist(core_block_name)) {
+    core_block_name = module_name_map.name(core_block_name);
+  }
   const ModuleId& core_module = module_manager.find_module(core_block_name);
   if (module_manager.valid_module_id(core_module)) {
     /* Now we use the core_block as the top-level block for the remaining
