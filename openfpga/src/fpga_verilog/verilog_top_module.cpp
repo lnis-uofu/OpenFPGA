@@ -32,7 +32,9 @@ void print_verilog_core_module(NetlistManager& netlist_manager,
   /* Create a module as the top-level fabric, and add it to the module manager
    */
   std::string core_module_name = generate_fpga_core_module_name();
-  core_module_name = module_name_map.name(core_module_name);
+  if (module_name_map.name_exist(core_module_name)) {
+    core_module_name = module_name_map.name(core_module_name);
+  }
   ModuleId core_module = module_manager.find_module(core_module_name);
   /* It could happen that the module does not exist, just return with no errors
    */
