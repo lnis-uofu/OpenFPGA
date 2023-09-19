@@ -12,7 +12,8 @@ Jinja2<3.1
 sphinxcontrib-bibtex
 
 # Package required to embed youtube video
-sphinxcontrib-youtube
+# See issues in release v1.3.0 and later on tue sphinx.util.display
+sphinxcontrib-youtube <= 1.2.0
 
 # Package required to convert SVG for latex building
 sphinxcontrib-svg2pdfconverter
