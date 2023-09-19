@@ -339,7 +339,7 @@ int add_fpga_core_to_fabric_template(T& openfpga_ctx, const Command& cmd,
   }
 
   return add_fpga_core_to_device_module_graph(
-    openfpga_ctx.mutable_module_graph(), openfpga_ctx.io_name_map(),
+    openfpga_ctx.mutable_module_graph(), openfpga_ctx.mutable_module_name_map(), openfpga_ctx.io_name_map(),
     core_inst_name, frame_view, verbose_output);
 }
 
