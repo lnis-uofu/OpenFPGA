@@ -7,8 +7,8 @@
 #include <string>
 
 #include "io_name_map.h"
-#include "module_name_map.h"
 #include "module_manager.h"
+#include "module_name_map.h"
 
 /********************************************************************
  * Function declaration
