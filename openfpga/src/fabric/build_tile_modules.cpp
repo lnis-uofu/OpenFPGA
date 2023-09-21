@@ -203,9 +203,8 @@ static int build_tile_module_port_and_nets_between_sb_and_pb(
         std::string temp_sb_module_name = generate_switch_block_module_name(
           fabric_tile.sb_coordinates(fabric_tile_id)[isb]);
         if (name_module_using_index) {
-          temp_sb_module_name = generate_switch_block_module_name_using_index(
-            device_rr_gsb.get_sb_unique_module_index(
-              fabric_tile.sb_coordinates(fabric_tile_id)[isb]));
+          temp_sb_module_name =
+            generate_switch_block_module_name_using_index(isb);
         }
         src_grid_port.set_name(generate_tile_module_port_name(
           temp_sb_module_name, sink_sb_port.get_name()));
@@ -436,9 +435,7 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
             cb_type, cb_inst_rr_gsb.get_cb_coordinate(cb_type));
         if (name_module_using_index) {
           cb_instance_name_in_tile =
-            generate_connection_block_module_name_using_index(
-              cb_type, device_rr_gsb.get_cb_unique_module_index(
-                         cb_type, cb_inst_rr_gsb.get_cb_coordinate(cb_type)));
+            generate_connection_block_module_name_using_index(cb_type, icb);
         }
         src_cb_port.set_name(generate_tile_module_port_name(
           cb_instance_name_in_tile, src_cb_port.get_name()));
@@ -703,9 +700,8 @@ static int build_tile_module_port_and_nets_between_sb_and_cb(
       std::string temp_sb_module_name = generate_switch_block_module_name(
         fabric_tile.sb_coordinates(fabric_tile_id)[isb]);
       if (name_module_using_index) {
-        temp_sb_module_name = generate_switch_block_module_name_using_index(
-          device_rr_gsb.get_sb_unique_module_index(
-            fabric_tile.sb_coordinates(fabric_tile_id)[isb]));
+        temp_sb_module_name =
+          generate_switch_block_module_name_using_index(isb);
       }
       chan_input_port.set_name(generate_tile_module_port_name(
         temp_sb_module_name, chan_input_port.get_name()));
@@ -925,9 +921,7 @@ static int build_tile_module_ports_from_cb(
     cb_type, unique_rr_gsb.get_cb_coordinate(cb_type));
   if (name_module_using_index) {
     cb_instance_name_in_tile =
-      generate_connection_block_module_name_using_index(
-        cb_type, device_rr_gsb.get_cb_unique_module_index(
-                   cb_type, unique_rr_gsb.get_cb_coordinate(cb_type)));
+      generate_connection_block_module_name_using_index(cb_type, icb);
   }
   vtr::Point<size_t> tile_coord =
     fabric_tile.tile_coordinate(curr_fabric_tile_id);
