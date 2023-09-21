@@ -306,8 +306,7 @@ static int build_top_module_tile_nets_between_sb_and_pb(
     generate_switch_block_module_name(sink_sb_coord_in_unique_tile);
   if (name_module_using_index) {
     sink_sb_instance_name_in_unique_tile =
-      generate_switch_block_module_name_using_index(
-        device_rr_gsb.get_sb_unique_module_index(sink_sb_coord_in_unique_tile));
+      generate_switch_block_module_name_using_index(sb_idx_in_curr_fabric_tile);
   }
 
   /* We could have two different coordinators, one is the instance, the other is
@@ -547,8 +546,7 @@ static int build_top_module_tile_nets_between_cb_and_pb(
   if (name_module_using_index) {
     src_cb_instance_name_in_unique_tile =
       generate_connection_block_module_name_using_index(
-        cb_type, device_rr_gsb.get_cb_unique_module_index(
-                   cb_type, src_cb_inst_rr_gsb.get_cb_coordinate(cb_type)));
+        cb_type, cb_idx_in_curr_fabric_tile);
   }
 
   /* We could have two different coordinators, one is the instance, the other is
@@ -750,8 +748,7 @@ static int build_top_module_tile_nets_between_sb_and_cb(
     generate_switch_block_module_name(sb_coord_in_unique_tile);
   if (name_module_using_index) {
     sb_instance_name_in_unique_tile =
-      generate_switch_block_module_name_using_index(
-        device_rr_gsb.get_sb_unique_module_index(sb_coord_in_unique_tile));
+      generate_switch_block_module_name_using_index(sb_idx_in_curr_fabric_tile);
   }
 
   /* Skip those Switch blocks that do not exist */
@@ -857,8 +854,7 @@ static int build_top_module_tile_nets_between_sb_and_cb(
     if (name_module_using_index) {
       cb_instance_name_in_unique_tile =
         generate_connection_block_module_name_using_index(
-          cb_type, device_rr_gsb.get_cb_unique_module_index(
-                     cb_type, unique_cb_rr_gsb.get_cb_coordinate(cb_type)));
+          cb_type, cb_idx_in_cb_tile);
     }
     std::string cb_tile_module_name =
       generate_tile_module_name(cb_unique_tile_coord);
