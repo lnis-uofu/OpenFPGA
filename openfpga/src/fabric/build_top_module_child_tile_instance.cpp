@@ -853,8 +853,8 @@ static int build_top_module_tile_nets_between_sb_and_cb(
         cb_type, unique_cb_rr_gsb.get_cb_coordinate(cb_type));
     if (name_module_using_index) {
       cb_instance_name_in_unique_tile =
-        generate_connection_block_module_name_using_index(
-          cb_type, cb_idx_in_cb_tile);
+        generate_connection_block_module_name_using_index(cb_type,
+                                                          cb_idx_in_cb_tile);
     }
     std::string cb_tile_module_name =
       generate_tile_module_name(cb_unique_tile_coord);
