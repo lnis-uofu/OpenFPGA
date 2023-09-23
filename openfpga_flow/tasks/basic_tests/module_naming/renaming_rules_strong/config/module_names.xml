@@ -1,6 +1,6 @@
 <module_names>
   <module_name default="mux_tree_tapbuf_size10_mem" given="mux_tree_mem_max"/>
-  <module_name default="mux_tree_size_2" given="mux_tree_mini"/>
+  <module_name default="mux_tree_size2" given="mux_tree_mini"/>
   <module_name default="logical_tile_clb_mode_clb_" given="logical_tile_clb_mode_clb_unique"/>
   <module_name default="sb_1__1_" given="sb_max"/>
   <module_name default="cby_1__1_" given="cby_max"/>
