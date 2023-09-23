@@ -92,6 +92,7 @@ int update_module_map_name_with_indexing_names(ModuleNameMap& module_name_map,
   return CMD_EXEC_SUCCESS;
 }
 
+/** @brief Apply module renaming for all the modules. Require the module name map cover all the modules */
 int rename_fabric_modules(ModuleManager& module_manager,
                           const ModuleNameMap& module_name_map,
                           const bool& verbose) {
@@ -117,6 +118,33 @@ int rename_fabric_modules(ModuleManager& module_manager,
   VTR_LOG("Renamed %lu modules\n", cnt);
   return status;
 }
+
+/** @brief Apply module renaming based on the pairs given by module name map only. So not all the modules are renamed. So the module name map just cover a subset of modules */
+int partial_rename_fabric_modules(ModuleManager& module_manager,
+                          const ModuleNameMap& module_name_map,
+                          const bool& verbose) {
+  int status = CMD_EXEC_SUCCESS;
+  size_t cnt = 0;
+  for (std::string built_in_name : module_name_map.tags()) {
+    ModuleId curr_module = module_manager.find_module(built_in_name);
+    if (!module_manager.valid_module_id(curr_module)) {
+      VTR_LOG_ERROR("The built-in module name '%s' does not exist! Abort renaming...\n", built_in_name.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+    std::string new_name =
+      module_name_map.name(built_in_name);
+    if (new_name != built_in_name) {
+      VTR_LOGV(verbose, "Rename module '%s' to its new name '%s'\n",
+               built_in_name.c_str(),
+               new_name.c_str());
+      module_manager.set_module_name(curr_module, new_name);
+    }
+    cnt++;
+  }
+  VTR_LOG("Renamed %lu modules\n", cnt);
+  return status;
+}
+
 
 /** @brief The module name map kept in openfpga context always has a built-in name with coordinates.
  * while users apply renaming or other internal renaming is applied, e.g., through option '--name_module_using_index', the module name in the module graph can be changed. So in the user's version, the built-in name may become index or anything else. 

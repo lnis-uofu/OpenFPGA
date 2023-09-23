@@ -369,7 +369,7 @@ int rename_modules_template(T& openfpga_ctx, const Command& cmd,
   }
 
   /* Apply renaming on the user version */
-  status = rename_fabric_modules(openfpga_ctx.mutable_module_graph(),
+  status = partial_rename_fabric_modules(openfpga_ctx.mutable_module_graph(),
                                  user_module_name_map,
                                  cmd_context.option_enable(cmd, opt_verbose));
   if (status != CMD_EXEC_SUCCESS) {
