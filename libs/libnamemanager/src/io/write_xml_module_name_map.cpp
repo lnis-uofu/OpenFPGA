@@ -74,7 +74,7 @@ static int write_xml_module_name_binding(std::fstream& fp,
     return 1;
   }
   write_xml_attribute(fp, XML_MODULE_NAME_ATTRIBUTE_GIVEN, given_name.c_str());
-  fp << ">"
+  fp << "/>"
      << "\n";
 
   return 0;
