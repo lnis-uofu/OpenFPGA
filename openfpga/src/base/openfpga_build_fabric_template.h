@@ -361,7 +361,7 @@ int rename_modules_template(T& openfpga_ctx, const Command& cmd,
 
   std::string file_name = cmd_context.option_value(cmd, opt_file);
 
-  int status = CMD_EXEC_SUCCESS; 
+  int status = CMD_EXEC_SUCCESS;
   ModuleNameMap user_module_name_map;
   status = read_xml_module_name_map(file_name.c_str(), user_module_name_map);
   if (status != CMD_EXEC_SUCCESS) {
@@ -369,15 +369,17 @@ int rename_modules_template(T& openfpga_ctx, const Command& cmd,
   }
 
   /* Apply renaming on the user version */
-  status = partial_rename_fabric_modules(openfpga_ctx.mutable_module_graph(),
-                                 user_module_name_map,
-                                 cmd_context.option_enable(cmd, opt_verbose));
+  status = partial_rename_fabric_modules(
+    openfpga_ctx.mutable_module_graph(), user_module_name_map,
+    cmd_context.option_enable(cmd, opt_verbose));
   if (status != CMD_EXEC_SUCCESS) {
     return CMD_EXEC_FATAL_ERROR;
   }
 
   /* Update the internal version of module name map based on users' version */
-  return update_module_name_map_with_user_version(openfpga_ctx.mutable_module_name_map(), user_module_name_map, cmd_context.option_enable(cmd, opt_verbose));
+  return update_module_name_map_with_user_version(
+    openfpga_ctx.mutable_module_name_map(), user_module_name_map,
+    cmd_context.option_enable(cmd, opt_verbose));
 }
 
 /********************************************************************
