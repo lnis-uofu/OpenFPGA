@@ -32,6 +32,21 @@ bool ModuleNameMap::name_exist(const std::string& tag) const {
   return result != tag2names_.end();
 }
 
+std::string ModuleNameMap::tag(const std::string& name) const {
+  auto result = name2tags_.find(name);
+  if (result == name2tags_.end()) {
+    VTR_LOG_ERROR("The given customized name '%s' does not exist!\n",
+                  name.c_str());
+    return std::string();
+  }
+  return result->second;
+}
+
+bool ModuleNameMap::tag_exist(const std::string& name) const {
+  auto result = name2tags_.find(name);
+  return result != name2tags_.end();
+}
+
 std::vector<std::string> ModuleNameMap::tags() const {
   std::vector<std::string> keys;
   for (auto const& element : tag2names_) {
