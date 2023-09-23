@@ -206,6 +206,7 @@ echo -e "Module naming";
 run-task basic_tests/module_naming/using_index $@
 run-task basic_tests/module_naming/renaming_rules $@
 run-task basic_tests/module_naming/renaming_rules_strong $@
+run-task basic_tests/module_naming/renaming_rules_on_indexed_names $@
 
 echo -e "Testing global port definition from tiles";
 run-task basic_tests/global_tile_ports/global_tile_clock $@
