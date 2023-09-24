@@ -11,3 +11,5 @@ OpenFPGA contains a number of utility tools to help users to craft files.
    :maxdepth: 2
 
    fabric_key_assistant
+
+   module_rename_assistant

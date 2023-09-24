@@ -29,6 +29,14 @@ int rename_fabric_modules(ModuleManager& module_manager,
                           const ModuleNameMap& module_name_map,
                           const bool& verbose);
 
+int partial_rename_fabric_modules(ModuleManager& module_manager,
+                                  const ModuleNameMap& module_name_map,
+                                  const bool& verbose);
+
+int update_module_name_map_with_user_version(
+  ModuleNameMap& curr_module_name_map,
+  const ModuleNameMap& user_module_name_map, const bool& verbose);
+
 } /* end namespace openfpga */
 
 #endif

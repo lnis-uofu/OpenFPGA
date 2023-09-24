@@ -22,6 +22,12 @@ class ModuleNameMap {
   /** @brief Check if a name does exist with a given tag. Return true if there
    * is a tag-to-name mapping */
   bool name_exist(const std::string& tag) const;
+  /** @brief Check if a tag does exist with a given name. Return true if there
+   * is a name-to-tag mapping */
+  bool tag_exist(const std::string& name) const;
+  /** @brief Get tag with a given name */
+  std::string tag(const std::string& name) const;
+
   /** @brief return a list of all the current keys */
   std::vector<std::string> tags() const;
 
