@@ -126,6 +126,22 @@ static void read_xml_tile_global_port_annotation(
 }
 
 /********************************************************************
+ * Parse XML description for an interconnection annotation
+ * under a <global_port> XML node
+ *******************************************************************/
+static void read_xml_tile_merge_port_annotation(
+  pugi::xml_node& xml_tile, const pugiutil::loc_data& loc_data,
+  openfpga::TileAnnotation& tile_annotation) {
+  const std::string& tile_attr =
+    get_attribute(xml_tile, "tile", loc_data).as_string();
+
+  const std::string& port_attr =
+    get_attribute(xml_tile, "port", loc_data).as_string();
+  
+  tile_annotation.add_merge_subtile_ports(tile_attr, port_attr);
+}
+
+/********************************************************************
  * Top function to parse XML description about tile annotation
  *******************************************************************/
 openfpga::TileAnnotation read_xml_tile_annotations(
@@ -146,11 +162,15 @@ openfpga::TileAnnotation read_xml_tile_annotations(
    */
   for (pugi::xml_node xml_tile_global_port : xml_annotations.children()) {
     /* Error out if the XML child has an invalid name! */
-    if (xml_tile_global_port.name() != std::string("global_port")) {
-      bad_tag(xml_tile_global_port, loc_data, xml_annotations, {"global_port"});
+    if (xml_tile_global_port.name() == std::string("global_port")) {
+      read_xml_tile_global_port_annotation(xml_tile_global_port, loc_data,
+                                           tile_annotations);
+    } else if (xml_tile_global_port.name() == std::string("merge_subtile_ports")) {
+      read_xml_tile_merge_port_annotation(xml_tile_global_port, loc_data,
+                                          tile_annotations);
+    } else {
+      bad_tag(xml_tile_global_port, loc_data, xml_annotations, {"global_port or merge_subtile_ports"});
     }
-    read_xml_tile_global_port_annotation(xml_tile_global_port, loc_data,
-                                         tile_annotations);
   }
 
   return tile_annotations;
