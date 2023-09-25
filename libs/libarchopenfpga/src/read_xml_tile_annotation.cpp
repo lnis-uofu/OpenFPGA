@@ -137,7 +137,7 @@ static void read_xml_tile_merge_port_annotation(
 
   const std::string& port_attr =
     get_attribute(xml_tile, "port", loc_data).as_string();
-  
+
   tile_annotation.add_merge_subtile_ports(tile_attr, port_attr);
 }
 
@@ -165,11 +165,13 @@ openfpga::TileAnnotation read_xml_tile_annotations(
     if (xml_tile_global_port.name() == std::string("global_port")) {
       read_xml_tile_global_port_annotation(xml_tile_global_port, loc_data,
                                            tile_annotations);
-    } else if (xml_tile_global_port.name() == std::string("merge_subtile_ports")) {
+    } else if (xml_tile_global_port.name() ==
+               std::string("merge_subtile_ports")) {
       read_xml_tile_merge_port_annotation(xml_tile_global_port, loc_data,
                                           tile_annotations);
     } else {
-      bad_tag(xml_tile_global_port, loc_data, xml_annotations, {"global_port or merge_subtile_ports"});
+      bad_tag(xml_tile_global_port, loc_data, xml_annotations,
+              {"global_port or merge_subtile_ports"});
     }
   }
 

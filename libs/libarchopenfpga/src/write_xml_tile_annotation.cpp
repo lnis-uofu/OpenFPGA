@@ -91,8 +91,7 @@ static void write_xml_tile_annotation_global_port(
  * A writer to output a device variation in a technology library to XML format
  *******************************************************************/
 static void write_xml_tile_annotation_subtile_port_to_merge(
-  std::fstream& fp, const char* fname,
-  const std::string& tile_name,
+  std::fstream& fp, const char* fname, const std::string& tile_name,
   const std::string& port_name) {
   /* Validate the file stream */
   openfpga::check_file_stream(fname, fp);
@@ -129,8 +128,10 @@ void write_xml_tile_annotations(std::fstream& fp, const char* fname,
                                           global_port_id);
   }
   for (std::string tile_name : tile_annotation.tiles_to_merge_ports()) {
-    for (std::string port_name : tile_annotation.tile_ports_to_merge(tile_name)) {
-      write_xml_tile_annotation_subtile_port_to_merge(fp, fname, tile_name, port_name);
+    for (std::string port_name :
+         tile_annotation.tile_ports_to_merge(tile_name)) {
+      write_xml_tile_annotation_subtile_port_to_merge(fp, fname, tile_name,
+                                                      port_name);
     }
   }
 
