@@ -15,8 +15,8 @@
 #include "fabric_tile.h"
 #include "module_manager.h"
 #include "rr_graph_view.h"
-#include "vpr_device_annotation.h"
 #include "tile_annotation.h"
+#include "vpr_device_annotation.h"
 
 /********************************************************************
  * Function declaration
