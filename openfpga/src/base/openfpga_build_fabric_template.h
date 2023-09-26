@@ -130,6 +130,15 @@ int build_fabric_template(T& openfpga_ctx, const Command& cmd,
       return CMD_EXEC_FATAL_ERROR;
     }
   }
+  /* Conflicts: duplicate_grid_pin does not support any port merge */
+  if (cmd_context.option_enable(cmd, opt_duplicate_grid_pin)) {
+    if (openfpga_ctx.arch().tile_annotations.tiles_to_merge_ports().size() > 0) {
+      VTR_LOG_ERROR(
+        "Option '%s' requires no tile ports to be merged due to a conflict!\n",
+        cmd.option_name(opt_duplicate_grid_pin).c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
 
   if (true == cmd_context.option_enable(cmd, opt_compress_routing)) {
     compress_routing_hierarchy_template<T>(
