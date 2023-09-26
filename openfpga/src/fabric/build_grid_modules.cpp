@@ -41,9 +41,8 @@ namespace openfpga {
 static void add_grid_module_pb_type_ports(
   ModuleManager& module_manager, const ModuleId& grid_module,
   const VprDeviceAnnotation& vpr_device_annotation,
-  t_physical_tile_type_ptr grid_type_descriptor, 
-  const TileAnnotation& tile_annotation,
-  const e_side& border_side) {
+  t_physical_tile_type_ptr grid_type_descriptor,
+  const TileAnnotation& tile_annotation, const e_side& border_side) {
   /* Ensure that we have a valid grid_type_descriptor */
   VTR_ASSERT(nullptr != grid_type_descriptor);
 
@@ -88,8 +87,11 @@ static void add_grid_module_pb_type_ports(
           int subtile_index =
             vpr_device_annotation.physical_tile_pin_subtile_index(
               grid_type_descriptor, ipin);
-          /* If the port is required to be merged, we deposit zero as subtile index */
-          if (tile_annotation.is_tile_port_to_merge(std::string(grid_type_descriptor->name), pin_info.get_name()) && subtile_index != 0) {
+          /* If the port is required to be merged, we deposit zero as subtile
+           * index */
+          if (tile_annotation.is_tile_port_to_merge(
+                std::string(grid_type_descriptor->name), pin_info.get_name()) &&
+              subtile_index != 0) {
             continue;
           }
           VTR_ASSERT(OPEN != subtile_index &&
@@ -118,8 +120,7 @@ static void add_grid_module_nets_connect_pb_type_ports(
   const ModuleId& child_module, const size_t& child_instance,
   const t_sub_tile& sub_tile, const VprDeviceAnnotation& vpr_device_annotation,
   t_physical_tile_type_ptr grid_type_descriptor,
-  const TileAnnotation& tile_annotation,
-  const e_side& border_side) {
+  const TileAnnotation& tile_annotation, const e_side& border_side) {
   /* Ensure that we have a valid grid_type_descriptor */
   VTR_ASSERT(nullptr != grid_type_descriptor);
 
@@ -137,9 +138,8 @@ static void add_grid_module_nets_connect_pb_type_ports(
       add_grid_module_net_connect_pb_graph_pin(
         module_manager, grid_module, child_module, child_instance,
         child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
-        tile_annotation,
-        &(top_pb_graph_node->input_pins[iport][ipin]), border_side,
-        INPUT2INPUT_INTERC);
+        tile_annotation, &(top_pb_graph_node->input_pins[iport][ipin]),
+        border_side, INPUT2INPUT_INTERC);
     }
   }
 
@@ -149,9 +149,8 @@ static void add_grid_module_nets_connect_pb_type_ports(
       add_grid_module_net_connect_pb_graph_pin(
         module_manager, grid_module, child_module, child_instance,
         child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
-        tile_annotation,
-        &(top_pb_graph_node->output_pins[iport][ipin]), border_side,
-        OUTPUT2OUTPUT_INTERC);
+        tile_annotation, &(top_pb_graph_node->output_pins[iport][ipin]),
+        border_side, OUTPUT2OUTPUT_INTERC);
     }
   }
 
@@ -161,9 +160,8 @@ static void add_grid_module_nets_connect_pb_type_ports(
       add_grid_module_net_connect_pb_graph_pin(
         module_manager, grid_module, child_module, child_instance,
         child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
-        tile_annotation,
-        &(top_pb_graph_node->clock_pins[iport][ipin]), border_side,
-        INPUT2INPUT_INTERC);
+        tile_annotation, &(top_pb_graph_node->clock_pins[iport][ipin]),
+        border_side, INPUT2INPUT_INTERC);
     }
   }
 }
@@ -1162,9 +1160,9 @@ static int build_physical_tile_module(
   const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, t_physical_tile_type_ptr phy_block_type,
-  const TileAnnotation& tile_annotation,
-  const e_side& border_side, const bool& duplicate_grid_pin,
-  const bool& group_config_block, const bool& verbose) {
+  const TileAnnotation& tile_annotation, const e_side& border_side,
+  const bool& duplicate_grid_pin, const bool& group_config_block,
+  const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
   /* Create a Module for the top-level physical block, and add to module manager
    */
@@ -1242,8 +1240,8 @@ static int build_physical_tile_module(
   if (false == duplicate_grid_pin) {
     /* Default way to add these ports by following the definition in pb_types */
     add_grid_module_pb_type_ports(module_manager, grid_module,
-                                  vpr_device_annotation, phy_block_type, tile_annotation,
-                                  border_side);
+                                  vpr_device_annotation, phy_block_type,
+                                  tile_annotation, border_side);
     /* Add module nets to connect the pb_type ports to sub modules */
     for (const t_sub_tile& sub_tile : phy_block_type->sub_tiles) {
       VTR_ASSERT(sub_tile.equivalent_sites.size() == 1);
@@ -1266,9 +1264,9 @@ static int build_physical_tile_module(
   } else {
     VTR_ASSERT_SAFE(true == duplicate_grid_pin);
     /* Add these ports with duplication */
-    add_grid_module_duplicated_pb_type_ports(module_manager, grid_module,
-                                             vpr_device_annotation,
-                                             phy_block_type, tile_annotation, border_side);
+    add_grid_module_duplicated_pb_type_ports(
+      module_manager, grid_module, vpr_device_annotation, phy_block_type,
+      tile_annotation, border_side);
 
     /* Add module nets to connect the duplicated pb_type ports to sub modules */
     for (const t_sub_tile& sub_tile : phy_block_type->sub_tiles) {
@@ -1427,8 +1425,8 @@ int build_grid_modules(
       for (const e_side& io_type_side : io_type_sides) {
         status = build_physical_tile_module(
           module_manager, decoder_lib, device_annotation, circuit_lib,
-          sram_orgz_type, sram_model, &physical_tile, tile_annotation, io_type_side,
-          duplicate_grid_pin, group_config_block, verbose);
+          sram_orgz_type, sram_model, &physical_tile, tile_annotation,
+          io_type_side, duplicate_grid_pin, group_config_block, verbose);
         if (status != CMD_EXEC_SUCCESS) {
           return CMD_EXEC_FATAL_ERROR;
         }

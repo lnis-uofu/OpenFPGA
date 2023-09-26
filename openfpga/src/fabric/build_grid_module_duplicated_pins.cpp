@@ -55,8 +55,7 @@ void add_grid_module_duplicated_pb_type_ports(
   ModuleManager& module_manager, const ModuleId& grid_module,
   const VprDeviceAnnotation& vpr_device_annotation,
   t_physical_tile_type_ptr grid_type_descriptor,
-  const TileAnnotation& tile_annotation,
-  const e_side& border_side) {
+  const TileAnnotation& tile_annotation, const e_side& border_side) {
   /* Ensure that we have a valid grid_type_descriptor */
   VTR_ASSERT(false == is_empty_type(grid_type_descriptor));
 
@@ -100,8 +99,11 @@ void add_grid_module_duplicated_pb_type_ports(
               grid_type_descriptor, ipin);
           VTR_ASSERT(OPEN != subtile_index &&
                      subtile_index < grid_type_descriptor->capacity);
-          /* If the port is required to be merged, we deposit zero as subtile index */
-          if (tile_annotation.is_tile_port_to_merge(std::string(grid_type_descriptor->name), pin_info.get_name()) && subtile_index != 0) {
+          /* If the port is required to be merged, we deposit zero as subtile
+           * index */
+          if (tile_annotation.is_tile_port_to_merge(
+                std::string(grid_type_descriptor->name), pin_info.get_name()) &&
+              subtile_index != 0) {
             continue;
           }
           /* Generate the pin name
@@ -304,8 +306,7 @@ void add_grid_module_nets_connect_duplicated_pb_type_ports(
   const ModuleId& child_module, const size_t& child_instance,
   const t_sub_tile& sub_tile, const VprDeviceAnnotation& vpr_device_annotation,
   t_physical_tile_type_ptr grid_type_descriptor,
-  const TileAnnotation& tile_annotation,
-  const e_side& border_side) {
+  const TileAnnotation& tile_annotation, const e_side& border_side) {
   /* Ensure that we have a valid grid_type_descriptor */
   VTR_ASSERT(false == is_empty_type(grid_type_descriptor));
 
@@ -322,9 +323,8 @@ void add_grid_module_nets_connect_duplicated_pb_type_ports(
       add_grid_module_net_connect_pb_graph_pin(
         module_manager, grid_module, child_module, child_instance,
         child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
-        tile_annotation,
-        &(top_pb_graph_node->input_pins[iport][ipin]), border_side,
-        INPUT2INPUT_INTERC);
+        tile_annotation, &(top_pb_graph_node->input_pins[iport][ipin]),
+        border_side, INPUT2INPUT_INTERC);
     }
   }
 
@@ -345,9 +345,8 @@ void add_grid_module_nets_connect_duplicated_pb_type_ports(
       add_grid_module_net_connect_pb_graph_pin(
         module_manager, grid_module, child_module, child_instance,
         child_inst_subtile_index, vpr_device_annotation, grid_type_descriptor,
-        tile_annotation,
-        &(top_pb_graph_node->clock_pins[iport][ipin]), border_side,
-        INPUT2INPUT_INTERC);
+        tile_annotation, &(top_pb_graph_node->clock_pins[iport][ipin]),
+        border_side, INPUT2INPUT_INTERC);
     }
   }
 }

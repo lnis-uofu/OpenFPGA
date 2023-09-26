@@ -46,8 +46,7 @@ void add_grid_module_net_connect_pb_graph_pin(
   const size_t& child_inst_subtile_index,
   const VprDeviceAnnotation& vpr_device_annotation,
   t_physical_tile_type_ptr grid_type_descriptor,
-  const TileAnnotation& tile_annotation,
-  t_pb_graph_pin* pb_graph_pin,
+  const TileAnnotation& tile_annotation, t_pb_graph_pin* pb_graph_pin,
   const e_side& border_side, const e_pin2pin_interc_type& pin2pin_interc_type) {
   /* Find the pin side for I/O grids*/
   std::vector<e_side> grid_pin_sides;
@@ -91,8 +90,10 @@ void add_grid_module_net_connect_pb_graph_pin(
       grid_type_descriptor, grid_pin_index);
     VTR_ASSERT(OPEN != subtile_index &&
                subtile_index < grid_type_descriptor->capacity);
-    /* If the port is required to be merged, we only consider the source port to be the subtile index of 0 */
-    if (tile_annotation.is_tile_port_to_merge(std::string(grid_type_descriptor->name), pin_info.get_name())) {
+    /* If the port is required to be merged, we only consider the source port to
+     * be the subtile index of 0 */
+    if (tile_annotation.is_tile_port_to_merge(
+          std::string(grid_type_descriptor->name), pin_info.get_name())) {
       subtile_index = 0;
     }
     std::string grid_port_name = generate_grid_port_name(

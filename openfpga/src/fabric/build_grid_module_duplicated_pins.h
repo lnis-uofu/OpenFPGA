@@ -21,16 +21,14 @@ void add_grid_module_duplicated_pb_type_ports(
   ModuleManager& module_manager, const ModuleId& grid_module,
   const VprDeviceAnnotation& vpr_device_annotation,
   t_physical_tile_type_ptr grid_type_descriptor,
-  const TileAnnotation& tile_annotation,
-  const e_side& border_side);
+  const TileAnnotation& tile_annotation, const e_side& border_side);
 
 void add_grid_module_nets_connect_duplicated_pb_type_ports(
   ModuleManager& module_manager, const ModuleId& grid_module,
   const ModuleId& child_module, const size_t& child_instance,
   const t_sub_tile& sub_tile, const VprDeviceAnnotation& vpr_device_annotation,
   t_physical_tile_type_ptr grid_type_descriptor,
-  const TileAnnotation& tile_annotation,
-  const e_side& border_side);
+  const TileAnnotation& tile_annotation, const e_side& border_side);
 
 } /* end namespace openfpga */
 
