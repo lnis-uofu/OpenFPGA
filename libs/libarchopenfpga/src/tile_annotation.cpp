@@ -102,6 +102,15 @@ std::string TileAnnotation::global_port_clock_arch_tree_name(
   return global_port_clock_arch_tree_names_[global_port_id];
 }
 
+bool TileAnnotation::is_tile_port_to_merge(const std::string& tile_name, const std::string& port_name) const {
+  const auto& result = tile_ports_to_merge_.find(tile_name);
+  if (result == tile_ports_to_merge_.end()) {
+    return false;
+  }
+  return result->second.end() ==
+      std::find(result->second.begin(), result->second.end(), port_name);
+}
+
 /************************************************************************
  * Public Mutators
  ***********************************************************************/

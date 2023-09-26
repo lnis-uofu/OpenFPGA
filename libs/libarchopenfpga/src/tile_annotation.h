@@ -59,6 +59,9 @@ class TileAnnotation {
   size_t global_port_default_value(
     const TileGlobalPortId& global_port_id) const;
 
+  /** @brief Check if a given tile port should be merged or not */
+  bool is_tile_port_to_merge(const std::string& tile_name, const std::string& port_name) const;
+
  public: /* Public mutators */
   /* By default, we do not set it as a clock.
    * Users should set it through the set_global_port_is_clock() function
