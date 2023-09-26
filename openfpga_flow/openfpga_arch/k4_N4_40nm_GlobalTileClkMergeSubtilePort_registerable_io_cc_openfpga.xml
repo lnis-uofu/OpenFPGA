@@ -179,7 +179,7 @@
     <segment name="L4" circuit_model_name="chan_segment"/>
   </routing_segment>
   <tile_annotations>
-    <merge_subtile_ports tile="io" port="clk"/>
+    <merge_subtile_ports tile="io_hybrid" port="clk"/>
     <global_port name="clk" is_clock="true" default_val="0">
       <tile name="clb" port="clk" x="-1" y="-1"/>
       <tile name="io" port="clk" x="-1" y="-1"/>
