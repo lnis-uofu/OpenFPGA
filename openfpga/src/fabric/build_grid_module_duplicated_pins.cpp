@@ -113,10 +113,10 @@ void add_grid_module_duplicated_pb_type_ports(
             /* If the port is required to be merged, we deposit zero as subtile
              * index */
             if (tile_annotation.is_tile_port_to_merge(
-                  std::string(grid_type_descriptor->name), pin_info.get_name())) {
+                  std::string(grid_type_descriptor->name),
+                  pin_info.get_name())) {
               if (subtile_index == 0) {
-                port_name = generate_grid_port_name(
-                  0, 0, 0, TOP, pin_info);
+                port_name = generate_grid_port_name(0, 0, 0, TOP, pin_info);
               } else {
                 continue;
               }
