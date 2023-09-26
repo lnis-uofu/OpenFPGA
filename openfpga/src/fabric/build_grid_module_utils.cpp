@@ -90,14 +90,17 @@ void add_grid_module_net_connect_pb_graph_pin(
       grid_type_descriptor, grid_pin_index);
     VTR_ASSERT(OPEN != subtile_index &&
                subtile_index < grid_type_descriptor->capacity);
+    std::string grid_port_name = generate_grid_port_name(
+      pin_width, pin_height, subtile_index, side, pin_info);
     /* If the port is required to be merged, we only consider the source port to
      * be the subtile index of 0 */
     if (tile_annotation.is_tile_port_to_merge(
           std::string(grid_type_descriptor->name), pin_info.get_name())) {
-      subtile_index = 0;
+      /* Exception: use top side for these merged ports */
+      grid_port_name = generate_grid_port_name(
+        0, 0, 0, TOP, pin_info);
+      VTR_LOG("Use source pin '%s'\n", grid_port_name.c_str());
     }
-    std::string grid_port_name = generate_grid_port_name(
-      pin_width, pin_height, subtile_index, side, pin_info);
     ModulePortId grid_module_port_id =
       module_manager.find_module_port(grid_module, grid_port_name);
     VTR_ASSERT(true == module_manager.valid_module_port_id(

@@ -99,13 +99,6 @@ void add_grid_module_duplicated_pb_type_ports(
               grid_type_descriptor, ipin);
           VTR_ASSERT(OPEN != subtile_index &&
                      subtile_index < grid_type_descriptor->capacity);
-          /* If the port is required to be merged, we deposit zero as subtile
-           * index */
-          if (tile_annotation.is_tile_port_to_merge(
-                std::string(grid_type_descriptor->name), pin_info.get_name()) &&
-              subtile_index != 0) {
-            continue;
-          }
           /* Generate the pin name
            * For each RECEIVER PIN or DRIVER PIN for direct connection,
            * we do not duplicate in these cases */
@@ -117,6 +110,17 @@ void add_grid_module_duplicated_pb_type_ports(
                (0. == find_physical_tile_pin_Fc(grid_type_descriptor, ipin)))) {
             std::string port_name = generate_grid_port_name(
               iwidth, iheight, subtile_index, side, pin_info);
+            /* If the port is required to be merged, we deposit zero as subtile
+             * index */
+            if (tile_annotation.is_tile_port_to_merge(
+                  std::string(grid_type_descriptor->name), pin_info.get_name())) {
+              if (subtile_index == 0) {
+                port_name = generate_grid_port_name(
+                  0, 0, 0, TOP, pin_info);
+              } else {
+                continue;
+              }
+            }
             BasicPort grid_port(port_name, 0, 0);
             /* Add the port to the module */
             module_manager.add_port(grid_module, grid_port,

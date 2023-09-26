@@ -87,17 +87,20 @@ static void add_grid_module_pb_type_ports(
           int subtile_index =
             vpr_device_annotation.physical_tile_pin_subtile_index(
               grid_type_descriptor, ipin);
-          /* If the port is required to be merged, we deposit zero as subtile
-           * index */
-          if (tile_annotation.is_tile_port_to_merge(
-                std::string(grid_type_descriptor->name), pin_info.get_name()) &&
-              subtile_index != 0) {
-            continue;
-          }
           VTR_ASSERT(OPEN != subtile_index &&
                      subtile_index < grid_type_descriptor->capacity);
           std::string port_name = generate_grid_port_name(
             iwidth, iheight, subtile_index, side, pin_info);
+          /* If the port is required to be merged, we use a special index
+           * index */
+          if (tile_annotation.is_tile_port_to_merge(
+                std::string(grid_type_descriptor->name), pin_info.get_name())) {
+            if (subtile_index == 0) {
+              port_name = generate_grid_port_name(0, 0, 0, TOP, pin_info);
+            } else {
+              continue;
+            }
+          }
           BasicPort grid_port(port_name, 0, 0);
           /* Add the port to the module */
           module_manager.add_port(grid_module, grid_port,

@@ -1398,17 +1398,20 @@ static int build_top_module_global_net_for_given_tile_module(
           vpr_device_annotation.physical_tile_pin_port_info(physical_tile,
                                                             grid_pin_index);
         VTR_ASSERT(true == grid_pin_info.is_valid());
-        if (tile_annotation.is_tile_port_to_merge(
-              std::string(physical_tile->name), grid_pin_info.get_name()) &&
-            subtile_index != 0) {
-          continue;
-        }
 
         /* Build nets */
         for (const e_side& pin_side : pin_sides) {
           std::string grid_port_name =
             generate_grid_port_name(grid_pin_width, grid_pin_height,
                                     subtile_index, pin_side, grid_pin_info);
+          if (tile_annotation.is_tile_port_to_merge(
+                std::string(physical_tile->name), grid_pin_info.get_name())) {
+            if (subtile_index != 0) {
+              grid_port_name = generate_grid_port_name(0, 0, 0, TOP, grid_pin_info);
+            } else {
+              continue;
+            }
+          }
           std::string tile_grid_port_name =
             generate_tile_module_port_name(grid_instance_name, grid_port_name);
           ModulePortId tile_grid_port_id =

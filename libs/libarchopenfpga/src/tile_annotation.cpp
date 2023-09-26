@@ -108,7 +108,7 @@ bool TileAnnotation::is_tile_port_to_merge(const std::string& tile_name,
   if (result == tile_ports_to_merge_.end()) {
     return false;
   }
-  return result->second.end() ==
+  return result->second.end() !=
          std::find(result->second.begin(), result->second.end(), port_name);
 }
 
