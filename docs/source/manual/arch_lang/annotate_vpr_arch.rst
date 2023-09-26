@@ -69,15 +69,27 @@ Here is an example:
     </global_port>
   </tile_annotations>
 
-For subtile port merge support:
+For subtile port merge support (see an illustrative example in :numref:`fig_subtile_port_merge`):
 
 - ``tile="<string>"`` is the name of tile, that is defined in VPR architecture
 
 - ``port="<string>"`` is the name of a port of the tile, that is defined in VPR architecture
 
+.. warning:: This is an option for power users. Suggest to enable for those global input ports, such as clock and reset, whose ``Fc`` is set to 0 in VPR architecture!!!
+
 .. note:: When defined, the given port of all the subtiles of a tile will be merged into one port. For example, a tile consists of 8 subtile ``A`` and 6 subtile ``B`` and all the subtiles have a port ``clk``, in the FPGA fabric, all the ``clk`` of the subtiles ``A`` and ``B`` will be wired to a common port ``clk`` at tile level.
 
+
 .. note:: When merged, the port will have a default side of ``TOP`` and index of ``0`` on all the attributes, such as width, height etc.
+
+.. _fig_subtile_port_merge:
+
+.. figure:: ./figures/subtile_port_merge.png
+   :scale: 100%
+   :alt: Difference in netlists with and without subtile port merging
+
+   Difference in netlists with and without subtile port merging
+
 
 For global port support:
 
