@@ -1406,7 +1406,7 @@ static int build_top_module_global_net_for_given_tile_module(
                                     subtile_index, pin_side, grid_pin_info);
           if (tile_annotation.is_tile_port_to_merge(
                 std::string(physical_tile->name), grid_pin_info.get_name())) {
-            if (subtile_index != 0) {
+            if (subtile_index == 0) {
               grid_port_name =
                 generate_grid_port_name(0, 0, 0, TOP, grid_pin_info);
             } else {

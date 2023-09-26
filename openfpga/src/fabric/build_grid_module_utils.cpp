@@ -98,7 +98,6 @@ void add_grid_module_net_connect_pb_graph_pin(
           std::string(grid_type_descriptor->name), pin_info.get_name())) {
       /* Exception: use top side for these merged ports */
       grid_port_name = generate_grid_port_name(0, 0, 0, TOP, pin_info);
-      VTR_LOG("Use source pin '%s'\n", grid_port_name.c_str());
     }
     ModulePortId grid_module_port_id =
       module_manager.find_module_port(grid_module, grid_port_name);

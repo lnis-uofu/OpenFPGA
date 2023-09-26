@@ -23,7 +23,7 @@ lut_truth_table_fixup
 # Build the module graph
 #  - Enabled compression on routing architecture modules
 #  - Enable pin duplication on grid modules
-build_fabric --compress_routing --duplicate_grid_pin #--verbose
+build_fabric --compress_routing ${OPENFPGA_GROUP_CONFIG_BLOCK_OPTIONS} ${OPENFPGA_GROUP_TILE_CONFIG_OPTIONS}  #--verbose
 
 # Write the fabric hierarchy of module graph to a file
 # This is used by hierarchical PnR flows
@@ -55,16 +55,6 @@ write_fabric_verilog --file ./SRC --explicit_port_mapping --include_timing --pri
 #  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
 write_full_testbench --file ./SRC --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --explicit_port_mapping --include_signal_init --bitstream fabric_bitstream.bit
-
-# Write the SDC files for PnR backend
-#  - Turn on every options here
-write_pnr_sdc --file ./SDC
-
-# Write SDC to disable timing for configure ports
-write_sdc_disable_timing_configure_ports --file ./SDC/disable_configure_ports.sdc
-
-# Write the SDC to run timing analysis for a mapped FPGA fabric
-write_analysis_sdc --file ./SDC_analysis
 
 # Finish and exit OpenFPGA
 exit
