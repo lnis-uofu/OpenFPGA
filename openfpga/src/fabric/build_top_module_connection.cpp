@@ -944,6 +944,11 @@ static int build_top_module_global_net_for_given_grid_module(
           vpr_device_annotation.physical_tile_pin_port_info(physical_tile,
                                                             grid_pin_index);
         VTR_ASSERT(true == grid_pin_info.is_valid());
+        if (tile_annotation.is_tile_port_to_merge(
+              std::string(physical_tile->name), grid_pin_info.get_name()) &&
+            subtile_index != 0) {
+          continue;
+        }
 
         /* Build nets */
         for (const e_side& pin_side : pin_sides) {
