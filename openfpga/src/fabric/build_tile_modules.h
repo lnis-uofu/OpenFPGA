@@ -15,6 +15,7 @@
 #include "fabric_tile.h"
 #include "module_manager.h"
 #include "rr_graph_view.h"
+#include "tile_annotation.h"
 #include "vpr_device_annotation.h"
 
 /********************************************************************
@@ -30,6 +31,7 @@ int build_tile_modules(ModuleManager& module_manager,
                        const VprDeviceAnnotation& vpr_device_annotation,
                        const DeviceRRGSB& device_rr_gsb,
                        const RRGraphView& rr_graph_view,
+                       const TileAnnotation& tile_annotation,
                        const CircuitLibrary& circuit_lib,
                        const CircuitModelId& sram_model,
                        const e_config_protocol_type& sram_orgz_type,

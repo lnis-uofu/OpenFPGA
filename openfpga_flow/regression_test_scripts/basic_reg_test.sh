@@ -211,6 +211,8 @@ run-task basic_tests/module_naming/renaming_rules_on_indexed_names $@
 echo -e "Testing global port definition from tiles";
 run-task basic_tests/global_tile_ports/global_tile_clock $@
 run-task basic_tests/global_tile_ports/global_tile_clock_subtile $@
+run-task basic_tests/global_tile_ports/global_tile_clock_subtile_port_merge $@
+run-task basic_tests/global_tile_ports/global_tile_clock_subtile_port_merge_fabric_tile_group_config $@
 run-task basic_tests/global_tile_ports/global_tile_reset $@
 run-task basic_tests/global_tile_ports/global_tile_4clock $@
 run-task basic_tests/global_tile_ports/global_tile_4clock_pin $@

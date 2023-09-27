@@ -3,7 +3,11 @@
  ***********************************************************************/
 #include "tile_annotation.h"
 
+#include <algorithm>
+
+#include "command_exit_codes.h"
 #include "vtr_assert.h"
+#include "vtr_log.h"
 
 /* namespace openfpga begins */
 namespace openfpga {
@@ -18,6 +22,27 @@ TileAnnotation::TileAnnotation() { return; }
  ***********************************************************************/
 TileAnnotation::global_port_range TileAnnotation::global_ports() const {
   return vtr::make_range(global_port_ids_.begin(), global_port_ids_.end());
+}
+
+std::vector<std::string> TileAnnotation::tiles_to_merge_ports() const {
+  std::vector<std::string> tile_names;
+  for (auto it = tile_ports_to_merge_.begin(); it != tile_ports_to_merge_.end();
+       it++) {
+    tile_names.push_back(it->first);
+  }
+  return tile_names;
+}
+
+std::vector<std::string> TileAnnotation::tile_ports_to_merge(
+  const std::string& tile_name) const {
+  std::vector<std::string> port_names;
+  const auto& result = tile_ports_to_merge_.find(tile_name);
+  if (result == tile_ports_to_merge_.end()) {
+    VTR_LOG_WARN("Tile '%s' does not contain any ports to merge!\n",
+                 tile_name.c_str());
+    return port_names;
+  }
+  return result->second;
 }
 
 /************************************************************************
@@ -75,6 +100,16 @@ std::string TileAnnotation::global_port_clock_arch_tree_name(
   const TileGlobalPortId& global_port_id) const {
   VTR_ASSERT(valid_global_port_id(global_port_id));
   return global_port_clock_arch_tree_names_[global_port_id];
+}
+
+bool TileAnnotation::is_tile_port_to_merge(const std::string& tile_name,
+                                           const std::string& port_name) const {
+  const auto& result = tile_ports_to_merge_.find(tile_name);
+  if (result == tile_ports_to_merge_.end()) {
+    return false;
+  }
+  return result->second.end() !=
+         std::find(result->second.begin(), result->second.end(), port_name);
 }
 
 /************************************************************************
@@ -176,6 +211,27 @@ bool TileAnnotation::valid_global_port_attributes(
   }
 
   return ((0 == attribute_counter) || (1 == attribute_counter));
+}
+
+int TileAnnotation::add_merge_subtile_ports(const std::string& tile_name,
+                                            const std::string& port_name) {
+  auto result = tile_ports_to_merge_.find(tile_name);
+  if (result == tile_ports_to_merge_.end()) {
+    /* Empty list: add a new element */
+    tile_ports_to_merge_[tile_name].push_back(port_name);
+  } else {
+    /* Check if the port name is already in the list, if yes, error out */
+    if (result->second.end() ==
+        std::find(result->second.begin(), result->second.end(), port_name)) {
+      tile_ports_to_merge_[tile_name].push_back(port_name);
+    } else {
+      VTR_LOG_ERROR(
+        "Port '%s' has already been defined twice for tile '%s' to be merged!",
+        port_name.c_str(), tile_name.c_str());
+      return CMD_EXEC_FATAL_ERROR;
+    }
+  }
+  return CMD_EXEC_SUCCESS;
 }
 
 }  // namespace openfpga

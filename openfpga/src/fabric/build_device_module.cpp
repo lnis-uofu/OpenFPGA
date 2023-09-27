@@ -87,8 +87,9 @@ int build_device_module_graph(
   status = build_grid_modules(
     module_manager, decoder_lib, vpr_device_ctx,
     openfpga_ctx.vpr_device_annotation(), openfpga_ctx.arch().circuit_lib,
-    openfpga_ctx.mux_lib(), openfpga_ctx.arch().config_protocol.type(),
-    sram_model, duplicate_grid_pin, group_config_block, verbose);
+    openfpga_ctx.mux_lib(), openfpga_ctx.arch().tile_annotations,
+    openfpga_ctx.arch().config_protocol.type(), sram_model, duplicate_grid_pin,
+    group_config_block, verbose);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }
@@ -120,13 +121,13 @@ int build_device_module_graph(
       return status;
     }
     /* Build the modules */
-    build_tile_modules(module_manager, decoder_lib, openfpga_ctx.fabric_tile(),
-                       vpr_device_ctx.grid,
-                       openfpga_ctx.vpr_device_annotation(),
-                       openfpga_ctx.device_rr_gsb(), vpr_device_ctx.rr_graph,
-                       openfpga_ctx.arch().circuit_lib, sram_model,
-                       openfpga_ctx.arch().config_protocol.type(),
-                       name_module_using_index, frame_view, verbose);
+    build_tile_modules(
+      module_manager, decoder_lib, openfpga_ctx.fabric_tile(),
+      vpr_device_ctx.grid, openfpga_ctx.vpr_device_annotation(),
+      openfpga_ctx.device_rr_gsb(), vpr_device_ctx.rr_graph,
+      openfpga_ctx.arch().tile_annotations, openfpga_ctx.arch().circuit_lib,
+      sram_model, openfpga_ctx.arch().config_protocol.type(),
+      name_module_using_index, frame_view, verbose);
   }
 
   /* Build FPGA fabric top-level module */

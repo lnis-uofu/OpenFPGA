@@ -36,7 +36,7 @@ static std::vector<std::string> format_argv(const std::string& cmd_name,
  * We want a renamed version for fabric B is
  *   <module_name default="tile_2__2_" given="tile_big"/>
  */
-int rename_module_names_for_fabricB_from_fabricA(
+static int rename_module_names_for_fabricB_from_fabricA(
   const openfpga::ModuleNameMap& refA_module_names,
   const openfpga::ModuleNameMap& renamedA_module_names,
   const openfpga::ModuleNameMap& refB_module_names,

@@ -88,6 +88,24 @@ static void write_xml_tile_annotation_global_port(
 }
 
 /********************************************************************
+ * A writer to output a device variation in a technology library to XML format
+ *******************************************************************/
+static void write_xml_tile_annotation_subtile_port_to_merge(
+  std::fstream& fp, const char* fname, const std::string& tile_name,
+  const std::string& port_name) {
+  /* Validate the file stream */
+  openfpga::check_file_stream(fname, fp);
+
+  fp << "\t\t"
+     << "<merge_subtile_ports ";
+
+  write_xml_attribute(fp, "tile", tile_name.c_str());
+  write_xml_attribute(fp, "port", port_name.c_str());
+
+  fp << "/>";
+}
+
+/********************************************************************
  * A writer to output tile annotations to XML format
  *******************************************************************/
 void write_xml_tile_annotations(std::fstream& fp, const char* fname,
@@ -108,6 +126,13 @@ void write_xml_tile_annotations(std::fstream& fp, const char* fname,
        tile_annotation.global_ports()) {
     write_xml_tile_annotation_global_port(fp, fname, tile_annotation,
                                           global_port_id);
+  }
+  for (std::string tile_name : tile_annotation.tiles_to_merge_ports()) {
+    for (std::string port_name :
+         tile_annotation.tile_ports_to_merge(tile_name)) {
+      write_xml_tile_annotation_subtile_port_to_merge(fp, fname, tile_name,
+                                                      port_name);
+    }
   }
 
   /* Write the root node for pb_type annotations */
