@@ -85,7 +85,7 @@ For subtile port merge support (see an illustrative example in :numref:`fig_subt
 .. _fig_subtile_port_merge:
 
 .. figure:: ./figures/subtile_port_merge.png
-   :scale: 100%
+   :width: 100%
    :alt: Difference in netlists with and without subtile port merging
 
    Difference in netlists with and without subtile port merging
@@ -136,7 +136,7 @@ A more illustrative example:
 .. _fig_global_tile_ports:
 
 .. figure:: ./figures/global_tile_ports.png
-   :scale: 100%
+   :width: 100%
    :alt: Difference between global port definition through circuit model and tile annotation
 
    Difference between global port definition through circuit model and tile annotation
