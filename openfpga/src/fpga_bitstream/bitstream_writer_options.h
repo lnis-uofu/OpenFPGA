@@ -5,6 +5,7 @@
  * Include header files required by the data structure definition
  *******************************************************************/
 #include <string>
+#include <array>
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -50,6 +51,12 @@ class BitstreamWriterOption {
   void set_output_file_name(const std::string& output_file);
   void set_time_stamp(const bool& enabled);
   void set_verbose_output(const bool& enabled);
+  void set_trim_path(const bool& enabled);
+  void set_path_only(const bool& enabled);
+  void set_value_only(const bool& enabled);
+  void set_fast_configuration(const bool& enabled);
+  void set_keep_dont_care_bits(const bool& enabled);
+  void set_wl_decremental_order(const bool& enabled);
 
   void set_filter_value(const std::string& val);
 
@@ -70,7 +77,7 @@ class BitstreamWriterOption {
 
   /* Generate a string include all the valid style
    * Useful for printing debugging messages */
-  std::string file_type_all2str() const;
+  std::string bitfile_type_all2str() const;
 
  private: /* Internal Data */
   /* Universal options */
