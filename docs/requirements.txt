@@ -8,6 +8,9 @@ Jinja2<3.1
 # Support Markdown
 #recommonmark
 
+# Theme
+sphinx-rtd-theme
+
 #Handle references in bibtex format
 sphinxcontrib-bibtex
 
