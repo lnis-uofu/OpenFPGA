@@ -4,8 +4,8 @@
 /********************************************************************
  * Include header files required by the data structure definition
  *******************************************************************/
-#include <string>
 #include <array>
+#include <string>
 
 /* Begin namespace openfpga */
 namespace openfpga {
@@ -16,11 +16,8 @@ namespace openfpga {
 class BitstreamWriterOption {
  public: /* Private data structures */
   /* A type to define the bitstream file format */
-  enum class e_bitfile_type {
-    TEXT,
-    XML,
-    NUM_TYPES
-  };
+  enum class e_bitfile_type { TEXT, XML, NUM_TYPES };
+
  public: /* Public constructor */
   /* Set default options */
   BitstreamWriterOption();
@@ -67,11 +64,11 @@ class BitstreamWriterOption {
   /** @brief Parse the file type from string to valid type. Parser
    * error can be turned on */
   e_bitfile_type str2bitfile_type(const std::string& type_str,
-                    const bool& verbose = false) const;
+                                  const bool& verbose = false) const;
 
   /** @brief Output the string representing file_type */
   std::string bitfile_type2str(const e_bitfile_type& type,
-                        const bool& verbose = false) const;
+                               const bool& verbose = false) const;
   /** @brief Validate the file_type */
   bool valid_file_type(const e_bitfile_type& bitfile_type) const;
 
@@ -98,7 +95,8 @@ class BitstreamWriterOption {
   bool wl_decremental_order_;
 
   /* Constants */
-  std::array<const char*, size_t(e_bitfile_type::NUM_TYPES)> BITFILE_TYPE_STRING_;
+  std::array<const char*, size_t(e_bitfile_type::NUM_TYPES)>
+    BITFILE_TYPE_STRING_;
 };
 
 } /* End namespace openfpga*/

@@ -32,7 +32,8 @@ BitstreamWriterOption::BitstreamWriterOption() {
 /**************************************************
  * Public Accessors
  *************************************************/
-BitstreamWriterOption::e_bitfile_type BitstreamWriterOption::output_file_type() const {
+BitstreamWriterOption::e_bitfile_type BitstreamWriterOption::output_file_type()
+  const {
   return file_type_;
 }
 
@@ -57,8 +58,12 @@ bool BitstreamWriterOption::output_path() const { return path_only_; }
 bool BitstreamWriterOption::output_value() const { return value_only_; }
 
 bool BitstreamWriterOption::fast_configuration() const { return fast_config_; }
-bool BitstreamWriterOption::keep_dont_care_bits() const { return keep_dont_care_bits_; }
-bool BitstreamWriterOption::wl_decremental_order() const { return wl_decremental_order_; }
+bool BitstreamWriterOption::keep_dont_care_bits() const {
+  return keep_dont_care_bits_;
+}
+bool BitstreamWriterOption::wl_decremental_order() const {
+  return wl_decremental_order_;
+}
 
 /******************************************************************************
  * Private Mutators
@@ -67,7 +72,8 @@ void BitstreamWriterOption::set_output_file_type(const std::string& val) {
   file_type_ = str2bitfile_type(val);
 }
 
-void BitstreamWriterOption::set_output_file_name(const std::string& output_file) {
+void BitstreamWriterOption::set_output_file_name(
+  const std::string& output_file) {
   output_file_ = output_file;
 }
 
@@ -120,20 +126,27 @@ bool BitstreamWriterOption::validate(bool show_err_msg) const {
   if (file_type_ == BitstreamWriterOption::e_bitfile_type::XML) {
     /* All the options in the XML format should be off */
     if (path_only_ && value_only_) {
-      VTR_LOGV_ERROR(show_err_msg, "Both path and value are specifed as only inputs! If specified, please define one of them\n");
+      VTR_LOGV_ERROR(show_err_msg,
+                     "Both path and value are specifed as only inputs! If "
+                     "specified, please define one of them\n");
       return false;
     }
-    if (!filter_value_.empty() && (filter_value_ != std::to_string(0) || filter_value_ != std::to_string(1))) {
-      VTR_LOGV_ERROR(show_err_msg, "Invalid value '%s' for filter values. Expect [0|1]!\n", filter_value_);
+    if (!filter_value_.empty() && (filter_value_ != std::to_string(0) ||
+                                   filter_value_ != std::to_string(1))) {
+      VTR_LOGV_ERROR(show_err_msg,
+                     "Invalid value '%s' for filter values. Expect [0|1]!\n",
+                     filter_value_);
       return false;
     }
   }
   return true;
 }
 
-BitstreamWriterOption::e_bitfile_type BitstreamWriterOption::str2bitfile_type(const std::string& type_str, const bool& verbose) const {
+BitstreamWriterOption::e_bitfile_type BitstreamWriterOption::str2bitfile_type(
+  const std::string& type_str, const bool& verbose) const {
   for (int itype = size_t(BitstreamWriterOption::e_bitfile_type::TEXT);
-       itype != size_t(BitstreamWriterOption::e_bitfile_type::NUM_TYPES); ++itype) {
+       itype != size_t(BitstreamWriterOption::e_bitfile_type::NUM_TYPES);
+       ++itype) {
     if (type_str == std::string(BITFILE_TYPE_STRING_[itype])) {
       return static_cast<BitstreamWriterOption::e_bitfile_type>(itype);
     }
@@ -143,8 +156,9 @@ BitstreamWriterOption::e_bitfile_type BitstreamWriterOption::str2bitfile_type(co
   return BitstreamWriterOption::e_bitfile_type::NUM_TYPES;
 }
 
-std::string BitstreamWriterOption::bitfile_type2str(const BitstreamWriterOption::e_bitfile_type& type,
-                                  const bool& verbose) const {
+std::string BitstreamWriterOption::bitfile_type2str(
+  const BitstreamWriterOption::e_bitfile_type& type,
+  const bool& verbose) const {
   if (!valid_file_type(type)) {
     VTR_LOGV_ERROR(verbose, "Invalid type for bitstream file! Expect %s\n",
                    bitfile_type_all2str().c_str());
@@ -156,7 +170,8 @@ std::string BitstreamWriterOption::bitfile_type2str(const BitstreamWriterOption:
 std::string BitstreamWriterOption::bitfile_type_all2str() const {
   std::string full_types = "[";
   for (int itype = size_t(BitstreamWriterOption::e_bitfile_type::TEXT);
-       itype != size_t(BitstreamWriterOption::e_bitfile_type::NUM_TYPES); ++itype) {
+       itype != size_t(BitstreamWriterOption::e_bitfile_type::NUM_TYPES);
+       ++itype) {
     full_types += std::string(BITFILE_TYPE_STRING_[itype]) + std::string("|");
   }
   full_types.pop_back();
@@ -164,8 +179,8 @@ std::string BitstreamWriterOption::bitfile_type_all2str() const {
   return full_types;
 }
 
-
-bool BitstreamWriterOption::valid_file_type(const BitstreamWriterOption::e_bitfile_type& bitfile_type) const {
+bool BitstreamWriterOption::valid_file_type(
+  const BitstreamWriterOption::e_bitfile_type& bitfile_type) const {
   return bitfile_type != BitstreamWriterOption::e_bitfile_type::NUM_TYPES;
 }
 
