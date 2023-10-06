@@ -94,6 +94,9 @@ int write_fabric_bitstream_template(const T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_keep_dont_care_bits = cmd.option("keep_dont_care_bits");
   CommandOptionId opt_wl_decremental_order = cmd.option("wl_decremental_order");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
+  CommandOptionId opt_filter_value = cmd.option("filter_value");
+  CommandOptionId opt_path_only = cmd.option("path_only");
+  CommandOptionId opt_value_only = cmd.option("value_only");
 
   /* Write fabric bitstream if required */
   int status = CMD_EXEC_SUCCESS;
