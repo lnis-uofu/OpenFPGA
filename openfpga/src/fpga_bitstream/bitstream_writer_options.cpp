@@ -141,11 +141,11 @@ bool BitstreamWriterOption::validate(bool show_err_msg) const {
                      "specified, please define one of them\n");
       return false;
     }
-    if (!filter_value_.empty() && (filter_value_ != std::to_string(0) ||
+    if (!filter_value_.empty() && (filter_value_ != std::to_string(0) &&
                                    filter_value_ != std::to_string(1))) {
       VTR_LOGV_ERROR(show_err_msg,
                      "Invalid value '%s' for filter values. Expect [0|1]!\n",
-                     filter_value_);
+                     filter_value_.c_str());
       return false;
     }
   }
