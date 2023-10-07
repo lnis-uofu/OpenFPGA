@@ -10,6 +10,7 @@
 #include "bitstream_manager.h"
 #include "config_protocol.h"
 #include "fabric_bitstream.h"
+#include "bitstream_writer_options.h"
 
 /********************************************************************
  * Function declaration
@@ -21,8 +22,8 @@ namespace openfpga {
 int write_fabric_bitstream_to_xml_file(
   const BitstreamManager& bitstream_manager,
   const FabricBitstream& fabric_bitstream,
-  const ConfigProtocol& config_protocol, const std::string& fname,
-  const bool& include_time_stamp, const bool& verbose);
+  const ConfigProtocol& config_protocol,
+  const BitstreamWriterOption& options);
 
 } /* end namespace openfpga */
 

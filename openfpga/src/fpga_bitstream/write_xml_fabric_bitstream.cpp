@@ -261,9 +261,11 @@ static int write_fabric_regional_config_bit_to_xml_file(
 int write_fabric_bitstream_to_xml_file(
   const BitstreamManager& bitstream_manager,
   const FabricBitstream& fabric_bitstream,
-  const ConfigProtocol& config_protocol, const std::string& fname,
-  const bool& include_time_stamp, const bool& verbose) {
+  const ConfigProtocol& config_protocol,
+  const BitstreamWriterOption& options) {
+  VTR_ASSERT(options.output_file_type() == BitstreamWriterOption::e_bitfile_type::XML);
   /* Ensure that we have a valid file name */
+  std::string fname = options.output_file_name();
   if (true == fname.empty()) {
     VTR_LOG_ERROR(
       "Received empty file name to output bitstream!\n\tPlease specify a valid "
@@ -282,7 +284,7 @@ int write_fabric_bitstream_to_xml_file(
   check_file_stream(fname.c_str(), fp);
 
   /* Write XML head */
-  write_fabric_bitstream_xml_file_head(fp, include_time_stamp);
+  write_fabric_bitstream_xml_file_head(fp, options.time_stamp());
 
   int xml_hierarchy_depth = 0;
   fp << "<fabric_bitstream>\n";
@@ -306,7 +308,7 @@ int write_fabric_bitstream_to_xml_file(
   /* Close file handler */
   fp.close();
 
-  VTR_LOGV(verbose, "Outputted %lu configuration bits to XML file: %s\n",
+  VTR_LOGV(options.verbose_output(), "Outputted %lu configuration bits to XML file: %s\n",
            fabric_bitstream.bits().size(), fname.c_str());
 
   return status;

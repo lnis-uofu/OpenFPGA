@@ -579,10 +579,10 @@ int write_fabric_bitstream_to_text_file(
   const FabricBitstream& fabric_bitstream,
   const MemoryBankShiftRegisterBanks& blwl_sr_banks,
   const ConfigProtocol& config_protocol,
-  const FabricGlobalPortInfo& global_ports, const std::string& fname,
-  const bool& fast_configuration, const bool& keep_dont_care_bits,
-  const bool& wl_incremental_order, const bool& include_time_stamp,
-  const bool& verbose) {
+  const FabricGlobalPortInfo& global_ports,
+  const BitstreamWriterOption& options) {
+  VTR_ASSERT(options.output_file_type() == BitstreamWriterOption::e_bitfile_type::TEXT);
+  std::string fname = options.output_file_name();
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
     VTR_LOG_ERROR(
@@ -603,8 +603,8 @@ int write_fabric_bitstream_to_text_file(
   check_file_stream(fname.c_str(), fp);
 
   bool apply_fast_configuration =
-    is_fast_configuration_applicable(global_ports) && fast_configuration;
-  if (fast_configuration && apply_fast_configuration != fast_configuration) {
+    is_fast_configuration_applicable(global_ports) && options.fast_configuration();
+  if (options.fast_configuration() && apply_fast_configuration != options.fast_configuration()) {
     VTR_LOG_WARN("Disable fast configuration even it is enabled by user\n");
   }
 
@@ -616,7 +616,7 @@ int write_fabric_bitstream_to_text_file(
   }
 
   /* Write file head */
-  write_fabric_bitstream_text_file_head(fp, include_time_stamp);
+  write_fabric_bitstream_text_file_head(fp, options.time_stamp());
 
   /* Output fabric bitstream to the file */
   int status = 0;
@@ -649,19 +649,18 @@ int write_fabric_bitstream_to_text_file(
         // bitstream
         status = fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
           fp, apply_fast_configuration, bit_value_to_skip, fabric_bitstream,
-          keep_dont_care_bits, wl_incremental_order);
+          options.keep_dont_care_bits(), options.wl_decremental_order());
 
       } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()) {
         status = write_memory_bank_flatten_fabric_bitstream_to_text_file(
           fp, apply_fast_configuration, bit_value_to_skip, fabric_bitstream,
-          keep_dont_care_bits);
+          options.keep_dont_care_bits());
       } else {
         VTR_ASSERT(BLWL_PROTOCOL_SHIFT_REGISTER ==
                    config_protocol.bl_protocol_type());
         status = write_memory_bank_shift_register_fabric_bitstream_to_text_file(
           fp, apply_fast_configuration, bit_value_to_skip,
-
-          fabric_bitstream, blwl_sr_banks, keep_dont_care_bits);
+          fabric_bitstream, blwl_sr_banks, options.keep_dont_care_bits());
       }
       break;
     }
@@ -685,7 +684,7 @@ int write_fabric_bitstream_to_text_file(
   /* Close file handler */
   fp.close();
 
-  VTR_LOGV(verbose, "Outputted %lu configuration bits to plain text file: %s\n",
+  VTR_LOGV(options.verbose_output(), "Outputted %lu configuration bits to plain text file: %s\n",
            fabric_bitstream.bits().size(), fname.c_str());
 
   return status;
