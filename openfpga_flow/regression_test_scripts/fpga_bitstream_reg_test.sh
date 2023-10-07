@@ -45,3 +45,6 @@ run-task fpga_bitstream/report_bitstream_distribution/custom_depth $@
 echo -e "Testing bitstream file with don't care bits";
 run-task fpga_bitstream/dont_care_bits/ql_memory_bank_flatten $@
 run-task fpga_bitstream/dont_care_bits/ql_memory_bank_shift_register $@
+
+echo -e "Testing bitstream file with selective contents";
+run-task fpga_bitstream/trim_path $@
