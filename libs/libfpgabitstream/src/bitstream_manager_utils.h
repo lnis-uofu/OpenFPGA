@@ -25,6 +25,9 @@ std::vector<ConfigBlockId> find_bitstream_manager_top_blocks(
 size_t find_bitstream_manager_config_bit_index_in_parent_block(
   const BitstreamManager& bitstream_manager, const ConfigBitId& bit_id);
 
+size_t find_bitstream_manager_config_bit_index_in_grandparent_block(
+  const BitstreamManager& bitstream_manager, const ConfigBitId& bit_id);
+
 size_t rec_find_bitstream_manager_block_sum_of_bits(
   const BitstreamManager& bitstream_manager, const ConfigBlockId& block);
 
