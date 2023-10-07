@@ -81,6 +81,40 @@ write_fabric_bitstream
     Specify the file format [``plain_text`` | ``xml``]. By default is ``plain_text``.
     See file formats in :ref:`file_formats_fabric_bitstream_xml` and :ref:`file_formats_fabric_bitstream_plain_text`.
 
+  .. option:: --filter_value <int>
+
+    .. warning:: Value filter is only applicable to XML file format!
+
+    Specify the value to be keep in the bitstream file. Can be [``0`` | ``1`` ]. By default is ``none``, which means no filter is applied.
+    When specified, only the bit with the filter value is written to the file. 
+    See file formats in :ref:`file_formats_fabric_bitstream_xml`.
+
+  .. option:: --path_only
+
+    .. warning:: This is only applicable to XML file format!
+
+    Specify that only the ``path`` attribute is kept in the bitstream file. By default is ``off``.
+    When specified, only the ``path`` attribute is written to the file. 
+    Regarding the ``path`` attribute, See file formats in :ref:`file_formats_fabric_bitstream_xml`.
+
+  .. option:: --value_only
+
+    .. warning:: This is only applicable to XML file format!
+
+    Specify that only the ``value`` attribute is kept in the bitstream file. By default is ``off``.
+    When specified, only the ``value`` attribute is written to the file. 
+    Regarding the ``value`` attribute, see file formats in :ref:`file_formats_fabric_bitstream_xml`.
+
+  .. option:: --trim_path
+
+    .. warning:: This is only applicable to XML file format!
+
+    .. warning:: This is an option for power user! Suggest only to use when you enable the ``--group_config_block`` option when building a fabric (See details in :ref:`cmd_build_fabric`).
+
+    Specify that the ``path`` will be trimed by 1 level in resulting bitstream file. By default is ``off``.
+    When specified, the hierarchy of ``path`` will be reduced by 1. For example, the original path is ``fpga_top.tile_1__1_.config_block.sub_mem.mem_out[0]``, the path after trimming is ``fpga_top.tile_1__1_.config_block.mem_out[0]``. 
+    Regarding the ``path`` attribute, see file formats in :ref:`file_formats_fabric_bitstream_xml`.
+
   .. option:: --fast_configuration
 
     Reduce the bitstream size when outputing by skipping dummy configuration bits. It is applicable to configuration chain, memory bank and frame-based configuration protocols. For configuration chain, when enabled, the zeros at the head of the bitstream will be skipped. For memory bank and frame-based, when enabled, all the zero configuration bits will be skipped. So ensure that your memory cells can be correctly reset to zero with a reset signal. 

@@ -4,6 +4,7 @@
 /********************************************************************
  * This file includes functions to build bitstream database
  *******************************************************************/
+#include "bitstream_writer_options.h"
 #include "build_device_bitstream.h"
 #include "build_fabric_bitstream.h"
 #include "build_io_mapping_info.h"
@@ -94,6 +95,10 @@ int write_fabric_bitstream_template(const T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_keep_dont_care_bits = cmd.option("keep_dont_care_bits");
   CommandOptionId opt_wl_decremental_order = cmd.option("wl_decremental_order");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
+  CommandOptionId opt_filter_value = cmd.option("filter_value");
+  CommandOptionId opt_path_only = cmd.option("path_only");
+  CommandOptionId opt_value_only = cmd.option("value_only");
+  CommandOptionId opt_trim_path = cmd.option("trim_path");
 
   /* Write fabric bitstream if required */
   int status = CMD_EXEC_SUCCESS;
@@ -112,26 +117,50 @@ int write_fabric_bitstream_template(const T& openfpga_ctx, const Command& cmd,
     file_format = cmd_context.option_value(cmd, opt_file_format);
   }
 
-  if (std::string("xml") == file_format) {
+  /* Validate options */
+  BitstreamWriterOption bitfile_writer_opt;
+  bitfile_writer_opt.set_output_file_type(file_format);
+  bitfile_writer_opt.set_output_file_name(
+    cmd_context.option_value(cmd, opt_file));
+  bitfile_writer_opt.set_time_stamp(
+    !cmd_context.option_enable(cmd, opt_no_time_stamp));
+  bitfile_writer_opt.set_verbose_output(
+    cmd_context.option_enable(cmd, opt_verbose));
+  bitfile_writer_opt.set_trim_path(
+    cmd_context.option_enable(cmd, opt_trim_path));
+  bitfile_writer_opt.set_path_only(
+    cmd_context.option_enable(cmd, opt_path_only));
+  bitfile_writer_opt.set_value_only(
+    cmd_context.option_enable(cmd, opt_value_only));
+  bitfile_writer_opt.set_fast_configuration(
+    cmd_context.option_enable(cmd, opt_fast_config));
+  bitfile_writer_opt.set_keep_dont_care_bits(
+    cmd_context.option_enable(cmd, opt_keep_dont_care_bits));
+  bitfile_writer_opt.set_wl_decremental_order(
+    cmd_context.option_enable(cmd, opt_wl_decremental_order));
+  if (cmd_context.option_enable(cmd, opt_filter_value)) {
+    bitfile_writer_opt.set_filter_value(
+      cmd_context.option_value(cmd, opt_filter_value));
+  }
+  if (!bitfile_writer_opt.validate(true)) {
+    VTR_LOG_ERROR("Conflicts detected in options for bitstream writer!\n");
+    return CMD_EXEC_FATAL_ERROR;
+  }
+
+  if (bitfile_writer_opt.output_file_type() ==
+      BitstreamWriterOption::e_bitfile_type::XML) {
     status = write_fabric_bitstream_to_xml_file(
       openfpga_ctx.bitstream_manager(), openfpga_ctx.fabric_bitstream(),
-      openfpga_ctx.arch().config_protocol,
-      cmd_context.option_value(cmd, opt_file),
-      !cmd_context.option_enable(cmd, opt_no_time_stamp),
-      cmd_context.option_enable(cmd, opt_verbose));
+      openfpga_ctx.arch().config_protocol, bitfile_writer_opt);
   } else {
+    VTR_ASSERT_SAFE(bitfile_writer_opt.output_file_type() ==
+                    BitstreamWriterOption::e_bitfile_type::TEXT);
     /* By default, output in plain text format */
     status = write_fabric_bitstream_to_text_file(
       openfpga_ctx.bitstream_manager(), openfpga_ctx.fabric_bitstream(),
       openfpga_ctx.blwl_shift_register_banks(),
       openfpga_ctx.arch().config_protocol,
-      openfpga_ctx.fabric_global_port_info(),
-      cmd_context.option_value(cmd, opt_file),
-      cmd_context.option_enable(cmd, opt_fast_config),
-      cmd_context.option_enable(cmd, opt_keep_dont_care_bits),
-      !cmd_context.option_enable(cmd, opt_wl_decremental_order),
-      !cmd_context.option_enable(cmd, opt_no_time_stamp),
-      cmd_context.option_enable(cmd, opt_verbose));
+      openfpga_ctx.fabric_global_port_info(), bitfile_writer_opt);
   }
 
   return status;

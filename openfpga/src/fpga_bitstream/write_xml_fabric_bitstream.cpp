@@ -72,36 +72,57 @@ static int write_fabric_config_bit_to_xml_file(
   std::fstream& fp, const BitstreamManager& bitstream_manager,
   const FabricBitstream& fabric_bitstream, const FabricBitId& fabric_bit,
   const e_config_protocol_type& config_type, bool fast_xml,
-  const int& xml_hierarchy_depth, std::string& bl_addr, std::string& wl_addr) {
+  const int& xml_hierarchy_depth, std::string& bl_addr, std::string& wl_addr,
+  const BitstreamWriterOption& options) {
   if (false == valid_file_stream(fp)) {
     return 1;
+  }
+  if (options.value_to_skip(
+        bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit)))) {
+    return 0;
   }
 
   write_tab_to_file(fp, xml_hierarchy_depth);
   fp << "<bit id=\"" << size_t(fabric_bit) << "\"";
-  fp << " value=\"";
-  fp << bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit));
-  fp << "\"";
+  if (options.output_value()) {
+    fp << " value=\"";
+    fp << bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit));
+    fp << "\"";
+  }
 
   /* Output hierarchy of this parent*/
   const ConfigBitId& config_bit = fabric_bitstream.config_bit(fabric_bit);
   const ConfigBlockId& config_block =
     bitstream_manager.bit_parent_block(config_bit);
-  std::vector<ConfigBlockId> block_hierarchy =
-    find_bitstream_manager_block_hierarchy(bitstream_manager, config_block);
-  std::string hie_path;
-  for (const ConfigBlockId& temp_block : block_hierarchy) {
-    hie_path += bitstream_manager.block_name(temp_block);
-    hie_path += std::string(".");
-  }
-  hie_path += generate_configurable_memory_data_out_name();
-  hie_path += std::string("[");
-  hie_path +=
-    std::to_string(find_bitstream_manager_config_bit_index_in_parent_block(
-      bitstream_manager, config_bit));
-  hie_path += std::string("]");
 
-  fp << " path=\"" << hie_path << "\">\n";
+  if (options.output_path()) {
+    std::vector<ConfigBlockId> block_hierarchy =
+      find_bitstream_manager_block_hierarchy(bitstream_manager, config_block);
+    std::string hie_path;
+    for (size_t iblk = 0; iblk < block_hierarchy.size(); ++iblk) {
+      /* If enabled, pop the last block name */
+      if (options.trim_path() && iblk == block_hierarchy.size() - 1) {
+        break;
+      }
+      hie_path += bitstream_manager.block_name(block_hierarchy[iblk]);
+      hie_path += std::string(".");
+    }
+    hie_path += generate_configurable_memory_data_out_name();
+    hie_path += std::string("[");
+    size_t bit_idx_in_parent_block =
+      find_bitstream_manager_config_bit_index_in_parent_block(bitstream_manager,
+                                                              config_bit);
+    if (options.trim_path()) {
+      bit_idx_in_parent_block =
+        find_bitstream_manager_config_bit_index_in_grandparent_block(
+          bitstream_manager, config_bit);
+    }
+    hie_path += std::to_string(bit_idx_in_parent_block);
+    hie_path += std::string("]");
+
+    fp << " path=\"" << hie_path << "\"";
+  }
+  fp << ">\n";
 
   switch (config_type) {
     case CONFIG_MEM_STANDALONE:
@@ -196,7 +217,7 @@ static int write_fabric_regional_config_bit_to_xml_file(
   const FabricBitstream& fabric_bitstream,
   const FabricBitRegionId& fabric_region,
   const e_config_protocol_type& config_type, bool fast_xml,
-  const int& xml_hierarchy_depth) {
+  const int& xml_hierarchy_depth, const BitstreamWriterOption& options) {
   if (false == valid_file_stream(fp)) {
     return 1;
   }
@@ -228,7 +249,7 @@ static int write_fabric_regional_config_bit_to_xml_file(
        fabric_bitstream.region_bits(fabric_region)) {
     status = write_fabric_config_bit_to_xml_file(
       fp, bitstream_manager, fabric_bitstream, fabric_bit, config_type,
-      fast_xml, xml_hierarchy_depth + 1, bl_addr, wl_addr);
+      fast_xml, xml_hierarchy_depth + 1, bl_addr, wl_addr, options);
     if (1 == status) {
       return status;
     }
@@ -261,9 +282,11 @@ static int write_fabric_regional_config_bit_to_xml_file(
 int write_fabric_bitstream_to_xml_file(
   const BitstreamManager& bitstream_manager,
   const FabricBitstream& fabric_bitstream,
-  const ConfigProtocol& config_protocol, const std::string& fname,
-  const bool& include_time_stamp, const bool& verbose) {
+  const ConfigProtocol& config_protocol, const BitstreamWriterOption& options) {
+  VTR_ASSERT(options.output_file_type() ==
+             BitstreamWriterOption::e_bitfile_type::XML);
   /* Ensure that we have a valid file name */
+  std::string fname = options.output_file_name();
   if (true == fname.empty()) {
     VTR_LOG_ERROR(
       "Received empty file name to output bitstream!\n\tPlease specify a valid "
@@ -282,7 +305,7 @@ int write_fabric_bitstream_to_xml_file(
   check_file_stream(fname.c_str(), fp);
 
   /* Write XML head */
-  write_fabric_bitstream_xml_file_head(fp, include_time_stamp);
+  write_fabric_bitstream_xml_file_head(fp, options.time_stamp());
 
   int xml_hierarchy_depth = 0;
   fp << "<fabric_bitstream>\n";
@@ -294,7 +317,7 @@ int write_fabric_bitstream_to_xml_file(
       fp, bitstream_manager, fabric_bitstream, region, config_protocol.type(),
       BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type() &&
         BLWL_PROTOCOL_FLATTEN == config_protocol.wl_protocol_type(),
-      xml_hierarchy_depth + 1);
+      xml_hierarchy_depth + 1, options);
     if (1 == status) {
       break;
     }
@@ -306,7 +329,8 @@ int write_fabric_bitstream_to_xml_file(
   /* Close file handler */
   fp.close();
 
-  VTR_LOGV(verbose, "Outputted %lu configuration bits to XML file: %s\n",
+  VTR_LOGV(options.verbose_output(),
+           "Outputted %lu configuration bits to XML file: %s\n",
            fabric_bitstream.bits().size(), fname.c_str());
 
   return status;
