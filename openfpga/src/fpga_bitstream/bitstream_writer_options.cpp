@@ -54,8 +54,18 @@ bool BitstreamWriterOption::value_to_skip(const size_t& val) const {
 }
 
 bool BitstreamWriterOption::trim_path() const { return trim_path_; }
-bool BitstreamWriterOption::output_path() const { return path_only_; }
-bool BitstreamWriterOption::output_value() const { return value_only_; }
+bool BitstreamWriterOption::output_path() const { 
+  if (!path_only_ && !value_only_) {
+    return true;
+  }
+  return path_only_;
+}
+bool BitstreamWriterOption::output_value() const { 
+  if (!path_only_ && !value_only_) {
+    return true;
+  }
+  return value_only_;
+}
 
 bool BitstreamWriterOption::fast_configuration() const { return fast_config_; }
 bool BitstreamWriterOption::keep_dont_care_bits() const {

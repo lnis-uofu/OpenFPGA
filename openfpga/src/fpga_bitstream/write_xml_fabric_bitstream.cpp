@@ -118,8 +118,9 @@ static int write_fabric_config_bit_to_xml_file(
     hie_path += std::to_string(bit_idx_in_parent_block);
     hie_path += std::string("]");
 
-    fp << " path=\"" << hie_path << "\">\n";
+    fp << " path=\"" << hie_path;
   }
+  fp << "\">\n";
 
   switch (config_type) {
     case CONFIG_MEM_STANDALONE:
