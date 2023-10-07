@@ -80,7 +80,9 @@ static int write_fabric_config_bit_to_xml_file(
 
   write_tab_to_file(fp, xml_hierarchy_depth);
   fp << "<bit id=\"" << size_t(fabric_bit) << "\"";
-  if (options.output_value() && !options.value_to_skip(bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit)))) {
+  if (options.output_value() &&
+      !options.value_to_skip(
+        bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit)))) {
     fp << " value=\"";
     fp << bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit));
     fp << "\"";
@@ -105,14 +107,15 @@ static int write_fabric_config_bit_to_xml_file(
     }
     hie_path += generate_configurable_memory_data_out_name();
     hie_path += std::string("[");
-    size_t bit_idx_in_parent_block = find_bitstream_manager_config_bit_index_in_parent_block(
-        bitstream_manager, config_bit);
+    size_t bit_idx_in_parent_block =
+      find_bitstream_manager_config_bit_index_in_parent_block(bitstream_manager,
+                                                              config_bit);
     if (options.trim_path()) {
-      bit_idx_in_parent_block = find_bitstream_manager_config_bit_index_in_grandparent_block(
-        bitstream_manager, config_bit);
+      bit_idx_in_parent_block =
+        find_bitstream_manager_config_bit_index_in_grandparent_block(
+          bitstream_manager, config_bit);
     }
-    hie_path +=
-      std::to_string(bit_idx_in_parent_block);
+    hie_path += std::to_string(bit_idx_in_parent_block);
     hie_path += std::string("]");
 
     fp << " path=\"" << hie_path << "\">\n";
@@ -211,8 +214,7 @@ static int write_fabric_regional_config_bit_to_xml_file(
   const FabricBitstream& fabric_bitstream,
   const FabricBitRegionId& fabric_region,
   const e_config_protocol_type& config_type, bool fast_xml,
-  const int& xml_hierarchy_depth,
-  const BitstreamWriterOption& options) {
+  const int& xml_hierarchy_depth, const BitstreamWriterOption& options) {
   if (false == valid_file_stream(fp)) {
     return 1;
   }

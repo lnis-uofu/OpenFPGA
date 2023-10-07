@@ -90,18 +90,19 @@ size_t find_bitstream_manager_config_bit_index_in_grandparent_block(
   size_t curr_index = 0;
   ConfigBlockId parent_blk = bitstream_manager.bit_parent_block(bit_id);
   ConfigBlockId grandparent_blk = bitstream_manager.block_parent(parent_blk);
-  for (const ConfigBlockId& cand_blk : bitstream_manager.block_children(grandparent_blk)) {
+  for (const ConfigBlockId& cand_blk :
+       bitstream_manager.block_children(grandparent_blk)) {
     if (cand_blk != parent_blk) {
       curr_index += bitstream_manager.block_bits(cand_blk).size();
     } else {
-      curr_index += find_bitstream_manager_config_bit_index_in_parent_block(bitstream_manager, bit_id);
+      curr_index += find_bitstream_manager_config_bit_index_in_parent_block(
+        bitstream_manager, bit_id);
       break;
     }
   }
 
   return curr_index;
 }
-
 
 /********************************************************************
  * Find the total number of configuration bits under a block
