@@ -54,13 +54,13 @@ bool BitstreamWriterOption::value_to_skip(const size_t& val) const {
 }
 
 bool BitstreamWriterOption::trim_path() const { return trim_path_; }
-bool BitstreamWriterOption::output_path() const { 
+bool BitstreamWriterOption::output_path() const {
   if (!path_only_ && !value_only_) {
     return true;
   }
   return path_only_;
 }
-bool BitstreamWriterOption::output_value() const { 
+bool BitstreamWriterOption::output_value() const {
   if (!path_only_ && !value_only_) {
     return true;
   }
