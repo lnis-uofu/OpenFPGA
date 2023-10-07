@@ -48,3 +48,7 @@ run-task fpga_bitstream/dont_care_bits/ql_memory_bank_shift_register $@
 
 echo -e "Testing bitstream file with selective contents";
 run-task fpga_bitstream/trim_path $@
+run-task fpga_bitstream/filter_value0 $@
+run-task fpga_bitstream/filter_value1 $@
+run-task fpga_bitstream/path_only $@
+run-task fpga_bitstream/value_only $@
