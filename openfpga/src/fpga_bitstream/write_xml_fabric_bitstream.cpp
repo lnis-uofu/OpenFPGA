@@ -77,12 +77,14 @@ static int write_fabric_config_bit_to_xml_file(
   if (false == valid_file_stream(fp)) {
     return 1;
   }
+  if (options.value_to_skip(
+        bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit)))) {
+    return 0;
+  }
 
   write_tab_to_file(fp, xml_hierarchy_depth);
   fp << "<bit id=\"" << size_t(fabric_bit) << "\"";
-  if (options.output_value() &&
-      !options.value_to_skip(
-        bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit)))) {
+  if (options.output_value()) {
     fp << " value=\"";
     fp << bitstream_manager.bit_value(fabric_bitstream.config_bit(fabric_bit));
     fp << "\"";
