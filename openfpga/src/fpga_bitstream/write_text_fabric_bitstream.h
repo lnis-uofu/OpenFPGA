@@ -8,11 +8,11 @@
 #include <vector>
 
 #include "bitstream_manager.h"
+#include "bitstream_writer_options.h"
 #include "config_protocol.h"
 #include "fabric_bitstream.h"
 #include "fabric_global_port_info.h"
 #include "memory_bank_shift_register_banks.h"
-#include "bitstream_writer_options.h"
 
 /********************************************************************
  * Function declaration

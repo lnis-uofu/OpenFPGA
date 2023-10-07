@@ -581,7 +581,8 @@ int write_fabric_bitstream_to_text_file(
   const ConfigProtocol& config_protocol,
   const FabricGlobalPortInfo& global_ports,
   const BitstreamWriterOption& options) {
-  VTR_ASSERT(options.output_file_type() == BitstreamWriterOption::e_bitfile_type::TEXT);
+  VTR_ASSERT(options.output_file_type() ==
+             BitstreamWriterOption::e_bitfile_type::TEXT);
   std::string fname = options.output_file_name();
   /* Ensure that we have a valid file name */
   if (true == fname.empty()) {
@@ -603,8 +604,10 @@ int write_fabric_bitstream_to_text_file(
   check_file_stream(fname.c_str(), fp);
 
   bool apply_fast_configuration =
-    is_fast_configuration_applicable(global_ports) && options.fast_configuration();
-  if (options.fast_configuration() && apply_fast_configuration != options.fast_configuration()) {
+    is_fast_configuration_applicable(global_ports) &&
+    options.fast_configuration();
+  if (options.fast_configuration() &&
+      apply_fast_configuration != options.fast_configuration()) {
     VTR_LOG_WARN("Disable fast configuration even it is enabled by user\n");
   }
 
@@ -659,8 +662,8 @@ int write_fabric_bitstream_to_text_file(
         VTR_ASSERT(BLWL_PROTOCOL_SHIFT_REGISTER ==
                    config_protocol.bl_protocol_type());
         status = write_memory_bank_shift_register_fabric_bitstream_to_text_file(
-          fp, apply_fast_configuration, bit_value_to_skip,
-          fabric_bitstream, blwl_sr_banks, options.keep_dont_care_bits());
+          fp, apply_fast_configuration, bit_value_to_skip, fabric_bitstream,
+          blwl_sr_banks, options.keep_dont_care_bits());
       }
       break;
     }
@@ -684,7 +687,8 @@ int write_fabric_bitstream_to_text_file(
   /* Close file handler */
   fp.close();
 
-  VTR_LOGV(options.verbose_output(), "Outputted %lu configuration bits to plain text file: %s\n",
+  VTR_LOGV(options.verbose_output(),
+           "Outputted %lu configuration bits to plain text file: %s\n",
            fabric_bitstream.bits().size(), fname.c_str());
 
   return status;

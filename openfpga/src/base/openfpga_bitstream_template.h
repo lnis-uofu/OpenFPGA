@@ -4,6 +4,7 @@
 /********************************************************************
  * This file includes functions to build bitstream database
  *******************************************************************/
+#include "bitstream_writer_options.h"
 #include "build_device_bitstream.h"
 #include "build_fabric_bitstream.h"
 #include "build_io_mapping_info.h"
@@ -22,7 +23,6 @@
 #include "write_xml_arch_bitstream.h"
 #include "write_xml_fabric_bitstream.h"
 #include "write_xml_io_mapping.h"
-#include "bitstream_writer_options.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -120,37 +120,47 @@ int write_fabric_bitstream_template(const T& openfpga_ctx, const Command& cmd,
   /* Validate options */
   BitstreamWriterOption bitfile_writer_opt;
   bitfile_writer_opt.set_output_file_type(file_format);
-  bitfile_writer_opt.set_output_file_name(cmd_context.option_value(cmd, opt_file));
-  bitfile_writer_opt.set_time_stamp(!cmd_context.option_enable(cmd, opt_no_time_stamp));
-  bitfile_writer_opt.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
-  bitfile_writer_opt.set_trim_path(cmd_context.option_enable(cmd, opt_trim_path));
-  bitfile_writer_opt.set_path_only(cmd_context.option_enable(cmd, opt_path_only));
-  bitfile_writer_opt.set_value_only(cmd_context.option_enable(cmd, opt_value_only));
-  bitfile_writer_opt.set_fast_configuration(cmd_context.option_enable(cmd, opt_fast_config));
-  bitfile_writer_opt.set_keep_dont_care_bits(cmd_context.option_enable(cmd, opt_keep_dont_care_bits));
-  bitfile_writer_opt.set_wl_decremental_order(cmd_context.option_enable(cmd, opt_wl_decremental_order));
+  bitfile_writer_opt.set_output_file_name(
+    cmd_context.option_value(cmd, opt_file));
+  bitfile_writer_opt.set_time_stamp(
+    !cmd_context.option_enable(cmd, opt_no_time_stamp));
+  bitfile_writer_opt.set_verbose_output(
+    cmd_context.option_enable(cmd, opt_verbose));
+  bitfile_writer_opt.set_trim_path(
+    cmd_context.option_enable(cmd, opt_trim_path));
+  bitfile_writer_opt.set_path_only(
+    cmd_context.option_enable(cmd, opt_path_only));
+  bitfile_writer_opt.set_value_only(
+    cmd_context.option_enable(cmd, opt_value_only));
+  bitfile_writer_opt.set_fast_configuration(
+    cmd_context.option_enable(cmd, opt_fast_config));
+  bitfile_writer_opt.set_keep_dont_care_bits(
+    cmd_context.option_enable(cmd, opt_keep_dont_care_bits));
+  bitfile_writer_opt.set_wl_decremental_order(
+    cmd_context.option_enable(cmd, opt_wl_decremental_order));
   if (cmd_context.option_enable(cmd, opt_filter_value)) {
-    bitfile_writer_opt.set_filter_value(cmd_context.option_value(cmd, opt_filter_value));
+    bitfile_writer_opt.set_filter_value(
+      cmd_context.option_value(cmd, opt_filter_value));
   }
   if (!bitfile_writer_opt.validate(true)) {
     VTR_LOG_ERROR("Conflicts detected in options for bitstream writer!\n");
-    return CMD_EXEC_FATAL_ERROR; 
+    return CMD_EXEC_FATAL_ERROR;
   }
 
-  if (bitfile_writer_opt.output_file_type() == BitstreamWriterOption::e_bitfile_type::XML) {
+  if (bitfile_writer_opt.output_file_type() ==
+      BitstreamWriterOption::e_bitfile_type::XML) {
     status = write_fabric_bitstream_to_xml_file(
       openfpga_ctx.bitstream_manager(), openfpga_ctx.fabric_bitstream(),
-      openfpga_ctx.arch().config_protocol,
-      bitfile_writer_opt);
+      openfpga_ctx.arch().config_protocol, bitfile_writer_opt);
   } else {
-    VTR_ASSERT_SAFE(bitfile_writer_opt.output_file_type() == BitstreamWriterOption::e_bitfile_type::TEXT);
+    VTR_ASSERT_SAFE(bitfile_writer_opt.output_file_type() ==
+                    BitstreamWriterOption::e_bitfile_type::TEXT);
     /* By default, output in plain text format */
     status = write_fabric_bitstream_to_text_file(
       openfpga_ctx.bitstream_manager(), openfpga_ctx.fabric_bitstream(),
       openfpga_ctx.blwl_shift_register_banks(),
       openfpga_ctx.arch().config_protocol,
-      openfpga_ctx.fabric_global_port_info(),
-      bitfile_writer_opt);
+      openfpga_ctx.fabric_global_port_info(), bitfile_writer_opt);
   }
 
   return status;

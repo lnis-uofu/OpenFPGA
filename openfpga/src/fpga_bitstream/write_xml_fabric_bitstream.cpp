@@ -261,9 +261,9 @@ static int write_fabric_regional_config_bit_to_xml_file(
 int write_fabric_bitstream_to_xml_file(
   const BitstreamManager& bitstream_manager,
   const FabricBitstream& fabric_bitstream,
-  const ConfigProtocol& config_protocol,
-  const BitstreamWriterOption& options) {
-  VTR_ASSERT(options.output_file_type() == BitstreamWriterOption::e_bitfile_type::XML);
+  const ConfigProtocol& config_protocol, const BitstreamWriterOption& options) {
+  VTR_ASSERT(options.output_file_type() ==
+             BitstreamWriterOption::e_bitfile_type::XML);
   /* Ensure that we have a valid file name */
   std::string fname = options.output_file_name();
   if (true == fname.empty()) {
@@ -308,7 +308,8 @@ int write_fabric_bitstream_to_xml_file(
   /* Close file handler */
   fp.close();
 
-  VTR_LOGV(options.verbose_output(), "Outputted %lu configuration bits to XML file: %s\n",
+  VTR_LOGV(options.verbose_output(),
+           "Outputted %lu configuration bits to XML file: %s\n",
            fabric_bitstream.bits().size(), fname.c_str());
 
   return status;
