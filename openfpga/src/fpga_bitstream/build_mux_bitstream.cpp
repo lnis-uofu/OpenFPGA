@@ -36,13 +36,13 @@ size_t find_mux_default_path_id(const CircuitLibrary& circuit_lib,
                                 const size_t& mux_size) {
   size_t default_path_id;
 
-  if (true == circuit_lib.mux_add_const_input(mux_model)) {
-    default_path_id =
-      mux_size - 1; /* When there is a constant input, use the last path */
-  } else {
-    default_path_id = DEFAULT_MUX_PATH_ID; /* When there is no constant input,
-                                              use the default one */
-  }
+  // if (true == circuit_lib.mux_add_const_input(mux_model)) {
+  /* When there is a constant input, use the last path */
+  default_path_id = mux_size - 1;
+  // } else {
+  //   default_path_id = DEFAULT_MUX_PATH_ID; /* When there is no constant input,
+  //                                             use the default one */
+  // }
 
   return default_path_id;
 }
