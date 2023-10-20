@@ -85,9 +85,12 @@ static void print_verilog_routing_connection_box_unique_module(
                                     rr_gsb.get_cb_y(cb_type));
   std::string verilog_fname(generate_connection_block_netlist_name(
     cb_type, gsb_coordinate, std::string(VERILOG_NETLIST_FILE_POSTFIX)));
-  std::string orig_module_name = generate_connection_block_module_name(cb_type, gsb_coordinate);
+  std::string orig_module_name =
+    generate_connection_block_module_name(cb_type, gsb_coordinate);
   if (module_name_map.name_exist(orig_module_name)) {
-    verilog_fname = generate_tile_module_netlist_name(module_name_map.name(orig_module_name), std::string(VERILOG_NETLIST_FILE_POSTFIX));
+    verilog_fname = generate_tile_module_netlist_name(
+      module_name_map.name(orig_module_name),
+      std::string(VERILOG_NETLIST_FILE_POSTFIX));
   }
 
   std::string verilog_fpath(subckt_dir + verilog_fname);
@@ -204,9 +207,12 @@ static void print_verilog_routing_switch_box_unique_module(
   std::string verilog_fname(generate_routing_block_netlist_name(
     SB_VERILOG_FILE_NAME_PREFIX, gsb_coordinate,
     std::string(VERILOG_NETLIST_FILE_POSTFIX)));
-  std::string orig_module_name = generate_switch_block_module_name(gsb_coordinate);
+  std::string orig_module_name =
+    generate_switch_block_module_name(gsb_coordinate);
   if (module_name_map.name_exist(orig_module_name)) {
-    verilog_fname = generate_tile_module_netlist_name(module_name_map.name(orig_module_name), std::string(VERILOG_NETLIST_FILE_POSTFIX));
+    verilog_fname = generate_tile_module_netlist_name(
+      module_name_map.name(orig_module_name),
+      std::string(VERILOG_NETLIST_FILE_POSTFIX));
   }
   std::string verilog_fpath(subckt_dir + verilog_fname);
 
@@ -225,8 +231,7 @@ static void print_verilog_routing_switch_box_unique_module(
 
   /* Create a Verilog Module based on the circuit model, and add to module
    * manager */
-  std::string sb_module_name =
-    module_name_map.name(orig_module_name);
+  std::string sb_module_name = module_name_map.name(orig_module_name);
   ModuleId sb_module = module_manager.find_module(sb_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(sb_module));
 
