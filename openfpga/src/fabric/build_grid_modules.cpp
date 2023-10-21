@@ -1232,7 +1232,7 @@ static int build_physical_tile_module(
   /* TODO: Add a physical memory block */
   if (group_config_block) {
     status = add_physical_memory_module(module_manager, decoder_lib,
-                                        grid_module, circuit_lib,
+                                        grid_module, std::string(), circuit_lib,
                                         sram_orgz_type, sram_model, verbose);
     if (status != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;

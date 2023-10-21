@@ -384,7 +384,7 @@ static void build_switch_block_module(
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
   const RRGraphView& rr_graph, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
-  const CircuitModelId& sram_model, const RRGSB& rr_gsb,
+  const CircuitModelId& sram_model, const DeviceRRGSB& device_rr_gsb, const RRGSB& rr_gsb,
   const bool& group_config_block, const bool& verbose) {
   /* Create a Module of Switch Block and add to module manager */
   vtr::Point<size_t> gsb_coordinate(rr_gsb.get_sb_x(), rr_gsb.get_sb_y());
@@ -494,7 +494,9 @@ static void build_switch_block_module(
 
   /* Build a physical memory block */
   if (group_config_block) {
-    add_physical_memory_module(module_manager, decoder_lib, sb_module,
+    std::string mem_module_name_prefix = 
+      generate_switch_block_module_name_using_index(device_rr_gsb.get_sb_unique_module_index(gsb_coordinate));
+    add_physical_memory_module(module_manager, decoder_lib, sb_module, mem_module_name_prefix,
                                circuit_lib, sram_orgz_type, sram_model,
                                verbose);
   }
@@ -891,7 +893,7 @@ static void build_connection_block_module(
   const VprDeviceAnnotation& device_annotation, const DeviceGrid& grids,
   const RRGraphView& rr_graph, const CircuitLibrary& circuit_lib,
   const e_config_protocol_type& sram_orgz_type,
-  const CircuitModelId& sram_model, const RRGSB& rr_gsb,
+  const CircuitModelId& sram_model, const DeviceRRGSB& device_rr_gsb, const RRGSB& rr_gsb,
   const t_rr_type& cb_type, const bool& group_config_block,
   const bool& verbose) {
   /* Create the netlist */
@@ -1022,7 +1024,9 @@ static void build_connection_block_module(
 
   /* Build a physical memory block */
   if (group_config_block) {
-    add_physical_memory_module(module_manager, decoder_lib, cb_module,
+    std::string mem_module_name_prefix = 
+      generate_connection_block_module_name_using_index(cb_type, device_rr_gsb.get_cb_unique_module_index(cb_type, gsb_coordinate));
+    add_physical_memory_module(module_manager, decoder_lib, cb_module, mem_module_name_prefix,
                                circuit_lib, sram_orgz_type, sram_model,
                                verbose);
   }
@@ -1105,7 +1109,7 @@ static void build_flatten_connection_block_modules(
       }
       build_connection_block_module(
         module_manager, decoder_lib, device_annotation, device_ctx.grid,
-        device_ctx.rr_graph, circuit_lib, sram_orgz_type, sram_model, rr_gsb,
+        device_ctx.rr_graph, circuit_lib, sram_orgz_type, sram_model, device_rr_gsb, rr_gsb,
         cb_type, group_config_block, verbose);
     }
   }
@@ -1140,7 +1144,7 @@ void build_flatten_routing_modules(
       }
       build_switch_block_module(module_manager, decoder_lib, device_annotation,
                                 device_ctx.grid, device_ctx.rr_graph,
-                                circuit_lib, sram_orgz_type, sram_model, rr_gsb,
+                                circuit_lib, sram_orgz_type, sram_model, device_rr_gsb, rr_gsb,
                                 group_config_block, verbose);
     }
   }
@@ -1181,7 +1185,7 @@ void build_unique_routing_modules(
     const RRGSB& unique_mirror = device_rr_gsb.get_sb_unique_module(isb);
     build_switch_block_module(module_manager, decoder_lib, device_annotation,
                               device_ctx.grid, device_ctx.rr_graph, circuit_lib,
-                              sram_orgz_type, sram_model, unique_mirror,
+                              sram_orgz_type, sram_model, device_rr_gsb, unique_mirror,
                               group_config_block, verbose);
   }
 
@@ -1193,7 +1197,7 @@ void build_unique_routing_modules(
     build_connection_block_module(
       module_manager, decoder_lib, device_annotation, device_ctx.grid,
       device_ctx.rr_graph, circuit_lib, sram_orgz_type, sram_model,
-      unique_mirror, CHANX, group_config_block, verbose);
+      device_rr_gsb, unique_mirror, CHANX, group_config_block, verbose);
   }
 
   /* Build unique X-direction connection block modules */
@@ -1204,7 +1208,7 @@ void build_unique_routing_modules(
     build_connection_block_module(
       module_manager, decoder_lib, device_annotation, device_ctx.grid,
       device_ctx.rr_graph, circuit_lib, sram_orgz_type, sram_model,
-      unique_mirror, CHANY, group_config_block, verbose);
+      device_rr_gsb, unique_mirror, CHANY, group_config_block, verbose);
   }
 }
 
