@@ -1509,8 +1509,8 @@ int add_physical_memory_module(ModuleManager& module_manager,
   if (module_num_config_bits == 0) {
     return CMD_EXEC_SUCCESS;
   }
-  std::string phy_mem_module_name = generate_physical_memory_module_name(
-    std::string(), module_num_config_bits);
+  std::string phy_mem_module_name =
+    generate_physical_memory_module_name(std::string(), module_num_config_bits);
   VTR_LOGV(verbose, "Adding memory group module '%s' as a child to '%s'...\n",
            phy_mem_module_name.c_str(),
            module_manager.module_name(curr_module).c_str());
