@@ -52,14 +52,8 @@ namespace openfpga {
  *******************************************************************/
 int print_verilog_template_testbench(
   const ModuleManager &module_manager,
-  const BitstreamManager &bitstream_manager,
-  const ConfigProtocol &config_protocol, const CircuitLibrary &circuit_lib,
-  const FabricGlobalPortInfo &global_ports, const AtomContext &atom_ctx,
-  const PlacementContext &place_ctx, const PinConstraints &pin_constraints,
-  const BusGroup &bus_group, const IoLocationMap &io_location_map,
   const IoNameMap &io_name_map, const ModuleNameMap &module_name_map,
-  const VprNetlistAnnotation &netlist_annotation,
-  const std::string &circuit_name, const std::string &verilog_fname,
+  const std::string &verilog_fname,
   const VerilogTestbenchOption &options) {
   std::string timer_message =
     std::string(
@@ -79,7 +73,7 @@ int print_verilog_template_testbench(
 
   /* Generate a brief description on the Verilog file*/
   std::string title =
-    std::string("A template Verilog testbench for pre-configured FPGA fabric")
+    std::string("A template Verilog testbench for pre-configured FPGA fabric");
   print_verilog_file_header(fp, title, options.time_stamp());
 
   print_verilog_comment(fp, std::string("Require an adaption to your needs before used for design verification!!!"));

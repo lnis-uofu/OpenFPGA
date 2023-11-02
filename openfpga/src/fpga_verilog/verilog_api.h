@@ -74,6 +74,22 @@ int fpga_verilog_preconfigured_fabric_wrapper(
   const CircuitLibrary& circuit_lib, const ConfigProtocol& config_protocol,
   const VerilogTestbenchOption& options);
 
+int fpga_verilog_template_testbench(
+  const ModuleManager &module_manager,
+  const IoNameMap &io_name_map, const ModuleNameMap &module_name_map,
+  const VerilogTestbenchOption &options);
+
+int fpga_verilog_testbench_io_connection(
+  const ModuleManager &module_manager,
+  const AtomContext &atom_ctx,
+  const PlacementContext &place_ctx, const PinConstraints &pin_constraints,
+  const BusGroup &bus_group, const IoLocationMap &io_location_map,
+  const ModuleNameMap &module_name_map,
+  const FabricGlobalPortInfo &fabric_global_port_info,
+  const VprNetlistAnnotation &netlist_annotation,
+  const VerilogTestbenchOption &options);
+
+
 int fpga_verilog_mock_fpga_wrapper(
   const ModuleManager& module_manager, const AtomContext& atom_ctx,
   const PlacementContext& place_ctx, const PinConstraints& pin_constraints,

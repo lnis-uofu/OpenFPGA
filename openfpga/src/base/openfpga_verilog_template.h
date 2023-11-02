@@ -244,6 +244,11 @@ int write_testbench_template_template(
   options.set_time_stamp(!cmd_context.option_enable(cmd, opt_no_time_stamp));
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
 
+  if (true == cmd_context.option_enable(cmd, opt_default_net_type)) {
+    options.set_default_net_type(
+      cmd_context.option_value(cmd, opt_default_net_type));
+  }
+
   if (true == cmd_context.option_enable(cmd, opt_dut_module)) {
     options.set_dut_module(cmd_context.option_value(cmd, opt_dut_module));
   }
@@ -253,12 +258,8 @@ int write_testbench_template_template(
   }
 
   return fpga_verilog_template_testbench(
-    openfpga_ctx.module_graph(), openfpga_ctx.bitstream_manager(),
-    g_vpr_ctx.atom(), g_vpr_ctx.placement(), pin_constraints, bus_group,
-    openfpga_ctx.io_location_map(), openfpga_ctx.io_name_map(),
-    openfpga_ctx.module_name_map(), openfpga_ctx.fabric_global_port_info(),
-    openfpga_ctx.vpr_netlist_annotation(), openfpga_ctx.arch().circuit_lib,
-    openfpga_ctx.arch().config_protocol, options);
+    openfpga_ctx.module_graph(), openfpga_ctx.io_name_map(),
+    openfpga_ctx.module_name_map(), options);
 }
 
 /********************************************************************
@@ -303,12 +304,11 @@ int write_testbench_io_connection_template(
   }
 
   return fpga_verilog_testbench_io_connection(
-    openfpga_ctx.module_graph(), openfpga_ctx.bitstream_manager(),
+    openfpga_ctx.module_graph(),
     g_vpr_ctx.atom(), g_vpr_ctx.placement(), pin_constraints, bus_group,
-    openfpga_ctx.io_location_map(), openfpga_ctx.io_name_map(),
+    openfpga_ctx.io_location_map(), 
     openfpga_ctx.module_name_map(), openfpga_ctx.fabric_global_port_info(),
-    openfpga_ctx.vpr_netlist_annotation(), openfpga_ctx.arch().circuit_lib,
-    openfpga_ctx.arch().config_protocol, options);
+    openfpga_ctx.vpr_netlist_annotation(), options);
 }
 
 /********************************************************************

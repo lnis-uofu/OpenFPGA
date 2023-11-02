@@ -29,7 +29,7 @@
 namespace openfpga {
 
 
-int print_verilog_testbench_io_connection(
+int print_verilog_preconfig_top_module(
   const ModuleManager& module_manager,
   const BitstreamManager& bitstream_manager,
   const ConfigProtocol& config_protocol, const CircuitLibrary& circuit_lib,
