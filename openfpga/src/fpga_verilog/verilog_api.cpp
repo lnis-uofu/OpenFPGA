@@ -20,6 +20,7 @@
 #include "verilog_grid.h"
 #include "verilog_mock_fpga_wrapper.h"
 #include "verilog_preconfig_top_module.h"
+#include "verilog_template_testbench.h"
 #include "verilog_routing.h"
 #include "verilog_simulation_info_writer.h"
 #include "verilog_submodule.h"
@@ -255,6 +256,49 @@ int fpga_verilog_preconfigured_fabric_wrapper(
 
   return status;
 }
+
+/********************************************************************
+ * A top-level function of FPGA-Verilog which focuses on template testbench
+ *generation This function will generate
+ *  - A wrapper module, which encapsulate the FPGA module in a Verilog module
+ *which have the same port as the input benchmark
+ ********************************************************************/
+int fpga_verilog_template_testbench(
+  const ModuleManager &module_manager,
+  const BitstreamManager &bitstream_manager, const AtomContext &atom_ctx,
+  const PlacementContext &place_ctx, const PinConstraints &pin_constraints,
+  const BusGroup &bus_group, const IoLocationMap &io_location_map,
+  const IoNameMap &io_name_map, const ModuleNameMap &module_name_map,
+  const FabricGlobalPortInfo &fabric_global_port_info,
+  const VprNetlistAnnotation &netlist_annotation,
+  const CircuitLibrary &circuit_lib, const ConfigProtocol &config_protocol,
+  const VerilogTestbenchOption &options) {
+  vtr::ScopedStartFinishTimer timer(
+    "Write a template testbench for a preconfigured FPGA fabric\n");
+
+  std::string src_dir_path = format_dir_path(options.output_directory());
+
+  std::string netlist_name = atom_ctx.nlist.netlist_name();
+
+  int status = CMD_EXEC_SUCCESS;
+
+  /* Create directories */
+  create_directory(src_dir_path);
+
+  /* Generate wrapper module for FPGA fabric (mapped by the input benchmark and
+   * pre-configured testbench for verification */
+  std::string testbench_file_path =
+    src_dir_path + options.top_module_name() +
+    std::string(VERILOG_NETLIST_FILE_POSTFIX);
+  status = print_verilog_template_testbench(
+    module_manager, bitstream_manager, config_protocol, circuit_lib,
+    fabric_global_port_info, atom_ctx, place_ctx, pin_constraints, bus_group,
+    io_location_map, io_name_map, module_name_map, netlist_annotation,
+    netlist_name, testbench_file_path, options);
+
+  return status;
+}
+
 
 /********************************************************************
  * A top-level function of FPGA-Verilog which focuses on a wrapper module,

@@ -1,5 +1,5 @@
-#ifndef VERILOG_PRECONFIG_TOP_MODULE_H
-#define VERILOG_PRECONFIG_TOP_MODULE_H
+#ifndef VERILOG_PRECONFIG_TOP_MODULE_UTILS_H
+#define VERILOG_PRECONFIG_TOP_MODULE_UTILS_H
 
 /********************************************************************
  * Include header files that are required by function declaration
@@ -28,18 +28,15 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+void print_verilog_preconfig_top_module_internal_wires(
+  std::fstream &fp, const ModuleManager &module_manager,
+  const ModuleId &top_module, const std::string& port_postfix);
 
-int print_verilog_testbench_io_connection(
-  const ModuleManager& module_manager,
-  const BitstreamManager& bitstream_manager,
-  const ConfigProtocol& config_protocol, const CircuitLibrary& circuit_lib,
-  const FabricGlobalPortInfo& global_ports, const AtomContext& atom_ctx,
-  const PlacementContext& place_ctx, const PinConstraints& pin_constraints,
-  const BusGroup& bus_group, const IoLocationMap& io_location_map,
-  const IoNameMap& io_name_map, const ModuleNameMap& module_name_map,
-  const VprNetlistAnnotation& netlist_annotation,
-  const std::string& circuit_name, const std::string& verilog_fname,
-  const VerilogTestbenchOption& options);
+int print_verilog_preconfig_top_module_connect_global_ports(
+  std::fstream &fp, const ModuleManager &module_manager,
+  const ModuleId &top_module, const PinConstraints &pin_constraints,
+  const FabricGlobalPortInfo &fabric_global_ports,
+  const std::vector<std::string> &benchmark_clock_port_names, const std::string& port_postfix);
 
 
 } /* end namespace openfpga */

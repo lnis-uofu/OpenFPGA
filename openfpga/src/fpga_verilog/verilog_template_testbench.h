@@ -1,5 +1,5 @@
-#ifndef VERILOG_PRECONFIG_TOP_MODULE_H
-#define VERILOG_PRECONFIG_TOP_MODULE_H
+#ifndef VERILOG_TEMPLATE_TESTBENCH_H
+#define VERILOG_TEMPLATE_TESTBENCH_H
 
 /********************************************************************
  * Include header files that are required by function declaration
@@ -28,8 +28,7 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-
-int print_verilog_testbench_io_connection(
+int print_verilog_template_testbench(
   const ModuleManager& module_manager,
   const BitstreamManager& bitstream_manager,
   const ConfigProtocol& config_protocol, const CircuitLibrary& circuit_lib,
@@ -40,7 +39,6 @@ int print_verilog_testbench_io_connection(
   const VprNetlistAnnotation& netlist_annotation,
   const std::string& circuit_name, const std::string& verilog_fname,
   const VerilogTestbenchOption& options);
-
 
 } /* end namespace openfpga */
 
