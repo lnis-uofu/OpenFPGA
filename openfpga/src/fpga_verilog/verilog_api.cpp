@@ -20,11 +20,11 @@
 #include "verilog_grid.h"
 #include "verilog_mock_fpga_wrapper.h"
 #include "verilog_preconfig_top_module.h"
-#include "verilog_template_testbench.h"
-#include "verilog_testbench_io_connection.h"
 #include "verilog_routing.h"
 #include "verilog_simulation_info_writer.h"
 #include "verilog_submodule.h"
+#include "verilog_template_testbench.h"
+#include "verilog_testbench_io_connection.h"
 #include "verilog_tile.h"
 #include "verilog_top_module.h"
 #include "verilog_top_testbench.h"
@@ -264,14 +264,15 @@ int fpga_verilog_preconfigured_fabric_wrapper(
  *  - A wrapper module, which encapsulate the FPGA module in a Verilog module
  *which have the same port as the input benchmark
  ********************************************************************/
-int fpga_verilog_template_testbench(
-  const ModuleManager &module_manager,
-  const IoNameMap &io_name_map, const ModuleNameMap &module_name_map,
-  const VerilogTestbenchOption &options) {
+int fpga_verilog_template_testbench(const ModuleManager &module_manager,
+                                    const IoNameMap &io_name_map,
+                                    const ModuleNameMap &module_name_map,
+                                    const VerilogTestbenchOption &options) {
   vtr::ScopedStartFinishTimer timer(
     "Write a template testbench for a preconfigured FPGA fabric\n");
 
-  std::string src_dir_path = format_dir_path(find_path_dir_name(options.output_directory()));
+  std::string src_dir_path =
+    format_dir_path(find_path_dir_name(options.output_directory()));
   std::string testbench_file_path = options.output_directory();
 
   int status = CMD_EXEC_SUCCESS;
@@ -282,18 +283,17 @@ int fpga_verilog_template_testbench(
   /* Generate wrapper module for FPGA fabric (mapped by the input benchmark and
    * pre-configured testbench for verification */
   status = print_verilog_template_testbench(
-    module_manager, io_name_map, module_name_map, 
-    testbench_file_path, options);
+    module_manager, io_name_map, module_name_map, testbench_file_path, options);
 
   return status;
 }
 
 /********************************************************************
- * A top-level function of FPGA-Verilog which focuses on generating I/O connection part of testbenches
+ * A top-level function of FPGA-Verilog which focuses on generating I/O
+ *connection part of testbenches
  ********************************************************************/
 int fpga_verilog_testbench_io_connection(
-  const ModuleManager &module_manager,
-  const AtomContext &atom_ctx,
+  const ModuleManager &module_manager, const AtomContext &atom_ctx,
   const PlacementContext &place_ctx, const PinConstraints &pin_constraints,
   const BusGroup &bus_group, const IoLocationMap &io_location_map,
   const ModuleNameMap &module_name_map,
@@ -303,7 +303,8 @@ int fpga_verilog_testbench_io_connection(
   vtr::ScopedStartFinishTimer timer(
     "Write a template testbench for a preconfigured FPGA fabric\n");
 
-  std::string src_dir_path = format_dir_path(find_path_dir_name(options.output_directory()));
+  std::string src_dir_path =
+    format_dir_path(find_path_dir_name(options.output_directory()));
   std::string testbench_file_path = options.output_directory();
 
   std::string netlist_name = atom_ctx.nlist.netlist_name();
@@ -316,14 +317,12 @@ int fpga_verilog_testbench_io_connection(
   /* Generate wrapper module for FPGA fabric (mapped by the input benchmark and
    * pre-configured testbench for verification */
   status = print_verilog_testbench_io_connection(
-    module_manager, 
-    fabric_global_port_info, atom_ctx, place_ctx, pin_constraints, bus_group,
-    io_location_map, module_name_map, netlist_annotation,
-    netlist_name, testbench_file_path, options);
+    module_manager, fabric_global_port_info, atom_ctx, place_ctx,
+    pin_constraints, bus_group, io_location_map, module_name_map,
+    netlist_annotation, netlist_name, testbench_file_path, options);
 
   return status;
 }
-
 
 /********************************************************************
  * A top-level function of FPGA-Verilog which focuses on a wrapper module,

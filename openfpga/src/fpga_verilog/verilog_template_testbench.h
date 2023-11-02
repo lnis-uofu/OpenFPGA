@@ -19,11 +19,11 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-int print_verilog_template_testbench(
-  const ModuleManager &module_manager,
-  const IoNameMap &io_name_map, const ModuleNameMap &module_name_map,
-  const std::string &verilog_fname,
-  const VerilogTestbenchOption &options);
+int print_verilog_template_testbench(const ModuleManager &module_manager,
+                                     const IoNameMap &io_name_map,
+                                     const ModuleNameMap &module_name_map,
+                                     const std::string &verilog_fname,
+                                     const VerilogTestbenchOption &options);
 
 } /* end namespace openfpga */
 

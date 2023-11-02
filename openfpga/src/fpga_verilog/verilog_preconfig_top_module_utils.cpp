@@ -28,7 +28,7 @@ namespace openfpga {
  *******************************************************************/
 void print_verilog_preconfig_top_module_internal_wires(
   std::fstream &fp, const ModuleManager &module_manager,
-  const ModuleId &top_module, const std::string& port_postfix) {
+  const ModuleId &top_module, const std::string &port_postfix) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -41,8 +41,7 @@ void print_verilog_preconfig_top_module_internal_wires(
       module_manager.module_port(top_module, module_port_id);
     /* Add a postfix to the internal wires to be different from other reserved
      * ports */
-    module_port.set_name(
-      module_port.get_name() + port_postfix);
+    module_port.set_name(module_port.get_name() + port_postfix);
     fp << generate_verilog_port(VERILOG_PORT_WIRE, module_port) << ";"
        << std::endl;
   }
@@ -60,7 +59,7 @@ int print_verilog_preconfig_top_module_connect_global_ports(
   const ModuleId &top_module, const PinConstraints &pin_constraints,
   const FabricGlobalPortInfo &fabric_global_ports,
   const std::vector<std::string> &benchmark_clock_port_names,
-  const std::string& port_postfix) {
+  const std::string &port_postfix) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -84,10 +83,9 @@ int print_verilog_preconfig_top_module_connect_global_ports(
        */
       for (size_t pin_id = 0; pin_id < module_global_port.pins().size();
            ++pin_id) {
-        BasicPort module_clock_pin(
-          module_global_port.get_name() +
-            port_postfix,
-          module_global_port.pins()[pin_id], module_global_port.pins()[pin_id]);
+        BasicPort module_clock_pin(module_global_port.get_name() + port_postfix,
+                                   module_global_port.pins()[pin_id],
+                                   module_global_port.pins()[pin_id]);
 
         /* If the clock port name is in the pin constraints, we should wire it
          * to the constrained pin */
@@ -144,9 +142,7 @@ int print_verilog_preconfig_top_module_connect_global_ports(
       std::string constrained_net_name =
         pin_constraints.pin_net(module_global_pin);
 
-      module_global_pin.set_name(
-        module_global_port.get_name() +
-        port_postfix);
+      module_global_pin.set_name(module_global_port.get_name() + port_postfix);
 
       /* - If constrained to a given net in the benchmark, we connect the global
        * pin to the net

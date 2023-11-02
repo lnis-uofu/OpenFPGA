@@ -18,8 +18,8 @@
 #include "openfpga_port.h"
 #include "openfpga_reserved_words.h"
 #include "verilog_constants.h"
-#include "verilog_preconfig_top_module_utils.h"
 #include "verilog_preconfig_top_module.h"
+#include "verilog_preconfig_top_module_utils.h"
 #include "verilog_testbench_utils.h"
 #include "verilog_writer_utils.h"
 
@@ -427,8 +427,9 @@ int print_verilog_preconfig_top_module(
   }
 
   /* Print internal wires */
-  print_verilog_preconfig_top_module_internal_wires(fp, module_manager,
-                                                    core_module, std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX));
+  print_verilog_preconfig_top_module_internal_wires(
+    fp, module_manager, core_module,
+    std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX));
 
   /* Instanciate FPGA top-level module */
   print_verilog_testbench_fpga_instance(
@@ -445,7 +446,8 @@ int print_verilog_preconfig_top_module(
    * signals! */
   status = print_verilog_preconfig_top_module_connect_global_ports(
     fp, module_manager, core_module, pin_constraints, global_ports,
-    benchmark_clock_port_names, std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX));
+    benchmark_clock_port_names,
+    std::string(FORMAL_VERIFICATION_TOP_MODULE_PORT_POSTFIX));
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }

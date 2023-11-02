@@ -28,7 +28,6 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-
 int print_verilog_preconfig_top_module(
   const ModuleManager& module_manager,
   const BitstreamManager& bitstream_manager,
@@ -40,7 +39,6 @@ int print_verilog_preconfig_top_module(
   const VprNetlistAnnotation& netlist_annotation,
   const std::string& circuit_name, const std::string& verilog_fname,
   const VerilogTestbenchOption& options);
-
 
 } /* end namespace openfpga */
 

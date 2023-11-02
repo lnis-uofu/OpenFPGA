@@ -30,14 +30,14 @@ namespace openfpga {
 
 void print_verilog_preconfig_top_module_internal_wires(
   std::fstream &fp, const ModuleManager &module_manager,
-  const ModuleId &top_module, const std::string& port_postfix);
+  const ModuleId &top_module, const std::string &port_postfix);
 
 int print_verilog_preconfig_top_module_connect_global_ports(
   std::fstream &fp, const ModuleManager &module_manager,
   const ModuleId &top_module, const PinConstraints &pin_constraints,
   const FabricGlobalPortInfo &fabric_global_ports,
-  const std::vector<std::string> &benchmark_clock_port_names, const std::string& port_postfix);
-
+  const std::vector<std::string> &benchmark_clock_port_names,
+  const std::string &port_postfix);
 
 } /* end namespace openfpga */
 

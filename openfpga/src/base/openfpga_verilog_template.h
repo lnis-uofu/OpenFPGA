@@ -222,9 +222,8 @@ int write_preconfigured_fabric_wrapper_template(
  *FPGA-Verilog
  *******************************************************************/
 template <class T>
-int write_testbench_template_template(
-  const T& openfpga_ctx, const Command& cmd,
-  const CommandContext& cmd_context) {
+int write_testbench_template_template(const T& openfpga_ctx, const Command& cmd,
+                                      const CommandContext& cmd_context) {
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_top_module = cmd.option("top_module");
   CommandOptionId opt_dut_module = cmd.option("dut_module");
@@ -267,9 +266,9 @@ int write_testbench_template_template(
  *FPGA-Verilog
  *******************************************************************/
 template <class T>
-int write_testbench_io_connection_template(
-  const T& openfpga_ctx, const Command& cmd,
-  const CommandContext& cmd_context) {
+int write_testbench_io_connection_template(const T& openfpga_ctx,
+                                           const Command& cmd,
+                                           const CommandContext& cmd_context) {
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_dut_module = cmd.option("dut_module");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
@@ -304,9 +303,8 @@ int write_testbench_io_connection_template(
   }
 
   return fpga_verilog_testbench_io_connection(
-    openfpga_ctx.module_graph(),
-    g_vpr_ctx.atom(), g_vpr_ctx.placement(), pin_constraints, bus_group,
-    openfpga_ctx.io_location_map(), 
+    openfpga_ctx.module_graph(), g_vpr_ctx.atom(), g_vpr_ctx.placement(),
+    pin_constraints, bus_group, openfpga_ctx.io_location_map(),
     openfpga_ctx.module_name_map(), openfpga_ctx.fabric_global_port_info(),
     openfpga_ctx.vpr_netlist_annotation(), options);
 }

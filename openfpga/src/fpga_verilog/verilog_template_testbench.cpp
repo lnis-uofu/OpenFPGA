@@ -18,8 +18,8 @@
 #include "openfpga_port.h"
 #include "openfpga_reserved_words.h"
 #include "verilog_constants.h"
-#include "verilog_template_testbench.h"
 #include "verilog_preconfig_top_module_utils.h"
+#include "verilog_template_testbench.h"
 #include "verilog_testbench_utils.h"
 #include "verilog_writer_utils.h"
 
@@ -29,7 +29,7 @@ namespace openfpga {
 /********************************************************************
  * Top-level function to generate a template testbench for a FPGA fabric.
  *
- *   Testbench 
+ *   Testbench
  *   +--------------------------------------------
  *   |
  *   |          FPGA fabric
@@ -50,14 +50,14 @@ namespace openfpga {
  *   |
  *   +-------------------------------------------
  *******************************************************************/
-int print_verilog_template_testbench(
-  const ModuleManager &module_manager,
-  const IoNameMap &io_name_map, const ModuleNameMap &module_name_map,
-  const std::string &verilog_fname,
-  const VerilogTestbenchOption &options) {
-  std::string timer_message =
-    std::string(
-      "Write a template Verilog testbench for pre-configured FPGA top-level netlist");
+int print_verilog_template_testbench(const ModuleManager &module_manager,
+                                     const IoNameMap &io_name_map,
+                                     const ModuleNameMap &module_name_map,
+                                     const std::string &verilog_fname,
+                                     const VerilogTestbenchOption &options) {
+  std::string timer_message = std::string(
+    "Write a template Verilog testbench for pre-configured FPGA top-level "
+    "netlist");
 
   int status = CMD_EXEC_SUCCESS;
 
@@ -76,7 +76,9 @@ int print_verilog_template_testbench(
     std::string("A template Verilog testbench for pre-configured FPGA fabric");
   print_verilog_file_header(fp, title, options.time_stamp());
 
-  print_verilog_comment(fp, std::string("Require an adaption to your needs before used for design verification!!!"));
+  print_verilog_comment(fp,
+                        std::string("Require an adaption to your needs before "
+                                    "used for design verification!!!"));
 
   print_verilog_default_net_type_declaration(fp, options.default_net_type());
 
@@ -118,10 +120,8 @@ int print_verilog_template_testbench(
     options.explicit_port_mapping());
 
   /* Testbench ends*/
-  print_verilog_module_end(
-    fp,
-    options.top_module(),
-    options.default_net_type());
+  print_verilog_module_end(fp, options.top_module(),
+                           options.default_net_type());
 
   /* Close the file stream */
   fp.close();

@@ -283,9 +283,11 @@ ShellCommandId add_write_testbench_template_command_template(
   shell_cmd.set_option_require_value(output_opt, openfpga::OPT_STRING);
 
   /* add an option '--top_module'*/
-  CommandOptionId top_module_opt = shell_cmd.add_option(
-    "top_module", false,
-    "specify the top-level module name to be used in the testbench. Please avoid reserved words, i.e., fpga_top or fpga_core. By default, it is top_tb.");
+  CommandOptionId top_module_opt =
+    shell_cmd.add_option("top_module", false,
+                         "specify the top-level module name to be used in the "
+                         "testbench. Please avoid reserved words, i.e., "
+                         "fpga_top or fpga_core. By default, it is top_tb.");
   shell_cmd.set_option_require_value(top_module_opt, openfpga::OPT_STRING);
 
   /* add an option '--dut_module'*/
@@ -315,10 +317,12 @@ ShellCommandId add_write_testbench_template_command_template(
 
   /* add command to the shell */
   ShellCommandId shell_cmd_id = shell.add_command(
-    shell_cmd, "generate a template of testbench for a pre-configured fpga fabric", hidden);
+    shell_cmd,
+    "generate a template of testbench for a pre-configured fpga fabric",
+    hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(
-    shell_cmd_id, write_testbench_template_template<T>);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     write_testbench_template_template<T>);
 
   /* add command dependency to the shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
@@ -371,11 +375,14 @@ ShellCommandId add_write_testbench_io_connection_command_template(
   shell_cmd.add_option("verbose", false, "enable verbose output");
 
   /* add command to the shell */
-  ShellCommandId shell_cmd_id = shell.add_command(
-    shell_cmd, "generate a file to describe the connection to I/Os of a pre-configured fpga fabric", hidden);
+  ShellCommandId shell_cmd_id =
+    shell.add_command(shell_cmd,
+                      "generate a file to describe the connection to I/Os of a "
+                      "pre-configured fpga fabric",
+                      hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
-  shell.set_command_execute_function(
-    shell_cmd_id, write_testbench_io_connection_template<T>);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     write_testbench_io_connection_template<T>);
 
   /* add command dependency to the shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
