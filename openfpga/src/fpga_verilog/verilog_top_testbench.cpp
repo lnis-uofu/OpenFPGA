@@ -1623,25 +1623,12 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
   /* Additional constants for multiple programming clock */
   if (num_prog_clocks > 1) {
     for (size_t iclk = 0; iclk < num_prog_clocks; ++iclk) {
-      std::vector<size_t> curr_clk_ctrl_regions =
-        config_protocol.prog_clock_pin_ccff_head_indices(
-          config_protocol.prog_clock_pins()[iclk]);
-      size_t curr_regional_bitstream_max_size =
-        find_fabric_regional_bitstream_max_size(fabric_bitstream,
-                                                curr_clk_ctrl_regions);
-      size_t curr_num_bits_to_skip = 0;
-      if (true == fast_configuration) {
-        curr_num_bits_to_skip =
-          find_configuration_chain_fabric_bitstream_size_to_be_skipped(
-            fabric_bitstream, bitstream_manager, bit_value_to_skip,
-            curr_clk_ctrl_regions);
-      }
       /* TODO: Try to apply different length as the bitstream size for ccffs are
        * different driven by differnt clocks! Tried but no luck yet. */
       print_verilog_define_flag(
         fp,
         std::string(TOP_TB_BITSTREAM_LENGTH_VARIABLE) + std::to_string(iclk),
-        curr_regional_bitstream_max_size - curr_num_bits_to_skip);
+        regional_bitstream_max_size - num_bits_to_skip);
     }
   }
 
@@ -1708,8 +1695,14 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
   } else {
     VTR_ASSERT(num_prog_clocks > 1);
     for (size_t iclk = 0; iclk < num_prog_clocks; ++iclk) {
+      std::vector<size_t> curr_clk_ctrl_regions =
+        config_protocol.prog_clock_pin_ccff_head_indices(
+          config_protocol.prog_clock_pins()[iclk]);
+      size_t curr_regional_bitstream_max_size =
+        find_fabric_regional_bitstream_max_size(fabric_bitstream,
+                                                curr_clk_ctrl_regions);
       fp << "\t";
-      fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << iclk << " <= 0";
+      fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << iclk << " <= " << regional_bitstream_max_size - curr_regional_bitstream_max_size;
       fp << ";";
       fp << std::endl;
     }
@@ -1918,8 +1911,7 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
   } else {
     VTR_ASSERT(num_prog_clocks > 1);
     for (size_t iclk = 0; iclk < num_prog_clocks; ++iclk) {
-      BasicPort curr_prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME) +
-                                       std::string(TOP_TB_CLOCK_REG_POSTFIX),
+      BasicPort curr_prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME),
                                      iclk, iclk);
       fp << "always";
       fp << " @(negedge "
