@@ -180,6 +180,83 @@ __ iverilog_website_
 
     Show verbose log
 
+
+.. _cmd_write_testbench_template:
+
+write_testbench_template
+~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+  Write a template of testbench for a preconfigured FPGA fabric. See details in :ref:`fpga_verilog_testbench`.
+
+.. warning:: The template testbench only contains an instance of FPGA fabric. Please do **NOT** directly use it in design verification without a proper modification!!!
+
+  .. option:: --file <string> or -f <string>
+     
+    The file path to output the testbench file. For example, ``--file /temp/testbench_template.v``
+
+  .. option:: --top_module <string>
+
+    Specify the name of top-level module to be considered in the testbench. Please avoid reserved words, i.e., ``fpga_top`` or ``fpga_core. By default, it is ``top_tb``.
+
+  .. note:: Please use the reserved words ``fpga_top`` or ``fpga_core`` even when renaming is applied to the modules (See details in :ref:`openfpga_setup_commands_rename_modules`). Renaming will be applied automatically.
+
+  .. option:: --dut_module <string>
+
+    Specify the name of *Design Under Test* (DUT) module to be considered in the testbench. Can be either ``fpga_top`` or ``fpga_core. By default, it is ``fpga_top``.
+
+  .. note:: Please use the reserved words ``fpga_top`` or ``fpga_core`` even when renaming is applied to the modules (See details in :ref:`openfpga_setup_commands_rename_modules`). Renaming will be applied automatically.
+
+  .. option:: --explicit_port_mapping
+
+    Use explicit port mapping when writing the Verilog netlists
+
+  .. option:: --default_net_type <string>
+
+    Specify the default net type for the Verilog netlists. Currently, supported types are ``none`` and ``wire``. Default value: ``none``.
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in Verilog netlists
+
+  .. option:: --verbose
+
+    Show verbose log
+
+write_testbench_io_connection
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+  Write the I/O connection statements in Verilog for a preconfigured FPGA fabric mapped to a given design. See details in :ref:`fpga_verilog_testbench`.
+
+.. warning:: The netlist may be included by the template testbench (see details in :ref:`cmd_write_testbench_template`). Please do **NOT** directly use it in design verification without a proper modification!!!
+
+  .. option:: --file <string> or -f <string>
+     
+    The file path to output the netlist file. For example, ``--file /temp/testbench_io_conkt.v``
+
+  .. option:: --dut_module <string>
+
+    Specify the name of *Design Under Test* (DUT) module to be considered in the testbench. Can be either ``fpga_top`` or ``fpga_core. By default, it is ``fpga_top``.
+
+  .. note:: Please use the reserved words ``fpga_top`` or ``fpga_core`` even when renaming is applied to the modules (See details in :ref:`openfpga_setup_commands_rename_modules`). Renaming will be applied automatically.
+
+  .. option:: --pin_constraints_file <string> or -pcf <string>
+
+    Specify the *Pin Constraints File* (PCF) if you want to custom stimulus in testbenches. For example, ``-pin_constraints_file pin_constraints.xml``
+    Strongly recommend for multi-clock simulations. See detailed file format about :ref:`file_format_pin_constraints_file`.
+
+  .. option:: --bus_group_file <string> or -bgf <string>
+
+    Specify the *Bus Group File* (BGF) if you want to group pins to buses. For example, ``-bgf bus_group.xml``
+    Strongly recommend when input HDL contains bus ports. See detailed file format about :ref:`file_format_bus_group_file`.
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in Verilog netlists
+
+  .. option:: --verbose
+
+    Show verbose log
+
 write_mock_fpga_wrapper
 ~~~~~~~~~~~~~~~~~~~~~~~
  
