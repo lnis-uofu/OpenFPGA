@@ -99,6 +99,7 @@ run-task basic_tests/generate_fabric $@
 
 echo -e "Testing Verilog testbench generation only";
 run-task basic_tests/generate_testbench $@
+run-task basic_tests/generate_template_testbench $@
 
 echo -e "Testing separated Verilog fabric netlists and testbench locations";
 run-task basic_tests/custom_fabric_netlist_location $@

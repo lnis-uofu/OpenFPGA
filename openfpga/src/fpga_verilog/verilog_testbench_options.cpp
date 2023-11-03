@@ -15,6 +15,7 @@ namespace openfpga {
  *************************************************/
 VerilogTestbenchOption::VerilogTestbenchOption() {
   output_directory_.clear();
+  top_module_ = "top_tb";
   dut_module_ = "fpga_top";
   fabric_netlist_file_path_.clear();
   reference_benchmark_file_path_.clear();
@@ -40,6 +41,8 @@ std::string VerilogTestbenchOption::output_directory() const {
 }
 
 std::string VerilogTestbenchOption::dut_module() const { return dut_module_; }
+
+std::string VerilogTestbenchOption::top_module() const { return top_module_; }
 
 std::string VerilogTestbenchOption::fabric_netlist_file_path() const {
   return fabric_netlist_file_path_;
@@ -110,6 +113,19 @@ bool VerilogTestbenchOption::verbose_output() const { return verbose_output_; }
 void VerilogTestbenchOption::set_output_directory(
   const std::string& output_dir) {
   output_directory_ = output_dir;
+}
+
+void VerilogTestbenchOption::set_top_module(const std::string& top_module) {
+  /* Precheck: avoid naming conflicts */
+  if (top_module == generate_fpga_top_module_name() ||
+      top_module == generate_fpga_core_module_name()) {
+    VTR_LOG_ERROR(
+      "Conflicted module name '%s' as top-levle module! Please avoid [%s|%s]\n",
+      top_module.c_str(), generate_fpga_top_module_name().c_str(),
+      generate_fpga_core_module_name().c_str());
+    exit(1);
+  }
+  top_module_ = top_module;
 }
 
 void VerilogTestbenchOption::set_dut_module(const std::string& dut_module) {
