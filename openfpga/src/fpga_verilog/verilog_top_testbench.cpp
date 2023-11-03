@@ -398,7 +398,7 @@ static void print_verilog_top_testbench_global_config_done_ports_stimuli(
                                                            module_global_port));
 
     BasicPort stimuli_config_done_port(
-      std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
+      std::string(TOP_TB_CONFIG_ALL_DONE_PORT_NAME), 1);
     /* Wire the port to the input stimuli:
      * The wiring will be inverted if the default value of the global port is 1
      * Otherwise, the wiring will not be inverted!
