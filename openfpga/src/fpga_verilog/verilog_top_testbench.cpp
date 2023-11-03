@@ -1702,7 +1702,8 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
         find_fabric_regional_bitstream_max_size(fabric_bitstream,
                                                 curr_clk_ctrl_regions);
       fp << "\t";
-      fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << iclk << " <= " << regional_bitstream_max_size - curr_regional_bitstream_max_size;
+      fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << iclk << " <= "
+         << regional_bitstream_max_size - curr_regional_bitstream_max_size;
       fp << ";";
       fp << std::endl;
     }
