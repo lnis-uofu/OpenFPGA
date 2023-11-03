@@ -188,7 +188,7 @@ write_testbench_template
  
   Write a template of testbench for a preconfigured FPGA fabric. See details in :ref:`fpga_verilog_testbench`.
 
-.. warning:: The template testbench only contains an instance of FPGA fabric. Please do **NOT** directly use it in design verification without a proper modification!!!
+  .. warning:: The template testbench only contains an instance of FPGA fabric. Please do **NOT** directly use it in design verification without a proper modification!!!
 
   .. option:: --file <string> or -f <string>
      
@@ -227,7 +227,7 @@ write_testbench_io_connection
  
   Write the I/O connection statements in Verilog for a preconfigured FPGA fabric mapped to a given design. See details in :ref:`fpga_verilog_testbench`.
 
-.. warning:: The netlist may be included by the template testbench (see details in :ref:`cmd_write_testbench_template`). Please do **NOT** directly use it in design verification without a proper modification!!!
+  .. warning:: The netlist may be included by the template testbench (see details in :ref:`cmd_write_testbench_template`). Please do **NOT** directly use it in design verification without a proper modification!!!
 
   .. option:: --file <string> or -f <string>
      
