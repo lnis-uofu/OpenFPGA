@@ -398,7 +398,7 @@ static void print_verilog_top_testbench_global_config_done_ports_stimuli(
                                                            module_global_port));
 
     BasicPort stimuli_config_done_port(
-      std::string(TOP_TB_CONFIG_DONE_PORT_NAME), 1);
+      std::string(TOP_TB_CONFIG_ALL_DONE_PORT_NAME), 1);
     /* Wire the port to the input stimuli:
      * The wiring will be inverted if the default value of the global port is 1
      * Otherwise, the wiring will not be inverted!
@@ -1695,8 +1695,15 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
   } else {
     VTR_ASSERT(num_prog_clocks > 1);
     for (size_t iclk = 0; iclk < num_prog_clocks; ++iclk) {
+      std::vector<size_t> curr_clk_ctrl_regions =
+        config_protocol.prog_clock_pin_ccff_head_indices(
+          config_protocol.prog_clock_pins()[iclk]);
+      size_t curr_regional_bitstream_max_size =
+        find_fabric_regional_bitstream_max_size(fabric_bitstream,
+                                                curr_clk_ctrl_regions);
       fp << "\t";
-      fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << iclk << " <= 0";
+      fp << TOP_TB_BITSTREAM_INDEX_REG_NAME << iclk << " <= "
+         << regional_bitstream_max_size - curr_regional_bitstream_max_size;
       fp << ";";
       fp << std::endl;
     }
@@ -1905,9 +1912,12 @@ static void print_verilog_full_testbench_configuration_chain_bitstream(
   } else {
     VTR_ASSERT(num_prog_clocks > 1);
     for (size_t iclk = 0; iclk < num_prog_clocks; ++iclk) {
+      BasicPort curr_prog_clock_port(std::string(TOP_TB_PROG_CLOCK_PORT_NAME),
+                                     iclk, iclk);
       fp << "always";
       fp << " @(negedge "
-         << generate_verilog_port(VERILOG_PORT_CONKT, prog_clock_port) << ")";
+         << generate_verilog_port(VERILOG_PORT_CONKT, curr_prog_clock_port)
+         << ")";
       fp << " begin";
       fp << std::endl;
 
