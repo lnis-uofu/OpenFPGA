@@ -76,9 +76,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: "Build Compatibility: GCC-7 (Ubuntu 20.04)"
-            cc: gcc-7
-            cxx: g++-7
           - name: "Build Compatibility: GCC-8 (Ubuntu 20.04)"
             cc: gcc-8
             cxx: g++-8
