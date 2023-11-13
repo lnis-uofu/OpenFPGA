@@ -5,8 +5,9 @@ Please reveal the following architecture features in the names to help quickly s
   * The keyword 'frac' is to specify if fracturable LUT is used or not.
   * The keyword 'Native' is to specify if fracturable LUT design is a native one (without mode switch) or a standard one (with mode switch).
 - N<le\_size>: Number of logic elements for a CLB. If you have multiple CLB architectures, this should be largest number.
-- tileable<IO>: If the routing architecture is tileable or not. 
+- tileable<IO|ConcatWire>: If the routing architecture is tileable or not. 
   * The keyword 'IO' specifies if the I/O tile is tileable or not
+  * The keyword 'ConcatWire' specifies if the routing wires can be continued in the same direction or not. For example, L4 -> L1
 - fracff<2edge>: Use multi-mode flip-flop model, where reset/set polarity is configurable. When 2edge is specified, clock polarity can be switched between postive edge triggered and negative edge triggered
 - adder\_chain: If hard adder/carry chain is used inside CLBs
 - register\_chain: If shift register chain is used inside CLBs
