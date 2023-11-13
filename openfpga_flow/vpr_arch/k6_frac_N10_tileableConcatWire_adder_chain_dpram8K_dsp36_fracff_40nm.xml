@@ -302,7 +302,7 @@
   </tiles>
   <!-- ODIN II specific config ends -->
   <!-- Physical descriptions begin -->
-  <layout tileable="true" through_channel="false" concat_wire="true" concat_pass_wire="false">
+  <layout tileable="true" through_channel="false" opin2all_sides="true" concat_wire="true" concat_pass_wire="false">
     <auto_layout aspect_ratio="1.0">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="100"/>
