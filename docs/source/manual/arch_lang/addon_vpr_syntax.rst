@@ -88,11 +88,58 @@ Layout
 
   .. warning:: Do NOT enable ``shrink_boundary`` if you are not using the tileable routing resource graph generator!
 
+.. option:: opin2all_sides="<bool>"
+
+  Allow each output pin of a programmable block to drive the routing tracks on all the sides of its adjacent switch block (see an illustrative example in :numref:`fig_opin2all_sides`). This can improve the routability of an FPGA fabric with an increase in the sizes of routing multiplexers in each switch block. 
+  By default, it is ``false``.
+
+  .. _fig_opin2all_sides:
+  
+  .. figure:: ./figures/opin2all_sides.svg
+     :width: 100%
+     :alt: Impact of opin2all_sides
+  
+     Impact on routing architecture when the opin-to-all-sides: (a) disabled; (b) enabled.
+
+  .. warning:: Do NOT enable ``opin2all_sides`` if you are not using the tileable routing resource graph generator!
+
+.. option:: concat_wire="<bool>"
+
+  In each switch block, allow each routing track which ends to drive another routing track on the opposite side, as such a wire can be continued in the same direction (see an illustrative example in :numref:`fig_concat_wire`). In other words, routing wires can be concatenated in the same direction across an FPGA fabric. This can improve the routability of an FPGA fabric with an increase in the sizes of routing multiplexers in each switch block. 
+  By default, it is ``false``.
+
+  .. _fig_concat_wire:
+  
+  .. figure:: ./figures/concat_wire.svg
+     :width: 100%
+     :alt: Impact of concat_wire
+  
+     Impact on routing architecture when the wire concatenation: (a) disabled; (b) enabled.
+
+  .. warning:: Do NOT enable ``concat_wire`` if you are not using the tileable routing resource graph generator!
+
+.. option:: concat_pass_wire="<bool>"
+
+  In each switch block, allow each routing track which passes to drive another routing track on the opposite side, as such a pass wire can be continued in the same direction (see an illustrative example in :numref:`fig_concat_pass_wire`). This can improve the routability of an FPGA fabric with an increase in the sizes of routing multiplexers in each switch block. 
+  By default, it is ``false``.
+
+  .. warning:: Please enable this option if you are looking for device support which is created by any release which is before v1.1.541!!!
+
+  .. _fig_concat_wire:
+  
+  .. figure:: ./figures/concat_pass_wire.svg
+     :width: 100%
+     :alt: Impact of concat_pass_wire
+  
+     Impact on routing architecture when the pass wire concatenation: (a) disabled; (b) enabled.
+
+  .. warning:: Do NOT enable ``concat_pass_wire`` if you are not using the tileable routing resource graph generator!
+
 A quick example to show tileable routing is enabled, other options, e.g., through channels are disabled:
 
 .. code-block:: xml
 
-  <layout tileable="true" through_channel="false" shrink_boundary="false">
+  <layout tileable="true" through_channel="false" shrink_boundary="false" opin2all_sides="false" concat_wire="false" concat_pass_wire="false">
   </layout>
 
 Switch Block
