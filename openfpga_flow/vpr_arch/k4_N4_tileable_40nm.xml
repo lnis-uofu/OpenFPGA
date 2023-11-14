@@ -67,7 +67,7 @@
   </tiles>
   <!-- ODIN II specific config ends -->
   <!-- Physical descriptions begin -->
-  <layout tileable="true" concat_wire="false" concat_pass_wire="false">
+  <layout tileable="true" concat_wire="false" concat_pass_wire="true">
     <auto_layout aspect_ratio="1.0">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="100"/>
