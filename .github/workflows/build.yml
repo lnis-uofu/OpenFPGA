@@ -76,9 +76,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: "Build Compatibility: GCC-7 (Ubuntu 20.04)"
-            cc: gcc-7
-            cxx: g++-7
           - name: "Build Compatibility: GCC-8 (Ubuntu 20.04)"
             cc: gcc-8
             cxx: g++-8
@@ -137,7 +134,7 @@ jobs:
         run: ccache -s
       - name: Upload artifact
         uses: actions/upload-artifact@v2
-        if: ${{ matrix.config.cc == 'gcc-8'}}
+        if: ${{ matrix.config.cc == 'gcc-9'}}
         with:
           name: openfpga
           path: |
@@ -441,7 +438,7 @@ jobs:
           chmod +x build/yosys/bin/yosys-config
           chmod +x build/yosys/bin/yosys-filterlib
           chmod +x build/yosys/bin/yosys-smtbmc
-      - name: ${{matrix.config.name}}_GCC-8_(Ubuntu 20.04)
+      - name: ${{matrix.config.name}}_GCC-9_(Ubuntu 20.04)
         shell: bash
         run: source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh --debug --show_thread_logs
       - name: Upload artifact
@@ -485,7 +482,7 @@ jobs:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v3
 
-      - name: ${{matrix.config.name}}_GCC-8_(Ubuntu 20.04)
+      - name: ${{matrix.config.name}}_GCC-9_(Ubuntu 20.04)
         shell: bash
         run: |
           bash .github/workflows/install_dependencies_run.sh
