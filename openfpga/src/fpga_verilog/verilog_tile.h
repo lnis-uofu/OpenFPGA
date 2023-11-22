@@ -9,6 +9,7 @@
 #include "fabric_tile.h"
 #include "fabric_verilog_options.h"
 #include "module_manager.h"
+#include "module_name_map.h"
 #include "netlist_manager.h"
 
 /********************************************************************
@@ -20,6 +21,7 @@ namespace openfpga {
 
 int print_verilog_tiles(NetlistManager& netlist_manager,
                         const ModuleManager& module_manager,
+                        const ModuleNameMap& module_name_map,
                         const std::string& verilog_dir,
                         const FabricTile& fabric_tile,
                         const std::string& subckt_dir_name,

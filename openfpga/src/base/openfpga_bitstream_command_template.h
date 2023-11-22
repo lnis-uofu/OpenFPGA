@@ -190,6 +190,27 @@ ShellCommandId add_write_fabric_bitstream_command_template(
     "file format of fabric bitstream [plain_text|xml]. Default: plain_text");
   shell_cmd.set_option_require_value(opt_file_format, openfpga::OPT_STRING);
 
+  CommandOptionId opt_filter_value = shell_cmd.add_option(
+    "filter_value", false,
+    "Specify what values should be written out in the resulting fabric "
+    "bitstream [0|1|none]. Only applicable to XML file format. Default: none");
+  shell_cmd.set_option_require_value(opt_filter_value, openfpga::OPT_STRING);
+
+  shell_cmd.add_option(
+    "path_only", false,
+    "Only paths will be written out in the resulting fabric bitstream. Only "
+    "applicable to XML file format. Default: off");
+
+  shell_cmd.add_option(
+    "value_only", false,
+    "Only values will be written out in the resulting fabric bitstream. Only "
+    "applicable to XML file format. Default: off");
+
+  shell_cmd.add_option(
+    "trim_path", false,
+    "Trim the path by a level of 1 in the resulting fabric bitstream. Only "
+    "applicable to XML file format. Default: off");
+
   /* Add an option '--fast_configuration' */
   shell_cmd.add_option("fast_configuration", false,
                        "Reduce the size of bitstream to be downloaded");

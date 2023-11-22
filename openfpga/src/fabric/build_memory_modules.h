@@ -41,6 +41,7 @@ int build_memory_group_module(
 int add_physical_memory_module(ModuleManager& module_manager,
                                DecoderLibrary& decoder_lib,
                                const ModuleId& curr_module,
+                               const std::string& suggested_module_name_prefix,
                                const CircuitLibrary& circuit_lib,
                                const e_config_protocol_type& sram_orgz_type,
                                const CircuitModelId& sram_model,

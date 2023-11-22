@@ -66,9 +66,9 @@ namespace openfpga {
  *******************************************************************/
 static void print_verilog_primitive_block(
   NetlistManager& netlist_manager, const ModuleManager& module_manager,
-  const std::string& subckt_dir, const std::string& subckt_dir_name,
-  t_pb_graph_node* primitive_pb_graph_node, const FabricVerilogOption& options,
-  const bool& verbose) {
+  const ModuleNameMap& module_name_map, const std::string& subckt_dir,
+  const std::string& subckt_dir_name, t_pb_graph_node* primitive_pb_graph_node,
+  const FabricVerilogOption& options, const bool& verbose) {
   /* Ensure a valid pb_graph_node */
   if (nullptr == primitive_pb_graph_node) {
     VTR_LOGF_ERROR(__FILE__, __LINE__, "Invalid primitive_pb_graph_node!\n");
@@ -101,6 +101,7 @@ static void print_verilog_primitive_block(
   /* Generate the module name for this primitive pb_graph_node*/
   std::string primitive_module_name =
     generate_physical_block_module_name(primitive_pb_graph_node->pb_type);
+  primitive_module_name = module_name_map.name(primitive_module_name);
 
   /* Create a module of the primitive LUT and register it to module manager */
   ModuleId primitive_module = module_manager.find_module(primitive_module_name);
@@ -150,6 +151,7 @@ static void print_verilog_primitive_block(
  *******************************************************************/
 static void rec_print_verilog_logical_tile(
   NetlistManager& netlist_manager, const ModuleManager& module_manager,
+  const ModuleNameMap& module_name_map,
   const VprDeviceAnnotation& device_annotation, const std::string& subckt_dir,
   const std::string& subckt_dir_name, t_pb_graph_node* physical_pb_graph_node,
   const FabricVerilogOption& options, const bool& verbose) {
@@ -172,8 +174,8 @@ static void rec_print_verilog_logical_tile(
     for (int ipb = 0; ipb < physical_mode->num_pb_type_children; ++ipb) {
       /* Go recursive to visit the children */
       rec_print_verilog_logical_tile(
-        netlist_manager, module_manager, device_annotation, subckt_dir,
-        subckt_dir_name,
+        netlist_manager, module_manager, module_name_map, device_annotation,
+        subckt_dir, subckt_dir_name,
         &(physical_pb_graph_node
             ->child_pb_graph_nodes[physical_mode->index][ipb][0]),
         options, verbose);
@@ -182,9 +184,9 @@ static void rec_print_verilog_logical_tile(
 
   /* For leaf node, a primitive Verilog module will be generated. */
   if (true == is_primitive_pb_type(physical_pb_type)) {
-    print_verilog_primitive_block(netlist_manager, module_manager, subckt_dir,
-                                  subckt_dir_name, physical_pb_graph_node,
-                                  options, verbose);
+    print_verilog_primitive_block(netlist_manager, module_manager,
+                                  module_name_map, subckt_dir, subckt_dir_name,
+                                  physical_pb_graph_node, options, verbose);
     /* Finish for primitive node, return */
     return;
   }
@@ -214,6 +216,7 @@ static void rec_print_verilog_logical_tile(
   /* Generate the name of the Verilog module for this pb_type */
   std::string pb_module_name =
     generate_physical_block_module_name(physical_pb_type);
+  pb_module_name = module_name_map.name(pb_module_name);
 
   /* Register the Verilog module in module manager */
   ModuleId pb_module = module_manager.find_module(pb_module_name);
@@ -261,6 +264,7 @@ static void rec_print_verilog_logical_tile(
  *****************************************************************************/
 static void print_verilog_logical_tile_netlist(
   NetlistManager& netlist_manager, const ModuleManager& module_manager,
+  const ModuleNameMap& module_name_map,
   const VprDeviceAnnotation& device_annotation, const std::string& subckt_dir,
   const std::string& subckt_dir_name, t_pb_graph_node* pb_graph_head,
   const FabricVerilogOption& options, const bool& verbose) {
@@ -276,9 +280,9 @@ static void print_verilog_logical_tile_netlist(
    */
   /* Print Verilog modules starting from the top-level pb_type/pb_graph_node,
    * and traverse the graph in a recursive way */
-  rec_print_verilog_logical_tile(netlist_manager, module_manager,
-                                 device_annotation, subckt_dir, subckt_dir_name,
-                                 pb_graph_head, options, verbose);
+  rec_print_verilog_logical_tile(
+    netlist_manager, module_manager, module_name_map, device_annotation,
+    subckt_dir, subckt_dir_name, pb_graph_head, options, verbose);
 
   VTR_LOG("Done\n");
   VTR_LOG("\n");
@@ -294,9 +298,9 @@ static void print_verilog_logical_tile_netlist(
  *****************************************************************************/
 static void print_verilog_physical_tile_netlist(
   NetlistManager& netlist_manager, const ModuleManager& module_manager,
-  const std::string& subckt_dir, const std::string& subckt_dir_name,
-  t_physical_tile_type_ptr phy_block_type, const e_side& border_side,
-  const FabricVerilogOption& options) {
+  const ModuleNameMap& module_name_map, const std::string& subckt_dir,
+  const std::string& subckt_dir_name, t_physical_tile_type_ptr phy_block_type,
+  const e_side& border_side, const FabricVerilogOption& options) {
   /* Give a name to the Verilog netlist */
   std::string verilog_fname(generate_grid_block_netlist_name(
     std::string(GRID_MODULE_NAME_PREFIX) + std::string(phy_block_type->name),
@@ -334,6 +338,7 @@ static void print_verilog_physical_tile_netlist(
   std::string grid_module_name = generate_grid_block_module_name(
     std::string(GRID_VERILOG_FILE_NAME_PREFIX),
     std::string(phy_block_type->name), is_io_type(phy_block_type), border_side);
+  grid_module_name = module_name_map.name(grid_module_name);
   ModuleId grid_module = module_manager.find_module(grid_module_name);
   VTR_ASSERT(true == module_manager.valid_module_id(grid_module));
 
@@ -377,9 +382,10 @@ static void print_verilog_physical_tile_netlist(
  ****************************************************************************/
 void print_verilog_grids(
   NetlistManager& netlist_manager, const ModuleManager& module_manager,
-  const DeviceContext& device_ctx, const VprDeviceAnnotation& device_annotation,
-  const std::string& subckt_dir, const std::string& subckt_dir_name,
-  const FabricVerilogOption& options, const bool& verbose) {
+  const ModuleNameMap& module_name_map, const DeviceContext& device_ctx,
+  const VprDeviceAnnotation& device_annotation, const std::string& subckt_dir,
+  const std::string& subckt_dir_name, const FabricVerilogOption& options,
+  const bool& verbose) {
   /* Create a vector to contain all the Verilog netlist names that have been
    * generated in this function */
   std::vector<std::string> netlist_names;
@@ -400,8 +406,9 @@ void print_verilog_grids(
       continue;
     }
     print_verilog_logical_tile_netlist(
-      netlist_manager, module_manager, device_annotation, subckt_dir,
-      subckt_dir_name, logical_tile.pb_graph_head, options, verbose);
+      netlist_manager, module_manager, module_name_map, device_annotation,
+      subckt_dir, subckt_dir_name, logical_tile.pb_graph_head, options,
+      verbose);
   }
   VTR_LOG("Writing logical tiles...");
   VTR_LOG("Done\n");
@@ -432,15 +439,15 @@ void print_verilog_grids(
         find_physical_io_tile_located_sides(device_ctx.grid, &physical_tile);
       for (const e_side& io_type_side : io_type_sides) {
         print_verilog_physical_tile_netlist(
-          netlist_manager, module_manager, subckt_dir, subckt_dir_name,
-          &physical_tile, io_type_side, options);
+          netlist_manager, module_manager, module_name_map, subckt_dir,
+          subckt_dir_name, &physical_tile, io_type_side, options);
       }
       continue;
     } else {
       /* For CLB and heterogenenous blocks */
-      print_verilog_physical_tile_netlist(netlist_manager, module_manager,
-                                          subckt_dir, subckt_dir_name,
-                                          &physical_tile, NUM_SIDES, options);
+      print_verilog_physical_tile_netlist(
+        netlist_manager, module_manager, module_name_map, subckt_dir,
+        subckt_dir_name, &physical_tile, NUM_SIDES, options);
     }
   }
   VTR_LOG("Building physical tiles...");

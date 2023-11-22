@@ -17,6 +17,7 @@
 #include "io_name_map.h"
 #include "memory_bank_shift_register_banks.h"
 #include "module_manager.h"
+#include "module_name_map.h"
 #include "pin_constraints.h"
 #include "simulation_setting.h"
 #include "verilog_testbench_options.h"
@@ -40,6 +41,7 @@ int print_verilog_full_testbench(
   const PlacementContext& place_ctx, const PinConstraints& pin_constraints,
   const BusGroup& bus_group, const std::string& bitstream_file,
   const IoLocationMap& io_location_map, const IoNameMap& io_name_map,
+  const ModuleNameMap& module_name_map,
   const VprNetlistAnnotation& netlist_annotation,
   const std::string& circuit_name, const std::string& verilog_fname,
   const SimulationSetting& simulation_parameters,

@@ -1,0 +1,4 @@
+<module_names>
+  <module_name default="tile_1__1_" given="tile_clb"/>
+  <module_name default="tile_2__1_" given="tile_dsp"/>
+</module_names>

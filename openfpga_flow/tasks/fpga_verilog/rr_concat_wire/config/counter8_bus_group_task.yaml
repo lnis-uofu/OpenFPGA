@@ -1,0 +1,5 @@
+counter8:
+  source:
+    - name: counter_output_verilog.v
+  top_module: counter
+  bus_group_file: bus_group.xml

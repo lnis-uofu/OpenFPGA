@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 
-project("libionamemap")
+project("libnamemanager")
 
 file(GLOB_RECURSE EXEC_SOURCES test/*.cpp)
 file(GLOB_RECURSE LIB_SOURCES src/*/*.cpp)
@@ -11,14 +11,14 @@ files_to_dirs(LIB_HEADERS LIB_INCLUDE_DIRS)
 list(REMOVE_ITEM LIB_SOURCES ${EXEC_SOURCES})
 
 #Create the library
-add_library(libionamemap STATIC
+add_library(libnamemanager STATIC
             ${LIB_HEADERS}
             ${LIB_SOURCES})
-target_include_directories(libionamemap PUBLIC ${LIB_INCLUDE_DIRS})
-set_target_properties(libionamemap PROPERTIES PREFIX "") #Avoid extra 'lib' prefix
+target_include_directories(libnamemanager PUBLIC ${LIB_INCLUDE_DIRS})
+set_target_properties(libnamemanager PROPERTIES PREFIX "") #Avoid extra 'lib' prefix
 
 #Specify link-time dependancies
-target_link_libraries(libionamemap
+target_link_libraries(libnamemanager
                       libarchopenfpga
                       libopenfpgautil
                       libopenfpgashell
@@ -31,7 +31,7 @@ foreach(testsourcefile ${EXEC_SOURCES})
     get_filename_component(testname ${testsourcefile} NAME_WE)
     add_executable(${testname} ${testsourcefile})
     # Make sure the library is linked to each test executable
-    target_link_libraries(${testname} libionamemap)
+    target_link_libraries(${testname} libnamemanager)
 endforeach(testsourcefile ${EXEC_SOURCES})
 
-install(TARGETS libionamemap DESTINATION bin)
+install(TARGETS libnamemanager DESTINATION bin)

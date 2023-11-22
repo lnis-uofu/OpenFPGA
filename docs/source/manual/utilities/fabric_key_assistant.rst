@@ -8,7 +8,7 @@ Note that crafting a fabric key is not an easy task for engineers, as its comple
 This tool is developed to assist engineers when finalizing fabric key files.
 It can apply sanity checks on hand-crafted fabric key files, helping engineers to correct and debug.
 
-The tool can be found at ``/build/libs/libfabrickey/test/fabric_key_assistant``
+The tool can be found at ``/build/libs/libfabrickey/fabric_key_assistant``
 
 The tool includes the following options:
 

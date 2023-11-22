@@ -58,7 +58,7 @@ help:
 checkout: 
 # Update all the submodules
 	git submodule init
-	git submodule update --init --depth 1
+	git submodule update --init --recursive
 
 prebuild:
 # Run cmake to generate Makefile under the build directory, before compilation
