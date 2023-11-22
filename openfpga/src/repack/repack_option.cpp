@@ -49,7 +49,6 @@ bool RepackOption::is_pin_ignore_global_nets(const std::string& pb_type_name,
 bool RepackOption::net_is_specified_to_be_ignored(std::string cluster_net_name,
                                                   std::string pb_type_name,
                                                   const BasicPort& port) const {
-  if (cluster_net_name == "rst_n") int tt = 0;
   auto result = design_constraints_.ignore_net_pin_map().find(cluster_net_name);
   if (result == design_constraints_.ignore_net_pin_map().end()) {
     /* Not found, return false */
@@ -87,9 +86,6 @@ bool RepackOption::net_is_specified_to_be_ignored(std::string cluster_net_name,
           num_parse_errors_temp++;
           continue;
         }
-        // if (curr_pb_type_name == pb_type_name && curr_port == port) {
-        //   return true;
-        // }
         if (curr_port.mergeable(port) && curr_port.contained(port) &&
             curr_pb_type_name == pb_type_name) {
           return true;
