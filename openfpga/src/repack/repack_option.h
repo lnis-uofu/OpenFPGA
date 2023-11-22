@@ -25,6 +25,9 @@ class RepackOption {
   /* Identify if a pin should ignore all the global nets */
   bool is_pin_ignore_global_nets(const std::string& pb_type_name,
                                  const BasicPort& pin) const;
+  bool net_is_specified_to_be_ignored(
+    std::string cluster_net_name, std::string pb_type_name,
+    const BasicPort& port) const;
   bool verbose_output() const;
 
  public: /* Public mutators */

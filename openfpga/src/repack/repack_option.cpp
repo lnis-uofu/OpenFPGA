@@ -46,6 +46,60 @@ bool RepackOption::is_pin_ignore_global_nets(const std::string& pb_type_name,
   return false;
 }
 
+bool RepackOption::net_is_specified_to_be_ignored(std::string cluster_net_name,
+                                                  std::string pb_type_name,
+                                                  const BasicPort& port) const {
+  if (cluster_net_name == "rst_n") int tt = 0;
+  auto result = design_constraints_.ignore_net_pin_map().find(cluster_net_name);
+  if (result == design_constraints_.ignore_net_pin_map().end()) {
+    /* Not found, return false */
+    return false;
+  } else {
+    int num_parse_errors_temp = 0;
+    /* Split the content using a tokenizer */
+    auto pin_ctx_to_parse =
+      design_constraints_.ignore_net_pin_map()[cluster_net_name];
+    for (auto pin_ctx_to_parse_iter : pin_ctx_to_parse) {
+      StringToken tokenizer(pin_ctx_to_parse_iter);
+      std::vector<std::string> tokens = tokenizer.split(',');
+      /* Parse each token */
+      for (std::string token : tokens) {
+        /* Extract the pb_type name and port name */
+        StringToken pin_tokenizer(token);
+        std::vector<std::string> pin_info = pin_tokenizer.split('.');
+        /* Expect two contents, otherwise error out */
+        if (pin_info.size() != 2) {
+          std::string err_msg =
+            std::string("Invalid content '") + token +
+            std::string("' to skip, expect <pb_type_name>.<pin>\n");
+          VTR_LOG_ERROR(err_msg.c_str());
+          num_parse_errors_temp++;
+          continue;
+        }
+        std::string curr_pb_type_name = pin_info[0];
+        PortParser port_parser(pin_info[1]);
+        BasicPort curr_port = port_parser.port();
+        if (!curr_port.is_valid()) {
+          std::string err_msg =
+            std::string("Invalid pin definition '") + token +
+            std::string("', expect <pb_type_name>.<pin_name>[int:int]\n");
+          VTR_LOG_ERROR(err_msg.c_str());
+          num_parse_errors_temp++;
+          continue;
+        }
+        // if (curr_pb_type_name == pb_type_name && curr_port == port) {
+        //   return true;
+        // }
+        if (curr_port.mergeable(port) && curr_port.contained(port) &&
+            curr_pb_type_name == pb_type_name) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 bool RepackOption::verbose_output() const { return verbose_output_; }
 
 /******************************************************************************

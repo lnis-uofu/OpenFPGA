@@ -54,6 +54,11 @@ std::string RepackDesignConstraints::net(
   return repack_design_constraint_nets_[repack_design_constraint_id];
 }
 
+std::map<std::string, std::vector<std::string>>
+RepackDesignConstraints::ignore_net_pin_map() const {
+  return ignore_net_pin_map_;
+}
+
 std::string RepackDesignConstraints::find_constrained_pin_net(
   const std::string& pb_type, const openfpga::BasicPort& pin) const {
   std::string constrained_net_name;
@@ -138,6 +143,10 @@ void RepackDesignConstraints::set_net(
   repack_design_constraint_nets_[repack_design_constraint_id] = net;
 }
 
+void RepackDesignConstraints::set_ignore_net_pin_map_(
+  const std::string& net_name, const std::string pin_ctx) {
+  ignore_net_pin_map_[net_name].push_back(pin_ctx);
+}
 /************************************************************************
  * Internal invalidators/validators
  ***********************************************************************/

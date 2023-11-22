@@ -80,11 +80,17 @@ RepackDesignConstraints read_xml_repack_design_constraints(
 
     for (pugi::xml_node xml_design_constraint : xml_root.children()) {
       /* Error out if the XML child has an invalid name! */
-      if (xml_design_constraint.name() != std::string("pin_constraint")) {
-        bad_tag(xml_design_constraint, loc_data, xml_root, {"pin_constraint"});
+      if (xml_design_constraint.name() == std::string("pin_constraint")) {
+        read_xml_pin_constraint(xml_design_constraint, loc_data,
+                                repack_design_constraints);
+      } else if (xml_design_constraint.name() == std::string("ignore_net")) {
+        repack_design_constraints.set_ignore_net_pin_map_(
+          get_attribute(xml_design_constraint, "name", loc_data).as_string(),
+          get_attribute(xml_design_constraint, "pin", loc_data).as_string());
+      } else {
+        bad_tag(xml_design_constraint, loc_data, xml_root,
+                {"pin_constraint", "ignore_net"});
       }
-      read_xml_pin_constraint(xml_design_constraint, loc_data,
-                              repack_design_constraints);
     }
   } catch (pugiutil::XmlError& e) {
     archfpga_throw(design_constraint_fname, e.line(), "%s", e.what());
