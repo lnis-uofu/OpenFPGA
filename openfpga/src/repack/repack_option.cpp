@@ -54,11 +54,11 @@ bool RepackOption::net_is_specified_to_be_ignored(std::string cluster_net_name,
     /* Not found, return false */
     return false;
   } else {
-    int num_parse_errors_temp = 0;
     /* Split the content using a tokenizer */
     auto pin_ctx_to_parse =
       design_constraints_.ignore_net_pin_map()[cluster_net_name];
     for (auto pin_ctx_to_parse_iter : pin_ctx_to_parse) {
+      int num_parse_errors_temp = 0;
       StringToken tokenizer(pin_ctx_to_parse_iter);
       std::vector<std::string> tokens = tokenizer.split(',');
       /* Parse each token */
