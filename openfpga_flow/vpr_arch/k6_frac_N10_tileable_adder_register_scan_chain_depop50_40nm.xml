@@ -146,7 +146,7 @@
   <!-- Apply tileable routing architecture.
        This is strongly recommended if you want to PnR large FPGA fabric
     -->
-  <layout tileable="true">
+  <layout tileable="true" concat_pass_wire="true">
     <auto_layout aspect_ratio="1.0">
       <!--Perimeter of 'io' blocks with 'EMPTY' blocks at corners-->
       <perimeter type="io" priority="100"/>

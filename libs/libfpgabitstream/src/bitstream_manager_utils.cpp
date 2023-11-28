@@ -82,6 +82,29 @@ size_t find_bitstream_manager_config_bit_index_in_parent_block(
 }
 
 /********************************************************************
+ * Find the index of a configuration bit in the children bits of its grandparent
+ *block. We count the index from the parent of current parent block
+ *******************************************************************/
+size_t find_bitstream_manager_config_bit_index_in_grandparent_block(
+  const BitstreamManager& bitstream_manager, const ConfigBitId& bit_id) {
+  size_t curr_index = 0;
+  ConfigBlockId parent_blk = bitstream_manager.bit_parent_block(bit_id);
+  ConfigBlockId grandparent_blk = bitstream_manager.block_parent(parent_blk);
+  for (const ConfigBlockId& cand_blk :
+       bitstream_manager.block_children(grandparent_blk)) {
+    if (cand_blk != parent_blk) {
+      curr_index += bitstream_manager.block_bits(cand_blk).size();
+    } else {
+      curr_index += find_bitstream_manager_config_bit_index_in_parent_block(
+        bitstream_manager, bit_id);
+      break;
+    }
+  }
+
+  return curr_index;
+}
+
+/********************************************************************
  * Find the total number of configuration bits under a block
  * As configuration bits are stored only under the leaf blocks,
  * this function will recursively visit all the child blocks

@@ -140,6 +140,9 @@ echo -e "Testing through channels in tileable routing";
 run-task fpga_verilog/thru_channel/thru_narrow_tile $@
 run-task fpga_verilog/thru_channel/thru_wide_tile $@
 
+echo -e "Testing wire concatation in tileable routing";
+run-task fpga_verilog/rr_concat_wire $@
+
 echo -e "Testing the generation of preconfigured fabric wrapper for different HDL simulators";
 run-task fpga_verilog/verilog_netlist_formats/embed_bitstream_none $@
 run-task fpga_verilog/verilog_netlist_formats/embed_bitstream_modelsim $@

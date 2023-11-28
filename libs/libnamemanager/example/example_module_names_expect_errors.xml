@@ -1,0 +1,6 @@
+<module_names>
+  <module_name default="tile_0__1_" given="tile_io_bottom"/>
+  <module_name default="tile_1__1_" given="tile_clb"/>
+  <module_name default="tile_1__0_" given="tile_io_left"/>
+  <module_name default="tile_3__0_" given="tile_io_left"/>
+</module_names>

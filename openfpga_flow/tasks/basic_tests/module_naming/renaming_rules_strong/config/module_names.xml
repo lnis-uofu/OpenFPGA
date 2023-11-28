@@ -1,0 +1,12 @@
+<module_names>
+  <module_name default="mux_tree_tapbuf_size10_mem" given="mux_tree_mem_max"/>
+  <module_name default="mux_tree_size2" given="mux_tree_mini"/>
+  <module_name default="logical_tile_clb_mode_clb_" given="logical_tile_clb_mode_clb_unique"/>
+  <module_name default="sb_1__1_" given="sb_max"/>
+  <module_name default="cby_1__1_" given="cby_max"/>
+  <module_name default="cbx_1__1_" given="cbx_max"/>
+  <module_name default="tile_1__1_" given="tile_clb"/>
+  <module_name default="tile_2__1_" given="tile_dsp"/>
+  <module_name default="fpga_core" given="pfabric_core"/>
+  <module_name default="fpga_top" given="pfabric_top"/>
+</module_names>

@@ -33,7 +33,7 @@ size_t find_fabric_regional_bitstream_max_size(
   for (const auto& region : fabric_bitstream.regions()) {
     if (!region_whitelist.empty() &&
         (std::find(region_whitelist.begin(), region_whitelist.end(),
-                   size_t(region)) != region_whitelist.end())) {
+                   size_t(region)) == region_whitelist.end())) {
       continue;
     }
     if (regional_bitstream_max_size <
@@ -65,7 +65,7 @@ size_t find_configuration_chain_fabric_bitstream_size_to_be_skipped(
   for (const auto& region : fabric_bitstream.regions()) {
     if (!region_whitelist.empty() &&
         (std::find(region_whitelist.begin(), region_whitelist.end(),
-                   size_t(region)) != region_whitelist.end())) {
+                   size_t(region)) == region_whitelist.end())) {
       continue;
     }
     size_t curr_region_num_bits_to_skip = 0;

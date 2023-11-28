@@ -266,6 +266,131 @@ ShellCommandId add_write_preconfigured_fabric_wrapper_command_template(
 }
 
 /********************************************************************
+ * - add a command to shell environment: write a template of testbench
+ * - add associated options
+ * - add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_write_testbench_template_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("write_testbench_template");
+
+  /* add an option '--file' in short '-f'*/
+  CommandOptionId output_opt = shell_cmd.add_option(
+    "file", true, "specify the file path to output the content");
+  shell_cmd.set_option_short_name(output_opt, "f");
+  shell_cmd.set_option_require_value(output_opt, openfpga::OPT_STRING);
+
+  /* add an option '--top_module'*/
+  CommandOptionId top_module_opt =
+    shell_cmd.add_option("top_module", false,
+                         "specify the top-level module name to be used in the "
+                         "testbench. Please avoid reserved words, i.e., "
+                         "fpga_top or fpga_core. By default, it is top_tb.");
+  shell_cmd.set_option_require_value(top_module_opt, openfpga::OPT_STRING);
+
+  /* add an option '--dut_module'*/
+  CommandOptionId dut_module_opt = shell_cmd.add_option(
+    "dut_module", false,
+    "specify the module name of DUT to be used in the testbench. Can be either "
+    "fpga_top or fpga_core. By default, it is fpga_top.");
+  shell_cmd.set_option_require_value(dut_module_opt, openfpga::OPT_STRING);
+
+  /* add an option '--explicit_port_mapping' */
+  shell_cmd.add_option("explicit_port_mapping", false,
+                       "use explicit port mapping in verilog netlists");
+
+  /* Add an option '--default_net_type' */
+  CommandOptionId default_net_type_opt = shell_cmd.add_option(
+    "default_net_type", false,
+    "Set the default net type for Verilog netlists. Default value is 'none'");
+  shell_cmd.set_option_require_value(default_net_type_opt,
+                                     openfpga::OPT_STRING);
+
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false,
+                       "Do not print a time stamp in the output files");
+
+  /* add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "enable verbose output");
+
+  /* add command to the shell */
+  ShellCommandId shell_cmd_id = shell.add_command(
+    shell_cmd,
+    "generate a template of testbench for a pre-configured fpga fabric",
+    hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     write_testbench_template_template<T>);
+
+  /* add command dependency to the shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
+ * - add a command to shell environment: write testbench io connection
+ * - add associated options
+ * - add command dependency
+ *******************************************************************/
+template <class T>
+ShellCommandId add_write_testbench_io_connection_command_template(
+  openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
+  const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
+  Command shell_cmd("write_testbench_io_connection");
+
+  /* add an option '--file' in short '-f'*/
+  CommandOptionId output_opt = shell_cmd.add_option(
+    "file", true, "specify the file path to output the content");
+  shell_cmd.set_option_short_name(output_opt, "f");
+  shell_cmd.set_option_require_value(output_opt, openfpga::OPT_STRING);
+
+  /* add an option '--dut_module'*/
+  CommandOptionId dut_module_opt = shell_cmd.add_option(
+    "dut_module", false,
+    "specify the module name of DUT to be used in the testbench. Can be either "
+    "fpga_top or fpga_core. By default, it is fpga_top.");
+  shell_cmd.set_option_require_value(dut_module_opt, openfpga::OPT_STRING);
+
+  /* add an option '--pin_constraints_file in short '-pcf' */
+  CommandOptionId pcf_opt =
+    shell_cmd.add_option("pin_constraints_file", false,
+                         "specify the file path to the pin constraints");
+  shell_cmd.set_option_short_name(pcf_opt, "pcf");
+  shell_cmd.set_option_require_value(pcf_opt, openfpga::OPT_STRING);
+
+  /* add an option '--bus_group_file in short '-bgf' */
+  CommandOptionId bgf_opt = shell_cmd.add_option(
+    "bus_group_file", false, "specify the file path to the group pins to bus");
+  shell_cmd.set_option_short_name(bgf_opt, "bgf");
+  shell_cmd.set_option_require_value(bgf_opt, openfpga::OPT_STRING);
+
+  /* Add an option '--no_time_stamp' */
+  shell_cmd.add_option("no_time_stamp", false,
+                       "Do not print a time stamp in the output files");
+
+  /* add an option '--verbose' */
+  shell_cmd.add_option("verbose", false, "enable verbose output");
+
+  /* add command to the shell */
+  ShellCommandId shell_cmd_id =
+    shell.add_command(shell_cmd,
+                      "generate a file to describe the connection to I/Os of a "
+                      "pre-configured fpga fabric",
+                      hidden);
+  shell.set_command_class(shell_cmd_id, cmd_class_id);
+  shell.set_command_execute_function(shell_cmd_id,
+                                     write_testbench_io_connection_template<T>);
+
+  /* add command dependency to the shell */
+  shell.set_command_dependency(shell_cmd_id, dependent_cmds);
+
+  return shell_cmd_id;
+}
+
+/********************************************************************
  * - add a command to shell environment: write mock fpga wrapper
  * - add associated options
  * - add command dependency
@@ -523,6 +648,28 @@ void add_verilog_command_templates(openfpga::Shell<T>& shell,
   preconfig_wrapper_dependent_cmds.push_back(build_fabric_cmd_id);
   add_write_preconfigured_fabric_wrapper_command_template<T>(
     shell, openfpga_verilog_cmd_class, preconfig_wrapper_dependent_cmds,
+    hidden);
+
+  /********************************
+   * Command 'write_testbench_template'
+   */
+  /* The command 'write_testbench_template' should NOT be executed
+   * before 'build_fabric' */
+  std::vector<ShellCommandId> testbench_template_dependent_cmds;
+  testbench_template_dependent_cmds.push_back(build_fabric_cmd_id);
+  add_write_testbench_template_command_template<T>(
+    shell, openfpga_verilog_cmd_class, testbench_template_dependent_cmds,
+    hidden);
+
+  /********************************
+   * Command 'write_testbench_io_connection'
+   */
+  /* The command 'write_testbench_io_connection' should NOT be executed
+   * before 'build_fabric' */
+  std::vector<ShellCommandId> testbench_io_conkt_dependent_cmds;
+  testbench_io_conkt_dependent_cmds.push_back(build_fabric_cmd_id);
+  add_write_testbench_io_connection_command_template<T>(
+    shell, openfpga_verilog_cmd_class, testbench_io_conkt_dependent_cmds,
     hidden);
 
   /********************************

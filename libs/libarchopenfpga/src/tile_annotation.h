@@ -39,6 +39,9 @@ class TileAnnotation {
 
  public: /* Public accessors: aggregators */
   global_port_range global_ports() const;
+  std::vector<std::string> tiles_to_merge_ports() const;
+  std::vector<std::string> tile_ports_to_merge(
+    const std::string& tile_name) const;
 
  public: /* Public accessors */
   std::string global_port_name(const TileGlobalPortId& global_port_id) const;
@@ -55,6 +58,10 @@ class TileAnnotation {
     const TileGlobalPortId& global_port_id) const;
   size_t global_port_default_value(
     const TileGlobalPortId& global_port_id) const;
+
+  /** @brief Check if a given tile port should be merged or not */
+  bool is_tile_port_to_merge(const std::string& tile_name,
+                             const std::string& port_name) const;
 
  public: /* Public mutators */
   /* By default, we do not set it as a clock.
@@ -76,6 +83,9 @@ class TileAnnotation {
                                 const bool& is_reset);
   void set_global_port_default_value(const TileGlobalPortId& global_port_id,
                                      const size_t& default_value);
+
+  int add_merge_subtile_ports(const std::string& tile_name,
+                              const std::string& port_name);
 
  public: /* Public validator */
   bool valid_global_port_id(const TileGlobalPortId& global_port_id) const;
@@ -102,6 +112,10 @@ class TileAnnotation {
 
   /* A fast lookup for port names */
   std::map<std::string, TileGlobalPortId> global_port_name2ids_;
+
+  /* Merge port information for tiles */
+  std::map<std::string, std::vector<std::string>>
+    tile_ports_to_merge_;  // tile_name -> port_name
 };
 
 }  // namespace openfpga

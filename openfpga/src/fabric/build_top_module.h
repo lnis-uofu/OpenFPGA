@@ -42,10 +42,10 @@ int build_top_module(
   const DeviceRRGSB& device_rr_gsb, const TileDirect& tile_direct,
   const ArchDirect& arch_direct, const ConfigProtocol& config_protocol,
   const CircuitModelId& sram_model, const FabricTile& fabric_tile,
-  const bool& frame_view, const bool& compact_routing_hierarchy,
-  const bool& duplicate_grid_pin, const FabricKey& fabric_key,
-  const bool& generate_random_fabric_key, const bool& group_config_block,
-  const bool& verbose);
+  const bool& name_module_using_index, const bool& frame_view,
+  const bool& compact_routing_hierarchy, const bool& duplicate_grid_pin,
+  const FabricKey& fabric_key, const bool& generate_random_fabric_key,
+  const bool& group_config_block, const bool& verbose);
 
 } /* end namespace openfpga */
 

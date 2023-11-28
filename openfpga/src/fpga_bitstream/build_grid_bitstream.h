@@ -11,6 +11,7 @@
 #include "device_grid.h"
 #include "fabric_tile.h"
 #include "module_manager.h"
+#include "module_name_map.h"
 #include "mux_library.h"
 #include "vpr_bitstream_annotation.h"
 #include "vpr_clustering_annotation.h"
@@ -27,10 +28,10 @@ namespace openfpga {
 
 void build_grid_bitstream(
   BitstreamManager& bitstream_manager, const ConfigBlockId& top_block,
-  const ModuleManager& module_manager, const FabricTile& fabric_tile,
-  const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
-  const DeviceGrid& grids, const size_t& layer, const AtomContext& atom_ctx,
-  const VprDeviceAnnotation& device_annotation,
+  const ModuleManager& module_manager, const ModuleNameMap& module_name_map,
+  const FabricTile& fabric_tile, const CircuitLibrary& circuit_lib,
+  const MuxLibrary& mux_lib, const DeviceGrid& grids, const size_t& layer,
+  const AtomContext& atom_ctx, const VprDeviceAnnotation& device_annotation,
   const VprClusteringAnnotation& cluster_annotation,
   const VprPlacementAnnotation& place_annotation,
   const VprBitstreamAnnotation& bitstream_annotation, const bool& verbose);

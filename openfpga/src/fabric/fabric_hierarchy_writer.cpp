@@ -84,6 +84,7 @@ static int rec_output_module_hierarchy_to_text_file(
  * Return 2 if fail when creating files
  ***************************************************************************************/
 int write_fabric_hierarchy_to_text_file(const ModuleManager& module_manager,
+                                        const ModuleNameMap& module_name_map,
                                         const std::string& fname,
                                         const size_t& hie_depth_to_stop,
                                         const bool& verbose) {
@@ -111,7 +112,8 @@ int write_fabric_hierarchy_to_text_file(const ModuleManager& module_manager,
   check_file_stream(fname.c_str(), fp);
 
   /* Find top-level module */
-  std::string top_module_name = generate_fpga_top_module_name();
+  std::string top_module_name =
+    module_name_map.name(generate_fpga_top_module_name());
   ModuleId top_module = module_manager.find_module(top_module_name);
   if (true != module_manager.valid_module_id(top_module)) {
     VTR_LOGV_ERROR(verbose, "Unable to find the top-level module '%s'!\n",

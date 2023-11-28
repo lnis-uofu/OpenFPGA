@@ -42,6 +42,7 @@ namespace openfpga {
 static void print_verilog_mux_local_decoder_module(
   std::fstream& fp, const ModuleManager& module_manager,
   const DecoderLibrary& decoder_lib, const DecoderId& decoder,
+  const ModuleNameMap& module_name_map,
   const e_verilog_default_net_type& default_net_type) {
   /* Get the number of inputs */
   size_t addr_size = decoder_lib.addr_size(decoder);
@@ -51,8 +52,8 @@ static void print_verilog_mux_local_decoder_module(
   VTR_ASSERT(true == valid_file_stream(fp));
 
   /* TODO: create a name for the local encoder */
-  std::string module_name =
-    generate_mux_local_decoder_subckt_name(addr_size, data_size);
+  std::string module_name = module_name_map.name(
+    generate_mux_local_decoder_subckt_name(addr_size, data_size));
 
   /* Create a Verilog Module based on the circuit model, and add to module
    * manager */
@@ -180,8 +181,8 @@ static void print_verilog_mux_local_decoder_module(
 void print_verilog_submodule_mux_local_decoders(
   const ModuleManager& module_manager, NetlistManager& netlist_manager,
   const MuxLibrary& mux_lib, const CircuitLibrary& circuit_lib,
-  const std::string& submodule_dir, const std::string& submodule_dir_name,
-  const FabricVerilogOption& options) {
+  const ModuleNameMap& module_name_map, const std::string& submodule_dir,
+  const std::string& submodule_dir_name, const FabricVerilogOption& options) {
   std::string verilog_fname(LOCAL_ENCODER_VERILOG_FILE_NAME);
   std::string verilog_fpath(submodule_dir + verilog_fname);
 
@@ -235,7 +236,8 @@ void print_verilog_submodule_mux_local_decoders(
   /* Generate Verilog modules for the found unique local encoders */
   for (const auto& decoder : decoder_lib.decoders()) {
     print_verilog_mux_local_decoder_module(fp, module_manager, decoder_lib,
-                                           decoder, options.default_net_type());
+                                           decoder, module_name_map,
+                                           options.default_net_type());
   }
 
   /* Close the file stream */
@@ -280,6 +282,7 @@ void print_verilog_submodule_mux_local_decoders(
 static void print_verilog_arch_decoder_module(
   std::fstream& fp, const ModuleManager& module_manager,
   const DecoderLibrary& decoder_lib, const DecoderId& decoder,
+  const ModuleNameMap& module_name_map,
   const e_verilog_default_net_type& default_net_type) {
   /* Get the number of inputs */
   size_t addr_size = decoder_lib.addr_size(decoder);
@@ -289,8 +292,8 @@ static void print_verilog_arch_decoder_module(
   VTR_ASSERT(true == valid_file_stream(fp));
 
   /* Create a name for the decoder */
-  std::string module_name =
-    generate_memory_decoder_subckt_name(addr_size, data_size);
+  std::string module_name = module_name_map.name(
+    generate_memory_decoder_subckt_name(addr_size, data_size));
 
   /* Create a Verilog Module based on the circuit model, and add to module
    * manager */
@@ -603,6 +606,7 @@ static void print_verilog_arch_decoder_module(
 static void print_verilog_arch_decoder_with_data_in_module(
   std::fstream& fp, const ModuleManager& module_manager,
   const DecoderLibrary& decoder_lib, const DecoderId& decoder,
+  const ModuleNameMap& module_name_map,
   const e_verilog_default_net_type& default_net_type) {
   /* Get the number of inputs */
   size_t addr_size = decoder_lib.addr_size(decoder);
@@ -613,8 +617,8 @@ static void print_verilog_arch_decoder_with_data_in_module(
   VTR_ASSERT(true == valid_file_stream(fp));
 
   /* Create a name for the decoder */
-  std::string module_name =
-    generate_memory_decoder_with_data_in_subckt_name(addr_size, data_size);
+  std::string module_name = module_name_map.name(
+    generate_memory_decoder_with_data_in_subckt_name(addr_size, data_size));
 
   /* Create a Verilog Module based on the circuit model, and add to module
    * manager */
@@ -778,8 +782,9 @@ static void print_verilog_arch_decoder_with_data_in_module(
  ***************************************************************************************/
 void print_verilog_submodule_arch_decoders(
   const ModuleManager& module_manager, NetlistManager& netlist_manager,
-  const DecoderLibrary& decoder_lib, const std::string& submodule_dir,
-  const std::string& submodule_dir_name, const FabricVerilogOption& options) {
+  const DecoderLibrary& decoder_lib, const ModuleNameMap& module_name_map,
+  const std::string& submodule_dir, const std::string& submodule_dir_name,
+  const FabricVerilogOption& options) {
   std::string verilog_fname(ARCH_ENCODER_VERILOG_FILE_NAME);
   std::string verilog_fpath(submodule_dir + verilog_fname);
 
@@ -801,10 +806,12 @@ void print_verilog_submodule_arch_decoders(
   for (const auto& decoder : decoder_lib.decoders()) {
     if (true == decoder_lib.use_data_in(decoder)) {
       print_verilog_arch_decoder_with_data_in_module(
-        fp, module_manager, decoder_lib, decoder, options.default_net_type());
+        fp, module_manager, decoder_lib, decoder, module_name_map,
+        options.default_net_type());
     } else {
       print_verilog_arch_decoder_module(fp, module_manager, decoder_lib,
-                                        decoder, options.default_net_type());
+                                        decoder, module_name_map,
+                                        options.default_net_type());
     }
   }
 
