@@ -54,9 +54,15 @@ std::string RepackDesignConstraints::net(
   return repack_design_constraint_nets_[repack_design_constraint_id];
 }
 
-std::map<std::string, std::vector<std::string>>
-RepackDesignConstraints::ignore_net_pin_map() const {
-  return ignore_net_pin_map_;
+std::vector<std::string> RepackDesignConstraints::ignore_net_on_pin(
+  const std::string& net_name) const {
+  std::map<std::string, std::vector<std::string>>::const_iterator it =
+    ignore_net_pin_map_.find(net_name);
+  if (it != ignore_net_pin_map_.end()) {
+    return it->second;
+  } else {
+    return std::vector<std::string>();
+  }
 }
 
 std::string RepackDesignConstraints::find_constrained_pin_net(

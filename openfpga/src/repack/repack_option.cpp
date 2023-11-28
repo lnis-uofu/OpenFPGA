@@ -49,14 +49,13 @@ bool RepackOption::is_pin_ignore_global_nets(const std::string& pb_type_name,
 bool RepackOption::net_is_specified_to_be_ignored(std::string cluster_net_name,
                                                   std::string pb_type_name,
                                                   const BasicPort& port) const {
-  auto result = design_constraints_.ignore_net_pin_map().find(cluster_net_name);
-  if (result == design_constraints_.ignore_net_pin_map().end()) {
+  auto pin_ctx_to_parse =
+    design_constraints_.ignore_net_on_pin(cluster_net_name);
+  if (pin_ctx_to_parse.empty()) {
     /* Not found, return false */
     return false;
   } else {
     /* Split the content using a tokenizer */
-    auto pin_ctx_to_parse =
-      design_constraints_.ignore_net_pin_map()[cluster_net_name];
     for (auto pin_ctx_to_parse_iter : pin_ctx_to_parse) {
       int num_parse_errors_temp = 0;
       StringToken tokenizer(pin_ctx_to_parse_iter);

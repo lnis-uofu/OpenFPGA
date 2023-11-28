@@ -69,7 +69,7 @@ class RepackDesignConstraints {
   std::string net(
     const RepackDesignConstraintId& repack_design_constraint_id) const;
 
-  std::map<std::string, std::vector<std::string>> ignore_net_pin_map() const;
+  std::vector<std::string> ignore_net_on_pin(const std::string& net_name) const;
   /* Find a constrained net */
   std::string find_constrained_pin_net(const std::string& pb_type,
                                        const openfpga::BasicPort& pin) const;
