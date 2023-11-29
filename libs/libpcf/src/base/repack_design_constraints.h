@@ -7,7 +7,7 @@
 #include <array>
 #include <map>
 #include <string>
-
+#include <set>
 /* Headers from vtrutil library */
 #include "vtr_geometry.h"
 #include "vtr_vector.h"
@@ -69,7 +69,7 @@ class RepackDesignConstraints {
   std::string net(
     const RepackDesignConstraintId& repack_design_constraint_id) const;
 
-  std::vector<std::string> ignore_net_on_pin(const std::string& net_name) const;
+  std::set<std::string> ignore_net_on_pin(const std::string& net_name) const;
   /* Find a constrained net */
   std::string find_constrained_pin_net(const std::string& pb_type,
                                        const openfpga::BasicPort& pin) const;
@@ -139,8 +139,8 @@ class RepackDesignConstraints {
   /* Nets to constraint */
   vtr::vector<RepackDesignConstraintId, std::string>
     repack_design_constraint_nets_;
-
-  std::map<std::string, std::vector<std::string>> ignore_net_pin_map_;
+ 
+  std::map<std::string, std::set<std::string>> ignore_net_pin_map_; // std::set
 };
 
 #endif

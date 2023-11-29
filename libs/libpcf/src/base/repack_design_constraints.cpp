@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "openfpga_port_parser.h"
+#include "openfpga_tokenizer.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
@@ -54,14 +56,14 @@ std::string RepackDesignConstraints::net(
   return repack_design_constraint_nets_[repack_design_constraint_id];
 }
 
-std::vector<std::string> RepackDesignConstraints::ignore_net_on_pin(
+std::set<std::string> RepackDesignConstraints::ignore_net_on_pin(
   const std::string& net_name) const {
-  std::map<std::string, std::vector<std::string>>::const_iterator it =
+  std::map<std::string, std::set<std::string>>::const_iterator it =
     ignore_net_pin_map_.find(net_name);
   if (it != ignore_net_pin_map_.end()) {
     return it->second;
   } else {
-    return std::vector<std::string>();
+    return std::set<std::string>();
   }
 }
 
@@ -151,7 +153,28 @@ void RepackDesignConstraints::set_net(
 
 void RepackDesignConstraints::set_ignore_net_pin_map_(
   const std::string& net_name, const std::string pin_ctx) {
-  ignore_net_pin_map_[net_name].push_back(pin_ctx);
+  /* Extract the pb_type name and port name */
+  openfpga::StringToken pin_tokenizer(pin_ctx);
+  std::vector<std::string> pin_info = pin_tokenizer.split('.');
+  /* Expect two contents, otherwise error out */
+  if (pin_info.size() != 2) {
+    std::string err_msg =
+      std::string("Invalid content '") + pin_ctx +
+      std::string("' to skip, expect <pb_type_name>.<pin>\n");
+    VTR_LOG_ERROR(err_msg.c_str());
+    return;
+  }
+  std::string pb_type_name = pin_info[0];
+  openfpga::PortParser port_parser(pin_info[1]);
+  openfpga::BasicPort curr_port = port_parser.port();
+  if (!curr_port.is_valid()) {
+    std::string err_msg =
+      std::string("Invalid pin definition '") + pin_ctx +
+      std::string("', expect <pb_type_name>.<pin_name>[int:int]\n");
+    VTR_LOG_ERROR(err_msg.c_str());
+    return;
+  }
+  ignore_net_pin_map_[net_name].insert(pin_ctx);
 }
 /************************************************************************
  * Internal invalidators/validators
