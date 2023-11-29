@@ -6,8 +6,8 @@
  *******************************************************************/
 #include <array>
 #include <map>
-#include <string>
 #include <set>
+#include <string>
 /* Headers from vtrutil library */
 #include "vtr_geometry.h"
 #include "vtr_vector.h"
@@ -139,8 +139,8 @@ class RepackDesignConstraints {
   /* Nets to constraint */
   vtr::vector<RepackDesignConstraintId, std::string>
     repack_design_constraint_nets_;
- 
-  std::map<std::string, std::set<std::string>> ignore_net_pin_map_; // std::set
+
+  std::map<std::string, std::set<std::string>> ignore_net_pin_map_; 
 };
 
 #endif
