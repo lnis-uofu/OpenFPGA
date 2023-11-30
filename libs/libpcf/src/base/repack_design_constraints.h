@@ -140,7 +140,7 @@ class RepackDesignConstraints {
   vtr::vector<RepackDesignConstraintId, std::string>
     repack_design_constraint_nets_;
 
-  std::map<std::string, std::set<std::string>> ignore_net_pin_map_; 
+  std::map<std::string, std::set<std::string>> ignore_net_pin_map_;
 };
 
 #endif
