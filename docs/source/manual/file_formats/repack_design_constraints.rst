@@ -32,3 +32,24 @@ An example of design constraints is shown as follows.
   The net name of the pin to be mapped, which should be consistent with net definition in your ``.blif`` file. The reserved word ``OPEN`` means that no net should be mapped to a given pin. Please ensure that it is not conflicted with any net names in your ``.blif`` file.
  
 .. warning:: Design constraints is a feature for power-users. It may cause repack to fail. It is users's responsibility to ensure proper design constraints
+
+**Addtional command:** To bypass global nets on specified pins, we add additional command: ignore_net
+
+An example of setting ignore nets is shown as follows.
+
+.. code-block:: xml
+
+   <repack_design_constraints>
+    <pin_constraint pb_type="clb" pin="clk[0]" net="clk0"/>
+      ...
+    <ignore_net name="rst_n" pin="clb.I[0:11]"/>
+    <ignore_net name="rst_n" pin="dsp.I[0:11]"/>
+  </repack_design_constraints>
+
+.. option:: name="<string>"
+   
+   The global nets's name to be ignored, which should be consistent with user-defined global nets in the PCF file. 
+
+.. option:: pin="<string>"
+   
+   The specified pins on a certain programmable block, which should be consistent with VPR's architecture description.
