@@ -162,6 +162,7 @@ void RepackDesignConstraints::set_ignore_net_pin_map_(
       std::string("Invalid content '") + pin_ctx +
       std::string("' to skip, expect <pb_type_name>.<pin>\n");
     VTR_LOG_ERROR(err_msg.c_str());
+    VTR_ASSERT(pin_info.size() == 2);
     return;
   }
   std::string pb_type_name = pin_info[0];
@@ -172,6 +173,7 @@ void RepackDesignConstraints::set_ignore_net_pin_map_(
       std::string("Invalid pin definition '") + pin_ctx +
       std::string("', expect <pb_type_name>.<pin_name>[int:int]\n");
     VTR_LOG_ERROR(err_msg.c_str());
+    VTR_ASSERT(curr_port.is_valid());
     return;
   }
   ignore_net_pin_map_[net_name].insert(pin_ctx);
