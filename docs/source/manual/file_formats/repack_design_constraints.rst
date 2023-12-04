@@ -21,6 +21,9 @@ An example of design constraints is shown as follows.
     <ignore_net name="rst_n" pin="clb.I[0:11]"/>
   </repack_design_constraints>
 
+Pin constraint
+^^^^^^^^^^^^^^
+
 .. option:: pb_type="<string>"
 
   The pb_type name to be constrained, which should be consistent with VPR's architecture description.
@@ -35,7 +38,10 @@ An example of design constraints is shown as follows.
  
 .. warning:: Design constraints is a feature for power-users. It may cause repack to fail. It is users's responsibility to ensure proper design constraints
 
-**Addtional command:** To ignore the global nets on specific pins, use the syntax ``ignore_net``. Note that the qualified pins are inputs, outputs, and clocks of pb_type. The option is useful for preventing global nets from being assigned to unwanted pins on pb_type.
+Ignore net
+^^^^^^^^^^
+
+To ignore the global nets on specific pins, use the syntax ``ignore_net``. Note that the qualified pins are inputs, outputs, and clocks of pb_type. The option is useful for preventing global nets from being assigned to unwanted pins on pb_type.
 
 .. option:: name="<string>"
    
