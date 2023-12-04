@@ -652,7 +652,7 @@ int write_fabric_bitstream_to_text_file(
         // bitstream
         status = fast_write_memory_bank_flatten_fabric_bitstream_to_text_file(
           fp, apply_fast_configuration, bit_value_to_skip, fabric_bitstream,
-          options.keep_dont_care_bits(), options.wl_decremental_order());
+          options.keep_dont_care_bits(), !options.wl_decremental_order());
 
       } else if (BLWL_PROTOCOL_FLATTEN == config_protocol.bl_protocol_type()) {
         status = write_memory_bank_flatten_fabric_bitstream_to_text_file(
