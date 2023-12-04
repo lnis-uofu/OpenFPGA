@@ -30,7 +30,7 @@ Repack's functionality are in the following aspects:
     Specify the mapping results of global nets should be ignored on which pins of a ``pb_type``. For example, ``--ignore_global_nets_on_pins clb.I[0:11]``. Once specified, the mapping results on the pins for all the global nets, such as clock, reset *etc.*, are ignored. Routing traces will be appeneded to other pins where the same global nets are mapped to. 
   
   .. note::  - This option is designed for global nets which are applied to both data path and global networks. For example, a reset signal is mapped to both a LUT input and the reset pin of a FF. Suggest not to use the option in other purposes!
-  - For repack options, the constraints specified by ``--ignore_global_nets_on_pins`` have higher priority than those set by ``ignore_net``. When the constraints from ``--ignore_global_nets_on_pins`` are satisfied, those from ``ignore_net`` will not be checked. For more information on ``ignore_net``, see `Repack Design Constraints (.xml) <../../file_formats/repack_design_constraints.rst>`_. 
+  - For repack options, the constraints specified by ``--ignore_global_nets_on_pins`` have higher priority than those set by ``ignore_net``. When the constraints from ``--ignore_global_nets_on_pins`` are satisfied, those from ``ignore_net`` will not be checked. For more information on ``ignore_net``, see :ref:`file_formats_repack_design_constraints`. 
 
   .. warning:: Users must specify the size/width of the pin. Currently, OpenFPGA cannot infer the pin size from the architecture!!!
      
