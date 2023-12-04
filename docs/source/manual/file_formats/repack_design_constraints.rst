@@ -13,10 +13,12 @@ An example of design constraints is shown as follows.
 .. code-block:: xml
 
   <repack_design_constraints>
+    <pin_constraint pb_type="clb" pin="reset[0]" net="rst_n"/>
     <pin_constraint pb_type="clb" pin="clk[0]" net="clk0"/>
     <pin_constraint pb_type="clb" pin="clk[1]" net="clk1"/>
     <pin_constraint pb_type="clb" pin="clk[2]" net="OPEN"/>
     <pin_constraint pb_type="clb" pin="clk[3]" net="OPEN"/>
+    <ignore_net name="rst_n" pin="clb.I[0:11]"/>
   </repack_design_constraints>
 
 .. option:: pb_type="<string>"
@@ -33,18 +35,7 @@ An example of design constraints is shown as follows.
  
 .. warning:: Design constraints is a feature for power-users. It may cause repack to fail. It is users's responsibility to ensure proper design constraints
 
-**Addtional command:** To bypass global nets on specified pins, we add additional command: ignore_net
-
-An example of setting ignore nets is shown as follows.
-
-.. code-block:: xml
-
-   <repack_design_constraints>
-    <pin_constraint pb_type="clb" pin="clk[0]" net="clk0"/>
-      ...
-    <ignore_net name="rst_n" pin="clb.I[0:11]"/>
-    <ignore_net name="rst_n" pin="dsp.I[0:11]"/>
-  </repack_design_constraints>
+**Addtional command:** To ignore the global nets on specific pins, use the syntax ``ignore_net``. Note that the qualified pins are inputs, outputs, and clocks of pb_type. The option is useful for preventing global nets from being assigned to unwanted pins on pb_type.
 
 .. option:: name="<string>"
    
