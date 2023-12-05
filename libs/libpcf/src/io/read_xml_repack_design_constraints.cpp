@@ -127,12 +127,12 @@ RepackDesignConstraints read_xml_repack_design_constraints(
       if (xml_design_constraint.name() == std::string("pin_constraint")) {
         read_xml_pin_constraint(xml_design_constraint, loc_data,
                                 repack_design_constraints);
-      } else if (xml_design_constraint.name() ==
-                 std::string("ignore_net")) {
+      } else if (xml_design_constraint.name() == std::string("ignore_net")) {
         read_xml_ignore_net_constraint(xml_design_constraint, loc_data,
                                        repack_design_constraints);
       } else {
-        bad_tag(xml_design_constraint, loc_data, xml_root, {"pin_constraint", "ignore_net"});
+        bad_tag(xml_design_constraint, loc_data, xml_root,
+                {"pin_constraint", "ignore_net"});
       }
     }
   } catch (pugiutil::XmlError& e) {
