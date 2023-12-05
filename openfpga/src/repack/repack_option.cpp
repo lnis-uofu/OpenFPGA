@@ -48,48 +48,17 @@ bool RepackOption::is_pin_ignore_global_nets(const std::string& pb_type_name,
 
 bool RepackOption::net_is_specified_to_be_ignored(std::string cluster_net_name,
                                                   std::string pb_type_name,
-                                                  const BasicPort& port) const {
-  auto pin_ctx_to_parse =
-    design_constraints_.ignore_net_on_pin(cluster_net_name);
-  if (pin_ctx_to_parse.empty()) {
-    /* Not found, return false */
-    return false;
-  } else {
-    /* Split the content using a tokenizer */
-    for (auto pin_ctx_to_parse_iter : pin_ctx_to_parse) {
-      int num_parse_errors_temp = 0;
-      StringToken tokenizer(pin_ctx_to_parse_iter);
-      std::vector<std::string> tokens = tokenizer.split(',');
-      /* Parse each token */
-      for (std::string token : tokens) {
-        /* Extract the pb_type name and port name */
-        StringToken pin_tokenizer(token);
-        std::vector<std::string> pin_info = pin_tokenizer.split('.');
-        /* Expect two contents, otherwise error out */
-        if (pin_info.size() != 2) {
-          std::string err_msg =
-            std::string("Invalid content '") + token +
-            std::string("' to skip, expect <pb_type_name>.<pin>\n");
-          VTR_LOG_ERROR(err_msg.c_str());
-          num_parse_errors_temp++;
-          continue;
-        }
-        std::string curr_pb_type_name = pin_info[0];
-        PortParser port_parser(pin_info[1]);
-        BasicPort curr_port = port_parser.port();
-        if (!curr_port.is_valid()) {
-          std::string err_msg =
-            std::string("Invalid pin definition '") + token +
-            std::string("', expect <pb_type_name>.<pin_name>[int:int]\n");
-          VTR_LOG_ERROR(err_msg.c_str());
-          num_parse_errors_temp++;
-          continue;
-        }
-        if (curr_port.mergeable(port) && curr_port.contained(port) &&
-            curr_pb_type_name == pb_type_name) {
-          return true;
-        }
-      }
+                                                  const BasicPort& pin) const {
+  const RepackDesignConstraints& design_constraint = design_constraints();
+  /* If found a constraint, record the net name */
+  for (const RepackDesignConstraintId id_ :
+       design_constraint.design_constraints()) {
+    if (design_constraint.type(id_) == RepackDesignConstraints::IGNORE_NET &&
+        design_constraint.pb_type(id_) == pb_type_name &&
+        design_constraint.net(id_) == cluster_net_name) {
+      if (design_constraint.pin(id_).mergeable(pin) &&
+          design_constraint.pin(id_).contained(pin))
+        return true;
     }
   }
   return false;
