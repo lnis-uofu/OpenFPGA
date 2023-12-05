@@ -36,7 +36,11 @@ constexpr const char* REPACK_DESIGN_CONSTRAINT_OPEN_NET = "OPEN";
  *******************************************************************/
 class RepackDesignConstraints {
  public: /* Type of design constraints */
-  enum e_design_constraint_type { PIN_ASSIGNMENT, NUM_DESIGN_CONSTRAINT_TYPES };
+  enum e_design_constraint_type {
+    PIN_ASSIGNMENT,
+    NUM_DESIGN_CONSTRAINT_TYPES,
+    IGNORE_NET
+  };
 
  public: /* Types */
   typedef vtr::vector<RepackDesignConstraintId,
