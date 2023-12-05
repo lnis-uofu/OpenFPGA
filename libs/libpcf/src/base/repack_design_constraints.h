@@ -7,6 +7,7 @@
 #include <array>
 #include <map>
 #include <string>
+
 /* Headers from vtrutil library */
 #include "vtr_geometry.h"
 #include "vtr_vector.h"
