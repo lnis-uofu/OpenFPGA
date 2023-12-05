@@ -578,7 +578,8 @@ static void add_lb_router_nets(
     if ((clustering_ctx.clb_nlist.net_is_ignored(cluster_net_id) &&
          clustering_ctx.clb_nlist.net_is_global(cluster_net_id) &&
          options.is_pin_ignore_global_nets(std::string(lb_type->pb_type->name),
-                                           curr_pin)) || (options.net_is_specified_to_be_ignored(
+                                           curr_pin)) ||
+        (options.net_is_specified_to_be_ignored(
           atom_ctx.nlist.net_name(pb_pin_mapped_nets[source_pb_pin]),
           std::string(lb_type->pb_type->name), curr_pin))) {
       /* Find the net mapped to this pin in clustering results*/
