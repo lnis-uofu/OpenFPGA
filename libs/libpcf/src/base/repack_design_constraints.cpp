@@ -2,8 +2,6 @@
 
 #include <algorithm>
 
-#include "openfpga_port_parser.h"
-#include "openfpga_tokenizer.h"
 #include "vtr_assert.h"
 #include "vtr_log.h"
 
