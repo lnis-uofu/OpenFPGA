@@ -46,6 +46,24 @@ bool RepackOption::is_pin_ignore_global_nets(const std::string& pb_type_name,
   return false;
 }
 
+bool RepackOption::net_is_specified_to_be_ignored(std::string cluster_net_name,
+                                                  std::string pb_type_name,
+                                                  const BasicPort& pin) const {
+  const RepackDesignConstraints& design_constraint = design_constraints();
+  /* If found a constraint, record the net name */
+  for (const RepackDesignConstraintId id_ :
+       design_constraint.design_constraints()) {
+    if (design_constraint.type(id_) == RepackDesignConstraints::IGNORE_NET &&
+        design_constraint.pb_type(id_) == pb_type_name &&
+        design_constraint.net(id_) == cluster_net_name) {
+      if (design_constraint.pin(id_).mergeable(pin) &&
+          design_constraint.pin(id_).contained(pin))
+        return true;
+    }
+  }
+  return false;
+}
+
 bool RepackOption::verbose_output() const { return verbose_output_; }
 
 /******************************************************************************

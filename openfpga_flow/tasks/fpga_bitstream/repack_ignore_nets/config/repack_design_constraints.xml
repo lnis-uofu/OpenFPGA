@@ -1,0 +1,7 @@
+<repack_design_constraints>
+  <pin_constraint pb_type="clb" pin="clk[0]" net="clk_i"/>
+  <pin_constraint pb_type="clb" pin="reset[0]" net="rst_i"/>
+  <ignore_net name="rst_i" pin="clb.I[0:11]"/>
+
+</repack_design_constraints>
+
