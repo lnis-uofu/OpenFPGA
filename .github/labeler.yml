@@ -7,128 +7,128 @@
 # Third-party tools
 ABC:
 - changed-files:
- - any-glob-to-any-file: 'abc/*'
- - any-glob-to-any-file: 'abc/**/*'
+  - any-glob-to-any-file: 'abc/*'
+  - any-glob-to-any-file: 'abc/**/*'
 ACE2:
 - changed-files:
- - any-glob-to-any-file: 'ace2/*'
- - any-glob-to-any-file: 'ace2/**/*'
+  - any-glob-to-any-file: 'ace2/*'
+  - any-glob-to-any-file: 'ace2/**/*'
 VPR:
 - changed-files:
- - any-glob-to-any-file: 'vpr/*'
- - any-glob-to-any-file: 'vpr/**/*'
- - any-glob-to-any-file: 'libs/**/*'
+  - any-glob-to-any-file: 'vpr/*'
+  - any-glob-to-any-file: 'vpr/**/*'
+  - any-glob-to-any-file: 'libs/**/*'
 
 # General areas
 documentation:
 - changed-files:
- - any-glob-to-any-file: 'docs/*'
- - any-glob-to-any-file: 'docs/**/*'
- - any-glob-to-any-file: '*README*'
- - any-glob-to-any-file: '*.md'
- - any-glob-to-any-file: 'tutorial'
- - any-glob-to-any-file: '*.rst'
- - any-glob-to-any-file: '.readthedocs.yml'
+  - any-glob-to-any-file: 'docs/*'
+  - any-glob-to-any-file: 'docs/**/*'
+  - any-glob-to-any-file: '*README*'
+  - any-glob-to-any-file: '*.md'
+  - any-glob-to-any-file: 'tutorial'
+  - any-glob-to-any-file: '*.rst'
+  - any-glob-to-any-file: '.readthedocs.yml'
 github:
 - changed-files:
- - any-glob-to-any-file: '.github/*'
- - any-glob-to-any-file: '.github/**/*'
+  - any-glob-to-any-file: '.github/*'
+  - any-glob-to-any-file: '.github/**/*'
 docker:
 - changed-files:
- - any-glob-to-any-file: 'Dockerfile'
- - any-glob-to-any-file: '*docker*'
+  - any-glob-to-any-file: 'Dockerfile'
+  - any-glob-to-any-file: '*docker*'
 build:
 - changed-files:
- - any-glob-to-any-file: 'Makefile'
- - any-glob-to-any-file: '*.make'
- - any-glob-to-any-file: 'CMakeLists.txt'
- - any-glob-to-any-file: 'cmake'
+  - any-glob-to-any-file: 'Makefile'
+  - any-glob-to-any-file: '*.make'
+  - any-glob-to-any-file: 'CMakeLists.txt'
+  - any-glob-to-any-file: 'cmake'
 libopenfpga:
 - changed-files:
- - any-glob-to-any-file: 'libopenfpga/**'
+  - any-glob-to-any-file: 'libopenfpga/**'
 libopenfpga-bitstream:
 - changed-files:
- - any-glob-to-any-file: 'libopenfpga/libfpgabitstream/**'
+  - any-glob-to-any-file: 'libopenfpga/libfpgabitstream/**'
 libopenfpga-arch-parser:
 - changed-files:
- - any-glob-to-any-file: 'libopenfpga/libarchopenfpga/**'
+  - any-glob-to-any-file: 'libopenfpga/libarchopenfpga/**'
 libopenfpga-fabric-key:
 - changed-files:
- - any-glob-to-any-file: 'libopenfpga/libfabrickey/**'
+  - any-glob-to-any-file: 'libopenfpga/libfabrickey/**'
 libopenfpga-shell:
 - changed-files:
- - any-glob-to-any-file: 'libopenfpga/libopenfpgashell/**'
+  - any-glob-to-any-file: 'libopenfpga/libopenfpgashell/**'
 libopenfpga-utils:
 - changed-files:
- - any-glob-to-any-file: 'libopenfpga/libopenfpgautil/**'
+  - any-glob-to-any-file: 'libopenfpga/libopenfpgautil/**'
 openfpga-tools:
 - changed-files:
- - any-glob-to-any-file: 'openfpga/**'
+  - any-glob-to-any-file: 'openfpga/**'
 openfpga-verilog:
 - changed-files:
- - any-glob-to-any-file: 'openfpga/*/fpga_verilog/**'
+  - any-glob-to-any-file: 'openfpga/*/fpga_verilog/**'
 openfpga-sdc:
 - changed-files:
- - any-glob-to-any-file: 'openfpga/*/fpga_sdc/**'
+  - any-glob-to-any-file: 'openfpga/*/fpga_sdc/**'
 openfpga-bitstream:
 - changed-files:
- - any-glob-to-any-file: 'openfpga/*/fpga_bitstream/**'
+  - any-glob-to-any-file: 'openfpga/*/fpga_bitstream/**'
 openfpga-spice:
 - changed-files:
- - any-glob-to-any-file: 'openfpga/*/fpga_spice/**'
+  - any-glob-to-any-file: 'openfpga/*/fpga_spice/**'
 flow-scripts:
 - changed-files:
- - any-glob-to-any-file: 'openfpga_flow/scripts/**'
- - any-glob-to-any-file: 'openfpga_flow/openfpga_shell_scripts/**'
- - any-glob-to-any-file: 'openfpga_flow/openfpga_simulation_settings/**'
- - any-glob-to-any-file: 'openfpga_flow/misc/**'
+  - any-glob-to-any-file: 'openfpga_flow/scripts/**'
+  - any-glob-to-any-file: 'openfpga_flow/openfpga_shell_scripts/**'
+  - any-glob-to-any-file: 'openfpga_flow/openfpga_simulation_settings/**'
+  - any-glob-to-any-file: 'openfpga_flow/misc/**'
 architecture-description:
 - changed-files:
- - any-glob-to-any-file: 'openfpga_flow/vpr_arch/**'
- - any-glob-to-any-file: 'openfpga_flow/openfpga_arch/**'
- - any-glob-to-any-file: 'openfpga_flow/fabric_keys/**'
+  - any-glob-to-any-file: 'openfpga_flow/vpr_arch/**'
+  - any-glob-to-any-file: 'openfpga_flow/openfpga_arch/**'
+  - any-glob-to-any-file: 'openfpga_flow/fabric_keys/**'
 bitstream:
 - changed-files:
- - any-glob-to-any-file: 'openfpga_flow/fabric_keys/**'
+  - any-glob-to-any-file: 'openfpga_flow/fabric_keys/**'
 cell-library:
 - changed-files:
- - any-glob-to-any-file: 'openfpga_flow/openfpga_cell_library/**'
- - any-glob-to-any-file: 'openfpga_flow/tech/**'
+  - any-glob-to-any-file: 'openfpga_flow/openfpga_cell_library/**'
+  - any-glob-to-any-file: 'openfpga_flow/tech/**'
 benchmarks:
 - changed-files:
- - any-glob-to-any-file: 'openfpga_flow/benchmarks/**'
+  - any-glob-to-any-file: 'openfpga_flow/benchmarks/**'
 tests:
 - changed-files:
- - any-glob-to-any-file: 'openfpga_flow/tasks/**'
+  - any-glob-to-any-file: 'openfpga_flow/tasks/**'
 
 # Tag pull requests with the languages used to make it easy to see what is
 # being used.
 lang-hdl:
 - changed-files:
- - any-glob-to-any-file: '*.v'
- - any-glob-to-any-file: '*.sv'
+  - any-glob-to-any-file: '*.v'
+  - any-glob-to-any-file: '*.sv'
 lang-cpp:
 - changed-files:
- - any-glob-to-any-file: '*.c*'
- - any-glob-to-any-file: '*.h'
+  - any-glob-to-any-file: '*.c*'
+  - any-glob-to-any-file: '*.h'
 lang-perl:
 - changed-files:
- - any-glob-to-any-file: '*.pl'
- - any-glob-to-any-file: '*perl*'
+  - any-glob-to-any-file: '*.pl'
+  - any-glob-to-any-file: '*perl*'
 lang-python:
 - changed-files:
- - any-glob-to-any-file: '*.py'
+  - any-glob-to-any-file: '*.py'
 lang-shell:
 - changed-files:
- - any-glob-to-any-file: '*.sh'
+  - any-glob-to-any-file: '*.sh'
 lang-netlist:
 - changed-files:
- - any-glob-to-any-file: '*.blif'
- - any-glob-to-any-file: '*.eblif'
- - any-glob-to-any-file: '*.edif'
- - any-glob-to-any-file: '*.vqm'
+  - any-glob-to-any-file: '*.blif'
+  - any-glob-to-any-file: '*.eblif'
+  - any-glob-to-any-file: '*.edif'
+  - any-glob-to-any-file: '*.vqm'
 lang-make:
 - changed-files:
- - any-glob-to-any-file: '*.make'
- - any-glob-to-any-file: 'Makefile'
- - any-glob-to-any-file: 'CMakeLists.txt'
+  - any-glob-to-any-file: '*.make'
+  - any-glob-to-any-file: 'Makefile'
+  - any-glob-to-any-file: 'CMakeLists.txt'
