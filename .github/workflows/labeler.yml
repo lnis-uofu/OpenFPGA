@@ -6,7 +6,7 @@ jobs:
   triage:
     runs-on: ubuntu-latest
     steps:
-    - uses: action/checkoutv4 # Upload repositoru content to the runner
+    - uses: actions/checkoutv4 # Upload repositoru content to the runner
     - uses: actions/labeler@v5
       with:
         repo-token: "${{ secrets.GITHUB_TOKEN }}"
