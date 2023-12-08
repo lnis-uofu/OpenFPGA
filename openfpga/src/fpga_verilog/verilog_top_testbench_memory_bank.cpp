@@ -345,10 +345,11 @@ print_verilog_full_testbench_ql_memory_bank_shift_register_virtual_clock_generat
   fp << "end";
   fp << std::endl;
 
-  fp << "\t";
-  fp << generate_verilog_port_constant_values(
-    sr_clock_port, std::vector<size_t>(sr_clock_port.get_width(), 0), true);
-  fp << ";" << std::endl;
+  // The following code does not work when using Synopsys VCS. Comment them out. See if iverilog is fine or not
+  //fp << "\t";
+  //fp << generate_verilog_port_constant_values(
+  //  sr_clock_port, std::vector<size_t>(sr_clock_port.get_width(), 0), true);
+  //fp << ";" << std::endl;
 
   fp << "end";
   fp << std::endl;
