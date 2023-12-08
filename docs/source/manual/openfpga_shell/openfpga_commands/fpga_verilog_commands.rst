@@ -61,6 +61,10 @@ write_full_testbench
 
     The bitstream file to be loaded to the full testbench, which should be in the same file format that OpenFPGA can outputs (See detailes in :ref:`file_formats_fabric_bitstream_plain_text`). For example, ``--bitstream and2.bit``
 
+  .. option:: --simulator <string>     
+
+    Specify the type of simulator which the full testbench will be used for. Currently support ``iverilog`` | ``vcs``. By default, assume the simulator is iverilog. For example, ``--simulator iverilog``. For different types of simulator, some syntax in the testbench may differ to help fast convergence.
+
   .. option:: --fabric_netlist_file_path <string>
 
     Specify the fabric Verilog file if they are not in the same directory as the testbenches to be generated. If not specified, OpenFPGA will assume that the fabric netlists are the in the same directory as testbenches and assign default names. For example, ``--file /temp/fabric/fabric_netlists.v``
