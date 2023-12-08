@@ -31,6 +31,19 @@ constexpr std::array<const char*, NUM_EMBEDDED_BITSTREAM_HDL_TYPES + 1>
  *
  *******************************************************************/
 class VerilogTestbenchOption {
+  /* Public types */
+  public:
+    /* Embedded bitstream code style */
+    enum class e_simulator_type {
+      IVERILOG = 0,
+      VCS,
+      NUM_TYPES
+    };
+  /* Constants */
+  private:
+    /* String version of simulator types. Used for debugging/error messages */
+    std::array<const char*, size_t(e_simulator_type::NUM_TYPES)>
+        SIMULATOR_TYPE_STRING_;
  public: /* Public constructor */
   /* Set default options */
   VerilogTestbenchOption();
@@ -56,6 +69,7 @@ class VerilogTestbenchOption {
   bool time_stamp() const;
   bool use_relative_path() const;
   bool verbose_output() const;
+  e_simulator_type simulator_type() const;
 
  public: /* Public validator */
   bool validate() const;
@@ -95,6 +109,15 @@ class VerilogTestbenchOption {
   void set_use_relative_path(const bool& enabled);
   void set_verbose_output(const bool& enabled);
 
+  /* @brief Create the simulator type by parsing a given string. Return error when failed */
+  int set_simulator_type(const std::string& value);
+
+ private: /* Private utility and validators */
+  e_simulator_type str2simulator_type(const std::string& value, const bool& verbose = false) const;
+  std::string simulator_type2str(const e_simulator_type& sim_type, const bool& verbose = false) const;
+  std::string simulator_type_all2str() const;
+  bool valid_simulator_type(const e_simulator_type& sim_type) const;
+
  private: /* Internal Data */
   std::string output_directory_;
   std::string top_module_;
@@ -111,10 +134,12 @@ class VerilogTestbenchOption {
   bool include_signal_init_;
   e_verilog_default_net_type default_net_type_;
   e_embedded_bitstream_hdl_type embedded_bitstream_hdl_type_;
+  e_simulator_type simulator_type_;
   float time_unit_;
   bool time_stamp_;
   bool use_relative_path_;
   bool verbose_output_;
+
 };
 
 } /* End namespace openfpga*/

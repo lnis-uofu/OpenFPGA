@@ -1423,7 +1423,8 @@ static int print_verilog_top_testbench_configuration_protocol_stimulus(
   const ModuleId& top_module, const bool& fast_configuration,
   const bool& bit_value_to_skip, const FabricBitstream& fabric_bitstream,
   const MemoryBankShiftRegisterBanks& blwl_sr_banks,
-  const float& prog_clock_period, const float& timescale) {
+  const float& prog_clock_period, const float& timescale,
+  const VerilogTestbenchOption::e_simulator_type sim_type) {
   /* Validate the file stream */
   valid_file_stream(fp);
 
@@ -1437,7 +1438,7 @@ static int print_verilog_top_testbench_configuration_protocol_stimulus(
       return print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(
         fp, config_protocol, sim_settings, module_manager, top_module,
         fast_configuration, bit_value_to_skip, fabric_bitstream, blwl_sr_banks,
-        prog_clock_period, timescale);
+        prog_clock_period, timescale, sim_type);
       break;
     case CONFIG_MEM_MEMORY_BANK:
     case CONFIG_MEM_FRAME_BASED: {
@@ -2564,7 +2565,7 @@ int print_verilog_full_testbench(
   status = print_verilog_top_testbench_configuration_protocol_stimulus(
     fp, config_protocol, simulation_parameters, module_manager, core_module,
     fast_configuration, bit_value_to_skip, fabric_bitstream, blwl_sr_banks,
-    prog_clock_period, VERILOG_SIM_TIMESCALE);
+    prog_clock_period, VERILOG_SIM_TIMESCALE, options.simulator_type());
 
   if (status == CMD_EXEC_FATAL_ERROR) {
     return status;

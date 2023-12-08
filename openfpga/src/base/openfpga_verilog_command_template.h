@@ -104,6 +104,11 @@ ShellCommandId add_write_full_testbench_command_template(
     "bitstream", true, "specify the bitstream to be loaded in the testbench");
   shell_cmd.set_option_require_value(bitstream_opt, openfpga::OPT_STRING);
 
+  /* add an option '--simulator'*/
+  CommandOptionId sim_opt = shell_cmd.add_option(
+    "simulator", false, "specify the simulator to be used for the testbench");
+  shell_cmd.set_option_require_value(sim_opt, openfpga::OPT_STRING);
+
   /* add an option '--fabric_netlist_file_path'*/
   CommandOptionId fabric_netlist_opt =
     shell_cmd.add_option("fabric_netlist_file_path", false,

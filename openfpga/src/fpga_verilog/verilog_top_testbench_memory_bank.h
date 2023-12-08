@@ -54,7 +54,8 @@ int print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(
   const ModuleId& top_module, const bool& fast_configuration,
   const bool& bit_value_to_skip, const FabricBitstream& fabric_bitstream,
   const MemoryBankShiftRegisterBanks& blwl_sr_banks,
-  const float& prog_clock_period, const float& timescale);
+  const float& prog_clock_period, const float& timescale,
+  const VerilogTestbenchOption::e_simulator_type sim_type);
 
 /**
  * @brief Print stimulus for a FPGA fabric with a memory bank configuration
