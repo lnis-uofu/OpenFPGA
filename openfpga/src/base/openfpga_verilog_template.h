@@ -135,8 +135,7 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
 
   /* Configure the simulator */
   if (true == cmd_context.option_enable(cmd, opt_sim)) {
-    options.set_simulator_type(
-      cmd_context.option_value(cmd, opt_sim));
+    options.set_simulator_type(cmd_context.option_value(cmd, opt_sim));
   }
 
   return fpga_verilog_full_testbench(

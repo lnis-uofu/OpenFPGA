@@ -346,7 +346,8 @@ print_verilog_full_testbench_ql_memory_bank_shift_register_virtual_clock_generat
   fp << "end";
   fp << std::endl;
 
-  // The following code does not work when using Synopsys VCS. Comment them out. See if iverilog is fine or not
+  // The following code does not work when using Synopsys VCS. Comment them out.
+  // See if iverilog is fine or not
   if (sim_type == VerilogTestbenchOption::e_simulator_type::IVERILOG) {
     fp << "\t";
     fp << generate_verilog_port_constant_values(
@@ -536,7 +537,8 @@ int print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(
       print_verilog_comment(
         fp, "----- BL Shift register virtual clock generator -----");
       print_verilog_full_testbench_ql_memory_bank_shift_register_virtual_clock_generator(
-        fp, start_bl_sr_port, virtual_bl_sr_clock_port, bl_sr_clock_period, sim_type);
+        fp, start_bl_sr_port, virtual_bl_sr_clock_port, bl_sr_clock_period,
+        sim_type);
 
       print_verilog_comment(fp,
                             "----- BL Shift register clock generator -----");
@@ -548,7 +550,8 @@ int print_verilog_top_testbench_configuration_protocol_ql_memory_bank_stimulus(
       print_verilog_comment(
         fp, "----- WL Shift register virtual clock generator -----");
       print_verilog_full_testbench_ql_memory_bank_shift_register_virtual_clock_generator(
-        fp, start_wl_sr_port, virtual_wl_sr_clock_port, wl_sr_clock_period, sim_type);
+        fp, start_wl_sr_port, virtual_wl_sr_clock_port, wl_sr_clock_period,
+        sim_type);
       print_verilog_comment(fp,
                             "----- WL Shift register clock generator -----");
       print_verilog_full_testbench_ql_memory_bank_shift_register_clock_generator(
