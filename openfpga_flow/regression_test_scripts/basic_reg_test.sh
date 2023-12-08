@@ -83,6 +83,9 @@ run-task basic_tests/full_testbench/ql_memory_bank_shift_register $@
 run-task basic_tests/full_testbench/ql_memory_bank_shift_register_use_wlr $@
 run-task basic_tests/full_testbench/ql_memory_bank_shift_register_multi_chain $@
 
+echo -e "Testing simulator support";
+run-task basic_tests/full_testbench/ql_memory_bank_shift_register_vcs $@
+
 echo -e "Testing testbenches without self checking features";
 run-task basic_tests/full_testbench/full_testbench_without_self_checking $@
 run-task basic_tests/preconfig_testbench/preconfigured_testbench_without_self_checking $@
