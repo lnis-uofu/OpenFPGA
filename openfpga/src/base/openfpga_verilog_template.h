@@ -74,6 +74,7 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
                                   const CommandContext& cmd_context) {
   CommandOptionId opt_output_dir = cmd.option("file");
   CommandOptionId opt_bitstream = cmd.option("bitstream");
+  CommandOptionId opt_sim = cmd.option("simulator");
   CommandOptionId opt_dut_module = cmd.option("dut_module");
   CommandOptionId opt_fabric_netlist = cmd.option("fabric_netlist_file_path");
   CommandOptionId opt_pcf = cmd.option("pin_constraints_file");
@@ -130,6 +131,11 @@ int write_full_testbench_template(const T& openfpga_ctx, const Command& cmd,
   if (true == cmd_context.option_enable(cmd, opt_bgf)) {
     bus_group =
       read_xml_bus_group(cmd_context.option_value(cmd, opt_bgf).c_str());
+  }
+
+  /* Configure the simulator */
+  if (true == cmd_context.option_enable(cmd, opt_sim)) {
+    options.set_simulator_type(cmd_context.option_value(cmd, opt_sim));
   }
 
   return fpga_verilog_full_testbench(
