@@ -907,18 +907,18 @@ def extract_vpr_stats(logfile, r_filename="vpr_stat", parse_section="vpr"):
     resultDict = {}
     for name, value in config.items(section):
         reg_string, filt_function = value.split(",")
-        match = re.search(reg_string[1:-1], vpr_log)
-        if match:
+        reg_result = re.findall(reg_string[1:-1], vpr_log)
+        if reg_result:
             try:
                 if "lambda" in filt_function.strip():
                     eval("ParseFunction = " + filt_function.strip())
-                    extract_val = ParseFunction(**match.groups())
+                    extract_val = ParseFunction(reg_result)
                 elif filt_function.strip() == "int":
-                    extract_val = int(match.group(1))
+                    extract_val = int(reg_result[-1])
                 elif filt_function.strip() == "float":
-                    extract_val = float(match.group(1))
+                    extract_val = float(reg_result[-1])
                 elif filt_function.strip() == "str":
-                    extract_val = str(match.group(1))
+                    extract_val = str(reg_result[-1])
                 elif filt_function.strip() == "scientific":
                     try:
                         mult = {
@@ -928,12 +928,12 @@ def extract_vpr_stats(logfile, r_filename="vpr_stat", parse_section="vpr"):
                             "K": 1e-3,
                             "M": 1e-6,
                             "G": 1e-9,
-                        }.get(match.group(2)[0], 1)
+                        }.get(reg_result[-1][1], 1)
                     except:
                         mult = 1
-                    extract_val = float(match.group(1)) * mult
+                    extract_val = float(reg_result[-1][0]) * mult
                 else:
-                    extract_val = match.group(1)
+                    extract_val = reg_result[-1]
             except:
                 logger.exception("Filter failed")
                 extract_val = "Filter Failed"
