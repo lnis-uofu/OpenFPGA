@@ -89,6 +89,7 @@ parser.add_argument(
     default=os.path.join(openfpga_base_dir, "tmp"),
     help="Directory to store intermidiate file & final results",
 )
+parser.add_argument("--default_tool_path", type=str, default=os.path.join(flow_script_dir, os.pardir, "misc", "fpgaflow_default_tool_path.conf"), help="The configuraton file contains paths to tools as well as keywords to be extracted from logs")
 parser.add_argument(
     "--openfpga_shell_template",
     type=str,
@@ -332,8 +333,8 @@ ExecTime = {}
 
 def main():
     logger.debug("Script Launched in " + os.getcwd())
-    check_required_file()
-    read_script_config()
+    check_required_file(args.default_tool_path)
+    read_script_config(args.default_tool_path)
     validate_command_line_arguments()
     prepare_run_directory(args.run_dir)
     if args.fpga_flow == "yosys_vpr":
@@ -394,11 +395,10 @@ def main():
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 
-def check_required_file():
+def check_required_file(default_tool_path):
     """Function ensure existace of all required files for the script"""
     files_dict = {
-        "CAD TOOL PATH": os.path.join(
-            flow_script_dir, os.pardir, "misc", "fpgaflow_default_tool_path.conf"
+        "CAD TOOL PATH": default_tool_path
         ),
     }
     for filename, filepath in files_dict.items():
@@ -406,14 +406,12 @@ def check_required_file():
             clean_up_and_exit("Not able to locate default file " + filename)
 
 
-def read_script_config():
+def read_script_config(default_tool_path):
     """This fucntion reads default CAD tools path from configuration file"""
     global config, cad_tools
     config = ConfigParser(interpolation=ExtendedInterpolation())
     config.read_dict(script_env_vars)
-    default_cad_tool_conf = os.path.join(
-        flow_script_dir, os.pardir, "misc", "fpgaflow_default_tool_path.conf"
-    )
+    default_cad_tool_conf = default_tool_path
     config.read_file(open(default_cad_tool_conf))
     if args.flow_config:
         config.read_file(open(args.flow_config))
