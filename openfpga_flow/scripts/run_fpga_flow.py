@@ -399,7 +399,7 @@ def check_required_file(default_tool_path):
     """Function ensure existace of all required files for the script"""
     files_dict = {
         "CAD TOOL PATH": default_tool_path
-        ),
+        ,
     }
     for filename, filepath in files_dict.items():
         if not os.path.isfile(filepath):
