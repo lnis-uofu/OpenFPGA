@@ -89,7 +89,12 @@ parser.add_argument(
     default=os.path.join(openfpga_base_dir, "tmp"),
     help="Directory to store intermidiate file & final results",
 )
-parser.add_argument("--default_tool_path", type=str, default=os.path.join(flow_script_dir, os.pardir, "misc", "fpgaflow_default_tool_path.conf"), help="The configuraton file contains paths to tools as well as keywords to be extracted from logs")
+parser.add_argument(
+    "--default_tool_path",
+    type=str,
+    default=os.path.join(flow_script_dir, os.pardir, "misc", "fpgaflow_default_tool_path.conf"),
+    help="The configuraton file contains paths to tools as well as keywords to be extracted from logs",
+)
 parser.add_argument(
     "--openfpga_shell_template",
     type=str,
@@ -398,8 +403,7 @@ def main():
 def check_required_file(default_tool_path):
     """Function ensure existace of all required files for the script"""
     files_dict = {
-        "CAD TOOL PATH": default_tool_path
-        ,
+        "CAD TOOL PATH": default_tool_path,
     }
     for filename, filepath in files_dict.items():
         if not os.path.isfile(filepath):

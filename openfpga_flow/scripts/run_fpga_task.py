@@ -77,7 +77,12 @@ parser.add_argument("--continue_on_fail", action="store_true", help="Exit script
 parser.add_argument(
     "--show_thread_logs", action="store_true", help="Skips logs from running thread"
 )
-parser.add_argument("--default_tool_path", type=str, default=os.path.join(task_script_dir, os.pardir, "misc", "fpgaflow_default_tool_path.conf"), help="The configuraton file contains paths to tools as well as keywords to be extracted from logs")
+parser.add_argument(
+    "--default_tool_path",
+    type=str,
+    default=os.path.join(task_script_dir, os.pardir, "misc", "fpgaflow_default_tool_path.conf"),
+    help="The configuraton file contains paths to tools as well as keywords to be extracted from logs",
+)
 args = parser.parse_args()
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
