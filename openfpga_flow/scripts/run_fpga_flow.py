@@ -407,7 +407,7 @@ def check_required_file(default_tool_path):
     }
     for filename, filepath in files_dict.items():
         if not os.path.isfile(filepath):
-            clean_up_and_exit("Not able to locate default file " + filename)
+            clean_up_and_exit("Not able to locate default file " + filename + " under " + filepath)
 
 
 def read_script_config(default_tool_path):
