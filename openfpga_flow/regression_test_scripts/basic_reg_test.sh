@@ -218,7 +218,7 @@ run-task basic_tests/global_tile_ports/global_tile_clock_subtile $@
 run-task basic_tests/global_tile_ports/global_tile_clock_subtile_port_merge $@
 run-task basic_tests/global_tile_ports/global_tile_clock_subtile_port_merge_fabric_tile_group_config $@
 run-task basic_tests/global_tile_ports/global_tile_reset $@
-run-task basic_tests/global_tile_ports/global_tile_4clock $@
+run-task basic_tests/global_tile_ports/global_tile_4clock --default_tool_path ${OPENFPGA_PATH}/openfpga_flow/misc/fpgaflow_default_tool_path_timing.conf $@
 run-task basic_tests/global_tile_ports/global_tile_4clock_pin $@
 
 echo -e "Testing programmable clock architecture";
