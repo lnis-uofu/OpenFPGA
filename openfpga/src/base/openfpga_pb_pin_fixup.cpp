@@ -47,7 +47,8 @@ static void update_cluster_pin_with_post_routing_results(
      * here z offset is the location in the multiple-logic-tile tile Get
      * physical pin does not consider THIS!!!!
      */
-    int physical_pin = get_physical_pin_at_sub_tile_location(physical_tile, logical_block, z, j);
+    int physical_pin =
+      get_physical_pin_at_sub_tile_location(physical_tile, logical_block, z, j);
     auto pin_class = physical_tile->pin_class[physical_pin];
     auto class_inf = physical_tile->class_inf[pin_class];
 
