@@ -320,7 +320,9 @@ if (OPENFPGA_WITH_YOSYS)
     else ()
         # run makefile provided, we pass-on the options to the local make file 
         add_custom_target(
-            yosys ALL 
+            yosys ALL
+            # add step to remove the 'built-in' quicklogic plugins code in yosys
+            COMMAND rm -rf techlibs/quicklogic
             COMMAND $(MAKE) config-gcc
             COMMAND $(MAKE) install PREFIX=${CMAKE_CURRENT_BINARY_DIR}/yosys/
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/yosys
