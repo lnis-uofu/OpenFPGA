@@ -102,6 +102,10 @@ std::string BitstreamSetting::default_path(
   return interconnect_default_paths_[interconnect_setting_id];
 }
 
+std::vector<NoneFabricBitstreamSetting> BitstreamSetting::none_fabric() const {
+  return none_fabric_;
+}
+
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
@@ -152,6 +156,22 @@ BitstreamSetting::add_bitstream_interconnect_setting(
   interconnect_default_paths_.push_back(default_path);
 
   return interc_setting_id;
+}
+
+void BitstreamSetting::add_none_fabric(const std::string& name,
+                                       const std::string& file) {
+  VTR_ASSERT(name.size());
+  VTR_ASSERT(file.size());
+  none_fabric_.push_back(NoneFabricBitstreamSetting(name, file));
+}
+
+void BitstreamSetting::add_none_fabric_pb(const std::string& pb,
+                                          const std::string& type,
+                                          const std::string& content) {
+  VTR_ASSERT(none_fabric_.size());
+  VTR_ASSERT(type == "param" || type == "attr");
+  VTR_ASSERT(content.size());
+  none_fabric_.back().add_pb(pb, type, content);
 }
 
 /************************************************************************
