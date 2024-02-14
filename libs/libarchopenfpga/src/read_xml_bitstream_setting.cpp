@@ -77,7 +77,8 @@ static void read_xml_bitstream_interconnect_setting(
 }
 
 /********************************************************************
- * Parse XML description for a none_fabric annotation under a <none_fabric> XML node
+ * Parse XML description for a none_fabric annotation under a <none_fabric> XML
+ *node
  *******************************************************************/
 static void read_xml_none_fabric_bitstream_setting(
   pugi::xml_node& xml_none_fabric, const pugiutil::loc_data& loc_data,
@@ -94,12 +95,10 @@ static void read_xml_none_fabric_bitstream_setting(
     }
     const std::string& pb_name_attr =
       get_attribute(xml_child, "name", loc_data).as_string();
-    const std::string& type_attr =
-      get_attribute(xml_child, "type", loc_data).as_string();
     const std::string& content_attr =
       get_attribute(xml_child, "content", loc_data).as_string();
     /* Add PB to none fabric */
-    bitstream_setting.add_none_fabric_pb(pb_name_attr, type_attr, content_attr);
+    bitstream_setting.add_none_fabric_pb(pb_name_attr, content_attr);
   }
 }
 

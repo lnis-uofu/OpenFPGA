@@ -13,6 +13,9 @@ This can define a hard-coded bitstream for a reconfigurable resource in FPGA fab
   <openfpga_bitstream_setting>
     <pb_type name="<string>" source="eblif" content=".param LUT" is_mode_select_bistream="true" bitstream_offset="1"/>
     <interconnect name="<string>" default_path="<string>"/>
+    <none_fabric name="<string>" file="<string>">
+      <pb name="<string>" type="<string>" content="<string>"/>
+    </none_fabric>
   </openfpga_bitstream_setting>
 
 pb_type-related Settings
@@ -39,7 +42,6 @@ The following syntax are applicable to the XML definition tagged by ``pb_type`` 
 .. option:: content="<string>"
 
   The content of the ``pb_type`` bitstream, which could be a keyword in a ``.eblif`` file. For example, ``content=".attr LUT"`` means that the bitstream will be extracted from the ``.attr LUT`` line which is defined under the ``.blif model`` (that is defined under the ``pb_type`` in VPR architecture file).
-  
 
 .. option:: is_mode_select_bitstream="<bool>"
 
@@ -71,3 +73,45 @@ The following syntax are applicable to the XML definition tagged by ``interconne
     <mux name="mux1" input="iopad.inpad ff.Q" output="io.inpad"/>
 
   The default path can be either ``iopad.inpad`` or ``ff.Q`` which corresponds to the first input and the second input respectively.
+
+none_fabric-related Settings
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is special syntax to extract PB defined parameter or attribute and save the data into dedicated JSON file outside of fabric bitstream
+
+The following syntax are applicable to the XML definition tagged by ``none-fabric`` in bitstream setting files.
+
+.. option:: name="<string: pb_type top level name>"
+
+  The ``pb_type`` top level name that the data to be extracted. For example, 
+
+  .. code-block:: xml
+
+    name="bram"
+
+.. option:: file="<string: JSON filepath>"
+
+  The filepath the data is saved to. For example, 
+
+  .. code-block:: xml
+
+    file="bram.json"
+
+.. option:: ``pb`` child element name="<string: pb_type child name>"
+
+  Together with ``pb_type`` top level name, that is the source of the ``pb_type`` bitstream
+
+  The final ``pb_type`` name is "<pb_type top level name>" + "<pb_type child name>"
+
+  For example,
+
+  .. code-block:: xml  
+    <none_fabric name="bram" file="bram_bitstream.json">
+      <pb name=".bram_lr[mem_36K_tdp].mem_36K" content=".param INIT_i"/>
+    </none_fabric>
+
+  The final ``pb_type`` name is "bram.bram_lr[mem_36K_tdp].mem_36K"
+
+.. option:: ``pb`` child element content="<string>"
+
+  The content of the ``pb_type`` data to be extracted. For example, ``content=".param INIT_i"`` means that the data will be extracted from the ``.param INIT_i`` line defined under the ``.blif model``.

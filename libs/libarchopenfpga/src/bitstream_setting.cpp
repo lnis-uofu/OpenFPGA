@@ -166,12 +166,16 @@ void BitstreamSetting::add_none_fabric(const std::string& name,
 }
 
 void BitstreamSetting::add_none_fabric_pb(const std::string& pb,
-                                          const std::string& type,
                                           const std::string& content) {
   VTR_ASSERT(none_fabric_.size());
-  VTR_ASSERT(type == "param" || type == "attr");
-  VTR_ASSERT(content.size());
-  none_fabric_.back().add_pb(pb, type, content);
+  VTR_ASSERT(content.find(".param ") == 0 || content.find(".attr ") == 0);
+  if (content.find(".param ") == 0) {
+    VTR_ASSERT(content.size() > 7);
+    none_fabric_.back().add_pb(pb, "param", content.substr(7));
+  } else {
+    VTR_ASSERT(content.size() > 6);
+    none_fabric_.back().add_pb(pb, "attr", content.substr(6));
+  }
 }
 
 /************************************************************************

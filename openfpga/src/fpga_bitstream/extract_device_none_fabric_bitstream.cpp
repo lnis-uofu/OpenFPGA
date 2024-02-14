@@ -19,6 +19,8 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+#define PRINT_LAYOUT_NAME "__layout__"
+
 /********************************************************************
  * Extract data from the targetted PB
  *   1. If it is primitive
@@ -110,7 +112,9 @@ static void extract_device_none_fabric_pb_bitstream(
   const size_t& layer = 0;
 
   // Loop logic block one by one
-  fp << ",\n      \"grid\" : [";
+  if (target_parent_pb_name != PRINT_LAYOUT_NAME) {
+    fp << ",\n      \"grid\" : [";
+  }
   size_t grid_count = 0;
   for (size_t ix = 1; ix < grids.width() - 1; ++ix) {
     for (size_t iy = 1; iy < grids.height() - 1; ++iy) {
@@ -125,6 +129,20 @@ static void extract_device_none_fabric_pb_bitstream(
       // Skip width > 1 or height > 1 tiles (mostly heterogeneous blocks)
       if ((0 < grids.get_width_offset(phy_tile_loc)) ||
           (0 < grids.get_height_offset(phy_tile_loc))) {
+        continue;
+      }
+
+      // Skip if this grid is not what we are looking for
+      if (target_parent_pb_name == PRINT_LAYOUT_NAME) {
+        if (grid_count) {
+          fp << ",\n";
+        }
+        fp << "    {\n";
+        fp << "      \"x\" : " << (uint32_t)(ix) << ",\n";
+        fp << "      \"y\" : " << (uint32_t)(iy) << ",\n";
+        fp << "      \"name\" : \"" << grid_type->name << "\"\n";
+        fp << "    }";
+        grid_count++;
         continue;
       }
 
@@ -152,7 +170,11 @@ static void extract_device_none_fabric_pb_bitstream(
       }
     }
   }
-  fp << "\n      ]";
+  if (target_parent_pb_name == PRINT_LAYOUT_NAME) {
+    fp << "\n";
+  } else {
+    fp << "\n      ]";
+  }
 }
 
 /********************************************************************
@@ -212,41 +234,49 @@ void extract_device_none_fabric_bitstream(const VprContext& vpr_ctx,
       fp.open(setting.file.c_str(), std::fstream::out);
       fp << "{\n";
       fp << "  \"" << setting.name.c_str() << "\" : [\n";
-      int pb_count = 0;
-      // Extract each needed PB data
-      for (auto pb_setting : setting.pbs) {
-        std::string pb_type = setting.name + pb_setting.pb;
-        t_pb_type* target_pb_type =
-          find_pb_type(vpr_ctx.device(), setting.name, pb_type);
-        if (pb_count) {
-          fp << ",\n";
-        }
-        fp << "    {\n";
-        fp << "      \"pb\" : \"" << pb_type.c_str() << "\",\n";
-        if (target_pb_type == nullptr) {
-          fp << "      \"is_primitive_pb_type\" : \"invalid\"\n";
-        } else {
-          if (is_primitive_pb_type(target_pb_type)) {
-            fp << "      \"is_primitive_pb_type\" : \"true\",\n";
-          } else {
-            fp << "      \"is_primitive_pb_type\" : \"false\",\n";
+      if (setting.name == PRINT_LAYOUT_NAME) {
+        extract_device_none_fabric_pb_bitstream(
+          fp, NoneFabricBitstreamPBSetting{}, setting.name, nullptr, vpr_ctx,
+          openfpga_ctx);
+      } else {
+        int pb_count = 0;
+        // Extract each needed PB data
+        for (auto pb_setting : setting.pbs) {
+          std::string pb_type = setting.name + pb_setting.pb;
+          t_pb_type* target_pb_type =
+            find_pb_type(vpr_ctx.device(), setting.name, pb_type);
+          if (pb_count) {
+            fp << ",\n";
           }
+          fp << "    {\n";
+          fp << "      \"pb\" : \"" << pb_type.c_str() << "\",\n";
+          if (target_pb_type == nullptr) {
+            fp << "      \"is_primitive_pb_type\" : \"invalid\",\n";
+          } else {
+            if (is_primitive_pb_type(target_pb_type)) {
+              fp << "      \"is_primitive_pb_type\" : \"true\",\n";
+            } else {
+              fp << "      \"is_primitive_pb_type\" : \"false\",\n";
+            }
+          }
+          fp << "      \"type\" : \"" << pb_setting.type.c_str() << "\",\n";
+          fp << "      \"content\" : \"" << pb_setting.content.c_str() << "\"";
+          if (target_pb_type != nullptr &&
+              is_primitive_pb_type(target_pb_type)) {
+            extract_device_none_fabric_pb_bitstream(
+              fp, pb_setting, setting.name, target_pb_type, vpr_ctx,
+              openfpga_ctx);
+          }
+          fp << "\n    }";
+          pb_count++;
         }
-        fp << "      \"type\" : \"" << pb_setting.type.c_str() << "\",\n";
-        fp << "      \"content\" : \"" << pb_setting.content.c_str() << "\"";
-        if (target_pb_type != nullptr && is_primitive_pb_type(target_pb_type)) {
-          extract_device_none_fabric_pb_bitstream(fp, pb_setting, setting.name,
-                                                  target_pb_type, vpr_ctx,
-                                                  openfpga_ctx);
+        if (pb_count) {
+          fp << "\n";
         }
-        fp << "\n    }";
-        pb_count++;
-      }
-      if (pb_count) {
-        fp << "\n";
       }
       fp << "  ]\n";
       fp << "}\n";
+      fp.close();
     }
   }
   VTR_LOGV(verbose, "Done\n");

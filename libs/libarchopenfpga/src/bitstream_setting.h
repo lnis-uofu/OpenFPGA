@@ -118,8 +118,7 @@ class BitstreamSetting {
     const std::string& default_path);
 
   void add_none_fabric(const std::string& name, const std::string& file);
-  void add_none_fabric_pb(const std::string& pb, const std::string& type,
-                          const std::string& content);
+  void add_none_fabric_pb(const std::string& pb, const std::string& content);
 
  public: /* Public Validators */
   bool valid_bitstream_pb_type_setting_id(
