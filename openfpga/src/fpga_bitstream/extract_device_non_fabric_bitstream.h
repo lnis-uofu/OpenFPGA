@@ -1,5 +1,5 @@
-#ifndef EXTRACT_DEVICE_NONE_FABRIC_BITSTREAM_H
-#define EXTRACT_DEVICE_NONE_FABRIC_BITSTREAM_H
+#ifndef EXTRACT_DEVICE_NON_FABRIC_BITSTREAM_H
+#define EXTRACT_DEVICE_NON_FABRIC_BITSTREAM_H
 
 /********************************************************************
  * Include header files that are required by function declaration
@@ -16,9 +16,9 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
-void extract_device_none_fabric_bitstream(const VprContext& vpr_ctx,
-                                          const OpenfpgaContext& openfpga_ctx,
-                                          const bool& verbose);
+void extract_device_non_fabric_bitstream(const VprContext& vpr_ctx,
+                                         const OpenfpgaContext& openfpga_ctx,
+                                         const bool& verbose);
 
 } /* end namespace openfpga */
 

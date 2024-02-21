@@ -102,8 +102,8 @@ std::string BitstreamSetting::default_path(
   return interconnect_default_paths_[interconnect_setting_id];
 }
 
-std::vector<NoneFabricBitstreamSetting> BitstreamSetting::none_fabric() const {
-  return none_fabric_;
+std::vector<NonFabricBitstreamSetting> BitstreamSetting::non_fabric() const {
+  return non_fabric_;
 }
 
 /************************************************************************
@@ -158,23 +158,23 @@ BitstreamSetting::add_bitstream_interconnect_setting(
   return interc_setting_id;
 }
 
-void BitstreamSetting::add_none_fabric(const std::string& name,
-                                       const std::string& file) {
+void BitstreamSetting::add_non_fabric(const std::string& name,
+                                      const std::string& file) {
   VTR_ASSERT(name.size());
   VTR_ASSERT(file.size());
-  none_fabric_.push_back(NoneFabricBitstreamSetting(name, file));
+  non_fabric_.push_back(NonFabricBitstreamSetting(name, file));
 }
 
-void BitstreamSetting::add_none_fabric_pb(const std::string& pb,
-                                          const std::string& content) {
-  VTR_ASSERT(none_fabric_.size());
+void BitstreamSetting::add_non_fabric_pb(const std::string& pb,
+                                         const std::string& content) {
+  VTR_ASSERT(non_fabric_.size());
   VTR_ASSERT(content.find(".param ") == 0 || content.find(".attr ") == 0);
   if (content.find(".param ") == 0) {
     VTR_ASSERT(content.size() > 7);
-    none_fabric_.back().add_pb(pb, "param", content.substr(7));
+    non_fabric_.back().add_pb(pb, "param", content.substr(7));
   } else {
     VTR_ASSERT(content.size() > 6);
-    none_fabric_.back().add_pb(pb, "attr", content.substr(6));
+    non_fabric_.back().add_pb(pb, "attr", content.substr(6));
   }
 }
 

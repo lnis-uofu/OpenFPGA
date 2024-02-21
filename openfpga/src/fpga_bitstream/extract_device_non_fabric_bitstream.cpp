@@ -9,7 +9,7 @@
 #include <vector>
 
 /* Headers from vtrutil library */
-#include "extract_device_none_fabric_bitstream.h"
+#include "extract_device_non_fabric_bitstream.h"
 #include "openfpga_pb_parser.h"
 #include "pb_type_utils.h"
 #include "vtr_assert.h"
@@ -31,7 +31,7 @@ namespace openfpga {
  *******************************************************************/
 static bool extract_pb_data(std::fstream& fp, const AtomContext& atom_ctx,
                             const t_pb* op_pb, const t_pb_type* target_pb_type,
-                            const NoneFabricBitstreamPBSetting& setting) {
+                            const NonFabricBitstreamPBSetting& setting) {
   t_pb_graph_node* pb_graph_node = op_pb->pb_graph_node;
   t_pb_type* pb_type = pb_graph_node->pb_type;
   bool found_pb = false;
@@ -84,10 +84,10 @@ static bool extract_pb_data(std::fstream& fp, const AtomContext& atom_ctx,
 /********************************************************************
  * Extract data from the targetted PB (from that particular grid)
  *******************************************************************/
-static void extract_grid_none_fabric_bitstream(
+static void extract_grid_non_fabric_bitstream(
   std::fstream& fp, const VprContext& vpr_ctx,
   const ClusterBlockId& cluster_block_id, const t_pb_type* target_pb_type,
-  const NoneFabricBitstreamPBSetting setting) {
+  const NonFabricBitstreamPBSetting setting) {
   const ClusteringContext& clustering_ctx = vpr_ctx.clustering();
   const AtomContext& atom_ctx = vpr_ctx.atom();
 
@@ -102,8 +102,8 @@ static void extract_grid_none_fabric_bitstream(
 /********************************************************************
  * Extract data from the targetted PB (from the device)
  *******************************************************************/
-static void extract_device_none_fabric_pb_bitstream(
-  std::fstream& fp, const NoneFabricBitstreamPBSetting setting,
+static void extract_device_non_fabric_pb_bitstream(
+  std::fstream& fp, const NonFabricBitstreamPBSetting setting,
   const std::string& target_parent_pb_name, const t_pb_type* target_pb_type,
   const VprContext& vpr_ctx) {
   const DeviceContext& device_ctx = vpr_ctx.device();
@@ -163,8 +163,8 @@ static void extract_device_none_fabric_pb_bitstream(
         fp << "        {\n";
         fp << "          \"x\" : " << (uint32_t)(ix) << ",\n";
         fp << "          \"y\" : " << (uint32_t)(iy);
-        extract_grid_none_fabric_bitstream(fp, vpr_ctx, cluster_blk_id,
-                                           target_pb_type, setting);
+        extract_grid_non_fabric_bitstream(fp, vpr_ctx, cluster_blk_id,
+                                          target_pb_type, setting);
         fp << "\n        }";
         grid_count++;
       }
@@ -212,31 +212,31 @@ static t_pb_type* find_pb_type(const DeviceContext& device_ctx,
 }
 
 /********************************************************************
- * A top-level function to extract data based on none-fabric bitstream setting
+ * A top-level function to extract data based on non-fabric bitstream setting
  *******************************************************************/
-void extract_device_none_fabric_bitstream(const VprContext& vpr_ctx,
-                                          const OpenfpgaContext& openfpga_ctx,
-                                          const bool& verbose) {
+void extract_device_non_fabric_bitstream(const VprContext& vpr_ctx,
+                                         const OpenfpgaContext& openfpga_ctx,
+                                         const bool& verbose) {
   std::string timer_message =
-    std::string("\nBuild none-fabric bitstream for implementation '") +
+    std::string("\nBuild non-fabric bitstream for implementation '") +
     vpr_ctx.atom().nlist.netlist_name() + std::string("'\n");
   vtr::ScopedStartFinishTimer timer(timer_message);
   const openfpga::BitstreamSetting& bitstream_setting =
     openfpga_ctx.bitstream_setting();
-  std::vector<NoneFabricBitstreamSetting> none_fabric_setting =
-    bitstream_setting.none_fabric();
+  std::vector<NonFabricBitstreamSetting> non_fabric_setting =
+    bitstream_setting.non_fabric();
 
   // Only proceed if it is defined in bitstream_setting.xml
-  if (none_fabric_setting.size()) {
-    // Go through each none_fabric settting
-    for (auto setting : none_fabric_setting) {
+  if (non_fabric_setting.size()) {
+    // Go through each non_fabric settting
+    for (auto setting : non_fabric_setting) {
       std::fstream fp;
       fp.open(setting.file.c_str(), std::fstream::out);
       fp << "{\n";
       fp << "  \"" << setting.name.c_str() << "\" : [\n";
       if (setting.name == PRINT_LAYOUT_NAME) {
-        extract_device_none_fabric_pb_bitstream(
-          fp, NoneFabricBitstreamPBSetting{}, setting.name, nullptr, vpr_ctx);
+        extract_device_non_fabric_pb_bitstream(
+          fp, NonFabricBitstreamPBSetting{}, setting.name, nullptr, vpr_ctx);
       } else {
         int pb_count = 0;
         // Extract each needed PB data
@@ -262,8 +262,8 @@ void extract_device_none_fabric_bitstream(const VprContext& vpr_ctx,
           fp << "      \"content\" : \"" << pb_setting.content.c_str() << "\"";
           if (target_pb_type != nullptr &&
               is_primitive_pb_type(target_pb_type)) {
-            extract_device_none_fabric_pb_bitstream(
-              fp, pb_setting, setting.name, target_pb_type, vpr_ctx);
+            extract_device_non_fabric_pb_bitstream(fp, pb_setting, setting.name,
+                                                   target_pb_type, vpr_ctx);
           }
           fp << "\n    }";
           pb_count++;

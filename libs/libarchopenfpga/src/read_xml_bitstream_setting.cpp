@@ -77,28 +77,28 @@ static void read_xml_bitstream_interconnect_setting(
 }
 
 /********************************************************************
- * Parse XML description for a none_fabric annotation under a <none_fabric> XML
+ * Parse XML description for a non_fabric annotation under a <non_fabric> XML
  *node
  *******************************************************************/
-static void read_xml_none_fabric_bitstream_setting(
-  pugi::xml_node& xml_none_fabric, const pugiutil::loc_data& loc_data,
+static void read_xml_non_fabric_bitstream_setting(
+  pugi::xml_node& xml_non_fabric, const pugiutil::loc_data& loc_data,
   openfpga::BitstreamSetting& bitstream_setting) {
   const std::string& name_attr =
-    get_attribute(xml_none_fabric, "name", loc_data).as_string();
+    get_attribute(xml_non_fabric, "name", loc_data).as_string();
   const std::string& file_attr =
-    get_attribute(xml_none_fabric, "file", loc_data).as_string();
-  /* Add to none fabric */
-  bitstream_setting.add_none_fabric(name_attr, file_attr);
-  for (pugi::xml_node xml_child : xml_none_fabric.children()) {
+    get_attribute(xml_non_fabric, "file", loc_data).as_string();
+  /* Add to non-fabric */
+  bitstream_setting.add_non_fabric(name_attr, file_attr);
+  for (pugi::xml_node xml_child : xml_non_fabric.children()) {
     if (xml_child.name() != std::string("pb")) {
-      bad_tag(xml_child, loc_data, xml_none_fabric, {"pb"});
+      bad_tag(xml_child, loc_data, xml_non_fabric, {"pb"});
     }
     const std::string& pb_name_attr =
       get_attribute(xml_child, "name", loc_data).as_string();
     const std::string& content_attr =
       get_attribute(xml_child, "content", loc_data).as_string();
-    /* Add PB to none fabric */
-    bitstream_setting.add_none_fabric_pb(pb_name_attr, content_attr);
+    /* Add PB to non-fabric */
+    bitstream_setting.add_non_fabric_pb(pb_name_attr, content_attr);
   }
 }
 
@@ -116,9 +116,9 @@ openfpga::BitstreamSetting read_xml_bitstream_setting(
     /* Error out if the XML child has an invalid name! */
     if ((xml_child.name() != std::string("pb_type")) &&
         (xml_child.name() != std::string("interconnect")) &&
-        (xml_child.name() != std::string("none_fabric"))) {
+        (xml_child.name() != std::string("non_fabric"))) {
       bad_tag(xml_child, loc_data, Node,
-              {"pb_type | interconnect | none_fabric"});
+              {"pb_type | interconnect | non_fabric"});
     }
 
     if (xml_child.name() == std::string("pb_type")) {
@@ -128,9 +128,9 @@ openfpga::BitstreamSetting read_xml_bitstream_setting(
       read_xml_bitstream_interconnect_setting(xml_child, loc_data,
                                               bitstream_setting);
     } else {
-      VTR_ASSERT_SAFE(xml_child.name() == std::string("none_fabric"));
-      read_xml_none_fabric_bitstream_setting(xml_child, loc_data,
-                                             bitstream_setting);
+      VTR_ASSERT_SAFE(xml_child.name() == std::string("non_fabric"));
+      read_xml_non_fabric_bitstream_setting(xml_child, loc_data,
+                                            bitstream_setting);
     }
   }
 

@@ -14,27 +14,27 @@
 /* namespace openfpga begins */
 namespace openfpga {
 
-struct NoneFabricBitstreamPBSetting {
-  NoneFabricBitstreamPBSetting(const std::string& p = "",
-                               const std::string& t = "",
-                               const std::string& c = "")
+struct NonFabricBitstreamPBSetting {
+  NonFabricBitstreamPBSetting(const std::string& p = "",
+                              const std::string& t = "",
+                              const std::string& c = "")
     : pb(p), type(t), content(c) {}
   const std::string pb = "";
   const std::string type = "";
   const std::string content = "";
 };
 
-struct NoneFabricBitstreamSetting {
-  NoneFabricBitstreamSetting(const std::string& n = "",
-                             const std::string& f = "")
+struct NonFabricBitstreamSetting {
+  NonFabricBitstreamSetting(const std::string& n = "",
+                            const std::string& f = "")
     : name(n), file(f) {}
   void add_pb(const std::string& p, const std::string& t,
               const std::string& c) {
-    pbs.push_back(NoneFabricBitstreamPBSetting(p, t, c));
+    pbs.push_back(NonFabricBitstreamPBSetting(p, t, c));
   }
   const std::string name = "";
   const std::string file = "";
-  std::vector<NoneFabricBitstreamPBSetting> pbs;
+  std::vector<NonFabricBitstreamPBSetting> pbs;
 };
 
 /********************************************************************
@@ -97,7 +97,7 @@ class BitstreamSetting {
     const BitstreamInterconnectSettingId& interconnect_setting_id) const;
   std::string default_path(
     const BitstreamInterconnectSettingId& interconnect_setting_id) const;
-  std::vector<NoneFabricBitstreamSetting> none_fabric() const;
+  std::vector<NonFabricBitstreamSetting> non_fabric() const;
 
  public: /* Public Mutators */
   BitstreamPbTypeSettingId add_bitstream_pb_type_setting(
@@ -117,8 +117,8 @@ class BitstreamSetting {
     const std::vector<std::string>& parent_mode_names,
     const std::string& default_path);
 
-  void add_none_fabric(const std::string& name, const std::string& file);
-  void add_none_fabric_pb(const std::string& pb, const std::string& content);
+  void add_non_fabric(const std::string& name, const std::string& file);
+  void add_non_fabric_pb(const std::string& pb, const std::string& content);
 
  public: /* Public Validators */
   bool valid_bitstream_pb_type_setting_id(
@@ -161,7 +161,7 @@ class BitstreamSetting {
     interconnect_parent_mode_names_;
   vtr::vector<BitstreamInterconnectSettingId, std::string>
     interconnect_default_paths_;
-  std::vector<NoneFabricBitstreamSetting> none_fabric_;
+  std::vector<NonFabricBitstreamSetting> non_fabric_;
 };
 
 }  // namespace openfpga
