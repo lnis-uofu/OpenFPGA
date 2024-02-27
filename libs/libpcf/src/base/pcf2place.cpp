@@ -41,6 +41,7 @@ int pcf2place(const PcfData& pcf_data,
     VTR_LOG("PCF basic check passed\n");
   }
 
+  std::map<size_t, std::pair<std::string, size_t>> int2extpin;
   /* Build the I/O place */
   for (const PcfIoConstraintId& io_id : pcf_data.io_constraints()) {
     /* Find the net name */
@@ -100,6 +101,30 @@ int pcf2place(const PcfData& pcf_data,
         x, y, z, net.c_str(), ext_pin.get_name().c_str(), ext_pin.get_lsb(),
         int_pin.get_name().c_str(), int_pin.get_lsb());
       continue;
+    }
+
+    size_t lsb = int_pin.get_lsb();
+    auto itr = int2extpin.find(lsb);
+    if (itr == int2extpin.end()) {
+      int2extpin.insert(
+        {lsb, std::make_pair(ext_pin.get_name(), ext_pin.get_lsb())});
+    } else {
+      std::string combined_pin_str = ext_pin.get_name();
+      size_t pos = combined_pin_str.find_last_of("IN");
+      if (std::string::npos != pos) {
+        combined_pin_str.replace(pos - 1, strlen("IN"), "IN/OUT");
+      } else {
+        pos = combined_pin_str.find_last_of("OUT");
+        if (std::string::npos != pos) {
+          combined_pin_str.replace(pos - 1, strlen("OUT"), "IN/OUT");
+        }
+      }
+
+      VTR_LOG_ERROR(
+        "Illegal pin constraint: direction conflicted at location (%ld, %ld, "
+        "%ld) of pin %s.\n",
+        x, y, z, combined_pin_str.c_str());
+      num_err++;
     }
 
     /* Add a fixed prefix to net namei, this is hard coded by VPR */
