@@ -41,7 +41,8 @@ int pcf2place(const PcfData& pcf_data,
     VTR_LOG("PCF basic check passed\n");
   }
 
-  std::map<size_t, std::string> int2net;
+  /* Map from internal pin lsb to net */
+  std::map<size_t, std::string> net_map;
   /* Build the I/O place */
   for (const PcfIoConstraintId& io_id : pcf_data.io_constraints()) {
     /* Find the net name */
@@ -104,15 +105,16 @@ int pcf2place(const PcfData& pcf_data,
     }
 
     size_t lsb = int_pin.get_lsb();
-    auto itr = int2net.find(lsb);
-    if (itr == int2net.end()) {
-      int2net.insert({lsb, net});
+    auto itr = net_map.find(lsb);
+    if (itr == net_map.end()) {
+      net_map.insert({lsb, net});
     } else {
       VTR_LOG_ERROR(
         "Illegal pin constraint: FPGA IO pin is assigned to two design pins: "
         "%s and %s.\n",
         itr->second.c_str(), net.c_str());
       num_err++;
+      continue;
     }
 
     /* Add a fixed prefix to net namei, this is hard coded by VPR */
