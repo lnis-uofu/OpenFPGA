@@ -20,6 +20,7 @@
 #include "read_xml_config_protocol.h"
 #include "read_xml_openfpga_arch.h"
 #include "read_xml_pb_type_annotation.h"
+#include "read_xml_ql_memory_bank_config_setting.h"
 #include "read_xml_routing_circuit.h"
 #include "read_xml_simulation_setting.h"
 #include "read_xml_technology_library.h"
@@ -79,6 +80,13 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
     /* Parse configuration protocol to data structure */
     openfpga_arch.config_protocol =
       read_xml_config_protocol(xml_openfpga_arch, loc_data);
+
+    /* Parse QL Memory Bank configuration setting */
+    if (openfpga_arch.config_protocol.type() == CONFIG_MEM_QL_MEMORY_BANK) {
+      read_xml_ql_memory_bank_config_setting(
+        openfpga_arch.ql_memory_bank_config_setting, xml_openfpga_arch,
+        loc_data);
+    }
 
     /* Build the internal link between configuration protocol and circuit
      * library */
