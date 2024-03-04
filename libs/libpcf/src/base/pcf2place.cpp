@@ -41,8 +41,8 @@ int pcf2place(const PcfData& pcf_data,
     VTR_LOG("PCF basic check passed\n");
   }
 
-  /* Map from internal pin lsb to net */
-  std::map<size_t, std::string> net_map;
+  /* Map from location to net */
+  std::map<std::array<size_t, 3>, std::string> net_map;
   /* Build the I/O place */
   for (const PcfIoConstraintId& io_id : pcf_data.io_constraints()) {
     /* Find the net name */
@@ -104,15 +104,16 @@ int pcf2place(const PcfData& pcf_data,
       continue;
     }
 
-    size_t lsb = int_pin.get_lsb();
-    auto itr = net_map.find(lsb);
+    std::array<size_t, 3> loc = {x, y, z};
+    auto itr = net_map.find(loc);
     if (itr == net_map.end()) {
-      net_map.insert({lsb, net});
+      net_map.insert({loc, net});
     } else {
       VTR_LOG_ERROR(
-        "Illegal pin constraint: FPGA IO pin is assigned to two design pins: "
-        "%s and %s.\n",
-        itr->second.c_str(), net.c_str());
+        "Illegal pin constraint: Two nets '%s' and '%s' are mapped to the I/O "
+        "pin '%s[%lu]' which belongs to the same coordinate (%ld, %ld, %ld)!\n",
+        itr->second.c_str(), net.c_str(), int_pin.get_name().c_str(),
+        int_pin.get_lsb(), x, y, z);
       num_err++;
       continue;
     }
