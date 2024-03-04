@@ -116,6 +116,14 @@ void print_verilog_testbench_fpga_instance(
   fp << std::endl;
 }
 
+std::string escapeNames(const std::string& original) {
+  std::string result = original;
+  if (result.find("$") != std::string::npos) {
+    result = "\\" + result + " ";
+  }
+  return result;
+}
+
 /********************************************************************
  * Instanciate the input benchmark module
  *******************************************************************/
@@ -224,17 +232,18 @@ void print_verilog_testbench_benchmark_instance(
             fp << "~";
           }
 
-          fp << bus_group.pin_name(pin);
+          std::string escapedName = bus_group.pin_name(pin);
 
           /* For clock ports, skip postfix */
           if (clock_port_names.end() == std::find(clock_port_names.begin(),
                                                   clock_port_names.end(),
                                                   port_names[iport])) {
-            fp << input_port_postfix;
+            escapedName += input_port_postfix;
           } else if (include_clock_port_postfix) {
-            fp << input_port_postfix;
+            escapedName += input_port_postfix;
           }
-
+          escapedName = escapeNames(escapedName);
+          fp << escapedName;
           pin_counter++;
         }
         fp << "}";
@@ -249,16 +258,17 @@ void print_verilog_testbench_benchmark_instance(
             pin_constraints.net_default_value(port_names[iport])) {
           fp << "~";
         }
-
-        fp << port_names[iport];
+        std::string escapedName = port_names[iport];
         /* For clock ports, skip postfix */
         if (clock_port_names.end() == std::find(clock_port_names.begin(),
                                                 clock_port_names.end(),
                                                 port_names[iport])) {
-          fp << input_port_postfix;
+          escapedName += input_port_postfix;
         } else if (include_clock_port_postfix) {
-          fp << input_port_postfix;
+          escapedName += input_port_postfix;
         }
+        escapedName = escapeNames(escapedName); 
+        fp << escapedName;
       }
 
       if (true == use_explicit_port_map) {
@@ -286,12 +296,16 @@ void print_verilog_testbench_benchmark_instance(
           if (0 < pin_counter) {
             fp << ", ";
           }
-          fp << bus_group.pin_name(pin) << output_port_postfix;
+          std::string escapedName = bus_group.pin_name(pin) + output_port_postfix;
+          escapedName = escapeNames(escapedName); 
+          fp << escapedName;
           pin_counter++;
         }
         fp << "}";
       } else {
-        fp << port_names[iport] << output_port_postfix;
+        std::string escapedName = port_names[iport] + output_port_postfix;
+        escapedName = escapeNames(escapedName);
+        fp << escapedName;
       }
       if (true == use_explicit_port_map) {
         fp << ")";
@@ -867,7 +881,7 @@ void print_verilog_testbench_random_stimuli(
 
     /* TODO: find the clock inputs will be initialized later */
     if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
-      fp << "\t\t" << block_name + input_port_postfix << " <= 1'b0;"
+      fp << "\t\t" << escapeNames(block_name + input_port_postfix) << " <= 1'b0;"
          << std::endl;
     }
   }
@@ -951,7 +965,7 @@ void print_verilog_testbench_random_stimuli(
 
     /* TODO: find the clock inputs will be initialized later */
     if (AtomBlockType::INPAD == atom_ctx.nlist.block_type(atom_blk)) {
-      fp << "\t\t" << block_name + input_port_postfix << " <= $random;"
+      fp << "\t\t" << escapeNames(block_name + input_port_postfix) << " <= $random;"
          << std::endl;
     }
   }
