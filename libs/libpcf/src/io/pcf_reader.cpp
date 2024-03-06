@@ -61,7 +61,8 @@ int read_pcf(const char* fname, PcfData& pcf_data) {
           /* Reach unknown command for OpenFpga, error out */
           if (word.find("set_clk") == 0 || word.find("set_reset") == 0) {
             continue;  // set_clk and set_rest are known commands for Arkangel,
-                       // should not error out when call this read_pcf function
+                       // disable the error message for these two commands when
+                       // call read_pcf function
           } else {
             VTR_LOG_ERROR("Unknown command '%s'!\n", word.c_str());
             num_err++;
