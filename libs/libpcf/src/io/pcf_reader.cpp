@@ -58,11 +58,16 @@ int read_pcf(const char* fname, PcfData& pcf_data) {
         } else if (word[0] == COMMENT) {  // if it's a comment
           break;  // or ignore the full line comment and move on
         } else {
-          /* Reach unknown command, error out */
-          VTR_LOG_ERROR("Unknown command '%s'!\n", word.c_str());
-          num_err++;
-          break;  // and move onto next line. without this, it will accept more
-                  // following values on this line
+          /* Reach unknown command for OpenFpga, error out */
+          if (word.find("set_clk") == 0 || word.find("set_reset") == 0) {
+            continue;  // set_clk and set_rest are known commands for Arkangel,
+                       // should not error out when call this read_pcf function
+          } else {
+            VTR_LOG_ERROR("Unknown command '%s'!\n", word.c_str());
+            num_err++;
+            break;  // and move onto next line. without this, it will accept
+                    // more following values on this line
+          }
         }
       }
     }
