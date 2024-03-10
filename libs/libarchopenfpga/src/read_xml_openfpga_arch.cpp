@@ -82,7 +82,11 @@ openfpga::Arch read_xml_openfpga_arch(const char* arch_file_name) {
       read_xml_config_protocol(xml_openfpga_arch, loc_data);
 
     /* Parse QL Memory Bank configuration setting */
-    if (openfpga_arch.config_protocol.type() == CONFIG_MEM_QL_MEMORY_BANK) {
+    if (openfpga_arch.config_protocol.type() == CONFIG_MEM_QL_MEMORY_BANK &&
+        openfpga_arch.config_protocol.bl_protocol_type() ==
+          BLWL_PROTOCOL_FLATTEN &&
+        openfpga_arch.config_protocol.wl_protocol_type() ==
+          BLWL_PROTOCOL_FLATTEN) {
       read_xml_ql_memory_bank_config_setting(
         openfpga_arch.ql_memory_bank_config_setting, xml_openfpga_arch,
         loc_data);
