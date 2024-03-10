@@ -52,3 +52,6 @@ run-task fpga_bitstream/filter_value0 $@
 run-task fpga_bitstream/filter_value1 $@
 run-task fpga_bitstream/path_only $@
 run-task fpga_bitstream/value_only $@
+
+echo -e "Testing extracting mode bits for DSP blocks when generating bitstream";
+run-task fpga_bitstream/extract_dsp_mode_bit $@

@@ -11,6 +11,7 @@
 #include "command.h"
 #include "command_context.h"
 #include "command_exit_codes.h"
+#include "extract_device_non_fabric_bitstream.h"
 #include "globals.h"
 #include "openfpga_digest.h"
 #include "openfpga_naming.h"
@@ -58,6 +59,9 @@ int fpga_bitstream_template(T& openfpga_ctx, const Command& cmd,
       cmd_context.option_value(cmd, opt_write_file),
       !cmd_context.option_enable(cmd, opt_no_time_stamp));
   }
+
+  extract_device_non_fabric_bitstream(
+    g_vpr_ctx, openfpga_ctx, cmd_context.option_enable(cmd, opt_verbose));
 
   /* TODO: should identify the error code from internal function execution */
   return CMD_EXEC_SUCCESS;

@@ -77,6 +77,32 @@ static void read_xml_bitstream_interconnect_setting(
 }
 
 /********************************************************************
+ * Parse XML description for a non_fabric annotation under a <non_fabric> XML
+ *node
+ *******************************************************************/
+static void read_xml_non_fabric_bitstream_setting(
+  pugi::xml_node& xml_non_fabric, const pugiutil::loc_data& loc_data,
+  openfpga::BitstreamSetting& bitstream_setting) {
+  const std::string& name_attr =
+    get_attribute(xml_non_fabric, "name", loc_data).as_string();
+  const std::string& file_attr =
+    get_attribute(xml_non_fabric, "file", loc_data).as_string();
+  /* Add to non-fabric */
+  bitstream_setting.add_non_fabric(name_attr, file_attr);
+  for (pugi::xml_node xml_child : xml_non_fabric.children()) {
+    if (xml_child.name() != std::string("pb")) {
+      bad_tag(xml_child, loc_data, xml_non_fabric, {"pb"});
+    }
+    const std::string& pb_name_attr =
+      get_attribute(xml_child, "name", loc_data).as_string();
+    const std::string& content_attr =
+      get_attribute(xml_child, "content", loc_data).as_string();
+    /* Add PB to non-fabric */
+    bitstream_setting.add_non_fabric_pb(pb_name_attr, content_attr);
+  }
+}
+
+/********************************************************************
  * Parse XML codes about <openfpga_bitstream_setting> to an object
  *******************************************************************/
 openfpga::BitstreamSetting read_xml_bitstream_setting(
@@ -89,17 +115,22 @@ openfpga::BitstreamSetting read_xml_bitstream_setting(
   for (pugi::xml_node xml_child : Node.children()) {
     /* Error out if the XML child has an invalid name! */
     if ((xml_child.name() != std::string("pb_type")) &&
-        (xml_child.name() != std::string("interconnect"))) {
-      bad_tag(xml_child, loc_data, Node, {"pb_type | interconnect"});
+        (xml_child.name() != std::string("interconnect")) &&
+        (xml_child.name() != std::string("non_fabric"))) {
+      bad_tag(xml_child, loc_data, Node,
+              {"pb_type | interconnect | non_fabric"});
     }
 
     if (xml_child.name() == std::string("pb_type")) {
       read_xml_bitstream_pb_type_setting(xml_child, loc_data,
                                          bitstream_setting);
-    } else {
-      VTR_ASSERT_SAFE(xml_child.name() == std::string("interconnect"));
+    } else if (xml_child.name() == std::string("interconnect")) {
       read_xml_bitstream_interconnect_setting(xml_child, loc_data,
                                               bitstream_setting);
+    } else {
+      VTR_ASSERT_SAFE(xml_child.name() == std::string("non_fabric"));
+      read_xml_non_fabric_bitstream_setting(xml_child, loc_data,
+                                            bitstream_setting);
     }
   }
 
