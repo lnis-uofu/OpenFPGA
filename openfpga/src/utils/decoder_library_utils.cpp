@@ -77,7 +77,7 @@ size_t find_mux_local_decoder_addr_size(const size_t& data_size) {
  ***************************************************************************************/
 size_t find_memory_decoder_addr_size(const size_t& num_mems) {
   return find_mux_local_decoder_addr_size(
-    find_memory_decoder_data_size(num_mems));
+    find_memory_decoder_data_size(num_mems, 0, false));
 }
 
 /***************************************************************************************
@@ -86,8 +86,18 @@ size_t find_memory_decoder_addr_size(const size_t& num_mems) {
  *lines and word lines, the number of data lines will be a square root of the
  *number of memory cells.
  ***************************************************************************************/
-size_t find_memory_decoder_data_size(const size_t& num_mems) {
-  return (size_t)std::ceil(std::sqrt((float)num_mems));
+size_t find_memory_decoder_data_size(const size_t& num_mems,
+                                     const size_t& defined_num_wl,
+                                     const bool is_bl) {
+  if (defined_num_wl == 0) {
+    return (size_t)std::ceil(std::sqrt((float)num_mems));
+  } else {
+    if (is_bl) {
+      return find_memory_wl_decoder_data_size(num_mems, defined_num_wl);
+    } else {
+      return defined_num_wl;
+    }
+  }
 }
 
 /***************************************************************************************

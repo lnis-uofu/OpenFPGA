@@ -8,6 +8,7 @@
 #include "circuit_library.h"
 #include "config_protocol.h"
 #include "pb_type_annotation.h"
+#include "ql_memory_bank_config_setting.h"
 #include "technology_library.h"
 #include "tile_annotation.h"
 
@@ -34,6 +35,9 @@ struct Arch {
 
   /* Configuration protocol settings */
   ConfigProtocol config_protocol;
+
+  /* QL Memory Bank Config Setting */
+  QLMemoryBankConfigSetting ql_memory_bank_config_setting;
 
   /* Mapping from the names of routing switches
    * to circuit models in circuit library

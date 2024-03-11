@@ -419,11 +419,16 @@ void add_sram_ports_to_module_manager(
 void add_pb_sram_ports_to_module_manager(
   ModuleManager& module_manager, const ModuleId& module_id,
   const CircuitLibrary& circuit_lib, const CircuitModelId& sram_model,
-  const e_config_protocol_type sram_orgz_type, const size_t& num_config_bits) {
+  const e_config_protocol_type sram_orgz_type, const size_t& num_config_bits,
+  const uint32_t defined_num_wl) {
+  if (defined_num_wl) {
+    // Only support defined_num_wl if the configuration mode is QL Memory Bank
+    VTR_ASSERT(sram_orgz_type == CONFIG_MEM_QL_MEMORY_BANK);
+  }
   std::vector<std::string> sram_port_names =
     generate_sram_port_names(circuit_lib, sram_model, sram_orgz_type);
   size_t sram_port_size =
-    generate_pb_sram_port_size(sram_orgz_type, num_config_bits);
+    generate_pb_sram_port_size(sram_orgz_type, num_config_bits, defined_num_wl);
 
   /* Add ports to the module manager */
   switch (sram_orgz_type) {

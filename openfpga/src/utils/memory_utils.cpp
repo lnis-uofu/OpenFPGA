@@ -436,7 +436,8 @@ size_t generate_sram_port_size(const e_config_protocol_type sram_orgz_type,
  * - QL Memory decoders: Apply square root as BL/WLs will be grouped
  ********************************************************************/
 size_t generate_pb_sram_port_size(const e_config_protocol_type sram_orgz_type,
-                                  const size_t& num_config_bits) {
+                                  const size_t& num_config_bits,
+                                  const size_t& defined_num_wl) {
   size_t sram_port_size = num_config_bits;
 
   switch (sram_orgz_type) {
@@ -447,7 +448,8 @@ size_t generate_pb_sram_port_size(const e_config_protocol_type sram_orgz_type,
       sram_port_size = 1;
       break;
     case CONFIG_MEM_QL_MEMORY_BANK:
-      sram_port_size = find_memory_decoder_data_size(num_config_bits);
+      sram_port_size =
+        find_memory_decoder_data_size(num_config_bits, defined_num_wl, true);
       break;
     case CONFIG_MEM_MEMORY_BANK:
       break;

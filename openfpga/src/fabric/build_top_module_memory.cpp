@@ -1110,14 +1110,14 @@ static void add_top_module_nets_cmos_memory_bank_config_bus(
   /* Each memory bank has a unified number of BL/WLs */
   size_t num_bls = 0;
   for (const auto& curr_config_bits : num_config_bits) {
-    num_bls =
-      std::max(num_bls, find_memory_decoder_data_size(curr_config_bits.first));
+    num_bls = std::max(
+      num_bls, find_memory_decoder_data_size(curr_config_bits.first, 0, true));
   }
 
   size_t num_wls = 0;
   for (const auto& curr_config_bits : num_config_bits) {
-    num_wls =
-      std::max(num_wls, find_memory_decoder_data_size(curr_config_bits.first));
+    num_wls = std::max(
+      num_wls, find_memory_decoder_data_size(curr_config_bits.first, 0, false));
   }
 
   /* Create separated memory bank circuitry, i.e., BL/WL decoders for each
