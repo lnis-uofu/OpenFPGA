@@ -492,7 +492,8 @@ int print_verilog_preconfig_top_module(
 
   /* Add waveform output command, support both fsdb and vcd */
   if (true == options.dump_waveform()) {
-    print_verilog_testbench_dump_waveform(fp, circuit_name, std::string(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME));
+    print_verilog_testbench_dump_waveform(
+      fp, circuit_name, std::string(FORMAL_VERIFICATION_TOP_MODULE_UUT_NAME));
   }
 
   /* Testbench ends*/

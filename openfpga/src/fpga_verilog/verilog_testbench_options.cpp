@@ -88,9 +88,7 @@ bool VerilogTestbenchOption::include_signal_init() const {
   return include_signal_init_;
 }
 
-bool VerilogTestbenchOption::dump_waveform() const {
-  return dump_waveform_;
-}
+bool VerilogTestbenchOption::dump_waveform() const { return dump_waveform_; }
 
 bool VerilogTestbenchOption::no_self_checking() const {
   return reference_benchmark_file_path_.empty();

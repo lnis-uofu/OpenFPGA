@@ -185,8 +185,7 @@ int write_preconfigured_fabric_wrapper_template(
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_include_signal_init(
     cmd_context.option_enable(cmd, opt_include_signal_init));
-  options.set_dump_waveform(
-    cmd_context.option_enable(cmd, opt_dump_waveform));
+  options.set_dump_waveform(cmd_context.option_enable(cmd, opt_dump_waveform));
   options.set_print_formal_verification_top_netlist(true);
 
   if (true == cmd_context.option_enable(cmd, opt_dut_module)) {
