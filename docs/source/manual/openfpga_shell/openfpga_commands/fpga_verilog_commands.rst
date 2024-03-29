@@ -176,6 +176,10 @@ __ iverilog_website_
 
    .. warning:: Signal initialization is only applied to the datapath inputs of routing multiplexers (considering the fact that they are indispensible cells of FPGAs)! If your FPGA does not contain any multiplexer cells, signal initialization is not applicable.
 
+  .. option:: --dump_waveform
+
+    Enable waveform output when runnign HDL simulation on the preconfigured wrapper. When enabled, waveform files can be outputted in two formats: ``fsdb`` and ``vcd`` through preprocessing flags ``DUMP_FSDB`` and ``DUMP_VCD`` respectively. For example, when using VCS,. the flag can be activiated by ``+define+DUMP_FSDB=1``.
+
   .. option:: --no_time_stamp
 
     Do not print time stamp in Verilog netlists
