@@ -135,6 +135,10 @@ void print_verilog_testbench_signal_initialization(
   const CircuitLibrary& circuit_lib, const ModuleManager& module_manager,
   const ModuleId& top_module, const bool& deposit_random_values);
 
+void print_verilog_testbench_dump_waveform(
+  std::fstream& fp, const std::string& circuit_name,
+  const std::string& uut_name);
+
 } /* end namespace openfpga */
 
 #endif

@@ -1344,4 +1344,32 @@ void print_verilog_testbench_signal_initialization(
   }
 }
 
+/********************************************************************
+ * Print waveform output commands: support both VCD and FSDB
+ *******************************************************************/
+void print_verilog_testbench_dump_waveform(
+  std::fstream& fp, const std::string& circuit_name,
+  const std::string& uut_name) {
+  /* Validate the file stream */
+  valid_file_stream(fp);
+
+  print_verilog_comment(
+    fp, std::string("------ Use " + std::string(VERILOG_FSDB_PREPROC_FLAG) + " to enable FSDB waveform output -----"));
+  print_verilog_preprocessing_flag(fp, std::string(VERILOG_FSDB_PREPROC_FLAG));
+  fp << "\tinital begin\n";
+  fp << "\t\t$fsdbDumpfile(\"" << circuit_name << ".fsdb\");\n";
+  fp << "\t\t$fsdbDumpvars(0, \"" << uut_name << "\");\n";
+  fp << "\tend\n";
+  print_verilog_endif(fp);
+
+  print_verilog_comment(
+    fp, std::string("------ Use " + std::string(VERILOG_VCD_PREPROC_FLAG) + " to enable VCD waveform output -----"));
+  print_verilog_preprocessing_flag(fp, std::string(VERILOG_VCD_PREPROC_FLAG));
+  fp << "\tinital begin\n";
+  fp << "\t\t$dumpfile(\"" << circuit_name << ".vcd\");\n";
+  fp << "\t\t$dumpvars(0, \"" << uut_name << "\");\n";
+  fp << "\tend\n";
+  print_verilog_endif(fp);
+}
+
 } /* end namespace openfpga */

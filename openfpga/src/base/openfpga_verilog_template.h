@@ -169,6 +169,7 @@ int write_preconfigured_fabric_wrapper_template(
   CommandOptionId opt_include_signal_init = cmd.option("include_signal_init");
   CommandOptionId opt_embed_bitstream = cmd.option("embed_bitstream");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
+  CommandOptionId opt_dump_waveform = cmd.option("dump_waveform");
   CommandOptionId opt_verbose = cmd.option("verbose");
 
   /* This is an intermediate data structure which is designed to modularize the
@@ -184,6 +185,8 @@ int write_preconfigured_fabric_wrapper_template(
   options.set_verbose_output(cmd_context.option_enable(cmd, opt_verbose));
   options.set_include_signal_init(
     cmd_context.option_enable(cmd, opt_include_signal_init));
+  options.set_dump_waveform(
+    cmd_context.option_enable(cmd, opt_dump_waveform));
   options.set_print_formal_verification_top_netlist(true);
 
   if (true == cmd_context.option_enable(cmd, opt_dut_module)) {

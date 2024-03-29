@@ -31,6 +31,7 @@ VerilogTestbenchOption::VerilogTestbenchOption() {
   time_stamp_ = true;
   use_relative_path_ = false;
   simulator_type_ = e_simulator_type::IVERILOG;
+  dump_waveform = false;
   verbose_output_ = false;
 
   SIMULATOR_TYPE_STRING_ = {{"iverilog", "vcs"}};
@@ -85,6 +86,10 @@ bool VerilogTestbenchOption::explicit_port_mapping() const {
 
 bool VerilogTestbenchOption::include_signal_init() const {
   return include_signal_init_;
+}
+
+bool VerilogTestbenchOption::dump_waveform() const {
+  return dump_waveform_;
 }
 
 bool VerilogTestbenchOption::no_self_checking() const {
@@ -204,6 +209,10 @@ void VerilogTestbenchOption::set_explicit_port_mapping(const bool& enabled) {
 
 void VerilogTestbenchOption::set_include_signal_init(const bool& enabled) {
   include_signal_init_ = enabled;
+}
+
+void VerilogTestbenchOption::set_dump_waveform(const bool& enabled) {
+  dump_waveform_ = enabled;
 }
 
 void VerilogTestbenchOption::set_default_net_type(
