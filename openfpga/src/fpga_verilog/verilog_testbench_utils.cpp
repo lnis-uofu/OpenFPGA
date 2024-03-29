@@ -1357,20 +1357,20 @@ void print_verilog_testbench_dump_waveform(std::fstream& fp,
     fp, std::string("------ Use " + std::string(VERILOG_FSDB_PREPROC_FLAG) +
                     " to enable FSDB waveform output -----"));
   print_verilog_preprocessing_flag(fp, std::string(VERILOG_FSDB_PREPROC_FLAG));
-  fp << "\tinital begin\n";
-  fp << "\t\t$fsdbDumpfile(\"" << circuit_name << ".fsdb\");\n";
-  fp << "\t\t$fsdbDumpvars(0, \"" << uut_name << "\");\n";
-  fp << "\tend\n";
+  fp << "initial begin\n";
+  fp << "\t$fsdbDumpfile(\"" << circuit_name << ".fsdb\");\n";
+  fp << "\t$fsdbDumpvars(0, \"" << uut_name << "\");\n";
+  fp << "end\n";
   print_verilog_endif(fp);
 
   print_verilog_comment(
     fp, std::string("------ Use " + std::string(VERILOG_VCD_PREPROC_FLAG) +
                     " to enable VCD waveform output -----"));
   print_verilog_preprocessing_flag(fp, std::string(VERILOG_VCD_PREPROC_FLAG));
-  fp << "\tinital begin\n";
-  fp << "\t\t$dumpfile(\"" << circuit_name << ".vcd\");\n";
-  fp << "\t\t$dumpvars(0, \"" << uut_name << "\");\n";
-  fp << "\tend\n";
+  fp << "initial begin\n";
+  fp << "\t$dumpfile(\"" << circuit_name << ".vcd\");\n";
+  fp << "\t$dumpvars(0, \"" << uut_name << "\");\n";
+  fp << "end\n";
   print_verilog_endif(fp);
 }
 
