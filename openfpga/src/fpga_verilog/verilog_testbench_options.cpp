@@ -31,7 +31,7 @@ VerilogTestbenchOption::VerilogTestbenchOption() {
   time_stamp_ = true;
   use_relative_path_ = false;
   simulator_type_ = e_simulator_type::IVERILOG;
-  dump_waveform = false;
+  dump_waveform_ = false;
   verbose_output_ = false;
 
   SIMULATOR_TYPE_STRING_ = {{"iverilog", "vcs"}};
