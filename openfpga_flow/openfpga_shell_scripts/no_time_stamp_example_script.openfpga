@@ -65,7 +65,7 @@ write_fabric_verilog --file ${OPENFPGA_OUTPUT_DIR} --explicit_port_mapping --inc
 #  - Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
 #  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
-write_preconfigured_fabric_wrapper --embed_bitstream iverilog --file ${OPENFPGA_OUTPUT_DIR} --explicit_port_mapping --no_time_stamp
+write_preconfigured_fabric_wrapper --embed_bitstream iverilog --file ${OPENFPGA_OUTPUT_DIR} --explicit_port_mapping --no_time_stamp ${OPENFPGA_PRECONFIG_FABRIC_WRAPPER_DUMP_WAVEFORM}
 write_preconfigured_testbench --file ${OPENFPGA_OUTPUT_DIR} --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --use_relative_path --explicit_port_mapping --no_time_stamp
 
 # Write the SDC files for PnR backend
