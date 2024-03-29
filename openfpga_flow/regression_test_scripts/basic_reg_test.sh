@@ -279,6 +279,7 @@ echo -e "Testing output files without time stamp";
 run-task basic_tests/no_time_stamp/device_1x1 $@
 run-task basic_tests/no_time_stamp/device_4x4 $@
 run-task basic_tests/no_time_stamp/no_cout_in_gsb $@
+run-task basic_tests/no_time_stamp/dump_waveform $@
 # Run git-diff to ensure no changes on the golden netlists
 # Switch to root path in case users are running the tests in another location
 cd ${OPENFPGA_PATH}
