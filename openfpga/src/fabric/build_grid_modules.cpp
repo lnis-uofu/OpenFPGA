@@ -1164,7 +1164,7 @@ static int build_physical_tile_module(
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, t_physical_tile_type_ptr phy_block_type,
   const TileAnnotation& tile_annotation, const e_side& border_side,
-  const QLMemoryBankConfigSetting& ql_memory_bank_config_setting,
+  const QLMemoryBankConfigSetting* ql_memory_bank_config_setting,
   const bool& duplicate_grid_pin, const bool& group_config_block,
   const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
@@ -1336,7 +1336,7 @@ static int build_physical_tile_module(
     add_pb_sram_ports_to_module_manager(
       module_manager, grid_module, circuit_lib, sram_model, sram_orgz_type,
       module_num_config_bits,
-      ql_memory_bank_config_setting.pb_setting(phy_block_type->name).num_wl);
+      ql_memory_bank_config_setting->pb_setting(phy_block_type->name).num_wl);
   }
 
   /* Add module nets to connect memory cells inside
@@ -1375,7 +1375,7 @@ int build_grid_modules(
   const TileAnnotation& tile_annotation,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model,
-  const QLMemoryBankConfigSetting& ql_memory_bank_config_setting,
+  const QLMemoryBankConfigSetting* ql_memory_bank_config_setting,
   const bool& duplicate_grid_pin, const bool& group_config_block,
   const bool& verbose) {
   /* Start time count */

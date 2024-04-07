@@ -7,6 +7,17 @@ Configuration protocol is the circuitry designed to program an FPGA.
 As an interface, configuration protocol could be really different in FPGAs, depending on the application context.
 OpenFPGA supports versatile configuration protocol, providing different trade-offs between speed and area. 
 
+Under configuration protocol, if the configuration is QL Memory Bank with flatten BL/WL protocol, there might be 
+optional configuration setting call <ql_memory_bank_config_setting>.
+In QL Memory Bank configuration protocol, configuration bits are organized as BitLine (BL) x WordLine (WL)
+By default, OpenFPGA will keep BL and WL in square shape if possible where BL might be one bit longer than WL in some cases
+  For example: 
+    - If the configuration bits of a PB is 9 bits, then BL=3 and WL=3
+    - If the configuration bits of a PB is 11 bits, then BL=4 and WL=3 (where there is one extra bit as phantom bit)
+    - If the configuration bits of a PB is 14 bits, then BL=4 and WL=4 (where there is two extra bits as phantom bits)
+    
+This QL Memory Bank configuration setting allow OpenFPGA to use a fixed WL size, instead of default approach
+
 Template
 ~~~~~~~~
 
@@ -14,6 +25,9 @@ Template
 
   <configuration_protocol>
     <organization type="<string>" circuit_model_name="<string>" num_regions="<int>"/>
+    <ql_memory_bank_config_setting>
+      <pb_type name="<string>" num_wl="<int>"/>
+    </ql_memory_bank_config_setting>
   </configuration_protocol>
 
 .. option:: type="scan_chain|memory_bank|standalone|frame_based|ql_memory_bank"
@@ -54,6 +68,29 @@ Template
 
   .. note:: For ``ql_memory_bank`` configuration protocol when BL/WL protocol ``shift_register`` is selected, different configuration regions **cannot** share any WLs on the same row! In such case, the default fabric key may not work. Strongly recommend to craft your own fabric key based on your configuration region plannning!
 
+.. option:: name="<string>" 
+
+  Specify the name of PB type, for example: clb, dsp, bram and etc
+
+.. option:: num_wl="<int>"
+
+  Fix the size of WL
+  
+  For example: 
+    Considered that the configuration bits of a PB is 400 bits.
+    
+    If num_wl is not defined, then 
+     - BL will be 20 [=ceiling(square_root(400))]
+     - WL will be 20 [=ceiling(400/20)]
+    
+    If num_wl is defined as 10, then 
+     - WL will be fixed as 10
+     - BL will be 40 [=ceiling(400/10)]
+
+    If num_wl is defined as 32, then 
+     - WL will be fixed as 32
+     - BL will be 13 [=ceiling(400/32)]
+     - There will be 16 bits [=(32x13)-400] as phantom bits. 
 
 Configuration Chain Example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

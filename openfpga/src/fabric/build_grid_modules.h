@@ -26,7 +26,7 @@ int build_grid_modules(
   const TileAnnotation& tile_annotation,
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model,
-  const QLMemoryBankConfigSetting& ql_memory_bank_config_setting,
+  const QLMemoryBankConfigSetting* ql_memory_bank_config_setting,
   const bool& duplicate_grid_pin, const bool& group_config_block,
   const bool& verbose);
 

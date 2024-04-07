@@ -173,10 +173,10 @@
       <bl protocol="flatten"/>
       <wl protocol="flatten"/>
     </organization>
+    <ql_memory_bank_config_setting>
+      <pb_type name="clb" num_wl="32"/>
+    </ql_memory_bank_config_setting>
   </configuration_protocol>
-  <ql_memory_bank_config_setting>
-    <pb_type name="clb" num_wl="32"/>
-  </ql_memory_bank_config_setting>
   <connection_block>
     <switch name="ipin_cblock" circuit_model_name="mux_2level_tapbuf"/>
   </connection_block>
