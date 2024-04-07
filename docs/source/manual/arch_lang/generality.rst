@@ -26,6 +26,7 @@ It consists of the following code blocks
     - ``<routing_segment>`` includes annotation on the routing segment definition ``<segmentlist>`` in original VPR XML. Full syntax can be found in :ref:`annotate_vpr_arch`.
     - ``<direct_connection>`` includes annotation on the inter-tile direct connection definitioin ``<directlist>`` in original VPR XML. Full syntax can be found in :ref:`direct_interconnect`.
     - ``<pb_type_annotation>`` includes annotation on the programmable block architecture ``<complexblocklist>`` in original VPR XML. Full syntax can be found in :ref:`annotate_vpr_arch`.
+
 .. note:: ``<technology_library>`` will be applied to ``circuit_model`` when running FPGA-SPICE. It will not impact FPGA-Verilog, FPGA-Bitstream, FPGA-SDC.
 
 
