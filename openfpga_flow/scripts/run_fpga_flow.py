@@ -674,9 +674,11 @@ def create_yosys_params():
                 ys_params["READ_HDL_FILE"] += " ".join(
                     [
                         "verific",
-                        "-L " + ys_params["VERIFIC_SEARCH_LIB"]
-                        if "VERIFIC_SEARCH_LIB" in ys_params
-                        else "",
+                        (
+                            "-L " + ys_params["VERIFIC_SEARCH_LIB"]
+                            if "VERIFIC_SEARCH_LIB" in ys_params
+                            else ""
+                        ),
                         standard,
                         " ".join([shlex.quote(src) for src in sources]),
                         "\n",
