@@ -66,7 +66,7 @@ static int write_xml_fabric_module_pin_phy_loc(
     for (int curr_pin_id : curr_port.pins()) {
       BasicPort curr_pin(curr_port.get_name(), curr_pin_id, curr_pin_id); 
       std::string curr_port_str = generate_xml_port_name(curr_pin);
-      SideManager side_mgr(module_manager.module_pin_side(curr_module, curr_port_id, curr_pin_id));
+      SideManager side_mgr(module_manager.pin_side(curr_module, curr_port_id, curr_pin_id));
       write_tab_to_file(fp, 2);
       fp << "<" << XML_MODULE_PINLOC_NODE_NAME;
       write_xml_attribute(fp, XML_MODULE_PINLOC_ATTRIBUTE_PIN, curr_port_str.c_str());

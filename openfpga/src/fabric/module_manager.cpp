@@ -304,6 +304,19 @@ std::vector<BasicPort> ModuleManager::module_ports_by_type(
   return ports;
 }
 
+e_side ModuleManager::pin_side(
+  const ModuleId& module_id, const ModulePortId& port_id, const size_t& pin_id) const {
+  VTR_ASSERT(valid_module_port_id(module_id, port_id));
+  BasicPort curr_port = module_manager.module_port(module_id, port_id);
+  BasicPort curr_pin(curr_port.get_name(), pin_id, pin_id);
+  /* Not a valid pin id, return invalid side */
+  if (!curr_port.contained(curr_pin)) {
+    return NUM_SIDES;
+  }
+  /* Reach here, return a valid value */
+  return port_sides_[module_id][port_id][pin_id] 
+}
+
 /* Find a list of port ids of a module by a given types */
 std::vector<ModulePortId> ModuleManager::module_port_ids_by_type(
   const ModuleId& module_id, const enum e_module_port_type& port_type) const {
@@ -789,6 +802,8 @@ ModulePortId ModuleManager::add_port(const ModuleId& module,
   port_ids_[module].push_back(port);
   ports_[module].push_back(port_info);
   port_types_[module].push_back(port_type);
+  /* Deposit invalid value for each side */
+  port_sides_[module].push_back(std::vector<e_side>(port_info.get_width(), NUM_SIDES));
   port_is_wire_[module].push_back(false);
   port_is_mappable_io_[module].push_back(false);
   port_is_register_[module].push_back(false);
@@ -892,6 +907,21 @@ void ModuleManager::set_port_preproc_flag(const ModuleId& module,
   VTR_ASSERT(valid_module_port_id(module, port));
   port_preproc_flags_[module][port] = preproc_flag;
 }
+
+/* Set the side for a pin of a port port */
+void ModuleManager::set_pin_side(const ModuleId& module,
+                                 const ModulePortId& port,
+                                 const size_t& pin,
+                                 const e_side& pin_side) {
+  /* Must find something, otherwise drop an error */
+  VTR_ASSERT(valid_module_port_id(module, port));
+  if (pin > port_sides_[module][port].size() - 1) {
+    VTR_LOG_ERROR("Invalid pin '%ld' for module '%s' port '%s'!\n", pin, module_name(module).c_str(), module_port(module, port).to_verilog_string().c_str());
+    VTR_ASSERT(pin < port_sides_[module][port].size());
+  }
+  port_sides_[module][port][pin] = pin_side;
+}
+
 
 /* Add a child module to a parent module */
 void ModuleManager::add_child_module(const ModuleId& parent_module,
