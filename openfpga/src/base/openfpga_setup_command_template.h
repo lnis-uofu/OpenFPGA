@@ -864,10 +864,10 @@ ShellCommandId add_write_module_naming_rules_command_template(
  * - Add command dependency
  *******************************************************************/
 template <class T>
-ShellCommandId add_write_pin_physical_location_command_template(
+ShellCommandId add_write_fabric_pin_physical_location_command_template(
   openfpga::Shell<T>& shell, const ShellCommandClassId& cmd_class_id,
   const std::vector<ShellCommandId>& dependent_cmds, const bool& hidden) {
-  Command shell_cmd("write_pin_physical_location");
+  Command shell_cmd("write_fabric_pin_physical_location");
   /* Add an option '--file' in short '-f'*/
   CommandOptionId opt_file = shell_cmd.add_option(
     "file", true, "file path to the XML file that contains pin physical location");
@@ -892,7 +892,7 @@ ShellCommandId add_write_pin_physical_location_command_template(
     hidden);
   shell.set_command_class(shell_cmd_id, cmd_class_id);
   shell.set_command_const_execute_function(
-    shell_cmd_id, write_pin_physical_location_template<T>);
+    shell_cmd_id, write_fabric_pin_physical_location_template<T>);
 
   /* Add command dependency to the Shell */
   shell.set_command_dependency(shell_cmd_id, dependent_cmds);
@@ -1142,13 +1142,13 @@ void add_setup_command_templates(openfpga::Shell<T>& shell,
     hidden);
 
   /********************************
-   * Command 'write_pin_physical_location'
+   * Command 'write_fabric_pin_physical_location'
    */
   /* The command should NOT be executed before 'build_fabric' */
-  std::vector<ShellCommandId> cmd_dependency_write_pin_physical_location;
-  cmd_dependency_write_pin_physical_location.push_back(build_fabric_cmd_id);
-  add_write_pin_physical_location_command_template<T>(
-    shell, openfpga_setup_cmd_class, cmd_dependency_write_pin_physical_location,
+  std::vector<ShellCommandId> cmd_dependency_write_fabric_pin_physical_location;
+  cmd_dependency_write_fabric_pin_physical_location.push_back(build_fabric_cmd_id);
+  add_write_fabric_pin_physical_location_command_template<T>(
+    shell, openfpga_setup_cmd_class, cmd_dependency_write_fabric_pin_physical_location,
     hidden);
 }
 
