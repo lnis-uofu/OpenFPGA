@@ -5,8 +5,8 @@
 #include <algorithm>
 #include <chrono>
 #include <ctime>
-#include <string>
 #include <regex>
+#include <string>
 
 /* Headers from vtrutil library */
 #include "vtr_assert.h"
@@ -143,18 +143,22 @@ int write_xml_fabric_pin_physical_location(const char* fname,
   /* If module name is not specified, walk through all the modules and write
    * physical pin location when any is specified */
   short cnt = 0;
-  /* Use regular expression to capture the module whose name matches the pattern */
+  /* Use regular expression to capture the module whose name matches the pattern
+   */
   for (ModuleId curr_module : module_manager.modules()) {
     std::string curr_module_name = module_manager.module_name(curr_module);
     std::string pattern = module_name;
     std::regex star_replace("\\*");
     std::regex questionmark_replace("\\?");
-    std::string wildcard_pattern = std::regex_replace(std::regex_replace(pattern, star_replace, ".*"), questionmark_replace, ".");
+    std::string wildcard_pattern =
+      std::regex_replace(std::regex_replace(pattern, star_replace, ".*"),
+                         questionmark_replace, ".");
     std::regex wildcard_regex(wildcard_pattern);
     if (!std::regex_match(curr_module_name, wildcard_regex)) {
       continue;
     }
-    VTR_LOGV(verbose, "Outputted pin physical location of module '%s'.\n", curr_module_name.c_str());
+    VTR_LOGV(verbose, "Outputted pin physical location of module '%s'.\n",
+             curr_module_name.c_str());
     /* Write the pin physical location for this module */
     int err_code = write_xml_fabric_module_pin_phy_loc(
       fp, module_manager, curr_module, show_invalid_side, verbose);
@@ -173,8 +177,10 @@ int write_xml_fabric_pin_physical_location(const char* fname,
 
   /* If there is no match, error out! */
   if (cnt == 0) {
-    VTR_LOG_ERROR("Invalid regular expression for module name '%s' which does not match any in current fabric!\n",
-                  module_name.c_str());
+    VTR_LOG_ERROR(
+      "Invalid regular expression for module name '%s' which does not match "
+      "any in current fabric!\n",
+      module_name.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
 
