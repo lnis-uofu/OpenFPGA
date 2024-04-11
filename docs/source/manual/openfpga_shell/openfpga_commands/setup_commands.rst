@@ -482,7 +482,7 @@ write_fabric_pin_physical_location
 
   .. option:: --file <string>
   
-    Specify the file path to be written to
+    Specify the file path to be written to. See details in :ref:`file_format_fabric_pin_physical_location_file`.
 
   .. option:: --module <string>
   
