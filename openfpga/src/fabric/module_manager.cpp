@@ -752,6 +752,7 @@ ModuleId ModuleManager::add_module(const std::string& name) {
   port_is_wire_.emplace_back();
   port_is_mappable_io_.emplace_back();
   port_is_register_.emplace_back();
+  port_sides_.emplace_back();
   port_preproc_flags_.emplace_back();
 
   num_nets_.emplace_back(0);
