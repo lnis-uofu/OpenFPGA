@@ -252,6 +252,9 @@ run-task basic_tests/write_gsb/write_gsb_to_xml_compress_routing $@
 run-task basic_tests/write_gsb/write_unique_gsb_to_xml $@
 run-task basic_tests/write_gsb/write_unique_gsb_to_xml_compress_routing $@
 
+echo -e "Testing fabric pin physical location file"
+run-task basic_tests/write_fabric_pin_phy_loc/write_fabric_pin_phy_loc_for_tiles $@
+
 echo -e "Testing bus group features";
 run-task basic_tests/bus_group/preconfig_testbench_explicit_mapping $@
 run-task basic_tests/bus_group/preconfig_testbench_implicit_mapping $@
