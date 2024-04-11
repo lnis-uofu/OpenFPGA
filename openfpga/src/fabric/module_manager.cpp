@@ -304,8 +304,8 @@ std::vector<BasicPort> ModuleManager::module_ports_by_type(
   return ports;
 }
 
-e_side ModuleManager::port_side(
-  const ModuleId& module_id, const ModulePortId& port_id) const {
+e_side ModuleManager::port_side(const ModuleId& module_id,
+                                const ModulePortId& port_id) const {
   VTR_ASSERT(valid_module_port_id(module_id, port_id));
   return port_sides_[module_id][port_id];
 }
@@ -903,8 +903,8 @@ void ModuleManager::set_port_preproc_flag(const ModuleId& module,
 
 /* Set the side for a pin of a port port */
 void ModuleManager::set_port_side(const ModuleId& module,
-                                 const ModulePortId& port,
-                                 const e_side& pin_side) {
+                                  const ModulePortId& port,
+                                  const e_side& pin_side) {
   /* Must find something, otherwise drop an error */
   VTR_ASSERT(valid_module_port_id(module, port));
   port_sides_[module][port] = pin_side;

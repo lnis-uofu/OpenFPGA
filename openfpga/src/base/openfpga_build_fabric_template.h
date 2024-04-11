@@ -23,8 +23,8 @@
 #include "rename_modules.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
-#include "write_xml_module_name_map.h"
 #include "write_xml_fabric_pin_physical_location.h"
+#include "write_xml_module_name_map.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -424,9 +424,9 @@ int write_module_naming_rules_template(const T& openfpga_ctx,
  * Write fabric pin physical location to a file
  *******************************************************************/
 template <class T>
-int write_fabric_pin_physical_location_template(const T& openfpga_ctx,
-                                         const Command& cmd,
-                                         const CommandContext& cmd_context) {
+int write_fabric_pin_physical_location_template(
+  const T& openfpga_ctx, const Command& cmd,
+  const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
   CommandOptionId opt_show_invalid_side = cmd.option("show_invalid_side");
@@ -449,8 +449,7 @@ int write_fabric_pin_physical_location_template(const T& openfpga_ctx,
 
   /* Write hierarchy to a file */
   return write_xml_fabric_pin_physical_location(
-    file_name.c_str(), module_name,
-    openfpga_ctx.module_graph(),
+    file_name.c_str(), module_name, openfpga_ctx.module_graph(),
     cmd_context.option_enable(cmd, opt_show_invalid_side),
     !cmd_context.option_enable(cmd, opt_no_time_stamp),
     cmd_context.option_enable(cmd, opt_verbose));

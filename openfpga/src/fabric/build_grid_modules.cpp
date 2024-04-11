@@ -103,8 +103,8 @@ static void add_grid_module_pb_type_ports(
           }
           BasicPort grid_port(port_name, 0, 0);
           /* Add the port to the module */
-          ModulePortId grid_port_id = module_manager.add_port(grid_module, grid_port,
-                                  pin_type2type_map[pin_class_type]);
+          ModulePortId grid_port_id = module_manager.add_port(
+            grid_module, grid_port, pin_type2type_map[pin_class_type]);
           /* Set port side */
           module_manager.set_port_side(grid_module, grid_port_id, side);
         }

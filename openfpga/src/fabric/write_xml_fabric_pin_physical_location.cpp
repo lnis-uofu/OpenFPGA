@@ -13,15 +13,14 @@
 #include "vtr_time.h"
 
 /* Headers from openfpgautil library */
+#include "command_exit_codes.h"
 #include "openfpga_digest.h"
 #include "openfpga_side_manager.h"
-#include "command_exit_codes.h"
 
 /* Headers from arch openfpga library */
-#include "write_xml_utils.h"
-
 #include "fabric_pin_physical_location_xml_constants.h"
 #include "write_xml_fabric_pin_physical_location.h"
+#include "write_xml_utils.h"
 
 /* begin namespace openfpga */
 namespace openfpga {
@@ -52,27 +51,32 @@ static void write_xml_fabric_pin_physical_location_file_head(
  * This function write header information to a pin location file
  *******************************************************************/
 static int write_xml_fabric_module_pin_phy_loc(
-  std::fstream& fp, const ModuleManager& module_manager, const ModuleId& curr_module, const bool& show_invalid_side, const bool& verbose) {
+  std::fstream& fp, const ModuleManager& module_manager,
+  const ModuleId& curr_module, const bool& show_invalid_side,
+  const bool& verbose) {
   valid_file_stream(fp);
 
-  /* If show invalid side is off, we should check if there is any valid side. If there are not any, skip this module */
+  /* If show invalid side is off, we should check if there is any valid side. If
+   * there are not any, skip this module */
   bool skip_curr_module = true;
   for (ModulePortId curr_port_id : module_manager.module_ports(curr_module)) {
     SideManager side_mgr(module_manager.port_side(curr_module, curr_port_id));
-    if (side_mgr.validate()) { 
+    if (side_mgr.validate()) {
       skip_curr_module = false;
       break;
     }
-  } 
+  }
 
   if (!show_invalid_side && skip_curr_module) {
-    VTR_LOGV(verbose, "Skip module '%s' as it contains no valid sides\n", module_manager.module_name(curr_module).c_str());
+    VTR_LOGV(verbose, "Skip module '%s' as it contains no valid sides\n",
+             module_manager.module_name(curr_module).c_str());
     return CMD_EXEC_SUCCESS;
   }
   /* Print a head */
   write_tab_to_file(fp, 1);
   fp << "<" << XML_MODULE_NODE_NAME;
-  write_xml_attribute(fp, XML_MODULE_ATTRIBUTE_NAME, module_manager.module_name(curr_module).c_str());
+  write_xml_attribute(fp, XML_MODULE_ATTRIBUTE_NAME,
+                      module_manager.module_name(curr_module).c_str());
   fp << ">"
      << "\n";
 
@@ -84,18 +88,21 @@ static int write_xml_fabric_module_pin_phy_loc(
       continue;
     }
     for (int curr_pin_id : curr_port.pins()) {
-      BasicPort curr_pin(curr_port.get_name(), curr_pin_id, curr_pin_id); 
+      BasicPort curr_pin(curr_port.get_name(), curr_pin_id, curr_pin_id);
       std::string curr_port_str = generate_xml_port_name(curr_pin);
       write_tab_to_file(fp, 2);
       fp << "<" << XML_MODULE_PINLOC_NODE_NAME;
-      write_xml_attribute(fp, XML_MODULE_PINLOC_ATTRIBUTE_PIN, curr_port_str.c_str());
-      write_xml_attribute(fp, XML_MODULE_PINLOC_ATTRIBUTE_SIDE, side_mgr.c_str());
+      write_xml_attribute(fp, XML_MODULE_PINLOC_ATTRIBUTE_PIN,
+                          curr_port_str.c_str());
+      write_xml_attribute(fp, XML_MODULE_PINLOC_ATTRIBUTE_SIDE,
+                          side_mgr.c_str());
       fp << "/>";
       fp << std::endl;
     }
     cnt++;
   }
-  VTR_LOGV(verbose, "Output '%lu' ports with physical sides for module '%s'\n", cnt, module_manager.module_name(curr_module).c_str());
+  VTR_LOGV(verbose, "Output '%lu' ports with physical sides for module '%s'\n",
+           cnt, module_manager.module_name(curr_module).c_str());
 
   /* Print a tail */
   write_tab_to_file(fp, 1);
@@ -109,13 +116,12 @@ static int write_xml_fabric_module_pin_phy_loc(
 /********************************************************************
  * Top-level function
  *******************************************************************/
-int write_xml_fabric_pin_physical_location(
-  const char* fname, const std::string& module_name,
-  const ModuleManager& module_manager,
-  const bool& show_invalid_side,
-  const bool& include_time_stamp,
-  const bool& verbose) {
-
+int write_xml_fabric_pin_physical_location(const char* fname,
+                                           const std::string& module_name,
+                                           const ModuleManager& module_manager,
+                                           const bool& show_invalid_side,
+                                           const bool& include_time_stamp,
+                                           const bool& verbose) {
   vtr::ScopedStartFinishTimer timer("Write fabric pin physical location");
 
   /* Create a file handler */
@@ -133,11 +139,13 @@ int write_xml_fabric_pin_physical_location(
   fp << ">"
      << "\n";
 
-  /* If module name is not specified, walk through all the modules and write physical pin location when any is specified */
+  /* If module name is not specified, walk through all the modules and write
+   * physical pin location when any is specified */
   short cnt = 0;
   if (module_name.empty()) {
     for (ModuleId curr_module : module_manager.modules()) {
-      int err_code = write_xml_fabric_module_pin_phy_loc(fp, module_manager, curr_module, show_invalid_side, verbose);
+      int err_code = write_xml_fabric_module_pin_phy_loc(
+        fp, module_manager, curr_module, show_invalid_side, verbose);
       if (err_code != CMD_EXEC_SUCCESS) {
         return CMD_EXEC_FATAL_ERROR;
       }
@@ -147,11 +155,14 @@ int write_xml_fabric_pin_physical_location(
     /* Check if the module name is valid or not, if not, error out */
     ModuleId curr_module = module_manager.find_module(module_name);
     if (!module_manager.valid_module_id(curr_module)) {
-      VTR_LOG_ERROR("Invalid module name '%s' which does not exist in current fabric!\n", module_name.c_str());
+      VTR_LOG_ERROR(
+        "Invalid module name '%s' which does not exist in current fabric!\n",
+        module_name.c_str());
       return CMD_EXEC_FATAL_ERROR;
-    } 
+    }
     /* Write the pin physical location for this module */
-    int err_code = write_xml_fabric_module_pin_phy_loc(fp, module_manager, curr_module, show_invalid_side, verbose);
+    int err_code = write_xml_fabric_module_pin_phy_loc(
+      fp, module_manager, curr_module, show_invalid_side, verbose);
     if (err_code != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;
     }

@@ -433,7 +433,8 @@ e_side get_cb_module_track_port_side(const t_rr_type& chan_type,
   /* Create a map between chan_type and module_prefix */
   std::map<t_rr_type, std::map<bool, e_side>> port_side_map;
   /* TODO: use a constexpr string to replace the fixed name? */
-  /* IMPORTANT: This part must be consistent with the mapping in the generate_cb_module_track_port_name() !!! */
+  /* IMPORTANT: This part must be consistent with the mapping in the
+   * generate_cb_module_track_port_name() !!! */
   port_side_map[CHANX][true] = LEFT;
   port_side_map[CHANX][false] = RIGHT;
   port_side_map[CHANY][true] = BOTTOM;

@@ -123,8 +123,8 @@ void add_grid_module_duplicated_pb_type_ports(
             }
             BasicPort grid_port(port_name, 0, 0);
             /* Add the port to the module */
-            ModulePortId grid_port_id = module_manager.add_port(grid_module, grid_port,
-                                    pin_type2type_map[pin_class_type]);
+            ModulePortId grid_port_id = module_manager.add_port(
+              grid_module, grid_port, pin_type2type_map[pin_class_type]);
             /* Set port side */
             module_manager.set_port_side(grid_module, grid_port_id, side);
           } else {
@@ -138,8 +138,8 @@ void add_grid_module_duplicated_pb_type_ports(
               iwidth, iheight, subtile_index, side, pin_info, true);
             BasicPort grid_upper_port(upper_port_name, 0, 0);
             /* Add the port to the module */
-            ModulePortId grid_upper_port_id = module_manager.add_port(grid_module, grid_upper_port,
-                                    pin_type2type_map[pin_class_type]);
+            ModulePortId grid_upper_port_id = module_manager.add_port(
+              grid_module, grid_upper_port, pin_type2type_map[pin_class_type]);
             /* Set port side */
             module_manager.set_port_side(grid_module, grid_upper_port_id, side);
 
@@ -147,8 +147,8 @@ void add_grid_module_duplicated_pb_type_ports(
               iwidth, iheight, subtile_index, side, pin_info, false);
             BasicPort grid_lower_port(lower_port_name, 0, 0);
             /* Add the port to the module */
-            ModulePortId grid_lower_port_id = module_manager.add_port(grid_module, grid_lower_port,
-                                    pin_type2type_map[pin_class_type]);
+            ModulePortId grid_lower_port_id = module_manager.add_port(
+              grid_module, grid_lower_port, pin_type2type_map[pin_class_type]);
             /* Set port side */
             module_manager.set_port_side(grid_module, grid_lower_port_id, side);
           }

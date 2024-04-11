@@ -7,9 +7,9 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "physical_types.h"
 #include "module_manager_fwd.h"
 #include "openfpga_port.h"
+#include "physical_types.h"
 #include "vtr_geometry.h"
 #include "vtr_vector.h"
 
@@ -274,9 +274,10 @@ class ModuleManager {
   /* Find the type of a port */
   ModuleManager::e_module_port_type port_type(const ModuleId& module,
                                               const ModulePortId& port) const;
-  /* Get the physical side of a port. Note that not every pin has a valid side. An invalid value NUM_SIDES will be returned when the pin does not has a specific physical location */
-  e_side port_side(const ModuleId& module,
-                  const ModulePortId& port) const;
+  /* Get the physical side of a port. Note that not every pin has a valid side.
+   * An invalid value NUM_SIDES will be returned when the pin does not has a
+   * specific physical location */
+  e_side port_side(const ModuleId& module, const ModulePortId& port) const;
   /* Find if a port is a wire connection */
   bool port_is_wire(const ModuleId& module, const ModulePortId& port) const;
   /* Find if a port is mappable to an I/O from users' implementations */
@@ -373,7 +374,9 @@ class ModuleManager {
   /* Set the preprocessing flag for a port */
   void set_port_preproc_flag(const ModuleId& module, const ModulePortId& port,
                              const std::string& preproc_flag);
-  /* Set side to a given pin of a module port. Note that the pin id must be a valid one. Otherwise, abort and error out. The valid pin range can be get from module_port().pins() */
+  /* Set side to a given pin of a module port. Note that the pin id must be a
+   * valid one. Otherwise, abort and error out. The valid pin range can be get
+   * from module_port().pins() */
   void set_port_side(const ModuleId& module, const ModulePortId& port,
                      const e_side& pin_side);
   /** @brief Add a child module to a parent module.
