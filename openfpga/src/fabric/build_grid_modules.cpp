@@ -105,6 +105,8 @@ static void add_grid_module_pb_type_ports(
           /* Add the port to the module */
           module_manager.add_port(grid_module, grid_port,
                                   pin_type2type_map[pin_class_type]);
+          /* Set port side */
+          module_manager.set_port_side(grid_module, grid_port, side);
         }
       }
     }

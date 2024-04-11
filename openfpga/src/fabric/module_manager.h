@@ -273,10 +273,9 @@ class ModuleManager {
   /* Find the type of a port */
   ModuleManager::e_module_port_type port_type(const ModuleId& module,
                                               const ModulePortId& port) const;
-  /* Get the physical side of a pin of a port. Note that not every pin has a valid side. An invalid value NUM_SIDES will be returned when the pin does not has a specific physical location */
-  e_side pin_side(const ModuleId& module,
-                  const ModulePortId& port,
-                  const size_t& pin_id) const;
+  /* Get the physical side of a port. Note that not every pin has a valid side. An invalid value NUM_SIDES will be returned when the pin does not has a specific physical location */
+  e_side port_side(const ModuleId& module,
+                  const ModulePortId& port) const;
   /* Find if a port is a wire connection */
   bool port_is_wire(const ModuleId& module, const ModulePortId& port) const;
   /* Find if a port is mappable to an I/O from users' implementations */
@@ -374,8 +373,8 @@ class ModuleManager {
   void set_port_preproc_flag(const ModuleId& module, const ModulePortId& port,
                              const std::string& preproc_flag);
   /* Set side to a given pin of a module port. Note that the pin id must be a valid one. Otherwise, abort and error out. The valid pin range can be get from module_port().pins() */
-  void set_pin_side(const ModuleId& module, const ModulePortId& port,
-                    const size_t& pin, const e_side& pin_side);
+  void set_port_side(const ModuleId& module, const ModulePortId& port,
+                     const e_side& pin_side);
   /** @brief Add a child module to a parent module.
    *  By default, it considers the child module as an I/O child, and update the
    * children list of I/O modules inside It not needed, just turn it off. Then
@@ -633,7 +632,7 @@ class ModuleManager {
     ports_; /* List of ports for each Module */
   vtr::vector<ModuleId, vtr::vector<ModulePortId, enum e_module_port_type>>
     port_types_; /* Type of ports */
-  vtr::vector<ModuleId, vtr::vector<ModulePortId, std::vector<e_side>>>
+  vtr::vector<ModuleId, vtr::vector<ModulePortId, e_side>>
     port_sides_; /* Type of ports */
   vtr::vector<ModuleId, vtr::vector<ModulePortId, bool>>
     port_is_mappable_io_; /* If the port is mappable  to an I/O for user's

@@ -97,6 +97,9 @@ std::string generate_sb_module_track_port_name(const t_rr_type& chan_type,
                                                const e_side& module_side,
                                                const PORTS& port_direction);
 
+e_side get_cb_module_track_port_side(const t_rr_type& chan_type,
+                                     const bool& upper_location);
+
 std::string generate_cb_module_track_port_name(const t_rr_type& chan_type,
                                                const PORTS& port_direction,
                                                const bool& upper_location);

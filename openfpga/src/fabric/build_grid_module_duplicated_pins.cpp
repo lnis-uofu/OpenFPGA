@@ -146,6 +146,8 @@ void add_grid_module_duplicated_pb_type_ports(
             module_manager.add_port(grid_module, grid_lower_port,
                                     pin_type2type_map[pin_class_type]);
           }
+          /* Set port side */
+          module_manager.set_port_side(grid_module, grid_port, side);
         }
       }
     }
