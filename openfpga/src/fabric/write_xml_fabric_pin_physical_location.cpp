@@ -102,7 +102,7 @@ static int write_xml_fabric_module_pin_phy_loc(
     }
     cnt++;
   }
-  VTR_LOGV(verbose, "Output '%lu' ports with physical sides for module '%s'\n",
+  VTR_LOGV(verbose, "Output %lu ports with physical sides for module '%s'\n",
            cnt, module_manager.module_name(curr_module).c_str());
 
   /* Print a tail */
@@ -154,7 +154,7 @@ int write_xml_fabric_pin_physical_location(const char* fname,
     if (!std::regex_match(curr_module_name, wildcard_regex)) {
       continue;
     }
-    VTR_LOGV(verbose, "Output pin physical location of module '%s'.\n", curr_module_name.c_str());
+    VTR_LOGV(verbose, "Outputted pin physical location of module '%s'.\n", curr_module_name.c_str());
     /* Write the pin physical location for this module */
     int err_code = write_xml_fabric_module_pin_phy_loc(
       fp, module_manager, curr_module, show_invalid_side, verbose);

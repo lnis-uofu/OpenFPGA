@@ -444,7 +444,7 @@ int write_fabric_pin_physical_location_template(
   std::string module_name("*"); /* Use a wildcard for everything */
   CommandOptionId opt_module = cmd.option("module");
   if (true == cmd_context.option_enable(cmd, opt_module)) {
-    module_name = cmd_context.option_value(cmd, opt_module).empty();
+    module_name = cmd_context.option_value(cmd, opt_module);
   }
 
   /* Write hierarchy to a file */
