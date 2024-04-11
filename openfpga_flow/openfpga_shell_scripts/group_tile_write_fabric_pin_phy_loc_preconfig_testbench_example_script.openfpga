@@ -27,7 +27,7 @@ lut_truth_table_fixup
 build_fabric --compress_routing --group_tile ${OPENFPGA_GROUP_TILE_CONFIG_FILE} #--verbose
 
 # Write fabric phyiscal pin location to file
-write_fabric_pin_physical_location --file ${OPENFPGA_FABRIC_PIN_PHY_LOC_FILE} --verbose
+write_fabric_pin_physical_location --file ${OPENFPGA_FABRIC_PIN_PHY_LOC_FILE} ${OPENFPGA_FABRIC_PIN_PHY_LOC_MODULE} --verbose
 
 # Write the fabric hierarchy of module graph to a file
 # This is used by hierarchical PnR flows
