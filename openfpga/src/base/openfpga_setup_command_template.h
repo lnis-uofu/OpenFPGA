@@ -883,6 +883,9 @@ ShellCommandId add_write_fabric_pin_physical_location_command_template(
   shell_cmd.add_option("no_time_stamp", false,
                        "Do not print time stamp in output files");
 
+  shell_cmd.add_option("show_invalid_side", false,
+                       "Include pins with invalid sides in output files. Recommended for debugging as the output file may include a lot of useless information");
+
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
 
   /* Add command to the Shell */

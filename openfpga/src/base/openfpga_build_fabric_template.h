@@ -429,6 +429,7 @@ int write_fabric_pin_physical_location_template(const T& openfpga_ctx,
                                          const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
   CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
+  CommandOptionId opt_show_invalid_side = cmd.option("show_invalid_side");
 
   /* Check the option '--file' is enabled or not
    * Actually, it must be enabled as the shell interface will check
@@ -450,6 +451,7 @@ int write_fabric_pin_physical_location_template(const T& openfpga_ctx,
   return write_xml_fabric_pin_physical_location(
     file_name.c_str(), module_name,
     openfpga_ctx.module_graph(),
+    cmd_context.option_enable(cmd, opt_show_invalid_side),
     !cmd_context.option_enable(cmd, opt_no_time_stamp),
     cmd_context.option_enable(cmd, opt_verbose));
 }
