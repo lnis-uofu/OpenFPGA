@@ -211,6 +211,8 @@ static int build_tile_module_port_and_nets_between_sb_and_pb(
         ModulePortId src_tile_port_id = module_manager.add_port(
           tile_module, src_grid_port,
           ModuleManager::e_module_port_type::MODULE_INPUT_PORT);
+        /* Set port side, inherit from the child module */
+        module_manager.set_port_side(tile_module, src_tile_port_id, module_manager.port_side(sink_sb_module, sink_sb_port_id));
         VTR_LOGV(
           verbose,
           "Adding ports '%s' to tile as required by the switch block '%s'...\n",
@@ -442,6 +444,8 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
         ModulePortId sink_tile_port_id = module_manager.add_port(
           tile_module, src_cb_port,
           ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT);
+        /* Set port side, inherit from the child module */
+        module_manager.set_port_side(tile_module, sink_tile_port_id, module_manager.port_side(src_cb_module, src_cb_port_id));
         VTR_LOGV(verbose,
                  "Adding ports '%s' to tile as required by the connection "
                  "block '%s'...\n",
@@ -739,6 +743,8 @@ static int build_tile_module_port_and_nets_between_sb_and_cb(
       ModulePortId tile_chan_output_port_id = module_manager.add_port(
         tile_module, chan_output_port,
         ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT);
+      /* Set port side, inherit from the child module */
+      module_manager.set_port_side(tile_module, tile_chan_output_port_id, module_manager.port_side(sb_module_id, src_chan_output_port_id));
       VTR_LOGV(
         verbose,
         "Adding ports '%s' to tile as required by the switch block '%s'...\n",
@@ -816,6 +822,8 @@ static int build_tile_module_one_port_from_cb(
    * avoid naming conflicts  */
   ModulePortId tile_module_port_id =
     module_manager.add_port(tile_module, tile_chan_port, chan_port_type);
+  /* Set port side, inherit from the child module */
+  module_manager.set_port_side(tile_module, tile_module_port_id, module_manager.port_side(cb_module, chan_port_id));
 
   if (!frame_view) {
     for (size_t pin_id = 0; pin_id < chan_port.pins().size(); ++pin_id) {
@@ -1161,6 +1169,8 @@ static int build_tile_port_and_nets_from_pb(
               ModulePortId tile_module_port_id = module_manager.add_port(
                 tile_module, pb_port,
                 ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT);
+              /* Set port side, inherit from the child module */
+              module_manager.set_port_side(tile_module, tile_module_port_id, module_manager.port_side(pb_module, pb_module_port_id));
               if (!frame_view) {
                 ModuleNetId net = create_module_source_pin_net(
                   module_manager, tile_module, pb_module, pb_instance,
