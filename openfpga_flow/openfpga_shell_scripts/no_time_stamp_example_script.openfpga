@@ -32,6 +32,7 @@ write_fabric_hierarchy --file ./fabric_hierarchy.txt
 # Write the fabric I/O attributes to a file
 # This is used by pin constraint files
 write_fabric_io_info --file ${OPENFPGA_OUTPUT_DIR}/fabric_io_location.xml --verbose --no_time_stamp
+write_fabric_pin_physical_location --file ${OPENFPGA_OUTPUT_DIR}/fabric_pin_phy_loc.xml --verbose --no_time_stamp --module *
 
 # Write gsb to XML
 write_gsb_to_xml --file ${OPENFPGA_OUTPUT_DIR}/gsb_xml --verbose
