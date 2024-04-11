@@ -744,7 +744,7 @@ static int build_tile_module_port_and_nets_between_sb_and_cb(
         tile_module, chan_output_port,
         ModuleManager::e_module_port_type::MODULE_OUTPUT_PORT);
       /* Set port side, inherit from the child module */
-      module_manager.set_port_side(tile_module, tile_chan_output_port_id, module_manager.port_side(sb_module_id, src_chan_output_port_id));
+      module_manager.set_port_side(tile_module, tile_chan_output_port_id, module_manager.port_side(sb_module_id, sb_chan_output_port_id));
       VTR_LOGV(
         verbose,
         "Adding ports '%s' to tile as required by the switch block '%s'...\n",

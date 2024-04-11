@@ -449,11 +449,10 @@ int write_fabric_pin_physical_location_template(const T& openfpga_ctx,
   /* Write hierarchy to a file */
   return write_xml_fabric_pin_physical_location(
     file_name.c_str(), module_name,
-    openfpga_ctx.module_name_map(), openfpga_ctx.module_graph(),
+    openfpga_ctx.module_graph(),
     !cmd_context.option_enable(cmd, opt_no_time_stamp),
     cmd_context.option_enable(cmd, opt_verbose));
 }
-
 
 } /* end namespace openfpga */
 

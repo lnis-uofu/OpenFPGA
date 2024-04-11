@@ -14,6 +14,7 @@
 
 /* Headers from openfpgautil library */
 #include "openfpga_digest.h"
+#include "openfpga_side_manager.h"
 #include "command_exit_codes.h"
 
 /* Headers from arch openfpga library */
@@ -71,7 +72,7 @@ static int write_xml_fabric_module_pin_phy_loc(
       fp << "<" << XML_MODULE_PINLOC_NODE_NAME;
       write_xml_attribute(fp, XML_MODULE_PINLOC_ATTRIBUTE_PIN, curr_port_str.c_str());
       write_xml_attribute(fp, XML_MODULE_PINLOC_ATTRIBUTE_SIDE, side_mgr.c_str());
-      fp << "/>"
+      fp << "/>";
       fp << std::endl;
     }
   }
@@ -90,7 +91,7 @@ static int write_xml_fabric_module_pin_phy_loc(
  *******************************************************************/
 int write_xml_fabric_pin_physical_location(
   const char* fname, const std::string& module_name,
-  const ModuleGraph& module_manager,
+  const ModuleManager& module_manager,
   const bool& include_time_stamp,
   const bool& verbose) {
 
@@ -112,11 +113,11 @@ int write_xml_fabric_pin_physical_location(
      << "\n";
 
   /* If module name is not specified, walk through all the modules and write physical pin location when any is specified */
-  cnt = 0;
+  short cnt = 0;
   if (module_name.empty()) {
     for (ModuleId curr_module : module_manager.modules()) {
-      int err_code = write_xml_fabric_module_pin_phy_loc(fp, curr_module);
-      if (err_code != CMD_EXEC_SUCESS) {
+      int err_code = write_xml_fabric_module_pin_phy_loc(fp, module_manager, curr_module);
+      if (err_code != CMD_EXEC_SUCCESS) {
         return CMD_EXEC_FATAL_ERROR;
       }
       cnt++;
@@ -129,8 +130,8 @@ int write_xml_fabric_pin_physical_location(
       return CMD_EXEC_FATAL_ERROR;
     } 
     /* Write the pin physical location for this module */
-    int err_code = write_xml_fabric_module_pin_phy_loc(fp, curr_module);
-    if (err_code != CMD_EXEC_SUCESS) {
+    int err_code = write_xml_fabric_module_pin_phy_loc(fp, module_manager, curr_module);
+    if (err_code != CMD_EXEC_SUCCESS) {
       return CMD_EXEC_FATAL_ERROR;
     }
     cnt++;
@@ -146,4 +147,6 @@ int write_xml_fabric_pin_physical_location(
   VTR_LOGV(verbose, "Outputted %lu modules with pin physical location.\n", cnt);
 
   return CMD_EXEC_SUCCESS;
+}
+
 } /* end namespace openfpga */

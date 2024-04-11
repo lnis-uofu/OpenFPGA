@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "physical_types.h"
 #include "module_manager_fwd.h"
 #include "openfpga_port.h"
 #include "vtr_geometry.h"

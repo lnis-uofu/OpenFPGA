@@ -436,7 +436,7 @@ static void build_switch_block_module(
       ModulePortId chan_input_port_id = module_manager.add_port(
         sb_module, chan_input_port, ModuleManager::MODULE_INPUT_PORT);
       /* Add side to the port */
-      module_manager.set_port_side(sb_module, chan_input_port_id, side_manager.get_side())
+      module_manager.set_port_side(sb_module, chan_input_port_id, side_manager.get_side());
 
       /* Cache the input net */
       for (const size_t& pin : chan_input_port.pins()) {
@@ -451,7 +451,7 @@ static void build_switch_block_module(
       ModulePortId chan_output_port_id = module_manager.add_port(sb_module, chan_output_port,
                               ModuleManager::MODULE_OUTPUT_PORT);
       /* Add side to the port */
-      module_manager.set_port_side(sb_module, chan_output_port_id, side_manager.get_side())
+      module_manager.set_port_side(sb_module, chan_output_port_id, side_manager.get_side());
     }
 
     /* Dump OPINs of adjacent CLBs */
@@ -473,7 +473,7 @@ static void build_switch_block_module(
       ModulePortId input_port_id = module_manager.add_port(
         sb_module, module_port, ModuleManager::MODULE_INPUT_PORT);
       /* Add side to the port */
-      module_manager.set_port_side(sb_module, module_port, side_manager.get_side())
+      module_manager.set_port_side(sb_module, input_port_id, side_manager.get_side());
 
       /* Cache the input net */
       ModuleNetId net = create_module_source_pin_net(
@@ -979,10 +979,10 @@ static void build_connection_block_module(
       BasicPort module_port(port_name,
                             1); /* Every grid output has a port size of 1 */
       /* Grid outputs are inputs of switch blocks */
-      module_manager.add_port(cb_module, module_port,
+      ModulePortId module_port_id = module_manager.add_port(cb_module, module_port,
                               ModuleManager::MODULE_OUTPUT_PORT);
       /* Add side to the port */
-      module_manager.set_port_side(cb_module, module_port, cb_ipin_side)
+      module_manager.set_port_side(cb_module, module_port_id, cb_ipin_side);
     }
   }
 
