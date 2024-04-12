@@ -392,7 +392,7 @@ write_fabric_io_info
 
   .. option:: --no_time_stamp
 
-    Do not print time stamp in bitstream files
+    Do not print time stamp in output files
 
   .. option:: --verbose
 
@@ -433,7 +433,7 @@ pcf2place
 
   .. option:: --no_time_stamp
 
-    Do not print time stamp in bitstream files
+    Do not print time stamp in output files
 
   .. option:: --verbose
 
@@ -467,7 +467,34 @@ write_module_naming_rules
 
   .. option:: --no_time_stamp
 
-    Do not print time stamp in bitstream files
+    Do not print time stamp in output files
+
+  .. option:: --verbose
+
+    Show verbose log
+
+.. _openfpga_setup_commands_write_fabric_pin_physical_location:
+
+write_fabric_pin_physical_location
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Output the physical location of each pin for each module of an FPGA fabric to a given file
+
+  .. option:: --file <string>
+  
+    Specify the file path to be written to. See details in :ref:`file_format_fabric_pin_physical_location_file`.
+
+  .. option:: --module <string>
+  
+    Specify the name of modules to be considered. Support regular expression, e.g., ``tile*``. When provided, only pins of selected modules will be outputted. By default, a wildcard ``*`` is considered, which means all the modules will be considered.
+
+  .. option:: --show_invalid_side
+
+    Show sides for each pin, even these pin does not have a specific valid side. This is mainly used for debugging.
+
+  .. option:: --no_time_stamp
+
+    Do not print time stamp in output files
 
   .. option:: --verbose
 
