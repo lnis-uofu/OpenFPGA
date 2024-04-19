@@ -250,6 +250,32 @@ static void read_xml_config_organization(pugi::xml_node& xml_config_orgz,
 }
 
 /********************************************************************
+ * Parse XML codes about <ql_memory_bank_config_setting> to
+ *QLMemoryBankConfigSetting
+ *******************************************************************/
+static void read_xml_ql_memory_bank_config_setting(
+  QLMemoryBankConfigSetting* setting, pugi::xml_node& Node,
+  const pugiutil::loc_data& loc_data) {
+  /* Parse configuration protocol root node */
+  pugi::xml_node config_setting =
+    get_single_child(Node, "ql_memory_bank_config_setting", loc_data,
+                     pugiutil::ReqOpt::OPTIONAL);
+
+  if (config_setting) {
+    /* Add to ql_memory_bank_config_setting_ */
+    for (pugi::xml_node xml_child : config_setting.children()) {
+      if (xml_child.name() != std::string("pb_type")) {
+        bad_tag(xml_child, loc_data, config_setting, {"pb_type"});
+      }
+      const std::string& name_attr =
+        get_attribute(xml_child, "name", loc_data).as_string();
+      uint32_t num_wl = get_attribute(xml_child, "num_wl", loc_data).as_uint();
+      setting->add_pb_setting(name_attr, num_wl);
+    }
+  }
+}
+
+/********************************************************************
  * Parse XML codes about <configuration_protocol> to an object of ConfigProtocol
  *******************************************************************/
 ConfigProtocol read_xml_config_protocol(pugi::xml_node& Node,
@@ -263,6 +289,15 @@ ConfigProtocol read_xml_config_protocol(pugi::xml_node& Node,
   pugi::xml_node xml_config_orgz =
     get_single_child(xml_config, "organization", loc_data);
   read_xml_config_organization(xml_config_orgz, loc_data, config_protocol);
+
+  /* Parse QL Memory Bank configuration setting */
+  if (config_protocol.type() == CONFIG_MEM_QL_MEMORY_BANK &&
+      config_protocol.bl_protocol_type() == BLWL_PROTOCOL_FLATTEN &&
+      config_protocol.wl_protocol_type() == BLWL_PROTOCOL_FLATTEN) {
+    read_xml_ql_memory_bank_config_setting(
+      config_protocol.get_ql_memory_bank_config_setting(), xml_config,
+      loc_data);
+  }
 
   return config_protocol;
 }

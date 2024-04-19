@@ -74,7 +74,8 @@ void add_sram_ports_to_module_manager(
 void add_pb_sram_ports_to_module_manager(
   ModuleManager& module_manager, const ModuleId& module_id,
   const CircuitLibrary& circuit_lib, const CircuitModelId& sram_model,
-  const e_config_protocol_type sram_orgz_type, const size_t& num_config_bits);
+  const e_config_protocol_type sram_orgz_type, const size_t& num_config_bits,
+  const uint32_t defined_num_wl = 0);
 
 void add_primitive_pb_type_ports_to_module_manager(
   ModuleManager& module_manager, const ModuleId& module_id,

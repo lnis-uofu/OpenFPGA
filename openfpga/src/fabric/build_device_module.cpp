@@ -88,8 +88,9 @@ int build_device_module_graph(
     module_manager, decoder_lib, vpr_device_ctx,
     openfpga_ctx.vpr_device_annotation(), openfpga_ctx.arch().circuit_lib,
     openfpga_ctx.mux_lib(), openfpga_ctx.arch().tile_annotations,
-    openfpga_ctx.arch().config_protocol.type(), sram_model, duplicate_grid_pin,
-    group_config_block, verbose);
+    openfpga_ctx.arch().config_protocol.type(), sram_model,
+    openfpga_ctx.arch().config_protocol.ql_memory_bank_config_setting(),
+    duplicate_grid_pin, group_config_block, verbose);
   if (CMD_EXEC_FATAL_ERROR == status) {
     return status;
   }

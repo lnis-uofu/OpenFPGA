@@ -116,6 +116,11 @@ CircuitModelId ConfigProtocol::wl_memory_model() const {
 
 size_t ConfigProtocol::wl_num_banks() const { return wl_num_banks_; }
 
+const QLMemoryBankConfigSetting* ConfigProtocol::ql_memory_bank_config_setting()
+  const {
+  return &ql_memory_bank_config_setting_;
+}
+
 /************************************************************************
  * Public Mutators
  ***********************************************************************/
@@ -254,6 +259,10 @@ void ConfigProtocol::set_wl_num_banks(const size_t& num_banks) {
     return;
   }
   wl_num_banks_ = num_banks;
+}
+
+QLMemoryBankConfigSetting* ConfigProtocol::get_ql_memory_bank_config_setting() {
+  return &ql_memory_bank_config_setting_;
 }
 
 /************************************************************************

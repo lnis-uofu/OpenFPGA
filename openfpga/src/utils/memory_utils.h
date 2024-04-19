@@ -42,7 +42,8 @@ size_t generate_sram_port_size(const e_config_protocol_type sram_orgz_type,
                                const size_t& num_config_bits);
 
 size_t generate_pb_sram_port_size(const e_config_protocol_type sram_orgz_type,
-                                  const size_t& num_config_bits);
+                                  const size_t& num_config_bits,
+                                  const size_t& defined_num_wl);
 
 /**
  * @brief Compute the number of configurable children to be skipped for a given
