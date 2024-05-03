@@ -270,7 +270,8 @@ template <class T>
 int write_fabric_hierarchy_template(const T& openfpga_ctx, const Command& cmd,
                                     const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
-  CommandOptionId opt_exclude_empty_modules = cmd.option("exclude_empty_modules");
+  CommandOptionId opt_exclude_empty_modules =
+    cmd.option("exclude_empty_modules");
 
   /* Check the option '--file' is enabled or not
    * Actually, it must be enabled as the shell interface will check
@@ -281,7 +282,8 @@ int write_fabric_hierarchy_template(const T& openfpga_ctx, const Command& cmd,
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
 
   CommandOptionId opt_module = cmd.option("module");
-  std::string root_module = openfpga_ctx.module_name_map().name(generate_fpga_top_module_name());
+  std::string root_module =
+    openfpga_ctx.module_name_map().name(generate_fpga_top_module_name());
   if (true == cmd_context.option_enable(cmd, opt_module)) {
     root_module = cmd_context.option_value(cmd, opt_module);
   }
@@ -309,12 +311,8 @@ int write_fabric_hierarchy_template(const T& openfpga_ctx, const Command& cmd,
 
   /* Write hierarchy to a file */
   return write_fabric_hierarchy_to_text_file(
-    openfpga_ctx.module_graph(),
-    openfpga_ctx.module_name_map(),
-    hie_file_name,
-    root_module,
-    filter,
-    size_t(depth),
+    openfpga_ctx.module_graph(), openfpga_ctx.module_name_map(), hie_file_name,
+    root_module, filter, size_t(depth),
     cmd_context.option_enable(cmd, opt_exclude_empty_modules),
     cmd_context.option_enable(cmd, opt_verbose));
 }

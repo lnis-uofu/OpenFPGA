@@ -463,10 +463,15 @@ ShellCommandId add_write_fabric_hierarchy_command_template(
 
   /* Add an option '--module' */
   CommandOptionId opt_module = shell_cmd.add_option(
-    "module", false, "Specify the root module name(s) which should be considered. By default, it is fpga_top. Regular expression is supported");
+    "module", false,
+    "Specify the root module name(s) which should be considered. By default, "
+    "it is fpga_top. Regular expression is supported");
   shell_cmd.set_option_require_value(opt_module, openfpga::OPT_STRING);
-  CommandOptionId opt_filter = shell_cmd.add_option(
-    "filter", false, "Specify the filter which allows user to select modules to appear under each root module tree. By default, it is *. Regular expression is supported");
+  CommandOptionId opt_filter =
+    shell_cmd.add_option("filter", false,
+                         "Specify the filter which allows user to select "
+                         "modules to appear under each root module tree. By "
+                         "default, it is *. Regular expression is supported");
   shell_cmd.set_option_require_value(opt_filter, openfpga::OPT_STRING);
 
   /* Add an option '--depth' */
@@ -475,7 +480,9 @@ ShellCommandId add_write_fabric_hierarchy_command_template(
     "Specify the depth of hierarchy to which the writer should stop");
   shell_cmd.set_option_require_value(opt_depth, openfpga::OPT_INT);
 
-  shell_cmd.add_option("exclude_empty_modules", false, "Exclude modules with no qualified children (match the names defined through filter) from the output file");
+  shell_cmd.add_option("exclude_empty_modules", false,
+                       "Exclude modules with no qualified children (match the "
+                       "names defined through filter) from the output file");
 
   /* Add an option '--verbose' */
   shell_cmd.add_option("verbose", false, "Show verbose outputs");
