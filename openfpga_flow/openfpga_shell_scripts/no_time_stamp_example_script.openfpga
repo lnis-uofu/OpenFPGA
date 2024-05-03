@@ -27,7 +27,7 @@ build_fabric --compress_routing #--verbose
 
 # Write the fabric hierarchy of module graph to a file
 # This is used by hierarchical PnR flows
-write_fabric_hierarchy --file ${OPENFPGA_OUPUT_DIR}/mux_modules.yaml --depth 1 --module (grid|cbx|cby|sb)* --filter *mux*_size([0-9]+) --verbose --exclude_empty_modules
+write_fabric_hierarchy --file ${OPENFPGA_OUTPUT_DIR}/mux_modules.yaml --depth 1 --module (grid|cbx|cby|sb)* --filter *mux*_size([0-9]+) --verbose --exclude_empty_modules
 
 # Write the fabric I/O attributes to a file
 # This is used by pin constraint files
