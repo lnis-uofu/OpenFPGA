@@ -359,11 +359,12 @@ add_fpga_core_to_fabric
 
     Show verbose log
 
+.. _openfpga_setup_commands_write_fabric_hierarchy:
 
 write_fabric_hierarchy
 ~~~~~~~~~~~~~~~~~~~~~~
 
-  Write the hierarchy of FPGA fabric graph to a plain-text file
+  Write the hierarchy of FPGA fabric graph to a YAML file
   
   .. option:: --file <string> or -f <string>
   
@@ -372,6 +373,18 @@ write_fabric_hierarchy
   .. option:: --depth <int>
 
     Specify at which depth of the fabric module graph should the writer stop outputting. The root module start from depth 0. For example, if you want a two-level hierarchy, you should specify depth as 1. 
+
+  .. option:: --module <regexp>
+
+    Specify the root module name(s) which should be considered. By default, it is ``fpga_top``. Note that regular expression is supported. For example, ``grid_*`` will output all the modules with a prefix of ``grid_``
+
+  .. option:: --filter <regexp>
+
+    Specify the filter which allows user to select modules to appear under each root module tree. By default, it is ``*``. Regular expression is supported. For example, ``*mux*`` will output all the modules which contains ``mux``. In the other words, the filter defines a white list.
+
+  .. option:: --exclude_empty_modules
+
+    Exclude modules with no qualified children (match the names defined through filter) from the output file
 
   .. option:: --verbose
 
