@@ -30,7 +30,8 @@ ${OPENFPGA_ADD_FPGA_CORE_MODULE}
 
 # Write the fabric hierarchy of module graph to a file
 # This is used by hierarchical PnR flows
-write_fabric_hierarchy --file ./fabric_hierarchy.txt
+write_fabric_hierarchy --file ./config_mem.yaml --depth 1 --module * --filter *config_group_mem* --verbose --exclude_empty_modules
+write_fabric_hierarchy --file ./mux_modules.txt --depth 1 --module (grid|cbx|cby|sb)* --filter *mux*_size([0-9]+) --verbose --exclude_empty_modules
 
 # Repack the netlist to physical pbs
 # This must be done before bitstream generator and testbench generation
