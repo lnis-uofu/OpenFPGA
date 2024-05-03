@@ -71,10 +71,11 @@ static int rec_output_module_hierarchy_to_text_file(
       break;
     }
   }
-  VTR_LOGV(verbose, "Current depth: %lu, Target depth: %lu\n", current_hie_depth, hie_depth_to_stop);
-  VTR_LOGV(use_list && verbose, "Use list as module '%s' contains only leaf nodes\n",
-           module_name_map.name(module_manager.module_name(parent_module)).c_str()
-          );
+  VTR_LOGV(verbose, "Current depth: %lu, Target depth: %lu\n",
+           current_hie_depth, hie_depth_to_stop);
+  VTR_LOGV(
+    use_list && verbose, "Use list as module '%s' contains only leaf nodes\n",
+    module_name_map.name(module_manager.module_name(parent_module)).c_str());
 
   /* Iterate over all the child module */
   for (const ModuleId& child_module :
@@ -207,7 +208,9 @@ int write_fabric_hierarchy_to_text_file(
       fp, hie_depth_to_stop, hie_depth + 1, /* Start with level 1 */
       module_manager, curr_module, module_name_map, module_name_filter,
       verbose);
-    VTR_LOGV(verbose, "Select module '%s' as root\n", module_name_map.name(module_manager.module_name(curr_module)).c_str());
+    VTR_LOGV(
+      verbose, "Select module '%s' as root\n",
+      module_name_map.name(module_manager.module_name(curr_module)).c_str());
     /* Catch error code and exit if required */
     if (err_code == CMD_EXEC_FATAL_ERROR) {
       return err_code;
