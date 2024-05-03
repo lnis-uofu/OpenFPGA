@@ -24,8 +24,10 @@ static bool module_filter_all_children(const ModuleManager& module_manager,
   for (const ModuleId& child_module :
        module_manager.child_modules(curr_module)) {
     /* Filter out the names which do not match the pattern */
-    std::string child_module_name =
-      module_name_map.name(module_manager.module_name(child_module));
+    std::string child_module_name = module_manager.module_name(child_module);
+    if (module_name_map.name_exist(child_module_name)) {
+      child_module_name = module_name_map.name(child_module_name);
+    }
     std::string pattern = module_name_filter;
     std::regex star_replace("\\*");
     std::regex questionmark_replace("\\?");
@@ -71,8 +73,14 @@ static int rec_output_module_hierarchy_to_text_file(
       break;
     }
   }
+  /* For debug use only
   VTR_LOGV(verbose, "Current depth: %lu, Target depth: %lu\n",
            current_hie_depth, hie_depth_to_stop);
+  */
+  std::string parent_module_name = module_manager.module_name(parent_module);
+  if (module_name_map.name_exist(parent_module_name)) {
+    parent_module_name = module_name_map.name(parent_module_name);
+  }
   VTR_LOGV(
     use_list && verbose, "Use list as module '%s' contains only leaf nodes\n",
     module_name_map.name(module_manager.module_name(parent_module)).c_str());
@@ -90,8 +98,10 @@ static int rec_output_module_hierarchy_to_text_file(
     }
 
     /* Filter out the names which do not match the pattern */
-    std::string child_module_name =
-      module_name_map.name(module_manager.module_name(child_module));
+    std::string child_module_name = module_manager.module_name(child_module);
+    if (module_name_map.name_exist(child_module_name)) {
+      child_module_name = module_name_map.name(child_module_name);
+    }
     std::string pattern = module_name_filter;
     std::regex star_replace("\\*");
     std::regex questionmark_replace("\\?");
@@ -107,13 +117,9 @@ static int rec_output_module_hierarchy_to_text_file(
       return CMD_EXEC_FATAL_ERROR;
     }
     if (hie_depth_to_stop == current_hie_depth || use_list) {
-      fp << "- ";
-      fp << module_name_map.name(module_manager.module_name(child_module));
-      fp << "\n";
+      fp << "- " << child_module_name.c_str() << "\n";
     } else {
-      fp << module_name_map.name(module_manager.module_name(child_module));
-      fp << ":";
-      fp << "\n";
+      fp << child_module_name.c_str() << ":\n";
     }
     /* Go to next level */
     int status = rec_output_module_hierarchy_to_text_file(
@@ -173,8 +179,10 @@ int write_fabric_hierarchy_to_text_file(
   /* Use regular expression to capture the module whose name matches the pattern
    */
   for (ModuleId curr_module : module_manager.modules()) {
-    std::string curr_module_name =
-      module_name_map.name(module_manager.module_name(curr_module));
+    std::string curr_module_name = module_manager.module_name(curr_module);
+    if (module_name_map.name_exist(curr_module_name)) {
+      curr_module_name = module_name_map.name(curr_module_name);
+    }
     std::string pattern = root_module_names;
     std::regex star_replace("\\*");
     std::regex questionmark_replace("\\?");
@@ -191,6 +199,9 @@ int write_fabric_hierarchy_to_text_file(
                                    module_name_filter)) {
       continue;
     }
+    VTR_LOGV(
+      verbose, "Select module '%s' as root\n",
+      curr_module_name.c_str());
     /* Record current depth of module: top module is the root with 0 depth */
     size_t hie_depth = 0;
 
@@ -202,9 +213,6 @@ int write_fabric_hierarchy_to_text_file(
       fp, hie_depth_to_stop, hie_depth + 1, /* Start with level 1 */
       module_manager, curr_module, module_name_map, module_name_filter,
       verbose);
-    VTR_LOGV(
-      verbose, "Select module '%s' as root\n",
-      module_name_map.name(module_manager.module_name(curr_module)).c_str());
     /* Catch error code and exit if required */
     if (err_code == CMD_EXEC_FATAL_ERROR) {
       return err_code;
