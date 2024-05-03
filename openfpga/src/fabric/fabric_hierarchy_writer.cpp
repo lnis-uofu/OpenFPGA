@@ -16,6 +16,29 @@
 /* begin namespace openfpga */
 namespace openfpga {
 
+/** Identify if the module has no child whose name matches the filter */
+static bool module_filter_all_children(const ModuleManager& module_manager,
+                                       const ModuleId& curr_module,
+                                       const ModuleNameMap& module_name_map,
+                                       const std::string& module_name_filter) {
+  for (const ModuleId& child_module :
+       module_manager.child_modules(curr_module)) {
+    /* Filter out the names which do not match the pattern */
+    std::string child_module_name = module_name_map.name(module_manager.module_name(child_module));
+    std::string pattern = module_name_filter;
+    std::regex star_replace("\\*");
+    std::regex questionmark_replace("\\?");
+    std::string wildcard_pattern =
+      std::regex_replace(std::regex_replace(pattern, star_replace, ".*"),
+                         questionmark_replace, ".");
+    std::regex wildcard_regex(wildcard_pattern);
+    if (std::regex_match(child_module_name, wildcard_regex)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 /***************************************************************************************
  * Recursively output child module of the parent_module to a text file
  * We use Depth-First Search (DFS) here so that we can output a tree down to
@@ -26,6 +49,7 @@ static int rec_output_module_hierarchy_to_text_file(
   std::fstream& fp, const size_t& hie_depth_to_stop,
   const size_t& current_hie_depth, const ModuleManager& module_manager,
   const ModuleId& parent_module,
+  const ModuleNameMap& module_name_map,
   const std::string& module_name_filter,
   const bool& verbose) {
   /* Stop if hierarchy depth is beyond the stop line */
@@ -35,6 +59,16 @@ static int rec_output_module_hierarchy_to_text_file(
 
   if (false == valid_file_stream(fp)) {
     return CMD_EXEC_FATAL_ERROR;
+  }
+
+  /* Check if all the child module has not qualified grand-child, use leaf for this level */
+  bool use_list = true;
+  for (const ModuleId& child_module :
+       module_manager.child_modules(parent_module)) {
+    if (!module_filter_all_children(module_manager, child_module, module_name_map, module_name_filter)) {
+      use_list = false;
+      break;
+    }
   }
 
   /* Iterate over all the child module */
@@ -52,7 +86,7 @@ static int rec_output_module_hierarchy_to_text_file(
     }
 
     /* Filter out the names which do not match the pattern */
-    std::string child_module_name = module_manager.module_name(child_module);
+    std::string child_module_name = module_name_map.name(module_manager.module_name(child_module));
     std::string pattern = module_name_filter;
     std::regex star_replace("\\*");
     std::regex questionmark_replace("\\?");
@@ -64,7 +98,7 @@ static int rec_output_module_hierarchy_to_text_file(
       continue;
     }
 
-    if (hie_depth_to_stop == current_hie_depth || module_manager.child_modules(child_module).empty()) {
+    if (hie_depth_to_stop == current_hie_depth || use_list) {
       fp << "- ";
     }
     fp << module_manager.module_name(child_module);
@@ -82,7 +116,7 @@ static int rec_output_module_hierarchy_to_text_file(
     int status = rec_output_module_hierarchy_to_text_file(
       fp, hie_depth_to_stop,
       current_hie_depth + 1, /* Increment the depth for the next level */
-      module_manager, child_module, module_name_filter, verbose);
+      module_manager, child_module, module_name_map, module_name_filter, verbose);
     if (status != CMD_EXEC_SUCCESS) {
       return status;
     }
@@ -138,7 +172,7 @@ int write_fabric_hierarchy_to_text_file(const ModuleManager& module_manager,
   /* Use regular expression to capture the module whose name matches the pattern
    */
   for (ModuleId curr_module : module_manager.modules()) {
-    std::string curr_module_name = module_manager.module_name(curr_module);
+    std::string curr_module_name = module_name_map.name(module_manager.module_name(curr_module));
     std::string pattern = root_module_names;
     std::regex star_replace("\\*");
     std::regex questionmark_replace("\\?");
@@ -150,27 +184,8 @@ int write_fabric_hierarchy_to_text_file(const ModuleManager& module_manager,
       continue;
     }
     /* Filter out module without children if required */
-    if (exclude_empty_modules) {
-      bool expect_empty_module = true;
-      for (const ModuleId& child_module :
-           module_manager.child_modules(curr_module)) {
-        /* Filter out the names which do not match the pattern */
-        std::string child_module_name = module_manager.module_name(child_module);
-        std::string pattern = module_name_filter;
-        std::regex star_replace("\\*");
-        std::regex questionmark_replace("\\?");
-        std::string wildcard_pattern =
-          std::regex_replace(std::regex_replace(pattern, star_replace, ".*"),
-                             questionmark_replace, ".");
-        std::regex wildcard_regex(wildcard_pattern);
-        if (std::regex_match(child_module_name, wildcard_regex)) {
-          expect_empty_module = false;
-          break;
-        }
-      }
-      if (expect_empty_module) {
-        continue;
-      }
+    if (exclude_empty_modules && module_filter_all_children(module_manager, curr_module, module_name_map, module_name_filter)) {
+      continue;
     }
     /* Record current depth of module: top module is the root with 0 depth */
     size_t hie_depth = 0;
@@ -181,8 +196,11 @@ int write_fabric_hierarchy_to_text_file(const ModuleManager& module_manager,
     /* Visit child module recursively and output the hierarchy */
     int err_code = rec_output_module_hierarchy_to_text_file(
       fp, hie_depth_to_stop, hie_depth + 1, /* Start with level 1 */
-      module_manager, curr_module, module_name_filter, exclude_empty_modules, verbose);
+      module_manager, curr_module, module_name_map, module_name_filter, verbose);
     /* Catch error code and exit if required */ 
+    if (err_code == CMD_EXEC_FATAL_ERROR) {
+      return err_code;
+    }
     cnt++;
   }
 
@@ -195,7 +213,7 @@ int write_fabric_hierarchy_to_text_file(const ModuleManager& module_manager,
   /* close a file */
   fp.close();
 
-  return err_code;
+  return CMD_EXEC_SUCCESS;
 }
 
 } /* end namespace openfpga */

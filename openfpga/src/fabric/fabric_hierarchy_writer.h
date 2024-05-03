@@ -20,7 +20,6 @@ int write_fabric_hierarchy_to_text_file(const ModuleManager& module_manager,
                                         const std::string& root_module_names,
                                         const std::string& module_name_filter,
                                         const size_t& hie_depth_to_stop,
-                                        const bool& use_list_in_leaf,
                                         const bool& exclude_empty_modules,
                                         const bool& verbose);
 

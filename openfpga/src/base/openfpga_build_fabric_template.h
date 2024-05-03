@@ -281,7 +281,7 @@ int write_fabric_hierarchy_template(const T& openfpga_ctx, const Command& cmd,
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
 
   CommandOptionId opt_module = cmd.option("module");
-  std::string root_module = generate_fpga_top_module_name();
+  std::string root_module = openfpga_ctx.module_name_map().name(generate_fpga_top_module_name());
   if (true == cmd_context.option_enable(cmd, opt_module)) {
     root_module = cmd_context.option_value(cmd, opt_module);
   }
