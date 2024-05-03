@@ -199,9 +199,7 @@ int write_fabric_hierarchy_to_text_file(
                                    module_name_filter)) {
       continue;
     }
-    VTR_LOGV(
-      verbose, "Select module '%s' as root\n",
-      curr_module_name.c_str());
+    VTR_LOGV(verbose, "Select module '%s' as root\n", curr_module_name.c_str());
     /* Record current depth of module: top module is the root with 0 depth */
     size_t hie_depth = 0;
 
