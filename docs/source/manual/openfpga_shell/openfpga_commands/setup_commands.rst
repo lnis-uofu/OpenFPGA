@@ -368,7 +368,7 @@ write_fabric_hierarchy
   
   .. option:: --file <string> or -f <string>
   
-    Specify the file name to write the hierarchy. 
+    Specify the file name to write the hierarchy.  See details in :ref:`file_format_fabric_hierarchy_file`.
 
   .. option:: --depth <int>
 
