@@ -80,10 +80,6 @@ static int rec_output_module_hierarchy_to_text_file(
   /* Iterate over all the child module */
   for (const ModuleId& child_module :
        module_manager.child_modules(parent_module)) {
-    if (false == write_space_to_file(fp, current_hie_depth * 2)) {
-      return CMD_EXEC_FATAL_ERROR;
-    }
-
     if (true != module_manager.valid_module_id(child_module)) {
       VTR_LOGV_ERROR(
         verbose,
@@ -107,10 +103,13 @@ static int rec_output_module_hierarchy_to_text_file(
       continue;
     }
 
+    if (false == write_space_to_file(fp, current_hie_depth * 2)) {
+      return CMD_EXEC_FATAL_ERROR;
+    }
     if (hie_depth_to_stop == current_hie_depth || use_list) {
       fp << "- ";
     }
-    fp << module_manager.module_name(child_module);
+    fp << module_name_map.name(module_manager.module_name(child_module));
 
     /* If this is the leaf node, we leave a new line
      * Otherwise, we will leave a ':' to be compatible to YAML file format
