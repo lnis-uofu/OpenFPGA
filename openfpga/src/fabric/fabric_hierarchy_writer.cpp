@@ -108,18 +108,13 @@ static int rec_output_module_hierarchy_to_text_file(
     }
     if (hie_depth_to_stop == current_hie_depth || use_list) {
       fp << "- ";
-    }
-    fp << module_name_map.name(module_manager.module_name(child_module));
-
-    /* If this is the leaf node, we leave a new line
-     * Otherwise, we will leave a ':' to be compatible to YAML file format
-     */
-    if ((!module_manager.child_modules(child_module).empty()) &&
-        (hie_depth_to_stop >= current_hie_depth + 1)) {
+      fp << module_name_map.name(module_manager.module_name(child_module));
+      fp << "\n";
+    } else {
+      fp << module_name_map.name(module_manager.module_name(child_module));
       fp << ":";
+      fp << "\n";
     }
-    fp << "\n";
-
     /* Go to next level */
     int status = rec_output_module_hierarchy_to_text_file(
       fp, hie_depth_to_stop,
