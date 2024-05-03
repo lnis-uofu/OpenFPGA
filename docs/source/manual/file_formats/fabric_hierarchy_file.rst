@@ -39,6 +39,7 @@ An example of the file is shown as follows.
 
 In this example, the root module is ``fpga_top``.
 The child modules under ``fpga_top`` are ``tile_0__2_`` and ``tile_1__2_``.
+Note that the leaf nodes are shown as a list, e.g., ``GPIO`` and ``GPIO_feedthrough_DFF_mem``.
 
 When multiple root modules are defined, the output could be
 
