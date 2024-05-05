@@ -12,7 +12,7 @@ How to Compile
 Supported Operating Systems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-OpenFPGA is continously tested with Ubuntu 20.04 and partially on Ubuntu 22.04 
+OpenFPGA is continously tested with Ubuntu 22.04 and partially on Ubuntu 20.04 
 It might work with earlier versions and other distributions.
 
 In addition to continous integration, our community users have tested OpenFPGA on their local machines using the following operating systems:
@@ -21,7 +21,6 @@ In addition to continous integration, our community users have tested OpenFPGA o
 - CentOS 8
 - Ubuntu 18.04
 - Ubuntu 21.04
-- Ubuntu 22.04
 
 Build Steps
 ~~~~~~~~~~~
@@ -34,7 +33,7 @@ In general, please follow the steps to compile
   cd OpenFPGA
   make all
 
-.. note:: OpenFPGA requires gcc/g++ version > 7 and clang version > 6.
+.. note:: OpenFPGA requires gcc/g++ version > 9 and clang version > 10.
 
 .. note:: cmake3.12+ is recommended to compile OpenFPGA with GUI
 
@@ -111,7 +110,7 @@ Ubuntu 20.04
 
 - Dependencies required to run regression tests
 
-.. include:: regtest_dependencies.sh
+.. include:: ubuntu20p04_regtest_dependencies.sh
   :code: shell
   
 .. note:: Python packages are also required
@@ -135,7 +134,7 @@ Ubuntu 22.04
 
 - Dependencies required to run regression tests
 
-.. include:: regtest_dependencies.sh
+.. include:: ubuntu22p04_regtest_dependencies.sh
   :code: shell
   
 .. note:: Python packages are also required
