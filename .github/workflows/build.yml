@@ -238,11 +238,11 @@ jobs:
           - name: "Build (GCC-11 on Ubuntu 20.04)"
             cc: gcc-11
             cxx: g++-11
-            dependency_version: "ubuntu22p04"
+            dependency_version: "ubuntu20p04"
           - name: "Build (Clang-10 on Ubuntu 20.04)"
             cc: clang-10
             cxx: clang++-10
-            dependency_version: "ubuntu22p04"
+            dependency_version: "ubuntu20p04"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
