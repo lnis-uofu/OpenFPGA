@@ -42,7 +42,7 @@ endif
 
 # Define executables
 PYTHON_EXEC ?= python3
-CLANG_FORMAT_EXEC ?= clang-format-10
+CLANG_FORMAT_EXEC ?= clang-format-14
 XML_FORMAT_EXEC ?= xmllint
 PYTHON_FORMAT_EXEC ?= black
 
