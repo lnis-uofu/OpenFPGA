@@ -137,6 +137,12 @@ jobs:
         run: |
           make all BUILD_TYPE=$BUILD_TYPE
 
+      - name: Clear error log
+        if: ${{ failure() }}
+        shell: bash
+        run: |
+          make all BUILD_TYPE=$BUILD_TYPE -j1
+
       # Check the cache size and see if it is over the limit
       - name: Check ccache size
         run: ccache -s
@@ -158,6 +164,7 @@ jobs:
             build/yosys/bin
             openfpga_flow
             openfpga.sh
+
 
   linux_build_opt:
     needs: change_detect
