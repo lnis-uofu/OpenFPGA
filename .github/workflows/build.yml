@@ -22,7 +22,7 @@ env:
 jobs:
   change_detect:
     name: "Detect code changes"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       # this is output as string, see https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
       source_modified: ${{ steps.changes.outputs.status_code == '1' }}
@@ -67,7 +67,7 @@ jobs:
     needs: change_detect
     if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
     name: ${{ matrix.config.name }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     # Note: dependencies are installed in the container. See details about dependency list in docker/Dockerfile.master
     # Comment the line out when base image is built again
     #container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.config.cc}}
@@ -76,30 +76,38 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: "Build Compatibility: GCC-8 (Ubuntu 20.04)"
-            cc: gcc-8
-            cxx: g++-8
-          - name: "Build Compatibility: GCC-9 (Ubuntu 20.04)"
+          - name: "Build Compatibility: GCC-9 (Ubuntu 22.04)"
             cc: gcc-9
             cxx: g++-9
-          - name: "Build Compatibility: GCC-10 (Ubuntu 20.04)"
+            dependency_version: "ubuntu22p04"
+          - name: "Build Compatibility: GCC-10 (Ubuntu 22.04)"
             cc: gcc-10
             cxx: g++-10
-          - name: "Build Compatibility: GCC-11 (Ubuntu 20.04)"
+            dependency_version: "ubuntu22p04"
+          - name: "Build Compatibility: GCC-11 (Ubuntu 22.04)"
             cc: gcc-11
             cxx: g++-11
-          - name: "Build Compatibility: Clang-6 (Ubuntu 20.04)"
-            cc: clang-6.0
-            cxx: clang++-6.0
-          - name: "Build Compatibility: Clang-7 (Ubuntu 20.04)"
-            cc: clang-7
-            cxx: clang++-7
-          - name: "Build Compatibility: Clang-8 (Ubuntu 20.04)"
-            cc: clang-8
-            cxx: clang++-8
-          - name: "Build Compatibility: Clang-10 (Ubuntu 20.04)"
-            cc: clang-10
-            cxx: clang++-10
+            dependency_version: "ubuntu22p04"
+          - name: "Build Compatibility: GCC-12 (Ubuntu 22.04)"
+            cc: gcc-12
+            cxx: g++-12
+            dependency_version: "ubuntu22p04"
+          - name: "Build Compatibility: Clang-11 (Ubuntu 22.04)"
+            cc: clang-11
+            cxx: clang++-11
+            dependency_version: "ubuntu22p04"
+          - name: "Build Compatibility: Clang-12 (Ubuntu 22.04)"
+            cc: clang-12
+            cxx: clang++-12
+            dependency_version: "ubuntu22p04"
+          - name: "Build Compatibility: Clang-13 (Ubuntu 22.04)"
+            cc: clang-13
+            cxx: clang++-13
+            dependency_version: "ubuntu22p04"
+          - name: "Build Compatibility: Clang-14 (Ubuntu 22.04)"
+            cc: clang-14
+            cxx: clang++-14
+            dependency_version: "ubuntu22p04"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
@@ -114,7 +122,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install dependencies
-        run: sudo bash ./.github/workflows/install_dependencies_build.sh
+        run: sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
       
       - name: Dump tool versions
         run: |
@@ -129,12 +137,18 @@ jobs:
         run: |
           make all BUILD_TYPE=$BUILD_TYPE
 
+      - name: Clear error log
+        if: ${{ failure() }}
+        shell: bash
+        run: |
+          make all BUILD_TYPE=$BUILD_TYPE -j1
+
       # Check the cache size and see if it is over the limit
       - name: Check ccache size
         run: ccache -s
       - name: Upload artifact
         uses: actions/upload-artifact@v2
-        if: ${{ matrix.config.cc == 'gcc-9'}}
+        if: ${{ matrix.config.cc == 'gcc-11'}}
         with:
           name: openfpga
           path: |
@@ -151,11 +165,12 @@ jobs:
             openfpga_flow
             openfpga.sh
 
+
   linux_build_opt:
     needs: change_detect
     if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
     name: ${{ matrix.config.name }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     # Note: dependencies are installed in the container. See details about dependency list in docker/Dockerfile.master
     # Comment the line out when base image is built again
     #container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-build-${{ matrix.config.cc}}
@@ -164,26 +179,31 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: "Build w/o Yosys (Ubuntu 20.04)"
-            cc: gcc-9
-            cxx: g++-9
+          - name: "Build w/o Yosys (Ubuntu 22.04)"
+            cc: gcc-11
+            cxx: g++-11
             cmake_flags: "-DOPENFPGA_WITH_YOSYS=OFF"
-          - name: "Build w/o Yosys plugin (Ubuntu 20.04)"
-            cc: gcc-9
-            cxx: g++-9
+            dependency_version: "ubuntu22p04"
+          - name: "Build w/o Yosys plugin (Ubuntu 22.04)"
+            cc: gcc-11
+            cxx: g++-11
             cmake_flags: "-DOPENFPGA_WITH_YOSYS_PLUGIN=OFF"
-          - name: "Build w/o test (Ubuntu 20.04)"
-            cc: gcc-9
-            cxx: g++-9
+            dependency_version: "ubuntu22p04"
+          - name: "Build w/o test (Ubuntu 22.04)"
+            cc: gcc-11
+            cxx: g++-11
             cmake_flags: "-DOPENFPGA_WITH_TEST=OFF"
-          - name: "Build w/o version number (Ubuntu 20.04)"
-            cc: gcc-9
-            cxx: g++-9
+            dependency_version: "ubuntu22p04"
+          - name: "Build w/o version number (Ubuntu 22.04)"
+            cc: gcc-11
+            cxx: g++-11
             cmake_flags: "-DOPENFPGA_WITH_VERSION=OFF"
-          - name: "Build w/o SWIG support (Ubuntu 20.04)"
-            cc: gcc-9
-            cxx: g++-9
+            dependency_version: "ubuntu22p04"
+          - name: "Build w/o SWIG support (Ubuntu 22.04)"
+            cc: gcc-11
+            cxx: g++-11
             cmake_flags: "-DOPENFPGA_WITH_SWIG=OFF"
+            dependency_version: "ubuntu22p04"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
@@ -198,7 +218,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install dependencies
-        run: sudo bash ./.github/workflows/install_dependencies_build.sh
+        run: sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
       
       - name: Dump tool versions
         run: |
@@ -217,14 +237,19 @@ jobs:
     needs: change_detect
     if: ${{ fromJSON(needs.change_detect.outputs.source_modified) }}
     name: ${{ matrix.config.name }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
         config:
-          - name: "Build (Ubuntu 22.04)"
+          - name: "Build (GCC-11 on Ubuntu 20.04)"
             cc: gcc-11
             cxx: g++-11
+            dependency_version: "ubuntu20p04"
+          - name: "Build (Clang-10 on Ubuntu 20.04)"
+            cc: clang-10
+            cxx: clang++-10
+            dependency_version: "ubuntu20p04"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
@@ -239,7 +264,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install dependencies
-        run: sudo bash ./.github/workflows/install_dependencies_build_ubuntu22p04.sh
+        run: sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
       
       - name: Dump tool versions
         run: |
@@ -270,6 +295,7 @@ jobs:
             cxx: g++-11
             build_type: debug
             cores: 4
+            dependency_version: "ubuntu22p04"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
@@ -285,8 +311,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo bash ./.github/workflows/install_dependencies_build_ubuntu22p04.sh
-          sudo bash ./.github/workflows/install_dependencies_run_ubuntu22p04.sh
+          sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
+          sudo bash ./.github/workflows/install_dependencies_run_${{ matrix.config.dependency_version }}.sh
           sudo python3 -m pip install -r requirements.txt
 
       - name: Dump tool versions
@@ -321,6 +347,7 @@ jobs:
             cxx: g++-11
             build_type: release
             cores: 4
+            dependency_version: "ubuntu22p04"
     # Define the steps to run the build job
     env:
       CC: ${{ matrix.config.cc }}
@@ -336,8 +363,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo bash ./.github/workflows/install_dependencies_build_ubuntu22p04.sh
-          sudo bash ./.github/workflows/install_dependencies_run_ubuntu22p04.sh
+          sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
+          sudo bash ./.github/workflows/install_dependencies_run_${{ matrix.config.dependency_version }}.sh
           sudo python3 -m pip install -r requirements.txt
 
       - name: Dump tool versions
@@ -360,7 +387,7 @@ jobs:
 
   docker_distribution:
     name: Build docker image for distribution
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: [linux_build, change_detect]
     steps:
       - name: Cancel previous
@@ -397,7 +424,7 @@ jobs:
 
   linux_regression_tests:
     name: linux_regression_tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: [linux_build, change_detect]
     container: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-env
     strategy:
@@ -438,7 +465,7 @@ jobs:
           chmod +x build/yosys/bin/yosys-config
           chmod +x build/yosys/bin/yosys-filterlib
           chmod +x build/yosys/bin/yosys-smtbmc
-      - name: ${{matrix.config.name}}_GCC-9_(Ubuntu 20.04)
+      - name: ${{matrix.config.name}}_GCC-11_(Ubuntu 22.04)
         shell: bash
         run: source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh --debug --show_thread_logs
       - name: Upload artifact
@@ -454,7 +481,7 @@ jobs:
     needs: change_detect
     if: ${{ !fromJSON(needs.change_detect.outputs.source_modified) }}
     name: docker_regression_tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container: 
       image: ghcr.io/${{ needs.change_detect.outputs.docker_repo }}/openfpga-master:latest
       options: --user root --workdir /home/openfpga_user
@@ -482,10 +509,10 @@ jobs:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v3
 
-      - name: ${{matrix.config.name}}_GCC-9_(Ubuntu 20.04)
+      - name: ${{matrix.config.name}}_GCC-11_(Ubuntu 22.04)
         shell: bash
         run: |
-          bash .github/workflows/install_dependencies_run.sh
+          bash .github/workflows/install_dependencies_run_ubuntu22p04.sh
           ${PYTHON_EXEC} -m pip install -r requirements.txt
           rsync -am --exclude='openfpga_flow/**' /opt/openfpga/. .
           unset OPENFPGA_PATH
