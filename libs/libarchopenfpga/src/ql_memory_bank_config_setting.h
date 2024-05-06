@@ -1,6 +1,7 @@
 #ifndef QL_MEMORY_BANK_CONFIG_SETTING_H
 #define QL_MEMORY_BANK_CONFIG_SETTING_H
 
+#include <cstdint>
 #include <map>
 #include <string>
 
