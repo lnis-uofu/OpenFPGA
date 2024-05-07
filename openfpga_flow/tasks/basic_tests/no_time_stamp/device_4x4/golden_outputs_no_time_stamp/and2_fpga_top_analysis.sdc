@@ -9,14 +9,14 @@
 ##################################################
 # Create clock                                    
 ##################################################
-create_clock clk[0] -period 1.314636955e-09 -waveform {0 6.573184774e-10}
+create_clock clk[0] -period 1.725112719e-09 -waveform {0 8.625563597e-10}
 
 ##################################################
 # Create input and output delays for used I/Os    
 ##################################################
-set_input_delay -clock clk[0] -max 1.314636955e-09 gfpga_pad_GPIO_PAD[38]
-set_input_delay -clock clk[0] -max 1.314636955e-09 gfpga_pad_GPIO_PAD[58]
-set_output_delay -clock clk[0] -max 1.314636955e-09 gfpga_pad_GPIO_PAD[17]
+set_input_delay -clock clk[0] -max 1.725112719e-09 gfpga_pad_GPIO_PAD[38]
+set_input_delay -clock clk[0] -max 1.725112719e-09 gfpga_pad_GPIO_PAD[58]
+set_output_delay -clock clk[0] -max 1.725112719e-09 gfpga_pad_GPIO_PAD[17]
 
 ##################################################
 # Disable timing for unused I/Os    
