@@ -136,7 +136,7 @@
         <output name="d_out" num_pins="8"/>
         <clock name="clk" num_pins="1"/>
         <fc in_type="frac" in_val="0.25" out_type="frac" out_val="0.20"/>
-        <pinlocations pattern="spread"/>
+        <pinlocations pattern="perimeter"/>
       </sub_tile>
     </tile>
   </tiles>
