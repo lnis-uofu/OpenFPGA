@@ -198,15 +198,20 @@ std::map<std::string, CircuitModelId> read_xml_routing_segment_circuit(
  * Convert string to the enumerate of direct type
  *******************************************************************/
 static e_direct_type string_to_direct_type(const std::string& type_string) {
+  if (std::string("part_of_cb") == type_string) {
+    return e_direct_type::PART_OF_CB;
+  }
+  if (std::string("inner_column_or_row") == type_string) {
+    return e_direct_type::INNER_COLUMN_OR_ROW;
+  }
   if (std::string("column") == type_string) {
-    return INTER_COLUMN;
+    return e_direct_type::INTER_COLUMN;
   }
-
   if (std::string("row") == type_string) {
-    return INTER_ROW;
+    return e_direct_type::INTER_ROW;
   }
 
-  return NUM_DIRECT_TYPES;
+  return e_direct_type::NUM_DIRECT_TYPES;
 }
 
 /********************************************************************
@@ -274,23 +279,24 @@ ArchDirect read_xml_direct_circuit(pugi::xml_node& Node,
     /* Add more information*/
     std::string direct_type_name =
       get_attribute(xml_direct, "type", loc_data, pugiutil::ReqOpt::OPTIONAL)
-        .as_string("none");
-    /* If not defined, we go to the next */
-    if (std::string("none") == direct_type_name) {
-      continue;
-    }
+        .as_string(DIRECT_TYPE_STRING[e_direct_type::INNER_COLUMN_OR_ROW]);
 
     e_direct_type direct_type = string_to_direct_type(direct_type_name);
 
     if (NUM_DIRECT_TYPES == direct_type) {
       archfpga_throw(
         loc_data.filename_c_str(), loc_data.line(xml_direct),
-        "Direct type '%s' is not support! Acceptable values are [column|row]\n",
+        "Direct type '%s' is not support! Acceptable values are [inner_column_or_row|part_of_cb|column|row]\n",
         direct_type_name.c_str());
     }
 
     arch_direct.set_type(direct, direct_type);
 
+    /* The following syntax is only available for inter-column/row */
+    if (arch_direct.type(direct) != INTER_COLUMN && arch_direct.type(direct) != INTER_ROW) {
+      continue;
+    }
+    
     std::string x_dir_name =
       get_attribute(xml_direct, "x_dir", loc_data).as_string();
     std::string y_dir_name =

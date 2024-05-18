@@ -804,9 +804,12 @@ TileDirect build_device_tile_direct(const DeviceContext& device_ctx,
       exit(1);
     }
     /* Build from original VPR arch definition */
-    build_inner_column_row_tile_direct(tile_direct,
-                                       device_ctx.arch->Directs[idirect],
-                                       device_ctx, arch_direct_id, verbose);
+    if((INNER_COLUMN_OR_ROW == arch_direct.type(arch_direct_id)) {
+      build_inner_column_row_tile_direct(tile_direct,
+                                         device_ctx.arch->Directs[idirect],
+                                         device_ctx, arch_direct_id, verbose);
+      /* Skip those direct connections which belong part of a connection block */
+    }
     /* Build from OpenFPGA arch definition */
     build_inter_column_row_tile_direct(
       tile_direct, device_ctx.arch->Directs[idirect], device_ctx, arch_direct,
