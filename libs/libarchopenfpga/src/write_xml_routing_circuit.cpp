@@ -57,7 +57,7 @@ static void write_xml_direct_component_circuit(
     fp, "circuit_model_name",
     circuit_lib.model_name(arch_direct.circuit_model(direct_id)).c_str());
   write_xml_attribute(fp, "type",
-                      DIRECT_TYPE_STRING[arch_direct.type(direct_id)]);
+                      DIRECT_TYPE_STRING[size_t(arch_direct.type(direct_id))]);
   write_xml_attribute(fp, "x_dir",
                       DIRECT_DIRECTION_STRING[arch_direct.x_dir(direct_id)]);
   write_xml_attribute(fp, "y_dir",

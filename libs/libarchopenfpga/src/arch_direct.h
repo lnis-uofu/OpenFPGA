@@ -21,7 +21,7 @@ enum class e_direct_type {
   INTER_ROW,
   NUM_DIRECT_TYPES
 };
-constexpr std::array<const char*, NUM_DIRECT_TYPES> DIRECT_TYPE_STRING = {
+constexpr std::array<const char*, (size_t)e_direct_type::NUM_DIRECT_TYPES> DIRECT_TYPE_STRING = {
   {"inner_column_or_row", "part_of_cb", "inter_column", "inter_row"}};
 
 enum e_direct_direction { POSITIVE_DIR, NEGATIVE_DIR, NUM_DIRECT_DIRECTIONS };
