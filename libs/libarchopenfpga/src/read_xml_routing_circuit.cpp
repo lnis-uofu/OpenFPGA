@@ -204,10 +204,10 @@ static e_direct_type string_to_direct_type(const std::string& type_string) {
   if (std::string("inner_column_or_row") == type_string) {
     return e_direct_type::INNER_COLUMN_OR_ROW;
   }
-  if (std::string("column") == type_string) {
+  if (std::string("inter_column") == type_string) {
     return e_direct_type::INTER_COLUMN;
   }
-  if (std::string("row") == type_string) {
+  if (std::string("inter_row") == type_string) {
     return e_direct_type::INTER_ROW;
   }
 

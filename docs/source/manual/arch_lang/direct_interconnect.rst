@@ -20,20 +20,34 @@ The original direct connections in the directlist section are documented here_. 
 
 .. note:: These options are required
 
-Our extension include three more options:
+In the OpenFPGA architecture file, you may define additional attributes for each VPR's direct connection:
+
+.. code-block:: xml
+
+  <direct_connection>
+    <direct name="string" circuit_model_name="string" interconnection_type="string" x_dir="string" y_dir="string"/>
+  </directlist>
+
+.. note:: these options are optional. However, if ``interconnection_type`` is set to ``inter_column`` or ``inter_row, then `x_dir` and `y_dir` are required.
+
+.. option:: interconnection_type="<string>"
+
+  Available types are ``inner_column_or_row`` | ``part_of_cb`` | ``inter_column`` | ``inter_row``
+
+  - ``inner_column_or_row`` indicates the direct connections are between tiles in the same column or row. This is the default value.
+  - ``part_of_cb`` indicates the direct connections will drive routing multiplexers in connection blocks. Therefore, it is no longer a strict point-to-point direct connection.
+  - ``inter_column`` indicates the direct connections are between tiles in two columns
+  - ``inter_row`` indicates the direct connections are between tiles in two rows
+
+The type ``part_of_cb`` is required, when VPR architecture defines feedback connections like:
 
 .. code-block:: xml
 
   <directlist>
-    <direct name="string" from_pin="string" to_pin="string" x_offset="int" y_offset="int" z_offset="int" switch_name="string" interconnection_type="string" x_dir="string" y_dir="string"/>
+    <direct name="feedback" from_pin="clb.O" to_pin="clb.I" x_offset="0" y_offset="0" z_offset="0"/>
   </directlist>
 
-.. note:: these options are optional. However, if `interconnection_type` is set `x_dir` and `y_dir` are required.
-
-.. option:: interconnection_type="<string>"
-
-  the type of interconnection should be a string.
-  Available types are ``NONE`` | ``column`` | ``row``, specifies if it applies on a column or a row ot if it doesn't apply.
+.. note:: The following syntax is only applicable to ``inter_column`` and ``inter_row``
 
 .. option:: x_dir="<string>"
 
@@ -74,11 +88,21 @@ Example
 
 For this example, we will study a scan-chain implementation. The description could be:
 
+In VPR architecture:
+
 .. code-block:: xml
 
   <directlist>
-    <direct name="scff_chain" from_pin="clb.sc_out" to_pin="clb.sc_in" x_offset="0" y_offset="-1" z_offset="0" interconnection_type="column" x_dir="positive" y_dir="positive"/>
+    <direct name="scff_chain" from_pin="clb.sc_out" to_pin="clb.sc_in" x_offset="0" y_offset="-1" z_offset="0"/>
   </directlist>
+
+In OpenFPGA architecture:
+
+.. code-block:: xml
+
+  <direct_connection>
+    <direct name="scff_chain" interconnection_type="column" x_dir="positive" y_dir="positive"/>
+  </direct_connection>
 
 :numref:`fig_p2p_exple` is the graphical representation of the above scan-chain description on a 4x4 FPGA.
 
