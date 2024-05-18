@@ -329,7 +329,8 @@ static vtr::Point<size_t> find_inter_direct_destination_coordinate(
       if (e_direct_type::INTER_COLUMN == arch_direct.type(arch_direct_id)) {
         next_col_row_coords.push_back(vtr::Point<size_t>(ix, iy));
       } else {
-        VTR_ASSERT(e_direct_type::INTER_ROW == arch_direct.type(arch_direct_id));
+        VTR_ASSERT(e_direct_type::INTER_ROW ==
+                   arch_direct.type(arch_direct_id));
         /* For cross-row connection, our search space is flipped */
         next_col_row_coords.push_back(vtr::Point<size_t>(iy, ix));
       }
@@ -804,11 +805,13 @@ TileDirect build_device_tile_direct(const DeviceContext& device_ctx,
       exit(1);
     }
     /* Build from original VPR arch definition */
-    if (e_direct_type::INNER_COLUMN_OR_ROW == arch_direct.type(arch_direct_id)) {
+    if (e_direct_type::INNER_COLUMN_OR_ROW ==
+        arch_direct.type(arch_direct_id)) {
       build_inner_column_row_tile_direct(tile_direct,
                                          device_ctx.arch->Directs[idirect],
                                          device_ctx, arch_direct_id, verbose);
-      /* Skip those direct connections which belong part of a connection block */
+      /* Skip those direct connections which belong part of a connection block
+       */
     }
     /* Build from OpenFPGA arch definition */
     build_inter_column_row_tile_direct(
