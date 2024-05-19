@@ -692,7 +692,7 @@ static void build_connection_block_mux_module(
    * multiplexer */
   std::vector<ModulePinInfo> cb_input_port_ids =
     find_connection_block_module_input_ports(
-      module_manager, cb_module, rr_graph, rr_gsb, cb_type, driver_rr_nodes);
+      module_manager, cb_module, grids, device_annotation, rr_graph, rr_gsb, cb_type, driver_rr_nodes);
 
   /* Link input bus port to Switch Block inputs */
   std::vector<CircuitPortId> mux_model_input_ports =
@@ -1003,7 +1003,7 @@ static void build_connection_block_module(
         rr_gsb.get_ipin_node_in_edges(rr_graph, cb_ipin_side, inode);
       for (const RREdgeId curr_edge : driver_rr_edges) {
         RRNodeId cand_node = rr_graph.edge_src_node(curr_edge);
-        if (OPIN != rr_graph.node_type(cand_node);
+        if (OPIN != rr_graph.node_type(cand_node)) {
           continue;
         }
         if (opin_rr_nodes.end() == std::find(opin_rr_nodes.begin(), opin_rr_nodes.end(), cand_node)) { 
@@ -1016,7 +1016,7 @@ static void build_connection_block_module(
   for (const RRNodeId& opin_node : opin_rr_nodes) {
     enum e_side cb_opin_side = NUM_SIDES;
     int cb_opin_index = -1;
-    rr_gsb.get_node_side_and_index(rr_graph, src_rr_node, IN_PORT, cb_opin_side,
+    rr_gsb.get_node_side_and_index(rr_graph, opin_node, IN_PORT, cb_opin_side,
                                    cb_opin_index);
     VTR_ASSERT((-1 != cb_opin_index) && (NUM_SIDES != cb_opin_side));
     std::string port_name = generate_cb_module_grid_port_name(

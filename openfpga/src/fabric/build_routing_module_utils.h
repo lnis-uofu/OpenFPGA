@@ -70,6 +70,7 @@ ModulePortId find_connection_block_module_opin_port(
 
 std::vector<ModulePinInfo> find_connection_block_module_input_ports(
   const ModuleManager& module_manager, const ModuleId& cb_module,
+  const DeviceGrid& grids, const VprDeviceAnnotation& vpr_device_annotation,
   const RRGraphView& rr_graph, const RRGSB& rr_gsb, const t_rr_type& cb_type,
   const std::vector<RRNodeId>& input_rr_nodes);
 

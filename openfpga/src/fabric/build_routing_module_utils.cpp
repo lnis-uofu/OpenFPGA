@@ -359,14 +359,15 @@ ModulePortId find_connection_block_module_opin_port(
  ********************************************************************/
 std::vector<ModulePinInfo> find_connection_block_module_input_ports(
   const ModuleManager& module_manager, const ModuleId& cb_module,
+  const DeviceGrid& grids, const VprDeviceAnnotation& vpr_device_annotation,
   const RRGraphView& rr_graph, const RRGSB& rr_gsb, const t_rr_type& cb_type,
   const std::vector<RRNodeId>& input_rr_nodes) {
   std::vector<ModulePinInfo> input_ports;
 
   for (auto input_rr_node : input_rr_nodes) {
     if (OPIN == rr_graph.node_type(input_rr_node)) {
-      input_ports.push_back(find_connection_block_module_opin_port(
-        module_manager, cb_module, rr_graph, rr_gsb, cb_type, input_rr_node));
+      input_ports.push_back(ModulePinInfo(find_connection_block_module_opin_port(
+        module_manager, cb_module, grids, vpr_device_annotation, rr_graph, rr_gsb, input_rr_node), 0));
     } else {
       input_ports.push_back(find_connection_block_module_chan_port(
         module_manager, cb_module, rr_graph, rr_gsb, cb_type, input_rr_node));
