@@ -366,8 +366,11 @@ std::vector<ModulePinInfo> find_connection_block_module_input_ports(
 
   for (auto input_rr_node : input_rr_nodes) {
     if (OPIN == rr_graph.node_type(input_rr_node)) {
-      input_ports.push_back(ModulePinInfo(find_connection_block_module_opin_port(
-        module_manager, cb_module, grids, vpr_device_annotation, rr_graph, rr_gsb, input_rr_node), 0));
+      input_ports.push_back(ModulePinInfo(
+        find_connection_block_module_opin_port(module_manager, cb_module, grids,
+                                               vpr_device_annotation, rr_graph,
+                                               rr_gsb, input_rr_node),
+        0));
     } else {
       input_ports.push_back(find_connection_block_module_chan_port(
         module_manager, cb_module, rr_graph, rr_gsb, cb_type, input_rr_node));

@@ -691,8 +691,9 @@ static void build_connection_block_mux_module(
   /* TODO: Generate input ports that are wired to the input bus of the routing
    * multiplexer */
   std::vector<ModulePinInfo> cb_input_port_ids =
-    find_connection_block_module_input_ports(
-      module_manager, cb_module, grids, device_annotation, rr_graph, rr_gsb, cb_type, driver_rr_nodes);
+    find_connection_block_module_input_ports(module_manager, cb_module, grids,
+                                             device_annotation, rr_graph,
+                                             rr_gsb, cb_type, driver_rr_nodes);
 
   /* Link input bus port to Switch Block inputs */
   std::vector<CircuitPortId> mux_model_input_ports =
@@ -993,7 +994,8 @@ static void build_connection_block_module(
     }
   }
 
-  /* Add the output pins of grids which are input ports of the connection block, if there is any */
+  /* Add the output pins of grids which are input ports of the connection block,
+   * if there is any */
   std::vector<RRNodeId> opin_rr_nodes;
   for (size_t iside = 0; iside < cb_ipin_sides.size(); ++iside) {
     enum e_side cb_ipin_side = cb_ipin_sides[iside];
@@ -1006,7 +1008,8 @@ static void build_connection_block_module(
         if (OPIN != rr_graph.node_type(cand_node)) {
           continue;
         }
-        if (opin_rr_nodes.end() == std::find(opin_rr_nodes.begin(), opin_rr_nodes.end(), cand_node)) { 
+        if (opin_rr_nodes.end() ==
+            std::find(opin_rr_nodes.begin(), opin_rr_nodes.end(), cand_node)) {
           opin_rr_nodes.push_back(cand_node);
         }
       }
@@ -1074,11 +1077,9 @@ static void build_connection_block_module(
 
   for (ModulePortId opin_module_port_id : opin_module_port_ids) {
     ModuleNetId net = create_module_source_pin_net(
-      module_manager, cb_module, cb_module, 0, opin_module_port_id,
-      0);
+      module_manager, cb_module, cb_module, 0, opin_module_port_id, 0);
     module_manager.add_module_net_sink(cb_module, net, cb_module, 0,
-                                       opin_module_port_id,
-                                       0);
+                                       opin_module_port_id, 0);
     /* Cache the module net */
     input_port_to_module_nets[ModulePinInfo(opin_module_port_id, 0)] = net;
   }
