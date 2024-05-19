@@ -398,6 +398,9 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
     temp_ipin_rr_nodes.clear();
   }
 
+  /* Build OPIN node lists for connection blocks */
+  rr_gsb.build_cb_opin_nodes(vpr_device_ctx.rr_graph);
+
   return rr_gsb;
 }
 

@@ -330,9 +330,6 @@ ModulePortId find_connection_block_module_opin_port(
   const RRNodeId& src_rr_node) {
   /* Ensure the src_rr_node is an input pin of a CLB */
   VTR_ASSERT(OPIN == rr_graph.node_type(src_rr_node));
-  /* Create port description for input pin of a CLB */
-  vtr::Point<size_t> port_coord(rr_graph.node_xlow(src_rr_node),
-                                rr_graph.node_ylow(src_rr_node));
   /* Search all the sides of a SB, see this drive_rr_node is an INPUT of this SB
    */
   enum e_side cb_opin_side = NUM_SIDES;
