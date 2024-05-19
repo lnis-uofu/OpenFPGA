@@ -978,7 +978,7 @@ static void build_connection_block_module(
     enum e_side cb_ipin_side = cb_ipin_sides[iside];
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side);
          ++inode) {
-      const RRNodeId& ipin_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
+      RRNodeId ipin_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
       vtr::Point<size_t> port_coord(rr_graph.node_xlow(ipin_node),
                                     rr_graph.node_ylow(ipin_node));
       std::string port_name = generate_cb_module_grid_port_name(
@@ -991,6 +991,44 @@ static void build_connection_block_module(
       /* Add side to the port */
       module_manager.set_port_side(cb_module, module_port_id, cb_ipin_side);
     }
+  }
+
+  /* Add the output pins of grids which are input ports of the connection block, if there is any */
+  std::vector<RRNodeId> opin_rr_nodes;
+  for (size_t iside = 0; iside < cb_ipin_sides.size(); ++iside) {
+    enum e_side cb_ipin_side = cb_ipin_sides[iside];
+    for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side);
+         ++inode) {
+      std::vector<RREdgeId> driver_rr_edges =
+        rr_gsb.get_ipin_node_in_edges(rr_graph, cb_ipin_side, inode);
+      for (const RREdgeId curr_edge : driver_rr_edges) {
+        RRNodeId cand_node = rr_graph.edge_src_node(curr_edge);
+        if (OPIN != rr_graph.node_type(cand_node);
+          continue;
+        }
+        if (opin_rr_nodes.end() == std::find(opin_rr_nodes.begin(), opin_rr_nodes.end(), cand_node)) { 
+          opin_rr_nodes.push_back(cand_node);
+        }
+      }
+    }
+  }
+  std::vector<ModulePortId> opin_module_port_ids;
+  for (const RRNodeId& opin_node : opin_rr_nodes) {
+    enum e_side cb_opin_side = NUM_SIDES;
+    int cb_opin_index = -1;
+    rr_gsb.get_node_side_and_index(rr_graph, src_rr_node, IN_PORT, cb_opin_side,
+                                   cb_opin_index);
+    VTR_ASSERT((-1 != cb_opin_index) && (NUM_SIDES != cb_opin_side));
+    std::string port_name = generate_cb_module_grid_port_name(
+      cb_opin_side, grids, device_annotation, rr_graph, opin_node);
+    BasicPort module_port(port_name,
+                          1); /* Every grid output has a port size of 1 */
+    /* Grid outputs are inputs of switch blocks */
+    ModulePortId module_port_id = module_manager.add_port(
+      cb_module, module_port, ModuleManager::MODULE_INPUT_PORT);
+    /* Add side to the port */
+    module_manager.set_port_side(cb_module, module_port_id, cb_opin_side);
+    opin_module_port_ids.push_back(module_port_id);
   }
 
   /* Create a cache (fast look up) for module nets whose source are input ports
@@ -1032,6 +1070,17 @@ static void build_connection_block_module(
     /* Cache the module net */
     input_port_to_module_nets[ModulePinInfo(
       chan_lower_input_port_id, chan_lower_input_port.pins()[pin_id])] = net;
+  }
+
+  for (ModulePortId opin_module_port_id : opin_module_port_ids) {
+    ModuleNetId net = create_module_source_pin_net(
+      module_manager, cb_module, cb_module, 0, opin_module_port_id,
+      0);
+    module_manager.add_module_net_sink(cb_module, net, cb_module, 0,
+                                       opin_module_port_id,
+                                       0);
+    /* Cache the module net */
+    input_port_to_module_nets[ModulePinInfo(opin_module_port_id, 0)] = net;
   }
 
   /* Add sub modules of routing multiplexers or direct interconnect*/
