@@ -475,10 +475,12 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
   std::vector<enum e_side> cb_opin_sides = module_cb.get_cb_opin_sides(cb_type);
   for (size_t iside = 0; iside < cb_opin_sides.size(); ++iside) {
     enum e_side cb_opin_side = cb_opin_sides[iside];
-    for (size_t inode = 0; inode < module_cb.get_num_cb_opin_nodes(cb_type, cb_opin_side);
+    for (size_t inode = 0;
+         inode < module_cb.get_num_cb_opin_nodes(cb_type, cb_opin_side);
          ++inode) {
       /* Collect source-related information */
-      RRNodeId module_opin_node = module_cb.get_cb_opin_node(cb_type, cb_opin_side, inode);
+      RRNodeId module_opin_node =
+        module_cb.get_cb_opin_node(cb_type, cb_opin_side, inode);
       vtr::Point<size_t> cb_src_port_coord(
         rr_graph.node_xlow(module_opin_node),
         rr_graph.node_ylow(module_opin_node));
@@ -495,7 +497,8 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
       /* Note that we use the instance cb pin here!!!
        * because it has the correct coordinator for the grid!!!
        */
-      RRNodeId instance_opin_node = rr_gsb.get_cb_opin_node(cb_type, cb_opin_side, inode);
+      RRNodeId instance_opin_node =
+        rr_gsb.get_cb_opin_node(cb_type, cb_opin_side, inode);
       vtr::Point<size_t> grid_coordinate(
         rr_graph.node_xlow(instance_opin_node),
         rr_graph.node_ylow(instance_opin_node));
@@ -543,44 +546,48 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
           /* Source and sink port should match in size */
           VTR_ASSERT(src_cb_port.get_width() == sink_grid_port.get_width());
 
-          /* Create a net for each pin. Note that the sink and source tags are reverted in the following code!!! */
+          /* Create a net for each pin. Note that the sink and source tags are
+           * reverted in the following code!!! */
           for (size_t pin_id = 0; pin_id < src_cb_port.pins().size();
                ++pin_id) {
             ModuleNetId net = create_module_source_pin_net(
               module_manager, tile_module, sink_grid_module, sink_grid_instance,
               sink_grid_port_id, sink_grid_port.pins()[pin_id]);
             /* Configure the net sink */
-            module_manager.add_module_net_sink(
-              tile_module, net, src_cb_module, src_cb_instance,
-              src_cb_port_id, src_cb_port.pins()[pin_id]);
+            module_manager.add_module_net_sink(tile_module, net, src_cb_module,
+                                               src_cb_instance, src_cb_port_id,
+                                               src_cb_port.pins()[pin_id]);
           }
         }
       } else {
-        /* Special: No need to create a new port! Since we only support OPINs from Switch blocks. Walk through all the switch blocks and find the new port that it is created when connecting pb and sb */
+        /* Special: No need to create a new port! Since we only support OPINs
+         * from Switch blocks. Walk through all the switch blocks and find the
+         * new port that it is created when connecting pb and sb */
         if (!frame_view) {
           /* This is the source sb that is added to the top module */
           const RRGSB& module_sb = device_rr_gsb.get_gsb(module_gsb_coordinate);
           vtr::Point<size_t> module_sb_coordinate(module_sb.get_sb_x(),
                                                   module_sb.get_sb_y());
-      
+
           /* Collect sink-related information */
           std::string sink_sb_module_name =
             generate_switch_block_module_name(module_sb_coordinate);
-          ModuleId sink_sb_module = module_manager.find_module(sink_sb_module_name);
+          ModuleId sink_sb_module =
+            module_manager.find_module(sink_sb_module_name);
           VTR_ASSERT(true == module_manager.valid_module_id(sink_sb_module));
-          size_t isb = fabric_tile.find_sb_index_in_tile(fabric_tile_id, module_sb_coordinate);
+          size_t isb = fabric_tile.find_sb_index_in_tile(fabric_tile_id,
+                                                         module_sb_coordinate);
           std::string temp_sb_module_name = generate_switch_block_module_name(
             fabric_tile.sb_coordinates(fabric_tile_id)[isb]);
           if (name_module_using_index) {
             temp_sb_module_name =
               generate_switch_block_module_name_using_index(isb);
           }
-          /* FIXME: may find a way to determine the side. Currently using cb_opin_side is fine */
+          /* FIXME: may find a way to determine the side. Currently using
+           * cb_opin_side is fine */
           vtr::Point<size_t> sink_sb_port_coord(
-            rr_graph.node_xlow(
-              module_sb.get_opin_node(cb_opin_side, inode)),
-            rr_graph.node_ylow(
-              module_sb.get_opin_node(cb_opin_side, inode)));
+            rr_graph.node_xlow(module_sb.get_opin_node(cb_opin_side, inode)),
+            rr_graph.node_ylow(module_sb.get_opin_node(cb_opin_side, inode)));
           std::string sink_sb_port_name = generate_sb_module_grid_port_name(
             cb_opin_side,
             get_rr_graph_single_node_side(
@@ -589,8 +596,8 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
             module_sb.get_opin_node(cb_opin_side, inode));
           ModulePortId sink_sb_port_id =
             module_manager.find_module_port(sink_sb_module, sink_sb_port_name);
-          VTR_ASSERT(true == module_manager.valid_module_port_id(sink_sb_module,
-                                                                 sink_sb_port_id));
+          VTR_ASSERT(true == module_manager.valid_module_port_id(
+                               sink_sb_module, sink_sb_port_id));
           BasicPort sink_sb_port =
             module_manager.module_port(sink_sb_module, sink_sb_port_id);
 
@@ -607,9 +614,9 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
               module_manager, tile_module, tile_module, 0, src_tile_port_id,
               sink_sb_port.pins()[pin_id]);
             /* Configure the net sink */
-            module_manager.add_module_net_sink(
-              tile_module, net, src_cb_module, src_cb_instance,
-              src_cb_port_id, src_cb_port.pins()[pin_id]);
+            module_manager.add_module_net_sink(tile_module, net, src_cb_module,
+                                               src_cb_instance, src_cb_port_id,
+                                               src_cb_port.pins()[pin_id]);
           }
         }
       }

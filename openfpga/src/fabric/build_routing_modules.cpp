@@ -998,9 +998,10 @@ static void build_connection_block_module(
   std::vector<enum e_side> cb_opin_sides = rr_gsb.get_cb_opin_sides(cb_type);
   for (size_t iside = 0; iside < cb_opin_sides.size(); ++iside) {
     enum e_side cb_opin_side = cb_opin_sides[iside];
-    for (size_t inode = 0; inode < rr_gsb.get_num_cb_opin_nodes(cb_type, cb_opin_side);
-         ++inode) {
-      RRNodeId opin_node = rr_gsb.get_cb_opin_node(cb_type, cb_opin_side, inode);
+    for (size_t inode = 0;
+         inode < rr_gsb.get_num_cb_opin_nodes(cb_type, cb_opin_side); ++inode) {
+      RRNodeId opin_node =
+        rr_gsb.get_cb_opin_node(cb_type, cb_opin_side, inode);
       std::string port_name = generate_cb_module_grid_port_name(
         cb_opin_side, grids, device_annotation, rr_graph, opin_node);
       BasicPort module_port(port_name,

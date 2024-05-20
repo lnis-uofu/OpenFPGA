@@ -568,10 +568,12 @@ static void add_top_module_nets_connect_grids_and_cb(
   std::vector<enum e_side> cb_opin_sides = module_cb.get_cb_opin_sides(cb_type);
   for (size_t iside = 0; iside < cb_opin_sides.size(); ++iside) {
     enum e_side cb_opin_side = cb_opin_sides[iside];
-    for (size_t inode = 0; inode < module_cb.get_num_cb_opin_nodes(cb_type, cb_opin_side);
+    for (size_t inode = 0;
+         inode < module_cb.get_num_cb_opin_nodes(cb_type, cb_opin_side);
          ++inode) {
       /* Collect source-related information */
-      RRNodeId module_opin_node = module_cb.get_cb_opin_node(cb_type, cb_opin_side, inode);
+      RRNodeId module_opin_node =
+        module_cb.get_cb_opin_node(cb_type, cb_opin_side, inode);
       vtr::Point<size_t> cb_src_port_coord(
         rr_graph.node_xlow(module_opin_node),
         rr_graph.node_ylow(module_opin_node));
@@ -588,7 +590,8 @@ static void add_top_module_nets_connect_grids_and_cb(
       /* Note that we use the instance cb pin here!!!
        * because it has the correct coordinator for the grid!!!
        */
-      RRNodeId instance_opin_node = rr_gsb.get_cb_opin_node(cb_type, cb_opin_side, inode);
+      RRNodeId instance_opin_node =
+        rr_gsb.get_cb_opin_node(cb_type, cb_opin_side, inode);
       vtr::Point<size_t> grid_coordinate(
         rr_graph.node_xlow(instance_opin_node),
         rr_graph.node_ylow(instance_opin_node));
@@ -631,19 +634,19 @@ static void add_top_module_nets_connect_grids_and_cb(
       /* Source and sink port should match in size */
       VTR_ASSERT(src_cb_port.get_width() == sink_grid_port.get_width());
 
-      /* Create a net for each pin. Note that the src/sink tag is reverted in the following code. */
+      /* Create a net for each pin. Note that the src/sink tag is reverted in
+       * the following code. */
       for (size_t pin_id = 0; pin_id < src_cb_port.pins().size(); ++pin_id) {
         ModuleNetId net = create_module_source_pin_net(
           module_manager, top_module, sink_grid_module, sink_grid_instance,
           sink_grid_port_id, sink_grid_port.pins()[pin_id]);
         /* Configure the net sink */
-        module_manager.add_module_net_sink(
-          top_module, net, src_cb_module, src_cb_instance,
-          src_cb_port_id, src_cb_port.pins()[pin_id]);
+        module_manager.add_module_net_sink(top_module, net, src_cb_module,
+                                           src_cb_instance, src_cb_port_id,
+                                           src_cb_port.pins()[pin_id]);
       }
     }
   }
-
 }
 
 /********************************************************************
