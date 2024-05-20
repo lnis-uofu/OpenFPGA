@@ -278,10 +278,11 @@ ArchDirect read_xml_direct_circuit(pugi::xml_node& Node,
     e_direct_type direct_type = string_to_direct_type(direct_type_name);
 
     if (e_direct_type::NUM_DIRECT_TYPES == direct_type) {
-      archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_direct),
-                     "Direct type '%s' is not support! Acceptable values are "
-                     "[inner_column_or_row|part_of_cb|inter_column|inter_row]\n",
-                     direct_type_name.c_str());
+      archfpga_throw(
+        loc_data.filename_c_str(), loc_data.line(xml_direct),
+        "Direct type '%s' is not support! Acceptable values are "
+        "[inner_column_or_row|part_of_cb|inter_column|inter_row]\n",
+        direct_type_name.c_str());
     }
 
     arch_direct.set_type(direct, direct_type);
@@ -290,14 +291,17 @@ ArchDirect read_xml_direct_circuit(pugi::xml_node& Node,
     std::string direct_model_name =
       get_attribute(xml_direct, "circuit_model_name", loc_data).as_string();
 
-    /* If a direct connection is part of a connection block, the circuit model should be a MUX */
+    /* If a direct connection is part of a connection block, the circuit model
+     * should be a MUX */
     e_circuit_model_type expected_circuit_model_type = CIRCUIT_MODEL_WIRE;
     if (arch_direct.type(direct) == e_direct_type::PART_OF_CB) {
-      VTR_LOG("Direct '%s' will modelled as part of a connection block.\n", direct_name.c_str());
+      VTR_LOG("Direct '%s' will modelled as part of a connection block.\n",
+              direct_name.c_str());
       expected_circuit_model_type = CIRCUIT_MODEL_MUX;
     }
     CircuitModelId direct_model = find_routing_circuit_model(
-      xml_direct, loc_data, circuit_lib, direct_model_name, expected_circuit_model_type);
+      xml_direct, loc_data, circuit_lib, direct_model_name,
+      expected_circuit_model_type);
     arch_direct.set_circuit_model(direct, direct_model);
 
     /* The following syntax is only available for inter-column/row */
