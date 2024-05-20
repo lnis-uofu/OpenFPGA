@@ -287,7 +287,7 @@ ArchDirect read_xml_direct_circuit(pugi::xml_node& Node,
     if (e_direct_type::NUM_DIRECT_TYPES == direct_type) {
       archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_direct),
                      "Direct type '%s' is not support! Acceptable values are "
-                     "[inner_column_or_row|part_of_cb|column|row]\n",
+                     "[inner_column_or_row|part_of_cb|inter_column|inter_row]\n",
                      direct_type_name.c_str());
     }
 
