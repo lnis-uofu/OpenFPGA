@@ -704,7 +704,7 @@ static void annotate_direct_circuit_models(
     }
 
     /* Check the circuit model type */
-    if (CIRCUIT_MODEL_WIRE !=
+    if (openfpga_arch.arch_direct.type(direct_id) != e_direct_type::PART_OF_CB && CIRCUIT_MODEL_WIRE !=
         openfpga_arch.circuit_lib.model_type(circuit_model)) {
       VTR_LOG_ERROR(
         "Require circuit model type '%s' for a direct connection '%s'!\nPlease "
@@ -712,6 +712,15 @@ static void annotate_direct_circuit_models(
         CIRCUIT_MODEL_TYPE_STRING[CIRCUIT_MODEL_WIRE], direct_name.c_str());
       exit(1);
     }
+    if (openfpga_arch.arch_direct.type(direct_id) == e_direct_type::PART_OF_CB && CIRCUIT_MODEL_MUX !=
+        openfpga_arch.circuit_lib.model_type(circuit_model)) {
+      VTR_LOG_ERROR(
+        "Require circuit model type '%s' for a direct connection '%s'!\nPlease "
+        "check your OpenFPGA architecture XML!\n",
+        CIRCUIT_MODEL_TYPE_STRING[CIRCUIT_MODEL_MUX], direct_name.c_str());
+      exit(1);
+    }
+
 
     /* Now update the device annotation */
     vpr_device_annotation.add_direct_annotation(idirect, direct_id);
