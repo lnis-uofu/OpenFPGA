@@ -1059,8 +1059,6 @@ static void build_connection_block_module(
   for (ModulePortId opin_module_port_id : opin_module_port_ids) {
     ModuleNetId net = create_module_source_pin_net(
       module_manager, cb_module, cb_module, 0, opin_module_port_id, 0);
-    module_manager.add_module_net_sink(cb_module, net, cb_module, 0,
-                                       opin_module_port_id, 0);
     /* Cache the module net */
     input_port_to_module_nets[ModulePinInfo(opin_module_port_id, 0)] = net;
   }
