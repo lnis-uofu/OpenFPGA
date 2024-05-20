@@ -66,8 +66,8 @@
         <fc in_type="frac" in_val="0.15" out_type="frac" out_val="0.10"/>
         <pinlocations pattern="custom">
           <loc side="top">clb.clk clb.I0[0:3] clb.I1[0:3] clb.O[0:1]</loc>
-          <loc side="left">clb.I2[0:3] clb.I3[0:3] clb.O[2:3]</loc>
-          <loc side="right"/>
+          <loc side="right">clb.I2[0:3] clb.I3[0:3] clb.O[2:3]</loc>
+          <loc side="left"/>
           <loc side="bottom"/>
         </pinlocations>
       </sub_tile>
