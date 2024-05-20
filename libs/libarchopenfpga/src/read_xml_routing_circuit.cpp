@@ -11,6 +11,7 @@
 
 /* Headers from vtr util library */
 #include "vtr_assert.h"
+#include "vtr_log.h"
 
 /* Headers from libarchfpga */
 #include "arch_error.h"
@@ -260,13 +261,6 @@ ArchDirect read_xml_direct_circuit(pugi::xml_node& Node,
     std::string direct_name =
       get_attribute(xml_direct, "name", loc_data).as_string();
 
-    /* Get the routing segment circuit model name */
-    std::string direct_model_name =
-      get_attribute(xml_direct, "circuit_model_name", loc_data).as_string();
-
-    CircuitModelId direct_model = find_routing_circuit_model(
-      xml_direct, loc_data, circuit_lib, direct_model_name, CIRCUIT_MODEL_WIRE);
-
     /* Add to the Arch direct database */
     ArchDirectId direct = arch_direct.add_direct(direct_name);
     if (false == arch_direct.valid_direct_id(direct)) {
@@ -274,7 +268,6 @@ ArchDirect read_xml_direct_circuit(pugi::xml_node& Node,
                      "Direct name '%s' has been defined more than once!\n",
                      direct_name.c_str());
     }
-    arch_direct.set_circuit_model(direct, direct_model);
 
     /* Add more information*/
     std::string direct_type_name =
@@ -292,6 +285,20 @@ ArchDirect read_xml_direct_circuit(pugi::xml_node& Node,
     }
 
     arch_direct.set_type(direct, direct_type);
+
+    /* Get the routing segment circuit model name */
+    std::string direct_model_name =
+      get_attribute(xml_direct, "circuit_model_name", loc_data).as_string();
+
+    /* If a direct connection is part of a connection block, the circuit model should be a MUX */
+    e_circuit_model_type expected_circuit_model_type = CIRCUIT_MODEL_WIRE;
+    if (arch_direct.type(direct) == e_direct_type::PART_OF_CB) {
+      VTR_LOG("Direct '%s' will modelled as part of a connection block.\n", direct_name.c_str());
+      expected_circuit_model_type = CIRCUIT_MODEL_MUX;
+    }
+    CircuitModelId direct_model = find_routing_circuit_model(
+      xml_direct, loc_data, circuit_lib, direct_model_name, expected_circuit_model_type);
+    arch_direct.set_circuit_model(direct, direct_model);
 
     /* The following syntax is only available for inter-column/row */
     if (arch_direct.type(direct) != e_direct_type::INTER_COLUMN &&
