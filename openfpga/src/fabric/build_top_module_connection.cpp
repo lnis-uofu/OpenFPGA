@@ -576,7 +576,7 @@ static void add_top_module_nets_connect_grids_and_cb(
         rr_graph.node_xlow(module_opin_node),
         rr_graph.node_ylow(module_opin_node));
       std::string src_cb_port_name = generate_cb_module_grid_port_name(
-        cb_ipin_side, grids, vpr_device_annotation, rr_graph, module_opin_node);
+        cb_opin_side, grids, vpr_device_annotation, rr_graph, module_opin_node);
       ModulePortId src_cb_port_id =
         module_manager.find_module_port(src_cb_module, src_cb_port_name);
       VTR_ASSERT(true == module_manager.valid_module_port_id(src_cb_module,
@@ -619,7 +619,7 @@ static void add_top_module_nets_connect_grids_and_cb(
       std::string sink_grid_port_name = generate_grid_port_name(
         sink_grid_pin_width, sink_grid_pin_height, subtile_index,
         get_rr_graph_single_node_side(
-          rr_graph, rr_gsb.get_cb_opin_node(cb_type, cb_opin_side, onode)),
+          rr_graph, rr_gsb.get_cb_opin_node(cb_type, cb_opin_side, inode)),
         sink_grid_pin_info);
       ModulePortId sink_grid_port_id =
         module_manager.find_module_port(sink_grid_module, sink_grid_port_name);
