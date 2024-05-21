@@ -155,10 +155,70 @@
     </segment>
   </segmentlist>
   <directlist>
-    <direct name="clb_feedback0_to_0" from_pin="clb.O[0:0]" to_pin="clb.I0[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
-    <direct name="clb_feedback1_to_0" from_pin="clb.O[1:1]" to_pin="clb.I0[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
-    <direct name="clb_feedback2_to_0" from_pin="clb.O[2:2]" to_pin="clb.I0[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
-    <direct name="clb_feedback3_to_0" from_pin="clb.O[3:3]" to_pin="clb.I0[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback0_to_I00" from_pin="clb.O[0:0]" to_pin="clb.I0[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback1_to_I00" from_pin="clb.O[1:1]" to_pin="clb.I0[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback2_to_I00" from_pin="clb.O[2:2]" to_pin="clb.I0[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback3_to_I00" from_pin="clb.O[3:3]" to_pin="clb.I0[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback0_to_I01" from_pin="clb.O[0:0]" to_pin="clb.I0[1:1]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback1_to_I01" from_pin="clb.O[1:1]" to_pin="clb.I0[1:1]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback2_to_I01" from_pin="clb.O[2:2]" to_pin="clb.I0[1:1]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback3_to_I01" from_pin="clb.O[3:3]" to_pin="clb.I0[1:1]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback0_to_I02" from_pin="clb.O[0:0]" to_pin="clb.I0[2:2]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback1_to_I02" from_pin="clb.O[1:1]" to_pin="clb.I0[2:2]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback2_to_I02" from_pin="clb.O[2:2]" to_pin="clb.I0[2:2]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback3_to_I02" from_pin="clb.O[3:3]" to_pin="clb.I0[2:2]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback0_to_I03" from_pin="clb.O[0:0]" to_pin="clb.I0[3:3]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback1_to_I03" from_pin="clb.O[1:1]" to_pin="clb.I0[3:3]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback2_to_I03" from_pin="clb.O[2:2]" to_pin="clb.I0[3:3]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback3_to_I03" from_pin="clb.O[3:3]" to_pin="clb.I0[3:3]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback0_to_I10" from_pin="clb.O[0:0]" to_pin="clb.I1[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback1_to_I10" from_pin="clb.O[1:1]" to_pin="clb.I1[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback2_to_I10" from_pin="clb.O[2:2]" to_pin="clb.I1[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback3_to_I10" from_pin="clb.O[3:3]" to_pin="clb.I1[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback0_to_I11" from_pin="clb.O[0:0]" to_pin="clb.I1[1:1]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback1_to_I11" from_pin="clb.O[1:1]" to_pin="clb.I1[1:1]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback2_to_I11" from_pin="clb.O[2:2]" to_pin="clb.I1[1:1]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback3_to_I11" from_pin="clb.O[3:3]" to_pin="clb.I1[1:1]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback0_to_I12" from_pin="clb.O[0:0]" to_pin="clb.I1[2:2]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback1_to_I12" from_pin="clb.O[1:1]" to_pin="clb.I1[2:2]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback2_to_I12" from_pin="clb.O[2:2]" to_pin="clb.I1[2:2]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback3_to_I12" from_pin="clb.O[3:3]" to_pin="clb.I1[2:2]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback0_to_I13" from_pin="clb.O[0:0]" to_pin="clb.I1[3:3]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback1_to_I13" from_pin="clb.O[1:1]" to_pin="clb.I1[3:3]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback2_to_I13" from_pin="clb.O[2:2]" to_pin="clb.I1[3:3]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback3_to_I13" from_pin="clb.O[3:3]" to_pin="clb.I1[3:3]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback0_to_I20" from_pin="clb.O[0:0]" to_pin="clb.I2[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback1_to_I20" from_pin="clb.O[1:1]" to_pin="clb.I2[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback2_to_I20" from_pin="clb.O[2:2]" to_pin="clb.I2[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback3_to_I20" from_pin="clb.O[3:3]" to_pin="clb.I2[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback0_to_I21" from_pin="clb.O[0:0]" to_pin="clb.I2[1:1]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback1_to_I21" from_pin="clb.O[1:1]" to_pin="clb.I2[1:1]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback2_to_I21" from_pin="clb.O[2:2]" to_pin="clb.I2[1:1]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback3_to_I21" from_pin="clb.O[3:3]" to_pin="clb.I2[1:1]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback0_to_I22" from_pin="clb.O[0:0]" to_pin="clb.I2[2:2]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback1_to_I22" from_pin="clb.O[1:1]" to_pin="clb.I2[2:2]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback2_to_I22" from_pin="clb.O[2:2]" to_pin="clb.I2[2:2]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback3_to_I22" from_pin="clb.O[3:3]" to_pin="clb.I2[2:2]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback0_to_I23" from_pin="clb.O[0:0]" to_pin="clb.I2[3:3]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback1_to_I23" from_pin="clb.O[1:1]" to_pin="clb.I2[3:3]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback2_to_I23" from_pin="clb.O[2:2]" to_pin="clb.I2[3:3]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback3_to_I23" from_pin="clb.O[3:3]" to_pin="clb.I2[3:3]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback0_to_I30" from_pin="clb.O[0:0]" to_pin="clb.I3[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback1_to_I30" from_pin="clb.O[1:1]" to_pin="clb.I3[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback2_to_I30" from_pin="clb.O[2:2]" to_pin="clb.I3[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback3_to_I30" from_pin="clb.O[3:3]" to_pin="clb.I3[0:0]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback0_to_I31" from_pin="clb.O[0:0]" to_pin="clb.I3[1:1]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback1_to_I31" from_pin="clb.O[1:1]" to_pin="clb.I3[1:1]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback2_to_I31" from_pin="clb.O[2:2]" to_pin="clb.I3[1:1]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback3_to_I31" from_pin="clb.O[3:3]" to_pin="clb.I3[1:1]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback0_to_I32" from_pin="clb.O[0:0]" to_pin="clb.I3[2:2]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback1_to_I32" from_pin="clb.O[1:1]" to_pin="clb.I3[2:2]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback2_to_I32" from_pin="clb.O[2:2]" to_pin="clb.I3[2:2]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback3_to_I32" from_pin="clb.O[3:3]" to_pin="clb.I3[2:2]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback0_to_I33" from_pin="clb.O[0:0]" to_pin="clb.I3[3:3]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback1_to_I33" from_pin="clb.O[1:1]" to_pin="clb.I3[3:3]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback2_to_I33" from_pin="clb.O[2:2]" to_pin="clb.I3[3:3]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
+    <direct name="clb_feedback3_to_I33" from_pin="clb.O[3:3]" to_pin="clb.I3[3:3]" x_offset="0" y_offset="0" z_offset="0" switch_name="ipin_cblock"/>
   </directlist>
   <complexblocklist>
     <!-- Define I/O pads begin -->
