@@ -28,7 +28,7 @@ In the OpenFPGA architecture file, you may define additional attributes for each
     <direct name="string" circuit_model_name="string" interconnection_type="string" x_dir="string" y_dir="string"/>
   </directlist>
 
-.. note:: these options are optional. However, if ``interconnection_type`` is set to ``inter_column`` or ``inter_row, then `x_dir` and `y_dir` are required.
+.. note:: these options are optional. However, if ``interconnection_type`` is set to ``inter_column`` or ``inter_row``, then ``x_dir`` and ``y_dir`` are required.
 
 .. option:: interconnection_type="<string>"
 
