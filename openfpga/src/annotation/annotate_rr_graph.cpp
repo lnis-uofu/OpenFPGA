@@ -398,6 +398,9 @@ static RRGSB build_rr_gsb(const DeviceContext& vpr_device_ctx,
     temp_ipin_rr_nodes.clear();
   }
 
+  /* Build OPIN node lists for connection blocks */
+  rr_gsb.build_cb_opin_nodes(vpr_device_ctx.rr_graph);
+
   return rr_gsb;
 }
 
@@ -701,12 +704,24 @@ static void annotate_direct_circuit_models(
     }
 
     /* Check the circuit model type */
-    if (CIRCUIT_MODEL_WIRE !=
-        openfpga_arch.circuit_lib.model_type(circuit_model)) {
+    if (openfpga_arch.arch_direct.type(direct_id) !=
+          e_direct_type::PART_OF_CB &&
+        CIRCUIT_MODEL_WIRE !=
+          openfpga_arch.circuit_lib.model_type(circuit_model)) {
       VTR_LOG_ERROR(
         "Require circuit model type '%s' for a direct connection '%s'!\nPlease "
         "check your OpenFPGA architecture XML!\n",
         CIRCUIT_MODEL_TYPE_STRING[CIRCUIT_MODEL_WIRE], direct_name.c_str());
+      exit(1);
+    }
+    if (openfpga_arch.arch_direct.type(direct_id) ==
+          e_direct_type::PART_OF_CB &&
+        CIRCUIT_MODEL_MUX !=
+          openfpga_arch.circuit_lib.model_type(circuit_model)) {
+      VTR_LOG_ERROR(
+        "Require circuit model type '%s' for a direct connection '%s'!\nPlease "
+        "check your OpenFPGA architecture XML!\n",
+        CIRCUIT_MODEL_TYPE_STRING[CIRCUIT_MODEL_MUX], direct_name.c_str());
       exit(1);
     }
 

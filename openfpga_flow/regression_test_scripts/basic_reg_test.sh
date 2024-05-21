@@ -175,6 +175,8 @@ echo -e "Testing K4N4 support clock generation by internal resources";
 run-task basic_tests/k4_series/k4n4_clk_gen $@
 echo -e "Testing K4N4 support reset generation by internal resources";
 run-task basic_tests/k4_series/k4n4_rst_gen $@
+echo -e "Testing enhanced connection blocks"
+run-task basic_tests/k4_series/k4n4_ecb $@
 
 echo -e "Testing different tile organizations";
 echo -e "Testing tiles with pins only on top and left sides";
@@ -199,6 +201,7 @@ run-task basic_tests/tile_organization/homo_fabric_tile_global_tile_clock $@
 run-task basic_tests/tile_organization/homo_fabric_tile_adder_chain $@
 run-task basic_tests/tile_organization/homo_fabric_tile_clkntwk $@
 run-task basic_tests/tile_organization/hetero_fabric_tile $@
+run-task basic_tests/tile_organization/homo_fabric_tile_ecb_2x2_preconfig $@
 
 echo -e "Testing group config block";
 run-task basic_tests/group_config_block/group_config_block_homo_full_testbench $@

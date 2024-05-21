@@ -691,8 +691,9 @@ static void build_connection_block_mux_module(
   /* TODO: Generate input ports that are wired to the input bus of the routing
    * multiplexer */
   std::vector<ModulePinInfo> cb_input_port_ids =
-    find_connection_block_module_input_ports(
-      module_manager, cb_module, rr_graph, rr_gsb, cb_type, driver_rr_nodes);
+    find_connection_block_module_input_ports(module_manager, cb_module, grids,
+                                             device_annotation, rr_graph,
+                                             rr_gsb, cb_type, driver_rr_nodes);
 
   /* Link input bus port to Switch Block inputs */
   std::vector<CircuitPortId> mux_model_input_ports =
@@ -978,9 +979,7 @@ static void build_connection_block_module(
     enum e_side cb_ipin_side = cb_ipin_sides[iside];
     for (size_t inode = 0; inode < rr_gsb.get_num_ipin_nodes(cb_ipin_side);
          ++inode) {
-      const RRNodeId& ipin_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
-      vtr::Point<size_t> port_coord(rr_graph.node_xlow(ipin_node),
-                                    rr_graph.node_ylow(ipin_node));
+      RRNodeId ipin_node = rr_gsb.get_ipin_node(cb_ipin_side, inode);
       std::string port_name = generate_cb_module_grid_port_name(
         cb_ipin_side, grids, device_annotation, rr_graph, ipin_node);
       BasicPort module_port(port_name,
@@ -990,6 +989,29 @@ static void build_connection_block_module(
         cb_module, module_port, ModuleManager::MODULE_OUTPUT_PORT);
       /* Add side to the port */
       module_manager.set_port_side(cb_module, module_port_id, cb_ipin_side);
+    }
+  }
+
+  /* Add the output pins of grids which are input ports of the connection block,
+   * if there is any */
+  std::vector<ModulePortId> opin_module_port_ids;
+  std::vector<enum e_side> cb_opin_sides = rr_gsb.get_cb_opin_sides(cb_type);
+  for (size_t iside = 0; iside < cb_opin_sides.size(); ++iside) {
+    enum e_side cb_opin_side = cb_opin_sides[iside];
+    for (size_t inode = 0;
+         inode < rr_gsb.get_num_cb_opin_nodes(cb_type, cb_opin_side); ++inode) {
+      RRNodeId opin_node =
+        rr_gsb.get_cb_opin_node(cb_type, cb_opin_side, inode);
+      std::string port_name = generate_cb_module_grid_port_name(
+        cb_opin_side, grids, device_annotation, rr_graph, opin_node);
+      BasicPort module_port(port_name,
+                            1); /* Every grid output has a port size of 1 */
+      /* Grid outputs are inputs of switch blocks */
+      ModulePortId module_port_id = module_manager.add_port(
+        cb_module, module_port, ModuleManager::MODULE_INPUT_PORT);
+      /* Add side to the port */
+      module_manager.set_port_side(cb_module, module_port_id, cb_opin_side);
+      opin_module_port_ids.push_back(module_port_id);
     }
   }
 
@@ -1032,6 +1054,13 @@ static void build_connection_block_module(
     /* Cache the module net */
     input_port_to_module_nets[ModulePinInfo(
       chan_lower_input_port_id, chan_lower_input_port.pins()[pin_id])] = net;
+  }
+
+  for (ModulePortId opin_module_port_id : opin_module_port_ids) {
+    ModuleNetId net = create_module_source_pin_net(
+      module_manager, cb_module, cb_module, 0, opin_module_port_id, 0);
+    /* Cache the module net */
+    input_port_to_module_nets[ModulePinInfo(opin_module_port_id, 0)] = net;
   }
 
   /* Add sub modules of routing multiplexers or direct interconnect*/

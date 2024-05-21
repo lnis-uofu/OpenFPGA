@@ -65,21 +65,6 @@
         10e-12
       </delay_matrix>
     </circuit_model>
-    <circuit_model type="gate" name="OR2" prefix="OR2" is_default="true">
-      <design_technology type="cmos" topology="OR"/>
-      <device_technology device_model_name="logic"/>
-      <input_buffer exist="false"/>
-      <output_buffer exist="false"/>
-      <port type="input" prefix="a" size="1"/>
-      <port type="input" prefix="b" size="1"/>
-      <port type="output" prefix="out" size="1"/>
-      <delay_matrix type="rise" in_port="a b" out_port="out">
-        10e-12 5e-12
-      </delay_matrix>
-      <delay_matrix type="fall" in_port="a b" out_port="out">
-        10e-12 5e-12
-      </delay_matrix>
-    </circuit_model>
     <circuit_model type="pass_gate" name="TGATE" prefix="TGATE" is_default="true">
       <design_technology type="cmos" topology="transmission_gate" nmos_size="1" pmos_size="2"/>
       <device_technology device_model_name="logic"/>
@@ -114,8 +99,8 @@
       <wire_param model_type="pi" R="0" C="0" num_level="1"/>
       <!-- model_type could be T, res_val cap_val should be defined -->
     </circuit_model>
-    <circuit_model type="mux" name="mux_2level" prefix="mux_2level" dump_structural_verilog="true">
-      <design_technology type="cmos" structure="multi_level" num_level="2" add_const_input="true" const_input_val="1"/>
+    <circuit_model type="mux" name="mux_tree" prefix="mux_tree" dump_structural_verilog="true">
+      <design_technology type="cmos" structure="tree" add_const_input="true" const_input_val="1"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <pass_gate_logic circuit_model_name="TGATE"/>
@@ -123,17 +108,8 @@
       <port type="output" prefix="out" size="1"/>
       <port type="sram" prefix="sram" size="1"/>
     </circuit_model>
-    <circuit_model type="mux" name="mux_2level_tapbuf" prefix="mux_2level_tapbuf" dump_structural_verilog="true">
-      <design_technology type="cmos" structure="multi_level" num_level="2" add_const_input="true" const_input_val="1"/>
-      <input_buffer exist="true" circuit_model_name="INVTX1"/>
-      <output_buffer exist="true" circuit_model_name="tap_buf4"/>
-      <pass_gate_logic circuit_model_name="TGATE"/>
-      <port type="input" prefix="in" size="1"/>
-      <port type="output" prefix="out" size="1"/>
-      <port type="sram" prefix="sram" size="1"/>
-    </circuit_model>
-    <circuit_model type="mux" name="mux_1level_tapbuf" prefix="mux_1level_tapbuf" is_default="true" dump_structural_verilog="true">
-      <design_technology type="cmos" structure="one_level" add_const_input="true" const_input_val="1"/>
+    <circuit_model type="mux" name="mux_tree_tapbuf" prefix="mux_tree_tapbuf" is_default="true" dump_structural_verilog="true">
+      <design_technology type="cmos" structure="tree" add_const_input="true" const_input_val="1"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="tap_buf4"/>
       <pass_gate_logic circuit_model_name="TGATE"/>
@@ -152,27 +128,22 @@
       <port type="output" prefix="Q" size="1"/>
       <port type="clock" prefix="clk" lib_name="CK" size="1" is_global="true" default_val="0"/>
     </circuit_model>
-    <circuit_model type="lut" name="frac_lut6" prefix="frac_lut6" dump_structural_verilog="true">
-      <design_technology type="cmos" fracturable_lut="true"/>
+    <circuit_model type="lut" name="lut4" prefix="lut4" dump_structural_verilog="true">
+      <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <lut_input_inverter exist="true" circuit_model_name="INVTX1"/>
       <lut_input_buffer exist="true" circuit_model_name="buf4"/>
-      <lut_intermediate_buffer exist="true" circuit_model_name="buf4" location_map="-1-1-"/>
       <pass_gate_logic circuit_model_name="TGATE"/>
-      <port type="input" prefix="in" size="6" tri_state_map="----11" circuit_model_name="OR2"/>
-      <port type="output" prefix="lut4_out" size="4" lut_frac_level="4" lut_output_mask="0,1,2,3"/>
-      <port type="output" prefix="lut5_out" size="2" lut_frac_level="5" lut_output_mask="0,1"/>
-      <port type="output" prefix="lut6_out" size="1" lut_output_mask="0"/>
-      <port type="sram" prefix="sram" size="64"/>
-      <port type="sram" prefix="mode" size="2" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
+      <port type="input" prefix="in" size="4"/>
+      <port type="output" prefix="out" size="1"/>
+      <port type="sram" prefix="sram" size="16"/>
     </circuit_model>
     <!--Scan-chain DFF subckt ports should be defined as <D> <Q> <Qb> <CLK> <RESET> <SET>  -->
-    <circuit_model type="ccff" name="DFFR" prefix="DFFR" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
+    <circuit_model type="ccff" name="DFF" prefix="DFF" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/dff.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/dff.v">
       <design_technology type="cmos"/>
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <port type="input" prefix="pReset" lib_name="RST" size="1" is_global="true" default_val="0" is_reset="true" is_prog="true"/>
       <port type="input" prefix="D" size="1"/>
       <port type="output" prefix="Q" size="1"/>
       <port type="output" prefix="QN" size="1"/>
@@ -183,35 +154,88 @@
       <input_buffer exist="true" circuit_model_name="INVTX1"/>
       <output_buffer exist="true" circuit_model_name="INVTX1"/>
       <port type="inout" prefix="PAD" size="1" is_global="true" is_io="true" is_data_io="true"/>
-      <port type="sram" prefix="DIR" size="1" mode_select="true" circuit_model_name="DFFR" default_val="1"/>
+      <port type="sram" prefix="DIR" size="1" mode_select="true" circuit_model_name="DFF" default_val="1"/>
       <port type="input" prefix="outpad" lib_name="A" size="1"/>
       <port type="output" prefix="inpad" lib_name="Y" size="1"/>
     </circuit_model>
-    <circuit_model type="hard_logic" name="ADDF" prefix="ADDF" is_default="true" spice_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/spice/adder.sp" verilog_netlist="${OPENFPGA_PATH}/openfpga_flow/openfpga_cell_library/verilog/adder.v">
-      <design_technology type="cmos"/>
-      <input_buffer exist="true" circuit_model_name="INVTX1"/>
-      <output_buffer exist="true" circuit_model_name="INVTX1"/>
-      <port type="input" prefix="a" lib_name="A" size="1"/>
-      <port type="input" prefix="b" lib_name="B" size="1"/>
-      <port type="input" prefix="cin" lib_name="CI" size="1"/>
-      <port type="output" prefix="sumout" lib_name="SUM" size="1"/>
-      <port type="output" prefix="cout" lib_name="CO" size="1"/>
-    </circuit_model>
   </circuit_library>
   <configuration_protocol>
-    <organization type="scan_chain" circuit_model_name="DFFR"/>
+    <organization type="scan_chain" circuit_model_name="DFF"/>
   </configuration_protocol>
   <connection_block>
-    <switch name="ipin_cblock" circuit_model_name="mux_2level_tapbuf"/>
+    <switch name="ipin_cblock" circuit_model_name="mux_tree_tapbuf"/>
   </connection_block>
   <switch_block>
-    <switch name="0" circuit_model_name="mux_2level_tapbuf"/>
+    <switch name="0" circuit_model_name="mux_tree_tapbuf"/>
   </switch_block>
   <routing_segment>
     <segment name="L4" circuit_model_name="chan_segment"/>
   </routing_segment>
   <direct_connection>
-    <direct name="adder_carry" circuit_model_name="direct_interc" type="inter_column" x_dir="positive" y_dir="positive"/>
+    <direct name="clb_feedback0_to_I00" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback1_to_I00" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback2_to_I00" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback3_to_I00" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback0_to_I01" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback1_to_I01" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback2_to_I01" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback3_to_I01" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback0_to_I02" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback1_to_I02" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback2_to_I02" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback3_to_I02" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback0_to_I03" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback1_to_I03" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback2_to_I03" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback3_to_I03" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback0_to_I10" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback1_to_I10" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback2_to_I10" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback3_to_I10" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback0_to_I11" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback1_to_I11" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback2_to_I11" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback3_to_I11" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback0_to_I12" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback1_to_I12" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback2_to_I12" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback3_to_I12" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback0_to_I13" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback1_to_I13" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback2_to_I13" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback3_to_I13" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback0_to_I20" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback1_to_I20" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback2_to_I20" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback3_to_I20" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback0_to_I21" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback1_to_I21" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback2_to_I21" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback3_to_I21" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback0_to_I22" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback1_to_I22" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback2_to_I22" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback3_to_I22" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback0_to_I23" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback1_to_I23" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback2_to_I23" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback3_to_I23" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback0_to_I30" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback1_to_I30" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback2_to_I30" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback3_to_I30" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback0_to_I31" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback1_to_I31" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback2_to_I31" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback3_to_I31" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback0_to_I32" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback1_to_I32" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback2_to_I32" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback3_to_I32" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback0_to_I33" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback1_to_I33" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback2_to_I33" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
+    <direct name="clb_feedback3_to_I33" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
   </direct_connection>
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->
@@ -222,37 +246,8 @@
     <!-- End physical pb_type binding in complex block IO -->
     <!-- physical pb_type binding in complex block CLB -->
     <!-- physical mode will be the default mode if not specified -->
-    <pb_type name="clb">
-      <!-- Binding interconnect to circuit models as their physical implementation, if not defined, we use the default model -->
-      <interconnect name="crossbar" circuit_model_name="mux_2level"/>
-    </pb_type>
-    <pb_type name="clb.fle" physical_mode_name="physical"/>
-    <pb_type name="clb.fle[physical].fabric.frac_logic.frac_lut6" circuit_model_name="frac_lut6" mode_bits="11"/>
-    <pb_type name="clb.fle[physical].fabric.ff" circuit_model_name="DFFSRQ"/>
-    <pb_type name="clb.fle[physical].fabric.adder" circuit_model_name="ADDF"/>
-    <!-- Binding operating pb_type to physical pb_type -->
-    <!-- Binding operating pb_types in mode 'n2_lut5' -->
-    <pb_type name="clb.fle[n2_lut5].ble5.lut5" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut6" mode_bits="01" physical_pb_type_index_factor="0.5">
-      <!-- Binding the lut5 to the first 5 inputs of fracturable lut6 -->
-      <port name="in" physical_mode_port="in[0:4]"/>
-      <port name="out" physical_mode_port="lut5_out[0:0]" physical_mode_pin_rotate_offset="1"/>
-    </pb_type>
-    <pb_type name="clb.fle[n2_lut5].ble5.ff" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
-    <!-- Binding operating pb_types in mode 'arithmetic' -->
-    <pb_type name="clb.fle[arithmetic].arithmetic.lut4" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut6" mode_bits="11" physical_pb_type_index_factor="0.25">
-      <!-- Binding the lut4 to the first 4 inputs of fracturable lut6 -->
-      <port name="in" physical_mode_port="in[0:3]"/>
-      <port name="out" physical_mode_port="lut4_out[0:0]" physical_mode_pin_rotate_offset="1"/>
-    </pb_type>
-    <pb_type name="clb.fle[arithmetic].arithmetic.adder" physical_pb_type_name="clb.fle[physical].fabric.adder"/>
-    <pb_type name="clb.fle[arithmetic].arithmetic.ff" physical_pb_type_name="clb.fle[physical].fabric.ff"/>
-    <!-- Binding operating pb_types in mode 'ble6' -->
-    <pb_type name="clb.fle[n1_lut6].ble6.lut6" physical_pb_type_name="clb.fle[physical].fabric.frac_logic.frac_lut6" mode_bits="00">
-      <!-- Binding the lut6 to the first 6 inputs of fracturable lut6 -->
-      <port name="in" physical_mode_port="in[0:5]"/>
-      <port name="out" physical_mode_port="lut6_out"/>
-    </pb_type>
-    <pb_type name="clb.fle[n1_lut6].ble6.ff" physical_pb_type_name="clb.fle[physical].fabric.ff" physical_pb_type_index_factor="2" physical_pb_type_index_offset="0"/>
+    <pb_type name="clb.fle[n1_lut4].ble4.lut4" circuit_model_name="lut4"/>
+    <pb_type name="clb.fle[n1_lut4].ble4.ff" circuit_model_name="DFFSRQ"/>
     <!-- End physical pb_type binding in complex block IO -->
   </pb_type_annotations>
 </openfpga_architecture>

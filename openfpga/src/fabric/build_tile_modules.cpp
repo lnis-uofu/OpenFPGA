@@ -471,6 +471,158 @@ static int build_tile_module_port_and_nets_between_cb_and_pb(
       }
     }
   }
+  /* Iterate over the output pins of the Connection Block */
+  std::vector<enum e_side> cb_opin_sides = module_cb.get_cb_opin_sides(cb_type);
+  for (size_t iside = 0; iside < cb_opin_sides.size(); ++iside) {
+    enum e_side cb_opin_side = cb_opin_sides[iside];
+    for (size_t inode = 0;
+         inode < module_cb.get_num_cb_opin_nodes(cb_type, cb_opin_side);
+         ++inode) {
+      /* Collect source-related information */
+      RRNodeId module_opin_node =
+        module_cb.get_cb_opin_node(cb_type, cb_opin_side, inode);
+      vtr::Point<size_t> cb_src_port_coord(
+        rr_graph.node_xlow(module_opin_node),
+        rr_graph.node_ylow(module_opin_node));
+      std::string src_cb_port_name = generate_cb_module_grid_port_name(
+        cb_opin_side, grids, vpr_device_annotation, rr_graph, module_opin_node);
+      ModulePortId src_cb_port_id =
+        module_manager.find_module_port(src_cb_module, src_cb_port_name);
+      VTR_ASSERT(true == module_manager.valid_module_port_id(src_cb_module,
+                                                             src_cb_port_id));
+      BasicPort src_cb_port =
+        module_manager.module_port(src_cb_module, src_cb_port_id);
+
+      /* Collect sink-related information */
+      /* Note that we use the instance cb pin here!!!
+       * because it has the correct coordinator for the grid!!!
+       */
+      RRNodeId instance_opin_node =
+        rr_gsb.get_cb_opin_node(cb_type, cb_opin_side, inode);
+      vtr::Point<size_t> grid_coordinate(
+        rr_graph.node_xlow(instance_opin_node),
+        rr_graph.node_ylow(instance_opin_node));
+      std::string sink_grid_module_name =
+        generate_grid_block_module_name_in_top_module(
+          std::string(GRID_MODULE_NAME_PREFIX), grids, grid_coordinate);
+      ModuleId sink_grid_module =
+        module_manager.find_module(sink_grid_module_name);
+      VTR_ASSERT(true == module_manager.valid_module_id(sink_grid_module));
+      size_t sink_grid_pin_index = rr_graph.node_pin_num(instance_opin_node);
+
+      t_physical_tile_type_ptr grid_type_descriptor = grids.get_physical_type(
+        t_physical_tile_loc(grid_coordinate.x(), grid_coordinate.y(), layer));
+      size_t sink_grid_pin_width =
+        grid_type_descriptor->pin_width_offset[sink_grid_pin_index];
+      size_t sink_grid_pin_height =
+        grid_type_descriptor->pin_height_offset[sink_grid_pin_index];
+      BasicPort sink_grid_pin_info =
+        vpr_device_annotation.physical_tile_pin_port_info(grid_type_descriptor,
+                                                          sink_grid_pin_index);
+      VTR_ASSERT(true == sink_grid_pin_info.is_valid());
+      int subtile_index = vpr_device_annotation.physical_tile_pin_subtile_index(
+        grid_type_descriptor, sink_grid_pin_index);
+      VTR_ASSERT(OPEN != subtile_index &&
+                 subtile_index < grid_type_descriptor->capacity);
+      std::string sink_grid_port_name = generate_grid_port_name(
+        sink_grid_pin_width, sink_grid_pin_height, subtile_index,
+        get_rr_graph_single_node_side(
+          rr_graph, rr_gsb.get_cb_opin_node(cb_type, cb_opin_side, inode)),
+        sink_grid_pin_info);
+      ModulePortId sink_grid_port_id =
+        module_manager.find_module_port(sink_grid_module, sink_grid_port_name);
+      VTR_ASSERT(true == module_manager.valid_module_port_id(
+                           sink_grid_module, sink_grid_port_id));
+      BasicPort sink_grid_port =
+        module_manager.module_port(sink_grid_module, sink_grid_port_id);
+
+      /* Check if the grid is inside the tile, if not, create ports */
+      if (fabric_tile.pb_in_tile(fabric_tile_id, grid_coordinate)) {
+        if (!frame_view) {
+          size_t sink_grid_instance =
+            pb_instances[fabric_tile.find_pb_index_in_tile(fabric_tile_id,
+                                                           grid_coordinate)];
+
+          /* Source and sink port should match in size */
+          VTR_ASSERT(src_cb_port.get_width() == sink_grid_port.get_width());
+
+          /* Create a net for each pin. Note that the sink and source tags are
+           * reverted in the following code!!! */
+          for (size_t pin_id = 0; pin_id < src_cb_port.pins().size();
+               ++pin_id) {
+            ModuleNetId net = create_module_source_pin_net(
+              module_manager, tile_module, sink_grid_module, sink_grid_instance,
+              sink_grid_port_id, sink_grid_port.pins()[pin_id]);
+            /* Configure the net sink */
+            module_manager.add_module_net_sink(tile_module, net, src_cb_module,
+                                               src_cb_instance, src_cb_port_id,
+                                               src_cb_port.pins()[pin_id]);
+          }
+        }
+      } else {
+        /* Special: No need to create a new port! Since we only support OPINs
+         * from Switch blocks. Walk through all the switch blocks and find the
+         * new port that it is created when connecting pb and sb */
+        if (!frame_view) {
+          /* This is the source sb that is added to the top module */
+          const RRGSB& module_sb = device_rr_gsb.get_gsb(module_gsb_coordinate);
+          vtr::Point<size_t> module_sb_coordinate(module_sb.get_sb_x(),
+                                                  module_sb.get_sb_y());
+
+          /* Collect sink-related information */
+          std::string sink_sb_module_name =
+            generate_switch_block_module_name(module_sb_coordinate);
+          ModuleId sink_sb_module =
+            module_manager.find_module(sink_sb_module_name);
+          VTR_ASSERT(true == module_manager.valid_module_id(sink_sb_module));
+          size_t isb = fabric_tile.find_sb_index_in_tile(fabric_tile_id,
+                                                         module_sb_coordinate);
+          std::string temp_sb_module_name = generate_switch_block_module_name(
+            fabric_tile.sb_coordinates(fabric_tile_id)[isb]);
+          if (name_module_using_index) {
+            temp_sb_module_name =
+              generate_switch_block_module_name_using_index(isb);
+          }
+          /* FIXME: may find a way to determine the side. Currently using
+           * cb_opin_side is fine */
+          vtr::Point<size_t> sink_sb_port_coord(
+            rr_graph.node_xlow(module_sb.get_opin_node(cb_opin_side, inode)),
+            rr_graph.node_ylow(module_sb.get_opin_node(cb_opin_side, inode)));
+          std::string sink_sb_port_name = generate_sb_module_grid_port_name(
+            cb_opin_side,
+            get_rr_graph_single_node_side(
+              rr_graph, module_sb.get_opin_node(cb_opin_side, inode)),
+            grids, vpr_device_annotation, rr_graph,
+            module_sb.get_opin_node(cb_opin_side, inode));
+          ModulePortId sink_sb_port_id =
+            module_manager.find_module_port(sink_sb_module, sink_sb_port_name);
+          VTR_ASSERT(true == module_manager.valid_module_port_id(
+                               sink_sb_module, sink_sb_port_id));
+          BasicPort sink_sb_port =
+            module_manager.module_port(sink_sb_module, sink_sb_port_id);
+
+          sink_sb_port.set_name(generate_tile_module_port_name(
+            temp_sb_module_name, sink_sb_port.get_name()));
+          ModulePortId src_tile_port_id = module_manager.find_module_port(
+            tile_module, sink_sb_port.get_name());
+
+          /* Create a net for each pin */
+          VTR_ASSERT(src_cb_port.pins().size() == sink_sb_port.pins().size());
+          for (size_t pin_id = 0; pin_id < src_cb_port.pins().size();
+               ++pin_id) {
+            ModuleNetId net = create_module_source_pin_net(
+              module_manager, tile_module, tile_module, 0, src_tile_port_id,
+              sink_sb_port.pins()[pin_id]);
+            /* Configure the net sink */
+            module_manager.add_module_net_sink(tile_module, net, src_cb_module,
+                                               src_cb_instance, src_cb_port_id,
+                                               src_cb_port.pins()[pin_id]);
+          }
+        }
+      }
+    }
+  }
+
   return CMD_EXEC_SUCCESS;
 }
 
