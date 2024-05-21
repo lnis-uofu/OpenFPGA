@@ -78,7 +78,15 @@ In the OpenFPGA architecture file, you may define additional attributes for each
 Enhanced Connection Block
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The direct connection can also drive routing multiplexers of connection blocks.
+The direct connection can also drive routing multiplexers of connection blocks. When such connection occures in a connection block, it is called enhanced connection block.
+:numref:`fig_ecb` illustrates the difference between a regular connection block and an enhanced connection block.
+
+.. _fig_ecb:
+
+.. figure:: ./figures/ecb.png
+
+    Enhanced connection block vs. Regular connection block
+
 In such scenario, the type ``part_of_cb`` is required.
 
 .. warning:: Restrictions may be applied when building the direct connections as part of a connection block. 
