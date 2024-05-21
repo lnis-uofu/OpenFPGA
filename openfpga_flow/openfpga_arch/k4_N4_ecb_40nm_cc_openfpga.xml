@@ -188,7 +188,6 @@
     <direct name="clb_feedback1_to_I03" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
     <direct name="clb_feedback2_to_I03" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
     <direct name="clb_feedback3_to_I03" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
-
     <direct name="clb_feedback0_to_I10" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
     <direct name="clb_feedback1_to_I10" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
     <direct name="clb_feedback2_to_I10" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
@@ -205,7 +204,6 @@
     <direct name="clb_feedback1_to_I13" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
     <direct name="clb_feedback2_to_I13" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
     <direct name="clb_feedback3_to_I13" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
-
     <direct name="clb_feedback0_to_I20" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
     <direct name="clb_feedback1_to_I20" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
     <direct name="clb_feedback2_to_I20" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
@@ -222,7 +220,6 @@
     <direct name="clb_feedback1_to_I23" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
     <direct name="clb_feedback2_to_I23" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
     <direct name="clb_feedback3_to_I23" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
-
     <direct name="clb_feedback0_to_I30" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
     <direct name="clb_feedback1_to_I30" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
     <direct name="clb_feedback2_to_I30" circuit_model_name="mux_tree_tapbuf" type="part_of_cb"/>
