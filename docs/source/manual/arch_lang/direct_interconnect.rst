@@ -1,12 +1,12 @@
 .. _direct_interconnect:
 
-Inter-Tile Direct Interconnection extensions
---------------------------------------------
+Direct Interconnect
+-------------------
 
-This section introduces extensions on the architecture description file about existing interconnection description.
+This section introduces extensions on the architecture description file about direct connections between programmable blocks.
 
-Directlist
-~~~~~~~~~~
+Syntax
+~~~~~~
 
 The original direct connections in the directlist section are documented here_. Its description is given below:
 
@@ -39,14 +39,6 @@ In the OpenFPGA architecture file, you may define additional attributes for each
   - ``inter_column`` indicates the direct connections are between tiles in two columns
   - ``inter_row`` indicates the direct connections are between tiles in two rows
 
-The type ``part_of_cb`` is required, when VPR architecture defines feedback connections like:
-
-.. code-block:: xml
-
-  <directlist>
-    <direct name="feedback" from_pin="clb.O" to_pin="clb.I" x_offset="0" y_offset="0" z_offset="0"/>
-  </directlist>
-
 .. note:: The following syntax is only applicable to ``inter_column`` and ``inter_row``
 
 .. option:: x_dir="<string>"
@@ -56,15 +48,15 @@ The type ``part_of_cb`` is required, when VPR architecture defines feedback conn
 
     - x_dir="positive": 
 
-        - interconnection_type="column": a column will be connected to a column on the ``right``, if it exists.
+        - interconnection_type="inter_column": a column will be connected to a column on the ``right``, if it exists.
 
-        - interconnection_type="row": the most on the ``right`` cell from a row connection will connect the most on the ``left`` cell of next row, if it exists.
+        - interconnection_type="inter_row": the most on the ``right`` cell from a row connection will connect the most on the ``left`` cell of next row, if it exists.
 
     - x_dir="negative": 
 
-        - interconnection_type="column": a column will be connected to a column on the ``left``, if it exists.
+        - interconnection_type="inter_column": a column will be connected to a column on the ``left``, if it exists.
 
-        - interconnection_type="row": the most on the ``left`` cell from a row connection will connect the most on the ``right`` cell of next row, if it exists.
+        - interconnection_type="inter_row": the most on the ``left`` cell from a row connection will connect the most on the ``right`` cell of next row, if it exists.
 
 .. option:: y_dir="<string>"
 
@@ -73,18 +65,69 @@ The type ``part_of_cb`` is required, when VPR architecture defines feedback conn
 
     - y_dir="positive": 
 
-        - interconnection_type="column": the ``bottom`` cell of a column will be connected to the next column ``top`` cell, if it exists.
+        - interconnection_type="inter_column": the ``bottom`` cell of a column will be connected to the next column ``top`` cell, if it exists.
 
-        - interconnection_type="row": a row will be connected on an ``above`` row, if it exists.
+        - interconnection_type="inter_row": a row will be connected on an ``above`` row, if it exists.
 
     - y_dir="negative": 
 
-        - interconnection_type="column": the ``top`` cell of a column will be connected to the next column ``bottom`` cell, if it exists.
+        - interconnection_type="inter_column": the ``top`` cell of a column will be connected to the next column ``bottom`` cell, if it exists.
 
-        - interconnection_type="row": a row will be connected on a row ``below``, if it exists.
+        - interconnection_type="inter_row": a row will be connected on a row ``below``, if it exists.
 
-Example
-~~~~~~~
+Enhanced Connection Block
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The direct connection can also drive routing multiplexers of connection blocks.
+In such scenario, the type ``part_of_cb`` is required.
+
+.. warning:: Restrictions may be applied when building the direct connections as part of a connection block. 
+
+Direct connections can be inside a tile or across two tiles. Currently, across more than two tiles are not supported!
+:numref:`fig_ecb_allowed_direct_connection`` illustrates the region (in red) where any input pin is allowed to be driven by any output pin.
+
+.. _fig_ecb_allowed_direct_connection:
+
+.. figure:: ./figures/ecb_allowed_direct_connection.png
+
+    Allowed connections inside a tile for enhanced connection block (see the highlighted region)
+
+:numref:`fig_ecb_allowed_direct_connection_inner_tile_example`` shows a few feedback connections which can be built inside connection blocks. Note that feedback connections are fully allowed between any pins on the same side of a programmable block.
+
+.. _fig_ecb_allowed_direct_connection_inner_tile_example:
+
+.. figure:: ./figures/ecb_allowed_direct_connection_inner_tile_example.png
+
+    Example of feedback connections inside a tile for enhanced connection block
+
+For instance, VPR architecture defines feedback connections like:
+
+.. code-block:: xml
+
+  <directlist>
+    <!-- Add 2 inputs to the routing multiplexers inside a connection block which drives pin 'clb.I_top[0]' -->
+    <direct name="feedback" from_pin="clb.O_top[0:0]" to_pin="clb.I_top[0:0]" x_offset="0" y_offset="0" z_offset="0"/>
+    <direct name="feedback" from_pin="clb.O_top[1:1]" to_pin="clb.I_top[0:0]" x_offset="0" y_offset="0" z_offset="0"/>
+  </directlist>
+
+:numref:`fig_ecb_allowed_direct_connection_inter_tile_example`` shows a few inter-tile connections which can be built inside connection blocks. Note that inter-tile connections are subjected to the restrictions depicted in :numref:`fig_ecb_allowed_direct_connection``
+
+.. _fig_ecb_allowed_direct_connection_inter_tile_example:
+
+.. figure:: ./figures/ecb_allowed_direct_connection_inter_tile_example.png
+
+    Example of connections across two tiles for enhanced connection block
+
+:numref:`fig_ecb_forbid_direct_connection_example`` illustrates some inner-tile and inter-tile connections which are not allowed. Note that feedback connections across different sides are restricted! 
+
+.. _fig_ecb_forbid_direct_connection_example:
+
+.. figure:: ./figures/ecb_forbid_direct_connection_example.png
+
+    Restrictions on building direct connections as part of a connection block
+
+Inter-tile Connections
+~~~~~~~~~~~~~~~~~~~~~~
 
 For this example, we will study a scan-chain implementation. The description could be:
 
@@ -114,9 +157,6 @@ In OpenFPGA architecture:
 
 
 In this figure, the red arrows represent the initial direct connection. The green arrows represent the point to point connection to connect all the columns of CLB.
-
-Truth table
-~~~~~~~~~~~
 
 A point to point connection can be applied in different ways than showed in the example section. To help the designer implement his point to point connection, a truth table with our new parameters id provided below.
 
