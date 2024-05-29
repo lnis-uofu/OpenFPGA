@@ -92,7 +92,7 @@ In such scenario, the type ``part_of_cb`` is required.
 .. warning:: Restrictions may be applied when building the direct connections as part of a connection block. 
 
 Direct connections can be inside a tile or across two tiles. Currently, across more than two tiles are not supported!
-:numref:`fig_ecb_allowed_direct_connection`` illustrates the region (in red) where any input pin is allowed to be driven by any output pin.
+:numref:`fig_ecb_allowed_direct_connection` illustrates the region (in red) where any input pin is allowed to be driven by any output pin.
 
 .. _fig_ecb_allowed_direct_connection:
 
@@ -100,7 +100,7 @@ Direct connections can be inside a tile or across two tiles. Currently, across m
 
     Allowed connections inside a tile for enhanced connection block (see the highlighted region)
 
-:numref:`fig_ecb_allowed_direct_connection_inner_tile_example`` shows a few feedback connections which can be built inside connection blocks. Note that feedback connections are fully allowed between any pins on the same side of a programmable block.
+:numref:`fig_ecb_allowed_direct_connection_inner_tile_example` shows a few feedback connections which can be built inside connection blocks. Note that feedback connections are fully allowed between any pins on the same side of a programmable block.
 
 .. _fig_ecb_allowed_direct_connection_inner_tile_example:
 
@@ -118,7 +118,7 @@ For instance, VPR architecture defines feedback connections like:
     <direct name="feedback" from_pin="clb.O_top[1:1]" to_pin="clb.I_top[0:0]" x_offset="0" y_offset="0" z_offset="0"/>
   </directlist>
 
-:numref:`fig_ecb_allowed_direct_connection_inter_tile_example`` shows a few inter-tile connections which can be built inside connection blocks. Note that inter-tile connections are subjected to the restrictions depicted in :numref:`fig_ecb_allowed_direct_connection``
+:numref:`fig_ecb_allowed_direct_connection_inter_tile_example` shows a few inter-tile connections which can be built inside connection blocks. Note that inter-tile connections are subjected to the restrictions depicted in :numref:`fig_ecb_allowed_direct_connection`
 
 .. _fig_ecb_allowed_direct_connection_inter_tile_example:
 
@@ -126,7 +126,7 @@ For instance, VPR architecture defines feedback connections like:
 
     Example of connections across two tiles for enhanced connection block
 
-:numref:`fig_ecb_forbid_direct_connection_example`` illustrates some inner-tile and inter-tile connections which are not allowed. Note that feedback connections across different sides are restricted! 
+:numref:`fig_ecb_forbid_direct_connection_example` illustrates some inner-tile and inter-tile connections which are not allowed. Note that feedback connections across different sides are restricted! 
 
 .. _fig_ecb_forbid_direct_connection_example:
 
