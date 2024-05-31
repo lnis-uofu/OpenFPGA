@@ -3,7 +3,6 @@ name: Cell Library Tests
 # Run CI on push, PR, and weekly.
 
 on:
-  push:
   pull_request:
   schedule:
     - cron: "0 0 * * 0 " # weekly
