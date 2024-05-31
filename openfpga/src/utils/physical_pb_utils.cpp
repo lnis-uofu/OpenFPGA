@@ -177,20 +177,26 @@ static void synchronize_primitive_physical_pb_atom_nets(
   const AtomContext& atom_ctx, const AtomBlockId& atom_blk,
   const VprDeviceAnnotation& device_annotation, const bool& verbose) {
   /* Iterate over all the ports: input, output and clock */
+  VTR_LOGV(verbose, "Synchronizing atom nets on pb_graph_node '%s'...\n",
+           pb_graph_node->hierarchical_type_name().c_str());
 
   for (int iport = 0; iport < pb_graph_node->num_input_ports; ++iport) {
     for (int ipin = 0; ipin < pb_graph_node->num_input_pins[iport]; ++ipin) {
       /* Port exists (some LUTs may have no input and hence no port in the atom
        * netlist) */
+      VTR_LOGV(verbose, "Synchronizing atom nets on pb_graph_pin '%s'...\n",
+               pb_graph_node->input_pins[iport][ipin].to_string().c_str());
       t_model_ports* model_port =
         pb_graph_node->input_pins[iport][ipin].port->model_port;
       if (nullptr == model_port) {
+        VTR_LOGV(verbose, "Skip due to empty model port\n");
         continue;
       }
 
       AtomPortId atom_port =
         atom_ctx.nlist.find_atom_port(atom_blk, model_port);
       if (!atom_port) {
+        VTR_LOGV(verbose, "Skip due to invalid port\n");
         continue;
       }
       /* Find the atom nets mapped to the pin
@@ -207,15 +213,19 @@ static void synchronize_primitive_physical_pb_atom_nets(
     for (int ipin = 0; ipin < pb_graph_node->num_output_pins[iport]; ++ipin) {
       /* Port exists (some LUTs may have no input and hence no port in the atom
        * netlist) */
+      VTR_LOGV(verbose, "Synchronizing atom nets on pb_graph_pin '%s'...\n",
+               pb_graph_node->output_pins[iport][ipin].to_string().c_str());
       t_model_ports* model_port =
         pb_graph_node->output_pins[iport][ipin].port->model_port;
       if (nullptr == model_port) {
+        VTR_LOGV(verbose, "Skip due to empty model port\n");
         continue;
       }
 
       AtomPortId atom_port =
         atom_ctx.nlist.find_atom_port(atom_blk, model_port);
       if (!atom_port) {
+        VTR_LOGV(verbose, "Skip due to invalid port\n");
         continue;
       }
       /* Find the atom nets mapped to the pin
@@ -232,15 +242,19 @@ static void synchronize_primitive_physical_pb_atom_nets(
     for (int ipin = 0; ipin < pb_graph_node->num_clock_pins[iport]; ++ipin) {
       /* Port exists (some LUTs may have no input and hence no port in the atom
        * netlist) */
+      VTR_LOGV(verbose, "Synchronizing atom nets on pb_graph_pin '%s'...\n",
+               pb_graph_node->clock_pins[iport][ipin].to_string().c_str());
       t_model_ports* model_port =
         pb_graph_node->clock_pins[iport][ipin].port->model_port;
       if (nullptr == model_port) {
+        VTR_LOGV(verbose, "Skip due to empty model port\n");
         continue;
       }
 
       AtomPortId atom_port =
         atom_ctx.nlist.find_atom_port(atom_blk, model_port);
       if (!atom_port) {
+        VTR_LOGV(verbose, "Skip due to invalid port\n");
         continue;
       }
       /* Find the atom nets mapped to the pin
