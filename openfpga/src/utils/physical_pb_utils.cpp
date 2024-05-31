@@ -131,7 +131,7 @@ void alloc_physical_pb_from_pb_graph(
 static void update_primitive_physical_pb_pin_atom_net(
   PhysicalPb& phy_pb, const PhysicalPbId& primitive_pb,
   const t_pb_graph_pin* pb_graph_pin, const t_pb_routes& pb_route,
-  const VprDeviceAnnotation& device_annotation) {
+  const VprDeviceAnnotation& device_annotation, const AtomNetlist& atom_nlist, const bool& verbose) {
   int node_index = pb_graph_pin->pin_count_in_cluster;
   if (pb_route.count(node_index)) {
     /* The pin is mapped to a net, find the original pin in the atom netlist */
@@ -144,15 +144,12 @@ static void update_primitive_physical_pb_pin_atom_net(
       device_annotation.physical_pb_graph_pin(pb_graph_pin);
     VTR_ASSERT(nullptr != physical_pb_graph_pin);
 
-    /* Print info to help debug
-    bool verbose = true;
-    VTR_LOGV(verbose,
-             "\nSynchronize net '%lu' to physical pb_graph_pin '%s.%s[%d]'\n",
-             size_t(atom_net),
-             pb_graph_pin->parent_node->pb_type->name,
-             pb_graph_pin->port->name,
-             pb_graph_pin->pin_number);
-     */
+    if (AtomNetId::INVALID() != atom_net) {
+      VTR_LOGV(verbose,
+               "Synchronize net '%s' to physical pb_graph_pin '%s'\n",
+               atom_nlist.net_name(atom_net).c_str(),
+               pb_graph_pin->to_string().c_str());
+    }
 
     /* Check if the pin has been mapped to a net.
      * If yes, the atom net must be the same
@@ -175,7 +172,7 @@ static void synchronize_primitive_physical_pb_atom_nets(
   PhysicalPb& phy_pb, const PhysicalPbId& primitive_pb,
   const t_pb_graph_node* pb_graph_node, const t_pb_routes& pb_route,
   const AtomContext& atom_ctx, const AtomBlockId& atom_blk,
-  const VprDeviceAnnotation& device_annotation) {
+  const VprDeviceAnnotation& device_annotation, const bool& verbose) {
   /* Iterate over all the ports: input, output and clock */
 
   for (int iport = 0; iport < pb_graph_node->num_input_ports; ++iport) {
@@ -199,7 +196,7 @@ static void synchronize_primitive_physical_pb_atom_nets(
        */
       update_primitive_physical_pb_pin_atom_net(
         phy_pb, primitive_pb, &(pb_graph_node->input_pins[iport][ipin]),
-        pb_route, device_annotation);
+        pb_route, device_annotation, atom_ctx.nlist, verbose);
     }
   }
 
@@ -224,7 +221,7 @@ static void synchronize_primitive_physical_pb_atom_nets(
        */
       update_primitive_physical_pb_pin_atom_net(
         phy_pb, primitive_pb, &(pb_graph_node->output_pins[iport][ipin]),
-        pb_route, device_annotation);
+        pb_route, device_annotation, atom_ctx.nlist, verbose);
     }
   }
 
@@ -249,7 +246,7 @@ static void synchronize_primitive_physical_pb_atom_nets(
        */
       update_primitive_physical_pb_pin_atom_net(
         phy_pb, primitive_pb, &(pb_graph_node->clock_pins[iport][ipin]),
-        pb_route, device_annotation);
+        pb_route, device_annotation, atom_ctx.nlist, verbose);
     }
   }
 }
@@ -399,7 +396,7 @@ void rec_update_physical_pb_from_operating_pb(
     /* Iterate over ports and annotate the atom pins */
     synchronize_primitive_physical_pb_atom_nets(
       phy_pb, physical_pb, pb_graph_node, pb_route, atom_ctx, atom_blk,
-      device_annotation);
+      device_annotation, verbose);
     return;
   }
 
