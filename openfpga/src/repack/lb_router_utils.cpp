@@ -92,10 +92,9 @@ void save_lb_router_results_to_physical_pb(PhysicalPb& phy_pb,
       const AtomNetId& atom_net = lb_router.net_atom_net_id(net);
 
       /* Print info to help debug */
-      VTR_LOGV(verbose, "Save net '%s' to physical pb_graph_pin '%s.%s[%d]'\n",
+      VTR_LOGV(verbose, "Save net '%s' to physical pb_graph_pin '%s'\n",
                atom_netlist.net_name(atom_net).c_str(),
-               pb_graph_pin->parent_node->pb_type->name,
-               pb_graph_pin->port->name, pb_graph_pin->pin_number);
+               pb_graph_pin->to_string().c_str());
 
       if (AtomNetId::INVALID() ==
           phy_pb.pb_graph_pin_atom_net(pb_id, pb_graph_pin)) {

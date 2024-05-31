@@ -281,9 +281,8 @@ static void mark_physical_pb_wired_lut_outputs(
 
       /* Print debug info */
       VTR_LOGV(
-        verbose, "Mark physical pb_graph pin '%s.%s[%d]' as wire LUT output\n",
-        physical_pb_graph_pin->parent_node->pb_type->name,
-        physical_pb_graph_pin->port->name, physical_pb_graph_pin->pin_number);
+        verbose, "Mark physical pb_graph pin '%s' as wire LUT output\n",
+        physical_pb_graph_pin->to_string().c_str());
 
       /* Label the pins in physical_pb as driven by wired LUT*/
       phy_pb.set_wire_lut_output(primitive_pb, physical_pb_graph_pin, true);

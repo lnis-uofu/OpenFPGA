@@ -139,7 +139,7 @@ static void build_physical_pb_lut_truth_tables(
           VTR_LOGV(verbose, "Input nets:\n");
           for (auto input_net : input_nets) {
             if (AtomNetId::INVALID() == input_net) {
-              VTR_LOGV(verbose, "unconn  ");
+              VTR_LOGV(verbose, "\tunconn\n");
             } else {
               VTR_ASSERT(AtomNetId::INVALID() != input_net);
               VTR_LOGV(verbose, "\t%s\n",
