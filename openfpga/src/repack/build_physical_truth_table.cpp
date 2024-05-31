@@ -138,8 +138,13 @@ static void build_physical_pb_lut_truth_tables(
                    size_t(lut_pb_id), output_pin->to_string().c_str());
           VTR_LOGV(verbose, "Input nets:\n");
           for (auto input_net : input_nets) {
-            VTR_LOGV(verbose, "\t%s\n",
-                     atom_ctx.nlist.net_name(input_net).c_str());
+            if (AtomNetId::INVALID() == input_net) {
+              VTR_LOGV(verbose, "unconn  ");
+            } else {
+              VTR_ASSERT(AtomNetId::INVALID() != input_net);
+              VTR_LOGV(verbose, "\t%s\n",
+                       atom_ctx.nlist.net_name(input_net).c_str());
+            }
           }
           VTR_LOGV(verbose, "Output nets:\n");
           VTR_LOGV(verbose, "\t%s\n",
