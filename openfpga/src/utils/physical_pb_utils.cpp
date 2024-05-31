@@ -314,6 +314,9 @@ void rec_update_physical_pb_from_operating_pb(
     VTR_ASSERT(atom_blk);
 
     phy_pb.add_atom_block(physical_pb, atom_blk);
+    VTR_LOGV(verbose, "Update physical pb '%s' using atom block '%s'\n",
+             physical_pb_graph_node->hierarchical_type_name().c_str(),
+             atom_ctx.nlist.block_name(atom_blk).c_str()); 
 
     /* if the operating pb type has bitstream annotation,
      * bind the bitstream value from atom block to the physical pb
