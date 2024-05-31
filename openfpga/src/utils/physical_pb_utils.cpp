@@ -163,7 +163,7 @@ static void update_primitive_physical_pb_pin_atom_net(
                                primitive_pb, physical_pb_graph_pin));
     }
   } else {
-    VTR_LOGV("Skip as no valid routing traces if found on physical pb_graph_pin '%s'\n",
+    VTR_LOGV(verbose, "Skip as no valid routing traces if found on physical pb_graph_pin '%s'\n",
              pb_graph_pin->to_string().c_str());
   }
 }
