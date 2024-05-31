@@ -188,6 +188,12 @@ static void synchronize_primitive_physical_pb_atom_nets(
                pb_graph_node->input_pins[iport][ipin].to_string().c_str());
       t_model_ports* model_port =
         pb_graph_node->input_pins[iport][ipin].port->model_port;
+      /* Special for LUTs, the model port is hidden under 1 level */
+      if (LUT_CLASS == pb_graph_node->pb_type->class_type) {
+        VTR_ASSERT(pb_graph_node->pb_type->num_modes == 2);
+        model_port = pb_graph_node->child_pb_graph_nodes[1][0][0].input_pins[iport][ipin].port->model_port;
+      }
+      /* It seems that LUT port are no longer built with an internal model */ 
       if (nullptr == model_port) {
         VTR_LOGV(verbose, "Skip due to empty model port\n");
         continue;
@@ -217,6 +223,11 @@ static void synchronize_primitive_physical_pb_atom_nets(
                pb_graph_node->output_pins[iport][ipin].to_string().c_str());
       t_model_ports* model_port =
         pb_graph_node->output_pins[iport][ipin].port->model_port;
+      /* Special for LUTs, the model port is hidden under 1 level */
+      if (LUT_CLASS == pb_graph_node->pb_type->class_type) {
+        VTR_ASSERT(pb_graph_node->pb_type->num_modes == 2);
+        model_port = pb_graph_node->child_pb_graph_nodes[1][0][0].output_pins[iport][ipin].port->model_port;
+      }
       if (nullptr == model_port) {
         VTR_LOGV(verbose, "Skip due to empty model port\n");
         continue;
