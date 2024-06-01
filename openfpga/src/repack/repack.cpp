@@ -666,6 +666,7 @@ static void add_lb_router_nets(
 
     BasicPort curr_pin(std::string(source_pb_pin->port->name),
                        source_pb_pin->pin_number, source_pb_pin->pin_number);
+    /* Be very careful! There is only one routing trace for the net, it should never be ignored! */
     if ((ignored_atom_nets[atom_net_id]) &&
         (find_pb_routes_by_atom_net_among_top_pb_pins(pb, atom_net_id).size() > 1) &&
         (options.is_pin_ignore_global_nets(std::string(lb_type->pb_type->name),
