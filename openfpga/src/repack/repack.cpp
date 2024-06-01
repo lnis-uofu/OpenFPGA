@@ -643,7 +643,7 @@ static void add_lb_router_nets(
     if ((ignored_atom_nets[atom_net_id]) &&
         (options.is_pin_ignore_global_nets(std::string(lb_type->pb_type->name),
                                            curr_pin))) {
-      VTR_LOGV("Skip net '%s' as it is global and set to be ignored\n", atom_ctx.nlist.net_name(atom_net_id).c_str());
+      VTR_LOGV(verbose, "Skip net '%s' as it is global and set to be ignored\n", atom_ctx.nlist.net_name(atom_net_id).c_str());
       continue;
     }
 
