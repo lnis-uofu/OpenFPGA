@@ -131,7 +131,8 @@ void alloc_physical_pb_from_pb_graph(
 static void update_primitive_physical_pb_pin_atom_net(
   PhysicalPb& phy_pb, const PhysicalPbId& primitive_pb,
   const t_pb_graph_pin* pb_graph_pin, const t_pb_routes& pb_route,
-  const VprDeviceAnnotation& device_annotation, const AtomNetlist& atom_nlist, const bool& verbose) {
+  const VprDeviceAnnotation& device_annotation, const AtomNetlist& atom_nlist,
+  const bool& verbose) {
   int node_index = pb_graph_pin->pin_count_in_cluster;
   if (pb_route.count(node_index)) {
     /* The pin is mapped to a net, find the original pin in the atom netlist */
@@ -145,8 +146,7 @@ static void update_primitive_physical_pb_pin_atom_net(
     VTR_ASSERT(nullptr != physical_pb_graph_pin);
 
     if (AtomNetId::INVALID() != atom_net) {
-      VTR_LOGV(verbose,
-               "Synchronize net '%s' to physical pb_graph_pin '%s'\n",
+      VTR_LOGV(verbose, "Synchronize net '%s' to physical pb_graph_pin '%s'\n",
                atom_nlist.net_name(atom_net).c_str(),
                pb_graph_pin->to_string().c_str());
     }
@@ -163,7 +163,9 @@ static void update_primitive_physical_pb_pin_atom_net(
                                primitive_pb, physical_pb_graph_pin));
     }
   } else {
-    VTR_LOGV(verbose, "Skip as no valid routing traces if found on physical pb_graph_pin '%s'\n",
+    VTR_LOGV(verbose,
+             "Skip as no valid routing traces if found on physical "
+             "pb_graph_pin '%s'\n",
              pb_graph_pin->to_string().c_str());
   }
 }
@@ -191,9 +193,11 @@ static void synchronize_primitive_physical_pb_atom_nets(
       /* Special for LUTs, the model port is hidden under 1 level */
       if (LUT_CLASS == pb_graph_node->pb_type->class_type) {
         VTR_ASSERT(pb_graph_node->pb_type->num_modes == 2);
-        model_port = pb_graph_node->child_pb_graph_nodes[1][0][0].input_pins[iport][ipin].port->model_port;
+        model_port = pb_graph_node->child_pb_graph_nodes[1][0][0]
+                       .input_pins[iport][ipin]
+                       .port->model_port;
       }
-      /* It seems that LUT port are no longer built with an internal model */ 
+      /* It seems that LUT port are no longer built with an internal model */
       if (nullptr == model_port) {
         VTR_LOGV(verbose, "Skip due to empty model port\n");
         continue;
@@ -226,7 +230,9 @@ static void synchronize_primitive_physical_pb_atom_nets(
       /* Special for LUTs, the model port is hidden under 1 level */
       if (LUT_CLASS == pb_graph_node->pb_type->class_type) {
         VTR_ASSERT(pb_graph_node->pb_type->num_modes == 2);
-        model_port = pb_graph_node->child_pb_graph_nodes[1][0][0].output_pins[iport][ipin].port->model_port;
+        model_port = pb_graph_node->child_pb_graph_nodes[1][0][0]
+                       .output_pins[iport][ipin]
+                       .port->model_port;
       }
       if (nullptr == model_port) {
         VTR_LOGV(verbose, "Skip due to empty model port\n");
@@ -305,9 +311,8 @@ static void mark_physical_pb_wired_lut_outputs(
       VTR_ASSERT(nullptr != physical_pb_graph_pin);
 
       /* Print debug info */
-      VTR_LOGV(
-        verbose, "Mark physical pb_graph pin '%s' as wire LUT output\n",
-        physical_pb_graph_pin->to_string().c_str());
+      VTR_LOGV(verbose, "Mark physical pb_graph pin '%s' as wire LUT output\n",
+               physical_pb_graph_pin->to_string().c_str());
 
       /* Label the pins in physical_pb as driven by wired LUT*/
       phy_pb.set_wire_lut_output(primitive_pb, physical_pb_graph_pin, true);
@@ -344,7 +349,7 @@ void rec_update_physical_pb_from_operating_pb(
     phy_pb.add_atom_block(physical_pb, atom_blk);
     VTR_LOGV(verbose, "Update physical pb '%s' using atom block '%s'\n",
              physical_pb_graph_node->hierarchical_type_name().c_str(),
-             atom_ctx.nlist.block_name(atom_blk).c_str()); 
+             atom_ctx.nlist.block_name(atom_blk).c_str());
 
     /* if the operating pb type has bitstream annotation,
      * bind the bitstream value from atom block to the physical pb
