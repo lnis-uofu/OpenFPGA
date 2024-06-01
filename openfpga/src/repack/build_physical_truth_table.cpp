@@ -241,6 +241,8 @@ void build_physical_lut_truth_tables(
 
   for (auto blk_id : cluster_ctx.clb_nlist.blocks()) {
     PhysicalPb& physical_pb = cluster_annotation.mutable_physical_pb(blk_id);
+    VTR_LOGV(verbose, "Build truth tables for physical LUTs under clustered block '%s'...\n",
+             cluster_ctx.clb_nlist.block_name(blk_id).c_str());
     /* Find the LUT physical pb id */
     for (const PhysicalPbId& primitive_pb : physical_pb.primitive_pbs()) {
       CircuitModelId circuit_model = device_annotation.pb_type_circuit_model(
