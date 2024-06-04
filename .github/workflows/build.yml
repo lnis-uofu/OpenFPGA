@@ -119,6 +119,8 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v3
+        with:
+          persist-credentials: false
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
