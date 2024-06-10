@@ -1,12 +1,12 @@
+.. _developer:
+   Developer Guidelines
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    version_number
 
    back_compatible
-
-   contributor_guidelines
 
    ci
 
@@ -14,3 +14,9 @@
 
    tcl_api
 
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contributor Guidelines
+
+   contributor_guidelines/index
