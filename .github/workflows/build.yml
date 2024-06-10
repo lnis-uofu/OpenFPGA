@@ -7,6 +7,10 @@ on:
   schedule:
     - cron: "0 0 * * 0 " # weekly
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 # Environment variables
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)

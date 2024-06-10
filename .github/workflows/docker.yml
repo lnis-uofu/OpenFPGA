@@ -7,6 +7,10 @@ env:
   DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
   REPO_OWNER: ${{ github.repository_owner }}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   change_detect:
     name: "Detect code changes"
