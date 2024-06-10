@@ -8,6 +8,8 @@
 
    contributor_guidelines
 
+   ci
+
    cicd_setup
 
    regression_tests
