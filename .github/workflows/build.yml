@@ -119,8 +119,6 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
@@ -217,8 +215,6 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
@@ -265,8 +261,6 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Install dependencies
         run: sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
@@ -313,8 +307,6 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Install dependencies
         run: |
@@ -367,8 +359,6 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Install dependencies
         run: |
@@ -406,8 +396,6 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
       - name: Download a built artifacts
         uses: actions/download-artifact@v2
         with:
@@ -461,8 +449,6 @@ jobs:
     
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
       - name: Download a built artifacts
         uses: actions/download-artifact@v2
         with:
@@ -521,8 +507,6 @@ jobs:
           
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: ${{matrix.config.name}}_GCC-11_(Ubuntu 22.04)
         shell: bash
