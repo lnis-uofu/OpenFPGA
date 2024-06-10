@@ -11,19 +11,19 @@ Version: see [`VERSION.md`](VERSION.md)
 
 The award-winning OpenFPGA framework is the **first open-source FPGA IP generator with silicon proofs** supporting highly-customizable FPGA architectures. OpenFPGA provides complete EDA support for customized FPGAs, including Verilog-to-bitstream generation and self-testing verification. OpenFPGA opens the door to democratizing FPGA technology and EDA techniques with agile prototyping approaches and constantly evolving EDA tools for chip designers and researchers.
 
-[!TIP]
-If this is your first time working with OpenFPGA, we strongly recommend you watch the [introduction video about OpenFPGA](https://youtu.be/ocODUGcYGqo)
+> [!TIP]
+> If this is your first time working with OpenFPGA, we strongly recommend you watch the [introduction video about OpenFPGA](https://youtu.be/ocODUGcYGqo)
 
 A quick overview of OpenFPGA tools can be found [**here**](https://openfpga.readthedocs.io/en/master/tutorials/getting_started/tools/).
 We also recommend potential users check out the summary of [**technical capabilities**](https://openfpga.readthedocs.io/en/master/overview/tech_highlights/#) before compiling.
 
-[!TIP]
-Before asking for help, please checkout the [Frequently Asked Questions](https://github.com/lnis-uofu/OpenFPGA/discussions/937)
+> [!TIP]
+> Before asking for help, please checkout the [Frequently Asked Questions](https://github.com/lnis-uofu/OpenFPGA/discussions/937)
 
 ## Compilation
 
-[!NOTE]
-A tutorial video about how to compile can be found [here](https://youtu.be/F9sMRmDewM0)
+> [!NOTE]
+> A tutorial video about how to compile can be found [here](https://youtu.be/F9sMRmDewM0)
 
 Detailed guidelines are available at [**compilation guidelines**](https://openfpga.readthedocs.io/en/master/tutorials/getting_started/compile/).
 Before starting, we strongly recommend you read the required dependencies and ensure that they are correctly installed.
