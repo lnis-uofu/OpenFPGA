@@ -10,8 +10,6 @@
 
    ci
 
-   cicd_setup
-
    regression_tests
 
    tcl_api
