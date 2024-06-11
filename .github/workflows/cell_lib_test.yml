@@ -1,9 +1,12 @@
 name: Cell Library Tests
 
 # Run CI on push, PR, and weekly.
-
 on:
+  workflow_dispatch:
   pull_request:
+  push:
+    branches:
+      - 'master'
   schedule:
     - cron: "0 0 * * 0 " # weekly
 
