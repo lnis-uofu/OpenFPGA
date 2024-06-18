@@ -321,18 +321,57 @@ ModulePortId find_connection_block_module_ipin_port(
 }
 
 /*********************************************************************
+ * Generate a port for a connection block
+ ********************************************************************/
+ModulePortId find_connection_block_module_opin_port(
+  const ModuleManager& module_manager, const ModuleId& cb_module,
+  const DeviceGrid& grids, const VprDeviceAnnotation& vpr_device_annotation,
+  const RRGraphView& rr_graph, const RRGSB& rr_gsb,
+  const RRNodeId& src_rr_node) {
+  /* Ensure the src_rr_node is an input pin of a CLB */
+  VTR_ASSERT(OPIN == rr_graph.node_type(src_rr_node));
+  /* Search all the sides of a SB, see this drive_rr_node is an INPUT of this SB
+   */
+  enum e_side cb_opin_side = NUM_SIDES;
+  int cb_opin_index = -1;
+  rr_gsb.get_node_side_and_index(rr_graph, src_rr_node, IN_PORT, cb_opin_side,
+                                 cb_opin_index);
+  /* We need to be sure that drive_rr_node is part of the CB */
+  VTR_ASSERT((-1 != cb_opin_index) && (NUM_SIDES != cb_opin_side));
+  std::string port_name = generate_cb_module_grid_port_name(
+    cb_opin_side, grids, vpr_device_annotation, rr_graph,
+    rr_gsb.get_opin_node(cb_opin_side, cb_opin_index));
+
+  /* Must find a valid port id in the Switch Block module */
+  ModulePortId opin_port_id =
+    module_manager.find_module_port(cb_module, port_name);
+  VTR_ASSERT(true ==
+             module_manager.valid_module_port_id(cb_module, opin_port_id));
+  return opin_port_id;
+}
+
+/*********************************************************************
  * Generate a list of routing track middle output ports
  * for routing multiplexer inside the connection block
  ********************************************************************/
 std::vector<ModulePinInfo> find_connection_block_module_input_ports(
   const ModuleManager& module_manager, const ModuleId& cb_module,
+  const DeviceGrid& grids, const VprDeviceAnnotation& vpr_device_annotation,
   const RRGraphView& rr_graph, const RRGSB& rr_gsb, const t_rr_type& cb_type,
   const std::vector<RRNodeId>& input_rr_nodes) {
   std::vector<ModulePinInfo> input_ports;
 
   for (auto input_rr_node : input_rr_nodes) {
-    input_ports.push_back(find_connection_block_module_chan_port(
-      module_manager, cb_module, rr_graph, rr_gsb, cb_type, input_rr_node));
+    if (OPIN == rr_graph.node_type(input_rr_node)) {
+      input_ports.push_back(ModulePinInfo(
+        find_connection_block_module_opin_port(module_manager, cb_module, grids,
+                                               vpr_device_annotation, rr_graph,
+                                               rr_gsb, input_rr_node),
+        0));
+    } else {
+      input_ports.push_back(find_connection_block_module_chan_port(
+        module_manager, cb_module, rr_graph, rr_gsb, cb_type, input_rr_node));
+    }
   }
 
   return input_ports;

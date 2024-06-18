@@ -250,6 +250,10 @@ ShellCommandId add_write_preconfigured_fabric_wrapper_command_template(
   shell_cmd.add_option("include_signal_init", false,
                        "initialize all the signals in verilog testbenches");
 
+  /* add an option '--dump_waveform' */
+  shell_cmd.add_option("dump_waveform", false,
+                       "add waveform output commands to the output file");
+
   /* Add an option '--no_time_stamp' */
   shell_cmd.add_option("no_time_stamp", false,
                        "Do not print a time stamp in the output files");

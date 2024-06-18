@@ -86,6 +86,9 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   openfpga_ctx.mutable_vpr_routing_annotation().init(
     g_vpr_ctx.device().rr_graph);
 
+  // Incase the incoming edges are not built. This may happen when loading
+  // rr_graph from an external file
+  g_vpr_ctx.mutable_device().rr_graph_builder.build_in_edges();
   annotate_vpr_rr_node_nets(g_vpr_ctx.device(), g_vpr_ctx.clustering(),
                             g_vpr_ctx.routing(),
                             openfpga_ctx.mutable_vpr_routing_annotation(),
@@ -105,7 +108,6 @@ int link_arch_template(T& openfpga_ctx, const Command& cmd,
   }
 
   /* Build incoming edges as VPR only builds fan-out edges for each node */
-  g_vpr_ctx.mutable_device().rr_graph_builder.build_in_edges();
   VTR_LOG("Built %ld incoming edges for routing resource graph\n",
           g_vpr_ctx.device().rr_graph.in_edges_count());
   VTR_ASSERT(g_vpr_ctx.device().rr_graph.validate_in_edges());

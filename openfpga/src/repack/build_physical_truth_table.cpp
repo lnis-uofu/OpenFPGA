@@ -138,8 +138,13 @@ static void build_physical_pb_lut_truth_tables(
                    size_t(lut_pb_id), output_pin->to_string().c_str());
           VTR_LOGV(verbose, "Input nets:\n");
           for (auto input_net : input_nets) {
-            VTR_LOGV(verbose, "\t%s\n",
-                     atom_ctx.nlist.net_name(input_net).c_str());
+            if (AtomNetId::INVALID() == input_net) {
+              VTR_LOGV(verbose, "\tunconn\n");
+            } else {
+              VTR_ASSERT(AtomNetId::INVALID() != input_net);
+              VTR_LOGV(verbose, "\t%s\n",
+                       atom_ctx.nlist.net_name(input_net).c_str());
+            }
           }
           VTR_LOGV(verbose, "Output nets:\n");
           VTR_LOGV(verbose, "\t%s\n",
@@ -236,6 +241,10 @@ void build_physical_lut_truth_tables(
 
   for (auto blk_id : cluster_ctx.clb_nlist.blocks()) {
     PhysicalPb& physical_pb = cluster_annotation.mutable_physical_pb(blk_id);
+    VTR_LOGV(
+      verbose,
+      "Build truth tables for physical LUTs under clustered block '%s'...\n",
+      cluster_ctx.clb_nlist.block_name(blk_id).c_str());
     /* Find the LUT physical pb id */
     for (const PhysicalPbId& primitive_pb : physical_pb.primitive_pbs()) {
       CircuitModelId circuit_model = device_annotation.pb_type_circuit_model(

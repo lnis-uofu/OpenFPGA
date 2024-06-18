@@ -71,7 +71,7 @@ ArchDirectId ArchDirect::add_direct(const std::string& name) {
   direct_ids_.push_back(direct);
   names_.push_back(name);
   circuit_models_.push_back(CircuitModelId::INVALID());
-  types_.emplace_back(NUM_DIRECT_TYPES);
+  types_.emplace_back(e_direct_type::NUM_DIRECT_TYPES);
   directions_.emplace_back(vtr::Point<e_direct_direction>(
     NUM_DIRECT_DIRECTIONS, NUM_DIRECT_DIRECTIONS));
 

@@ -2,7 +2,6 @@
 
 set -e
 source openfpga.sh
-PYTHON_EXEC=python3.8
 ###############################################
 # OpenFPGA Shell with VPR8
 ##############################################
@@ -29,6 +28,7 @@ run-task fpga_bitstream/load_external_architecture_bitstream $@
 echo -e "Testing repacker capability in identifying wire LUTs";
 run-task fpga_bitstream/repack_wire_lut $@
 run-task fpga_bitstream/repack_wire_lut_strong $@
+run-task fpga_bitstream/repack_ignore_nets $@
 
 echo -e "Testing overloading default paths for programmable interconnect when generating bitstream";
 run-task fpga_bitstream/overload_mux_default_path $@

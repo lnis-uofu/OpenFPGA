@@ -3,26 +3,36 @@ name: Code Format
 # Run CI on push, PR, and weekly.
 
 on:
-  push:
+  workflow_dispatch:
   pull_request:
+  push:
+    branches:
+      - 'master'
   schedule:
     - cron: "0 0 * * 0 " # weekly
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 # Multiple job to tests
 jobs:
   change_detect:
     name: "Check"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
         config:
           - name: "C/C++"
             code_type: "-cpp"
+            dependency_version: "ubuntu22p04"
           - name: "XML"
             code_type: "-xml"
+            dependency_version: "ubuntu22p04"
           - name: "Python"
             code_type: "-py"
+            dependency_version: "ubuntu22p04"
     steps:
       - name: Cancel previous
         uses: styfle/cancel-workflow-action@0.9.1
@@ -34,12 +44,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo bash ./.github/workflows/install_dependencies_build.sh
+          sudo bash ./.github/workflows/install_dependencies_build_${{ matrix.config.dependency_version }}.sh
           sudo python3 -m pip install -r requirements.txt
           
       - name: Dump tool versions
         run: |
-          clang-format-10 --version
+          clang-format-14 --version
           black --version
 
       - name: Check format

@@ -197,7 +197,7 @@ static vtr::Point<size_t> find_inter_direct_destination_coordinate(
    * Our search space will start from the next column
    * and ends at the RIGHT side of fabric
    */
-  if (INTER_COLUMN == arch_direct.type(arch_direct_id)) {
+  if (e_direct_type::INTER_COLUMN == arch_direct.type(arch_direct_id)) {
     if (POSITIVE_DIR == arch_direct.x_dir(arch_direct_id)) {
       /* Our first search space will be in x-direction:
        *
@@ -262,7 +262,7 @@ static vtr::Point<size_t> find_inter_direct_destination_coordinate(
    * Our search space will start from the next column
    * and ends at the RIGHT side of fabric
    */
-  if (INTER_ROW == arch_direct.type(arch_direct_id)) {
+  if (e_direct_type::INTER_ROW == arch_direct.type(arch_direct_id)) {
     if (POSITIVE_DIR == arch_direct.y_dir(arch_direct_id)) {
       /* Our first search space will be in y-direction:
        *
@@ -326,10 +326,11 @@ static vtr::Point<size_t> find_inter_direct_destination_coordinate(
   for (size_t ix : first_search_space) {
     std::vector<vtr::Point<size_t>> next_col_row_coords;
     for (size_t iy : second_search_space) {
-      if (INTER_COLUMN == arch_direct.type(arch_direct_id)) {
+      if (e_direct_type::INTER_COLUMN == arch_direct.type(arch_direct_id)) {
         next_col_row_coords.push_back(vtr::Point<size_t>(ix, iy));
       } else {
-        VTR_ASSERT(INTER_ROW == arch_direct.type(arch_direct_id));
+        VTR_ASSERT(e_direct_type::INTER_ROW ==
+                   arch_direct.type(arch_direct_id));
         /* For cross-row connection, our search space is flipped */
         next_col_row_coords.push_back(vtr::Point<size_t>(iy, ix));
       }
@@ -549,8 +550,8 @@ static void build_inter_column_row_tile_direct(
 
   /* Go through the direct connection list, see if we need intra-column/row
    * connection here */
-  if ((INTER_COLUMN != arch_direct.type(arch_direct_id)) &&
-      (INTER_ROW != arch_direct.type(arch_direct_id))) {
+  if ((e_direct_type::INTER_COLUMN != arch_direct.type(arch_direct_id)) &&
+      (e_direct_type::INTER_ROW != arch_direct.type(arch_direct_id))) {
     return;
   }
   /* For cross-column connection, we will search the first valid grid in each
@@ -568,7 +569,7 @@ static void build_inter_column_row_tile_direct(
    *   +------+
    *
    */
-  if (INTER_COLUMN == arch_direct.type(arch_direct_id)) {
+  if (e_direct_type::INTER_COLUMN == arch_direct.type(arch_direct_id)) {
     for (size_t ix = 1; ix < device_ctx.grid.width() - 1; ++ix) {
       std::vector<vtr::Point<size_t>> next_col_src_grid_coords;
       /* For negative y- direction, we should start from y = ny */
@@ -671,7 +672,7 @@ static void build_inter_column_row_tile_direct(
   }
 
   /* Reach here, it must be a cross-row connection */
-  VTR_ASSERT(INTER_ROW == arch_direct.type(arch_direct_id));
+  VTR_ASSERT(e_direct_type::INTER_ROW == arch_direct.type(arch_direct_id));
   /* For cross-row connection, we will search the first valid grid in each
    * column from x = 1 to x = nx
    *
@@ -804,9 +805,14 @@ TileDirect build_device_tile_direct(const DeviceContext& device_ctx,
       exit(1);
     }
     /* Build from original VPR arch definition */
-    build_inner_column_row_tile_direct(tile_direct,
-                                       device_ctx.arch->Directs[idirect],
-                                       device_ctx, arch_direct_id, verbose);
+    if (e_direct_type::INNER_COLUMN_OR_ROW ==
+        arch_direct.type(arch_direct_id)) {
+      build_inner_column_row_tile_direct(tile_direct,
+                                         device_ctx.arch->Directs[idirect],
+                                         device_ctx, arch_direct_id, verbose);
+      /* Skip those direct connections which belong part of a connection block
+       */
+    }
     /* Build from OpenFPGA arch definition */
     build_inter_column_row_tile_direct(
       tile_direct, device_ctx.arch->Directs[idirect], device_ctx, arch_direct,

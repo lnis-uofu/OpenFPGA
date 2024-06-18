@@ -2,7 +2,6 @@
 
 set -e
 source openfpga.sh
-PYTHON_EXEC=python3.8
 ###############################################
 # OpenFPGA Shell with VPR8
 ##############################################
@@ -14,6 +13,10 @@ run-task basic_tests/vpr_standalone $@
 echo -e "Test source commands in openfpga shell"
 run-task basic_tests/source_command/source_string $@
 run-task basic_tests/source_command/source_file $@
+
+echo -e "Testing preloading rr_graph"
+run-task basic_tests/preload_rr_graph/preload_rr_graph_xml $@
+run-task basic_tests/preload_rr_graph/preload_rr_graph_bin $@
 
 echo -e "Testing testbenches using fpga core wrapper"
 run-task basic_tests/full_testbench/fpga_core_wrapper $@
@@ -78,6 +81,7 @@ run-task basic_tests/full_testbench/ql_memory_bank $@
 run-task basic_tests/full_testbench/ql_memory_bank_use_wlr $@
 run-task basic_tests/full_testbench/multi_region_ql_memory_bank $@
 run-task basic_tests/full_testbench/ql_memory_bank_flatten $@
+run-task basic_tests/full_testbench/ql_memory_bank_flatten_defined_wl $@
 run-task basic_tests/full_testbench/ql_memory_bank_flatten_use_wlr $@
 run-task basic_tests/full_testbench/ql_memory_bank_shift_register $@
 run-task basic_tests/full_testbench/ql_memory_bank_shift_register_use_wlr $@
@@ -171,6 +175,8 @@ echo -e "Testing K4N4 support clock generation by internal resources";
 run-task basic_tests/k4_series/k4n4_clk_gen $@
 echo -e "Testing K4N4 support reset generation by internal resources";
 run-task basic_tests/k4_series/k4n4_rst_gen $@
+echo -e "Testing enhanced connection blocks"
+run-task basic_tests/k4_series/k4n4_ecb $@
 
 echo -e "Testing different tile organizations";
 echo -e "Testing tiles with pins only on top and left sides";
@@ -195,6 +201,7 @@ run-task basic_tests/tile_organization/homo_fabric_tile_global_tile_clock $@
 run-task basic_tests/tile_organization/homo_fabric_tile_adder_chain $@
 run-task basic_tests/tile_organization/homo_fabric_tile_clkntwk $@
 run-task basic_tests/tile_organization/hetero_fabric_tile $@
+run-task basic_tests/tile_organization/homo_fabric_tile_ecb_2x2_preconfig $@
 
 echo -e "Testing group config block";
 run-task basic_tests/group_config_block/group_config_block_homo_full_testbench $@
@@ -252,6 +259,12 @@ run-task basic_tests/write_gsb/write_gsb_to_xml_compress_routing $@
 run-task basic_tests/write_gsb/write_unique_gsb_to_xml $@
 run-task basic_tests/write_gsb/write_unique_gsb_to_xml_compress_routing $@
 
+echo -e "Testing fabric pin physical location file"
+run-task basic_tests/write_fabric_pin_phy_loc/write_fabric_pin_phy_loc_default $@
+run-task basic_tests/write_fabric_pin_phy_loc/write_fabric_pin_phy_loc_for_tiles $@
+run-task basic_tests/write_fabric_pin_phy_loc/write_fabric_pin_phy_loc_show_invalid_sides $@
+run-task basic_tests/write_fabric_pin_phy_loc/write_fabric_pin_phy_loc_wildcards $@
+
 echo -e "Testing bus group features";
 run-task basic_tests/bus_group/preconfig_testbench_explicit_mapping $@
 run-task basic_tests/bus_group/preconfig_testbench_implicit_mapping $@
@@ -279,6 +292,7 @@ echo -e "Testing output files without time stamp";
 run-task basic_tests/no_time_stamp/device_1x1 $@
 run-task basic_tests/no_time_stamp/device_4x4 $@
 run-task basic_tests/no_time_stamp/no_cout_in_gsb $@
+run-task basic_tests/no_time_stamp/dump_waveform $@
 # Run git-diff to ensure no changes on the golden netlists
 # Switch to root path in case users are running the tests in another location
 cd ${OPENFPGA_PATH}

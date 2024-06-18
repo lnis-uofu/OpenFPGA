@@ -131,7 +131,8 @@ void alloc_physical_pb_from_pb_graph(
 static void update_primitive_physical_pb_pin_atom_net(
   PhysicalPb& phy_pb, const PhysicalPbId& primitive_pb,
   const t_pb_graph_pin* pb_graph_pin, const t_pb_routes& pb_route,
-  const VprDeviceAnnotation& device_annotation) {
+  const VprDeviceAnnotation& device_annotation, const AtomNetlist& atom_nlist,
+  const bool& verbose) {
   int node_index = pb_graph_pin->pin_count_in_cluster;
   if (pb_route.count(node_index)) {
     /* The pin is mapped to a net, find the original pin in the atom netlist */
@@ -144,15 +145,11 @@ static void update_primitive_physical_pb_pin_atom_net(
       device_annotation.physical_pb_graph_pin(pb_graph_pin);
     VTR_ASSERT(nullptr != physical_pb_graph_pin);
 
-    /* Print info to help debug
-    bool verbose = true;
-    VTR_LOGV(verbose,
-             "\nSynchronize net '%lu' to physical pb_graph_pin '%s.%s[%d]'\n",
-             size_t(atom_net),
-             pb_graph_pin->parent_node->pb_type->name,
-             pb_graph_pin->port->name,
-             pb_graph_pin->pin_number);
-     */
+    if (AtomNetId::INVALID() != atom_net) {
+      VTR_LOGV(verbose, "Synchronize net '%s' to physical pb_graph_pin '%s'\n",
+               atom_nlist.net_name(atom_net).c_str(),
+               pb_graph_pin->to_string().c_str());
+    }
 
     /* Check if the pin has been mapped to a net.
      * If yes, the atom net must be the same
@@ -165,6 +162,11 @@ static void update_primitive_physical_pb_pin_atom_net(
       VTR_ASSERT(atom_net == phy_pb.pb_graph_pin_atom_net(
                                primitive_pb, physical_pb_graph_pin));
     }
+  } else {
+    VTR_LOGV(verbose,
+             "Skip as no valid routing traces if found on physical "
+             "pb_graph_pin '%s'\n",
+             pb_graph_pin->to_string().c_str());
   }
 }
 
@@ -175,22 +177,39 @@ static void synchronize_primitive_physical_pb_atom_nets(
   PhysicalPb& phy_pb, const PhysicalPbId& primitive_pb,
   const t_pb_graph_node* pb_graph_node, const t_pb_routes& pb_route,
   const AtomContext& atom_ctx, const AtomBlockId& atom_blk,
-  const VprDeviceAnnotation& device_annotation) {
+  const VprDeviceAnnotation& device_annotation, const bool& verbose) {
   /* Iterate over all the ports: input, output and clock */
+  VTR_LOGV(verbose, "Synchronizing atom nets on pb_graph_node '%s'...\n",
+           pb_graph_node->hierarchical_type_name().c_str());
 
   for (int iport = 0; iport < pb_graph_node->num_input_ports; ++iport) {
     for (int ipin = 0; ipin < pb_graph_node->num_input_pins[iport]; ++ipin) {
       /* Port exists (some LUTs may have no input and hence no port in the atom
        * netlist) */
+      VTR_LOGV(verbose, "Synchronizing atom nets on pb_graph_pin '%s'...\n",
+               pb_graph_node->input_pins[iport][ipin].to_string().c_str());
       t_model_ports* model_port =
         pb_graph_node->input_pins[iport][ipin].port->model_port;
+      /* Special for LUTs, the model port is hidden under 1 level
+       * Do NOT do this. Net mapping on LUT inputs may be swapped during
+       * rerouting
+       * if (LUT_CLASS == pb_graph_node->pb_type->class_type) {
+       *   VTR_ASSERT(pb_graph_node->pb_type->num_modes == 2);
+       *   model_port = pb_graph_node->child_pb_graph_nodes[1][0][0]
+       *                  .input_pins[iport][ipin]
+       *                  .port->model_port;
+       * }
+       */
+      /* It seems that LUT port are no longer built with an internal model */
       if (nullptr == model_port) {
+        VTR_LOGV(verbose, "Skip due to empty model port\n");
         continue;
       }
 
       AtomPortId atom_port =
         atom_ctx.nlist.find_atom_port(atom_blk, model_port);
       if (!atom_port) {
+        VTR_LOGV(verbose, "Skip due to invalid port\n");
         continue;
       }
       /* Find the atom nets mapped to the pin
@@ -199,7 +218,7 @@ static void synchronize_primitive_physical_pb_atom_nets(
        */
       update_primitive_physical_pb_pin_atom_net(
         phy_pb, primitive_pb, &(pb_graph_node->input_pins[iport][ipin]),
-        pb_route, device_annotation);
+        pb_route, device_annotation, atom_ctx.nlist, verbose);
     }
   }
 
@@ -207,15 +226,29 @@ static void synchronize_primitive_physical_pb_atom_nets(
     for (int ipin = 0; ipin < pb_graph_node->num_output_pins[iport]; ++ipin) {
       /* Port exists (some LUTs may have no input and hence no port in the atom
        * netlist) */
+      VTR_LOGV(verbose, "Synchronizing atom nets on pb_graph_pin '%s'...\n",
+               pb_graph_node->output_pins[iport][ipin].to_string().c_str());
       t_model_ports* model_port =
         pb_graph_node->output_pins[iport][ipin].port->model_port;
+      /* Special for LUTs, the model port is hidden under 1 level
+       * Do NOT do this. Net mapping on LUT inputs may be swapped during
+       * rerouting
+       * if (LUT_CLASS == pb_graph_node->pb_type->class_type) {
+       *  VTR_ASSERT(pb_graph_node->pb_type->num_modes == 2);
+       *  model_port = pb_graph_node->child_pb_graph_nodes[1][0][0]
+       *                 .output_pins[iport][ipin]
+       *                 .port->model_port;
+       * }
+       */
       if (nullptr == model_port) {
+        VTR_LOGV(verbose, "Skip due to empty model port\n");
         continue;
       }
 
       AtomPortId atom_port =
         atom_ctx.nlist.find_atom_port(atom_blk, model_port);
       if (!atom_port) {
+        VTR_LOGV(verbose, "Skip due to invalid port\n");
         continue;
       }
       /* Find the atom nets mapped to the pin
@@ -224,7 +257,7 @@ static void synchronize_primitive_physical_pb_atom_nets(
        */
       update_primitive_physical_pb_pin_atom_net(
         phy_pb, primitive_pb, &(pb_graph_node->output_pins[iport][ipin]),
-        pb_route, device_annotation);
+        pb_route, device_annotation, atom_ctx.nlist, verbose);
     }
   }
 
@@ -232,15 +265,19 @@ static void synchronize_primitive_physical_pb_atom_nets(
     for (int ipin = 0; ipin < pb_graph_node->num_clock_pins[iport]; ++ipin) {
       /* Port exists (some LUTs may have no input and hence no port in the atom
        * netlist) */
+      VTR_LOGV(verbose, "Synchronizing atom nets on pb_graph_pin '%s'...\n",
+               pb_graph_node->clock_pins[iport][ipin].to_string().c_str());
       t_model_ports* model_port =
         pb_graph_node->clock_pins[iport][ipin].port->model_port;
       if (nullptr == model_port) {
+        VTR_LOGV(verbose, "Skip due to empty model port\n");
         continue;
       }
 
       AtomPortId atom_port =
         atom_ctx.nlist.find_atom_port(atom_blk, model_port);
       if (!atom_port) {
+        VTR_LOGV(verbose, "Skip due to invalid port\n");
         continue;
       }
       /* Find the atom nets mapped to the pin
@@ -249,7 +286,7 @@ static void synchronize_primitive_physical_pb_atom_nets(
        */
       update_primitive_physical_pb_pin_atom_net(
         phy_pb, primitive_pb, &(pb_graph_node->clock_pins[iport][ipin]),
-        pb_route, device_annotation);
+        pb_route, device_annotation, atom_ctx.nlist, verbose);
     }
   }
 }
@@ -280,10 +317,8 @@ static void mark_physical_pb_wired_lut_outputs(
       VTR_ASSERT(nullptr != physical_pb_graph_pin);
 
       /* Print debug info */
-      VTR_LOGV(
-        verbose, "Mark physical pb_graph pin '%s.%s[%d]' as wire LUT output\n",
-        physical_pb_graph_pin->parent_node->pb_type->name,
-        physical_pb_graph_pin->port->name, physical_pb_graph_pin->pin_number);
+      VTR_LOGV(verbose, "Mark physical pb_graph pin '%s' as wire LUT output\n",
+               physical_pb_graph_pin->to_string().c_str());
 
       /* Label the pins in physical_pb as driven by wired LUT*/
       phy_pb.set_wire_lut_output(primitive_pb, physical_pb_graph_pin, true);
@@ -318,6 +353,9 @@ void rec_update_physical_pb_from_operating_pb(
     VTR_ASSERT(atom_blk);
 
     phy_pb.add_atom_block(physical_pb, atom_blk);
+    VTR_LOGV(verbose, "Update physical pb '%s' using atom block '%s'\n",
+             physical_pb_graph_node->hierarchical_type_name().c_str(),
+             atom_ctx.nlist.block_name(atom_blk).c_str());
 
     /* if the operating pb type has bitstream annotation,
      * bind the bitstream value from atom block to the physical pb
@@ -400,7 +438,7 @@ void rec_update_physical_pb_from_operating_pb(
     /* Iterate over ports and annotate the atom pins */
     synchronize_primitive_physical_pb_atom_nets(
       phy_pb, physical_pb, pb_graph_node, pb_route, atom_ctx, atom_blk,
-      device_annotation);
+      device_annotation, verbose);
     return;
   }
 

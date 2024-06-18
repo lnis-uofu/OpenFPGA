@@ -1,0 +1,24 @@
+sb_0__0_:
+  - mux_tree_tapbuf_size4
+  - mux_tree_tapbuf_size3
+  - mux_tree_tapbuf_size2
+sb_0__1_:
+  - mux_tree_tapbuf_size4
+  - mux_tree_tapbuf_size3
+  - mux_tree_tapbuf_size2
+sb_1__0_:
+  - mux_tree_tapbuf_size4
+  - mux_tree_tapbuf_size3
+  - mux_tree_tapbuf_size2
+sb_1__1_:
+  - mux_tree_tapbuf_size4
+  - mux_tree_tapbuf_size3
+  - mux_tree_tapbuf_size2
+cbx_1__0_:
+  - mux_tree_tapbuf_size6
+cbx_1__1_:
+  - mux_tree_tapbuf_size6
+cby_0__1_:
+  - mux_tree_tapbuf_size6
+cby_1__1_:
+  - mux_tree_tapbuf_size6

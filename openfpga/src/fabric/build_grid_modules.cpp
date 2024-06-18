@@ -103,8 +103,10 @@ static void add_grid_module_pb_type_ports(
           }
           BasicPort grid_port(port_name, 0, 0);
           /* Add the port to the module */
-          module_manager.add_port(grid_module, grid_port,
-                                  pin_type2type_map[pin_class_type]);
+          ModulePortId grid_port_id = module_manager.add_port(
+            grid_module, grid_port, pin_type2type_map[pin_class_type]);
+          /* Set port side */
+          module_manager.set_port_side(grid_module, grid_port_id, side);
         }
       }
     }
@@ -1164,6 +1166,7 @@ static int build_physical_tile_module(
   const e_config_protocol_type& sram_orgz_type,
   const CircuitModelId& sram_model, t_physical_tile_type_ptr phy_block_type,
   const TileAnnotation& tile_annotation, const e_side& border_side,
+  const QLMemoryBankConfigSetting* ql_memory_bank_config_setting,
   const bool& duplicate_grid_pin, const bool& group_config_block,
   const bool& verbose) {
   int status = CMD_EXEC_SUCCESS;
@@ -1332,9 +1335,10 @@ static int build_physical_tile_module(
       module_manager, grid_module, circuit_lib, sram_model, sram_orgz_type,
       config_child_type);
   if (0 < module_num_config_bits) {
-    add_pb_sram_ports_to_module_manager(module_manager, grid_module,
-                                        circuit_lib, sram_model, sram_orgz_type,
-                                        module_num_config_bits);
+    add_pb_sram_ports_to_module_manager(
+      module_manager, grid_module, circuit_lib, sram_model, sram_orgz_type,
+      module_num_config_bits,
+      ql_memory_bank_config_setting->pb_setting(phy_block_type->name).num_wl);
   }
 
   /* Add module nets to connect memory cells inside
@@ -1372,8 +1376,10 @@ int build_grid_modules(
   const CircuitLibrary& circuit_lib, const MuxLibrary& mux_lib,
   const TileAnnotation& tile_annotation,
   const e_config_protocol_type& sram_orgz_type,
-  const CircuitModelId& sram_model, const bool& duplicate_grid_pin,
-  const bool& group_config_block, const bool& verbose) {
+  const CircuitModelId& sram_model,
+  const QLMemoryBankConfigSetting* ql_memory_bank_config_setting,
+  const bool& duplicate_grid_pin, const bool& group_config_block,
+  const bool& verbose) {
   /* Start time count */
   vtr::ScopedStartFinishTimer timer("Build grid modules");
 
@@ -1429,7 +1435,8 @@ int build_grid_modules(
         status = build_physical_tile_module(
           module_manager, decoder_lib, device_annotation, circuit_lib,
           sram_orgz_type, sram_model, &physical_tile, tile_annotation,
-          io_type_side, duplicate_grid_pin, group_config_block, verbose);
+          io_type_side, ql_memory_bank_config_setting, duplicate_grid_pin,
+          group_config_block, verbose);
         if (status != CMD_EXEC_SUCCESS) {
           return CMD_EXEC_FATAL_ERROR;
         }
@@ -1439,7 +1446,8 @@ int build_grid_modules(
       status = build_physical_tile_module(
         module_manager, decoder_lib, device_annotation, circuit_lib,
         sram_orgz_type, sram_model, &physical_tile, tile_annotation, NUM_SIDES,
-        duplicate_grid_pin, group_config_block, verbose);
+        ql_memory_bank_config_setting, duplicate_grid_pin, group_config_block,
+        verbose);
       if (status != CMD_EXEC_SUCCESS) {
         return CMD_EXEC_FATAL_ERROR;
       }

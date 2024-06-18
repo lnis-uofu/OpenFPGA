@@ -27,11 +27,12 @@ build_fabric --compress_routing #--verbose
 
 # Write the fabric hierarchy of module graph to a file
 # This is used by hierarchical PnR flows
-write_fabric_hierarchy --file ./fabric_hierarchy.txt
+write_fabric_hierarchy --file ${OPENFPGA_OUTPUT_DIR}/mux_modules.yaml --depth 1 --module (grid|cbx|cby|sb)* --filter *mux*_size([0-9]+) --verbose --exclude_empty_modules
 
 # Write the fabric I/O attributes to a file
 # This is used by pin constraint files
 write_fabric_io_info --file ${OPENFPGA_OUTPUT_DIR}/fabric_io_location.xml --verbose --no_time_stamp
+write_fabric_pin_physical_location --file ${OPENFPGA_OUTPUT_DIR}/fabric_pin_phy_loc.xml --verbose --no_time_stamp --module *
 
 # Write gsb to XML
 write_gsb_to_xml --file ${OPENFPGA_OUTPUT_DIR}/gsb_xml --verbose
@@ -65,7 +66,7 @@ write_fabric_verilog --file ${OPENFPGA_OUTPUT_DIR} --explicit_port_mapping --inc
 #  - Enable top-level testbench which is a full verification including programming circuit and core logic of FPGA
 #  - Enable pre-configured top-level testbench which is a fast verification skipping programming phase
 #  - Simulation ini file is optional and is needed only when you need to interface different HDL simulators using openfpga flow-run scripts
-write_preconfigured_fabric_wrapper --embed_bitstream iverilog --file ${OPENFPGA_OUTPUT_DIR} --explicit_port_mapping --no_time_stamp
+write_preconfigured_fabric_wrapper --embed_bitstream iverilog --file ${OPENFPGA_OUTPUT_DIR} --explicit_port_mapping --no_time_stamp ${OPENFPGA_PRECONFIG_FABRIC_WRAPPER_DUMP_WAVEFORM}
 write_preconfigured_testbench --file ${OPENFPGA_OUTPUT_DIR} --reference_benchmark_file_path ${REFERENCE_VERILOG_TESTBENCH} --use_relative_path --explicit_port_mapping --no_time_stamp
 
 # Write the SDC files for PnR backend

@@ -223,7 +223,7 @@
     <segment name="L4" circuit_model_name="chan_segment"/>
   </routing_segment>
   <direct_connection>
-    <direct name="adder_carry" circuit_model_name="direct_interc" type="column" x_dir="positive" y_dir="positive"/>
+    <direct name="adder_carry" circuit_model_name="direct_interc" type="inter_column" x_dir="positive" y_dir="positive"/>
   </direct_connection>
   <pb_type_annotations>
     <!-- physical pb_type binding in complex block IO -->

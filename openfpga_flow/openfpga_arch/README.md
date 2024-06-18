@@ -37,5 +37,6 @@ Note that an OpenFPGA architecture can be applied to multiple VPR architecture f
   * <Int> is the number of clocks 
   * <Pin> When specified, multiple clocks are in separated pins with different names
 - abspath: All the paths in the architecture file are absolute and hardcoded.
+- ecb: *Enhanced Connection Block* where connection blocks includes feedback connections
 
 Other features are used in naming should be listed here.

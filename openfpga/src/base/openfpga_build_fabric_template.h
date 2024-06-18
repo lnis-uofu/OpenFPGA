@@ -23,6 +23,7 @@
 #include "rename_modules.h"
 #include "vtr_log.h"
 #include "vtr_time.h"
+#include "write_xml_fabric_pin_physical_location.h"
 #include "write_xml_module_name_map.h"
 
 /* begin namespace openfpga */
@@ -269,6 +270,8 @@ template <class T>
 int write_fabric_hierarchy_template(const T& openfpga_ctx, const Command& cmd,
                                     const CommandContext& cmd_context) {
   CommandOptionId opt_verbose = cmd.option("verbose");
+  CommandOptionId opt_exclude_empty_modules =
+    cmd.option("exclude_empty_modules");
 
   /* Check the option '--file' is enabled or not
    * Actually, it must be enabled as the shell interface will check
@@ -277,6 +280,19 @@ int write_fabric_hierarchy_template(const T& openfpga_ctx, const Command& cmd,
   CommandOptionId opt_file = cmd.option("file");
   VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
   VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  CommandOptionId opt_module = cmd.option("module");
+  std::string root_module =
+    openfpga_ctx.module_name_map().name(generate_fpga_top_module_name());
+  if (true == cmd_context.option_enable(cmd, opt_module)) {
+    root_module = cmd_context.option_value(cmd, opt_module);
+  }
+
+  CommandOptionId opt_filter = cmd.option("filter");
+  std::string filter("*");
+  if (true == cmd_context.option_enable(cmd, opt_filter)) {
+    filter = cmd_context.option_value(cmd, opt_filter);
+  }
 
   /* Default depth requirement, will not stop until the leaf */
   int depth = -1;
@@ -296,7 +312,9 @@ int write_fabric_hierarchy_template(const T& openfpga_ctx, const Command& cmd,
   /* Write hierarchy to a file */
   return write_fabric_hierarchy_to_text_file(
     openfpga_ctx.module_graph(), openfpga_ctx.module_name_map(), hie_file_name,
-    size_t(depth), cmd_context.option_enable(cmd, opt_verbose));
+    root_module, filter, size_t(depth),
+    cmd_context.option_enable(cmd, opt_exclude_empty_modules),
+    cmd_context.option_enable(cmd, opt_verbose));
 }
 
 /********************************************************************
@@ -415,6 +433,41 @@ int write_module_naming_rules_template(const T& openfpga_ctx,
   /* Write hierarchy to a file */
   return write_xml_module_name_map(
     file_name.c_str(), openfpga_ctx.module_name_map(),
+    !cmd_context.option_enable(cmd, opt_no_time_stamp),
+    cmd_context.option_enable(cmd, opt_verbose));
+}
+
+/********************************************************************
+ * Write fabric pin physical location to a file
+ *******************************************************************/
+template <class T>
+int write_fabric_pin_physical_location_template(
+  const T& openfpga_ctx, const Command& cmd,
+  const CommandContext& cmd_context) {
+  CommandOptionId opt_verbose = cmd.option("verbose");
+  CommandOptionId opt_no_time_stamp = cmd.option("no_time_stamp");
+  CommandOptionId opt_show_invalid_side = cmd.option("show_invalid_side");
+
+  /* Check the option '--file' is enabled or not
+   * Actually, it must be enabled as the shell interface will check
+   * before reaching this fuction
+   */
+  CommandOptionId opt_file = cmd.option("file");
+  VTR_ASSERT(true == cmd_context.option_enable(cmd, opt_file));
+  VTR_ASSERT(false == cmd_context.option_value(cmd, opt_file).empty());
+
+  std::string file_name = cmd_context.option_value(cmd, opt_file);
+
+  std::string module_name("*"); /* Use a wildcard for everything */
+  CommandOptionId opt_module = cmd.option("module");
+  if (true == cmd_context.option_enable(cmd, opt_module)) {
+    module_name = cmd_context.option_value(cmd, opt_module);
+  }
+
+  /* Write hierarchy to a file */
+  return write_xml_fabric_pin_physical_location(
+    file_name.c_str(), module_name, openfpga_ctx.module_graph(),
+    cmd_context.option_enable(cmd, opt_show_invalid_side),
     !cmd_context.option_enable(cmd, opt_no_time_stamp),
     cmd_context.option_enable(cmd, opt_verbose));
 }
