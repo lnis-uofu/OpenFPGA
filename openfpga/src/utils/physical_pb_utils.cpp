@@ -316,6 +316,13 @@ static void mark_physical_pb_wired_lut_outputs(
         device_annotation.physical_pb_graph_pin(pb_graph_pin);
       VTR_ASSERT(nullptr != physical_pb_graph_pin);
 
+      // Skip if the output net is invalid
+      AtomNetId output_net =
+        phy_pb.pb_graph_pin_atom_net(primitive_pb, pb_graph_pin);
+      if (AtomNetId::INVALID() == output_net) {
+        continue;
+      }
+
       /* Print debug info */
       VTR_LOGV(verbose, "Mark physical pb_graph pin '%s' as wire LUT output\n",
                physical_pb_graph_pin->to_string().c_str());
