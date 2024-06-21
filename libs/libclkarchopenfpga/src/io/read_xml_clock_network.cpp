@@ -263,11 +263,17 @@ ClockNetwork read_xml_clock_network(const char* fname) {
         .as_string();
     clk_ntwk.set_default_segment_name(default_segment_name);
 
-    std::string default_switch_name =
-      get_attribute(xml_root, XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_SWITCH,
+    std::string default_tap_switch_name =
+      get_attribute(xml_root, XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_TAP_SWITCH,
                     loc_data)
         .as_string();
-    clk_ntwk.set_default_switch_name(default_switch_name);
+    clk_ntwk.set_default_tap_switch_name(default_tap_switch_name);
+
+    std::string default_driver_switch_name =
+      get_attribute(xml_root, XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_DRIVER_SWITCH,
+                    loc_data)
+        .as_string();
+    clk_ntwk.set_default_driver_switch_name(default_driver_switch_name);
 
     size_t num_trees =
       std::distance(xml_root.children().begin(), xml_root.children().end());

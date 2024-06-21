@@ -18,7 +18,8 @@ namespace openfpga {  // Begin namespace openfpga
  ***********************************************************************/
 ClockNetwork::ClockNetwork() {
   default_segment_id_ = RRSegmentId::INVALID();
-  default_switch_id_ = RRSwitchId::INVALID();
+  default_tap_switch_id_ = RRSwitchId::INVALID();
+  default_driver_switch_id_ = RRSwitchId::INVALID();
   is_dirty_ = true;
 }
 
@@ -172,11 +173,16 @@ RRSegmentId ClockNetwork::default_segment() const {
   return default_segment_id_;
 }
 
-std::string ClockNetwork::default_switch_name() const {
-  return default_switch_name_;
+std::string ClockNetwork::default_tap_switch_name() const {
+  return default_tap_switch_name_;
 }
 
-RRSwitchId ClockNetwork::default_switch() const { return default_switch_id_; }
+std::string ClockNetwork::default_driver_switch_name() const {
+  return default_driver_switch_name_;
+}
+
+RRSwitchId ClockNetwork::default_tap_switch() const { return default_tap_switch_id_; }
+RRSwitchId ClockNetwork::default_driver_switch() const { return default_driver_switch_id_; }
 
 std::string ClockNetwork::tree_name(const ClockTreeId& tree_id) const {
   VTR_ASSERT(valid_tree_id(tree_id));
@@ -417,16 +423,24 @@ void ClockNetwork::set_default_segment(const RRSegmentId& seg_id) {
   default_segment_id_ = seg_id;
 }
 
-void ClockNetwork::set_default_switch(const RRSwitchId& switch_id) {
-  default_switch_id_ = switch_id;
+void ClockNetwork::set_default_tap_switch(const RRSwitchId& switch_id) {
+  default_tap_switch_id_ = switch_id;
+}
+
+void ClockNetwork::set_default_driver_switch(const RRSwitchId& switch_id) {
+  default_driver_switch_id_ = switch_id;
 }
 
 void ClockNetwork::set_default_segment_name(const std::string& name) {
   default_segment_name_ = name;
 }
 
-void ClockNetwork::set_default_switch_name(const std::string& name) {
-  default_switch_name_ = name;
+void ClockNetwork::set_default_tap_switch_name(const std::string& name) {
+  default_tap_switch_name_ = name;
+}
+
+void ClockNetwork::set_default_driver_switch_name(const std::string& name) {
+  default_driver_switch_name_ = name;
 }
 
 ClockTreeId ClockNetwork::create_tree(const std::string& name, size_t width) {

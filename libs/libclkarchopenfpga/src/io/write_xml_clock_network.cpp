@@ -168,8 +168,10 @@ int write_xml_clock_network(const char* fname, const ClockNetwork& clk_ntwk) {
   fp << "<" << XML_CLOCK_NETWORK_ROOT_NAME;
   write_xml_attribute(fp, XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_SEGMENT,
                       clk_ntwk.default_segment_name().c_str());
-  write_xml_attribute(fp, XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_SWITCH,
-                      clk_ntwk.default_switch_name().c_str());
+  write_xml_attribute(fp, XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_TAP_SWITCH,
+                      clk_ntwk.default_tap_switch_name().c_str());
+  write_xml_attribute(fp, XML_CLOCK_NETWORK_ATTRIBUTE_DEFAULT_DRIVER_SWITCH,
+                      clk_ntwk.default_driver_switch_name().c_str());
   fp << ">"
      << "\n";
 

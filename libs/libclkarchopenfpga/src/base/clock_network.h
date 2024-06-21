@@ -145,9 +145,11 @@ class ClockNetwork {
   /* Reserve a number of trees to be memory efficent */
   void reserve_trees(const size_t& num_trees);
   void set_default_segment(const RRSegmentId& seg_id);
-  void set_default_switch(const RRSwitchId& switch_id);
+  void set_default_tap_switch(const RRSwitchId& switch_id);
+  void set_default_driver_switch(const RRSwitchId& switch_id);
   void set_default_segment_name(const std::string& name);
-  void set_default_switch_name(const std::string& name);
+  void set_default_tap_switch_name(const std::string& name);
+  void set_default_driver_switch_name(const std::string& name);
   /* Create a new tree, by default the tree can accomodate only 1 clock signal;
    * use width to adjust the size */
   ClockTreeId create_tree(const std::string& name, size_t width = 1);
@@ -250,8 +252,11 @@ class ClockNetwork {
                                         clock wires */
   RRSegmentId default_segment_id_;
   std::string
-    default_switch_name_; /* The routing switch interconnecting clock wire */
-  RRSwitchId default_switch_id_;
+    default_tap_switch_name_; /* The routing switch interconnecting clock wire */
+  RRSwitchId default_tap_switch_id_;
+  std::string
+    default_driver_switch_name_; /* The routing switch interconnecting clock wire */
+  RRSwitchId default_driver_switch_id_;
 
   /* Fast lookup */
   std::map<std::string, ClockTreeId> tree_name2id_map_;
