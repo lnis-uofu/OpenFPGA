@@ -526,7 +526,7 @@ static void add_rr_graph_block_clock_edges(
               /* Create edges */
               VTR_ASSERT(rr_graph_view.valid_node(des_node));
               rr_graph_builder.create_edge(src_node, des_node,
-                                           clk_ntwk.default_switch(), false);
+                                           clk_ntwk.default_driver_switch(), false);
               edge_count++;
             }
             VTR_LOGV(verbose, "\tWill add %lu edges to other clock nodes\n",
@@ -542,7 +542,7 @@ static void add_rr_graph_block_clock_edges(
               /* Create edges */
               VTR_ASSERT(rr_graph_view.valid_node(des_node));
               rr_graph_builder.create_edge(src_node, des_node,
-                                           clk_ntwk.default_switch(), false);
+                                           clk_ntwk.default_tap_switch(), false);
               edge_count++;
             }
             VTR_LOGV(verbose, "\tWill add %lu edges to other IPIN\n",
