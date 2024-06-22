@@ -1,0 +1,7 @@
+<pin_constraints>
+  <!-- For a given .blif file, we want to assign 
+       - the reset signal to the op_reset[0] port of the FPGA fabric
+    -->
+  <set_io pin="op_reset[0]" net="resetb" default_value="1"/>
+</pin_constraints>
+
