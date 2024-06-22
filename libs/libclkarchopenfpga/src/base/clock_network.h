@@ -73,8 +73,10 @@ class ClockNetwork {
    * information from RRGraph */
   RRSegmentId default_segment() const;
   std::string default_segment_name() const;
-  RRSwitchId default_switch() const;
-  std::string default_switch_name() const;
+  RRSwitchId default_tap_switch() const;
+  std::string default_tap_switch_name() const;
+  RRSwitchId default_driver_switch() const;
+  std::string default_driver_switch_name() const;
   std::string tree_name(const ClockTreeId& tree_id) const;
   size_t tree_width(const ClockTreeId& tree_id) const;
   size_t tree_depth(const ClockTreeId& tree_id) const;

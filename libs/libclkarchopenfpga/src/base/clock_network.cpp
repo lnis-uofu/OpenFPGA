@@ -636,7 +636,7 @@ bool ClockNetwork::validate_tree() const {
 
 bool ClockNetwork::validate() const {
   is_dirty_ = true;
-  if (default_segment_id_ && default_switch_id_ && validate_tree()) {
+  if (default_segment_id_ && default_tap_switch_id_ && default_driver_switch_id_ && validate_tree()) {
     is_dirty_ = false;
   }
   return true;
