@@ -19,7 +19,7 @@ append_clock_rr_graph
 
 # Annotate the OpenFPGA architecture to VPR data base
 # to debug use --verbose options
-link_openfpga_arch --activity_file ${ACTIVITY_FILE} --sort_gsb_chan_node_in_edges
+link_openfpga_arch --sort_gsb_chan_node_in_edges
 
 # Route clock based on clock network definition
 route_clock_rr_graph --pin_constraints_file ${OPENFPGA_PIN_CONSTRAINTS_FILE} 
