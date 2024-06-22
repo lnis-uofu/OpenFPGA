@@ -210,14 +210,6 @@ int route_clock_rr_graph(VprRoutingAnnotation& vpr_routing_annotation,
     return CMD_EXEC_SUCCESS;
   }
 
-  /* Report any clock structure we do not support yet! */
-  if (clk_ntwk.num_trees() > 1) {
-    VTR_LOG(
-      "Currently only support 1 clock tree in programmable clock "
-      "architecture\nPlease update your clock architecture definition\n");
-    return CMD_EXEC_FATAL_ERROR;
-  }
-
   /* If there are multiple clock signals from the netlist, require pin
    * constraints */
   std::vector<std::string> clock_net_names =
