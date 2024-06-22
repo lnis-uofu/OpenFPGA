@@ -45,12 +45,16 @@ static int link_clock_network_rr_switches(ClockNetwork& clk_ntwk,
     }
   }
   if (status != CMD_EXEC_SUCCESS) {
-    VTR_LOG("Unable to find the default tap switch '%s' in VPR architecture description!\n", default_tap_switch_name.c_str());
+    VTR_LOG(
+      "Unable to find the default tap switch '%s' in VPR architecture "
+      "description!\n",
+      default_tap_switch_name.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
   /* default driver switch id */
   status = CMD_EXEC_FATAL_ERROR;
-  std::string default_driver_switch_name = clk_ntwk.default_driver_switch_name();
+  std::string default_driver_switch_name =
+    clk_ntwk.default_driver_switch_name();
   for (size_t rr_switch_id = 0; rr_switch_id < rr_graph.num_rr_switches();
        ++rr_switch_id) {
     if (std::string(rr_graph.rr_switch_inf(RRSwitchId(rr_switch_id)).name) ==
@@ -61,7 +65,10 @@ static int link_clock_network_rr_switches(ClockNetwork& clk_ntwk,
     }
   }
   if (status != CMD_EXEC_SUCCESS) {
-    VTR_LOG("Unable to find the default driver switch '%s' in VPR architecture description!\n", default_driver_switch_name.c_str());
+    VTR_LOG(
+      "Unable to find the default driver switch '%s' in VPR architecture "
+      "description!\n",
+      default_driver_switch_name.c_str());
     return CMD_EXEC_FATAL_ERROR;
   }
 

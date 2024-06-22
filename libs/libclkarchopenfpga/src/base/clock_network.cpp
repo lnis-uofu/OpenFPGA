@@ -181,8 +181,12 @@ std::string ClockNetwork::default_driver_switch_name() const {
   return default_driver_switch_name_;
 }
 
-RRSwitchId ClockNetwork::default_tap_switch() const { return default_tap_switch_id_; }
-RRSwitchId ClockNetwork::default_driver_switch() const { return default_driver_switch_id_; }
+RRSwitchId ClockNetwork::default_tap_switch() const {
+  return default_tap_switch_id_;
+}
+RRSwitchId ClockNetwork::default_driver_switch() const {
+  return default_driver_switch_id_;
+}
 
 std::string ClockNetwork::tree_name(const ClockTreeId& tree_id) const {
   VTR_ASSERT(valid_tree_id(tree_id));
@@ -636,7 +640,8 @@ bool ClockNetwork::validate_tree() const {
 
 bool ClockNetwork::validate() const {
   is_dirty_ = true;
-  if (default_segment_id_ && default_tap_switch_id_ && default_driver_switch_id_ && validate_tree()) {
+  if (default_segment_id_ && default_tap_switch_id_ &&
+      default_driver_switch_id_ && validate_tree()) {
     is_dirty_ = false;
   }
   return true;

@@ -253,11 +253,11 @@ class ClockNetwork {
   std::string default_segment_name_; /* The routing segment representing the
                                         clock wires */
   RRSegmentId default_segment_id_;
-  std::string
-    default_tap_switch_name_; /* The routing switch interconnecting clock wire */
+  std::string default_tap_switch_name_; /* The routing switch interconnecting
+                                           clock wire */
   RRSwitchId default_tap_switch_id_;
-  std::string
-    default_driver_switch_name_; /* The routing switch interconnecting clock wire */
+  std::string default_driver_switch_name_; /* The routing switch interconnecting
+                                              clock wire */
   RRSwitchId default_driver_switch_id_;
 
   /* Fast lookup */
