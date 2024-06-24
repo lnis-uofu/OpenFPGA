@@ -153,7 +153,7 @@ jobs:
       - name: Check ccache size
         run: ccache -s
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         if: ${{ matrix.config.cc == 'gcc-11'}}
         with:
           name: openfpga
@@ -475,7 +475,7 @@ jobs:
         shell: bash
         run: source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh --debug --show_thread_logs
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         if: ${{ failure() }}
         with:
           name: failed_${{matrix.config.name}}_regression_log
@@ -524,7 +524,7 @@ jobs:
           unset OPENFPGA_PATH
           source openfpga.sh && source openfpga_flow/regression_test_scripts/${{matrix.config.name}}.sh --debug --show_thread_logs
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         if: ${{ failure() }}
         with:
           name: failed_${{matrix.config.name}}_regression_log
