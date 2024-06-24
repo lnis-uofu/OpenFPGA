@@ -22,7 +22,7 @@ Using the clock network description language, users can define multiple clock ne
 
 .. code-block:: xml
 
-  <clock_networks default_segment="<string>" default_switch="<string>"> 
+  <clock_networks default_segment="<string>" default_tap_switch="<string>" default_driver_switch="<string>"> 
     <clock_network name="<string>" width="<int>"> 
       <spine name="<string>" start_x="<int>" start_y="<int>" end_x="<int>" end_y="<int>"> 
         <switch_point tap="<string>" x="<int>" y="<int>"/> 
@@ -56,23 +56,28 @@ where the segment is defined in the VPR architecture file:
 
 .. note:: Currently, clock network requires only length-1 wire segment to be used!
 
-.. option:: default_switch="<string>"
+.. option:: default_tap_switch="<string>"
+
+  Define the default routing switch to be used when interconnects the routing tracks to the input pins of programmable blocks in the clock network. Must be a valid routing switch defined in the VPR architecture file. See the example in the ``default_driver_switch``. 
+
+.. option:: default_driver_switch="<string>"
 
   Define the default routing switch to be used when interconnects the routing tracks in the clock network. Must be a valid routing switch defined in the VPR architecture file. For example, 
 
   .. code-block:: xml
 
-    default_switch="clk_mux"
+    default_tap_switch="cb_mux" default_driver_switch="sb_clk_mux"
 
 where the switch is defined in the VPR architecture file:
 
 .. code-block:: xml
 
   <switchlist>
-    <switch type="mux" name="clk_mux" R="551" Cin=".77e-15" Cout="4e-15" Tdel="58e-12" mux_trans_size="2.630740" buf_size="27.645901"/>
+    <switch type="mux" name="cb_mux" R="551" Cin=".77e-15" Cout="4e-15" Tdel="58e-12" mux_trans_size="2.630740" buf_size="27.645901"/>
+    <switch type="mux" name="sb_clk_mux" R="55" Cin=".7e-15" Cout="4e-15" Tdel="58e-12" mux_trans_size="2.630740" buf_size="27.645901"/>
   </switchlist>
 
-.. note:: Currently, clock network only supports one type of routing switch, which means all the programmable routing switch in the clock network will be in the same type and circuit design topology.
+.. note:: Currently, clock network only supports the default types of routing switch, which means all the programmable routing switch in the clock network will be in the same type and circuit design topology.
 
 Clock Network Settings
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -94,7 +99,7 @@ where the clock network is used to drive the global clock pin ``clk0`` in OpenFP
 
   <tile_annotations>
     <global_port name="clk0" is_clock="true" clock_arch_tree_name="clk_tree_0" default_val="0">
-      <tile name="clb" port="clk[0:1]"
+      <tile name="clb" port="clk[0:1]"/>
     </global_port>
   </tile_annotations>
 
