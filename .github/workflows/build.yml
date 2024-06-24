@@ -37,7 +37,7 @@ jobs:
       docker_repo: ${{ steps.changes.outputs.docker_repo }}
     steps:
       - name: Cancel previous
-        uses: styfle/cancel-workflow-action@0.9.1
+        uses: styfle/cancel-workflow-action@0.12.1
         with:
           access_token: ${{ github.token }}
           
@@ -120,7 +120,7 @@ jobs:
       CXX: ${{ matrix.config.cxx }}
     steps:
       - name: Cancel previous
-        uses: styfle/cancel-workflow-action@0.9.1
+        uses: styfle/cancel-workflow-action@0.12.1
         with:
           access_token: ${{ github.token }}
           
@@ -216,7 +216,7 @@ jobs:
       CXX: ${{ matrix.config.cxx }}
     steps:
       - name: Cancel previous
-        uses: styfle/cancel-workflow-action@0.9.1
+        uses: styfle/cancel-workflow-action@0.12.1
         with:
           access_token: ${{ github.token }}
           
@@ -262,7 +262,7 @@ jobs:
       CXX: ${{ matrix.config.cxx }}
     steps:
       - name: Cancel previous
-        uses: styfle/cancel-workflow-action@0.9.1
+        uses: styfle/cancel-workflow-action@0.12.1
         with:
           access_token: ${{ github.token }}
           
@@ -308,7 +308,7 @@ jobs:
       CXX: ${{ matrix.config.cxx }}
     steps:
       - name: Cancel previous
-        uses: styfle/cancel-workflow-action@0.9.1
+        uses: styfle/cancel-workflow-action@0.12.1
         with:
           access_token: ${{ github.token }}
           
@@ -360,7 +360,7 @@ jobs:
       CXX: ${{ matrix.config.cxx }}
     steps:
       - name: Cancel previous
-        uses: styfle/cancel-workflow-action@0.9.1
+        uses: styfle/cancel-workflow-action@0.12.1
         with:
           access_token: ${{ github.token }}
           
@@ -397,7 +397,7 @@ jobs:
     needs: [linux_build, change_detect]
     steps:
       - name: Cancel previous
-        uses: styfle/cancel-workflow-action@0.9.1
+        uses: styfle/cancel-workflow-action@0.12.1
         with:
           access_token: ${{ github.token }}
           
@@ -450,7 +450,7 @@ jobs:
           - name: tcl_reg_test
     steps:
       - name: Cancel previous
-        uses: styfle/cancel-workflow-action@0.9.1
+        uses: styfle/cancel-workflow-action@0.12.1
         with:
           access_token: ${{ github.token }}
     
@@ -508,7 +508,7 @@ jobs:
           - name: tcl_reg_test
     steps:
       - name: Cancel previous
-        uses: styfle/cancel-workflow-action@0.9.1
+        uses: styfle/cancel-workflow-action@0.12.1
         with:
           access_token: ${{ github.token }}
           
