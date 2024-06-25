@@ -569,6 +569,7 @@ ClockSwitchPointId ClockNetwork::add_spine_switch_point(const ClockSpineId& spin
   VTR_ASSERT(valid_spine_id(drive_spine_id));
   spine_switch_points_[spine_id].push_back(drive_spine_id);
   spine_switch_coords_[spine_id].push_back(coord);
+  spine_switch_internal_drivers_[spine_id].emplace_back();
   /* Do not allow any spine has different parents */
   if (spine_parents_[drive_spine_id]) {
     VTR_LOG_ERROR(
