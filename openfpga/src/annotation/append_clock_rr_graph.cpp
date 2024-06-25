@@ -626,9 +626,9 @@ static std::vector<RRNodeId> find_clock_opin2track_node(
   grid_sides[0] = {RIGHT, BOTTOM};
   grid_coords[1] = vtr::Point<int>(sb_coord.x() + 1, sb_coord.y() + 1);
   grid_sides[1] = {LEFT, BOTTOM};
-  grid_coords[2] = vtr::Point<int>(sb_coord.x() + 1, sb_coord.y());
+  grid_coords[2] = vtr::Point<int>(sb_coord.x(), sb_coord.y());
   grid_sides[2] = {RIGHT, TOP};
-  grid_coords[3] = vtr::Point<int>(sb_coord.x(), sb_coord.y());
+  grid_coords[3] = vtr::Point<int>(sb_coord.x() + 1, sb_coord.y());
   grid_sides[3] = {LEFT, TOP};
   for (size_t igrid = 0; igrid < 4; igrid++) {
     vtr::Point<int> grid_coord = grid_coords[igrid];
