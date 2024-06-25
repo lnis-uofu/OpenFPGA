@@ -25,7 +25,9 @@ Using the clock network description language, users can define multiple clock ne
   <clock_networks default_segment="<string>" default_tap_switch="<string>" default_driver_switch="<string>"> 
     <clock_network name="<string>" width="<int>"> 
       <spine name="<string>" start_x="<int>" start_y="<int>" end_x="<int>" end_y="<int>"> 
-        <switch_point tap="<string>" x="<int>" y="<int>"/> 
+        <switch_point tap="<string>" x="<int>" y="<int>"> 
+          <internal_driver tile_pin="<string>"/>
+        </switch_point>
       </spine>  
       <taps>
         <tap tile_pin="<string>"/>
@@ -174,6 +176,33 @@ For example,
   <spine>
 
 where clock spine ``spine0`` will drive another clock spine ``spine1`` at (1, 1). 
+
+For each switch point, outputs of neighbouring programmable blocks are allowed to drive the spine at next level, through syntax ``internal_driver``.
+
+.. option:: tile_pin="<string>"
+
+  Define the pin of a programmable block as an internal driver to a clock network. The pin must be a valid pin defined in the VPR architecture description file.
+
+For example, 
+
+.. code-block:: xml
+
+  <spine name="spine0" start_x="1" start_y="1" end_x="2" end_y="1">
+    <switch_point tap="spine1" x="1" y="1">
+      <internal_driver tile_pin="clb.O[0:1]"/>
+    </switch_point>
+  <spine>
+
+where the clock routing can be driven at (x=1,y=1) by the output pins ``O[0:3]`` of tile ``clb`` in a VPR architecture description file:
+
+.. code-block:: xml
+
+  <tile name="clb">
+   <sub_tile name="clb">
+     <output name="O" num_pins="8"/>
+   </sub_tile>
+  </tile>
+
 
 .. _file_formats_clock_network_tap_point:
 
