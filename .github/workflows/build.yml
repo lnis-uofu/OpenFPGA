@@ -404,7 +404,7 @@ jobs:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v4
       - name: Download a built artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: openfpga
       - name: Set up QEMU
@@ -457,7 +457,7 @@ jobs:
       - name: Checkout OpenFPGA repo
         uses: actions/checkout@v4
       - name: Download a built artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: openfpga
       - name: chmod
