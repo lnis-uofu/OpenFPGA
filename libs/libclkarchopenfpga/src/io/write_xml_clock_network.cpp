@@ -70,7 +70,7 @@ static int write_xml_clock_spine_switch_point(
     for (ClockInternalDriverId int_driver_id : clk_ntwk.spine_switch_point_internal_drivers(spine_id, switch_point_id)) {
       openfpga::write_tab_to_file(fp, 4);
       fp << "<" << XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_NODE_NAME;
-      write_xml_attribute(fp, XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_ARRIBUTER_TILE_PIN, clk_ntwk.internal_driver_port(int_driver_id).c_str());
+      write_xml_attribute(fp, XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_ATTRIBUTE_TILE_PIN, clk_ntwk.internal_driver_port(int_driver_id).c_str());
       fp << "/>"
          << "\n";
     }
