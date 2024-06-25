@@ -42,10 +42,12 @@ class ClockNetwork {
     clock_tree_iterator;
   /* Create range */
   typedef vtr::Range<clock_tree_iterator> clock_tree_range;
-  typedef vtr::vector<ClockInternalDriverId, ClockInternalDriverId>::const_iterator
+  typedef vtr::vector<ClockInternalDriverId,
+                      ClockInternalDriverId>::const_iterator
     clock_internal_driver_iterator;
   /* Create range */
-  typedef vtr::Range<clock_internal_driver_iterator> clock_internal_driver_range;
+  typedef vtr::Range<clock_internal_driver_iterator>
+    clock_internal_driver_range;
 
  public: /* Constructors */
   ClockNetwork();
@@ -124,8 +126,10 @@ class ClockNetwork {
   std::vector<ClockInternalDriverId> spine_switch_point_internal_drivers(
     const ClockSpineId& spine_id,
     const ClockSwitchPointId& switch_point_id) const;
-  std::string internal_driver_port(const ClockInternalDriverId& int_driver_id) const;
-  std::vector<std::string> flatten_internal_driver_port(const ClockInternalDriverId& int_driver_id) const;
+  std::string internal_driver_port(
+    const ClockInternalDriverId& int_driver_id) const;
+  std::vector<std::string> flatten_internal_driver_port(
+    const ClockInternalDriverId& int_driver_id) const;
 
   /* Return the original list of tap pins that is in storage; useful for parsers
    */
@@ -184,11 +188,11 @@ class ClockNetwork {
   void set_spine_track_type(const ClockSpineId& spine_id,
                             const t_rr_type& type);
   ClockSwitchPointId add_spine_switch_point(const ClockSpineId& spine_id,
-                              const ClockSpineId& drive_spine_id,
-                              const vtr::Point<int>& coord);
-  ClockInternalDriverId add_spine_switch_point_internal_driver(const ClockSpineId& spine_id,
-                                              const ClockSwitchPointId& switch_point_id,
-							                  const std::string& internal_driver_port);
+                                            const ClockSpineId& drive_spine_id,
+                                            const vtr::Point<int>& coord);
+  ClockInternalDriverId add_spine_switch_point_internal_driver(
+    const ClockSpineId& spine_id, const ClockSwitchPointId& switch_point_id,
+    const std::string& internal_driver_port);
   void add_tree_tap(const ClockTreeId& tree_id, const std::string& pin_name);
   /* Build internal links between clock tree, spines etc. This is also an
    * validator to verify the correctness of the clock network. Must run before
@@ -198,7 +202,8 @@ class ClockNetwork {
  public: /* Public invalidators/validators */
   /* Show if the tree id is a valid for data queries */
   bool valid_tree_id(const ClockTreeId& tree_id) const;
-  bool valid_internal_driver_id(const ClockInternalDriverId& int_driver_id) const;
+  bool valid_internal_driver_id(
+    const ClockInternalDriverId& int_driver_id) const;
   /* Show if the level id is a valid for a given tree */
   bool valid_level_id(const ClockTreeId& tree_id,
                       const ClockLevelId& lvl_id) const;
@@ -260,13 +265,15 @@ class ClockNetwork {
   vtr::vector<ClockSpineId, t_rr_type> spine_track_types_;
   vtr::vector<ClockSpineId, std::vector<ClockSpineId>> spine_switch_points_;
   vtr::vector<ClockSpineId, std::vector<vtr::Point<int>>> spine_switch_coords_;
-  vtr::vector<ClockSpineId, std::vector<std::vector<ClockInternalDriverId>>> spine_switch_internal_drivers_;
+  vtr::vector<ClockSpineId, std::vector<std::vector<ClockInternalDriverId>>>
+    spine_switch_internal_drivers_;
   vtr::vector<ClockSpineId, ClockSpineId> spine_parents_;
   vtr::vector<ClockSpineId, std::vector<ClockSpineId>> spine_children_;
   vtr::vector<ClockSpineId, ClockTreeId> spine_parent_trees_;
 
   /* Basic Information about internal drivers */
-  vtr::vector<ClockInternalDriverId, ClockInternalDriverId> internal_driver_ids_;
+  vtr::vector<ClockInternalDriverId, ClockInternalDriverId>
+    internal_driver_ids_;
   vtr::vector<ClockInternalDriverId, std::string> internal_driver_ports_;
 
   /* Default routing resource */

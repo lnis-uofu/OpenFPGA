@@ -525,8 +525,8 @@ static void add_rr_graph_block_clock_edges(
                    chan_coord, itree, ilvl, ClockTreePinId(ipin), node_dir)) {
               /* Create edges */
               VTR_ASSERT(rr_graph_view.valid_node(des_node));
-              rr_graph_builder.create_edge(src_node, des_node,
-                                           clk_ntwk.default_driver_switch(), false);
+              rr_graph_builder.create_edge(
+                src_node, des_node, clk_ntwk.default_driver_switch(), false);
               edge_count++;
             }
             VTR_LOGV(verbose, "\tWill add %lu edges to other clock nodes\n",
@@ -541,8 +541,8 @@ static void add_rr_graph_block_clock_edges(
                    itree, ClockTreePinId(ipin))) {
               /* Create edges */
               VTR_ASSERT(rr_graph_view.valid_node(des_node));
-              rr_graph_builder.create_edge(src_node, des_node,
-                                           clk_ntwk.default_tap_switch(), false);
+              rr_graph_builder.create_edge(
+                src_node, des_node, clk_ntwk.default_tap_switch(), false);
               edge_count++;
             }
             VTR_LOGV(verbose, "\tWill add %lu edges to IPINs\n",
@@ -566,8 +566,7 @@ static void try_find_and_add_clock_opin2track_node(
   std::vector<RRNodeId>& opin_nodes, const DeviceGrid& grids,
   const RRGraphView& rr_graph_view, const size_t& layer,
   const vtr::Point<int>& grid_coord, const e_side& pin_side,
-  const ClockNetwork& clk_ntwk,
-  const ClockInternalDriverId& int_driver_id) {
+  const ClockNetwork& clk_ntwk, const ClockInternalDriverId& int_driver_id) {
   t_physical_tile_type_ptr grid_type = grids.get_physical_type(
     t_physical_tile_loc(grid_coord.x(), grid_coord.y(), layer));
   for (std::string tap_pin_name :
@@ -611,11 +610,9 @@ static void try_find_and_add_clock_opin2track_node(
  *******************************************************************/
 static std::vector<RRNodeId> find_clock_opin2track_node(
   const DeviceGrid& grids, const RRGraphView& rr_graph_view,
-  const size_t& layer,
-  const vtr::Point<int>& sb_coord, 
+  const size_t& layer, const vtr::Point<int>& sb_coord,
   const ClockNetwork& clk_ntwk,
-  const std::vector<ClockInternalDriverId>& int_driver_ids
-) {
+  const std::vector<ClockInternalDriverId>& int_driver_ids) {
   std::vector<RRNodeId> opin_nodes;
   /* Find opins from
    * - Grid[x][y+1] on right and bottom sides
@@ -649,13 +646,14 @@ static std::vector<RRNodeId> find_clock_opin2track_node(
 /********************************************************************
  * Add edges between OPIN of programmable blocks and clock routing tracks
  * Note that such edges only occur at the switching points of spines
- * Different from add_rr_graph_block_clock_edges(), we follow the clock spines here
- * By expanding on switching points, internal drivers will be added
+ * Different from add_rr_graph_block_clock_edges(), we follow the clock spines
+ *here By expanding on switching points, internal drivers will be added
  *******************************************************************/
-static int add_rr_graph_opin2clk_edges(RRGraphBuilder& rr_graph_builder, size_t& num_edges_to_create,
+static int add_rr_graph_opin2clk_edges(
+  RRGraphBuilder& rr_graph_builder, size_t& num_edges_to_create,
   const RRClockSpatialLookup& clk_rr_lookup, const RRGraphView& rr_graph_view,
-  const DeviceGrid& grids, const size_t& layer,
-  const ClockNetwork& clk_ntwk, const bool& verbose) {
+  const DeviceGrid& grids, const size_t& layer, const ClockNetwork& clk_ntwk,
+  const bool& verbose) {
   size_t edge_count = 0;
   for (ClockTreeId clk_tree : clk_ntwk.trees()) {
     for (ClockSpineId ispine : clk_ntwk.spines(clk_tree)) {
@@ -664,8 +662,11 @@ static int add_rr_graph_opin2clk_edges(RRGraphBuilder& rr_graph_builder, size_t&
       for (auto ipin : clk_ntwk.pins(clk_tree)) {
         for (ClockSwitchPointId switch_point_id :
              clk_ntwk.spine_switch_points(ispine)) {
-          if (clk_ntwk.spine_switch_point_internal_drivers(ispine, switch_point_id).empty()) {
-            continue; /* We only focus on switching points containing internal drivers */
+          if (clk_ntwk
+                .spine_switch_point_internal_drivers(ispine, switch_point_id)
+                .empty()) {
+            continue; /* We only focus on switching points containing internal
+                         drivers */
           }
           size_t curr_edge_count = edge_count;
           /* Get the rr node of destination spine */
@@ -680,12 +681,16 @@ static int add_rr_graph_opin2clk_edges(RRGraphBuilder& rr_graph_builder, size_t&
           /* Walk through each qualified OPIN, build edges */
           vtr::Point<int> src_coord =
             clk_ntwk.spine_switch_point(ispine, switch_point_id);
-          std::vector<ClockInternalDriverId> int_driver_ids = clk_ntwk.spine_switch_point_internal_drivers(ispine, switch_point_id);
-          for (RRNodeId src_node : find_clock_opin2track_node(grids, rr_graph_view, layer, src_coord, clk_ntwk, int_driver_ids)) {
+          std::vector<ClockInternalDriverId> int_driver_ids =
+            clk_ntwk.spine_switch_point_internal_drivers(ispine,
+                                                         switch_point_id);
+          for (RRNodeId src_node : find_clock_opin2track_node(
+                 grids, rr_graph_view, layer, src_coord, clk_ntwk,
+                 int_driver_ids)) {
             /* Create edges */
             VTR_ASSERT(rr_graph_view.valid_node(des_node));
-            rr_graph_builder.create_edge(src_node, des_node,
-                                         clk_ntwk.default_driver_switch(), false);
+            rr_graph_builder.create_edge(
+              src_node, des_node, clk_ntwk.default_driver_switch(), false);
             edge_count++;
           }
           VTR_LOGV(verbose, "\tWill add %lu edges to OPINs at (x=%lu, y=%lu)\n",
@@ -758,7 +763,9 @@ static void add_rr_graph_clock_edges(
     }
   }
   /* Add edges between OPIN (internal driver) and clock routing tracks */
-  add_rr_graph_opin2clk_edges(rr_graph_builder, num_edges_to_create, clk_rr_lookup, rr_graph_view, grids, layer, clk_ntwk, verbose);
+  add_rr_graph_opin2clk_edges(rr_graph_builder, num_edges_to_create,
+                              clk_rr_lookup, rr_graph_view, grids, layer,
+                              clk_ntwk, verbose);
 }
 
 /********************************************************************

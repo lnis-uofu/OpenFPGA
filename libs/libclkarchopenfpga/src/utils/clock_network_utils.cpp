@@ -34,7 +34,7 @@ static int link_clock_network_rr_segments(ClockNetwork& clk_ntwk,
  *clock network
  *******************************************************************/
 static int link_clock_network_tap_rr_switches(ClockNetwork& clk_ntwk,
-                                          const RRGraphView& rr_graph) {
+                                              const RRGraphView& rr_graph) {
   /* default tap switch id */
   std::string default_tap_switch_name = clk_ntwk.default_tap_switch_name();
   for (size_t rr_switch_id = 0; rr_switch_id < rr_graph.num_rr_switches();
@@ -57,7 +57,7 @@ static int link_clock_network_tap_rr_switches(ClockNetwork& clk_ntwk,
  *clock network
  *******************************************************************/
 static int link_clock_network_driver_rr_switches(ClockNetwork& clk_ntwk,
-                                          const RRGraphView& rr_graph) {
+                                                 const RRGraphView& rr_graph) {
   /* default driver switch id */
   std::string default_driver_switch_name =
     clk_ntwk.default_driver_switch_name();

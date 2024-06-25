@@ -240,8 +240,9 @@ int read_openfpga_clock_arch_template(T& openfpga_context, const Command& cmd,
     VTR_LOG_ERROR("Link clock network failed!");
     return CMD_EXEC_FATAL_ERROR;
   }
-  if (CMD_EXEC_SUCCESS != link_clock_network_rr_graph(openfpga_context.mutable_clock_arch(),
-                              g_vpr_ctx.device().rr_graph)) {
+  if (CMD_EXEC_SUCCESS !=
+      link_clock_network_rr_graph(openfpga_context.mutable_clock_arch(),
+                                  g_vpr_ctx.device().rr_graph)) {
     VTR_LOG_ERROR("Link clock network to routing architecture failed!");
     return CMD_EXEC_FATAL_ERROR;
   }

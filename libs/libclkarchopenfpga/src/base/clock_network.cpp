@@ -32,8 +32,10 @@ ClockNetwork::clock_tree_range ClockNetwork::trees() const {
   return vtr::make_range(tree_ids_.begin(), tree_ids_.end());
 }
 
-ClockNetwork::clock_internal_driver_range ClockNetwork::internal_drivers() const {
-  return vtr::make_range(internal_driver_ids_.begin(), internal_driver_ids_.end());
+ClockNetwork::clock_internal_driver_range ClockNetwork::internal_drivers()
+  const {
+  return vtr::make_range(internal_driver_ids_.begin(),
+                         internal_driver_ids_.end());
 }
 
 std::vector<ClockLevelId> ClockNetwork::levels(
@@ -329,14 +331,16 @@ vtr::Point<int> ClockNetwork::spine_switch_point(
   return spine_switch_coords_[spine_id][size_t(switch_point_id)];
 }
 
-std::vector<ClockInternalDriverId> ClockNetwork::spine_switch_point_internal_drivers(
+std::vector<ClockInternalDriverId>
+ClockNetwork::spine_switch_point_internal_drivers(
   const ClockSpineId& spine_id,
   const ClockSwitchPointId& switch_point_id) const {
   VTR_ASSERT(valid_spine_switch_point_id(spine_id, switch_point_id));
   return spine_switch_internal_drivers_[spine_id][size_t(switch_point_id)];
 }
 
-std::string ClockNetwork::internal_driver_port(const ClockInternalDriverId& int_driver_id) const {
+std::string ClockNetwork::internal_driver_port(
+  const ClockInternalDriverId& int_driver_id) const {
   VTR_ASSERT(valid_internal_driver_id(int_driver_id));
   return internal_driver_ports_[int_driver_id];
 }
@@ -389,7 +393,8 @@ std::vector<std::string> ClockNetwork::tree_flatten_taps(
   return flatten_taps;
 }
 
-std::vector<std::string> ClockNetwork::flatten_internal_driver_port(const ClockInternalDriverId& int_driver_id) const {
+std::vector<std::string> ClockNetwork::flatten_internal_driver_port(
+  const ClockInternalDriverId& int_driver_id) const {
   std::vector<std::string> flatten_taps;
   std::string tap_name = internal_driver_port(int_driver_id);
   StringToken tokenizer(tap_name);
@@ -598,9 +603,9 @@ void ClockNetwork::set_spine_track_type(const ClockSpineId& spine_id,
   spine_track_types_[spine_id] = type;
 }
 
-ClockSwitchPointId ClockNetwork::add_spine_switch_point(const ClockSpineId& spine_id,
-                                          const ClockSpineId& drive_spine_id,
-                                          const vtr::Point<int>& coord) {
+ClockSwitchPointId ClockNetwork::add_spine_switch_point(
+  const ClockSpineId& spine_id, const ClockSpineId& drive_spine_id,
+  const vtr::Point<int>& coord) {
   VTR_ASSERT(valid_spine_id(spine_id));
   VTR_ASSERT(valid_spine_id(drive_spine_id));
   spine_switch_points_[spine_id].push_back(drive_spine_id);
@@ -621,24 +626,27 @@ ClockSwitchPointId ClockNetwork::add_spine_switch_point(const ClockSpineId& spin
   return ClockSwitchPointId(spine_switch_points_[spine_id].size() - 1);
 }
 
-ClockInternalDriverId ClockNetwork::add_spine_switch_point_internal_driver(const ClockSpineId& spine_id,
-                                                          const ClockSwitchPointId& switch_point_id,
-                                                          const std::string& int_driver_port) {
+ClockInternalDriverId ClockNetwork::add_spine_switch_point_internal_driver(
+  const ClockSpineId& spine_id, const ClockSwitchPointId& switch_point_id,
+  const std::string& int_driver_port) {
   VTR_ASSERT(valid_spine_id(spine_id));
   VTR_ASSERT(valid_spine_switch_point_id(spine_id, switch_point_id));
   /* Find any existing id for the driver port */
   for (ClockInternalDriverId int_driver_id : internal_driver_ids_) {
     if (internal_driver_ports_[int_driver_id] == int_driver_port) {
-      spine_switch_internal_drivers_[spine_id][size_t(switch_point_id)].push_back(int_driver_id);
-      return int_driver_id; 
+      spine_switch_internal_drivers_[spine_id][size_t(switch_point_id)]
+        .push_back(int_driver_id);
+      return int_driver_id;
     }
   }
   /* Reaching here, no existing id can be reused, create a new one */
-  ClockInternalDriverId int_driver_id = ClockInternalDriverId(internal_driver_ids_.size());
+  ClockInternalDriverId int_driver_id =
+    ClockInternalDriverId(internal_driver_ids_.size());
   internal_driver_ids_.push_back(int_driver_id);
   internal_driver_ports_.push_back(int_driver_port);
-  spine_switch_internal_drivers_[spine_id][size_t(switch_point_id)].push_back(int_driver_id);
-  return int_driver_id; 
+  spine_switch_internal_drivers_[spine_id][size_t(switch_point_id)].push_back(
+    int_driver_id);
+  return int_driver_id;
 }
 
 void ClockNetwork::add_tree_tap(const ClockTreeId& tree_id,
@@ -793,7 +801,8 @@ bool ClockNetwork::valid_tree_id(const ClockTreeId& tree_id) const {
          (tree_id == tree_ids_[tree_id]);
 }
 
-bool ClockNetwork::valid_internal_driver_id(const ClockInternalDriverId& int_driver_id) const {
+bool ClockNetwork::valid_internal_driver_id(
+  const ClockInternalDriverId& int_driver_id) const {
   return (size_t(int_driver_id) < internal_driver_ids_.size()) &&
          (int_driver_id == internal_driver_ids_[int_driver_id]);
 }

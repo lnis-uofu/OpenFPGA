@@ -61,17 +61,20 @@ static void read_xml_clock_tree_taps(pugi::xml_node& xml_taps,
  *******************************************************************/
 static void read_xml_clock_spine_switch_point_internal_driver(
   pugi::xml_node& xml_int_driver, const pugiutil::loc_data& loc_data,
-  ClockNetwork& clk_ntwk, const ClockSpineId& spine_id, const ClockSwitchPointId& switch_point_id) {
+  ClockNetwork& clk_ntwk, const ClockSpineId& spine_id,
+  const ClockSwitchPointId& switch_point_id) {
   if (!clk_ntwk.valid_spine_id(spine_id)) {
     archfpga_throw(loc_data.filename_c_str(), loc_data.line(xml_int_driver),
                    "Invalid id of a clock spine!\n");
   }
 
   std::string int_driver_port_name =
-    get_attribute(xml_int_driver, XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_ATTRIBUTE_TILE_PIN,
-                  loc_data)
+    get_attribute(
+      xml_int_driver,
+      XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_ATTRIBUTE_TILE_PIN, loc_data)
       .as_string();
-  clk_ntwk.add_spine_switch_point_internal_driver(spine_id, switch_point_id, int_driver_port_name);
+  clk_ntwk.add_spine_switch_point_internal_driver(spine_id, switch_point_id,
+                                                  int_driver_port_name);
 }
 
 /********************************************************************
@@ -108,16 +111,16 @@ static void read_xml_clock_spine_switch_point(
                             XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_Y, loc_data)
                 .as_int();
 
-  ClockSwitchPointId switch_point_id = clk_ntwk.add_spine_switch_point(spine_id, tap_spine_id,
-                                                                       vtr::Point<int>(tap_x, tap_y));
+  ClockSwitchPointId switch_point_id = clk_ntwk.add_spine_switch_point(
+    spine_id, tap_spine_id, vtr::Point<int>(tap_x, tap_y));
 
-  /* Add internal drivers if possible */ 
+  /* Add internal drivers if possible */
   for (pugi::xml_node xml_int_driver : xml_switch_point.children()) {
     /* Error out if the XML child has an invalid name! */
     if (xml_int_driver.name() ==
         std::string(XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_NODE_NAME)) {
-      read_xml_clock_spine_switch_point_internal_driver(xml_int_driver, loc_data, clk_ntwk,
-                                                        spine_id, switch_point_id);
+      read_xml_clock_spine_switch_point_internal_driver(
+        xml_int_driver, loc_data, clk_ntwk, spine_id, switch_point_id);
     } else {
       bad_tag(xml_int_driver, loc_data, xml_switch_point,
               {XML_CLOCK_SPINE_SWITCH_POINT_INTERNAL_DRIVER_NODE_NAME});
