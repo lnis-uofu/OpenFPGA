@@ -389,6 +389,46 @@ std::vector<std::string> ClockNetwork::tree_flatten_taps(
   return flatten_taps;
 }
 
+std::vector<std::string> ClockNetwork::flatten_internal_driver_port(const ClockInternalDriverId& int_driver_id) const {
+  std::vector<std::string> flatten_taps;
+  for (const std::string& tap_name : internal_driver_port(int_driver_id)) {
+    StringToken tokenizer(tap_name);
+    std::vector<std::string> pin_tokens = tokenizer.split(".");
+    if (pin_tokens.size() != 2) {
+      VTR_LOG_ERROR("Invalid pin name '%s'. Expect <tile>.<port>\n",
+                    tap_name.c_str());
+      exit(1);
+    }
+    PortParser tile_parser(pin_tokens[0]);
+    BasicPort tile_info = tile_parser.port();
+    PortParser pin_parser(pin_tokens[1]);
+    BasicPort pin_info = pin_parser.port();
+    if (!tile_info.is_valid()) {
+      VTR_LOG_ERROR("Invalid pin name '%s' whose subtile index is not valid\n",
+                    tap_name.c_str());
+      exit(1);
+    }
+    if (!pin_info.is_valid()) {
+      VTR_LOG_ERROR("Invalid pin name '%s' whose pin index is not valid\n",
+                    tap_name.c_str());
+      exit(1);
+    }
+    for (size_t& tile_idx : tile_info.pins()) {
+      std::string flatten_tile_str =
+        tile_info.get_name() + "[" + std::to_string(tile_idx) + "]";
+      for (size_t& pin_idx : pin_info.pins()) {
+        if (pin_idx != size_t(clk_pin_id)) {
+          continue;
+        }
+        std::string flatten_pin_str =
+          pin_info.get_name() + "[" + std::to_string(pin_idx) + "]";
+        flatten_taps.push_back(flatten_tile_str + "." + flatten_pin_str);
+      }
+    }
+  }
+  return flatten_taps;
+}
+
 ClockTreeId ClockNetwork::find_tree(const std::string& name) const {
   auto result = tree_name2id_map_.find(name);
   if (result == tree_name2id_map_.end()) {

@@ -125,6 +125,7 @@ class ClockNetwork {
     const ClockSpineId& spine_id,
     const ClockSwitchPointId& switch_point_id) const;
   std::string internal_driver_port(const ClockInternalDriverId& int_driver_id) const;
+  std::vector<std::string> flatten_internal_driver_port(const ClockInternalDriverId& int_driver_id) const;
 
   /* Return the original list of tap pins that is in storage; useful for parsers
    */
