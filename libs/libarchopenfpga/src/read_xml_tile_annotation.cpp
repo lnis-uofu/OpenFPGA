@@ -102,9 +102,9 @@ static void read_xml_tile_global_port_annotation(
       .as_bool(false));
 
   /* Get clock tree attributes if this is a clock, reset or set */
-  if (tile_annotation.global_port_is_clock(tile_global_port_id)
-   || tile_annotation.global_port_is_reset(tile_global_port_id)
-   || tile_annotation.global_port_is_set(tile_global_port_id)) {
+  if (tile_annotation.global_port_is_clock(tile_global_port_id) ||
+      tile_annotation.global_port_is_reset(tile_global_port_id) ||
+      tile_annotation.global_port_is_set(tile_global_port_id)) {
     tile_annotation.set_global_port_clock_arch_tree_name(
       tile_global_port_id, get_attribute(xml_tile, "clock_arch_tree_name",
                                          loc_data, pugiutil::ReqOpt::OPTIONAL)
