@@ -48,6 +48,13 @@ class ClockNetwork {
   /* Create range */
   typedef vtr::Range<clock_internal_driver_iterator>
     clock_internal_driver_range;
+  /* Type of tap points */
+  enum class : unsigned char {
+    ALL = 0,
+    SINGLE,
+    REGION,
+    NUM_TYPES
+  };
 
  public: /* Constructors */
   ClockNetwork();
@@ -133,12 +140,30 @@ class ClockNetwork {
 
   /* Return the original list of tap pins that is in storage; useful for parsers
    */
-  std::vector<std::string> tree_taps(const ClockTreeId& tree_id) const;
+  std::vector<ClockTapId> tree_taps(const ClockTreeId& tree_id) const;
+  /* Return the source ports for a given tap */
+  std::string tap_from_port(const ClockTapId& tap_id) const;
+  /* Return the destination ports for a given tap */
+  std::string tap_to_port(const ClockTapId& tap_id) const;
+  /* Find the type of tap point:
+   * all -> all coordinates in efpga are required to tap
+   * single -> only 1 coordinate is required to tap
+   * region -> coordinates in a region required to tap. Steps in region may be required
+   */
+  e_tap_type tap_type(const ClockTapId& tap_id) const;
+  /* Require the type of single */
+  size_t tap_x(const ClockTapId& tap_id) const; 
+  size_t tap_y(const ClockTapId& tap_id) const; 
+  /* Require the type of region */
+  vtr::Rect<size_t> tap_bounding_box(const ClockTapId& tap_id) const; 
+  /* Steps are only available when type is region */
+  size_t tap_step_x(const ClockTapId& tap_id) const; 
+  size_t tap_step_y(const ClockTapId& tap_id) const; 
   /* Return the list of flatten tap pins. For example: clb[0:1].clk[2:2] is
    * flatten to { clb[0].clk[2], clb[1].clk[2] } Useful to build clock routing
    * resource graph Note that the clk_pin_id limits only 1 clock to be accessed
    */
-  std::vector<std::string> tree_flatten_taps(
+  std::vector<std::string> tree_flatten_tap_to_ports(
     const ClockTreeId& tree_id, const ClockTreePinId& clk_pin_id) const;
   /* Find a spine with a given name, if not found, return an valid id, otherwise
    * return an invalid one */
@@ -193,7 +218,10 @@ class ClockNetwork {
   ClockInternalDriverId add_spine_switch_point_internal_driver(
     const ClockSpineId& spine_id, const ClockSwitchPointId& switch_point_id,
     const std::string& internal_driver_port);
-  void add_tree_tap(const ClockTreeId& tree_id, const std::string& pin_name);
+  ClockTapId add_tree_tap(const ClockTreeId& tree_id, const std::string& from_port, const std::string& to_port);
+  bool set_tap_bounding_box(const ClockTapId& tap_id, const vtr::Rect<size_t>& bb);
+  bool set_tap_step_x(const ClockTapId& tap_id, const size_t& step);
+  bool set_tap_step_y(const ClockTapId& tap_id, const size_t& step);
   /* Build internal links between clock tree, spines etc. This is also an
    * validator to verify the correctness of the clock network. Must run before
    * using the data! */
@@ -202,8 +230,6 @@ class ClockNetwork {
  public: /* Public invalidators/validators */
   /* Show if the tree id is a valid for data queries */
   bool valid_tree_id(const ClockTreeId& tree_id) const;
-  bool valid_internal_driver_id(
-    const ClockInternalDriverId& int_driver_id) const;
   /* Show if the level id is a valid for a given tree */
   bool valid_level_id(const ClockTreeId& tree_id,
                       const ClockLevelId& lvl_id) const;
@@ -233,6 +259,11 @@ class ClockNetwork {
   /* Ensure tree data is clean. All the spines are valid, and switch points are
    * valid */
   bool validate_tree() const;
+  /* Show if the internal driver id is a valid for data queries */
+  bool valid_internal_driver_id(
+    const ClockInternalDriverId& int_driver_id) const;
+  /* Show if the tap id is a valid for data queries */
+  bool valid_tap_id(const ClockTapId& tap_id) const;
 
  private: /* Private mutators */
   /* Build internal links between spines under a given tree */
@@ -253,7 +284,7 @@ class ClockNetwork {
   vtr::vector<ClockTreeId, size_t> tree_widths_;
   vtr::vector<ClockTreeId, size_t> tree_depths_;
   vtr::vector<ClockTreeId, std::vector<ClockSpineId>> tree_top_spines_;
-  vtr::vector<ClockTreeId, std::vector<std::string>> tree_taps_;
+  vtr::vector<ClockTreeId, ClockTapId> tree_taps_;
 
   /* Basic information of each spine */
   vtr::vector<ClockSpineId, ClockSpineId> spine_ids_;
@@ -275,6 +306,12 @@ class ClockNetwork {
   vtr::vector<ClockInternalDriverId, ClockInternalDriverId>
     internal_driver_ids_;
   vtr::vector<ClockInternalDriverId, std::string> internal_driver_ports_;
+  /* Basic information about tap */
+  vtr::vector<ClockTapId, ClockTapId> tap_ids_;
+  vtr::vector<ClockTapId, std::string> tap_from_ports_;
+  vtr::vector<ClockTapId, std::string> tap_to_ports_;
+  vtr::vector<ClockTapId, vtr::Rect<size_t>> tap_bbs_; /* Bounding box for tap points, (xlow, ylow) -> (xhigh, yhigh) */
+  vtr::vector<ClockTapId, vtr::Point<size_t>> tap_bb_steps_; /* x() -> x-direction step, y() -> y-direction step */
 
   /* Default routing resource */
   std::string default_segment_name_; /* The routing segment representing the
@@ -290,6 +327,9 @@ class ClockNetwork {
   /* Fast lookup */
   std::map<std::string, ClockTreeId> tree_name2id_map_;
   std::map<std::string, ClockSpineId> spine_name2id_map_;
+
+  /* Constants */
+  vtr::Rect<size_t> empty_tap_bb_;
 
   /* Flags */
   mutable bool is_dirty_;

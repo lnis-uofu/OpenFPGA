@@ -30,7 +30,18 @@ constexpr const char* XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_TAP = "tap";
 constexpr const char* XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_X = "x";
 constexpr const char* XML_CLOCK_SPINE_SWITCH_POINT_ATTRIBUTE_Y = "y";
 constexpr const char* XML_CLOCK_TREE_TAPS_NODE_NAME = "taps";
-constexpr const char* XML_CLOCK_TREE_TAP_NODE_NAME = "tap";
-constexpr const char* XML_CLOCK_TREE_TAP_ATTRIBUTE_TILE_PIN = "tile_pin";
+constexpr const char* XML_CLOCK_TREE_TAP_ALL_NODE_NAME = "all";
+constexpr const char* XML_CLOCK_TREE_TAP_REGION_NODE_NAME = "region";
+constexpr const char* XML_CLOCK_TREE_TAP_SINGLE_NODE_NAME = "single";
+constexpr const char* XML_CLOCK_TREE_TAP_ATTRIBUTE_FROM_PIN = "from_pin";
+constexpr const char* XML_CLOCK_TREE_TAP_ATTRIBUTE_TO_PIN = "to_pin";
+constexpr const char* XML_CLOCK_TREE_TAP_ATTRIBUTE_X = "x";
+constexpr const char* XML_CLOCK_TREE_TAP_ATTRIBUTE_Y = "y";
+constexpr const char* XML_CLOCK_TREE_TAP_ATTRIBUTE_STARTX = "start_x";
+constexpr const char* XML_CLOCK_TREE_TAP_ATTRIBUTE_STARTY = "start_y";
+constexpr const char* XML_CLOCK_TREE_TAP_ATTRIBUTE_ENDX = "end_x";
+constexpr const char* XML_CLOCK_TREE_TAP_ATTRIBUTE_ENDY = "end_y";
+constexpr const char* XML_CLOCK_TREE_TAP_ATTRIBUTE_REPEATX = "repeat_x";
+constexpr const char* XML_CLOCK_TREE_TAP_ATTRIBUTE_REPEATY = "repeat_y";
 
 #endif

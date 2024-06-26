@@ -28,15 +28,60 @@ static int write_xml_clock_tree_taps(std::fstream& fp,
                                      const ClockTreeId& tree_id) {
   openfpga::write_tab_to_file(fp, 3);
   fp << "<" << XML_CLOCK_TREE_TAPS_NODE_NAME << ">\n";
-  for (const std::string& tile_pin_name : clk_ntwk.tree_taps(tree_id)) {
-    openfpga::write_tab_to_file(fp, 4);
-    fp << "<" << XML_CLOCK_TREE_TAP_NODE_NAME << "";
-
-    write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_TILE_PIN,
-                        tile_pin_name.c_str());
-    fp << "/>"
-       << "\n";
-  }
+  /* Depends on the type */
+  for (ClockTapId tap_id : clk_ntwk.tree_taps(tree_id)) {
+    switch clk_ntwk.tap_type(tap_id): {
+      case ClockNetwork::e_tap_type::ALL: {
+        openfpga::write_tab_to_file(fp, 4);
+        fp << "<" << XML_CLOCK_TREE_TAP_ALL_NODE_NAME << "";
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_FROM_PIN,
+                            clk_ntwk.tap_from_port(tap_id).c_str());
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_TO_PIN,
+                            clk_ntwk.tap_to_port(tap_id).c_str());
+        fp << "/>"
+           << "\n";
+      }
+      case ClockNetwork::e_tap_type::SINGLE: {
+        openfpga::write_tab_to_file(fp, 4);
+        fp << "<" << XML_CLOCK_TREE_TAP_SINGLE_NODE_NAME << "";
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_FROM_PIN,
+                            clk_ntwk.tap_from_port(tap_id).c_str());
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_TO_PIN,
+                            clk_ntwk.tap_to_port(tap_id).c_str());
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_X,
+                            clk_ntwk.tap_x(tap_id));
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_Y,
+                            clk_ntwk.tap_y(tap_id));
+        fp << "/>"
+           << "\n";
+      }
+      case ClockNetwork::e_tap_type::REGION: {
+        openfpga::write_tab_to_file(fp, 4);
+        fp << "<" << XML_CLOCK_TREE_TAP_SINGLE_NODE_NAME << "";
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_FROM_PIN,
+                            clk_ntwk.tap_from_port(tap_id).c_str());
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_TO_PIN,
+                            clk_ntwk.tap_to_port(tap_id).c_str());
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_STARTX,
+                            clk_ntwk.tap_bounding_box(tap_id).xmin());
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_STARTY,
+                            clk_ntwk.tap_bounding_box(tap_id).ymin());
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_ENDX,
+                            clk_ntwk.tap_bounding_box(tap_id).xmax());
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_ENDY,
+                            clk_ntwk.tap_bounding_box(tap_id).ymax());
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_REPEATX,
+                            clk_ntwk.tap_step_x(tap_id));
+        write_xml_attribute(fp, XML_CLOCK_TREE_TAP_ATTRIBUTE_REPEATY,
+                            clk_ntwk.tap_step_y(tap_id));
+        fp << "/>"
+           << "\n";
+      }
+      default: {
+        VTR_LOG_ERROR("Invalid type of tap point!\n");
+        return 1;
+      }
+    }
 
   openfpga::write_tab_to_file(fp, 3);
   fp << "</" << XML_CLOCK_TREE_TAPS_NODE_NAME << ">\n";
